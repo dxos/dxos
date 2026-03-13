@@ -8,7 +8,7 @@ import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/web-search';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.web-search';
 
 const functions: AppCapabilities.BlueprintDefinition['functions'] = [];
 

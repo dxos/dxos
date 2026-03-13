@@ -82,7 +82,7 @@ export const upsertFunctionObject: (opts: {
 });
 
 const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Obj.Unknown) {
-  const collectionRef = space.properties['dxos.org/type/Collection'] as Ref.Ref<Collection.Collection> | undefined;
+  const collectionRef = space.properties[Collection.Collection.typename] as Ref.Ref<Collection.Collection> | undefined;
   if (collectionRef) {
     const collection = yield* Database.load(collectionRef);
     if (collection) {

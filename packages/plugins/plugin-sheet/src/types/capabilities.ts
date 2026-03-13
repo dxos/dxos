@@ -9,6 +9,6 @@ import { meta } from '../meta';
 
 export namespace SheetCapabilities {
   export const ComputeGraphRegistry = Capability.make<ComputeGraphRegistry>(
-    `${meta.id}/capability/compute-graph-registry`,
+    `${meta.id}.capability.compute-graph-registry`,
   );
 }

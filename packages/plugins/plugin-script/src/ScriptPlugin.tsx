@@ -42,7 +42,6 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
               const { object } = yield* Operation.invoke(ScriptOperation.CreateScript, props);
               return object;
             })) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
       {
@@ -52,7 +51,6 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
           iconHue: 'sky',
           inputSchema: ScriptOperation.NotebookProps,
           createObject: ((props) => Effect.sync(() => Notebook.make(props))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
     ],

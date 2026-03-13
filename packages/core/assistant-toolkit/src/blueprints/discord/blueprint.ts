@@ -11,7 +11,7 @@ import { trim } from '@dxos/util';
 
 import { DiscordFunctions } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/discord';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.discord';
 
 const functions = Object.values(DiscordFunctions);
 

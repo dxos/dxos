@@ -23,7 +23,7 @@ const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Organization', // TODO(burdon): Change all types to /schema
+    typename: 'com.example.type.organization',
     version: '0.1.0',
   }),
 );
@@ -65,7 +65,7 @@ const Person = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Person', // TODO(burdon): Change all types to /schema
+    typename: 'org.dxos.type.person', // TODO(burdon): Change all types to /schema
     version: '0.1.0',
   }),
 );

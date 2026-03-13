@@ -28,10 +28,12 @@ export const StackSection = ({
   metadata: { icon = 'ph--placeholder--regular' },
 }: StackSectionProps) => {
   const { t } = useTranslation(meta.id);
-  const { onNavigate, onAdd, onCollapse, onDelete } = useStack();
+  const { attendableId: parentAttendableId, onNavigate, onAdd, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
-  const attentionAttrs = useAttentionAttributes(id);
+  const attendableId = `${parentAttendableId}/${object.id}`;
+  const attentionAttrs = useAttentionAttributes(attendableId);
   const stackItem = useMemo(() => ({ id }), [id]);
+  const data = useMemo(() => ({ attendableId, subject: object }), [object, attendableId]);
 
   return (
     <CollapsiblePrimitive.Root asChild open={!view.collapsed} onOpenChange={(nextOpen) => onCollapse?.(id, !nextOpen)}>
@@ -107,7 +109,7 @@ export const StackSection = ({
           </StackItem.HeadingStickyContent>
         </StackItem.Heading>
         <CollapsiblePrimitive.Content>
-          <Surface.Surface role='section' data={{ subject: object }} limit={1} placeholder={<></>} />
+          <Surface.Surface role='section' data={data} limit={1} placeholder={<></>} />
         </CollapsiblePrimitive.Content>
         {view.collapsed && (
           <StackItem.Content classNames='dx-attention-surface'>

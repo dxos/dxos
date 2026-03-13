@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/sketch',
+  id: 'org.dxos.plugin.sketch',
   name: 'Sketch',
   description: trim`
     Lightweight digital whiteboard for quick sketches and visual thinking.

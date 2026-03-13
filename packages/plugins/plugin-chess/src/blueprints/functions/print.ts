@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { defineFunction } from '@dxos/functions';
 
 export default defineFunction({
-  key: 'dxos.org/function/chess/print',
+  key: 'org.dxos.function.chess.print',
   name: 'Print game',
   description: 'Prints the chess game to ASCII.',
   inputSchema: Schema.Struct({

@@ -2,17 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import { invariant } from '@dxos/invariant';
+
 import * as Node from './node';
 
 /**
  * Key separators for compound string keys used across the app-graph package.
  * `primary` separates top-level components (e.g., node ID from relation).
  * `secondary` separates sub-components within an encoded value (e.g., relation kind from direction).
+ * `path` separates segments in qualified node IDs (e.g., parent path from local segment).
  * Two distinct characters are needed because secondary separators appear inside primary-separated fields.
  */
 export const Separators = {
   primary: '\u0001',
   secondary: '\u0002',
+  path: '/',
 } as const;
 
 /**
@@ -52,4 +56,16 @@ export const nodeArgsUnchanged = (prev: Node.NodeArg<any>[], next: Node.NodeArg<
       shallowEqual(prevNode.properties, nextNode.properties)
     );
   });
+};
+
+/**
+ * Build a qualified node ID by joining a parent path with a local segment.
+ */
+export const qualifyId = (parentId: string, segmentId: string): string => `${parentId}${Separators.path}${segmentId}`;
+
+/**
+ * Validate that a segment ID does not contain the path separator.
+ */
+export const validateSegmentId = (id: string): void => {
+  invariant(!id.includes(Separators.path), `Node segment ID must not contain '${Separators.path}': ${id}`);
 };

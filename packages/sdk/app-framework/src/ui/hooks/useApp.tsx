@@ -21,7 +21,7 @@ import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
 import { App, PluginManagerProvider } from '../components';
 
-const ENABLED_KEY = 'dxos.org/app-framework/enabled';
+const ENABLED_KEY = 'org.dxos.app-framework.enabled';
 
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
@@ -131,13 +131,13 @@ export const useApp = ({
     manager.capabilities.contribute({
       interface: Capabilities.PluginManager,
       implementation: manager,
-      module: 'dxos.org/app-framework/plugin-manager',
+      module: 'org.dxos.app-framework.plugin-manager',
     });
 
     manager.capabilities.contribute({
       interface: Capabilities.AtomRegistry,
       implementation: manager.registry,
-      module: 'dxos.org/app-framework/atom-registry',
+      module: 'org.dxos.app-framework.atom-registry',
     });
 
     const fiber = Effect.gen(function* () {

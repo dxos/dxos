@@ -43,7 +43,7 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
 
   const [creating, setCreating] = useState(false);
   const [instructions, setInstructions] = useState<string>(`You can run the script "${object.name ?? 'script'}".`);
-  const blueprintKey = `dxos.org/blueprint/${kebabize(object.name ?? 'script')}`;
+  const blueprintKey = `org.dxos.blueprint.${kebabize(object.name ?? 'script')}`;
   const existingBlueprint = blueprints.find((bp) => bp.key === blueprintKey);
 
   useAsyncEffect(async () => {
@@ -226,7 +226,7 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   const handleOpenTokenManager = useCallback(
     () =>
       invokePromise(SettingsOperation.Open, {
-        plugin: 'dxos.org/plugin/token-manager',
+        plugin: 'org.dxos.plugin.token-manager',
       }),
     [invokePromise],
   );

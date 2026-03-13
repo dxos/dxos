@@ -11,7 +11,7 @@ import { meta } from '../meta';
 import { type FilesSettingsProps, type FilesState } from './schema';
 
 export namespace FileCapabilities {
-  export const Settings = Capability.make<Atom.Writable<FilesSettingsProps>>(`${meta.id}/capability/settings`);
+  export const Settings = Capability.make<Atom.Writable<FilesSettingsProps>>(`${meta.id}.capability.settings`);
 
-  export const State = Capability.make<Atom.Writable<FilesState>>(`${meta.id}/capability/state`);
+  export const State = Capability.make<Atom.Writable<FilesState>>(`${meta.id}.capability.state`);
 }

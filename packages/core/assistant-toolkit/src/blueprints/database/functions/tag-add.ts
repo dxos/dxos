@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/database/tag-add',
+  key: 'org.dxos.function.database.tag-add',
   name: 'Add tag',
   description: trim`
     Adds a tag to an object.

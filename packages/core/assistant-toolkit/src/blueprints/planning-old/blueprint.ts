@@ -11,7 +11,7 @@ import { trim } from '@dxos/util';
 
 import { TaskFunctions } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/planning';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.planning';
 
 const functions = Object.values(TaskFunctions);
 

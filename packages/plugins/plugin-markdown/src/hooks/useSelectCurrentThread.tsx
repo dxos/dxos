@@ -17,13 +17,13 @@ import { meta } from '../meta';
 /**
  * Handle scrolling and selection of the current thread in a markdown editor.
  */
-export const useSelectCurrentThread = (editorView: EditorView | null, documentId: string) => {
+export const useSelectCurrentThread = (editorView: EditorView | null, documentId: string, attendableId: string) => {
   const scrollIntoViewHandler = useMemo(
     () =>
       OperationResolver.make({
         operation: LayoutOperation.ScrollIntoView,
         position: 'hoist',
-        filter: (input) => !!editorView && input.subject === documentId && !!input.cursor,
+        filter: (input) => !!editorView && !!input.cursor && input.subject === attendableId,
         handler: (input) =>
           Effect.sync(() => {
             invariant(editorView, 'Editor view is not defined.');
@@ -54,7 +54,7 @@ export const useSelectCurrentThread = (editorView: EditorView | null, documentId
             }
           }),
       }),
-    [documentId, editorView],
+    [documentId, attendableId, editorView],
   );
 
   useOperationResolver(meta.id, scrollIntoViewHandler);

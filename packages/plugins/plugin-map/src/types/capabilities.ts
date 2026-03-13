@@ -31,5 +31,5 @@ export namespace MapCapabilities {
     zoom?: number;
   };
 
-  export const State = Capability.make<Atom.Writable<State>>(`${meta.id}/capability/state`);
+  export const State = Capability.make<Atom.Writable<State>>(`${meta.id}.capability.state`);
 }

@@ -32,7 +32,7 @@ export const TestItem = Schema.Struct({
   }),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Test',
+    typename: 'org.dxos.type.test',
     version: '0.1.0',
   }),
 );

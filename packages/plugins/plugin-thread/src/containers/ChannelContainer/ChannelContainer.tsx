@@ -37,13 +37,18 @@ export type ChannelContainerProps = SurfaceComponentProps<
  * Renders a call when active, otherwise renders the channel chat.
  */
 // TODO(burdon): Create Radix style layout.
-export const ChannelContainer = ({ role, subject: channel, roomId: roomIdProp, fullscreen }: ChannelContainerProps) => {
+export const ChannelContainer = ({
+  role,
+  subject: channel,
+  attendableId,
+  roomId: roomIdProp,
+  fullscreen,
+}: ChannelContainerProps) => {
   const space = getSpace(channel);
   const callManager = useCapability(ThreadCapabilities.CallManager);
   const extensions = useCapabilities(ThreadCapabilities.CallExtension);
   const joined = useAtomValue(callManager.joinedAtom);
   const currentRoomId = useAtomValue(callManager.roomIdAtom);
-  const attendableId = channel ? Obj.getDXN(channel).toString() : undefined;
   const roomId = roomIdProp ?? attendableId ?? failUndefined();
   const identity = useIdentity();
   const isNamed = !!identity?.profile?.displayName;

@@ -1,13 +1,13 @@
 [
   {
     "id": "01K6AY22Y0Y7BFVKG0Q4JBPF70",
-    "@type": "dxn:type:dxos.org/type/AgentStatus:0.1.0",
+    "@type": "dxn:type:org.dxos.type.agent-status:0.1.0",
     "created": "2025-09-29T14:29:37.860Z",
     "message": "Running Research"
   },
   {
     "id": "01K6AY22Y4CXE89HMR4N9RYC2A",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "created": "2025-09-29T14:29:37.860Z",
     "sender": {
       "role": "user"
@@ -15,14 +15,14 @@
     "blocks": [
       {
         "_tag": "text",
-        "text": "{\"id\":\"01K6AXZKK79H4E54RKP1YZDARK\",\"@type\":\"dxn:type:dxos.org/type/Organization:0.1.0\",\"@meta\":{\"keys\":[]},\"name\":\"Blue Yard\",\"website\":\"https://blueyard.com\"}"
+        "text": "{\"id\":\"01K6AXZKK79H4E54RKP1YZDARK\",\"@type\":\"dxn:type:org.dxos.type.organization:0.1.0\",\"@meta\":{\"keys\":[]},\"name\":\"Blue Yard\",\"website\":\"https://blueyard.com\"}"
       }
     ],
     "properties": {}
   },
   {
     "id": "01K6AY2807BKHHJG6897MXN7TS",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "created": "2025-09-29T14:29:43.047Z",
     "sender": {
       "role": "assistant"
@@ -56,7 +56,7 @@
   },
   {
     "id": "01K6AY280GJ93DHBEDWKXQDNH6",
-    "@type": "dxn:type:dxos.org/type/AgentStatus:0.1.0",
+    "@type": "dxn:type:org.dxos.type.agent-status:0.1.0",
     "parentMessage": "01K6AY2807BKHHJG6897MXN7TS",
     "toolCallId": "toolu_01Loo95BkQXpKkN4A1WPNWhF",
     "created": "2025-09-29T14:29:43.059Z",
@@ -64,7 +64,7 @@
   },
   {
     "id": "01K6AY280M638YC8QBV1DRZ8RW",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "parentMessage": "01K6AY2807BKHHJG6897MXN7TS",
     "created": "2025-09-29T14:29:43.060Z",
     "sender": {
@@ -82,7 +82,7 @@
   },
   {
     "id": "01K6AY3CNWZ2NTWK1KFXDEVH4W",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "created": "2025-09-29T14:30:20.604Z",
     "sender": {
       "role": "user"
@@ -100,7 +100,7 @@
   },
   {
     "id": "01K6AY3CNPH01ZK7AZB7N6RN56",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "parentMessage": "01K6AY2807BKHHJG6897MXN7TS",
     "created": "2025-09-29T14:30:20.597Z",
     "sender": {
@@ -390,7 +390,7 @@
   },
   {
     "id": "01K6AY3HVFJZCDZM20C1FM7XA9",
-    "@type": "dxn:type:dxos.org/type/AgentStatus:0.1.0",
+    "@type": "dxn:type:org.dxos.type.agent-status:0.1.0",
     "parentMessage": "01K6AY3HV7HA78PA783TN4KTSS",
     "toolCallId": "toolu_01FRyentsT5unq3ArucPyd9v",
     "created": "2025-09-29T14:30:25.901Z",
@@ -398,7 +398,7 @@
   },
   {
     "id": "01K6AY3HV7HA78PA783TN4KTSS",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "created": "2025-09-29T14:30:25.895Z",
     "sender": {
       "role": "assistant"
@@ -432,7 +432,7 @@
   },
   {
     "id": "01K6AY3HVK44YW04M6HAGMSV9A",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "parentMessage": "01K6AY3HV7HA78PA783TN4KTSS",
     "created": "2025-09-29T14:30:25.907Z",
     "sender": {
@@ -450,7 +450,7 @@
   },
   {
     "id": "01K6AY4J322X231GVXRRVPKK2D",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "parentMessage": "01K6AY3HV7HA78PA783TN4KTSS",
     "created": "2025-09-29T14:30:58.914Z",
     "sender": {
@@ -523,7 +523,7 @@
   },
   {
     "id": "01K6AY4J6XZETMN968N93QPXKT",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "parentMessage": "01K6AY3HV7HA78PA783TN4KTSS",
     "created": "2025-09-29T14:30:59.037Z",
     "sender": {
@@ -544,7 +544,7 @@
   },
   {
     "id": "01K6AY4J747J0DD1VH723E8Q1E",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "created": "2025-09-29T14:30:59.044Z",
     "sender": {
       "role": "user"
@@ -562,7 +562,7 @@
   },
   {
     "id": "01K6AY4P9EXDD43FC6FN5EYZTJ",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "created": "2025-09-29T14:31:03.214Z",
     "sender": {
       "role": "assistant"
@@ -596,7 +596,7 @@
   },
   {
     "id": "01K6AY4P9VHPXKKRV9S1T90QMP",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "parentMessage": "01K6AY4P9EXDD43FC6FN5EYZTJ",
     "created": "2025-09-29T14:31:03.227Z",
     "sender": {
@@ -614,7 +614,7 @@
   },
   {
     "id": "01K6AY4P9Q76ENPVXBP3Q0S3D4",
-    "@type": "dxn:type:dxos.org/type/AgentStatus:0.1.0",
+    "@type": "dxn:type:org.dxos.type.agent-status:0.1.0",
     "parentMessage": "01K6AY4P9EXDD43FC6FN5EYZTJ",
     "toolCallId": "toolu_0184yyWFfy8eUDJMKQhZ9iVt",
     "created": "2025-09-29T14:31:33.086Z",
@@ -622,7 +622,7 @@
   },
   {
     "id": "01K6AY5KEZKFJTKB5TKD2T884Z",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "created": "2025-09-29T14:31:33.087Z",
     "sender": {
       "role": "user"
@@ -640,7 +640,7 @@
   },
   {
     "id": "01K6AY5KEW4HYBBP7Z8W1CZRJD",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "parentMessage": "01K6AY4P9EXDD43FC6FN5EYZTJ",
     "created": "2025-09-29T14:31:33.084Z",
     "sender": {
@@ -802,7 +802,7 @@
   },
   {
     "id": "01K6AY5XW8RVCW00D05V72JDVM",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "created": "2025-09-29T14:31:43.752Z",
     "sender": {
       "role": "assistant"
@@ -836,7 +836,7 @@
   },
   {
     "id": "01K6AY5XWG3G1MSJX4DVGDJD91",
-    "@type": "dxn:type:dxos.org/type/AgentStatus:0.1.0",
+    "@type": "dxn:type:org.dxos.type.agent-status:0.1.0",
     "parentMessage": "01K6AY5XW8RVCW00D05V72JDVM",
     "toolCallId": "toolu_01VEJ58D62TFgmiTiN9A517F",
     "created": "2025-09-29T14:31:43.865Z",
@@ -844,7 +844,7 @@
   },
   {
     "id": "01K6AY5Y2YV6A0EFP59HB9NNAY",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "created": "2025-09-29T14:31:43.965Z",
     "sender": {
       "role": "user"
@@ -862,7 +862,7 @@
   },
   {
     "id": "01K6AY62JMHBN46G1P48PVJX14",
-    "@type": "dxn:type:dxos.org/type/Message:0.1.0",
+    "@type": "dxn:type:org.dxos.type.message:0.1.0",
     "created": "2025-09-29T14:31:48.564Z",
     "sender": {
       "role": "assistant"

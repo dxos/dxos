@@ -9,7 +9,7 @@ import { Operation } from '@dxos/operation';
 
 import { Label } from './translations';
 
-const LAYOUT_PLUGIN = 'dxos.org/plugin/layout';
+const LAYOUT_PLUGIN = 'org.dxos.plugin.layout';
 
 /**
  * Layout operations - Operation-based equivalents of LayoutAction intents.
@@ -22,7 +22,7 @@ export namespace LayoutOperation {
 
   export const UpdateSidebar = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/update-sidebar`,
+      key: `${LAYOUT_PLUGIN}.operation.update-sidebar`,
       name: 'Update Sidebar',
       description: 'Update the sidebar state.',
     },
@@ -45,7 +45,7 @@ export namespace LayoutOperation {
 
   export const UpdateComplementary = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/update-complementary`,
+      key: `${LAYOUT_PLUGIN}.operation.update-complementary`,
       name: 'Update Complementary Sidebar',
       description: 'Update the complementary sidebar state.',
     },
@@ -72,7 +72,7 @@ export namespace LayoutOperation {
 
   export const UpdateDialog = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/update-dialog`,
+      key: `${LAYOUT_PLUGIN}.operation.update-dialog`,
       name: 'Update Dialog',
       description: 'Open, close, or update the dialog.',
     },
@@ -148,7 +148,7 @@ export namespace LayoutOperation {
 
   export const UpdatePopover = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/update-popover`,
+      key: `${LAYOUT_PLUGIN}.operation.update-popover`,
       name: 'Update Popover',
       description: 'Open, close, or update a popover.',
     },
@@ -203,7 +203,7 @@ export namespace LayoutOperation {
 
   export const AddToast = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/add-toast`,
+      key: `${LAYOUT_PLUGIN}.operation.add-toast`,
       name: 'Add Toast',
       description: 'Add a toast notification.',
     },
@@ -221,7 +221,7 @@ export namespace LayoutOperation {
 
   export const SetLayoutMode = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/set-layout-mode`,
+      key: `${LAYOUT_PLUGIN}.operation.set-layout-mode`,
       name: 'Set Layout Mode',
       description: 'Set the layout mode (solo, deck, fullscreen, etc.).',
     },
@@ -249,7 +249,7 @@ export namespace LayoutOperation {
 
   export const SwitchWorkspace = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/switch-workspace`,
+      key: `${LAYOUT_PLUGIN}.operation.switch-workspace`,
       name: 'Switch Workspace',
       description: 'Switch to a different workspace.',
     },
@@ -265,7 +265,7 @@ export namespace LayoutOperation {
 
   export const RevertWorkspace = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/revert-workspace`,
+      key: `${LAYOUT_PLUGIN}.operation.revert-workspace`,
       name: 'Revert Workspace',
       description: 'Revert to the previous workspace.',
     },
@@ -283,7 +283,7 @@ export namespace LayoutOperation {
 
   export const Open = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/open`,
+      key: `${LAYOUT_PLUGIN}.operation.open`,
       name: 'Open',
       description: 'Open items in the main content area.',
     },
@@ -317,7 +317,7 @@ export namespace LayoutOperation {
 
   export const Close = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/close`,
+      key: `${LAYOUT_PLUGIN}.operation.close`,
       name: 'Close',
       description: 'Close items in the main content area.',
     },
@@ -333,7 +333,7 @@ export namespace LayoutOperation {
 
   export const Set = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/set`,
+      key: `${LAYOUT_PLUGIN}.operation.set`,
       name: 'Set',
       description: 'Override items in the main content area.',
     },
@@ -353,7 +353,7 @@ export namespace LayoutOperation {
 
   export const ScrollIntoView = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/scroll-into-view`,
+      key: `${LAYOUT_PLUGIN}.operation.scroll-into-view`,
       name: 'Scroll Into View',
       description: 'Scroll an item into view.',
     },
@@ -370,7 +370,7 @@ export namespace LayoutOperation {
 
   export const Expose = Operation.make({
     meta: {
-      key: `${LAYOUT_PLUGIN}/operation/expose`,
+      key: `${LAYOUT_PLUGIN}.operation.expose`,
       name: 'Expose',
       description: 'Expose an item in the navigation area.',
     },
@@ -384,8 +384,8 @@ export namespace LayoutOperation {
   });
 }
 
-const SETTINGS_PLUGIN = 'dxos.org/plugin/settings';
-const SETTINGS_OPERATION = `${SETTINGS_PLUGIN}/operation`;
+const SETTINGS_PLUGIN = 'org.dxos.plugin.settings';
+const SETTINGS_OPERATION = `${SETTINGS_PLUGIN}.operation`;
 
 /**
  * Operations for the Settings plugin.
@@ -393,7 +393,7 @@ const SETTINGS_OPERATION = `${SETTINGS_PLUGIN}/operation`;
 export namespace SettingsOperation {
   export const Open = Operation.make({
     meta: {
-      key: `${SETTINGS_OPERATION}/open`,
+      key: `${SETTINGS_OPERATION}.open`,
       name: 'Open Settings',
       description: 'Open the settings panel.',
     },
@@ -408,7 +408,7 @@ export namespace SettingsOperation {
 
   export const OpenPluginRegistry = Operation.make({
     meta: {
-      key: `${SETTINGS_OPERATION}/open-plugin-registry`,
+      key: `${SETTINGS_OPERATION}.open-plugin-registry`,
       name: 'Open Plugin Registry',
       description: 'Open the plugin registry.',
     },

@@ -32,7 +32,7 @@ export const UserFeedback = Schema.Struct({
 
 export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;
 
-const OBSERVABILITY_OPERATION = `${meta.id}/operation`;
+const OBSERVABILITY_OPERATION = `${meta.id}.operation`;
 
 /**
  * Operations for the Observability plugin.
@@ -40,7 +40,7 @@ const OBSERVABILITY_OPERATION = `${meta.id}/operation`;
 export namespace ObservabilityOperation {
   export const Toggle = Operation.make({
     meta: {
-      key: `${OBSERVABILITY_OPERATION}/toggle`,
+      key: `${OBSERVABILITY_OPERATION}.toggle`,
       name: 'Toggle Observability',
       description: 'Toggle observability on or off.',
     },
@@ -55,7 +55,7 @@ export namespace ObservabilityOperation {
 
   export const CaptureUserFeedback = Operation.make({
     meta: {
-      key: `${OBSERVABILITY_OPERATION}/capture-feedback`,
+      key: `${OBSERVABILITY_OPERATION}.capture-feedback`,
       name: 'Capture User Feedback',
       description: 'Capture user feedback.',
     },
@@ -68,7 +68,7 @@ export namespace ObservabilityOperation {
 
   export const SendEvent = Operation.make({
     meta: {
-      key: `${OBSERVABILITY_OPERATION}/send-event`,
+      key: `${OBSERVABILITY_OPERATION}.send-event`,
       name: 'Send Event',
       description: 'Send an observability event.',
     },

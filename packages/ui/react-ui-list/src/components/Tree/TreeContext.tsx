@@ -12,6 +12,10 @@ export type TreeItemDataProps = {
   id: string;
   label: Label;
   parentOf?: string[];
+  /** When `false`, the item cannot be dragged (overrides tree-level `draggable`). */
+  draggable?: boolean;
+  /** When `false`, the item does not participate as a drop target. */
+  droppable?: boolean;
   className?: string;
   headingClassName?: string;
   icon?: string;

@@ -98,6 +98,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    value: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization)',
+    value: '(type:org.dxos.type.person OR type:org.dxos.type.organization)',
   },
 };

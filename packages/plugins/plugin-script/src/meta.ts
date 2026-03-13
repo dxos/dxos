@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/script',
+  id: 'org.dxos.plugin.script',
   name: 'Scripts',
   description: trim`
     Write and deploy custom JavaScript functions that extend your workspace capabilities.
@@ -22,5 +22,5 @@ export const meta: Plugin.Meta = {
 // TODO(ZaymonFC): Configure by scopes?
 export const defaultScriptsForIntegration: Record<string, string[]> = {
   // TODO(wittjosiah): Also include content extraction scripts in the default set.
-  'gmail.com': ['dxos.org/script/gmail'],
+  'gmail.com': ['org.dxos.script.gmail'],
 };

@@ -399,9 +399,11 @@ export const WithMail: Story = {
       return { plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()] };
     },
     config: config.remote,
-    types: [Feed.Feed],
+    types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const feed = await mailbox.feed?.tryLoad();
+      invariant(feed);
       const queue = space.queues.create<Message.Message>();
       Obj.change(feed, (mutable) => {
         Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
@@ -410,8 +412,8 @@ export const WithMail: Story = {
       await queue.append(messages);
     },
     onChatCreated: async ({ space, binder }) => {
-      const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
-      const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
+      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const mailbox = mailboxes[0];
       if (mailbox) {
         await binder.bind({ objects: [Ref.make(mailbox)] });
       }
@@ -435,13 +437,13 @@ export const WithGmail: Story = {
       return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
     },
     config: config.persistent,
-    types: [Feed.Feed],
+    types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
       space.db.add(Mailbox.make({ name: 'Mailbox' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
-      const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
+      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const mailbox = mailboxes[0];
       if (mailbox) {
         await binder.bind({ objects: [Ref.make(mailbox)] });
       }
@@ -465,13 +467,13 @@ export const WithCalendar: Story = {
       return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
     },
     config: config.remote,
-    types: [Feed.Feed, Event.Event],
+    types: [Feed.Feed, Calendar.Calendar, Event.Event],
     onInit: async ({ space }) => {
       space.db.add(Calendar.make({ name: 'Calendar' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
-      const calendar = feeds.find((feed) => feed.kind === Calendar.kind);
+      const calendars = await space.db.query(Filter.type(Calendar.Calendar)).run();
+      const calendar = calendars[0];
       if (calendar) {
         await binder.bind({ objects: [Ref.make(calendar)] });
       }
@@ -1039,7 +1041,7 @@ export const WithScript: Story = {
       const { identityKey } = client.halo.identity.get()!;
       await client.halo.writeCredentials([getAccessCredential(identityKey)]);
 
-      const template = templates.find((template) => template.id === 'dxos.org/script/forex-effect');
+      const template = templates.find((template) => template.id === 'org.dxos.script.forex-effect');
       invariant(template, 'Template not found');
       invariant(template.name, 'Template name not found');
 
@@ -1055,14 +1057,14 @@ export const WithScript: Story = {
 
       space.db.add(
         Blueprint.make({
-          key: 'dxos.org/blueprint/forex',
+          key: 'org.dxos.blueprint.forex',
           name: 'Forex',
           instructions: Template.make({
             source: trim`
               You can get the exchange rate between two currencies.
             `,
           }),
-          tools: [ToolId.make('dxos.org/script/forex-effect')],
+          tools: [ToolId.make('org.dxos.script.forex-effect')],
         }),
       );
 

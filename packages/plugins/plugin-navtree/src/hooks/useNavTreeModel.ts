@@ -40,10 +40,17 @@ const createItemPropsFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =
           : node.properties.role === 'branch'
             ? []
             : undefined;
+      const parentId = path.length >= 2 ? path[path.length - 2] : undefined;
+      const parentNode = parentId ? Option.getOrElse(get(graph.node(parentId)), () => undefined) : undefined;
+      const droppable =
+        node.properties.droppable === false || parentNode?.properties.childrenDroppable === false ? false : undefined;
+
       return {
         id: node.id,
         parentOf,
         disabled: node.properties.disabled,
+        draggable: node.properties.draggable,
+        droppable,
         label: node.properties.label ?? node.id,
         className: mx(node.properties.className, node.properties.modified && 'italic'),
         headingClassName: node.properties.headingClassName,
@@ -65,8 +72,7 @@ const createItemFamily = (graph: ReturnType<typeof useAppGraph>['graph']) =>
   Atom.family((id: string) =>
     Atom.make((get) => {
       const node = Option.getOrElse(get(graph.node(id)), () => undefined);
-      const passed = node ? filterItems(node) : false;
-      return node && passed ? node : undefined;
+      return node && filterItems(node) ? node : undefined;
     }).pipe(Atom.keepAlive),
   );
 

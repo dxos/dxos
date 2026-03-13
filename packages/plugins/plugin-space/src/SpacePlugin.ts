@@ -52,13 +52,12 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       {
         id: Collection.Collection.typename,
         metadata: {
-          icon: 'ph--cards-three--regular',
+          icon: 'ph--folder--regular',
           iconHue: 'neutral',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
           inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
           createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
       {
@@ -69,45 +68,38 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           inputSchema: SpaceOperation.StoredSchemaForm,
           createObject: ((props, { db }) =>
             Effect.gen(function* () {
-              if (props.typename) {
-                const result = yield* Operation.invoke(SpaceOperation.UseStaticSchema, {
-                  db,
-                  typename: props.typename,
-                });
-                return result as any;
-              } else {
-                const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
-                  db,
-                  name: props.name,
-                  schema: createDefaultSchema(),
-                });
-                return result.object;
-              }
+              const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
+                db,
+                name: props.name,
+                schema: createDefaultSchema(),
+              });
+              return result.object;
             })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Event.Event.typename,
-        metadata: {
-          icon: 'ph--calendar-dot--regular',
         },
       },
       {
         id: Organization.Organization.typename,
         metadata: {
           icon: 'ph--building-office--regular',
+          iconHue: 'neutral',
+          createObject: ((props) => Effect.sync(() => Organization.make(props))) satisfies CreateObject,
         },
       },
       {
         id: Person.Person.typename,
         metadata: {
           icon: 'ph--user--regular',
+          iconHue: 'neutral',
+          createObject: ((props) => Effect.sync(() => Person.make(props))) satisfies CreateObject,
         },
       },
       {
         id: Task.Task.typename,
         metadata: {
           icon: 'ph--check-circle--regular',
+          iconHue: 'neutral',
+          inputSchema: Task.Task,
+          createObject: ((props) => Effect.sync(() => Task.make(props))) satisfies CreateObject,
         },
       },
     ],

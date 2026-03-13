@@ -7,4 +7,4 @@ export * from './Home';
 export * from './MobileLayout';
 export * from './Popover';
 export * from './SimpleLayout';
-export * from './Workspace';
+export * from './NavBranch';

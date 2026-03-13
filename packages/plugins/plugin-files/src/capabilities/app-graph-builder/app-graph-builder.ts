@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
@@ -21,7 +21,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Create export/import actions.
       GraphBuilder.createExtension({
-        id: `${meta.id}/export`,
+        id: `${meta.id}.export`,
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -46,7 +46,7 @@ export default Capability.makeModule(
 
       // Create files group node.
       GraphBuilder.createExtension({
-        id: `${meta.id}/root`,
+        id: `${meta.id}.root`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
           const settingsAtom = capabilities.get(FileCapabilities.Settings);
@@ -73,8 +73,8 @@ export default Capability.makeModule(
 
       // Create files nodes.
       GraphBuilder.createExtension({
-        id: `${meta.id}/files`,
-        match: NodeMatcher.whenId(meta.id),
+        id: `${meta.id}.files`,
+        match: NodeMatcher.whenId(getSpacePath('dxos:plugin-files')),
         actions: () =>
           Effect.succeed([
             {
@@ -128,7 +128,7 @@ export default Capability.makeModule(
 
       // Create sub-files nodes.
       GraphBuilder.createExtension({
-        id: `${meta.id}/sub-files`,
+        id: `${meta.id}.sub-files`,
         match: (node) => (isLocalDirectory(node.data) ? Option.some(node.data) : Option.none()),
         connector: (directory) =>
           Effect.succeed(
@@ -146,7 +146,7 @@ export default Capability.makeModule(
 
       // Create file actions.
       GraphBuilder.createExtension({
-        id: `${meta.id}/actions`,
+        id: `${meta.id}.actions`,
         match: (node) => (isLocalEntity(node.data) ? Option.some(node.data) : Option.none()),
         actions: (entity) =>
           Effect.succeed([

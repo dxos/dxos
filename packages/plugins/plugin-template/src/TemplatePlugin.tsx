@@ -21,7 +21,6 @@ export const TemplatePlugin = Plugin.define(meta).pipe(
         icon: 'ph--asterisk--regular',
         iconHue: 'sky',
         createObject: ((props) => Effect.sync(() => Template.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),

@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/navtree',
+  id: 'org.dxos.plugin.navtree',
   name: 'Navtree',
   description: trim`
     Hierarchical navigation tree for browsing spaces, folders, and objects.
@@ -17,4 +17,4 @@ export const meta: Plugin.Meta = {
 // TODO(wittjosiah): Factor out.
 export const KEY_BINDING = 'KeyBinding';
 // TODO(wittjosiah): Factor out.
-export const COMMANDS_DIALOG = `${meta.id}/CommandsDialog`;
+export const COMMANDS_DIALOG = `${meta.id}.commands-dialog`;

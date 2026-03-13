@@ -354,12 +354,12 @@ describe('CoreDatabase', () => {
       await graph.schemaRegistry.register([TestSchema.Person]);
       const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
       await db.coreDatabase.atomicReplaceObject(contact.id, {
-        type: DXN.parse('dxn:type:example.com/type/Task:0.1.0'),
+        type: DXN.parse('dxn:type:com.example.type.task:0.1.0'),
         data: { name: 'Bar' },
       });
 
       expect(contact.name).to.eq('Bar');
-      expect(Obj.getTypeDXN(contact)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
+      expect(Obj.getTypeDXN(contact)?.toString()).to.eq('dxn:type:com.example.type.task:0.1.0');
     });
   });
 });

@@ -16,6 +16,7 @@ export const translations = [
         'typename label_one': 'Circuit',
         'typename label_other': 'Circuits',
         'object name placeholder': 'New circuit',
+        'add object label': 'Add circuit',
         'rename object label': 'Rename circuit',
         'delete object label': 'Delete circuit',
         'object deleted label': 'Circuit deleted',

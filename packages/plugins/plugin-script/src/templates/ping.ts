@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { defineFunction } from '@dxos/functions';
 
 export default defineFunction({
-  key: 'dxos.org/script/ping',
+  key: 'org.dxos.script.ping',
   name: 'Ping',
   inputSchema: Schema.Any,
 

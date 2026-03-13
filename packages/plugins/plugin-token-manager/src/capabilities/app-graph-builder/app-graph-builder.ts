@@ -15,14 +15,14 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}/space-settings`,
-        match: NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`),
+        id: `${meta.id}.space-settings`,
+        match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
         connector: (node) =>
           Effect.succeed([
             {
-              id: `integrations-${node.id}`,
-              type: `${meta.id}/space-settings`,
-              data: `${meta.id}/space-settings`,
+              id: `${meta.id}.integrations`,
+              type: `${meta.id}.space-settings`,
+              data: `${meta.id}.space-settings`,
               properties: {
                 label: ['space panel name', { ns: meta.id }],
                 icon: 'ph--plugs--regular',

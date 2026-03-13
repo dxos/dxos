@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/pwa',
+  id: 'org.dxos.plugin.pwa',
   name: 'PWA',
   description: trim`
     Progressive Web App capabilities enabling offline functionality and app-like experience.

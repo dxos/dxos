@@ -116,10 +116,12 @@ export const generator = () => ({
     [
       PresetName.ORG_RESEARCH_PROJECT,
       async (space, n, cb) => {
-        const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
-        const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
-        invariant(mailbox, 'Mailbox feed not found');
-        const queueDxn = Feed.getQueueDxn(mailbox)?.toString();
+        const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+        const mailbox = mailboxes[0];
+        invariant(mailbox, 'Mailbox not found');
+        const mailboxFeed = await mailbox.feed?.tryLoad();
+        invariant(mailboxFeed, 'Mailbox missing feed reference');
+        const queueDxn = Feed.getQueueDxn(mailboxFeed)?.toString();
         invariant(queueDxn, 'Mailbox feed missing queue DXN key');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagDxn = Obj.getDXN(tag).toString();
@@ -313,7 +315,7 @@ export const generator = () => ({
             'subscription',
             (triggerSpec) =>
               (triggerSpec.query = {
-                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast as Obj.Mutable<QueryAST.Query>,
+                ast: Query.select(Filter.typename('org.dxos.type.chess')).ast as Obj.Mutable<QueryAST.Query>,
               }),
             'type',
           );

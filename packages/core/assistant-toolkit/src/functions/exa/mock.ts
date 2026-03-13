@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { SEARCH_RESULTS } from './data';
 
 export default defineFunction({
-  key: 'dxos.org/function/exa-mock',
+  key: 'org.dxos.function.exa-mock',
   name: 'Exa mock',
   description: 'Search the web for information',
   inputSchema: Schema.Struct({

@@ -49,7 +49,7 @@ export class QuerySandbox extends Resource {
 
   /**
    * Evaluates the query code.
-   * @param queryCode Example: `Query.select(Filter.typename('dxos.org/type/Person'))`
+   * @param queryCode Example: `Query.select(Filter.typename('org.dxos.type.person'))`
    */
   eval(queryCode: string): QueryAST.Query {
     using context = this.#runtime.newContext();

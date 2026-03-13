@@ -7,15 +7,12 @@ import React, { useCallback, useMemo } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Feed, Filter, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
-import { useClient } from '@dxos/react-client';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
 import { Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
-import { ManagedCollection } from '@dxos/schema';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -31,9 +28,7 @@ const useMetadataResolver = () => {
 /**
  * Article view for collections.
  */
-export const CollectionArticle = ({
-  subject,
-}: SurfaceComponentProps<Collection.Collection | ManagedCollection.ManagedCollection>) => {
+export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.Collection>) => {
   const { t } = useTranslation(meta.id);
   const resolveMetadata = useMetadataResolver();
   const { items, handleSearch } = useCollectionItems(subject, resolveMetadata);
@@ -101,58 +96,16 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = (props) => {
   );
 };
 
-/**
- * Hook to get items from a regular collection.
- */
-const useRegularCollectionItems = (collection: Collection.Collection): Obj.Unknown[] => {
-  return useMemo(
-    () => (collection.objects ?? []).map((ref) => ref.target).filter((obj): obj is Obj.Unknown => Obj.isObject(obj)),
-    [collection.objects],
-  );
-};
-
-/**
- * Hook to get items from a managed collection by querying the space.
- */
-const useManagedCollectionItems = (collection: ManagedCollection.ManagedCollection): Obj.Unknown[] => {
-  const client = useClient();
-  const space = getSpace(collection);
-  const [typename, feedKind] = collection.key.split('~');
-
-  const schema = useMemo(
-    () => client.graph.schemaRegistry.query({ typename, location: ['runtime'] }).runSync()[0],
-    [client, typename],
-  );
-
-  const filter = useMemo(
-    () =>
-      typename === Feed.Feed.typename
-        ? Filter.type(Feed.Feed, { kind: feedKind })
-        : schema
-          ? Filter.type(schema)
-          : Filter.nothing(),
-    [typename, schema, feedKind],
-  );
-
-  return useQuery(space?.db, filter);
-};
-
 type MetadataResolver = (typename: string) => { icon?: string; iconHue?: string };
 
 /**
  * Combined hook to get collection items with search/filter support.
  */
-const useCollectionItems = (
-  collection: Collection.Collection | ManagedCollection.ManagedCollection,
-  resolveMetadata: MetadataResolver,
-) => {
-  const isManaged = Obj.instanceOf(ManagedCollection.ManagedCollection, collection);
-
-  // Call both hooks unconditionally to satisfy React's rules of hooks.
-  const regularObjects = useRegularCollectionItems(collection as Collection.Collection);
-  const managedObjects = useManagedCollectionItems(collection as ManagedCollection.ManagedCollection);
-
-  const objects = isManaged ? managedObjects : regularObjects;
+const useCollectionItems = (collection: Collection.Collection, resolveMetadata: MetadataResolver) => {
+  const objects = useMemo(
+    () => (collection.objects ?? []).map((ref) => ref.target).filter((obj): obj is Obj.Unknown => Obj.isObject(obj)),
+    [collection.objects],
+  );
 
   // Convert objects to items with resolved metadata.
   const items = useMemo(

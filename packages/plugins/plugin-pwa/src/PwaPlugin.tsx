@@ -23,7 +23,7 @@ export const PwaPlugin = Plugin.define(meta).pipe(
       const updateSW = registerSW({
         onNeedRefresh: () => {
           invokeSync(LayoutOperation.AddToast, {
-            id: `${meta.id}/need-refresh`,
+            id: `${meta.id}.need-refresh`,
             title: ['need refresh label', { ns: meta.id }],
             description: ['need refresh description', { ns: meta.id }],
             duration: 4 * 60 * 1000, // 4m
@@ -34,7 +34,7 @@ export const PwaPlugin = Plugin.define(meta).pipe(
         },
         onOfflineReady: () => {
           invokeSync(LayoutOperation.AddToast, {
-            id: `${meta.id}/offline-ready`,
+            id: `${meta.id}.offline-ready`,
             title: ['offline ready label', { ns: meta.id }],
             closeLabel: ['confirm label', { ns: meta.id }],
           });

@@ -32,7 +32,6 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
     annotation: {
       location: ['database', 'runtime'],
       kind: ['user'],
-      registered: ['registered'],
     },
   });
 

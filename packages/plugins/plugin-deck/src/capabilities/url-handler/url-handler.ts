@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, fromUrlPath, getWorkspaceFromPath, toUrlPath } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
+import { Node } from '@dxos/plugin-graph';
 
 import { DeckCapabilities, type DeckStateProps, defaultDeck } from '../../types';
 
-// TODO(wittjosiah): Cleanup the url handling. May justify introducing routing capabilities.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { invokeSync } = yield* Capability.get(Capabilities.OperationInvoker);
@@ -48,15 +48,17 @@ export default Capability.makeModule(
         return;
       }
 
-      const [_, nextDeck, nextSolo] = pathname.split('/');
-      if (nextDeck && nextDeck !== state.activeDeck) {
-        invokeSync(LayoutOperation.SwitchWorkspace, { subject: nextDeck });
+      const qualifiedId = fromUrlPath(pathname);
+      const workspace = getWorkspaceFromPath(qualifiedId);
+      if (workspace !== Node.RootId && workspace !== state.activeDeck) {
+        invokeSync(LayoutOperation.SwitchWorkspace, { subject: workspace });
       }
 
       const deck = getDeck();
-      if (nextSolo && nextSolo !== deck.solo) {
-        invokeSync(LayoutOperation.SetLayoutMode, { subject: nextSolo, mode: 'solo' });
-      } else if (!nextSolo && deck.solo) {
+      const activeId = qualifiedId !== workspace ? qualifiedId : undefined;
+      if (activeId && activeId !== deck.solo) {
+        invokeSync(LayoutOperation.SetLayoutMode, { subject: activeId, mode: 'solo' });
+      } else if (!activeId && deck.solo) {
         invokeSync(LayoutOperation.SetLayoutMode, { mode: 'deck' });
       }
     };
@@ -78,7 +80,7 @@ export default Capability.makeModule(
         lastSolo = solo;
         lastActiveDeck = activeDeck;
 
-        const path = solo ? `/${activeDeck}/${solo}` : `/${activeDeck}`;
+        const path = solo ? toUrlPath(solo) : toUrlPath(activeDeck);
         if (window.location.pathname !== path) {
           // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
           history.pushState(null, '', `${path}${window.location.search}`);

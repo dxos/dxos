@@ -63,5 +63,7 @@ export {
 // Deprecated
 //
 
+// eslint-disable-next-line @dxos/rules/import-as-namespace
 export { LegacyOrganization } from './Organization';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
 export { LegacyPerson } from './Person';

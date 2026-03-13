@@ -22,7 +22,6 @@ export const ConductorPlugin = Plugin.define(meta).pipe(
         icon: 'ph--infinity--regular',
         iconHue: 'sky',
         createObject: ((props) => Effect.sync(() => CanvasBoard.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),

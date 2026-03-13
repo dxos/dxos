@@ -291,11 +291,11 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
  *
  * Examples: (expected) (actual)
  *
- * dxn:type:example.org/type/Task       !== dxn:type:example.org/type/Contact
- * dxn:type:example.org/type/Task       === dxn:type:example.org/type/Task
- * dxn:type:example.org/type/Task:0.1.0 !== dxn:type:example.org/type/Task:0.2.0
- * dxn:type:example.org/type/Task       === dxn:type:example.org/type/Task:0.1.0
- * dxn:type:example.org/type/Task:0.1.0 === dxn:type:example.org/type/Task
+ * dxn:type:com.example.type.task       !== dxn:type:com.example.type.contact
+ * dxn:type:com.example.type.task       === dxn:type:com.example.type.task
+ * dxn:type:com.example.type.task:0.1.0 !== dxn:type:com.example.type.task:0.2.0
+ * dxn:type:com.example.type.task       === dxn:type:com.example.type.task:0.1.0
+ * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
  *
  */
 const compareTypename = (expectedDXN: DXN, actualDXN: DXN): boolean => {

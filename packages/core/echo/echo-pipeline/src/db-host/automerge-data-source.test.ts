@@ -17,9 +17,9 @@ import { AutomergeHost } from '../automerge';
 
 import { AutomergeDataSource, headsCodec } from './automerge-data-source';
 
-const TEST_TYPE = DXN.parse('dxn:type:example.com/type/Test:0.1.0').toString();
-const OTHER_TYPE = DXN.parse('dxn:type:example.com/type/Other:0.1.0').toString();
-const PERSON_TYPE = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
+const TEST_TYPE = DXN.parse('dxn:type:com.example.type.test:0.1.0').toString();
+const OTHER_TYPE = DXN.parse('dxn:type:com.example.type.other:0.1.0').toString();
+const PERSON_TYPE = DXN.parse('dxn:type:com.example.type.person:0.1.0').toString();
 
 /**
  * Set up a real AutomergeHost with LevelDB storage.

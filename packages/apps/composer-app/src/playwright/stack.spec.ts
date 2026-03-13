@@ -8,7 +8,6 @@ import { expect, test } from '@playwright/test';
 // import { StackPlugin } from '@dxos/plugin-stack';
 
 import { AppManager } from './app-manager';
-import { INITIAL_OBJECT_COUNT } from './constants';
 import { Markdown, Stack, StackPlugin } from './plugins';
 
 test.describe('Stack tests', () => {
@@ -36,19 +35,18 @@ test.describe('Stack tests', () => {
     await host.createObject({ type: 'Collection' });
     const stack = Stack.getStack(host.page);
     await expect(stack.sections()).toHaveCount(0);
-    await expect(host.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
+    await expect(host.getObjectLinks()).toHaveCount(1);
   });
 
   test('create new document section', async () => {
     await host.createSpace();
     await host.createObject({ type: 'Collection' });
-    await host.toggleCollectionCollapsed(INITIAL_OBJECT_COUNT);
     await Stack.addSection(host.page, 'Document');
     const stack = Stack.getStack(host.page);
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    await expect(host.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 2);
+    await expect(host.getObjectLinks()).toHaveCount(2);
     await expect(stack.sections()).toHaveCount(1);
     await expect(textBox).toBeEditable();
   });

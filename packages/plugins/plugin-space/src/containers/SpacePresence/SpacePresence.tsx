@@ -2,11 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useAtomCapability } from '@dxos/app-framework/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
 import { PublicKey } from '@dxos/react-client';
@@ -25,10 +23,9 @@ import {
   useDefaultValue,
   useTranslation,
 } from '@dxos/react-ui';
-import { AttentionGlyph, type AttentionGlyphProps, useAttended, useAttention } from '@dxos/react-ui-attention';
+import { AttentionGlyph, type AttentionGlyphProps, useAttention } from '@dxos/react-ui-attention';
 import { ComplexMap, keyToFallback } from '@dxos/util';
 
-import { usePath } from '../../hooks';
 import { meta } from '../../meta';
 import { type ObjectViewerProps, SpaceCapabilities } from '../../types';
 
@@ -220,17 +217,8 @@ export type SmallPresenceLiveProps = {
 
 export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps) => {
   const { hasAttention, isAncestor, isRelated } = useAttention(id);
-  const isAttended = hasAttention || isAncestor || isRelated;
-
-  // TODO(wittjosiah): If the attended node is deep in the graph and the graph is not fully loaded
-  //   this will result in an empty path until the graph is connected.
-  // TODO(wittjosiah): Consider using this indicator for all open nodes instead of just attended.
-  const { graph } = useAppGraph();
-  const attended = useAttended();
-  const startOfAttention = attended.at(-1);
-  const path = usePath(graph, startOfAttention);
-  const containsAttended = !open && !isAttended && id && Option.isSome(path) ? path.value.includes(id) : false;
-
+  const attended = hasAttention || isRelated;
+  const containsAttended = isAncestor && !open;
   const getActiveViewers = (viewers: ComplexMap<PublicKey, ObjectViewerProps>): ObjectViewerProps[] => {
     const moment = Date.now();
     return Array.from<ObjectViewerProps>(viewers.values()).filter(
@@ -250,7 +238,7 @@ export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps)
     }
   }, [viewers]);
 
-  return <SmallPresence count={activeViewers.length} attended={isAttended} containsAttended={containsAttended} />;
+  return <SmallPresence count={activeViewers.length} attended={attended} containsAttended={containsAttended} />;
 };
 
 export type SmallPresenceProps = {

@@ -7,7 +7,7 @@ import { type FunctionDefinition, defineFunction } from '@dxos/functions';
 import { ExtractionInput, ExtractionOutput } from '../extraction';
 
 export const extractionAnthropicFunction: FunctionDefinition<ExtractionInput, ExtractionOutput> = defineFunction({
-  key: 'dxos.org/function/extraction/extract-entities',
+  key: 'org.dxos.function.extraction.extract-entities',
   name: 'Extract Entities',
   description: 'Extract entities from the transcript message and add them to the message.',
   inputSchema: ExtractionInput,

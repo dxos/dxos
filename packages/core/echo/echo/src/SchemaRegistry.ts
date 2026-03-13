@@ -47,7 +47,7 @@ export type Query = {
    * @default false
    *
    * The system schema include but are not limited to:
-   *  - dxos.org/type/Schema
+   *  - org.dxos.type.schema
    */
   includeSystem?: boolean;
 };

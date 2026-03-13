@@ -14,7 +14,6 @@ export const GraphProps = Schema.Struct({
     TypeInputOptionsAnnotation.set({
       location: ['database', 'runtime'],
       kind: ['user'],
-      registered: ['registered'],
     }),
     Schema.optional,
   ),

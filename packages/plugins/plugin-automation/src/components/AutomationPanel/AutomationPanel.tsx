@@ -50,7 +50,6 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
     annotation: {
       location: ['database', 'runtime'],
       kind: ['user'],
-      registered: ['registered'],
     },
   });
 

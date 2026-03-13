@@ -78,7 +78,7 @@ export const Blueprint = Schema.Struct({
 }).pipe(
   Type.object({
     // TODO(burdon): Is this a DXN? Need to create a Format type for these IDs.
-    typename: 'dxos.org/type/Blueprint',
+    typename: 'org.dxos.type.blueprint',
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),

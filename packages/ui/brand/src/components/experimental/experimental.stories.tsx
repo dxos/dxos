@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { arc } from 'd3';
 import React, { useRef, useState } from 'react';
 
-import { Button, Icon } from '@dxos/react-ui';
+import { Button, Icon, IconButton, ThemedClassName } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -210,13 +210,15 @@ export const Linear: Story = {
 };
 
 // Brand icon colors, outer → inner.
-const composerBrandColors = ['rgb(5,40,61)', 'rgb(10,75,105)', 'rgb(1,122,183)', 'rgb(6,197,253)'];
+const brandColors = ['rgb(5,40,61)', 'rgb(10,75,105)', 'rgb(1,122,183)', 'rgb(6,197,253)'];
+// const brandColors = ['rgb(5,40,61)', 'rgb(5,92,125)', 'rgb(6,145,189)', 'rgb(6,197,253)'];
+// const brandColors = ['rgb(5,40,61)', 'rgb(5,76,105)', 'rgb(6,127,167)', 'rgb(6,197,253)'];
 
-export const BrandArcSimple: Story = {
+export const Radial: Story = {
   render: () => {
     const size = 256;
     const totalRadius = size / 2;
-    const n = composerBrandColors.length;
+    const n = brandColors.length;
     const ringWidth = totalRadius / (n + 1);
     const gap = 0;
     const startAngle = (1 / 4) * Math.PI;
@@ -226,7 +228,7 @@ export const BrandArcSimple: Story = {
       <div className='absolute inset-0 flex items-center justify-center'>
         <svg width={size} height={size}>
           <g transform={`translate(${totalRadius}, ${totalRadius})`}>
-            {composerBrandColors.map((color, i) => {
+            {brandColors.map((color, i) => {
               const outerRadius = totalRadius - i * ringWidth;
               const innerRadius = outerRadius - ringWidth + gap;
               const d = arc<any, any>()
@@ -280,29 +282,61 @@ const makeBrandLayerPath = (cx: number, cy: number, r1: number, r2: number, r3: 
   ].join(' ');
 };
 
-export const BrandArc: Story = {
+const ComposerArc = ({ classNames, size = 512 }: ThemedClassName<{ size?: number }>) => {
+  const cx = size / 2;
+  const cy = size / 2;
+  const n = brandColors.length;
+  const ringWidth = size / 2 / (n + 1); // Try 1.6 to remove inner circle.
+  const gap = 0;
+
+  return (
+    <svg aria-hidden='true' width={size} height={size} className={mx(classNames)}>
+      {brandColors.map((color, i) => {
+        const outerR = size / 2 - i * ringWidth;
+        const innerR = outerR - ringWidth + gap;
+        const mirror = n - 1 - i;
+        const mirrorOuterR = size / 2 - mirror * ringWidth;
+        const mirrorInnerR = mirrorOuterR - ringWidth + gap;
+        return <path key={i} d={makeBrandLayerPath(cx, cy, outerR, innerR, mirrorOuterR, mirrorInnerR)} fill={color} />;
+      })}
+    </svg>
+  );
+};
+
+const useToggle = (initial = false) => {
+  const [toggled, setToggled] = useState(initial);
+  return [toggled, () => setToggled(!toggled)] as const;
+};
+
+export const Oblique: Story = {
   render: () => {
-    const size = 256;
-    const cx = size / 2;
-    const cy = size / 2;
-    const n = composerBrandColors.length;
-    const ringWidth = size / 2 / (n + 1);
-    const gap = 0;
+    const [visible, setVisible] = useToggle(true);
+    const size = 512;
 
     return (
       <div className='absolute inset-0 grid place-items-center'>
-        <svg width={size} height={size} aria-hidden='true'>
-          {composerBrandColors.map((color, i) => {
-            const outerR = size / 2 - i * ringWidth;
-            const innerR = outerR - ringWidth + gap;
-            const mirror = n - 1 - i;
-            const mirrorOuterR = size / 2 - mirror * ringWidth;
-            const mirrorInnerR = mirrorOuterR - ringWidth + gap;
-            return (
-              <path key={i} d={makeBrandLayerPath(cx, cy, outerR, innerR, mirrorOuterR, mirrorInnerR)} fill={color} />
-            );
-          })}
-        </svg>
+        <div className='absolute top-4 left-4'>
+          <IconButton icon='ph--square--duotone' label='Visibility' onClick={() => setVisible()} />
+        </div>
+        <div className='absolute grid place-items-center'>
+          <ComposerArc
+            size={size}
+            classNames={mx(
+              'opacity-0 scale-10 transition-all rotate-[540deg] __translate-x-[980px] duration-500 delay-0 ease-in',
+              visible && 'delay-200 opacity-10 scale-100 rotate-[180deg] translate-x-[8]',
+            )}
+          />
+        </div>
+        <div className='absolute grid place-items-center'>
+          <ComposerArc
+            size={size}
+            classNames={mx(
+              'opacity-0 blur-xs scale-10 rotate-360 __translate-y-[-100px]',
+              'transition-[opacity,filter,scale,rotate] duration-[500ms,500ms,500ms,750ms] ease-in-out',
+              visible && 'opacity-100 blur-none scale-100 rotate-0 translate-y-0',
+            )}
+          />
+        </div>
       </div>
     );
   },

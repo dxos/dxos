@@ -32,12 +32,11 @@ export const DebugSettingsSchema = Schema.mutable(
 export interface DebugSettingsProps extends Schema.Schema.Type<typeof DebugSettingsSchema> {}
 
 export namespace DebugCapabilities {
-  export const Settings = Capability.make<Atom.Writable<DebugSettingsProps>>(`${meta.id}/capability/settings`);
+  export const Settings = Capability.make<Atom.Writable<DebugSettingsProps>>(`${meta.id}.capability.settings`);
 }
 
 export namespace Devtools {
-  // TODO(wittjosiah): Cannot use slashes in ids until we have a router which decouples ids from url paths.
-  export const id = 'dxos.org.plugin.debug.devtools';
+  export const id = `${meta.id}.devtools`;
 
   export namespace Client {
     export const id = `${Devtools.id}.client`;

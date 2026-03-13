@@ -6,15 +6,14 @@ import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { useLayout } from '@dxos/app-toolkit/ui';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { DXN } from '@dxos/keys';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
-import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { DeckOperation } from '@dxos/plugin-deck/types';
+import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
@@ -25,21 +24,26 @@ import { HasSubject, Message } from '@dxos/types';
 import { type MailboxActionHandler, Mailbox as MailboxComponent, MailboxEmpty } from '../../components';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
-import { InboxOperation, Mailbox } from '../../types';
+import { InboxOperation, type Mailbox } from '../../types';
 import { sortByCreated } from '../../util';
 
 export type MailboxArticleProps = SurfaceComponentProps<
-  Feed.Feed,
+  Mailbox.Mailbox,
   {
     filter?: string;
     attendableId?: string;
   }
 >;
 
-export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const id = attendableId ?? Obj.getDXN(feed).toString();
-  const db = Obj.getDatabase(feed);
+  const id = attendableId ?? getObjectPathFromObject(mailbox);
+  const db = Obj.getDatabase(mailbox);
+
+  // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
+  useObject(mailbox);
+  const feed = mailbox.feed?.target as Feed.Feed | undefined;
+
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
   const currentMessageId = useSelected(id, 'single');
@@ -56,20 +60,12 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
     filterVisible: filterVisible.atom,
   });
 
-  // Get the feed's database and config.
-  const configs = useQuery(db, Filter.type(Mailbox.Config));
-  // TODO(wittjosiah): Not possible to filter by references yet.
-  const config = useMemo(
-    () => configs.find((config) => DXN.equals(config.feed.dxn, Obj.getDXN(feed))),
-    [configs, feed],
-  );
-
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any>();
   const [filterText, setFilterText] = useState<string>(filterProp ?? '');
   const messages: Message.Message[] = useQuery(
     db,
-    Query.select(filter ?? Filter.type(Message.Message)).from(feed),
+    feed ? Query.select(filter ?? Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   ) as Message.Message[];
   const sortedMessages = useMemo(
     () => [...messages].sort(sortByCreated('created', sortDescending.value)),
@@ -90,17 +86,16 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
   // Build message-to-tags map from HasSubject relations incrementally.
   const messageTagsMap = useMessageTagsMap(db, feed);
 
-  // Merge tags into config labels.
+  // Merge tags into mailbox labels.
   const mergedLabels = useMemo(() => {
-    const labels = { ...(config?.labels ?? {}) };
-    // Add all tags to the labels object (tag.id -> tag.label).
+    const labels = { ...(mailbox.labels ?? {}) };
     for (const [_messageId, messageTags] of Object.entries(messageTagsMap)) {
       for (const tag of messageTags) {
         labels[tag.id] = tag.label;
       }
     }
     return labels;
-  }, [config?.labels, messageTagsMap]);
+  }, [mailbox.labels, messageTagsMap]);
 
   // Update message properties to include tag IDs in labels array.
   const messagesWithTags = useMemo(() => {
@@ -132,7 +127,7 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
             selection: { mode: 'single', id: message?.id },
           });
 
-          const companionId = `${id}${ATTENDABLE_PATH_SEPARATOR}message`;
+          const companionId = `${COMPANION_PREFIX}message`;
           if (layout.mode === 'simple') {
             // Simple layout: navigate to companion as standalone view.
             void invokePromise(LayoutOperation.Open, {
@@ -168,13 +163,13 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
             state: true,
             variant: 'virtual',
             anchor: filterSaveButtonRef.current,
-            props: { feed, config, filter: action.filter },
+            props: { mailbox, filter: action.filter },
           });
           break;
         }
       }
     },
-    [id, layout.mode, feed, config, sortedMessages, invokePromise],
+    [id, layout.mode, mailbox, sortedMessages, invokePromise],
   );
 
   const handleCancel = useCallback(() => {
@@ -236,7 +231,7 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
             onAction={handleAction}
           />
         ) : (
-          <MailboxEmpty feed={feed} />
+          <MailboxEmpty mailbox={mailbox} />
         )}
       </Panel.Content>
     </Panel.Root>
@@ -246,8 +241,14 @@ export const MailboxArticle = ({ subject: feed, filter: filterProp, attendableId
 /**
  * Hook that builds an object mapping message IDs to tags from HasSubject relations.
  */
-const useMessageTagsMap = (db: Database.Database | undefined, feed: Feed.Feed): Record<string, Tag.Tag[]> => {
-  const hasSubjectRelations = useQuery(db, Query.select(Filter.type(HasSubject.HasSubject)).from(feed));
+const useMessageTagsMap = (
+  db: Database.Database | undefined,
+  feed: Feed.Feed | undefined,
+): Record<string, Tag.Tag[]> => {
+  const hasSubjectRelations = useQuery(
+    db,
+    feed ? Query.select(Filter.type(HasSubject.HasSubject)).from(feed) : Query.select(Filter.nothing()),
+  );
   const [messageTagsMap, setMessageTagsMap] = useState<Record<string, Tag.Tag[]>>({});
 
   useEffect(() => {

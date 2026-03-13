@@ -2,23 +2,25 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as Schema from 'effect/Schema';
 
-import * as internal from './internal';
+import * as jsonSchemaInternal from './internal/JsonSchema';
 
 /**
  * Decode JSON Schema to Effect Schema.
  */
-export const toEffectSchema = internal.toEffectSchema;
+export const toEffectSchema = jsonSchemaInternal.toEffectSchema;
 
 /**
  * Encode Effect Schema to JSON Schema.
  */
-export const toJsonSchema = internal.toJsonSchema;
+export const toJsonSchema = jsonSchemaInternal.toJsonSchema;
 
 /**
  * Serializable JsonSchema type definition.
  */
-export type JsonSchema = internal.JsonSchemaType;
+export type JsonSchema = jsonSchemaInternal.JsonSchemaType;
 
-export const JsonSchema: Schema.Schema<internal.JsonSchemaType> = internal.JsonSchemaType;
+export const JsonSchema: Schema.Schema<jsonSchemaInternal.JsonSchemaType> = jsonSchemaInternal.JsonSchemaType;

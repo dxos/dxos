@@ -10,7 +10,7 @@ import { trim } from '@dxos/util';
 
 import { DatabaseFunctions } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/database';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.database';
 
 const instructions = trim`
   You can query, create, update, and delete objects in ECHO.

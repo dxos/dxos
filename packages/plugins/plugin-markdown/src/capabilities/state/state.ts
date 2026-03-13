@@ -15,13 +15,13 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
-      key: `${meta.id}/state`,
+      key: `${meta.id}.state`,
       schema: MarkdownStateSchema,
       defaultValue: () => ({ viewMode: {} }),
     });
 
     // TODO(wittjosiah): Fold into state.
-    const editorState = createEditorStateStore(`${meta.id}/editor`);
+    const editorState = createEditorStateStore(`${meta.id}.editor`);
 
     return [
       Capability.contributes(MarkdownCapabilities.State, stateAtom),
