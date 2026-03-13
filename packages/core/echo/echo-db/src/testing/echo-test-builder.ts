@@ -74,7 +74,7 @@ export class EchoTestBuilder extends Resource {
       host: peer.host,
       graph: db.graph,
       db,
-      queues: peer.client.constructQueueFactory(this._ctx, db.spaceId),
+      queues: peer.client.constructQueueFactory(db.spaceId),
     };
   }
 }
@@ -158,7 +158,7 @@ export class EchoTestPeer extends Resource {
   protected override async _open(ctx: Context): Promise<void> {
     await this._kv.open();
     this._initEcho();
-    this._echoClient.connectToService(ctx, {
+    this._echoClient.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
       queueService: this._echoHost.queuesService,
@@ -170,7 +170,7 @@ export class EchoTestPeer extends Resource {
   protected override async _close(ctx: Context): Promise<void> {
     for (const client of this._clients) {
       await client.close(ctx);
-      client.disconnectFromService(this._ctx);
+      client.disconnectFromService();
     }
     await this._echoHost.close(ctx);
     await this._kv.close();
@@ -198,7 +198,7 @@ export class EchoTestPeer extends Resource {
     const client = new EchoClient();
     await client.graph.schemaRegistry.register(this._types);
     this._clients.add(client);
-    client.connectToService(this._ctx, {
+    client.connectToService({
       dataService: this._echoHost.dataService,
       queryService: this._echoHost.queryService,
     });

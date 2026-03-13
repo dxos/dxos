@@ -207,10 +207,10 @@ export class ObjectCore {
     return {
       handle: {
         doc: () => this.getDoc(ctx),
-        change: (callback, options) => {
+        change: (ctx, callback, options) => {
           this.change(ctx, callback, options);
         },
-        changeAt: (heads, callback, options) => {
+        changeAt: (ctx, heads, callback, options) => {
           return this.changeAt(ctx, heads, callback, options);
         },
         addListener: (event, listener) => {
