@@ -163,6 +163,10 @@ export class CoreDatabase {
     }
     this._state = CoreDatabaseState.OPENING;
 
+    this._updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(this._ctx), {
+      maxFrequency: THROTTLED_UPDATE_FREQUENCY,
+    });
+
     await this._repoProxy.open();
     this._ctx.onDispose(() => this._unsubscribeFromHandles());
     this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, (event) =>
@@ -942,7 +946,7 @@ export class CoreDatabase {
    * This happens for objects which were loaded for the first time (_onObjectDocumentLoaded).
    */
   private _objectsForNextUpdate = new Set<string>();
-  private readonly _updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(this._ctx), {
+  private _updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(this._ctx), {
     maxFrequency: THROTTLED_UPDATE_FREQUENCY,
   });
 
