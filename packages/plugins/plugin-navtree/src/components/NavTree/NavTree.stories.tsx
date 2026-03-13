@@ -132,7 +132,7 @@ const meta = {
         NavTreePlugin(),
       ],
       capabilities: () => {
-        const storyStateAtom = Atom.make({ tab: 'space-0' }).pipe(Atom.keepAlive);
+        const storyStateAtom = Atom.make({ tab: 'root/space-0' }).pipe(Atom.keepAlive);
         return [
           Capability.contributes(StoryState, storyStateAtom),
           Capability.contributes(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
