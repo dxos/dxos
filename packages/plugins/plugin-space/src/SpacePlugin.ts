@@ -78,16 +78,10 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         },
       },
       {
-        id: Event.Event.typename,
-        metadata: {
-          icon: 'ph--calendar-dot--regular',
-          createObject: ((props) => Effect.sync(() => Event.make(props))) satisfies CreateObject,
-        },
-      },
-      {
         id: Organization.Organization.typename,
         metadata: {
           icon: 'ph--building-office--regular',
+          iconHue: 'neutral',
           createObject: ((props) => Effect.sync(() => Organization.make(props))) satisfies CreateObject,
         },
       },
@@ -95,6 +89,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         id: Person.Person.typename,
         metadata: {
           icon: 'ph--user--regular',
+          iconHue: 'neutral',
           createObject: ((props) => Effect.sync(() => Person.make(props))) satisfies CreateObject,
         },
       },
@@ -102,6 +97,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         id: Task.Task.typename,
         metadata: {
           icon: 'ph--check-circle--regular',
+          iconHue: 'neutral',
           inputSchema: Task.Task,
           createObject: ((props) => Effect.sync(() => Task.make(props))) satisfies CreateObject,
         },

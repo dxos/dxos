@@ -531,23 +531,6 @@ export namespace SpaceOperation {
     name: Schema.optional(Schema.String),
   });
 
-  export const UseStaticSchema = Operation.make({
-    meta: {
-      key: `${SPACE_OPERATION}.use-static-schema`,
-      name: 'Use Static Schema',
-      description: 'Use a static schema in the space.',
-    },
-    services: [Capability.Service, Plugin.Service],
-    schema: {
-      input: Schema.Struct({
-        db: Database.Database,
-        typename: Schema.String,
-        show: Schema.optional(Schema.Boolean),
-      }),
-      output: Schema.Struct({}),
-    },
-  });
-
   export const AddSchema = Operation.make({
     meta: {
       key: `${SPACE_OPERATION}.add-schema`,

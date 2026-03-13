@@ -61,6 +61,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: 'ph--calendar-dot--regular',
           iconHue: 'rose',
+          createObject: ((props) => Effect.sync(() => Event.make(props))) satisfies CreateObject,
         },
       },
     ],
