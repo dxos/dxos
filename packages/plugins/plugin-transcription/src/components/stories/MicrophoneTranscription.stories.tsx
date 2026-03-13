@@ -15,7 +15,6 @@ import {
   getNer,
   processTranscriptMessage,
 } from '@dxos/assistant/extraction';
-import { Context } from '@dxos/context';
 import { Filter, type Obj } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
 import { MemoryQueue } from '@dxos/echo-db';

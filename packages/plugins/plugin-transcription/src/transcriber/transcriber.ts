@@ -156,9 +156,8 @@ export class Transcriber extends Resource {
       return;
     }
 
-    const ctx = this._ctx;
-    const audio = await this._mergeAudioChunks(ctx, chunks);
-    const segments = await this._fetchTranscription(ctx, audio);
+    const audio = await this._mergeAudioChunks(chunks);
+    const segments = await this._fetchTranscription(audio);
     if (!Array.isArray(segments) || segments.length === 0) {
       return;
     }
@@ -176,7 +175,7 @@ export class Transcriber extends Resource {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _mergeAudioChunks(ctx: Context, chunks: AudioChunk[]): Promise<string> {
+  private async _mergeAudioChunks(chunks: AudioChunk[]): Promise<string> {
     const file = new WaveFile();
     const wavConfig = this._recorder.wavConfig;
 
@@ -191,7 +190,7 @@ export class Transcriber extends Resource {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _fetchTranscription(ctx: Context, audio: string): Promise<WhisperSegment[]> {
+  private async _fetchTranscription(audio: string): Promise<WhisperSegment[]> {
     if (audio.length === 0) {
       this._audioChunks = [];
       throw new Error('No audio to send for transcribing');

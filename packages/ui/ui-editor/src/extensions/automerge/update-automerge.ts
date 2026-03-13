@@ -7,7 +7,6 @@
 import { next as A, type Heads } from '@automerge/automerge';
 import { type EditorState, type StateField, type Text, type Transaction } from '@codemirror/state';
 
-import { Context } from '@dxos/context';
 import { type IDocHandle } from '@dxos/echo-db';
 
 import { type State } from './defs';
@@ -33,7 +32,7 @@ export const updateAutomerge = (
     return undefined;
   }
 
-  const newHeads = handle.changeAt(Context.default(), lastHeads, (doc: A.Doc<unknown>) => {
+  const newHeads = handle.changeAt(lastHeads, (doc: A.Doc<unknown>) => {
     const invertedTransactions: { from: number; del: number; insert: Text }[] = [];
     for (const tr of transactions) {
       tr.changes.iterChanges((fromA, toA, _fromB, _toB, insert) => {

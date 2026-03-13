@@ -5,7 +5,6 @@
 import type { TLRecord } from '@tldraw/tldraw';
 import { isShape } from '@tldraw/tlschema';
 
-import { Context } from '@dxos/context';
 import { createDocAccessor } from '@dxos/echo-db';
 
 import type { Diagram } from '../types';
@@ -21,7 +20,7 @@ export const handleSnap = async (sketch: Diagram.Diagram) => {
 
   // TODO(burdon): Use context to access document.
   const accessor = createDocAccessor(sketch.canvas.target!, ['content']);
-  accessor.handle.change(Context.default(), (sketch) => {
+  accessor.handle.change((sketch) => {
     const map: Record<string, TLRecord> = getDeep(sketch, accessor.path);
     Object.entries(map ?? {}).forEach(([_id, item]) => {
       if (isShape(item)) {

@@ -2,12 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type DocHandle, Repo } from '@automerge/automerge-repo';
+import { Repo } from '@automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
@@ -41,7 +40,7 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
   const { parentRef } = useTextEditor(
     () => ({
       autoFocus,
-      initialValue: DocAccessor.getValue(Context.default(), source),
+      initialValue: DocAccessor.getValue(source),
       extensions: [
         createBasicExtensions({ placeholder: 'Type here...', search: true }),
         createThemeExtensions({ themeMode, slots: { scroll: { className: 'p-2' } } }),
@@ -71,8 +70,8 @@ const DefaultStory = () => {
       const object2 = await repo2.find<TestObject>(object1.url);
       await object2.whenReady();
 
-      setObject1({ handle: adaptDocHandle(object1), path: ['text'] });
-      setObject2({ handle: adaptDocHandle(object2), path: ['text'] });
+      setObject1({ handle: object1, path: ['text'] });
+      setObject2({ handle: object2, path: ['text'] });
     });
   }, []);
 

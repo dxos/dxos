@@ -26,7 +26,6 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
 export const DebugSettingsSchema = Schema.mutable(
   Schema.Struct({
     wireframe: Schema.optional(Schema.Boolean),
-    traceAll: Schema.optional(Schema.Boolean),
   }),
 );
 

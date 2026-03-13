@@ -8,7 +8,6 @@ import { next as A } from '@automerge/automerge';
 import { type Extension, StateField, Transaction } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { Context } from '@dxos/context';
 import { DocAccessor } from '@dxos/echo-db';
 
 import { Cursor } from '../../util';
@@ -21,10 +20,9 @@ import { Syncer } from './sync';
 export const automerge = (accessor: DocAccessor): Extension => {
   const syncState = StateField.define<State>({
     create: () => {
-      const ctx = Context.default();
       return {
         path: accessor.path.slice(),
-        lastHeads: A.getHeads(accessor.handle.doc(ctx)!),
+        lastHeads: A.getHeads(accessor.handle.doc()!),
         unreconciledTransactions: [],
       };
     },
@@ -71,7 +69,7 @@ export const automerge = (accessor: DocAccessor): Extension => {
           accessor.handle.addListener('change', this._handleChange);
 
           requestAnimationFrame(() => {
-            const value = DocAccessor.getValue<string>(Context.default(), accessor);
+            const value = DocAccessor.getValue<string>(accessor);
             const current = this._view.state.doc.toString();
             if (value !== current) {
               // TODO(burdon): This attempts to set the initial state.

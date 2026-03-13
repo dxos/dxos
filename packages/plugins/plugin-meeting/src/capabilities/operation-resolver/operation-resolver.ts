@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Context } from '@dxos/context';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation, OperationResolver } from '@dxos/operation';
@@ -87,7 +86,7 @@ export default Capability.makeModule(
           const { transcriptionManager } = store.state;
           if (space && transcriptDxn) {
             // NOTE: Must set queue before enabling transcription.
-            const queue = space.queues.get<Message.Message>(Context.default(), DXN.parse(transcriptDxn));
+            const queue = space.queues.get<Message.Message>(DXN.parse(transcriptDxn));
             transcriptionManager?.setQueue(queue);
           }
 

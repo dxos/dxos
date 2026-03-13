@@ -4,7 +4,6 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Message, Transcript } from '@dxos/types';
@@ -26,7 +25,7 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
         getTextContent: async (transcript: Transcript.Transcript) => {
           const space = getSpace(transcript);
           const members = space?.members.get().map((member) => member.identity) ?? [];
-          const queue = space?.queues.get<Message.Message>(Context.default(), transcript.queue.dxn);
+          const queue = space?.queues.get<Message.Message>(transcript.queue.dxn);
           await queue?.refresh();
           const content = queue?.objects
             .filter((message) => Obj.instanceOf(Message.Message, message))

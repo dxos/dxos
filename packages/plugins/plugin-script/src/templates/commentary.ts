@@ -14,7 +14,6 @@ import * as Schema from 'effect/Schema';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
-import { Context } from '@dxos/context';
 import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
@@ -184,7 +183,7 @@ export default defineFunction({
         // Load the text content and append the commentary
         const text = yield* Database.load(document.content);
         const accessor = createDocAccessor(text, ['content']);
-        accessor.handle.change(Context.default(), (doc: A.Doc<Text.Text>) => {
+        accessor.handle.change((doc: A.Doc<Text.Text>) => {
           A.splice(doc, accessor.path.slice(), text.content.length, 0, commentary);
         });
       }
