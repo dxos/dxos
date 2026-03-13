@@ -19,7 +19,7 @@ export namespace TestSchema {
    */
   export const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
     Type.object({
-      typename: 'example.com/type/Expando',
+      typename: 'com.example.type.expando',
       version: '0.1.0',
     }),
   );
@@ -65,7 +65,7 @@ export namespace TestSchema {
   /** @deprecated Use another test schema or create a specific local test schema. */
   export const Example = ExampleSchema.pipe(
     Type.object({
-      typename: 'example.com/type/Example',
+      typename: 'com.example.type.example',
       version: '0.1.0',
     }),
   );
@@ -89,7 +89,7 @@ export namespace TestSchema {
 
   export const Message = MessageStruct.pipe(
     Type.object({
-      typename: 'example.com/type/Message',
+      typename: 'com.example.type.message',
       version: '0.1.0',
     }),
   );
@@ -110,7 +110,7 @@ export namespace TestSchema {
     ),
   }).pipe(
     Type.object({
-      typename: 'example.com/type/Organization',
+      typename: 'com.example.type.organization',
       version: '0.1.0',
     }),
   );
@@ -144,7 +144,7 @@ export namespace TestSchema {
   }).pipe(
     Schema.partial,
     Type.object({
-      typename: 'example.com/type/Person',
+      typename: 'com.example.type.person',
       version: '0.1.0',
     }),
   );
@@ -166,7 +166,7 @@ export namespace TestSchema {
   }).pipe(
     Schema.partial,
     Type.object({
-      typename: 'example.com/type/Task',
+      typename: 'com.example.type.task',
       version: '0.1.0',
     }),
   );
@@ -179,7 +179,7 @@ export namespace TestSchema {
 
   export const HasManager = Schema.Struct({}).pipe(
     Type.relation({
-      typename: 'example.com/type/HasManager',
+      typename: 'com.example.type.has-manager',
       version: '0.1.0',
       source: Person,
       target: Person,
@@ -197,7 +197,7 @@ export namespace TestSchema {
     since: Schema.optional(Schema.String),
   }).pipe(
     Type.relation({
-      typename: 'example.com/type/EmployedBy',
+      typename: 'com.example.type.employed-by',
       version: '0.1.0',
       source: Person,
       target: Organization,
@@ -231,7 +231,7 @@ export namespace TestSchema {
   }).pipe(
     Schema.partial,
     Type.object({
-      typename: 'example.com/type/Container',
+      typename: 'com.example.type.container',
       version: '0.1.0',
     }),
   );

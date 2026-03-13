@@ -13,19 +13,12 @@ import React, {
 } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
 import { IconButton, type Label, Main, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { mx } from '@dxos/ui-theme';
 
-import {
-  type DeckCompanion,
-  getCompanionId,
-  useBreakpoints,
-  useDeckCompanions,
-  useDeckState,
-  useHoistStatusbar,
-} from '../../hooks';
+import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
@@ -49,8 +42,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
 
   const companions = useDeckCompanions();
-  const activeCompanion = companions.find((companion) => getCompanionId(companion.id) === current);
-  const activeId = activeCompanion && getCompanionId(activeCompanion.id);
+  const activeCompanion = companions.find((companion) => getCompanionVariant(companion.id) === current);
+  const activeId = activeCompanion && getCompanionVariant(activeCompanion.id);
   const [internalValue, setInternalValue] = useState(activeId);
 
   useEffect(() => {
@@ -108,15 +101,15 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         >
           <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) p-1 gap-1 overflow-y-auto!'>
             {companions.map((companion) => (
-              <Tabs.Tab key={getCompanionId(companion.id)} value={getCompanionId(companion.id)} asChild>
+              <Tabs.Tab key={getCompanionVariant(companion.id)} value={getCompanionVariant(companion.id)} asChild>
                 <IconButton
                   label={toLocalizedString(companion.properties.label, t)}
                   icon={companion.properties.icon}
                   iconOnly
                   tooltipSide='left'
-                  data-value={getCompanionId(companion.id)}
+                  data-value={getCompanionVariant(companion.id)}
                   variant={
-                    activeId === getCompanionId(companion.id)
+                    activeId === getCompanionVariant(companion.id)
                       ? state.complementarySidebarState === 'expanded'
                         ? 'primary'
                         : 'default'
@@ -139,8 +132,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         {activeId &&
           companions.map((companion) => (
             <Tabs.Tabpanel
-              key={getCompanionId(companion.id)}
-              value={getCompanionId(companion.id)}
+              key={getCompanionVariant(companion.id)}
+              value={getCompanionVariant(companion.id)}
               classNames={[
                 'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
                 'inset-y-0 start-0 w-[calc(100%-var(--dx-r0-size))] lg:w-(--dx-r1-size)',
@@ -174,7 +167,7 @@ type ComplementarySidebarPanelProps = {
 const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }: ComplementarySidebarPanelProps) => {
   const { t } = useTranslation(meta.id);
 
-  if (getCompanionId(companion.id) !== activeId && !data) {
+  if (getCompanionVariant(companion.id) !== activeId && !data) {
     return null;
   }
 
@@ -188,7 +181,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
           icon={companion.properties.icon}
           iconOnly
           tooltipSide='left'
-          data-value={getCompanionId(companion.id)}
+          data-value={getCompanionVariant(companion.id)}
           classNames='h-10 w-10'
           variant='default'
         />
@@ -198,7 +191,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
       </div>
       <Wrapper>
         <Surface.Surface
-          role={`deck-companion--${getCompanionId(companion.id)}`}
+          role={`deck-companion--${getCompanionVariant(companion.id)}`}
           data={data}
           fallback={PlankErrorFallback}
           placeholder={<PlankLoading />}

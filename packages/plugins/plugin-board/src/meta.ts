@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/board',
+  id: 'org.dxos.plugin.board',
   name: 'Board',
   description: trim`
     Infinite canvas workspace that combines sticky notes, media, and whiteboarding tools.

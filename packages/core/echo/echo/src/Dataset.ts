@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { pipe } from 'effect/Function';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';

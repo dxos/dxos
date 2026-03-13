@@ -54,7 +54,7 @@ const DefaultStory = (props: StoryProps) => {
         salary: Format.Currency(),
       }).pipe(
         Type.object({
-          typename: 'example.com/type/Test',
+          typename: 'com.example.type.test',
           version: '0.1.0',
         }),
       );
@@ -65,7 +65,7 @@ const DefaultStory = (props: StoryProps) => {
         completed: Schema.Boolean,
       }).pipe(
         Type.object({
-          typename: 'example.com/type/Alternate',
+          typename: 'com.example.type.alternate',
           version: '0.1.0',
         }),
       );

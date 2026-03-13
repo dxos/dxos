@@ -4,10 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { SpaceSchema } from '@dxos/react-client/echo';
 
 import { meta } from '../meta';
 
@@ -28,27 +25,14 @@ export namespace SheetAction {
   export type RestoreAxis = Schema.Schema.Type<typeof RestoreAxis>;
 }
 
-const SHEET_OPERATION = `${meta.id}/operation`;
+const SHEET_OPERATION = `${meta.id}.operation`;
 
 // TODO(wittjosiah): Factor out. This is `DxGridAxis` from `@dxos/react-ui-grid`.
 const Axis = Schema.Union(Schema.Literal('row'), Schema.Literal('col'));
 
 export namespace SheetOperation {
-  export const OnCreateSpace = Operation.make({
-    meta: { key: `${SHEET_OPERATION}/on-create-space`, name: 'On Create Space' },
-    services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-        rootCollection: Collection.Collection,
-        isDefault: Schema.optional(Schema.Boolean),
-      }),
-      output: Schema.Void,
-    },
-  });
-
   export const InsertAxis = Operation.make({
-    meta: { key: `${SHEET_OPERATION}/axis-insert`, name: 'Insert Axis' },
+    meta: { key: `${SHEET_OPERATION}.axis-insert`, name: 'Insert Axis' },
     schema: {
       input: Schema.Struct({
         model: Schema.Any,
@@ -71,7 +55,7 @@ export namespace SheetOperation {
   export type DropAxisOutput = Schema.Schema.Type<typeof DropAxisOutput>;
 
   export const DropAxis = Operation.make({
-    meta: { key: `${SHEET_OPERATION}/axis-drop`, name: 'Drop Axis' },
+    meta: { key: `${SHEET_OPERATION}.axis-drop`, name: 'Drop Axis' },
     schema: {
       input: Schema.Struct({
         model: Schema.Any,
@@ -86,7 +70,7 @@ export namespace SheetOperation {
    * Restore a dropped axis (inverse of DropAxis).
    */
   export const RestoreAxis = Operation.make({
-    meta: { key: `${SHEET_OPERATION}/restore-axis`, name: 'Restore Axis' },
+    meta: { key: `${SHEET_OPERATION}.restore-axis`, name: 'Restore Axis' },
     schema: {
       input: Schema.Struct({
         model: Schema.Any.annotations({ description: 'The sheet model.' }),

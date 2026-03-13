@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
-  key: 'dxos.org/function/markdown/update',
+  key: 'org.dxos.function.markdown.update',
   name: 'Update markdown',
   description: 'Updates the entire contents of the markdown document.',
   inputSchema: Schema.Struct({

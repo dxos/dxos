@@ -11,7 +11,7 @@ import { meta } from '../meta';
 import { type Meeting } from '../types';
 
 export namespace MeetingCapabilities {
-  export const Settings = Capability.make<Atom.Writable<Meeting.Settings>>(`${meta.id}/capability/settings`);
+  export const Settings = Capability.make<Atom.Writable<Meeting.Settings>>(`${meta.id}.capability.settings`);
 
   export type MeetingState = {
     activeMeeting?: Meeting.Meeting;
@@ -24,5 +24,5 @@ export namespace MeetingCapabilities {
     updateState: (updater: (current: MeetingState) => MeetingState) => void;
   };
 
-  export const State = Capability.make<MeetingStateStore>(`${meta.id}/capability/state`);
+  export const State = Capability.make<MeetingStateStore>(`${meta.id}.capability.state`);
 }

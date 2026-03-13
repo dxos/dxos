@@ -5,7 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, Plugin, UndoMapping } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  LayoutOperation,
+  getCollectionsPath,
+  getObjectPath,
+  getObjectPathFromObject,
+} from '@dxos/app-toolkit';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
@@ -17,15 +23,9 @@ import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
+import { getSpacePath } from '@dxos/app-toolkit';
 import { iconValues } from '@dxos/react-ui-pickers/icons';
-import {
-  CollectionModel,
-  ManagedCollection,
-  ProjectionModel,
-  createEchoChangeCallback,
-  getTypenameFromQuery,
-} from '@dxos/schema';
+import { CollectionModel, ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 import { hues } from '@dxos/ui-theme';
 
 import {
@@ -145,8 +145,8 @@ export default Capability.makeModule(
           operation: SpaceOperation.OpenSettings,
           handler: Effect.fnUntraced(function* (input) {
             yield* Operation.invoke(LayoutOperation.Open, {
-              subject: [`properties-settings${ATTENDABLE_PATH_SEPARATOR}${input.space.id}`],
-              workspace: input.space.id,
+              subject: [`${getSpacePath(input.space.id)}/settings`],
+              workspace: getSpacePath(input.space.id),
             });
           }),
         }),
@@ -182,8 +182,9 @@ export default Capability.makeModule(
             // Close objects that were open.
             const wasActive = objects
               .flatMap((obj, i) => [obj, ...nestedObjectsList[i]])
-              .filter((obj) => Obj.isObject(obj) && openObjectIds.has(Obj.getDXN(obj).toString()))
-              .map((obj) => Obj.getDXN(obj).toString());
+              .filter(Obj.isObject)
+              .map((obj) => getObjectPathFromObject(obj))
+              .filter((path) => openObjectIds.has(path));
 
             for (let i = 0; i < objects.length; i++) {
               const obj = objects[i];
@@ -278,11 +279,11 @@ export default Capability.makeModule(
                 typename: input.typename,
                 initialFormValues: input.initialFormValues,
                 onCreateObject: input.onCreateObject,
+                targetNodeId: input.targetNodeId,
                 shouldNavigate: navigable
                   ? (object: Obj.Unknown) => {
                       const isCollection = Obj.instanceOf(Collection.Collection, object);
-                      const isSystemCollection = Obj.instanceOf(ManagedCollection.ManagedCollection, object);
-                      return (!isCollection && !isSystemCollection) || ephemeralState.navigableCollections;
+                      return !isCollection || ephemeralState.navigableCollections;
                     }
                   : () => false,
               },
@@ -307,6 +308,7 @@ export default Capability.makeModule(
               hidden: input.hidden,
             }).pipe(Effect.provide(Database.layer(db)));
 
+            const typename = Obj.getTypename(object)!;
             yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'space.object.add',
               properties: {
@@ -316,9 +318,17 @@ export default Capability.makeModule(
               },
             });
 
+            // If creating an object in a collection, open the object from the collection path.
+            const isCollection = typename === Collection.Collection.typename;
+            const subject = input.targetNodeId
+              ? `${input.targetNodeId}/${object.id}`
+              : isCollection
+                ? `${getCollectionsPath(db.spaceId)}/${object.id}`
+                : getObjectPath(db.spaceId, typename, object.id);
+
             return {
               id: Obj.getDXN(object).toString(),
-              subject: [Obj.getDXN(object).toString()],
+              subject: [subject],
               object,
             };
           }),
@@ -422,13 +432,6 @@ export default Capability.makeModule(
               }
             });
 
-            // Create records smart collection.
-            Obj.change(collection, (c) => {
-              c.objects.push(
-                Ref.make(ManagedCollection.makeManagedCollection({ key: Type.getTypename(Type.PersistentType) })),
-              );
-            });
-
             // Allow other plugins to add default content.
             yield* Plugin.activate(SpaceEvents.SpaceCreated);
             const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
@@ -507,7 +510,7 @@ export default Capability.makeModule(
           handler: Effect.fnUntraced(function* (input) {
             yield* Operation.invoke(LayoutOperation.UpdatePopover, {
               subject: SPACE_RENAME_POPOVER,
-              anchorId: `dxos.org/ui/${input.caller}/${input.space.id}`,
+              anchorId: input.caller ?? '',
               props: input.space,
             });
           }),
@@ -522,7 +525,7 @@ export default Capability.makeModule(
             const object = input.object as Obj.Unknown;
             yield* Operation.invoke(LayoutOperation.UpdatePopover, {
               subject: OBJECT_RENAME_POPOVER,
-              anchorId: `dxos.org/ui/${input.caller}/${Obj.getDXN(object).toString()}`,
+              anchorId: input.caller ?? '',
               props: object,
             });
           }),
@@ -535,8 +538,8 @@ export default Capability.makeModule(
           operation: SpaceOperation.OpenMembers,
           handler: Effect.fnUntraced(function* (input) {
             yield* Operation.invoke(LayoutOperation.Open, {
-              subject: [`members-settings${ATTENDABLE_PATH_SEPARATOR}${input.space.id}`],
-              workspace: input.space.id,
+              subject: [`${getSpacePath(input.space.id)}/settings`],
+              workspace: getSpacePath(input.space.id),
             });
           }),
         }),

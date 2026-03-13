@@ -6,15 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
-import { Obj, Relation, Type } from '@dxos/echo';
+import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { Obj, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { OperationResolver } from '@dxos/operation';
-import { Operation } from '@dxos/operation';
-import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { Operation, OperationResolver } from '@dxos/operation';
+import { DeckOperation } from '@dxos/plugin-deck/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
-import { Ref } from '@dxos/react-client/echo';
-import { ManagedCollection } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { meta } from '../../meta';
@@ -131,15 +129,10 @@ export default Capability.makeModule(
         //
         OperationResolver.make({
           operation: ThreadOperation.OnCreateSpace,
-          handler: Effect.fnUntraced(function* ({ space, isDefault, rootCollection }) {
+          handler: Effect.fnUntraced(function* ({ space, isDefault }) {
             if (isDefault) {
               return;
             }
-
-            const collection = ManagedCollection.makeManagedCollection({ key: Type.getTypename(Channel.Channel) });
-            Obj.change(rootCollection, (c) => {
-              c.objects.push(Ref.make(collection));
-            });
 
             const { object: channel } = yield* Operation.invoke(ThreadOperation.CreateChannel, {
               name: 'General',
@@ -178,7 +171,7 @@ export default Capability.makeModule(
             // Follow-up operations.
             yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
             yield* Operation.invoke(DeckOperation.ChangeCompanion, {
-              companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
+              companion: `${COMPANION_PREFIX}comments`,
             });
           }),
         }),

@@ -119,7 +119,7 @@ const _JsonSchemaType = Schema.Struct({
    * Typename of this schema.
    * Only on schema representing an ECHO object.
    *
-   * @example 'example.com/type/MyType'
+   * @example 'com.example.type.my-type'
    */
   typename: Schema.optional(Schema.String),
 

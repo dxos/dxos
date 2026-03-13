@@ -51,10 +51,10 @@ describe('query', () => {
       },
       // Type
       {
-        input: 'type:dxos.org/type/Person',
+        input: 'type:org.dxos.type.person',
         expected: [
           'Query',
-          // type:dxos.org/type/Person
+          // type:org.dxos.type.person
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -111,10 +111,10 @@ describe('query', () => {
         ],
       },
       {
-        input: 'type:dxos.org/type/Person OR type:dxos.org/type/Organization',
+        input: 'type:org.dxos.type.person OR type:org.dxos.type.organization',
         expected: [
           'Query',
-          // type:dxos.org/type/Person
+          // type:org.dxos.type.person
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -122,7 +122,7 @@ describe('query', () => {
           'Identifier',
           // OR
           'Or',
-          // type:dxos.org/type/Organization
+          // type:org.dxos.type.organization
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -131,11 +131,11 @@ describe('query', () => {
         ],
       },
       {
-        input: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { name: "DXOS" }',
+        input: '(type:org.dxos.type.person OR type:org.dxos.type.organization) AND { name: "DXOS" }',
         expected: [
           'Query',
           '(',
-          // type:dxos.org/type/Person
+          // type:org.dxos.type.person
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -143,7 +143,7 @@ describe('query', () => {
           'Identifier',
           // OR
           'Or',
-          // type:dxos.org/type/Organization
+          // type:org.dxos.type.organization
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -164,10 +164,10 @@ describe('query', () => {
         ],
       },
       {
-        input: 'type:dxos.org/type/Person -> type:dxos.org/type/Organization',
+        input: 'type:org.dxos.type.person -> type:org.dxos.type.organization',
         expected: [
           'Query',
-          // type:dxos.org/type/Person
+          // type:org.dxos.type.person
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -175,7 +175,7 @@ describe('query', () => {
           'Identifier',
           'Relation',
           'ArrowRight',
-          // type:dxos.org/type/Organization
+          // type:org.dxos.type.organization
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -184,10 +184,10 @@ describe('query', () => {
         ],
       },
       {
-        input: 'type:dxos.org/type/Organization <- type:dxos.org/type/Person',
+        input: 'type:org.dxos.type.organization <- type:org.dxos.type.person',
         expected: [
           'Query',
-          // type:dxos.org/type/Organization
+          // type:org.dxos.type.organization
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -195,7 +195,7 @@ describe('query', () => {
           'Identifier',
           'Relation',
           'ArrowLeft',
-          // type:dxos.org/type/Person
+          // type:org.dxos.type.person
           'Filter',
           'TypeFilter',
           'TypeKeyword',
@@ -206,7 +206,7 @@ describe('query', () => {
       {
         // Persons for Organizations with name "DXOS"
         // TODO(burdon): Filter relations.
-        input: '((type:dxos.org/type/Organization AND { name: "DXOS" }) -> type:dxos.org/type/Person)',
+        input: '((type:org.dxos.type.organization AND { name: "DXOS" }) -> type:org.dxos.type.person)',
         expected: [
           'Query',
           '(',
@@ -238,7 +238,7 @@ describe('query', () => {
         ],
       },
       {
-        input: 'type:dxos.org/type/Person and { name: "DXOS" }',
+        input: 'type:org.dxos.type.person and { name: "DXOS" }',
         expected: [
           'Query',
           'Filter',
@@ -259,7 +259,7 @@ describe('query', () => {
         ],
       },
       {
-        input: 'x = ( type: dxos.org/type/Person )',
+        input: 'x = ( type: org.dxos.type.person )',
         expected: [
           'Query',
           'Assignment',
@@ -305,9 +305,9 @@ describe('query', () => {
     const tests: Test[] = [
       // Types
       {
-        input: 'type:dxos.org/type/Person',
+        input: 'type:org.dxos.type.person',
         expected: {
-          filter: Filter.typename('dxos.org/type/Person'),
+          filter: Filter.typename('org.dxos.type.person'),
         },
       },
       // Tags
@@ -357,32 +357,32 @@ describe('query', () => {
         },
       },
       {
-        input: 'type:dxos.org/type/Person OR type:dxos.org/type/Organization',
+        input: 'type:org.dxos.type.person OR type:org.dxos.type.organization',
         expected: {
-          filter: Filter.or(Filter.typename('dxos.org/type/Person'), Filter.typename('dxos.org/type/Organization')),
+          filter: Filter.or(Filter.typename('org.dxos.type.person'), Filter.typename('org.dxos.type.organization')),
         },
       },
       {
-        input: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization) AND { name: "DXOS" }',
+        input: '(type:org.dxos.type.person OR type:org.dxos.type.organization) AND { name: "DXOS" }',
         expected: {
           filter: Filter.and(
-            Filter.or(Filter.typename('dxos.org/type/Person'), Filter.typename('dxos.org/type/Organization')),
+            Filter.or(Filter.typename('org.dxos.type.person'), Filter.typename('org.dxos.type.organization')),
             Filter.props({ name: 'DXOS' }),
           ),
         },
       },
       {
-        input: 'type:dxos.org/type/Person and { name: "DXOS" }',
+        input: 'type:org.dxos.type.person and { name: "DXOS" }',
         expected: {
-          filter: Filter.and(Filter.typename('dxos.org/type/Person'), Filter.props({ name: 'DXOS' })),
+          filter: Filter.and(Filter.typename('org.dxos.type.person'), Filter.props({ name: 'DXOS' })),
         },
       },
       // Assignment
       {
-        input: 'x = ( type:dxos.org/type/Person )',
+        input: 'x = ( type:org.dxos.type.person )',
         expected: {
           name: 'x',
-          filter: Filter.typename('dxos.org/type/Person'),
+          filter: Filter.typename('org.dxos.type.person'),
         },
       },
       {
@@ -401,9 +401,9 @@ describe('query', () => {
       //
       // {
       //   input: '',
-      //   expected: Query.select(Filter.typename('dxos.org/type/Person', { jobTitle: 'investor' }))
+      //   expected: Query.select(Filter.typename('org.dxos.type.person', { jobTitle: 'investor' }))
       //     .reference('organization')
-      //     .targetOf(Relation.of('dxos.org/relation/HasSubject')) // TODO(burdon): Invert?
+      //     .targetOf(Relation.of('org.dxos.relation.has-subject')) // TODO(burdon): Invert?
       //     .source(),
       // },
     ];

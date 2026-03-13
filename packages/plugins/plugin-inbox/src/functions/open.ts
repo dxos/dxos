@@ -11,15 +11,16 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
+import * as Mailbox from '../types/Mailbox';
 import { renderMarkdown } from '../util';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/email-open',
+  key: 'org.dxos.function.inbox.email-open',
   name: 'Open email',
-  description: 'Opens and reads the contents of a mailbox feed.',
+  description: 'Opens and reads the contents of a mailbox.',
   inputSchema: Schema.Struct({
-    feed: Ref.Ref(Feed.Feed).annotations({
-      description: 'The ID of the mailbox feed.',
+    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
+      description: 'Reference to the mailbox object.',
     }),
     skip: Schema.Number.pipe(
       Schema.annotations({
@@ -37,9 +38,11 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     content: Schema.String,
   }),
+  types: [Feed.Feed, Mailbox.Mailbox],
   services: [Database.Service, Feed.Service],
-  handler: Effect.fn(function* ({ data: { feed: feedRef, skip = 0, limit = 20 } }) {
-    const feed = yield* Database.load(feedRef);
+  handler: Effect.fn(function* ({ data: { mailbox: mailboxRef, skip = 0, limit = 20 } }) {
+    const mailbox = yield* Database.load(mailboxRef);
+    const feed = yield* Database.load(mailbox.feed);
     const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
     const content = Function.pipe(
       objects,

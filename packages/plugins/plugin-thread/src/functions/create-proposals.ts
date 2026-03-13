@@ -15,7 +15,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 export default defineFunction({
-  key: 'dxos.org/function/thread/create-proposals',
+  key: 'org.dxos.function.thread.create-proposals',
   name: 'Create Proposals',
   description: 'Proposes a set of changes to a document.',
   inputSchema: Schema.Struct({

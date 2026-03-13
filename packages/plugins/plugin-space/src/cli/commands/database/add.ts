@@ -28,7 +28,6 @@ import { printObject } from './util';
 export type Metadata = {
   createObject: CreateObject;
   inputSchema?: Schema.Schema.AnyNoContext;
-  addToCollectionOnCreate?: boolean;
 };
 
 export const add = Command.make(

@@ -16,6 +16,7 @@ export const translations = [
         'typename label_one': 'Sheet',
         'typename label_other': 'Sheets',
         'object name placeholder': 'New sheet',
+        'add object label': 'Add sheet',
         'rename object label': 'Rename sheet',
         'delete object label': 'Delete sheet',
         'object deleted label': 'Sheet deleted',

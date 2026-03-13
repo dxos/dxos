@@ -75,13 +75,13 @@ export const createCliApp = Effect.fn(function* ({
   manager.capabilities.contribute({
     interface: Capabilities.PluginManager,
     implementation: manager,
-    module: 'dxos.org/app-framework/plugin-manager',
+    module: 'org.dxos.app-framework.plugin-manager',
   });
 
   manager.capabilities.contribute({
     interface: Capabilities.AtomRegistry,
     implementation: manager.registry,
-    module: 'dxos.org/app-framework/atom-registry',
+    module: 'org.dxos.app-framework.atom-registry',
   });
 
   // Activate startup event to load CLI commands and Effect layers.

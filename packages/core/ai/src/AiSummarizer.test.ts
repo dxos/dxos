@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 
 import * as AiService from './AiService';
-import { summarize } from './AiSummarizer';
+import * as AiSummarizer from './AiSummarizer';
 import { TestAiService, TestData } from './testing';
 
 ObjectId.dangerouslyDisableRandomness();
@@ -24,7 +24,7 @@ describe('AiSummarizer', () => {
     Effect.fnUntraced(
       function* (_) {
         const messages = yield* Effect.promise(() => TestData.internetOrderConversation());
-        const summary = yield* summarize(messages);
+        const summary = yield* AiSummarizer.summarize(messages);
         invariant(summary.blocks[0]._tag === 'summary');
       },
       Effect.provide(TestLanguageModel),

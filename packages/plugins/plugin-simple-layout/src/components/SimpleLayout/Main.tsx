@@ -13,7 +13,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
 import { ContentLoading } from '../ContentLoading';
-import { useLoadDescendents } from '../hooks';
+import { useExpandPath } from '../hooks';
 import { useMobileLayout } from '../MobileLayout';
 
 import { AppBar } from './AppBar';
@@ -47,8 +47,7 @@ export const Main = () => {
     );
   }, [id, node, node?.data, node?.properties, state.popoverAnchorId]);
 
-  // Ensures that children are loaded so that they are available to navigate to.
-  useLoadDescendents(id);
+  useExpandPath(id);
 
   // TODO(burdon): BUG: When showing ANY statusbar the size progressively shrinks when the keyboard opens/closes.
   const showNavBar = !keyboardOpen && !state.isPopover && state.drawerState === 'closed';

@@ -97,7 +97,7 @@ export default Capability.makeModule(
 
         if (downloadSuccess) {
           yield* invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}/update-ready`,
+            id: `${meta.id}.update-ready`,
             title: ['update ready label', { ns: meta.id }],
             description: ['update ready description', { ns: meta.id }],
             duration: Infinity,

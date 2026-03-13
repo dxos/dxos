@@ -19,7 +19,7 @@ export const SaveConfig = async (config: ConfigProto): Promise<void> => {
   PERFORMING_CONFIG_SAVE = true;
 
   try {
-    await localforage.setItem('dxos.org/settings/config', config);
+    await localforage.setItem('org.dxos.settings.config', config);
   } catch (err) {
     log.warn('Failed to save config', { err });
   } finally {

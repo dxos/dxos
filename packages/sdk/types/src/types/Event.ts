@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -47,7 +49,7 @@ export const Event = Schema.Struct({
   thread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Event',
+    typename: 'org.dxos.type.event',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['title']),

@@ -32,7 +32,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
           Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
           Query.select(Filter.text(query, { type: 'full-text' }))
             .select(Filter.type(Text.Text))
-            .referencedBy('dxos.org/type/Document', 'content'),
+            .referencedBy('org.dxos.type.document', 'content'),
         ),
   );
 

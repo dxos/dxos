@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as AiError from '@effect/ai/AiError';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Prompt from '@effect/ai/Prompt';
@@ -56,7 +58,7 @@ export const DEFAULT_INSTRUCTIONS = trim`
     Processing a flight booking confirmation email. The user requested a round-trip flight from Warsaw to Barcelona for March 15–22, 2026.
 
     Action taken:
-    - Found existing booking object \`dxn:echo:@:01KHZWKQ9HPJYG147HV7CP5ARX\` (type \`dxn:echo:@:01KHXAMH4F3V94RCYC7P7M2H0C\` / \`example.com/type/FlightBooking\`) matching confirmation code ABC123.
+    - Found existing booking object \`dxn:echo:@:01KHZWKQ9HPJYG147HV7CP5ARX\` (type \`dxn:echo:@:01KHXAMH4F3V94RCYC7P7M2H0C\` / \`com.example.type.flight-booking\`) matching confirmation code ABC123.
     - Updated the booking status from "pending" to "confirmed".
     - Added flight details: Outbound WAW→BCN Mar 15 08:30, Return BCN→WAW Mar 22 14:15, carrier LOT Polish Airlines.
     - Stored passenger info and seat assignments in notes.

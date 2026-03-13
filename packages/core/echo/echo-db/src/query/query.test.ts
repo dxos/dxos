@@ -273,11 +273,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.2.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.2.0' }));
 
       const peer = await builder.createPeer({ types: [ContactV1, ContactV2] });
       const db = await peer.createDatabase();
@@ -288,16 +288,16 @@ describe('Query', () => {
       const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
       await queue.append([contactV1, contactV2]);
 
-      const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')))).run();
+      const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person')))).run();
       expect(both).toHaveLength(2);
 
       const v1 = await queue
-        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.1.0'))))
+        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.1.0'))))
         .run();
       expect(v1).toEqual([contactV1]);
 
       const v2 = await queue
-        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0'))))
+        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.2.0'))))
         .run();
       expect(v2).toEqual([contactV2]);
     });
@@ -858,11 +858,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.2.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.2.0' }));
 
       const { peer, db } = await builder.createDatabase({
         types: [ContactV1, ContactV2],
@@ -876,10 +876,10 @@ describe('Query', () => {
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV2), [contactV2]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')), [contactV1, contactV2]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.1.0')), [contactV1]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0')), [contactV2]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person')), [contactV1, contactV2]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.1.0')), [contactV1]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.2.0')), [contactV2]);
       };
 
       await assertQueries(db);

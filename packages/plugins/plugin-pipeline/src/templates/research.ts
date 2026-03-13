@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Database, Feed, Filter, JsonSchema, Query, Ref } from '@dxos/echo';
+import { type Database, Filter, JsonSchema, Query, Ref } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { ViewModel } from '@dxos/schema';
@@ -12,14 +12,15 @@ export const createResearchProject = async (
   db: Database.Database,
   name?: string,
 ): Promise<Pipeline.Pipeline | null> => {
-  const feeds = await db.query(Filter.type(Feed.Feed)).run();
-  const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
-  if (!mailbox) {
+  const mailboxes = await db.query(Filter.type(Mailbox.Mailbox)).run();
+  const mailbox = mailboxes[0];
+  const feed = await mailbox?.feed?.tryLoad();
+  if (!mailbox || !feed) {
     return null;
   }
 
   const mailboxView = ViewModel.make({
-    query: Query.select(Filter.type(Message.Message)).from(mailbox),
+    query: Query.select(Filter.type(Message.Message)).from(feed),
     jsonSchema: JsonSchema.toJsonSchema(Message.Message),
   });
 

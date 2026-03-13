@@ -41,7 +41,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       id: Collection.Collection.typename,
       metadata: {
         createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),

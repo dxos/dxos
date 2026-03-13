@@ -76,14 +76,14 @@ describe('Feed', () => {
     const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
-      yield* Database.add(Feed.make({ name: 'notifications', kind: 'dxos.org/plugin/notifications/v1' }));
-      yield* Database.add(Feed.make({ name: 'messages', kind: 'dxos.org/plugin/messages/v1' }));
-      yield* Database.add(Feed.make({ name: 'other-notifications', kind: 'dxos.org/plugin/notifications/v1' }));
+      yield* Database.add(Feed.make({ name: 'notifications', kind: 'org.dxos.plugin.notifications.v1' }));
+      yield* Database.add(Feed.make({ name: 'messages', kind: 'org.dxos.plugin.messages.v1' }));
+      yield* Database.add(Feed.make({ name: 'other-notifications', kind: 'org.dxos.plugin.notifications.v1' }));
 
       yield* Database.flush({ indexes: true });
 
       const notificationFeeds = yield* Database.runQuery(
-        Filter.type(Feed.Feed, { kind: 'dxos.org/plugin/notifications/v1' }),
+        Filter.type(Feed.Feed, { kind: 'org.dxos.plugin.notifications.v1' }),
       );
       expect(notificationFeeds).toHaveLength(2);
       expect(notificationFeeds.map((feed) => feed.name).sort()).toEqual(['notifications', 'other-notifications']);

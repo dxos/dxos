@@ -29,7 +29,7 @@ export const Basic = () => {
   }
 
   return (
-    <SheetRoot graph={graph} sheet={sheet} ignoreAttention>
+    <SheetRoot graph={graph} sheet={sheet} attendableId='test' ignoreAttention>
       <div role='none' className='grid h-full w-full'>
         <SheetContent />
       </div>

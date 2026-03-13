@@ -17,7 +17,7 @@ describe('schema composition', () => {
     const BaseType = Schema.Struct({
       name: Schema.String,
       email: Schema.String,
-    }).pipe(EchoObjectSchema({ typename: 'example.com/Person', version: '0.1.0' }));
+    }).pipe(EchoObjectSchema({ typename: 'com.example.person', version: '0.1.0' }));
 
     const OverlaySchema = Schema.Struct({
       email: Schema.String.pipe(FieldPath('$.email'), FormatAnnotation.set(TypeFormat.Email)),

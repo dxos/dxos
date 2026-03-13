@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
@@ -466,7 +468,7 @@ export const getDXN = (entity: Unknown | Snapshot): DXN => {
 
 /**
  * @returns The DXN of the object's type.
- * @example dxn:example.com/type/Person:1.0.0
+ * @example dxn:com.example.type.person:1.0.0
  */
 // TODO(wittjosiah): Narrow types.
 export const getTypeDXN: (obj: unknown | undefined) => DXN | undefined = internal.getTypeDXN as any;
@@ -481,7 +483,7 @@ export const getSchema: (obj: unknown | undefined) => Type.AnyEntity | undefined
 /**
  * @returns The typename of the object's type.
  * Accepts both reactive objects and snapshots.
- * @example `example.com/type/Person`
+ * @example `com.example.type.person`
  */
 export const getTypename = (entity: Unknown | Snapshot): string | undefined => internal.getTypename(entity);
 

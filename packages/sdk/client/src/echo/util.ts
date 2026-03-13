@@ -3,24 +3,25 @@
 //
 
 import { type Space } from '@dxos/client-protocol';
-import { type SpaceSyncState, getDatabaseFromObject } from '@dxos/echo-db';
+import { Obj } from '@dxos/echo';
+import { type SpaceSyncState } from '@dxos/echo-db';
 import { type ObjectId, type SpaceId } from '@dxos/keys';
 
 import { SpaceProxy } from './space-proxy';
 
 /**
- * @param object @deprecated
+ * @deprecated Prefer Obj.getDatabase.
  */
-// TODO(wittjosiah): This should be `Obj.getSpace` / `Relation.getSpace` / `Ref.getSpace`.
+// TODO(wittjosiah): Can we remove the need for this?
 export const getSpace = (object?: any): Space | undefined => {
   if (!object) {
     return undefined;
   }
 
-  const db = getDatabaseFromObject(object);
+  const db = Obj.getDatabase(object);
   const id = db?.spaceId;
-  if (id) {
-    const owner = db.graph._getOwningObject(id);
+  if (id && '_getOwningObject' in db.graph) {
+    const owner = (db.graph as { _getOwningObject: (id: SpaceId) => unknown })._getOwningObject(id);
     if (owner instanceof SpaceProxy) {
       return owner;
     }

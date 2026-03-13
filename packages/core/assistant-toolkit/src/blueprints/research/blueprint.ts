@@ -11,7 +11,7 @@ import { trim } from '@dxos/util';
 
 import { ResearchFunctions } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/research';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.research';
 
 const functions = Object.values(ResearchFunctions);
 

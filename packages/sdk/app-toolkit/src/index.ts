@@ -7,6 +7,8 @@ export * from './capabilities';
 export * from './collaboration';
 export * from './file';
 export * from './graph';
+export * from './object-node';
 export * from './operations';
+export * from './paths';
 export * from './plugin';
 export * from './translations';

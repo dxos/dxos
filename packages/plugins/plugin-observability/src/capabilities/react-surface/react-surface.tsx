@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/help`,
+        id: `${meta.id}.help`,
         role: 'deck-companion--help',
         component: () => <HelpContainer />,
       }),

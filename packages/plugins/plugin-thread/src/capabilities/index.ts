@@ -9,6 +9,5 @@ export * from './markdown';
 export * from './operation-resolver';
 export * from './react-root';
 export * from './react-surface';
-export * from './repair';
 export * from './settings';
 export * from './state';

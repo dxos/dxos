@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getCollectionsPath, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { SpaceEvents } from '@dxos/plugin-space';
@@ -17,11 +17,10 @@ const SPACE_ICON = 'house-line';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { Obj, Ref, Type } = yield* Effect.tryPromise(() => import('@dxos/echo'));
+    const { Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/echo'));
-    const { ManagedCollection } = yield* Effect.tryPromise(() => import('@dxos/schema'));
 
     const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
     const { invoke, schedule } = operationInvoker;
@@ -33,15 +32,6 @@ export default Capability.makeModule(
       p.icon = SPACE_ICON;
     });
     const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
-
-    if (defaultSpaceCollection) {
-      const typesCollectionRef = Ref.make(
-        ManagedCollection.makeManagedCollection({ key: Type.getTypename(Type.PersistentType) }),
-      );
-      Obj.change(defaultSpaceCollection, (c) => {
-        c.objects.push(typesCollectionRef);
-      });
-    }
 
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
     const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
@@ -59,15 +49,21 @@ export default Capability.makeModule(
     });
     space.db.add(readme);
 
+    const gettingStarted = space.db.add(Obj.make(Collection.Collection, { name: 'Getting Started', objects: [] }));
+    Obj.change(gettingStarted, (collection) => {
+      collection.objects.push(Ref.make(readme));
+    });
+    Obj.change(defaultSpaceCollection, (collection) => {
+      collection.objects.push(Ref.make(gettingStarted));
+    });
+
     // Ensure the default content is in the graph and connected.
     // This will allow the expose action to work before the navtree renders for the first time.
     graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(space.id, 'child'));
 
-    yield* invoke(LayoutOperation.SwitchWorkspace, { subject: space.id });
-    yield* invoke(LayoutOperation.SetLayoutMode, {
-      mode: 'solo',
-      subject: Obj.getDXN(readme).toString(),
-    });
-    yield* schedule(LayoutOperation.Expose, { subject: Obj.getDXN(readme).toString() });
+    const readmePath = `${getCollectionsPath(space.id)}/${gettingStarted.id}/${readme.id}`;
+    yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
+    yield* invoke(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: readmePath });
+    yield* schedule(LayoutOperation.Expose, { subject: readmePath });
   }),
 );

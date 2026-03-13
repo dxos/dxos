@@ -6,20 +6,16 @@ import { Collection, Feed, Type, View } from '@dxos/echo';
 
 import * as CollectionModel from './CollectionModel';
 import * as Expando from './Expando';
-import * as ManagedCollection from './ManagedCollection';
 import * as Text from './Text';
 import * as ViewModel from './ViewModel';
 
-export { Expando, Text, CollectionModel, ManagedCollection, ViewModel };
+export { Expando, Text, CollectionModel, ViewModel };
 
 export const DataTypes: Type.AnyEntity[] = [
-  Feed.Feed,
-  Type.PersistentType,
-
-  // System
   Collection.Collection,
-  ManagedCollection.ManagedCollection,
   Expando.Expando,
+  Feed.Feed,
   Text.Text,
+  Type.PersistentType,
   View.View,
 ];

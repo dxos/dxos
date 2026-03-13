@@ -14,13 +14,13 @@ import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import type { IndexerObject } from './interface';
 import { ObjectMetaIndex } from './object-meta-index';
 
-const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
-const TYPE_PERSON_VERSIONLESS = DXN.parse('dxn:type:example.com/type/Person').toString();
-const TYPE_RELATION = DXN.parse('dxn:type:example.com/type/Relation:0.1.0').toString();
-const TYPE_RELATION_UPDATED = DXN.parse('dxn:type:example.com/type/RelationUpdated:0.1.0').toString();
-const TYPE_WITH_UNDERSCORE = DXN.parse('dxn:type:example.com/type/Person_Extra:0.1.0').toString();
-const TYPE_WITH_UNDERSCORE_VERSIONLESS = DXN.parse('dxn:type:example.com/type/Person_Extra').toString();
-const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.parse('dxn:type:example.com/type/PersonAExtra:0.1.0').toString();
+const TYPE_PERSON = DXN.parse('dxn:type:com.example.type.person:0.1.0').toString();
+const TYPE_PERSON_VERSIONLESS = DXN.parse('dxn:type:com.example.type.person').toString();
+const TYPE_RELATION = DXN.parse('dxn:type:com.example.type.relation:0.1.0').toString();
+const TYPE_RELATION_UPDATED = DXN.parse('dxn:type:com.example.type.relation-updated:0.1.0').toString();
+const TYPE_WITH_UNDERSCORE = DXN.parse('dxn:type:com.example.type.person-extra:0.1.0').toString();
+const TYPE_WITH_UNDERSCORE_VERSIONLESS = DXN.parse('dxn:type:com.example.type.person-extra').toString();
+const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.parse('dxn:type:com.example.type.person-a-extra:0.1.0').toString();
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({
@@ -57,7 +57,7 @@ describe('ObjectMetaIndex', () => {
 
       const otherTypeResults = yield* index.query({
         spaceId,
-        typeDxn: DXN.parse('dxn:type:example.com/type/Other').toString(),
+        typeDxn: DXN.parse('dxn:type:com.example.type.other').toString(),
       });
       expect(otherTypeResults).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),

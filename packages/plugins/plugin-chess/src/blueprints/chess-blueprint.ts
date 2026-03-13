@@ -8,7 +8,7 @@ import { trim } from '@dxos/util';
 
 import { ChessFunctions } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/chess';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
 
 const functions = Object.values(ChessFunctions);
 

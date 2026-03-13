@@ -37,7 +37,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     if (status === 'success') {
       // TODO(ZaymonFC): We can probably re-use this toast for normal script deployment.
       void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}/deployment-success`,
+        id: `${meta.id}.deployment-success`,
         icon: 'ph--check--regular',
         duration: Infinity,
         title: ['script deployment toast label', { ns: meta.id, count: scriptTemplates.length }],
@@ -49,7 +49,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     if (status === 'error') {
       void invokePromise(LayoutOperation.UpdateDialog, { state: false });
       void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}/deployment-error`,
+        id: `${meta.id}.deployment-error`,
         icon: 'ph--warning--regular',
         duration: Infinity,
         title: ['script deployment error toast label', { ns: meta.id, count: scriptTemplates.length }],

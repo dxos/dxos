@@ -18,10 +18,12 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/sheet`,
+        id: `${meta.id}.sheet`,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Sheet.Sheet } =>
-          Obj.instanceOf(Sheet.Sheet, data.subject) && !!getSpace(data.subject),
+        filter: (data): data is { attendableId: string; subject: Sheet.Sheet } =>
+          typeof data.attendableId === 'string' &&
+          Obj.instanceOf(Sheet.Sheet, data.subject) &&
+          !!getSpace(data.subject),
         component: ({ data, role }) => {
           const computeGraphRegistry = useCapability(SheetCapabilities.ComputeGraphRegistry);
 
@@ -29,6 +31,7 @@ export default Capability.makeModule(() =>
             <SheetContainer
               role={role}
               subject={data.subject}
+              attendableId={data.attendableId}
               space={getSpace(data.subject)!}
               registry={computeGraphRegistry}
             />
@@ -36,7 +39,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/object-settings`,
+        id: `${meta.id}.object-settings`,
         role: 'object-settings',
         filter: (data): data is { subject: Sheet.Sheet } => Obj.instanceOf(Sheet.Sheet, data.subject),
         component: ({ data }) => <RangeList sheet={data.subject} />,

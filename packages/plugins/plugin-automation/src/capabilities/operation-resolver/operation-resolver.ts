@@ -5,15 +5,15 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { Operation, OperationResolver } from '@dxos/operation';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Filter } from '@dxos/react-client/echo';
 
+import { meta } from '../../meta';
 import { AutomationOperation } from '../../types';
 
 export default Capability.makeModule(
@@ -70,8 +70,8 @@ export default Capability.makeModule(
             hidden: true,
           });
           yield* Operation.invoke(LayoutOperation.Open, {
-            subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
-            workspace: db.spaceId,
+            subject: [`${getSpacePath(db.spaceId)}/settings/${meta.id}.automations`],
+            workspace: getSpacePath(db.spaceId),
           });
         }),
       }),

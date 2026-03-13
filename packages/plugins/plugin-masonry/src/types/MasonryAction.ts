@@ -14,7 +14,7 @@ export const MasonryProps = Schema.Struct({
     TypeInputOptionsAnnotation.set({
       location: ['database', 'runtime'],
       kind: ['user'],
-      registered: ['registered'],
+      registered: ['registered', 'unregistered'],
     }),
     Schema.optional,
   ),

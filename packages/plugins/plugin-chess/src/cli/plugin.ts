@@ -18,7 +18,6 @@ export const ChessPlugin = Plugin.define(meta).pipe(
       id: Chess.Game.typename,
       metadata: {
         createObject: ((props) => Effect.sync(() => Chess.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),

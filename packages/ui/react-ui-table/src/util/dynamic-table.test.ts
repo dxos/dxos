@@ -49,7 +49,7 @@ describe('makeDynamicTable', () => {
    */
   test('makeDynamicTable with jsonSchema from getBaseSchema(typename, properties) and properties with title does not throw', () => {
     const registry = Registry.make();
-    const typename = 'example.com/type/DynamicTableTest';
+    const typename = 'com.example.type.dynamic-table-test';
     const properties: TablePropertyDefinition[] = [
       { name: 'id', format: Format.TypeFormat.String },
       { name: 'name', format: Format.TypeFormat.String, title: 'Name' },

@@ -24,7 +24,7 @@ const TestItem = Schema.Struct({
   value: Schema.Number,
 }).pipe(
   Type.object({
-    typename: 'example.com/type/TestItem',
+    typename: 'com.example.type.test-item',
     version: '0.1.0',
   }),
 );

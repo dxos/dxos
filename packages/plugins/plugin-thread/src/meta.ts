@@ -7,7 +7,7 @@ import { trim } from '@dxos/util';
 
 // TODO(wittjosiah): Needs screenshots.
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/thread',
+  id: 'org.dxos.plugin.thread',
   name: 'Chat',
   description: trim`
     Multi-modal communication platform supporting text chat, voice, and video conferencing.
@@ -18,4 +18,4 @@ export const meta: Plugin.Meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-thread',
 };
 
-export const THREAD_ITEM = `${meta.id}/item`;
+export const THREAD_ITEM = `${meta.id}.item`;

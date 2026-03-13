@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { QueryAST } from '@dxos/echo-protocol';
@@ -73,8 +75,8 @@ const ViewSchema = Schema.Struct({
   projection: Projection,
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/View',
-    version: '0.5.0',
+    typename: 'org.dxos.type.view',
+    version: '0.1.0',
   }),
   internal.SystemTypeAnnotation.set(true),
 );

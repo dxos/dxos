@@ -17,7 +17,7 @@ export const Board = Schema.Struct({
   layout: BoardLayout.pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Board',
+    typename: 'org.dxos.type.board',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),

@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability, UndoOperation } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getCompanionVariant, isPinnedWorkspace } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -18,10 +18,9 @@ import { Graph, Node } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { byPosition, isNonNullable } from '@dxos/util';
 
-import { closeEntry, createEntryId, incrementPlank, openEntry } from '../../layout';
+import { closeEntry, incrementPlank, openEntry } from '../../layout';
 import { meta } from '../../meta';
 import {
-  ATTENDABLE_PATH_SEPARATOR,
   DeckCapabilities,
   DeckOperation,
   type DeckState,
@@ -273,7 +272,7 @@ export default Capability.makeModule(
             const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
             // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
             //   Ideally this should be worked into the data model in a generic way.
-            const shouldUpdatePrevious = !state.activeDeck.startsWith('!');
+            const shouldUpdatePrevious = !isPinnedWorkspace(state.activeDeck);
 
             yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => {
               const newDecks = state.decks[input.subject]
@@ -341,14 +340,13 @@ export default Capability.makeModule(
             const deck = yield* DeckCapabilities.getDeck();
             previouslyOpenIds = new Set<string>(deck.solo ? [deck.solo] : deck.active);
             const next = deck.solo
-              ? input.subject.map((id) => createEntryId(id, input.variant))
+              ? [...input.subject]
               : input.subject.reduce(
                   (acc, entryId) =>
                     openEntry(acc, entryId, {
                       key: input.key,
                       positioning: input.positioning ?? settings?.newPlankPositioning,
                       pivotId: input.pivotId,
-                      variant: input.variant,
                     }),
                   deck.active,
                 );
@@ -490,7 +488,7 @@ export default Capability.makeModule(
               updateActiveDeck(state, { companionOpen: false }),
             );
           } else {
-            const [, variant] = input.companion.split(ATTENDABLE_PATH_SEPARATOR);
+            const variant = getCompanionVariant(input.companion);
             yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
               updateActiveDeck(state, {
                 companionOpen: true,

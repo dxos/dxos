@@ -33,7 +33,7 @@ export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubs
 // Consider: https://github.com/multiformats/multiaddr
 // dxn:echo:[<space-id>:[<queue-id>:]]<object-id>
 // dxn:echo:[S/<space-id>:[Q/<queue-id>:]]<object-id>
-// dxn:type:dxos.org/markdown/Contact
+// dxn:type:org.dxos.markdown.contact
 
 /**
  * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
@@ -47,8 +47,8 @@ export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubs
  * dxn:echo:<space key>:<echo id>
  * dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
  * dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6
- * dxn:type:dxos.org/type/Calendar
- * dxn:plugin:dxos.org/agent/plugin/functions
+ * dxn:type:org.dxos.type.calendar
+ * dxn:plugin:org.dxos.agent.plugin.functions
  * ```
  */
 export class DXN {
@@ -61,7 +61,7 @@ export class DXN {
     Schema.annotations({
       title: 'DXN',
       description: 'DXN URI',
-      examples: ['dxn:type:example.com/type/MyType', 'dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6'],
+      examples: ['dxn:type:com.example.type.my-type', 'dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6'],
     }),
   );
 
@@ -140,14 +140,14 @@ export class DXN {
   }
 
   /**
-   * @example `dxn:type:example.com/type/Person`
+   * @example `dxn:type:com.example.type.person`
    */
   static fromTypename(typename: string): DXN {
     return new DXN(DXN.kind.TYPE, [typename]);
   }
 
   /**
-   * @example `dxn:type:example.com/type/Person:0.1.0`
+   * @example `dxn:type:com.example.type.person:0.1.0`
    */
   // TODO(dmaretskyi): Consider using @ as the version separator.
   static fromTypenameAndVersion(typename: string, version: string): DXN {

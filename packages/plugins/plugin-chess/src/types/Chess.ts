@@ -31,8 +31,8 @@ export const Game = Schema.Struct({
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Chess',
-    version: '0.2.0',
+    typename: 'org.dxos.type.chess',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
 );

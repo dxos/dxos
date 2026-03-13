@@ -12,7 +12,7 @@ export {
   type SyncQueueRequest,
 } from './proto/gen/dxos/client/services.js';
 
-export const KEY_QUEUE_POSITION = 'dxos.org/key/queue-position';
+export const KEY_QUEUE_POSITION = 'org.dxos.key.queue-position';
 
 import * as Schema from 'effect/Schema';
 
