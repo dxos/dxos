@@ -71,6 +71,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   private _lifecycleState: LifecycleState = LifecycleState.CLOSED;
   private readonly _connected = new Trigger();
   private readonly _ready = new Trigger();
+  private readonly _ctx?: Context = undefined;
 
   public readonly documentRequested = new Event<{ documentId: DocumentId; peerId: PeerId }>();
 
@@ -102,6 +103,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   @synchronized
   async open(ctx: Context): Promise<void> {
+    this._ctx = ctx;
     if (this._lifecycleState === LifecycleState.OPEN) {
       return;
     }
@@ -122,6 +124,8 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
     this._ready.reset();
     this._lifecycleState = LifecycleState.CLOSED;
+    void this._ctx?.dispose();
+    this._ctx = undefined;
   }
 
   async whenConnected(ctx: Context): Promise<void> {
