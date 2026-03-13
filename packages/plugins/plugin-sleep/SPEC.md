@@ -11,14 +11,14 @@
 
 ## Phase 1 (Shell)
 
-- [ ] Create plugin scaffold following standard DXOS plugin patterns.
-- [ ] Define `Dream` ECHO schema type with `name`, `duration`, `soundtrack` fields.
-- [ ] `soundtrack` enum: `fireplace`, `ocean_surf`, `rain`, `stream` (bundled `.m4a` files).
+- [x] Create plugin scaffold following standard DXOS plugin patterns.
+- [x] Define `Dream` ECHO schema type with `name`, `duration`, `soundtrack` fields.
+- [x] `soundtrack` enum: `fireplace`, `ocean_surf`, `rain`, `stream` (bundled `.m4a` files).
 - [ ] `duration` defaults to 30 minutes, selectable range 5-120 minutes.
-- [ ] Register `Dream` type with schema module and metadata.
-- [ ] Create `SleepArticle` container that renders a form to edit `Dream` objects via `react-ui-form`.
-- [ ] Register article surface for the `Dream` type.
-- [ ] Add translations for type labels and plugin name.
+- [x] Register `Dream` type with schema module and metadata.
+- [x] Create `SleepArticle` container that renders a form to edit `Dream` objects via `react-ui-form`.
+- [x] Register article surface for the `Dream` type.
+- [x] Add translations for type labels and plugin name.
 
 ## Phase 2 (Sequencer & Dynamic Sounds)
 
