@@ -9,7 +9,6 @@ import {
   iframeServiceBundle,
   workerServiceBundle,
 } from '@dxos/client-protocol';
-import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
@@ -104,7 +103,7 @@ export class WorkerSession {
           stop: async () => {
             setTimeout(async () => {
               try {
-                await this.close(Context.default());
+                await this.close();
               } catch (err: any) {
                 log.catch(err);
               }
@@ -119,22 +118,22 @@ export class WorkerSession {
     this.bridgeService = this._iframeRpc.rpc.BridgeService;
   }
 
-  async open(ctx: Context): Promise<void> {
+  async open(): Promise<void> {
     log('opening...');
-    await Promise.all([this._clientRpc.open(ctx), this._iframeRpc.open(), this._maybeOpenShell(ctx)]);
+    await Promise.all([this._clientRpc.open(), this._iframeRpc.open(), this._maybeOpenShell()]);
 
     // Wait until the worker's RPC service has started.
     await this._startTrigger.wait({ timeout: PROXY_CONNECTION_TIMEOUT });
 
     // TODO(burdon): Comment required.
     if (this.lockKey) {
-      void this._afterLockReleases(ctx, this.lockKey, () => this.close(ctx));
+      void this._afterLockReleases(this.lockKey, () => this.close());
     }
 
     log('opened');
   }
 
-  async close(ctx: Context): Promise<void> {
+  async close(): Promise<void> {
     log.debug('closing...');
     try {
       await this.onClose.callIfSet();
@@ -142,19 +141,19 @@ export class WorkerSession {
       log.catch(err);
     }
 
-    await Promise.all([this._clientRpc.close(ctx), this._iframeRpc.close()]);
+    await Promise.all([this._clientRpc.close(), this._iframeRpc.close()]);
     log.debug('closed');
   }
 
-  private async _maybeOpenShell(ctx: Context): Promise<void> {
+  private async _maybeOpenShell(): Promise<void> {
     try {
-      this._shellClientRpc && (await asyncTimeout(this._shellClientRpc.open(ctx), 1_000));
+      this._shellClientRpc && (await asyncTimeout(this._shellClientRpc.open(), 1_000));
     } catch {
       log.info('No shell connected.');
     }
   }
 
-  private _afterLockReleases(ctx: Context, lockKey: string, callback: () => MaybePromise<void>): Promise<void> {
+  private _afterLockReleases(lockKey: string, callback: () => MaybePromise<void>): Promise<void> {
     return navigator.locks
       .request(lockKey, () => {
         // No-op.

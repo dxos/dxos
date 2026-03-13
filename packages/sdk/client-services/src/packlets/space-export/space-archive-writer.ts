@@ -33,31 +33,31 @@ export class SpaceArchiveWriter extends Resource {
     this._tar = await import('@obsidize/tar-browserify');
   }
 
-  protected override async _close(ctx: Context): Promise<void> {
+  protected override async _close(): Promise<void> {
     return Promise.resolve();
   }
 
-  async begin(ctx: Context, meta: SpaceArchiveBeginProps): Promise<void> {
+  async begin(meta: SpaceArchiveBeginProps): Promise<void> {
     assertState(this._tar, 'Not open');
     assertState(!this._meta, 'Already started');
     this._meta = meta;
     this._archive = new this._tar.Archive();
   }
 
-  async setCurrentRootUrl(ctx: Context, url: string): Promise<void> {
+  async setCurrentRootUrl(url: string): Promise<void> {
     assertArgument(url.startsWith('automerge:'), 'url', 'Invalid root URL');
     assertState(this._tar, 'Not open');
     assertState(this._meta, 'Not started');
     this._currentRootUrl = url;
   }
 
-  async writeDocument(ctx: Context, documentId: string, data: Uint8Array): Promise<void> {
+  async writeDocument(documentId: string, data: Uint8Array): Promise<void> {
     assertArgument(!documentId.startsWith('automerge:'), 'documentId', 'Invalid document ID');
     assertState(this._archive, 'Not open');
     this._archive.addBinaryFile(`${SpaceArchiveFileStructure.documents}/${documentId}.bin`, data);
   }
 
-  async finish(ctx: Context): Promise<SpaceArchive> {
+  async finish(): Promise<SpaceArchive> {
     assertState(this._archive, 'Not open');
     assertState(this._meta, 'Not started');
     assertState(this._meta.spaceId, 'No space ID set');

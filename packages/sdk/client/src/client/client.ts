@@ -425,7 +425,7 @@ export class Client {
       this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
     }
 
-    this._echoClient.connectToService(this._ctx, {
+    this._echoClient.connectToService({
       dataService: this._services.services.DataService ?? raise(new Error('DataService not available')),
       queryService: this._services.services.QueryService ?? raise(new Error('QueryService not available')),
       queueService: this._services.services.QueueService ?? raise(new Error('QueueService not available')),
@@ -471,7 +471,7 @@ export class Client {
       throw err;
     }
 
-    await this._runtime.open(this._ctx);
+    await this._runtime.open();
 
     // TODO(wittjosiah): Factor out iframe manager and proxy into shell manager.
     await this._iframeManager?.open();
@@ -529,7 +529,7 @@ export class Client {
     log('closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
     await this._statusStream?.close();
-    await this._runtime?.close(this._ctx);
+    await this._runtime?.close();
     await this._echoClient.close(this._ctx);
     await this._services?.close();
     this._edgeHttpClient = undefined;

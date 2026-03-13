@@ -214,7 +214,7 @@ export class EchoTestPeer extends Resource {
     // NOTE: Client closes the database when it is closed.
     const root = await this.host.createSpaceRoot(this._ctx, spaceKey);
     const spaceId = await createIdFromSpaceKey(spaceKey);
-    const db = client.constructDatabase(this._ctx, { spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(root.url);
     await db.open();
 
@@ -232,7 +232,7 @@ export class EchoTestPeer extends Resource {
     // NOTE: Client closes the database when it is closed.
     const spaceId = await createIdFromSpaceKey(spaceKey);
     await this.host.openSpaceRoot(this._ctx, spaceId, rootUrl as AutomergeUrl);
-    const db = client.constructDatabase(this._ctx, { spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
+    const db = client.constructDatabase({ spaceId, spaceKey, reactiveSchemaQuery, preloadSchemaOnOpen });
     await db.setSpaceRoot(rootUrl);
     await db.open();
     return db;

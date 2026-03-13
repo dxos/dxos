@@ -340,7 +340,7 @@ describe('CoreDatabase', () => {
           const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
           // NOTE: Client closes the database when it is closed.
           const spaceId = await createIdFromSpaceKey(spaceKey);
-          const db = peer.client.constructDatabase(Context.default(), { spaceId, spaceKey });
+          const db = peer.client.constructDatabase({ spaceId, spaceKey });
           void db.setSpaceRoot(root.url);
           coreDb = db.coreDatabase;
         }

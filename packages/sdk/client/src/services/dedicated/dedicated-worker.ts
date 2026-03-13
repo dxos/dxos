@@ -6,7 +6,6 @@
 
 import { WorkerRuntime } from '@dxos/client-services';
 import { Config } from '@dxos/config';
-import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { createWorkerPort } from '@dxos/rpc-tunnel';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
@@ -71,7 +70,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
             sqliteLayer: opfsAvailable ? undefined : layerMemory,
           });
           await options.onBeforeStart?.(config);
-          await runtime.start(Context.default());
+          await runtime.start();
           self.postMessage({
             type: 'ready',
             livenessLockKey: runtime.livenessLockKey,
@@ -100,7 +99,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
 
           // Will block until the other side finishes the handshake.
           {
-            const session = await runtime.createSession(Context.default(), {
+            const session = await runtime.createSession({
               systemPort: createWorkerPort({ port: systemChannel.port2 }),
               appPort: createWorkerPort({ port: appChannel.port2 }),
               onClose: async () => {
@@ -108,7 +107,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
               },
             });
             if (message.clientId === owningClientId) {
-              runtime.connectWebrtcBridge(Context.default(), session);
+              runtime.connectWebrtcBridge(session);
             }
           }
           break;

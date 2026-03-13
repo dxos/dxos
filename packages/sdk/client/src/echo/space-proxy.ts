@@ -152,12 +152,12 @@ export class SpaceProxy implements Space, CustomInspectable {
       }),
     );
 
-    this._db = echoClient.constructDatabase(this._ctx, {
+    this._db = echoClient.constructDatabase({
       spaceId: this.id,
       spaceKey: this.key,
       owningObject: this,
     });
-    this._queues = echoClient.constructQueueFactory(this._ctx, this.id);
+    this._queues = echoClient.constructQueueFactory(this.id);
 
     const self = this;
     this._internal = {

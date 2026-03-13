@@ -4,7 +4,6 @@
 
 import { type ClientServices } from '@dxos/client-protocol';
 import { type Any, type ServiceHandler, Stream } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { RpcPeer, type RpcPeerOptions, type ServiceBundle, parseMethodName } from '@dxos/rpc';
 import { MapCounter, trace } from '@dxos/tracing';
@@ -52,8 +51,7 @@ export class ClientRpcServer {
       ...rpcOptions,
       callHandler: (method, params) => {
         const [serviceName, methodName] = parseMethodName(method);
-        const handler = (method: string, params: Any) =>
-          this._getServiceHandler(Context.default(), serviceName).call(method, params);
+        const handler = (method: string, params: Any) => this._getServiceHandler(serviceName).call(method, params);
 
         this._callMetrics.inc(`${serviceName}.${methodName} request`);
 
@@ -66,7 +64,7 @@ export class ClientRpcServer {
       streamHandler: (method, params) => {
         const [serviceName, methodName] = parseMethodName(method);
         const handler = (method: string, params: Any) =>
-          this._getServiceHandler(Context.default(), serviceName).callStream(method, params);
+          this._getServiceHandler(serviceName).callStream(method, params);
 
         this._callMetrics.inc(`${serviceName}.${methodName} request stream`);
 
@@ -82,15 +80,15 @@ export class ClientRpcServer {
     });
   }
 
-  async open(_ctx: Context): Promise<void> {
+  async open(): Promise<void> {
     await this._rpcPeer.open();
   }
 
-  async close(_ctx: Context): Promise<void> {
+  async close(): Promise<void> {
     await this._rpcPeer.close();
   }
 
-  private _getServiceHandler(_ctx: Context, serviceName: string) {
+  private _getServiceHandler(serviceName: string) {
     if (!this._handlerCache.has(serviceName)) {
       const [key, descriptor] =
         Object.entries(this._serviceRegistry.descriptors as ServiceBundle<Record<string, any>>).find(

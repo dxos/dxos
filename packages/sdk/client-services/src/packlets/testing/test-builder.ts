@@ -243,7 +243,7 @@ export class TestPeer {
 
   async createIdentity(): Promise<void> {
     this._props.signingContext ??= await createSigningContext(this.keyring);
-    this.networkManager.setPeerInfo(Context.default(), {
+    this.networkManager.setPeerInfo({
       identityKey: this._props.signingContext.identityKey.toHex(),
       peerKey: this._props.signingContext.deviceKey.toHex(),
     });
