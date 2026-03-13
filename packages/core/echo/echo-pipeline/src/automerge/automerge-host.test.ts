@@ -78,14 +78,14 @@ describe('AutomergeHost', () => {
     const expectedHeads = getHeads(handle.doc()!);
     await host.flush(Context.default());
 
-    expect(await host.getHeads(Context.default(), [handle.documentId])).toEqual([expectedHeads]);
+    expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
     await host.close();
     await level.close();
 
     // Simulate a restart.
     {
       const host = await setupAutomergeHost({ level: await createLevel(tmpPath) });
-      expect(await host.getHeads(Context.default(), [handle.documentId])).toEqual([expectedHeads]);
+      expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
     }
   });
 
@@ -102,7 +102,7 @@ describe('AutomergeHost', () => {
     ids.splice(1, 0, 'non-existent-id' as DocumentId);
     expectedHeads.splice(1, 0, undefined);
 
-    expect(await host.getHeads(Context.default(), ids)).toEqual(expectedHeads);
+    expect(await host.getHeads(ids)).toEqual(expectedHeads);
     await host.close();
     await level.close();
 
@@ -110,7 +110,7 @@ describe('AutomergeHost', () => {
     {
       const level = await createLevel(tmpPath);
       const host = await setupAutomergeHost({ level });
-      expect(await host.getHeads(Context.default(), ids)).toEqual(expectedHeads);
+      expect(await host.getHeads(ids)).toEqual(expectedHeads);
       await host.close();
       await level.close();
     }
@@ -146,8 +146,8 @@ describe('AutomergeHost', () => {
 
     for (const documentId of documentIds) {
       await expect
-        .poll(() => host1.getHeads(Context.default(), [documentId]))
-        .toEqual(await host2.getHeads(Context.default(), [documentId]));
+        .poll(() => host1.getHeads([documentId]))
+        .toEqual(await host2.getHeads([documentId]));
     }
 
     await host1.close();
