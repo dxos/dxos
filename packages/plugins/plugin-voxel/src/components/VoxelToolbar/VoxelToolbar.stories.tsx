@@ -15,14 +15,18 @@ import { VoxelToolbar } from './VoxelToolbar';
 const DefaultStory = () => {
   const [toolMode, setToolMode] = useState<ToolMode>('add');
   const [selectedHue, setSelectedHue] = useState<Hue>(DEFAULT_HUE);
+  const [showGrid, setShowGrid] = useState(true);
 
   return (
     <VoxelToolbar
       toolMode={toolMode}
       selectedHue={selectedHue}
+      showGrid={showGrid}
       onToolModeChange={setToolMode}
       onHueChange={setSelectedHue}
+      onToggleGrid={() => setShowGrid((prev) => !prev)}
       onClear={() => {}}
+      onGenerate={() => {}}
     />
   );
 };
