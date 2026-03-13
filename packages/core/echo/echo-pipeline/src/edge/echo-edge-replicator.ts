@@ -171,21 +171,21 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
 
         restartScheduled = true;
         scheduleTask(
-          this._ctx,
+          this._ctx!,
           async () => {
             using _guard = await this._mutex.acquire();
             if (this._connections.get(spaceId) !== connection) {
               return;
             }
 
-            const innerCtx = this._ctx;
+            const innerCtx = this._ctx!;
             await connection.close(); // Will call onRemoteDisconnected
             this._connections.delete(spaceId);
             if (innerCtx?.disposed) {
               return;
             }
             log.trace('dxos.echo.edge.replicator.restart', { spaceId, reconnects, restartDelay });
-            await this._openConnection(this._ctx, spaceId, reconnects + 1);
+            await this._openConnection(this._ctx!, spaceId, reconnects + 1);
           },
           restartDelay,
         );

@@ -268,7 +268,7 @@ export class QueryExecutor extends Resource {
     this._reactivity = options.reactivity;
 
     const queryPlanner = new QueryPlanner();
-    this._plan = queryPlanner.createPlan(Context.default(), this._query);
+    this._plan = queryPlanner.createPlan(this._query);
   }
 
   get query(): QueryAST.Query {

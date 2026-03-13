@@ -71,7 +71,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   private _lifecycleState: LifecycleState = LifecycleState.CLOSED;
   private readonly _connected = new Trigger();
   private readonly _ready = new Trigger();
-  private readonly _ctx?: Context = undefined;
+  private _ctx?: Context = undefined;
 
   public readonly documentRequested = new Event<{ documentId: DocumentId; peerId: PeerId }>();
 
@@ -148,9 +148,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._replicators.add(replicator);
     await replicator.connect(ctx, {
       peerId: this.peerId,
-      onConnectionOpen: (connection) => this._onConnectionOpen(this._ctx, connection),
-      onConnectionClosed: (connection) => this._onConnectionClosed(this._ctx, connection),
-      onConnectionAuthScopeChanged: (connection) => this._onConnectionAuthScopeChanged(this._ctx, connection),
+      onConnectionOpen: (connection) => this._onConnectionOpen(this._ctx!, connection),
+      onConnectionClosed: (connection) => this._onConnectionClosed(this._ctx!, connection),
+      onConnectionAuthScopeChanged: (connection) => this._onConnectionAuthScopeChanged(this._ctx!, connection),
       isDocumentInRemoteCollection: this._params.isDocumentInRemoteCollection,
       getContainingSpaceForDocument: this._params.getContainingSpaceForDocument,
       getContainingSpaceIdForDocument: async (documentId) => {
