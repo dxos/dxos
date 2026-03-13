@@ -131,6 +131,8 @@ export type VoxelEditorProps = {
   toolMode?: ToolMode;
   /** Currently selected hue. */
   selectedHue?: Hue;
+  /** Whether to show the ground grid (default true). */
+  showGrid?: boolean;
   /** Read-only mode (no interaction, no ground plane, no orbit controls). */
   readOnly?: boolean;
   /** Called when user clicks to add a voxel. */
@@ -347,6 +349,7 @@ type VoxelSceneProps = {
   blockSize: number;
   toolMode: ToolMode;
   selectedHue: Hue;
+  showGrid?: boolean;
   readOnly?: boolean;
   onAddVoxel?: (voxel: Voxel.VoxelData) => void;
   onRemoveVoxel?: (position: { x: number; y: number; z: number }) => void;
@@ -360,6 +363,7 @@ const VoxelScene = ({
   blockSize,
   toolMode,
   selectedHue,
+  showGrid = true,
   readOnly,
   onAddVoxel,
   onRemoveVoxel,
@@ -459,7 +463,7 @@ const VoxelScene = ({
       <pointLight position={[-10, 10, -10]} intensity={0.3} />
 
       <group scale={[blockSize, blockSize, blockSize]}>
-        {!readOnly && (
+        {!readOnly && showGrid && (
           <Grid
             gridX={gridX}
             gridY={gridY}
@@ -508,6 +512,7 @@ export const VoxelEditor = ({
   blockSize = 1,
   toolMode = 'add',
   selectedHue = DEFAULT_HUE,
+  showGrid = true,
   readOnly,
   onAddVoxel,
   onRemoveVoxel,
@@ -531,6 +536,7 @@ export const VoxelEditor = ({
         blockSize={blockSize}
         toolMode={toolMode}
         selectedHue={selectedHue}
+        showGrid={showGrid}
         readOnly={readOnly}
         onAddVoxel={onAddVoxel}
         onRemoveVoxel={onRemoveVoxel}

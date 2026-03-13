@@ -14,12 +14,18 @@ export type VoxelToolbarProps = ToolbarRootProps & {
   toolMode: ToolMode;
   /** Currently selected hue. */
   selectedHue: Hue;
+  /** Whether the grid is visible. */
+  showGrid: boolean;
   /** Called when tool mode changes. */
   onToolModeChange: (mode: ToolMode) => void;
   /** Called when hue selection changes. */
   onHueChange: (hue: Hue) => void;
+  /** Called when grid visibility is toggled. */
+  onToggleGrid: () => void;
   /** Called when clear button is clicked. */
   onClear?: () => void;
+  /** Called when generate button is clicked. */
+  onGenerate?: () => void;
 };
 
 const TOOL_OPTIONS: { value: ToolMode; icon: string; label: string }[] = [
@@ -32,9 +38,12 @@ const TOOL_OPTIONS: { value: ToolMode; icon: string; label: string }[] = [
 export const VoxelToolbar = ({
   toolMode,
   selectedHue,
+  showGrid,
   onToolModeChange,
   onHueChange,
+  onToggleGrid,
   onClear,
+  onGenerate,
   ...props
 }: VoxelToolbarProps) => {
   return (
@@ -54,6 +63,16 @@ export const VoxelToolbar = ({
           />
         ))}
       </Toolbar.ToggleGroup>
+      <Toolbar.IconButton
+        icon={showGrid ? 'ph--grid-four--fill' : 'ph--grid-four--regular'}
+        iconOnly
+        variant='ghost'
+        label='Toggle grid'
+        onClick={onToggleGrid}
+      />
+      {onGenerate && (
+        <Toolbar.IconButton icon='ph--shapes--regular' iconOnly variant='ghost' label='Generate shape' onClick={onGenerate} />
+      )}
       {onClear && (
         <Toolbar.IconButton icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />
       )}
