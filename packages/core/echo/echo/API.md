@@ -458,7 +458,6 @@ Feed (queue) types and operations.
 | `Feed.Cursor<T>`                | type       | Opaque cursor for iterating feed items.              |
 | `Feed.RetentionOptions`         | type       | Retention policy options.                            |
 | `Feed.Service`                  | class      | Effect service tag for feed operations.              |
-| `Feed.DXN_KEY`                  | const      | Meta key source for the backing DXN.                 |
 | `Feed.notAvailable`             | const      | Layer providing a Feed.Service that throws.          |
 | `Feed.make(props)`              | fn         | Creates a new feed object.                           |
 | `Feed.getDxn(feed)`             | fn         | Derives the queue DXN from the feed object's DXN.    |

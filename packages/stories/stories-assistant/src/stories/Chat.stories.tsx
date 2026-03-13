@@ -402,10 +402,8 @@ export const WithMail: Story = {
     types: [Feed.Feed],
     onInit: async ({ space }) => {
       const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const queue = space.queues.create<Message.Message>();
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
-      });
+      const feedDxn = Feed.getDxn(feed)!;
+      const queue = space.queues.get<Message.Message>(feedDxn);
       const messages = createTestMailbox();
       await queue.append(messages);
     },
@@ -879,10 +877,8 @@ export const WithProject: Story = {
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const queue = space.queues.create<Message.Message>();
-      Obj.change(mailbox, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
-      });
+      const mailboxDxn = Feed.getDxn(mailbox)!;
+      const queue = space.queues.get<Message.Message>(mailboxDxn);
       const messages = createTestMailbox(people);
       await queue.append(messages);
 
