@@ -13,7 +13,7 @@ export const Tag = Schema.Struct({
   hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Tag',
+    typename: 'org.dxos.type.tag',
     version: '0.1.0',
   }),
   internal.LabelAnnotation.set(['label']),

@@ -38,8 +38,8 @@ export const Kanban = Schema.Struct({
   arrangement: Arrangement,
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Kanban',
-    version: '0.3.0',
+    typename: 'org.dxos.type.kanban',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),

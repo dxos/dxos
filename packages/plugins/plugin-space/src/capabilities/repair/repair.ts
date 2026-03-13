@@ -28,14 +28,14 @@ const removeQueryCollections = async (space: Space) => {
   }
 
   const objects = await Promise.all(rootCollection.objects.map((ref) => ref.load()));
-  const queryCollections = objects.filter((object) => Obj.getTypename(object) === 'dxos.org/type/QueryCollection');
+  const queryCollections = objects.filter((object) => Obj.getTypename(object) === 'org.dxos.type.query-collection');
   if (queryCollections.length === 0) {
     return;
   }
 
   Obj.change(rootCollection, (c) => {
     c.objects = objects
-      .filter((object) => Obj.getTypename(object) !== 'dxos.org/type/QueryCollection')
+      .filter((object) => Obj.getTypename(object) !== 'org.dxos.type.query-collection')
       .map((object) => Ref.make(object));
   });
   queryCollections.forEach((object) => space.db.remove(object));

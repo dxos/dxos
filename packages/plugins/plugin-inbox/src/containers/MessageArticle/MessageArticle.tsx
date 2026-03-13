@@ -21,7 +21,7 @@ export type MessageArticleProps = SurfaceComponentProps<
   }
 >;
 
-export const MessageArticle = ({ role, subject: message, mailbox }: MessageArticleProps) => {
+export const MessageArticle = ({ role, subject: message, mailbox, attendableId }: MessageArticleProps) => {
   const viewMode = useMemo<ViewMode>(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
     return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'plain-only';
@@ -60,7 +60,7 @@ export const MessageArticle = ({ role, subject: message, mailbox }: MessageArtic
 
   return (
     <Message.Root
-      attendableId={Obj.getDXN(mailbox).toString()}
+      attendableId={attendableId}
       viewMode={viewMode}
       message={message}
       sender={sender}

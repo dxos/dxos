@@ -57,7 +57,7 @@ const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: Me
   const { iconSize, onAction } = useMenuScoped('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
 
-  const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
+  const { icon, iconOnly = true, disabled, testId, hidden, classNames, variant } = action.properties;
   const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
   const rootProps = icon
     ? { icon, size: iconSize, iconOnly, label: actionLabel(action, t) }
@@ -76,7 +76,7 @@ const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: Me
       key={action.id}
       disabled={disabled}
       onClick={handleClick}
-      variant='ghost'
+      variant={variant ?? 'ghost'}
       {...(testId && { 'data-testid': testId })}
       {...(rootProps as any)}
       classNames={classNames}

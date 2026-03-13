@@ -15,7 +15,7 @@ export const Channel = Schema.Struct({
   threads: Ref.Ref(Thread.Thread).pipe(Schema.Array, FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Channel',
+    typename: 'org.dxos.type.channel',
     version: '0.1.0',
   }),
 );

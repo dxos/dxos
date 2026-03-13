@@ -47,7 +47,7 @@ export const Event = Schema.Struct({
   thread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Event',
+    typename: 'org.dxos.type.event',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['title']),

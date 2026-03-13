@@ -87,14 +87,14 @@ export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN 
 
 /**
  * Fully qualified globally unique typename.
- * Example: `dxos.org/type/Message`
+ * Example: `org.dxos.type.message`
  */
 // TODO(burdon): Reconcile with short DXN format.
-// TODO(burdon): Change "/type" => "/schema" throughout.
-export const TypenameSchema = Schema.String.pipe(Schema.pattern(/^[a-zA-Z]\w+\.[a-zA-Z]\w{1,}\/[\w/_-]+$/)).annotations(
+// TODO(burdon): Change "type" => "schema" throughout.
+export const TypenameSchema = Schema.String.pipe(Schema.pattern(/^[a-z][a-z0-9]*(\.[a-z][a-z0-9-]*){2,}$/)).annotations(
   {
-    description: 'Fully qualified globally unique typename',
-    example: 'dxos.org/type/Message',
+    description: 'Fully qualified globally unique typename in lowercase reverse-DNS form.',
+    example: 'org.dxos.type.message',
   },
 );
 
@@ -175,7 +175,7 @@ export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined 
 /**
  * Gets the typename of the object without the version.
  * Returns only the name portion, not the DXN.
- * @example "example.org/type/Contact"
+ * @example "org.example.type.contact"
  *
  * @internal (use Obj.getTypename)
  */
@@ -207,7 +207,7 @@ export const setTypename = (obj: any, typename: DXN): void => {
 /**
  * @returns Object type as {@link DXN}.
  * @returns undefined if the object doesn't have a type.
- * @example `dxn:example.com/type/Person:1.0.0`
+ * @example `dxn:com.example.type.person:1.0.0`
  *
  * @internal (use Obj.getTypeDXN)
  */
@@ -467,9 +467,9 @@ interface MakeAnnoationsProps<T> {
 // TODO(wittjosiah): Comment.
 export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): AnnotationHelper<T> => {
   assertArgument(
-    /[a-zA-Z0-9]+\.[a-zA-Z.]+\/[a-zA-Z/]+/.test(props.id),
+    /^[a-z][a-z0-9]*(\.[a-z][a-z0-9-]*){2,}$/.test(props.id),
     'id',
-    'Annotation id must be in the FQN format (dxos.org/annotation/Example).',
+    'Annotation id must be in the FQN format (org.dxos.annotation.example).',
   );
 
   const getFromAst = (ast: SchemaAST.AST) =>
@@ -521,6 +521,6 @@ export interface IconAnnotation extends Schema.Schema.Type<typeof IconAnnotation
  * Icon to render in the UI.
  */
 export const IconAnnotation = makeUserAnnotation<IconAnnotation>({
-  id: 'dxos.org/annotation/Icon',
+  id: 'org.dxos.annotation.icon',
   schema: IconAnnotationSchema,
 });

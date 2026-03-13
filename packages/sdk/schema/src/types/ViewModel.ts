@@ -262,30 +262,3 @@ export const makeFromDatabase = async ({
     }),
   };
 };
-
-//
-// V4
-//
-
-const ViewSchemaV4 = Schema.Struct({
-  name: Schema.optional(
-    Schema.String.annotations({
-      title: 'Name',
-      [SchemaAST.ExamplesAnnotationId]: ['Contact'],
-    }),
-  ),
-  query: Schema.Struct({
-    raw: Schema.optional(Schema.String),
-    ast: QueryAST.Query,
-  }).pipe(FormInputAnnotation.set(false)),
-  projection: View.Projection.pipe(FormInputAnnotation.set(false)),
-  presentation: Ref.Ref(Obj.Unknown).pipe(FormInputAnnotation.set(false)),
-}).pipe(
-  Type.object({
-    typename: 'dxos.org/type/View',
-    version: '0.4.0',
-  }),
-  LabelAnnotation.set(['name']),
-);
-export interface ViewV4 extends Schema.Schema.Type<typeof ViewSchemaV4> {}
-export const ViewV4: Type.Obj<ViewV4> = ViewSchemaV4 as any;

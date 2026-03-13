@@ -14,7 +14,7 @@ import { useApp } from '../../hooks';
 
 // Minimal plugin that contributes a ReactRoot.
 const TestPlugin = Plugin.define<{ error?: boolean }>({
-  id: 'dxos.org/plugin/test',
+  id: 'org.dxos.plugin.test',
   name: 'Test Plugin',
 }).pipe(
   Plugin.addModule(({ error }) => ({
@@ -23,7 +23,7 @@ const TestPlugin = Plugin.define<{ error?: boolean }>({
     activate: () =>
       Effect.succeed([
         Capability.contributes(Capabilities.ReactRoot, {
-          id: 'dxos.org/plugin/test/root',
+          id: 'org.dxos.plugin.test.root',
           root: () => {
             useEffect(() => {
               let t: NodeJS.Timeout;

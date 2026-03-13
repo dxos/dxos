@@ -57,7 +57,7 @@ const STREAMING_CONFIG = {
 } as const;
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/google-mail-sync',
+  key: 'org.dxos.function.inbox.google-mail-sync',
   name: 'Sync Gmail',
   description: 'Sync emails from Gmail to the mailbox feed.',
   inputSchema: Schema.Struct({
@@ -160,9 +160,9 @@ export default defineFunction({
  */
 const syncLabels = Effect.fn(function* (mailbox: Mailbox.Mailbox, userId: string) {
   const { labels } = yield* GoogleMail.listLabels(userId);
-  Obj.change(mailbox, (mutable: any) => {
-    labels.forEach((label: any) => {
-      (mutable.labels ??= {})[label.id] = label.name;
+  Obj.change(mailbox, (mailbox) => {
+    labels.forEach((label) => {
+      (mailbox.labels ??= {})[label.id] = label.name;
     });
   });
   return labels.length;

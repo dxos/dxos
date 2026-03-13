@@ -315,7 +315,7 @@ export const generator = () => ({
             'subscription',
             (triggerSpec) =>
               (triggerSpec.query = {
-                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast as Obj.Mutable<QueryAST.Query>,
+                ast: Query.select(Filter.typename('org.dxos.type.chess')).ast as Obj.Mutable<QueryAST.Query>,
               }),
             'type',
           );

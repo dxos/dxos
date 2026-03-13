@@ -29,11 +29,6 @@ export default Capability.makeModule(() =>
     ]),
     Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
-        operation: SheetOperation.OnCreateSpace,
-        // TODO(wittjosiah): Remove?
-        handler: Effect.fnUntraced(function* () {}),
-      }),
-      OperationResolver.make({
         operation: SheetOperation.InsertAxis,
         handler: ({ model, axis, index, count }) =>
           Effect.sync(() => {

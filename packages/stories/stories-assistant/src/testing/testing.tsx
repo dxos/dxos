@@ -22,7 +22,7 @@ import {
 } from '@dxos/app-framework';
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
-import { AppActivationEvents, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
 import { AgentFunctions, DesignBlueprint, MarkdownBlueprint, PlanningBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
@@ -198,7 +198,7 @@ const PluginManagerHost: React.FC<{
 
     manager.capabilities.contribute({
       ...capability,
-      module: 'dxos.org/app-framework/withPluginManager/lazy',
+      module: 'org.dxos.app-framework.with-plugin-manager.lazy',
     });
 
     return () => {
@@ -318,7 +318,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
       const space = client.spaces.default;
 
       // Ensure workspace is set.
-      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: space.id });
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
 
       // Create initial chat.
       yield* invoke(AssistantOperation.CreateChat, { db: space.db });

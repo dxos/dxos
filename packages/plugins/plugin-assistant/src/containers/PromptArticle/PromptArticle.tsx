@@ -19,9 +19,9 @@ import { meta } from '../../meta';
 
 export type PromptArticleProps = SurfaceComponentProps<Prompt.Prompt>;
 
-export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
+export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const { hasAttention } = useAttention(Obj.getDXN(subject).toString());
+  const { hasAttention } = useAttention(attendableId);
   const db = Obj.getDatabase(subject);
 
   const inputData = useMemo<FunctionDefinition.Input<typeof AgentFunctions.Prompt> | undefined>(

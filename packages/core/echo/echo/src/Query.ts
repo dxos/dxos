@@ -380,11 +380,11 @@ class QueryClass implements Any {
     if (items.length > 0) {
       const typename = Obj.getTypename(items[0] as Obj.Unknown);
       // TODO(dmaretskyi): Support querying from views.
-      if (typename === 'dxos.org/type/View') {
+      if (typename === 'org.dxos.type.view') {
         throw new Error('Query.from(view) is not yet supported.');
       }
       // TODO(dmaretskyi): Support querying from collections.
-      if (typename === 'dxos.org/type/Collection') {
+      if (typename === 'org.dxos.type.collection') {
         throw new Error('Query.from(collection) is not yet supported.');
       }
     }

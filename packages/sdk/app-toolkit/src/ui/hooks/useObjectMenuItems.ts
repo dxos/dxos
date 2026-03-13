@@ -12,6 +12,7 @@ import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { LayoutOperation } from '../../operations';
+import { getObjectPathFromObject } from '../../paths';
 
 const OPEN_ICON = 'ph--arrow-square-out--regular';
 
@@ -37,9 +38,9 @@ export const useObjectNavigate = (subject: unknown): (() => void) | undefined =>
       return;
     }
 
-    const subjectId = Obj.getDXN(subject).toString();
+    const subjectPath = getObjectPathFromObject(subject);
     return () => {
-      void invokePromise(LayoutOperation.Open, { subject: [subjectId] });
+      void invokePromise(LayoutOperation.Open, { subject: [subjectPath] });
     };
   }, [subject, invokePromise]);
 };
@@ -58,12 +59,12 @@ export const useObjectMenuItems = (subject: unknown): MenuItem[] => {
       return [];
     }
 
-    const subjectId = Obj.getDXN(subject).toString();
+    const subjectPath = getObjectPathFromObject(subject);
     return [
       createMenuAction(
         'navigate',
         () => {
-          void invokePromise(LayoutOperation.Open, { subject: [subjectId] });
+          void invokePromise(LayoutOperation.Open, { subject: [subjectPath] });
         },
         {
           label: t('open label'),

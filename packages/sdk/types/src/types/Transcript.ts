@@ -23,7 +23,7 @@ export const Transcript = Schema.Struct({
   queue: Ref.Ref(Queue),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Transcript',
+    typename: 'org.dxos.type.transcript',
     version: '0.1.0',
   }),
   SystemTypeAnnotation.set(true),

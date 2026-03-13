@@ -58,9 +58,6 @@ catalog:
   '@dnd-kit/modifiers': ^6.0.0
   '@dnd-kit/sortable': ^7.0.1
   '@dnd-kit/utilities': ^3.2.0
-  '@dxos/echo': ^0.8.3
-  '@dxos/react-ui': ^0.8.3
-  '@dxos/react-ui-menu': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.1
   '@effect-atom/atom-react': ^0.5.0
@@ -189,8 +186,8 @@ catalog:
   '@storybook/addon-themes': ^10.2.12
   '@storybook/addon-vitest': ^10.2.12
   '@storybook/builder-vite': ^10.2.12
-  '@storybook/icons': ^2.0.1
   '@storybook/html-vite': ^10.2.12
+  '@storybook/icons': ^2.0.1
   '@storybook/mdx2-csf': ^1.1.0
   '@storybook/react-vite': ^10.2.12
   '@storybook/web-components-vite': ^10.2.12

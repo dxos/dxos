@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
-import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
 import { type Event, Message } from '@dxos/types';
@@ -49,7 +49,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}/mailboxes-section`,
+        id: `${meta.id}.mailboxes-section`,
         match: whenSpace,
         connector: (space, get) => {
           const mailboxes = get(AtomQuery.make(space.db, Filter.type(Mailbox.Mailbox)));
@@ -59,7 +59,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             {
-              id: `${space.id}-mailboxes`,
+              id: 'mailboxes',
               type: MAILBOXES_SECTION_TYPE,
               data: null,
               properties: {
@@ -78,7 +78,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}/mailbox-listing`,
+        id: `${meta.id}.mailbox-listing`,
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === MAILBOXES_SECTION_TYPE && space ? Option.some(space) : Option.none();
@@ -90,7 +90,7 @@ export default Capability.makeModule(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
               const mailboxDxn = Obj.getDXN(mailbox).toString();
               return {
-                id: `${mailboxDxn}-mailbox`,
+                id: mailbox.id,
                 type: Mailbox.Mailbox.typename,
                 data: null,
                 properties: {
@@ -102,7 +102,7 @@ export default Capability.makeModule(
                 },
                 nodes: [
                   {
-                    id: `${mailboxDxn}-all-mail`,
+                    id: 'all-mail',
                     type: MAILBOX_ALL_MAIL_TYPE,
                     data: mailbox,
                     properties: {
@@ -113,7 +113,7 @@ export default Capability.makeModule(
                     },
                   },
                   {
-                    id: `${mailboxDxn}-drafts`,
+                    id: 'drafts',
                     type: MAILBOX_DRAFTS_TYPE,
                     data: null,
                     properties: {
@@ -125,7 +125,7 @@ export default Capability.makeModule(
                     },
                   },
                   ...(mailbox.filters?.map(({ name, filter }: { name: string; filter: any }) => ({
-                    id: `${mailboxDxn}-filter-${kebabize(name)}`,
+                    id: `filter-${kebabize(name)}`,
                     type: FILTER_TYPE,
                     data: mailbox,
                     properties: {
@@ -136,7 +136,7 @@ export default Capability.makeModule(
                     },
                     nodes: [
                       {
-                        id: `${mailboxDxn}-filter-${kebabize(name)}-delete`,
+                        id: `filter-${kebabize(name)}-delete`,
                         type: Node.ActionType,
                         data: Effect.fnUntraced(function* () {
                           const index = mailbox.filters.findIndex((f: any) => f.name === name);
@@ -160,7 +160,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}/mailbox-drafts`,
+        id: `${meta.id}.mailbox-drafts`,
         match: NodeMatcher.whenNodeType(MAILBOX_DRAFTS_TYPE),
         connector: (node, get) => {
           const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
@@ -191,7 +191,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             {
-              id: `${Obj.getDXN(mailbox).toString()}-create-draft`,
+              id: 'create-draft',
               type: Node.ActionType,
               data: () => Operation.invoke(InboxOperation.CreateDraft, { db, mailbox }),
               properties: {
@@ -205,7 +205,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}/mailbox-message`,
+        id: `${meta.id}.mailbox-message`,
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (mailbox, get) => {
           const db = Obj.getDatabase(mailbox);
@@ -224,7 +224,7 @@ export default Capability.makeModule(
           )[0];
           return Effect.succeed([
             {
-              id: `${nodeId}${ATTENDABLE_PATH_SEPARATOR}message`,
+              id: 'message',
               type: PLANK_COMPANION_TYPE,
               data: message ?? 'message',
               properties: {
@@ -238,7 +238,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}/calendar-event`,
+        id: `${meta.id}.calendar-event`,
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         connector: (calendar, get) => {
           const db = Obj.getDatabase(calendar);
@@ -254,7 +254,7 @@ export default Capability.makeModule(
           )[0];
           return Effect.succeed([
             {
-              id: `${nodeId}${ATTENDABLE_PATH_SEPARATOR}event`,
+              id: 'event',
               type: PLANK_COMPANION_TYPE,
               data: event ?? 'event',
               properties: {
@@ -268,12 +268,12 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}/sync-mailbox`,
+        id: `${meta.id}.sync-mailbox`,
         match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (mailbox) =>
           Effect.succeed([
             {
-              id: `${Obj.getDXN(mailbox).toString()}-sync`,
+              id: 'sync',
               data: Effect.fnUntraced(function* () {
                 const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
                 const db = Obj.getDatabase(mailbox);
@@ -297,12 +297,12 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}/sync-calendar`,
+        id: `${meta.id}.sync-calendar`,
         match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (calendar) =>
           Effect.succeed([
             {
-              id: `${Obj.getDXN(calendar).toString()}-sync`,
+              id: 'sync',
               data: Effect.fnUntraced(function* () {
                 const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
                 const db = Obj.getDatabase(calendar);

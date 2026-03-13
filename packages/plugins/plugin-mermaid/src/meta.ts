@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/mermaid',
+  id: 'org.dxos.plugin.mermaid',
   name: 'Mermaid',
   description: trim`
     Generate diagrams from simple text-based definitions using Mermaid syntax.

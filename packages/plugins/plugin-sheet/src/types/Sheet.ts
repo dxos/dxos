@@ -62,7 +62,7 @@ export const Sheet = Schema.Struct({
   ranges: Schema.Array(Range).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Sheet',
+    typename: 'org.dxos.type.sheet',
     version: '0.1.0',
   }),
 );

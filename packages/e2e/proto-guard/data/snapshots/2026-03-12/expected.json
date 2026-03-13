@@ -1,0 +1,162 @@
+{
+  "BNU6W3JGZ37VILGKKRXPVDCT3FY6E4XMD": {
+    "01KKKG2DMGG50QZZMBY6XQBFXG": {
+      "id": "01KKKG2DMGG50QZZMBY6XQBFXG",
+      "@type": "dxn:type:org.dxos.type.space-properties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BNU6W3JGZ37VILGKKRXPVDCT3FY6E4XMD:01KKKG2DMGG50QZZMBY6XQBFXG",
+      "__DEFAULT__": "04bcf62fcff9cd50d21583e40ac1d6526df6b177f1900bb71dd0e97f02e435509e4d4e1c6aabff9df2457c9f8e76d255eabbd06f447e74b975f0e82a8dd0480465"
+    }
+  },
+  "BOV533VTA6PDYWV5X5GEMGE23UNC34HW7": {
+    "01KKKG2E35Z2NTZX3TRMFBKJPQ": {
+      "id": "01KKKG2E35Z2NTZX3TRMFBKJPQ",
+      "@type": "dxn:type:org.dxos.type.space-properties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BOV533VTA6PDYWV5X5GEMGE23UNC34HW7:01KKKG2E35Z2NTZX3TRMFBKJPQ",
+      "name": "My Space"
+    }
+  },
+  "BNNICGF5DRWB2N2A37HAVKFNH4QUN4Y74": {
+    "01KKKG2EJG5ZY47E4ZZ1SH5XY2": {
+      "id": "01KKKG2EJG5ZY47E4ZZ1SH5XY2",
+      "@type": "dxn:type:org.dxos.type.space-properties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BNNICGF5DRWB2N2A37HAVKFNH4QUN4Y74:01KKKG2EJG5ZY47E4ZZ1SH5XY2",
+      "name": "first-space"
+    },
+    "01KKKG2EJQ1RQBD4C4F1BGER84": {
+      "id": "01KKKG2EJQ1RQBD4C4F1BGER84",
+      "@type": "dxn:type:com.example.type.expando:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BNNICGF5DRWB2N2A37HAVKFNH4QUN4Y74:01KKKG2EJQ1RQBD4C4F1BGER84",
+      "array": [
+        "one",
+        "two",
+        "three"
+      ],
+      "string": "hello world!",
+      "value": 100
+    },
+    "01KKKG2F21W2P5FVQYRF142MD5": {
+      "id": "01KKKG2F21W2P5FVQYRF142MD5",
+      "@type": "dxn:type:com.example.type.expando:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BNNICGF5DRWB2N2A37HAVKFNH4QUN4Y74:01KKKG2F21W2P5FVQYRF142MD5",
+      "value": [
+        1,
+        2,
+        3,
+        {
+          "/": "dxn:echo:@:01KKKG2F25B584A12GETTPEQSE"
+        }
+      ]
+    },
+    "01KKKG2F25B584A12GETTPEQSE": {
+      "id": "01KKKG2F25B584A12GETTPEQSE",
+      "@type": "dxn:type:com.example.type.todo:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BNNICGF5DRWB2N2A37HAVKFNH4QUN4Y74:01KKKG2F25B584A12GETTPEQSE",
+      "name": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+    }
+  },
+  "BKYFEYRR3T5GJ7LGWGSC23JDY3MQVYRD5": {
+    "01KKKG2FHPWE8Z0C90W6QR0A76": {
+      "id": "01KKKG2FHPWE8Z0C90W6QR0A76",
+      "@type": "dxn:type:org.dxos.type.space-properties:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BKYFEYRR3T5GJ7LGWGSC23JDY3MQVYRD5:01KKKG2FHPWE8Z0C90W6QR0A76",
+      "name": "second-space"
+    },
+    "01KKKG2FHWCMTR0BY00GJSVT1X": {
+      "id": "01KKKG2FHWCMTR0BY00GJSVT1X",
+      "@type": "dxn:type:org.dxos.type.schema:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BKYFEYRR3T5GJ7LGWGSC23JDY3MQVYRD5:01KKKG2FHWCMTR0BY00GJSVT1X",
+      "jsonSchema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "dxn:echo:@:01KKKG2FHWCMTR0BY00GJSVT1X",
+        "entityKind": "object",
+        "typename": "com.example.type.test",
+        "version": "0.1.0",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "testField": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "todo": {
+            "$id": "/schemas/echo/ref",
+            "$ref": "/schemas/echo/ref",
+            "reference": {
+              "schema": {
+                "$ref": "dxn:type:com.example.type.todo"
+              },
+              "schemaVersion": "0.1.0"
+            }
+          }
+        },
+        "required": [
+          "testField",
+          "id"
+        ],
+        "propertyOrder": [
+          "testField",
+          "id",
+          "name",
+          "todo"
+        ],
+        "additionalProperties": false,
+        "annotations": {
+          "schemaId": "dxn:echo:@:01KKKG2FHWCMTR0BY00GJSVT1X"
+        }
+      },
+      "kind": "object",
+      "typename": "com.example.type.test",
+      "version": "0.1.0"
+    },
+    "01KKKG2FJ310EVV8ZTBEEREX1W": {
+      "id": "01KKKG2FJ310EVV8ZTBEEREX1W",
+      "@type": "dxn:echo:@:01KKKG2FHWCMTR0BY00GJSVT1X",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BKYFEYRR3T5GJ7LGWGSC23JDY3MQVYRD5:01KKKG2FJ310EVV8ZTBEEREX1W",
+      "testField": "Test",
+      "name": "Test",
+      "todo": {
+        "/": "dxn:echo:@:01KKKG2FJBXR66KP266FZDGY2B"
+      }
+    },
+    "01KKKG2FJBXR66KP266FZDGY2B": {
+      "id": "01KKKG2FJBXR66KP266FZDGY2B",
+      "@type": "dxn:type:com.example.type.todo:0.1.0",
+      "@meta": {
+        "keys": []
+      },
+      "@dxn": "dxn:echo:BKYFEYRR3T5GJ7LGWGSC23JDY3MQVYRD5:01KKKG2FJBXR66KP266FZDGY2B",
+      "name": "Test todo"
+    }
+  }
+}

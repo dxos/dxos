@@ -76,7 +76,7 @@ export default async ({ data: { bodyText }, context: { space, ai } }: any) => {
 
 const getContext = async ({ space }: any) => {
   let context = '';
-  const { objects: docs } = await space.crud.query({ __typename: 'dxos.org/type/Document' }).run();
+  const { objects: docs } = await space.crud.query({ __typename: 'org.dxos.type.document' }).run();
   for (const doc of docs) {
     const { content } = await space.crud.query({ id: doc.content }).first();
     context += content + '\n\n';

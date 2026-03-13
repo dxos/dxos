@@ -15,12 +15,12 @@ import { FeedAnnotation } from '@dxos/schema';
 /**
  * Foreign key {@link PROJECT_TRIGGER_EXTENSION_KEY} => <initative id : ObjectId>
  */
-const PROJECT_TRIGGER_EXTENSION_KEY = 'dxos.org/extension/ProjectTrigger';
+const PROJECT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.ProjectTrigger';
 
 /**
  * Foreign key {@link PROJECT_TRIGGER_EXTENSION_KEY} => <dxn string of subscription target>
  */
-const PROJECT_TRIGGER_TARGET_EXTENSION_KEY = 'dxos.org/extension/ProjectTriggerTarget';
+const PROJECT_TRIGGER_TARGET_EXTENSION_KEY = 'org.dxos.extension.ProjectTriggerTarget';
 
 /** Checks if an object's schema has the FeedAnnotation. */
 const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {

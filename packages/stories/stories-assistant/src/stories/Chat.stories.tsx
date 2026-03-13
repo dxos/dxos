@@ -1042,7 +1042,7 @@ export const WithScript: Story = {
       const { identityKey } = client.halo.identity.get()!;
       await client.halo.writeCredentials([getAccessCredential(identityKey)]);
 
-      const template = templates.find((template) => template.id === 'dxos.org/script/forex-effect');
+      const template = templates.find((template) => template.id === 'org.dxos.script.forex-effect');
       invariant(template, 'Template not found');
       invariant(template.name, 'Template name not found');
 
@@ -1058,14 +1058,14 @@ export const WithScript: Story = {
 
       space.db.add(
         Blueprint.make({
-          key: 'dxos.org/blueprint/forex',
+          key: 'org.dxos.blueprint.forex',
           name: 'Forex',
           instructions: Template.make({
             source: trim`
               You can get the exchange rate between two currencies.
             `,
           }),
-          tools: [ToolId.make('dxos.org/script/forex-effect')],
+          tools: [ToolId.make('org.dxos.script.forex-effect')],
         }),
       );
 

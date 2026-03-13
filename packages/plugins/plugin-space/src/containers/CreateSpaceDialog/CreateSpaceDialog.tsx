@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -16,7 +16,7 @@ import { useInputSurfaceLookup } from '../../hooks';
 import { meta } from '../../meta';
 import { SpaceForm, SpaceOperation } from '../../types';
 
-export const CREATE_SPACE_DIALOG = `${meta.id}/CreateSpaceDialog`;
+export const CREATE_SPACE_DIALOG = `${meta.id}.CreateSpaceDialog`;
 
 type FormValues = Schema.Schema.Type<typeof SpaceForm>;
 const initialValues: FormValues = { edgeReplication: true };
@@ -33,7 +33,9 @@ export const CreateSpaceDialog = () => {
       const program = Effect.gen(function* () {
         const { data: result } = yield* Effect.promise(() => invokePromise(SpaceOperation.Create, data));
         if (result?.space) {
-          yield* Effect.promise(() => invokePromise(LayoutOperation.SwitchWorkspace, { subject: result.space.id }));
+          yield* Effect.promise(() =>
+            invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(result.space.id) }),
+          );
           yield* Effect.promise(() => invokePromise(LayoutOperation.UpdateDialog, { state: false }));
         }
       });

@@ -18,14 +18,14 @@ import { meta } from '../../../meta';
 /** Creates the settings-sections extension for space settings panel. */
 export const createSettingsExtensions = Effect.fnUntraced(function* () {
   const extension = yield* GraphBuilder.createExtension({
-    id: `${meta.id}/settings-sections`,
-    match: NodeMatcher.whenNodeType(`${meta.id}/settings`),
+    id: `${meta.id}.settings-sections`,
+    match: NodeMatcher.whenNodeType(`${meta.id}.settings`),
     connector: (node) =>
       Effect.succeed([
         {
-          id: `properties-${node.id}`,
-          type: `${meta.id}/properties`,
-          data: `${meta.id}/properties`,
+          id: `${meta.id}.general`,
+          type: `${meta.id}.general`,
+          data: `${meta.id}.general`,
           properties: {
             label: ['space settings properties label', { ns: meta.id }],
             icon: 'ph--sliders--regular',
@@ -34,9 +34,9 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           },
         },
         {
-          id: `members-${node.id}`,
-          type: `${meta.id}/members`,
-          data: `${meta.id}/members`,
+          id: `${meta.id}.members`,
+          type: `${meta.id}.members`,
+          data: `${meta.id}.members`,
           properties: {
             label: ['members panel label', { ns: meta.id }],
             icon: 'ph--users--regular',
@@ -45,9 +45,9 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           },
         },
         {
-          id: `schema-${node.id}`,
-          type: `${meta.id}/schema`,
-          data: `${meta.id}/schema`,
+          id: `${meta.id}.schema`,
+          type: `${meta.id}.schema`,
+          data: `${meta.id}.schema`,
           properties: {
             label: ['space settings schema label', { ns: meta.id }],
             icon: 'ph--shapes--regular',

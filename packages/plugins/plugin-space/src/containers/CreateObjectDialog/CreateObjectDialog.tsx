@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getObjectPath } from '@dxos/app-toolkit';
 import { Collection, Database, Obj, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -27,12 +27,13 @@ import {
 import { meta } from '../../meta';
 import { SpaceOperation } from '../../types';
 
-export const CREATE_OBJECT_DIALOG = `${meta.id}/CreateObjectDialog`;
+export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
 
 export type CreateObjectDialogProps = Pick<CreateObjectPanelProps, 'target' | 'typename' | 'initialFormValues'> & {
   views?: boolean;
   onCreateObject?: (object: Obj.Unknown) => void;
   shouldNavigate?: (object: Obj.Unknown) => boolean;
+  targetNodeId?: string;
 };
 
 export const CreateObjectDialog = ({
@@ -42,6 +43,7 @@ export const CreateObjectDialog = ({
   initialFormValues,
   onCreateObject,
   shouldNavigate: _shouldNavigate,
+  targetNodeId,
 }: CreateObjectDialogProps) => {
   const manager = usePluginManager();
   const { t } = useTranslation(meta.id);
@@ -105,15 +107,16 @@ export const CreateObjectDialog = ({
         invariant(db, 'Missing database');
         const object = yield* metadata.createObject(data, { db });
         if (Obj.isObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
-          yield* operationInvoker.invoke(SpaceOperation.AddObject, {
+          const { subject } = yield* operationInvoker.invoke(SpaceOperation.AddObject, {
             target,
             object,
             hidden: !Obj.instanceOf(Collection.Collection, object),
+            targetNodeId,
           });
           const shouldNavigate = _shouldNavigate ?? (() => true);
           if (shouldNavigate(object)) {
             yield* operationInvoker.invoke(LayoutOperation.Open, {
-              subject: [Obj.getDXN(object).toString()],
+              subject,
             });
           }
 

@@ -38,7 +38,7 @@ export const World = Schema.Struct({
   voxels: Schema.optional(Schema.Record({ key: Schema.String, value: VoxelProps })),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Voxel',
+    typename: 'org.dxos.type.voxel',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),

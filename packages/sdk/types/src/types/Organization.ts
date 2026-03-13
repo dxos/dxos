@@ -84,7 +84,7 @@ export const Organization = OrganizationSchema.pipe(
   LabelAnnotation.set(['name']),
   IconAnnotation.set('ph--building--regular'),
   Type.object({
-    typename: 'dxos.org/type/Organization',
+    typename: 'org.dxos.type.organization',
     version: '0.1.0',
   }),
 );
@@ -100,7 +100,7 @@ export const LegacyOrganization = OrganizationSchema.pipe(
   LabelAnnotation.set(['name']),
   IconAnnotation.set('ph--building--regular'),
   Type.object({
-    typename: 'dxos.org/type/Organization',
+    typename: 'org.dxos.type.organization',
     version: '0.1.0',
   }),
 );

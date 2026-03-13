@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: `${meta.id}/article`,
+        id: `${meta.id}.article`,
         role: ['article', 'section'],
         filter: (data): data is { subject: View.View } => Obj.instanceOf(Graph.Graph, data.subject),
         component: ({ data, role }) => {

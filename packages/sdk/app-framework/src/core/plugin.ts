@@ -49,7 +49,7 @@ export const reset = (event: ActivationEvent.ActivationEvent): Effect.Effect<boo
  * Computes a module ID from plugin ID and export name.
  */
 const computeModuleId = (pluginId: string, moduleName: string): string => {
-  return `${pluginId}/module/${moduleName}`;
+  return `${pluginId}.module.${moduleName}`;
 };
 
 /**
@@ -128,7 +128,7 @@ export type Meta = {
    *
    * Expected to be in the form of a valid URL.
    *
-   * @example dxos.org/plugin/example
+   * @example org.dxos.plugin.example
    */
   id: string;
 

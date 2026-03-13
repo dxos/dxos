@@ -17,9 +17,9 @@ import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export const SPACE_DIRECTORY_HANDLE = `${meta.id}/directory`;
+export const SPACE_DIRECTORY_HANDLE = `${meta.id}.directory`;
 
-export const SPACE_TYPE = 'dxos.org/type/Space';
+export const SPACE_TYPE = 'org.dxos.type.space';
 
 export type SpacePluginOptions = {
   /**
@@ -142,11 +142,11 @@ export const SpaceForm = Schema.Struct({
   edgeReplication: Schema.optional(Schema.Boolean.annotations({ title: 'Enable EDGE Replication' })),
 });
 
-const COLLECTION_OPERATION = 'dxos.org/plugin/collection/operation';
+const COLLECTION_OPERATION = 'org.dxos.plugin.collection.operation';
 
 export namespace CollectionOperation {
   export const Create = Operation.make({
-    meta: { key: `${COLLECTION_OPERATION}/create`, name: 'Create Collection' },
+    meta: { key: `${COLLECTION_OPERATION}.create`, name: 'Create Collection' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -159,7 +159,7 @@ export namespace CollectionOperation {
   });
 }
 
-const SPACE_OPERATION = `${meta.id}/operation`;
+const SPACE_OPERATION = `${meta.id}.operation`;
 
 /**
  * Operations for the Space plugin.
@@ -167,7 +167,7 @@ const SPACE_OPERATION = `${meta.id}/operation`;
 export namespace SpaceOperation {
   export const Create = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/create`,
+      key: `${SPACE_OPERATION}.create`,
       name: 'Create Space',
       description: 'Create a new space.',
     },
@@ -184,7 +184,7 @@ export namespace SpaceOperation {
 
   export const Join = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/join`,
+      key: `${SPACE_OPERATION}.join`,
       name: 'Join Space',
       description: 'Join a space via invitation.',
     },
@@ -200,7 +200,7 @@ export namespace SpaceOperation {
 
   export const Open = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/open`,
+      key: `${SPACE_OPERATION}.open`,
       name: 'Open Space',
       description: 'Open a space.',
     },
@@ -215,7 +215,7 @@ export namespace SpaceOperation {
 
   export const Close = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/close`,
+      key: `${SPACE_OPERATION}.close`,
       name: 'Close Space',
       description: 'Close a space.',
     },
@@ -230,7 +230,7 @@ export namespace SpaceOperation {
 
   export const Share = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/share`,
+      key: `${SPACE_OPERATION}.share`,
       name: 'Share Space',
       description: 'Share a space.',
     },
@@ -250,7 +250,7 @@ export namespace SpaceOperation {
   // TODO(wittjosiah): This appears to be unused.
   export const Lock = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/lock`,
+      key: `${SPACE_OPERATION}.lock`,
       name: 'Lock Space',
       description: 'Lock a space to prevent modifications.',
     },
@@ -266,7 +266,7 @@ export namespace SpaceOperation {
   // TODO(wittjosiah): This appears to be unused.
   export const Unlock = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/unlock`,
+      key: `${SPACE_OPERATION}.unlock`,
       name: 'Unlock Space',
       description: 'Unlock a space to allow modifications.',
     },
@@ -281,7 +281,7 @@ export namespace SpaceOperation {
 
   export const OpenSettings = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/open-settings`,
+      key: `${SPACE_OPERATION}.open-settings`,
       name: 'Open Space Settings',
       description: 'Open space settings.',
     },
@@ -296,7 +296,7 @@ export namespace SpaceOperation {
 
   export const WaitForObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/wait-for-object`,
+      key: `${SPACE_OPERATION}.wait-for-object`,
       name: 'Wait For Object',
       description: 'Wait for an object to be available.',
     },
@@ -311,7 +311,7 @@ export namespace SpaceOperation {
 
   export const AddObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/add-object`,
+      key: `${SPACE_OPERATION}.add-object`,
       name: 'Add Object',
       description: 'Add an object to a space.',
     },
@@ -323,6 +323,9 @@ export namespace SpaceOperation {
           description: 'The database or collection to add to.',
         }),
         hidden: Schema.optional(Schema.Boolean),
+        targetNodeId: Schema.optional(
+          Schema.String.annotations({ description: 'Qualified graph node ID of the target collection.' }),
+        ),
       }),
       output: Schema.Struct({
         id: Schema.String,
@@ -348,7 +351,7 @@ export namespace SpaceOperation {
 
   export const RemoveObjects = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/remove-objects`,
+      key: `${SPACE_OPERATION}.remove-objects`,
       name: 'Remove Objects',
       description: 'Remove objects from a space.',
     },
@@ -373,7 +376,7 @@ export namespace SpaceOperation {
 
   export const DeleteField = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/delete-field`,
+      key: `${SPACE_OPERATION}.delete-field`,
       name: 'Delete Field',
       description: 'Delete a field from a view.',
     },
@@ -389,7 +392,7 @@ export namespace SpaceOperation {
 
   export const OpenCreateObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/open-create-object`,
+      key: `${SPACE_OPERATION}.open-create-object`,
       name: 'Open Create Object Dialog',
       description: 'Open the create object dialog.',
     },
@@ -403,6 +406,9 @@ export namespace SpaceOperation {
         typename: Schema.optional(Schema.String),
         initialFormValues: Schema.optional(Schema.Any),
         navigable: Schema.optional(Schema.Boolean),
+        targetNodeId: Schema.optional(
+          Schema.String.annotations({ description: 'Qualified graph node ID of the target collection.' }),
+        ),
         // TODO(wittjosiah): This is a function, is there a better way to handle this?
         onCreateObject: Schema.optional(Schema.Any),
       }),
@@ -412,7 +418,7 @@ export namespace SpaceOperation {
 
   export const OpenCreateSpace = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/open-create-space`,
+      key: `${SPACE_OPERATION}.open-create-space`,
       name: 'Open Create Space Dialog',
       description: 'Open the create space dialog.',
     },
@@ -425,7 +431,7 @@ export namespace SpaceOperation {
 
   export const Migrate = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/migrate`,
+      key: `${SPACE_OPERATION}.migrate`,
       name: 'Migrate Space',
       description: 'Migrate a space to a new version.',
     },
@@ -441,7 +447,7 @@ export namespace SpaceOperation {
 
   export const Snapshot = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/snapshot`,
+      key: `${SPACE_OPERATION}.snapshot`,
       name: 'Create Snapshot',
       description: 'Create a snapshot of the space.',
     },
@@ -459,7 +465,7 @@ export namespace SpaceOperation {
 
   export const Rename = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/rename`,
+      key: `${SPACE_OPERATION}.rename`,
       name: 'Rename Space',
       description: 'Rename a space.',
     },
@@ -475,7 +481,7 @@ export namespace SpaceOperation {
 
   export const RenameObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/rename-object`,
+      key: `${SPACE_OPERATION}.rename-object`,
       name: 'Rename Object',
       description: 'Rename an object.',
     },
@@ -491,7 +497,7 @@ export namespace SpaceOperation {
 
   export const OpenMembers = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/open-members`,
+      key: `${SPACE_OPERATION}.open-members`,
       name: 'Open Members',
       description: 'Open the members panel for a space.',
     },
@@ -506,7 +512,7 @@ export namespace SpaceOperation {
 
   export const GetShareLink = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/get-share-link`,
+      key: `${SPACE_OPERATION}.get-share-link`,
       name: 'Get Share Link',
       description: 'Get a shareable link for a space.',
     },
@@ -527,7 +533,7 @@ export namespace SpaceOperation {
 
   export const UseStaticSchema = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/use-static-schema`,
+      key: `${SPACE_OPERATION}.use-static-schema`,
       name: 'Use Static Schema',
       description: 'Use a static schema in the space.',
     },
@@ -544,7 +550,7 @@ export namespace SpaceOperation {
 
   export const AddSchema = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/add-schema`,
+      key: `${SPACE_OPERATION}.add-schema`,
       name: 'Add Schema',
       description: 'Add a schema to the space.',
     },
@@ -569,7 +575,7 @@ export namespace SpaceOperation {
 
   export const AddRelation = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/add-relation`,
+      key: `${SPACE_OPERATION}.add-relation`,
       name: 'Add Relation',
       description: 'Add a relation between objects.',
     },
@@ -593,7 +599,7 @@ export namespace SpaceOperation {
   // TODO(wittjosiah): This appears to be unused.
   export const DuplicateObject = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/duplicate-object`,
+      key: `${SPACE_OPERATION}.duplicate-object`,
       name: 'Duplicate Object',
       description: 'Duplicate an object.',
     },
@@ -612,7 +618,7 @@ export namespace SpaceOperation {
    */
   export const RestoreField = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/restore-field`,
+      key: `${SPACE_OPERATION}.restore-field`,
       name: 'Restore Field',
       description: 'Restore a deleted field to a view.',
     },
@@ -634,7 +640,7 @@ export namespace SpaceOperation {
    */
   export const RestoreObjects = Operation.make({
     meta: {
-      key: `${SPACE_OPERATION}/restore-objects`,
+      key: `${SPACE_OPERATION}.restore-objects`,
       name: 'Restore Objects',
       description: 'Restore deleted objects to a space.',
     },

@@ -13,7 +13,6 @@ import { Obj, Type } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { ClientEvents } from '@dxos/plugin-client/types';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
@@ -27,7 +26,6 @@ import {
   LocalModelResolver,
   OperationResolver,
   ReactSurface,
-  Repair,
   Settings,
   Toolkit,
 } from './capabilities';
@@ -129,10 +127,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           Operation.invoke(AssistantOperation.OnCreateSpace, params),
         ),
       ),
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.SpacesReady,
-    activate: Repair,
   }),
   Plugin.addModule({
     activatesOn: AssistantEvents.SetupAiServiceProviders,

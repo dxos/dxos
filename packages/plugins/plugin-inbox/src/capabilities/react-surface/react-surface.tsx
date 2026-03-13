@@ -32,7 +32,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/mailbox`,
+        id: `${meta.id}.mailbox`,
         role: ['article'],
         filter: (
           data,
@@ -48,16 +48,18 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/message`,
+        id: `${meta.id}.message`,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Message.Message; companionTo: Mailbox.Mailbox } =>
-          Obj.instanceOf(Message.Message, data.subject) && Mailbox.instanceOf(data.companionTo),
-        component: ({ data: { companionTo, subject }, role }) => {
-          return <MessageArticle role={role} subject={subject} mailbox={companionTo} />;
+        filter: (data): data is { attendableId: string; subject: Message.Message; companionTo: Mailbox.Mailbox } =>
+          typeof data.attendableId === 'string' &&
+          Obj.instanceOf(Message.Message, data.subject) &&
+          Mailbox.instanceOf(data.companionTo),
+        component: ({ data: { attendableId, companionTo, subject }, role }) => {
+          return <MessageArticle role={role} subject={subject} mailbox={companionTo} attendableId={attendableId} />;
         },
       }),
       Surface.create({
-        id: `${meta.id}/draft-message`,
+        id: `${meta.id}.draft-message`,
         role: ['article'],
         filter: (data): data is { subject: Message.Message } =>
           Obj.instanceOf(Message.Message, data.subject) && !Mailbox.instanceOf(data.companionTo),
@@ -66,7 +68,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/event`,
+        id: `${meta.id}.event`,
         role: ['article', 'section'],
         filter: (data): data is { subject: Event.Event; companionTo: Calendar.Calendar } =>
           Obj.instanceOf(Event.Event, data.subject) && Calendar.instanceOf(data.companionTo),
@@ -75,19 +77,19 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/calendar`,
+        id: `${meta.id}.calendar`,
         role: ['article'],
         filter: (data): data is { subject: Calendar.Calendar } => Calendar.instanceOf(data.subject),
         component: ({ data, role }) => <CalendarArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/message-card`,
+        id: `${meta.id}.message-card`,
         role: 'card--content',
         filter: (data): data is { subject: Message.Message } => Obj.instanceOf(Message.Message, data?.subject),
         component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
       }),
       Surface.create({
-        id: `${meta.id}/event-card`,
+        id: `${meta.id}.event-card`,
         role: 'card--content',
         filter: (data): data is { subject: Event.Event } => Obj.instanceOf(Event.Event, data?.subject),
         component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
@@ -106,13 +108,13 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <SaveFilterPopover mailbox={data.props.mailbox} filter={data.props.filter} />,
       }),
       Surface.create({
-        id: `${meta.id}/mailbox/companion/settings`,
+        id: `${meta.id}.mailbox.companion.settings`,
         role: 'object-settings',
         filter: (data): data is { subject: Mailbox.Mailbox } => Mailbox.instanceOf(data.subject),
         component: ({ data }) => <MailboxSettings subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/calendar/companion/settings`,
+        id: `${meta.id}.calendar.companion.settings`,
         role: 'object-settings',
         filter: (data): data is { subject: Calendar.Calendar } => Calendar.instanceOf(data.subject),
         component: ({ data }) => <CalendarSettings subject={data.subject} />,
@@ -121,13 +123,13 @@ export default Capability.makeModule(() =>
       // TODO(card-cleanup): Remove.
       // TODO(wittjosiah): Generalize the mess below.
       Surface.create({
-        id: `${meta.id}/contact-related`,
+        id: `${meta.id}.contact-related`,
         role: 'related',
         filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
         component: ({ data: { subject } }) => <RelatedToContact subject={subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/organization-related`,
+        id: `${meta.id}.organization-related`,
         role: 'related',
         filter: (data): data is { subject: Organization.Organization } =>
           Obj.instanceOf(Organization.Organization, data.subject),

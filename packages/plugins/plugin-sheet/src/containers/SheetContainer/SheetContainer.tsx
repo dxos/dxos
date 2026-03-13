@@ -6,7 +6,6 @@ import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type ComputeGraphRegistry } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
@@ -31,6 +30,7 @@ export const SheetContainer = ({ registry, ...props }: SheetContainerProps) => (
 const SheetContainerInner = ({
   role,
   subject: sheet,
+  attendableId,
   space,
   ignoreAttention,
 }: Omit<SheetContainerProps, 'registry'>) => {
@@ -40,10 +40,10 @@ const SheetContainerInner = ({
   }
 
   return (
-    <Sheet.Root graph={graph} sheet={sheet} ignoreAttention={ignoreAttention}>
+    <Sheet.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
       <Panel.Root classNames={role === 'section' && 'aspect-aquare'}>
         <Panel.Toolbar asChild>
-          <Sheet.Toolbar id={Obj.getDXN(sheet).toString()} />
+          <Sheet.Toolbar id={attendableId!} />
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Sheet.Content />

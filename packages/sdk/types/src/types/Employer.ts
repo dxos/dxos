@@ -21,7 +21,7 @@ export const Employer = Schema.Struct({
 })
   .pipe(
     Type.relation({
-      typename: 'dxos.org/relation/Employer',
+      typename: 'org.dxos.relation.employer',
       version: '0.1.0',
       source: Person,
       target: Organization,

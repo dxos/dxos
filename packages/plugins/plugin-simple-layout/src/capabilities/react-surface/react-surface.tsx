@@ -23,13 +23,13 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/home`,
+        id: `${meta.id}.home`,
         role: 'article',
         filter: (data): data is SurfaceData => data.attendableId === Node.RootId,
         component: () => <Home />,
       }),
       Surface.create({
-        id: `${meta.id}/nav-branch`,
+        id: `${meta.id}.nav-branch`,
         role: 'article',
         position: 'fallback',
         filter: (data): data is SurfaceData => {

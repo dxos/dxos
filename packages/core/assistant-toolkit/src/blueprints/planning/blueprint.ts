@@ -7,7 +7,7 @@ import { Blueprint } from '@dxos/blueprints';
 
 import { PlanningFunctions } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/planning';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.planning';
 
 const functions = Object.values(PlanningFunctions);
 

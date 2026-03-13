@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, SettingsOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation, OperationResolver } from '@dxos/operation';
 
 import { REGISTRY_ID } from '../../meta';
@@ -16,7 +16,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: SettingsOperation.OpenPluginRegistry,
         handler: Effect.fnUntraced(function* () {
-          yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: REGISTRY_ID });
+          yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(REGISTRY_ID) });
         }),
       }),
     ]);

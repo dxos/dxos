@@ -47,7 +47,7 @@ export default Capability.makeModule(
     };
 
     const eventHandler = debounce(() => {
-      Graph.traverse(graph, { relation: 'child', visitor });
+      Graph.traverse(graph, { relation: ['child', 'action'], visitor });
     }, 500);
 
     const unsubscribe = graph.onNodeChanged.on(eventHandler);

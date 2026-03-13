@@ -11,7 +11,7 @@ import { ExtractionInput, ExtractionOutput } from '../extraction';
  */
 // TODO(mykola): Make it use vector index to query objects and not pass objects as input.
 export const extractionNerFunction = defineFunction({
-  key: 'dxos.org/function/extraction/extract-entities',
+  key: 'org.dxos.function.extraction.extract-entities',
   name: 'Extract Entities',
   description: 'Extracts named entities from a text',
   inputSchema: ExtractionInput,

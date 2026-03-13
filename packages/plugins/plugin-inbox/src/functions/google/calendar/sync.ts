@@ -28,7 +28,7 @@ import { GoogleCredentials } from '../../services/google-credentials';
 import { mapEvent } from './mapper';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/google-calendar-sync',
+  key: 'org.dxos.function.inbox.google-calendar-sync',
   name: 'Sync Google Calendar',
   description:
     'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',

@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
-  key: 'dxos.org/function/markdown/read-tasks',
+  key: 'org.dxos.function.markdown.read-tasks',
   name: 'Read',
   description: 'Read markdown tasks.',
   inputSchema: Schema.Struct({

@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
@@ -70,13 +70,14 @@ export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Per
       if (!mailbox) {
         return;
       }
+      const mailboxPath = getObjectPathFromObject(mailbox);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
       await invokePromise(LayoutOperation.Open, {
-        subject: [Obj.getDXN(mailbox).toString()],
-        workspace: space?.id,
+        subject: [mailboxPath],
+        workspace: space ? getSpacePath(space.id) : undefined,
       });
       await invokePromise(AttentionOperation.Select, {
-        contextId: Obj.getDXN(mailbox).toString(),
+        contextId: mailboxPath,
         selection: { mode: 'single', id: message.id },
       });
     },
@@ -88,13 +89,14 @@ export const RelatedToContact = ({ subject: contact }: SurfaceComponentProps<Per
       if (!calendar) {
         return;
       }
+      const calendarPath = getObjectPathFromObject(calendar);
       await invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
       await invokePromise(LayoutOperation.Open, {
-        subject: [Obj.getDXN(calendar).toString()],
-        workspace: space?.id,
+        subject: [calendarPath],
+        workspace: space ? getSpacePath(space.id) : undefined,
       });
       await invokePromise(AttentionOperation.Select, {
-        contextId: Obj.getDXN(calendar).toString(),
+        contextId: calendarPath,
         selection: { mode: 'single', id: event.id },
       });
     },

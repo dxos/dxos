@@ -5,10 +5,10 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { getCompanionVariant } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { Menu, useMenuActions } from '@dxos/react-ui-menu';
 
 import { useCompanions, useDrawerActions, useSimpleLayoutState } from '../../hooks';
@@ -67,12 +67,6 @@ export const Drawer = () => {
 
 Drawer.displayName = DRAWER_NAME;
 
-/** Parse entry ID to extract primary ID and variant. */
-const parseEntryId = (entryId: string) => {
-  const [id, variant] = entryId.split(ATTENDABLE_PATH_SEPARATOR);
-  return { id, variant };
-};
-
 /**
  * Resolves which companion to show based on variant preference.
  * Falls back to first available if preferred variant not available.
@@ -85,10 +79,7 @@ const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string
 
     // Try to find companion matching the preferred variant.
     if (preferredVariant) {
-      const preferred = companions.find((c) => {
-        const { variant } = parseEntryId(c.id);
-        return variant === preferredVariant;
-      });
+      const preferred = companions.find((c) => getCompanionVariant(c.id) === preferredVariant);
       if (preferred) {
         return preferred;
       }
@@ -99,7 +90,7 @@ const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string
   }, [companions, preferredVariant]);
 
   const companionId = selectedCompanion?.id;
-  const { variant } = parseEntryId(companionId ?? '');
+  const variant = companionId ? getCompanionVariant(companionId) : undefined;
 
   return { selectedCompanion, companionId, variant };
 };

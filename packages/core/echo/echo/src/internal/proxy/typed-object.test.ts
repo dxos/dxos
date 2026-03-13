@@ -16,7 +16,7 @@ const Organization = Schema.Struct({
   name: Schema.String,
 }).pipe(
   EchoObjectSchema({
-    typename: 'example.com/type/Organization',
+    typename: 'com.example.type.organization',
     version: '0.1.0',
   }),
 );
@@ -34,7 +34,7 @@ const Contact = Schema.Struct(
 ).pipe(
   Schema.partial,
   EchoObjectSchema({
-    typename: 'example.com/type/Person',
+    typename: 'com.example.type.person',
     version: '0.1.0',
   }),
 );
@@ -101,7 +101,7 @@ describe('EchoObjectSchema class DSL', () => {
         meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
       }).pipe(
         EchoObjectSchema({
-          typename: 'dxos.org/type/FunctionTrigger',
+          typename: 'org.dxos.type.function-trigger',
           version: '0.1.0',
         }),
       );

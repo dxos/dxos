@@ -100,7 +100,7 @@ describe('useSchema', () => {
     // The runtime registry query subscription doesn't fire when schemas are registered.
     // See: packages/core/echo/echo-db/src/proxy-db/runtime-schema-registry.ts:57
     let schemaAccessor: (() => any) | undefined;
-    const typename = 'example.com/type/Person';
+    const typename = 'com.example.type.person';
 
     function TestComponent() {
       const schema = useSchema(db, typename);

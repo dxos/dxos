@@ -8,7 +8,7 @@ import { trim } from '@dxos/util';
 
 import { ProjectFunctions } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/project';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.project';
 
 const functions = [ProjectFunctions.AddArtifact];
 
@@ -52,7 +52,7 @@ const make = () =>
         {
           name: 'project',
           kind: 'function',
-          function: 'dxos.org/function/project/get-context',
+          function: 'org.dxos.function.project.get-context',
         },
       ],
     }),

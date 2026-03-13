@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
+import { COMPANION_PREFIX } from '@dxos/app-toolkit';
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { OperationResolver } from '@dxos/operation';
-import { Operation } from '@dxos/operation';
-import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { Operation, OperationResolver } from '@dxos/operation';
+import { DeckOperation } from '@dxos/plugin-deck/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
@@ -171,7 +171,7 @@ export default Capability.makeModule(
             // Follow-up operations.
             yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
             yield* Operation.invoke(DeckOperation.ChangeCompanion, {
-              companion: `${subjectId}${ATTENDABLE_PATH_SEPARATOR}comments`,
+              companion: `${COMPANION_PREFIX}comments`,
             });
           }),
         }),

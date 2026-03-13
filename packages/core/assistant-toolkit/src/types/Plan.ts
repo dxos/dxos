@@ -44,7 +44,7 @@ export const Plan = Schema.Struct({
   tasks: Schema.Array(Task),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Plan',
+    typename: 'org.dxos.type.plan',
     version: '0.1.0',
   }),
   Annotation.SystemTypeAnnotation.set(true),

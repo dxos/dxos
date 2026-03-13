@@ -16,7 +16,7 @@ import { GoogleMail } from '../../apis';
 import { GoogleCredentials } from '../../services/google-credentials';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/google-mail-send',
+  key: 'org.dxos.function.inbox.google-mail-send',
   name: 'Send Gmail',
   description: 'Send emails via Gmail.',
   inputSchema: Schema.Struct({

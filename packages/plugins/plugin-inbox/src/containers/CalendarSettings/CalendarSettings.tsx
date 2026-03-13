@@ -5,11 +5,10 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 
@@ -45,7 +44,7 @@ export const CalendarSettings = ({ subject }: SurfaceComponentProps<Calendar.Cal
   const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
     db,
     subject,
-    functionKey: 'dxos.org/function/inbox/google-calendar-sync',
+    functionKey: 'org.dxos.function.inbox.google-calendar-sync',
   });
 
   const handleViewTrigger = useCallback(() => {
@@ -53,8 +52,8 @@ export const CalendarSettings = ({ subject }: SurfaceComponentProps<Calendar.Cal
       return;
     }
     void invokePromise(LayoutOperation.Open, {
-      subject: [`automation-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
-      workspace: db.spaceId,
+      subject: [`${getSpacePath(db.spaceId)}/settings/org.dxos.plugin.automation.automations`],
+      workspace: getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);
 

@@ -7,7 +7,7 @@ import { useMemo } from 'react';
 
 import { type Capabilities } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { debounceAndThrottle } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
@@ -169,7 +169,7 @@ const createBaseExtensions = ({
           renderLinkButton: createRenderLink((targetId: string) => {
             void invokePromise?.(LayoutOperation.Open, {
               subject: [targetId],
-              pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
+              pivotId: object && Obj.isObject(object) ? getObjectPathFromObject(object) : id,
             });
           }),
         }),

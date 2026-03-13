@@ -45,6 +45,7 @@ import {
 
 type MarkdownEditorContextValue = {
   id: string;
+  attendableId?: string;
   setEditorView: (view: EditorView) => void;
   extensions: Extension[];
   previewBlocks: PreviewBlock[];
@@ -64,7 +65,10 @@ type MarkdownEditorRootProps = PropsWithChildren<
   {
     object?: DocumentType;
     extensions?: Extension[];
-  } & Pick<MarkdownEditorContextValue, 'id' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
+  } & Pick<
+    MarkdownEditorContextValue,
+    'id' | 'attendableId' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'
+  > &
     Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
     Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings'>
 >;
@@ -72,6 +76,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
 const MarkdownEditorRoot = ({
   children,
   id,
+  attendableId,
   object,
   editorStateStore,
   selectionManager,
@@ -128,6 +133,7 @@ const MarkdownEditorRoot = ({
   return (
     <MarkdownEditorContextProvider
       id={id}
+      attendableId={attendableId}
       editorView={editorView}
       setEditorView={setEditorView}
       extensions={extensions}
@@ -155,6 +161,7 @@ type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' |
 const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   const {
     id,
+    attendableId,
     editorView,
     setEditorView,
     viewMode,
@@ -168,6 +175,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
       <NaturalMarkdownEditorContent
         {...props}
         id={id}
+        attendableId={attendableId}
         viewMode={viewMode}
         toolbarState={toolbarState}
         extensions={extensions}

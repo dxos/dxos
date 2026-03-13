@@ -25,7 +25,7 @@ export const AccessToken = Schema.Struct({
   }),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/AccessToken',
+    typename: 'org.dxos.type.access-token',
     version: '0.1.0',
   }),
   Schema.annotations({

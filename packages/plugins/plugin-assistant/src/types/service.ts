@@ -86,7 +86,7 @@ export const ServiceType = Schema.Struct({
   interfaces: Schema.optional(Schema.Array(ServiceInterface)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/ServiceType',
+    typename: 'org.dxos.type.service',
     version: '0.1.0',
   }),
 );

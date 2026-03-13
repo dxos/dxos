@@ -6,13 +6,13 @@ import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { useLayout } from '@dxos/app-toolkit/ui';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
-import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
@@ -37,7 +37,7 @@ export type MailboxArticleProps = SurfaceComponentProps<
 
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const id = attendableId ?? Obj.getDXN(mailbox).toString();
+  const id = attendableId ?? getObjectPathFromObject(mailbox);
   const db = Obj.getDatabase(mailbox);
 
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
@@ -127,7 +127,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             selection: { mode: 'single', id: message?.id },
           });
 
-          const companionId = `${id}${ATTENDABLE_PATH_SEPARATOR}message`;
+          const companionId = `${COMPANION_PREFIX}message`;
           if (layout.mode === 'simple') {
             // Simple layout: navigate to companion as standalone view.
             void invokePromise(LayoutOperation.Open, {

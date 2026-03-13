@@ -17,7 +17,7 @@ export const Collection = Schema.Struct({
   objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(internal.FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Collection',
+    typename: 'org.dxos.type.collection',
     version: '0.1.0',
   }),
 );

@@ -7,14 +7,14 @@ import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/
 import React, { useEffect, useRef, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { type Diagram } from '@dxos/plugin-sketch/types';
+import { type Sketch } from '@dxos/plugin-sketch/types';
 import { Panel as DxPanel, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '../../hooks';
 import { type SketchSettingsProps } from '../../types';
 
 export type SketchContainerProps = SurfaceComponentProps<
-  Diagram.Diagram,
+  Sketch.Sketch,
   {
     settings: SketchSettingsProps;
   }

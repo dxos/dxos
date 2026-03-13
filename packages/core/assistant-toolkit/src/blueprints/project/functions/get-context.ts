@@ -12,7 +12,7 @@ import { defineFunction } from '@dxos/functions';
 import { Plan, Project } from '../../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/project/get-context',
+  key: 'org.dxos.function.project.get-context',
   name: 'Get Project Context',
   description: 'Get the context of an project.',
   inputSchema: Schema.Struct({}),

@@ -26,13 +26,12 @@ type PickerState = {
 
 export type BoardContainerProps = SurfaceComponentProps<BoardType.Board>;
 
-export const BoardContainer = ({ role, subject: board }: BoardContainerProps) => {
+export const BoardContainer = ({ role, subject: board, attendableId }: BoardContainerProps) => {
   const controller = useRef<BoardController>(null);
   const [boardItems] = useObject(board, 'items');
   const items = useObjects(boardItems ?? []);
   const addTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
-  const attendableId = Obj.getDXN(board).toString();
   const { hasAttention } = useAttention(attendableId);
 
   const db = Obj.getDatabase(board);

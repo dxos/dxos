@@ -31,7 +31,7 @@ import { renderMarkdown } from '../util';
  * Summarize a mailbox.
  */
 export default defineFunction({
-  key: 'dxos.org/function/inbox/email-summarize',
+  key: 'org.dxos.function.inbox.email-summarize',
   name: 'Summarize',
   description: 'Summarize a mailbox.',
   inputSchema: Schema.Struct({

@@ -25,14 +25,14 @@ export type MarkdownState = {
 };
 
 export namespace MarkdownCapabilities {
-  export const Settings = Capability.make<Atom.Writable<Markdown.Settings>>(`${meta.id}/capability/settings`);
+  export const Settings = Capability.make<Atom.Writable<Markdown.Settings>>(`${meta.id}.capability.settings`);
 
   /** Persisted state atom for view mode per document. */
-  export const State = Capability.make<Atom.Writable<MarkdownState>>(`${meta.id}/capability/state`);
+  export const State = Capability.make<Atom.Writable<MarkdownState>>(`${meta.id}.capability.state`);
 
   /** Editor state store for cursor positions, scroll state, etc. */
-  export const EditorState = Capability.make<EditorStateStore>(`${meta.id}/capability/editor-state`);
+  export const EditorState = Capability.make<EditorStateStore>(`${meta.id}.capability.editor-state`);
 
   // TODO(burdon): Move to ./types (external API)?
-  export const Extensions = Capability.make<MarkdownExtensionProvider[]>(`${meta.id}/capability/extensions`);
+  export const Extensions = Capability.make<MarkdownExtensionProvider[]>(`${meta.id}.capability.extensions`);
 }

@@ -25,8 +25,8 @@ export const Pipeline = Schema.Struct({
   columns: Schema.Array(Column).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Pipeline',
-    version: '0.2.0',
+    typename: 'org.dxos.type.pipeline',
+    version: '0.1.0',
   }),
   Schema.annotations({ title: 'Pipeline' }),
   LabelAnnotation.set(['name']),

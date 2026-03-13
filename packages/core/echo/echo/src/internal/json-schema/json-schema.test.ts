@@ -36,12 +36,12 @@ describe('effect-to-json', () => {
   test('type annotation', () => {
     const Test = Schema.Struct({ name: Schema.String }).pipe(
       Type.object({
-        typename: 'example.com/type/Test',
+        typename: 'com.example.type.test',
         version: '0.1.0',
       }),
     );
     const jsonSchema = toJsonSchema(Test);
-    expect((jsonSchema as any).$id).toEqual('dxn:type:example.com/type/Test');
+    expect((jsonSchema as any).$id).toEqual('dxn:type:com.example.type.test');
     expect((jsonSchema as any).version).toEqual('0.1.0');
   });
 
@@ -51,7 +51,7 @@ describe('effect-to-json', () => {
       name: Schema.String.pipe(PropertyMeta(EXAMPLE_NAMESPACE, meta)),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Test',
+        typename: 'com.example.type.test',
         version: '0.1.0',
       }),
     );
@@ -64,7 +64,7 @@ describe('effect-to-json', () => {
       name: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/TestNested',
+        typename: 'com.example.type.testNested',
         version: '0.1.0',
       }),
     );
@@ -72,7 +72,7 @@ describe('effect-to-json', () => {
       name: Ref(Nested),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Test',
+        typename: 'com.example.type.test',
         version: '0.1.0',
       }),
     );
@@ -89,7 +89,7 @@ describe('effect-to-json', () => {
       name: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/TestNested',
+        typename: 'com.example.type.testNested',
         version: '0.1.0',
       }),
     );
@@ -97,7 +97,7 @@ describe('effect-to-json', () => {
       name: Ref(Nested).annotations({ [FieldLookupAnnotationId]: 'name' }),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Test',
+        typename: 'com.example.type.test',
         version: '0.1.0',
       }),
     );
@@ -113,7 +113,7 @@ describe('effect-to-json', () => {
       name: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/TestNested',
+        typename: 'com.example.type.testNested',
         version: '0.1.0',
       }),
     );
@@ -121,7 +121,7 @@ describe('effect-to-json', () => {
       name: Schema.Array(Ref(Nested)),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Test',
+        typename: 'com.example.type.test',
         version: '0.1.0',
       }),
     );
@@ -135,7 +135,7 @@ describe('effect-to-json', () => {
       name: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/TestNested',
+        typename: 'com.example.type.testNested',
         version: '0.1.0',
       }),
     );
@@ -143,7 +143,7 @@ describe('effect-to-json', () => {
       name: Schema.optional(Ref(Nested)),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Test',
+        typename: 'com.example.type.test',
         version: '0.1.0',
       }),
     );
@@ -166,7 +166,7 @@ describe('effect-to-json', () => {
       }),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
@@ -174,10 +174,10 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(TempSchema);
     expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'dxn:type:example.com/type/Person',
+      $id: 'dxn:type:com.example.type.person',
 
       entityKind: EntityKind.Object,
-      typename: 'example.com/type/Person',
+      typename: 'com.example.type.person',
       version: '0.1.0',
 
       type: 'object',
@@ -217,7 +217,7 @@ describe('effect-to-json', () => {
       field: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Organization',
+        typename: 'com.example.type.organization',
         version: '0.1.0',
       }),
     );
@@ -227,7 +227,7 @@ describe('effect-to-json', () => {
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
@@ -237,10 +237,10 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(Contact);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'dxn:type:example.com/type/Person',
+      $id: 'dxn:type:com.example.type.person',
 
       entityKind: EntityKind.Object,
-      typename: 'example.com/type/Person',
+      typename: 'com.example.type.person',
       version: '0.1.0',
 
       type: 'object',
@@ -260,7 +260,7 @@ describe('effect-to-json', () => {
               $ref: '/schemas/echo/ref',
               reference: {
                 schema: {
-                  $ref: 'dxn:type:example.com/type/Organization',
+                  $ref: 'dxn:type:com.example.type.organization',
                 },
                 schemaVersion: '0.1.0',
               },
@@ -279,7 +279,7 @@ describe('effect-to-json', () => {
       field: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Organization',
+        typename: 'com.example.type.organization',
         version: '0.1.0',
       }),
     );
@@ -289,7 +289,7 @@ describe('effect-to-json', () => {
       organization: Ref(Organization).annotations({ description: 'Contact organization' }),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
@@ -350,18 +350,18 @@ describe('effect-to-json', () => {
     const schema = TestSchema.EmployedBy;
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
-      $id: 'dxn:type:example.com/type/EmployedBy',
+      $id: 'dxn:type:com.example.type.employed-by',
       $schema: 'http://json-schema.org/draft-07/schema#',
       entityKind: 'relation',
-      typename: 'example.com/type/EmployedBy',
+      typename: 'com.example.type.employed-by',
       version: '0.1.0',
       relationSource: {
         // TODO(dmaretskyi): Should those point to specific schema version?
-        $ref: 'dxn:type:example.com/type/Person',
+        $ref: 'dxn:type:com.example.type.person',
       },
       relationTarget: {
         // TODO(dmaretskyi): Should those point to specific schema version?
-        $ref: 'dxn:type:example.com/type/Organization',
+        $ref: 'dxn:type:com.example.type.organization',
       },
       type: 'object',
       properties: {
@@ -387,7 +387,7 @@ describe('effect-to-json', () => {
       name: Schema.String,
     }).pipe(
       EchoObjectSchema({
-        typename: 'example.com/type/Organization',
+        typename: 'com.example.type.organization',
         version: '0.1.0',
       }),
       LabelAnnotation.set(['name']),
@@ -395,9 +395,9 @@ describe('effect-to-json', () => {
 
     const jsonSchema = toJsonSchema(Organization);
     expect(jsonSchema).toEqual({
-      $id: 'dxn:type:example.com/type/Organization',
+      $id: 'dxn:type:com.example.type.organization',
       $schema: 'http://json-schema.org/draft-07/schema#',
-      typename: 'example.com/type/Organization',
+      typename: 'com.example.type.organization',
       version: '0.1.0',
       entityKind: 'object',
       type: 'object',
@@ -468,7 +468,7 @@ describe('effect-to-json', () => {
   const expectReferenceAnnotation = (object: JsonSchemaType) => {
     expect(object.reference).to.deep.eq({
       schema: {
-        $ref: 'dxn:type:example.com/type/TestNested',
+        $ref: 'dxn:type:com.example.type.testNested',
       },
       schemaVersion: '0.1.0',
     });
@@ -497,7 +497,7 @@ describe('json-to-effect', () => {
         field: Schema.String,
       }).pipe(
         Type.object({
-          typename: 'example.com/type/Organization',
+          typename: 'com.example.type.organization',
           version: '0.1.0',
         }),
       );
@@ -518,7 +518,7 @@ describe('json-to-effect', () => {
 
       const Test = (partial ? Schema.partial(Schema.Struct(fields)) : Schema.Struct(fields)).pipe(
         Type.object({
-          typename: 'example.com/type/Test',
+          typename: 'com.example.type.test',
           version: '0.1.0',
         }),
       );
@@ -545,13 +545,13 @@ describe('json-to-effect', () => {
 
   test('legacy schema with dxn:type $id gets decoded', () => {
     const jsonSchema: JsonSchemaType = {
-      $id: 'dxn:type:example.com/type/Project',
+      $id: 'dxn:type:com.example.type.project',
       $schema: 'http://json-schema.org/draft-07/schema#',
       additionalProperties: false,
       echo: {
         type: {
           schemaId: '01JERV1HQCQZDQ4NVCJ42QB38F',
-          typename: 'example.com/type/Project',
+          typename: 'com.example.type.project',
           version: '0.1.0',
         },
       },
@@ -577,7 +577,7 @@ describe('json-to-effect', () => {
     const schema = toEffectSchema(jsonSchema);
     expect(getTypeAnnotation(schema)).to.deep.eq({
       kind: EntityKind.Object,
-      typename: 'example.com/type/Project',
+      typename: 'com.example.type.project',
       version: '0.1.0',
     });
     expect(getTypeIdentifierAnnotation(schema)).to.deep.eq('dxn:echo:@:01JERV1HQCQZDQ4NVCJ42QB38F');
@@ -715,7 +715,7 @@ describe('json-to-effect', () => {
             "$ref": "/schemas/echo/ref",
             "reference": {
               "schema": {
-                "$ref": "dxn:type:example.com/type/Person",
+                "$ref": "dxn:type:com.example.type.person",
               },
               "schemaVersion": "0.1.0",
             },
@@ -736,7 +736,7 @@ describe('json-to-effect', () => {
   test('object nested inside another struct', () => {
     const Contact = Schema.Struct({
       name: Schema.String,
-    }).pipe(EchoObjectSchema({ typename: 'example.com/type/Person', version: '0.1.0' }));
+    }).pipe(EchoObjectSchema({ typename: 'com.example.type.person', version: '0.1.0' }));
     const input = Schema.Struct({
       contact: Contact,
     });
@@ -747,7 +747,7 @@ describe('json-to-effect', () => {
         "additionalProperties": false,
         "properties": {
           "contact": {
-            "$id": "dxn:type:example.com/type/Person",
+            "$id": "dxn:type:com.example.type.person",
             "additionalProperties": false,
             "entityKind": "object",
             "properties": {
@@ -767,7 +767,7 @@ describe('json-to-effect', () => {
               "id",
             ],
             "type": "object",
-            "typename": "example.com/type/Person",
+            "typename": "com.example.type.person",
             "version": "0.1.0",
           },
         },
@@ -796,7 +796,7 @@ describe('reference', () => {
       $schema: 'http://json-schema.org/draft-07/schema#',
       reference: {
         schema: {
-          $ref: 'dxn:type:example.com/type/Person',
+          $ref: 'dxn:type:com.example.type.person',
         },
         schemaVersion: '0.1.0',
       },
@@ -814,7 +814,7 @@ describe('reference', () => {
           $ref: '/schemas/echo/ref',
           reference: {
             schema: {
-              $ref: 'dxn:type:example.com/type/Person',
+              $ref: 'dxn:type:com.example.type.person',
             },
             schemaVersion: '0.1.0',
           },
@@ -835,7 +835,7 @@ describe('reference', () => {
           $ref: '/schemas/echo/ref',
           reference: {
             schema: {
-              $ref: 'dxn:type:example.com/type/Person',
+              $ref: 'dxn:type:com.example.type.person',
             },
             schemaVersion: '0.1.0',
           },

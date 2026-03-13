@@ -7,7 +7,8 @@ import React, { useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
-import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
@@ -44,7 +45,7 @@ export const CalendarArticle = ({ role, subject: calendar }: SurfaceComponentPro
     (event: Event.Event) => {
       singleSelect(event.id);
       void invokePromise(DeckOperation.ChangeCompanion, {
-        companion: `${id}${ATTENDABLE_PATH_SEPARATOR}event`,
+        companion: `${COMPANION_PREFIX}event`,
       });
     },
     [singleSelect, invokePromise, id],

@@ -17,13 +17,16 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/table`,
+        id: `${meta.id}.table`,
         role: ['article', 'section', 'slide'],
-        filter: (data): data is { subject: Table.Table } => Obj.instanceOf(Table.Table, data.subject),
-        component: ({ data, role }) => <TableContainer role={role} subject={data.subject} />,
+        filter: (data): data is { attendableId: string; subject: Table.Table } =>
+          typeof data.attendableId === 'string' && Obj.instanceOf(Table.Table, data.subject),
+        component: ({ data, role }) => (
+          <TableContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
-        id: `${meta.id}/table-card`,
+        id: `${meta.id}.table-card`,
         role: ['card--content'],
         filter: (data): data is { subject: Table.Table } => Obj.instanceOf(Table.Table, data.subject),
         component: ({ data, role }) => <TableCard subject={data.subject} role={role} />,

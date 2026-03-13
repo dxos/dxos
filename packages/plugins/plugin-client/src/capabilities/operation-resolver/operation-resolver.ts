@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { PublicKey } from '@dxos/client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -65,8 +65,8 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: ClientOperation.ShareIdentity,
         handler: Effect.fnUntraced(function* () {
-          yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: Account.id });
-          yield* Operation.invoke(LayoutOperation.Open, { subject: [Account.Profile] });
+          yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(Account.id) });
+          yield* Operation.invoke(LayoutOperation.Open, { subject: [`${getSpacePath(Account.id)}/${Account.Profile}`] });
           yield* Operation.schedule(ObservabilityOperation.SendEvent, { name: 'identity.share' });
         }),
       }),

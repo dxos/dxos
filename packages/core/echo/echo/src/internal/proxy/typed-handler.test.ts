@@ -40,10 +40,10 @@ describe('complex schema validations', () => {
 
   test('references', () => {
     const Foo = Schema.Struct({ field: Schema.String }).pipe(
-      EchoObjectSchema({ typename: 'example.com/type/Foo', version: '0.1.0' }),
+      EchoObjectSchema({ typename: 'com.example.type.foo', version: '0.1.0' }),
     );
     const Bar = Schema.Struct({ fooRef: Ref(Foo) }).pipe(
-      EchoObjectSchema({ typename: 'example.com/type/Bar', version: '0.1.0' }),
+      EchoObjectSchema({ typename: 'com.example.type.bar', version: '0.1.0' }),
     );
     const field = 'hello';
     expect(() => makeObject(Bar, { fooRef: { id: '1', field } as any })).to.throw();

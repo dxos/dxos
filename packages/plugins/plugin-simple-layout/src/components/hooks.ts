@@ -4,23 +4,23 @@
 
 import { useEffect } from 'react';
 
+import { expandAttendableId } from '@dxos/react-ui-attention';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph } from '@dxos/plugin-graph';
 
 /**
- * Hook to expand graph nodes two levels deep when directly linked to.
+ * Expand graph nodes along the full path from root to the given node ID.
+ * Walks each progressive prefix, ensuring ancestor nodes are materialized
+ * before attempting to access their children.
  */
-export const useLoadDescendents = (nodeId?: string) => {
+export const useExpandPath = (nodeId?: string) => {
   const { graph } = useAppGraph();
 
   useEffect(() => {
     if (nodeId) {
-      // First level: expand the node itself.
-      Graph.expand(graph, nodeId, 'child');
-      // Second level: expand each child.
-      Graph.getConnections(graph, nodeId, 'child').forEach((child) => {
-        Graph.expand(graph, child.id, 'child');
-      });
+      for (const prefix of expandAttendableId(nodeId)) {
+        Graph.expand(graph, prefix, 'child');
+      }
     }
   }, [nodeId, graph]);
 };

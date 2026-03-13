@@ -15,7 +15,7 @@ import * as Mailbox from '../types/Mailbox';
 import { renderMarkdown } from '../util';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/email-open',
+  key: 'org.dxos.function.inbox.email-open',
   name: 'Open email',
   description: 'Opens and reads the contents of a mailbox.',
   inputSchema: Schema.Struct({

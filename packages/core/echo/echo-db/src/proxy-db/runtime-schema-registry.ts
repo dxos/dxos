@@ -15,7 +15,7 @@ import { coerceArray, defaultMap } from '@dxos/util';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
 
 // TODO(wittjosiah): Use Annotation.SystemTypeAnnotation.
-const SYSTEM_SCHEMA = ['dxos.org/type/Schema'];
+const SYSTEM_SCHEMA = ['org.dxos.type.schema'];
 
 /**
  * Registry of `Type.RuntimeType` schemas.

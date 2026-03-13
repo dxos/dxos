@@ -7,7 +7,7 @@ import { Atom } from '@effect-atom/atom-react';
 import React, { forwardRef, useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
@@ -33,9 +33,8 @@ export type MarkdownContainerProps = SurfaceComponentProps<
 >;
 
 export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerProps>(
-  ({ role, subject: object, id, settings, extensionProviders, ...props }, forwardedRef) => {
+  ({ role, subject: object, id, attendableId, settings, extensionProviders, ...props }, forwardedRef) => {
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
-    const attendableId = Obj.instanceOf(Markdown.Document, object) ? Obj.getDXN(object).toString() : undefined;
     const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
     const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
     const initialValue = docContent ?? textContent;
@@ -66,7 +65,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     const runAction = useActionRunner();
     const customActions = useMemo(() => {
       return Atom.make((get) => {
-        const actions = get(graph.actions(id));
+        const actions = get(graph.actions(attendableId ?? id));
         const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
         const edges = nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' }));
         return { nodes, edges };
@@ -88,7 +87,8 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
 
     return (
       <MarkdownEditor.Root
-        id={attendableId ?? id}
+        id={id}
+        attendableId={attendableId}
         object={object}
         extensions={extensions}
         settings={settings}

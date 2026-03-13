@@ -16,7 +16,7 @@ const Task = Schema.Struct({
   title: Schema.optional(Schema.String),
 }).pipe(
   EchoObjectSchema({
-    typename: 'example.com/type/Task',
+    typename: 'com.example.type.task',
     version: '0.1.0',
   }),
 );
@@ -29,7 +29,7 @@ const Contact = Schema.Struct({
   tasks: Schema.Array(Ref(Task)),
 }).pipe(
   EchoObjectSchema({
-    typename: 'example.com/type/Person',
+    typename: 'com.example.type.person',
     version: '0.1.0',
   }),
 );

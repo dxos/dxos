@@ -20,7 +20,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
   const { renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;
-  const { actions: actionsProp, groupedActions } = useActions(item, path);
+  const { actions: actionsProp, groupedActions } = useActions(item);
   const sortedActions = useMemo(
     () =>
       actionsProp.toSorted((actionA, actionB) => {
@@ -56,7 +56,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
     [primaryAction, groupedActions],
   );
 
-  const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
+  const ActionRoot = popoverAnchorId === `${NAV_TREE_ITEM}:${item.id}` ? Popover.Anchor : Fragment;
 
   return (
     <div role='none' className='contents dx-app-no-drag'>

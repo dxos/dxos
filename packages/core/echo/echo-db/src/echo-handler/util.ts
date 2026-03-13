@@ -3,29 +3,14 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { getProxyTarget } from '@dxos/echo/internal';
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
-
-import { type EchoDatabase } from '../proxy-db';
-
-import { isEchoObject } from './echo-object-utils';
-import { type ProxyTarget, symbolInternals } from './echo-proxy-target';
-
-export const getDatabaseFromObject = (obj: any): EchoDatabase | undefined => {
-  if (!isEchoObject(obj)) {
-    return undefined;
-  }
-
-  const target = getProxyTarget(obj) as ProxyTarget;
-  return target[symbolInternals].database;
-};
 
 /**
  * @deprecated Use `DXN.fromSpaceAndObjectId(spaceId, obj.id)` instead.
  */
 export const getDXNWithSpaceKey = (obj: Obj.Any): DXN | undefined => {
-  const db = getDatabaseFromObject(obj);
+  const db = Obj.getDatabase(obj);
   return db && DXN.fromSpaceAndObjectId(db.spaceId, obj.id);
 };
 

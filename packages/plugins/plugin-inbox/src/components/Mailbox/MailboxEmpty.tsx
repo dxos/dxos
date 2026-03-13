@@ -5,9 +5,8 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
@@ -24,8 +23,8 @@ export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
   const openSpaceSettings = useCallback(() => {
     if (db) {
       void invokePromise(LayoutOperation.Open, {
-        subject: [`integrations-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
-        workspace: db.spaceId,
+        subject: [`${getSpacePath(db.spaceId)}/settings/org.dxos.plugin.token-manager.integrations`],
+        workspace: getSpacePath(db.spaceId),
       });
     }
   }, [db, invokePromise]);

@@ -13,18 +13,18 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
 import { Sketch } from '../../components';
-import { type Diagram, type SketchSettingsProps } from '../../types';
+import { type Sketch as SketchNs, type SketchSettingsProps } from '../../types';
 
 export type SketchContainerProps = SurfaceComponentProps<
-  Diagram.Diagram,
+  SketchNs.Sketch,
   {
     settings: SketchSettingsProps;
   }
 >;
 
-export const SketchContainer = ({ role, subject: sketch, settings }: SketchContainerProps) => {
+export const SketchContainer = ({ role, attendableId, subject: sketch, settings }: SketchContainerProps) => {
   const id = Obj.getDXN(sketch).toString();
-  const { hasAttention } = useAttention(id);
+  const { hasAttention } = useAttention(attendableId);
 
   const props = {
     readonly: role === 'slide',

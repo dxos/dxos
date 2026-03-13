@@ -35,7 +35,7 @@ interface MakeProps<T> {
  * @example
  * ```ts
  * const ColorAnnotation = Annotation.make({
- *   id: 'dxos.org/annotation/Color',
+ *   id: 'org.dxos.annotation.color',
  *   schema: Schema.String,
  * });
  *

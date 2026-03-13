@@ -11,7 +11,7 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/database/context-remove',
+  key: 'org.dxos.function.database.context-remove',
   name: 'Remove from context',
   description: trim`
     Removes the object from the chat context.

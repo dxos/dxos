@@ -16,11 +16,6 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
-        operation: WnfsOperation.OnCreateSpace,
-        // TODO(wittjosiah): Remove?
-        handler: Effect.fnUntraced(function* () {}),
-      }),
-      OperationResolver.make({
         operation: WnfsOperation.Create,
         handler: ({ name, type, cid }) =>
           Effect.succeed({

@@ -12,7 +12,7 @@ import { defineFunction } from '@dxos/functions';
 import { Project } from '../../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/project/add-artifact',
+  key: 'org.dxos.function.project.add-artifact',
   name: 'Add artifact',
   description: 'Adds a new artifact.',
   inputSchema: Schema.Struct({

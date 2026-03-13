@@ -12,7 +12,7 @@ import { defineFunction } from '@dxos/functions';
 import { Chess } from '../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/chess/move',
+  key: 'org.dxos.function.chess.move',
   name: 'Move',
   description: 'Makes a move in the given chess game.',
   inputSchema: Schema.Struct({

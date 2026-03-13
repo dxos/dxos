@@ -25,7 +25,7 @@ export default Capability.makeModule(
 
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
-      key: `${meta.id}/state`,
+      key: `${meta.id}.state`,
       schema: SpaceCapabilities.StateSchema,
       defaultValue: () => ({ ...defaultSpaceState }),
     });
@@ -43,8 +43,8 @@ export default Capability.makeModule(
     // Update navigableCollections based on plugin state.
     const updateNavigableCollections = () => {
       const enabled =
-        manager.getEnabled().includes('dxos.org/plugin/stack') ||
-        manager.getEnabled().includes('dxos.org/plugin/simple-layout');
+        manager.getEnabled().includes('org.dxos.plugin.stack') ||
+        manager.getEnabled().includes('org.dxos.plugin.simple-layout');
       const current = registry.get(ephemeralAtom);
       if (enabled !== current.navigableCollections) {
         registry.update(ephemeralAtom, (c) => ({ ...c, navigableCollections: enabled }));

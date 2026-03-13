@@ -178,7 +178,7 @@ const schemaVariance = {
  *
  * @example
  * ```ts
- * export class TableType extends Schema.Struct({...}).pipe(Type.object({ typename: 'example.org/type/Table', version: '0.1.0' })){
+ * export class TableType extends Schema.Struct({...}).pipe(Type.object({ typename: 'com.example.type.table', version: '0.1.0' })){
  *   title: Schema.String,
  *   schema: Schema.optional(ref(EchoSchema)),
  *   props: Schema.mutable(S.Array(TablePropSchema)),

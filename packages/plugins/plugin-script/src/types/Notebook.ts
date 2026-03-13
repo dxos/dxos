@@ -30,7 +30,7 @@ export const Notebook = Schema.Struct({
   cells: Cell.pipe(Schema.Array, FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Notebook',
+    typename: 'org.dxos.type.notebook',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),

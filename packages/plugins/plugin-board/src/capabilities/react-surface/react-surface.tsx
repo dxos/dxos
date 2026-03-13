@@ -19,8 +19,11 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Board.Board } => Obj.instanceOf(Board.Board, data.subject),
-        component: ({ role, data }) => <BoardContainer role={role} subject={data.subject} />,
+        filter: (data): data is { attendableId: string; subject: Board.Board } =>
+          typeof data.attendableId === 'string' && Obj.instanceOf(Board.Board, data.subject),
+        component: ({ role, data }) => (
+          <BoardContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
     ]),
   ),

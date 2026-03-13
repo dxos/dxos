@@ -15,7 +15,7 @@ import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
-import { useLoadDescendents } from '../hooks';
+import { useExpandPath } from '../hooks';
 
 export type NavBranchProps = {
   id: string;
@@ -30,7 +30,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
 
-  useLoadDescendents(id);
+  useExpandPath(id);
 
   const children = useConnections(graph, id, 'child');
 
@@ -85,6 +85,7 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
     [invokeSync, data.id],
   );
 
+  // Register this item with the search context.
   useEffect(() => {
     if (ref.current) {
       registerItem(data.id, ref.current, handleSelect);
@@ -93,6 +94,7 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
     return () => unregisterItem(data.id);
   }, [data.id, handleSelect, registerItem, unregisterItem]);
 
+  // Scroll into view when selected.
   useEffect(() => {
     if (isSelected && ref.current) {
       ref.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });

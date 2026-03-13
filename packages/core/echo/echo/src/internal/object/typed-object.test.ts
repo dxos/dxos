@@ -12,7 +12,7 @@ const Organization = Schema.Struct({
   name: Schema.String,
 }).pipe(
   EchoObjectSchema({
-    typename: 'example.com/type/Organization',
+    typename: 'com.example.type.organization',
     version: '0.1.0',
   }),
 );
@@ -25,7 +25,7 @@ describe('EchoObjectSchema DSL', () => {
   });
 
   test('static typename accessor', async () => {
-    expect(Organization.typename).to.eq('example.com/type/Organization');
+    expect(Organization.typename).to.eq('com.example.type.organization');
   });
 
   test('expect schema', async () => {

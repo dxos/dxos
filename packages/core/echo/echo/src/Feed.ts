@@ -23,7 +23,7 @@ import * as Type from './Type';
  *
  * @example
  * ```ts
- * const feed = Obj.make(Feed.Feed, { name: 'notifications', kind: 'dxos.org/plugin/notifications/v1' });
+ * const feed = Obj.make(Feed.Feed, { name: 'notifications', kind: 'org.dxos.plugin.notifications.v1' });
  * ```
  */
 export const Feed = Schema.Struct({
@@ -33,7 +33,7 @@ export const Feed = Schema.Struct({
   kind: Schema.String.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Feed',
+    typename: 'org.dxos.type.feed',
     version: '0.1.0',
   }),
   internal.SystemTypeAnnotation.set(true),
@@ -52,7 +52,7 @@ export interface Feed extends Schema.Schema.Type<typeof Feed> {}
  * Meta key source for storing the backing DXN bound to a feed object.
  */
 // TODO(dmaretskyi): Enforce that Feed ObjectId = feed storage ID. And remove this key.
-export const DXN_KEY = 'dxos.org/key/feed';
+export const DXN_KEY = 'org.dxos.key.feed';
 
 /**
  * Opaque cursor for iterating over feed items.
@@ -80,7 +80,7 @@ export interface RetentionOptions {
  *
  * @example
  * ```ts
- * const feed = Feed.make({ name: 'notifications', kind: 'dxos.org/plugin/notifications/v1' });
+ * const feed = Feed.make({ name: 'notifications', kind: 'org.dxos.plugin.notifications.v1' });
  * ```
  */
 // TODO(wittjosiah): How to control the feed namespace (data/trace)? Why do feeds have namespaces?

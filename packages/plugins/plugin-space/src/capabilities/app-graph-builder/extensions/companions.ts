@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { COMPANION_PREFIX } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
-import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 // TODO(wittjosiah): This is currently necessary for type portability.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -24,12 +25,12 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
   return yield* Effect.all([
     // Object settings plank companion.
     GraphBuilder.createExtension({
-      id: `${meta.id}/settings`,
+      id: `${meta.id}.settings`,
       match: NodeMatcher.whenEchoObjectMatches,
       connector: (node) =>
         Effect.succeed([
           {
-            id: [node.id, 'settings'].join(ATTENDABLE_PATH_SEPARATOR),
+            id: `${COMPANION_PREFIX}settings`,
             type: PLANK_COMPANION_TYPE,
             data: 'settings',
             properties: {
@@ -44,7 +45,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
 
     // View selected objects companion.
     GraphBuilder.createExtension({
-      id: `${meta.id}/selected-objects`,
+      id: `${meta.id}.selected-objects`,
       match: (node) => {
         if (!Obj.isObject(node.data)) {
           return Option.none();
@@ -64,7 +65,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
       connector: (node) =>
         Effect.succeed([
           {
-            id: [node.id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
+            id: `${COMPANION_PREFIX}selected-objects`,
             type: PLANK_COMPANION_TYPE,
             data: 'selected-objects',
             properties: {

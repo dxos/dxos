@@ -23,7 +23,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { AttentionManager, getAttendables } from '../attention';
-import { ATTENDABLE_PATH_SEPARATOR, type Attention } from '../types';
+import { type Attention } from '../types';
 
 const ATTENTION_NAME = 'Attention';
 const ATTENDABLE_ATTRIBUTE = 'data-attendable-id';
@@ -31,41 +31,34 @@ const ATTENTION_SOURCE_ATTRIBUTE = 'data-w-attention-source';
 
 type AttentionContextValue = {
   attention: AttentionManager;
-  path: string[];
 };
 
 const [AttentionContextProvider, useAttentionContext] = createContext<AttentionContextValue>(ATTENTION_NAME, {
   attention: undefined as unknown as AttentionManager,
-  path: [],
 });
 
 const UNKNOWN_ATTENDABLE = { hasAttention: false, isAncestor: false, isRelated: false } as Attention;
 
+/**
+ * Subscribe to the attention state for a qualified graph ID.
+ */
 const useAttention = (attendableId?: string): Attention => {
-  const { attention, path } = useAttentionContext(ATTENTION_NAME);
+  const { attention } = useAttentionContext(ATTENTION_NAME);
   const [state, setState] = useState<Attention>(UNKNOWN_ATTENDABLE);
 
-  const key = useMemo(() => {
-    if (!attendableId) {
-      return undefined;
-    }
-    return [...attendableId.split(ATTENDABLE_PATH_SEPARATOR), ...path];
-  }, [attendableId, path]);
-
   useEffect(() => {
-    if (!key || !attention) {
+    if (!attendableId || !attention) {
       setState(UNKNOWN_ATTENDABLE);
       return;
     }
 
-    // Set initial state.
-    setState(attention.get(key));
+    const currentState = attention.get(attendableId);
+    setState(currentState);
 
-    // Subscribe to changes.
-    return attention.subscribe(key, (newState) => {
+    return attention.subscribe(attendableId, (newState) => {
       setState(newState);
     });
-  }, [attention, key]);
+  }, [attention, attendableId]);
 
   return state;
 };
@@ -79,10 +72,8 @@ const useAttended = () => {
       return;
     }
 
-    // Set initial state.
     setCurrent(attention.getCurrent());
 
-    // Subscribe to changes.
     return attention.subscribeCurrent((newCurrent) => {
       setCurrent(newCurrent);
     });
@@ -93,7 +84,6 @@ const useAttended = () => {
 
 /**
  * Computes HTML element attributes to apply so the attention system can detect changes.
- * @param attendableId
  */
 const useAttentionAttributes = (attendableId?: string) => {
   const { hasAttention } = useAttention(attendableId);
@@ -105,11 +95,6 @@ const useAttentionAttributes = (attendableId?: string) => {
 
     return attributes;
   }, [attendableId, hasAttention]);
-};
-
-const useAttentionPath = () => {
-  const { path } = useAttentionContext(ATTENTION_NAME);
-  return path;
 };
 
 const RootAttentionProvider = ({
@@ -147,21 +132,10 @@ const RootAttentionProvider = ({
   };
 
   return (
-    <AttentionContextProvider attention={attention} path={[]}>
+    <AttentionContextProvider attention={attention}>
       <div role='none' className='contents' onFocusCapture={handleFocus}>
         {children}
       </div>
-    </AttentionContextProvider>
-  );
-};
-
-const AttentionProvider = ({ id, children }: PropsWithChildren<{ id: string }>) => {
-  const { attention, path } = useAttentionContext(ATTENTION_NAME);
-  const nextPath = useMemo(() => [id, ...path], [id, path]);
-
-  return (
-    <AttentionContextProvider attention={attention} path={nextPath}>
-      {children}
     </AttentionContextProvider>
   );
 };
@@ -195,13 +169,11 @@ const AttendableContainer = forwardRef<HTMLDivElement, AttendableContainerProps>
 
 export {
   RootAttentionProvider,
-  AttentionProvider,
   AttendableContainer,
   useAttentionContext,
   useAttention,
   useAttended,
   useAttentionAttributes,
-  useAttentionPath,
   ATTENTION_NAME,
   ATTENDABLE_ATTRIBUTE,
   ATTENTION_SOURCE_ATTRIBUTE,

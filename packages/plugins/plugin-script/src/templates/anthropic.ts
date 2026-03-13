@@ -12,7 +12,7 @@ import { AiService } from '@dxos/ai';
 import { defineFunction } from '@dxos/functions';
 
 export default defineFunction({
-  key: 'dxos.org/script/anthropic',
+  key: 'org.dxos.script.anthropic',
   name: 'Anthropic Chat',
   description: 'Chat with Anthropic',
   inputSchema: Schema.Struct({

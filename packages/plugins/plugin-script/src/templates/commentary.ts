@@ -26,7 +26,7 @@ import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/chess/commentary',
+  key: 'org.dxos.function.chess.commentary',
   name: 'Commentary',
   description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
   inputSchema: Schema.Struct({
@@ -150,7 +150,7 @@ export default defineFunction({
       let document: Markdown.Document;
       if (docs.length === 0) {
         // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
-        const [properties] = yield* Database.runQuery(Filter.typename('dxos.org/type/Properties'));
+        const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.space-properties'));
         const rootCollection = yield* Database.load<Collection.Collection>(properties[Collection.Collection.typename]);
 
         log.info('rootCollection', { rootCollection });

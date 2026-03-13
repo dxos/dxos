@@ -130,7 +130,7 @@ export const getCollectionGraphNodePartials = ({
 // createObjectNode.
 //
 
-/** Builds an app-graph node for an ECHO object. */
+/** Builds an app-graph node for an ECHO object. Uses the local object ID as the graph node ID. */
 export const createObjectNode = ({
   db,
   object,
@@ -169,29 +169,29 @@ export const createObjectNode = ({
 
   let onRearrange: ((nextOrder: unknown[]) => void) | undefined;
   if (parentCollection) {
-    const collectionId = Obj.getDXN(parentCollection).toString();
-    onRearrange = rearrangeCache.get(collectionId);
+    const collectionDxn = Obj.getDXN(parentCollection).toString();
+    onRearrange = rearrangeCache.get(collectionDxn);
     if (!onRearrange) {
       onRearrange = (nextOrder: unknown[]) => {
         Obj.change(parentCollection, (mutable) => {
           mutable.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
         });
       };
-      rearrangeCache.set(collectionId, onRearrange);
+      rearrangeCache.set(collectionDxn, onRearrange);
     }
   }
 
-  const objectId = Obj.getDXN(object).toString();
-  let blockInstruction = blockInstructionCache.get(objectId);
+  const objectDxn = Obj.getDXN(object).toString();
+  let blockInstruction = blockInstructionCache.get(objectDxn);
   if (!blockInstruction) {
     blockInstruction = (_source: TreeData, _instruction: Instruction) => false;
-    blockInstructionCache.set(objectId, blockInstruction);
+    blockInstructionCache.set(objectDxn, blockInstruction);
   }
 
   const canDrop = droppable ? CAN_DROP_OBJECT : undefined;
 
   return {
-    id: Obj.getDXN(object).toString(),
+    id: object.id,
     type,
     cacheable: CACHEABLE_PROPS,
     data: object,

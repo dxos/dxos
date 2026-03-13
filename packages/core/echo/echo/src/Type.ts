@@ -97,7 +97,7 @@ export type AnyObj = ObjectSchemaBase;
  * ```ts
  * const Person = Schema.Struct({
  *   name: Schema.String,
- * }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
+ * }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
  * ```
  */
 export const object: {
@@ -161,7 +161,7 @@ export type AnyRelation = RelationSchemaBase;
  * const WorksFor = Schema.Struct({
  *   role: Schema.String,
  * }).pipe(Type.relation({
- *   typename: 'example.com/type/WorksFor',
+ *   typename: 'com.example.type.works-for',
  *   version: '0.1.0',
  *   source: Person,
  *   target: Company,
@@ -211,7 +211,7 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
 /**
  * Gets the full DXN of the schema.
  * Will include the version if it's a `type` DXN.
- * @example "dxn:example.com/type/Person:0.1.0"
+ * @example "dxn:com.example.type.person:0.1.0"
  * @example "dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX"
  */
 export const getDXN = (schema: AnyEntity): DXN | undefined => {
@@ -220,7 +220,7 @@ export const getDXN = (schema: AnyEntity): DXN | undefined => {
 
 /**
  * @param schema - Schema to get the typename from.
- * @returns The typename of the schema. Example: `example.com/type/Person`.
+ * @returns The typename of the schema. Example: `com.example.type.person`.
  */
 export const getTypename = (schema: AnyEntity): string => {
   const typename = internal.getSchemaTypename(schema);

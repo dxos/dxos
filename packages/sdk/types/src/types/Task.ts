@@ -85,8 +85,8 @@ export const Task = Schema.Struct({
   // tags: [String],
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Task',
-    version: '0.2.0',
+    typename: 'org.dxos.type.task',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['title']),
 );

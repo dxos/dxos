@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, SettingsOperation, getSpacePath } from '@dxos/app-toolkit';
 import { OperationResolver } from '@dxos/operation';
 
 import { SETTINGS_ID, SETTINGS_KEY } from '../../actions';
@@ -21,12 +21,11 @@ export default Capability.makeModule(
         handler: (input) =>
           Effect.gen(function* () {
             const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
-            yield* invoke(LayoutOperation.SwitchWorkspace, { subject: SETTINGS_ID });
+            yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(SETTINGS_ID) });
             if (input.plugin) {
-              // Fire and forget the open operation.
               yield* Effect.fork(
                 invoke(LayoutOperation.Open, {
-                  subject: [`${SETTINGS_KEY}:${input.plugin.replaceAll('/', ':')}`],
+                  subject: [`${getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:${input.plugin.replaceAll('/', ':')}`],
                 }),
               );
             }
@@ -41,10 +40,10 @@ export default Capability.makeModule(
         handler: () =>
           Effect.gen(function* () {
             const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
-            yield* invoke(LayoutOperation.SwitchWorkspace, { subject: SETTINGS_ID });
+            yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(SETTINGS_ID) });
             yield* Effect.fork(
               invoke(LayoutOperation.Open, {
-                subject: [`${SETTINGS_KEY}:plugins`],
+                subject: [`${getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:plugins`],
               }),
             );
           }),

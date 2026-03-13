@@ -13,11 +13,6 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
-        operation: MarkdownOperation.OnCreateSpace,
-        // TODO(wittjosiah): Remove?
-        handler: Effect.fnUntraced(function* () {}),
-      }),
-      OperationResolver.make({
         operation: MarkdownOperation.Create,
         handler: ({ name, content }) =>
           Effect.succeed({

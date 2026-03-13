@@ -11,7 +11,7 @@ import { defineFunction } from '@dxos/functions';
 import { Markdown } from '../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/markdown/open',
+  key: 'org.dxos.function.markdown.open',
   name: 'Open',
   description: 'Opens and reads the contents of a new markdown document.',
   inputSchema: Schema.Struct({

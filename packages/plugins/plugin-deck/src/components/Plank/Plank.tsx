@@ -14,17 +14,16 @@ import React, {
 } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { debounce } from '@dxos/async';
 import { type Node, useNode } from '@dxos/plugin-graph';
-import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-ui-attention';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { useCompanions, useDeckState, useMainSize, useSelectedCompanion } from '../../hooks';
-import { parseEntryId } from '../../layout';
-import { DeckOperation, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
+import { DeckOperation, type DeckSettingsProps, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
 
 import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
@@ -174,8 +173,8 @@ const PlankComponent = memo(
 
     const rootElement = useRef<HTMLDivElement | null>(null);
 
-    const { variant } = parseEntryId(id);
-    const sizeKey = `${id.split('+')[0]}${variant ? `${ATTENDABLE_PATH_SEPARATOR}${variant}` : ''}`;
+    const variant = node?.type === PLANK_COMPANION_TYPE ? getCompanionVariant(id) : undefined;
+    const sizeKey = id.split('+')[0];
     const size = deck.plankSizing[sizeKey] as number | undefined;
 
     const handleSizeChange = useCallback(

@@ -4,12 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
-import { Operation } from '@dxos/operation';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
@@ -26,7 +24,7 @@ import {
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Markdown, MarkdownEvents, MarkdownOperation } from './types';
+import { Markdown, MarkdownEvents } from './types';
 import { serializer } from './util';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
@@ -76,16 +74,6 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     //   Should settings store be renamed to be more generic?
     activatesOn: AppActivationEvents.SetupSettings,
     activate: MarkdownState,
-  }),
-  Plugin.addModule({
-    id: 'on-space-created',
-    activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(MarkdownOperation.OnCreateSpace, params),
-        ),
-      ),
   }),
   Plugin.addModule({
     activatesOn: AppActivationEvents.AppGraphReady,

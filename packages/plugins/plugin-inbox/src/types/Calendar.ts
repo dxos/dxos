@@ -23,8 +23,8 @@ export const Calendar = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Calendar',
-    version: '0.2.0',
+    typename: 'org.dxos.type.calendar',
+    version: '0.1.0',
   }),
   FeedAnnotation.set(true),
 );

@@ -13,7 +13,7 @@ import { EchoObjectSchema } from '../entities';
 // TODO(dmaretskyi): Comment.
 const EmptySchemaType = Schema.Struct({}).pipe(
   EchoObjectSchema({
-    typename: 'example.com/type/Empty',
+    typename: 'com.example.type.empty',
     version: '0.1.0',
   }),
 );
@@ -27,7 +27,7 @@ describe('dynamic schema', () => {
       field2: Schema.Boolean,
     }).pipe(
       EchoObjectSchema({
-        typename: 'example.com/type/Test',
+        typename: 'com.example.type.test',
         version: '0.1.0',
       }),
     );
@@ -44,7 +44,7 @@ describe('dynamic schema', () => {
       field1: Schema.String,
     }).pipe(
       EchoObjectSchema({
-        typename: 'example.com/type/Test',
+        typename: 'com.example.type.test',
         version: '0.1.0',
       }),
     );
@@ -95,7 +95,7 @@ describe('dynamic schema', () => {
     registered.updateFields({ field3: Schema.Boolean });
     registered.removeFields(['field2']);
     expect(getTypeAnnotation(registered)).to.deep.contain({
-      typename: 'example.com/type/Empty',
+      typename: 'com.example.type.empty',
       version: '0.1.0',
     });
     expect(getPropertyMetaAnnotation(registered.getProperties()[0], metaNamespace)).to.deep.eq(metaInfo);
@@ -111,7 +111,7 @@ describe('dynamic schema', () => {
     });
 
     // First update.
-    const newTypename1 = 'example.com/type/Individual';
+    const newTypename1 = 'com.example.type.individual';
     registered.updateTypename(newTypename1);
 
     // Basic typename update checks.
@@ -132,13 +132,13 @@ describe('dynamic schema', () => {
     expect(nameMeta).toEqual({ maxLength: 10 });
 
     // Second update to ensure multiple updates work.
-    const newTypename2 = 'example.com/type/Person';
+    const newTypename2 = 'com.example.type.person';
     registered.updateTypename(newTypename2);
     expect(registered.typename).toBe(newTypename2);
     expect(registered.jsonSchema.$id).toBe(`dxn:type:${newTypename2}`);
     expect(registered.jsonSchema.typename).toBe(newTypename2);
     expect(getTypeAnnotation(registered)).to.deep.contain({
-      typename: 'example.com/type/Person',
+      typename: 'com.example.type.person',
       version: '0.1.0',
     });
   });

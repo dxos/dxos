@@ -103,7 +103,7 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
 
   // Compute popover anchor ID.
   const popoverAnchorId =
-    node && state.popoverAnchorId === `dxos.org/ui/${meta.id}/${node.id}` ? state.popoverAnchorId : undefined;
+    node && state.popoverAnchorId === `${meta.id}:${node.id}` ? state.popoverAnchorId : undefined;
 
   return {
     title,

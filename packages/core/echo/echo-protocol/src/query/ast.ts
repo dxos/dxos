@@ -166,7 +166,7 @@ export const Filter = Schema.Union(
   FilterNot,
   FilterAnd,
   FilterOr,
-).annotations({ identifier: 'dxos.org/schema/Filter' });
+).annotations({ identifier: 'org.dxos.schema.filter' });
 
 export type Filter = Schema.Schema.Type<typeof Filter>;
 
@@ -384,7 +384,7 @@ const Query_ = Schema.Union(
   QueryOptionsClause,
   QueryLimitClause,
   QueryFromClause,
-).annotations({ identifier: 'dxos.org/schema/Query' });
+).annotations({ identifier: 'org.dxos.schema.query' });
 
 export type Query = Schema.Schema.Type<typeof Query_>;
 export const Query: Schema.Schema<Query> = Query_;

@@ -43,6 +43,7 @@
 
   /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
   --color-attention-surface: var(--color-focus-surface);
+  --color-attention-contains: oklch(from var(--color-accent-surface) l c h / 0.3);
   --color-focus-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-neutral-focus-indicator: light-dark(var(--color-neutral-400), var(--color-neutral-600));
 

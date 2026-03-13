@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/email-create',
+  key: 'org.dxos.function.inbox.email-create',
   name: 'Create email draft',
   description: 'Creates a new email draft.',
   inputSchema: Schema.Struct({
@@ -36,7 +36,7 @@ export default defineFunction({
     const message = yield* Database.add(
       Obj.make(Message.Message, {
         [Obj.Meta]: {
-          tags: ['dxos.org/plugin-inbox/draft'],
+          tags: ['org.dxos.plugin-inbox.draft'],
         },
 
         created: new Date().toISOString(),

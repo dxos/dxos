@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/welcome`,
+        id: `${meta.id}.welcome`,
         role: 'dialog',
         filter: (data): data is any => data.component === WELCOME_SCREEN,
         component: () => {

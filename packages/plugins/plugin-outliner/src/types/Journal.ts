@@ -17,8 +17,8 @@ export const JournalEntry = Schema.Struct({
   content: Ref.Ref(Text.Text),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/JournalEntry',
-    version: '0.2.0',
+    typename: 'org.dxos.type.journal-entry',
+    version: '0.1.0',
   }),
   SystemTypeAnnotation.set(true),
 );
@@ -32,8 +32,8 @@ export const Journal = Schema.Struct({
   entries: Schema.Record({ key: Schema.String, value: Ref.Ref(JournalEntry) }),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Journal',
-    version: '0.3.0',
+    typename: 'org.dxos.type.journal',
+    version: '0.1.0',
   }),
 );
 

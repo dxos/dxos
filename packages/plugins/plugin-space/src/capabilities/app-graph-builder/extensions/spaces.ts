@@ -5,20 +5,20 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { type Space, SpaceState, parseId } from '@dxos/client/echo';
+import { AppCapabilities, COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { type Space, SpaceState } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Migrations } from '@dxos/migrations';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Expando } from '@dxos/schema';
 
 import { getActiveSpace } from '../../../hooks';
 import { meta } from '../../../meta';
 import { SPACE_TYPE, SpaceCapabilities, SpaceOperation } from '../../../types';
+import { SHARED, getSpaceDisplayName } from '../../../util';
 
 import {
   CACHEABLE_PROPS,
@@ -27,9 +27,7 @@ import {
   MIGRATE_SPACE_LABEL,
   RENAME_SPACE_LABEL,
   SETTINGS_PANEL_LABEL,
-  SHARED,
   checkPendingMigration,
-  getSpaceDisplayName,
   spaceActionsCache,
   spaceRearrangeCache,
   whenSpace,
@@ -45,7 +43,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
   return yield* Effect.all([
     GraphBuilder.createExtension({
-      id: `${meta.id}/primary-actions`,
+      id: `${meta.id}.primary-actions`,
       position: 'hoist',
       match: NodeMatcher.whenRoot,
       actions: () =>
@@ -107,7 +105,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
     }),
 
     GraphBuilder.createExtension({
-      id: `${meta.id}/spaces`,
+      id: `${meta.id}.spaces`,
       match: NodeMatcher.whenRoot,
       connector: (_node, get) => {
         const client = capabilities.get(ClientCapabilities.Client);
@@ -169,43 +167,12 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
           return Effect.succeed([]);
         }
       },
-      resolver: (id, get) => {
-        const { spaceId } = parseId(id);
-        if (!spaceId) {
-          return Effect.succeed(null);
-        }
-
-        const client = capabilities.get(ClientCapabilities.Client);
-
-        const spaces = get(CreateAtom.fromObservable(client.spaces));
-        const space = spaces?.find((candidate) => candidate.id === spaceId);
-        if (!space) {
-          return Effect.succeed(null);
-        }
-
-        const state = get(capabilities.get(SpaceCapabilities.State));
-        const ephemeralState = get(capabilities.get(SpaceCapabilities.EphemeralState));
-
-        const { graph } = capabilities.get(AppCapabilities.AppGraph);
-        const [spacesOrder] = get(
-          AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })),
-        );
-
-        return Effect.succeed(
-          constructSpaceNode({
-            space,
-            navigable: ephemeralState.navigableCollections,
-            personal: space === client.spaces.default,
-            namesCache: state.spaceNames,
-            graph,
-            spacesOrder,
-          }),
-        );
-      },
+      // TODO(graph-path-ids): Resolver temporarily disabled; redesign needed for path-based IDs.
+      // resolver: (id, get) => { ... },
     }),
 
     GraphBuilder.createExtension({
-      id: `${meta.id}/actions`,
+      id: `${meta.id}.actions`,
       match: whenSpace,
       actions: (space, get) => {
         const [client] = get(capabilities.atom(ClientCapabilities.Client));
@@ -291,8 +258,8 @@ const constructSpaceNode = ({
     },
     nodes: [
       {
-        id: `settings${ATTENDABLE_PATH_SEPARATOR}${space.id}`,
-        type: `${meta.id}/settings`,
+        id: 'settings',
+        type: `${meta.id}.settings`,
         data: null,
         properties: {
           label: SETTINGS_PANEL_LABEL,
@@ -320,12 +287,11 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
     return cached.actions;
   }
 
-  const getId = (id: string) => `${id}/${space.id}`;
   const actions: Node.NodeArg<Node.ActionData<Operation.Service>>[] = [];
 
   if (hasPendingMigration) {
     actions.push({
-      id: getId(SpaceOperation.Migrate.meta.key),
+      id: SpaceOperation.Migrate.meta.key,
       type: Node.ActionGroupType,
       data: () => Operation.invoke(SpaceOperation.Migrate, { space }),
       properties: {
@@ -340,7 +306,7 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
   if (state === SpaceState.SPACE_READY && !hasPendingMigration) {
     actions.push(
       {
-        id: getId(SpaceOperation.OpenCreateObject.meta.key),
+        id: SpaceOperation.OpenCreateObject.meta.key,
         type: Node.ActionType,
         data: () => Operation.invoke(SpaceOperation.OpenCreateObject, { target: space.db }),
         properties: {
@@ -351,9 +317,10 @@ const constructSpaceActions = ({ space, migrating }: { space: Space; migrating?:
         },
       },
       {
-        id: getId(SpaceOperation.Rename.meta.key),
+        id: SpaceOperation.Rename.meta.key,
         type: Node.ActionType,
-        data: (params?: Node.InvokeProps) => Operation.invoke(SpaceOperation.Rename, { space, caller: params?.caller }),
+        data: (params?: Node.InvokeProps) =>
+          Operation.invoke(SpaceOperation.Rename, { space, caller: `${params?.caller}:${params?.parent?.id}` }),
         properties: {
           label: RENAME_SPACE_LABEL,
           icon: 'ph--pencil-simple-line--regular',

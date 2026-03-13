@@ -24,7 +24,7 @@ export const Toolbar = () => {
 
   const count = (useCapabilities(Number) as number[]).reduce((acc, curr) => acc + curr, 0);
 
-  const generatorPlugins = plugins.filter((plugin) => plugin.meta.id.startsWith('dxos.org/test/generator/'));
+  const generatorPlugins = plugins.filter((plugin) => plugin.meta.id.startsWith('org.dxos.test.generator.'));
 
   return (
     <>
@@ -32,7 +32,7 @@ export const Toolbar = () => {
       <div className='flex items-center'>Count: {count}</div>
       {generatorPlugins.map((plugin) => (
         <Button key={plugin.meta.id} onClick={() => invokePromise(createAlertOperation(plugin.meta.id))}>
-          {plugin.meta.id.replace('dxos.org/test/generator/', '')}
+          {plugin.meta.id.replace('org.dxos.test.generator.', '')}
         </Button>
       ))}
     </>
@@ -44,7 +44,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: 'dxos.org/test/generator/toolbar',
+        id: 'org.dxos.test.generator.toolbar',
         role: 'toolbar',
         component: Toolbar,
       }),

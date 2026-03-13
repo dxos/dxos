@@ -44,8 +44,8 @@ export const Mailbox = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Mailbox',
-    version: '0.2.0',
+    typename: 'org.dxos.type.mailbox',
+    version: '0.1.0',
   }),
   Annotation.IconAnnotation.set({
     icon: 'ph--tray--regular',
