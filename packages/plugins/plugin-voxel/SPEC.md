@@ -42,6 +42,9 @@ NOTE: We need to develop agent-specific instructions for creating data sets, inc
 ### Phase 3 (Advanced Features)
 
 - [ ] Sleep plugin
+- nonprofit (ENO)
+- avatar -- meets others and describe the journey
+- p2p social network -- send love to the world
 
 - [ ] Life mode (e.g., blocks grow, shrink, move, etc.)
 
