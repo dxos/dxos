@@ -11,11 +11,11 @@ import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
-import type * as Entity from './Entity';
+import type * as EntityModule from './Entity';
 import * as typeInternal from './internal/Type';
 import * as internal from './internal';
-import type * as Obj from './Obj';
-import type * as Relation from './Relation';
+import type * as ObjModule from './Obj';
+import type * as RelationModule from './Relation';
 
 /**
  * Dynamic type that can be constructed, mutated, and persisted in the ECHO database.
@@ -64,7 +64,7 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
     EchoSchemaKind<internal.EntityKind.Object>,
     Schema.AnnotableClass<
       Obj<T, Fields>,
-      Entity.OfKind<typeof Entity.Kind.Object> & T,
+      EntityModule.OfKind<typeof EntityModule.Kind.Object> & T,
       Schema.Simplify<ObjModule.BaseObjJson & ToMutable<T>>,
       never
     > {
@@ -127,7 +127,7 @@ export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields
     EchoSchemaKind<internal.EntityKind.Relation>,
     Schema.AnnotableClass<
       Relation<T, Source, Target, Fields>,
-      Entity.OfKind<typeof Entity.Kind.Relation> & RelationModule.Endpoints<Source, Target> & T,
+      EntityModule.OfKind<typeof EntityModule.Kind.Relation> & RelationModule.Endpoints<Source, Target> & T,
       Schema.Simplify<RelationModule.BaseRelationJson & ToMutable<T>>,
       never
     > {

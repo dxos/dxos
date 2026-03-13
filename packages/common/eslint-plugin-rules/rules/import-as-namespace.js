@@ -172,7 +172,8 @@ export default {
         }
 
         const actual = node.specifiers[0].local.name;
-        if (actual !== expectedNamespace) {
+        const allowedNames = [expectedNamespace, expectedNamespace + 'Module'];
+        if (!allowedNames.includes(actual)) {
           context.report({
             node,
             messageId: 'namespaceMustMatchFilename',
@@ -237,7 +238,8 @@ export default {
 
         if (node.exported) {
           const actual = node.exported.name;
-          if (actual !== expectedNamespace) {
+          const allowedNames = [expectedNamespace, expectedNamespace + 'Module'];
+          if (!allowedNames.includes(actual)) {
             context.report({
               node,
               messageId: 'namespaceMustMatchFilename',
