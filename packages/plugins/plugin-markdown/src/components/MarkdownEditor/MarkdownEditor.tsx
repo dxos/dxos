@@ -6,11 +6,10 @@ import { type Extension } from '@codemirror/state';
 import { type EditorView } from '@codemirror/view';
 import { type Atom } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
@@ -82,25 +81,10 @@ const MarkdownEditorRoot = ({
   extensions: extensionsProp,
   slashCommandGroups,
   onLinkQuery,
-  onSelectObject: onSelectObjectProp,
+  onSelectObject,
   ...props
 }: MarkdownEditorRootProps) => {
   const [editorView, setEditorView] = useState<EditorView>();
-  const { invokePromise } = useOperationInvoker();
-
-  const onSelectObject = useCallback(
-    (targetId: string) => {
-      if (onSelectObjectProp) {
-        onSelectObjectProp(targetId);
-      } else {
-        void invokePromise?.(LayoutOperation.Open, {
-          subject: [targetId],
-          pivotId: object && Obj.isObject(object) ? Obj.getDXN(object).toString() : id,
-        });
-      }
-    },
-    [onSelectObjectProp, invokePromise, object, id],
-  );
 
   // Preview blocks.
   const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
