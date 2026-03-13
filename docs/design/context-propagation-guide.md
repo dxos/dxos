@@ -96,38 +96,6 @@ async initializeAll(ctx: Context): Promise<void> {
 }
 ```
 
-### 5. Class lifecycle ctx
-
-Many classes (especially `Resource` subclasses) have `private _ctx = Context.default()`. This context is tied to the object's open/close lifecycle and disposed on close.
-
-Use it when:
-
-- A method is called from a lifecycle hook and no caller-provided ctx exists.
-- Registering event handlers or scheduling background work.
-- Running detached tasks (setTimeout, DeferredTask, etc.).
-
-```typescript
-class DataSpace {
-  private _ctx = Context.default();
-
-  async activate(): Promise<void> {
-    await this._open(this._ctx);
-    this.initializeDataPipelineAsync(this._ctx);
-  }
-
-  private async _close(ctx: Context): Promise<void> {
-    await this._ctx.dispose();
-    this._ctx = Context.default();
-    // ...
-  }
-}
-```
-
-`Context.default()` should only be used:
-
-- In public API entry points (creating the root trace context).
-- Resetting `this._ctx` after dispose (as shown above).
-
 ## How context flows through a call chain
 
 ```text

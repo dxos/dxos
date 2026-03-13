@@ -12,7 +12,6 @@ import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiConversation, type ContextBinding, GenerationObserver } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Blueprint } from '@dxos/blueprints';
-import { Context } from '@dxos/context';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';

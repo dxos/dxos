@@ -6215,9 +6215,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -8864,9 +8861,6 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -9390,9 +9384,6 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../../sdk/client-protocol
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -10894,9 +10885,6 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -14335,9 +14323,6 @@ importers:
       '@dxos/client-protocol':
         specifier: workspace:*
         version: link:../client-protocol
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug

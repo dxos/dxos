@@ -11,7 +11,6 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Context as DxosContext } from '@dxos/context';
 import { Entity, Filter, Obj, Query, Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import {
