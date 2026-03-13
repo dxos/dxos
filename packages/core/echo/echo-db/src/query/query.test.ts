@@ -609,6 +609,31 @@ describe('Query', () => {
       expect(spaceResult).toHaveLength(0);
     });
 
+    test('from(feed) with no queue DXN returns empty results', async () => {
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      const feed = db.add(Feed.make({ name: 'empty-feed' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await db.flush({ indexes: true });
+
+      const results = await db.query(Query.select(Filter.type(TestSchema.Task)).from(feed)).run();
+      expect(results).toHaveLength(0);
+    });
+
+    test('from({ queues: [] }) returns empty results', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await db.flush({ indexes: true });
+
+      const results = await db
+        .query(Query.select(Filter.type(TestSchema.Task)).from({ queues: [] }))
+        .run();
+      expect(results).toHaveLength(0);
+    });
+
     test('Query.type(...).from(feed) scopes query to feed items', async () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
