@@ -29,7 +29,7 @@ export type LoadObjectProps = {
 };
 
 export interface ObjectLoader {
-  loadObject(params: LoadObjectProps): Promise<Entity.Unknown | undefined>;
+  loadObject(ctx: Context, params: LoadObjectProps): Promise<Entity.Unknown | undefined>;
 }
 
 export type IndexQueryProviderProps = {
@@ -247,7 +247,7 @@ export class IndexQuerySource implements QuerySource {
       return queryResult;
     }
 
-    const object = await this._params.objectLoader.loadObject({
+    const object = await this._params.objectLoader.loadObject(ctx, {
       spaceId: result.spaceId,
       objectId: result.id,
       documentId: result.documentId,

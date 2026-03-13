@@ -218,11 +218,10 @@ export class EchoClient extends Resource {
     }
   }
 
-  private async _loadObjectFromDocument({
-    spaceId,
-    objectId,
-    documentId,
-  }: LoadObjectProps): Promise<Entity.Unknown | undefined> {
+  private async _loadObjectFromDocument(
+    ctx: Context,
+    { spaceId, objectId, documentId }: LoadObjectProps,
+  ): Promise<Entity.Unknown | undefined> {
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;
@@ -239,7 +238,7 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const objectDocId = db.coreDatabase._automergeDocLoader.getObjectDocumentId(objectId);
+    const objectDocId = db.coreDatabase._automergeDocLoader.getObjectDocumentId(ctx, objectId);
     if (objectDocId !== documentId) {
       log("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
       return undefined;
