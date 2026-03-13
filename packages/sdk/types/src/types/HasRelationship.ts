@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Obj, Relation, Type } from '@dxos/echo';
 
-import { Person } from './Person';
+import * as Person from './Person';
 
 export const HasRelationship = Schema.Struct({
   id: Obj.ID,
@@ -19,8 +21,8 @@ export const HasRelationship = Schema.Struct({
     Type.relation({
       typename: 'org.dxos.relation.has-relationship',
       version: '0.1.0',
-      source: Person,
-      target: Person,
+      source: Person.Person,
+      target: Person.Person,
     }),
   )
   .annotations({

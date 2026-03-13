@@ -7,11 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, createObjectNode } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { type Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
@@ -88,7 +89,6 @@ export default Capability.makeModule(
 
           return Effect.succeed(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
-              const mailboxDxn = Obj.getDXN(mailbox).toString();
               return {
                 id: mailbox.id,
                 type: Mailbox.Mailbox.typename,
@@ -138,12 +138,13 @@ export default Capability.makeModule(
                       {
                         id: `filter-${kebabize(name)}-delete`,
                         type: Node.ActionType,
-                        data: Effect.fnUntraced(function* () {
-                          const index = mailbox.filters.findIndex((f: any) => f.name === name);
-                          Obj.change(mailbox, (mutable: any) => {
-                            mutable.filters.splice(index, 1);
-                          });
-                        }),
+                        data: () =>
+                          Effect.sync(() => {
+                            const index = mailbox.filters.findIndex((f: any) => f.name === name);
+                            Obj.change(mailbox, (mutable: any) => {
+                              mutable.filters.splice(index, 1);
+                            });
+                          }),
                         properties: {
                           label: ['delete filter label', { ns: meta.id }],
                           icon: 'ph--trash--regular',
@@ -285,6 +286,17 @@ export default Capability.makeModule(
                       mailbox: Ref.make(mailbox),
                     }),
                   ),
+                ).pipe(
+                  Effect.catchAll((error) => {
+                    log.catch(error);
+                    return Operation.invoke(LayoutOperation.AddToast, {
+                      id: `${meta.id}/sync-mailbox-error`,
+                      icon: 'ph--warning--regular',
+                      duration: 5_000,
+                      title: ['sync mailbox error title', { ns: meta.id }],
+                      closeLabel: ['close label', { ns: meta.id }],
+                    });
+                  }),
                 );
               }),
               properties: {
@@ -314,6 +326,17 @@ export default Capability.makeModule(
                       calendar: Ref.make(calendar),
                     }),
                   ),
+                ).pipe(
+                  Effect.catchAll((error) => {
+                    log.catch(error);
+                    return Operation.invoke(LayoutOperation.AddToast, {
+                      id: `${meta.id}/sync-calendar-error`,
+                      icon: 'ph--warning--regular',
+                      duration: 5_000,
+                      title: ['sync calendar error title', { ns: meta.id }],
+                      closeLabel: ['close label', { ns: meta.id }],
+                    });
+                  }),
                 );
               }),
               properties: {

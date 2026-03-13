@@ -59,7 +59,9 @@ export const translations = [
         'inbox label': 'Inbox',
 
         'sync mailbox label': 'Sync mailbox',
+        'sync mailbox error title': 'Failed to sync mailbox',
         'sync calendar label': 'Sync calendar',
+        'sync calendar error title': 'Failed to sync calendar',
 
         'show contact label': 'Show contact',
         'create contact label': 'Create contact',
