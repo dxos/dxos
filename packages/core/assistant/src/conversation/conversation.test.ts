@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, expect } from 'vitest';
 
 import { Blueprint } from '@dxos/blueprints';
-import { Context as DxosContext } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 
@@ -29,8 +28,8 @@ describe('AiConversation', () => {
     Effect.gen(function* () {
       const peer = yield* Effect.promise(() => builder.createPeer({ types: [Blueprint.Blueprint, ContextBinding] }));
       const db = yield* Effect.promise(() => peer.createDatabase());
-      const queues = peer.client.constructQueueFactory(DxosContext.default(), db.spaceId);
-      const queue = queues.create<ContextBinding>(DxosContext.default());
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create<ContextBinding>();
 
       // Create blueprint.
       const blueprint = db.add(
