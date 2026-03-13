@@ -87,7 +87,7 @@ export class MeshEchoReplicator implements AutomergeReplicator {
         } else {
           this._connectionsPerPeer.set(connection.peerId, [connection]);
           this._context.onConnectionOpen(connection);
-          connection.enable(Context.default());
+          connection.enable();
         }
       },
       onRemoteDisconnected: async () => {
@@ -107,12 +107,12 @@ export class MeshEchoReplicator implements AutomergeReplicator {
 
         if (connection.isEnabled) {
           this._context?.onConnectionClosed(connection);
-          connection.disable(Context.default());
+          connection.disable();
 
           // Promote the next connection to enabled
           if (existingConnections.length > 0) {
             this._context?.onConnectionOpen(existingConnections[0]);
-            existingConnections[0].enable(Context.default());
+            existingConnections[0].enable();
           }
         }
       },

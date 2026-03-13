@@ -48,7 +48,7 @@ export class Serializer {
       version: Serializer.version,
       timestamp: new Date().toISOString(),
       objects: loadedObjects.filter(isNonNullable).map((object) => {
-        return this.exportObject(ctx, object as any);
+        return this.exportObject(object as any);
       }),
     };
 
@@ -69,7 +69,7 @@ export class Serializer {
     await database.flush();
   }
 
-  exportObject(ctx: Context, object: Obj.Any): Obj.JSON {
+  exportObject(object: Obj.Any): Obj.JSON {
     return Obj.toJSON(object);
   }
 

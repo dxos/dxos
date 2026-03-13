@@ -39,7 +39,7 @@ export class SpacesDumper {
 
       dump[space.id] = {};
       for (const object of objects) {
-        dump[space.id][object.id] = serializer.exportObject(Context.default(), object);
+        dump[space.id][object.id] = serializer.exportObject(object);
       }
     }
 

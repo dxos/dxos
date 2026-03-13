@@ -5,7 +5,6 @@
 import type * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 
-import { type Context } from '@dxos/context';
 import { type ObjectJSON } from '@dxos/echo/internal';
 import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -39,7 +38,6 @@ export class QueueDataSource implements IndexDataSource {
   }
 
   getChangedObjects(
-    _ctx: Context,
     cursors: DataSourceCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {

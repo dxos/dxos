@@ -90,7 +90,7 @@ describe('RepoProxy', () => {
     const text = 'Hello World!';
     const handle1 = repo1.create<{ text: string }>(Context.default(), { text });
     await handle1.whenReady();
-    await repo1.flush(Context.default());
+    await repo1.flush();
 
     const handle2 = repo2.find<{ text: string }>(Context.default(), handle1.url!);
     await handle2.whenReady();
@@ -130,7 +130,7 @@ describe('RepoProxy', () => {
         doc.text = text;
       });
 
-      await clientRepo.flush(Context.default());
+      await clientRepo.flush();
       await host.flush(Context.default());
       await clientRepo.close();
       await host.close();
@@ -195,7 +195,7 @@ describe('RepoProxy', () => {
       const text = 'Hello World!';
       type TestDoc = { text: string };
       const clientHandle = clientRepo.create<TestDoc>(Context.default());
-      await clientRepo.flush(Context.default());
+      await clientRepo.flush();
       clientHandle.change((doc: TestDoc) => (doc.text = text));
       url = clientHandle.url!;
       await sleep(200); // Wait for the object to be saved without flush.

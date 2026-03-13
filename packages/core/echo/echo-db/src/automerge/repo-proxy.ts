@@ -105,7 +105,7 @@ export class RepoProxy extends Resource {
     return this._createHandle<T>(ctx, { initialValue });
   }
 
-  async flush(ctx: Context): Promise<void> {
+  async flush(): Promise<void> {
     // Wait for all creations to be completed.
     await Promise.all([...this._pendingCreations.values()]);
     // Wait for all updates to be sent.
@@ -139,7 +139,7 @@ export class RepoProxy extends Resource {
   /**
    * Update the data service reference after reconnection.
    */
-  _updateDataService(ctx: Context, dataService: DataService): void {
+  _updateDataService(dataService: DataService): void {
     this._dataService = dataService;
   }
 
@@ -221,7 +221,7 @@ export class RepoProxy extends Resource {
       log('onChange', { documentId });
       this._pendingUpdateIds.add(documentId);
       this._sendUpdatesJob?.trigger();
-      this._emitSaveStateEvent(this._ctx);
+      this._emitSaveStateEvent();
     };
 
     const cleanup = () => {
@@ -249,7 +249,7 @@ export class RepoProxy extends Resource {
       // Called only when documentId is known (after onChange check or after creation).
       this._pendingUpdateIds.add(handle.documentId!);
       this._sendUpdatesJob?.trigger();
-      this._emitSaveStateEvent(this._ctx);
+      this._emitSaveStateEvent();
     };
 
     // TODO(burdon): Called even if not mutations.
@@ -376,7 +376,7 @@ export class RepoProxy extends Resource {
         }
       }
 
-      this._emitSaveStateEvent(ctx);
+      this._emitSaveStateEvent();
     } catch (err) {
       // Don't restore pending updates if generation changed - this task is abandoned.
       const isAbandoned = generation !== this._generation;
@@ -400,7 +400,7 @@ export class RepoProxy extends Resource {
     }
   }
 
-  private _emitSaveStateEvent(ctx: Context): void {
+  private _emitSaveStateEvent(): void {
     const unsavedDocuments = Array.from(this._pendingUpdateIds);
     this.saveStateChanged.emit({ unsavedDocuments });
   }

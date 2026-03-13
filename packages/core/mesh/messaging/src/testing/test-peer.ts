@@ -47,7 +47,7 @@ export class TestPeer extends Resource {
     this.messenger = new Messenger({ signalManager: this.signalManager, retryDelay: 300 });
 
     await this.signalManager.open();
-    this.messenger.open(this._ctx);
+    this.messenger.open();
     await this.messenger
       .listen(this._ctx, {
         peer: this.peerInfo,
@@ -59,7 +59,7 @@ export class TestPeer extends Resource {
   }
 
   protected override async _close(): Promise<void> {
-    await this.messenger.close(this._ctx);
+    await this.messenger.close();
     await this.signalManager.close();
   }
 }

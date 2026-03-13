@@ -39,8 +39,8 @@ describe('Signal Integration Test', () => {
     const messenger = new Messenger({
       signalManager,
     });
-    messenger.open(Context.default());
-    onTestFinished(() => messenger.close(Context.default()));
+    messenger.open();
+    onTestFinished(() => messenger.close());
     await messenger.listen(Context.default(), {
       peer,
       onMessage: async (message) => await messageRouter.receiveMessage(message),

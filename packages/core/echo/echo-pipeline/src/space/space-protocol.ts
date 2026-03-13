@@ -162,7 +162,7 @@ export class SpaceProtocol {
     log('started');
   }
 
-  public updateTopology(ctx: Context): void {
+  public updateTopology(): void {
     this._topology.forceUpdate();
   }
 

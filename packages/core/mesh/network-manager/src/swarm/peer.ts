@@ -277,7 +277,7 @@ export class Peer {
           this._lastConnectionTime = Date.now();
           this._callbacks.onConnected();
 
-          this._connectionLimiter.doneConnecting(this._ctx, sessionId);
+          this._connectionLimiter.doneConnecting(sessionId);
           log.trace('dxos.mesh.connection.connected', {
             topic: this.topic,
             localPeerId: this.localInfo,
@@ -291,7 +291,7 @@ export class Peer {
           log('connection closed', logMeta);
 
           // Make sure none of the connections are stuck in the limiter.
-          this._connectionLimiter.doneConnecting(this._ctx, sessionId);
+          this._connectionLimiter.doneConnecting(sessionId);
 
           invariant(this.connection === connection, 'Connection mismatch (race condition).');
 

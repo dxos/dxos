@@ -689,7 +689,7 @@ export class DataSpaceManager extends Resource {
       closedSessions,
     });
     // Handle the case when there was a removed peer online, we can now establish a connection with them
-    spaceProtocol.updateTopology(ctx);
+    spaceProtocol.updateTopology();
   }
 
   private _handleNewPeerConnected(ctx: Context, space: Space, peerState: PeerState): void {

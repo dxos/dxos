@@ -238,7 +238,7 @@ export class EchoClient extends Resource {
       throw err;
     }
 
-    const objectDocId = db.coreDatabase._automergeDocLoader.getObjectDocumentId(ctx, objectId);
+    const objectDocId = db.coreDatabase._automergeDocLoader.getObjectDocumentId(objectId);
     if (objectDocId !== documentId) {
       log("documentIds don't match", { objectId, expected: documentId, actual: objectDocId ?? null });
       return undefined;

@@ -207,8 +207,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   // TODO(burdon): Type check.
   getObjectById<T extends Entity.Unknown = Entity.Any>(id: string, { deleted = false } = {}): T | undefined {
-    const core = this._coreDatabase.getObjectCoreById(this._ctx, id);
-    if (!core || (core.isDeleted(this._ctx) && !deleted)) {
+    const core = this._coreDatabase.getObjectCoreById(id);
+    if (!core || (core.isDeleted() && !deleted)) {
       return undefined;
     }
 
@@ -347,7 +347,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Entity.Unknown | undefined> {
     const core = await this._coreDatabase.loadObjectCoreById(this._ctx, objectId, options);
-    if (!core || (core?.isDeleted(this._ctx) && !options.allowDeleted)) {
+    if (!core || (core?.isDeleted() && !options.allowDeleted)) {
       return undefined;
     }
 

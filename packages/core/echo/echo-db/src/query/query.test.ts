@@ -702,7 +702,7 @@ describe('Query', () => {
       await createObjects(peer, db, { count: 3 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(3);
-      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle(Context.default()).url!;
+      root = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle().url!;
       await peer.close();
     }
 
@@ -730,7 +730,7 @@ describe('Query', () => {
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
-      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle(Context.default());
+      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
       });
@@ -765,7 +765,7 @@ describe('Query', () => {
       const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
-      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle(Context.default());
+      const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
       const obj1DocHandle = getObjectCore(obj1).docHandle!;
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
       // Wait for documents to be ready before accessing url and objects.

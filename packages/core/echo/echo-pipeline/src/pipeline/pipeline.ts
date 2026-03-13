@@ -110,7 +110,7 @@ export class PipelineState {
   }
 
   async waitUntilTimeframe(ctx: Context, target: Timeframe): Promise<void> {
-    await this._timeframeClock.waitUntilReached(ctx, target);
+    await this._timeframeClock.waitUntilReached(target);
   }
 
   setTargetTimeframe(ctx: Context, target: Timeframe): void {
@@ -320,7 +320,7 @@ export class Pipeline implements PipelineAccessor {
     invariant(!this._isStarted || this._isPaused, 'Invalid state.');
 
     this._state._startTimeframe = timeframe;
-    this._timeframeClock.setTimeframe(ctx, timeframe);
+    this._timeframeClock.setTimeframe(timeframe);
 
     // Cancel downloads of mutations before the cursor.
     if (this._feedSetIterator) {
@@ -383,10 +383,10 @@ export class Pipeline implements PipelineAccessor {
       if (!done) {
         const block = value ?? failUndefined();
         this._processingTrigger.reset();
-        this._timeframeClock.updatePendingTimeframe(ctx, PublicKey.from(block.feedKey), block.seq);
+        this._timeframeClock.updatePendingTimeframe(PublicKey.from(block.feedKey), block.seq);
         yield block;
         this._processingTrigger.wake();
-        this._timeframeClock.updateTimeframe(ctx);
+        this._timeframeClock.updateTimeframe();
       }
     }
 
@@ -415,7 +415,7 @@ export class Pipeline implements PipelineAccessor {
   }
 
   private async _initIterator(ctx: Context): Promise<void> {
-    this._feedSetIterator = new FeedSetIterator<FeedMessage>(createMessageSelector(ctx, this._timeframeClock), {
+    this._feedSetIterator = new FeedSetIterator<FeedMessage>(createMessageSelector(this._timeframeClock), {
       start: startAfter(this._timeframeClock.timeframe),
       stallTimeout: 1000,
     });

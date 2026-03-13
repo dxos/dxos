@@ -59,7 +59,7 @@ describe('EchoEdgeReplicator', () => {
       await replicator.connectToSpace(Context.default(), spaceId);
 
       await expect.poll(() => openConnections.length === 1).toBeTruthy();
-      expect(openConnections[0].shouldAdvertise(Context.default(), { documentId })).toBeTruthy();
+      expect(openConnections[0].shouldAdvertise({ documentId })).toBeTruthy();
     });
 
     test('checks remote collection if space id can not be resolved', async () => {
@@ -74,9 +74,9 @@ describe('EchoEdgeReplicator', () => {
 
       await expect.poll(() => openConnections.length === 1).toBeTruthy();
       const connection = openConnections[0];
-      expect(await connection.shouldAdvertise(Context.default(), { documentId })).toBeFalsy();
+      expect(await connection.shouldAdvertise({ documentId })).toBeFalsy();
       remoteCollections[connection.peerId] = { [documentId]: true };
-      expect(await connection.shouldAdvertise(Context.default(), { documentId })).toBeTruthy();
+      expect(await connection.shouldAdvertise({ documentId })).toBeTruthy();
     });
   });
 

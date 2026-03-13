@@ -86,7 +86,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
 
     this.localState = new SignalLocalState(
       async (message) => {
-        this._monitor.recordMessageReceived(this._ctx, message);
+        this._monitor.recordMessageReceived(message);
         this.onMessage.emit(message);
       },
       async (event) => this.swarmEvent.emit(event),
@@ -106,11 +106,11 @@ export class SignalClient extends Resource implements SignalClientMethods {
         await cancelWithContext(this._connectionCtx!, this._clientReady.wait({ timeout: 5_000 }));
         invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
         await this.localState.reconcile(this._connectionCtx!, this._client!);
-        this._monitor.recordReconciliation(this._ctx, { success: true });
+        this._monitor.recordReconciliation({ success: true });
         this._lastReconciliationFailed = false;
       } catch (err) {
         this._lastReconciliationFailed = true;
-        this._monitor.recordReconciliation(this._ctx, { success: false });
+        this._monitor.recordReconciliation({ success: false });
         throw err;
       }
     });
@@ -128,9 +128,9 @@ export class SignalClient extends Resource implements SignalClientMethods {
     this._reconnectTask = new DeferredTask(this._ctx, async () => {
       try {
         await this._reconnect();
-        this._monitor.recordReconnect(this._ctx, { success: true });
+        this._monitor.recordReconnect({ success: true });
       } catch (err) {
-        this._monitor.recordReconnect(this._ctx, { success: false });
+        this._monitor.recordReconnect({ success: false });
         throw err;
       }
     });
@@ -167,20 +167,20 @@ export class SignalClient extends Resource implements SignalClientMethods {
       state: this._state,
       error: this._lastError?.message,
       reconnectIn: this._reconnectAfter,
-      ...this._monitor.getRecordedTimestamps(this._ctx),
+      ...this._monitor.getRecordedTimestamps(),
     };
   }
 
   async join(args: JoinRequest): Promise<void> {
     log('joining', { topic: args.topic, peerId: args.peer.peerKey });
-    this._monitor.recordJoin(this._ctx);
+    this._monitor.recordJoin();
     this.localState.join(this._ctx, { topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
     this._reconcileTask?.schedule();
   }
 
   async leave(args: LeaveRequest): Promise<void> {
     log('leaving', { topic: args.topic, peerId: args.peer.peerKey });
-    this._monitor.recordLeave(this._ctx);
+    this._monitor.recordLeave();
     this.localState.leave(this._ctx, { topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
   }
 
@@ -189,7 +189,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
   }
 
   async sendMessage(msg: Message): Promise<void> {
-    return this._monitor.recordMessageSending(this._ctx, msg, async () => {
+    return this._monitor.recordMessageSending(msg, async () => {
       await this._clientReady.wait();
       invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
       invariant(msg.author.peerKey, 'Author key required');
@@ -223,13 +223,13 @@ export class SignalClient extends Resource implements SignalClientMethods {
     log('creating client', { host: this._host, state: this._state });
     invariant(!this._client, 'Client already created');
 
-    this._monitor.recordConnectionStartTime(this._ctx);
+    this._monitor.recordConnectionStartTime();
 
     this._connectionCtx = this._ctx.derive();
     this._connectionCtx.onDispose(async () => {
       log('connection context disposed');
       const { failureCount } = await this.localState.safeCloseStreams(this._ctx);
-      this._monitor.recordStreamCloseErrors(this._ctx, failureCount);
+      this._monitor.recordStreamCloseErrors(failureCount);
     });
 
     try {
@@ -315,7 +315,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
 
   private _setState(newState: SignalState): void {
     this._state = newState;
-    this._monitor.recordStateChangeTime(this._ctx);
+    this._monitor.recordStateChangeTime();
     log('signal state changed', { status: this.getStatus() });
     this.statusChanged.emit(this.getStatus());
   }

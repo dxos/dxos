@@ -26,7 +26,7 @@ const SPACE_KEY = PublicKey.random();
 describe('AutomergeDocumentLoader', () => {
   test('space access is set on root doc handle and it is accessible', async () => {
     const { loader, spaceRootDocHandle } = await setupTest();
-    expect(loader.getSpaceRootDocHandle(Context.default())).not.to.throw;
+    expect(loader.getSpaceRootDocHandle()).not.to.throw;
     expect(spaceRootDocHandle.doc()?.access?.spaceKey).to.eq(SPACE_KEY.toHex());
   });
 
@@ -60,7 +60,7 @@ describe('AutomergeDocumentLoader', () => {
     await Promise.all([oldDocHandle.whenReady(), newDocHandle.whenReady()]);
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle: oldDocHandle });
     loadLinkedObjects(loader, { [objectId]: oldDocHandle.url! });
-    loader.onObjectBoundToDocument(Context.default(), newDocHandle, objectId);
+    loader.onObjectBoundToDocument(newDocHandle, objectId);
     await sleep(10);
     expect(docLoadInfo.loaded).to.be.false;
   });
@@ -70,7 +70,7 @@ describe('AutomergeDocumentLoader', () => {
     const { loader, repo } = await setupTest();
     const existingHandle = repo.create<DatabaseDirectory>(Context.default());
     await existingHandle.whenReady();
-    loader.onObjectBoundToDocument(Context.default(), existingHandle, objectId);
+    loader.onObjectBoundToDocument(existingHandle, objectId);
     const newDocHandle = repo.create<DatabaseDirectory>(Context.default());
     await newDocHandle.whenReady();
     const docLoadInfo = waitForDocumentLoad(loader, { objectId, handle: newDocHandle });

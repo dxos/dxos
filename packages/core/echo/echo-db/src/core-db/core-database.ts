@@ -164,14 +164,14 @@ export class CoreDatabase {
     this._state = CoreDatabaseState.OPENING;
 
     await this._repoProxy.open();
-    this._ctx.onDispose(() => this._unsubscribeFromHandles(this._ctx));
+    this._ctx.onDispose(() => this._unsubscribeFromHandles());
     this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, (event) =>
       this._onObjectDocumentLoaded(this._ctx, event),
     );
 
     try {
       await this._automergeDocLoader.loadSpaceRootDocHandle(ctx, spaceState);
-      const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle(ctx);
+      const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
       const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
       invariant(spaceRootDoc);
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
@@ -219,16 +219,16 @@ export class CoreDatabase {
   @synchronized
   async updateSpaceState(ctx: Context, spaceState: SpaceState): Promise<void> {
     invariant(this._ctx, 'Must be open');
-    const currentRootUrl = this._automergeDocLoader.getSpaceRootDocHandle(ctx).url;
+    const currentRootUrl = this._automergeDocLoader.getSpaceRootDocHandle().url;
     if (spaceState.rootUrl === currentRootUrl) {
       return;
     }
-    this._unsubscribeFromHandles(ctx);
-    const objectIdsToLoad = this._automergeDocLoader.clearHandleReferences(ctx);
+    this._unsubscribeFromHandles();
+    const objectIdsToLoad = this._automergeDocLoader.clearHandleReferences();
 
     try {
       await this._automergeDocLoader.loadSpaceRootDocHandle(ctx, spaceState);
-      const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle(ctx);
+      const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
       await this._handleSpaceRootDocumentChange(ctx, spaceRootDocHandle, objectIdsToLoad);
       spaceRootDocHandle.on('change', this._onDocumentUpdate);
     } catch (err) {
@@ -248,11 +248,11 @@ export class CoreDatabase {
       return [];
     }
 
-    const hasLoadedHandles = this._automergeDocLoader.getAllHandles(ctx).length > 0;
+    const hasLoadedHandles = this._automergeDocLoader.getAllHandles().length > 0;
     if (!hasLoadedHandles) {
       return [];
     }
-    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle(ctx).doc();
+    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle().doc();
     if (!rootDoc) {
       return [];
     }
@@ -261,11 +261,11 @@ export class CoreDatabase {
   }
 
   getNumberOfInlineObjects(ctx: Context): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle(ctx).doc()?.objects ?? {}).length;
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().doc()?.objects ?? {}).length;
   }
 
   getNumberOfLinkedObjects(ctx: Context): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle(ctx).doc()?.links ?? {}).length;
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle().doc()?.links ?? {}).length;
   }
 
   getTotalNumberOfObjects(ctx: Context): number {
@@ -276,18 +276,18 @@ export class CoreDatabase {
    * @deprecated
    * Return only loaded objects.
    */
-  allObjectCores(ctx: Context): ObjectCore[] {
+  allObjectCores(): ObjectCore[] {
     return Array.from(this._objects.values());
   }
 
-  getObjectCoreById(ctx: Context, id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
+  getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
     if (!this._automergeDocLoader.hasRootHandle) {
       throw new Error('Database is not ready.');
     }
 
     const objCore = this._objects.get(id);
     if (load && !objCore) {
-      this._automergeDocLoader.loadObjectDocument(ctx, id);
+      this._automergeDocLoader.loadObjectDocument(this._ctx, id);
       return undefined;
     }
 
@@ -301,17 +301,17 @@ export class CoreDatabase {
     objectId: string,
     { timeout, returnWithUnsatisfiedDeps }: LoadObjectOptions = {},
   ): Promise<ObjectCore | undefined> {
-    const core = this.getObjectCoreById(ctx, objectId);
+    const core = this.getObjectCoreById(objectId);
     if (core && (returnWithUnsatisfiedDeps || this._areDepsSatisfied(ctx, core))) {
       return core;
     }
     const isReady = () => {
-      const core = this.getObjectCoreById(this._ctx, objectId);
+      const core = this.getObjectCoreById(objectId);
       return core ? returnWithUnsatisfiedDeps || this._areDepsSatisfied(this._ctx, core) : false;
     };
     const waitForUpdate = this._updateEvent
       .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId) && isReady())
-      .then(() => this.getObjectCoreById(this._ctx, objectId));
+      .then(() => this.getObjectCoreById(objectId));
     this._automergeDocLoader.loadObjectDocument(ctx, objectId);
 
     return timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate;
@@ -341,12 +341,12 @@ export class CoreDatabase {
     for (let i = 0; i < objectIds.length; i++) {
       const objectId = objectIds[i];
 
-      if (!this._automergeDocLoader.objectPresent(ctx, objectId)) {
+      if (!this._automergeDocLoader.objectPresent(objectId)) {
         result[i] = undefined;
         continue;
       }
 
-      const core = this.getObjectCoreById(ctx, objectId, { load: true });
+      const core = this.getObjectCoreById(objectId, { load: true });
       if (!returnDeleted && this._objects.get(objectId)?.isDeleted()) {
         result[i] = undefined;
       } else if (!returnWithUnsatisfiedDeps && core && !this._areDepsSatisfied(ctx, core)) {
@@ -400,7 +400,7 @@ export class CoreDatabase {
                 diagnostics.push('deps-unsatisfied');
                 result[objectToLoad.resultIndex] = undefined;
               } else {
-                result[objectToLoad.resultIndex] = this.getObjectCoreById(this._ctx, objectToLoad.id)!;
+                result[objectToLoad.resultIndex] = this.getObjectCoreById(objectToLoad.id)!;
               }
 
               objectsToLoad.splice(i, 1);
@@ -449,8 +449,8 @@ export class CoreDatabase {
       }
       // TODO(dmaretskyi): In the future we should forbid object placement in the root doc.
       case 'root-doc': {
-        spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle(ctx);
-        this._automergeDocLoader.onObjectBoundToDocument(ctx, spaceDocHandle, core.id);
+        spaceDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
+        this._automergeDocLoader.onObjectBoundToDocument(spaceDocHandle, core.id);
         break;
       }
       default:
@@ -474,7 +474,7 @@ export class CoreDatabase {
    * Removes an object link from the space root document.
    */
   unlinkObjects(ctx: Context, objectIds: string[]): void {
-    const root = this._automergeDocLoader.getSpaceRootDocHandle(ctx);
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
     for (const objectId of objectIds) {
       if (!root.doc().links?.[objectId]) {
         throw new Error(`Link not found: ${objectId}`);
@@ -540,13 +540,13 @@ export class CoreDatabase {
   ): Promise<void> {
     log('flush', { disk, indexes, updates });
     // Wait for pending document creations to complete before flushing.
-    await this._automergeDocLoader.waitForPendingCreations(ctx);
+    await this._automergeDocLoader.waitForPendingCreations();
     if (disk) {
-      await this._repoProxy.flush(ctx);
+      await this._repoProxy.flush();
       await this._dataService.flush(
         {
           documentIds: this._automergeDocLoader
-            .getAllHandles(ctx)
+            .getAllHandles()
             .map((handle) => handle.documentId)
             .filter((id): id is DocumentId => id != null),
         },
@@ -567,7 +567,7 @@ export class CoreDatabase {
    * Returns document heads for all documents in the space.
    */
   async getDocumentHeads(ctx: Context): Promise<SpaceDocumentHeads> {
-    const root = this._automergeDocLoader.getSpaceRootDocHandle(ctx);
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
     const doc = root.doc();
     if (!doc || root.documentId == null) {
       return { heads: {} };
@@ -617,7 +617,7 @@ export class CoreDatabase {
    * Returns document heads for all documents in the space.
    */
   async reIndexHeads(ctx: Context): Promise<void> {
-    const root = this._automergeDocLoader.getSpaceRootDocHandle(ctx);
+    const root = this._automergeDocLoader.getSpaceRootDocHandle();
     const doc = root.doc();
     invariant(doc);
     invariant(root.documentId, 'Space root document must have documentId');
@@ -681,7 +681,7 @@ export class CoreDatabase {
   ): void {
     (this as any)._dataService = dataService;
     (this as any)._queryService = queryService;
-    this._repoProxy._updateDataService(ctx, dataService);
+    this._repoProxy._updateDataService(dataService);
   }
 
   /**
@@ -693,7 +693,7 @@ export class CoreDatabase {
     this._reconnected.emit();
   }
 
-  getLoadedDocumentHandles(ctx: Context): DocHandleProxy<any>[] {
+  getLoadedDocumentHandles(): DocHandleProxy<any>[] {
     return Object.values(this._repoProxy.handles);
   }
 
@@ -757,7 +757,7 @@ export class CoreDatabase {
     this.rootChanged.emit();
   }
 
-  private _emitObjectUpdateEvent(ctx: Context, itemsUpdated: string[]): void {
+  private _emitObjectUpdateEvent(itemsUpdated: string[]): void {
     if (itemsUpdated.length === 0) {
       return;
     }
@@ -776,15 +776,15 @@ export class CoreDatabase {
    * Keep as field to have a reference to pass for unsubscribing from handle changes.
    */
   private readonly _onDocumentUpdate = (event: ChangeEvent<DatabaseDirectory>) => {
-    const documentChanges = this._processDocumentUpdate(this._ctx, event);
+    const documentChanges = this._processDocumentUpdate(event);
     this._rebindObjects(this._ctx, event.handle, documentChanges.objectsToRebind);
     this._automergeDocLoader.onObjectLinksUpdated(this._ctx, documentChanges.linkedDocuments);
     this._createInlineObjects(this._ctx, event.handle, documentChanges.createdObjectIds);
-    this._emitObjectUpdateEvent(this._ctx, documentChanges.updatedObjectIds);
-    this._scheduleThrottledDbUpdate(this._ctx, documentChanges.updatedObjectIds);
+    this._emitObjectUpdateEvent(documentChanges.updatedObjectIds);
+    this._scheduleThrottledDbUpdate(documentChanges.updatedObjectIds);
   };
 
-  private _processDocumentUpdate(ctx: Context, event: ChangeEvent<DatabaseDirectory>): DocumentChanges {
+  private _processDocumentUpdate(event: ChangeEvent<DatabaseDirectory>): DocumentChanges {
     const { inlineChangedObjects, linkedDocuments } = getInlineAndLinkChanges(event);
     const createdObjectIds: string[] = [];
     const objectsToRebind: string[] = [];
@@ -814,7 +814,7 @@ export class CoreDatabase {
     };
   }
 
-  private _unsubscribeFromHandles(ctx: Context): void {
+  private _unsubscribeFromHandles(): void {
     for (const docHandle of Object.values(this._repoProxy.handles)) {
       docHandle.off('change', this._onDocumentUpdate);
     }
@@ -824,7 +824,7 @@ export class CoreDatabase {
     handle.on('change', this._onDocumentUpdate);
     const core = this._createObjectInDocument(ctx, handle, objectId);
     if (this._areDepsSatisfied(ctx, core)) {
-      this._scheduleThrottledUpdate(ctx, [objectId]);
+      this._scheduleThrottledUpdate([objectId]);
     } else {
       for (const dep of core.getStrongDependencies()) {
         if (dep.isLocalObjectId()) {
@@ -847,7 +847,7 @@ export class CoreDatabase {
           queue.push(dep);
           const core = this._objects.get(dep);
           if (core && this._areDepsSatisfied(ctx, core)) {
-            this._scheduleThrottledUpdate(ctx, [core.id]);
+            this._scheduleThrottledUpdate([core.id]);
           }
         }
       }
@@ -873,7 +873,7 @@ export class CoreDatabase {
     const core = new ObjectCore();
     core.id = objectId;
     this._objects.set(core.id, core);
-    this._automergeDocLoader.onObjectBoundToDocument(ctx, docHandle, objectId);
+    this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
     core.bind({
       db: this,
       docHandle,
@@ -928,7 +928,7 @@ export class CoreDatabase {
         path: objectCore.mountPath,
         assignFromLocalState: false,
       });
-      this._automergeDocLoader.onObjectBoundToDocument(ctx, docHandle, objectId);
+      this._automergeDocLoader.onObjectBoundToDocument(docHandle, objectId);
     }
   }
 
@@ -947,7 +947,7 @@ export class CoreDatabase {
   });
 
   @trace.span({ showInBrowserTimeline: true })
-  private _emitDbUpdateEvents(ctx: Context): void {
+  private _emitDbUpdateEvents(_ctx: Context): void {
     const fullUpdateIds = [...this._objectsForNextUpdate];
     const allDbUpdates = new Set([...this._objectsForNextUpdate, ...this._objectsForNextDbUpdate]);
     this._objectsForNextUpdate.clear();
@@ -960,13 +960,13 @@ export class CoreDatabase {
           itemsUpdated: [...allDbUpdates].map((id) => ({ id })),
         });
       }
-      this._emitObjectUpdateEvent(ctx, fullUpdateIds);
+      this._emitObjectUpdateEvent(fullUpdateIds);
     });
   }
 
   // TODO(dmaretskyi): Pass all remote updates through this.
   // Scheduled db and signal update events.
-  private _scheduleThrottledUpdate(ctx: Context, objectId: string[]): void {
+  private _scheduleThrottledUpdate(objectId: string[]): void {
     for (const id of objectId) {
       this._objectsForNextUpdate.add(id);
     }
@@ -978,7 +978,7 @@ export class CoreDatabase {
   }
 
   // Scheduled db update event only.
-  private _scheduleThrottledDbUpdate(ctx: Context, objectId: string[]): void {
+  private _scheduleThrottledDbUpdate(objectId: string[]): void {
     for (const id of objectId) {
       this._objectsForNextDbUpdate.add(id);
     }

@@ -168,22 +168,22 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     this._replicators.delete(replicator);
   }
 
-  async shouldAdvertise(ctx: Context, peerId: PeerId, params: ShouldAdvertiseProps): Promise<boolean> {
+  async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseProps): Promise<boolean> {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
     }
 
-    return connection.connection.shouldAdvertise(ctx, params);
+    return connection.connection.shouldAdvertise(params);
   }
 
-  shouldSyncCollection(ctx: Context, peerId: PeerId, params: ShouldSyncCollectionProps): boolean {
+  shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionProps): boolean {
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
     }
 
-    return connection.connection.shouldSyncCollection(ctx, params);
+    return connection.connection.shouldSyncCollection(params);
   }
 
   queryCollectionState(ctx: Context, collectionId: string, targetId: PeerId): void {
@@ -211,7 +211,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   getPeersInterestedInCollection(ctx: Context, collectionId: string): PeerId[] {
     return Array.from(this._connections.values())
       .map((connection) => {
-        return connection.connection.shouldSyncCollection(ctx, { collectionId })
+        return connection.connection.shouldSyncCollection({ collectionId })
           ? (connection.connection.peerId as PeerId)
           : null;
       })

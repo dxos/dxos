@@ -50,7 +50,6 @@ class MockIndexDataSource implements IndexDataSource {
   }
 
   getChangedObjects(
-    _ctx: Context,
     cursors: IndexCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {

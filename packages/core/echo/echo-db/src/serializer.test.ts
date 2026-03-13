@@ -33,7 +33,7 @@ describe('Serializer', () => {
       await graph.schemaRegistry.register([TestSchema.Task]);
 
       const task = db.add(Obj.make(TestSchema.Task, { title: 'Testing' }));
-      const data = serializer.exportObject(Context.default(), task);
+      const data = serializer.exportObject(task);
 
       expect(data).to.deep.include({
         id: task.id,

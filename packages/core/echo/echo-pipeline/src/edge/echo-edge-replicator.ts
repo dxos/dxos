@@ -269,7 +269,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
 
     this.writable = new WritableStream<AutomergeProtocolMessage>({
       write: async (message: AutomergeProtocolMessage, controller) => {
-        await this._requestLimiter.rateLimit(this._ctx, message);
+        await this._requestLimiter.rateLimit(message);
 
         await this._sendMessage(this._ctx, message);
       },
@@ -318,7 +318,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
     return this._remotePeerId;
   }
 
-  async shouldAdvertise(_ctx: Context, params: ShouldAdvertiseProps): Promise<boolean> {
+  async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
     if (!this._sharedPolicyEnabled) {
       return true;
     }
@@ -343,7 +343,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
     return spaceId === this._spaceId;
   }
 
-  shouldSyncCollection(_ctx: Context, params: ShouldSyncCollectionProps): boolean {
+  shouldSyncCollection(params: ShouldSyncCollectionProps): boolean {
     if (!this._sharedPolicyEnabled) {
       return true;
     }
@@ -399,7 +399,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
       return;
     }
 
-    this._requestLimiter.handleResponse(_ctx, message);
+    this._requestLimiter.handleResponse(message);
 
     this._readableStreamController.enqueue(message);
   }

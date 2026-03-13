@@ -167,11 +167,11 @@ export class TestReplicatorConnection implements AutomergeReplicatorConnection {
     return false;
   }
 
-  async shouldAdvertise(_ctx: Context, _params: ShouldAdvertiseProps): Promise<boolean> {
+  async shouldAdvertise(_params: ShouldAdvertiseProps): Promise<boolean> {
     return true;
   }
 
-  shouldSyncCollection(_ctx: Context, _params: ShouldSyncCollectionProps): boolean {
+  shouldSyncCollection(_params: ShouldSyncCollectionProps): boolean {
     return true;
   }
 }

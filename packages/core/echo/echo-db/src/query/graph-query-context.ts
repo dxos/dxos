@@ -191,7 +191,7 @@ export class SpaceQuerySource implements QuerySource {
     prohibitSignalActions(() => {
       // TODO(dmaretskyi): Could be optimized to recompute changed only to the relevant space.
       const changed = updateEvent.itemsUpdated.some(({ id: objectId }) => {
-        const core = this._database.coreDatabase.getObjectCoreById(this._ctx, objectId, {
+        const core = this._database.coreDatabase.getObjectCoreById(objectId, {
           load: false,
         });
 
@@ -302,10 +302,10 @@ export class SpaceQuerySource implements QuerySource {
   ): QueryResult.EntityEntry<Obj.Unknown>[] {
     const filteredCores = isObjectIdFilter(filter)
       ? (filter as QueryAST.FilterObject)
-          .id!.map((id) => this._database.coreDatabase.getObjectCoreById(ctx, id, { load: true }))
+          .id!.map((id) => this._database.coreDatabase.getObjectCoreById(id, { load: true }))
           .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(ctx, core, filter, options))
-      : this._database.coreDatabase.allObjectCores(ctx).filter((core) => this._filterCore(ctx, core, filter, options));
+      : this._database.coreDatabase.allObjectCores().filter((core) => this._filterCore(ctx, core, filter, options));
 
     return filteredCores.map((core) => this._mapCoreToResult(ctx, core));
   }

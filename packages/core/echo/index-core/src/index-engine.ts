@@ -44,7 +44,6 @@ export interface IndexDataSource {
   readonly sourceName: string; // e.g. queue, automerge, etc.
 
   getChangedObjects(
-    ctx: Context,
     cursors: DataSourceCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }>;
@@ -217,7 +216,7 @@ export class IndexEngine {
             // Pass undefined to get all cursors when spaceId is null.
             spaceId: opts.spaceId ?? undefined,
           });
-          const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(ctx, cursors, {
+          const { objects, cursors: updatedCursors } = yield* source.getChangedObjects(cursors, {
             limit: opts.limit,
           });
           if (objects.length === 0) {

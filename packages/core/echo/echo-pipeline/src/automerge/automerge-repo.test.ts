@@ -958,7 +958,7 @@ const createTeleportTestPeer = async (
     network: [echoAdapter],
     storage: options?.storage,
     sharePolicy: async (peerId, documentId) =>
-      documentId ? echoAdapter.shouldAdvertise(Context.default(), peerId, { documentId }) : false,
+      documentId ? echoAdapter.shouldAdvertise(peerId, { documentId }) : false,
   });
   await echoAdapter.open(Context.default());
   await echoAdapter.whenConnected(Context.default());

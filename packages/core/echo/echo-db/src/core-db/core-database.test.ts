@@ -366,8 +366,8 @@ describe('CoreDatabase', () => {
 });
 
 const getDocHandles = (db: EchoDatabase): DocumentHandles => ({
-  spaceRootHandle: db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle(Context.default()),
-  linkedDocHandles: db.coreDatabase._automergeDocLoader.getLinkedDocHandles(Context.default()),
+  spaceRootHandle: db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle(),
+  linkedDocHandles: db.coreDatabase._automergeDocLoader.getLinkedDocHandles(),
 });
 
 const getObjectDocHandle = (obj: any) => getObjectCore(obj).docHandle!;

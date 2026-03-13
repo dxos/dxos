@@ -38,7 +38,7 @@ export class InflightRequestLimiter extends Resource {
     clearTimeout(this._resetBalanceTimeout);
   }
 
-  public async rateLimit(_ctx: Context, message: AutomergeProtocolMessage): Promise<void> {
+  public async rateLimit(message: AutomergeProtocolMessage): Promise<void> {
     if (message.type !== 'sync') {
       return;
     }
@@ -56,7 +56,7 @@ export class InflightRequestLimiter extends Resource {
     }
   }
 
-  public handleResponse(_ctx: Context, message: AutomergeProtocolMessage): void {
+  public handleResponse(message: AutomergeProtocolMessage): void {
     if (message.type !== 'sync') {
       return;
     }

@@ -5,7 +5,7 @@
 import * as A from '@automerge/automerge';
 import { cbor } from '@automerge/automerge-repo';
 
-import { type Context, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -54,7 +54,7 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
           await this.replicatorExtension.sendSyncMessage({ payload: cbor.encode(message) });
         } catch (err) {
           controller.error(err);
-          this._disconnectIfEnabled(this._ctx);
+          this._disconnectIfEnabled();
         }
       },
     });
@@ -90,13 +90,13 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
           readableStreamController.enqueue(message);
         },
         onClose: async () => {
-          this._disconnectIfEnabled(this._ctx);
+          this._disconnectIfEnabled();
         },
       },
     ]);
   }
 
-  private _disconnectIfEnabled(ctx: Context): void {
+  private _disconnectIfEnabled(): void {
     if (this._isEnabled) {
       this._params.onRemoteDisconnected();
     }
@@ -115,11 +115,11 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
     return false;
   }
 
-  async shouldAdvertise(ctx: Context, params: ShouldAdvertiseProps): Promise<boolean> {
+  async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
     return this._params.shouldAdvertise(params);
   }
 
-  shouldSyncCollection(ctx: Context, params: ShouldSyncCollectionProps): boolean {
+  shouldSyncCollection(params: ShouldSyncCollectionProps): boolean {
     return this._params.shouldSyncCollection(params);
   }
 
@@ -127,7 +127,7 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
    * Start exchanging messages with the remote peer.
    * Call after the remote peer has connected.
    */
-  enable(ctx: Context): void {
+  enable(): void {
     invariant(this._remotePeerId != null, 'Remote peer has not connected yet.');
     this._isEnabled = true;
   }
@@ -135,7 +135,7 @@ export class MeshReplicatorConnection extends Resource implements AutomergeRepli
   /**
    * Stop exchanging messages with the remote peer.
    */
-  disable(ctx: Context): void {
+  disable(): void {
     this._isEnabled = false;
   }
 }

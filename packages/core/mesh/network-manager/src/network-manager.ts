@@ -133,7 +133,7 @@ export class SwarmNetworkManager {
 
   async open(ctx: Context): Promise<void> {
     log.trace('dxos.mesh.network-manager.open', trace.begin({ id: this._instanceId }));
-    this._messenger.open(ctx);
+    this._messenger.open();
     await this._signalManager.open();
     log.trace('dxos.mesh.network-manager.open', trace.end({ id: this._instanceId }));
   }
@@ -145,7 +145,7 @@ export class SwarmNetworkManager {
       });
     }
 
-    await this._messenger.close(ctx);
+    await this._messenger.close();
     await this._signalManager.close();
   }
 
@@ -240,14 +240,14 @@ export class SwarmNetworkManager {
         this._connectionState = state;
         // go offline
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOffline(ctx)));
-        await this._messenger.close(ctx);
+        await this._messenger.close();
         await this._signalManager.close();
         break;
       }
       case ConnectionState.ONLINE: {
         this._connectionState = state;
         // go online
-        this._messenger.open(ctx);
+        this._messenger.open();
         await Promise.all([...this._swarms.values()].map((swarm) => swarm.goOnline(ctx)));
         await this._signalManager.open();
         break;

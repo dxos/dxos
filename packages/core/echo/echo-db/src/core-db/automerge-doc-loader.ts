@@ -24,30 +24,30 @@ export interface AutomergeDocumentLoader {
 
   get hasRootHandle(): boolean;
 
-  getAllHandles(ctx: Context): DocHandleProxy<DatabaseDirectory>[];
+  getAllHandles(): DocHandleProxy<DatabaseDirectory>[];
   /**
    * @returns Handles linked from the space root handle.
    */
-  getLinkedDocHandles(ctx: Context): DocHandleProxy<DatabaseDirectory>[];
+  getLinkedDocHandles(): DocHandleProxy<DatabaseDirectory>[];
 
-  objectPresent(ctx: Context, id: ObjectId): boolean;
+  objectPresent(id: ObjectId): boolean;
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
   loadObjectDocument(ctx: Context, objectId: string | string[]): void;
-  getObjectDocumentId(ctx: Context, objectId: string): string | undefined;
-  getSpaceRootDocHandle(ctx: Context): DocHandleProxy<DatabaseDirectory>;
+  getObjectDocumentId(objectId: string): string | undefined;
+  getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
   createDocumentForObject(ctx: Context, objectId: string): DocHandleProxy<DatabaseDirectory>;
   onObjectLinksUpdated(ctx: Context, links: SpaceDocumentLinks): void;
-  onObjectBoundToDocument(ctx: Context, handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void;
+  onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void;
 
   /**
    * Wait for all pending document creations to complete.
    */
-  waitForPendingCreations(ctx: Context): Promise<void>;
+  waitForPendingCreations(): Promise<void>;
 
   /**
    * @returns objectIds for which we had document handles or were loading one.
    */
-  clearHandleReferences(ctx: Context): string[];
+  clearHandleReferences(): string[];
 }
 
 /**
@@ -94,13 +94,13 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return this._spaceRootDocHandle != null;
   }
 
-  getAllHandles(ctx: Context): DocHandleProxy<DatabaseDirectory>[] {
+  getAllHandles(): DocHandleProxy<DatabaseDirectory>[] {
     return this._spaceRootDocHandle != null
       ? [this._spaceRootDocHandle, ...new Set(this._objectDocumentHandles.values())]
       : [];
   }
 
-  getLinkedDocHandles(ctx: Context): DocHandleProxy<DatabaseDirectory>[] {
+  getLinkedDocHandles(): DocHandleProxy<DatabaseDirectory>[] {
     return [...new Set(this._objectDocumentHandles.values())];
   }
 
@@ -123,7 +123,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     this._spaceRootDocHandle = existingDocHandle;
   }
 
-  objectPresent(_ctx: Context, id: ObjectId): boolean {
+  objectPresent(id: ObjectId): boolean {
     assertState(this._spaceRootDocHandle, 'Database was not initialized with root object.');
     return (
       DatabaseDirectory.getInlineObject(this._spaceRootDocHandle.doc(), id) != null ||
@@ -154,7 +154,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     }
   }
 
-  public getObjectDocumentId(_ctx: Context, objectId: string): string | undefined {
+  public getObjectDocumentId(objectId: string): string | undefined {
     invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
     const spaceRootDoc = this._spaceRootDocHandle.doc();
     invariant(spaceRootDoc);
@@ -176,7 +176,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
   }
 
-  public getSpaceRootDocHandle(ctx: Context): DocHandleProxy<DatabaseDirectory> {
+  public getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory> {
     invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
     return this._spaceRootDocHandle;
   }
@@ -208,20 +208,20 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
         this._pendingDocumentCreations.delete(objectId);
       });
     this._pendingDocumentCreations.set(objectId, creationPromise);
-    this.onObjectBoundToDocument(ctx, spaceDocHandle, objectId);
+    this.onObjectBoundToDocument(spaceDocHandle, objectId);
 
     return spaceDocHandle;
   }
 
-  public async waitForPendingCreations(ctx: Context): Promise<void> {
+  public async waitForPendingCreations(): Promise<void> {
     await Promise.all([...this._pendingDocumentCreations.values()]);
   }
 
-  public onObjectBoundToDocument(ctx: Context, handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
+  public onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void {
     this._objectDocumentHandles.set(objectId, handle);
   }
 
-  public clearHandleReferences(ctx: Context): string[] {
+  public clearHandleReferences(): string[] {
     const objectsWithHandles = [...this._objectDocumentHandles.keys()];
     this._objectDocumentHandles.clear();
     this._spaceRootDocHandle = null;

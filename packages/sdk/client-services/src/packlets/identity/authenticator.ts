@@ -46,7 +46,7 @@ export class TrustedKeySetAuthVerifier {
 
   constructor(private readonly _params: TrustedKeySetAuthVerifierProps) {}
 
-  async close(_ctx: Context): Promise<void> {
+  async close(): Promise<void> {
     await this._ctx.dispose();
   }
 
@@ -66,7 +66,7 @@ export class TrustedKeySetAuthVerifier {
         return false;
       }
 
-      if (this._isTrustedKey(this._ctx, credential.issuer)) {
+      if (this._isTrustedKey(credential.issuer)) {
         log('key is trusted -- auth success', { key: credential.issuer });
         return true;
       }
@@ -77,7 +77,7 @@ export class TrustedKeySetAuthVerifier {
       });
 
       const clear = this._params.update.on(this._ctx, () => {
-        if (this._isTrustedKey(this._ctx, credential.issuer)) {
+        if (this._isTrustedKey(credential.issuer)) {
           log('auth success', { key: credential.issuer });
           trigger.wake(true);
         } else {
@@ -98,7 +98,7 @@ export class TrustedKeySetAuthVerifier {
     };
   }
 
-  private _isTrustedKey(_ctx: Context, deviceKey: PublicKey): boolean {
+  private _isTrustedKey(deviceKey: PublicKey): boolean {
     const deviceSet = this._params.trustedKeysProvider();
     return deviceSet.has(deviceKey);
   }

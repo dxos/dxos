@@ -36,10 +36,12 @@ const RECEIVED_MESSAGES_GC_INTERVAL = 120_000;
 export class Messenger {
   private readonly _monitor = new MessengerMonitor();
   private readonly _signalManager: SignalManager;
+  // { peerId, payloadType } => listeners set
   private readonly _listeners = new ComplexMap<{ peerId: string; payloadType: string }, Set<OnMessage>>(
     ({ peerId, payloadType }) => peerId + payloadType,
   );
 
+  // peerId => listeners set
   private readonly _defaultListeners = new Map<string, Set<OnMessage>>();
 
   private readonly _onAckCallbacks = new ComplexMap<PublicKey, () => void>(PublicKey.hash);
@@ -59,10 +61,10 @@ export class Messenger {
     this._signalManager = signalManager;
     this._retryDelay = retryDelay;
 
-    this.open(Context.default());
+    this.open();
   }
 
-  open(_ctx: Context): void {
+  open(): void {
     if (!this._closed) {
       return;
     }
@@ -74,14 +76,15 @@ export class Messenger {
     this._ctx.onDispose(
       this._signalManager.onMessage.on(async (message) => {
         log('received message', { from: message.author });
-        await this._handleMessage(this._ctx, message);
+        await this._handleMessage(message);
       }),
     );
 
+    // Clear the map periodically.
     scheduleTaskInterval(
       this._ctx,
       async () => {
-        this._performGc(this._ctx);
+        this._performGc();
       },
       RECEIVED_MESSAGES_GC_INTERVAL,
     );
@@ -90,7 +93,7 @@ export class Messenger {
     log.trace('dxos.mesh.messenger.open', trace.end({ id: traceId }));
   }
 
-  async close(_ctx: Context): Promise<void> {
+  async close(): Promise<void> {
     if (this._closed) {
       return;
     }
@@ -98,7 +101,7 @@ export class Messenger {
     await this._ctx.dispose();
   }
 
-  async sendMessage(ctx: Context, { author, recipient, payload }: Message): Promise<void> {
+  async sendMessage({ author, recipient, payload }: Message): Promise<void> {
     invariant(!this._closed, 'Closed');
     const messageContext = this._ctx.derive();
 
@@ -118,12 +121,13 @@ export class Messenger {
       timeoutHit = reject;
     });
 
+    // Setting retry interval if signal was not acknowledged.
     scheduleExponentialBackoffTaskInterval(
       messageContext,
       async () => {
         log('retrying message', { messageId: reliablePayload.messageId });
         sendAttempts++;
-        await this._encodeAndSend(ctx, { author, recipient, reliablePayload }).catch((err) =>
+        await this._encodeAndSend({ author, recipient, reliablePayload }).catch((err) =>
           log('failed to send message', { err }),
         );
       },
@@ -154,7 +158,7 @@ export class Messenger {
       this._monitor.recordReliableMessage({ sendAttempts, sent: true });
     });
 
-    await this._encodeAndSend(ctx, { author, recipient, reliablePayload });
+    await this._encodeAndSend({ author, recipient, reliablePayload });
     return promise;
   }
 
@@ -162,18 +166,15 @@ export class Messenger {
    * Subscribes onMessage function to messages that contains payload with payloadType.
    * @param payloadType if not specified, onMessage will be subscribed to all types of messages.
    */
-  async listen(
-    ctx: Context,
-    {
-      peer,
-      payloadType,
-      onMessage,
-    }: {
-      peer: PeerInfo;
-      payloadType?: string;
-      onMessage: OnMessage;
-    },
-  ): Promise<ListeningHandle> {
+  async listen({
+    peer,
+    payloadType,
+    onMessage,
+  }: {
+    peer: PeerInfo;
+    payloadType?: string;
+    onMessage: OnMessage;
+  }): Promise<ListeningHandle> {
     invariant(!this._closed, 'Closed');
 
     await this._signalManager.subscribeMessages(peer);
@@ -203,18 +204,15 @@ export class Messenger {
     };
   }
 
-  private async _encodeAndSend(
-    ctx: Context,
-    {
-      author,
-      recipient,
-      reliablePayload,
-    }: {
-      author: PeerInfo;
-      recipient: PeerInfo;
-      reliablePayload: ReliablePayload;
-    },
-  ): Promise<void> {
+  private async _encodeAndSend({
+    author,
+    recipient,
+    reliablePayload,
+  }: {
+    author: PeerInfo;
+    recipient: PeerInfo;
+    reliablePayload: ReliablePayload;
+  }): Promise<void> {
     await this._signalManager.sendMessage({
       author,
       recipient,
@@ -225,27 +223,27 @@ export class Messenger {
     });
   }
 
-  private async _handleMessage(ctx: Context, message: Message): Promise<void> {
+  private async _handleMessage(message: Message): Promise<void> {
     switch (message.payload.type_url) {
       case 'dxos.mesh.messaging.ReliablePayload': {
-        await this._handleReliablePayload(ctx, message);
+        await this._handleReliablePayload(message);
         break;
       }
       case 'dxos.mesh.messaging.Acknowledgement': {
-        await this._handleAcknowledgement(ctx, { payload: message.payload });
+        await this._handleAcknowledgement({ payload: message.payload });
         break;
       }
     }
   }
 
-  private async _handleReliablePayload(ctx: Context, { author, recipient, payload }: Message): Promise<void> {
+  private async _handleReliablePayload({ author, recipient, payload }: Message): Promise<void> {
     invariant(payload.type_url === 'dxos.mesh.messaging.ReliablePayload');
     const reliablePayload: ReliablePayload = ReliablePayload.decode(payload.value, { preserveAny: true });
 
     log('handling message', { messageId: reliablePayload.messageId });
 
     try {
-      await this._sendAcknowledgement(ctx, {
+      await this._sendAcknowledgement({
         author,
         recipient,
         messageId: reliablePayload.messageId,
@@ -255,36 +253,34 @@ export class Messenger {
       throw err;
     }
 
+    // Ignore message if it was already received, i.e. from multiple signal servers.
     if (this._receivedMessages.has(reliablePayload.messageId!)) {
       return;
     }
 
     this._receivedMessages.add(reliablePayload.messageId!);
 
-    await this._callListeners(ctx, {
+    await this._callListeners({
       author,
       recipient,
       payload: reliablePayload.payload,
     });
   }
 
-  private async _handleAcknowledgement(ctx: Context, { payload }: { payload: Any }): Promise<void> {
+  private async _handleAcknowledgement({ payload }: { payload: Any }): Promise<void> {
     invariant(payload.type_url === 'dxos.mesh.messaging.Acknowledgement');
     this._onAckCallbacks.get(Acknowledgement.decode(payload.value).messageId)?.();
   }
 
-  private async _sendAcknowledgement(
-    ctx: Context,
-    {
-      author,
-      recipient,
-      messageId,
-    }: {
-      author: PeerInfo;
-      recipient: PeerInfo;
-      messageId: PublicKey;
-    },
-  ): Promise<void> {
+  private async _sendAcknowledgement({
+    author,
+    recipient,
+    messageId,
+  }: {
+    author: PeerInfo;
+    recipient: PeerInfo;
+    messageId: PublicKey;
+  }): Promise<void> {
     log('sending ACK', { messageId, from: recipient, to: author });
 
     await this._signalManager.sendMessage({
@@ -297,7 +293,7 @@ export class Messenger {
     });
   }
 
-  private async _callListeners(ctx: Context, message: Message): Promise<void> {
+  private async _callListeners(message: Message): Promise<void> {
     {
       invariant(message.recipient.peerKey, 'Peer key is required');
       const defaultListenerMap = this._defaultListeners.get(message.recipient.peerKey);
@@ -321,7 +317,7 @@ export class Messenger {
     }
   }
 
-  private _performGc(_ctx: Context): void {
+  private _performGc(): void {
     const start = performance.now();
 
     for (const key of this._toClear.keys()) {

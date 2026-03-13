@@ -462,7 +462,7 @@ export class AutomergeHost extends Resource {
 
       const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
       if (isEchoPeerMetadata(peerMetadata)) {
-        return this._echoNetworkAdapter.shouldAdvertise(this._ctx, peerId, { documentId });
+        return this._echoNetworkAdapter.shouldAdvertise(peerId, { documentId });
       }
 
       return false;
@@ -483,10 +483,10 @@ export class AutomergeHost extends Resource {
     this._headsStore.setHeads(handle.documentId, heads, batch);
   }
 
-  private _shouldSyncCollection(ctx: Context, collectionId: string, peerId: PeerId): boolean {
+  private _shouldSyncCollection(_ctx: Context, collectionId: string, peerId: PeerId): boolean {
     const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
     if (isEchoPeerMetadata(peerMetadata)) {
-      return this._echoNetworkAdapter.shouldSyncCollection(ctx, peerId, { collectionId });
+      return this._echoNetworkAdapter.shouldSyncCollection(peerId, { collectionId });
     }
 
     return false;

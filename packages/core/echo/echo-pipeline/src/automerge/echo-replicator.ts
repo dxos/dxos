@@ -64,12 +64,12 @@ export interface AutomergeReplicatorConnection {
    * @returns true if the document should be advertised to this peer.
    * The remote peer can still request the document by its id bypassing this check.
    */
-  shouldAdvertise(ctx: Context, params: ShouldAdvertiseProps): Promise<boolean>;
+  shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean>;
 
   /**
    * @returns true if the collection should be synced to this peer.
    */
-  shouldSyncCollection(ctx: Context, params: ShouldSyncCollectionProps): boolean;
+  shouldSyncCollection(params: ShouldSyncCollectionProps): boolean;
 
   /**
    * Batch syncing considered enabled if AutomergeReplicatorConnection implements `pushBatch` and `pullBatch` methods.

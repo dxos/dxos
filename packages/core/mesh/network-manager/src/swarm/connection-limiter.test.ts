@@ -18,8 +18,8 @@ describe('ConnectionLimiter', () => {
       const sessionId = PublicKey.random();
       yield {
         sessionId,
-        connecting: () => asyncTimeout(limiter.connecting(Context.default(), sessionId), 500),
-        doneConnecting: () => limiter.doneConnecting(Context.default(), sessionId),
+        connecting: () => asyncTimeout(limiter.connecting(sessionId), 500),
+        doneConnecting: () => limiter.doneConnecting(sessionId),
       };
     }
   }
