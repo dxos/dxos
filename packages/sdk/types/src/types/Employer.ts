@@ -2,12 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { type Entity, Obj, Relation, Type } from '@dxos/echo';
 
-import { Organization } from './Organization';
-import { Person } from './Person';
+import * as Organization from './Organization';
+import * as Person from './Person';
 
 /**
  * Employer relation.
@@ -23,8 +25,8 @@ export const Employer = Schema.Struct({
     Type.relation({
       typename: 'dxos.org/relation/Employer',
       version: '0.1.0',
-      source: Person,
-      target: Organization,
+      source: Person.Person,
+      target: Organization.Organization,
     }),
   )
   .annotations({
@@ -36,7 +38,7 @@ export interface Employer extends Schema.Schema.Type<typeof Employer> {}
 // TODO(wittjosiah): Add `Relation.MakeProps`.
 export const make = (
   props: {
-    [Relation.Source]: Schema.Schema.Type<typeof Person>;
-    [Relation.Target]: Schema.Schema.Type<typeof Organization>;
+    [Relation.Source]: Schema.Schema.Type<typeof Person.Person>;
+    [Relation.Target]: Schema.Schema.Type<typeof Organization.Organization>;
   } & Entity.Properties<Schema.Schema.Type<typeof Employer>>,
 ) => Relation.make(Employer, props);
