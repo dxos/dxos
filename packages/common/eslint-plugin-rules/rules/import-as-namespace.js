@@ -46,8 +46,7 @@ export default {
         'Module marked with @import-as-namespace must have a PascalCase filename. Got: "{{filename}}".',
       mustUseNamespaceImport:
         'Module "{{source}}" is marked @import-as-namespace. Use: `import * as {{namespace}} from \'{{source}}\'`.',
-      namespaceMustMatchFilename:
-        'Namespace import name "{{actual}}" must match filename "{{expected}}".',
+      namespaceMustMatchFilename: 'Namespace import name "{{actual}}" must match filename "{{expected}}".',
       mustUseNamespaceReexport:
         'Module "{{source}}" is marked @import-as-namespace. Use: `export * as {{namespace}} from \'{{source}}\'`.',
     },
@@ -180,10 +179,7 @@ export default {
             data: { actual, expected: expectedNamespace },
             fix: (fixer) => {
               const importKeyword = node.importKind === 'type' ? 'import type' : 'import';
-              return fixer.replaceText(
-                node,
-                `${importKeyword} * as ${expectedNamespace} from '${source}';`,
-              );
+              return fixer.replaceText(node, `${importKeyword} * as ${expectedNamespace} from '${source}';`);
             },
           });
         }
@@ -214,10 +210,7 @@ export default {
           messageId: 'mustUseNamespaceReexport',
           data: { source, namespace: expectedNamespace },
           fix: (fixer) => {
-            return fixer.replaceText(
-              node,
-              `${exportKeyword} * as ${expectedNamespace} from '${source}';`,
-            );
+            return fixer.replaceText(node, `${exportKeyword} * as ${expectedNamespace} from '${source}';`);
           },
         });
       },
@@ -250,10 +243,7 @@ export default {
               messageId: 'namespaceMustMatchFilename',
               data: { actual, expected: expectedNamespace },
               fix: (fixer) => {
-                return fixer.replaceText(
-                  node,
-                  `export * as ${expectedNamespace} from '${source}';`,
-                );
+                return fixer.replaceText(node, `export * as ${expectedNamespace} from '${source}';`);
               },
             });
           }
