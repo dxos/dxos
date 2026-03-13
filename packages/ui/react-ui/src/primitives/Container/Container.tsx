@@ -20,11 +20,3 @@ export const Container = forwardRef<HTMLDivElement, ContainerProps>(({ children,
     </Comp>
   );
 });
-
-const Foo = ({ count, ...props }: { count?: number }) => {
-  return (
-    <Container {...props} classNames={['flex flex-col']}>
-      <div className='border border-red-500'>{count}</div>
-    </Container>
-  );
-};
