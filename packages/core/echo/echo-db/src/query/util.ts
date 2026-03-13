@@ -48,8 +48,7 @@ export const isSimpleSelectionQuery = (
       if (!maybeFilter) {
         return null;
       }
-      const hasQueues =
-        (query.from._tag === 'scope' && query.from.scope.queues !== undefined) || maybeFilter.hasQueues;
+      const hasQueues = (query.from._tag === 'scope' && query.from.scope.queues !== undefined) || maybeFilter.hasQueues;
       return {
         filter: maybeFilter.filter,
         options: maybeFilter.options,

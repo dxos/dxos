@@ -628,9 +628,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
       await db.flush({ indexes: true });
 
-      const results = await db
-        .query(Query.select(Filter.type(TestSchema.Task)).from({ queues: [] }))
-        .run();
+      const results = await db.query(Query.select(Filter.type(TestSchema.Task)).from({ queues: [] })).run();
       expect(results).toHaveLength(0);
     });
 
