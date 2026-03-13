@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { AgentFunctions, Chat } from '@dxos/assistant-toolkit';
+import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -15,7 +16,7 @@ import { invariant } from '@dxos/invariant';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Collection } from '@dxos/schema';
+import { ManagedCollection } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { AssistantBlueprint } from '../../blueprints';
@@ -28,9 +29,9 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: AssistantOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ space, rootCollection }) {
-          const chatCollection = Collection.makeManaged({ key: Chat.Chat.typename });
-          const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
-          const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });
+          const chatCollection = ManagedCollection.makeManagedCollection({ key: Chat.Chat.typename });
+          const blueprintCollection = ManagedCollection.makeManagedCollection({ key: Blueprint.Blueprint.typename });
+          const promptCollection = ManagedCollection.makeManagedCollection({ key: Type.getTypename(Prompt.Prompt) });
           Obj.change(rootCollection, (c) => {
             c.objects.push(Ref.make(chatCollection), Ref.make(blueprintCollection), Ref.make(promptCollection));
           });
@@ -59,14 +60,22 @@ export default Capability.makeModule(
           // TODO(wittjosiah): This should be a space-level setting.
           // TODO(burdon): Clone when activated. Copy-on-write for template.
           const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
-          let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.key);
-          if (!defaultBlueprint) {
-            defaultBlueprint = db.add(AssistantBlueprint.make());
+          let defaultAssistantBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.key);
+          if (!defaultAssistantBlueprint) {
+            defaultAssistantBlueprint = db.add(AssistantBlueprint.make());
+          }
+          let defaultDatabaseBlueprint = blueprints.find((blueprint) => blueprint.key === DatabaseBlueprint.key);
+          if (!defaultDatabaseBlueprint) {
+            defaultDatabaseBlueprint = db.add(DatabaseBlueprint.make());
           }
 
           const binder = new AiContextBinder({ queue, registry });
           yield* Effect.promise(() =>
-            binder.use((b: AiContextBinder) => b.bind({ blueprints: [Ref.make(defaultBlueprint!)] })),
+            binder.use((b: AiContextBinder) =>
+              b.bind({
+                blueprints: [Ref.make(defaultAssistantBlueprint!), Ref.make(defaultDatabaseBlueprint!)],
+              }),
+            ),
           );
 
           return { object: chat };

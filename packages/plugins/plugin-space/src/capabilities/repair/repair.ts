@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Collection, Obj, Ref, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
-import { Collection } from '@dxos/schema';
+import { ManagedCollection } from '@dxos/schema';
 
 import { SpaceCapabilities } from '../../types';
 
@@ -54,13 +54,17 @@ const ensureSystemCollection = async (space: Space) => {
 
   const objects = await Promise.all(rootCollection.objects.map((ref) => ref.load()));
   const records = objects.find(
-    (object) => Obj.instanceOf(Collection.Managed, object) && object.key === Type.getTypename(Type.PersistentType),
+    (object) =>
+      Obj.instanceOf(ManagedCollection.ManagedCollection, object) &&
+      object.key === Type.getTypename(Type.PersistentType),
   );
   if (records) {
     return;
   }
 
-  const recordsCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) }));
+  const recordsCollectionRef = Ref.make(
+    ManagedCollection.makeManagedCollection({ key: Type.getTypename(Type.PersistentType) }),
+  );
   Obj.change(rootCollection, (c) => {
     c.objects.push(recordsCollectionRef);
   });

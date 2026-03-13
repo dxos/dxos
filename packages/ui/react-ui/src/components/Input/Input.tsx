@@ -40,7 +40,7 @@ type InputSharedProps = Partial<{ density: Density; elevation: Elevation; varian
 
 type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
 
-const Label = forwardRef<HTMLLabelElement, LabelProps>(({ srOnly, classNames, children, ...props }, forwardedRef) => {
+const Label = forwardRef<HTMLLabelElement, LabelProps>(({ classNames, children, srOnly, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
     <LabelPrimitive {...props} className={tx('input.label', { srOnly }, classNames)} ref={forwardedRef}>
@@ -52,7 +52,7 @@ const Label = forwardRef<HTMLLabelElement, LabelProps>(({ srOnly, classNames, ch
 type DescriptionProps = ThemedClassName<DescriptionPrimitiveProps> & { srOnly?: boolean };
 
 const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
-  ({ srOnly, classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <DescriptionPrimitive {...props} className={tx('input.description', { srOnly }, classNames)} ref={forwardedRef}>
@@ -65,7 +65,7 @@ const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
 type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
 
 const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>>(
-  ({ __inputScope, srOnly, classNames, children, ...props }, forwardedRef) => {
+  ({ __inputScope, classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
     return (
@@ -83,7 +83,7 @@ const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>
 type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
 
 const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
-  ({ srOnly, classNames, children, ...props }, forwardedRef) => {
+  ({ classNames, children, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <DescriptionAndValidationPrimitive
@@ -100,7 +100,7 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
 type PinInputProps = ThemedClassName<InputSharedProps & Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'>>;
 
 const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
-  ({ density: propsDensity, elevation: propsElevation, classNames, ...props }, forwardedRef) => {
+  ({ classNames, density: propsDensity, elevation: propsElevation, ...props }, forwardedRef) => {
     const { hasIosKeyboard } = useThemeContext();
     const { tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
@@ -204,11 +204,11 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
   (
     {
       __inputScope,
+      classNames,
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
       onCheckedChange: propsOnCheckedChange,
       size,
-      classNames,
       ...props
     },
     forwardedRef,
@@ -254,10 +254,10 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
   (
     {
       __inputScope,
+      classNames,
       checked: propsChecked,
       defaultChecked: propsDefaultChecked,
       onCheckedChange: propsOnCheckedChange,
-      classNames,
       ...props
     },
     forwardedRef,

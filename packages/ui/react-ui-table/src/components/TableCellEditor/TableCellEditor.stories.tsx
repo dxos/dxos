@@ -6,11 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Obj } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 import { useTestTableModel } from '../../testing';
@@ -52,7 +53,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: Task.Task.typename });
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: Task.Task.typename });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
         Array.from({ length: 10 }).forEach(() => {

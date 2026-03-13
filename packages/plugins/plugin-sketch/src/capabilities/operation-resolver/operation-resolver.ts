@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { OperationResolver } from '@dxos/operation';
-import { Collection } from '@dxos/schema';
+import { ManagedCollection } from '@dxos/schema';
 
 import { Diagram, SketchOperation } from '../../types';
 
@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
       OperationResolver.make({
         operation: SketchOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ rootCollection }) {
-          const collection = Collection.makeManaged({ key: Type.getTypename(Diagram.Diagram) });
+          const collection = ManagedCollection.makeManagedCollection({ key: Type.getTypename(Diagram.Diagram) });
           Obj.change(rootCollection, (c) => {
             c.objects.push(Ref.make(collection));
           });

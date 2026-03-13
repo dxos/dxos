@@ -2,15 +2,20 @@
 // Copyright 2022 DXOS.org
 //
 
-import { extendTailwindMerge, validators } from 'tailwind-merge';
+import { type ElementType, type HTMLAttributes } from 'react';
+import { type ClassNameValue, extendTailwindMerge, validators } from 'tailwind-merge';
+
+import { Slot } from '@radix-ui/react-slot';
+
+import { type ComposableProps } from '@dxos/ui-types';
 
 type AdditionalClassGroups = 'density' | 'dx-focus-ring';
 
 export const mx = extendTailwindMerge<AdditionalClassGroups>({
   extend: {
     classGroups: {
-      ['font-family' as const]: ['font-body', 'font-mono'],
-      ['font-weight' as const]: [
+      'font-family': ['font-body', 'font-mono'],
+      'font-weight': [
         // App weights
         'font-thin',
         'font-extralight',
@@ -21,14 +26,13 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
         'font-bold',
         'font-extrabold',
         'font-black',
-
         // Arbitrary numbers
         validators.isArbitraryNumber,
       ],
 
-      ['density' as const]: ['dx-density-fine', 'dx-density-coarse'],
+      density: ['dx-density-fine', 'dx-density-coarse'],
 
-      ['dx-focus-ring' as const]: [
+      'dx-focus-ring': [
         'dx-focus-ring',
         'dx-focus-ring-inset',
         'dx-focus-ring-always',
@@ -46,4 +50,19 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
       ],
     },
   },
+});
+
+/**
+ * Reconciles className properties from a parent slot.
+ * - `className` is set by the Slot merge mechanism.
+ * - `classNames` is the consumer-facing prop for theming overrides.
+ * Use `composableProps` to reconcile both into a single `className`.
+ */
+export const composableProps = <P extends HTMLElement = HTMLElement>(
+  { className, classNames, ...props }: ComposableProps,
+  { className: defaultClassNames, ...defaults }: Partial<HTMLAttributes<P>> | undefined = {},
+) => ({
+  ...(defaults as object),
+  ...props,
+  className: mx(defaultClassNames, className, classNames),
 });

@@ -2,13 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
 import type { ToggleGroupItemProps as ToggleGroupItemPrimitiveProps } from '@radix-ui/react-toggle-group';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import React, { Fragment, forwardRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { type ToolbarStyleProps } from '@dxos/ui-theme';
+import { composableProps, type ToolbarStyleProps } from '@dxos/ui-theme';
+import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
+import { translationKey } from '../../translations';
 import { type ThemedClassName } from '../../util';
 import {
   Button,
@@ -22,7 +27,12 @@ import {
   type ToggleProps,
 } from '../Button';
 import { Link, type LinkProps } from '../Link';
+import { DropdownMenu } from '../Menu';
 import { Separator, type SeparatorProps } from '../Separator';
+
+//
+// Root
+//
 
 type ToolbarRootProps = ThemedClassName<
   ToolbarPrimitive.ToolbarProps &
@@ -34,23 +44,25 @@ type ToolbarRootProps = ThemedClassName<
 // TODO(burdon): Implement asChild property.
 const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
   (
-    { classNames, children, density, disabled, layoutManaged, textBlockWidth: textBlockWidthProp, ...props },
+    { children, density, disabled, layoutManaged, textBlockWidth: textBlockWidthProp, orientation, ...props },
     forwardedRef,
   ) => {
+    const { className, dir: _, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
     const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
     const innerRootProps = textBlockWidthProp
       ? {
           role: 'none',
-          className: tx('toolbar.inner', { layoutManaged }, classNames),
+          className: tx('toolbar.inner', { layoutManaged }, className),
         }
       : {};
 
     return (
       <ToolbarPrimitive.Root
-        {...props}
-        data-arrow-keys={props.orientation === 'vertical' ? 'up down' : 'left right'}
-        className={tx('toolbar.root', { density, disabled, layoutManaged }, classNames)}
+        {...rest}
+        orientation={orientation}
+        data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
+        className={tx('toolbar.root', { density, disabled, layoutManaged }, className)}
         ref={forwardedRef}
       >
         <InnerRoot {...innerRootProps}>{children}</InnerRoot>
@@ -58,6 +70,27 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
     );
   },
 );
+
+//
+// Text
+//
+
+type ToolbarTextProps = SlottableProps<HTMLDivElement>;
+
+const ToolbarText = forwardRef<HTMLDivElement, ToolbarTextProps>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
+  return (
+    <Comp {...rest} className={tx('toolbar.text', {}, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
+
+//
+// Button
+//
 
 type ToolbarButtonProps = ButtonProps;
 
@@ -68,6 +101,10 @@ const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>((props, 
     </ToolbarPrimitive.Button>
   );
 });
+
+//
+// IconButton
+//
 
 type ToolbarIconButtonProps = IconButtonProps;
 
@@ -89,6 +126,10 @@ const ToolbarToggle = forwardRef<HTMLButtonElement, ToolbarToggleProps>((props, 
   );
 });
 
+//
+// Link
+//
+
 type ToolbarLinkProps = LinkProps;
 
 const ToolbarLink = forwardRef<HTMLAnchorElement, ToolbarLinkProps>((props, forwardedRef) => {
@@ -104,6 +145,10 @@ type ToolbarToggleGroupProps = (
   | Omit<ToolbarPrimitive.ToolbarToggleGroupMultipleProps, 'className'>
 ) &
   ButtonGroupProps;
+
+//
+// ToggleGroup
+//
 
 const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>(
   ({ classNames, children, elevation, ...props }, forwardedRef) => {
@@ -150,10 +195,14 @@ const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGr
   },
 );
 
+//
+// Separator
+//
+
 type ToolbarSeparatorProps = SeparatorProps & { variant?: 'gap' | 'line' };
 
 const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
-  ({ variant = 'line', ...props }, forwardedRef) => {
+  ({ variant = 'gap', ...props }, forwardedRef) => {
     return variant === 'line' ? (
       <ToolbarPrimitive.Separator asChild>
         <Separator {...props} ref={forwardedRef} />
@@ -164,8 +213,109 @@ const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
   },
 );
 
+//
+// DragHandle
+//
+
+type ToolbarDragHandleProps = { testId?: string; label?: string };
+
+const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
+  ({ testId = 'drag-handle', label }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    return (
+      <ToolbarIconButton
+        data-testid={testId}
+        noTooltip
+        iconOnly
+        icon='ph--dots-six-vertical--regular'
+        variant='ghost'
+        label={label ?? t('toolbar drag handle label')}
+        classNames='cursor-pointer'
+        size={5}
+        disabled={!forwardedRef}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+//
+// CloseIconButton
+//
+
+type ToolbarCloseIconButtonProps = { onClick?: () => void; label?: string };
+
+const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconButtonProps>(
+  ({ onClick, label }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    return (
+      <ToolbarIconButton
+        iconOnly
+        icon='ph--x--regular'
+        variant='ghost'
+        label={label ?? t('toolbar close label')}
+        classNames='cursor-pointer'
+        size={5}
+        onClick={onClick}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+//
+// Menu
+//
+
+type ToolbarMenuItem<T extends any | void = void> = {
+  label: string;
+  onClick: (context: T) => void;
+};
+
+type ToolbarMenuProps<T extends any | void = void> = {
+  context?: T;
+  items?: ToolbarMenuItem<T>[];
+};
+
+// TODO(burdon): Make slottable.
+const ToolbarMenu = <T extends any | void = void>({ context, items }: ToolbarMenuProps<T>) => {
+  const { t } = useTranslation(translationKey);
+
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger disabled={!items?.length} asChild>
+        <ToolbarIconButton
+          iconOnly
+          variant='ghost'
+          icon='ph--dots-three-vertical--regular'
+          label={t('toolbar menu label')}
+        />
+      </DropdownMenu.Trigger>
+      {(items?.length ?? 0) > 0 && (
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content>
+            <DropdownMenu.Viewport>
+              {items?.map(({ label, onClick: onSelect }, index) => (
+                <DropdownMenu.Item key={index} onSelect={() => onSelect(context as T)}>
+                  {label}
+                </DropdownMenu.Item>
+              ))}
+            </DropdownMenu.Viewport>
+            <DropdownMenu.Arrow />
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      )}
+    </DropdownMenu.Root>
+  );
+};
+
+//
+// Toolbar
+//
+
 export const Toolbar = {
   Root: ToolbarRoot,
+  Text: ToolbarText,
   Button: ToolbarButton,
   IconButton: ToolbarIconButton,
   Link: ToolbarLink,
@@ -174,10 +324,14 @@ export const Toolbar = {
   ToggleGroupItem: ToolbarToggleGroupItem,
   ToggleGroupIconItem: ToolbarToggleGroupIconItem,
   Separator: ToolbarSeparator,
+  DragHandle: ToolbarDragHandle,
+  CloseIconButton: ToolbarCloseIconButton,
+  Menu: ToolbarMenu,
 };
 
 export type {
   ToolbarRootProps,
+  ToolbarTextProps,
   ToolbarButtonProps,
   ToolbarIconButtonProps,
   ToolbarLinkProps,
@@ -186,4 +340,8 @@ export type {
   ToolbarToggleGroupItemProps,
   ToolbarToggleGroupIconItemProps,
   ToolbarSeparatorProps,
+  ToolbarDragHandleProps,
+  ToolbarCloseIconButtonProps,
+  ToolbarMenuItem,
+  ToolbarMenuProps,
 };

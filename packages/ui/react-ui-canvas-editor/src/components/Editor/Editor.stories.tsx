@@ -80,8 +80,8 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
               values={selected}
               fieldMap={{
                 // TODO(burdon): Replace by type.
-                ['center' as const]: (props) => <TupleField {...props} binding={['x', 'y']} />,
-                ['size' as const]: (props) => <TupleField {...props} binding={['width', 'height']} />,
+                center: (props) => <TupleField {...props} binding={['x', 'y']} />,
+                size: (props) => <TupleField {...props} binding={['width', 'height']} />,
               }}
             >
               <Form.Viewport>
@@ -117,7 +117,7 @@ const meta = {
             // Replace all schema in the spec with the registered schema.
             const registeredSchema = await space.db.schemaRegistry.register([
               ...new Set(spec.map((schema: any) => schema.type)),
-            ] as Type.Entity.Any[]);
+            ] as Type.AnyEntity[]);
 
             spec = spec.map((schema: any) => ({
               ...schema,

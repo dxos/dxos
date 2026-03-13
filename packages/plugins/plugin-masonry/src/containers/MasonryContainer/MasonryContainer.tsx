@@ -7,12 +7,15 @@ import React, { useEffect, useState } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, type Ref, Type } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useObject, useQuery } from '@dxos/react-client/echo';
+import { Card, Toolbar } from '@dxos/react-ui';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
-import { Card } from '@dxos/react-ui-mosaic';
-import { type View, getTypenameFromQuery } from '@dxos/schema';
+import { Menu } from '@dxos/react-ui-menu';
+import { getTypenameFromQuery } from '@dxos/schema';
 
 export type MasonryContainerProps = {
   view: View.View;
@@ -66,14 +69,23 @@ export const MasonryContainer = ({
 };
 
 const Item = ({ data }: { data: any }) => {
+  const objectMenuItems = useObjectMenuItems(data);
+  const handleNavigate = useObjectNavigate(data);
+
   return (
-    <Card.Root>
-      <Card.Toolbar>
-        <span />
-        <Card.Title>{Obj.getLabel(data)}</Card.Title>
-        <Card.Menu />
-      </Card.Toolbar>
-      <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
-    </Card.Root>
+    <Menu.Root>
+      <Card.Root>
+        <Card.Toolbar>
+          <span />
+          <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
+          {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+          <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+          </Menu.Trigger>
+          <Menu.Content items={objectMenuItems} />
+        </Card.Toolbar>
+        <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
+      </Card.Root>
+    </Menu.Root>
   );
 };

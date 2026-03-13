@@ -17,8 +17,7 @@ export type ClientReadyOptions = {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: ClientReadyOptions) {
-    const { observability } = props!;
+  Effect.fnUntraced(function* ({ observability }: ClientReadyOptions) {
     const manager = yield* Capability.get(Capabilities.PluginManager);
     const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
     const registry = yield* Capability.get(Capabilities.AtomRegistry);

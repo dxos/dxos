@@ -78,7 +78,7 @@ const CounterComponent = () => {
   }, [counter]);
 
   if (!manager) {
-    return <div className='p-4 text-red-500'>Error: Context not found</div>;
+    return <div className='p-4 text-error-text'>Error: Context not found</div>;
   }
 
   return (

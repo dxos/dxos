@@ -10,7 +10,6 @@ import { UserAccountAvatar } from './UserAccountAvatar';
 
 const meta = {
   title: 'plugins/plugin-navtree/components/UserAccountAvatar',
-
   decorators: [withTheme()],
   component: UserAccountAvatar,
 } satisfies Meta<typeof UserAccountAvatar>;

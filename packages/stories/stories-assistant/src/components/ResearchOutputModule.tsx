@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 
 import { type ComponentProps } from './types';
 

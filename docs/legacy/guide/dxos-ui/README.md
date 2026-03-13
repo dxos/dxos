@@ -12,8 +12,8 @@ There are several open-source packages of UI components available:
 | Package                                                                      | Description                                                                                        | Audience                                           |
 | :--------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------- | :------------------------------------------------- |
 | [@dxos/react-ui](https://www.npmjs.com/package/@dxos/react-ui)               | A set of lookless components in a UI system based on `radix`, `phosphor`, `react`, and `tailwind`. | Any react application.                             |
-| [@dxos/ui-theme](https://www.npmjs.com/package/@dxos/ui-theme)   | A default theme for DXOS UI                                                                        | Any react application.                             |
-| [@dxos/ui-types](https://www.npmjs.com/package/@dxos/ui-types)   | TypeScript types for the UI system.                                                                | Any react application using DXOS UI.               |
+| [@dxos/ui-theme](https://www.npmjs.com/package/@dxos/ui-theme)               | A default theme for DXOS UI                                                                        | Any react application.                             |
+| [@dxos/ui-types](https://www.npmjs.com/package/@dxos/ui-types)               | TypeScript types for the UI system.                                                                | Any react application using DXOS UI.               |
 | [@dxos/react-ui-editor](https://www.npmjs.com/package/@dxos/react-ui-editor) | A collaborative rich text editor component.                                                        | Any react application using DXOS UI (and/or ECHO). |
 | [@dxos/react-ui-table](https://www.npmjs.com/package/@dxos/react-ui-table)   | A data table component.                                                                            | Any react application using DXOS UI (and/or ECHO). |
 
@@ -36,10 +36,7 @@ import { ThemePlugin } from '@dxos/ui-theme/plugin';
 export default defineConfig({
   plugins: [
     ThemePlugin({
-      content: [
-        resolve(__dirname, './index.html'),
-        resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}'),
-      ],
+      content: [resolve(__dirname, './index.html'), resolve(__dirname, './src/**/*.{js,ts,jsx,tsx}')],
     }),
   ],
 });
@@ -76,7 +73,7 @@ This package exports both CJS and ESM builds of its components, though these are
 
 Follow the [Tailwind Framework Guides documentation](https://tailwindcss.com/docs/installation/framework-guides) relevant to your stack to see how that’s done, but make the following modifications:
 
-* Use the Tailwind configuration from this package:
+- Use the Tailwind configuration from this package:
 
 ```ts
 import tailwindcss from 'tailwindcss';
@@ -93,8 +90,8 @@ tailwindcss(
 // ...
 ```
 
-* Instead of adding the Tailwind directives to your own CSS, use or import this package’s `theme.css` (`@dxos/react-ui/dist/plugin/node/theme.css`) which adds the Tailwind directives itself.
-* This package relies on font assets installed via npm as dependencies; if you’re seeing errors in the browser console or build logs about missing `.woff2` files, ensure your build can correctly resolve the import directives used in `theme.css` e.g. `@import '@fontsource/roboto-flex/variable-full.css'`.
+- Instead of adding the Tailwind directives to your own CSS, use or import this package’s `theme.css` (`@dxos/react-ui/dist/plugin/node/theme.css`) which adds the Tailwind directives itself.
+- This package relies on font assets installed via npm as dependencies; if you’re seeing errors in the browser console or build logs about missing `.woff2` files, ensure your build can correctly resolve the import directives used in `theme.css` e.g. `@import '@fontsource/roboto-flex/variable-full.css'`.
 
 :::
 
@@ -129,11 +126,11 @@ To prevent flash of unstyled content, ensure the document features the right cla
 <head>
   <script>
     function setTheme(darkMode) {
-      document.documentElement.classList[darkMode ? 'add' : 'remove']('dark')
+      document.documentElement.classList[darkMode ? 'add' : 'remove']('dark');
     }
-    setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches)
+    setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
-      setTheme(e.matches)
+      setTheme(e.matches);
     });
   </script>
 </head>

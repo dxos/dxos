@@ -9,7 +9,7 @@ import { Text } from '@dxos/schema';
 
 export const Outline = Schema.Struct({
   name: Schema.optional(Schema.String),
-  content: Type.Ref(Text.Text),
+  content: Ref.Ref(Text.Text),
 }).pipe(
   Type.object({
     typename: 'dxos.org/type/Outline',

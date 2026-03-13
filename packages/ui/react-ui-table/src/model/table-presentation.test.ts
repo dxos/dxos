@@ -6,9 +6,9 @@ import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { Filter, Query, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { ProjectionModel, View, createDirectChangeCallback } from '@dxos/schema';
+import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
 import { Table } from '../types';
 
@@ -99,7 +99,7 @@ const Test = Schema.Struct({
 
 const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);
-  const view = View.make({
+  const view = ViewModel.make({
     query: Query.select(Filter.type(schema)),
     jsonSchema: schema.jsonSchema,
   });
@@ -108,7 +108,7 @@ const createTableModel = (registry: Registry.Registry, props: Partial<TableModel
     registry,
     view,
     baseSchema: schema.jsonSchema,
-    change: createDirectChangeCallback(view.projection, Type.toJsonSchema(schema)),
+    change: createDirectChangeCallback(view.projection, JsonSchema.toJsonSchema(schema)),
   });
   projection.normalizeView();
   return new TableModel({ registry, object, projection, ...props });

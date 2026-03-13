@@ -4,13 +4,21 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { JsonSchemaType } from './internal';
+import * as jsonSchemaInternal from './internal/JsonSchema';
 
-export { toEffectSchema, toJsonSchema } from './internal';
+/**
+ * Decode JSON Schema to Effect Schema.
+ */
+export const toEffectSchema = jsonSchemaInternal.toEffectSchema;
+
+/**
+ * Encode Effect Schema to JSON Schema.
+ */
+export const toJsonSchema = jsonSchemaInternal.toJsonSchema;
 
 /**
  * Serializable JsonSchema type definition.
  */
-export type JsonSchema = JsonSchemaType;
+export type JsonSchema = jsonSchemaInternal.JsonSchemaType;
 
-export const JsonSchema: Schema.Schema<JsonSchemaType> = JsonSchemaType;
+export const JsonSchema: Schema.Schema<jsonSchemaInternal.JsonSchemaType> = jsonSchemaInternal.JsonSchemaType;

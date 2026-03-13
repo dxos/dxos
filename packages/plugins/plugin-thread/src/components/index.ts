@@ -3,6 +3,5 @@
 //
 
 export * from './Call';
-export * from './CommentsContainer';
-export * from './CommentsThreadContainer';
-export * from './MessageContainer';
+export * from './CommentsPanel';
+export * from './MessagePanel';

@@ -14,7 +14,7 @@ export interface Order<T> {
 export type Any = Order<any>;
 
 class OrderClass implements Order<any> {
-  private static variance: Order<any>['~Order'] = {} as Order<any>['~Order'];
+  private static 'variance': Order<any>['~Order'] = {} as Order<any>['~Order'];
 
   static is(value: unknown): value is Order<any> {
     return typeof value === 'object' && value !== null && '~Order' in value;

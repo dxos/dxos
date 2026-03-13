@@ -2,22 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
+import { Collection, Feed, Type, View } from '@dxos/echo';
 
-import * as Collection from './Collection';
+import * as CollectionModel from './CollectionModel';
 import * as Expando from './Expando';
+import * as ManagedCollection from './ManagedCollection';
 import * as Text from './Text';
-import * as View from './View';
+import * as ViewModel from './ViewModel';
 
-export { Collection, Expando, Text, View };
+export { Expando, Text, CollectionModel, ManagedCollection, ViewModel };
 
-export const DataTypes: Type.Entity.Any[] = [
-  Type.Feed,
+export const DataTypes: Type.AnyEntity[] = [
+  Feed.Feed,
   Type.PersistentType,
 
   // System
   Collection.Collection,
-  Collection.Managed,
+  ManagedCollection.ManagedCollection,
   Expando.Expando,
   Text.Text,
   View.View,

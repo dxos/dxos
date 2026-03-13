@@ -6,14 +6,15 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
-import { View, ViewAnnotation } from '@dxos/schema';
+import { ViewAnnotation } from '@dxos/schema';
 
 export const Table = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
-  view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
+  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
 
   sizes: Schema.Record({
     // TODO(wittjosiah): Should be JsonPath.
@@ -51,7 +52,7 @@ export const make = ({ name, sizes = {}, view, jsonSchema }: MakeProps): Table =
 
   // Preset sizes.
   if (jsonSchema) {
-    const schema = Type.toEffectSchema(jsonSchema);
+    const schema = JsonSchema.toEffectSchema(jsonSchema);
     const properties = SchemaAST.getPropertySignatures(schema.ast);
     for (const property of properties) {
       const name = property.name.toString() as JsonPath;

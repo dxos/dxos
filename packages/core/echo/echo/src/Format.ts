@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type TypeFormat as Format } from './internal';
+import type * as internal from './internal';
 
-export * from './internal/formats';
+export * from './internal/Format';
 
-export type { Format };
+export type Format = internal.TypeFormat;

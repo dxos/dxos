@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 
 // TODO(burdon): Replace with @dxos/echo/testing TestSchema.
 
@@ -37,8 +37,8 @@ export interface Project extends Schema.Schema.Type<typeof Project> {}
 export const Task = Schema.Struct({
   name: Schema.String.annotations({ description: 'The name of the task.' }),
   description: Schema.optional(Schema.String).annotations({ description: 'The description of the task.' }),
-  project: Type.Ref(Project),
-  assignee: Type.Ref(Contact),
+  project: Ref.Ref(Project),
+  assignee: Ref.Ref(Contact),
 }).pipe(
   Type.object({
     typename: 'example.com/type/Task',
@@ -51,8 +51,8 @@ export interface Task extends Schema.Schema.Type<typeof Task> {}
 /** @deprecated */
 export const Organization = Schema.Struct({
   name: Schema.String.annotations({ description: 'The name of the organization.' }),
-  projects: Schema.Array(Type.Ref(Project)),
-  employees: Schema.Array(Type.Ref(Contact)),
+  projects: Schema.Array(Ref.Ref(Project)),
+  employees: Schema.Array(Ref.Ref(Contact)),
 }).pipe(
   Type.object({
     typename: 'example.com/type/Organization',

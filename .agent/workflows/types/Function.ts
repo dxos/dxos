@@ -36,7 +36,7 @@ export const Function = Schema.Struct({
 
   // Reference to a source script if it exists within ECHO.
   // TODO(burdon): Don't ref ScriptType directly (core).
-  source: Schema.optional(Type.Ref(Script)),
+  source: Schema.optional(Ref.Ref(Script)),
 
   inputSchema: Schema.optional(JsonSchema.JsonSchema),
   outputSchema: Schema.optional(JsonSchema.JsonSchema),

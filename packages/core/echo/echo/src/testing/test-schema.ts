@@ -4,6 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Obj from '../Obj';
+import * as Ref from '../Ref';
 import * as Type from '../Type';
 
 export namespace TestSchema {
@@ -51,8 +53,8 @@ export namespace TestSchema {
     nested: Nested,
     nestedArray: Schema.Array(Nested),
     nestedNullableArray: Schema.Array(Schema.Union(Nested, Schema.Null)),
-    reference: Schema.suspend((): Type.Ref<Example> => Type.Ref(Example)),
-    referenceArray: Schema.Array(Schema.suspend((): Type.Ref<Example> => Type.Ref(Example))),
+    reference: Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example)),
+    referenceArray: Schema.Array(Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example))),
     classInstance: Schema.instanceOf(TestClass),
     other: Schema.Any,
   }).pipe(Schema.partial);
@@ -124,8 +126,8 @@ export namespace TestSchema {
     username: Schema.String,
     email: Schema.String,
     age: Schema.Number.pipe(Schema.optional),
-    tasks: Schema.Array(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task))),
-    employer: Schema.optional(Type.Ref(Organization)),
+    tasks: Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
+    employer: Schema.optional(Ref.Ref(Organization)),
     address: Schema.Struct({
       city: Schema.optional(Schema.String),
       state: Schema.optional(Schema.String),
@@ -157,9 +159,9 @@ export namespace TestSchema {
     title: Schema.optional(Schema.String),
     deadline: Schema.optional(Schema.String),
     completed: Schema.optional(Schema.Boolean),
-    assignee: Schema.optional(Type.Ref(Person)),
-    previous: Schema.optional(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task))),
-    subTasks: Schema.optional(Schema.Array(Schema.suspend((): Type.Ref<Task> => Type.Ref(Task)))),
+    assignee: Schema.optional(Ref.Ref(Person)),
+    previous: Schema.optional(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
+    subTasks: Schema.optional(Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task)))),
     description: Schema.optional(Schema.String),
   }).pipe(
     Schema.partial,
@@ -215,13 +217,13 @@ export namespace TestSchema {
   }
 
   export const Container = Schema.Struct({
-    objects: Schema.Array(Type.Ref(Type.Obj)),
+    objects: Schema.Array(Ref.Ref(Obj.Unknown)),
     records: Schema.Array(
       Schema.partial(
         Schema.Struct({
           title: Schema.String,
           description: Schema.String,
-          contacts: Schema.Array(Type.Ref(Person)),
+          contacts: Schema.Array(Ref.Ref(Person)),
           type: Schema.Enums(RecordType),
         }),
       ),

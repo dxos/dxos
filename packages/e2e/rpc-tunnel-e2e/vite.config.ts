@@ -13,6 +13,6 @@ export default defineConfig({
     outDir: 'out',
   },
   server: {
-    host: true
-  }
+    host: true,
+  },
 });

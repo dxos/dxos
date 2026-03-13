@@ -4,7 +4,14 @@
 
 import { type Atom, RegistryContext } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
-import React, { type ComponentType, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type ComponentType,
+  type PropsWithChildren,
+  useCallback,
+  useContext,
+  useMemo,
+} from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
@@ -68,7 +75,7 @@ type KanbanBoardRootProps = PropsWithChildren<
     items: Atom.Atom<Obj.Unknown[]>;
     onCardAdd?: (columnValue: string | undefined) => string | undefined;
     onCardRemove?: (card: Obj.Unknown) => void;
-  }
+  } & ComponentPropsWithoutRef<'div'>
 >;
 
 export const KanbanBoardRoot = ({
@@ -141,7 +148,9 @@ KanbanBoardRoot.displayName = KANBAN_BOARD_ROOT;
 
 const KANBAN_BOARD_CONTENT = 'KanbanBoard.Content';
 
-export const KanbanBoardContent = () => {
+type KanbanBoardContentProps = {};
+
+export const KanbanBoardContent = (props: KanbanBoardContentProps) => {
   const { model } = useBoard(KANBAN_BOARD_CONTENT);
   const { kanbanId, projection, pivotFieldId, change } = useKanbanBoard(KANBAN_BOARD_CONTENT);
 

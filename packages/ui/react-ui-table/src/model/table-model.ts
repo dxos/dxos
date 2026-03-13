@@ -6,6 +6,7 @@ import { Atom, type Registry } from '@effect-atom/atom-react';
 
 import { Resource } from '@dxos/context';
 import { type Database, Format, Obj, Order, Query, type QueryAST, Ref } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import { type JsonProp, type JsonSchemaType, type Mutable, toEffectSchema } from '@dxos/echo/internal';
 import { getSnapshot } from '@dxos/echo/internal';
 import { getValue, setValue } from '@dxos/effect';
@@ -19,7 +20,7 @@ import {
   type DxGridPlaneRange,
   type DxGridPosition,
 } from '@dxos/react-ui-grid';
-import { type ProjectionModel, type PropertyType, type ValidationError, type View, validateSchema } from '@dxos/schema';
+import { type ProjectionModel, type PropertyType, type ValidationError, validateSchema } from '@dxos/schema';
 
 import { type Table } from '../types';
 import { extractOrder } from '../util';

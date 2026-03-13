@@ -49,7 +49,7 @@ export type Layout = Schema.Schema.Type<typeof Layout>;
 export const CanvasBoard = Schema.Struct({
   name: Schema.optional(Schema.String),
 
-  computeGraph: Schema.optional(Type.Ref(ComputeGraph)),
+  computeGraph: Schema.optional(Ref.Ref(ComputeGraph)),
 
   /**
    * Graph of shapes positioned on the canvas.

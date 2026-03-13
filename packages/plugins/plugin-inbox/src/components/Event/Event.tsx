@@ -3,11 +3,11 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren } from 'react';
+import React, { type ComponentPropsWithoutRef, type PropsWithChildren } from 'react';
 
 import { type Database } from '@dxos/react-client/echo';
 import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { MenuProvider, ToolbarMenu } from '@dxos/react-ui-menu';
+import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -48,16 +48,16 @@ EventRoot.displayName = EVENT_ROOT_NAME;
 
 const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
 
-type EventToolbarProps = ThemedClassName<UseEventToolbarActionsProps>;
+type EventToolbarProps = ThemedClassName<UseEventToolbarActionsProps & ComponentPropsWithoutRef<typeof Menu.Root>>;
 
-const EventToolbar = ({ classNames, ...props }: EventToolbarProps) => {
+const EventToolbar = ({ classNames, onNoteCreate, ...props }: EventToolbarProps) => {
   const { attendableId } = useEventContext(EVENT_TOOLBAR_NAME);
-  const actions = useEventToolbarActions(props);
+  const actions = useEventToolbarActions({ onNoteCreate });
 
   return (
-    <MenuProvider {...actions} attendableId={attendableId}>
-      <ToolbarMenu classNames={classNames} />
-    </MenuProvider>
+    <Menu.Root {...props} {...actions} attendableId={attendableId}>
+      <Menu.Toolbar classNames={classNames} />
+    </Menu.Root>
   );
 };
 
@@ -69,10 +69,14 @@ EventToolbar.displayName = EVENT_TOOLBAR_NAME;
 
 const EVENT_VIEWPORT_NAME = 'Event.Viewport';
 
-type EventViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+type EventViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
 
-const EventViewport = ({ classNames, children }: EventViewportProps) => {
-  return <div className={mx(classNames)}>{children}</div>;
+const EventViewport = ({ classNames, children, ...props }: EventViewportProps) => {
+  return (
+    <div {...props} className={mx(classNames)}>
+      {children}
+    </div>
+  );
 };
 
 EventViewport.displayName = EVENT_VIEWPORT_NAME;

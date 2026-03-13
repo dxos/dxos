@@ -5,8 +5,8 @@
 import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type Collection } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
-import { type Collection } from '@dxos/schema';
 
 import { meta } from '../../meta';
 

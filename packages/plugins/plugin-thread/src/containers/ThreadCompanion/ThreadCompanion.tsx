@@ -11,14 +11,12 @@ import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
-import { Container } from '@dxos/react-ui';
+import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttended } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
 
-import { CommentsContainer, type CommentsContainerProps } from '../../components';
+import { CommentsPanel, type CommentsPanelProps } from '../../components';
 import { meta } from '../../meta';
 import { ThreadCapabilities, ThreadOperation, type ViewState } from '../../types';
 
@@ -131,7 +129,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
     [invokePromise, subject],
   );
 
-  const handleAcceptProposal = useCallback<NonNullable<CommentsContainerProps['onAcceptProposal']>>(
+  const handleAcceptProposal = useCallback<NonNullable<CommentsPanelProps['onAcceptProposal']>>(
     async (anchor, messageId) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const messageIndex = thread.messages.findIndex(Ref.hasObjectId(messageId));
@@ -152,7 +150,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   );
 
   const comments = (
-    <CommentsContainer
+    <CommentsPanel
       anchors={anchors}
       currentId={attended.includes(subjectId) ? state.current : undefined}
       showResolvedThreads={showResolvedThreads}
@@ -165,30 +163,35 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
     />
   );
 
+  // TODO(burdon): Root should be headless.
   return (
-    <Container.Main toolbar>
-      <Tabs.Root
-        value={showResolvedThreads ? 'all' : 'unresolved'}
-        orientation='horizontal'
-        classNames={[
-          'contents [&_[role="tabpanel"]]:min-h-0 [&_[role="tabpanel"]]:overflow-y-auto [&_[role="tabpanel"]]:scrollbar-thin',
-        ]}
-        onValueChange={onChangeViewState}
-      >
-        {/* TODO(burdon): Standardize (like Tollbar). */}
-        <Tabs.Tablist classNames={mx('bg-toolbar-surface border-b border-subdued-separator')}>
-          <Tabs.Tab value='unresolved' classNames='text-sm'>
-            {t('show unresolved label')}
-          </Tabs.Tab>
-          <Tabs.Tab value='all' classNames='text-sm'>
-            {t('show all label')}
-          </Tabs.Tab>
-        </Tabs.Tablist>
-        <div className='overflow-y-auto'>
-          <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
-          <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
-        </div>
-      </Tabs.Root>
-    </Container.Main>
+    <Tabs.Root
+      value={showResolvedThreads ? 'all' : 'unresolved'}
+      orientation='horizontal'
+      onValueChange={onChangeViewState}
+    >
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Tabs.Tablist>
+              <Tabs.Tab value='unresolved' classNames='text-sm'>
+                {t('show unresolved label')}
+              </Tabs.Tab>
+              <Tabs.Tab value='all' classNames='text-sm'>
+                {t('show all label')}
+              </Tabs.Tab>
+            </Tabs.Tablist>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ScrollArea.Root thin>
+            <ScrollArea.Viewport>
+              <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
+              <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Tabs.Root>
   );
 };

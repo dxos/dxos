@@ -9,9 +9,9 @@ order: 1
 
 HALO is a system of components for implementing decentralized identity designed around privacy, security, and collaboration requirements.
 
-* The HALO **Shell** manages the user's identity and connected devices. It's available as a [component](https://github.com/dxos/dxos/tree/main/packages/sdk/shell).
-* The HALO [**SDK**](https://www.npmjs.com/package/@dxos/client) is part of the DXOS client library and provides user authentication, identity, and contact management capabilities.
-* The HALO **protocol** supports the verification, transport, and exchange of identity information between networked peers.
+- The HALO **Shell** manages the user's identity and connected devices. It's available as a [component](https://github.com/dxos/dxos/tree/main/packages/sdk/shell).
+- The HALO [**SDK**](https://www.npmjs.com/package/@dxos/client) is part of the DXOS client library and provides user authentication, identity, and contact management capabilities.
+- The HALO **protocol** supports the verification, transport, and exchange of identity information between networked peers.
 
 ## Background
 
@@ -19,10 +19,10 @@ See the user guide's [section on identity](../../composer/user-guide/).
 
 ## Features
 
-* Public/private key-pair authentication mechanism integrated into ECHO
-* Passwordless log in
-* Local-first credentials and key storage
-* Multi-device synchronization of identities, credentials, ECHO spaces
+- Public/private key-pair authentication mechanism integrated into ECHO
+- Passwordless log in
+- Local-first credentials and key storage
+- Multi-device synchronization of identities, credentials, ECHO spaces
 
 ## Establishing user identity
 
@@ -53,11 +53,11 @@ The shell can be invoked via the client API.
 
 Scenarios:
 
-* View and edit the user's basic profile
-* Invite someone to a space
-* Accept an invitation to join another space
-* Join another device to the user's HALO identity
-* Accept a device invitation to join the current device to an existing HALO identity
+- View and edit the user's basic profile
+- Invite someone to a space
+- Accept an invitation to join another space
+- Join another device to the user's HALO identity
+- Accept a device invitation to join the current device to an existing HALO identity
 
 You can experiment with the Shell at <https://halo.dxos.org>.
 
@@ -65,10 +65,10 @@ You can experiment with the Shell at <https://halo.dxos.org>.
 
 How to use the HALO Shell in code:
 
-* Use [Shell with Typescript](../echo/typescript/)
-* Use [Shell with React](../echo/react/)
+- Use [Shell with Typescript](../echo/typescript/)
+- Use [Shell with React](../echo/react/)
 
 How to read the HALO identity in code:
 
-* Use the [`useIdentity` hook in react](../halo/react.md)
-* Use the [`client.halo.profile` field in TypeScript](../halo/typescript.md)
+- Use the [`useIdentity` hook in react](../halo/react.md)
+- Use the [`client.halo.profile` field in TypeScript](../halo/typescript.md)

@@ -4,14 +4,14 @@
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Obj, Query, Type } from '@dxos/echo';
+import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 
 import { type EchoDatabase } from './proxy-db';
-import { Filter } from './query';
 import { type SerializedSpace } from './serialized-space';
 import { Serializer } from './serializer';
 import { EchoTestBuilder, createTmpPath } from './testing';
@@ -159,18 +159,18 @@ describe('Serializer', () => {
         const obj = Obj.make(TestSchema.Expando, {
           title: 'Main task',
           subtasks: [
-            Type.Ref.make(
+            Ref.make(
               Obj.make(TestSchema.Expando, {
                 title: 'Subtask 1',
               }),
             ),
-            Type.Ref.make(
+            Ref.make(
               Obj.make(TestSchema.Expando, {
                 title: 'Subtask 2',
               }),
             ),
           ],
-          previous: Type.Ref.make(
+          previous: Ref.make(
             Obj.make(TestSchema.Expando, {
               title: 'Previous task',
             }),

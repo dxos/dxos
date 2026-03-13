@@ -86,11 +86,13 @@ export const MeetingsList = ({ channel }: MeetingsListProps) => {
   const handleCreateMeeting = useCallback(async () => {
     invariant(db);
     const createResult = await invokePromise(MeetingOperation.Create, { channel });
+    invariant(Obj.instanceOf(Meeting.Meeting, createResult.data?.object));
     const addResult = await invokePromise(SpaceOperation.AddObject, {
       target: db,
       hidden: true,
       object: createResult.data?.object,
     });
+    invariant(Obj.instanceOf(Meeting.Meeting, addResult.data?.object));
     await invokePromise(MeetingOperation.SetActive, { object: addResult.data?.object });
   }, [invokePromise, db, channel]);
 

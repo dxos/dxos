@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { getUserMediaTrack } from '../../calls';
-import { ResponsiveContainer } from '../ResponsiveGrid';
+import { ResponsivePanel } from '../ResponsiveGrid';
 
 import { VideoObject, type VideoObjectProps } from './VideoObject';
 
@@ -37,9 +37,9 @@ const DefaultStory = (props: VideoObjectProps) => {
   }, []);
 
   return (
-    <ResponsiveContainer>
+    <ResponsivePanel>
       <VideoObject videoStream={videoStream} flip {...props} />
-    </ResponsiveContainer>
+    </ResponsivePanel>
   );
 };
 

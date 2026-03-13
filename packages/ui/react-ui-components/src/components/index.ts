@@ -10,4 +10,4 @@ export * from './QueryEditor';
 export * from './QueryForm';
 export * from './TextCrawl';
 export * from './Timeline';
-export * from './ToggleContainer';
+export * from './TogglePanel';

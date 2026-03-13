@@ -254,10 +254,10 @@ export const findProperty = (
 //
 
 const defaultAnnotations: Record<string, SchemaAST.Annotated> = {
-  ['ObjectKeyword' as const]: SchemaAST.objectKeyword,
-  ['StringKeyword' as const]: SchemaAST.stringKeyword,
-  ['NumberKeyword' as const]: SchemaAST.numberKeyword,
-  ['BooleanKeyword' as const]: SchemaAST.booleanKeyword,
+  ObjectKeyword: SchemaAST.objectKeyword,
+  StringKeyword: SchemaAST.stringKeyword,
+  NumberKeyword: SchemaAST.numberKeyword,
+  BooleanKeyword: SchemaAST.booleanKeyword,
 };
 
 /**

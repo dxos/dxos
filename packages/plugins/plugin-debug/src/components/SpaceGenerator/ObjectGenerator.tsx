@@ -7,6 +7,7 @@ import type * as Schema from 'effect/Schema';
 import { addressToA1Notation } from '@dxos/compute';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { DXN, Filter, Key, type Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { type OperationInvoker } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Sheet } from '@dxos/plugin-sheet/types';
@@ -15,7 +16,7 @@ import { SpaceOperation } from '@dxos/plugin-space/types';
 import { faker } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { View, getTypenameFromQuery } from '@dxos/schema';
+import { getTypenameFromQuery } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { range } from '@dxos/util';
 
@@ -27,7 +28,7 @@ const findViewByTypename = async (views: View.View[], typename: string) => {
 
 export type ObjectGenerator<T> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
 
-export const createGenerator = <S extends Type.Obj.Any>(
+export const createGenerator = <S extends Type.AnyObj>(
   client: Client,
   invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
   schema: S,

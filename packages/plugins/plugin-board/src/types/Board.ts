@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { BoardLayout, defaultLayout } from '@dxos/react-ui-board';
 
@@ -13,7 +13,7 @@ import { BoardLayout, defaultLayout } from '@dxos/react-ui-board';
  */
 export const Board = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  items: Type.Ref(Type.Obj).pipe(Schema.Array, FormInputAnnotation.set(false)),
+  items: Ref.Ref(Obj.Unknown).pipe(Schema.Array, FormInputAnnotation.set(false)),
   layout: BoardLayout.pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({

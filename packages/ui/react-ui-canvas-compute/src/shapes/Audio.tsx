@@ -38,7 +38,7 @@ export const AudioComponent = ({ shape }: ShapeComponentProps<AudioShape>) => {
     <div className='flex w-full justify-center items-center'>
       <Icon
         icon={active ? 'ph--microphone--regular' : 'ph--microphone-slash--regular'}
-        classNames={['transition opacity-20 duration-1000', active && 'opacity-100 text-red-500']}
+        classNames={['transition opacity-20 duration-1000', active && 'opacity-100 text-error-text']}
         size={8}
         onClick={() => setActive(!active)}
       />

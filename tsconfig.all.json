@@ -205,6 +205,9 @@
       "path": "packages/core/halo/keyring/tsconfig.json"
     },
     {
+      "path": "packages/core/mcp-client/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/edge-client/tsconfig.json"
     },
     {
@@ -419,6 +422,9 @@
     },
     {
       "path": "packages/plugins/plugin-transformer/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-voxel/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-wnfs/tsconfig.json"
@@ -659,7 +665,5 @@
     }
   ],
   "include": [],
-  "exclude": [
-    "**/node_modules"
-  ]
+  "exclude": ["**/node_modules"]
 }

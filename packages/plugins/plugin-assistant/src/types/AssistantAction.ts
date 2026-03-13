@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
 import { SpaceSchema } from '@dxos/client/echo';
-import { Database, Type } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
@@ -61,7 +61,7 @@ export namespace AssistantOperation {
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        companionTo: Type.Obj,
+        companionTo: Obj.Unknown,
         chat: Chat.Chat.pipe(Schema.optional),
       }),
       output: Schema.Void,

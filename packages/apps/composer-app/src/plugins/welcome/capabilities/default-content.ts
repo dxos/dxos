@@ -20,7 +20,8 @@ export default Capability.makeModule(
     const { Obj, Ref, Type } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
     const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
-    const { Collection } = yield* Effect.tryPromise(() => import('@dxos/schema'));
+    const { Collection } = yield* Effect.tryPromise(() => import('@dxos/echo'));
+    const { ManagedCollection } = yield* Effect.tryPromise(() => import('@dxos/schema'));
 
     const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
     const { invoke, schedule } = operationInvoker;
@@ -34,7 +35,9 @@ export default Capability.makeModule(
     const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
 
     if (defaultSpaceCollection) {
-      const typesCollectionRef = Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) }));
+      const typesCollectionRef = Ref.make(
+        ManagedCollection.makeManagedCollection({ key: Type.getTypename(Type.PersistentType) }),
+      );
       Obj.change(defaultSpaceCollection, (c) => {
         c.objects.push(typesCollectionRef);
       });

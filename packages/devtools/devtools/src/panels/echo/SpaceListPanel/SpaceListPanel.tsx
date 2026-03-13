@@ -174,6 +174,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
 
   return (
     <PanelContainer classNames='overflow-auto flex-1'>
+      {/* TODO(burdon): This should not be a dialog. */}
       <DialogRestoreSpace handleFile={handleImport} />
       <DynamicTable
         properties={properties}

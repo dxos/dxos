@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithoutRef, type FC, type ForwardRefExoticComponent, forwardRef } from 'react';
 
@@ -51,18 +52,18 @@ type ListItemEndcapProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & { 
 
 const ListItemEndcap = forwardRef<HTMLDivElement, ListItemEndcapProps>(
   ({ children, classNames, asChild, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
+    const Comp = asChild ? Slot : Primitive.div;
     const density = useDensityContext();
     const { tx } = useThemeContext();
     return (
-      <Root
+      <Comp
         {...(!asChild && { role: 'none' })}
         {...props}
         className={tx('list.item.endcap', { density }, classNames)}
         ref={forwardedRef}
       >
         {children}
-      </Root>
+      </Comp>
     );
   },
 );

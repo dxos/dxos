@@ -15,7 +15,6 @@ import { ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, type QueryEditorProps, useQueryBuilder } from '@dxos/react-ui-components';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { render } from '@dxos/storybook-utils';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 // TODO(burdon): Move.
@@ -56,15 +55,15 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
 };
 
 const tags: Tag.Map = {
-  ['tag_1' as const]: Tag.make({ label: 'Red' }),
-  ['tag_2' as const]: Tag.make({ label: 'Green' }),
-  ['tag_3' as const]: Tag.make({ label: 'Blue' }),
+  tag_1: Tag.make({ label: 'Red' }),
+  tag_2: Tag.make({ label: 'Green' }),
+  tag_3: Tag.make({ label: 'Blue' }),
 };
 
 const meta: Meta<typeof QueryEditor> = {
   title: 'stories/stories-assistant/QueryEditor',
   component: QueryEditor,
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),

@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import React, { useCallback, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, useCallback, useState } from 'react';
 
 import { type FileInfo } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
@@ -12,9 +12,10 @@ import { EditorToolbar, type EditorToolbarProps } from '@dxos/react-ui-editor';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { FileUpload, type FileUploadAction } from './FileUpload';
+import { composableProps } from '@dxos/ui-theme';
 
 export type MarkdownEditorToolbarProps = ThemedClassName<
-  {
+  ComponentPropsWithoutRef<'div'> & {
     id: string;
     editorView?: EditorView;
     onFileUpload?: (file: File) => Promise<FileInfo | undefined>;
@@ -22,7 +23,6 @@ export type MarkdownEditorToolbarProps = ThemedClassName<
 >;
 
 export const MarkdownEditorToolbar = ({
-  classNames,
   id,
   role,
   state,
@@ -31,11 +31,11 @@ export const MarkdownEditorToolbar = ({
   onAction,
   onFileUpload,
   onViewModeChange,
+  ...props
 }: MarkdownEditorToolbarProps) => {
+  const { className, ...rest } = composableProps(props);
   const [upload, setUpload] = useState<FileUploadAction | null>(null);
   const uploadRef = useCallback((next: FileUploadAction) => setUpload(() => next), []);
-
-  const handleViewModeChange = useCallback((mode: EditorViewMode) => onViewModeChange?.(mode), [onViewModeChange]);
 
   const getView = useCallback(() => {
     invariant(editorView);
@@ -43,13 +43,14 @@ export const MarkdownEditorToolbar = ({
   }, [editorView]);
 
   if (!editorView) {
-    return <div />;
+    return <div {...props} />;
   }
 
   return (
-    <>
+    <div role='none' className='contents'>
       <EditorToolbar
-        classNames={classNames}
+        {...rest}
+        classNames={className}
         attendableId={id}
         role={role}
         state={state}
@@ -57,10 +58,10 @@ export const MarkdownEditorToolbar = ({
         getView={getView}
         onAction={onAction}
         onImageUpload={upload ?? undefined}
-        onViewModeChange={handleViewModeChange}
+        onViewModeChange={onViewModeChange}
       />
 
       {onFileUpload && <FileUpload ref={uploadRef} editorView={editorView} onFileUpload={onFileUpload} />}
-    </>
+    </div>
   );
 };

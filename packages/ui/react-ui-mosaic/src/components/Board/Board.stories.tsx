@@ -27,17 +27,14 @@ import { DefaultBoardColumn } from './Column';
 
 faker.seed(999);
 
-// TODO(burdon): Create model with Kanban, Pipeline, and Hierarchical implementations.
-// TODO(burdon): Remove react-ui-kanban (replace kanban).
-// TODO(burdon): Mobile implementation.
-// TODO(burdon): Tests/stories (sanity check).
+const randomItems = () => faker.number.int({ min: 0, max: 20 });
 
-const createTestData = (db: Database.Database, columnCount: number, emptyColumns = 0) => {
-  Array.from({ length: columnCount }).forEach((_, i) => {
+const createTestData = (db: Database.Database, columns: number, items?: (column: number) => number) => {
+  Array.from({ length: columns }).forEach((_, i) => {
     db.add(
       Obj.make(TestColumn, {
         name: `Column ${i}`,
-        items: Array.from({ length: faker.number.int({ min: 0, max: 20 }) }).map((_, j) => {
+        items: Array.from({ length: items?.(i) ?? 0 }).map((_, j) => {
           const item = db.add(
             Obj.make(TestItem, {
               name: faker.lorem.sentence(3),
@@ -51,15 +48,11 @@ const createTestData = (db: Database.Database, columnCount: number, emptyColumns
       }),
     );
   });
-
-  for (let i = 0; i < emptyColumns; i++) {
-    db.add(Obj.make(TestColumn, { name: `Column ${columnCount + i}`, items: [] }));
-  }
 };
 
 type StoryProps = {
   columns?: number;
-  emptyColumns?: number;
+  items?: (column: number) => number;
   debug?: boolean;
 };
 
@@ -101,7 +94,7 @@ const useTestBoardModel = (): TestBoardModelResult => {
               const refs = get(AtomObj.makeProperty(column, 'items'));
               return (
                 refs
-                  ?.map((ref) => get(AtomObj.makeWithReactive(ref)))
+                  ?.map((ref: Ref.Ref<TestItem>) => get(AtomObj.makeWithReactive(ref)))
                   .filter((item): item is TestItem => item != null) ?? []
               );
             }),
@@ -137,7 +130,7 @@ const useTestBoardModel = (): TestBoardModelResult => {
           if (!mutableColumn.items) {
             return;
           }
-          const idx = mutableColumn.items.findIndex((ref) => ref.target?.id === current?.id);
+          const idx = mutableColumn.items.findIndex((ref: Ref.Ref<TestItem>) => ref.target?.id === current?.id);
           if (idx !== -1) {
             mutableColumn.items.splice(idx, 1);
           }
@@ -208,7 +201,7 @@ const meta = {
       createSpace: true,
       onCreateSpace: ({ space }, context) => {
         const args = context.args as StoryProps;
-        createTestData(space.db, args.columns ?? 4, args.emptyColumns ?? 0);
+        createTestData(space.db, args.columns ?? 0, args.items);
       },
     }),
   ],
@@ -233,6 +226,22 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     columns: 8,
+    items: randomItems,
+  },
+};
+
+export const SingleColumn: Story = {
+  args: {
+    columns: 1,
+    items: () => 1,
+  },
+};
+
+export const Empty: Story = {};
+
+export const EmptyColumn: Story = {
+  args: {
+    columns: 1,
   },
 };
 
@@ -245,8 +254,8 @@ export const Debug: Story = {
 
 export const Spec: Story = {
   args: {
-    columns: 2,
-    emptyColumns: 1,
+    columns: 3,
+    items: (column) => (column < 2 ? 5 : 0),
   },
   play: async () => {
     const body = within(document.body);
@@ -258,7 +267,7 @@ export const Spec: Story = {
       const items = within(column).queryAllByTestId('board-item');
       await expect(items.length).toBeGreaterThan(0);
     }
-    const emptyItems = within(columns[2]).queryAllByTestId('board-item');
-    await expect(emptyItems).toHaveLength(0);
+    const items = within(columns[2]).queryAllByTestId('board-item');
+    await expect(items).toHaveLength(0);
   },
 };

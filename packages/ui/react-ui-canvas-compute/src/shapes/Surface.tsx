@@ -7,9 +7,9 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { DEFAULT_INPUT } from '@dxos/conductor';
+import { Card } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
-import { Card } from '@dxos/react-ui-mosaic';
 
 import { useComputeNodeState } from '../hooks';
 

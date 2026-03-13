@@ -7,7 +7,7 @@ import { type Obj, type Type } from '@dxos/echo';
 // TODO(burdon): Use echo-schema types.
 export type TestObject = { id: string } & Record<string, any>;
 
-export type TestSchemaMap<T extends string = string> = Record<T, Type.Obj.Any>;
+export type TestSchemaMap<T extends string = string> = Record<T, Type.AnyObj>;
 
 export type TestObjectProvider<T extends string = string> = (type: T) => Promise<any[]>;
 

@@ -6,7 +6,8 @@ import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { ScrollArea } from '@dxos/react-ui';
-import { Card, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
+import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
 import { getHashStyles } from '@dxos/ui-theme';
 
@@ -38,9 +39,9 @@ type MessageTileData = {
   onAction?: MailboxActionHandler;
 };
 
-type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'classNames' | 'location' | 'data'>;
+type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'location' | 'data'>;
 
-const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ classNames, data, location }, forwardedRef) => {
+const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location }, forwardedRef) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const { message, labels, currentMessageId, onAction } = data;
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), true);
@@ -169,8 +170,8 @@ export const Mailbox = ({ messages, labels, currentMessageId, onAction }: Mailbo
   return (
     <Focus.Group asChild>
       <Mosaic.Container asChild withFocus autoScroll={viewport}>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
+        <ScrollArea.Root orientation='vertical' margin>
+          <ScrollArea.Viewport ref={setViewport}>
             <Mosaic.Stack items={items} getId={(item) => item.message.id} draggable={false} Tile={MessageTile} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>

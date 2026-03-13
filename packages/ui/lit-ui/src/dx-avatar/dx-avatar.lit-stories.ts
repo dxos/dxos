@@ -17,5 +17,7 @@ export default {
 };
 
 export const Basic = (_props: DxAvatarProps) => {
-  return html`<dx-avatar hue="teal" fallback="Composer user" icon="/icons.svg#ph--basketball--regular"></dx-avatar>`;
+  return html`
+    <dx-avatar hue="teal" fallback="Composer user" icon="/icons.svg#ph--basketball--regular"></dx-avatar>
+  `;
 };

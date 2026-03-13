@@ -12,12 +12,13 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { Filter, type Space } from '@dxos/client/echo';
 import { Database, Obj, Ref, type Type } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { Function, Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
-import { Collection, Text } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
-export const DATA_TYPES: Type.Entity.Any[] = [Function.Function, Script.Script, Collection.Collection, Text.Text];
+export const DATA_TYPES: Type.AnyEntity[] = [Function.Function, Script.Script, Collection.Collection, Text.Text];
 
 export const getNextVersion = (fnObject: Option.Option<Function.Function>) => {
   return Option.match(fnObject, {

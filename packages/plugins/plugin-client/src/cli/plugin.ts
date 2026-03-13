@@ -18,7 +18,7 @@ import { config, device, edge, halo, profile } from './commands';
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   // TODO(wittjosiah): Could some of these commands make use of operations?
   AppPlugin.addCommandModule({ commands: [config, device, edge, halo, profile] }),
-  AppPlugin.addOperationResolverModule({ activate: () => OperationResolver() }),
+  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
   Plugin.addModule((options) => ({
     id: Capability.getModuleTag(Client),
     activatesOn: ActivationEvents.Startup,

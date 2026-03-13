@@ -103,7 +103,7 @@ export interface Space extends Messenger {
   /**
    * Properties object.
    */
-  get properties(): Obj.Obj<SpaceProperties>;
+  get properties(): Obj.OfShape<SpaceProperties>;
 
   /**
    * Current state of space pipeline.

@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Database } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { Collection } from '@dxos/schema';
 import { Actor } from '@dxos/types';
 
 import { meta } from '../meta';

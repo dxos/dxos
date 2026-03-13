@@ -10,7 +10,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { type Size } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
-import { ResponsiveContainer } from './ResponsiveContainer';
+import { ResponsivePanel } from './ResponsivePanel';
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem';
 
 const ASPECT_RATIO = 16 / 9;
@@ -206,7 +206,7 @@ export const ResponsiveGrid = <T extends object = any>({
 
 const SoloItem: FC<Pick<ResponsiveGridProps, 'debug'> & { id: string }> = ({ debug, id }) => {
   return (
-    <ResponsiveContainer>
+    <ResponsivePanel>
       <div
         {...{ 'data-grid-item': id }}
         className={mx('aspect-video overflow-hidden', debug && 'z-20 border-2 border-primary-500')}
@@ -214,7 +214,7 @@ const SoloItem: FC<Pick<ResponsiveGridProps, 'debug'> & { id: string }> = ({ deb
         {/* Maximum size placeholder image forces aspect ratio. */}
         <img alt='placeholder video' className={mx('opacity-0', maxImageSize)} />
       </div>
-    </ResponsiveContainer>
+    </ResponsivePanel>
   );
 };
 

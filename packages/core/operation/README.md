@@ -26,23 +26,23 @@ const CreateSpace = Operation.make({
 });
 
 // Attach a handler (direct call)
-const createSpaceWithHandler = Operation.withHandler(CreateSpace, (input) => 
+const createSpaceWithHandler = Operation.withHandler(CreateSpace, (input) =>
   Effect.gen(function* () {
     // ... implementation
     return { id: 'space-id' };
-  })
+  }),
 );
 
 // Or use in a pipe (piped call)
 import * as Function from 'effect/Function';
 const createSpaceWithHandler2 = Function.pipe(
   CreateSpace,
-  Operation.withHandler((input) => 
+  Operation.withHandler((input) =>
     Effect.gen(function* () {
       // ... implementation
       return { id: 'space-id' };
-    })
-  )
+    }),
+  ),
 );
 ```
 

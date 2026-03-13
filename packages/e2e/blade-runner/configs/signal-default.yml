@@ -3,7 +3,7 @@ agents: 10
 peersPerAgent: 10
 serversPerAgent: 1
 signalArguments:
-# - p2pserver
+  # - p2pserver
   - globalsubserver #TODO(burdon): Import/define types (for KUBE?)
 topicCount: 1
 topicsPerAgent: 1

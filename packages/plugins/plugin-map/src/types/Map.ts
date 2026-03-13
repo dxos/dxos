@@ -5,13 +5,14 @@
 import * as Schema from 'effect/Schema';
 
 import { Format, Obj, Ref, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { View, ViewAnnotation } from '@dxos/schema';
+import { ViewAnnotation } from '@dxos/schema';
 
 export const Map = Schema.Struct({
   name: Schema.optional(Schema.String),
 
-  view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
+  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
 
   center: Format.GeoPoint.pipe(FormInputAnnotation.set(false), Schema.optional),
   zoom: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),

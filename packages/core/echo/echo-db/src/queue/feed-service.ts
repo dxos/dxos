@@ -15,7 +15,7 @@ import type { QueueFactory } from './queue-factory';
 export const createFeedServiceLayer = (queues: QueueFactory) =>
   Layer.succeed(Feed.Service, {
     append: async (feed: Feed.Feed, items: Entity.Unknown[]): Promise<void> => {
-      const feedDxn = Feed.getQueueDxn(feed);
+      const feedDxn = Feed.getDxn(feed);
       if (!feedDxn) {
         throw new Error('Unable to append to feed: make sure feed is stored in the database');
       }
@@ -24,7 +24,7 @@ export const createFeedServiceLayer = (queues: QueueFactory) =>
     },
 
     remove: async (feed: Feed.Feed, ids: string[]): Promise<void> => {
-      const feedDxn = Feed.getQueueDxn(feed);
+      const feedDxn = Feed.getDxn(feed);
       if (!feedDxn) {
         throw new Error('Unable to remove from feed: make sure feed is stored in the database');
       }
@@ -33,7 +33,7 @@ export const createFeedServiceLayer = (queues: QueueFactory) =>
     },
 
     query: (feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any) => {
-      const feedDxn = Feed.getQueueDxn(feed);
+      const feedDxn = Feed.getDxn(feed);
       if (!feedDxn) {
         throw new Error('Unable to query feed: make sure feed is stored in the database');
       }

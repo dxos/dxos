@@ -4,6 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { type LogBuffer } from '@dxos/log';
 import { type Observability } from '@dxos/observability';
 import { FeedbackForm } from '@dxos/plugin-observability';
 import { type UserFeedback } from '@dxos/plugin-observability/types';
@@ -15,6 +16,7 @@ import {
   IconButton,
   Message,
   Popover,
+  useFileDownload,
   useMediaQuery,
   useTranslation,
 } from '@dxos/react-ui';
@@ -49,6 +51,7 @@ export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open'
   needRefresh?: boolean;
   onRefresh?: () => void;
   observability?: Promise<Observability.Observability>;
+  logBuffer: LogBuffer;
 };
 
 export const ResetDialog = ({
@@ -57,6 +60,7 @@ export const ResetDialog = ({
   needRefresh,
   onRefresh,
   observability: observabilityProp,
+  logBuffer,
   defaultOpen,
   open,
   onOpenChange,
@@ -66,10 +70,18 @@ export const ResetDialog = ({
   const error = propsError && parseError(t, propsError);
   const [showStack, setShowStack] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const download = useFileDownload();
 
   const handleCopyError = useCallback(() => {
     void navigator.clipboard.writeText(JSON.stringify(error));
   }, [error]);
+
+  const handleDownloadLogs = useCallback(() => {
+    const ndjson = logBuffer.serialize();
+    const file = new Blob([ndjson], { type: 'application/x-ndjson' });
+    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
+    download(file, fileName);
+  }, [download, logBuffer]);
 
   const handleReset = useCallback(async () => {
     localStorage.clear();
@@ -124,12 +136,20 @@ export const ResetDialog = ({
                       onClick={() => setShowStack((showStack) => !showStack)}
                       data-testid='resetDialog.showStackTrace'
                     />
-                    <IconButton
-                      icon='ph--clipboard--duotone'
-                      iconOnly
-                      label={t('copy error label')}
-                      onClick={handleCopyError}
-                    />
+                    <div role='none' className='flex items-center gap-1'>
+                      <IconButton
+                        icon='ph--clipboard--duotone'
+                        iconOnly
+                        label={t('copy error label')}
+                        onClick={handleCopyError}
+                      />
+                      <IconButton
+                        icon='ph--download-simple--regular'
+                        iconOnly
+                        label={t('download logs label')}
+                        onClick={handleDownloadLogs}
+                      />
+                    </div>
                   </div>
                 </div>
                 {showStack && (

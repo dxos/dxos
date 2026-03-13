@@ -2,43 +2,43 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Database, Filter, Query, Ref, Type } from '@dxos/echo';
+import { type Database, Feed, Filter, JsonSchema, Query, Ref } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 
 export const createResearchProject = async (
   db: Database.Database,
   name?: string,
 ): Promise<Pipeline.Pipeline | null> => {
-  const feeds = await db.query(Filter.type(Type.Feed)).run();
+  const feeds = await db.query(Filter.type(Feed.Feed)).run();
   const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
   if (!mailbox) {
     return null;
   }
 
-  const mailboxView = View.make({
+  const mailboxView = ViewModel.make({
     query: Query.select(Filter.type(Message.Message)).from(mailbox),
-    jsonSchema: Type.toJsonSchema(Message.Message),
+    jsonSchema: JsonSchema.toJsonSchema(Message.Message),
   });
 
   const contactsQuery = Query.select(Filter.type(Person.Person));
-  const contactsView = View.make({
+  const contactsView = ViewModel.make({
     query: contactsQuery,
-    jsonSchema: Type.toJsonSchema(Person.Person),
+    jsonSchema: JsonSchema.toJsonSchema(Person.Person),
   });
 
   const organizationsQuery = Query.select(Filter.type(Organization.Organization));
-  const organizationsView = View.make({
+  const organizationsView = ViewModel.make({
     query: organizationsQuery,
-    jsonSchema: Type.toJsonSchema(Organization.Organization),
+    jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
   });
 
   const notesQuery = Query.select(Filter.type(Markdown.Document));
-  const notesView = View.make({
+  const notesView = ViewModel.make({
     query: notesQuery,
-    jsonSchema: Type.toJsonSchema(Markdown.Document),
+    jsonSchema: JsonSchema.toJsonSchema(Markdown.Document),
   });
 
   return Pipeline.make({

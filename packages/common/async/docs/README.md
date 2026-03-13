@@ -41,10 +41,10 @@ dxos/async --> dxos/context
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
+| Module                                          | Direct  |
+| ----------------------------------------------- | ------- |
 | [`@dxos/context`](../../context/docs/README.md) | &check; |
-| [`@dxos/debug`](../../debug/docs/README.md) | &check; |
-| [`@dxos/keys`](../../keys/docs/README.md) |  |
-| [`@dxos/log`](../../log/docs/README.md) |  |
-| [`@dxos/util`](../../util/docs/README.md) | &check; |
+| [`@dxos/debug`](../../debug/docs/README.md)     | &check; |
+| [`@dxos/keys`](../../keys/docs/README.md)       |         |
+| [`@dxos/log`](../../log/docs/README.md)         |         |
+| [`@dxos/util`](../../util/docs/README.md)       | &check; |

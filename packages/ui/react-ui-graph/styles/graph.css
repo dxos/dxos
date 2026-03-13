@@ -87,21 +87,126 @@ svg {
         }
       }
 
-      g[data-color="orange" ].dx-node { circle { @apply fill-orange-300; .dark & { @apply fill-orange-500; } } }
-      g[data-color="amber"  ].dx-node { circle { @apply fill-amber-300; .dark & { @apply fill-amber-500; } } }
-      g[data-color="yellow" ].dx-node { circle { @apply fill-yellow-300; .dark & { @apply fill-yellow-500; } } }
-      g[data-color="lime"   ].dx-node { circle { @apply fill-lime-300; .dark & { @apply fill-lime-500; } } }
-      g[data-color="green"  ].dx-node { circle { @apply fill-green-300; .dark & { @apply fill-green-500; } } }
-      g[data-color="emerald"].dx-node { circle { @apply fill-emerald-300; .dark & { @apply fill-emerald-500; } } }
-      g[data-color="teal"   ].dx-node { circle { @apply fill-teal-300; .dark & { @apply fill-teal-500; } } }
-      g[data-color="cyan"   ].dx-node { circle { @apply fill-cyan-300; .dark & { @apply fill-cyan-500; } } }
-      g[data-color="sky"    ].dx-node { circle { @apply fill-sky-300; .dark & { @apply fill-sky-500; } } }
-      g[data-color="indigo" ].dx-node { circle { @apply fill-indigo-300; .dark & { @apply fill-indigo-500; } } }
-      g[data-color="violet" ].dx-node { circle { @apply fill-violet-300; .dark & { @apply fill-violet-500; } } }
-      g[data-color="purple" ].dx-node { circle { @apply fill-purple-300; .dark & { @apply fill-purple-500; } } }
-      g[data-color="fuchsia"].dx-node { circle { @apply fill-fuchsia-300; .dark & { @apply fill-fuchsia-500; } } }
-      g[data-color="rose"   ].dx-node { circle { @apply fill-rose-300; .dark & { @apply fill-rose-500; } } }
-      g[data-color="pink"   ].dx-node { circle { @apply fill-pink-300; .dark & { @apply fill-pink-500; } } }
+      g[data-color='orange'].dx-node {
+        circle {
+          @apply fill-orange-300;
+          .dark & {
+            @apply fill-orange-500;
+          }
+        }
+      }
+      g[data-color='amber'].dx-node {
+        circle {
+          @apply fill-amber-300;
+          .dark & {
+            @apply fill-amber-500;
+          }
+        }
+      }
+      g[data-color='yellow'].dx-node {
+        circle {
+          @apply fill-yellow-300;
+          .dark & {
+            @apply fill-yellow-500;
+          }
+        }
+      }
+      g[data-color='lime'].dx-node {
+        circle {
+          @apply fill-lime-300;
+          .dark & {
+            @apply fill-lime-500;
+          }
+        }
+      }
+      g[data-color='green'].dx-node {
+        circle {
+          @apply fill-green-300;
+          .dark & {
+            @apply fill-green-500;
+          }
+        }
+      }
+      g[data-color='emerald'].dx-node {
+        circle {
+          @apply fill-emerald-300;
+          .dark & {
+            @apply fill-emerald-500;
+          }
+        }
+      }
+      g[data-color='teal'].dx-node {
+        circle {
+          @apply fill-teal-300;
+          .dark & {
+            @apply fill-teal-500;
+          }
+        }
+      }
+      g[data-color='cyan'].dx-node {
+        circle {
+          @apply fill-cyan-300;
+          .dark & {
+            @apply fill-cyan-500;
+          }
+        }
+      }
+      g[data-color='sky'].dx-node {
+        circle {
+          @apply fill-sky-300;
+          .dark & {
+            @apply fill-sky-500;
+          }
+        }
+      }
+      g[data-color='indigo'].dx-node {
+        circle {
+          @apply fill-indigo-300;
+          .dark & {
+            @apply fill-indigo-500;
+          }
+        }
+      }
+      g[data-color='violet'].dx-node {
+        circle {
+          @apply fill-violet-300;
+          .dark & {
+            @apply fill-violet-500;
+          }
+        }
+      }
+      g[data-color='purple'].dx-node {
+        circle {
+          @apply fill-purple-300;
+          .dark & {
+            @apply fill-purple-500;
+          }
+        }
+      }
+      g[data-color='fuchsia'].dx-node {
+        circle {
+          @apply fill-fuchsia-300;
+          .dark & {
+            @apply fill-fuchsia-500;
+          }
+        }
+      }
+      g[data-color='rose'].dx-node {
+        circle {
+          @apply fill-rose-300;
+          .dark & {
+            @apply fill-rose-500;
+          }
+        }
+      }
+      g[data-color='pink'].dx-node {
+        circle {
+          @apply fill-pink-300;
+          .dark & {
+            @apply fill-pink-500;
+          }
+        }
+      }
 
       g.dx-dragging,
       g.dx-highlight {
@@ -147,21 +252,126 @@ svg {
         }
       }
 
-      g[data-color="orange" ].dx-edge { path { @apply stroke-orange-300; .dark & { @apply stroke-orange-500; } } }
-      g[data-color="amber"  ].dx-edge { path { @apply stroke-amber-300; .dark & { @apply stroke-amber-500; } } }
-      g[data-color="yellow" ].dx-edge { path { @apply stroke-yellow-300; .dark & { @apply stroke-yellow-500; } } }
-      g[data-color="lime"   ].dx-edge { path { @apply stroke-lime-300; .dark & { @apply stroke-lime-500; } } }
-      g[data-color="green"  ].dx-edge { path { @apply stroke-green-300; .dark & { @apply stroke-green-500; } } }
-      g[data-color="emerald"].dx-edge { path { @apply stroke-emerald-300; .dark & { @apply stroke-emerald-500; } } }
-      g[data-color="teal"   ].dx-edge { path { @apply stroke-teal-300; .dark & { @apply stroke-teal-500; } } }
-      g[data-color="cyan"   ].dx-edge { path { @apply stroke-cyan-300; .dark & { @apply stroke-cyan-500; } } }
-      g[data-color="sky"    ].dx-edge { path { @apply stroke-sky-300; .dark & { @apply stroke-sky-500; } } }
-      g[data-color="indigo" ].dx-edge { path { @apply stroke-indigo-300; .dark & { @apply stroke-indigo-500; } } }
-      g[data-color="violet" ].dx-edge { path { @apply stroke-violet-300; .dark & { @apply stroke-violet-500; } } }
-      g[data-color="purple" ].dx-edge { path { @apply stroke-purple-300; .dark & { @apply stroke-purple-500; } } }
-      g[data-color="fuchsia"].dx-edge { path { @apply stroke-fuchsia-300; .dark & { @apply stroke-fuchsia-500; } } }
-      g[data-color="rose"   ].dx-edge { path { @apply stroke-rose-300; .dark & { @apply stroke-rose-500; } } }
-      g[data-color="pink"   ].dx-edge { path { @apply stroke-pink-300; .dark & { @apply stroke-pink-500; } } }
+      g[data-color='orange'].dx-edge {
+        path {
+          @apply stroke-orange-300;
+          .dark & {
+            @apply stroke-orange-500;
+          }
+        }
+      }
+      g[data-color='amber'].dx-edge {
+        path {
+          @apply stroke-amber-300;
+          .dark & {
+            @apply stroke-amber-500;
+          }
+        }
+      }
+      g[data-color='yellow'].dx-edge {
+        path {
+          @apply stroke-yellow-300;
+          .dark & {
+            @apply stroke-yellow-500;
+          }
+        }
+      }
+      g[data-color='lime'].dx-edge {
+        path {
+          @apply stroke-lime-300;
+          .dark & {
+            @apply stroke-lime-500;
+          }
+        }
+      }
+      g[data-color='green'].dx-edge {
+        path {
+          @apply stroke-green-300;
+          .dark & {
+            @apply stroke-green-500;
+          }
+        }
+      }
+      g[data-color='emerald'].dx-edge {
+        path {
+          @apply stroke-emerald-300;
+          .dark & {
+            @apply stroke-emerald-500;
+          }
+        }
+      }
+      g[data-color='teal'].dx-edge {
+        path {
+          @apply stroke-teal-300;
+          .dark & {
+            @apply stroke-teal-500;
+          }
+        }
+      }
+      g[data-color='cyan'].dx-edge {
+        path {
+          @apply stroke-cyan-300;
+          .dark & {
+            @apply stroke-cyan-500;
+          }
+        }
+      }
+      g[data-color='sky'].dx-edge {
+        path {
+          @apply stroke-sky-300;
+          .dark & {
+            @apply stroke-sky-500;
+          }
+        }
+      }
+      g[data-color='indigo'].dx-edge {
+        path {
+          @apply stroke-indigo-300;
+          .dark & {
+            @apply stroke-indigo-500;
+          }
+        }
+      }
+      g[data-color='violet'].dx-edge {
+        path {
+          @apply stroke-violet-300;
+          .dark & {
+            @apply stroke-violet-500;
+          }
+        }
+      }
+      g[data-color='purple'].dx-edge {
+        path {
+          @apply stroke-purple-300;
+          .dark & {
+            @apply stroke-purple-500;
+          }
+        }
+      }
+      g[data-color='fuchsia'].dx-edge {
+        path {
+          @apply stroke-fuchsia-300;
+          .dark & {
+            @apply stroke-fuchsia-500;
+          }
+        }
+      }
+      g[data-color='rose'].dx-edge {
+        path {
+          @apply stroke-rose-300;
+          .dark & {
+            @apply stroke-rose-500;
+          }
+        }
+      }
+      g[data-color='pink'].dx-edge {
+        path {
+          @apply stroke-pink-300;
+          .dark & {
+            @apply stroke-pink-500;
+          }
+        }
+      }
     }
 
     .dx-linker {

@@ -16,7 +16,7 @@ import type { DXN, ObjectId } from '@dxos/keys';
 // TODO(wittjosiah): The `export * as ...` syntax causes tsdown to genereate multiple files which breaks the sandbox.
 
 class OrderClass implements Order$.Any {
-  private static variance: Order$.Any['~Order'] = {} as Order$.Any['~Order'];
+  private static 'variance': Order$.Any['~Order'] = {} as Order$.Any['~Order'];
 
   static is(value: unknown): value is Order$.Any {
     return typeof value === 'object' && value !== null && '~Order' in value;
@@ -46,7 +46,7 @@ const Order2: typeof Order$ = Order1;
 export { Order2 as Order };
 
 class FilterClass implements Filter$.Any {
-  private static variance: Filter$.Any['~Filter'] = {} as Filter$.Any['~Filter'];
+  private static 'variance': Filter$.Any['~Filter'] = {} as Filter$.Any['~Filter'];
 
   static is(value: unknown): value is Filter$.Any {
     return typeof value === 'object' && value !== null && '~Filter' in value;
@@ -328,7 +328,7 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
 };
 
 class QueryClass implements Query$.Any {
-  private static variance: Query$.Any['~Query'] = {} as Query$.Any['~Query'];
+  private static 'variance': Query$.Any['~Query'] = {} as Query$.Any['~Query'];
 
   static is(value: unknown): value is Query$.Any {
     return typeof value === 'object' && value !== null && '~Query' in value;
@@ -370,6 +370,15 @@ class QueryClass implements Query$.Any {
       source: source.ast,
       exclude: exclude.ast,
     });
+  }
+
+  static from(source: any, options?: { includeFeeds?: boolean }): Query$.Any {
+    const baseQuery: QueryAST.Query = {
+      type: 'select',
+      filter: FilterClass.everything().ast,
+    };
+    const wrapper = new QueryClass(baseQuery);
+    return wrapper.from(source, options);
   }
 
   constructor(public readonly ast: QueryAST.Query) {}
@@ -484,11 +493,22 @@ class QueryClass implements Query$.Any {
   from(arg: any, options?: { includeFeeds?: boolean }): Query$.Any {
     if (arg === 'all-accessible-spaces') {
       return new QueryClass({
-        type: 'options',
+        type: 'from',
         query: this.ast,
-        options: {
-          ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+        from: {
+          _tag: 'scope',
+          scope: {
+            ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+          },
         },
+      });
+    }
+
+    if (_isScopeLike(arg)) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'scope', scope: arg },
       });
     }
 
@@ -516,4 +536,13 @@ const makeTypeDxn = (typename: string) => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
   return `dxn:type:${typename}`;
+};
+
+const SCOPE_KEYS = new Set(['spaceIds', 'queues', 'allQueuesFromSpaces']);
+
+const _isScopeLike = (value: unknown): value is QueryAST.Scope => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  return Object.keys(value).every((key) => SCOPE_KEYS.has(key));
 };

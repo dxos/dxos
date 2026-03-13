@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
+import { type LogBuffer } from '@dxos/log';
 import { type Observability } from '@dxos/observability';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AttentionPlugin } from '@dxos/plugin-attention';
@@ -52,6 +53,7 @@ import { ThemePlugin } from '@dxos/plugin-theme';
 import { ThreadPlugin } from '@dxos/plugin-thread';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
+import { VoxelPlugin } from '@dxos/plugin-voxel';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
 import { isTruthy } from '@dxos/util';
 
@@ -65,6 +67,7 @@ export type State = {
   config: Config;
   services: ClientServicesProvider;
   observability: Promise<Observability.Observability>;
+  logBuffer: LogBuffer;
 };
 
 export type PluginConfig = State & {
@@ -140,6 +143,7 @@ export const getPlugins = ({
   config,
   services,
   observability,
+  logBuffer,
   isDev,
   isLabs,
   isPwa,
@@ -172,7 +176,7 @@ export const getPlugins = ({
         }),
     }),
     ConductorPlugin(),
-    DebugPlugin(),
+    DebugPlugin({ logBuffer }),
     useSimpleLayout ? SimpleLayoutPlugin({ isPopover }) : DeckPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
@@ -221,6 +225,7 @@ export const getPlugins = ({
     ThreadPlugin(),
     TokenManagerPlugin(),
     TranscriptionPlugin(),
+    VoxelPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),
   ]

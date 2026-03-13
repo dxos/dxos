@@ -3,8 +3,8 @@
 //
 
 import { Type } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { Collection } from '@dxos/schema';
 import { Event, Message, Organization, Person, Pipeline, Task } from '@dxos/types';
 
 import { meta } from './meta';

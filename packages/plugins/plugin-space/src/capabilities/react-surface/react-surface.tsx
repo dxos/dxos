@@ -12,12 +12,13 @@ import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framewor
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Database, Obj, type Ref } from '@dxos/echo';
+import { Collection, type View } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, parseId, useSpace } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
-import { Collection, type View, ViewAnnotation } from '@dxos/schema';
+import { ManagedCollection, ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import {
@@ -66,9 +67,7 @@ type ReactSurfaceOptions = {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: ReactSurfaceOptions) {
-    const { createInvitationUrl } = props!;
-
+  Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: `${meta.id}/article`,
@@ -91,8 +90,9 @@ export default Capability.makeModule(
         id: `${meta.id}/collection-fallback`,
         role: 'article',
         position: 'fallback',
-        filter: (data): data is { subject: Collection.Collection | Collection.Managed } =>
-          Obj.instanceOf(Collection.Collection, data.subject) || Obj.instanceOf(Collection.Managed, data.subject),
+        filter: (data): data is { subject: Collection.Collection | ManagedCollection.ManagedCollection } =>
+          Obj.instanceOf(Collection.Collection, data.subject) ||
+          Obj.instanceOf(ManagedCollection.ManagedCollection, data.subject),
         component: ({ data }) => <CollectionArticle subject={data.subject} />,
       }),
       Surface.create({
@@ -168,7 +168,9 @@ export default Capability.makeModule(
       Surface.create({
         id: `${meta.id}/selected-objects`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Obj<{ view: Ref.Ref<View.View> }>; subject: 'selected-objects' } => {
+        filter: (
+          data,
+        ): data is { companionTo: Obj.OfShape<{ view: Ref.Ref<View.View> }>; subject: 'selected-objects' } => {
           if (data.subject !== 'selected-objects' || !Obj.isObject(data.companionTo)) {
             return false;
           }
@@ -180,6 +182,7 @@ export default Capability.makeModule(
             Option.getOrElse(() => false),
           );
         },
+        // TODO(burdon): Replace with mosaic.
         component: ({ data, ref }) => (
           <ObjectCardStack
             key={Obj.getDXN(data.companionTo).toString()}

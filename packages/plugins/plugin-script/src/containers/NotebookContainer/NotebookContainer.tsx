@@ -19,19 +19,21 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Graph } from '@dxos/plugin-explorer/types';
-import { DropdownMenu, IconButton, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Container } from '@dxos/react-ui';
+import { DropdownMenu, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { Text, View } from '@dxos/schema';
+import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { NotebookMenu, NotebookStack, type NotebookStackProps } from '../../components/NotebookStack';
-import { type TypescriptEditorProps } from '../../components/TypescriptEditor';
+import { NotebookMenu, NotebookStack, type NotebookStackProps, type TypescriptEditorProps } from '../../components';
 import { meta } from '../../meta';
 import { ComputeGraph } from '../../notebook';
 import { type Notebook } from '../../types';
 
-const INCLUDE_BLUEPRINTS = ['dxos.org/blueprint/assistant', 'dxos.org/blueprint/markdown'];
+const INCLUDE_BLUEPRINTS = [
+  'dxos.org/blueprint/assistant',
+  'dxos.org/blueprint/database',
+  'dxos.org/blueprint/markdown',
+];
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
@@ -62,7 +64,7 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
             const ast = Query.select(filter).ast;
             const graph = cell.graph?.target;
             if (!graph) {
-              const { view } = await View.makeFromDatabase({ db });
+              const { view } = await ViewModel.makeFromDatabase({ db });
               const newGraph = Graph.make({ query: { ast }, view });
               Obj.change(notebook!, (n) => {
                 const c = n.cells.find((c) => c.id === cell.id);
@@ -188,25 +190,26 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
   );
 
   return (
-    <Container.Main role={role} toolbar>
-      <Toolbar.Root disabled={!hasAttention} textBlockWidth>
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <IconButton icon='ph--plus--regular' iconOnly label={t('notebook cell insert label')} />
-          </DropdownMenu.Trigger>
-          <NotebookMenu onCellInsert={handleCellInsert} />
-        </DropdownMenu.Root>
-        <Toolbar.IconButton
-          icon='ph--play--fill'
-          iconOnly
-          label={t('compute label')}
-          classNames='text-green-500'
-          onClick={handleCompute}
-        />
-      </Toolbar.Root>
-      <div role='none' className='flex h-full overflow-hidden -ms-[1px] -me-[1px]'>
+    <Panel.Root role={role} className='dx-article'>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root disabled={!hasAttention} textBlockWidth>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild>
+              <IconButton icon='ph--plus--regular' iconOnly label={t('notebook cell insert label')} />
+            </DropdownMenu.Trigger>
+            <NotebookMenu onCellInsert={handleCellInsert} />
+          </DropdownMenu.Root>
+          <Toolbar.IconButton
+            icon='ph--play--fill'
+            iconOnly
+            label={t('compute label')}
+            classNames='text-success-text'
+            onClick={handleCompute}
+          />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
         <NotebookStack
-          classNames='dx-container-max-width border-l border-r border-subdued-separator'
           db={db}
           notebook={notebook}
           graph={graph}
@@ -216,8 +219,8 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
           onCellInsert={handleCellInsert}
           onCellDelete={handleCellDelete}
         />
-      </div>
-    </Container.Main>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

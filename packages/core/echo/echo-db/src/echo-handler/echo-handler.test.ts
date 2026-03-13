@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Entity, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -26,7 +27,6 @@ import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
 import { DocAccessor } from '../core-db';
-import { Filter } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { createDocAccessor } from './doc-accessor';
@@ -125,7 +125,7 @@ describe('without database', () => {
     nested: Schema.Struct({
       name: Schema.optional(Schema.String),
       arr: Schema.optional(Schema.Array(Schema.String)),
-      ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Type.Ref(TestSchema))),
+      ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
     }),
   }).pipe(
     EchoObjectSchema({
@@ -238,10 +238,10 @@ describe('Reactive Object with ECHO database', () => {
     const objectHost = db.add(Obj.make(TestSchema, { field: [] }));
     const object = db.add(Obj.make(TestSchema, { field: 'foo' }));
     Obj.change(objectHost, (o) => {
-      o.field?.push({ hosted: Type.Ref.make(object) });
+      o.field?.push({ hosted: Ref.make(object) });
     });
     Obj.make(TestSchema, {
-      field: [Obj.make(TestSchema, { field: Type.Ref.make(objectHost) })],
+      field: [Obj.make(TestSchema, { field: Ref.make(objectHost) })],
     });
     expect(objectHost.field[0].hosted).not.to.be.undefined;
   });
@@ -281,7 +281,7 @@ describe('Reactive Object with ECHO database', () => {
       await peer.client.graph.schemaRegistry.register([TestSchema.Example]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query(Query.select(Filter.id(id))).first()) as Obj.Obj<TestSchema.Example>;
+      const obj = (await db.query(Query.select(Filter.id(id))).first()) as TestSchema.Example;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -315,7 +315,7 @@ describe('Reactive Object with ECHO database', () => {
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query(Filter.id(id)).first()) as Obj.Obj<TestSchema.Example>;
+      const obj = (await db.query(Filter.id(id)).first()) as TestSchema.Example;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -447,8 +447,8 @@ describe('Reactive Object with ECHO database', () => {
 
     const Contact = Schema.Struct({
       name: Schema.String,
-      organization: Type.Ref(Organization),
-      previousEmployment: Schema.optional(Schema.Array(Type.Ref(Organization))),
+      organization: Ref.Ref(Organization),
+      previousEmployment: Schema.optional(Schema.Array(Ref.Ref(Organization))),
     }).pipe(
       Type.object({
         typename: 'example.com/type/Person',
@@ -670,14 +670,14 @@ describe('Reactive Object with ECHO database', () => {
         field: Schema.Number,
       }).pipe(Type.object({ typename: 'example.com/type/TestNested', version: '0.1.0' }));
       const TestType = Schema.Struct({
-        objects: Schema.Array(Type.Ref(NestedType)),
+        objects: Schema.Array(Ref.Ref(NestedType)),
       }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
 
       const key = foreignKey('example.com', '123');
       const { db, graph } = await builder.createDatabase();
       await graph.schemaRegistry.register([TestType, NestedType]);
       const obj = db.add(Obj.make(TestType, { objects: [] }));
-      const objectWithMeta = Obj.make(NestedType, { field: 42 }, { keys: [key] });
+      const objectWithMeta = Obj.make(NestedType, { [Obj.Meta]: { keys: [key] }, field: 42 });
       Obj.change(obj, (o) => {
         o.objects.push(Ref.make(objectWithMeta));
       });
@@ -690,7 +690,7 @@ describe('Reactive Object with ECHO database', () => {
       }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
       const { db, graph } = await builder.createDatabase();
       await graph.schemaRegistry.register([TestType]);
-      const obj = db.add(Obj.make(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));
+      const obj = db.add(Obj.make(TestType, { [Obj.Meta]: { keys: [foreignKey('example.com', '123')] }, field: 1 }));
       Obj.change(obj, (obj) => {
         Obj.getMeta(obj).keys.push(foreignKey('example.com', '456'));
       });
@@ -730,7 +730,7 @@ describe('Reactive Object with ECHO database', () => {
       {
         const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
         const db = await peer.openDatabase(spaceKey, root.url);
-        const obj = (await db.query(Filter.id(id)).first()) as Obj.Obj<TestSchema.Example>;
+        const obj = (await db.query(Filter.id(id)).first()) as TestSchema.Example;
         expect(Obj.getMeta(obj).keys).to.deep.eq([metaKey]);
       }
     });

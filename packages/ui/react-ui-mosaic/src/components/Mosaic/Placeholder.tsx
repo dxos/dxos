@@ -46,7 +46,7 @@ const MosaicPlaceholder = <Location extends LocationType = LocationType>({
   location,
 }: MosaicPlaceholderProps<Location>) => {
   const rootRef = useRef<HTMLDivElement>(null);
-  const Root = asChild ? Slot : Primitive.div;
+  const Comp = asChild ? Slot : Primitive.div;
   const {
     id: containerId,
     eventHandler,
@@ -90,7 +90,7 @@ const MosaicPlaceholder = <Location extends LocationType = LocationType>({
   }, [rootRef, data, scrolling, setActiveLocation]);
 
   return (
-    <Root
+    <Comp
       {...{
         [`data-${MOSAIC_PLACEHOLDER_ORIENTATION_ATTR}`]: orientation,
         [`data-${MOSAIC_PLACEHOLDER_STATE_ATTR}`]: data.location === activeLocation ? 'active' : 'idle',
@@ -100,7 +100,7 @@ const MosaicPlaceholder = <Location extends LocationType = LocationType>({
       ref={rootRef}
     >
       {children}
-    </Root>
+    </Comp>
   );
 };
 

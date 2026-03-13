@@ -84,20 +84,20 @@ dxos/mesh-protocol --> dxos/codec-protobuf
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
-| [`@dxos/async`](../../../../common/async/docs/README.md) | &check; |
-| [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md) | &check; |
-| [`@dxos/context`](../../../../common/context/docs/README.md) |  |
-| [`@dxos/crypto`](../../../../common/crypto/docs/README.md) | &check; |
-| [`@dxos/debug`](../../../../common/debug/docs/README.md) | &check; |
-| [`@dxos/feed-store`](../../../../common/feed-store/docs/README.md) | &check; |
-| [`@dxos/hypercore`](../../../../common/hypercore/docs/README.md) |  |
-| [`@dxos/keyring`](../../keyring/docs/README.md) | &check; |
-| [`@dxos/keys`](../../../../common/keys/docs/README.md) | &check; |
-| [`@dxos/log`](../../../../common/log/docs/README.md) | &check; |
-| [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md) | &check; |
-| [`@dxos/protocols`](../../../protocols/docs/README.md) | &check; |
-| [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |  |
-| [`@dxos/timeframe`](../../../../common/timeframe/docs/README.md) |  |
-| [`@dxos/util`](../../../../common/util/docs/README.md) | &check; |
+| Module                                                                                   | Direct  |
+| ---------------------------------------------------------------------------------------- | ------- |
+| [`@dxos/async`](../../../../common/async/docs/README.md)                                 | &check; |
+| [`@dxos/codec-protobuf`](../../../../common/codec-protobuf/docs/README.md)               | &check; |
+| [`@dxos/context`](../../../../common/context/docs/README.md)                             |         |
+| [`@dxos/crypto`](../../../../common/crypto/docs/README.md)                               | &check; |
+| [`@dxos/debug`](../../../../common/debug/docs/README.md)                                 | &check; |
+| [`@dxos/feed-store`](../../../../common/feed-store/docs/README.md)                       | &check; |
+| [`@dxos/hypercore`](../../../../common/hypercore/docs/README.md)                         |         |
+| [`@dxos/keyring`](../../keyring/docs/README.md)                                          | &check; |
+| [`@dxos/keys`](../../../../common/keys/docs/README.md)                                   | &check; |
+| [`@dxos/log`](../../../../common/log/docs/README.md)                                     | &check; |
+| [`@dxos/mesh-protocol`](../../../mesh/mesh-protocol/docs/README.md)                      | &check; |
+| [`@dxos/protocols`](../../../protocols/docs/README.md)                                   | &check; |
+| [`@dxos/random-access-storage`](../../../../common/random-access-storage/docs/README.md) |         |
+| [`@dxos/timeframe`](../../../../common/timeframe/docs/README.md)                         |         |
+| [`@dxos/util`](../../../../common/util/docs/README.md)                                   | &check; |

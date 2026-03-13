@@ -8,6 +8,7 @@ import { Capabilities, Capability, Plugin, UndoMapping } from '@dxos/app-framewo
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { SpaceState, getSpace } from '@dxos/client/echo';
 import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { Migrations } from '@dxos/migrations';
@@ -18,7 +19,13 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
 import { iconValues } from '@dxos/react-ui-pickers/icons';
-import { Collection, ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
+import {
+  CollectionModel,
+  ManagedCollection,
+  ProjectionModel,
+  createEchoChangeCallback,
+  getTypenameFromQuery,
+} from '@dxos/schema';
 import { hues } from '@dxos/ui-theme';
 
 import {
@@ -28,7 +35,7 @@ import {
   OBJECT_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
 } from '../../constants';
-import { type JoinDialogProps } from '../../containers/JoinDialog/JoinDialog';
+import { type JoinDialogProps } from '../../containers/JoinDialog';
 import { meta } from '../../meta';
 import { SpaceEvents } from '../../types';
 import { SpaceCapabilities, SpaceOperation } from '../../types';
@@ -40,8 +47,7 @@ type OperationResolverOptions = {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: OperationResolverOptions) {
-    const { createInvitationUrl, observability } = props!;
+  Effect.fnUntraced(function* ({ createInvitationUrl, observability }: OperationResolverOptions) {
     const capabilityManager = yield* Capability.Service;
 
     const resolve = (typename: string) =>
@@ -275,7 +281,7 @@ export default Capability.makeModule(
                 shouldNavigate: navigable
                   ? (object: Obj.Unknown) => {
                       const isCollection = Obj.instanceOf(Collection.Collection, object);
-                      const isSystemCollection = Obj.instanceOf(Collection.Managed, object);
+                      const isSystemCollection = Obj.instanceOf(ManagedCollection.ManagedCollection, object);
                       return (!isCollection && !isSystemCollection) || ephemeralState.navigableCollections;
                     }
                   : () => false,
@@ -295,7 +301,7 @@ export default Capability.makeModule(
             const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
             invariant(db, 'Database not found.');
 
-            yield* Collection.add({
+            yield* CollectionModel.add({
               object,
               target: Database.isDatabase(target) ? undefined : target,
               hidden: input.hidden,
@@ -418,7 +424,9 @@ export default Capability.makeModule(
 
             // Create records smart collection.
             Obj.change(collection, (c) => {
-              c.objects.push(Ref.make(Collection.makeManaged({ key: Type.getTypename(Type.PersistentType) })));
+              c.objects.push(
+                Ref.make(ManagedCollection.makeManagedCollection({ key: Type.getTypename(Type.PersistentType) })),
+              );
             });
 
             // Allow other plugins to add default content.

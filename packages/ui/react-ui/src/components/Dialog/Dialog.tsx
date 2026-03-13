@@ -32,9 +32,9 @@ import { useTranslation } from 'react-i18next';
 import { type DialogSize, osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
-import { Container } from '../../primitives';
+import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
-import { IconButton, type IconButtonProps } from '../Button';
+import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
 
 //
@@ -87,9 +87,9 @@ const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<
     return (
       <DialogOverlayPrimitive
         {...props}
+        data-block-align={blockAlign}
         className={tx('dialog.overlay', {}, classNames)}
         ref={forwardedRef}
-        data-h-align={blockAlign}
       >
         <OverlayLayoutProvider inOverlayLayout>{children}</OverlayLayoutProvider>
       </DialogOverlayPrimitive>
@@ -124,7 +124,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
         ref={forwardedRef}
       >
-        <Container.Column>{children}</Container.Column>
+        <Column.Root>{children}</Column.Root>
       </DialogContentPrimitive>
     );
   },
@@ -142,9 +142,33 @@ const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTM
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <Container.Segment>
+      <Column.Segment asChild>
         <div role='heading' {...props} className={tx('dialog.header', { srOnly }, [classNames])} ref={forwardedRef} />
-      </Container.Segment>
+      </Column.Segment>
+    );
+  },
+);
+
+//
+// CloseIconButton
+//
+
+type DialogCloseIconButtonProps = { label?: string };
+
+const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButtonProps>(
+  ({ label, ...props }, forwardedRef) => {
+    const { t } = useTranslation(osTranslations);
+    return (
+      <IconButton
+        {...props}
+        label={label ?? t('close dialog label')}
+        icon='ph--x--regular'
+        iconOnly
+        size={4}
+        density='fine'
+        variant='ghost'
+        ref={forwardedRef}
+      />
     );
   },
 );
@@ -159,11 +183,11 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDi
   ({ children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <Container.Segment>
+      <Column.Segment asChild>
         <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
           {children}
         </div>
-      </Container.Segment>
+      </Column.Segment>
     );
   },
 );
@@ -215,11 +239,11 @@ const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forward
 >(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <Container.Segment>
+    <Column.Segment asChild>
       <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
         {children}
       </div>
-    </Container.Segment>
+    </Column.Segment>
   );
 });
 
@@ -230,31 +254,6 @@ const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forward
 type DialogCloseProps = DialogClosePrimitiveProps;
 
 const DialogClose: FunctionComponent<DialogCloseProps> = DialogClosePrimitive;
-
-//
-// Close Button
-//
-
-type DialogCloseIconButtonProps = ThemedClassName<Partial<IconButtonProps>>;
-
-const DialogCloseIconButton: ForwardRefExoticComponent<DialogCloseIconButtonProps> = forwardRef<
-  HTMLButtonElement,
-  DialogCloseIconButtonProps
->((props, forwardedRef) => {
-  const { t } = useTranslation(osTranslations);
-  return (
-    <IconButton
-      {...props}
-      label={props.label ?? t('close dialog label')}
-      icon='ph--x--regular'
-      iconOnly
-      size={4}
-      density='fine'
-      variant='ghost'
-      ref={forwardedRef}
-    />
-  );
-});
 
 //
 // Dialog
@@ -287,5 +286,4 @@ export type {
   DialogDescriptionProps,
   DialogActionBarProps,
   DialogCloseProps,
-  DialogCloseIconButtonProps,
 };

@@ -5,17 +5,19 @@
 import React, { type FC } from 'react';
 
 import { type Markdown } from '@dxos/plugin-markdown/types';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 
-import { RevealPlayer } from '../../components/RevealPlayer';
+import { RevealPlayer } from '../../components';
 import { useExitPresenter } from '../../useExitPresenter';
 
 export const DocumentPresenterContainer: FC<{ document: Markdown.Document }> = ({ document }) => {
   const handleExit = useExitPresenter(document);
 
   return (
-    <Container.Main classNames='relative'>
-      <RevealPlayer content={document.content.target?.content ?? ''} onExit={handleExit} />
-    </Container.Main>
+    <Panel.Root classNames='relative'>
+      <Panel.Content asChild>
+        <RevealPlayer content={document.content.target?.content ?? ''} onExit={handleExit} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

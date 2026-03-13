@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { useSelected } from '@dxos/react-ui-attention';
@@ -13,7 +13,7 @@ import { useSelected } from '@dxos/react-ui-attention';
 import { type ComponentProps } from './types';
 
 export const MessageModule = ({ space }: ComponentProps) => {
-  const feeds = useQuery(space.db, Filter.type(Type.Feed));
+  const feeds = useQuery(space.db, Filter.type(Feed.Feed));
   const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
   const mailboxDxn = mailbox ? Obj.getDXN(mailbox).toString() : undefined;
   const selected = useSelected(mailboxDxn, 'single');

@@ -4,10 +4,14 @@
 @layer dx-tokens {
   :root {
     --dx-grid-cell-padding-block: 0.2rem;
-    --dx-grid-cell-content-padding-block: calc(var(--dx-grid-cell-padding-block) - var(--dx-grid-focus-indicator-width));
+    --dx-grid-cell-content-padding-block: calc(
+      var(--dx-grid-cell-padding-block) - var(--dx-grid-focus-indicator-width)
+    );
     --dx-grid-cell-editor-padding-block: var(--dx-grid-cell-content-padding-block);
     --dx-grid-cell-padding-inline: 0.25rem;
-    --dx-grid-cell-content-padding-inline: calc(var(--dx-grid-cell-padding-inline) - var(--dx-grid-focus-indicator-width));
+    --dx-grid-cell-content-padding-inline: calc(
+      var(--dx-grid-cell-padding-inline) - var(--dx-grid-focus-indicator-width)
+    );
     --dx-grid-cell-editor-padding-inline: var(--dx-grid-cell-content-padding-inline);
   }
 }
@@ -101,7 +105,8 @@
         border: var(--dx-grid-focus-indicator-width) solid transparent;
         border-radius: 2px;
 
-        &:has(.dx-tag), &:has(dx-tag-picker-item) {
+        &:has(.dx-tag),
+        &:has(dx-tag-picker-item) {
           text-overflow: clip;
           line-height: 0;
           --dx-grid-cell-content-padding-inline: 1px;
@@ -122,7 +127,8 @@
           --grid-cell-surface: var(--color-grid-selection-overlay);
 
           &:focus:not([aria-readonly='true']),
-          &:focus-visible, &:focus-within {
+          &:focus-visible,
+          &:focus-within {
             & > .dx-grid__cell__content {
               background: transparent;
             }
@@ -149,7 +155,7 @@
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
-      &:not([data-focus-unfurl="false"]):not(.dx-grid__cell--no-focus-unfurl) {
+      &:not([data-focus-unfurl='false']):not(.dx-grid__cell--no-focus-unfurl) {
         &:focus,
         &:focus-within {
           & > .dx-grid__cell__content {
@@ -204,7 +210,8 @@
     inline-size: min-content;
     max-inline-size: var(--dx-grid-cell-editor-max-inline-size);
 
-    &:has(.dx-tag), &:has(dx-tag-picker-item) {
+    &:has(.dx-tag),
+    &:has(dx-tag-picker-item) {
       text-overflow: clip;
       line-height: 0;
       --dx-grid-cell-editor-padding-inline: 1px;

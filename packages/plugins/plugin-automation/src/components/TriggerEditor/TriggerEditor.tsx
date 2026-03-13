@@ -120,11 +120,11 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
       },
 
       // Spec selector.
-      ['spec.kind' as const]: (props) => <SpecSelector {...props} readonly={readonlySpec} />,
+      'spec.kind': (props) => <SpecSelector {...props} readonly={readonlySpec} />,
 
       // TODO(wittjosiah): Copied from ViewEditor.
       // Query input editor.
-      ['spec.query' as const]: (props) => {
+      'spec.query': (props) => {
         const handleChange = useCallback(
           (query: Query.Any) => props.onValueChange(props.type, { ast: query.ast }),
           [props.type, props.onValueChange],
@@ -139,7 +139,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
       },
 
       // Function input editor.
-      ['input' as const]: (props) => <FunctionInputEditor {...props} functions={functions} db={db} />,
+      input: (props) => <FunctionInputEditor {...props} functions={functions} db={db} />,
     }),
     [workflows, scripts, functions, readonlySpec],
   );

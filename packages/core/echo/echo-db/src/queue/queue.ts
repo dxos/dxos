@@ -8,14 +8,15 @@ import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, Entity, Obj, type Ref } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
-import { assertArgument, failedInvariant } from '@dxos/invariant';
+import { failedInvariant } from '@dxos/invariant';
 import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
-import { Filter, Query, QueryResultImpl } from '../query';
+import { QueryResultImpl } from '../query';
 
 import { QueueQueryContext } from './queue-query-context';
 import type { Queue } from './types';
@@ -234,14 +235,10 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(queryOrFilter: Query.Any | Filter.Any, options?: Database.QueryOptions) {
-    assertArgument(options === undefined, 'options', 'not supported');
+  private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    const queryWithOptions = query.options({
-      spaceIds: [this._spaceId],
-      queues: [this._dxn.toString()],
-    });
-    return new QueryResultImpl(new QueueQueryContext(this), queryWithOptions);
+    const queryWithScope = query.from({ spaceIds: [this._spaceId], queues: [this._dxn.toString()] });
+    return new QueryResultImpl(new QueueQueryContext(this), queryWithScope);
   }
 
   async sync({

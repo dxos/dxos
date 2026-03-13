@@ -7,13 +7,13 @@ import { QR } from 'react-qr-rounded';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space, useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
 import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
-import { Collection } from '@dxos/schema';
 import {
   type ActionMenuItem,
   AuthCode,
@@ -165,7 +165,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             )}
           </Settings.Frame>
           {/* TODO(wittjosiah): Make Settings.ItemInput & Settings.Frame compatible. */}
-          <div className='justify-center p-0 mt-4 dx-container-max-width grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
+          <div className='justify-center p-0 mt-4 grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
             <Settings.ItemInput title={t('space locked label')} description={t('space locked description')}>
               <Input.Switch checked={locked} onCheckedChange={handleChangeLocked} classNames='justify-self-end' />
             </Settings.ItemInput>

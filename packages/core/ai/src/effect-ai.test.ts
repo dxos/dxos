@@ -89,7 +89,7 @@ const TestToolkit = Toolkit.make(
 
 // Tool handlers.
 const toolkitLayer = TestToolkit.toLayer({
-  ['calculator' as const]: ({ input }) =>
+  calculator: ({ input }) =>
     Effect.gen(function* () {
       const result = (() => {
         // Restrict to basic arithmetic operations for safety.
@@ -104,7 +104,7 @@ const toolkitLayer = TestToolkit.toLayer({
       yield* Console.log(`Executing calculation: ${input} = ${result}`);
       return { result };
     }),
-  ['get-date' as const]: () =>
+  'get-date': () =>
     Effect.gen(function* () {
       return new Date('2025-10-01');
     }),

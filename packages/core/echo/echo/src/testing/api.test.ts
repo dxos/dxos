@@ -110,7 +110,7 @@ describe('Experimental API review', () => {
         expect(expando.content).to.eq('Test');
 
         // This should work: assign to Obj.Obj of the schema's instance type
-        const _typed: Obj.Obj<TestSchema.Expando> = expando;
+        const _typed: Obj.OfShape<TestSchema.Expando> = expando;
       }
 
       {
@@ -119,7 +119,7 @@ describe('Experimental API review', () => {
         expect(person.name).to.eq('Test');
 
         // This should work: assign to Obj.Obj of the schema's instance type
-        const _typed: Obj.Obj<TestSchema.Person> = person;
+        const _typed: Obj.OfShape<TestSchema.Person> = person;
       }
     });
   });

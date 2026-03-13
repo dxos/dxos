@@ -221,6 +221,9 @@
       "path": "../../plugins/plugin-transcription"
     },
     {
+      "path": "../../plugins/plugin-voxel"
+    },
+    {
       "path": "../../plugins/plugin-wnfs"
     },
     {

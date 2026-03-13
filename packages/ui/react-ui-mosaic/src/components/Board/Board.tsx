@@ -15,7 +15,7 @@ import React, {
 
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { useContainerDebug } from '../../hooks';
 import { Focus } from '../Focus';
@@ -29,7 +29,7 @@ import {
   useMosaic,
 } from '../Mosaic';
 
-import { BoardColumn, type BoardColumnProps, DefaultBoardColumn } from './Column';
+import { BoardColumn, type BoardColumnProps, DefaultBoardColumn, useBoardColumn } from './Column';
 import { BoardItem, type BoardItemProps } from './Item';
 
 //
@@ -98,7 +98,8 @@ type BoardContentProps<TColumn = any> = ThemedClassName<{
 }>;
 
 const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
-  ({ classNames, id: _id, debug, eventHandler, Tile = DefaultBoardColumn }, forwardedRef) => {
+  ({ id: _id, debug, eventHandler, Tile = DefaultBoardColumn, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
     const { model } = useBoardContext(BOARD_CONTENT_NAME);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -106,7 +107,7 @@ const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
     const items = useAtomValue(model.columns);
 
     return (
-      <div ref={forwardedRef} className={mx('flex h-full w-full overflow-hidden', classNames)}>
+      <div role='none' {...rest} className={mx('dx-container', className)} ref={forwardedRef}>
         <Focus.Group asChild orientation='horizontal'>
           <Mosaic.Container
             asChild
@@ -186,5 +187,6 @@ export const Board = {
   Debug: BoardDebug,
 };
 
-export { useBoard };
+export { useBoard, useBoardColumn };
+
 export type { BoardRootProps, BoardContentProps, BoardColumnProps, BoardItemProps };

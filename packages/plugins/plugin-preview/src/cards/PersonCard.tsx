@@ -6,15 +6,15 @@ import React from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Avatar } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) => {
   const { image, organization: { target: organization } = {}, emails = [] } = subject;
 
   return (
-    <Avatar.Root>
-      <Card.Content>
+    <Card.Content>
+      <Avatar.Root>
         {image && (
           <Card.Row className='py-1'>
             <Avatar.Content
@@ -41,7 +41,7 @@ export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) =>
             </Card.Text>
           </Card.Row>
         ))}
-      </Card.Content>
-    </Avatar.Root>
+      </Avatar.Root>
+    </Card.Content>
   );
 };

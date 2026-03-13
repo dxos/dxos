@@ -2,6 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-import { JoinDialog } from './JoinDialog';
-
-export default JoinDialog;
+export { JoinDialog, type JoinDialogProps } from './JoinDialog';
+export { JoinDialog as default } from './JoinDialog';

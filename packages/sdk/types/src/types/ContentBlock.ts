@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Unit, isTruthy } from '@dxos/util';
 
 export const Base = Schema.Struct({
@@ -243,7 +243,7 @@ export interface File extends Schema.Schema.Type<typeof File> {}
  * Non-text content embedded in the message (e.g., files, polls, etc.).
  */
 export const Reference = Schema.TaggedStruct('reference', {
-  reference: Type.Ref(Type.Obj),
+  reference: Ref.Ref(Obj.Unknown),
 
   ...Base.fields,
 });

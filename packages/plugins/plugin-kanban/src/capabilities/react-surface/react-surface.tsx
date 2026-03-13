@@ -8,10 +8,10 @@ import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, JsonSchema, Obj } from '@dxos/echo';
+import { type Collection } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
-import { type Collection } from '@dxos/schema';
 
 import { KanbanContainer, KanbanViewEditor } from '../../containers';
 import { meta } from '../../meta';
@@ -59,7 +59,7 @@ export default Capability.makeModule(() =>
             [db, typename],
           );
           const singleSelectColumns = useMemo(() => {
-            const properties = Type.toJsonSchema(selectedSchema).properties;
+            const properties = JsonSchema.toJsonSchema(selectedSchema).properties;
             if (!properties) {
               return [];
             }
