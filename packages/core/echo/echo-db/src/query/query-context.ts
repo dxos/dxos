@@ -12,7 +12,7 @@ import { type QueryAST } from '@dxos/echo-protocol';
 export type Sort<T extends AnyProperties> = (a: T, b: T) => -1 | 0 | 1;
 
 export interface QueryContext<T extends AnyProperties = AnyProperties, O extends Entity.Entity<T> = Entity.Entity<T>> {
-  getResults(ctx: Context): QueryResult.EntityEntry<O>[];
+  getResults(): QueryResult.EntityEntry<O>[];
 
   // TODO(dmaretskyi): Update info?
   changed: Event<void>;
@@ -25,7 +25,7 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
   /**
    * Set the filter and trigger continuous updates.
    */
-  update(ctx: Context, query: QueryAST.Query): void;
+  update(query: QueryAST.Query): void;
 
   /**
    * Start creating query sources and firing events.
@@ -33,7 +33,7 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
    * `start` and `stop` are re-entrant.
    */
   // TODO(dmaretskyi): Make async.
-  start(ctx: Context): void;
+  start(): void;
 
   /**
    * Clear any resources associated with the query.
@@ -41,5 +41,5 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
    * `start` and `stop` are re-entrant.
    */
   // TODO(dmaretskyi): Make async.
-  stop(ctx: Context): void;
+  stop(): void;
 }

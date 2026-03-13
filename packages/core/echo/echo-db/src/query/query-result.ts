@@ -36,7 +36,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
       }
     });
 
-    this._queryContext.update(Context.default(), this._query.ast);
+    this._queryContext.update(this._query.ast);
 
     this._diagnostic = {
       isActive: this._isActive,
@@ -164,7 +164,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    */
   private _recomputeResult(): boolean {
     // TODO(dmaretskyi): Make results unique too.
-    const results = this._queryContext.getResults(Context.default());
+    const results = this._queryContext.getResults();
     const objects = this._uniqueObjects(results);
 
     const changed =
@@ -215,12 +215,12 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
   private _start(): void {
     this._isActive = true;
-    this._queryContext.start(Context.default());
+    this._queryContext.start();
     this._diagnostic.isActive = true;
   }
 
   private _stop(): void {
-    this._queryContext.stop(Context.default());
+    this._queryContext.stop();
     this._isActive = false;
     this._diagnostic.isActive = false;
   }

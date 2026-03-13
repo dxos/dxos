@@ -71,7 +71,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     }
 
     for (const context of this._queryContexts.values()) {
-      context.addQuerySource(Context.default(), new SpaceQuerySource(database));
+      context.addQuerySource(new SpaceQuerySource(database));
     }
   }
 
@@ -371,7 +371,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   registerQuerySourceProvider(provider: QuerySourceProvider): void {
     this._querySourceProviders.push(provider);
     for (const context of this._queryContexts.values()) {
-      context.addQuerySource(Context.default(), provider.create(Context.default()));
+      context.addQuerySource(provider.create());
     }
   }
 
@@ -423,10 +423,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     });
 
     for (const database of this._databases.values()) {
-      context.addQuerySource(Context.default(), new SpaceQuerySource(database));
+      context.addQuerySource(new SpaceQuerySource(database));
     }
     for (const provider of this._querySourceProviders) {
-      context.addQuerySource(Context.default(), provider.create(Context.default()));
+      context.addQuerySource(provider.create());
     }
 
     return context;
@@ -434,7 +434,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 }
 
 export interface QuerySourceProvider {
-  create(ctx: Context): QuerySource;
+  create(): QuerySource;
 }
 
 type ObjectDiagnostic = {

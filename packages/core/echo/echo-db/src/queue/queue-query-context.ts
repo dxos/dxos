@@ -32,7 +32,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * One-shot run.
    */
-  async run(ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<T>[]> {
+  async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<T>[]> {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
@@ -55,7 +55,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * Start reactive query.
    */
-  start(ctx: Context): void {
+  start(): void {
     this.#runCtx = Context.default();
     this.#runCtx.onDispose(this.#queue.beginPolling());
     this.#queue.updated.on(this.#runCtx, () => {
@@ -66,7 +66,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * Stop reactive query.
    */
-  stop(ctx: Context): void {
+  stop(): void {
     void this.#runCtx?.dispose();
     this.#runCtx = null;
   }
@@ -74,7 +74,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * Update the filter (for reactive queries).
    */
-  update(ctx: Context, query: QueryAST.Query): void {
+  update(query: QueryAST.Query): void {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
@@ -87,7 +87,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * Synchronously get the results.
    */
-  getResults(ctx: Context): QueryResult.EntityEntry<T>[] {
+  getResults(): QueryResult.EntityEntry<T>[] {
     invariant(this.#filter);
 
     return Function.pipe(

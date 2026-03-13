@@ -45,7 +45,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderProps) {}
 
   // TODO(burdon): Rename createQuerySource
-  create(ctx: Context): QuerySource {
+  create(): QuerySource {
     return new IndexQuerySource({
       service: this._params.service,
       objectLoader: this._params.objectLoader,
@@ -73,31 +73,31 @@ export class IndexQuerySource implements QuerySource {
 
   constructor(private readonly _params: IndexQuerySourceProps) {}
 
-  open(ctx: Context): void {
+  open(): void {
     this._open = true;
   }
 
-  close(ctx: Context): void {
+  close(): void {
     this._open = false;
     this._results = undefined;
-    this._closeStream(ctx);
+    this._closeStream();
   }
 
-  getResults(ctx: Context): QueryResult.EntityEntry[] {
+  getResults(): QueryResult.EntityEntry[] {
     return this._results ?? [];
   }
 
-  async run(ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
+  async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry[]> {
     this._query = query;
     return new Promise((resolve, reject) => {
-      this._queryIndex(ctx, query, QueryReactivity.ONE_SHOT, resolve, reject);
+      this._queryIndex(query, QueryReactivity.ONE_SHOT, resolve, reject);
     });
   }
 
-  update(ctx: Context, query: QueryAST.Query): void {
+  update(query: QueryAST.Query): void {
     this._query = query;
 
-    this._closeStream(ctx);
+    this._closeStream();
     this._results = [];
     this.changed.emit();
 
@@ -107,14 +107,13 @@ export class IndexQuerySource implements QuerySource {
       return;
     }
 
-    this._queryIndex(ctx, query, QueryReactivity.REACTIVE, (results) => {
+    this._queryIndex(query, QueryReactivity.REACTIVE, (results) => {
       this._results = results;
       this.changed.emit();
     });
   }
 
   private _queryIndex(
-    ctx: Context,
     query: QueryAST.Query,
     queryType: QueryReactivity,
     onResult: (results: QueryResult.EntityEntry[]) => void,
@@ -269,7 +268,7 @@ export class IndexQuerySource implements QuerySource {
     return queryResult;
   }
 
-  private _closeStream(ctx: Context): void {
+  private _closeStream(): void {
     void this._stream?.close().catch(() => {});
     this._stream = undefined;
   }
