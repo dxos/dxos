@@ -17,9 +17,8 @@ import { Assistant } from '@dxos/plugin-assistant/types';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { render } from '@dxos/storybook-utils';
 import { isNonNullable } from '@dxos/util';
 
 import { ChatModule, type ComponentProps } from '../components';
@@ -73,7 +72,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
   const objects = binder?.getObjects() ?? [];
 
   if (!space) {
-    return null;
+    return <Loading data={{ space: !!space }} />;
   }
 
   return (
@@ -129,7 +128,7 @@ const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
 
 const storybook: Meta<typeof DefaultStory> = {
   title: 'stories/stories-assistant/Projects',
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',

@@ -70,18 +70,18 @@ export const KanbanContainer = ({ role, subject: object }: KanbanContainerProps)
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild>
-        <KanbanBoard.Root
-          kanban={object}
-          projection={projection}
-          items={items}
-          change={change}
-          onCardAdd={handleCardAdd}
-          onCardRemove={handleCardRemove}
-        >
+      <KanbanBoard.Root
+        kanban={object}
+        projection={projection}
+        items={items}
+        change={change}
+        onCardAdd={handleCardAdd}
+        onCardRemove={handleCardRemove}
+      >
+        <Panel.Content asChild>
           <KanbanBoard.Content />
-        </KanbanBoard.Root>
-      </Panel.Content>
+        </Panel.Content>
+      </KanbanBoard.Root>
     </Panel.Root>
   );
 };

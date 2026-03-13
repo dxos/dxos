@@ -4,6 +4,7 @@
 
 import React, {
   type FocusEvent,
+  forwardRef,
   type KeyboardEvent,
   type MouseEvent,
   type WheelEvent,
@@ -17,7 +18,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
-import { type ComposableProps, DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
+import { type ComposableProps, DropdownMenu, Icon, SlottableProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
@@ -32,7 +33,7 @@ import {
   editorKeys,
   parseCellIndex,
 } from '@dxos/react-ui-grid';
-import { mx, useComposableProps } from '@dxos/ui-theme';
+import { composableProps } from '@dxos/ui-theme';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
@@ -70,9 +71,9 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
-export type SheetContentProps = ComposableProps<React.HTMLAttributes<HTMLDivElement>>;
+export type SheetContentProps = ComposableProps;
 
-export const SheetContent = (props: SheetContentProps) => {
+export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
     useSheetContext();
@@ -84,7 +85,6 @@ export const SheetContent = (props: SheetContentProps) => {
   const { invokePromise } = useOperationInvoker();
   const rangeController = useRef<RangeController>(null);
   const { hasAttention } = useAttention(id);
-  const { className, ...rest } = useComposableProps(props);
 
   const handleFocus = useCallback(
     (event: FocusEvent) => {
@@ -322,7 +322,7 @@ export const SheetContent = (props: SheetContentProps) => {
   useSelectThreadOnCellFocus();
 
   return (
-    <div {...rest} role='none' className={mx('relative min-h-0', className)}>
+    <div ref={forwardedRef} {...composableProps(props, { role: 'none', className: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
@@ -386,4 +386,4 @@ export const SheetContent = (props: SheetContentProps) => {
       </DropdownMenu.Root>
     </div>
   );
-};
+});

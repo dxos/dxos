@@ -4,7 +4,7 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export type { CreateObjectDialogProps } from './CreateObjectDialog/CreateObjectDialog';
+export type { CreateObjectDialogProps } from './CreateObjectDialog';
 
 export const CollectionArticle: ComponentType<any> = lazy(() => import('./CollectionArticle'));
 export const CollectionSection: ComponentType<any> = lazy(() => import('./CollectionSection'));

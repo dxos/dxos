@@ -9,7 +9,7 @@ import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import React, { Fragment, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { type ToolbarStyleProps } from '@dxos/ui-theme';
+import { composableProps, type ToolbarStyleProps } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -44,23 +44,25 @@ type ToolbarRootProps = ThemedClassName<
 // TODO(burdon): Implement asChild property.
 const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
   (
-    { classNames, children, density, disabled, layoutManaged, textBlockWidth: textBlockWidthProp, ...props },
+    { children, density, disabled, layoutManaged, textBlockWidth: textBlockWidthProp, orientation, ...props },
     forwardedRef,
   ) => {
+    const { className, dir: _, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
     const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
     const innerRootProps = textBlockWidthProp
       ? {
           role: 'none',
-          className: tx('toolbar.inner', { layoutManaged }, classNames),
+          className: tx('toolbar.inner', { layoutManaged }, className),
         }
       : {};
 
     return (
       <ToolbarPrimitive.Root
-        {...props}
-        data-arrow-keys={props.orientation === 'vertical' ? 'up down' : 'left right'}
-        className={tx('toolbar.root', { density, disabled, layoutManaged }, classNames)}
+        {...rest}
+        orientation={orientation}
+        data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
+        className={tx('toolbar.root', { density, disabled, layoutManaged }, className)}
         ref={forwardedRef}
       >
         <InnerRoot {...innerRootProps}>{children}</InnerRoot>
@@ -75,17 +77,16 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
 
 type ToolbarTextProps = SlottableProps<HTMLDivElement>;
 
-const ToolbarText = forwardRef<HTMLDivElement, ToolbarTextProps>(
-  ({ classNames, className, asChild, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const Comp = asChild ? Slot : Primitive.div;
-    return (
-      <Comp {...props} className={tx('toolbar.text', {}, [className, classNames])} ref={forwardedRef}>
-        {children}
-      </Comp>
-    );
-  },
-);
+const ToolbarText = forwardRef<HTMLDivElement, ToolbarTextProps>(({ children, asChild, ...props }, forwardedRef) => {
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
+  const { tx } = useThemeContext();
+  return (
+    <Comp {...rest} className={tx('toolbar.text', {}, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 //
 // Button

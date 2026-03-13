@@ -38,10 +38,9 @@ import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Text, ViewModel } from '@dxos/schema';
-import { render } from '@dxos/storybook-utils';
 import {
   AccessToken,
   Employer,
@@ -136,7 +135,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
   const objects = binder?.getObjects() ?? [];
 
   if (!space) {
-    return null;
+    return <Loading data={{ space: !!space }} />;
   }
 
   return (
@@ -192,7 +191,7 @@ const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
 
 const storybook: Meta<typeof DefaultStory> = {
   title: 'stories/stories-assistant/Chat',
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',

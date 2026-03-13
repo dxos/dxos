@@ -9,7 +9,7 @@ import { Settings } from '@dxos/react-ui-form';
 
 import { AutomationPanel, type AutomationPanelProps } from '../../components/AutomationPanel';
 import { meta } from '../../meta';
-import { TriggersSettings } from '../TriggerSettings/TriggerSettings';
+import { TriggersSettings } from '../TriggerSettings';
 
 export const AutomationSettings = (props: AutomationPanelProps) => {
   const { t } = useTranslation(meta.id);
