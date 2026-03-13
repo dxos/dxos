@@ -135,8 +135,8 @@ const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
           data-testid='board-column-header'
           ref={forwardedRef}
         >
-          <Toolbar.DragHandle ref={dragHandleRef} />
-          <Toolbar.Text>{label}</Toolbar.Text>
+          <Toolbar.DragHandle ref={dragHandleRef} testId='mosaicBoard.columnDragHandle' />
+          <Toolbar.Text data-testid='mosaicBoard.columnTitle'>{label}</Toolbar.Text>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <Menu.Trigger asChild disabled={!columnMenuItems?.length}>
             <Toolbar.IconButton
