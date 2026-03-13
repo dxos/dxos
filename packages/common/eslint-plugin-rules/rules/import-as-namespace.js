@@ -16,8 +16,12 @@ const TS_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
  * When a module contains the `// @import-as-namespace` directive comment, this rule enforces:
  * - The module filename is PascalCase (e.g. `LanguageModel.ts`).
  * - All imports of the module use namespace form: `import * as LanguageModel from './LanguageModel'`.
- * - The namespace name matches the filename (without extension).
+ * - The namespace name matches the filename (without extension), or has a `Module` suffix.
  * - Re-exports use namespace form: `export * as LanguageModel from './LanguageModel'`.
+ *
+ * The `Module` suffix is allowed as an escape hatch when the expected namespace name conflicts
+ * with a local declaration in the importing file (e.g., `import * as ObjModule from './Obj'`
+ * when the file also exports its own `Obj` interface).
  *
  * @example
  * // In LanguageModel.ts:
@@ -31,6 +35,7 @@ const TS_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
  *
  * // ✅ Good:
  * import * as LanguageModel from './LanguageModel';
+ * import * as LanguageModelModule from './LanguageModel';  // Also allowed when needed
  * export * as LanguageModel from './LanguageModel';
  */
 export default {
