@@ -46,7 +46,7 @@ export const World = Schema.Struct({
 
 export interface World extends Schema.Schema.Type<typeof World> {}
 
-const DEFAULT_GRID_SIZE = 16;
+const DEFAULT_GRID_SIZE = 32;
 const DEFAULT_BLOCK_SIZE = 1;
 
 /** Create a voxel map key from coordinates. */
