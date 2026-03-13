@@ -5,7 +5,6 @@
 import type * as A from '@automerge/automerge';
 import { type AutomergeUrl, type DocHandle, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
-import { type Context } from '@dxos/context';
 import { DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 
@@ -44,12 +43,12 @@ export class DatabaseRoot {
     return this._rootHandle;
   }
 
-  doc(ctx: Context): A.Doc<DatabaseDirectory> | null {
+  doc(): A.Doc<DatabaseDirectory> | null {
     return this._rootHandle.isReady() ? this._rootHandle.doc() : null;
   }
 
-  getVersion(ctx: Context): SpaceDocVersion | null {
-    const doc = this.doc(ctx);
+  getVersion(): SpaceDocVersion | null {
+    const doc = this.doc();
     if (!doc) {
       return null;
     }
@@ -57,8 +56,8 @@ export class DatabaseRoot {
     return doc.version ?? SpaceDocVersion.LEGACY;
   }
 
-  getSpaceKey(ctx: Context): string | null {
-    const doc = this.doc(ctx);
+  getSpaceKey(): string | null {
+    const doc = this.doc();
     if (!doc) {
       return null;
     }
@@ -66,8 +65,8 @@ export class DatabaseRoot {
     return DatabaseDirectory.getSpaceKey(doc);
   }
 
-  getInlineObjectCount(ctx: Context): number | null {
-    const doc = this.doc(ctx);
+  getInlineObjectCount(): number | null {
+    const doc = this.doc();
     if (!doc) {
       return null;
     }
@@ -75,8 +74,8 @@ export class DatabaseRoot {
     return Object.keys(doc.objects ?? {}).length;
   }
 
-  getLinkedObjectCount(ctx: Context): number | null {
-    const doc = this.doc(ctx);
+  getLinkedObjectCount(): number | null {
+    const doc = this.doc();
     if (!doc) {
       return null;
     }
@@ -84,16 +83,16 @@ export class DatabaseRoot {
     return Object.keys(doc.links ?? {}).length;
   }
 
-  getAllLinkedDocuments(ctx: Context): AutomergeUrl[] {
-    const doc = this.doc(ctx);
+  getAllLinkedDocuments(): AutomergeUrl[] {
+    const doc = this.doc();
     invariant(doc);
 
     // .toString() to handle RawString.
     return Object.values(doc.links ?? {}).map((s) => s.toString()) as AutomergeUrl[];
   }
 
-  measureMetrics(ctx: Context): DocMetrics | null {
-    const doc = this.doc(ctx);
+  measureMetrics(): DocMetrics | null {
+    const doc = this.doc();
     if (!doc) {
       return null;
     }

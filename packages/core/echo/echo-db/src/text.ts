@@ -4,7 +4,6 @@
 
 import { next as A } from '@automerge/automerge';
 
-import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
 import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -15,7 +14,7 @@ import { createDocAccessor } from './echo-handler';
 
 // TODO(burdon): Handle assoc to associate with a previous character.
 export const toCursor = (accessor: DocAccessor, pos: number, assoc = 0): A.Cursor => {
-  const doc = accessor.handle.doc(Context.default());
+  const doc = accessor.handle.doc();
   if (!doc) {
     return '';
   }
@@ -38,7 +37,7 @@ export const fromCursor = (accessor: DocAccessor, cursor: A.Cursor): number => {
     return 0;
   }
 
-  const doc = accessor.handle.doc(Context.default());
+  const doc = accessor.handle.doc();
   if (!doc) {
     return 0;
   }
@@ -60,7 +59,7 @@ export const fromCursor = (accessor: DocAccessor, cursor: A.Cursor): number => {
  * Return the text value between two cursor positions.
  */
 export const getTextInRange = (accessor: DocAccessor, start: string, end: string): string | undefined => {
-  const doc = accessor.handle.doc(Context.default());
+  const doc = accessor.handle.doc();
   const value = getDeep(doc, accessor.path);
   if (typeof value === 'string') {
     const beginIdx = fromCursor(accessor, start);
@@ -91,7 +90,7 @@ export const updateText = <T extends Obj.Unknown>(obj: T, path: KeyPath, newText
   invariant(isProxy(obj));
   invariant(path === undefined || isValidKeyPath(path));
   const accessor = createDocAccessor(obj, path);
-  accessor.handle.change(Context.default(), (doc) => {
+  accessor.handle.change((doc) => {
     A.updateText(doc, accessor.path.slice(), newText);
   });
   return obj;

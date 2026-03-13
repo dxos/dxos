@@ -6,7 +6,6 @@ import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 
 import { type Space } from '@dxos/client/echo';
-import { Context } from '@dxos/context';
 import { Ref, Type } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { faker } from '@dxos/random';
@@ -117,7 +116,7 @@ const testObjectMutators: TestMutationsMap<TestSchemaType> = {
     const accessor = createDocAccessor(object, ['content']);
     for (let i = 0; i < params.count; i++) {
       const length = object.content?.content?.length ?? 0;
-      accessor.handle.change(Context.default(), (doc) => {
+      accessor.handle.change((doc) => {
         A.splice(
           doc,
           accessor.path.slice(),

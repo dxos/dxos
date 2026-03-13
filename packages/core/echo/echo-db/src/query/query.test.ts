@@ -731,7 +731,7 @@ describe('Query', () => {
 
       expect((await db.query(Query.select(Filter.everything())).run()).length).to.eq(2);
       const rootDocHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle(Context.default());
-      rootDocHandle.change(Context.default(), (doc: DatabaseDirectory) => {
+      rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = 'automerge:4hjTgo9zLNsfRTJiLcpPY8P4smy';
       });
       await db.flush();
@@ -769,15 +769,11 @@ describe('Query', () => {
       const obj1DocHandle = getObjectCore(obj1).docHandle!;
       const anotherDocHandle = getObjectCore(obj2).docHandle!;
       // Wait for documents to be ready before accessing url and objects.
-      await Promise.all([
-        rootDocHandle.whenReady(Context.default()),
-        obj1DocHandle.whenReady(Context.default()),
-        anotherDocHandle.whenReady(Context.default()),
-      ]);
-      anotherDocHandle.change(Context.default(), (doc: DatabaseDirectory) => {
-        doc.objects![obj1.id] = obj1DocHandle.doc(Context.default())!.objects![obj1.id];
+      await Promise.all([rootDocHandle.whenReady(), obj1DocHandle.whenReady(), anotherDocHandle.whenReady()]);
+      anotherDocHandle.change((doc: DatabaseDirectory) => {
+        doc.objects![obj1.id] = obj1DocHandle.doc()!.objects![obj1.id];
       });
-      rootDocHandle.change(Context.default(), (doc: DatabaseDirectory) => {
+      rootDocHandle.change((doc: DatabaseDirectory) => {
         doc.links![obj1.id] = new A.RawString(anotherDocHandle.url!);
       });
       await db.flush();
@@ -835,7 +831,7 @@ describe('Query', () => {
     const [obj1] = await createObjects(peer, db, { count: 2 });
 
     const obj2Core = getObjectCore(obj1);
-    obj2Core.docHandle!.delete(Context.default()); // Deleted handle access throws an exception.
+    obj2Core.docHandle!.delete(); // Deleted handle access throws an exception.
 
     await expect(db.query(Query.select(Filter.everything())).run()).rejects.toBeInstanceOf(Error);
   });

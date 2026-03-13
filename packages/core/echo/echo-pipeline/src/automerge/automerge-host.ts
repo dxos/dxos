@@ -172,13 +172,13 @@ export class AutomergeHost extends Resource {
     this._storage = new LevelDBStorageAdapter({
       db: db.sublevel('automerge'),
       callbacks: {
-        beforeSave: async (params) => this._beforeSave(this._ctx, params),
-        afterSave: async (key) => this._afterSave(this._ctx, key),
+        beforeSave: async (params) => this._beforeSave(params),
+        afterSave: async (key) => this._afterSave(key),
       },
       monitor: dataMonitor,
     });
     this._echoNetworkAdapter = new EchoNetworkAdapter({
-      getContainingSpaceForDocument: (documentId) => this._getContainingSpaceForDocument(this._ctx, documentId),
+      getContainingSpaceForDocument: (documentId) => this._getContainingSpaceForDocument(documentId),
       isDocumentInRemoteCollection: (params) => this._isDocumentInRemoteCollection(this._ctx, params),
       onCollectionStateQueried: (collectionId, peerId) =>
         this._onCollectionStateQueried(this._ctx, collectionId, peerId),
@@ -339,7 +339,7 @@ export class AutomergeHost extends Resource {
     return handle;
   }
 
-  async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
+  async exportDoc(id: AnyDocumentId): Promise<Uint8Array> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const documentId = interpretAsDocumentId(id);
 
@@ -392,7 +392,7 @@ export class AutomergeHost extends Resource {
       return;
     }
     const documentIds = entries.map((entry) => entry.documentId as DocumentId);
-    const documentHeads = await this.getHeads(ctx, documentIds);
+    const documentHeads = await this.getHeads(documentIds);
     const headsToWait = entries.filter((entry, index) => {
       const targetHeads = entry.heads;
       if (!targetHeads || targetHeads.length === 0) {
@@ -416,7 +416,7 @@ export class AutomergeHost extends Resource {
     );
   }
 
-  async reIndexHeads(ctx: Context, documentIds: DocumentId[]): Promise<void> {
+  async reIndexHeads(documentIds: DocumentId[]): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     for (const documentId of documentIds) {
       log('re-indexing heads for document', { documentId });
@@ -469,7 +469,7 @@ export class AutomergeHost extends Resource {
     },
   };
 
-  private async _beforeSave(ctx: Context, { path, batch }: BeforeSaveProps): Promise<void> {
+  private async _beforeSave({ path, batch }: BeforeSaveProps): Promise<void> {
     const handle = this._repo.handles[path[0] as DocumentId];
     if (!handle || !handle.isReady()) {
       return;
@@ -495,7 +495,7 @@ export class AutomergeHost extends Resource {
   /**
    * Called by AutomergeStorageAdapter after levelDB batch commit.
    */
-  private async _afterSave(ctx: Context, path: StorageKey): Promise<void> {
+  private async _afterSave(path: StorageKey): Promise<void> {
     if (!this.isOpen) {
       return undefined;
     }
@@ -536,7 +536,7 @@ export class AutomergeHost extends Resource {
     return false;
   }
 
-  private async _getContainingSpaceForDocument(ctx: Context, documentId: string): Promise<PublicKey | null> {
+  private async _getContainingSpaceForDocument(documentId: string): Promise<PublicKey | null> {
     const handle = this._repo.handles[documentId as any];
     if (handle.state === 'loading') {
       await handle.whenReady();
@@ -580,7 +580,7 @@ export class AutomergeHost extends Resource {
     await this._onHeadsChangedTask?.runBlocking();
   }
 
-  async getHeads(ctx: Context, documentIds: DocumentId[]): Promise<(Heads | undefined)[]> {
+  async getHeads(documentIds: DocumentId[]): Promise<(Heads | undefined)[]> {
     const result: (Heads | undefined)[] = [];
     const storeRequestIds: DocumentId[] = [];
     const storeResultIndices: number[] = [];
@@ -606,7 +606,7 @@ export class AutomergeHost extends Resource {
   /**
    * Iterate over all document heads stored on disk.
    */
-  listDocumentHeads(ctx: Context): AsyncGenerator<{ documentId: DocumentId; heads: Heads }> {
+  listDocumentHeads(): AsyncGenerator<{ documentId: DocumentId; heads: Heads }> {
     return this._headsStore.iterateAll();
   }
 
@@ -660,7 +660,7 @@ export class AutomergeHost extends Resource {
    * Update the local collection state based on the locally stored document heads.
    */
   async updateLocalCollectionState(ctx: Context, collectionId: string, documentIds: DocumentId[]): Promise<void> {
-    const heads = await this.getHeads(ctx, documentIds);
+    const heads = await this.getHeads(documentIds);
     const documents: Record<DocumentId, Heads> = Object.fromEntries(
       heads.map((heads, index) => [documentIds[index], heads ?? []]),
     );

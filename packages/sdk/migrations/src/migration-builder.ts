@@ -51,7 +51,7 @@ export class MigrationBuilder {
     // TODO(wittjosiah): Accessing private API.
     this._rootDoc = (this._space.internal.db.coreDatabase as any)._automergeDocLoader
       .getSpaceRootDocHandle(ctx)
-      .doc(ctx) as Doc<DatabaseDirectory>;
+      .doc() as Doc<DatabaseDirectory>;
   }
 
   async findObject(id: string): Promise<ObjectStructure | undefined> {
@@ -62,8 +62,8 @@ export class MigrationBuilder {
       return undefined;
     }
 
-    await docHandle.whenReady(ctx);
-    const doc = docHandle.doc(ctx) as Doc<DatabaseDirectory>;
+    await docHandle.whenReady();
+    const doc = docHandle.doc() as Doc<DatabaseDirectory>;
     return doc.objects?.[id];
   }
 
@@ -99,9 +99,9 @@ export class MigrationBuilder {
       },
     };
     const ctx = Context.default();
-    const migratedDoc = migrateDocument(oldHandle.doc(ctx) as Doc<DatabaseDirectory>, newState);
+    const migratedDoc = migrateDocument(oldHandle.doc() as Doc<DatabaseDirectory>, newState);
     const newHandle = this._repo.import<DatabaseDirectory>(ctx, A.save(migratedDoc));
-    await newHandle.whenReady(ctx);
+    await newHandle.whenReady();
     invariant(newHandle.url, 'Migrated document URL not available after whenReady');
     this._newLinks[id] = newHandle.url;
     this._addHandleToFlushList(newHandle.documentId!);
@@ -126,12 +126,11 @@ export class MigrationBuilder {
     }
     invariant(this._newRoot, 'New root not created');
 
-    const ctx = Context.default();
-    this._newRoot.change(ctx, (doc: DatabaseDirectory) => {
+    this._newRoot.change((doc: DatabaseDirectory) => {
       const propertiesStructure = doc.objects?.[this._space.properties.id];
       propertiesStructure && changeFn(propertiesStructure);
     });
-    await this._newRoot.whenReady(ctx);
+    await this._newRoot.whenReady();
     this._addHandleToFlushList(this._newRoot.documentId!);
   }
 
@@ -162,7 +161,7 @@ export class MigrationBuilder {
       return undefined;
     }
 
-    await docHandle.whenReady(ctx);
+    await docHandle.whenReady();
     return docHandle;
   }
 
@@ -185,7 +184,7 @@ export class MigrationBuilder {
       objects: this._rootDoc.objects,
       links,
     });
-    await this._newRoot.whenReady(ctx);
+    await this._newRoot.whenReady();
     this._addHandleToFlushList(this._newRoot.documentId!);
   }
 
@@ -215,7 +214,7 @@ export class MigrationBuilder {
         [core.id]: core.getDoc(ctx) as ObjectStructure,
       },
     });
-    await newHandle.whenReady(ctx);
+    await newHandle.whenReady();
     this._newLinks[core.id] = newHandle.url!;
     this._addHandleToFlushList(newHandle.documentId!);
 

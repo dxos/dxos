@@ -4,8 +4,6 @@
 
 import { next as A } from '@automerge/automerge';
 
-import { Context } from '@dxos/context';
-
 import { createDocAccessor } from './doc-accessor';
 
 export type ObjectVersion = {
@@ -24,7 +22,7 @@ export const ObjectVersion = Object.freeze({
  */
 export const getVersion = (obj: any): ObjectVersion => {
   const docAccessor = createDocAccessor(obj, []);
-  const doc = docAccessor.handle.doc(Context.default());
+  const doc = docAccessor.handle.doc();
   if (!doc) {
     return { heads: [] };
   }

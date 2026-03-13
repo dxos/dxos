@@ -151,9 +151,9 @@ export class EchoHost extends Resource {
         return Array.from(this._spaceStateManager.roots.values()).map((root) => ({
           url: root.url,
           isLoaded: root.isLoaded,
-          spaceKey: root.getSpaceKey(this._ctx),
-          inlineObjects: root.getInlineObjectCount(this._ctx),
-          linkedObjects: root.getLinkedObjectCount(this._ctx),
+          spaceKey: root.getSpaceKey(),
+          inlineObjects: root.getInlineObjectCount(),
+          linkedObjects: root.getLinkedObjectCount(),
         }));
       },
     });
@@ -165,10 +165,10 @@ export class EchoHost extends Resource {
         return Array.from(this._spaceStateManager.roots.values()).map((root) => ({
           url: root.url,
           isLoaded: root.isLoaded,
-          spaceKey: root.getSpaceKey(this._ctx),
-          inlineObjects: root.getInlineObjectCount(this._ctx),
-          linkedObjects: root.getLinkedObjectCount(this._ctx),
-          ...(root.measureMetrics(this._ctx) ?? {}),
+          spaceKey: root.getSpaceKey(),
+          inlineObjects: root.getInlineObjectCount(),
+          linkedObjects: root.getLinkedObjectCount(),
+          ...(root.measureMetrics() ?? {}),
         }));
       },
     });
@@ -268,8 +268,8 @@ export class EchoHost extends Resource {
     return await this._automergeHost.loadDoc(ctx, documentId, opts);
   }
 
-  async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
-    return await this._automergeHost.exportDoc(ctx, id);
+  async exportDoc(id: AnyDocumentId): Promise<Uint8Array> {
+    return await this._automergeHost.exportDoc(id);
   }
 
   /**
@@ -308,7 +308,7 @@ export class EchoHost extends Resource {
     });
     await handle.whenReady();
 
-    return this._spaceStateManager.assignRootToSpace(ctx, spaceId, handle);
+    return this._spaceStateManager.assignRootToSpace(spaceId, handle);
   }
 
   // TODO(dmaretskyi): Change to document id.
@@ -335,7 +335,7 @@ export class EchoHost extends Resource {
    * Does not wait for the sync to complete.
    */
   async runCollectionSync(ctx: Context, spaceId: SpaceId) {
-    const root = this._spaceStateManager.getRootBySpaceId(ctx, spaceId);
+    const root = this._spaceStateManager.getRootBySpaceId(spaceId);
     if (!root) {
       throw new Error(`Space not found: ${spaceId}`);
     }

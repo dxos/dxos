@@ -63,7 +63,7 @@ export class DocumentsSynchronizer extends Resource {
                 const doc = await this._params.automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId as DocumentId, {
                   fetchFromNetwork: true,
                 });
-                this._startSync(ctx, doc);
+                this._startSync(doc);
                 this._pendingUpdates.add(doc.documentId);
                 this._sendUpdatesJob!.trigger();
               } catch (err) {
@@ -79,7 +79,7 @@ export class DocumentsSynchronizer extends Resource {
     );
   }
 
-  removeDocuments(ctx: Context, documentIds: DocumentId[]): void {
+  removeDocuments(documentIds: DocumentId[]): void {
     for (const documentId of documentIds) {
       this._syncStates.get(documentId)?.clearSubscriptions?.();
       this._syncStates.delete(documentId);
@@ -88,7 +88,7 @@ export class DocumentsSynchronizer extends Resource {
   }
 
   protected override async _open(ctx: Context): Promise<void> {
-    this._sendUpdatesJob = new UpdateScheduler(this._ctx, () => this._checkAndSendUpdates(this._ctx), {
+    this._sendUpdatesJob = new UpdateScheduler(this._ctx, () => this._checkAndSendUpdates(), {
       maxFrequency: MAX_UPDATE_FREQ,
     });
   }
@@ -108,19 +108,19 @@ export class DocumentsSynchronizer extends Resource {
     });
   }
 
-  private _startSync(ctx: Context, doc: DocHandle<DatabaseDirectory>) {
+  private _startSync(doc: DocHandle<DatabaseDirectory>) {
     if (this._syncStates.has(doc.documentId)) {
       log('Document already being synced', { documentId: doc.documentId });
       return;
     }
 
     const syncState: DocSyncState = { handle: doc };
-    this._subscribeForChanges(ctx, syncState);
+    this._subscribeForChanges(syncState);
     this._syncStates.set(doc.documentId, syncState);
     return syncState;
   }
 
-  _subscribeForChanges(ctx: Context, syncState: DocSyncState): void {
+  _subscribeForChanges(syncState: DocSyncState): void {
     const handler = () => {
       this._pendingUpdates.add(syncState.handle.documentId);
       this._sendUpdatesJob!.trigger();
@@ -129,14 +129,14 @@ export class DocumentsSynchronizer extends Resource {
     syncState.clearSubscriptions = () => syncState.handle.off('heads-changed', handler);
   }
 
-  private async _checkAndSendUpdates(ctx: Context): Promise<void> {
+  private async _checkAndSendUpdates(): Promise<void> {
     const updates: DocumentUpdate[] = [];
 
     const docsWithPendingUpdates = Array.from(this._pendingUpdates);
     this._pendingUpdates.clear();
 
     for (const documentId of docsWithPendingUpdates) {
-      const update = this._getPendingChanges(ctx, documentId);
+      const update = this._getPendingChanges(documentId);
       if (update) {
         updates.push({
           documentId,
@@ -150,7 +150,7 @@ export class DocumentsSynchronizer extends Resource {
     }
   }
 
-  private _getPendingChanges(ctx: Context, documentId: DocumentId): Uint8Array | void {
+  private _getPendingChanges(documentId: DocumentId): Uint8Array | void {
     const syncState = this._syncStates.get(documentId);
     invariant(syncState, 'Sync state for document not found');
     const handle = syncState.handle;

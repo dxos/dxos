@@ -36,15 +36,15 @@ export class SpaceStateManager extends Resource {
     return Array.from(this._rootBySpace.keys());
   }
 
-  getRootByDocumentId(ctx: Context, documentId: DocumentId): DatabaseRoot | undefined {
+  getRootByDocumentId(documentId: DocumentId): DatabaseRoot | undefined {
     return this._roots.get(documentId);
   }
 
-  getSpaceRootDocumentId(ctx: Context, spaceId: SpaceId): DocumentId | undefined {
+  getSpaceRootDocumentId(spaceId: SpaceId): DocumentId | undefined {
     return this._rootBySpace.get(spaceId);
   }
 
-  getRootBySpaceId(ctx: Context, spaceId: SpaceId): DatabaseRoot | undefined {
+  getRootBySpaceId(spaceId: SpaceId): DatabaseRoot | undefined {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const documentId = this._rootBySpace.get(spaceId);
     if (!documentId) {
@@ -53,7 +53,7 @@ export class SpaceStateManager extends Resource {
     return this._roots.get(documentId);
   }
 
-  async assignRootToSpace(ctx: Context, spaceId: SpaceId, handle: DocHandle<DatabaseDirectory>): Promise<DatabaseRoot> {
+  async assignRootToSpace(spaceId: SpaceId, handle: DocHandle<DatabaseDirectory>): Promise<DatabaseRoot> {
     let root: DatabaseRoot;
     if (this._roots.has(handle.documentId)) {
       root = this._roots.get(handle.documentId)!;
@@ -82,10 +82,7 @@ export class SpaceStateManager extends Resource {
     const documentListCheckScheduler = new UpdateScheduler(
       rootCtx,
       async () => {
-        const documentIds = [
-          root.documentId,
-          ...root.getAllLinkedDocuments(this._ctx).map((url) => interpretAsDocumentId(url)),
-        ];
+        const documentIds = [root.documentId, ...root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url))];
         if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
           this._lastSpaceDocumentList.set(spaceId, documentIds);
           this.spaceDocumentListUpdated.emit(

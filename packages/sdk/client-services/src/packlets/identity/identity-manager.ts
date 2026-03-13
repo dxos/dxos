@@ -280,10 +280,7 @@ export class IdentityManager {
     });
 
     const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
-    await this._identity.controlPipeline.state.waitUntilTimeframe(
-      ctx,
-      new Timeframe([[receipt.feedKey, receipt.seq]]),
-    );
+    await this._identity.controlPipeline.state.waitUntilTimeframe(ctx, new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
     return profile;
   }
@@ -300,10 +297,7 @@ export class IdentityManager {
     });
 
     const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
-    await this._identity.controlPipeline.state.waitUntilTimeframe(
-      ctx,
-      new Timeframe([[receipt.feedKey, receipt.seq]]),
-    );
+    await this._identity.controlPipeline.state.waitUntilTimeframe(ctx, new Timeframe([[receipt.feedKey, receipt.seq]]));
     this.stateUpdate.emit();
     return {
       deviceKey: this._identity.deviceKey,

@@ -353,7 +353,11 @@ const isObjectIdFilter = (filter: QueryAST.Filter) => {
   return filter.type === 'object' && filter.id !== undefined && filter.id.length > 0;
 };
 
-const filterCoreByDeletedFlag = (ctx: Context, core: ObjectCore, options: QueryAST.QueryOptions | undefined): boolean => {
+const filterCoreByDeletedFlag = (
+  ctx: Context,
+  core: ObjectCore,
+  options: QueryAST.QueryOptions | undefined,
+): boolean => {
   switch (options?.deleted) {
     case undefined:
     case 'exclude':

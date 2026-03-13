@@ -88,7 +88,7 @@ const cloneInner = <T extends Obj.Unknown>(obj: T, id: string): T => {
 };
 
 const getObjectDoc = (core: ObjectCore): any => {
-  let value = core.doc ?? core.docHandle!.doc(Context.default());
+  let value = core.doc ?? core.docHandle!.doc();
   for (const key of core.mountPath) {
     value = (value as any)?.[key];
   }

@@ -110,7 +110,7 @@ export class ObjectCore {
   bind(ctx: Context, options: BindOptions): void {
     // When loading existing documents, wait for the document to be ready.
     // When creating new documents (assignFromLocalState), the local doc is immediately usable.
-    invariant(options.assignFromLocalState || options.docHandle.isReady(ctx));
+    invariant(options.assignFromLocalState || options.docHandle.isReady());
     this.database = options.db;
     this.docHandle = options.docHandle;
     this.mountPath = options.path;
@@ -124,7 +124,7 @@ export class ObjectCore {
       // Prevent recursive change calls.
       using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
-      this.docHandle.change(ctx, (newDoc: DatabaseDirectory) => {
+      this.docHandle.change((newDoc: DatabaseDirectory) => {
         setDeep(newDoc, this.mountPath, doc);
       });
     }
@@ -138,7 +138,7 @@ export class ObjectCore {
     }
 
     if (this.docHandle) {
-      return this.docHandle.doc(ctx);
+      return this.docHandle.doc();
     }
 
     throw new Error('Invalid ObjectCore state');
@@ -166,7 +166,7 @@ export class ObjectCore {
       this.notifyUpdate();
     } else {
       invariant(this.docHandle);
-      this.docHandle.change(ctx, changeFn, options);
+      this.docHandle.change(changeFn, options);
       // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
     }
   }
@@ -194,7 +194,7 @@ export class ObjectCore {
       this.notifyUpdate();
     } else {
       invariant(this.docHandle);
-      result = this.docHandle.changeAt(ctx, heads, callback, options);
+      result = this.docHandle.changeAt(heads, callback, options);
       // Note: We don't need to notify listeners here, since `change` event is already processed by DB.
     }
 
@@ -207,10 +207,10 @@ export class ObjectCore {
     return {
       handle: {
         doc: () => this.getDoc(ctx),
-        change: (ctx, callback, options) => {
+        change: (callback, options) => {
           this.change(ctx, callback, options);
         },
-        changeAt: (ctx, heads, callback, options) => {
+        changeAt: (heads, callback, options) => {
           return this.changeAt(ctx, heads, callback, options);
         },
         addListener: (event, listener) => {

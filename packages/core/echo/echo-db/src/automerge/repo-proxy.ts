@@ -97,7 +97,7 @@ export class RepoProxy extends Resource {
 
   import<T>(ctx: Context, dump: Uint8Array): DocHandleProxy<T> {
     const handle = this.create<T>(ctx);
-    handle.update(ctx, () => A.load(dump));
+    handle.update(() => A.load(dump));
     return handle;
   }
 
@@ -121,7 +121,7 @@ export class RepoProxy extends Resource {
     this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(this._ctx), {
       maxFrequency: MAX_UPDATE_FREQ,
     });
-    this._subscription.subscribe((updates) => this._receiveUpdate(this._ctx, updates));
+    this._subscription.subscribe((updates) => this._receiveUpdate(updates));
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -176,7 +176,7 @@ export class RepoProxy extends Resource {
     // Wait for the subscription stream to be ready (services-side registration complete).
     await this._subscription.waitUntilReady();
 
-    this._subscription.subscribe((updates) => this._receiveUpdate(this._ctx, updates));
+    this._subscription.subscribe((updates) => this._receiveUpdate(updates));
 
     // Re-sync all existing documents.
     const documentIds = Object.keys(this._handles);
@@ -290,11 +290,11 @@ export class RepoProxy extends Resource {
         )
         .then((response) => {
           const documentId = response.documentId as DocumentId;
-          handle._setDocumentId(this._ctx, documentId);
+          handle._setDocumentId(documentId);
           this._pendingAddIds.add(documentId);
           this._handles[documentId] = handle;
           update();
-          handle._wakeReady(this._ctx);
+          handle._wakeReady();
         })
         .catch((err) => {
           log.catch(err);
@@ -308,7 +308,7 @@ export class RepoProxy extends Resource {
     return handle;
   }
 
-  private _receiveUpdate(ctx: Context, { updates }: BatchedDocumentUpdates): void {
+  private _receiveUpdate({ updates }: BatchedDocumentUpdates): void {
     if (!updates) {
       return;
     }
@@ -321,7 +321,7 @@ export class RepoProxy extends Resource {
         continue;
       }
 
-      handle._integrateHostUpdate(ctx, mutation);
+      handle._integrateHostUpdate(mutation);
     }
   }
 
@@ -358,7 +358,7 @@ export class RepoProxy extends Resource {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];
           invariant(handle, `No handle found for documentId ${documentId}`);
-          const mutation = handle._getPendingChanges(ctx);
+          const mutation = handle._getPendingChanges();
           if (mutation) {
             updates.push({ documentId, mutation });
           }
@@ -372,7 +372,7 @@ export class RepoProxy extends Resource {
           return;
         }
         for (const { documentId } of updates) {
-          this._handles[documentId]._confirmSync(ctx);
+          this._handles[documentId]._confirmSync();
         }
       }
 

@@ -85,7 +85,7 @@ export class DataServiceImpl {
       await synchronizer.addDocuments(ctx, request.addIds as DocumentId[]);
     }
     if (request.removeIds?.length) {
-      synchronizer.removeDocuments(ctx, request.removeIds as DocumentId[]);
+      synchronizer.removeDocuments(request.removeIds as DocumentId[]);
     }
   }
 
@@ -112,12 +112,11 @@ export class DataServiceImpl {
   }
 
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
-    const ctx = Context.default();
     const documentIds = request.documentIds;
     if (!documentIds) {
       return { heads: { entries: [] } };
     }
-    const heads = await this._automergeHost.getHeads(ctx, documentIds as DocumentId[]);
+    const heads = await this._automergeHost.getHeads(documentIds as DocumentId[]);
     return {
       heads: {
         entries: heads.map((heads, idx) => ({ documentId: documentIds[idx], heads })),
@@ -134,8 +133,7 @@ export class DataServiceImpl {
   }
 
   async reIndexHeads(request: ReIndexHeadsRequest, options?: RequestOptions): Promise<void> {
-    const ctx = Context.default();
-    await this._automergeHost.reIndexHeads(ctx, (request.documentIds ?? []) as DocumentId[]);
+    await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
   }
 
   async updateIndexes(): Promise<void> {
@@ -147,7 +145,7 @@ export class DataServiceImpl {
       const spaceId = request.spaceId;
       invariant(SpaceId.isValid(spaceId));
 
-      const rootDocumentId = this._spaceStateManager.getSpaceRootDocumentId(streamCtx, spaceId);
+      const rootDocumentId = this._spaceStateManager.getSpaceRootDocumentId(spaceId);
       let collectionId = rootDocumentId && deriveCollectionIdFromSpaceId(spaceId, rootDocumentId);
       this._spaceStateManager.spaceDocumentListUpdated.on(streamCtx, (event) => {
         const newId = deriveCollectionIdFromSpaceId(spaceId, event.spaceRootId);

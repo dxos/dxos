@@ -165,12 +165,12 @@ describe('without database', () => {
 
     {
       const accessor = createDocAccessor(obj, 'text');
-      expect(DocAccessor.getValue(Context.default(), accessor)).toEqual('foo');
+      expect(DocAccessor.getValue(accessor)).toEqual('foo');
     }
 
     {
       const accessor = createDocAccessor(obj.nested, 'name');
-      expect(DocAccessor.getValue(Context.default(), accessor)).toEqual('bar');
+      expect(DocAccessor.getValue(accessor)).toEqual('bar');
     }
   });
 });
@@ -762,7 +762,7 @@ describe('Reactive Object with ECHO database', () => {
         }),
       );
 
-      log.info('', { acc: createDocAccessor(org, []).handle.doc(Context.default()) });
+      log.info('', { acc: createDocAccessor(org, []).handle.doc() });
 
       expect(Obj.getMeta(org).tags).toEqual(['important']);
     });

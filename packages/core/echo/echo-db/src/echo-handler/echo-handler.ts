@@ -919,7 +919,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
   private _getVersion(target: ProxyTarget): Obj.Version {
     const accessor = target[symbolInternals].core.getDocAccessor(Context.default());
-    const doc = accessor.handle.doc(Context.default());
+    const doc = accessor.handle.doc();
     invariant(doc);
     const heads = A.getHeads(doc);
     return {

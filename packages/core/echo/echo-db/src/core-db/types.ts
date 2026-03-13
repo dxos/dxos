@@ -6,7 +6,6 @@
 // TDOO(burdon): Standardize import * as A.
 import type { ChangeFn, ChangeOptions, Doc, Heads } from '@automerge/automerge';
 
-import { type Context } from '@dxos/context';
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { getDeep } from '@dxos/util';
 
@@ -31,9 +30,9 @@ export type DecodedAutomergePrimaryValue =
 export type KeyPath = readonly (string | number)[];
 
 export interface IDocHandle<T = any> {
-  doc(ctx: Context): Doc<T> | undefined; // TODO(burdon): Remove undefined.
-  change(ctx: Context, callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
-  changeAt(ctx: Context, heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): Heads | undefined;
+  doc(): Doc<T> | undefined; // TODO(burdon): Remove undefined.
+  change(callback: ChangeFn<T>, options?: ChangeOptions<T>): void;
+  changeAt(heads: Heads, callback: ChangeFn<T>, options?: ChangeOptions<T>): Heads | undefined;
   addListener(event: 'change', listener: () => void): void;
   removeListener(event: 'change', listener: () => void): void;
 }
@@ -46,7 +45,7 @@ export interface DocAccessor<T = any> {
 
 // TODO(burdon): Extract function.
 export const DocAccessor = {
-  getValue: <T>(ctx: Context, accessor: DocAccessor): T => getDeep(accessor.handle.doc(ctx), accessor.path) as T,
+  getValue: <T>(accessor: DocAccessor): T => getDeep(accessor.handle.doc(), accessor.path) as T,
 };
 
 export const isValidKeyPath = (value: unknown): value is KeyPath =>

@@ -76,7 +76,7 @@ export class AutomergeDataSource implements IndexDataSource {
         const result: { documentId: DocumentId; heads: Heads }[] = [];
         const limit = opts?.limit ?? Infinity;
 
-        for await (const { documentId, heads } of this.#automergeHost.listDocumentHeads(ctx)) {
+        for await (const { documentId, heads } of this.#automergeHost.listDocumentHeads()) {
           const existingCursor = cursorMap.get(documentId);
           if (hasChanged(existingCursor, heads)) {
             result.push({ documentId, heads });

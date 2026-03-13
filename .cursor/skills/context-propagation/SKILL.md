@@ -34,14 +34,14 @@ Do **not** add ctx to:
 
 ### Key entry points
 
-| Class / layer | Role |
-|---|---|
-| `ClientServicesHost` (`service-host.ts`) | Top-level root — `initialize(ctx)`, `close(ctx)` propagate to everything below. |
-| `DataSpaceManager` | Manages space lifecycle — `createSpace`, `acceptSpace`, `close` are networking paths. |
-| `DataSpace` | Per-space networking — control pipeline, data pipeline, epoch creation, feed replication. |
-| `IdentityManager` | Identity HALO operations — `createIdentity`, `updateProfile` write credentials over the network. |
-| `EchoHost` / `CoreDatabase` | Database sync layer — document loading, flushing, index updates flow to Automerge replication. |
-| `SpaceProtocol` / mesh layer | Swarm connections, signaling, WebRTC — `open`, `close`, `updateTopology`. |
+| Class / layer                            | Role                                                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `ClientServicesHost` (`service-host.ts`) | Top-level root — `initialize(ctx)`, `close(ctx)` propagate to everything below.                  |
+| `DataSpaceManager`                       | Manages space lifecycle — `createSpace`, `acceptSpace`, `close` are networking paths.            |
+| `DataSpace`                              | Per-space networking — control pipeline, data pipeline, epoch creation, feed replication.        |
+| `IdentityManager`                        | Identity HALO operations — `createIdentity`, `updateProfile` write credentials over the network. |
+| `EchoHost` / `CoreDatabase`              | Database sync layer — document loading, flushing, index updates flow to Automerge replication.   |
+| `SpaceProtocol` / mesh layer             | Swarm connections, signaling, WebRTC — `open`, `close`, `updateTopology`.                        |
 
 ## Rules
 
@@ -129,15 +129,15 @@ Each `@trace.span()` method reads the parent span ID from the incoming ctx, crea
 
 ## Quick reference
 
-| Situation | What ctx to use |
-|---|---|
-| Direct call inside a method | Forward the method's `ctx` |
-| Public API entry point | `Context.default()` |
-| Event / callback subscription | Lifecycle `this._ctx` |
-| setTimeout / scheduleTask / DeferredTask | Lifecycle `this._ctx` |
-| queueMicrotask | Lifecycle `this._ctx` |
-| Promise.all fan-out | Same `ctx` for all branches |
-| No caller ctx available | Lifecycle `this._ctx` |
+| Situation                                | What ctx to use             |
+| ---------------------------------------- | --------------------------- |
+| Direct call inside a method              | Forward the method's `ctx`  |
+| Public API entry point                   | `Context.default()`         |
+| Event / callback subscription            | Lifecycle `this._ctx`       |
+| setTimeout / scheduleTask / DeferredTask | Lifecycle `this._ctx`       |
+| queueMicrotask                           | Lifecycle `this._ctx`       |
+| Promise.all fan-out                      | Same `ctx` for all branches |
+| No caller ctx available                  | Lifecycle `this._ctx`       |
 
 ## Common mistakes
 

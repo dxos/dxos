@@ -172,7 +172,7 @@ export class CoreDatabase {
     try {
       await this._automergeDocLoader.loadSpaceRootDocHandle(ctx, spaceState);
       const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle(ctx);
-      const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc(ctx);
+      const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
       invariant(spaceRootDoc);
       const objectIds = Object.keys(spaceRootDoc.objects ?? {});
       this._createInlineObjects(ctx, spaceRootDocHandle, objectIds);
@@ -252,7 +252,7 @@ export class CoreDatabase {
     if (!hasLoadedHandles) {
       return [];
     }
-    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle(ctx).doc(ctx);
+    const rootDoc = this._automergeDocLoader.getSpaceRootDocHandle(ctx).doc();
     if (!rootDoc) {
       return [];
     }
@@ -261,11 +261,11 @@ export class CoreDatabase {
   }
 
   getNumberOfInlineObjects(ctx: Context): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle(ctx).doc(ctx)?.objects ?? {}).length;
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle(ctx).doc()?.objects ?? {}).length;
   }
 
   getNumberOfLinkedObjects(ctx: Context): number {
-    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle(ctx).doc(ctx)?.links ?? {}).length;
+    return Object.keys(this._automergeDocLoader.getSpaceRootDocHandle(ctx).doc()?.links ?? {}).length;
   }
 
   getTotalNumberOfObjects(ctx: Context): number {
@@ -476,11 +476,11 @@ export class CoreDatabase {
   unlinkObjects(ctx: Context, objectIds: string[]): void {
     const root = this._automergeDocLoader.getSpaceRootDocHandle(ctx);
     for (const objectId of objectIds) {
-      if (!root.doc(ctx).links?.[objectId]) {
+      if (!root.doc().links?.[objectId]) {
         throw new Error(`Link not found: ${objectId}`);
       }
     }
-    root.change(ctx, (doc) => {
+    root.change((doc) => {
       for (const objectId of objectIds) {
         delete doc.links![objectId];
       }
@@ -568,7 +568,7 @@ export class CoreDatabase {
    */
   async getDocumentHeads(ctx: Context): Promise<SpaceDocumentHeads> {
     const root = this._automergeDocLoader.getSpaceRootDocHandle(ctx);
-    const doc = root.doc(ctx);
+    const doc = root.doc();
     if (!doc || root.documentId == null) {
       return { heads: {} };
     }
@@ -618,7 +618,7 @@ export class CoreDatabase {
    */
   async reIndexHeads(ctx: Context): Promise<void> {
     const root = this._automergeDocLoader.getSpaceRootDocHandle(ctx);
-    const doc = root.doc(ctx);
+    const doc = root.doc();
     invariant(doc);
     invariant(root.documentId, 'Space root document must have documentId');
 
@@ -708,7 +708,7 @@ export class CoreDatabase {
       return;
     }
 
-    const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc(ctx);
+    const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
 
@@ -735,8 +735,8 @@ export class CoreDatabase {
           continue;
         }
         const newDocHandle = this._repoProxy.find(ctx, newObjectDocUrl as DocumentId);
-        await newDocHandle.whenReady(ctx);
-        newDocHandle.doc(ctx);
+        await newDocHandle.whenReady();
+        newDocHandle.doc();
         objectsToRebind.set(newObjectDocUrl.toString(), { handle: newDocHandle, objectIds: [object.id] });
       } else {
         objectsToRemove.push(object.id);
