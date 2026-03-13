@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context } from '@dxos/context';
+import { Context } from '@dxos/context';
 import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -87,7 +87,7 @@ export class MeshEchoReplicator implements AutomergeReplicator {
         } else {
           this._connectionsPerPeer.set(connection.peerId, [connection]);
           this._context.onConnectionOpen(connection);
-          connection.enable(ctx);
+          connection.enable(Context.default());
         }
       },
       onRemoteDisconnected: async () => {
@@ -107,12 +107,12 @@ export class MeshEchoReplicator implements AutomergeReplicator {
 
         if (connection.isEnabled) {
           this._context?.onConnectionClosed(connection);
-          connection.disable(ctx);
+          connection.disable(Context.default());
 
           // Promote the next connection to enabled
           if (existingConnections.length > 0) {
             this._context?.onConnectionOpen(existingConnections[0]);
-            existingConnections[0].enable(ctx);
+            existingConnections[0].enable(Context.default());
           }
         }
       },

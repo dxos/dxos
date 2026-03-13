@@ -85,7 +85,7 @@ export class ObjectCore {
     return `ObjectCore { id: ${this.id} }`;
   }
 
-  [inspectCustom](ctx: Context, depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect): string {
+  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect): string {
     return `ObjectCore ${inspectFn({ id: this.id }, options)}`;
   }
 
@@ -208,10 +208,10 @@ export class ObjectCore {
       handle: {
         doc: () => this.getDoc(ctx),
         change: (callback, options) => {
-          this.change(callback, options);
+          this.change(ctx, callback, options);
         },
         changeAt: (heads, callback, options) => {
-          return this.changeAt(heads, callback, options);
+          return this.changeAt(ctx, heads, callback, options);
         },
         addListener: (event, listener) => {
           if (event === 'change') {

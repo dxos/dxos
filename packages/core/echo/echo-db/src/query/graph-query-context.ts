@@ -339,10 +339,10 @@ export class SpaceQuerySource implements QuerySource {
     options: QueryAST.QueryOptions | undefined,
   ): boolean {
     return (
-      filterCoreByDeletedFlag(core, options) &&
+      filterCoreByDeletedFlag(ctx, core, options) &&
       filterMatchObject(filter, {
         id: core.id,
-        doc: core.getObjectStructure(this._ctx),
+        doc: core.getObjectStructure(ctx),
         spaceId: this.spaceId,
       })
     );
@@ -353,14 +353,14 @@ const isObjectIdFilter = (filter: QueryAST.Filter) => {
   return filter.type === 'object' && filter.id !== undefined && filter.id.length > 0;
 };
 
-const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOptions | undefined): boolean => {
+const filterCoreByDeletedFlag = (ctx: Context, core: ObjectCore, options: QueryAST.QueryOptions | undefined): boolean => {
   switch (options?.deleted) {
     case undefined:
     case 'exclude':
-      return !core.isDeleted(Context.default());
+      return !core.isDeleted(ctx);
     case 'include':
       return true;
     case 'only':
-      return core.isDeleted(Context.default());
+      return core.isDeleted(ctx);
   }
 };

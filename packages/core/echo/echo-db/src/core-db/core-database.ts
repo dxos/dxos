@@ -476,11 +476,11 @@ export class CoreDatabase {
   unlinkObjects(ctx: Context, objectIds: string[]): void {
     const root = this._automergeDocLoader.getSpaceRootDocHandle(ctx);
     for (const objectId of objectIds) {
-      if (!root.doc(this._ctx).links?.[objectId]) {
+      if (!root.doc(ctx).links?.[objectId]) {
         throw new Error(`Link not found: ${objectId}`);
       }
     }
-    root.change(this._ctx, (doc) => {
+    root.change(ctx, (doc) => {
       for (const objectId of objectIds) {
         delete doc.links![objectId];
       }
@@ -493,9 +493,9 @@ export class CoreDatabase {
   async unlinkDeletedObjects(ctx: Context, { batchSize = 10 }: { batchSize?: number } = {}): Promise<void> {
     const idChunks = chunkArray(this.getAllObjectIds(ctx), batchSize);
     for (const ids of idChunks) {
-      const objects = await this.batchLoadObjectCores(this._ctx, ids, { returnDeleted: true });
-      const toUnlink = objects.filter((o) => o?.isDeleted(this._ctx)).map((o) => o!.id);
-      this.unlinkObjects(this._ctx, toUnlink);
+      const objects = await this.batchLoadObjectCores(ctx, ids, { returnDeleted: true });
+      const toUnlink = objects.filter((o) => o?.isDeleted(ctx)).map((o) => o!.id);
+      this.unlinkObjects(ctx, toUnlink);
     }
   }
 
@@ -689,7 +689,7 @@ export class CoreDatabase {
    */
   async _onReconnect(ctx: Context): Promise<void> {
     log('re-establishing database streams');
-    await this._repoProxy._onReconnect(this._ctx);
+    await this._repoProxy._onReconnect(ctx);
     this._reconnected.emit();
   }
 
@@ -708,7 +708,7 @@ export class CoreDatabase {
       return;
     }
 
-    const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc(this._ctx);
+    const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc(ctx);
     const inlinedObjectIds = new Set(Object.keys(spaceRootDoc.objects ?? {}));
     const linkedObjectIds = new Map(Object.entries(spaceRootDoc.links ?? {}).map(([k, v]) => [k, v.toString()]));
 
@@ -734,9 +734,9 @@ export class CoreDatabase {
           existing.objectIds.push(object.id);
           continue;
         }
-        const newDocHandle = this._repoProxy.find(this._ctx, newObjectDocUrl as DocumentId);
-        await newDocHandle.whenReady(this._ctx);
-        newDocHandle.doc(this._ctx);
+        const newDocHandle = this._repoProxy.find(ctx, newObjectDocUrl as DocumentId);
+        await newDocHandle.whenReady(ctx);
+        newDocHandle.doc(ctx);
         objectsToRebind.set(newObjectDocUrl.toString(), { handle: newDocHandle, objectIds: [object.id] });
       } else {
         objectsToRemove.push(object.id);
@@ -744,16 +744,16 @@ export class CoreDatabase {
     }
 
     objectsToRemove.forEach((oid) => this._objects.delete(oid));
-    this._createInlineObjects(this._ctx, spaceRootDocHandle, objectsToCreate);
+    this._createInlineObjects(ctx, spaceRootDocHandle, objectsToCreate);
     for (const { handle, objectIds } of objectsToRebind.values()) {
-      this._rebindObjects(this._ctx, handle, objectIds);
+      this._rebindObjects(ctx, handle, objectIds);
     }
     for (const objectId of objectsToLoad) {
       if (!this._objects.has(objectId)) {
-        this._automergeDocLoader.loadObjectDocument(this._ctx, objectId);
+        this._automergeDocLoader.loadObjectDocument(ctx, objectId);
       }
     }
-    this._automergeDocLoader.onObjectLinksUpdated(this._ctx, spaceRootDoc.links);
+    this._automergeDocLoader.onObjectLinksUpdated(ctx, spaceRootDoc.links);
     this.rootChanged.emit();
   }
 
@@ -914,7 +914,7 @@ export class CoreDatabase {
       if (seen.has(depCore.id)) {
         return true;
       }
-      return this._areDepsSatisfied(this._ctx, depCore, seen);
+      return this._areDepsSatisfied(ctx, depCore, seen);
     });
   }
 
@@ -922,7 +922,7 @@ export class CoreDatabase {
     for (const objectId of objectIds) {
       const objectCore = this._objects.get(objectId);
       invariant(objectCore);
-      objectCore.bind(this._ctx, {
+      objectCore.bind(ctx, {
         db: this,
         docHandle,
         path: objectCore.mountPath,

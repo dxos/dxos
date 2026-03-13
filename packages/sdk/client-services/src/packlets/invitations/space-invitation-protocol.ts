@@ -185,7 +185,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       throw new AlreadyJoinedError({ message: 'Already joined space.' });
     }
 
-    await this._spaceManager.acceptSpace(Context.default(), {
+    await this._spaceManager.acceptSpace(ctx, {
       spaceKey: assertion.spaceKey,
       genesisFeedKey: assertion.genesisFeedKey,
       controlTimeframe,

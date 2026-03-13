@@ -109,7 +109,7 @@ export class InvitationsManager {
 
       const loadTasks = freshInvitations.map((persistentInvitation) => {
         invariant(!this._createInvitations.get(persistentInvitation.invitationId), 'invitation already exists');
-        return this.createInvitation(Context.default(), { ...persistentInvitation, persistent: false });
+        return this.createInvitation(ctx, { ...persistentInvitation, persistent: false });
       });
       const cInvitations = await Promise.all(loadTasks);
 

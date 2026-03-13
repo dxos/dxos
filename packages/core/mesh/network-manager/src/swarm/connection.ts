@@ -207,7 +207,7 @@ export class Connection {
       topic: this.topic.toHex(),
       initiator: this.initiator,
       stream: this._protocol.stream,
-      sendSignal: async (signal) => this._sendSignal(ctx, signal),
+      sendSignal: async (signal) => this._sendSignal(this._ctx, signal),
       sessionId: this.sessionId,
     });
 

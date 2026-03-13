@@ -356,7 +356,7 @@ export class DataSpaceManager extends Resource {
     if (!space.databaseRoot) {
       return false;
     }
-    switch (space.databaseRoot.getVersion(this._ctx)) {
+    switch (space.databaseRoot.getVersion(ctx)) {
       case SpaceDocVersion.CURRENT: {
         if (!space.databaseRoot.handle.isReady()) {
           log.warn('waiting for space root to be ready', { spaceId: space.id });
@@ -364,7 +364,7 @@ export class DataSpaceManager extends Resource {
         }
 
         const [_, properties] =
-          findInlineObjectOfType(space.databaseRoot.doc(this._ctx)!, Type.getTypename(SpaceProperties)) ?? [];
+          findInlineObjectOfType(space.databaseRoot.doc(ctx)!, Type.getTypename(SpaceProperties)) ?? [];
         return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
       }
 
@@ -373,7 +373,7 @@ export class DataSpaceManager extends Resource {
       }
 
       default:
-        log.warn('unknown space version', { version: space.databaseRoot.getVersion(this._ctx), spaceId: space.id });
+        log.warn('unknown space version', { version: space.databaseRoot.getVersion(ctx), spaceId: space.id });
         return false;
     }
   }
@@ -487,9 +487,8 @@ export class DataSpaceManager extends Resource {
     );
   }
 
-  public async requestSpaceAdmissionCredential(_ctx: Context, spaceKey: PublicKey): Promise<Credential> {
-    const requestCtx = Context.default();
-    return this._spaceManager.requestSpaceAdmissionCredential(requestCtx, {
+  public async requestSpaceAdmissionCredential(ctx: Context, spaceKey: PublicKey): Promise<Credential> {
+    return this._spaceManager.requestSpaceAdmissionCredential(ctx, {
       spaceKey,
       identityKey: this._signingContext.identityKey,
       timeout: 15_000,
@@ -515,10 +514,10 @@ export class DataSpaceManager extends Resource {
     if (space.isOpen) {
       switch (setting) {
         case EdgeReplicationSetting.DISABLED:
-          await this._echoEdgeReplicator?.disconnectFromSpace(this._ctx, space.id);
+          await this._echoEdgeReplicator?.disconnectFromSpace(ctx, space.id);
           break;
         case EdgeReplicationSetting.ENABLED:
-          await this._echoEdgeReplicator?.connectToSpace(this._ctx, space.id);
+          await this._echoEdgeReplicator?.connectToSpace(ctx, space.id);
           break;
       }
     }
@@ -547,7 +546,7 @@ export class DataSpaceManager extends Resource {
         sparse: true,
       }));
 
-    const space: Space = await this._spaceManager.constructSpace(this._ctx, {
+    const space: Space = await this._spaceManager.constructSpace(ctx, {
       metadata,
       swarmIdentity: {
         identityKey: this._signingContext.identityKey,
@@ -656,10 +655,10 @@ export class DataSpaceManager extends Resource {
       log.warn('p2p automerge replication disabled', { space: space.key });
       return;
     }
-    await replicator.authorizeDevice(this._ctx, space.key, session.remotePeerId);
+    await replicator.authorizeDevice(ctx, space.key, session.remotePeerId);
     // session ended during device authorization
     if (session.isOpen) {
-      session.addExtension('dxos.mesh.teleport.automerge', replicator.createExtension(this._ctx));
+      session.addExtension('dxos.mesh.teleport.automerge', replicator.createExtension(ctx));
     }
   }
 
@@ -728,7 +727,7 @@ export class DataSpaceManager extends Resource {
     invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
   ): Promise<void> {
     const tasks = invitations.map(([credentialId, invitation]) => {
-      return this._invitationsManager.createInvitation(this._ctx, {
+      return this._invitationsManager.createInvitation(ctx, {
         type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         spaceKey: space.key,

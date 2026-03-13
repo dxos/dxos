@@ -161,7 +161,7 @@ export class ServiceContext extends Resource {
       this.keyring,
       this._edgeHttpClient,
       () => this.identityManager.identity,
-      (params) => this._acceptIdentity(Context.default(), params),
+      (params) => this._acceptIdentity(this._ctx, params),
     );
 
     this.echoHost = new EchoHost({
@@ -199,7 +199,7 @@ export class ServiceContext extends Resource {
         new DeviceInvitationProtocol(
           this.keyring,
           () => this.identityManager.identity ?? failUndefined(),
-          (params) => this._acceptIdentity(Context.default(), params),
+          (params) => this._acceptIdentity(this._ctx, params),
         ),
     );
 
@@ -400,7 +400,7 @@ export class ServiceContext extends Resource {
 
         try {
           log('accepting space recorded in halo', { details: assertion });
-          await this.dataSpaceManager.acceptSpace(Context.default(), {
+          await this.dataSpaceManager.acceptSpace(this._ctx, {
             spaceKey: assertion.spaceKey,
             genesisFeedKey: assertion.genesisFeedKey,
           });

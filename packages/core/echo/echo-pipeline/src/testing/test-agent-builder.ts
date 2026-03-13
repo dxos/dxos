@@ -207,7 +207,7 @@ export class TestAgent {
     await space.setControlFeed(ctx, controlFeed);
     await space.setDataFeed(ctx, dataFeed);
 
-    await space.open(new Context());
+    await space.open(ctx);
 
     this._spaces.set(spaceKey, space);
     return space;

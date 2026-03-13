@@ -186,7 +186,7 @@ export class EdgeFeedReplicator extends Resource {
             return;
           }
 
-          using _guard = await this._getPushMutex(this._ctx, feed.key).acquire();
+          using _guard = await this._getPushMutex(ctx, feed.key).acquire();
 
           this._remoteLength.set(feedKey, message.length);
 
@@ -194,7 +194,7 @@ export class EdgeFeedReplicator extends Resource {
           if (message.length > feed.length) {
             log('requesting missing blocks', logMeta);
 
-            await this._sendMessage(this._ctx, {
+            await this._sendMessage(ctx, {
               type: 'request',
               feedKey: feedKey.toHex(),
               range: { from: feed.length, to: message.length },
@@ -202,7 +202,7 @@ export class EdgeFeedReplicator extends Resource {
           } else if (message.length < feed.length) {
             log('pushing blocks to remote', logMeta);
 
-            await this._pushBlocks(this._ctx, feed, message.length, feed.length);
+            await this._pushBlocks(ctx, feed, message.length, feed.length);
           }
 
           break;
@@ -218,7 +218,7 @@ export class EdgeFeedReplicator extends Resource {
             return;
           }
 
-          await this._integrateBlocks(this._ctx, feed, message.blocks);
+          await this._integrateBlocks(ctx, feed, message.blocks);
           break;
         }
 

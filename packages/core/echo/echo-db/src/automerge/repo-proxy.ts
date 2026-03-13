@@ -118,10 +118,10 @@ export class RepoProxy extends Resource {
       subscriptionId: this._subscriptionId,
       spaceId: this._spaceId,
     });
-    this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(ctx), {
+    this._sendUpdatesJob = new UpdateScheduler(this._ctx, async () => this._sendUpdates(this._ctx), {
       maxFrequency: MAX_UPDATE_FREQ,
     });
-    this._subscription.subscribe((updates) => this._receiveUpdate(ctx, updates));
+    this._subscription.subscribe((updates) => this._receiveUpdate(this._ctx, updates));
   }
 
   protected override async _close(ctx: Context): Promise<void> {

@@ -1261,12 +1261,12 @@ export class QueryExecutor extends Resource {
 
         const spaceId = echoDxn.spaceId ?? sourceSpaceId;
 
-        const spaceRoot = this._spaceStateManager.getRootBySpaceId(this._ctx, spaceId);
+        const spaceRoot = this._spaceStateManager.getRootBySpaceId(ctx, spaceId);
         if (!spaceRoot) {
           log.warn('no space state found for', { spaceId });
           return null;
         }
-        const dbDirectory = spaceRoot.doc(this._ctx);
+        const dbDirectory = spaceRoot.doc(ctx);
         if (!dbDirectory) {
           log.warn('no space state found for', { spaceId });
           return null;

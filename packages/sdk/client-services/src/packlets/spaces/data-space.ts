@@ -360,12 +360,12 @@ export class DataSpace {
 
   async *getAllDocuments(ctx: Context): AsyncIterable<[string, Uint8Array]> {
     invariant(this._databaseRoot, 'Space is not ready');
-    const doc = this._databaseRoot.doc(this._ctx) ?? failedInvariant();
+    const doc = this._databaseRoot.doc(ctx) ?? failedInvariant();
     const root = save(doc);
     yield [this._databaseRoot.documentId, root];
 
-    for (const documentUrl of this._databaseRoot.getAllLinkedDocuments(this._ctx)) {
-      const data = await this._echoHost.exportDoc(Context.default(), documentUrl);
+    for (const documentUrl of this._databaseRoot.getAllLinkedDocuments(ctx)) {
+      const data = await this._echoHost.exportDoc(ctx, documentUrl);
       yield [documentUrl.replace(/^automerge:/, ''), data];
     }
   }
@@ -410,7 +410,7 @@ export class DataSpace {
     const credentials: Credential[] = [];
     if (!this.inner.controlFeedKey) {
       const controlFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
-      await this.inner.setControlFeed(this._ctx, controlFeed);
+      await this.inner.setControlFeed(ctx, controlFeed);
 
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
@@ -430,7 +430,7 @@ export class DataSpace {
         writable: true,
         sparse: true,
       });
-      await this.inner.setDataFeed(this._ctx, dataFeed);
+      await this.inner.setDataFeed(ctx, dataFeed);
 
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
@@ -534,7 +534,7 @@ export class DataSpace {
   }
 
   async createEpoch(ctx: Context, options?: CreateEpochOptions): Promise<CreateEpochResult | null> {
-    const epochCtx = this._ctx.derive();
+    const epochCtx = ctx.derive();
 
     // Preserving existing behavior.
     if (!options?.migration) {
@@ -570,8 +570,8 @@ export class DataSpace {
     });
 
     const timeframe = new Timeframe([[receipt.feedKey, receipt.seq]]);
-    await this.inner.controlPipeline.state.waitUntilTimeframe(this._ctx, timeframe);
-    await this._echoHost.updateIndexes(this._ctx);
+    await this.inner.controlPipeline.state.waitUntilTimeframe(ctx, timeframe);
+    await this._echoHost.updateIndexes(ctx);
 
     return { credential, timeframe };
   }
@@ -583,8 +583,8 @@ export class DataSpace {
     }
 
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_ACTIVE);
-    await this._open(this._ctx);
-    this.initializeDataPipelineAsync(this._ctx);
+    await this._open(ctx);
+    this.initializeDataPipelineAsync(ctx);
   }
 
   @synchronized
@@ -594,7 +594,7 @@ export class DataSpace {
     }
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_INACTIVE);
     if (this._state !== SpaceState.SPACE_CLOSED) {
-      await this._close(this._ctx);
+      await this._close(ctx);
     }
     this._state = SpaceState.SPACE_INACTIVE;
     log('new state', { state: SpaceState[this._state] });

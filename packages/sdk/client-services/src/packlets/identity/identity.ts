@@ -152,7 +152,7 @@ export class Identity {
   async ready(ctx: Context): Promise<void> {
     await this._deviceStateMachine.deviceChainReady.wait();
 
-    await this.controlPipeline.state.waitUntilReachedTargetTimeframe(Context.default(), {
+    await this.controlPipeline.state.waitUntilReachedTargetTimeframe(ctx, {
       timeout: LOAD_CONTROL_FEEDS_TIMEOUT,
     });
   }

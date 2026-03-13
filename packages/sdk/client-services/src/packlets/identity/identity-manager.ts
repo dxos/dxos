@@ -128,7 +128,7 @@ export class IdentityManager {
   }
 
   async close(ctx: Context): Promise<void> {
-    await this._identity?.close(new Context());
+    await this._identity?.close(ctx);
   }
 
   async createIdentity(ctx: Context, { profile, deviceProfile }: CreateIdentityOptions = {}): Promise<Identity> {
@@ -148,7 +148,7 @@ export class IdentityManager {
     };
 
     const identity = await this._constructIdentity(ctx, identityRecord);
-    await identity.open(new Context());
+    await identity.open(ctx);
 
     {
       const generator = new CredentialGenerator(this._keyring, identityRecord.identityKey, identityRecord.deviceKey);
@@ -240,7 +240,7 @@ export class IdentityManager {
       },
     };
     const identity = await this._constructIdentity(ctx, identityRecord);
-    await identity.open(new Context());
+    await identity.open(ctx);
     return { identity, identityRecord };
   }
 
@@ -281,7 +281,7 @@ export class IdentityManager {
 
     const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
     await this._identity.controlPipeline.state.waitUntilTimeframe(
-      Context.default(),
+      ctx,
       new Timeframe([[receipt.feedKey, receipt.seq]]),
     );
     this.stateUpdate.emit();
@@ -301,7 +301,7 @@ export class IdentityManager {
 
     const receipt = await this._identity.controlPipeline.writer.write({ credential: { credential } });
     await this._identity.controlPipeline.state.waitUntilTimeframe(
-      Context.default(),
+      ctx,
       new Timeframe([[receipt.feedKey, receipt.seq]]),
     );
     this.stateUpdate.emit();
@@ -348,8 +348,8 @@ export class IdentityManager {
       gossip,
       identityKey: identityRecord.identityKey,
     });
-    await space.setControlFeed(Context.default(), controlFeed);
-    await space.setDataFeed(Context.default(), dataFeed);
+    await space.setControlFeed(ctx, controlFeed);
+    await space.setDataFeed(ctx, dataFeed);
 
     const did = await createDidFromIdentityKey(identityRecord.identityKey);
     const identity: Identity = new Identity({
@@ -365,7 +365,7 @@ export class IdentityManager {
     log('done', { identityKey: identityRecord.identityKey });
 
     if (identityRecord.haloSpace.controlTimeframe) {
-      identity.controlPipeline.state.setTargetTimeframe(Context.default(), identityRecord.haloSpace.controlTimeframe);
+      identity.controlPipeline.state.setTargetTimeframe(ctx, identityRecord.haloSpace.controlTimeframe);
     }
 
     identity.stateUpdate.on(() => this.stateUpdate.emit());
@@ -376,7 +376,7 @@ export class IdentityManager {
     ctx: Context,
     { spaceRecord, swarmIdentity, identityKey, gossip }: ConstructSpaceProps,
   ) {
-    return this._spaceManager.constructSpace(Context.default(), {
+    return this._spaceManager.constructSpace(ctx, {
       metadata: {
         key: spaceRecord.key,
         genesisFeedKey: spaceRecord.genesisFeedKey,

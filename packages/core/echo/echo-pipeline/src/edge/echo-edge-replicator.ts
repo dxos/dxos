@@ -185,7 +185,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
               return;
             }
             log.trace('dxos.echo.edge.replicator.restart', { spaceId, reconnects, restartDelay });
-            await this._openConnection(ctx, spaceId, reconnects + 1);
+            await this._openConnection(this._ctx, spaceId, reconnects + 1);
           },
           restartDelay,
         );

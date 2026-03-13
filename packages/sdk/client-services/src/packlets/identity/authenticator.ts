@@ -66,7 +66,7 @@ export class TrustedKeySetAuthVerifier {
         return false;
       }
 
-      if (this._isTrustedKey(Context.default(), credential.issuer)) {
+      if (this._isTrustedKey(this._ctx, credential.issuer)) {
         log('key is trusted -- auth success', { key: credential.issuer });
         return true;
       }
@@ -77,7 +77,7 @@ export class TrustedKeySetAuthVerifier {
       });
 
       const clear = this._params.update.on(this._ctx, () => {
-        if (this._isTrustedKey(Context.default(), credential.issuer)) {
+        if (this._isTrustedKey(this._ctx, credential.issuer)) {
           log('auth success', { key: credential.issuer });
           trigger.wake(true);
         } else {
