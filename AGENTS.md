@@ -40,6 +40,7 @@
 - Remember to remove/update TODOs as you go.
 - Avoid single letter variable names.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
+- When user asks to move code, update other usages to import from the new location.
 
 ## Workflow
 

@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/assistant-toolkit';
+import { Project, syncTriggers } from '@dxos/assistant-toolkit';
 import { Feed, Obj, Query, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -20,8 +20,6 @@ import { Filter, useQuery } from '@dxos/react-client/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { ButtonGroup, Input } from '@dxos/react-ui';
-
-import { syncTriggers } from './triggers';
 
 export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Project.Project>) => {
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
