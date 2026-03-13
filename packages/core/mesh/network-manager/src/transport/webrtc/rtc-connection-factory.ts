@@ -26,7 +26,7 @@ class BrowserRtcConnectionFactory implements RtcConnectionFactory {
     return new RTCPeerConnection(config);
   }
 
-  async initConnection(_connection: RTCPeerConnection, _info: ConnectionInfo): Promise<void> {}
+  async initConnection(connection: RTCPeerConnection, info: ConnectionInfo): Promise<void> {}
 }
 
 /**
@@ -36,6 +36,9 @@ class BrowserRtcConnectionFactory implements RtcConnectionFactory {
 class NodeRtcConnectionFactory implements RtcConnectionFactory {
   private static _createdConnections = 0;
   private static _cleanupMutex = new Mutex();
+
+  // This should be inside the function to avoid triggering `eval` in the global scope.
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval
 
   // TODO(burdon): Do imports here?
   async initialize(): Promise<void> {}

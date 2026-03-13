@@ -8,7 +8,6 @@ import { next as A, type ChangeFn, type ChangeOptions, type Doc, type Heads } fr
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';
 
 import { Event } from '@dxos/async';
-import { type Context } from '@dxos/context';
 import { inspectCustom } from '@dxos/debug';
 import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
@@ -92,14 +91,14 @@ export class ObjectCore {
   /**
    * Create local doc with initial state from this object.
    */
-  initNewObject(ctx: Context, initialProps?: unknown, opts?: ObjectCoreOptions): void {
+  initNewObject(initialProps?: unknown, opts?: ObjectCoreOptions): void {
     invariant(!this.docHandle && !this.doc);
 
     initialProps ??= {};
 
     this.doc = A.from<ObjectStructure>({
-      data: this.encode(ctx, initialProps as any),
-      meta: this.encode(ctx, {
+      data: this.encode(initialProps as any),
+      meta: this.encode({
         keys: [],
         ...opts?.meta,
       }),
@@ -107,7 +106,7 @@ export class ObjectCore {
     });
   }
 
-  bind(ctx: Context, options: BindOptions): void {
+  bind(options: BindOptions): void {
     // When loading existing documents, wait for the document to be ready.
     // When creating new documents (assignFromLocalState), the local doc is immediately usable.
     invariant(options.assignFromLocalState || options.docHandle.isReady());
@@ -132,7 +131,7 @@ export class ObjectCore {
     this.notifyUpdate();
   }
 
-  getDoc(ctx: Context): Doc<unknown> {
+  getDoc(): Doc<unknown> {
     if (this.doc) {
       return this.doc;
     }
@@ -144,14 +143,14 @@ export class ObjectCore {
     throw new Error('Invalid ObjectCore state');
   }
 
-  getObjectStructure(ctx: Context): ObjectStructure {
-    return getDeep(this.getDoc(ctx), this.mountPath) as ObjectStructure;
+  getObjectStructure(): ObjectStructure {
+    return getDeep(this.getDoc(), this.mountPath) as ObjectStructure;
   }
 
   /**
    * Do not take into account mountPath.
    */
-  change(ctx: Context, changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
+  change(changeFn: ChangeFn<any>, options?: A.ChangeOptions<any>): void {
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -174,7 +173,7 @@ export class ObjectCore {
   /**
    * Do not take into account mountPath.
    */
-  changeAt(ctx: Context, heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
+  changeAt(heads: Heads, callback: ChangeFn<any>, options?: ChangeOptions<any>): Heads | undefined {
     // Prevent recursive change calls.
     using _ = defer(docChangeSemaphore(this.docHandle ?? this));
 
@@ -201,17 +200,17 @@ export class ObjectCore {
     return result;
   }
 
-  getDocAccessor(ctx: Context, path: KeyPath = []): DocAccessor {
+  getDocAccessor(path: KeyPath = []): DocAccessor {
     invariant(isValidKeyPath(path));
     const self = this;
     return {
       handle: {
-        doc: () => this.getDoc(ctx),
+        doc: () => this.getDoc(),
         change: (callback, options) => {
-          this.change(ctx, callback, options);
+          this.change(callback, options);
         },
         changeAt: (heads, callback, options) => {
-          return this.changeAt(ctx, heads, callback, options);
+          return this.changeAt(heads, callback, options);
         },
         addListener: (event, listener) => {
           if (event === 'change') {
@@ -258,7 +257,7 @@ export class ObjectCore {
   /**
    * Encode a value to be stored in the Automerge document.
    */
-  encode(ctx: Context, value: DecodedAutomergePrimaryValue) {
+  encode(value: DecodedAutomergePrimaryValue) {
     if (isProxy(value) as boolean) {
       throw new TypeError('Linking is not allowed');
     }
@@ -275,12 +274,12 @@ export class ObjectCore {
       return value;
     }
     if (Array.isArray(value)) {
-      const values: any = value.map((val) => this.encode(ctx, val));
+      const values: any = value.map((val) => this.encode(val));
       return values;
     }
     if (typeof value === 'object' && value !== null) {
       const entries = Object.entries(value).filter(([_, value]) => value !== undefined);
-      return Object.fromEntries(entries.map(([key, value]): [string, any] => [key, this.encode(ctx, value)]));
+      return Object.fromEntries(entries.map(([key, value]): [string, any] => [key, this.encode(value)]));
     }
 
     if (typeof value === 'string' && value.length > STRING_CRDT_LIMIT) {
@@ -293,12 +292,12 @@ export class ObjectCore {
   /**
    * Decode a value from the Automerge document.
    */
-  decode(ctx: Context, value: any): DecodedAutomergePrimaryValue {
+  decode(value: any): DecodedAutomergePrimaryValue {
     if (value === null) {
       return value;
     }
     if (Array.isArray(value)) {
-      return value.map((val) => this.decode(ctx, val));
+      return value.map((val) => this.decode(val));
     }
     if (value instanceof A.RawString) {
       return value.toString();
@@ -313,19 +312,17 @@ export class ObjectCore {
       return convertLegacyProtoReference(value);
     }
     if (typeof value === 'object') {
-      return Object.fromEntries(
-        Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(ctx, value)]),
-      );
+      return Object.fromEntries(Object.entries(value).map(([key, value]): [string, any] => [key, this.decode(value)]));
     }
 
     return value;
   }
 
-  arrayPush(ctx: Context, path: KeyPath, items: DecodedAutomergePrimaryValue[]): number {
-    const itemsEncoded = items.map((item) => this.encode(ctx, item));
+  arrayPush(path: KeyPath, items: DecodedAutomergePrimaryValue[]): number {
+    const itemsEncoded = items.map((item) => this.encode(item));
 
     let newLength: number = -1;
-    this.change(ctx, (doc) => {
+    this.change((doc) => {
       const fullPath = [...this.mountPath, ...path];
       const array = getDeep(doc, fullPath);
       invariant(Array.isArray(array));
@@ -335,10 +332,10 @@ export class ObjectCore {
     return newLength;
   }
 
-  private _getRaw(ctx: Context, path: KeyPath): Doc<ObjectStructure> | Doc<DatabaseDirectory> {
+  private _getRaw(path: KeyPath): Doc<ObjectStructure> | Doc<DatabaseDirectory> {
     const fullPath = [...this.mountPath, ...path];
 
-    let value = this.getDoc(ctx);
+    let value = this.getDoc();
     for (const key of fullPath) {
       value = (value as any)?.[key];
     }
@@ -346,47 +343,47 @@ export class ObjectCore {
     return value;
   }
 
-  private _setRaw(ctx: Context, path: KeyPath, value: any): void {
+  private _setRaw(path: KeyPath, value: any): void {
     const fullPath = [...this.mountPath, ...path];
 
-    this.change(ctx, (doc) => {
+    this.change((doc) => {
       setDeep(doc, fullPath, value);
     });
   }
 
   // TODO(dmaretskyi): Rename to `get`.
-  getDecoded(ctx: Context, path: KeyPath): DecodedAutomergePrimaryValue {
-    return this.decode(ctx, this._getRaw(ctx, path)) as DecodedAutomergePrimaryValue;
+  getDecoded(path: KeyPath): DecodedAutomergePrimaryValue {
+    return this.decode(this._getRaw(path)) as DecodedAutomergePrimaryValue;
   }
 
   // TODO(dmaretskyi): Rename to `set`.
-  setDecoded(ctx: Context, path: KeyPath, value: DecodedAutomergePrimaryValue): void {
-    this._setRaw(ctx, path, this.encode(ctx, value));
+  setDecoded(path: KeyPath, value: DecodedAutomergePrimaryValue): void {
+    this._setRaw(path, this.encode(value));
   }
 
   /**
    * Deletes key at path.
    */
-  delete(ctx: Context, path: KeyPath): void {
+  delete(path: KeyPath): void {
     const fullPath = [...this.mountPath, ...path];
 
-    this.change(ctx, (doc) => {
+    this.change((doc) => {
       const value: any = getDeep(doc, fullPath.slice(0, fullPath.length - 1));
       delete value[fullPath[fullPath.length - 1]];
     });
   }
 
-  getKind(ctx: Context): EntityKind {
-    return (this._getRaw(ctx, [SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
+  getKind(): EntityKind {
+    return (this._getRaw([SYSTEM_NAMESPACE, 'kind']) as any) ?? EntityKind.Object;
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setKind(ctx: Context, kind: EntityKind): void {
-    this._setRaw(ctx, [SYSTEM_NAMESPACE, 'kind'], kind);
+  setKind(kind: EntityKind): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'kind'], kind);
   }
 
-  getSource(ctx: Context): EncodedReference | undefined {
-    const res = this._getRaw(ctx, [SYSTEM_NAMESPACE, 'source']);
+  getSource(): EncodedReference | undefined {
+    const res = this._getRaw([SYSTEM_NAMESPACE, 'source']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -394,12 +391,12 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setSource(ctx: Context, ref: EncodedReference): void {
-    this._setRaw(ctx, [SYSTEM_NAMESPACE, 'source'], ref);
+  setSource(ref: EncodedReference): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'source'], ref);
   }
 
-  getTarget(ctx: Context): EncodedReference | undefined {
-    const res = this._getRaw(ctx, [SYSTEM_NAMESPACE, 'target']);
+  getTarget(): EncodedReference | undefined {
+    const res = this._getRaw([SYSTEM_NAMESPACE, 'target']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
@@ -407,55 +404,55 @@ export class ObjectCore {
   }
 
   // TODO(dmaretskyi): Just set statically during construction.
-  setTarget(ctx: Context, ref: EncodedReference): void {
-    this._setRaw(ctx, [SYSTEM_NAMESPACE, 'target'], ref);
+  setTarget(ref: EncodedReference): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'target'], ref);
   }
 
-  getParent(ctx: Context): EncodedReference | undefined {
-    const res = this._getRaw(ctx, [SYSTEM_NAMESPACE, 'parent']);
+  getParent(): EncodedReference | undefined {
+    const res = this._getRaw([SYSTEM_NAMESPACE, 'parent']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
     return res;
   }
 
-  setParent(ctx: Context, ref: EncodedReference | undefined): void {
+  setParent(ref: EncodedReference | undefined): void {
     if (ref === undefined) {
-      this.delete(ctx, [SYSTEM_NAMESPACE, 'parent']);
+      this.delete([SYSTEM_NAMESPACE, 'parent']);
     } else {
-      this._setRaw(ctx, [SYSTEM_NAMESPACE, 'parent'], ref);
+      this._setRaw([SYSTEM_NAMESPACE, 'parent'], ref);
     }
   }
 
-  getType(ctx: Context): EncodedReference | undefined {
-    const res = this._getRaw(ctx, [SYSTEM_NAMESPACE, 'type']);
+  getType(): EncodedReference | undefined {
+    const res = this._getRaw([SYSTEM_NAMESPACE, 'type']);
     if (!res || !EncodedReference.isEncodedReference(res)) {
       return undefined;
     }
     return res;
   }
 
-  setType(ctx: Context, ref: EncodedReference): void {
-    this._setRaw(ctx, [SYSTEM_NAMESPACE, 'type'], ref);
+  setType(ref: EncodedReference): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'type'], ref);
   }
 
-  getMeta(ctx: Context): ObjectMeta {
-    return this.getDecoded(ctx, [META_NAMESPACE]) as ObjectMeta;
+  getMeta(): ObjectMeta {
+    return this.getDecoded([META_NAMESPACE]) as ObjectMeta;
   }
 
-  setMeta(ctx: Context, meta: ObjectMeta): void {
-    this._setRaw(ctx, [META_NAMESPACE], this.encode(ctx, meta));
+  setMeta(meta: ObjectMeta): void {
+    this._setRaw([META_NAMESPACE], this.encode(meta));
   }
 
-  isDeleted(ctx: Context, remainingDepth: number = 10): boolean {
-    const value = this._getRaw(ctx, [SYSTEM_NAMESPACE, 'deleted']);
+  isDeleted(remainingDepth: number = 10): boolean {
+    const value = this._getRaw([SYSTEM_NAMESPACE, 'deleted']);
     const ownDeleted = typeof value === 'boolean' ? value : false;
     if (ownDeleted) {
       return true;
     }
 
     if (this.database && remainingDepth > 0) {
-      const parentRef = this.getParent(ctx);
+      const parentRef = this.getParent();
       if (parentRef) {
         // Checks if the reference is pointing to an object in the same space.
         const parentDXN = EncodedReference.toDXN(parentRef);
@@ -465,8 +462,8 @@ export class ObjectCore {
           // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
           // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
           // Given strong dependencies, the parent SHOULD be loaded if the child is loaded.
-          const parent = this.database.getObjectCoreById(ctx, parentId);
-          if (parent && parent.isDeleted(ctx, remainingDepth - 1)) {
+          const parent = this.database.getObjectCoreById(parentId);
+          if (parent && parent.isDeleted(remainingDepth - 1)) {
             return true;
           }
         }
@@ -475,8 +472,8 @@ export class ObjectCore {
     return false;
   }
 
-  setDeleted(ctx: Context, value: boolean): void {
-    this._setRaw(ctx, [SYSTEM_NAMESPACE, 'deleted'], value);
+  setDeleted(value: boolean): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'deleted'], value);
   }
 
   /**
@@ -484,10 +481,10 @@ export class ObjectCore {
    * Strong references are loaded together with the source object.
    * Currently this is the schema reference and the source and target for relations.
    */
-  getStrongDependencies(ctx: Context): DXN[] {
+  getStrongDependencies(): DXN[] {
     const res: DXN[] = [];
 
-    const typeRef = this.getType(ctx);
+    const typeRef = this.getType();
     if (typeRef) {
       const typeDXN = EncodedReference.toDXN(typeRef);
       if (typeDXN.kind === DXN.kind.ECHO) {
@@ -495,18 +492,18 @@ export class ObjectCore {
       }
     }
 
-    if (this.getKind(ctx) === EntityKind.Relation) {
-      const sourceRef = this.getSource(ctx);
+    if (this.getKind() === EntityKind.Relation) {
+      const sourceRef = this.getSource();
       if (sourceRef) {
         res.push(EncodedReference.toDXN(sourceRef));
       }
-      const targetRef = this.getTarget(ctx);
+      const targetRef = this.getTarget();
       if (targetRef) {
         res.push(EncodedReference.toDXN(targetRef));
       }
     }
 
-    const parentRef = this.getParent(ctx);
+    const parentRef = this.getParent();
     if (parentRef) {
       res.push(EncodedReference.toDXN(parentRef));
     }

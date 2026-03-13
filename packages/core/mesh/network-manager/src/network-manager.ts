@@ -195,7 +195,7 @@ export class SwarmNetworkManager {
     this._signalConnection.join({ topic, peer: this._peerInfo }).catch((error) => log.catch(error));
 
     this.topicsUpdated.emit();
-    this._connectionLog?.joinedSwarm(ctx, swarm);
+    this._connectionLog?.joinedSwarm(swarm);
     log('joined', { topic: PublicKey.from(topic), count: this._swarms.size });
 
     return {
@@ -218,10 +218,10 @@ export class SwarmNetworkManager {
     await this._signalConnection.leave({ topic, peer: swarm.ownPeer });
 
     const map = this._mappers.get(topic)!;
-    map.destroy(ctx);
+    map.destroy();
     this._mappers.delete(topic);
 
-    this._connectionLog?.leftSwarm(ctx, swarm);
+    this._connectionLog?.leftSwarm(swarm);
 
     await swarm.destroy(ctx);
     this._swarms.delete(topic);

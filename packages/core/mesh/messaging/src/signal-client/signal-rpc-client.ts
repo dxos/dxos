@@ -165,7 +165,7 @@ export class SignalRPCClient {
       await this._closeComplete.wait({ timeout: 1_000 });
     } catch (err) {
       const failureReason = err instanceof TimeoutError ? 'timeout' : (err?.constructor?.name ?? 'unknown');
-      this._monitor.recordClientCloseFailure(ctx, { failureReason });
+      this._monitor.recordClientCloseFailure({ failureReason });
     }
   }
 

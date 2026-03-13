@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context } from '@dxos/context';
 import { trace } from '@dxos/tracing';
 
 import type { Message } from '../signal-methods';
@@ -25,22 +24,22 @@ export class SignalClientMonitor {
    */
   private _lastStateChange = new Date();
 
-  public getRecordedTimestamps(_ctx: Context): { connectionStarted: Date; lastStateChange: Date } {
+  public getRecordedTimestamps(): { connectionStarted: Date; lastStateChange: Date } {
     return {
       connectionStarted: this._connectionStarted,
       lastStateChange: this._lastStateChange,
     };
   }
 
-  public recordStateChangeTime(_ctx: Context): void {
+  public recordStateChangeTime(): void {
     this._lastStateChange = new Date();
   }
 
-  public recordConnectionStartTime(_ctx: Context): void {
+  public recordConnectionStartTime(): void {
     this._connectionStarted = new Date();
   }
 
-  public recordReconnect(ctx: Context, params: { success: boolean }): void {
+  public recordReconnect(params: { success: boolean }): void {
     this._performance.reconnectCounter++;
     trace.metrics.increment('dxos.mesh.signal.signal-client.reconnect', 1, {
       tags: {
@@ -49,15 +48,15 @@ export class SignalClientMonitor {
     });
   }
 
-  public recordJoin(_ctx: Context): void {
+  public recordJoin(): void {
     this._performance.joinCounter++;
   }
 
-  public recordLeave(_ctx: Context): void {
+  public recordLeave(): void {
     this._performance.leaveCounter++;
   }
 
-  public recordMessageReceived(ctx: Context, message: Message): void {
+  public recordMessageReceived(message: Message): void {
     this._performance.receivedMessages++;
     trace.metrics.increment('dxos.mesh.signal.signal-client.received-total', 1, {
       tags: createIdentityTags(message),
@@ -67,7 +66,7 @@ export class SignalClientMonitor {
     });
   }
 
-  public async recordMessageSending(ctx: Context, message: Message, sendMessage: () => Promise<void>): Promise<void> {
+  public async recordMessageSending(message: Message, sendMessage: () => Promise<void>): Promise<void> {
     this._performance.sentMessages++;
     const tags = createIdentityTags(message);
     let success = true;
@@ -77,7 +76,7 @@ export class SignalClientMonitor {
       const reqDuration = Date.now() - reqStart;
       trace.metrics.distribution('dxos.mesh.signal.signal-client.send-duration', reqDuration, { tags });
       trace.metrics.distribution('dxos.mesh.signal.signal-client.bytes-out', getByteCount(message), { tags });
-    } catch {
+    } catch (err) {
       success = false;
     }
     trace.metrics.increment('dxos.mesh.signal.signal-client.sent-total', 1, {
@@ -85,11 +84,11 @@ export class SignalClientMonitor {
     });
   }
 
-  public recordStreamCloseErrors(ctx: Context, count: number): void {
+  public recordStreamCloseErrors(count: number): void {
     trace.metrics.increment('dxos.mesh.signal.signal-client.stream-close-errors', count);
   }
 
-  public recordReconciliation(ctx: Context, params: { success: boolean }): void {
+  public recordReconciliation(params: { success: boolean }): void {
     trace.metrics.increment('dxos.mesh.signal.signal-client.reconciliation', 1, {
       tags: {
         success: params.success,

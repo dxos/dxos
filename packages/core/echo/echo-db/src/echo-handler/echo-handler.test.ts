@@ -701,7 +701,7 @@ describe('Reactive Object with ECHO database', () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(TestSchema.Expando, { field: 1 }));
       const typeDXN = getSchemaDXN(TestSchema.Example)!;
-      getObjectCore(obj).setType(Context.default(), EncodedReference.fromDXN(typeDXN));
+      getObjectCore(obj).setType(EncodedReference.fromDXN(typeDXN));
       expect(Obj.getTypeDXN(obj)).to.deep.eq(Type.getDXN(TestSchema.Example));
     });
 
@@ -786,7 +786,7 @@ describe('Reactive Object with ECHO database', () => {
     expect(updateCount).to.eq(0);
 
     // Rebind obj2 to obj1
-    getObjectCore(obj2).bind(Context.default(), {
+    getObjectCore(obj2).bind({
       db: getObjectCore(obj1).database!,
       docHandle: getObjectCore(obj1).docHandle!,
       path: getObjectCore(obj1).mountPath,

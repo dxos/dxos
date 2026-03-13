@@ -28,7 +28,7 @@ export class FullyConnectedTopology implements Topology {
     }
   }
 
-  async onOffer(_peer: PublicKey): Promise<boolean> {
+  async onOffer(peer: PublicKey): Promise<boolean> {
     return true;
   }
 

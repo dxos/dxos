@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context } from '@dxos/context';
 import { type Obj } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
@@ -74,11 +73,11 @@ const requireAutomergeCore = (obj: Obj.Unknown) => {
 const cloneInner = <T extends Obj.Unknown>(obj: T, id: string): T => {
   const core = requireAutomergeCore(obj);
   const coreClone = new ObjectCore();
-  coreClone.initNewObject(Context.default());
+  coreClone.initNewObject();
   coreClone.id = id;
   const proxy = initEchoReactiveObjectRootProxy(coreClone);
   const automergeSnapshot = getObjectDoc(core);
-  coreClone.change(Context.default(), (doc: any) => {
+  coreClone.change((doc: any) => {
     for (const key of Object.keys(automergeSnapshot)) {
       doc[key] = automergeSnapshot[key];
     }

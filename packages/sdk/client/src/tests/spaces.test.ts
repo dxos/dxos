@@ -464,7 +464,7 @@ describe('Spaces', () => {
     const [wait, inc] = latch({ count: 2, timeout: 1000 });
 
     const getTypename = (obj: any) => {
-      const typeRef = getObjectCore(obj).getType(Context.default());
+      const typeRef = getObjectCore(obj).getType();
       return typeRef ? EncodedReference.toDXN(typeRef).asTypeDXN()?.type : undefined;
     };
 

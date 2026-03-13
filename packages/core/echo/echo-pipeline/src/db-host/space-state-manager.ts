@@ -73,14 +73,14 @@ export class SpaceStateManager extends Resource {
     }
 
     this._rootBySpace.set(spaceId, root.handle.documentId);
-    const rootCtx = new Context();
+    const ctx = new Context();
 
-    this._perRootContext.set(root.handle.documentId, rootCtx);
+    this._perRootContext.set(root.handle.documentId, ctx);
 
     await root.handle.whenReady();
 
     const documentListCheckScheduler = new UpdateScheduler(
-      rootCtx,
+      ctx,
       async () => {
         const documentIds = [root.documentId, ...root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url))];
         if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
@@ -94,7 +94,7 @@ export class SpaceStateManager extends Resource {
     );
     const triggerCheckOnChange = () => documentListCheckScheduler.trigger();
     root.handle.addListener('change', triggerCheckOnChange);
-    rootCtx.onDispose(() => root.handle.removeListener('change', triggerCheckOnChange));
+    ctx.onDispose(() => root.handle.removeListener('change', triggerCheckOnChange));
 
     documentListCheckScheduler.trigger();
 

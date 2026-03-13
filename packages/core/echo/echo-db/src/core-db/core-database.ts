@@ -347,7 +347,7 @@ export class CoreDatabase {
       }
 
       const core = this.getObjectCoreById(ctx, objectId, { load: true });
-      if (!returnDeleted && this._objects.get(objectId)?.isDeleted(ctx)) {
+      if (!returnDeleted && this._objects.get(objectId)?.isDeleted()) {
         result[i] = undefined;
       } else if (!returnWithUnsatisfiedDeps && core && !this._areDepsSatisfied(ctx, core)) {
         result[i] = undefined;
@@ -388,7 +388,7 @@ export class CoreDatabase {
             if (updatedIds.includes(objectToLoad.id)) {
               clearTimeout(inactivityTimeoutTimer);
 
-              const isDeleted = this._objects.get(objectToLoad.id)?.isDeleted(this._ctx);
+              const isDeleted = this._objects.get(objectToLoad.id)?.isDeleted();
               const depsUnsatisfied =
                 this._objects.get(objectToLoad.id) &&
                 !this._areDepsSatisfied(this._ctx, this._objects.get(objectToLoad.id)!);
@@ -429,8 +429,8 @@ export class CoreDatabase {
         throw new Error('Object already belongs to another database');
       }
 
-      if (core.isDeleted(ctx)) {
-        core.setDeleted(ctx, false);
+      if (core.isDeleted()) {
+        core.setDeleted(false);
       }
 
       return;
@@ -457,7 +457,7 @@ export class CoreDatabase {
         throw new TypeError(`Unknown object placement: ${placement}`);
     }
 
-    core.bind(ctx, {
+    core.bind({
       db: this,
       docHandle: spaceDocHandle,
       path: ['objects', core.id],
@@ -465,9 +465,9 @@ export class CoreDatabase {
     });
   }
 
-  removeCore(ctx: Context, core: ObjectCore): void {
+  removeCore(_ctx: Context, core: ObjectCore): void {
     invariant(this._objects.has(core.id));
-    core.setDeleted(ctx, true);
+    core.setDeleted(true);
   }
 
   /**
@@ -494,7 +494,7 @@ export class CoreDatabase {
     const idChunks = chunkArray(this.getAllObjectIds(ctx), batchSize);
     for (const ids of idChunks) {
       const objects = await this.batchLoadObjectCores(ctx, ids, { returnDeleted: true });
-      const toUnlink = objects.filter((o) => o?.isDeleted(ctx)).map((o) => o!.id);
+      const toUnlink = objects.filter((o) => o?.isDeleted()).map((o) => o!.id);
       this.unlinkObjects(ctx, toUnlink);
     }
   }
@@ -520,7 +520,7 @@ export class CoreDatabase {
     invariant(mappedData['@type'] === undefined);
     invariant(mappedData['@meta'] === undefined);
 
-    const existingStruct: ObjectStructure = core.getDecoded(ctx, []) as any;
+    const existingStruct: ObjectStructure = core.getDecoded([]) as any;
     const newStruct: ObjectStructure = {
       ...existingStruct,
       data: mappedData,
@@ -530,7 +530,7 @@ export class CoreDatabase {
       newStruct.system!.type = EncodedReference.fromDXN(type);
     }
 
-    core.setDecoded(ctx, [], newStruct);
+    core.setDecoded([], newStruct);
   }
 
   // TODO(wittjosiah): Handle RpcClosedError and TimeoutError during reconnection gracefully.
@@ -826,7 +826,7 @@ export class CoreDatabase {
     if (this._areDepsSatisfied(ctx, core)) {
       this._scheduleThrottledUpdate(ctx, [objectId]);
     } else {
-      for (const dep of core.getStrongDependencies(ctx)) {
+      for (const dep of core.getStrongDependencies()) {
         if (dep.isLocalObjectId()) {
           const id = dep.parts[1];
           this._automergeDocLoader.loadObjectDocument(ctx, id);
@@ -874,14 +874,14 @@ export class CoreDatabase {
     core.id = objectId;
     this._objects.set(core.id, core);
     this._automergeDocLoader.onObjectBoundToDocument(ctx, docHandle, objectId);
-    core.bind(ctx, {
+    core.bind({
       db: this,
       docHandle,
       path: ['objects', core.id],
       assignFromLocalState: false,
     });
 
-    const deps = core.getStrongDependencies(ctx);
+    const deps = core.getStrongDependencies();
     for (const dxn of deps) {
       if (!dxn.isLocalObjectId()) {
         continue;
@@ -899,7 +899,7 @@ export class CoreDatabase {
 
   private _areDepsSatisfied(ctx: Context, core: ObjectCore, seen?: Set<ObjectId>): boolean {
     seen ??= new Set<ObjectId>();
-    const deps = core.getStrongDependencies(ctx);
+    const deps = core.getStrongDependencies();
 
     seen.add(core.id);
     return deps.every((dep) => {
@@ -922,7 +922,7 @@ export class CoreDatabase {
     for (const objectId of objectIds) {
       const objectCore = this._objects.get(objectId);
       invariant(objectCore);
-      objectCore.bind(ctx, {
+      objectCore.bind({
         db: this,
         docHandle,
         path: objectCore.mountPath,

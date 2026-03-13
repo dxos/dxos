@@ -18,6 +18,7 @@ import {
   type InsertIntoQueueRequest,
   type QueryQueueRequest,
   type QueueQueryResult,
+  type QueueService,
   type SyncQueueRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
@@ -25,7 +26,7 @@ import type { SqlTransaction } from '@dxos/sql-sqlite';
 /**
  * Writes queue data to a local FeedStore.
  */
-export class LocalQueueServiceImpl {
+export class LocalQueueServiceImpl implements QueueService {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;
   #syncQueue?: (request: SyncQueueRequest) => Promise<void>;

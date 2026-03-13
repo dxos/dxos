@@ -173,7 +173,7 @@ export class RtcTransportProxy extends Resource implements Transport {
   private async _handleSignal(signalEvent: BridgeEvent.SignalEvent): Promise<void> {
     try {
       await this._options.sendSignal(signalEvent.payload);
-    } catch {
+    } catch (error) {
       const type = signalEvent.payload.payload.data?.type;
       if (type === 'offer' || type === 'answer') {
         this._raiseIfOpen(
@@ -190,7 +190,7 @@ export class RtcTransportProxy extends Resource implements Transport {
         { timeout: RPC_TIMEOUT },
       );
       return response.details;
-    } catch {
+    } catch (err) {
       return 'bridge-svc unreachable';
     }
   }
@@ -199,7 +199,7 @@ export class RtcTransportProxy extends Resource implements Transport {
     try {
       const response = await this._options.bridgeService.getStats({ proxyId: this._proxyId }, { timeout: RPC_TIMEOUT });
       return response.stats as TransportStats;
-    } catch {
+    } catch (err) {
       return {
         bytesSent: 0,
         bytesReceived: 0,

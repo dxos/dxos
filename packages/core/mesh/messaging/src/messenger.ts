@@ -142,7 +142,7 @@ export class Messenger {
           }),
         );
         void messageContext.dispose();
-        this._monitor.recordReliableMessage(ctx, { sendAttempts, sent: false });
+        this._monitor.recordReliableMessage({ sendAttempts, sent: false });
       },
       MESSAGE_TIMEOUT,
     );
@@ -151,7 +151,7 @@ export class Messenger {
       messageReceived();
       this._onAckCallbacks.delete(reliablePayload.messageId!);
       void messageContext.dispose();
-      this._monitor.recordReliableMessage(ctx, { sendAttempts, sent: true });
+      this._monitor.recordReliableMessage({ sendAttempts, sent: true });
     });
 
     await this._encodeAndSend(ctx, { author, recipient, reliablePayload });
@@ -251,7 +251,7 @@ export class Messenger {
         messageId: reliablePayload.messageId,
       });
     } catch (err) {
-      this._monitor.recordMessageAckFailed(ctx);
+      this._monitor.recordMessageAckFailed();
       throw err;
     }
 

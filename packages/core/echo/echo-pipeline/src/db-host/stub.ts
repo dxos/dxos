@@ -7,13 +7,14 @@ import type {
   InsertIntoQueueRequest,
   QueryQueueRequest,
   QueueQueryResult,
+  QueueService,
   SyncQueueRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 
 /**
  * Stub implementation for when Edge is not available.
  */
-export class QueueServiceStub {
+export class QueueServiceStub implements QueueService {
   queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
     throw new Error('Not available.');
   }

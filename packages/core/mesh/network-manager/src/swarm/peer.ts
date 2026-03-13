@@ -146,7 +146,7 @@ export class Peer {
         const connection = this._createConnection(ctx, false, message.sessionId);
 
         try {
-          await this._connectionLimiter.connecting(ctx, message.sessionId);
+          await this._connectionLimiter.connecting(message.sessionId);
           connection.initiate(ctx);
 
           await connection.openConnection(ctx);
@@ -180,7 +180,7 @@ export class Peer {
 
     let answer: Answer;
     try {
-      await this._connectionLimiter.connecting(ctx, sessionId);
+      await this._connectionLimiter.connecting(sessionId);
       connection.initiate(ctx);
 
       answer = await this._signalMessaging.offer({

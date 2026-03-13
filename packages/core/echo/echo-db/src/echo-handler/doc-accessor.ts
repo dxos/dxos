@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Context } from '@dxos/context';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { assertArgument } from '@dxos/invariant';
@@ -24,5 +23,5 @@ export const createDocAccessor = <T extends AnyProperties>(obj: T, path: KeyPath
   const core = getObjectCore(obj);
   const basePath = (obj as any as ProxyTarget)[symbolPath];
   const fullPath = basePath ? [...basePath, ...path] : path;
-  return core.getDocAccessor(Context.default(), fullPath);
+  return core.getDocAccessor(fullPath);
 };

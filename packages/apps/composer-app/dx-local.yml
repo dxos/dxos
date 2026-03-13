@@ -10,6 +10,6 @@ runtime:
       type: LOCAL_TESTING
     # NOTE: For local testing use the DX_EDGE_BASE_URL environment variable.
     edge:
-      url: https://edge.dxos.workers.dev
+      url: https://edge-main.dxos.workers.dev
     ai:
       server: https://ai-service.dxos.workers.dev

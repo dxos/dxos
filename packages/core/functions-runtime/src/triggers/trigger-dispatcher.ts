@@ -20,7 +20,6 @@ import * as Record from 'effect/Record';
 import * as Schedule from 'effect/Schedule';
 import * as Struct from 'effect/Struct';
 
-import { Context as DxosContext } from '@dxos/context';
 import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';

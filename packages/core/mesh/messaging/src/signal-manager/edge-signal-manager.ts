@@ -144,11 +144,11 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     );
   }
 
-  async subscribeMessages(_peerInfo: PeerInfo): Promise<void> {
+  async subscribeMessages(peerInfo: PeerInfo): Promise<void> {
     // No-op.
   }
 
-  async unsubscribeMessages(_peerInfo: PeerInfo): Promise<void> {
+  async unsubscribeMessages(peerInfo: PeerInfo): Promise<void> {
     // No-op.
   }
 

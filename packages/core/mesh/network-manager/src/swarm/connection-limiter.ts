@@ -44,7 +44,7 @@ export class ConnectionLimiter {
   /**
    * @returns Promise that resolves in queue when connections amount with 'CONNECTING' state is below the limit.
    */
-  async connecting(ctx: Context, sessionId: PublicKey): Promise<void> {
+  async connecting(sessionId: PublicKey): Promise<void> {
     invariant(!this._waitingPromises.has(sessionId), 'Peer is already waiting for connection');
     log('waiting', { sessionId });
     await new Promise<void>((resolve, reject) => {
@@ -60,7 +60,7 @@ export class ConnectionLimiter {
   /**
    * Rejects promise returned by `connecting` method.
    */
-  doneConnecting(ctx: Context, sessionId: PublicKey): void {
+  doneConnecting(sessionId: PublicKey): void {
     log('done', { sessionId });
     if (!this._waitingPromises.has(sessionId)) {
       return;

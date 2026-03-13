@@ -333,16 +333,16 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   private _filterCore(
-    ctx: Context,
+    _ctx: Context,
     core: ObjectCore,
     filter: QueryAST.Filter,
     options: QueryAST.QueryOptions | undefined,
   ): boolean {
     return (
-      filterCoreByDeletedFlag(ctx, core, options) &&
+      filterCoreByDeletedFlag(core, options) &&
       filterMatchObject(filter, {
         id: core.id,
-        doc: core.getObjectStructure(ctx),
+        doc: core.getObjectStructure(),
         spaceId: this.spaceId,
       })
     );
@@ -354,17 +354,16 @@ const isObjectIdFilter = (filter: QueryAST.Filter) => {
 };
 
 const filterCoreByDeletedFlag = (
-  ctx: Context,
   core: ObjectCore,
   options: QueryAST.QueryOptions | undefined,
 ): boolean => {
   switch (options?.deleted) {
     case undefined:
     case 'exclude':
-      return !core.isDeleted(ctx);
+      return !core.isDeleted();
     case 'include':
       return true;
     case 'only':
-      return core.isDeleted(ctx);
+      return core.isDeleted();
   }
 };

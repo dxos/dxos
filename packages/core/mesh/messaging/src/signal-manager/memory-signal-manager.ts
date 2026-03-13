@@ -141,7 +141,7 @@ export class MemorySignalManager implements SignalManager {
     this._context.swarmEvent.emit(swarmEvent);
   }
 
-  async query(_request: QueryRequest): Promise<SwarmResponse> {
+  async query(request: QueryRequest): Promise<SwarmResponse> {
     throw new Error('Not implemented');
   }
 
