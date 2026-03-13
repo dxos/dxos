@@ -49,9 +49,12 @@ export const getTypesPath = (spaceId: string): string => `${Node.RootId}/${space
 
 /**
  * Canonical qualified path to a specific type's subtree within a space.
+ * Optional additional segments are appended (e.g. an object id for a view under that type).
  */
-export const getTypePath = (spaceId: string, typename: string): string =>
-  `${Node.RootId}/${spaceId}/${Segments.types}/${typename}`;
+export const getTypePath = (spaceId: string, typename: string, ...segments: string[]): string => {
+  const base = `${Node.RootId}/${spaceId}/${Segments.types}/${typename}`;
+  return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
+};
 
 /**
  * Canonical qualified path to a specific object node within a type's subtree.
@@ -73,8 +76,12 @@ export const getObjectPathFromObject = (object: Obj.Unknown): string => {
 
 /**
  * Canonical qualified path to the collections section of a space.
+ * Optional additional segments are appended (e.g. an object id for a collection under that section).
  */
-export const getCollectionsPath = (spaceId: string): string => `${Node.RootId}/${spaceId}/${Segments.collections}`;
+export const getCollectionsPath = (spaceId: string, ...segments: string[]): string => {
+  const base = `${Node.RootId}/${spaceId}/${Segments.collections}`;
+  return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
+};
 
 //
 // URL routing helpers.

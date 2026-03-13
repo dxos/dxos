@@ -27,23 +27,17 @@ export default Capability.makeModule(
             typename: Task.Task.typename,
           });
           space.db.add(object);
-          Obj.change(space.properties, (p) => {
-            p.staticRecords = [Task.Task.typename];
-          });
         }),
       }),
       OperationResolver.make({
         operation: TableOperation.OnSchemaAdded,
-        handler: Effect.fnUntraced(function* ({ db, schema, show = true }) {
+        handler: Effect.fnUntraced(function* ({ db, schema }) {
           const { object } = yield* Operation.invoke(TableOperation.Create, {
             db,
             typename: Type.getTypename(schema),
           });
-          yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
-
-          if (show) {
-            yield* Operation.invoke(LayoutOperation.Open, { subject: [getObjectPathFromObject(object)] });
-          }
+          const { subject } = yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
+          yield* Operation.invoke(LayoutOperation.Open, { subject });
         }),
       }),
       OperationResolver.make({

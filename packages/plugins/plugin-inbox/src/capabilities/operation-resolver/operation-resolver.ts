@@ -151,14 +151,6 @@ export default Capability.makeModule(
             });
           }
 
-          if (!space.properties.staticRecords.includes(Person.Person.typename)) {
-            log.info('adding record type for contacts');
-            yield* Operation.invoke(SpaceOperation.UseStaticSchema, {
-              db,
-              typename: Person.Person.typename,
-            });
-          }
-
           yield* Operation.invoke(SpaceOperation.AddObject, {
             object: newContact,
             target: db,

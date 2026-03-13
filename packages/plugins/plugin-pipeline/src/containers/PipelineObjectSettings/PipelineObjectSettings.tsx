@@ -51,7 +51,6 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
     annotation: {
       location: ['database', 'runtime'],
       kind: ['user'],
-      registered: ['registered', 'unregistered'],
     },
   });
 

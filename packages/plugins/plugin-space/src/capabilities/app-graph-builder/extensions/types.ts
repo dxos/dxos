@@ -88,9 +88,11 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
+        // TODO(wittjosiah): Make schema queries reactive to simplify this.
         // Reactive subscription to database schema objects so the connector re-runs on schema changes.
         get(AtomQuery.make(space.db, Filter.type(Type.PersistentType)));
-
+        // Reactive subscription to client/plugin-contributed schemas so the connector re-runs when new schemas or static schemas are added.
+        get(capabilities.atom(AppCapabilities.Schema));
         const allSchemas = space.db.schemaRegistry.query({ location: ['runtime', 'database'] }).runSync();
 
         const userSchemas = allSchemas.filter((schema) => {
@@ -112,6 +114,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         const viewIndex = buildViewIndex(get, space, allSchemas);
 
         const visibleSchemas = userSchemas.filter((schema) => {
+          if (Type.isMutable(schema)) {
+            return true;
+          }
           const typename = Type.getTypename(schema);
           const objects = get(AtomQuery.make(space.db, Filter.typename(typename)));
           return objects.length > 0 || viewIndex.typenamesWithViews.has(typename);
@@ -256,7 +261,7 @@ const createSchemaNode = ({
       const snapshot = get(AtomObj.make(persistentSchema));
       return {
         label: snapshot.name || ['object name placeholder', { ns: Type.PersistentType.typename }],
-        nodeId: persistentSchema.id,
+        nodeId: typename,
       };
     }),
     Match.orElse(() => ({
@@ -264,14 +269,16 @@ const createSchemaNode = ({
       nodeId: typename,
     })),
   );
+  const icon = Type.isMutable(schema) ? 'ph--cube--regular' : (metadata.icon ?? 'ph--placeholder--regular');
+  const iconHue = Type.isMutable(schema) ? 'neutral' : metadata.iconHue;
   return {
     id: nodeId,
     type: STATIC_SCHEMA_TYPE,
     data: schema,
     properties: {
       label,
-      icon: metadata.icon ?? 'ph--placeholder--regular',
-      iconHue: metadata.iconHue,
+      icon,
+      iconHue,
       role: 'branch',
       testId: `spacePlugin.schemaNode.${typename}`,
       selectable: false,
@@ -375,16 +382,11 @@ const createSchemaActions = ({
       id: SpaceOperation.RemoveObjects.meta.key,
       type: Node.ActionType,
       data: () =>
-        Effect.sync(() => {
-          const index = space.properties.staticRecords.findIndex(
-            (typename: string) => typename === Type.getTypename(schema),
-          );
-          if (index > -1) {
-            Obj.change(space.properties, (props) => {
-              props.staticRecords.splice(index, 1);
-            });
-          }
-        }),
+        Type.isMutable(schema)
+          ? Operation.invoke(SpaceOperation.RemoveObjects, {
+              objects: [(schema as Type.RuntimeType).persistentSchema as Obj.Unknown],
+            })
+          : Effect.succeed(undefined),
       properties: {
         label: getDynamicLabel('delete object label', Type.getTypename(Type.PersistentType)),
         icon: 'ph--trash--regular',
