@@ -52,7 +52,7 @@ describe('IndexQuerySource', () => {
     const source = new IndexQuerySource({
       service,
       objectLoader: {
-        loadObject: async (_ctx) => undefined,
+        loadObject: async () => undefined,
       },
       graph: mockGraph,
     });
@@ -90,7 +90,7 @@ describe('IndexQuerySource', () => {
     const source = new IndexQuerySource({
       service,
       objectLoader: {
-        loadObject: async (_ctx) => undefined,
+        loadObject: async () => undefined,
       },
       graph: mockGraph,
     });

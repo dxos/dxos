@@ -219,7 +219,6 @@ export class EchoClient extends Resource {
   }
 
   private async _loadObjectFromDocument(
-    ctx: Context,
     { spaceId, objectId, documentId }: LoadObjectProps,
   ): Promise<Entity.Unknown | undefined> {
     const db = this._databases.get(spaceId);

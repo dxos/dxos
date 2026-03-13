@@ -35,7 +35,7 @@ export class TestBuilder extends Resource {
     return this._registry;
   }
 
-  override async _open(_ctx: Context): Promise<void> {
+  override async _open(): Promise<void> {
     const client = new Client(this._options);
     await client.initialize();
     await client.halo.createIdentity();
