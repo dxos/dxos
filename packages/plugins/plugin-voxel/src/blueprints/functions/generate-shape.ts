@@ -19,7 +19,9 @@ export default defineFunction({
     world: Ref.Ref(Voxel.World).annotations({
       description: 'The voxel world to modify.',
     }),
-    shape: (Schema.Union(...MODEL_TYPES.map((type) => Schema.Literal(type))) as unknown as Schema.Schema<ModelType>).annotations({
+    shape: (
+      Schema.Union(...MODEL_TYPES.map((type) => Schema.Literal(type))) as unknown as Schema.Schema<ModelType>
+    ).annotations({
       description: `Shape type: ${MODEL_TYPES.join(', ')}.`,
     }),
     origin: Schema.Struct({

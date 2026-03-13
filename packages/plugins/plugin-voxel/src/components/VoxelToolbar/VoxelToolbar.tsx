@@ -71,7 +71,13 @@ export const VoxelToolbar = ({
         onClick={onToggleGrid}
       />
       {onGenerate && (
-        <Toolbar.IconButton icon='ph--shapes--regular' iconOnly variant='ghost' label='Generate shape' onClick={onGenerate} />
+        <Toolbar.IconButton
+          icon='ph--shapes--regular'
+          iconOnly
+          variant='ghost'
+          label='Generate shape'
+          onClick={onGenerate}
+        />
       )}
       {onClear && (
         <Toolbar.IconButton icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />
