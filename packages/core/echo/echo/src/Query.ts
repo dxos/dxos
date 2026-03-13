@@ -6,6 +6,7 @@ import type * as EffectArray from 'effect/Array';
 import type * as Schema from 'effect/Schema';
 
 import { type QueryAST } from '@dxos/echo-protocol';
+import { type ObjectId } from '@dxos/keys';
 
 import type * as Collection from './Collection';
 import * as Database from './Database';
@@ -452,6 +453,17 @@ export const type = (schema: Schema.Schema.All | string, predicates?: Filter.Pro
 };
 
 /**
+ * Query for a specific object by its id.
+ * Shorthand for: `Query.select(Filter.id(objectId))`.
+ */
+export const id = (objectId: ObjectId): Any => {
+  return new QueryClass({
+    type: 'select',
+    filter: Filter.id(objectId).ast,
+  });
+};
+
+/**
  * Combine results of multiple queries.
  * @param queries - Queries to combine.
  * @returns Query for the combined results.
@@ -484,13 +496,19 @@ export const without = <T>(source: Query<T>, exclude: Query<T>): Query<T> => {
 };
 
 /**
+ * Create a query that selects a specific ECHO object.
+ * Shorthand for: `Query.id(obj.id)`.
+ */
+export function from(obj: Obj.Unknown): Any;
+
+/**
  * Create a query scoped to a data source.
  * The returned query selects everything from the source; chain `.select()` to narrow results.
  *
  * @param source - Data source: database, feed, 'all-accessible-spaces', or another query.
  * @returns Query scoped to the given source.
  */
-export const from = (
+export function from(
   source:
     | Database.Database
     | Database.Database[]
@@ -500,14 +518,31 @@ export const from = (
     | QueryAST.Scope
     | 'all-accessible-spaces',
   options?: { includeFeeds?: boolean },
-): Any => {
+): Any;
+
+export function from(
+  source:
+    | Obj.Unknown
+    | Database.Database
+    | Database.Database[]
+    | Feed.Feed
+    | Feed.Feed[]
+    | Any
+    | QueryAST.Scope
+    | 'all-accessible-spaces',
+  options?: { includeFeeds?: boolean },
+): Any {
+  if (Obj.isObject(source) || Obj.isSnapshot(source)) {
+    return id(source.id);
+  }
+
   const baseQuery: QueryAST.Query = {
     type: 'select',
     filter: Filter.everything().ast,
   };
   const wrapper = new QueryClass(baseQuery);
   return wrapper.from(source as any, options);
-};
+}
 
 const SCOPE_KEYS = new Set(['spaceIds', 'queues', 'allQueuesFromSpaces']);
 
