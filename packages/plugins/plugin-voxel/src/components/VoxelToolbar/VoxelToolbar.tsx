@@ -16,6 +16,8 @@ export type VoxelToolbarProps = ToolbarRootProps & {
   selectedHue: Hue;
   /** Whether the grid is visible. */
   showGrid: boolean;
+  /** Whether the life simulation is running. */
+  lifeRunning?: boolean;
   /** Called when tool mode changes. */
   onToolModeChange: (mode: ToolMode) => void;
   /** Called when hue selection changes. */
@@ -26,6 +28,10 @@ export type VoxelToolbarProps = ToolbarRootProps & {
   onClear?: () => void;
   /** Called when generate button is clicked. */
   onGenerate?: () => void;
+  /** Called to toggle the life simulation. */
+  onToggleLife?: () => void;
+  /** Called to seed a random life pattern. */
+  onSeedLife?: () => void;
 };
 
 const TOOL_OPTIONS: { value: ToolMode; icon: string; label: string }[] = [
@@ -39,11 +45,14 @@ export const VoxelToolbar = ({
   toolMode,
   selectedHue,
   showGrid,
+  lifeRunning,
   onToolModeChange,
   onHueChange,
   onToggleGrid,
   onClear,
   onGenerate,
+  onToggleLife,
+  onSeedLife,
   ...props
 }: VoxelToolbarProps) => {
   return (
@@ -81,6 +90,25 @@ export const VoxelToolbar = ({
       )}
       {onClear && (
         <Toolbar.IconButton icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />
+      )}
+      <Toolbar.Separator />
+      {onSeedLife && (
+        <Toolbar.IconButton
+          icon='ph--dna--regular'
+          iconOnly
+          variant='ghost'
+          label='Seed random life pattern'
+          onClick={onSeedLife}
+        />
+      )}
+      {onToggleLife && (
+        <Toolbar.IconButton
+          icon={lifeRunning ? 'ph--pause--fill' : 'ph--play--fill'}
+          iconOnly
+          variant='ghost'
+          label={lifeRunning ? 'Stop life' : 'Start life'}
+          onClick={onToggleLife}
+        />
       )}
       <Toolbar.Separator />
       {PALETTE_STYLES.map((colorStyle) => (
