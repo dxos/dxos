@@ -29,6 +29,7 @@ Do **not** add ctx to:
 - **Public user-facing APIs** (called by app/plugin developers) — these create `ctx = Context.default()` internally and forward it.
 - **Infrastructure / plumbing** — worker setup, service registry wiring, serialization, import/export helpers.
 - **Pure local operations** — in-memory data transforms, UI state, local database reads that never leave the process.
+- **Leaf utility methods** — small methods that don't call other methods (getters, simple lookups, validation helpers). Adding ctx to these adds noise without tracing value.
 - **Test utilities** — test builders, test helpers (unless they call production code that requires ctx, in which case pass `Context.default()`).
 
 ### Key entry points
