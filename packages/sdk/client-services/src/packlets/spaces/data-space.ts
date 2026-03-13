@@ -477,7 +477,7 @@ export class DataSpace {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
           handle = await cancelWithContext(
             this._ctx,
-            this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), rootUrl as AutomergeUrl, {
+            this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
               fetchFromNetwork: true,
             }),
           );

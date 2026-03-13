@@ -219,7 +219,7 @@ export class Identity {
     });
     const receipt = await this.controlPipeline.writer.write({ credential: { credential } });
     await this.controlPipeline.state.waitUntilTimeframe(
-      Context.default(),
+      ctx,
       new Timeframe([[receipt.feedKey, receipt.seq]]),
     );
   }

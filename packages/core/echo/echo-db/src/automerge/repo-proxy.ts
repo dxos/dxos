@@ -92,7 +92,7 @@ export class RepoProxy extends Resource {
     }
 
     const documentId = interpretAsDocumentId(id);
-    return this._getOrLoadHandle<T>(this._ctx, { documentId });
+    return this._getOrLoadHandle<T>(ctx, { documentId });
   }
 
   import<T>(ctx: Context, dump: Uint8Array): DocHandleProxy<T> {
@@ -210,7 +210,7 @@ export class RepoProxy extends Resource {
       throw new Error(`Invalid documentId ${documentId}`);
     }
 
-    return this._loadHandle<T>(this._ctx, { documentId });
+    return this._loadHandle<T>(ctx, { documentId });
   }
 
   private _loadHandle<T>(ctx: Context, { documentId }: { documentId: DocumentId }): DocHandleProxy<T> {
@@ -321,7 +321,7 @@ export class RepoProxy extends Resource {
         continue;
       }
 
-      handle._integrateHostUpdate(this._ctx, mutation);
+      handle._integrateHostUpdate(ctx, mutation);
     }
   }
 
@@ -358,7 +358,7 @@ export class RepoProxy extends Resource {
         for (const documentId of documentIds) {
           const handle = this._handles[documentId];
           invariant(handle, `No handle found for documentId ${documentId}`);
-          const mutation = handle._getPendingChanges(this._ctx);
+          const mutation = handle._getPendingChanges(ctx);
           if (mutation) {
             updates.push({ documentId, mutation });
           }
@@ -372,11 +372,11 @@ export class RepoProxy extends Resource {
           return;
         }
         for (const { documentId } of updates) {
-          this._handles[documentId]._confirmSync(this._ctx);
+          this._handles[documentId]._confirmSync(ctx);
         }
       }
 
-      this._emitSaveStateEvent(this._ctx);
+      this._emitSaveStateEvent(ctx);
     } catch (err) {
       // Don't restore pending updates if generation changed - this task is abandoned.
       const isAbandoned = generation !== this._generation;

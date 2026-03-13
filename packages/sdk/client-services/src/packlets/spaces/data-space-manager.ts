@@ -254,7 +254,7 @@ export class DataSpaceManager extends Resource {
   protected override async _close(ctx: Context): Promise<void> {
     log('close');
     for (const space of this._spaces.values()) {
-      await space.close(this._ctx);
+      await space.close(ctx);
     }
     this._spaces.clear();
   }
@@ -585,8 +585,8 @@ export class DataSpaceManager extends Resource {
         return this._handleInvitationStatusChange(this._ctx, dataSpace, invitation, isActive);
       },
     });
-    controlFeed && (await space.setControlFeed(this._ctx, controlFeed));
-    dataFeed && (await space.setDataFeed(this._ctx, dataFeed));
+    controlFeed && (await space.setControlFeed(ctx, controlFeed));
+    dataFeed && (await space.setDataFeed(ctx, dataFeed));
 
     const dataSpace = new DataSpace({
       inner: space,
@@ -642,7 +642,7 @@ export class DataSpaceManager extends Resource {
     });
 
     if (metadata.controlTimeframe) {
-      dataSpace.inner.controlPipeline.state.setTargetTimeframe(this._ctx, metadata.controlTimeframe);
+      dataSpace.inner.controlPipeline.state.setTargetTimeframe(ctx, metadata.controlTimeframe);
     }
 
     this._spaces.set(metadata.key, dataSpace);

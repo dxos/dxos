@@ -89,7 +89,7 @@ export class SpaceManager {
 
   @synchronized
   async close(ctx: Context): Promise<void> {
-    await Promise.all([...this._spaces.values()].map((space) => space.close()));
+    await Promise.all([...this._spaces.values()].map((space) => space.close(ctx)));
   }
 
   async constructSpace(

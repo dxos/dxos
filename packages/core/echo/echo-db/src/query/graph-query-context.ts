@@ -217,7 +217,7 @@ export class SpaceQuerySource implements QuerySource {
   };
 
   async run(ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<Obj.Unknown>[]> {
-    if (!this._isValidSourceForQuery(this._ctx, query)) {
+    if (!this._isValidSourceForQuery(ctx, query)) {
       return [];
     }
 
@@ -232,18 +232,18 @@ export class SpaceQuerySource implements QuerySource {
       results.push(
         ...(
           await this._database.coreDatabase.batchLoadObjectCores(
-            this._ctx,
+            ctx,
             (filter as QueryAST.FilterObject).id as ObjectId[],
           )
         )
           .filter(Predicate.isNotUndefined)
-          .filter((core) => this._filterCore(this._ctx, core, filter, options))
-          .map((core) => this._mapCoreToResult(this._ctx, core)),
+          .filter((core) => this._filterCore(ctx, core, filter, options))
+          .map((core) => this._mapCoreToResult(ctx, core)),
       );
     }
 
     prohibitSignalActions(() => {
-      results.push(...this._queryWorkingSet(this._ctx, filter, options));
+      results.push(...this._queryWorkingSet(ctx, filter, options));
     });
 
     // Dedup
@@ -269,7 +269,7 @@ export class SpaceQuerySource implements QuerySource {
 
     if (!this._results) {
       prohibitSignalActions(() => {
-        this._results = this._queryWorkingSet(this._ctx, filter, options);
+        this._results = this._queryWorkingSet(ctx, filter, options);
       });
     }
 
@@ -277,7 +277,7 @@ export class SpaceQuerySource implements QuerySource {
   }
 
   update(ctx: Context, query: QueryAST.Query): void {
-    if (!this._isValidSourceForQuery(this._ctx, query)) {
+    if (!this._isValidSourceForQuery(ctx, query)) {
       this._query = undefined;
       return;
     }
