@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { QueryAST } from '@dxos/echo-protocol';
-import { DXN } from '@dxos/keys';
+import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Dataset from './Dataset';
@@ -560,12 +560,20 @@ describe('query api', () => {
       });
     });
 
-    test('Query.type(...).from(feed) sets queue scope', () => {
-      const feed = Feed.make({ name: 'test-feed' });
-      const queueDxn = DXN.parse('dxn:echo:test-space:test-queue');
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queueDxn.toString() });
-      });
+    test('Query.type(...).from(feed) sets queue scope', async () => {
+      const spaceId = SpaceId.random();
+      const feedId = ObjectId.random();
+      const feedDxn = DXN.parse(`dxn:echo:${spaceId}:${feedId}`);
+      const feed = (await Obj.fromJSON(
+        {
+          '@type': 'dxn:type:dxos.org/type/Feed:0.1.0',
+          id: feedId,
+          name: 'test-feed',
+        },
+        { dxn: feedDxn },
+      )) as Feed.Feed;
+
+      const expectedQueueDxn = new DXN(DXN.kind.QUEUE, ['data', spaceId, feedId]);
 
       const query = Query.type(TestSchema.Person).from(feed);
       Schema.validateSync(QueryAST.Query)(query.ast);
@@ -574,7 +582,7 @@ describe('query api', () => {
         from: {
           _tag: 'scope',
           scope: {
-            queues: [queueDxn.toString()],
+            queues: [expectedQueueDxn.toString()],
           },
         },
         query: {

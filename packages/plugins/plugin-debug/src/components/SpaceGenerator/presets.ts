@@ -119,7 +119,7 @@ export const generator = () => ({
         const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
         const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
         invariant(mailbox, 'Mailbox feed not found');
-        const queueDxn = Feed.getQueueDxn(mailbox)?.toString();
+        const queueDxn = Feed.getDxn(mailbox)?.toString();
         invariant(queueDxn, 'Mailbox feed missing queue DXN key');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagDxn = Obj.getDXN(tag).toString();
