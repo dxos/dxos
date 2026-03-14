@@ -207,16 +207,17 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: `${meta.id}.mailbox-message`,
-        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        connector: (mailbox, get) => {
+        match: (node) =>
+          Mailbox.instanceOf(node.data) ? Option.some({ mailbox: node.data, nodeId: node.id }) : Option.none(),
+        connector: (matched, get) => {
+          const mailbox = matched.mailbox;
           const db = Obj.getDatabase(mailbox);
           const feed = mailbox.feed ? (get(AtomRef.make(mailbox.feed)) as Feed.Feed | undefined) : undefined;
           if (!db || !feed) {
             return Effect.succeed([]);
           }
 
-          const nodeId = Obj.getDXN(mailbox).toString();
-          const messageId = get(selectedId(nodeId));
+          const messageId = get(selectedId(matched.nodeId));
           const message = get(
             AtomQuery.make<Message.Message>(
               db,
@@ -240,16 +241,17 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: `${meta.id}.calendar-event`,
-        match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        connector: (calendar, get) => {
+        match: (node) =>
+          Calendar.instanceOf(node.data) ? Option.some({ calendar: node.data, nodeId: node.id }) : Option.none(),
+        connector: (matched, get) => {
+          const calendar = matched.calendar;
           const db = Obj.getDatabase(calendar);
           const feed = calendar.feed ? (get(AtomRef.make(calendar.feed)) as Feed.Feed | undefined) : undefined;
           if (!db || !feed) {
             return Effect.succeed([]);
           }
 
-          const nodeId = Obj.getDXN(calendar).toString();
-          const eventId = get(selectedId(nodeId));
+          const eventId = get(selectedId(matched.nodeId));
           const event = get(
             AtomQuery.make<Event.Event>(db, Query.select(eventId ? Filter.id(eventId) : Filter.nothing()).from(feed)),
           )[0];

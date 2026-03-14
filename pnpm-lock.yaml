@@ -6052,6 +6052,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-observability':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-observability
       '@dxos/plugin-registry':
         specifier: workspace:*
         version: link:../../plugins/plugin-registry
@@ -10785,6 +10788,9 @@ importers:
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.73.2(@effect/platform@0.94.4(effect@3.19.16))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.19.16))(effect@3.19.16))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.19.16))(effect@3.19.16))(effect@3.19.16)
+      yaml:
+        specifier: 'catalog:'
+        version: 2.8.2
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
