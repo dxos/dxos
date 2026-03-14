@@ -56,12 +56,12 @@ export class EdgeAgentManager extends Resource {
     invariant(this._edgeFeatures?.agents);
 
     const response = await this._edgeHttpClient.createAgent(
+      this._ctx,
       {
         identityKey: this._identity.identityKey.toHex(),
         haloSpaceId: this._identity.haloSpaceId,
         haloSpaceKey: this._identity.haloSpaceKey.toHex(),
       },
-      { context: this._ctx },
     );
 
     const deviceKey = PublicKey.fromHex(response.deviceKey);
@@ -125,8 +125,8 @@ export class EdgeAgentManager extends Resource {
     try {
       log('fetching agent status');
       const { agent } = await this._edgeHttpClient.getAgentStatus(
+        this._ctx,
         { ownerIdentityKey: this._identity.identityKey },
-        { context: this._ctx },
       );
       const wasAgentCreatedDuringQuery = this._agentStatus === EdgeAgentStatus.ACTIVE;
       if (!wasAgentCreatedDuringQuery) {

@@ -84,7 +84,7 @@ export class EdgeIdentityRecoveryManager {
     };
 
     try {
-      await this._edgeClient.recoverIdentity(request, { context: ctx });
+      await this._edgeClient.recoverIdentity(ctx, request);
       throw new Error('No challenge received.');
     } catch (error: any) {
       if (!(error instanceof EdgeAuthChallengeError)) {
@@ -125,7 +125,7 @@ export class EdgeIdentityRecoveryManager {
           : Buffer.from(signature).toString('base64'),
     };
 
-    const response = await this._edgeClient.recoverIdentity(request, { context: ctx });
+    const response = await this._edgeClient.recoverIdentity(ctx, request);
 
     await this._acceptRecoveredIdentity({
       authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
@@ -152,7 +152,7 @@ export class EdgeIdentityRecoveryManager {
       token,
     };
 
-    const response = await this._edgeClient.recoverIdentity(request, { context: ctx });
+    const response = await this._edgeClient.recoverIdentity(ctx, request);
 
     await this._acceptRecoveredIdentity({
       authorizedDeviceCredential: decodeCredential(response.deviceAuthCredential),
@@ -180,18 +180,18 @@ export class EdgeIdentityRecoveryManager {
 
     let response: RecoverIdentityResponseBody;
     try {
-      response = await this._edgeClient.recoverIdentity(request, { context: ctx });
+      response = await this._edgeClient.recoverIdentity(ctx, request);
     } catch (error: any) {
       if (!(error instanceof EdgeAuthChallengeError)) {
         throw error;
       }
       const signature = sign(Buffer.from(error.challenge, 'base64'), recoveryKeypair.secretKey);
       response = await this._edgeClient.recoverIdentity(
+        ctx,
         {
           ...request,
           signature: Buffer.from(signature).toString('base64'),
         },
-        { context: ctx },
       );
     }
 

@@ -94,6 +94,7 @@ export class FunctionsServiceClient {
         'Asset paths must be relative',
       );
       const response = await this.#edgeClient.uploadFunction(
+        ctx,
         { functionId: request.functionId },
         {
           name: request.name,
@@ -103,7 +104,7 @@ export class FunctionsServiceClient {
           assets: request.assets,
           runtime: request.runtime,
         },
-        { context: ctx, retry: { count: 3 }, auth: true },
+        { retry: { count: 3 }, auth: true },
       );
       log.verbose('deploy result', { ...response });
 
@@ -129,7 +130,7 @@ export class FunctionsServiceClient {
   // TODO(dmaretskyi): Add query filters.
   async query(ctx: Context): Promise<Function.Function[]> {
     try {
-      const response = await this.#edgeClient.listFunctions({ context: ctx });
+      const response = await this.#edgeClient.listFunctions(ctx);
       return response.uploadedFunctions.map((record: any) => {
         // Record shape is determined by EDGE API. We defensively parse.
         const latest = record.latestVersion ?? {};
@@ -165,6 +166,7 @@ export class FunctionsServiceClient {
     const cleanedId = functionId.replace(/^\//, '');
     try {
       return await this.#edgeClient.invokeFunction(
+        ctx,
         {
           functionId: cleanedId,
           spaceId: options?.spaceId,
@@ -172,7 +174,6 @@ export class FunctionsServiceClient {
           subrequestsLimit: options?.subrequestsLimit,
         },
         input,
-        { context: ctx },
       );
     } catch (error) {
       throw FunctionError.wrap({ message: 'Failed to invoke function', ifTypeDiffers: true })(error);
@@ -180,6 +181,6 @@ export class FunctionsServiceClient {
   }
 
   async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId): Promise<InvokeResult> {
-    return (await this.#edgeClient.forceRunCronTrigger(spaceId, triggerId, { context: ctx })) as InvokeResult;
+    return (await this.#edgeClient.forceRunCronTrigger(ctx, spaceId, triggerId)) as InvokeResult;
   }
 }

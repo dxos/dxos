@@ -378,12 +378,12 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
         heads,
       })),
     };
-    await this._edgeHttpClient.importBundle(this._spaceId, request, { context: ctx });
+    await this._edgeHttpClient.importBundle(ctx, this._spaceId, request);
   }
 
   async pullBundle(ctx: Context, docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>> {
     const request: ExportBundleRequest = { docHeads };
-    const response = await this._edgeHttpClient.exportBundle(this._spaceId, request, { context: ctx });
+    const response = await this._edgeHttpClient.exportBundle(ctx, this._spaceId, request);
     return Object.fromEntries(response.bundle.map((doc) => [doc.documentId, DocumentCodec.decode(doc.mutation)]));
   }
 

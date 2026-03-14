@@ -10,6 +10,7 @@ import { type DID } from 'iso-did/types';
 import { type Client } from '@dxos/client';
 import { type SpaceId } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
+import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, Function, setUserFunctionIdInMetadata } from '@dxos/functions';
@@ -54,6 +55,7 @@ export const uploadWorkerFunction = async ({
   log('uploading function', { functionId, name, version, ownerPublicKey });
   const edgeClient = createEdgeClient(client);
   const response = await edgeClient.uploadFunction(
+    Context.default(),
     { functionId },
     { name, version, ownerPublicKey: ownerPublicKey.toHex(), entryPoint, assets },
   );
@@ -76,7 +78,7 @@ export const uploadWorkerFunction = async ({
  */
 export const getDeployedFunctions = async (client: Client, dedupe = false): Promise<Function.Function[]> => {
   const edgeClient = createEdgeClient(client);
-  const result = await edgeClient.listFunctions();
+  const result = await edgeClient.listFunctions(Context.default());
   const functions: Function.Function[] = result.uploadedFunctions.flatMap((record: any) => {
     // Record shape is determined by EDGE API. We defensively parse.
     const latest = record.latestVersion ?? {};
@@ -130,7 +132,7 @@ export const invokeFunction = async (
   }
   // COMPAT: Previously functionId was a URL `/<guid>`. Now it's just the `<guid>`.
   const cleanedId = functionId.replace(/^\//, '');
-  return await edgeClient.invokeFunction({ functionId: cleanedId, spaceId, cpuTimeLimit, subrequestsLimit }, input);
+  return await edgeClient.invokeFunction(Context.default(), { functionId: cleanedId, spaceId, cpuTimeLimit, subrequestsLimit }, input);
 };
 
 export const incrementSemverPatch = (version: string): string => {

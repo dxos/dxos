@@ -9,6 +9,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { type Client, ClientService } from '@dxos/client';
+import { Context as DxosContext } from '@dxos/context';
 import { FunctionError } from '@dxos/functions';
 import type { SpaceId } from '@dxos/keys';
 
@@ -35,7 +36,7 @@ export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions
         Effect.gen(function* () {
           // TODO(dmaretskyi): Reconcile with `invokeFunction`.
           const cleanedId = deployedFunctionId.replace(/^\//, '');
-          return yield* Effect.promise(() => edgeClient.invokeFunction({ functionId: cleanedId, spaceId }, input)).pipe(
+            return yield* Effect.promise(() => edgeClient.invokeFunction(DxosContext.default(), { functionId: cleanedId, spaceId }, input)).pipe(
             Effect.mapError(FunctionError.wrap()),
             Effect.orDie, // TODO(dmaretskyi): Checked error.
           );
@@ -70,7 +71,7 @@ export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions
               // TODO(dmaretskyi): Reconcile with `invokeFunction`.
               const cleanedId = deployedFunctionId.replace(/^\//, '');
               return yield* Effect.promise(() =>
-                edgeClient.invokeFunction({ functionId: cleanedId, spaceId }, input),
+                edgeClient.invokeFunction(DxosContext.default(), { functionId: cleanedId, spaceId }, input),
               ).pipe(
                 Effect.mapError(FunctionError.wrap()),
                 Effect.orDie, // TODO(dmaretskyi): Checked error.

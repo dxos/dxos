@@ -28,10 +28,10 @@ export class QueueServiceImpl implements QueueService {
     invariant(request.query?.queuesNamespace);
     const ctx = Context.default();
     const result = await this._client.queryQueue(
+      ctx,
       request.query.queuesNamespace,
       request.query.spaceId as SpaceId,
       request.query,
-      { context: ctx },
     );
     return result as any as QueueQueryResult;
   }
@@ -39,22 +39,22 @@ export class QueueServiceImpl implements QueueService {
   insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
     const ctx = Context.default();
     return this._client.insertIntoQueue(
+      ctx,
       request.subspaceTag!,
       request.spaceId as SpaceId,
       request.queueId as ObjectId,
       request.objects!,
-      { context: ctx },
     );
   }
 
   deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
     const ctx = Context.default();
     return this._client.deleteFromQueue(
+      ctx,
       request.subspaceTag!,
       request.spaceId as SpaceId,
       request.queueId as ObjectId,
       request.objectIds as ObjectId[],
-      { context: ctx },
     );
   }
 

@@ -246,9 +246,10 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     scheduleTask(ctx, async () => {
       try {
         await client.notarizeCredentials(
+          ctx,
           this._spaceId,
           { credentials: encodedCredentials },
-          { context: ctx, retry: { count: MAX_EDGE_RETRIES, timeout: timeouts.retryTimeout, jitter: timeouts.jitter } },
+          { retry: { count: MAX_EDGE_RETRIES, timeout: timeouts.retryTimeout, jitter: timeouts.jitter } },
         );
 
         log('edge notarization success');
@@ -302,8 +303,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
   private _notarizePendingEdgeCredentials(client: EdgeHttpClient, writer: FeedWriter<Credential>): void {
     scheduleMicroTask(this._ctx, async () => {
       try {
-        const response = await client.getCredentialsForNotarization(this._spaceId, {
-          context: this._ctx,
+        const response = await client.getCredentialsForNotarization(this._ctx, this._spaceId, {
           retry: { count: MAX_EDGE_RETRIES },
         });
 
