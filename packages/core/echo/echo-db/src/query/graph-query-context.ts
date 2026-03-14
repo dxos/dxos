@@ -306,6 +306,7 @@ export class SpaceQuerySource implements QuerySource {
 
   private _isValidSourceForQuery(query: QueryAST.Query): boolean {
     const targetSpaces = getTargetSpacesForQuery(query);
+    // Disabled by spaces filter.
     if (targetSpaces.length > 0 && !targetSpaces.includes(this.spaceId)) {
       return false;
     }

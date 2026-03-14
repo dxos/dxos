@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import { DeferredTask, Event, scheduleTask, synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -50,12 +51,12 @@ export class EdgeAgentManager extends Resource {
   }
 
   @synchronized
-  public async createAgent(): Promise<void> {
+  public async createAgent(ctx: Context): Promise<void> {
     invariant(this.isOpen);
     invariant(this._edgeHttpClient);
     invariant(this._edgeFeatures?.agents);
 
-    const response = await this._edgeHttpClient.createAgent(this._ctx, {
+    const response = await this._edgeHttpClient.createAgent(ctx, {
       identityKey: this._identity.identityKey.toHex(),
       haloSpaceId: this._identity.haloSpaceId,
       haloSpaceKey: this._identity.haloSpaceKey.toHex(),

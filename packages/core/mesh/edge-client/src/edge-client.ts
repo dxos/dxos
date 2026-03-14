@@ -15,6 +15,7 @@ import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
 
+import { Context } from '@dxos/context';
 import { protocol } from './defs';
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { EdgeWsConnection } from './edge-ws-connection';
@@ -45,7 +46,7 @@ export interface EdgeConnection extends Required<Lifecycle> {
   get isOpen(): boolean;
   get status(): EdgeStatus;
   setIdentity(identity: EdgeIdentity): void;
-  send(message: Message): Promise<void>;
+  send(ctx: Context, message: Message): Promise<void>;
   onMessage(listener: MessageListener): () => void;
   onReconnected(listener: ReconnectListener): () => void;
 }
@@ -126,7 +127,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * Send message.
    * NOTE: The message is guaranteed to be delivered but the service must respond with a message to confirm processing.
    */
-  public async send(message: Message) {
+  public async send(ctx: Context, message: Message) {
     if (this._ready.state !== TriggerState.RESOLVED) {
       log('waiting for websocket');
       await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
@@ -143,7 +144,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       throw new EdgeIdentityChangedError();
     }
 
-    this._currentConnection.send(message);
+    this._currentConnection.send(ctx, message);
   }
 
   public onMessage(listener: MessageListener) {

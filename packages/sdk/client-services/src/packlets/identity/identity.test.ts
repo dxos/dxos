@@ -130,7 +130,7 @@ describe('identity/identity', () => {
         onMessage: (_: MessageListener): (() => void) => {
           return () => {};
         },
-        send: async (_) => {
+        send: async (..._) => {
           replicationStarted = true;
         },
       } as EdgeConnection,

@@ -419,6 +419,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
 
     try {
       await this._edgeConnection.send(
+        ctx,
         buf.create(RouterMessageSchema, {
           serviceId: this._targetServiceId,
           source: {

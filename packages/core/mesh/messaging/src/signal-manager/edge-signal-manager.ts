@@ -77,6 +77,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
 
     this._swarmPeers.set(topic, { lastState: peer.state, joinedPeers: new ComplexSet<PeerInfo>(PeerInfoHash) });
     await this._edgeConnection.send(
+      ctx,
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: EdgeService.SWARM,
         source: createMessageSource(topic, peer),
@@ -89,6 +90,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     this._swarmPeers.delete(topic);
     try {
       await this._edgeConnection.send(
+        ctx,
         protocol.createMessage(SwarmRequestSchema, {
           serviceId: EdgeService.SWARM,
           source: createMessageSource(topic, peer),
@@ -112,6 +114,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     );
 
     await this._edgeConnection.send(
+      ctx,
       protocol.createMessage(SwarmRequestSchema, {
         serviceId: EdgeService.SWARM,
         source: createMessageSource(topic, {
@@ -135,6 +138,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     }
 
     await this._edgeConnection.send(
+      ctx,
       protocol.createMessage(bufWkt.AnySchema, {
         serviceId: EdgeService.SIGNAL,
         source: message.author,

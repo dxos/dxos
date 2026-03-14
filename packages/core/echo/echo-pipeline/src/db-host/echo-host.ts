@@ -57,7 +57,7 @@ export type EchoHostProps = {
   /**
    * Callback to run blocking queue sync.
    */
-  syncQueue?: (request: SyncQueueRequest) => Promise<void>;
+  syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
 };
 
 /**

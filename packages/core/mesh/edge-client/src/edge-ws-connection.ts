@@ -89,7 +89,7 @@ export class EdgeWsConnection extends Resource {
     return this._messagesReceived;
   }
 
-  public send(message: Message): void {
+  public send(ctx: Context, message: Message): void {
     invariant(this._ws);
     invariant(this._wsMuxer);
     log('sending...', { peerKey: this._identity.peerKey, payload: protocol.getPayloadType(message) });

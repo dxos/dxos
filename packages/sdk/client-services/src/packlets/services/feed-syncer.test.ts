@@ -69,9 +69,9 @@ const createEdgeConnection = ({
     setIdentity: () => {},
     open: async () => {},
     close: async () => {},
-    send: async (routerMessage: RouterMessage) => {
+    send: async (ctx, routerMessage: RouterMessage) => {
       const decoded = cborDecode(routerMessage.payload!.value) as ProtocolMessage;
-      await syncServer.handleMessage(decoded).pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
+      await syncServer.handleMessage(ctx, decoded).pipe(RuntimeProvider.runPromise(serverRuntime.runtimeEffect));
     },
     onMessage: (listener: (message: RouterMessage) => void) => {
       messageListeners.add(listener);
