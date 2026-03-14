@@ -105,7 +105,7 @@ catalog:
   '@lezer/xml': ^1.0.6
   '@lit/react': ^1.0.8
   '@modelcontextprotocol/sdk': ^1.27.1
-  '@moonrepo/cli': 2.0.3
+  '@moonrepo/cli': 2.0.4
   '@ngneat/falso': ^7.1.1
   '@observablehq/plot': ^0.6.11
   '@obsidize/tar-browserify': ^5.2.0
