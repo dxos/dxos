@@ -16,11 +16,13 @@ import { Context } from '@dxos/context';
 
 ## Which methods need ctx
 
-`ctx: Context` is **always the first parameter** in every method on the networking path. No exceptions — not in an options bag, not as the last parameter.
+**`ctx: Context` is always the first parameter.** This is a universal rule — not in an options bag, not as the last parameter, not optional. Every method that participates in context propagation takes `ctx: Context` as its very first parameter.
+
+This rule applies to `EdgeHttpClient` methods, `EdgeWsConnection.send`, signal managers, messengers, replicators, and every intermediate method in between.
 
 Add `ctx: Context` as first parameter to methods on any call chain that reaches:
 
-- **`EdgeHttpClient` methods** — all HTTP calls to EDGE services (`notarizeCredentials`, `execQuery`, `importBundle`, `exportBundle`, etc.).
+- **`EdgeHttpClient` methods** — all HTTP calls to EDGE services (`notarizeCredentials`, `execQuery`, `importBundle`, `exportBundle`, etc.). `EdgeHttpClient` itself takes `ctx: Context` as the first parameter in every public method.
 - **`EdgeWsConnection.send` / `EdgeClient.send`** — all WebSocket messages to EDGE (signaling, gossip, replication).
 - **Swarm / WebRTC connections** (mesh replication, peer discovery).
 - **Feed replication** (Hypercore feed read/write over the network).
