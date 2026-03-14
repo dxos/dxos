@@ -6,7 +6,7 @@ import * as Registry from '@effect-atom/atom/Registry';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Context } from '@dxos/context';
+
 import { Obj, type QueryResult, Type } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
@@ -219,7 +219,7 @@ describe('AtomQuery with queues', () => {
   test('AtomQuery.make with Filter.type on queue', async () => {
     const peer = await testBuilder.createPeer({ types: [TestSchema.Person] });
     const spaceId = SpaceId.random();
-    const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+    const queues = peer.client.constructQueueFactory(spaceId);
     const queue = queues.create();
 
     const john = Obj.make(TestSchema.Person, { name: 'john' });
@@ -241,7 +241,7 @@ describe('AtomQuery with queues', () => {
   test('AtomQuery.make with Filter.id on queue', async () => {
     const peer = await testBuilder.createPeer({ types: [TestSchema.Person] });
     const spaceId = SpaceId.random();
-    const queues = peer.client.constructQueueFactory(Context.default(), spaceId);
+    const queues = peer.client.constructQueueFactory(spaceId);
     const queue = queues.create();
 
     const john = Obj.make(TestSchema.Person, { name: 'john' });
