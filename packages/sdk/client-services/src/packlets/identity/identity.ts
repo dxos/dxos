@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
-import { Context } from '@dxos/context';
+import { type Context } from '@dxos/context';
 import {
   type CredentialSigner,
   DeviceStateMachine,
@@ -107,6 +107,7 @@ export class Identity {
     }
   }
 
+  // TODO(burdon): Expose state object?
   get authorizedDeviceKeys(): ComplexMap<PublicKey, DeviceProfileDocument> {
     return this._deviceStateMachine.authorizedDeviceKeys;
   }

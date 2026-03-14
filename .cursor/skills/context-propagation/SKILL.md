@@ -33,6 +33,7 @@ Every method in the call chain — from entry point through signal managers, mes
 Do **not** add ctx to:
 
 - **Public user-facing APIs** (called by app/plugin developers) — these create `ctx = Context.default()` internally and forward it.
+- **RPC service methods** (proto-generated interface) — the signature is fixed by the proto definition. Treat these as new entry points: create `ctx = Context.default()` and forward it to internal methods.
 - **React components and hooks** — UI code should not propagate ctx; create `Context.default()` at the boundary if calling into SDK.
 - **Infrastructure / plumbing** — worker setup, service registry wiring, serialization, import/export helpers.
 - **Pure local operations** — in-memory data transforms, UI state, local database reads that never leave the process.
@@ -185,6 +186,7 @@ class SpaceProxy {
 Tracing who provides the root context:
 
 - **Public API entry point**: creates `Context.default()` → passes to internal chain
+- **RPC service method**: creates `Context.default()` → passes to internal chain (RPC boundaries are new entry points — the proto-generated interface does not accept `ctx`, so treat these the same as public API calls)
 - **Callback / event handler**: uses `this._ctx` (lifecycle) → passes to internal chain
 - **Detached async work**: uses `this._ctx` (lifecycle) → passes to internal chain
 
@@ -217,6 +219,7 @@ Each `@trace.span()` method reads the parent span ID from the incoming ctx, crea
 | ---------------------------------------- | --------------------------- |
 | Direct call inside a method              | Forward the method's `ctx`  |
 | Public API entry point                   | `Context.default()`         |
+| RPC service method (proto-generated)     | `Context.default()`         |
 | Event / callback subscription            | Lifecycle `this._ctx`       |
 | setTimeout / scheduleTask / DeferredTask | Lifecycle `this._ctx`       |
 | queueMicrotask                           | Lifecycle `this._ctx`       |
@@ -230,6 +233,7 @@ Each `@trace.span()` method reads the parent span ID from the incoming ctx, crea
 - **Passing `ctx` in a callback or `scheduleTask`** — captures a stale context whose span has already ended.
 - **Adding `ctx` to Node.js protocol methods** (e.g., `[Symbol.for('nodejs.util.inspect.custom')]`) — fixed-signature methods that don't support extra parameters.
 - **Adding `ctx` to public APIs** — user-facing methods should not expose `Context`; create `Context.default()` internally.
+- **Using `this._ctx` in RPC service methods** — RPC boundaries are new entry points, not continuations of a lifecycle. Use `Context.default()`, not `this._ctx`. The proto-generated interface cannot accept `ctx`, so the RPC method is the root of a new trace.
 
 ## ESLint enforcement
 
