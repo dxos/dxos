@@ -5302,6 +5302,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/context':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
