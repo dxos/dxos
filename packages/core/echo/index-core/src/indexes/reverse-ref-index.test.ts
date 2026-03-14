@@ -14,8 +14,8 @@ import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import type { IndexerObject } from './interface';
 import { ReverseRefIndex } from './reverse-ref-index';
 
-const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
-const TYPE_EXAMPLE = DXN.parse('dxn:type:example.com/type/Example:0.1.0').toString();
+const TYPE_PERSON = DXN.parse('dxn:type:com.example.type.person:0.1.0').toString();
+const TYPE_EXAMPLE = DXN.parse('dxn:type:com.example.type.example:0.1.0').toString();
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({

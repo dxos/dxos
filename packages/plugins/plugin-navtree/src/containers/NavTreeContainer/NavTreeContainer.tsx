@@ -14,8 +14,7 @@ import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type TreeData, isTreeData } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';
 
-import { NAV_TREE_ITEM, NavTree } from '../../components/NavTree';
-import { NavTreeContext } from '../../components/NavTreeContext';
+import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '../../components';
 import { useNavTreeModel, useNavTreeState } from '../../hooks';
 import { meta } from '../../meta';
 import { type NavTreeItemGraphNode } from '../../types';
@@ -132,7 +131,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
         if (Node.isAction(node)) {
           const [parent] = Graph.getConnections(graph, node.id, Node.childRelation('inbound'));
           if (parent) {
-            void runAction(node, { parent, caller: NAV_TREE_ITEM });
+            void runAction(node, { parent, path, caller: NAV_TREE_ITEM });
           }
           return;
         }
@@ -178,8 +177,9 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
             const targetNode = target.data.item as NavTreeItemGraphNode;
             const sourcePath = source.data.path as string[];
             const targetPath = target.data.path as string[];
+            const sameParent = sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join();
             const operation =
-              sourcePath.slice(0, -1).join() === targetPath.slice(0, -1).join() && instruction.type !== 'make-child'
+              sameParent && instruction.type !== 'make-child'
                 ? 'rearrange'
                 : resolveMigrationOperation(graph, sourceNode, targetPath, targetNode);
             const sourceParent = getParent(graph, sourceNode, sourcePath);
@@ -208,7 +208,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
               }
               case 'transfer': {
                 const target = instruction.type === 'make-child' ? targetNode : targetParent;
-                if (!target?.properties.onTransferStart || !sourceParent?.properties.onTransferEnd) {
+                if (!target?.properties.onTransferStart || target?.id === sourceParent?.id) {
                   break;
                 }
                 void target?.properties.onTransferStart(sourceNode, migrationIndex);

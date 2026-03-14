@@ -1,0 +1,31 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { invariant } from '@dxos/invariant';
+import { type DXN } from '@dxos/keys';
+import { assumeType } from '@dxos/util';
+
+import type { AnyEntity } from '../common/types';
+
+import { type InternalObjectProps, ObjectDatabaseId } from './model';
+import { getObjectDXN } from './util';
+
+/**
+ * Get the DXN of an entity.
+ * Accepts both reactive entities and snapshots.
+ */
+export const getDXN = (entity: AnyEntity): DXN => {
+  const dxn = getObjectDXN(entity);
+  invariant(dxn != null, 'Invalid entity.');
+  return dxn;
+};
+
+/**
+ * Get the database the entity belongs to.
+ * Accepts both reactive entities and snapshots.
+ */
+export const getDatabase = (entity: AnyEntity): any | undefined => {
+  assumeType<InternalObjectProps>(entity);
+  return entity[ObjectDatabaseId];
+};

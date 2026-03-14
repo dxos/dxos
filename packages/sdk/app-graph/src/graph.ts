@@ -49,8 +49,8 @@ export type GraphTraversalOptions = {
    */
   source?: string;
 
-  /** The relation to traverse graph edges. */
-  relation: Node.RelationInput;
+  /** The relation(s) to traverse graph edges. */
+  relation: Node.RelationInput | Node.RelationInput[];
 };
 
 export type GraphProps = {
@@ -183,6 +183,9 @@ class GraphImpl implements WritableGraph {
   // TODO(wittjosiah): Atom feature request, support for something akin to `ComplexMap` to allow for complex arguments.
   readonly _connections = Atom.family<string, Atom.Atom<Node.Node[]>>((key) => {
     return Atom.make((get) => {
+      if (!key || key.indexOf(Separators.primary) <= 0) {
+        return [];
+      }
       const { id, relation } = relationFromConnectionKey(key);
       const edges = get(this._edges(id));
       return (edges[relationKey(relation)] ?? [])
@@ -194,6 +197,9 @@ class GraphImpl implements WritableGraph {
 
   readonly _actions = Atom.family<string, Atom.Atom<(Node.Action | Node.ActionGroup)[]>>((id) => {
     return Atom.make((get) => {
+      if (!id) {
+        return [];
+      }
       return get(this._connections(connectionKey(id, Node.actionRelation()))) as (Node.Action | Node.ActionGroup)[];
     }).pipe(Atom.withLabel(`graph:actions:${id}`));
   });
@@ -515,9 +521,16 @@ const traverseImpl = (graph: BaseGraph, options: GraphTraversalOptions, path: st
     return;
   }
 
-  Object.values(getConnections(graph, source, relation)).forEach((child) =>
-    traverseImpl(graph, { source: child.id, relation, visitor }, [...path, source]),
-  );
+  const relations = Array.isArray(relation) ? relation : [relation];
+  const seen = new Set<string>();
+  for (const rel of relations) {
+    for (const connected of getConnections(graph, source, rel)) {
+      if (!seen.has(connected.id)) {
+        seen.add(connected.id);
+        traverseImpl(graph, { source: connected.id, relation, visitor }, [...path, source]);
+      }
+    }
+  }
 };
 
 /**

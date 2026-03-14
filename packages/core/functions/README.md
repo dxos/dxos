@@ -27,11 +27,9 @@ import { FunctionContext } from '@dxos/functions';
 
 export default (event: any, context: FunctionContext) => {
   const identity = context.client.halo.identity.get();
-  return context
-    .status(200)
-    .succeed({ 
-      message: `Hello ${identity?.profile?.displayName}` 
-    });
+  return context.status(200).succeed({
+    message: `Hello ${identity?.profile?.displayName}`,
+  });
 };
 ```
 
@@ -69,7 +67,7 @@ nodemon -w ./src -e ts --exec $(git rev-parse --show-toplevel)/packages/devtools
 > NOTE: The port (7001) must match the one in config.
 
 ```bash
-curl http://localhost:7001/dev/hello -X POST -H 'Content-Type: application/json' -w '\n' --data '{ "message": "Hello World!" }' 
+curl http://localhost:7001/dev/hello -X POST -H 'Content-Type: application/json' -w '\n' --data '{ "message": "Hello World!" }'
 ```
 
 ## DXOS Resources

@@ -203,7 +203,7 @@ export const TextRibbon = forwardRef<TextRibbonController, TextRibbonProps>(
     useImperativeHandle(forwardedRef, () => ({ setPosition }), [setPosition]);
 
     return (
-      <div role='none' className={mx('relative overflow-hidden', classNames, className)}>
+      <div role='none' className={mx('relative overflow-hidden', className, classNames)}>
         <div role='none' ref={containerRef} className={mx('flex flex-col')}>
           {lines.map((line, i) => (
             <Line

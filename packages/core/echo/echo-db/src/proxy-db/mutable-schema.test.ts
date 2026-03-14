@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { DXN, Obj, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import {
   EchoSchema,
   EntityKind,
@@ -16,12 +17,11 @@ import {
   getSchemaDXN,
 } from '@dxos/echo/internal';
 
-import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
 const TestEmpty = Schema.Struct({}).pipe(
   Type.object({
-    typename: 'example.com/type/Empty',
+    typename: 'com.example.type.empty',
     version: '0.1.0',
   }),
 );
@@ -33,7 +33,7 @@ const TestWithRefs = Schema.Struct({
   schemaArray: Schema.optional(Schema.Array(Ref(EchoSchema))),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Test',
+    typename: 'com.example.type.test',
     version: '0.1.0',
   }),
 );
@@ -57,7 +57,7 @@ describe('EchoSchema', () => {
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, {}));
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     Obj.change(instanceWithSchemaRef, (instanceWithSchemaRef) => {
@@ -66,7 +66,7 @@ describe('EchoSchema', () => {
     const schemaWithId = GeneratedSchema.annotations({
       [TypeAnnotationId]: {
         kind: EntityKind.Object,
-        typename: 'example.com/type/Test',
+        typename: 'com.example.type.test',
         version: '0.1.0',
       } satisfies TypeAnnotation,
       [TypeIdentifierAnnotationId]: `dxn:echo:@:${instanceWithSchemaRef.schema?.target?.id}`,
@@ -82,7 +82,7 @@ describe('EchoSchema', () => {
     const { db } = await setupTest();
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schema: Ref.make(schema) }));
     expect(instanceWithSchemaRef.schema!.target!.typename).to.eq(GeneratedSchema.typename);
@@ -93,7 +93,7 @@ describe('EchoSchema', () => {
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schemaArray: [] }));
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     Obj.change(instanceWithSchemaRef, (o) => {
       o.schemaArray!.push(Ref.make(schema));
@@ -141,7 +141,7 @@ describe('EchoSchema', () => {
   test('getSchemaDXN on schema with updated typename', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    schema.updateTypename('example.com/type/Updated');
+    schema.updateTypename('com.example.type.updated');
     expect(getSchemaDXN(schema)?.asEchoDXN()?.echoId).to.eq(schema.id);
   });
 
@@ -150,12 +150,12 @@ describe('EchoSchema', () => {
 
     const OrgSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
-    }).pipe(Type.object({ typename: 'example.com/type/org', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'com.example.type.org', version: '0.1.0' }));
 
     const ContactSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       org: Schema.optional(Ref(OrgSchema)),
-    }).pipe(Type.object({ typename: 'example.com/type/contact', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'com.example.type.contact', version: '0.1.0' }));
 
     const [orgSchema] = await db.schemaRegistry.register([OrgSchema]);
     const [contactSchema] = await db.schemaRegistry.register([ContactSchema]);
@@ -167,7 +167,7 @@ describe('EchoSchema', () => {
   test('schema id stays as echo DXN after update', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    schema.updateTypename('example.com/type/Updated');
+    schema.updateTypename('com.example.type.updated');
     expect(getSchemaDXN(schema)?.kind).to.eq(DXN.kind.ECHO);
   });
 

@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Entity, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
@@ -26,13 +27,11 @@ import { openAndClose } from '@dxos/test-utils';
 import { defer } from '@dxos/util';
 
 import { DocAccessor } from '../core-db';
-import { Filter } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { createDocAccessor } from './doc-accessor';
 import { createObject, getObjectCore } from './echo-handler';
 import { isEchoObject } from './echo-object-utils';
-import { getDatabaseFromObject } from './util';
 
 const TEST_OBJECT: TestSchema.ExampleSchema = {
   string: 'foo',
@@ -66,7 +65,7 @@ describe('ECHO specific proxy properties with schema', () => {
     );
     const str = inspect(obj, { colors: false });
     expect(str).toMatchInlineSnapshot(
-      `"TypedEchoObject(example.com/type/Example) { string: 'bar', id: '01KB0G0HR8BSPH11XJS85BGSWF' }"`,
+      `"TypedEchoObject(com.example.type.example) { string: 'bar', id: '01KB0G0HR8BSPH11XJS85BGSWF' }"`,
     );
   });
 
@@ -125,11 +124,11 @@ describe('without database', () => {
     nested: Schema.Struct({
       name: Schema.optional(Schema.String),
       arr: Schema.optional(Schema.Array(Schema.String)),
-      ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Type.Ref(TestSchema))),
+      ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
     }),
   }).pipe(
     EchoObjectSchema({
-      typename: 'example.com/type/Test',
+      typename: 'com.example.type.test',
       version: '0.1.0',
     }),
   );
@@ -231,17 +230,17 @@ describe('Reactive Object with ECHO database', () => {
   test('existing proxy objects can be passed to create', async () => {
     const TestSchema = Schema.Struct({
       field: Schema.Any,
-    }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
+    }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
 
     const { db, graph } = await builder.createDatabase();
     await graph.schemaRegistry.register([TestSchema]);
     const objectHost = db.add(Obj.make(TestSchema, { field: [] }));
     const object = db.add(Obj.make(TestSchema, { field: 'foo' }));
     Obj.change(objectHost, (o) => {
-      o.field?.push({ hosted: Type.Ref.make(object) });
+      o.field?.push({ hosted: Ref.make(object) });
     });
     Obj.make(TestSchema, {
-      field: [Obj.make(TestSchema, { field: Type.Ref.make(objectHost) })],
+      field: [Obj.make(TestSchema, { field: Ref.make(objectHost) })],
     });
     expect(objectHost.field[0].hosted).not.to.be.undefined;
   });
@@ -281,7 +280,7 @@ describe('Reactive Object with ECHO database', () => {
       await peer.client.graph.schemaRegistry.register([TestSchema.Example]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query(Query.select(Filter.id(id))).first()) as Obj.Obj<TestSchema.Example>;
+      const obj = (await db.query(Query.select(Filter.id(id))).first()) as TestSchema.Example;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -315,7 +314,7 @@ describe('Reactive Object with ECHO database', () => {
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
       const db = await peer.openDatabase(spaceKey, root.url);
 
-      const obj = (await db.query(Filter.id(id)).first()) as Obj.Obj<TestSchema.Example>;
+      const obj = (await db.query(Filter.id(id)).first()) as TestSchema.Example;
       expect(isEchoObject(obj)).to.be.true;
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
@@ -341,7 +340,7 @@ describe('Reactive Object with ECHO database', () => {
       db.add(Obj.make(TestSchema.Example, { string: 'foo' }));
 
       {
-        const queryResult = await db.query(Filter.typename('example.com/type/Example')).run();
+        const queryResult = await db.query(Filter.typename('com.example.type.example')).run();
         expect(queryResult.length).to.eq(1);
       }
 
@@ -384,8 +383,8 @@ describe('Reactive Object with ECHO database', () => {
       const objData: any = (obj as any).toJSON();
       expect(objData).to.deep.contain({
         ...TEST_OBJECT,
-        'id': obj.id,
-        '@type': 'dxn:type:example.com/type/Example:0.1.0',
+        id: obj.id,
+        '@type': 'dxn:type:com.example.type.example:0.1.0',
         '@meta': { keys: [] },
       });
     }
@@ -440,18 +439,18 @@ describe('Reactive Object with ECHO database', () => {
       name: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Organization',
+        typename: 'com.example.type.organization',
         version: '0.1.0',
       }),
     );
 
     const Contact = Schema.Struct({
       name: Schema.String,
-      organization: Type.Ref(Organization),
-      previousEmployment: Schema.optional(Schema.Array(Type.Ref(Organization))),
+      organization: Ref.Ref(Organization),
+      previousEmployment: Schema.optional(Schema.Array(Ref.Ref(Organization))),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
@@ -668,16 +667,16 @@ describe('Reactive Object with ECHO database', () => {
     test('object with meta pushed to array', async () => {
       const NestedType = Schema.Struct({
         field: Schema.Number,
-      }).pipe(Type.object({ typename: 'example.com/type/TestNested', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.test-nested', version: '0.1.0' }));
       const TestType = Schema.Struct({
-        objects: Schema.Array(Type.Ref(NestedType)),
-      }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
+        objects: Schema.Array(Ref.Ref(NestedType)),
+      }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
 
       const key = foreignKey('example.com', '123');
       const { db, graph } = await builder.createDatabase();
       await graph.schemaRegistry.register([TestType, NestedType]);
       const obj = db.add(Obj.make(TestType, { objects: [] }));
-      const objectWithMeta = Obj.make(NestedType, { field: 42 }, { keys: [key] });
+      const objectWithMeta = Obj.make(NestedType, { [Obj.Meta]: { keys: [key] }, field: 42 });
       Obj.change(obj, (o) => {
         o.objects.push(Ref.make(objectWithMeta));
       });
@@ -687,10 +686,10 @@ describe('Reactive Object with ECHO database', () => {
     test('push key to object created with', async () => {
       const TestType = Schema.Struct({
         field: Schema.Number,
-      }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
       const { db, graph } = await builder.createDatabase();
       await graph.schemaRegistry.register([TestType]);
-      const obj = db.add(Obj.make(TestType, { field: 1 }, { keys: [foreignKey('example.com', '123')] }));
+      const obj = db.add(Obj.make(TestType, { [Obj.Meta]: { keys: [foreignKey('example.com', '123')] }, field: 1 }));
       Obj.change(obj, (obj) => {
         Obj.getMeta(obj).keys.push(foreignKey('example.com', '456'));
       });
@@ -730,7 +729,7 @@ describe('Reactive Object with ECHO database', () => {
       {
         const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
         const db = await peer.openDatabase(spaceKey, root.url);
-        const obj = (await db.query(Filter.id(id)).first()) as Obj.Obj<TestSchema.Example>;
+        const obj = (await db.query(Filter.id(id)).first()) as TestSchema.Example;
         expect(Obj.getMeta(obj).keys).to.deep.eq([metaKey]);
       }
     });
@@ -743,11 +742,11 @@ describe('Reactive Object with ECHO database', () => {
 
       const employeeJson = JSON.parse(JSON.stringify(employee));
       expect(employeeJson).to.deep.eq({
-        'id': employee.id,
+        id: employee.id,
         '@meta': { keys: [] },
-        '@type': 'dxn:type:example.com/type/Expando:0.1.0',
-        'name': 'John',
-        'worksAt': EncodedReference.fromDXN(DXN.fromLocalObjectId(org.id)),
+        '@type': 'dxn:type:com.example.type.expando:0.1.0',
+        name: 'John',
+        worksAt: EncodedReference.fromDXN(DXN.fromLocalObjectId(org.id)),
       });
     });
 
@@ -898,7 +897,7 @@ describe('Reactive Object with ECHO database', () => {
     Obj.change(obj, (o) => {
       o.other = Ref.make(another);
     });
-    expect(getDatabaseFromObject(another)).not.to.be.undefined;
+    expect(Obj.getDatabase(another)).not.to.be.undefined;
   });
 
   test('able to create queue references', async () => {

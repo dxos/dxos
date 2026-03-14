@@ -4,8 +4,8 @@
 
 import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
 
+import { textBlockWidth } from '../../fragments';
 import { mx } from '../../util';
-import { textBlockWidth } from '../fragments';
 
 export type ToolbarStyleProps = Partial<{
   density: Density;

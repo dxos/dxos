@@ -15,15 +15,15 @@ import { coerceArray, defaultMap } from '@dxos/util';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
 
 // TODO(wittjosiah): Use Annotation.SystemTypeAnnotation.
-const SYSTEM_SCHEMA = ['dxos.org/type/Schema'];
+const SYSTEM_SCHEMA = ['org.dxos.type.schema'];
 
 /**
  * Registry of `Type.RuntimeType` schemas.
  */
 export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
-  private readonly _registry = new Map<string, Type.Entity.Any[]>();
+  private readonly _registry = new Map<string, Type.AnyEntity[]>();
 
-  constructor(schemas: Type.Entity.Any[] = [Type.PersistentType]) {
+  constructor(schemas: Type.AnyEntity[] = [Type.PersistentType]) {
     schemas.forEach((schema) => {
       const typename = Type.getTypename(schema);
       invariant(typename, 'Not a valid ECHO schema');
@@ -31,14 +31,14 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
     });
   }
 
-  get schemas(): Type.Entity.Any[] {
+  get schemas(): Type.AnyEntity[] {
     return Array.from(this._registry.values()).flat();
   }
 
   async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> {
     input
       // TODO(wittjosiah): This should filter out or throw on non-ECHO schemas.
-      .filter((schema): schema is Type.Entity.Any => Schema.isSchema(schema))
+      .filter((schema): schema is Type.AnyEntity => Schema.isSchema(schema))
       .forEach((schema) => {
         const typename = Type.getTypename(schema) ?? raise(new TypeError('Schema has no typename'));
         const version = Type.getVersion(schema) ?? raise(new TypeError('Schema has no version'));
@@ -75,7 +75,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   // TODO(wittjosiah): Not a part of SchemaRegistry interface, remove?
-  hasSchema<S extends Type.Entity.Any>(schema: S): boolean {
+  hasSchema<S extends Type.AnyEntity>(schema: S): boolean {
     const typename = Type.getTypename(schema);
     const version = Type.getVersion(schema);
     invariant(typename, 'Invalid schema');
@@ -85,7 +85,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   // TODO(wittjosiah): Not a part of SchemaRegistry interface, remove?
-  getSchemaByDXN(dxn: DXN): Type.Entity.Any | undefined {
+  getSchemaByDXN(dxn: DXN): Type.AnyEntity | undefined {
     const components = dxn.asTypeDXN();
     if (!components) {
       return undefined;
@@ -105,15 +105,15 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
    * @deprecated Use getSchemaByDXN.
    */
   // TODO(wittjosiah): Remove.
-  getSchema(typename: string): Type.Entity.Any | undefined {
+  getSchema(typename: string): Type.AnyEntity | undefined {
     return this._registry.get(typename)?.[0];
   }
 }
 
-const getSortKey = (schema: Type.Entity.Any) =>
+const getSortKey = (schema: Type.AnyEntity) =>
   Type.getTypename(schema) + ':' + Type.getVersion(schema) + ':' + Type.getDXN(schema);
 
-const filterOrderResults = (schemas: Type.Entity.Any[], query: SchemaRegistry.Query) => {
+const filterOrderResults = (schemas: Type.AnyEntity[], query: SchemaRegistry.Query) => {
   const filtered = schemas
     .filter((schema) => {
       const typename = Type.getTypename(schema);

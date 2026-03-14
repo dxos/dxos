@@ -18,7 +18,7 @@ import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 
-export const DATA_TYPES: Type.Entity.Any[] = [Function.Function, Script.Script, Collection.Collection, Text.Text];
+export const DATA_TYPES: Type.AnyEntity[] = [Function.Function, Script.Script, Collection.Collection, Text.Text];
 
 export const getNextVersion = (fnObject: Option.Option<Function.Function>) => {
   return Option.match(fnObject, {
@@ -82,7 +82,7 @@ export const upsertFunctionObject: (opts: {
 });
 
 const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Obj.Unknown) {
-  const collectionRef = space.properties['dxos.org/type/Collection'] as Ref.Ref<Collection.Collection> | undefined;
+  const collectionRef = space.properties[Collection.Collection.typename] as Ref.Ref<Collection.Collection> | undefined;
   if (collectionRef) {
     const collection = yield* Database.load(collectionRef);
     if (collection) {

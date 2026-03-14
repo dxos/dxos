@@ -15,7 +15,7 @@ import { LogOperation } from './schema';
 const Toolbar = Capability.lazy('Toolbar', () => import('./Toolbar'));
 
 const meta = {
-  id: 'dxos.org/test/logger',
+  id: 'org.dxos.test.logger',
   name: 'Logger',
 };
 

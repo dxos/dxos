@@ -20,8 +20,5 @@ export default defineConfig({
   build: {
     target: 'esnext',
   },
-  plugins: [
-    react(),
-    ThemePlugin({}),
-  ],
+  plugins: [react(), ThemePlugin({})],
 });

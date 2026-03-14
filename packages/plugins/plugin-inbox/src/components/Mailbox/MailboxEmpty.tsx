@@ -5,17 +5,17 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { type Feed, Obj } from '@dxos/echo';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/plugin-deck/types';
+import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { Obj } from '@dxos/echo';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '../../meta';
+import { type Mailbox } from '../../types';
 
-export const MailboxEmpty = ({ feed }: { feed: Feed.Feed }) => {
-  const db = Obj.getDatabase(feed);
+export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
+  const db = Obj.getDatabase(mailbox);
   const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
@@ -23,8 +23,8 @@ export const MailboxEmpty = ({ feed }: { feed: Feed.Feed }) => {
   const openSpaceSettings = useCallback(() => {
     if (db) {
       void invokePromise(LayoutOperation.Open, {
-        subject: [`integrations-settings${ATTENDABLE_PATH_SEPARATOR}${db.spaceId}`],
-        workspace: db.spaceId,
+        subject: [`${getSpacePath(db.spaceId)}/settings/org.dxos.plugin.token-manager.integrations`],
+        workspace: getSpacePath(db.spaceId),
       });
     }
   }, [db, invokePromise]);

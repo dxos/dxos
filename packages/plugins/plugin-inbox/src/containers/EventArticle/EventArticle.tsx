@@ -6,27 +6,27 @@ import React, { useCallback } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { type Feed, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps } from '../../components';
 import { useShadowObject } from '../../hooks';
-import { InboxOperation } from '../../types';
+import { type Calendar, InboxOperation } from '../../types';
 
 export type EventArticleProps = SurfaceComponentProps<
   EventType.Event,
   {
-    feed: Feed.Feed;
+    calendar: Calendar.Calendar;
   }
 >;
 
-export const EventArticle = ({ role, subject, feed }: EventArticleProps) => {
+export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
   const id = Obj.getDXN(subject).toString();
-  const db = Obj.getDatabase(feed);
+  const db = Obj.getDatabase(calendar);
   const [shadowedEvent, createShadowEvent] = useShadowObject(db, subject, EventType.Event);
   const notes = shadowedEvent?.notes?.target;
 
@@ -51,16 +51,20 @@ export const EventArticle = ({ role, subject, feed }: EventArticleProps) => {
   );
 
   return (
-    <Container.Main role={role} toolbar>
-      <Event.Root event={subject}>
-        <Event.Toolbar onNoteCreate={handleNoteCreate} />
-        <Event.Viewport>
-          <Event.Header db={db} onContactCreate={handleContactCreate} />
-          <Event.Content />
-          {/* TODO(burdon): Suppress markdown toolbar if section. */}
-          {notes && <Surface.Surface role='section' data={{ id, subject: notes }} limit={1} />}
-        </Event.Viewport>
-      </Event.Root>
-    </Container.Main>
+    <Event.Root event={subject}>
+      <Panel.Root role={role} className='dx-article'>
+        <Panel.Toolbar asChild>
+          <Event.Toolbar onNoteCreate={handleNoteCreate} />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <Event.Viewport>
+            <Event.Header db={db} onContactCreate={handleContactCreate} />
+            <Event.Content />
+            {/* TODO(burdon): Suppress markdown toolbar if section. */}
+            {notes && <Surface.Surface role='section' data={{ id, subject: notes }} limit={1} />}
+          </Event.Viewport>
+        </Panel.Content>
+      </Panel.Root>
+    </Event.Root>
   );
 };

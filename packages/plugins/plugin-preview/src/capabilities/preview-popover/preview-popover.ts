@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getSpaceIdFromPath } from '@dxos/app-toolkit';
 import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
-import { type Space, parseId } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -51,7 +51,7 @@ export default Capability.makeModule(
       const registry = capabilities.get(Capabilities.AtomRegistry);
       const [layoutAtom] = capabilities.getAll(AppCapabilities.Layout);
       const layout = registry.get(layoutAtom);
-      const { spaceId } = parseId(layout.workspace);
+      const spaceId = getSpaceIdFromPath(layout.workspace);
       const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
       const result = await handlePreviewLookup(client, space, { dxn, label });
       if (!result) {

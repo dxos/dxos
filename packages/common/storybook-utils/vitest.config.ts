@@ -16,9 +16,7 @@ export default createConfig({
   node: {
     environment: 'jsdom',
     setupFiles: ['./src/vitest-setup.ts'],
-    plugins: [
-      ThemePlugin({}),
-    ]
+    plugins: [ThemePlugin({})],
   },
   storybook: true,
 });

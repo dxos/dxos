@@ -5,6 +5,6 @@
 import { type Plugin } from '@dxos/app-framework';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/settings',
+  id: 'org.dxos.plugin.settings',
   name: 'Settings',
 };

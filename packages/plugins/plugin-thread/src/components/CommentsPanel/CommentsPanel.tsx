@@ -1,0 +1,71 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import React, { useEffect } from 'react';
+
+import { Obj, Relation } from '@dxos/echo';
+import { Icon, Message, Trans, useTranslation } from '@dxos/react-ui';
+import { type AnchoredTo, type Thread } from '@dxos/types';
+
+import { meta } from '../../meta';
+
+import { CommentsThread, type CommentsThreadProps } from './CommentsThread';
+
+export type CommentsPanelProps = Omit<CommentsThreadProps, 'anchor' | 'current'> & {
+  anchors: AnchoredTo.AnchoredTo[];
+  currentId?: string;
+  showResolvedThreads?: boolean;
+};
+
+/**
+ * Root container for collection of comment threads.
+ */
+export const CommentsPanel = ({ anchors, currentId, showResolvedThreads, ...props }: CommentsPanelProps) => {
+  const { t } = useTranslation(meta.id);
+
+  // TODO(wittjosiah): There seems to be a race between thread and anchor being deleted.
+  const filteredAnchors = showResolvedThreads
+    ? anchors.filter((anchor) => !!Relation.getSource(anchor))
+    : anchors.filter((anchor) => {
+        const thread = Relation.getSource(anchor);
+        // TODO(dmaretskyi): Do Obj.instanceOf check instead.
+        return thread && (thread as any).status !== 'resolved';
+      });
+
+  useEffect(() => {
+    if (currentId) {
+      document.getElementById(currentId)?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [currentId]);
+
+  if (filteredAnchors.length === 0) {
+    return (
+      <div role='none' className='p-form-padding'>
+        <Message.Root>
+          <Message.Title>
+            <Trans
+              {...{
+                t,
+                i18nKey: 'no comments message',
+                components: {
+                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='w-block' />,
+                },
+              }}
+            />
+          </Message.Title>
+        </Message.Root>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {filteredAnchors.map((anchor) => {
+        const thread = Relation.getSource(anchor) as Thread.Thread;
+        const threadId = Obj.getDXN(thread).toString();
+        return <CommentsThread key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
+      })}
+    </div>
+  );
+};

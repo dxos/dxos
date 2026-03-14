@@ -12,7 +12,7 @@ export type ScrollAreaStyleProps = {
   /** Balance left/right, top/bottom "margin" with scrollbar. */
   margin?: boolean;
   /** Add default padding. */
-  /** TODO(burdon): Integrate with Container.Column padding. */
+  /** TODO(burdon): Integrate with Column.Root padding. */
   padding?: boolean;
   /** Use thin scrollbars. */
   /** TODO(burdon): Density fine/course. */
@@ -21,37 +21,20 @@ export type ScrollAreaStyleProps = {
   snap?: boolean;
 };
 
-/**
- * Layout rules for flex-based scroll containment:
- *
- * - `flex flex-col` on a container: makes it a flex column so children stack and can use `flex-1`.
- * - `flex-1` on a child: grows to fill the flex parent. Requires the parent to be `display:flex`.
- * - `min-h-0` alongside `flex-1`: browsers default flex children to `min-height:auto` (sized to content),
- *   which prevents shrinking. `min-h-0` overrides this so the element can shrink and
- *   trigger overflow/scrolling. Always pair with `flex-1` when scroll is needed.
- * - `h-full`: fills 100% of the parent's *computed* height. Use when the parent has a definite
- *   height but is not a flex container (e.g. `overflow:hidden` wrapper). Unlike `flex-1`, does
- *   not require the parent to be flex.
- *
- * Pattern for a scrollable region inside a flex ancestor:
- *   ancestor      → `flex flex-col`  (or `flex flex-row`)
- *   scroll root   → `flex-1 min-h-0` (fills ancestor, can shrink)
- *   scroll viewport → `h-full overflow-y-scroll` (fills root, scrolls)
- */
 export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, margin, thin }, ...etc) =>
   mx(
     'overflow-hidden',
 
-    // NOTE: min-h-0 is required for vertical scrollbars
-    orientation === 'vertical' && 'group/scroll-v min-h-0 flex-1 h-full w-full',
-    orientation === 'horizontal' && 'group/scroll-h h-full min-w-0 w-full',
-    orientation === 'all' && 'group/scroll-all min-h-0 flex-1 h-full min-w-0 w-full',
+    orientation === 'vertical' && 'group/scroll-v dx-container',
+    orientation === 'horizontal' && 'group/scroll-h dx-container',
+    orientation === 'all' && 'group/scroll-all dx-container',
 
-    // Apply col-span-full only when inside a Container.Column grid (detected via dx-column marker).
+    // TODO(burdon): Audit composition.
+    // Apply col-span-full only when inside a Column.Root grid (detected via dx-column marker).
     '[.dx-column_&]:col-span-full',
 
     // NOTE: Uses --gutter CSS variable
-    // If contained within Container.Column grid, the gutter is set by that component.
+    // If contained within Column.Root grid, the gutter is set by that component.
     margin && [
       orientation === 'vertical' &&
         (thin

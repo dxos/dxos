@@ -10,7 +10,7 @@ import { ConsolePrinter } from '@dxos/ai';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { defineFunction } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
@@ -21,11 +21,11 @@ import { AssistantTestLayer } from './testing';
 ObjectId.dangerouslyDisableRandomness();
 
 const readName = defineFunction({
-  key: 'dxos.org/function/read-name',
+  key: 'org.dxos.function.read-name',
   name: 'Read Name',
   description: 'Reads the name of an organization.',
   inputSchema: Schema.Struct({
-    org: Type.Ref(Organization.Organization),
+    org: Ref.Ref(Organization.Organization),
   }),
   outputSchema: Schema.String,
   handler: Effect.fnUntraced(function* ({ data }) {
@@ -35,7 +35,7 @@ const readName = defineFunction({
 });
 
 const blueprint = Blueprint.make({
-  key: 'dxos.org/blueprint/test',
+  key: 'org.dxos.blueprint.test',
   name: 'Test blueprint',
   tools: Blueprint.toolDefinitions({ functions: [readName] }),
 });

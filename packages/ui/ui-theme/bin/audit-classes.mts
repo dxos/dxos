@@ -24,6 +24,10 @@
  *   --top <n>           Show only the top N unknown classes (default: 50)
  */
 
+//
+// Copyright 2026 DXOS.org
+//
+
 import { __unstable__loadDesignSystem } from 'tailwindcss';
 import { Scanner } from '@tailwindcss/oxide';
 import { execSync } from 'node:child_process';
@@ -196,27 +200,163 @@ function isMalformed(candidate: string): boolean {
 
 // JS/TS keywords and common words the oxide scanner extracts from .ts files.
 const JS_KEYWORDS = new Set([
-  'abstract', 'any', 'as', 'async', 'await', 'boolean', 'break', 'case',
-  'catch', 'class', 'const', 'constructor', 'continue', 'debugger', 'declare',
-  'default', 'delete', 'do', 'else', 'enum', 'export', 'extends', 'false',
-  'finally', 'for', 'from', 'function', 'get', 'if', 'implements', 'import',
-  'in', 'infer', 'instanceof', 'interface', 'is', 'keyof', 'let', 'module',
-  'namespace', 'never', 'new', 'null', 'number', 'object', 'of', 'out',
-  'override', 'package', 'private', 'protected', 'public', 'readonly',
-  'require', 'return', 'set', 'static', 'string', 'super', 'switch', 'symbol',
-  'target', 'this', 'throw', 'true', 'try', 'type', 'typeof', 'undefined',
-  'unique', 'unknown', 'using', 'var', 'void', 'while', 'with', 'yield',
+  'abstract',
+  'any',
+  'as',
+  'async',
+  'await',
+  'boolean',
+  'break',
+  'case',
+  'catch',
+  'class',
+  'const',
+  'constructor',
+  'continue',
+  'debugger',
+  'declare',
+  'default',
+  'delete',
+  'do',
+  'else',
+  'enum',
+  'export',
+  'extends',
+  'false',
+  'finally',
+  'for',
+  'from',
+  'function',
+  'get',
+  'if',
+  'implements',
+  'import',
+  'in',
+  'infer',
+  'instanceof',
+  'interface',
+  'is',
+  'keyof',
+  'let',
+  'module',
+  'namespace',
+  'never',
+  'new',
+  'null',
+  'number',
+  'object',
+  'of',
+  'out',
+  'override',
+  'package',
+  'private',
+  'protected',
+  'public',
+  'readonly',
+  'require',
+  'return',
+  'set',
+  'static',
+  'string',
+  'super',
+  'switch',
+  'symbol',
+  'target',
+  'this',
+  'throw',
+  'true',
+  'try',
+  'type',
+  'typeof',
+  'undefined',
+  'unique',
+  'unknown',
+  'using',
+  'var',
+  'void',
+  'while',
+  'with',
+  'yield',
   // Common identifiers the scanner also picks up
-  'name', 'value', 'id', 'key', 'data', 'props', 'state', 'event', 'error',
-  'result', 'response', 'request', 'config', 'options', 'params', 'context',
-  'node', 'root', 'item', 'items', 'list', 'index', 'count', 'size', 'width',
-  'height', 'ref', 'label', 'title', 'text', 'icon', 'style', 'theme',
-  'color', 'colors', 'path', 'url', 'src', 'href', 'alt', 'role',
+  'name',
+  'value',
+  'id',
+  'key',
+  'data',
+  'props',
+  'state',
+  'event',
+  'error',
+  'result',
+  'response',
+  'request',
+  'config',
+  'options',
+  'params',
+  'context',
+  'node',
+  'root',
+  'item',
+  'items',
+  'list',
+  'index',
+  'count',
+  'size',
+  'width',
+  'height',
+  'ref',
+  'label',
+  'title',
+  'text',
+  'icon',
+  'style',
+  'theme',
+  'color',
+  'colors',
+  'path',
+  'url',
+  'src',
+  'href',
+  'alt',
+  'role',
   // English words that appear in comments / string literals
-  'the', 'and', 'or', 'not', 'for', 'with', 'but', 'can', 'has', 'have',
-  'been', 'will', 'are', 'was', 'were', 'use', 'used', 'get', 'set',
-  'add', 'all', 'any', 'new', 'old', 'end', 'map', 'tag', 'row', 'col',
-  'top', 'left', 'right', 'bottom', 'back', 'next', 'prev', 'none',
+  'the',
+  'and',
+  'or',
+  'not',
+  'for',
+  'with',
+  'but',
+  'can',
+  'has',
+  'have',
+  'been',
+  'will',
+  'are',
+  'was',
+  'were',
+  'use',
+  'used',
+  'get',
+  'set',
+  'add',
+  'all',
+  'any',
+  'new',
+  'old',
+  'end',
+  'map',
+  'tag',
+  'row',
+  'col',
+  'top',
+  'left',
+  'right',
+  'bottom',
+  'back',
+  'next',
+  'prev',
+  'none',
 ]);
 
 // Candidates that the oxide scanner extracts but are never Tailwind class candidates.
@@ -258,8 +398,7 @@ function isKnownIdentifierClass(candidate: string): boolean {
 // Filters: HTML attrs, URLs, hex colors, CSS selectors, CamelCase, ACRONYMS,
 //          paths with 2+ slashes, pure numbers, underscore-prefixed identifiers,
 //          CSS at-rules / npm package names (starting with @).
-const NOISE_PATTERN =
-  /^(?:data-|aria-|https?:|\/\/|[#.@]|\d+$|.*\/.+\/|[A-Z][a-z]*[A-Z]|.*[A-Z]{2,}|_)/;
+const NOISE_PATTERN = /^(?:data-|aria-|https?:|\/\/|[#.@]|\d+$|.*\/.+\/|[A-Z][a-z]*[A-Z]|.*[A-Z]{2,}|_)/;
 
 /**
  * Returns true if the candidate contains an uppercase letter outside of
@@ -269,8 +408,14 @@ const NOISE_PATTERN =
 function hasCamelCase(candidate: string): boolean {
   let depth = 0;
   for (const ch of candidate) {
-    if (ch === '[') { depth++; continue; }
-    if (ch === ']') { depth--; continue; }
+    if (ch === '[') {
+      depth++;
+      continue;
+    }
+    if (ch === ']') {
+      depth--;
+      continue;
+    }
     if (depth === 0 && ch >= 'A' && ch <= 'Z') return true;
   }
   return false;
@@ -282,18 +427,18 @@ const MAX_CANDIDATE_LENGTH = 80;
 // File path patterns to skip entirely (not UI source — contain word lists,
 // generated data, or test fixtures that would produce thousands of false positives).
 const SKIP_FILE_PATTERNS = [
-  /\/display-name\//,       // word-list data files (adjectives, animals)
-  /\.test\.(ts|tsx)$/,       // test files (less interesting for class auditing)
-  /\.stories\.(ts|tsx)$/,    // stories (handled separately if needed)
+  /\/display-name\//, // word-list data files (adjectives, animals)
+  /\.test\.(ts|tsx)$/, // test files (less interesting for class auditing)
+  /\.stories\.(ts|tsx)$/, // stories (handled separately if needed)
   /\/dist\//,
   /\/node_modules\//,
 ];
 
 // Noise patterns for specific known non-Tailwind class families.
 const EXTRA_NOISE_PATTERNS: RegExp[] = [
-  /^ph--/,                       // Phosphor icon font: ph--icon-name--weight
-  /^eslint-/,                    // ESLint directives in comments
-  /^prettier-/,                  // Prettier directives in comments
+  /^ph--/, // Phosphor icon font: ph--icon-name--weight
+  /^eslint-/, // ESLint directives in comments
+  /^prettier-/, // Prettier directives in comments
   /^(?:react|solid|vue|angular)(-[a-z][-a-z0-9]*)+$/, // npm package name patterns
   // CSS property names that the scanner picks up from inline styles or CSS-in-JS.
   /^(?:z-index|font-size|font-weight|font-family|line-height|letter-spacing|text-align|text-decoration|text-transform|white-space|word-break|overflow-x|overflow-y|box-sizing|border-radius|border-collapse|border-spacing|background-color|background-image|background-size|background-position|background-repeat|object-fit|object-position|list-style|pointer-events|user-select|vertical-align|inline-size|block-size|min-width|max-width|min-height|max-height|margin-top|margin-bottom|margin-left|margin-right|padding-top|padding-bottom|padding-left|padding-right|flex-direction|flex-wrap|flex-grow|flex-shrink|flex-basis|align-items|align-self|justify-content|justify-items|grid-template|grid-column|grid-row|grid-area|grid-gap|column-gap|row-gap|transition-property|transition-duration|transition-timing|animation-name|animation-duration|transform-origin|text-overflow|will-change|touch-action|scroll-behavior|scroll-padding|overscroll-behavior|aspect-ratio|inset-inline|padding-inline|margin-inline|border-inline|inset-block|padding-block|margin-block|border-block)$/,
@@ -304,9 +449,7 @@ const EXTRA_NOISE_PATTERNS: RegExp[] = [
  * This avoids treating CSS property names (`background-color`, `z-index`)
  * as class candidates.
  */
-function extractApplyCandidates(
-  content: string,
-): Array<{ candidate: string; position: number }> {
+function extractApplyCandidates(content: string): Array<{ candidate: string; position: number }> {
   const results: Array<{ candidate: string; position: number }> = [];
   const applyRe = /@apply\s+([^;{}\n]+)/g;
   let m: RegExpExecArray | null;
@@ -422,15 +565,11 @@ async function main(): Promise<void> {
   console.log(`  ${customClasses.size} custom class names collected`);
 
   // Set up scanner
-  const sources = filterPath
-    ? [{ base: ROOT, pattern: filterPath, negated: false }]
-    : buildSources(extensions);
+  const sources = filterPath ? [{ base: ROOT, pattern: filterPath, negated: false }] : buildSources(extensions);
 
   const scanner = new Scanner({ sources });
 
-  const modeLabel = filterPath
-    ? `--path ${filterPath}`
-    : `extensions: ${extensions}`;
+  const modeLabel = filterPath ? `--path ${filterPath}` : `extensions: ${extensions}`;
   console.log(`Discovering source files  [${modeLabel}]…`);
   scanner.scan(); // populate scanner.files
   const files = scanner.files;
@@ -459,9 +598,7 @@ async function main(): Promise<void> {
     // For CSS files, only look at @apply directives — not the full file content
     // (which includes CSS property names, values, selectors, etc.)
     const withPos =
-      ext === 'css'
-        ? extractApplyCandidates(content)
-        : scanner.getCandidatesWithPositions({ content, extension: ext });
+      ext === 'css' ? extractApplyCandidates(content) : scanner.getCandidatesWithPositions({ content, extension: ext });
 
     for (const { candidate, position } of withPos) {
       if (NOISE_PATTERN.test(candidate)) continue;

@@ -8,7 +8,7 @@ import { trim } from '@dxos/util';
 
 import { ThreadFunctions } from '../functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/thread';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.thread';
 
 const functions = Object.values(ThreadFunctions);
 

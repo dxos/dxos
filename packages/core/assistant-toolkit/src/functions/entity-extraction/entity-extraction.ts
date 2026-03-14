@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { AiSession, ToolExecutionServices } from '@dxos/assistant';
-import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
 import { type DXN } from '@dxos/keys';
@@ -22,7 +22,7 @@ import { ResearchGraph } from '../../blueprints';
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 
 export default defineFunction({
-  key: 'dxos.org/functions/entity-extraction',
+  key: 'org.dxos.functions.entity-extraction',
   name: 'Entity Extraction',
   description: 'Extracts entities from emails and transcripts.',
   inputSchema: Schema.Struct({
@@ -37,7 +37,7 @@ export default defineFunction({
   }),
   outputSchema: Schema.Struct({
     entities: Schema.optional(
-      Schema.Array(Type.Obj).annotations({
+      Schema.Array(Obj.Unknown).annotations({
         description: 'Extracted entities.',
       }),
     ),

@@ -10,8 +10,7 @@ import { InvitationListItem, type InvitationListItemProps } from './InvitationLi
 import { type SharedInvitationListProps } from './InvitationListProps';
 
 export interface InvitationListProps
-  extends Omit<InvitationListItemProps, 'invitation' | 'value'>,
-    Pick<SharedInvitationListProps, 'send'> {
+  extends Omit<InvitationListItemProps, 'invitation' | 'value'>, Pick<SharedInvitationListProps, 'send'> {
   invitations: CancellableInvitationObservable[];
   InvitationListItem?: ComponentType<InvitationListItemProps>;
   className?: string;

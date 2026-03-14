@@ -2,7 +2,7 @@
 title: Configuration
 ---
 
-The `config` object we send to our client during initialization shouldn't be directly define on our code, 
+The `config` object we send to our client during initialization shouldn't be directly define on our code,
 but rather provided on each environment.
 
 ```jsx
@@ -50,7 +50,7 @@ const config = async () => new Config(await Dynamics(), Envs(), Defaults());
 export const initConfig = () => config().then(({ values }) => values);
 ```
 
-We are instantiating a `Config` object from `@dxos/config` package. 
+We are instantiating a `Config` object from `@dxos/config` package.
 This Config object is in charge of reading the files we created above:
 
 ```
@@ -75,7 +75,7 @@ const App = () => {
 
 ## Webpack ConfigPlugin
 
-To make this package work properly, we need to make sure our Webpack settings have the `ConfigPlugin` 
+To make this package work properly, we need to make sure our Webpack settings have the `ConfigPlugin`
 from `@dxos/config` to load the config files.
 
 ```jsx:title=<root>/craco.config.js
@@ -130,5 +130,5 @@ module.exports = {
 
 ---
 
-If everything is properly set, your app should still be working same as it was on last section. 
+If everything is properly set, your app should still be working same as it was on last section.
 But now, we are prepared to publicly deploy our app to a Kube.

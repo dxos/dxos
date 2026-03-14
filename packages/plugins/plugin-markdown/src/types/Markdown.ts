@@ -16,10 +16,10 @@ export const Document = Schema.Struct({
   name: Schema.optional(Schema.String),
   description: Schema.optional(Schema.String),
   fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
-  content: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+  content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Document',
+    typename: 'org.dxos.type.document',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name', 'fallbackName']),

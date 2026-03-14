@@ -5,17 +5,17 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Type } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
-  key: 'dxos.org/function/markdown/read',
+  key: 'org.dxos.function.markdown.read',
   name: 'Read markdown document',
   description:
     'Read markdown document. Note that result is a snapshot in time, and might have changed since the document was last read.',
   inputSchema: Schema.Struct({
-    document: Type.Ref(Markdown.Document).annotations({
+    document: Ref.Ref(Markdown.Document).annotations({
       description: 'The document to read.',
     }),
   }),

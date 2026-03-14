@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, Obj, QueryAST, Type } from '@dxos/echo';
+import { Annotation, Obj, QueryAST, Ref, Type } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 import { Expando } from '@dxos/schema';
@@ -25,6 +25,7 @@ export const EmailSpec = Schema.Struct({
 });
 export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
 
+// TODO(wittjosiah): Remove. Migrate to Subscription triggers once EDGE supports them for feed queries.
 export const QueueSpec = Schema.Struct({
   kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
 
@@ -102,7 +103,7 @@ const TriggerSchema = Schema.Struct({
    * Function or workflow to invoke.
    */
   // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-  function: Schema.optional(Type.Ref(Expando.Expando).annotations({ title: 'Function' })),
+  function: Schema.optional(Ref.Ref(Expando.Expando).annotations({ title: 'Function' })),
 
   /**
    * Only used for workflowSchema.
@@ -140,7 +141,7 @@ const TriggerSchema = Schema.Struct({
   input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Trigger',
+    typename: 'org.dxos.type.trigger',
     version: '0.1.0',
   }),
   Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),

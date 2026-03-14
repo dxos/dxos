@@ -20,7 +20,7 @@ import { Table } from '../types';
 
 faker.seed(0); // NOTE(ZaymonFC): Required for smoke tests.
 
-export type TestTableModel<T extends Type.Obj.Any = Type.Obj.Any> = {
+export type TestTableModel<T extends Type.AnyObj = Type.AnyObj> = {
   schema: T | undefined;
   table: Table.Table | undefined;
   projection: ProjectionModel | undefined;
@@ -38,7 +38,7 @@ export type TestTableModel<T extends Type.Obj.Any = Type.Obj.Any> = {
  * Custom hook to create and manage a test table model for storybook demonstrations.
  * Provides table data, schema, and handlers for table operations.
  */
-export const useTestTableModel = <T extends Type.Obj.Any = Type.Obj.Any>(): TestTableModel<T> => {
+export const useTestTableModel = <T extends Type.AnyObj = Type.AnyObj>(): TestTableModel<T> => {
   const registry = useContext(RegistryContext);
   const { space } = useClientStory();
   const db = space?.db;

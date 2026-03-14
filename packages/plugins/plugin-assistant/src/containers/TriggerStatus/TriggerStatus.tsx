@@ -4,13 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
-import { useLayout } from '@dxos/app-toolkit/ui';
 import { type InvocationsState } from '@dxos/functions-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { useActiveSpace } from '@dxos/plugin-space';
 import { StatusBar } from '@dxos/plugin-status-bar';
-import { type Database, parseId } from '@dxos/react-client/echo';
+import { type Database } from '@dxos/react-client/echo';
 import { Icon, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
@@ -43,16 +41,8 @@ const getIconClassNames = (state: TriggerStatusState): string | undefined => {
   }
 };
 
-const useCurrentSpace = () => {
-  const layout = useLayout();
-  const client = useCapability(ClientCapabilities.Client);
-  const { spaceId } = parseId(layout.workspace);
-  const space = spaceId ? client.spaces.get(spaceId) : undefined;
-  return space;
-};
-
 export const TriggerStatus = () => {
-  const space = useCurrentSpace();
+  const space = useActiveSpace();
   const db = space?.db;
   if (!db) {
     return null;

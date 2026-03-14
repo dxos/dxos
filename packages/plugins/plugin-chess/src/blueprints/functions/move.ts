@@ -6,17 +6,17 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
 import { Chess } from '../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/chess/move',
+  key: 'org.dxos.function.chess.move',
   name: 'Move',
   description: 'Makes a move in the given chess game.',
   inputSchema: Schema.Struct({
-    game: Type.Ref(Chess.Game).annotations({
+    game: Ref.Ref(Chess.Game).annotations({
       description: 'The ID of the chess object.',
     }),
     move: Schema.String.annotations({

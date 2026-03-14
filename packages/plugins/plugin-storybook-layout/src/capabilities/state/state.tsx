@@ -51,9 +51,6 @@ export default Capability.makeModule(({ initialState }: { initialState?: Partial
       } satisfies AppCapabilities.Layout;
     }).pipe(Atom.keepAlive);
 
-    return [
-      Capability.contributes(LayoutState, stateAtom),
-      Capability.contributes(AppCapabilities.Layout, layoutAtom),
-    ];
+    return [Capability.contributes(LayoutState, stateAtom), Capability.contributes(AppCapabilities.Layout, layoutAtom)];
   }),
 );

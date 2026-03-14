@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AgentFunctions, EntityExtractionFunctions, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Feed, Filter, Key, Obj, Query, type QueryAST, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { GmailFunctions } from '@dxos/plugin-inbox';
@@ -85,7 +85,9 @@ export const generator = () => ({
           //   }),
           // );
 
-          space.db.add(Obj.make(Person.Person, { fullName: 'Rich', organization: Ref.make(org) }, { tags: [tagDxn] }));
+          space.db.add(
+            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagDxn] }, fullName: 'Rich', organization: Ref.make(org) }),
+          );
           space.db.add(
             Obj.make(Person.Person, {
               fullName: 'Josiah',
@@ -114,10 +116,12 @@ export const generator = () => ({
     [
       PresetName.ORG_RESEARCH_PROJECT,
       async (space, n, cb) => {
-        const feeds = await space.db.query(Filter.type(Type.Feed)).run();
-        const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
-        invariant(mailbox, 'Mailbox feed not found');
-        const queueDxn = Feed.getQueueDxn(mailbox)?.toString();
+        const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+        const mailbox = mailboxes[0];
+        invariant(mailbox, 'Mailbox not found');
+        const mailboxFeed = await mailbox.feed?.tryLoad();
+        invariant(mailboxFeed, 'Mailbox missing feed reference');
+        const queueDxn = Feed.getQueueDxn(mailboxFeed)?.toString();
         invariant(queueDxn, 'Mailbox feed missing queue DXN key');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagDxn = Obj.getDXN(tag).toString();
@@ -198,22 +202,22 @@ export const generator = () => ({
               Filter.type(Message.Message, {
                 properties: { labels: Filter.contains('investor') },
               }),
-            ).options({
+            ).from({
               queues: [queueDxn],
             }),
-            jsonSchema: Type.toJsonSchema(Message.Message),
+            jsonSchema: JsonSchema.toJsonSchema(Message.Message),
           });
           const contactsView = ViewModel.make({
             query: contactsQuery,
-            jsonSchema: Type.toJsonSchema(Person.Person),
+            jsonSchema: JsonSchema.toJsonSchema(Person.Person),
           });
           const organizationsView = ViewModel.make({
             query: organizationsQuery,
-            jsonSchema: Type.toJsonSchema(Organization.Organization),
+            jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
           });
           const notesView = ViewModel.make({
             query: notesQuery,
-            jsonSchema: Type.toJsonSchema(Markdown.Document),
+            jsonSchema: JsonSchema.toJsonSchema(Markdown.Document),
           });
 
           return space.db.add(
@@ -311,7 +315,7 @@ export const generator = () => ({
             'subscription',
             (triggerSpec) =>
               (triggerSpec.query = {
-                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast as Obj.Mutable<QueryAST.Query>,
+                ast: Query.select(Filter.typename('org.dxos.type.chess')).ast as Obj.Mutable<QueryAST.Query>,
               }),
             'type',
           );
@@ -396,7 +400,7 @@ export const generator = () => ({
     //       const templateComputeNode = computeModel.nodes.find((n) => n.id === template.node);
     //       invariant(templateComputeNode, 'Template compute node was not created.');
     //       templateComputeNode.value = templateContent.join('\n');
-    //       templateComputeNode.inputSchema = Type.toJsonSchema(EmailTriggerOutput);
+    //       templateComputeNode.inputSchema = JsonSchema.toJsonSchema(EmailTriggerOutput);
 
     //       attachTrigger(functionTrigger, computeModel);
 
@@ -530,7 +534,7 @@ export const generator = () => ({
     //       invariant(templateComputeNode, 'Template compute node was not created.');
     //       templateComputeNode.value = templateContent.join('\n');
     //       const extendedSchema = Schema.extend(EmailTriggerOutput, Schema.Struct({ text: Schema.String }));
-    //       templateComputeNode.inputSchema = Type.toJsonSchema(extendedSchema);
+    //       templateComputeNode.inputSchema = JsonSchema.toJsonSchema(extendedSchema);
 
     //       attachTrigger(functionTrigger, computeModel);
 
@@ -769,7 +773,9 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
   invariant(templateComputeNode, 'Template compute node was not created.');
   // NOTE: These are plain object mutations during model construction, not ECHO object mutations.
   templateComputeNode.value = ['{', '  "@type": "{{type}}",', '  "id": "@{{changeId}}"', '}'].join('\n');
-  templateComputeNode.inputSchema = Type.toJsonSchema(Schema.Struct({ type: Schema.String, changeId: Schema.String }));
+  templateComputeNode.inputSchema = JsonSchema.toJsonSchema(
+    Schema.Struct({ type: Schema.String, changeId: Schema.String }),
+  );
   attachTrigger(functionTrigger, computeModel);
 
   return { canvasModel, computeModel };

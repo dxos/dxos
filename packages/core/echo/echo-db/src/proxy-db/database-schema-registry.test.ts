@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { JsonSchema, Obj, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo/internal';
 
-import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
 const Organization = Schema.Struct({
@@ -16,7 +16,7 @@ const Organization = Schema.Struct({
   address: Schema.String,
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Organization',
+    typename: 'com.example.type.organization',
     version: '0.1.0',
   }),
 );
@@ -25,7 +25,7 @@ const Contact = Schema.Struct({
   name: Schema.String,
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Person',
+    typename: 'com.example.type.person',
     version: '0.1.0',
   }),
 );
@@ -57,7 +57,7 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([
       {
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
         jsonSchema: {
           type: 'object',
@@ -71,7 +71,7 @@ describe('schema registry', () => {
     ]);
     expect(registry.hasSchema(echoSchema)).to.be.true;
     expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
-    expect(echoSchema.typename).toEqual('example.com/type/Person');
+    expect(echoSchema.typename).toEqual('com.example.type.person');
     expect(echoSchema.version).toEqual('0.1.0');
     expect(echoSchema.jsonSchema.properties).toEqual({
       name: expect.any(Object),
@@ -81,7 +81,7 @@ describe('schema registry', () => {
   test('database schema work with echo APIs', async () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
-    expect(Type.getTypename(echoSchema)).toEqual('example.com/type/Person');
+    expect(Type.getTypename(echoSchema)).toEqual('com.example.type.person');
     expect(Type.getVersion(echoSchema)).toEqual('0.1.0');
   });
 
@@ -134,9 +134,9 @@ describe('schema registry', () => {
     const retrieved = await registry.query({ location: ['database', 'runtime'] }).run();
     // Note: Expando is registered by default in test builder.
     expect(retrieved.map(Type.getTypename)).toEqual([
-      'example.com/type/Expando',
-      'example.com/type/Organization',
-      'example.com/type/Person',
+      'com.example.type.expando',
+      'com.example.type.organization',
+      'com.example.type.person',
     ]);
   });
 
@@ -147,7 +147,7 @@ describe('schema registry', () => {
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['runtime'] }).run();
     // Note: Expando is registered by default in test builder.
-    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Expando', 'example.com/type/Organization']);
+    expect(retrieved.map(Type.getTypename)).toEqual(['com.example.type.expando', 'com.example.type.organization']);
   });
 
   test('query only database schemas', async () => {
@@ -156,13 +156,13 @@ describe('schema registry', () => {
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['database'] }).run();
-    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Person']);
+    expect(retrieved.map(Type.getTypename)).toEqual(['com.example.type.person']);
   });
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
     const schemaToStore = Obj.make(Type.PersistentType, {
-      typename: 'example.com/type/Test',
+      typename: 'com.example.type.test',
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
     });
@@ -253,7 +253,7 @@ const makeTestSchema = () =>
     name: Schema.String,
   }).pipe(
     Type.object({
-      typename: 'example.com/type/Test',
+      typename: 'com.example.type.test',
       version: '0.1.0',
     }),
   );

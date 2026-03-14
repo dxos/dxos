@@ -56,7 +56,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
     [primaryAction, groupedActions],
   );
 
-  const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
+  const ActionRoot = popoverAnchorId === `${NAV_TREE_ITEM}:${item.id}` ? Popover.Anchor : Fragment;
 
   return (
     <div role='none' className='contents dx-app-no-drag'>
@@ -67,6 +67,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
             label={toLocalizedString(primaryAction.properties?.label, t)}
             icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
             parent={item}
+            path={path}
             monolithic={Node.isAction(primaryAction)}
             menuActions={primaryMenuActions}
             menuType={primaryAction.properties?.menuType}
@@ -84,6 +85,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
               label={t('tree item actions label')}
               icon='ph--dots-three-vertical--regular'
               parent={item}
+              path={path}
               menuActions={actions}
               menuType='dropdown'
               caller={NAV_TREE_ITEM}

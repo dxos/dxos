@@ -15,6 +15,7 @@ export const translations = [
         'typename label_one': 'Pipeline',
         'typename label_other': 'Pipelines',
         'object name placeholder': 'New pipeline',
+        'add object label': 'Add pipeline',
         'rename object label': 'Rename pipeline',
         'delete object label': 'Delete pipeline',
         'object deleted label': 'Pipeline deleted',

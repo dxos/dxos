@@ -6,6 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { type Entity, Filter, Obj, Ref } from '@dxos/echo';
+import { Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { ObjectId } from '@dxos/keys';
@@ -17,7 +18,6 @@ import { range } from '@dxos/util';
 import { type DocHandleProxy, type RepoProxy } from '../automerge';
 import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase, type EchoDatabaseImpl } from '../proxy-db';
-import { Query } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 import { type CoreDatabase } from './core-database';
@@ -354,12 +354,12 @@ describe('CoreDatabase', () => {
       await graph.schemaRegistry.register([TestSchema.Person]);
       const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
       await db.coreDatabase.atomicReplaceObject(contact.id, {
-        type: DXN.parse('dxn:type:example.com/type/Task:0.1.0'),
+        type: DXN.parse('dxn:type:com.example.type.task:0.1.0'),
         data: { name: 'Bar' },
       });
 
       expect(contact.name).to.eq('Bar');
-      expect(Obj.getTypeDXN(contact)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
+      expect(Obj.getTypeDXN(contact)?.toString()).to.eq('dxn:type:com.example.type.task:0.1.0');
     });
   });
 });

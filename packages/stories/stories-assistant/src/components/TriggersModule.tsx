@@ -12,7 +12,7 @@ export const TriggersModule = () => {
     <Surface.Surface
       role='article'
       data={{
-        subject: `${automationMeta.id}/space-settings-automation`,
+        subject: `${automationMeta.id}.space-settings-automation`,
       }}
     />
   );

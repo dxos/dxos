@@ -13,14 +13,14 @@ import { Link, type LinkProps } from '../Link';
 
 type BreadcrumbRootProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.div>> & {
   'aria-label': string;
-  'asChild'?: boolean;
+  asChild?: boolean;
 };
 
 const BreadcrumbRoot = forwardRef<HTMLDivElement, BreadcrumbRootProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : Primitive.div;
-    return <Root role='navigation' {...props} className={tx('breadcrumb.root', {}, classNames)} ref={forwardedRef} />;
+    const Comp = asChild ? Slot : Primitive.div;
+    return <Comp role='navigation' {...props} className={tx('breadcrumb.root', {}, classNames)} ref={forwardedRef} />;
   },
 );
 
@@ -29,8 +29,8 @@ type BreadcrumbListProps = ThemedClassName<ComponentPropsWithRef<typeof Primitiv
 const BreadcrumbList = forwardRef<HTMLOListElement, BreadcrumbListProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : Primitive.ol;
-    return <Root role='list' {...props} className={tx('breadcrumb.list', {}, classNames)} ref={forwardedRef} />;
+    const Comp = asChild ? Slot : Primitive.ol;
+    return <Comp role='list' {...props} className={tx('breadcrumb.list', {}, classNames)} ref={forwardedRef} />;
   },
 );
 
@@ -39,16 +39,16 @@ type BreadcrumbListItemProps = ThemedClassName<ComponentPropsWithRef<typeof Prim
 const BreadcrumbListItem = forwardRef<HTMLLIElement, BreadcrumbListItemProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : Primitive.li;
-    return <Root role='listitem' {...props} className={tx('breadcrumb.listItem', {}, classNames)} ref={forwardedRef} />;
+    const Comp = asChild ? Slot : Primitive.li;
+    return <Comp role='listitem' {...props} className={tx('breadcrumb.listItem', {}, classNames)} ref={forwardedRef} />;
   },
 );
 
 type BreadcrumbLinkProps = LinkProps;
 
 const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(({ asChild, ...props }, forwardedRef) => {
-  const Root = asChild ? Slot : Link;
-  return <Root {...props} ref={forwardedRef} />;
+  const Comp = asChild ? Slot : Link;
+  return <Comp {...props} ref={forwardedRef} />;
 });
 
 type BreadcrumbCurrentProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & { asChild?: boolean };
@@ -56,9 +56,9 @@ type BreadcrumbCurrentProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & { a
 const BreadcrumbCurrent = forwardRef<HTMLHeadingElement, BreadcrumbCurrentProps>(
   ({ asChild, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : 'h1';
+    const Comp = asChild ? Slot : 'h1';
     return (
-      <Root {...props} aria-current='page' className={tx('breadcrumb.current', {}, classNames)} ref={forwardedRef} />
+      <Comp {...props} aria-current='page' className={tx('breadcrumb.current', {}, classNames)} ref={forwardedRef} />
     );
   },
 );

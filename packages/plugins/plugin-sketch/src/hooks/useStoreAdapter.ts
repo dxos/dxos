@@ -8,7 +8,7 @@ import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { Diagram } from '../types';
+import { Sketch } from '../types';
 
 import { TLDrawStoreAdapter } from './adapter';
 
@@ -19,7 +19,7 @@ import { TLDrawStoreAdapter } from './adapter';
  * @param object - Optional diagram whose canvas will be loaded and synced.
  * @returns The TLDrawStoreAdapter instance managing the tldraw store.
  */
-export const useStoreAdapter = (object?: Diagram.Diagram) => {
+export const useStoreAdapter = (object?: Sketch.Sketch) => {
   const [adapter] = useState(new TLDrawStoreAdapter());
   const [_, forceUpdate] = useState({});
   useAsyncEffect(
@@ -33,7 +33,7 @@ export const useStoreAdapter = (object?: Diagram.Diagram) => {
         return;
       }
 
-      if (canvas.schema !== Diagram.TLDRAW_SCHEMA) {
+      if (canvas.schema !== Sketch.TLDRAW_SCHEMA) {
         log.warn('invalid schema', { schema: canvas.schema });
         return;
       }

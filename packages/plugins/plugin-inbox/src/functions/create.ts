@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Message } from '@dxos/types';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/email-create',
+  key: 'org.dxos.function.inbox.email-create',
   name: 'Create email draft',
   description: 'Creates a new email draft.',
   inputSchema: Schema.Struct({
@@ -24,7 +24,7 @@ export default defineFunction({
     body: Schema.String.annotations({
       description: 'The body of the email.',
     }),
-    replyTo: Schema.optional(Type.Ref(Message.Message)).annotations({
+    replyTo: Schema.optional(Ref.Ref(Message.Message)).annotations({
       description: 'The message to reply to.',
     }),
   }),
@@ -36,7 +36,7 @@ export default defineFunction({
     const message = yield* Database.add(
       Obj.make(Message.Message, {
         [Obj.Meta]: {
-          tags: ['dxos.org/plugin-inbox/draft'],
+          tags: ['org.dxos.plugin-inbox.draft'],
         },
 
         created: new Date().toISOString(),

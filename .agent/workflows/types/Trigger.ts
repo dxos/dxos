@@ -102,7 +102,7 @@ const TriggerSchema = Schema.Struct({
    * Function or workflow to invoke.
    */
   // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-  function: Schema.optional(Type.Ref(Expando.Expando).annotations({ title: 'Function' })),
+  function: Schema.optional(Ref.Ref(Expando.Expando).annotations({ title: 'Function' })),
 
   /**
    * Only used for workflowSchema.
@@ -140,7 +140,7 @@ const TriggerSchema = Schema.Struct({
   input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Trigger',
+    typename: 'org.dxos.type.trigger',
     version: '0.1.0',
   }),
   SystemTypeAnnotation.set(true),

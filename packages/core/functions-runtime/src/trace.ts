@@ -63,22 +63,22 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * Queue  for function/workflow invocation events.
    */
-  invocationTraceQueue: Schema.optional(Type.Ref(Queue)),
+  invocationTraceQueue: Schema.optional(Ref.Ref(Queue)),
   /**
    * DXN of the invoked function/workflow.
    */
-  invocationTarget: Schema.optional(Type.Ref(Type.Obj)),
+  invocationTarget: Schema.optional(Ref.Ref(Obj.Unknown)),
   /**
    * Present for automatic invocations.
    */
-  trigger: Schema.optional(Type.Ref(Trigger.Trigger)),
+  trigger: Schema.optional(Ref.Ref(Trigger.Trigger)),
   /**
    * Runtime executing the function.
    */
   runtime: Schema.optional(FunctionRuntimeKind),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/InvocationTraceStart',
+    typename: 'org.dxos.type.invocation-trace-start',
     version: '0.1.0',
   }),
 );
@@ -106,7 +106,7 @@ export const InvocationTraceEndEvent = Schema.Struct({
   error: Schema.optional(SerializedError),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/InvocationTraceEnd',
+    typename: 'org.dxos.type.invocation-trace-end',
     version: '0.1.0',
   }),
 );
@@ -131,7 +131,7 @@ export const TraceEvent = Schema.Struct({
   ingestionTimestamp: Schema.Number,
   logs: Schema.Array(TraceEventLog),
   exceptions: Schema.Array(TraceEventException),
-}).pipe(Type.object({ typename: 'dxos.org/type/TraceEvent', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'org.dxos.type.trace-event', version: '0.1.0' }));
 
 export type TraceEvent = Schema.Schema.Type<typeof TraceEvent>;
 

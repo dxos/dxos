@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/internal';
 import { RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
@@ -28,7 +28,7 @@ describe('Projection', () => {
 
   test('create view from schema', async ({ expect }) => {
     const schema = TestSchema.Person;
-    const jsonSchema = Type.toJsonSchema(schema);
+    const jsonSchema = JsonSchema.toJsonSchema(schema);
     const registry = new RuntimeSchemaRegistry();
     await registry.register([TestSchema.Person, TestSchema.Organization]);
 
@@ -65,7 +65,7 @@ describe('Projection', () => {
         type: TypeEnum.Ref,
         format: Format.TypeFormat.Ref,
         referencePath: 'name',
-        referenceSchema: 'example.com/type/Organization',
+        referenceSchema: 'com.example.type.organization',
       });
     }
   });
@@ -80,8 +80,8 @@ describe('Projection', () => {
       organization: Ref.make(organization),
     });
     log('schema', {
-      organization: Type.toJsonSchema(TestSchema.Organization),
-      contact: Type.toJsonSchema(TestSchema.Person),
+      organization: JsonSchema.toJsonSchema(TestSchema.Organization),
+      contact: JsonSchema.toJsonSchema(TestSchema.Person),
     });
     log('objects', { organization, contact });
     expect(Obj.getTypename(organization)).to.eq(TestSchema.Organization.typename);
@@ -90,9 +90,9 @@ describe('Projection', () => {
 
   test('maintains field order during initialization', async ({ expect }) => {
     const schema = Obj.make(Type.PersistentType, {
-      typename: 'example.com/type/Person',
+      typename: 'com.example.type.person',
       version: '0.1.0',
-      jsonSchema: Type.toJsonSchema(
+      jsonSchema: JsonSchema.toJsonSchema(
         Schema.Struct({
           name: Schema.optional(Schema.String).annotations({ title: 'Name' }),
           email: Schema.optional(Format.Email),

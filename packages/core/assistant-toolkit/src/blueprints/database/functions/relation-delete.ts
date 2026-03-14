@@ -1,0 +1,28 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
+
+import { Database, Ref, Relation } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
+import { trim } from '@dxos/util';
+
+export default defineFunction({
+  key: 'org.dxos.function.database.relation-delete',
+  name: 'Delete relation',
+  description: trim`
+    Deletes the relation.
+  `,
+  inputSchema: Schema.Struct({
+    rel: Ref.Ref(Relation.Unknown),
+  }),
+  outputSchema: Schema.Void,
+  handler: Effect.fn(function* ({ data: { rel } }) {
+    const { db } = yield* Database.Service;
+    const relation = yield* Database.load(rel);
+    // TODO(dmaretskyi): Echo types broken.
+    db.remove(relation as any);
+  }),
+});

@@ -18,8 +18,7 @@ type ClientCapabilityOptions = Omit<
 >;
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: ClientCapabilityOptions) {
-    const { onClientInitialized, onSpacesReady, ...options } = props!;
+  Effect.fnUntraced(function* ({ onClientInitialized, onSpacesReady, ...options }: ClientCapabilityOptions) {
     const capabilityManager = yield* Capability.Service;
     const pluginManager = yield* Plugin.Service;
 

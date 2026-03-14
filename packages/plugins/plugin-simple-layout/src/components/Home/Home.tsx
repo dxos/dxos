@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Container, Icon, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
@@ -16,7 +16,7 @@ import { mx } from '@dxos/ui-theme';
 import { byPosition } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { useLoadDescendents } from '../hooks';
+import { useExpandPath } from '../hooks';
 
 export type HomeProps = {};
 
@@ -28,7 +28,7 @@ export const Home = (_: HomeProps) => {
   const userAccountItem = useItemsByDisposition('user-account')[0];
   const pinnedItems = useItemsByDisposition('pin-end', true);
   const workspaceItems = useItemsByDisposition('workspace');
-  useLoadDescendents(Node.RootId);
+  useExpandPath(Node.RootId);
 
   const items = useMemo(
     () => [...(userAccountItem ? [userAccountItem] : []), ...pinnedItems, ...workspaceItems],
@@ -41,22 +41,26 @@ export const Home = (_: HomeProps) => {
   });
 
   return (
-    <Container.Main toolbar>
-      <SearchList.Root onSearch={handleSearch}>
-        <Toolbar.Root>
-          <SearchList.Input placeholder={t('search placeholder')} autoFocus />
-        </Toolbar.Root>
-        <SearchList.Content>
-          <Mosaic.Container asChild>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport classNames='p-2'>
-                <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Mosaic.Container>
-        </SearchList.Content>
-      </SearchList.Root>
-    </Container.Main>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchList.Content>
+            <Mosaic.Container asChild>
+              <ScrollArea.Root orientation='vertical'>
+                <ScrollArea.Viewport classNames='p-2'>
+                  <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Mosaic.Container>
+          </SearchList.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
@@ -69,7 +73,7 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
   const isSelected = selectedValue === data.id;
   const cardRef = useRef<HTMLDivElement>(null);
 
-  useLoadDescendents(data.id);
+  useExpandPath(data.id);
 
   const handleSelect = useCallback(
     () => invokePromise(LayoutOperation.SwitchWorkspace, { subject: data.id }),

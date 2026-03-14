@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -9,19 +11,17 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { type QueryAST } from '@dxos/echo-protocol';
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
-import { type QueryOptions as QueryOptionsProto } from '@dxos/protocols/proto/dxos/echo/filter';
+import { DXN, type SpaceId } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
-import { isInstanceOf } from './internal/annotations';
-import type { Ref } from './internal/ref/ref';
-import { type AnyProperties } from './internal/types';
+import { isInstanceOf } from './internal/Annotation';
+import type { Ref } from './internal/Ref/ref';
+import { type AnyProperties } from './internal/common/types';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
@@ -29,51 +29,12 @@ import type * as SchemaRegistry from './SchemaRegistry';
 import type * as Type from './Type';
 
 /**
- * @deprecated Use `QueryAST.QueryOptions` instead.
- */
-export type QueryOptions = {
-  /**
-   * @deprecated Use `spaceIds` instead.
-   */
-  spaces?: PublicKey[];
-
-  /**
-   * Query only in specific spaces.
-   */
-  // TODO(dmaretskyi): Change this to SpaceId.
-  spaceIds?: string[];
-
-  /**
-   * Return only the first `limit` results.
-   */
-  limit?: number;
-
-  /**
-   * Query only local spaces, or remote on agent.
-   * @default `QueryOptions.DataLocation.LOCAL`
-   *
-   * Options:
-   *   - proto3_optional = true
-   */
-  // TODO(burdon): Remove?
-  dataLocation?: QueryOptionsProto.DataLocation;
-};
-
-/**
  * `query` API function declaration.
  */
 // TODO(burdon): Reconcile Query and Filter (should only have one root type).
-// TODO(dmaretskyi): Remove query options.
 export interface QueryFn {
-  <Q extends Query.Any>(
-    query: Q,
-    options?: (QueryAST.QueryOptions & QueryOptions) | undefined,
-  ): QueryResult.QueryResult<Query.Type<Q>>;
-
-  <F extends Filter.Any>(
-    filter: F,
-    options?: (QueryAST.QueryOptions & QueryOptions) | undefined,
-  ): QueryResult.QueryResult<Filter.Type<F>>;
+  <Q extends Query.Any>(query: Q): QueryResult.QueryResult<Query.Type<Q>>;
+  <F extends Filter.Any>(filter: F): QueryResult.QueryResult<Filter.Type<F>>;
 }
 
 /**
@@ -145,7 +106,10 @@ export interface Database extends Queryable {
   /**
    * Return object by local ID.
    */
-  getObjectById<T extends Obj.Unknown = Obj.Obj<AnyProperties>>(id: string, opts?: GetObjectByIdOptions): T | undefined;
+  getObjectById<T extends Obj.Unknown = Obj.OfShape<AnyProperties>>(
+    id: string,
+    opts?: GetObjectByIdOptions,
+  ): T | undefined;
 
   /**
    * Query objects.
@@ -239,11 +203,11 @@ export const resolve: {
   // No type check.
   (ref: DXN | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
   // Check matches schema.
-  <S extends Type.Entity.Any>(
+  <S extends Type.AnyEntity>(
     ref: DXN | Ref<any>,
     schema: S,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
-} = (<S extends Type.Entity.Any>(
+} = (<S extends Type.AnyEntity>(
   ref: DXN | Ref<any>,
   schema?: S,
 ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>

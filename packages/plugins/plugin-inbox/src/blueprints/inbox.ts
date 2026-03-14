@@ -8,7 +8,7 @@ import { trim } from '@dxos/util';
 
 import { GmailFunctions, InboxFunctions } from '../functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/inbox';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.inbox';
 
 const functions = [...Object.values(InboxFunctions), GmailFunctions.Sync];
 

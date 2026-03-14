@@ -14,7 +14,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { todo } from '@dxos/debug';
-import { Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
@@ -172,7 +172,7 @@ const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<s
  * The picked schema type decodes to the original schema type.
  */
 const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
-  if (Type.Ref.isRefSchemaAST(ast)) {
+  if (Ref.isRefType(ast)) {
     const description = ast.annotations.description
       ? ast.annotations.description + '\n' + RefFromLLM.ast.annotations.description
       : (RefFromLLM.ast.annotations.description as string);

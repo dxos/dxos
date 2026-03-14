@@ -7,6 +7,7 @@ import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
 import { Obj, Relation, Type } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
@@ -18,8 +19,6 @@ import {
 import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
-
-import { Filter, Query } from '../query';
 
 import { EchoTestBuilder, createDataAssertion } from './echo-test-builder';
 
@@ -451,7 +450,7 @@ describe('Integration tests', () => {
 
         const LocalTestSchema = Schema.Struct({
           field: Schema.String,
-        }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
+        }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
         const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
@@ -477,7 +476,7 @@ describe('Integration tests', () => {
         const objects = await db.query(Query.select(Filter.typeDXN(DXN.parse(schemaDxn)))).run();
         expect(objects.length).to.eq(1);
         expect(getTypeAnnotation(Obj.getSchema(objects[0])!)).to.include({
-          typename: 'example.com/type/Test',
+          typename: 'com.example.type.test',
           version: '0.1.0',
         });
       }
@@ -486,12 +485,12 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema ref.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const schema = db.schemaRegistry.getSchema('example.com/type/Test');
+        const schema = db.schemaRegistry.getSchema('com.example.type.test');
 
         const objects = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);
         expect(getTypeAnnotation(Obj.getSchema(objects[0])!)).to.include({
-          typename: 'example.com/type/Test',
+          typename: 'com.example.type.test',
           version: '0.1.0',
         });
       }
@@ -558,7 +557,9 @@ describe('Integration tests', () => {
       expect(objects.length).to.eq(0);
 
       // Verify object appears in deleted-only query.
-      const deletedObjects = await db.query(Query.select(Filter.type(TestSchema.Person)), { deleted: 'only' }).run();
+      const deletedObjects = await db
+        .query(Query.select(Filter.type(TestSchema.Person)).options({ deleted: 'only' }))
+        .run();
       expect(deletedObjects.length).to.eq(1);
       expect(deletedObjects[0].name).to.eq('Alice');
       expect(Obj.isDeleted(deletedObjects[0])).to.be.true;

@@ -12,7 +12,7 @@ import { translations } from '../../translations';
 import { SheetToolbar } from './SheetToolbar';
 
 const DefaultStory = () => {
-  // TODO(wittjosiah): Depends on SheetProvider.
+  // TODO(wittjosiah): Depends on SheetRoot.
   // return <SheetToolbar id='test' />;
   return <>TODO</>;
 };

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import type * as HttpClient from '@effect/platform/HttpClient';

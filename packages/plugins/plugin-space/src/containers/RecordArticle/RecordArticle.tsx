@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Container, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Card as MosaicCard } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { mx } from '@dxos/ui-theme';
@@ -27,27 +27,29 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
   const singleColumn = related.length === 1;
 
   return (
-    <Container.Main role={role}>
-      <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport classNames={mx('p-4 gap-4')}>
-          <div role='none' className={mx('flex w-full dx-card-max-width')}>
-            <Surface.Surface role='section' data={data} limit={1} />
-          </div>
-
-          {related.length > 0 && (
-            <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'dx-card-max-width' : 'w-full')}>
-              <label className='mt-2 text-sm text-description'>{t('related objects label')}</label>
-              <Masonry.Root<Entity.Unknown>
-                items={related}
-                render={Card}
-                columnCount={singleColumn ? 1 : undefined}
-                intrinsicHeight
-              />
+    <Panel.Root role={role} className='dx-article'>
+      <Panel.Content asChild>
+        <ScrollArea.Root orientation='vertical'>
+          <ScrollArea.Viewport classNames='p-4 gap-4'>
+            <div role='none' className='flex w-full dx-card-max-width'>
+              <Surface.Surface role='section' data={data} limit={1} />
             </div>
-          )}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </Container.Main>
+
+            {related.length > 0 && (
+              <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'dx-card-max-width' : 'w-full')}>
+                <label className='mt-2 text-sm text-description'>{t('related objects label')}</label>
+                <Masonry.Root<Entity.Unknown>
+                  items={related}
+                  render={Card}
+                  columnCount={singleColumn ? 1 : undefined}
+                  intrinsicHeight
+                />
+              </div>
+            )}
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

@@ -11,7 +11,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
-import { FeedbackForm } from '../../components/FeedbackForm';
+import { FeedbackForm } from '../../components';
 import { meta } from '../../meta';
 import { ObservabilityCapabilities, ObservabilityOperation, type UserFeedback } from '../../types';
 
@@ -40,7 +40,7 @@ export const HelpContainer = () => {
       await invokePromise(ObservabilityOperation.CaptureUserFeedback, values);
       await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
       await invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}/feedback-success`,
+        id: `${meta.id}.feedback-success`,
         icon: 'ph--paper-plane-tilt--regular',
         duration: 3000,
         title: ['feedback toast label', { ns: meta.id }],

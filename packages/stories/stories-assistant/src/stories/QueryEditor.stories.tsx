@@ -15,7 +15,6 @@ import { ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, type QueryEditorProps, useQueryBuilder } from '@dxos/react-ui-components';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { render } from '@dxos/storybook-utils';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 // TODO(burdon): Move.
@@ -64,7 +63,7 @@ const tags: Tag.Map = {
 const meta: Meta<typeof QueryEditor> = {
   title: 'stories/stories-assistant/QueryEditor',
   component: QueryEditor,
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -99,6 +98,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    value: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization)',
+    value: '(type:org.dxos.type.person OR type:org.dxos.type.organization)',
   },
 };

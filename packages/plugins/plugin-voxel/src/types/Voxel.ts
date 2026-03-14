@@ -38,7 +38,7 @@ export const World = Schema.Struct({
   voxels: Schema.optional(Schema.Record({ key: Schema.String, value: VoxelProps })),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Voxel',
+    typename: 'org.dxos.type.voxel',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
@@ -46,7 +46,7 @@ export const World = Schema.Struct({
 
 export interface World extends Schema.Schema.Type<typeof World> {}
 
-const DEFAULT_GRID_SIZE = 16;
+const DEFAULT_GRID_SIZE = 32;
 const DEFAULT_BLOCK_SIZE = 1;
 
 /** Create a voxel map key from coordinates. */

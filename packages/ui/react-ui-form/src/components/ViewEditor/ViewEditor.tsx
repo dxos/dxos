@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
-import { Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry, Type } from '@dxos/echo';
+import { Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -17,7 +17,13 @@ import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
-import { ProjectionModel, VIEW_FIELD_LIMIT, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
+import {
+  ParentLabelAnnotation,
+  ProjectionModel,
+  VIEW_FIELD_LIMIT,
+  createEchoChangeCallback,
+  getTypenameFromQuery,
+} from '@dxos/schema';
 import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -90,16 +96,20 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     useImperativeHandle(forwardedRef, () => projectionModel, [projectionModel]);
 
     const queueTarget = Match.value(view.query.ast).pipe(
-      Match.when({ type: 'options' }, ({ options }) => {
-        return Option.fromNullable(options.queues).pipe(
+      Match.when({ type: 'from' }, ({ from }) => {
+        if (from._tag !== 'scope') {
+          return undefined;
+        }
+        return Option.fromNullable(from.scope.queues).pipe(
           Option.flatMap((queues) => Array.head(queues)),
+          Option.map(String),
           Option.getOrUndefined,
         );
       }),
       Match.orElse(() => undefined),
     );
 
-    const feeds = useQuery(db, Filter.type(Type.Feed));
+    const feeds = useQuery(db, Filter.type(Feed.Feed));
 
     const targetRef = useMemo(() => {
       if (!queueTarget) {
@@ -120,7 +130,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (mode === 'tag') {
         return Schema.Struct({
           ...base.fields,
-          target: Schema.optional(Type.Ref(Type.Feed).annotations({ title: 'Target Feed' })),
+          // TODO(wittjosiah): Replace Type.Feed with Dataset.Dataset when Ref.Ref supports unions.
+          target: Ref.Ref(Feed.Feed).pipe(
+            Schema.annotations({ title: 'Target Feed' }),
+            ParentLabelAnnotation.set(true),
+            Schema.optional,
+          ),
         }).pipe(Schema.mutable);
       }
 

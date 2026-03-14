@@ -22,7 +22,6 @@ export const BoardPlugin = Plugin.define(meta).pipe(
         icon: 'ph--squares-four--regular',
         iconHue: 'green',
         createObject: ((props) => Effect.sync(() => Board.makeBoard(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),

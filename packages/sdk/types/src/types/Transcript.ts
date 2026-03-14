@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { type DXN, Obj, Ref, Type } from '@dxos/echo';
@@ -20,10 +22,10 @@ export const Transcript = Schema.Struct({
   /**
    * Queue containing TranscriptBlock objects.
    */
-  queue: Type.Ref(Queue),
+  queue: Ref.Ref(Queue),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Transcript',
+    typename: 'org.dxos.type.transcript',
     version: '0.1.0',
   }),
   SystemTypeAnnotation.set(true),

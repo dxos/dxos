@@ -6,20 +6,20 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiContextService } from '@dxos/assistant';
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
 import { Project } from '../../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/project/add-artifact',
+  key: 'org.dxos.function.project.add-artifact',
   name: 'Add artifact',
   description: 'Adds a new artifact.',
   inputSchema: Schema.Struct({
     name: Schema.String.annotations({
       description: 'The name of the artifact to add.',
     }),
-    artifact: Type.Ref(Type.Obj).annotations({
+    artifact: Ref.Ref(Obj.Unknown).annotations({
       description: 'The artifact to add. Do NOT guess or try to generate the ID.',
     }),
   }),

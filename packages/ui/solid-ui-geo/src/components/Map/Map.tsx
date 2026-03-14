@@ -55,6 +55,7 @@ const useMapContext = (displayName: string) => {
   if (!context) {
     throw new Error(`${displayName} must be used within Map.Root`);
   }
+
   return context;
 };
 

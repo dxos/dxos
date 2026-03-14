@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { AiContextService, AiConversation, type ContextBinding } from '@dxos/assistant';
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TriggerEvent, defineFunction } from '@dxos/functions';
@@ -17,11 +17,11 @@ import { type Message } from '@dxos/types';
 import { Project } from '../../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/project/agent',
+  key: 'org.dxos.function.project.agent',
   name: 'Project Agent',
   description: 'Agentic worker that drives the project autonomously.',
   inputSchema: Schema.Struct({
-    project: Schema.suspend(() => Type.Ref(Project.Project)),
+    project: Schema.suspend(() => Ref.Ref(Project.Project)),
     prompt: Schema.optional(Schema.String),
     event: Schema.optional(TriggerEvent.TriggerEvent),
   }),

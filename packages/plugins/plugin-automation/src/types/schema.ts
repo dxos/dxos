@@ -17,7 +17,7 @@ const TriggerTemplate = Schema.Union(
 
 export namespace AutomationAction {
   export class CreateTriggerFromTemplate extends Schema.TaggedClass<CreateTriggerFromTemplate>()(
-    `${meta.id}/action/create-trigger-from-template`,
+    `${meta.id}.action.create-trigger-from-template`,
     {
       input: Schema.Struct({
         db: Database.Database,
@@ -32,11 +32,11 @@ export namespace AutomationAction {
   ) {}
 }
 
-const AUTOMATION_OPERATION = `${meta.id}/operation`;
+const AUTOMATION_OPERATION = `${meta.id}.operation`;
 
 export namespace AutomationOperation {
   export const CreateTriggerFromTemplate = Operation.make({
-    meta: { key: `${AUTOMATION_OPERATION}/create-trigger-from-template`, name: 'Create Trigger From Template' },
+    meta: { key: `${AUTOMATION_OPERATION}.create-trigger-from-template`, name: 'Create Trigger From Template' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({

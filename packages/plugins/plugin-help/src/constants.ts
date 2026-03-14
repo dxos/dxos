@@ -4,4 +4,4 @@
 
 import { meta } from './meta';
 
-export const SHORTCUTS_DIALOG = `${meta.id}/ShortcutsDialog`;
+export const SHORTCUTS_DIALOG = `${meta.id}.ShortcutsDialog`;

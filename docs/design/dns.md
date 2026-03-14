@@ -7,7 +7,6 @@
 
 - Wilcard cert
   - letsencrypt
-  
 - TLS CSR
   - https://letsencrypt.org/how-it-works
   - https://www.globalsign.com/en/blog/what-is-a-certificate-signing-request-csr
@@ -51,7 +50,6 @@
 
 - `srv.us`
 
-
 ## Design
 
 ### Goals
@@ -70,7 +68,6 @@
 
 > - ISSUE: Private networks and `localhost`?
 
-
 ## Resources
 
 - https://www.abetterinternet.org
@@ -83,7 +80,6 @@
 - Local subnet
 - Public
 
-
 ### Solution Candidate
 
 - Secure installation of HALO core app from dxos.org or trusted server
@@ -92,4 +88,3 @@
   - HTML Script integrity check
     - https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script#attr-integrity
   - HALO validates integrity using credential presentation in custom header
-

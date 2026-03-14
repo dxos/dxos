@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { type ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { SelectionModel } from '@dxos/graph';
@@ -26,10 +26,11 @@ export type D3ForceGraphProps = ThemedClassName<
     match?: RegExp;
     selection?: SelectionModel;
     grid?: boolean;
-  } & Pick<GraphProps, 'drag'>
+  } & Pick<GraphProps, 'drag'> &
+    ComponentPropsWithoutRef<'div'>
 >;
 
-export const D3ForceGraph = ({ classNames, model, selection: _selection, grid, ...props }: D3ForceGraphProps) => {
+export const D3ForceGraph = ({ classNames, model, selection: _selection, grid, drag, ...props }: D3ForceGraphProps) => {
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector | undefined>(() => {
     if (context.current) {
@@ -66,12 +67,12 @@ export const D3ForceGraph = ({ classNames, model, selection: _selection, grid, .
   );
 
   return (
-    <SVG.Root ref={context} classNames={classNames}>
+    <SVG.Root ref={context} classNames={classNames} {...props}>
       <SVG.Markers />
       {grid && <SVG.Grid axis />}
       <SVG.Zoom extent={[1 / 2, 2]}>
         <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
-          {...props}
+          drag={drag}
           ref={graph}
           model={model}
           projector={projector}

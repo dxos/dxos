@@ -493,12 +493,12 @@ interface TooltipContentImplProps extends Omit<PopperContentProps, 'onPlaced'> {
    * Event handler called when the escape key is down.
    * Can be prevented.
    */
-  'onEscapeKeyDown'?: DismissableLayerProps['onEscapeKeyDown'];
+  onEscapeKeyDown?: DismissableLayerProps['onEscapeKeyDown'];
   /**
    * Event handler called when the a `pointerdown` event happens outside of the `Tooltip`.
    * Can be prevented.
    */
-  'onPointerDownOutside'?: DismissableLayerProps['onPointerDownOutside'];
+  onPointerDownOutside?: DismissableLayerProps['onPointerDownOutside'];
 }
 
 const TooltipContentImpl = forwardRef<TooltipContentImplElement, TooltipContentImplProps>(

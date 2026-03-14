@@ -51,7 +51,7 @@ namespace Proposition {
 
   export const Object = Fields.pipe(
     Type.object({
-      typename: 'dxos.org/type/Proposition',
+      typename: 'org.dxos.type.proposition',
       version: '0.1.0',
     }),
   );
@@ -87,7 +87,7 @@ export namespace OKR {
 
   const Object = Properties.pipe(
     Type.object({
-      typename: 'dxos.org/type/OKR',
+      typename: 'org.dxos.type.okr',
       version: '0.1.0',
     }),
   );
@@ -102,19 +102,19 @@ export namespace OKR {
  */
 export namespace SWOT {
   const Properties = Schema.Struct({
-    subject: Schema.optional(Type.Ref(Proposition.Object)).annotations({
+    subject: Schema.optional(Ref.Ref(Proposition.Object)).annotations({
       description: 'Subject of the analysis, which could be a document or a structured object.',
     }),
-    strengths: Schema.Array(Type.Ref(Proposition.Object)).annotations({
+    strengths: Schema.Array(Ref.Ref(Proposition.Object)).annotations({
       description: 'An attribute of the organization that is helpful in achieving its objectives.',
     }),
-    weaknesses: Schema.Array(Type.Ref(Proposition.Object)).annotations({
+    weaknesses: Schema.Array(Ref.Ref(Proposition.Object)).annotations({
       description: 'A limitation or deficiency within the organization that could hinder its progress.',
     }),
-    opportunities: Schema.Array(Type.Ref(Proposition.Object)).annotations({
+    opportunities: Schema.Array(Ref.Ref(Proposition.Object)).annotations({
       description: 'An external factor that the organization could exploit to its advantage.',
     }),
-    threats: Schema.Array(Type.Ref(Proposition.Object)).annotations({
+    threats: Schema.Array(Ref.Ref(Proposition.Object)).annotations({
       description: 'An external factor that could potentially harm the organization.',
     }),
   }).annotations({
@@ -124,7 +124,7 @@ export namespace SWOT {
 
   const Object = Properties.pipe(
     Type.object({
-      typename: 'dxos.org/type/SWOT',
+      typename: 'org.dxos.type.swot',
       version: '0.1.0',
     }),
   );
@@ -141,7 +141,7 @@ export namespace Plan {
 
   const Object = Properties.pipe(
     Type.object({
-      typename: 'dxos.org/type/Plan',
+      typename: 'org.dxos.type.plan',
       version: '0.1.0',
     }),
   );

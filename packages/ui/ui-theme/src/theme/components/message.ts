@@ -4,8 +4,8 @@
 
 import { type ComponentFunction, type Elevation, type MessageValence, type Theme } from '@dxos/ui-types';
 
+import { messageValence } from '../../fragments';
 import { mx } from '../../util';
-import { messageValence } from '../fragments';
 
 export type MessageStyleProps = {
   valence?: MessageValence;

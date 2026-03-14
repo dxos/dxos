@@ -14,9 +14,7 @@ function uppercase(str) {
 }
 
 function replaceVariables(template, name) {
-  return template
-    .replace(/\$\{NAME\}/g, uppercase(name))
-    .replace(/\$\{name\}/g, name);
+  return template.replace(/\$\{NAME\}/g, uppercase(name)).replace(/\$\{name\}/g, name);
 }
 
 async function activate(context) {

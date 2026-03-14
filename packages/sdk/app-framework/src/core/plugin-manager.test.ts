@@ -23,14 +23,14 @@ import type * as CapabilityManager from './capability-manager';
 import * as Plugin from './plugin';
 import * as PluginManager from './plugin-manager';
 
-const String = Capability.make<{ string: string }>('dxos.org/test/string');
-const Number = Capability.make<{ number: number }>('dxos.org/test/number');
-const Total = Capability.make<{ total: number }>('dxos.org/test/total');
+const String = Capability.make<{ string: string }>('org.dxos.test.string');
+const Number = Capability.make<{ number: number }>('org.dxos.test.number');
+const Total = Capability.make<{ total: number }>('org.dxos.test.total');
 
-const CountEvent = ActivationEvent.make('dxos.org/test/count');
-const FailEvent = ActivationEvent.make('dxos.org/test/fail');
+const CountEvent = ActivationEvent.make('org.dxos.test.count');
+const FailEvent = ActivationEvent.make('org.dxos.test.fail');
 
-const testMeta = { id: 'dxos.org/plugin/test', name: 'Test' };
+const testMeta = { id: 'org.dxos.plugin.test', name: 'Test' };
 
 // TODO(wittjosiah): Factor out?
 const atomCounter = (registry: Registry.Registry, atom: Atom.Atom<any>) => {
@@ -204,7 +204,7 @@ describe('PluginManager', () => {
 
   it.effect('should catch and log defects (synchronous throws) in module activation', () =>
     Effect.gen(function* () {
-      const DefectEvent = ActivationEvent.make('dxos.org/test/defect');
+      const DefectEvent = ActivationEvent.make('org.dxos.test.defect');
       const capturedErrors: LogEntry[] = [];
       const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
         if (entry.level === LogLevel.ERROR) {
@@ -238,7 +238,7 @@ describe('PluginManager', () => {
       const defectLog = capturedErrors.find(
         (entry) =>
           entry.message?.includes('module failed to activate') &&
-          entry.context?.module === 'dxos.org/plugin/test/module/DefectInEffectSync',
+          entry.context?.module === 'org.dxos.plugin.test.module.DefectInEffectSync',
       );
       assert.isNotNull(defectLog, 'Expected error log for defect');
       assert.strictEqual(defectLog?.context?.isDefect, true, 'Expected isDefect to be true for synchronous throw');
@@ -249,7 +249,7 @@ describe('PluginManager', () => {
 
   it.effect('should catch and log defects when activate throws before returning Effect', () =>
     Effect.gen(function* () {
-      const DefectEvent = ActivationEvent.make('dxos.org/test/defect-immediate');
+      const DefectEvent = ActivationEvent.make('org.dxos.test.defect-immediate');
       const capturedErrors: LogEntry[] = [];
       const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
         if (entry.level === LogLevel.ERROR) {
@@ -284,7 +284,7 @@ describe('PluginManager', () => {
       const defectLog = capturedErrors.find(
         (entry) =>
           entry.message?.includes('module failed to activate') &&
-          entry.context?.module === 'dxos.org/plugin/test/module/DefectImmediate',
+          entry.context?.module === 'org.dxos.plugin.test.module.DefectImmediate',
       );
       assert.isNotNull(defectLog, 'Expected error log for immediate defect');
       assert.strictEqual(
@@ -419,7 +419,7 @@ describe('PluginManager', () => {
 
   it.effect('should be able to fire custom activation events', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin1',
@@ -427,7 +427,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin2',
@@ -435,7 +435,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin3 = Plugin.define({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }).pipe(
+      const Plugin3 = Plugin.define({ id: 'org.dxos.test.plugin-3', name: 'Plugin 3' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin3',
@@ -546,7 +546,7 @@ describe('PluginManager', () => {
         state.total = numbers.reduce((acc: number, n: { number: number }) => acc + n.number, 0);
       };
 
-      const Count = Plugin.define({ id: 'dxos.org/test/count', name: 'Count' }).pipe(
+      const Count = Plugin.define({ id: 'org.dxos.test.count', name: 'Count' }).pipe(
         Plugin.addModule({
           id: 'Count',
           activatesOn: ActivationEvents.Startup,
@@ -626,7 +626,7 @@ describe('PluginManager', () => {
 
   it.effect('should be reactive', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin1',
@@ -634,7 +634,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin2',
@@ -642,7 +642,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin3 = Plugin.define({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }).pipe(
+      const Plugin3 = Plugin.define({ id: 'org.dxos.test.plugin-3', name: 'Plugin 3' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin3',
@@ -752,8 +752,8 @@ describe('PluginManager', () => {
         }
       });
 
-      const SlowEvent = ActivationEvent.make('dxos.org/test/slow');
-      const SlowPlugin = Plugin.define({ id: 'dxos.org/test/slow-plugin', name: 'Slow Plugin' }).pipe(
+      const SlowEvent = ActivationEvent.make('org.dxos.test.slow');
+      const SlowPlugin = Plugin.define({ id: 'org.dxos.test.slow-plugin', name: 'Slow Plugin' }).pipe(
         Plugin.addModule({
           id: 'SlowModule',
           activatesOn: SlowEvent,
@@ -795,11 +795,11 @@ describe('PluginManager', () => {
   it.effect('should prevent concurrent loads of the same module via semaphore', () =>
     Effect.gen(function* () {
       // Two different events that both can trigger the same module.
-      const EventA = ActivationEvent.make('dxos.org/test/event-a');
-      const EventB = ActivationEvent.make('dxos.org/test/event-b');
+      const EventA = ActivationEvent.make('org.dxos.test.event-a');
+      const EventB = ActivationEvent.make('org.dxos.test.event-b');
 
       let activateCallCount = 0;
-      const ConcurrentPlugin = Plugin.define({ id: 'dxos.org/test/concurrent-plugin', name: 'Concurrent Plugin' }).pipe(
+      const ConcurrentPlugin = Plugin.define({ id: 'org.dxos.test.concurrent-plugin', name: 'Concurrent Plugin' }).pipe(
         Plugin.addModule({
           id: 'ConcurrentModule',
           // Module activates on either event - this allows two different events to race.

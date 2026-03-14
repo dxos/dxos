@@ -7,10 +7,16 @@ import React, { type PropsWithChildren, useContext, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type CompleteCellRange } from '@dxos/compute';
-import { type ActionGraphProps, Menu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import {
+  type ActionGraphProps,
+  Menu,
+  type MenuRootProps,
+  createGapSeparator,
+  useMenuActions,
+} from '@dxos/react-ui-menu';
 
 import { type SheetModel } from '../../model';
-import { useSheetContext } from '../SheetContext';
+import { useSheetContext } from '../SheetRoot';
 
 import { createAlign, useAlignState } from './align';
 import { createStyle, useStyleState } from './style';
@@ -53,9 +59,10 @@ const createToolbarActions = ({
   });
 };
 
-export type SheetToolbarProps = PropsWithChildren<{ id: string }>;
+export type SheetToolbarProps = { id: string } & Partial<MenuRootProps> &
+  PropsWithChildren<{ id: string } & Partial<MenuRootProps>>;
 
-export const SheetToolbar = ({ id }: SheetToolbarProps) => {
+export const SheetToolbar = ({ id, ...props }: SheetToolbarProps) => {
   const { model, cursorFallbackRange } = useSheetContext();
   const stateAtom = useToolbarState({});
   const registry = useContext(RegistryContext);
@@ -81,7 +88,7 @@ export const SheetToolbar = ({ id }: SheetToolbarProps) => {
   const menu = useMenuActions(actionsCreator);
 
   return (
-    <Menu.Root {...menu} attendableId={id}>
+    <Menu.Root {...props} {...menu} attendableId={id}>
       <Menu.Toolbar />
     </Menu.Root>
   );

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Prompt from '@effect/ai/Prompt';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
@@ -331,7 +333,7 @@ const convertAssistantMessagePart: (
         });
       case 'summary':
         return Prompt.makePart('text', {
-          text: `<summary>${block.content}</summary>`,
+          text: `This is the continuation of a conversation that was compacted to preserve context-window space. Summary of what happened in this conversation previously: <summary>${block.content}</summary>`,
         });
       case 'toolkit':
         return Prompt.makePart('text', {

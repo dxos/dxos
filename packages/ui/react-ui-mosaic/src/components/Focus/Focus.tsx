@@ -13,9 +13,7 @@ import { Slot } from '@radix-ui/react-slot';
 import React, { type PropsWithChildren, createContext, forwardRef, useContext, useRef, useState } from 'react';
 
 import { type Axis, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
-
-import { styles } from './styles';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 //
 // Context
@@ -47,10 +45,11 @@ type GroupProps = ThemedClassName<
 // TODO(wittjosiah): Consider how this could integrate with with react-ui-attention.
 //   Perhaps react-ui-attention comes under the mosaic umbrella as it supports selection?
 const Group = forwardRef<HTMLDivElement, GroupProps>(
-  ({ classNames, className, children, asChild, orientation = 'vertical', ...props }: GroupProps, forwardedRef) => {
+  ({ children, asChild, orientation = 'vertical', ...props }: GroupProps, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const Root = asChild ? Slot : Primitive.div;
 
     // TODO(burdon): Configure.
     const focusableGroupAttrs = useFocusableGroup({
@@ -65,18 +64,30 @@ const Group = forwardRef<HTMLDivElement, GroupProps>(
 
     return (
       <FocusContext.Provider value={{ setFocus: setState }}>
-        <Root
-          tabIndex={0}
-          className={mx(styles.container.root, className, classNames)}
+        <Comp
+          {...rest}
           {...tabsterAttrs}
           {...(state && {
             [`data-${FOCUS_STATE_ATTR}`]: state,
           })}
-          {...props}
+          tabIndex={0}
+          className={mx(
+            [
+              // TODO(burdon): Option for border/rounded; ring/outline vs border?
+              'outline-hidden border border-separator md:rounded-xs',
+              // Focus (e.g., via tabster).
+              'focus:!border-accent-surface',
+              // Active (e.g., drop target).
+              'data-[focus-state=active]:border-neutral-focus-indicator',
+              // Error
+              'data-[focus-state=error]:border-rose-500',
+            ],
+            className,
+          )}
           ref={composedRef}
         >
           {children}
-        </Root>
+        </Comp>
       </FocusContext.Provider>
     );
   },

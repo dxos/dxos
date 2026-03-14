@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Prompt } from '@dxos/blueprints';
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { LabelAnnotation } from '@dxos/echo/internal';
 import { Graph } from '@dxos/plugin-explorer/types';
@@ -18,9 +18,9 @@ export const Cell = Schema.Struct({
   type: Schema.String,
   name: Schema.optional(Schema.String),
   // TODO(burdon): Union type.
-  source: Schema.optional(Type.Ref(Text.Text)),
-  prompt: Schema.optional(Type.Ref(Prompt.Prompt)),
-  graph: Schema.optional(Type.Ref(Graph.Graph)),
+  source: Schema.optional(Ref.Ref(Text.Text)),
+  prompt: Schema.optional(Ref.Ref(Prompt.Prompt)),
+  graph: Schema.optional(Ref.Ref(Graph.Graph)),
 });
 
 export interface Cell extends Schema.Schema.Type<typeof Cell> {}
@@ -30,7 +30,7 @@ export const Notebook = Schema.Struct({
   cells: Cell.pipe(Schema.Array, FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Notebook',
+    typename: 'org.dxos.type.notebook',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),

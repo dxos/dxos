@@ -11,7 +11,6 @@ import {
   type Size,
 } from '@dxos/ui-types';
 
-import { mx } from '../../util';
 import {
   coarseBlockSize,
   coarseDimensions,
@@ -27,7 +26,8 @@ import {
   staticFocusRing,
   subduedFocus,
   textValence,
-} from '../fragments';
+} from '../../fragments';
+import { mx } from '../../util';
 
 export type InputStyleProps = Partial<{
   variant: 'default' | 'subdued' | 'static';

@@ -5,11 +5,10 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { getCompanionVariant } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useNode } from '@dxos/plugin-graph';
-import { Container } from '@dxos/react-ui';
-import { ErrorFallback } from '@dxos/react-ui';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
+import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { Menu, useMenuActions } from '@dxos/react-ui-menu';
 
 import { useCompanions, useDrawerActions, useSimpleLayoutState } from '../../hooks';
@@ -53,22 +52,20 @@ export const Drawer = () => {
   const menu = useMenuActions(actions);
 
   return (
-    <Container.Main toolbar>
-      <Menu.Root {...menu} alwaysActive onAction={onAction}>
-        <Menu.Toolbar density='coarse' />
-      </Menu.Root>
-      <Surface.Surface role='article' data={data} limit={1} fallback={ErrorFallback} placeholder={placeholder} />
-    </Container.Main>
+    <Panel.Root>
+      <Panel.Toolbar>
+        <Menu.Root {...menu} alwaysActive onAction={onAction}>
+          <Menu.Toolbar density='coarse' />
+        </Menu.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <Surface.Surface role='article' data={data} limit={1} fallback={ErrorFallback} placeholder={placeholder} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
 Drawer.displayName = DRAWER_NAME;
-
-/** Parse entry ID to extract primary ID and variant. */
-const parseEntryId = (entryId: string) => {
-  const [id, variant] = entryId.split(ATTENDABLE_PATH_SEPARATOR);
-  return { id, variant };
-};
 
 /**
  * Resolves which companion to show based on variant preference.
@@ -82,10 +79,7 @@ const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string
 
     // Try to find companion matching the preferred variant.
     if (preferredVariant) {
-      const preferred = companions.find((c) => {
-        const { variant } = parseEntryId(c.id);
-        return variant === preferredVariant;
-      });
+      const preferred = companions.find((c) => getCompanionVariant(c.id) === preferredVariant);
       if (preferred) {
         return preferred;
       }
@@ -96,7 +90,7 @@ const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string
   }, [companions, preferredVariant]);
 
   const companionId = selectedCompanion?.id;
-  const { variant } = parseEntryId(companionId ?? '');
+  const variant = companionId ? getCompanionVariant(companionId) : undefined;
 
   return { selectedCompanion, companionId, variant };
 };

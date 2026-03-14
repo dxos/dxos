@@ -2,7 +2,10 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './AnchoredOverflow';
+export * from './DensityProvider';
+export * from './ElevationProvider';
+export * from './ThemeProvider';
+
 export * from './Avatars';
 export * from './Breadcrumb';
 export * from './Button';
@@ -30,7 +33,3 @@ export * from './Tag';
 export * from './Toast';
 export * from './Toolbar';
 export * from './Tooltip';
-
-export * from './DensityProvider';
-export * from './ElevationProvider';
-export * from './ThemeProvider';

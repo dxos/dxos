@@ -75,7 +75,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
       pluginManager.capabilities.contribute({
         ...capability,
-        module: 'dxos.org/app-framework/withPluginManager',
+        module: 'org.dxos.app-framework.with-plugin-manager',
       });
 
       return () => {
@@ -96,7 +96,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 };
 
 const storyMeta = {
-  id: 'dxos.org/app-framework/story',
+  id: 'org.dxos.app-framework.story',
   name: 'Story',
 };
 

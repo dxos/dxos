@@ -83,7 +83,7 @@ describe('format', () => {
 
     // Valid.
     {
-      prop.referenceSchema = 'dxn:type:example.com/type/Test';
+      prop.referenceSchema = 'dxn:type:com.example.type.test';
       expect(validate(prop)).to.deep.eq(prop);
     }
   });

@@ -3,11 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability, Plugin, UndoMapping } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  LayoutOperation,
+  getCollectionsPath,
+  getObjectPath,
+  getObjectPathFromObject,
+  getTypePath,
+} from '@dxos/app-toolkit';
 import { SpaceState, getSpace } from '@dxos/client/echo';
-import { Database, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Database, Obj, Query, Ref, Relation, Type, View } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -16,16 +24,11 @@ import { OperationResolver } from '@dxos/operation';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
+import { ViewAnnotation } from '@dxos/schema';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention/types';
+import { getSpacePath } from '@dxos/app-toolkit';
 import { iconValues } from '@dxos/react-ui-pickers/icons';
-import {
-  CollectionModel,
-  ManagedCollection,
-  ProjectionModel,
-  createEchoChangeCallback,
-  getTypenameFromQuery,
-} from '@dxos/schema';
+import { CollectionModel, ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 import { hues } from '@dxos/ui-theme';
 
 import {
@@ -35,11 +38,12 @@ import {
   OBJECT_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
 } from '../../constants';
-import { type JoinDialogProps } from '../../containers/JoinDialog/JoinDialog';
+import { type JoinDialogProps } from '../../containers/JoinDialog';
 import { meta } from '../../meta';
 import { SpaceEvents } from '../../types';
 import { SpaceCapabilities, SpaceOperation } from '../../types';
 import { COMPOSER_SPACE_LOCK, cloneObject, getNestedObjects } from '../../util';
+import { isNonNullable } from '@dxos/util';
 
 type OperationResolverOptions = {
   createInvitationUrl: (invitationCode: string) => string;
@@ -47,8 +51,7 @@ type OperationResolverOptions = {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: OperationResolverOptions) {
-    const { createInvitationUrl, observability } = props!;
+  Effect.fnUntraced(function* ({ createInvitationUrl, observability }: OperationResolverOptions) {
     const capabilityManager = yield* Capability.Service;
 
     const resolve = (typename: string) =>
@@ -81,7 +84,7 @@ export default Capability.makeModule(
           message: (input, _output) => {
             const ns = Obj.getTypename(input.objects[0]);
             return ns && input.objects.length === 1
-              ? ['object deleted label', { ns: meta.id }]
+              ? ['object deleted label', { ns }]
               : ['objects deleted label', { ns: meta.id }];
           },
         }),
@@ -146,8 +149,8 @@ export default Capability.makeModule(
           operation: SpaceOperation.OpenSettings,
           handler: Effect.fnUntraced(function* (input) {
             yield* Operation.invoke(LayoutOperation.Open, {
-              subject: [`properties-settings${ATTENDABLE_PATH_SEPARATOR}${input.space.id}`],
-              workspace: input.space.id,
+              subject: [`${getSpacePath(input.space.id)}/settings`],
+              workspace: getSpacePath(input.space.id),
             });
           }),
         }),
@@ -164,7 +167,6 @@ export default Capability.makeModule(
             // All objects must be a member of the same space.
             const space = getSpace(objects[0]);
             invariant(space && objects.every((obj) => Obj.isObject(obj) && getSpace(obj) === space));
-            const openObjectIds = new Set<string>(layout.active);
 
             const parentCollection: Collection.Collection =
               input.target ?? space.properties[Collection.Collection.typename]?.target;
@@ -183,8 +185,9 @@ export default Capability.makeModule(
             // Close objects that were open.
             const wasActive = objects
               .flatMap((obj, i) => [obj, ...nestedObjectsList[i]])
-              .filter((obj) => Obj.isObject(obj) && openObjectIds.has(Obj.getDXN(obj).toString()))
-              .map((obj) => Obj.getDXN(obj).toString());
+              .filter(Obj.isObject)
+              .map((object) => layout.active.find((graphId) => graphId.endsWith(object.id)))
+              .filter(isNonNullable);
 
             for (let i = 0; i < objects.length; i++) {
               const obj = objects[i];
@@ -279,11 +282,11 @@ export default Capability.makeModule(
                 typename: input.typename,
                 initialFormValues: input.initialFormValues,
                 onCreateObject: input.onCreateObject,
+                targetNodeId: input.targetNodeId,
                 shouldNavigate: navigable
                   ? (object: Obj.Unknown) => {
                       const isCollection = Obj.instanceOf(Collection.Collection, object);
-                      const isSystemCollection = Obj.instanceOf(ManagedCollection.ManagedCollection, object);
-                      return (!isCollection && !isSystemCollection) || ephemeralState.navigableCollections;
+                      return !isCollection || ephemeralState.navigableCollections;
                     }
                   : () => false,
               },
@@ -308,6 +311,7 @@ export default Capability.makeModule(
               hidden: input.hidden,
             }).pipe(Effect.provide(Database.layer(db)));
 
+            const typename = Obj.getTypename(object)!;
             yield* Operation.schedule(ObservabilityOperation.SendEvent, {
               name: 'space.object.add',
               properties: {
@@ -317,9 +321,23 @@ export default Capability.makeModule(
               },
             });
 
+            const [schema] = db.schemaRegistry.query({ typename, location: ['runtime'] }).runSync();
+            const isViewSchema = schema !== undefined && ViewAnnotation.get(schema).pipe(Option.getOrElse(() => false));
+            const view = isViewSchema
+              ? yield* Effect.promise(() => (object as Obj.Any).view.load() as Promise<View.View>)
+              : undefined;
+            const viewTargetTypename = view ? getTypenameFromQuery(view.query.ast) : undefined;
+            const subject = getSubjectPathForNewObject({
+              spaceId: db.spaceId,
+              objectId: object.id,
+              nodeId: input.targetNodeId,
+              typename,
+              viewTargetTypename,
+            });
+
             return {
               id: Obj.getDXN(object).toString(),
-              subject: [Obj.getDXN(object).toString()],
+              subject: [subject],
               object,
             };
           }),
@@ -423,13 +441,6 @@ export default Capability.makeModule(
               }
             });
 
-            // Create records smart collection.
-            Obj.change(collection, (c) => {
-              c.objects.push(
-                Ref.make(ManagedCollection.makeManagedCollection({ key: Type.getTypename(Type.PersistentType) })),
-              );
-            });
-
             // Allow other plugins to add default content.
             yield* Plugin.activate(SpaceEvents.SpaceCreated);
             const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
@@ -508,7 +519,7 @@ export default Capability.makeModule(
           handler: Effect.fnUntraced(function* (input) {
             yield* Operation.invoke(LayoutOperation.UpdatePopover, {
               subject: SPACE_RENAME_POPOVER,
-              anchorId: `dxos.org/ui/${input.caller}/${input.space.id}`,
+              anchorId: input.caller ?? '',
               props: input.space,
             });
           }),
@@ -523,7 +534,7 @@ export default Capability.makeModule(
             const object = input.object as Obj.Unknown;
             yield* Operation.invoke(LayoutOperation.UpdatePopover, {
               subject: OBJECT_RENAME_POPOVER,
-              anchorId: `dxos.org/ui/${input.caller}/${Obj.getDXN(object).toString()}`,
+              anchorId: input.caller ?? '',
               props: object,
             });
           }),
@@ -536,8 +547,8 @@ export default Capability.makeModule(
           operation: SpaceOperation.OpenMembers,
           handler: Effect.fnUntraced(function* (input) {
             yield* Operation.invoke(LayoutOperation.Open, {
-              subject: [`members-settings${ATTENDABLE_PATH_SEPARATOR}${input.space.id}`],
-              workspace: input.space.id,
+              subject: [`${getSpacePath(input.space.id)}/settings`],
+              workspace: getSpacePath(input.space.id),
             });
           }),
         }),
@@ -576,48 +587,6 @@ export default Capability.makeModule(
               yield* Effect.tryPromise(() => navigator.clipboard.writeText(url));
             }
             return url;
-          }),
-        }),
-
-        //
-        // UseStaticSchema
-        //
-        OperationResolver.make({
-          operation: SpaceOperation.UseStaticSchema,
-          handler: Effect.fnUntraced(function* (input) {
-            const db = input.db as Database.Database;
-            const client = yield* Capability.get(ClientCapabilities.Client);
-            const schema: any = yield* Effect.promise(() =>
-              (client as any).graph.schemaRegistry.query({ typename: input.typename, location: ['runtime'] }).first(),
-            );
-            const space = client.spaces.get(db.spaceId);
-            invariant(space, 'Space not found');
-
-            Obj.change(space.properties, (p) => {
-              if (!p.staticRecords) {
-                p.staticRecords = [];
-              }
-              if (!p.staticRecords.includes(input.typename)) {
-                p.staticRecords.push(input.typename);
-              }
-            });
-
-            yield* Plugin.activate(SpaceEvents.SchemaAdded);
-            const onSchemaAdded = yield* Capability.getAll(SpaceCapabilities.OnSchemaAdded);
-            yield* Effect.all(
-              onSchemaAdded.map((callback) => callback({ db, schema, show: input.show })),
-              { concurrency: 'unbounded' },
-            );
-
-            yield* Operation.schedule(ObservabilityOperation.SendEvent, {
-              name: 'space.schema.use',
-              properties: {
-                spaceId: space.id,
-                typename: Type.getTypename(schema),
-              },
-            });
-
-            return {};
           }),
         }),
 
@@ -770,3 +739,25 @@ export default Capability.makeModule(
     ];
   }),
 );
+
+/** Resolves the subject path where a newly added object should be opened in the graph. */
+const getSubjectPathForNewObject = (props: {
+  spaceId: string;
+  objectId: string;
+  nodeId?: string;
+  typename: string;
+  /** When set, the object is a view (e.g. Table) and should open under the type its query targets. */
+  viewTargetTypename?: string;
+}): string => {
+  const { nodeId, typename, viewTargetTypename, spaceId, objectId } = props;
+  if (typeof nodeId === 'string') {
+    return `${nodeId}/${objectId}`;
+  }
+  if (typename === Collection.Collection.typename) {
+    return getCollectionsPath(spaceId, objectId);
+  }
+  if (viewTargetTypename) {
+    return getTypePath(spaceId, viewTargetTypename, objectId);
+  }
+  return getObjectPath(spaceId, typename, objectId);
+};

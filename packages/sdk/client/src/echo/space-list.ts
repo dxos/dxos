@@ -398,9 +398,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions) {
+  private _query(query: Query.Any | Filter.Any) {
     query = Filter.is(query) ? Query.select(query) : query;
-    return this._echoClient.graph.query(query, options);
+    return this._echoClient.graph.query(query);
   }
 
   private _findProxy(space: SerializedSpace): SpaceProxy {

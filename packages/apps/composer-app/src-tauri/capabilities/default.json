@@ -2,10 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "enables the default permissions",
-  "windows": [
-    "main",
-    "popover"
-  ],
+  "windows": ["main", "popover"],
   "permissions": [
     "core:default",
     "core:window:allow-start-dragging",
@@ -16,9 +13,7 @@
       "identifier": "shell:allow-spawn",
       "allow": [
         {
-          "args": [
-            "serve"
-          ],
+          "args": ["serve"],
           "name": "sidecar/ollama",
           "sidecar": true
         }

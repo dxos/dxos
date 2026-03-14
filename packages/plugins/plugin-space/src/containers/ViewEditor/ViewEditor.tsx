@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
@@ -32,7 +32,6 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
     annotation: {
       location: ['database', 'runtime'],
       kind: ['user'],
-      registered: ['registered'],
     },
   });
 
@@ -54,7 +53,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       }
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
-      const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
+      const query = queue ? Query.fromAst(newQuery).from({ queues: [queue] }) : Query.fromAst(newQuery);
       Obj.change(view, (v) => {
         v.query.ast = query.ast as Mutable<typeof query.ast>;
       });
@@ -65,7 +64,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
 
       const newView = ViewModel.make({
         query,
-        jsonSchema: Type.toJsonSchema(newSchema),
+        jsonSchema: JsonSchema.toJsonSchema(newSchema),
       });
       Obj.change(view, (v) => {
         v.projection = Obj.getSnapshot(newView).projection as Mutable<typeof v.projection>;

@@ -15,6 +15,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { asyncTimeout, sleep } from '@dxos/async';
 import { Obj, Query, Ref, Type } from '@dxos/echo';
 import { Err } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -22,7 +23,6 @@ import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { clone, getObjectCore } from '../echo-handler';
-import { Filter } from '../query';
 import { EchoTestBuilder, createTmpPath } from '../testing';
 
 // TODO(burdon): Normalize tests to use common graph data (see query.test.ts).
@@ -236,8 +236,8 @@ describe('Database', () => {
     expect(task.id).to.exist;
     expect(() => getObjectCore(task)).to.throw();
     expect(Obj.getSchema(task)?.ast).to.eq(TestSchema.Task.ast);
-    expect(Obj.getTypeDXN(task)?.toString()).to.eq('dxn:type:example.com/type/Task:0.1.0');
-    expect(Obj.getTypename(task)).to.eq('example.com/type/Task');
+    expect(Obj.getTypeDXN(task)?.toString()).to.eq('dxn:type:com.example.type.task:0.1.0');
+    expect(Obj.getTypename(task)).to.eq('com.example.type.task');
 
     db.add(task);
     await db.flush();
@@ -384,8 +384,8 @@ describe('Database', () => {
       }),
     );
 
-    expect(Obj.getTypename(task.subTasks![0].target!)).to.eq('example.com/type/Task');
-    expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']).to.eq('dxn:type:example.com/type/Task:0.1.0');
+    expect(Obj.getTypename(task.subTasks![0].target!)).to.eq('com.example.type.task');
+    expect(JSON.parse(JSON.stringify(task.subTasks![0].target))['@type']).to.eq('dxn:type:com.example.type.task:0.1.0');
   });
 
   test('versions', async () => {

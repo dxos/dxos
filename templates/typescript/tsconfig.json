@@ -2,5 +2,5 @@
   "extends": "{{ workspace_root | path_join(part = 'tsconfig.base.json') | path_relative(from = dest_dir) }}",
   "compilerOptions": {},
   "include": ["src", "src/**/*.json"],
-  "references": [],
+  "references": []
 }

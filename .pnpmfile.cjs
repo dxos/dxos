@@ -1,5 +1,9 @@
 // https://pnpm.io/pnpmfile
 
+//
+// Copyright 2026 DXOS.org
+//
+
 function lockfileWarning() {
   if (process.env.NO_LOCKFILE_WARNING) {
     return;
@@ -109,7 +113,6 @@ function readPackage(packageJson, context) {
       packageJson.peerDependencies['vite'] = '^7.0.0';
       break;
     }
-
 
     // https://github.com/dxos/dxos/issues/3330
     case 'simple-hypercore-protocol': {

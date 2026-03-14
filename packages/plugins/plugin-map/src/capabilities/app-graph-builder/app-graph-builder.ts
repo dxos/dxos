@@ -29,7 +29,7 @@ export default Capability.makeModule(
         }
         return Effect.succeed([
           {
-            id: `${view.id}/toggle-map`,
+            id: `${view.id}.toggle-map`,
             data: () => Operation.invoke(MapAction.MapOperation.Toggle, undefined),
             properties: {
               label: ['toggle type label', { ns: meta.id }],

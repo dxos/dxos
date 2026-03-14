@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
@@ -28,14 +30,14 @@ import * as Plan from './Plan';
 export const Project = Schema.Struct({
   name: Schema.String,
 
-  spec: Type.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
-  plan: Type.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false)),
+  spec: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
+  plan: Ref.Ref(Plan.Plan).pipe(FormInputAnnotation.set(false)),
 
   artifacts: Schema.Array(
     Schema.Struct({
       // TODO(dmaretskyi): Consider gettings names from the artifact itself using Obj.getLabel.
       name: Schema.String,
-      data: Type.Ref(Type.Obj),
+      data: Ref.Ref(Obj.Unknown),
     }),
   ).pipe(FormInputAnnotation.set(false)),
 
@@ -43,17 +45,17 @@ export const Project = Schema.Struct({
    * Incoming queue that the agent processes.
    */
   // NOTE: Named `queue` to conform to subscribable schema (see QueueAnnotation).
-  queue: Schema.optional(Type.Ref(Queue).pipe(FormInputAnnotation.set(false))),
+  queue: Schema.optional(Ref.Ref(Queue).pipe(FormInputAnnotation.set(false))),
 
   // TODO(dmaretskyi): Multiple chats.
-  chat: Schema.optional(Type.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
+  chat: Schema.optional(Ref.Ref(Chat.Chat).pipe(FormInputAnnotation.set(false))),
 
   /**
    * References to objects with a canonical queue property.
    * Schema must have the QueueAnnotation.
    */
   // TODO(dmaretskyi): Turn into an array of objects when form-data
-  subscriptions: Schema.Array(Type.Ref(Type.Obj)).pipe(FormInputAnnotation.set(false)),
+  subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
 
   useQualifyingAgent: Schema.optional(Schema.Boolean).annotations({
     title: 'Use qualifying agent on subscriptions',
@@ -62,7 +64,7 @@ export const Project = Schema.Struct({
   }),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Project',
+    typename: 'org.dxos.type.project',
     version: '0.1.0',
   }),
   Annotation.IconAnnotation.set({

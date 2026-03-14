@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { invokeFunctionWithTracing, useComputeRuntimeCallback } from '@dxos/plugin-automation';
-import { Container, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
 import { TemplateEditor } from '../../components';
@@ -19,9 +19,9 @@ import { meta } from '../../meta';
 
 export type PromptArticleProps = SurfaceComponentProps<Prompt.Prompt>;
 
-export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
+export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const { hasAttention } = useAttention(Obj.getDXN(subject).toString());
+  const { hasAttention } = useAttention(attendableId);
   const db = Obj.getDatabase(subject);
 
   const inputData = useMemo<FunctionDefinition.Input<typeof AgentFunctions.Prompt> | undefined>(
@@ -45,11 +45,15 @@ export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
   );
 
   return (
-    <Container.Main role={role} toolbar>
-      <Toolbar.Root disabled={!hasAttention} onClick={handleRun}>
-        <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run prompt label')} onClick={handleRun} />
-      </Toolbar.Root>
-      <TemplateEditor id={subject.id} template={subject.instructions} classNames='dx-container-max-width' />
-    </Container.Main>
+    <Panel.Root role={role} className='dx-article'>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root disabled={!hasAttention} onClick={handleRun}>
+          <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run prompt label')} onClick={handleRun} />
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <TemplateEditor id={subject.id} template={subject.instructions} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };

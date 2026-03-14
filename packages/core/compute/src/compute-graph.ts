@@ -37,7 +37,7 @@ type ObjectRef = { type: string; id: string };
 
 /**
  * Marker for sheets that are managed by an ECHO object.
- * Sheet ID: `dxos.org/type/SheetType@1234`
+ * Sheet ID: `org.dxos.type.sheet-type@1234`
  */
 export const createSheetName = ({ type, id }: ObjectRef) => `${type}@${id}`;
 export const parseSheetName = (name: string): Partial<ObjectRef> => {
@@ -153,7 +153,7 @@ export class ComputeGraph extends Resource {
       formula
         //
         // Map cross-sheet references by name onto sheet stored by ECHO object/model.
-        // Example: "Test Sheet"!A0 => "dxos.org/type/SheetType@1234"!A0
+        // Example: "Test Sheet"!A0 => "org.dxos.type.sheet-type@1234"!A0
         // https://hyperformula.handsontable.com/guide/cell-references.html#cell-references
         //
         .replace(/['"]?([ \w]+)['"]?!/, (_match, name) => {

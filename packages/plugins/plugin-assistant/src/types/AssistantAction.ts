@@ -7,18 +7,18 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
 import { SpaceSchema } from '@dxos/client/echo';
-import { Database, Type } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
 
 // Operations
-const ASSISTANT_OPERATION = `${meta.id}/operation`;
+const ASSISTANT_OPERATION = `${meta.id}.operation`;
 
 export namespace AssistantOperation {
   export const OnCreateSpace = Operation.make({
-    meta: { key: `${ASSISTANT_OPERATION}/on-create-space`, name: 'On Create Space' },
+    meta: { key: `${ASSISTANT_OPERATION}.on-create-space`, name: 'On Create Space' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -30,7 +30,7 @@ export namespace AssistantOperation {
   });
 
   export const CreateChat = Operation.make({
-    meta: { key: `${ASSISTANT_OPERATION}/create-chat`, name: 'Create Chat' },
+    meta: { key: `${ASSISTANT_OPERATION}.create-chat`, name: 'Create Chat' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -46,7 +46,7 @@ export namespace AssistantOperation {
   });
 
   export const UpdateChatName = Operation.make({
-    meta: { key: `${ASSISTANT_OPERATION}/update-chat-name`, name: 'Update Chat Name' },
+    meta: { key: `${ASSISTANT_OPERATION}.update-chat-name`, name: 'Update Chat Name' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -57,11 +57,11 @@ export namespace AssistantOperation {
   });
 
   export const SetCurrentChat = Operation.make({
-    meta: { key: `${ASSISTANT_OPERATION}/set-current-chat`, name: 'Set Current Chat' },
+    meta: { key: `${ASSISTANT_OPERATION}.set-current-chat`, name: 'Set Current Chat' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        companionTo: Type.Obj,
+        companionTo: Obj.Unknown,
         chat: Chat.Chat.pipe(Schema.optional),
       }),
       output: Schema.Void,

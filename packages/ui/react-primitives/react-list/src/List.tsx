@@ -36,11 +36,7 @@ const List = forwardRef<HTMLOListElement, ListProps>((props: ListScopedProps<Lis
   const { __listScope, variant = 'ordered', selectable = false, itemSizes, children, ...rootProps } = props;
   const ListRoot = variant === 'ordered' ? Primitive.ol : Primitive.ul;
   return (
-    <ListRoot
-      {...(selectable && { 'role': 'listbox', 'aria-multiselectable': true })}
-      {...rootProps}
-      ref={forwardedRef}
-    >
+    <ListRoot {...(selectable && { role: 'listbox', 'aria-multiselectable': true })} {...rootProps} ref={forwardedRef}>
       <ListProvider
         {...{
           scope: __listScope,

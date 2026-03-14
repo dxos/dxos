@@ -8,16 +8,16 @@ import React, { useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj, Query, Type } from '@dxos/echo';
+import { Feed, Obj, Query } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
-import { render } from '@dxos/storybook-utils';
+
 import { Message, Person } from '@dxos/types';
 
 import { InboxPlugin } from '../../InboxPlugin';
@@ -34,7 +34,7 @@ const DefaultStory = () => {
 
 const CompanionStory = () => {
   const db = useDatabase();
-  const feeds = useQuery(db, Filter.type(Type.Feed));
+  const feeds = useQuery(db, Filter.type(Feed.Feed));
   const feed = feeds.find((f) => Mailbox.instanceOf(f));
 
   const selected = useSelected(feed ? Obj.getDXN(feed).toString() : undefined, 'single');
@@ -50,7 +50,7 @@ const CompanionStory = () => {
   const attentionAttrs = useAttentionAttributes(feed ? Obj.getDXN(feed).toString() : undefined);
 
   if (!db || !feed) {
-    return null;
+    return <Loading data={{ db: !!db, feed: !!feed }} />;
   }
 
   return (
@@ -78,14 +78,14 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const WithCompanion: Story = {
-  render: render(CompanionStory),
+  render: CompanionStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Type.Feed, Mailbox.Config, Message.Message, Person.Person],
+          types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* Effect.promise(() => client.halo.createIdentity());

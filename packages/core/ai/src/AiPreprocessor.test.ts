@@ -11,7 +11,7 @@ import { Obj } from '@dxos/echo';
 import { type ContentBlock, Message } from '@dxos/types';
 import { bufferToArray } from '@dxos/util';
 
-import { estimateTokens, preprocessPrompt } from './AiPreprocessor';
+import * as AiPreprocessor from './AiPreprocessor';
 import { PromptPreprocessingError } from './errors';
 import { TestData } from './testing';
 
@@ -25,7 +25,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
           text: 'What is 2 + 2?',
         },
       ]);
-      const input = yield* preprocessPrompt([message]);
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
       expect(input).toEqual(
         Prompt.fromMessages([
           Prompt.makeMessage('user', {
@@ -56,7 +56,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const input = yield* preprocessPrompt([message]);
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
       expect(input.content).toHaveLength(1);
 
       // First message should be tool results.
@@ -105,7 +105,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const input = yield* preprocessPrompt([message]);
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
       expect(input.content).toHaveLength(1);
 
       const assistantMessage = input.content[0] as Prompt.AssistantMessage;
@@ -138,7 +138,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const input = yield* preprocessPrompt([message]);
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
       const assistantMessage = input.content[0] as Prompt.AssistantMessage;
       expect(assistantMessage.content[0]).toEqual(
         Prompt.makePart('reasoning', {
@@ -164,7 +164,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const input = yield* preprocessPrompt([message]);
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
       const assistantMessage = input.content[0] as Prompt.AssistantMessage;
       expect(assistantMessage.content[0]).toEqual(
         Prompt.makePart('reasoning', {
@@ -190,7 +190,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const input = yield* preprocessPrompt([message]);
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
       const assistantMessage = input.content[0] as Prompt.AssistantMessage;
       expect(assistantMessage.content[0]).toEqual(
         Prompt.makePart('reasoning', {
@@ -214,7 +214,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const input = yield* preprocessPrompt([message]);
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
       const userMessage = input.content[0] as Prompt.UserMessage;
       expect(userMessage.content[0]).toEqual(
         Prompt.makePart('file', {
@@ -240,7 +240,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const input = yield* preprocessPrompt([message]);
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
       const userMessage = input.content[0] as Prompt.UserMessage;
       expect(userMessage.content[0]).toEqual(
         Prompt.makePart('file', {
@@ -262,7 +262,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const input = yield* preprocessPrompt([message]);
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
       const userMessage = input.content[0] as Prompt.UserMessage;
       expect(userMessage.content[0]).toEqual(
         Prompt.makePart('file', {
@@ -284,7 +284,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const input = yield* preprocessPrompt([message]);
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
       const userMessage = input.content[0] as Prompt.UserMessage;
       expect(userMessage.content[0]).toEqual(
         Prompt.makePart('text', {
@@ -306,7 +306,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         { _tag: 'json', data: '{"key": "value"}' },
       ]);
 
-      const input = yield* preprocessPrompt([message]);
+      const input = yield* AiPreprocessor.preprocessPrompt([message]);
       const assistantMessage = input.content[0] as Prompt.AssistantMessage;
       expect(assistantMessage.content).toHaveLength(6);
 
@@ -356,7 +356,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const result = yield* Effect.either(preprocessPrompt([message]));
+      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt([message]));
       expect(Either.isLeft(result)).toBe(true);
       if (Either.isLeft(result)) {
         expect(result.left).toBeInstanceOf(PromptPreprocessingError);
@@ -377,7 +377,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         },
       ]);
 
-      const result = yield* preprocessPrompt([message]);
+      const result = yield* AiPreprocessor.preprocessPrompt([message]);
       expect(result.content).toHaveLength(1);
       expect(result.content[0].role).toBe('assistant');
       expect(result.content[0].content).toEqual([
@@ -400,7 +400,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         makeMessage('assistant', [{ _tag: 'text', text: 'Hi there!' }]),
       ];
 
-      const input = yield* preprocessPrompt(messages);
+      const input = yield* AiPreprocessor.preprocessPrompt(messages);
       expect(input.content).toHaveLength(2);
       expect(input.content[0].role).toBe('user');
       expect(input.content[1].role).toBe('assistant');
@@ -419,11 +419,13 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         makeMessage('user', [{ _tag: 'text', text: 'New question' }]),
       ];
 
-      const input = yield* preprocessPrompt(messages);
+      const input = yield* AiPreprocessor.preprocessPrompt(messages);
       expect(input.content).toHaveLength(2);
       expect(input.content[0].role).toBe('assistant');
       expect((input.content[0] as Prompt.AssistantMessage).content).toEqual([
-        Prompt.makePart('text', { text: '<summary>User asked an old question.</summary>' }),
+        Prompt.makePart('text', {
+          text: 'This is the continuation of a conversation that was compacted to preserve context-window space. Summary of what happened in this conversation previously: <summary>User asked an old question.</summary>',
+        }),
       ]);
       expect(input.content[1].role).toBe('user');
       expect((input.content[1] as Prompt.UserMessage).content).toEqual([
@@ -437,7 +439,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
     Effect.fn(function* ({ expect }) {
       const messages = [makeMessage('user', [{ _tag: 'summary', content: 'Bad summary' }])];
 
-      const result = yield* Effect.either(preprocessPrompt(messages));
+      const result = yield* Effect.either(AiPreprocessor.preprocessPrompt(messages));
       expect(Either.isLeft(result)).toBe(true);
       if (Either.isLeft(result)) {
         expect(result.left).toBeInstanceOf(PromptPreprocessingError);
@@ -456,7 +458,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         ]),
       ];
 
-      const input = yield* preprocessPrompt(messages);
+      const input = yield* AiPreprocessor.preprocessPrompt(messages);
       expect(input.content.map((x) => x.role)).toEqual(['assistant', 'tool', 'assistant']);
     }),
   );
@@ -471,7 +473,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         ]),
       ];
 
-      const input = yield* preprocessPrompt(messages);
+      const input = yield* AiPreprocessor.preprocessPrompt(messages);
       expect(input.content.map((x) => x.role)).toEqual(['assistant', 'tool']);
     }),
   );
@@ -492,7 +494,7 @@ describe('AiPreprocessor.preprocessPrompt', () => {
         makeMessage('assistant', [{ _tag: 'text', text: 'The result is 10.' }]),
       ];
 
-      const input = yield* preprocessPrompt(messages);
+      const input = yield* AiPreprocessor.preprocessPrompt(messages);
       expect(input.content.map((x) => x.role)).toEqual(['assistant', 'tool', 'assistant']);
       expect(input.content[1].content.length).toEqual(2);
     }),
@@ -503,8 +505,8 @@ describe('AiPreprocessor.estimateTokens', () => {
   it.effect(
     'should estimate tokens for a simple user message with text',
     Effect.fn(function* ({ expect }) {
-      const prompt = yield* preprocessPrompt(yield* Effect.promise(TestData.internetOrderConversation));
-      const tokens = yield* estimateTokens(prompt);
+      const prompt = yield* AiPreprocessor.preprocessPrompt(yield* Effect.promise(TestData.internetOrderConversation));
+      const tokens = yield* AiPreprocessor.estimateTokens(prompt);
       expect(tokens).toBeGreaterThan(0);
     }),
   );

@@ -12,11 +12,10 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
-import { render } from '@dxos/storybook-utils';
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
 import { useGraphModel } from '../../hooks';
@@ -46,7 +45,7 @@ const DefaultStory = () => {
 
   const model = useGraphModel(space);
   if (!model || !space || !graph) {
-    return null;
+    return <Loading data={{ model: !!model, space: !!space, graph: !!graph }} />;
   }
 
   return <ForceGraph model={model} />;
@@ -55,7 +54,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-explorer/components/ForceGraph',
   component: ForceGraph,
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [
     withRegistry,
     withTheme(),

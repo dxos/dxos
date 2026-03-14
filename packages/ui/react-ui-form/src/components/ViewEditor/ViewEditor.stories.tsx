@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DXN, Filter, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
@@ -54,7 +54,7 @@ const DefaultStory = (props: StoryProps) => {
         salary: Format.Currency(),
       }).pipe(
         Type.object({
-          typename: 'example.com/type/Test',
+          typename: 'com.example.type.test',
           version: '0.1.0',
         }),
       );
@@ -65,7 +65,7 @@ const DefaultStory = (props: StoryProps) => {
         completed: Schema.Boolean,
       }).pipe(
         Type.object({
-          typename: 'example.com/type/Alternate',
+          typename: 'com.example.type.alternate',
           version: '0.1.0',
         }),
       );
@@ -74,7 +74,7 @@ const DefaultStory = (props: StoryProps) => {
       const view = ViewModel.make({
         name: 'Test',
         query: Query.select(Filter.type(TestSchema)),
-        jsonSchema: Type.toJsonSchema(TestSchema),
+        jsonSchema: JsonSchema.toJsonSchema(TestSchema),
       });
 
       setSchema(testSchema);
@@ -90,7 +90,7 @@ const DefaultStory = (props: StoryProps) => {
 
       if (props.mode === 'tag') {
         const queue = target && DXN.tryParse(target) ? target : undefined;
-        const query = queue ? Query.fromAst(newQuery).options({ queues: [queue] }) : Query.fromAst(newQuery);
+        const query = queue ? Query.fromAst(newQuery).from({ queues: [queue] }) : Query.fromAst(newQuery);
         Obj.change(view, (v) => {
           v.query.ast = query.ast as Mutable<typeof query.ast>;
         });

@@ -125,7 +125,7 @@ const TaskProps = Schema.Struct({
 });
 
 export default defineFunction({
-  key: 'dxos.org/function/planning/update-tasks',
+  key: 'org.dxos.function.planning.update-tasks',
   name: 'Update tasks',
   description: INSTRUCTIONS,
   inputSchema: Schema.Struct({

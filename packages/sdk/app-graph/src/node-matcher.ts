@@ -69,7 +69,7 @@ export const whenId =
  * ```ts
  * GraphBuilder.createExtension({
  *   id: 'space-settings-extension',
- *   match: NodeMatcher.whenNodeType('dxos.org/plugin/space/settings'),
+ *   match: NodeMatcher.whenNodeType('org.dxos.plugin.space.settings'),
  *   connector: (node) => Effect.succeed([...]),
  * });
  * ```
@@ -109,7 +109,7 @@ export const whenNodeType =
  * @see {@link whenEchoTypeMatches} - Use instead when composing with whenAll/whenAny.
  */
 export const whenEchoType =
-  <T extends Type.Entity.Any>(type: T): NodeMatcher<Entity.Entity<Schema.Schema.Type<T>>> =>
+  <T extends Type.AnyEntity>(type: T): NodeMatcher<Entity.Entity<Schema.Schema.Type<T>>> =>
   (node: Node.Node): Option.Option<Entity.Entity<Schema.Schema.Type<T>>> =>
     Obj.instanceOf(type, node.data) ? Option.some(node.data) : Option.none();
 
@@ -129,7 +129,7 @@ export const whenEchoType =
  *   connector: (object) => {
  *     // `object` is typed as Obj.Unknown
  *     const id = Obj.getDXN(object).toString();
- *     return Effect.succeed([{ id: `${id}/settings`, ... }]);
+ *     return Effect.succeed([{ id: `${id}.settings`, ... }]);
  *   },
  * });
  * ```
@@ -227,7 +227,7 @@ export const whenAny =
  * @see {@link whenEchoType} - Use instead when you need the typed entity directly.
  */
 export const whenEchoTypeMatches =
-  <T extends Type.Entity.Any>(type: T): NodeMatcher =>
+  <T extends Type.AnyEntity>(type: T): NodeMatcher =>
   (node: Node.Node): Option.Option<Node.Node> =>
     Obj.instanceOf(type, node.data) ? Option.some(node) : Option.none();
 

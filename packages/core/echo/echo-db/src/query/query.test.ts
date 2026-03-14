@@ -21,6 +21,7 @@ import {
   Type,
   View,
 } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -32,8 +33,6 @@ import { range } from '@dxos/util';
 import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
-
-import { Filter, Query } from './api';
 
 faker.seed(1);
 
@@ -242,17 +241,17 @@ describe('Query', () => {
       }
 
       {
-        const objects = await db.query(Query.select(Filter.everything()), { deleted: 'exclude' }).run();
+        const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'exclude' })).run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const objects = await db.query(Query.select(Filter.everything()), { deleted: 'include' }).run();
+        const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'include' })).run();
         expect(objects).to.have.length(10);
       }
 
       {
-        const objects = await db.query(Query.select(Filter.everything()), { deleted: 'only' }).run();
+        const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'only' })).run();
         expect(objects).to.have.length(3);
       }
     });
@@ -273,11 +272,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.2.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.2.0' }));
 
       const peer = await builder.createPeer({ types: [ContactV1, ContactV2] });
       const db = await peer.createDatabase();
@@ -288,16 +287,16 @@ describe('Query', () => {
       const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
       await queue.append([contactV1, contactV2]);
 
-      const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')))).run();
+      const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person')))).run();
       expect(both).toHaveLength(2);
 
       const v1 = await queue
-        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.1.0'))))
+        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.1.0'))))
         .run();
       expect(v1).toEqual([contactV1]);
 
       const v2 = await queue
-        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0'))))
+        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.2.0'))))
         .run();
       expect(v2).toEqual([contactV2]);
     });
@@ -315,7 +314,7 @@ describe('Query', () => {
 
       const obj: TestSchema.Task = await db
         .query(
-          Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).options({
+          Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).from({
             queues: [queue.dxn.toString()],
           }),
         )
@@ -355,13 +354,7 @@ describe('Query', () => {
 
       {
         // Default: no queue options → only space objects.
-        const results = await graph
-          .query(
-            Query.select(Filter.type(TestSchema.Task)).options({
-              spaceIds: bothSpaces,
-            }),
-          )
-          .run();
+        const results = await graph.query(Query.select(Filter.type(TestSchema.Task)).from([db1, db2])).run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
         expect(titles).toEqual([spaceTask1.title, spaceTask2.title]);
       }
@@ -369,12 +362,7 @@ describe('Query', () => {
       {
         // allQueuesFromSpaces: true → space + all queue objects.
         const results = await graph
-          .query(
-            Query.select(Filter.type(TestSchema.Task)).options({
-              spaceIds: bothSpaces,
-              allQueuesFromSpaces: true,
-            }),
-          )
+          .query(Query.select(Filter.type(TestSchema.Task)).from([db1, db2], { includeFeeds: true }))
           .run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
         expect(titles).toEqual([queueTask1.title, queueTask2.title, spaceTask1.title, spaceTask2.title]);
@@ -384,7 +372,7 @@ describe('Query', () => {
         // Specific queue → space objects + only that queue's objects.
         const results = await graph
           .query(
-            Query.select(Filter.type(TestSchema.Task)).options({
+            Query.select(Filter.type(TestSchema.Task)).from({
               spaceIds: bothSpaces,
               queues: [queue1.dxn.toString()],
             }),
@@ -398,7 +386,7 @@ describe('Query', () => {
         // Other specific queue → space objects + only that queue's objects.
         const results = await graph
           .query(
-            Query.select(Filter.type(TestSchema.Task)).options({
+            Query.select(Filter.type(TestSchema.Task)).from({
               spaceIds: bothSpaces,
               queues: [queue2.dxn.toString()],
             }),
@@ -412,7 +400,7 @@ describe('Query', () => {
         // Both queues explicitly → same as allQueuesFromSpaces.
         const results = await graph
           .query(
-            Query.select(Filter.type(TestSchema.Task)).options({
+            Query.select(Filter.type(TestSchema.Task)).from({
               spaceIds: bothSpaces,
               queues: [queue1.dxn.toString(), queue2.dxn.toString()],
             }),
@@ -425,12 +413,7 @@ describe('Query', () => {
       {
         // Single space with allQueuesFromSpaces → only that space's objects + queues.
         const results = await graph
-          .query(
-            Query.select(Filter.type(TestSchema.Task)).options({
-              spaceIds: [db1.spaceId],
-              allQueuesFromSpaces: true,
-            }),
-          )
+          .query(Query.select(Filter.type(TestSchema.Task)).from(db1, { includeFeeds: true }))
           .run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
         expect(titles).toEqual([queueTask1.title, spaceTask1.title]);
@@ -439,12 +422,7 @@ describe('Query', () => {
       {
         // Different type filter → queue options don't affect non-matching types.
         const results = await graph
-          .query(
-            Query.select(Filter.type(TestSchema.Person)).options({
-              spaceIds: bothSpaces,
-              allQueuesFromSpaces: true,
-            }),
-          )
+          .query(Query.select(Filter.type(TestSchema.Person)).from([db1, db2], { includeFeeds: true }))
           .run();
         expect(results).toHaveLength(1);
         expect((results[0] as TestSchema.Person).name).toEqual(spacePerson1.name);
@@ -580,7 +558,7 @@ describe('Query', () => {
     });
 
     test('from(feed) scopes query to feed items', async () => {
-      const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -606,7 +584,7 @@ describe('Query', () => {
     });
 
     test('from(feed) with Filter.id scopes to feed', async () => {
-      const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -632,7 +610,7 @@ describe('Query', () => {
     });
 
     test('Query.type(...).from(feed) scopes query to feed items', async () => {
-      const peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Task] });
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
       const queue = queues.create();
@@ -652,6 +630,58 @@ describe('Query', () => {
       const feedResults = await db.query(Query.type(TestSchema.Task).from(feed)).run();
       expect(feedResults).toHaveLength(2);
       expect(feedResults.map((obj: any) => obj.title).sort()).toEqual(['Feed Task 1', 'Feed Task 2']);
+    });
+
+    test('Query.select(...).from(subquery) filters results of inner query', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Task 1' }));
+      await db.flush({ indexes: true });
+
+      const subquery = Query.select(Filter.type(TestSchema.Person)).from(db);
+      const results = await db
+        .query(Query.select(Filter.props<TestSchema.Person>({ name: 'Alice' })).from(subquery))
+        .run();
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({ name: 'Alice' });
+    });
+
+    test('Query.from(db).select(...) scopes then filters', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      const db1 = await peer.createDatabase();
+      const db2 = await peer.createDatabase();
+
+      db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db1.add(Obj.make(TestSchema.Task, { title: 'Task 1' }));
+      db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      await db1.flush({ indexes: true });
+      await db2.flush({ indexes: true });
+
+      const results = await peer.client.graph.query(Query.from(db1).select(Filter.type(TestSchema.Person))).run();
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({ name: 'Alice' });
+    });
+
+    test('Query.from(subquery).reference() traverses from subquery results', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Task for Alice', assignee: Ref.make(alice) }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Task for Bob', assignee: Ref.make(bob) }));
+      await db.flush({ indexes: true });
+
+      const subquery = Query.select(Filter.type(TestSchema.Task, { title: 'Task for Alice' })).from(db);
+      const results = await db.query(Query.from(subquery).reference('assignee')).run();
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({ name: 'Alice' });
     });
   });
 
@@ -827,11 +857,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.2.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.2.0' }));
 
       const { peer, db } = await builder.createDatabase({
         types: [ContactV1, ContactV2],
@@ -845,10 +875,10 @@ describe('Query', () => {
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV2), [contactV2]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')), [contactV1, contactV2]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.1.0')), [contactV1]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0')), [contactV2]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person')), [contactV1, contactV2]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.1.0')), [contactV1]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.2.0')), [contactV2]);
       };
 
       await assertQueries(db);
@@ -1537,7 +1567,9 @@ describe('Query', () => {
       {
         const objects = await db
           .query(
-            Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).from({
+              queues: [queue.dxn.toString()],
+            }),
           )
           .run();
         expect(objects).toHaveLength(1);
@@ -1547,7 +1579,7 @@ describe('Query', () => {
       // Search for React.
       {
         const objects = await db
-          .query(Query.select(Filter.text('React', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }))
+          .query(Query.select(Filter.text('React', { type: 'full-text' })).from({ queues: [queue.dxn.toString()] }))
           .run();
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Getting Started with React');
@@ -1557,7 +1589,9 @@ describe('Query', () => {
       {
         const objects = await db
           .query(
-            Query.select(Filter.text('JavaScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+            Query.select(Filter.text('JavaScript', { type: 'full-text' })).from({
+              queues: [queue.dxn.toString()],
+            }),
           )
           .run();
         expect(objects).toHaveLength(0);
@@ -1582,11 +1616,7 @@ describe('Query', () => {
       // Search with allQueuesFromSpaces: true should return both space and queue objects.
       {
         const objects: TestSchema.Task[] = await db
-          .query(
-            Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({
-              allQueuesFromSpaces: true,
-            }),
-          )
+          .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db, { includeFeeds: true }))
           .run();
         expect(objects).toHaveLength(2);
         expect(objects.map((_) => _.title).sort()).toEqual(['Queue Object TypeScript', 'Space Object TypeScript']);
@@ -1594,9 +1624,7 @@ describe('Query', () => {
 
       // Search without allQueuesFromSpaces should return only space objects.
       {
-        const objects = await db
-          .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({}))
-          .run();
+        const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Space Object TypeScript');
       }
@@ -1615,7 +1643,9 @@ describe('Query', () => {
 
       const obj: TestSchema.Task = await db
         .query(
-          Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+          Query.select(Filter.text('TypeScript', { type: 'full-text' })).from({
+            queues: [queue.dxn.toString()],
+          }),
         )
         .first();
       expect(obj).toBeDefined();

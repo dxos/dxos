@@ -9,10 +9,6 @@
     "web-auth:default",
     "web-auth:allow-authenticate"
   ],
-  "platforms": [
-    "iOS"
-  ],
-  "windows": [
-    "main"
-  ]
+  "platforms": ["iOS"],
+  "windows": ["main"]
 }

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Obj, Relation, Type } from '@dxos/echo';
@@ -15,10 +17,10 @@ export const HasSubject = Schema.Struct({
   completedAt: Format.DateTime,
 }).pipe(
   Type.relation({
-    typename: 'dxos.org/relation/HasSubject',
+    typename: 'org.dxos.relation.has-subject',
     version: '0.1.0',
-    source: Type.Obj,
-    target: Type.Obj,
+    source: Obj.Unknown,
+    target: Obj.Unknown,
   }),
 );
 

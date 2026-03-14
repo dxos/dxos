@@ -2,16 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import React, { type JSX, useMemo, useState } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Filter, Obj, Type } from '@dxos/echo';
+import { Annotation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
 import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { mx } from '@dxos/ui-theme';
+import { getStyles, mx } from '@dxos/ui-theme';
 
 import {
   useActiveBlueprints,
@@ -203,11 +205,18 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
           {results.length ? (
             results.map((object) => {
               const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
+              const { icon, hue } = Option.fromNullable(Obj.getSchema(object)).pipe(
+                Option.flatMap(Annotation.IconAnnotation.get),
+                Option.getOrElse(() => ({ icon: DEFAULT_OBJECT_ICON, hue: undefined as string | undefined })),
+              );
+              const styles = hue ? getStyles(hue) : undefined;
               return (
                 <SearchList.Item
                   classNames='flex items-center overflow-hidden'
                   key={object.id}
                   value={object.id}
+                  icon={icon}
+                  iconClassNames={styles?.surfaceText}
                   label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
                   checked={isActive}
                   onSelect={() => onUpdateObject?.(Obj.getDXN(object), !isActive)}
@@ -244,3 +253,6 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
     </SearchList.Root>
   );
 };
+
+// TODO(dmaretskyi): Extract those somewhere else.
+const DEFAULT_OBJECT_ICON = 'ph--cube--regular';

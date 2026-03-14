@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { View as _View } from '@dxos/echo';
 import {
@@ -68,7 +70,7 @@ export const Task = Schema.Struct({
     }),
     Schema.optional,
   ),
-  assigned: Schema.optional(Type.Ref(Person.Person).annotations({ title: 'Assigned' })),
+  assigned: Schema.optional(Ref.Ref(Person.Person).annotations({ title: 'Assigned' })),
   estimate: Schema.optional(Schema.Number.annotations({ title: 'Estimate' })),
   description: Schema.optional(
     Schema.String.annotations({ title: 'Description' }).pipe(
@@ -78,15 +80,15 @@ export const Task = Schema.Struct({
       }),
     ),
   ),
-  project: Schema.optional(Type.Ref(Pipeline.Pipeline).annotations({ title: 'Project' })),
+  project: Schema.optional(Ref.Ref(Pipeline.Pipeline).annotations({ title: 'Project' })),
   // TODO(burdon): Created date metadata.
   // due: Date,
   // TODO(burdon): Generic tags.
   // tags: [String],
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Task',
-    version: '0.2.0',
+    typename: 'org.dxos.type.task',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['title']),
 );

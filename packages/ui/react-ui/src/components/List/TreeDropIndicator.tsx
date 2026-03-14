@@ -15,14 +15,14 @@ const edgeToOrientationMap: Record<InstructionType, Orientation> = {
   'reorder-above': 'sibling',
   'reorder-below': 'sibling',
   'make-child': 'child',
-  'reparent': 'child',
+  reparent: 'child',
 };
 
 const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['className']> = {
   // TODO(wittjosiah): Stop using left/right here.
   sibling:
     'h-(--line-thickness) left-(--horizontal-indent) right-0 bg-accent-surface before:left-(--negative-terminal-size)',
-  child: 'w-full top-0 bottom-0 border-[length:--line-thickness] before:invisible',
+  child: 'inset-0 border-[length:var(--line-thickness)] before:invisible',
 };
 
 const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['className']> = {
@@ -30,7 +30,7 @@ const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['cl
   'reorder-below': 'bottom-(--line-offset) before:bottom-(--offset-terminal)',
   'make-child': 'border-accent-surface',
   // TODO(wittjosiah): This is not occurring in the current implementation.
-  'reparent': '',
+  reparent: '',
 };
 
 const strokeSize = 2;

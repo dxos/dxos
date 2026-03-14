@@ -7,6 +7,7 @@ import * as FileSystem from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Yaml from 'yaml';
 
 import { CommandConfig, printList } from '@dxos/cli-util';
@@ -23,21 +24,22 @@ export const list = Command.make(
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const profileDir = path.join(DX_CONFIG, 'profile');
-    const files = yield* fs.readDirectory(profileDir);
-    const profiles = yield* Effect.forEach(
-      files,
-      Effect.fnUntraced(function* (filename) {
-        const ext = path.extname(filename);
-        const name = filename.slice(0, -ext.length);
-        const fullPath = path.join(DX_CONFIG, 'profile', filename);
-        const configContent = yield* fs.readFileString(fullPath);
-        const configValues = Yaml.parse(configContent);
+    const entries = yield* fs.readDirectory(profileDir);
+    const profileFiles = entries.filter((entry) => entry.endsWith('.yml'));
+    const profiles = yield* Effect.forEach(profileFiles, (filename) =>
+      Effect.gen(function* () {
+        const name = filename.slice(0, -4);
+        const configPath = path.join(profileDir, filename);
+        const configContent = yield* fs
+          .readFileString(configPath)
+          .pipe(Effect.catchTag('SystemError', () => Effect.succeed('{}')));
+        const configValues = Yaml.parse(configContent) ?? {};
         const config = new Config(configValues);
         return {
           name,
           isCurrent: name === currentProfile,
-          fullPath,
-          storagePath: getProfilePath(configValues?.runtime?.client?.storage.dataRoot ?? DX_DATA, name),
+          fullPath: configPath,
+          storagePath: getProfilePath(configValues?.runtime?.client?.storage?.dataRoot ?? DX_DATA, name),
           edge: config.values.runtime?.services?.edge?.url,
         };
       }),

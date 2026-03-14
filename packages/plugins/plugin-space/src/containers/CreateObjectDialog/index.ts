@@ -2,6 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-import { CreateObjectDialog } from './CreateObjectDialog';
-
-export default CreateObjectDialog;
+export { CreateObjectDialog, type CreateObjectDialogProps } from './CreateObjectDialog';
+export { CreateObjectDialog as default } from './CreateObjectDialog';

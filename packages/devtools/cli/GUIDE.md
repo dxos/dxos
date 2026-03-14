@@ -20,8 +20,8 @@ pnpm unlink --global @dxos/cli
 - If not create one: `dx profile create --template main`.
 - Set the profile environment variable: `export DX_PROFILE="main"`.
 - Link the dx CLI's HALO to a Composer's identity:
-    - Navigate to Profile > Security > Create Recovery Code
-    - Enter the recovery code: `dx halo recover "<recovery code>"`
+  - Navigate to Profile > Security > Create Recovery Code
+  - Enter the recovery code: `dx halo recover "<recovery code>"`
 
 ## Examples
 
@@ -33,9 +33,9 @@ pnpm unlink --global @dxos/cli
 4.  Get the function id via: `dx function list` then create 2 subscription triggers for bot and commentary:
 
 ```bash
-dx trigger create subscription --enabled 
+dx trigger create subscription --enabled
   --function-id <uuid> \n
-  --typename "dxos.org/type/Chess" \n 
+  --typename "dxos.org/type/Chess" \n
   --input "game={{event.subject}}"
 ```
 

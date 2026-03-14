@@ -22,7 +22,7 @@ import {
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
-import { Feed, Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
+import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -38,10 +38,9 @@ import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Text, ViewModel } from '@dxos/schema';
-import { render } from '@dxos/storybook-utils';
 import {
   AccessToken,
   Employer,
@@ -136,7 +135,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
   const objects = binder?.getObjects() ?? [];
 
   if (!space) {
-    return null;
+    return <Loading data={{ space: !!space }} />;
   }
 
   return (
@@ -192,7 +191,7 @@ const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
 
 const storybook: Meta<typeof DefaultStory> = {
   title: 'stories/stories-assistant/Chat',
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
@@ -400,9 +399,11 @@ export const WithMail: Story = {
       return { plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()] };
     },
     config: config.remote,
-    types: [Type.Feed],
+    types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const feed = await mailbox.feed?.tryLoad();
+      invariant(feed);
       const queue = space.queues.create<Message.Message>();
       Obj.change(feed, (mutable) => {
         Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
@@ -411,8 +412,8 @@ export const WithMail: Story = {
       await queue.append(messages);
     },
     onChatCreated: async ({ space, binder }) => {
-      const feeds = await space.db.query(Filter.type(Type.Feed)).run();
-      const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
+      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const mailbox = mailboxes[0];
       if (mailbox) {
         await binder.bind({ objects: [Ref.make(mailbox)] });
       }
@@ -436,13 +437,13 @@ export const WithGmail: Story = {
       return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
     },
     config: config.persistent,
-    types: [Type.Feed],
+    types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
       space.db.add(Mailbox.make({ name: 'Mailbox' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const feeds = await space.db.query(Filter.type(Type.Feed)).run();
-      const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
+      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const mailbox = mailboxes[0];
       if (mailbox) {
         await binder.bind({ objects: [Ref.make(mailbox)] });
       }
@@ -466,13 +467,13 @@ export const WithCalendar: Story = {
       return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
     },
     config: config.remote,
-    types: [Type.Feed, Event.Event],
+    types: [Feed.Feed, Calendar.Calendar, Event.Event],
     onInit: async ({ space }) => {
       space.db.add(Calendar.make({ name: 'Calendar' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const feeds = await space.db.query(Filter.type(Type.Feed)).run();
-      const calendar = feeds.find((feed) => feed.kind === Calendar.kind);
+      const calendars = await space.db.query(Filter.type(Calendar.Calendar)).run();
+      const calendar = calendars[0];
       if (calendar) {
         await binder.bind({ objects: [Ref.make(calendar)] });
       }
@@ -864,7 +865,7 @@ export const WithProject: Story = {
       Person.Person,
       Pipeline.Pipeline,
       View.View,
-      Type.Feed,
+      Feed.Feed,
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
@@ -971,19 +972,19 @@ export const WithProject: Story = {
 
       const mailboxView = ViewModel.make({
         query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagDxn)).from(mailbox),
-        jsonSchema: Type.toJsonSchema(Message.Message),
+        jsonSchema: JsonSchema.toJsonSchema(Message.Message),
       });
       const contactsView = ViewModel.make({
         query: contactsQuery,
-        jsonSchema: Type.toJsonSchema(Person.Person),
+        jsonSchema: JsonSchema.toJsonSchema(Person.Person),
       });
       const organizationsView = ViewModel.make({
         query: organizationsQuery,
-        jsonSchema: Type.toJsonSchema(Organization.Organization),
+        jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
       });
       const notesView = ViewModel.make({
         query: notesQuery,
-        jsonSchema: Type.toJsonSchema(Markdown.Document),
+        jsonSchema: JsonSchema.toJsonSchema(Markdown.Document),
       });
 
       space.db.add(
@@ -1040,7 +1041,7 @@ export const WithScript: Story = {
       const { identityKey } = client.halo.identity.get()!;
       await client.halo.writeCredentials([getAccessCredential(identityKey)]);
 
-      const template = templates.find((template) => template.id === 'dxos.org/script/forex-effect');
+      const template = templates.find((template) => template.id === 'org.dxos.script.forex-effect');
       invariant(template, 'Template not found');
       invariant(template.name, 'Template name not found');
 
@@ -1056,14 +1057,14 @@ export const WithScript: Story = {
 
       space.db.add(
         Blueprint.make({
-          key: 'dxos.org/blueprint/forex',
+          key: 'org.dxos.blueprint.forex',
           name: 'Forex',
           instructions: Template.make({
             source: trim`
               You can get the exchange rate between two currencies.
             `,
           }),
-          tools: [ToolId.make('dxos.org/script/forex-effect')],
+          tools: [ToolId.make('org.dxos.script.forex-effect')],
         }),
       );
 

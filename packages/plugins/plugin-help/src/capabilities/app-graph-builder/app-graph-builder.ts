@@ -38,7 +38,7 @@ export default Capability.makeModule(
             },
           },
           {
-            id: `${meta.id}/open-shortcuts`,
+            id: `${meta.id}.open-shortcuts`,
             data: Effect.fnUntraced(function* () {
               yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
               yield* Operation.invoke(LayoutOperation.UpdateDialog, {

@@ -12,7 +12,7 @@ import { defineFunction } from '@dxos/functions';
 import { Plan, Project } from '../../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/project/get-context',
+  key: 'org.dxos.function.project.get-context',
   name: 'Get Project Context',
   description: 'Get the context of an project.',
   inputSchema: Schema.Struct({}),
@@ -40,10 +40,12 @@ export default defineFunction({
         Effect.map((_) => _.content),
         Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No spec found.')),
       ),
-      plan: yield* project.plan?.pipe(Database.load).pipe(
-        Effect.map(Plan.formatPlan),
-        Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No plan found.')),
-      ) ?? Effect.succeed('No plan found.'),
+      plan: yield* (
+        project.plan?.pipe(Database.load).pipe(
+          Effect.map(Plan.formatPlan),
+          Effect.catchTag('ObjectNotFoundError', () => Effect.succeed('No plan found.')),
+        ) ?? Effect.succeed('No plan found.')
+      ),
       artifacts: yield* Effect.forEach(project.artifacts, (artifact) =>
         Effect.gen(function* () {
           return {

@@ -4,24 +4,20 @@
 
 import { type Extension } from '@codemirror/state';
 import { Atom } from '@effect-atom/atom-react';
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import { type SelectionManager } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 
-import {
-  MarkdownEditor,
-  type MarkdownEditorContentProps,
-  type MarkdownEditorRootProps,
-} from '../../components/MarkdownEditor';
+import { MarkdownEditor, type MarkdownEditorContentProps, type MarkdownEditorRootProps } from '../../components';
 import { useLinkQuery } from '../../hooks';
 import { Markdown, MarkdownCapabilities, type MarkdownPluginState } from '../../types';
 
@@ -31,15 +27,17 @@ export type MarkdownContainerProps = SurfaceComponentProps<
     id: string;
     settings: Markdown.Settings;
     selectionManager?: SelectionManager;
-  } & Pick<MarkdownEditorRootProps, 'viewMode' | 'onViewModeChange'> &
-    Pick<MarkdownEditorContentProps, 'editorStateStore'> &
-    Pick<MarkdownPluginState, 'extensionProviders'>
+  } & Pick<MarkdownPluginState, 'extensionProviders'> &
+    Pick<MarkdownEditorRootProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
+    Pick<MarkdownEditorContentProps, 'editorStateStore'>
 >;
 
 export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerProps>(
-  ({ role, subject: object, id, settings, extensionProviders, ...props }, forwardedRef) => {
+  (
+    { role, subject: object, id, attendableId, settings, extensionProviders, onSelectObject, ...props },
+    forwardedRef,
+  ) => {
     const db = Obj.isObject(object) ? Obj.getDatabase(object) : undefined;
-    const attendableId = Obj.instanceOf(Markdown.Document, object) ? Obj.getDXN(object).toString() : undefined;
     const [docContent] = useObject(Obj.instanceOf(Markdown.Document, object) ? object.content : undefined, 'content');
     const [textContent] = useObject(Obj.instanceOf(Text.Text, object) ? object : undefined, 'content');
     const initialValue = docContent ?? textContent;
@@ -70,7 +68,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     const runAction = useActionRunner();
     const customActions = useMemo(() => {
       return Atom.make((get) => {
-        const actions = get(graph.actions(id));
+        const actions = get(graph.actions(attendableId ?? id));
         const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
         const edges = nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' }));
         return { nodes, edges };
@@ -90,25 +88,47 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     // Query for @ refs.
     const handleLinkQuery = useLinkQuery(db);
 
+    // Open linked objects.
+    const { invokePromise } = useOperationInvoker();
+    const handleSelectObject = useCallback(
+      (targetId: string) => {
+        if (onSelectObject) {
+          onSelectObject(targetId);
+        } else {
+          void invokePromise?.(LayoutOperation.Open, {
+            subject: [targetId],
+            pivotId: attendableId,
+          });
+        }
+      },
+      [onSelectObject, invokePromise, object, id],
+    );
+
     return (
-      <Container.Main toolbar={settings.toolbar} ref={forwardedRef}>
-        <MarkdownEditor.Root
-          id={attendableId ?? id}
-          object={object}
-          extensions={extensions}
-          settings={settings}
-          onAction={runAction}
-          onFileUpload={handleFileUpload}
-          onLinkQuery={handleLinkQuery}
-          {...props}
-        >
+      <MarkdownEditor.Root
+        id={id}
+        attendableId={attendableId}
+        object={object}
+        extensions={extensions}
+        settings={settings}
+        onAction={runAction}
+        onFileUpload={handleFileUpload}
+        onLinkQuery={handleLinkQuery}
+        onSelectObject={handleSelectObject}
+        {...props}
+      >
+        <Panel.Root role={role} ref={forwardedRef}>
           {settings.toolbar && (
-            <MarkdownEditor.Toolbar id={attendableId ?? id} role={role} customActions={customActions} />
+            <Panel.Toolbar asChild>
+              <MarkdownEditor.Toolbar customActions={customActions} />
+            </Panel.Toolbar>
           )}
-          <MarkdownEditor.Content initialValue={initialValue} scrollPastEnd={role === 'article'} />
-          <MarkdownEditor.Blocks />
-        </MarkdownEditor.Root>
-      </Container.Main>
+          <Panel.Content>
+            <MarkdownEditor.Content initialValue={initialValue} scrollPastEnd={role === 'article'} />
+            <MarkdownEditor.Blocks />
+          </Panel.Content>
+        </Panel.Root>
+      </MarkdownEditor.Root>
     );
   },
 );

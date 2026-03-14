@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
@@ -11,14 +13,14 @@ import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 
-import { getTypeDXNFromSpecifier } from './internal';
+import * as internal from './internal';
 import * as Ref from './Ref';
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
   '~Filter': { value: Types.Contravariant<T> };
 
-  'ast': QueryAST.Filter;
+  ast: QueryAST.Filter;
 }
 
 export type Props<T> = {
@@ -33,7 +35,7 @@ export type Type<F extends Any> = F extends Filter<infer T> ? T : never;
 class FilterClass implements Any {
   private static 'variance': Any['~Filter'] = {} as Any['~Filter'];
 
-  'constructor'(public readonly ast: QueryAST.Filter) {}
+  constructor(public readonly ast: QueryAST.Filter) {}
 
   '~Filter' = FilterClass.variance;
 }
@@ -103,7 +105,7 @@ export const type = <S extends Schema.Schema.All>(
   props?: Props<Schema.Schema.Type<S>>,
 ): Filter<Schema.Schema.Type<S>> => {
   if (Schema.isSchema(schema) && SchemaAST.isUnion(schema.ast)) {
-    const typenames = schema.ast.types.map((type) => getTypeDXNFromSpecifier(Schema.make(type)));
+    const typenames = schema.ast.types.map((type) => internal.getTypeDXNFromSpecifier(Schema.make(type)));
     return new FilterClass({
       type: 'or',
       filters: typenames.map((typename) => ({
@@ -114,7 +116,7 @@ export const type = <S extends Schema.Schema.All>(
     });
   }
 
-  const dxn = getTypeDXNFromSpecifier(schema);
+  const dxn = internal.getTypeDXNFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
     typename: dxn.toString(),
@@ -193,7 +195,7 @@ export const foreignKeys = <S extends Schema.Schema.All>(
   schema: S | string,
   keys: ForeignKey[],
 ): Filter<Schema.Schema.Type<S>> => {
-  const dxn = getTypeDXNFromSpecifier(schema);
+  const dxn = internal.getTypeDXNFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
     typename: dxn.toString(),

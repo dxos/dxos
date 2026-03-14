@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -9,11 +11,11 @@ import { Text } from '@dxos/schema';
 
 export const Outline = Schema.Struct({
   name: Schema.optional(Schema.String),
-  content: Type.Ref(Text.Text),
+  content: Ref.Ref(Text.Text),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Outline',
-    version: '0.2.0',
+    typename: 'org.dxos.type.outline',
+    version: '0.1.0',
   }),
 );
 

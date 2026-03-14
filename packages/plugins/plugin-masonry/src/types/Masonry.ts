@@ -12,7 +12,7 @@ import { ViewAnnotation } from '@dxos/schema';
 export const Masonry = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
-  view: Type.Ref(View.View).pipe(FormInputAnnotation.set(false)),
+  view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
 
   arrangement: Schema.Array(
     Schema.Struct({
@@ -23,8 +23,8 @@ export const Masonry = Schema.Struct({
   // TODO(wittjosiah): Consider Masonry supporting not being just a view but referencing arbitrary data directly.
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Masonry',
-    version: '0.2.0',
+    typename: 'org.dxos.type.masonry',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
@@ -42,21 +42,3 @@ type MakeProps = Omit<Partial<Obj.MakeProps<typeof Masonry>>, 'view'> & {
 export const make = ({ name, arrangement = [], view }: MakeProps): Masonry => {
   return Obj.make(Masonry, { name, view: Ref.make(view), arrangement });
 };
-
-//
-// V1
-//
-
-export const MasonryV1 = Schema.Struct({
-  arrangement: Schema.Array(
-    Schema.Struct({
-      ids: Schema.Array(Obj.ID),
-      hidden: Schema.optional(Schema.Boolean),
-    }),
-  ).pipe(Schema.optional),
-}).pipe(
-  Type.object({
-    typename: 'dxos.org/type/Masonry',
-    version: '0.1.0',
-  }),
-);

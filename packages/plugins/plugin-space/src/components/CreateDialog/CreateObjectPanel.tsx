@@ -29,7 +29,6 @@ export type CreateObjectOption = {
 export type Metadata = {
   createObject: CreateObject;
   inputSchema?: Schema.Schema.AnyNoContext;
-  addToCollectionOnCreate?: boolean;
   icon?: string;
 };
 
@@ -88,28 +87,36 @@ export const CreateObjectPanel = ({
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
   // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
-  return !metadata ? (
-    <SelectType options={sortedOptions} onChange={handleSelectOption} />
-  ) : !target ? (
-    <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />
-  ) : metadata.inputSchema ? (
-    <Form.Root
-      testId='create-object-form'
-      autoFocus
-      schema={omitId(metadata.inputSchema)}
-      defaultValues={initialFormValues}
-      db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
-      fieldProvider={inputSurfaceLookup}
-      onSave={handleCreateObject}
-    >
-      <Form.Viewport>
-        <Form.Content>
-          <Form.FieldSet />
-          <Form.Submit />
-        </Form.Content>
-      </Form.Viewport>
-    </Form.Root>
-  ) : null;
+  if (!metadata) {
+    return <SelectType options={sortedOptions} onChange={handleSelectOption} />;
+  }
+
+  if (!target) {
+    return <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />;
+  }
+
+  if (metadata.inputSchema) {
+    return (
+      <Form.Root
+        testId='create-object-form'
+        autoFocus
+        schema={omitId(metadata.inputSchema)}
+        defaultValues={initialFormValues}
+        db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
+        fieldProvider={inputSurfaceLookup}
+        onSave={handleCreateObject}
+      >
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+            <Form.Submit />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    );
+  }
+
+  return null;
 };
 
 CreateObjectPanel.displayName = 'CreateObjectPanel';
@@ -152,7 +159,6 @@ const SelectSpace = ({
       ),
   });
 
-  // TODO(burdon): Replace with Combobox.
   return (
     <SearchList.Root onSearch={handleSearch}>
       <SearchList.Content>

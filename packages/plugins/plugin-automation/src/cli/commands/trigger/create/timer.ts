@@ -13,7 +13,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { Database, Filter, Ref, Type } from '@dxos/echo';
+import { Database, Filter, JsonSchema, Ref } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
 
 import { Cron, Enabled, Input } from '../options';
@@ -52,7 +52,7 @@ export const timer = Command.make(
       });
 
       const input = yield* Option.match(options.input, {
-        onNone: () => promptForSchemaInput(fn.inputSchema ? Type.toEffectSchema(fn.inputSchema) : undefined),
+        onNone: () => promptForSchemaInput(fn.inputSchema ? JsonSchema.toEffectSchema(fn.inputSchema) : undefined),
         onSome: (value) => Effect.succeed(Object.fromEntries(HashMap.toEntries(value))),
       });
 

@@ -11,7 +11,7 @@ import { defineFunction } from '@dxos/functions';
 import { Chess } from '../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/chess/create',
+  key: 'org.dxos.function.chess.create',
   name: 'Create Chess',
   description: 'Creates a new chess game.',
   inputSchema: Schema.Struct({

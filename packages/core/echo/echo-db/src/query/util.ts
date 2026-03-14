@@ -12,9 +12,9 @@ export const getTargetSpacesForQuery = (query: QueryAST.Query): SpaceId[] => {
   const spaces = new Set<SpaceId>();
 
   const visitor = (node: QueryAST.Query) => {
-    if (node.type === 'options') {
-      if (node.options.spaceIds) {
-        for (const spaceId of node.options.spaceIds) {
+    if (node.type === 'from' && node.from._tag === 'scope') {
+      if (node.from.scope.spaceIds) {
+        for (const spaceId of node.from.scope.spaceIds) {
           spaces.add(SpaceId.make(spaceId));
         }
       }
@@ -26,7 +26,7 @@ export const getTargetSpacesForQuery = (query: QueryAST.Query): SpaceId[] => {
 
 /**
  * Extracts the filter and options from a query.
- * Supports Select(...) and Options(Select(...)) queries.
+ * Supports Select(...), Options(Select(...)), and From(Select(...)) queries.
  */
 export const isSimpleSelectionQuery = (
   query: QueryAST.Query,
@@ -40,7 +40,21 @@ export const isSimpleSelectionQuery = (
       return {
         filter: maybeFilter.filter,
         options: query.options,
-        hasQueues: (query.options.queues && query.options.queues.length > 0) || maybeFilter.hasQueues,
+        hasQueues: maybeFilter.hasQueues,
+      };
+    }
+    case 'from': {
+      const maybeFilter = isSimpleSelectionQuery(query.query);
+      if (!maybeFilter) {
+        return null;
+      }
+      const hasQueues =
+        (query.from._tag === 'scope' && query.from.scope.queues && query.from.scope.queues.length > 0) ||
+        maybeFilter.hasQueues;
+      return {
+        filter: maybeFilter.filter,
+        options: maybeFilter.options,
+        hasQueues: hasQueues || false,
       };
     }
     case 'select': {

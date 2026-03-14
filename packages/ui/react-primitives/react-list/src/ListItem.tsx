@@ -65,11 +65,11 @@ type ListItemHeadingProps = ListItemScopedProps<Omit<ComponentPropsWithoutRef<'p
 const ListItemHeading = forwardRef<HTMLDivElement, ListItemHeadingProps>(
   ({ children, asChild, __listItemScope, ...props }, forwardedRef) => {
     const { headingId } = useListItemContext(LIST_ITEM_NAME, __listItemScope);
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Root {...props} id={headingId} ref={forwardedRef}>
+      <Comp {...props} id={headingId} ref={forwardedRef}>
         {children}
-      </Root>
+      </Comp>
     );
   },
 );
@@ -122,7 +122,7 @@ const ListItem = forwardRef<ListItemElement, ListItemProps>(
         id={id}
         ref={forwardedRef}
         aria-labelledby={headingId}
-        {...(selectable && { 'role': 'option', 'aria-selected': !!selected })}
+        {...(selectable && { role: 'option', 'aria-selected': !!selected })}
         {...(open && { 'aria-expanded': true })}
       >
         {children}

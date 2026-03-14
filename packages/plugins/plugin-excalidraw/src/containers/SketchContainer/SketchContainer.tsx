@@ -7,14 +7,14 @@ import { type ExcalidrawImperativeAPI, type ExcalidrawProps } from '@excalidraw/
 import React, { useEffect, useRef, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { type Diagram } from '@dxos/plugin-sketch/types';
-import { Container as DxContainer, Flex, type FlexProps, useThemeContext } from '@dxos/react-ui';
+import { type Sketch } from '@dxos/plugin-sketch/types';
+import { Panel as DxPanel, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '../../hooks';
 import { type SketchSettingsProps } from '../../types';
 
 export type SketchContainerProps = SurfaceComponentProps<
-  Diagram.Diagram,
+  Sketch.Sketch,
   {
     settings: SketchSettingsProps;
   }
@@ -88,30 +88,37 @@ export const SketchContainer = ({ role, subject: sketch }: SketchContainerProps)
     }
   };
 
-  // NOTE: Min 500px height (for tools palette to be visible).
-  const Root = role === 'section' ? Container : DxContainer.Main;
+  const excalidraw = (
+    <Excalidraw
+      excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
+      initialData={{ elements: adapter.getElements() }}
+      // gridModeEnabled={true}
+      // detectScroll={false}
+      theme={themeMode}
+      onChange={handleChange}
+      onPointerUpdate={handlePointerUpdate}
+    >
+      <MainMenu>
+        <MainMenu.Item onSelect={handleRefresh}>Refresh</MainMenu.Item>
+      </MainMenu>
+    </Excalidraw>
+  );
 
   // NOTE: Min 500px height (for tools palette to be visible).
   // TODO(burdon): Disable scrolling with mouse pad unless focused.
   // TODO(burdon): Show live collaborators.
   //  https://docs.excalidraw.com/docs/@excalidraw/excalidraw/api/children-components/live-collaboration-trigger
+  if (role === 'section') {
+    return (
+      <div ref={containerRef} className='aspect-square'>
+        {excalidraw}
+      </div>
+    );
+  }
+
   return (
-    <Root ref={containerRef}>
-      <Excalidraw
-        excalidrawAPI={(api) => (excalidrawAPIRef.current = api)}
-        initialData={{ elements: adapter.getElements() }}
-        // gridModeEnabled={true}
-        // detectScroll={false}
-        theme={themeMode}
-        onChange={handleChange}
-        onPointerUpdate={handlePointerUpdate}
-      >
-        <MainMenu>
-          <MainMenu.Item onSelect={handleRefresh}>Refresh</MainMenu.Item>
-        </MainMenu>
-      </Excalidraw>
-    </Root>
+    <DxPanel.Root>
+      <DxPanel.Content ref={containerRef}>{excalidraw}</DxPanel.Content>
+    </DxPanel.Root>
   );
 };
-
-const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;

@@ -7,15 +7,16 @@ import * as Match from 'effect/Match';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
+
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 import {
   Table as TableComponent,
   type TableController,
@@ -23,7 +24,6 @@ import {
   type TableModelProps,
   TablePresentation,
   type TableRowAction,
-  TableToolbar,
   extractOrder,
   useAddRow,
   useProjectionModel,
@@ -38,7 +38,7 @@ export type TableContainerProps = SurfaceComponentProps<Table.Table>;
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
-  ({ role, subject: object }, forwardedRef) => {
+  ({ role, subject: object, attendableId }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const { invokePromise } = useOperationInvoker();
     const tableRef = useRef<TableController>(null);
@@ -57,14 +57,14 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     const { graph } = useAppGraph();
     const customActions = useMemo(() => {
       return Atom.make((get) => {
-        const actions = get(graph.actions(Obj.getDXN(object).toString()));
+        const actions = get(graph.actions(attendableId!));
         const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
         return {
           nodes,
           edges: nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
         };
       });
-    }, [graph]);
+    }, [graph, attendableId]);
 
     const addRow = useAddRow({ db, schema });
 
@@ -104,7 +104,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     const handleRowAction = useCallback(
       (actionId: string, data: any) =>
         Match.value(actionId).pipe(
-          Match.when('open', () => invokePromise(LayoutOperation.Open, { subject: [Obj.getDXN(data).toString()] })),
+          Match.when('open', () => invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(data)] })),
           Match.orElseAbsurd,
         ),
       [invokePromise],
@@ -115,7 +115,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     }, []);
 
     const handleCreate = useCallback(
-      (schema: Type.Entity.Any, values: any) => {
+      (schema: Type.AnyEntity, values: any) => {
         invariant(db);
         invariant(Type.isObjectSchema(schema));
         return db.add(Obj.make(schema, values));
@@ -159,26 +159,30 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     );
 
     return (
-      <Container.Main toolbar role={role} ref={forwardedRef}>
-        <TableToolbar
-          attendableId={Obj.getDXN(object).toString()}
-          customActions={customActions}
-          viewDirty={model?.getViewDirty()}
-          onAdd={handleInsertRow}
-          onSave={handleSave}
-        />
-        <TableComponent.Root role={role}>
-          <TableComponent.Main
-            key={Obj.getDXN(object).toString()}
-            ref={tableRef}
-            model={model}
-            presentation={presentation}
-            schema={schema}
-            onCreate={handleCreate}
-            onRowClick={handleRowClick}
-          />
-        </TableComponent.Root>
-      </Container.Main>
+      <TableComponent.Root>
+        <Panel.Root role={role} ref={forwardedRef}>
+          <Panel.Toolbar asChild>
+            <TableComponent.Toolbar
+              attendableId={attendableId}
+              customActions={customActions}
+              viewDirty={model?.getViewDirty()}
+              onAdd={handleInsertRow}
+              onSave={handleSave}
+            />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <TableComponent.Main
+              key={attendableId}
+              ref={tableRef}
+              model={model}
+              presentation={presentation}
+              schema={schema}
+              onCreate={handleCreate}
+              onRowClick={handleRowClick}
+            />
+          </Panel.Content>
+        </Panel.Root>
+      </TableComponent.Root>
     );
   },
 );
@@ -190,7 +194,7 @@ export default TableContainer;
 const useQueryWorkaround = (
   db: Database.Database | undefined,
   ast: QueryAST.Query | undefined,
-  schema: Type.Entity.Any | undefined,
+  schema: Type.AnyEntity | undefined,
 ) => {
   // Extract order from query AST and apply it to the base filter query
   const query = useMemo(() => {

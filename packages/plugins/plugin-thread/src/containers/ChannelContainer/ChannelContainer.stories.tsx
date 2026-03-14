@@ -9,8 +9,7 @@ import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { render } from '@dxos/storybook-utils';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Message, Thread } from '@dxos/types';
 
 import { createThreadPlugins } from '../../testing';
@@ -24,7 +23,7 @@ const DefaultStory = ({ roomId }: ChannelContainerProps) => {
   const db = useDatabase();
   const [channel] = useQuery(db, Query.type(Channel.Channel));
   if (!channel) {
-    return null;
+    return <Loading data={{ db: !!db, channel: !!channel }} />;
   }
 
   return <ChannelContainer subject={channel} roomId={roomId} />;
@@ -33,7 +32,7 @@ const DefaultStory = ({ roomId }: ChannelContainerProps) => {
 const meta = {
   title: 'plugins/plugin-thread/containers/ChannelContainer',
   component: ChannelContainer,
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),

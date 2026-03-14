@@ -5,14 +5,15 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
-import { ManagedCollection } from '@dxos/schema';
+import { CollectionModel } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
 import { Calendar, InboxOperation, Mailbox } from '../../types';
@@ -23,17 +24,48 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: InboxOperation.OnCreateSpace,
-        handler: Effect.fnUntraced(function* ({ rootCollection }) {
-          const mailboxCollection = ManagedCollection.makeManagedCollection({
-            key: `${Type.getTypename(Type.Feed)}~${Mailbox.kind}`,
+        handler: Effect.fnUntraced(function* ({ space, isDefault }) {
+          if (!isDefault) {
+            return;
+          }
+
+          const mailbox = Mailbox.make({ name: 'Mail' });
+          space.db.add(mailbox);
+
+          const calendar = Calendar.make({ name: 'Calendar' });
+          space.db.add(calendar);
+        }),
+      }),
+      OperationResolver.make({
+        operation: SpaceOperation.AddObject,
+        position: 'hoist',
+        filter: (input) => Mailbox.instanceOf(input.object) && Database.isDatabase(input.target),
+        handler: Effect.fnUntraced(function* (input) {
+          const target = input.target as any;
+          const object = input.object as Obj.Unknown;
+          const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
+          invariant(db, 'Database not found.');
+
+          yield* CollectionModel.add({
+            object,
+            target: Database.isDatabase(target) ? undefined : target,
+            hidden: input.hidden,
+          }).pipe(Effect.provide(Database.layer(db)));
+
+          yield* Operation.schedule(ObservabilityOperation.SendEvent, {
+            name: 'space.object.add',
+            properties: {
+              spaceId: db.spaceId,
+              objectId: object.id,
+              typename: Obj.getTypename(object),
+            },
           });
-          const calendarCollection = ManagedCollection.makeManagedCollection({
-            key: `${Type.getTypename(Type.Feed)}~${Calendar.kind}`,
-          });
-          const messageCollection = ManagedCollection.makeManagedCollection({ key: Message.Message.typename });
-          Obj.change(rootCollection, (c) => {
-            c.objects.push(Ref.make(mailboxCollection), Ref.make(calendarCollection), Ref.make(messageCollection));
-          });
+
+          return {
+            id: Obj.getDXN(object).toString(),
+            subject: [`${getSpacePath(db.spaceId)}/mailboxes/${object.id}/all-mail`],
+            object,
+          };
         }),
       }),
       OperationResolver.make({
@@ -119,14 +151,6 @@ export default Capability.makeModule(
             });
           }
 
-          if (!space.properties.staticRecords.includes(Person.Person.typename)) {
-            log.info('adding record type for contacts');
-            yield* Operation.invoke(SpaceOperation.UseStaticSchema, {
-              db,
-              typename: Person.Person.typename,
-            });
-          }
-
           yield* Operation.invoke(SpaceOperation.AddObject, {
             object: newContact,
             target: db,
@@ -136,12 +160,13 @@ export default Capability.makeModule(
       }),
       OperationResolver.make({
         operation: InboxOperation.CreateDraft,
-        handler: Effect.fnUntraced(function* ({ db, mode, replyToMessage, subject, body }) {
+        handler: Effect.fnUntraced(function* ({ db, mode, replyToMessage, subject, body, mailbox }) {
           const props = buildDraftMessageProps({
             mode,
             replyToMessage: replyToMessage as Message.Message | undefined,
             subject,
             body,
+            mailbox,
           });
           const draft = Obj.make(Message.Message, props);
           yield* Operation.invoke(SpaceOperation.AddObject, {
@@ -149,9 +174,7 @@ export default Capability.makeModule(
             target: db,
             hidden: true,
           });
-          yield* Operation.invoke(LayoutOperation.Open, {
-            subject: [Obj.getDXN(draft).toString()],
-          });
+          yield* Operation.invoke(LayoutOperation.Open, { subject: [getObjectPathFromObject(draft)] });
         }),
       }),
     ]);

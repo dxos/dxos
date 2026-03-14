@@ -32,21 +32,26 @@ NOTE: We need to develop agent-specific instructions for creating data sets, inc
 - [x] Remove ground plane and orbit controls from card view
 - [x] Configure block size via config option in Voxel.World
 
-### Phase 2 (Editor Enhancements)
+### Phase 2 (Modeler)
 
-- [ ] Implement agent blueprint for creating/deleting blocks (e.g., "create tower five blocks high")
-- [ ] Paint tool to change color of existing voxels
-- [ ] Fill/Flood tool to fill a rectangular region or connected empty space
-- [ ] Copy/Paste/Mirror selection across an axis
+- [x] Toolbar to toggle grid visibility
+- [x] Model class that maintains a collection of 3D objects that are rendered as voxels (e.g., cube, wall, sphere, cylinder, text characters)
+- [x] Toolbar to generate (and render) a random object from the Model objects
+- [x] Implement agent blueprint for creating/deleting blocks (e.g., "create tower five blocks high")
 
 ### Phase 3 (Advanced Features)
 
+- [ ] Sleep plugin
+- nonprofit (ENO)
+- avatar -- meets others and describe the journey
+- p2p social network -- send love to the world
+
+- [ ] Life mode (e.g., blocks grow, shrink, move, etc.)
+
+- [ ] Separate 3D model; compatible with blender (import/export)
 - [ ] Undo/Redo with Cmd+Z / Cmd+Shift+Z (generalize with ECHO)
 - [ ] Physics simulation (e.g., gravity, collision, block toppling)
 - [ ] Game mode (e.g., missiles/projectiles to knock down structures)
 - [ ] Export to glTF/OBJ for downloading voxel models as standard 3D formats
-- [ ] Import image
-- [ ] Layer visibility toggle for editing interior structures by Y-axis
 - [ ] Collaborative cursors showing other users' ghost cursors and tool selections via ECHO
-
-## Implementation Notes
+- [ ] Import image

@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/masonry',
+  id: 'org.dxos.plugin.masonry',
   name: 'Masonry',
   description: trim`
     Responsive grid layout that displays query results in an adaptive masonry pattern.

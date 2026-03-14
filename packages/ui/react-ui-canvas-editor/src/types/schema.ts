@@ -49,7 +49,7 @@ export type Layout = Schema.Schema.Type<typeof Layout>;
 export const CanvasBoard = Schema.Struct({
   name: Schema.optional(Schema.String),
 
-  computeGraph: Schema.optional(Type.Ref(ComputeGraph)),
+  computeGraph: Schema.optional(Ref.Ref(ComputeGraph)),
 
   /**
    * Graph of shapes positioned on the canvas.
@@ -57,7 +57,7 @@ export const CanvasBoard = Schema.Struct({
   layout: Graph.Graph,
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/CanvasBoard',
+    typename: 'org.dxos.type.canvas-board',
     version: '0.1.0',
   }),
 );

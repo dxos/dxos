@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { Database, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TriggerEvent, defineFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
@@ -16,12 +16,12 @@ import { trim } from '@dxos/util';
 import { Plan, Project } from '../../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/project/qualifier',
+  key: 'org.dxos.function.project.qualifier',
   name: 'Project Qualifier',
   description:
     'Qualifier that determines if the event is relevant to the project. Puts the data into the input queue of the project.',
   inputSchema: Schema.Struct({
-    project: Schema.suspend(() => Type.Ref(Project.Project)),
+    project: Schema.suspend(() => Ref.Ref(Project.Project)),
     event: TriggerEvent.TriggerEvent,
   }),
   outputSchema: Schema.Void,

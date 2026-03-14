@@ -19,9 +19,9 @@ export type TagProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.sp
 export const Tag = forwardRef<HTMLSpanElement, TagProps>(
   ({ asChild, palette = 'neutral', classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : Primitive.span;
+    const Comp = asChild ? Slot : Primitive.span;
     return (
-      <Root {...props} className={tx('tag.root', { palette }, classNames)} data-hue={palette} ref={forwardedRef} />
+      <Comp {...props} className={tx('tag.root', { palette }, classNames)} data-hue={palette} ref={forwardedRef} />
     );
   },
 );

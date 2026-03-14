@@ -18,15 +18,12 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: `${meta.id}/article`,
+        id: `${meta.id}.article`,
         role: 'article',
-        filter: (data): data is { id?: string; subject: Collection.Collection } =>
-          Obj.instanceOf(Collection.Collection, data.subject),
+        filter: (data): data is { attendableId: string; subject: Collection.Collection } =>
+          typeof data.attendableId === 'string' && Obj.instanceOf(Collection.Collection, data.subject),
         component: ({ role, data }) => {
-          // This allows the id to be overridden by the surface for situations where the id of the collection
-          // is not the same as the id of what is being represented (e.g., a space with a root collection).
-          const id = typeof data.id === 'string' ? data.id : undefined;
-          return <StackContainer id={id ?? Obj.getDXN(data.subject).toString()} role={role} subject={data.subject} />;
+          return <StackContainer attendableId={data.attendableId} role={role} subject={data.subject} />;
         },
       }),
     ),

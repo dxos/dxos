@@ -14,7 +14,7 @@ import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation, type OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -29,13 +29,12 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}/root`,
+        id: `${meta.id}.root`,
         type: Chat.Chat,
         actions: (chat) => {
-          const id = Obj.getDXN(chat).toString();
           return Effect.succeed([
             {
-              id: `${AssistantOperation.UpdateChatName.meta.key}/${id}`,
+              id: AssistantOperation.UpdateChatName.meta.key,
               data: () => Operation.invoke(AssistantOperation.UpdateChatName, { chat }),
               properties: {
                 label: ['chat update name label', { ns: meta.id }],
@@ -48,12 +47,12 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}/assistant`,
+        id: `${meta.id}.assistant`,
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
-              id: `${LayoutOperation.UpdateDialog.meta.key}/assistant/open`,
+              id: `${LayoutOperation.UpdateDialog.meta.key}.assistant.open`,
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
@@ -83,7 +82,7 @@ export default Capability.makeModule(
               },
             },
             {
-              id: `${meta.id}/reset-blueprints`,
+              id: `${meta.id}.reset-blueprints`,
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
@@ -105,7 +104,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}/companion-chat`,
+        id: `${meta.id}.companion-chat`,
         match: NodeMatcher.whenEchoObject,
         connector: (object, get) =>
           Effect.gen(function* () {
@@ -115,7 +114,7 @@ export default Capability.makeModule(
             if (!currentChatState) {
               return [
                 {
-                  id: [Obj.getDXN(object).toString(), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
+                  id: 'assistant-chat',
                   type: PLANK_COMPANION_TYPE,
                   data: 'assistant-chat',
                   properties: {
@@ -137,7 +136,7 @@ export default Capability.makeModule(
             // This ensures the companion remains visible even during transient states.
             return [
               {
-                id: [Obj.getDXN(object).toString(), 'assistant-chat'].join(ATTENDABLE_PATH_SEPARATOR),
+                id: 'assistant-chat',
                 type: PLANK_COMPANION_TYPE,
                 data: Obj.isObject(currentChat) ? currentChat : 'assistant-chat',
                 properties: {
@@ -152,15 +151,15 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}/invocations`,
+        id: `${meta.id}.invocations`,
         match: NodeMatcher.whenAny(
           NodeMatcher.whenEchoTypeMatches(Sequence),
           NodeMatcher.whenEchoTypeMatches(Prompt.Prompt),
         ),
-        connector: (node) =>
+        connector: () =>
           Effect.succeed([
             {
-              id: [node.id, 'invocations'].join(ATTENDABLE_PATH_SEPARATOR),
+              id: 'invocations',
               type: PLANK_COMPANION_TYPE,
               data: 'invocations',
               properties: {

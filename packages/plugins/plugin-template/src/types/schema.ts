@@ -11,7 +11,7 @@ export namespace Template {
     name: Schema.optional(Schema.String),
   }).pipe(
     Type.object({
-      typename: 'dxos.org/type/Data',
+      typename: 'org.dxos.type.data',
       version: '0.1.0',
     }),
   );

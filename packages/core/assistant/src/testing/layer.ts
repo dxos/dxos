@@ -21,7 +21,7 @@ interface TestLayerOptions {
   model?: ModelName;
   functions?: FunctionDefinition.Any[];
   toolkits?: GenericToolkit.GenericToolkit[];
-  types?: Type.Entity.Any[];
+  types?: Type.AnyEntity[];
   credentials?: ServiceCredential[];
   /*
    * Tracing configuration.
@@ -34,7 +34,7 @@ interface TestLayerOptions {
 
 export const AssistantTestLayer = ({
   aiServicePreset = 'direct',
-  model = '@anthropic/claude-opus-4-0',
+  model = '@anthropic/claude-opus-4-6',
   functions = [],
   toolkits = [],
   types = [],

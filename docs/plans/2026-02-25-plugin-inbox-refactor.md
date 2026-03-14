@@ -17,19 +17,19 @@ Exemplar: `packages/plugins/plugin-kanban`
 
 ### Surface components to move (referenced by react-surface.tsx):
 
-| Current location | Container destination |
-|---|---|
-| `components/MailboxArticle/MailboxArticle.tsx` | `containers/MailboxArticle/MailboxArticle.tsx` |
-| `components/MailboxArticle/PopoverSaveFilter.tsx` | `containers/PopoverSaveFilter/PopoverSaveFilter.tsx` |
-| `components/MessageArticle/MessageArticle.tsx` | `containers/MessageArticle/MessageArticle.tsx` |
-| `components/DraftMessageArticle/DraftMessageArticle.tsx` | `containers/DraftMessageArticle/DraftMessageArticle.tsx` |
-| `components/EventArticle/EventArticle.tsx` | `containers/EventArticle/EventArticle.tsx` |
-| `components/CalendarArticle/CalendarArticle.tsx` | `containers/CalendarArticle/CalendarArticle.tsx` |
-| `components/MessageCard/MessageCard.tsx` | `containers/MessageCard/MessageCard.tsx` |
-| `components/EventCard/EventCard.tsx` | `containers/EventCard/EventCard.tsx` |
-| `components/MailboxSettings/MailboxSettings.tsx` | `containers/MailboxSettings/MailboxSettings.tsx` |
-| `components/Related/RelatedToContact.tsx` | `containers/RelatedToContact/RelatedToContact.tsx` |
-| `components/Related/RelatedToOrganization.tsx` | `containers/RelatedToOrganization/RelatedToOrganization.tsx` |
+| Current location                                         | Container destination                                        |
+| -------------------------------------------------------- | ------------------------------------------------------------ |
+| `components/MailboxArticle/MailboxArticle.tsx`           | `containers/MailboxArticle/MailboxArticle.tsx`               |
+| `components/MailboxArticle/PopoverSaveFilter.tsx`        | `containers/PopoverSaveFilter/PopoverSaveFilter.tsx`         |
+| `components/MessageArticle/MessageArticle.tsx`           | `containers/MessageArticle/MessageArticle.tsx`               |
+| `components/DraftMessageArticle/DraftMessageArticle.tsx` | `containers/DraftMessageArticle/DraftMessageArticle.tsx`     |
+| `components/EventArticle/EventArticle.tsx`               | `containers/EventArticle/EventArticle.tsx`                   |
+| `components/CalendarArticle/CalendarArticle.tsx`         | `containers/CalendarArticle/CalendarArticle.tsx`             |
+| `components/MessageCard/MessageCard.tsx`                 | `containers/MessageCard/MessageCard.tsx`                     |
+| `components/EventCard/EventCard.tsx`                     | `containers/EventCard/EventCard.tsx`                         |
+| `components/MailboxSettings/MailboxSettings.tsx`         | `containers/MailboxSettings/MailboxSettings.tsx`             |
+| `components/Related/RelatedToContact.tsx`                | `containers/RelatedToContact/RelatedToContact.tsx`           |
+| `components/Related/RelatedToOrganization.tsx`           | `containers/RelatedToOrganization/RelatedToOrganization.tsx` |
 
 ### Primitive sub-components that stay in `src/components/`:
 
@@ -42,6 +42,7 @@ Exemplar: `packages/plugins/plugin-kanban`
 - `common/` — shared primitive utilities
 
 ### Existing storybooks (on primitive sub-components, stay in place):
+
 - `MailboxArticle/Mailbox.stories.tsx`
 - `MessageArticle/Message.stories.tsx`
 - `EventArticle/Event.stories.tsx`
@@ -52,6 +53,7 @@ Exemplar: `packages/plugins/plugin-kanban`
 - `MessageCard/MessageCard.stories.tsx`
 
 ### Missing storybooks (noted as issues, out of scope for this refactor):
+
 - `MailboxSettings` — requires trigger/database setup, complex
 - `RelatedToContact`, `RelatedToOrganization` — require complex context
 
@@ -60,6 +62,7 @@ Exemplar: `packages/plugins/plugin-kanban`
 ## Task 1: Create containers directory and move MailboxArticle + PopoverSaveFilter
 
 **Files:**
+
 - Create: `packages/plugins/plugin-inbox/src/containers/MailboxArticle/MailboxArticle.tsx`
 - Create: `packages/plugins/plugin-inbox/src/containers/MailboxArticle/index.ts`
 - Create: `packages/plugins/plugin-inbox/src/containers/PopoverSaveFilter/PopoverSaveFilter.tsx`
@@ -77,6 +80,7 @@ cp packages/plugins/plugin-inbox/src/components/MailboxArticle/MailboxArticle.ts
 **Step 2: Fix import paths in the container** (relative imports now reference `../../components/MailboxArticle/`)
 
 In `containers/MailboxArticle/MailboxArticle.tsx`, update internal imports:
+
 ```ts
 // Change from:
 import { Mailbox, MailboxEmpty, type MailboxProps } from './Mailbox';
@@ -127,6 +131,7 @@ rm packages/plugins/plugin-inbox/src/components/MailboxArticle/PopoverSaveFilter
 ```bash
 moon run plugin-inbox:build 2>&1 | grep -v "Auth token DEPOT_TOKEN"
 ```
+
 Expected: errors about missing exports in containers/index.ts (we haven't created that yet — expected)
 
 **Step 8: Commit**
@@ -142,6 +147,7 @@ git commit -m "refactor(plugin-inbox): move MailboxArticle and PopoverSaveFilter
 ## Task 2: Move MessageArticle, DraftMessageArticle, EventArticle, CalendarArticle
 
 **Files:**
+
 - Create: `containers/MessageArticle/MessageArticle.tsx`, `containers/MessageArticle/index.ts`
 - Create: `containers/DraftMessageArticle/DraftMessageArticle.tsx`, `containers/DraftMessageArticle/index.ts`
 - Create: `containers/EventArticle/EventArticle.tsx`, `containers/EventArticle/index.ts`
@@ -168,6 +174,7 @@ cp packages/plugins/plugin-inbox/src/components/CalendarArticle/CalendarArticle.
 **Step 2: Fix import paths in each moved container file**
 
 For `containers/MessageArticle/MessageArticle.tsx`:
+
 ```ts
 // Change relative imports to reference components/ directory:
 import { Message, type MessageHeaderProps } from '../../components/MessageArticle/Message';
@@ -175,6 +182,7 @@ import { type ViewMode } from '../../components/MessageArticle/useToolbar';
 ```
 
 For `containers/DraftMessageArticle/DraftMessageArticle.tsx`:
+
 ```ts
 // Fix relative imports to:
 import { ComposeEmailPanel } from '../../components/DraftMessageArticle/ComposeEmailPanel';
@@ -182,6 +190,7 @@ import { ComposeEmailPanel } from '../../components/DraftMessageArticle/ComposeE
 ```
 
 For `containers/EventArticle/EventArticle.tsx`:
+
 ```ts
 // Fix relative imports to reference:
 import { Event } from '../../components/EventArticle/Event';
@@ -190,6 +199,7 @@ import { EventToolbar } from '../../components/EventArticle/EventToolbar';
 ```
 
 For `containers/CalendarArticle/CalendarArticle.tsx`:
+
 ```ts
 // Fix relative imports to:
 import { EventList } from '../../components/CalendarArticle/EventList';
@@ -199,6 +209,7 @@ import { EventList } from '../../components/CalendarArticle/EventList';
 **Step 3: Create index.ts for each container**
 
 Each `containers/XArticle/index.ts`:
+
 ```ts
 //
 // Copyright 2025 DXOS.org
@@ -229,6 +240,7 @@ git commit -m "refactor(plugin-inbox): move article containers to containers/"
 ## Task 3: Move MessageCard, EventCard, MailboxSettings, RelatedToContact, RelatedToOrganization
 
 **Files:**
+
 - Create: `containers/MessageCard/MessageCard.tsx`, `containers/MessageCard/index.ts`
 - Create: `containers/EventCard/EventCard.tsx`, `containers/EventCard/index.ts`
 - Create: `containers/MailboxSettings/MailboxSettings.tsx`, `containers/MailboxSettings/index.ts`
@@ -261,6 +273,7 @@ cp packages/plugins/plugin-inbox/src/components/Related/RelatedToOrganization.ts
 For `containers/MessageCard/MessageCard.tsx`: no sub-component imports needed (self-contained).
 
 For `containers/EventCard/EventCard.tsx`:
+
 ```ts
 // Fix relative import:
 import { DateComponent } from '../../components/common';
@@ -269,6 +282,7 @@ import { DateComponent } from '../../components/common';
 For `containers/MailboxSettings/MailboxSettings.tsx`: no sub-component imports (self-contained).
 
 For `containers/RelatedToContact/RelatedToContact.tsx`:
+
 ```ts
 // Fix relative imports:
 import { RelatedMessages } from '../../components/Related/RelatedMessages';
@@ -277,6 +291,7 @@ import { RelatedEvents } from '../../components/Related/RelatedEvents';
 ```
 
 For `containers/RelatedToOrganization/RelatedToOrganization.tsx`:
+
 ```ts
 // Fix relative import:
 import { RelatedContacts } from '../../components/Related/RelatedContacts';
@@ -285,6 +300,7 @@ import { RelatedContacts } from '../../components/Related/RelatedContacts';
 **Step 3: Create index.ts for each container**
 
 Each `containers/X/index.ts`:
+
 ```ts
 //
 // Copyright 2025 DXOS.org
@@ -316,6 +332,7 @@ git commit -m "refactor(plugin-inbox): move card and settings containers to cont
 ## Task 4: Create containers/index.ts with lazy exports
 
 **Files:**
+
 - Create: `packages/plugins/plugin-inbox/src/containers/index.ts`
 
 **Step 1: Create containers/index.ts**
@@ -352,12 +369,14 @@ git commit -m "refactor(plugin-inbox): create containers/index.ts with lazy expo
 ## Task 5: Update components/index.ts and react-surface.tsx
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-inbox/src/components/index.ts`
 - Modify: `packages/plugins/plugin-inbox/src/capabilities/react-surface/react-surface.tsx`
 
 **Step 1: Update components/index.ts**
 
 Remove all surface component exports. The current file has:
+
 ```ts
 export * from './MailboxSettings';    // REMOVE — now in containers
 export * from './MailboxArticle';      // REMOVE surface component, but keep: check sub-components
@@ -379,17 +398,39 @@ Check what `src/components/MailboxArticle/index.ts` currently exports — it lik
 **Step 2: Update react-surface.tsx to import from containers**
 
 Change:
+
 ```ts
-import { CalendarArticle, DraftMessageArticle, EventArticle, EventCard, MailboxArticle,
-         MailboxSettings, MessageArticle, MessageCard, PopoverSaveFilter,
-         RelatedToContact, RelatedToOrganization } from '../../components';
+import {
+  CalendarArticle,
+  DraftMessageArticle,
+  EventArticle,
+  EventCard,
+  MailboxArticle,
+  MailboxSettings,
+  MessageArticle,
+  MessageCard,
+  PopoverSaveFilter,
+  RelatedToContact,
+  RelatedToOrganization,
+} from '../../components';
 ```
 
 To:
+
 ```ts
-import { CalendarArticle, DraftMessageArticle, EventArticle, EventCard, MailboxArticle,
-         MailboxSettings, MessageArticle, MessageCard, PopoverSaveFilter,
-         RelatedToContact, RelatedToOrganization } from '../../containers';
+import {
+  CalendarArticle,
+  DraftMessageArticle,
+  EventArticle,
+  EventCard,
+  MailboxArticle,
+  MailboxSettings,
+  MessageArticle,
+  MessageCard,
+  PopoverSaveFilter,
+  RelatedToContact,
+  RelatedToOrganization,
+} from '../../containers';
 ```
 
 **Step 3: Build to check for errors**
@@ -397,6 +438,7 @@ import { CalendarArticle, DraftMessageArticle, EventArticle, EventCard, MailboxA
 ```bash
 moon run plugin-inbox:build 2>&1 | grep -v "Auth token DEPOT_TOKEN"
 ```
+
 Expected: clean build (no TypeScript errors)
 
 **Step 4: Fix any remaining import errors**
@@ -426,20 +468,24 @@ After moving surface components, some `components/X/index.ts` files will have br
 **Step 1: Fix each affected index.ts**
 
 For directories where the surface component was the ONLY export (MessageCard, EventCard, MailboxSettings):
+
 - The `components/X/index.ts` can be deleted, OR
 - Kept if sub-components need to be exported
 
 Check each:
+
 - `components/MessageCard/index.ts` — if only exported `MessageCard`, delete the directory
 - `components/EventCard/index.ts` — if only exported `EventCard`, delete the directory
 - `components/MailboxSettings/index.ts` — if only exported `MailboxSettings`, delete the directory
 
 For directories with remaining primitives (MailboxArticle, MessageArticle, etc.):
+
 - Update `index.ts` to only export remaining primitives
 
 **Step 2: Check Related/index.ts**
 
 `components/Related/index.ts` currently exports:
+
 - `RelatedToContact` → REMOVED (moved to containers)
 - `RelatedToOrganization` → REMOVED (moved to containers)
 - `RelatedContacts`, `RelatedMessages`, `RelatedEvents` → KEEP (primitives)
@@ -451,6 +497,7 @@ Update to only export the remaining primitives.
 ```bash
 moon run plugin-inbox:build 2>&1 | grep -v "Auth token DEPOT_TOKEN"
 ```
+
 Expected: clean build
 
 **Step 4: Commit**
@@ -467,6 +514,7 @@ git commit -m "refactor(plugin-inbox): clean up components/ index files after co
 **Step 1: Check that storybook stories still reference correct component paths**
 
 Run a quick check: grep for imports of moved components in stories files:
+
 ```bash
 grep -r "MailboxArticle\|MessageArticle\|EventArticle\|CalendarArticle\|DraftMessageArticle" \
   packages/plugins/plugin-inbox/src/components --include="*.stories.tsx"
@@ -489,15 +537,19 @@ moon run plugin-inbox:lint 2>&1 | grep -v "Auth token DEPOT_TOKEN"
 **Step 4: Mark plugin-inbox complete in AGENTS.md**
 
 In `packages/plugins/AGENTS.md`, change:
+
 ```markdown
 - [ ] plugin-inbox
 ```
+
 To:
+
 ```markdown
 - [x] plugin-inbox
 ```
 
 Also add learnings:
+
 ```markdown
 ## Learnings
 

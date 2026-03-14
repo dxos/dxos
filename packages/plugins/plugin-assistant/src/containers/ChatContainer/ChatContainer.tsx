@@ -8,7 +8,7 @@ import { useAtomCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
-import { Container } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 
 import { Chat as ChatComponent, type ChatRootProps } from '../../components';
 import { useBlueprintRegistry, useChatProcessor, useChatServices, useOnline, usePresets } from '../../hooks';
@@ -44,22 +44,26 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   }
 
   return (
-    <Container.Main toolbar role={role} ref={forwardedRef}>
-      <ChatComponent.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
-        <ChatComponent.Toolbar companionTo={companionTo} />
-        <ChatComponent.Viewport classNames='dx-container-max-width'>
-          <ChatComponent.Thread />
-          <div role='none' className='p-4'>
-            <ChatComponent.Prompt
-              {...chatProps}
-              outline
-              preset={preset?.id}
-              online={online}
-              onOnlineChange={setOnline}
-            />
-          </div>
-        </ChatComponent.Viewport>
-      </ChatComponent.Root>
-    </Container.Main>
+    <ChatComponent.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
+      <Panel.Root role={role} classNames='dx-article' ref={forwardedRef}>
+        <Panel.Toolbar>
+          <ChatComponent.Toolbar companionTo={companionTo} />
+        </Panel.Toolbar>
+        <Panel.Content>
+          <ChatComponent.Viewport>
+            <ChatComponent.Thread />
+            <div role='none' className='p-4'>
+              <ChatComponent.Prompt
+                {...chatProps}
+                outline
+                preset={preset?.id}
+                online={online}
+                onOnlineChange={setOnline}
+              />
+            </div>
+          </ChatComponent.Viewport>
+        </Panel.Content>
+      </Panel.Root>
+    </ChatComponent.Root>
   );
 });

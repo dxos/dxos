@@ -11,7 +11,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - Primitive components should not use hooks from `@dxos/app-framework`.
 - Surface components are in `src/containers` and are referenced by `src/capabilities/react-surface`.
 - Surface components should define and export a `SurfaceComponentProps` properties type.
-- Surface components should not use classNames or implement custom styling; flag as an issue if you see this.
+- Surface components should not use classNames (other than tailwind functional styles like `@container`, `dx-article`, etc.) or implement custom styling; flag as an issue if you see this.
 - Surface components should have lazy exports.
 - Surface should implement appropriate `<Suspense>` boundaries.
 - Surface components should end with the following suffixes if there is an unambiguous matching role: Article, Card, Dialog, Popover, Settings.
@@ -62,52 +62,52 @@ so errors in components that depend on Edge, capabilities, or other runtime serv
 NOT detected by the current smoke test infrastructure. Stories that need to test fully-rendered
 components should add a `play` function that waits for the component to mount. See "Smoke Test Issues" below.
 
-| Plugin | Stories | Smoke Test | Notes |
-|---|---|---|---|
-| plugin-assistant      |  9 | pass | |
-| plugin-attention      |  — | — | No stories (behavioral plugin) |
-| plugin-automation     |  4 | warn | AutomationPanel: `Edge is not configured` at runtime (not caught by test; see issues) |
-| plugin-board          |  1 | pass | |
-| plugin-chess          |  4 | pass | |
-| plugin-client         |  7 | pass | |
-| plugin-conductor      |  0 | — | No storybook stories |
-| plugin-debug          |  0 | — | No storybook stories |
-| plugin-deck           |  2 | pass | |
-| plugin-excalidraw     |  1 | pass | |
-| plugin-explorer       |  8 | pass | |
-| plugin-files          |  — | — | No stories |
-| plugin-graph          |  — | — | No stories (utility plugin) |
-| plugin-help           |  1 | pass | |
-| plugin-inbox          | 10 | pass | |
-| plugin-kanban         |  3 | warn | Console: `Error in connector` (invariant: No capability found for space/settings) |
-| plugin-map            |  — | — | No stories |
-| plugin-markdown       |  3 | pass | |
-| plugin-masonry        |  1 | pass | |
-| plugin-meeting        |  1 | pass | |
-| plugin-mermaid        |  2 | pass | |
-| plugin-native         |  — | — | No stories (native plugin) |
-| plugin-navtree        |  5 | pass | |
-| plugin-observability  |  1 | pass | |
-| plugin-outliner       |  4 | pass | |
-| plugin-pipeline       |  3 | pass | |
-| plugin-presenter      |  8 | pass | |
-| plugin-preview        |  5 | pass | |
-| plugin-registry       |  3 | pass | |
-| plugin-script         |  6 | pass | |
-| plugin-search         |  0 | — | All tests skipped |
-| plugin-settings       |  — | — | No stories (routing plugin) |
-| plugin-sheet          |  9 | pass | |
-| plugin-simple-layout  | 15 | pass | ContentError demo stories intentionally render errors |
-| plugin-sketch         |  1 | pass | |
-| plugin-space          |  6 | pass | |
-| plugin-stack          |  — | — | No stories |
-| plugin-status-bar     |  2 | pass | |
-| plugin-table          |  1 | pass | |
-| plugin-thread         | 15 | warn | Unhandled rejection: `Schema not registered` (Expando) from Comments.stories.tsx |
-| plugin-token-manager  |  1 | pass | |
-| plugin-transcription  |  7 | pass | |
-| plugin-transformer    |  1 | pass | Console: `No GPU adapter found` (expected in headless) |
-| plugin-wnfs           |  1 | pass | |
+| Plugin               | Stories | Smoke Test | Notes                                                                                 |
+| -------------------- | ------- | ---------- | ------------------------------------------------------------------------------------- |
+| plugin-assistant     | 9       | pass       |                                                                                       |
+| plugin-attention     | —       | —          | No stories (behavioral plugin)                                                        |
+| plugin-automation    | 4       | warn       | AutomationPanel: `Edge is not configured` at runtime (not caught by test; see issues) |
+| plugin-board         | 1       | pass       |                                                                                       |
+| plugin-chess         | 4       | pass       |                                                                                       |
+| plugin-client        | 7       | pass       |                                                                                       |
+| plugin-conductor     | 0       | —          | No storybook stories                                                                  |
+| plugin-debug         | 0       | —          | No storybook stories                                                                  |
+| plugin-deck          | 2       | pass       |                                                                                       |
+| plugin-excalidraw    | 1       | pass       |                                                                                       |
+| plugin-explorer      | 8       | pass       |                                                                                       |
+| plugin-files         | —       | —          | No stories                                                                            |
+| plugin-graph         | —       | —          | No stories (utility plugin)                                                           |
+| plugin-help          | 1       | pass       |                                                                                       |
+| plugin-inbox         | 10      | pass       |                                                                                       |
+| plugin-kanban        | 3       | warn       | Console: `Error in connector` (invariant: No capability found for space/settings)     |
+| plugin-map           | —       | —          | No stories                                                                            |
+| plugin-markdown      | 3       | pass       |                                                                                       |
+| plugin-masonry       | 1       | pass       |                                                                                       |
+| plugin-meeting       | 1       | pass       |                                                                                       |
+| plugin-mermaid       | 2       | pass       |                                                                                       |
+| plugin-native        | —       | —          | No stories (native plugin)                                                            |
+| plugin-navtree       | 5       | pass       |                                                                                       |
+| plugin-observability | 1       | pass       |                                                                                       |
+| plugin-outliner      | 4       | pass       |                                                                                       |
+| plugin-pipeline      | 3       | pass       |                                                                                       |
+| plugin-presenter     | 8       | pass       |                                                                                       |
+| plugin-preview       | 5       | pass       |                                                                                       |
+| plugin-registry      | 3       | pass       |                                                                                       |
+| plugin-script        | 6       | pass       |                                                                                       |
+| plugin-search        | 0       | —          | All tests skipped                                                                     |
+| plugin-settings      | —       | —          | No stories (routing plugin)                                                           |
+| plugin-sheet         | 9       | pass       |                                                                                       |
+| plugin-simple-layout | 15      | pass       | ContentError demo stories intentionally render errors                                 |
+| plugin-sketch        | 1       | pass       |                                                                                       |
+| plugin-space         | 6       | pass       |                                                                                       |
+| plugin-stack         | —       | —          | No stories                                                                            |
+| plugin-status-bar    | 2       | pass       |                                                                                       |
+| plugin-table         | 1       | pass       |                                                                                       |
+| plugin-thread        | 15      | warn       | Unhandled rejection: `Schema not registered` (Expando) from Comments.stories.tsx      |
+| plugin-token-manager | 1       | pass       |                                                                                       |
+| plugin-transcription | 7       | pass       |                                                                                       |
+| plugin-transformer   | 1       | pass       | Console: `No GPU adapter found` (expected in headless)                                |
+| plugin-wnfs          | 1       | pass       |                                                                                       |
 
 ### Smoke Test Issues
 
@@ -332,7 +332,7 @@ components should add a `play` function that waits for the component to mount. S
 - `ScriptPluginSettings` → already in `containers/ScriptPluginSettings/`
 - `ScriptProperties` → already in `containers/ScriptProperties/`
 - `TestContainer` → already in `containers/TestContainer/`
-- `FrameContainer`, `NotebookStack`, `QueryEditor`, `ScriptToolbar`, `TestPanel`, `TypescriptEditor` → primitives; stay in `components/`
+- `FramePanel`, `NotebookStack`, `QueryEditor`, `ScriptToolbar`, `TestPanel`, `TypescriptEditor` → primitives; stay in `components/`
 - Time: 2026-02-25, ~3 min
 
 ## plugin-search

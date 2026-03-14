@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Entity, Feed, Filter, Obj, Type } from '@dxos/echo';
+import { Database, Entity, Feed, Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
@@ -27,7 +27,7 @@ describe('Feed', () => {
   });
 
   test('remove items from a feed', async ({ expect }) => {
-    await using peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Person] });
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
@@ -44,7 +44,7 @@ describe('Feed', () => {
   });
 
   test('DXN is stored as meta key on feed object', async ({ expect }) => {
-    await using peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Person] });
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
@@ -70,19 +70,19 @@ describe('Feed', () => {
   });
 
   test('query feeds by kind', async ({ expect }) => {
-    await using peer = await builder.createPeer({ types: [Type.Feed] });
+    await using peer = await builder.createPeer({ types: [Feed.Feed] });
     const db = await peer.createDatabase();
     const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
-      yield* Database.add(Feed.make({ name: 'notifications', kind: 'dxos.org/plugin/notifications/v1' }));
-      yield* Database.add(Feed.make({ name: 'messages', kind: 'dxos.org/plugin/messages/v1' }));
-      yield* Database.add(Feed.make({ name: 'other-notifications', kind: 'dxos.org/plugin/notifications/v1' }));
+      yield* Database.add(Feed.make({ name: 'notifications', kind: 'org.dxos.plugin.notifications.v1' }));
+      yield* Database.add(Feed.make({ name: 'messages', kind: 'org.dxos.plugin.messages.v1' }));
+      yield* Database.add(Feed.make({ name: 'other-notifications', kind: 'org.dxos.plugin.notifications.v1' }));
 
       yield* Database.flush({ indexes: true });
 
       const notificationFeeds = yield* Database.runQuery(
-        Filter.type(Type.Feed, { kind: 'dxos.org/plugin/notifications/v1' }),
+        Filter.type(Feed.Feed, { kind: 'org.dxos.plugin.notifications.v1' }),
       );
       expect(notificationFeeds).toHaveLength(2);
       expect(notificationFeeds.map((feed) => feed.name).sort()).toEqual(['notifications', 'other-notifications']);
@@ -90,7 +90,7 @@ describe('Feed', () => {
   });
 
   test('query items in a feed', async ({ expect }) => {
-    await using peer = await builder.createPeer({ types: [Type.Feed, TestSchema.Person] });
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));

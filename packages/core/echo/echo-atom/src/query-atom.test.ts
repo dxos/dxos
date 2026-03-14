@@ -7,8 +7,9 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Obj, type QueryResult, Type } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { type EchoDatabase, Filter, Query } from '@dxos/echo-db';
+import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { SpaceId } from '@dxos/keys';
 
@@ -22,7 +23,7 @@ const TestItem = Schema.Struct({
   value: Schema.Number,
 }).pipe(
   Type.object({
-    typename: 'example.com/type/TestItem',
+    typename: 'com.example.type.test-item',
     version: '0.1.0',
   }),
 );

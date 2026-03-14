@@ -56,7 +56,7 @@ export type ClientOptions = {
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
   /** ECHO schema. */
-  types?: Type.Entity.Any[];
+  types?: Type.AnyEntity[];
   /** Shell path. */
   shell?: string;
   /** Create client worker. */
@@ -254,7 +254,7 @@ export class Client {
    * Add schema types to the client.
    */
   // TODO(burdon): Check if already registered (and remove downstream checks).
-  async addTypes(types: Type.Entity.Any[]) {
+  async addTypes(types: Type.AnyEntity[]) {
     log('addTypes', { schema: types.map((type) => Type.getTypename(type)) });
 
     // TODO(dmaretskyi): Uncomment after release.

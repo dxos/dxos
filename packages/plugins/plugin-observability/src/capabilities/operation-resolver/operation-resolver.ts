@@ -14,8 +14,7 @@ import { meta } from '../../meta';
 import { ObservabilityCapabilities, ObservabilityOperation } from '../../types';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: { namespace: string }) {
-    const { namespace } = props!;
+  Effect.fnUntraced(function* ({ namespace }: { namespace: string }) {
     const capabilities = yield* Capability.Service;
 
     return Capability.contributes(Capabilities.OperationResolver, [
