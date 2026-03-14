@@ -7,12 +7,12 @@ import * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
-/** Available bundled soundtracks. */
-export const Soundtrack = Schema.Literal('fireplace', 'ocean_surf', 'rain', 'stream');
+// TODO(burdon): These should configurable.
+export const Soundtrack = Schema.Literal('fireplace', 'ocean', 'rain', 'stream');
 
 export type Soundtrack = Schema.Schema.Type<typeof Soundtrack>;
 
-export const SOUNDTRACKS: Soundtrack[] = ['fireplace', 'ocean_surf', 'rain', 'stream'];
+export const SOUNDTRACKS: Soundtrack[] = ['fireplace', 'ocean', 'rain', 'stream'];
 
 export const Dream = Schema.Struct({
   name: Schema.optional(Schema.String),
