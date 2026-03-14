@@ -111,18 +111,92 @@ async initializeAll(ctx: Context): Promise<void> {
 }
 ```
 
+### 5. Complete call chain: every method between entry point and @trace.span must forward ctx
+
+The `@trace.span()` decorator reads the parent span ID from incoming `ctx`. If `ctx` is `Context.default()` (no parent span), the decorator creates an **orphaned root span** — disconnected from the trace hierarchy.
+
+**Critical rule**: every intermediate method between an entry point and a `@trace.span()` method must accept and forward `ctx`, even if the intermediate method itself has no `@trace.span()`. Otherwise the trace chain is broken.
+
+```typescript
+// ❌ WRONG — breaks trace chain with Context.default() at the last step
+class SpaceList {
+  private _setupSpacesStream(): void {
+    stream.subscribe((data) => {
+      scheduleMicroTask(this._ctx, async () => {
+        await spaceProxy._processUpdate(data);     // no ctx
+      });
+    });
+  }
+}
+
+class SpaceProxy {
+  async _processUpdate(data: Data): Promise<void> {     // no ctx
+    await this._initialize();                            // no ctx
+  }
+
+  private async _initialize(): Promise<void> {          // no ctx
+    await this._initializeDb(Context.default());         // orphaned root!
+  }
+
+  @trace.span()
+  private async _initializeDb(_ctx: Context): Promise<void> {
+    // _ctx has no parent span — creates disconnected root span
+  }
+}
+```
+
+```typescript
+// ✅ CORRECT — ctx flows through entire chain
+class SpaceList {
+  private _setupSpacesStream(): void {
+    stream.subscribe((data) => {
+      scheduleMicroTask(this._ctx, async () => {
+        await spaceProxy._processUpdate(this._ctx, data);  // lifecycle ctx
+      });
+    });
+  }
+}
+
+class SpaceProxy {
+  async _processUpdate(ctx: Context, data: Data): Promise<void> {
+    await this._initialize(ctx);                     // forwards ctx
+  }
+
+  private async _initialize(ctx: Context): Promise<void> {
+    await this._initializeDb(ctx);                   // forwards ctx
+  }
+
+  @trace.span()
+  private async _initializeDb(_ctx: Context): Promise<void> {
+    // _ctx has parent span from lifecycle context — connected hierarchy
+  }
+}
+```
+
+Tracing who provides the root context:
+- **Public API entry point**: creates `Context.default()` → passes to internal chain
+- **Callback / event handler**: uses `this._ctx` (lifecycle) → passes to internal chain
+- **Detached async work**: uses `this._ctx` (lifecycle) → passes to internal chain
+
 ## How context flows
 
 ```text
 User code (no ctx)
   → public API creates ctx = Context.default()
-    → @trace.span() method receives ctx
-      decorator: creates span, derives child ctx, replaces args[0]
-      → method body receives child ctx
-        → intermediate method forwards child ctx
-          → @trace.span() method receives child ctx
-            decorator: creates child span, derives grandchild ctx
-            → ...
+    → intermediate method forwards ctx (no @trace.span — passes as-is)
+      → intermediate method forwards ctx (no @trace.span — passes as-is)
+        → @trace.span() method receives ctx
+          decorator: creates span, derives child ctx, replaces args[0]
+          → method body receives child ctx
+            → intermediate method forwards child ctx
+              → @trace.span() method receives child ctx
+                decorator: creates child span, derives grandchild ctx
+                → ...
+
+Callback / detached async work:
+  event fires → callback uses this._ctx (lifecycle context)
+    → intermediate method forwards this._ctx
+      → @trace.span() method receives this._ctx — creates root span tied to object lifecycle
 ```
 
 Each `@trace.span()` method reads the parent span ID from the incoming ctx, creates a new span, derives a child context with the new span ID, and replaces `args[0]`. Methods without `@trace.span()` forward ctx as-is.
@@ -141,6 +215,7 @@ Each `@trace.span()` method reads the parent span ID from the incoming ctx, crea
 
 ## Common mistakes
 
+- **Breaking the chain with `Context.default()` in an intermediate method** — if a method calls `child(Context.default())` where `child` has `@trace.span()`, the span is an orphaned root. The intermediate method must accept `ctx` from its caller and forward it.
 - **Passing `this._ctx` in a direct call** when the method has `ctx` in scope — breaks trace hierarchy, creates a new root instead of a child span.
 - **Passing `ctx` in a callback or `scheduleTask`** — captures a stale context whose span has already ended.
 - **Adding `ctx` to Node.js protocol methods** (e.g., `[Symbol.for('nodejs.util.inspect.custom')]`) — fixed-signature methods that don't support extra parameters.

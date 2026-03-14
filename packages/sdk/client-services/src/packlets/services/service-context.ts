@@ -273,7 +273,7 @@ export class ServiceContext extends Resource {
     if (this._deviceSpaceSync && this.identityManager.identity) {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
     }
-    await this.dataSpaceManager?.close();
+    await this.dataSpaceManager?.close(ctx);
     await this.edgeAgentManager?.close();
     await this.identityManager.close();
     await this.spaceManager.close();

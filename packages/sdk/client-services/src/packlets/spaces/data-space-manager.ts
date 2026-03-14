@@ -517,7 +517,7 @@ export class DataSpaceManager extends Resource {
           await this._echoEdgeReplicator?.disconnectFromSpace(space.id);
           break;
         case EdgeReplicationSetting.ENABLED:
-          await this._echoEdgeReplicator?.connectToSpace(space.id);
+          await this._echoEdgeReplicator?.connectToSpace(ctx, space.id);
           break;
       }
     }
@@ -623,7 +623,7 @@ export class DataSpaceManager extends Resource {
     dataSpace.postOpen.append(async () => {
       const setting = dataSpace.getEdgeReplicationSetting();
       if (!setting || setting === EdgeReplicationSetting.ENABLED) {
-        await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);
+        await this._echoEdgeReplicator?.connectToSpace(this._ctx, dataSpace.id);
       } else if (this._echoEdgeReplicator) {
         log('not connecting EchoEdgeReplicator because of EdgeReplicationSetting', { spaceId: dataSpace.id });
       }
@@ -720,7 +720,7 @@ export class DataSpaceManager extends Resource {
     invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
   ): Promise<void> {
     const tasks = invitations.map(([credentialId, invitation]) => {
-      return this._invitationsManager.createInvitation(Context.default(), {
+      return this._invitationsManager.createInvitation(this._ctx, {
         type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         spaceKey: space.key,

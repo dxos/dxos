@@ -362,7 +362,7 @@ export class DataSpace {
     yield [this._databaseRoot.documentId, root];
 
     for (const documentUrl of this._databaseRoot.getAllLinkedDocuments()) {
-      const data = await this._echoHost.exportDoc(Context.default(), documentUrl);
+      const data = await this._echoHost.exportDoc(documentUrl);
       yield [documentUrl.replace(/^automerge:/, ''), data];
     }
   }

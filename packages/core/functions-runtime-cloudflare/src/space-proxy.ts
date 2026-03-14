@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { type Database } from '@dxos/echo';
 import { type CoreDatabase, type EchoClient, type EchoDatabaseImpl } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
@@ -61,6 +61,6 @@ export class SpaceProxy extends Resource {
       owningObject: this,
     });
 
-    await this._db.coreDatabase.open({ rootUrl: meta.rootDocumentId });
+    await this._db.coreDatabase.open(this._ctx, { rootUrl: meta.rootDocumentId });
   }
 }

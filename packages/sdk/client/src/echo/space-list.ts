@@ -207,7 +207,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         // Process space update in a separate task, also initializing the space if necessary.
         scheduleMicroTask(this._ctx, async () => {
-          await spaceProxy!._processSpaceUpdate(space);
+          await spaceProxy!._processSpaceUpdate(this._ctx, space);
         });
       }
 

@@ -52,7 +52,7 @@ export class InvitationsManager {
 
   @trace.span({ showInBrowserTimeline: true })
   async createInvitation(
-    ctx: Context,
+    _ctx: Context,
     options: Partial<Invitation> & Pick<Invitation, 'kind'>,
   ): Promise<CancellableInvitation> {
     if (options.invitationId) {
@@ -82,7 +82,7 @@ export class InvitationsManager {
     });
 
     try {
-      await this._persistIfRequired(ctx, handler, stream, invitation);
+      await this._persistIfRequired(handler, stream, invitation);
     } catch (err) {
       log.catch(err);
       await observableInvitation.cancel();
@@ -119,7 +119,8 @@ export class InvitationsManager {
     }
   }
 
-  acceptInvitation(ctx: Context, request: AcceptInvitationRequest): AuthenticatingInvitation {
+  @trace.span({ showInBrowserTimeline: true })
+  acceptInvitation(_ctx: Context, request: AcceptInvitationRequest): AuthenticatingInvitation {
     const options = request.invitation;
     const existingInvitation = this._acceptInvitations.get(options.invitationId);
     if (existingInvitation) {
@@ -314,7 +315,6 @@ export class InvitationsManager {
   }
 
   private async _persistIfRequired(
-    ctx: Context,
     handler: InvitationProtocol,
     changeStream: PushStream<Invitation>,
     invitation: Invitation,
