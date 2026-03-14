@@ -52,7 +52,7 @@ export class InvitationsManager {
 
   @trace.span({ showInBrowserTimeline: true })
   async createInvitation(
-    _ctx: Context,
+    ctx: Context,
     options: Partial<Invitation> & Pick<Invitation, 'kind'>,
   ): Promise<CancellableInvitation> {
     if (options.invitationId) {
@@ -69,7 +69,11 @@ export class InvitationsManager {
     }
     const invitation = this._createInvitation(handler, options);
 
-    const { ctx: invitationCtx, stream, observableInvitation } = this._createObservableInvitation(handler, invitation);
+    const {
+      ctx: invitationCtx,
+      stream,
+      observableInvitation,
+    } = this._createObservableInvitation(ctx, handler, invitation);
 
     this._createInvitations.set(invitation.invitationId, observableInvitation);
     this.invitationCreated.emit(invitation);
@@ -251,14 +255,15 @@ export class InvitationsManager {
   }
 
   private _createObservableInvitation(
+    ctx: Context,
     handler: InvitationProtocol,
     invitation: Invitation,
   ): { ctx: Context; stream: PushStream<Invitation>; observableInvitation: CancellableInvitation } {
     const stream = new PushStream<Invitation>();
-    const ctx = new Context({
+    const invitationCtx = ctx.derive({
       onError: (err) => {
         stream.error(err);
-        void ctx.dispose();
+        void invitationCtx.dispose();
       },
     });
     ctx.onDispose(() => {
@@ -273,7 +278,7 @@ export class InvitationsManager {
         await ctx.dispose();
       },
     });
-    return { ctx, stream, observableInvitation };
+    return { ctx: invitationCtx, stream, observableInvitation };
   }
 
   private _createObservableAcceptingInvitation(
