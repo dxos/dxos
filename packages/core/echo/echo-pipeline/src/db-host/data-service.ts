@@ -101,7 +101,7 @@ export class DataServiceImpl implements DataService {
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
-    await synchronizer.update(request.updates);
+    await synchronizer.update(Context.default(), request.updates);
   }
 
   async flush(request: FlushRequest): Promise<void> {

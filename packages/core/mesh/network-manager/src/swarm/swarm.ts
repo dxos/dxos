@@ -94,7 +94,7 @@ export class Swarm {
     _topology.init(this._getSwarmController());
 
     this._swarmMessenger = new SwarmMessenger({
-      sendMessage: async (msg) => await this._messenger.sendMessage(this._ctx, msg),
+      sendMessage: async (ctx, msg) => await this._messenger.sendMessage(ctx, msg),
       onSignal: async (msg) => await this.onSignal(msg),
       onOffer: async (msg) => await this.onOffer(msg),
       topic: this._topic,

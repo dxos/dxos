@@ -51,7 +51,7 @@ describe('Signal Integration Test', () => {
       receivedSignals.push(msg);
     };
     const messageRouter = new SwarmMessenger({
-      sendMessage: (message) => messenger.sendMessage(Context.default(), message),
+      sendMessage: (ctx, message) => messenger.sendMessage(ctx, message),
       onSignal: signalMock,
       onOffer: async () => ({ accept: true }),
       topic,

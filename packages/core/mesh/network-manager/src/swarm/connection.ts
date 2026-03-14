@@ -3,7 +3,7 @@
 //
 
 import { DeferredTask, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep, synchronized } from '@dxos/async';
-import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
+import { Context, Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -118,7 +118,7 @@ export class Connection {
   public readonly transportStats = new Event<TransportStats>();
 
   private readonly _signalSendTask = new DeferredTask(this._ctx, async () => {
-    await this._flushSignalBuffer();
+    await this._flushSignalBuffer(this._ctx);
   });
 
   private _signallingDelay = STARTING_SIGNALLING_DELAY;
@@ -366,7 +366,7 @@ export class Connection {
     this._signalSendTask.schedule();
   }
 
-  private async _flushSignalBuffer(): Promise<void> {
+  private async _flushSignalBuffer(ctx: Context): Promise<void> {
     if (this._outgoingSignalBuffer.length === 0) {
       return;
     }

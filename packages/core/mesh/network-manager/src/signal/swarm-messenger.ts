@@ -20,7 +20,7 @@ interface OfferRecord {
 }
 
 export type SwarmMessengerOptions = {
-  sendMessage: (params: Message) => Promise<void>;
+  sendMessage: (ctx: Context, params: Message) => Promise<void>;
   onOffer: (message: OfferMessage) => Promise<Answer>;
   onSignal: (message: SignalMessage) => Promise<void>;
   topic: PublicKey;
@@ -32,11 +32,9 @@ const SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage');
  * Adds offer/answer and signal interfaces.
  */
 export class SwarmMessenger implements SignalMessenger {
-  private readonly _ctx = new Context();
-
-  private readonly _sendMessage: (msg: Message) => Promise<void>;
-  private readonly _onSignal: (message: SignalMessage) => Promise<void>;
-  private readonly _onOffer: (message: OfferMessage) => Promise<Answer>;
+  private readonly _sendMessage: SwarmMessengerOptions['sendMessage'];
+  private readonly _onSignal: SwarmMessengerOptions['onSignal'];
+  private readonly _onOffer: SwarmMessengerOptions['onOffer'];
   private readonly _topic: PublicKey;
 
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap((key) => key.toHex());
@@ -83,23 +81,23 @@ export class SwarmMessenger implements SignalMessenger {
     }
   }
 
-  async signal(message: SignalMessage): Promise<void> {
+  async signal(ctx: Context, message: SignalMessage): Promise<void> {
     invariant(message.data?.signal || message.data?.signalBatch, 'Invalid message');
-    await this._sendReliableMessage({
+    await this._sendReliableMessage(ctx, {
       author: message.author,
       recipient: message.recipient,
       message,
     });
   }
 
-  async offer(message: OfferMessage): Promise<Answer> {
+  async offer(ctx: Context, message: OfferMessage): Promise<Answer> {
     const networkMessage: SwarmMessage = {
       ...message,
       messageId: PublicKey.random(),
     };
     return new Promise<Answer>((resolve, reject) => {
       this._offerRecords.set(networkMessage.messageId!, { resolve });
-      this._sendReliableMessage({
+      this._sendReliableMessage(ctx, {
         author: message.author,
         recipient: message.recipient,
         message: networkMessage,
@@ -107,15 +105,18 @@ export class SwarmMessenger implements SignalMessenger {
     });
   }
 
-  private async _sendReliableMessage({
-    author,
-    recipient,
-    message,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    message: MakeOptional<SwarmMessage, 'messageId'>;
-  }): Promise<void> {
+  private async _sendReliableMessage(
+    ctx: Context,
+    {
+      author,
+      recipient,
+      message,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      message: MakeOptional<SwarmMessage, 'messageId'>;
+    },
+  ): Promise<void> {
     const networkMessage: SwarmMessage = {
       ...message,
       // Setting unique message_id if it not specified yet.
@@ -123,7 +124,7 @@ export class SwarmMessenger implements SignalMessenger {
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
-    await this._sendMessage({
+    await this._sendMessage(ctx, {
       author,
       recipient,
       payload: {

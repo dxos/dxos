@@ -169,7 +169,7 @@ export class Peer {
   /**
    * Initiate a connection to the remote peer.
    */
-  async initiateConnection(): Promise<void> {
+  async initiateConnection(ctx: Context): Promise<void> {
     invariant(!this.initiating, 'Initiation in progress.');
     invariant(!this.connection, 'Already connected.');
     const sessionId = PublicKey.random();
@@ -183,7 +183,7 @@ export class Peer {
       await this._connectionLimiter.connecting(sessionId);
       connection.initiate();
 
-      answer = await this._signalMessaging.offer({
+      answer = await this._signalMessaging.offer(ctx, {
         author: this.localInfo,
         recipient: this.remoteInfo,
         sessionId,

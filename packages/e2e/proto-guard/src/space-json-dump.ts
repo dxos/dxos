@@ -9,7 +9,6 @@ import * as Record from 'effect/Record';
 import isEqual from 'fast-deep-equal';
 
 import { type Client } from '@dxos/client';
-import { Context } from '@dxos/context';
 import { type Obj, Type } from '@dxos/echo';
 import { Filter } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-db';
