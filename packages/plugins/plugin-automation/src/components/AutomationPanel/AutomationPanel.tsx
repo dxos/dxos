@@ -8,6 +8,7 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { Context } from '@dxos/context';
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
@@ -93,7 +94,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleForceRunTrigger = async (trigger: Trigger.Trigger) => {
-    await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+    await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
   };
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {

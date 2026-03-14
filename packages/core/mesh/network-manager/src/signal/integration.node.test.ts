@@ -4,6 +4,7 @@
 
 import { afterAll, beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { Messenger, type PeerInfo, WebsocketSignalManager } from '@dxos/messaging';
 import { type SignalServerRunner, runTestSignalServer } from '@dxos/signal';
@@ -50,7 +51,7 @@ describe('Signal Integration Test', () => {
       receivedSignals.push(msg);
     };
     const messageRouter = new SwarmMessenger({
-      sendMessage: messenger.sendMessage.bind(messenger),
+      sendMessage: (message) => messenger.sendMessage(Context.default(), message),
       onSignal: signalMock,
       onOffer: async () => ({ accept: true }),
       topic,
@@ -78,8 +79,8 @@ describe('Signal Integration Test', () => {
       ({ peerAvailable }) => !!peerAvailable && peerNetworking1.peer.peerKey === peerAvailable.peer.peerKey,
     );
 
-    await peerNetworking1.signalManager.join({ topic, peer: peerNetworking1.peer });
-    await peerNetworking2.signalManager.join({ topic, peer: peerNetworking2.peer });
+    await peerNetworking1.signalManager.join(Context.default(), { topic, peer: peerNetworking1.peer });
+    await peerNetworking2.signalManager.join(Context.default(), { topic, peer: peerNetworking2.peer });
 
     await promise1;
     await promise2;

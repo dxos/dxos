@@ -3,6 +3,7 @@
 //
 
 import { type Client } from '@dxos/client';
+import { type Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, Function, FunctionError } from '@dxos/functions';
@@ -86,7 +87,7 @@ export class FunctionsServiceClient {
   /**
    * Deploys a function to the EDGE service.
    */
-  async deploy(request: FunctionDeployOptions): Promise<Function.Function> {
+  async deploy(ctx: Context, request: FunctionDeployOptions): Promise<Function.Function> {
     try {
       invariant(
         Object.keys(request.assets).every((path) => !path.startsWith('/')),
@@ -102,7 +103,7 @@ export class FunctionsServiceClient {
           assets: request.assets,
           runtime: request.runtime,
         },
-        { retry: { count: 3 }, auth: true },
+        { context: ctx, retry: { count: 3 }, auth: true },
       );
       log.verbose('deploy result', { ...response });
 
@@ -126,9 +127,9 @@ export class FunctionsServiceClient {
    * Queries the EDGE service for deployed functions.
    */
   // TODO(dmaretskyi): Add query filters.
-  async query(): Promise<Function.Function[]> {
+  async query(ctx: Context): Promise<Function.Function[]> {
     try {
-      const response = await this.#edgeClient.listFunctions();
+      const response = await this.#edgeClient.listFunctions({ context: ctx });
       return response.uploadedFunctions.map((record: any) => {
         // Record shape is determined by EDGE API. We defensively parse.
         const latest = record.latestVersion ?? {};
@@ -155,7 +156,7 @@ export class FunctionsServiceClient {
     }
   }
 
-  async invoke(func: Function.Function, input: unknown, options?: FunctionInvokeOptions) {
+  async invoke(ctx: Context, func: Function.Function, input: unknown, options?: FunctionInvokeOptions) {
     const functionId = Obj.getMeta(func).keys.find((key) => key.source === FUNCTIONS_META_KEY)?.id;
     if (!functionId) {
       throw new FunctionServiceError({ message: 'No identifier for the function at the EDGE service' });
@@ -171,13 +172,14 @@ export class FunctionsServiceClient {
           subrequestsLimit: options?.subrequestsLimit,
         },
         input,
+        { context: ctx },
       );
     } catch (error) {
       throw FunctionError.wrap({ message: 'Failed to invoke function', ifTypeDiffers: true })(error);
     }
   }
 
-  async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId): Promise<InvokeResult> {
-    return (await this.#edgeClient.forceRunCronTrigger(spaceId, triggerId)) as InvokeResult;
+  async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId): Promise<InvokeResult> {
+    return (await this.#edgeClient.forceRunCronTrigger(spaceId, triggerId, { context: ctx })) as InvokeResult;
   }
 }

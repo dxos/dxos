@@ -275,7 +275,7 @@ export class ServiceContext extends Resource {
     }
     await this.dataSpaceManager?.close(ctx);
     await this.edgeAgentManager?.close();
-    await this.identityManager.close();
+    await this.identityManager.close(ctx);
     await this.spaceManager.close();
     await this.echoHost.close(ctx);
 

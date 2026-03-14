@@ -3,6 +3,7 @@
 //
 
 import { type Client } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
@@ -50,7 +51,7 @@ export const deployScript = async ({
     }
 
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
-    const newFunction = await functionsServiceClient.deploy({
+    const newFunction = await functionsServiceClient.deploy(Context.default(), {
       // TODO(dmaretskyi): Space key or identity key.
       ownerPublicKey: space.key,
       version: fn ? incrementSemverPatch(fn.version) : '0.0.1',

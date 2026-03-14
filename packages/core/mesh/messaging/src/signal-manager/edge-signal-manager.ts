@@ -3,7 +3,7 @@
 //
 
 import { Event, scheduleMicroTask } from '@dxos/async';
-import { Resource, cancelWithContext } from '@dxos/context';
+import { type Context, Resource, cancelWithContext } from '@dxos/context';
 import { type EdgeConnection, EdgeIdentityChangedError, protocol } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -60,7 +60,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   /**
    * Warning: PeerInfo is inferred from edgeConnection.
    */
-  async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async join(ctx: Context, { topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
     if (!this._matchSelfPeerInfo(peer)) {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
       log.warn('ignoring peer info on join request', {
@@ -85,7 +85,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     );
   }
 
-  async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async leave(ctx: Context, { topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
     this._swarmPeers.delete(topic);
     try {
       await this._edgeConnection.send(
@@ -105,7 +105,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     }
   }
 
-  async query({ topic }: { topic: PublicKey }): Promise<SwarmResponse> {
+  async query(ctx: Context, { topic }: { topic: PublicKey }): Promise<SwarmResponse> {
     const response = cancelWithContext(
       this._ctx,
       this.swarmState.waitFor((state) => state.swarmKey === topic.toHex()),
@@ -125,7 +125,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
     return response;
   }
 
-  async sendMessage(message: Message): Promise<void> {
+  async sendMessage(ctx: Context, message: Message): Promise<void> {
     if (!this._matchSelfPeerInfo(message.author)) {
       // NOTE: Could only join swarm with the same peer info as the edge connection.
       log.warn('ignoring author on send request', {
@@ -228,7 +228,7 @@ export class EdgeSignalManager extends Resource implements SignalManager {
   private async _rejoinAllSwarms(): Promise<void> {
     log('rejoin swarms', { swarms: Array.from(this._swarmPeers.keys()) });
     for (const [topic, { lastState }] of this._swarmPeers.entries()) {
-      await this.join({
+      await this.join(this._ctx, {
         topic,
         peer: {
           peerKey: this._edgeConnection.peerKey,

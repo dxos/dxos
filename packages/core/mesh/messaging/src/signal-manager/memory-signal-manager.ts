@@ -63,7 +63,7 @@ export class MemorySignalManager implements SignalManager {
     this._ctx = new Context();
     this._ctx.onDispose(this._context.swarmEvent.on((data) => this.swarmEvent.emit(data)));
 
-    await Promise.all([...this._joinedSwarms.values()].map((value) => this.join(value)));
+    await Promise.all([...this._joinedSwarms.values()].map((value) => this.join(this._ctx, value)));
   }
 
   async close(): Promise<void> {
@@ -76,7 +76,7 @@ export class MemorySignalManager implements SignalManager {
       [...this._joinedSwarms.values()],
     );
 
-    await Promise.all([...this._joinedSwarms.values()].map((value) => this.leave(value)));
+    await Promise.all([...this._joinedSwarms.values()].map((value) => this.leave(this._ctx, value)));
 
     // assign joined swarms back because .leave() deletes it.
     this._joinedSwarms = joinedSwarmsCopy;
@@ -88,7 +88,7 @@ export class MemorySignalManager implements SignalManager {
     return [];
   }
 
-  async join({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async join(_ctx: Context, { topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
     invariant(!this._ctx.disposed, 'Closed');
 
     this._joinedSwarms.add({ topic, peer });
@@ -120,7 +120,7 @@ export class MemorySignalManager implements SignalManager {
     }
   }
 
-  async leave({ topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
+  async leave(_ctx: Context, { topic, peer }: { topic: PublicKey; peer: PeerInfo }): Promise<void> {
     invariant(!this._ctx.disposed, 'Closed');
 
     this._joinedSwarms.delete({ topic, peer });
@@ -141,11 +141,11 @@ export class MemorySignalManager implements SignalManager {
     this._context.swarmEvent.emit(swarmEvent);
   }
 
-  async query(request: QueryRequest): Promise<SwarmResponse> {
+  async query(_ctx: Context, request: QueryRequest): Promise<SwarmResponse> {
     throw new Error('Not implemented');
   }
 
-  async sendMessage({
+  async sendMessage(_ctx: Context, {
     author,
     recipient,
     payload,

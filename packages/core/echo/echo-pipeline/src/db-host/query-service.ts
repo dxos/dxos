@@ -80,7 +80,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   }
 
   override async _open(): Promise<void> {
-    this._updateQueries = new DeferredTask(this._ctx, this._executeQueries.bind(this));
+    this._updateQueries = new DeferredTask(this._ctx, () => this._executeQueries(this._ctx));
   }
 
   @synchronized
@@ -165,7 +165,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _executeQueries() {
+  private async _executeQueries(_ctx: Context) {
     // TODO(dmaretskyi): How do we integrate this tracing info into the tracing API.
     const begin = performance.now();
     let count = 0;

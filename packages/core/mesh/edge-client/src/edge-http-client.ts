@@ -359,8 +359,9 @@ export class EdgeHttpClient {
     });
   }
 
-  public async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId) {
+  public async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId, args?: EdgeHttpGetArgs) {
     return this._call(new URL(`/test/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
+      ...args,
       method: 'POST',
     });
   }

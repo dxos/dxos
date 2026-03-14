@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import { sleep } from '@dxos/async';
 import { Client, type Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { Context } from '@dxos/context';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
@@ -58,7 +59,7 @@ export const deployFunction = async (
     entryPoint,
     verbose: true,
   });
-  const func = await functionsServiceClient.deploy({
+  const func = await functionsServiceClient.deploy(Context.default(), {
     version: '0.0.1',
     ownerPublicKey: space.key,
     entryPoint: artifact.entryPoint,

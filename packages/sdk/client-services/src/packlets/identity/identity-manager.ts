@@ -131,8 +131,8 @@ export class IdentityManager {
     log.trace('dxos.halo.identity-manager.open', trace.end({ id: traceId }));
   }
 
-  async close(): Promise<void> {
-    await this._identity?.close(new Context());
+  async close(ctx: Context): Promise<void> {
+    await this._identity?.close(ctx);
   }
 
   async createIdentity({ profile, deviceProfile }: CreateIdentityOptions = {}): Promise<Identity> {

@@ -248,7 +248,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
         await client.notarizeCredentials(
           this._spaceId,
           { credentials: encodedCredentials },
-          { retry: { count: MAX_EDGE_RETRIES, timeout: timeouts.retryTimeout, jitter: timeouts.jitter } },
+          { context: ctx, retry: { count: MAX_EDGE_RETRIES, timeout: timeouts.retryTimeout, jitter: timeouts.jitter } },
         );
 
         log('edge notarization success');
@@ -303,6 +303,7 @@ export class NotarizationPlugin extends Resource implements CredentialProcessor 
     scheduleMicroTask(this._ctx, async () => {
       try {
         const response = await client.getCredentialsForNotarization(this._spaceId, {
+          context: this._ctx,
           retry: { count: MAX_EDGE_RETRIES },
         });
 

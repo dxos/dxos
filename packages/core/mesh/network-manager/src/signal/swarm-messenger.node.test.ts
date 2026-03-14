@@ -5,6 +5,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { type Awaited } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { Messenger, WebsocketSignalManager } from '@dxos/messaging';
 import { type Answer } from '@dxos/protocols/proto/dxos/mesh/swarm';
@@ -57,7 +58,7 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
 
     const router: SwarmMessenger = new SwarmMessenger({
       // todo(mykola): added catch to avoid not finished request.
-      sendMessage: async (message) => await messenger.sendMessage(message),
+      sendMessage: async (message) => await messenger.sendMessage(Context.default(), message),
       onSignal,
       onOffer,
       topic,
@@ -89,8 +90,8 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join(Context.default(), { topic, peer: peer1 });
+    await signalManager2.join(Context.default(), { topic, peer: peer2 });
 
     const msg: SignalMessage = {
       author: peer2,
@@ -125,8 +126,8 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join(Context.default(), { topic, peer: peer1 });
+    await signalManager2.join(Context.default(), { topic, peer: peer2 });
     const answer = await router1.offer({
       author: peer1,
       recipient: peer2,
@@ -181,9 +182,9 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
-    await signalManager3.join({ topic, peer: peer3 });
+    await signalManager1.join(Context.default(), { topic, peer: peer1 });
+    await signalManager2.join(Context.default(), { topic, peer: peer2 });
+    await signalManager3.join(Context.default(), { topic, peer: peer3 });
 
     // sending signal from peer1 to peer3.
     const msg1to3: SignalMessage = {
@@ -241,8 +242,8 @@ describe('SwarmMessenger', { timeout: 7000 }, () => {
       topic,
     });
 
-    await signalManager1.join({ topic, peer: peer1 });
-    await signalManager2.join({ topic, peer: peer2 });
+    await signalManager1.join(Context.default(), { topic, peer: peer1 });
+    await signalManager2.join(Context.default(), { topic, peer: peer2 });
 
     // sending offer from peer1 to peer2.
     const answer1 = await router1.offer({

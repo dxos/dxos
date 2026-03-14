@@ -269,7 +269,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
       write: async (message: AutomergeProtocolMessage, controller) => {
         await this._requestLimiter.rateLimit(message);
 
-        await this._sendMessage(message);
+        await this._sendMessage(this._ctx, message);
       },
     });
   }
@@ -402,7 +402,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
     this._readableStreamController.enqueue(message);
   }
 
-  private async _sendMessage(message: AutomergeProtocolMessage): Promise<void> {
+  private async _sendMessage(ctx: Context, message: AutomergeProtocolMessage): Promise<void> {
     // Fix the peer id.
     (message as any).targetId = this._targetServiceId as PeerId;
 
