@@ -36,7 +36,9 @@ export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions
         Effect.gen(function* () {
           // TODO(dmaretskyi): Reconcile with `invokeFunction`.
           const cleanedId = deployedFunctionId.replace(/^\//, '');
-            return yield* Effect.promise(() => edgeClient.invokeFunction(DxosContext.default(), { functionId: cleanedId, spaceId }, input)).pipe(
+          return yield* Effect.promise(() =>
+            edgeClient.invokeFunction(DxosContext.default(), { functionId: cleanedId, spaceId }, input),
+          ).pipe(
             Effect.mapError(FunctionError.wrap()),
             Effect.orDie, // TODO(dmaretskyi): Checked error.
           );

@@ -390,8 +390,7 @@ export class CoreDatabase {
 
               const isDeleted = this._objects.get(objectToLoad.id)?.isDeleted();
               const depsUnsatisfied =
-                this._objects.get(objectToLoad.id) &&
-                !this._areDepsSatisfied(this._objects.get(objectToLoad.id)!);
+                this._objects.get(objectToLoad.id) && !this._areDepsSatisfied(this._objects.get(objectToLoad.id)!);
 
               if (!returnDeleted && isDeleted) {
                 diagnostics.push('object-deleted');

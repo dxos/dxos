@@ -169,14 +169,10 @@ export class EdgeInvitationHandler implements FlowLockHolder {
           throw error;
         }
         const signature = sign(Buffer.from(error.challenge, 'base64'), privateKey);
-        return this._client.joinSpaceByInvitation(
-          ctx,
-          spaceId,
-          {
-            ...request,
-            signature: Buffer.from(signature).toString('base64'),
-          },
-        );
+        return this._client.joinSpaceByInvitation(ctx, spaceId, {
+          ...request,
+          signature: Buffer.from(signature).toString('base64'),
+        });
       } else {
         throw error;
       }

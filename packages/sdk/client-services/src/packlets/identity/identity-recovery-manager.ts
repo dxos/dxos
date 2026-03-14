@@ -186,13 +186,10 @@ export class EdgeIdentityRecoveryManager {
         throw error;
       }
       const signature = sign(Buffer.from(error.challenge, 'base64'), recoveryKeypair.secretKey);
-      response = await this._edgeClient.recoverIdentity(
-        ctx,
-        {
-          ...request,
-          signature: Buffer.from(signature).toString('base64'),
-        },
-      );
+      response = await this._edgeClient.recoverIdentity(ctx, {
+        ...request,
+        signature: Buffer.from(signature).toString('base64'),
+      });
     }
 
     log.info('recovering identity', response);

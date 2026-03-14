@@ -230,11 +230,7 @@ export class SpaceQuerySource implements QuerySource {
     const results: QueryResult.EntityEntry<Obj.Any>[] = [];
     if (isObjectIdFilter(filter)) {
       results.push(
-        ...(
-          await this._database.coreDatabase.batchLoadObjectCores(
-            (filter as QueryAST.FilterObject).id as ObjectId[],
-          )
-        )
+        ...(await this._database.coreDatabase.batchLoadObjectCores((filter as QueryAST.FilterObject).id as ObjectId[]))
           .filter(Predicate.isNotUndefined)
           .filter((core) => this._filterCore(core, filter, options))
           .map((core) => this._mapCoreToResult(core)),
@@ -329,11 +325,7 @@ export class SpaceQuerySource implements QuerySource {
     };
   }
 
-  private _filterCore(
-    core: ObjectCore,
-    filter: QueryAST.Filter,
-    options: QueryAST.QueryOptions | undefined,
-  ): boolean {
+  private _filterCore(core: ObjectCore, filter: QueryAST.Filter, options: QueryAST.QueryOptions | undefined): boolean {
     return (
       filterCoreByDeletedFlag(core, options) &&
       filterMatchObject(filter, {
@@ -349,10 +341,7 @@ const isObjectIdFilter = (filter: QueryAST.Filter) => {
   return filter.type === 'object' && filter.id !== undefined && filter.id.length > 0;
 };
 
-const filterCoreByDeletedFlag = (
-  core: ObjectCore,
-  options: QueryAST.QueryOptions | undefined,
-): boolean => {
+const filterCoreByDeletedFlag = (core: ObjectCore, options: QueryAST.QueryOptions | undefined): boolean => {
   switch (options?.deleted) {
     case undefined:
     case 'exclude':

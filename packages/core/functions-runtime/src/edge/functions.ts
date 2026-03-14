@@ -132,7 +132,11 @@ export const invokeFunction = async (
   }
   // COMPAT: Previously functionId was a URL `/<guid>`. Now it's just the `<guid>`.
   const cleanedId = functionId.replace(/^\//, '');
-  return await edgeClient.invokeFunction(Context.default(), { functionId: cleanedId, spaceId, cpuTimeLimit, subrequestsLimit }, input);
+  return await edgeClient.invokeFunction(
+    Context.default(),
+    { functionId: cleanedId, spaceId, cpuTimeLimit, subrequestsLimit },
+    input,
+  );
 };
 
 export const incrementSemverPatch = (version: string): string => {

@@ -6,7 +6,6 @@ import * as Registry from '@effect-atom/atom/Registry';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-
 import { Obj, type QueryResult, Type } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';

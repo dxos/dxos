@@ -86,7 +86,11 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
     return [];
   }
 
-  async run(_ctx: Context, query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.EntityEntry<T>[]> {
+  async run(
+    _ctx: Context,
+    query: QueryAST.Query,
+    opts?: QueryResult.RunOptions,
+  ): Promise<QueryResult.EntityEntry<T>[]> {
     const start = Date.now();
 
     log('executing edge query', { spaceId: this._params.spaceId, query });

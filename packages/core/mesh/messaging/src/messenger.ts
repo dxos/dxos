@@ -204,15 +204,18 @@ export class Messenger {
     };
   }
 
-  private async _encodeAndSend(ctx: Context, {
-    author,
-    recipient,
-    reliablePayload,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    reliablePayload: ReliablePayload;
-  }): Promise<void> {
+  private async _encodeAndSend(
+    ctx: Context,
+    {
+      author,
+      recipient,
+      reliablePayload,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      reliablePayload: ReliablePayload;
+    },
+  ): Promise<void> {
     await this._signalManager.sendMessage(ctx, {
       author,
       recipient,
@@ -272,15 +275,18 @@ export class Messenger {
     this._onAckCallbacks.get(Acknowledgement.decode(payload.value).messageId)?.();
   }
 
-  private async _sendAcknowledgement(ctx: Context, {
-    author,
-    recipient,
-    messageId,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    messageId: PublicKey;
-  }): Promise<void> {
+  private async _sendAcknowledgement(
+    ctx: Context,
+    {
+      author,
+      recipient,
+      messageId,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      messageId: PublicKey;
+    },
+  ): Promise<void> {
     log('sending ACK', { messageId, from: recipient, to: author });
 
     await this._signalManager.sendMessage(ctx, {
