@@ -8867,6 +8867,9 @@ importers:
       '@dxos/conductor':
         specifier: workspace:*
         version: link:../../core/conductor
+      '@dxos/context':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -10894,6 +10897,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/context':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
