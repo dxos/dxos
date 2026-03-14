@@ -227,7 +227,7 @@ export class DataSpaceManager extends Resource {
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         log('load space', { spaceMetadata });
-        const space = await this._constructSpace(spaceMetadata);
+        const space = await this._constructSpace(this._ctx, spaceMetadata);
         // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
         if (this._runtimeProps?.autoActivateSpaces && spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
           spacesToActivate.push(space);
@@ -332,7 +332,7 @@ export class DataSpaceManager extends Resource {
 
     log('constructing space...', { spaceKey });
 
-    const space = await this._constructSpace(metadata);
+    const space = await this._constructSpace(ctx, metadata);
     await space.open(ctx);
 
     log('adding space...', { spaceKey });
@@ -434,7 +434,7 @@ export class DataSpaceManager extends Resource {
       dataTimeframe: opts.dataTimeframe,
     };
 
-    const space = await this._constructSpace(metadata);
+    const space = await this._constructSpace(ctx, metadata);
     await space.open(ctx);
     await this._metadataStore.addSpace(metadata);
     space.initializeDataPipelineAsync();
@@ -525,7 +525,7 @@ export class DataSpaceManager extends Resource {
     space.stateUpdate.emit();
   }
 
-  private async _constructSpace(metadata: SpaceMetadata): Promise<DataSpace> {
+  private async _constructSpace(ctx: Context, metadata: SpaceMetadata): Promise<DataSpace> {
     log('construct space', { metadata });
     const gossip = new Gossip({
       localPeerId: this._signingContext.deviceKey,
@@ -623,7 +623,7 @@ export class DataSpaceManager extends Resource {
     dataSpace.postOpen.append(async () => {
       const setting = dataSpace.getEdgeReplicationSetting();
       if (!setting || setting === EdgeReplicationSetting.ENABLED) {
-        await this._echoEdgeReplicator?.connectToSpace(this._ctx, dataSpace.id);
+        await this._echoEdgeReplicator?.connectToSpace(ctx, dataSpace.id);
       } else if (this._echoEdgeReplicator) {
         log('not connecting EchoEdgeReplicator because of EdgeReplicationSetting', { spaceId: dataSpace.id });
       }
