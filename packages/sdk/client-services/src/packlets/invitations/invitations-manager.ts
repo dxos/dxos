@@ -73,6 +73,7 @@ export class InvitationsManager {
 
     this._createInvitations.set(invitation.invitationId, observableInvitation);
     this.invitationCreated.emit(invitation);
+    // onComplete is called on cancel, expiration, or redemption of a single-use invitation
     this._onInvitationComplete(observableInvitation, async () => {
       this._createInvitations.delete(observableInvitation.get().invitationId);
       this.removedCreated.emit(observableInvitation.get());
@@ -101,6 +102,7 @@ export class InvitationsManager {
     }
     try {
       const persistentInvitations = this._metadataStore.getInvitations();
+      // get saved persistent invitations, filter and remove from storage those that have expired.
       const freshInvitations = persistentInvitations.filter((invitation) => !hasInvitationExpired(invitation));
 
       const loadTasks = freshInvitations.map((persistentInvitation) => {
@@ -169,6 +171,7 @@ export class InvitationsManager {
     invariant(invitationId);
     const created = this._createInvitations.get(invitationId);
     if (created) {
+      // remove from storage before modifying in-memory state, higher chance of failing
       if (created.get().persistent) {
         await this._metadataStore.removeInvitation(invitationId);
       }
@@ -234,7 +237,7 @@ export class InvitationsManager {
       swarmKey,
       authCode,
       timeout,
-      persistent: persistent && type !== Invitation.Type.DELEGATED,
+      persistent: persistent && type !== Invitation.Type.DELEGATED, // delegated invitations are persisted in control feed
       guestKeypair:
         guestKeypair ?? (authMethod === Invitation.AuthMethod.KNOWN_PUBLIC_KEY ? createAdmissionKeypair() : undefined),
       created,
@@ -308,6 +311,7 @@ export class InvitationsManager {
         await ctx.dispose();
       },
       onAuthenticate: async (code: string) => {
+        // TODO(burdon): Reset creates a race condition? Event?
         otpEnteredTrigger.wake(code);
       },
     });
