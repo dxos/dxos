@@ -227,6 +227,9 @@
       "path": "../../plugins/plugin-wnfs"
     },
     {
+      "path": "../../plugins/plugin-zen"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

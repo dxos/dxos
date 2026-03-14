@@ -4,7 +4,7 @@
 
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
-import { ghostHighlighted, surfaceShadow, surfaceZIndex } from '../../fragments';
+import { surfaceShadow, surfaceZIndex } from '../../fragments';
 import { mx } from '../../util';
 
 export type SelectStyleProps = Partial<{
@@ -28,7 +28,7 @@ export const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) 
     'flex items-center min-h-[2rem] px-3 py-1 gap-2',
     'text-base-surface-text leading-none select-none outline-hidden',
     '[&>svg]:invisible [&[data-state=checked]>svg]:visible',
-    ghostHighlighted,
+    'dx-highlighted',
     ...etc,
   );
 

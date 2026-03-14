@@ -45,6 +45,7 @@ src/
 ### Task 1: Sequence Schema
 
 **Files:**
+
 - Create: `src/types/Sequence.ts`
 - Modify: `src/types/index.ts`
 
@@ -136,6 +137,7 @@ git commit -m "feat(plugin-sleep): add Sequence schema for mixer layers"
 ### Task 2: Sample Player
 
 **Files:**
+
 - Create: `src/generator/sample-player.ts`
 - Modify: `src/generator/index.ts`
 
@@ -246,6 +248,7 @@ git commit -m "feat(plugin-sleep): add SamplePlayer for m4a playback"
 ### Task 3: Mixer Engine
 
 **Files:**
+
 - Create: `src/generator/mixer-engine.ts`
 - Modify: `src/generator/index.ts`
 
@@ -362,6 +365,7 @@ git commit -m "feat(plugin-sleep): add MixerEngine to orchestrate audio layers"
 ### Task 4: SequenceEditor Component
 
 **Files:**
+
 - Create: `src/components/SequenceEditor/SequenceEditor.tsx`
 - Create: `src/components/SequenceEditor/index.ts`
 - Create: `src/components/SequenceEditor/SequenceEditor.stories.tsx`
@@ -507,6 +511,7 @@ git commit -m "feat(plugin-sleep): add SequenceEditor form component with storyb
 ### Task 5: Add react-ui-list dependency
 
 **Files:**
+
 - Modify: `package.json` (via pnpm)
 
 - [ ] **Step 1: Add dependency**
@@ -530,6 +535,7 @@ git commit -m "chore(plugin-sleep): add react-ui-list dependency"
 ### Task 6: MixerLayer Component
 
 **Files:**
+
 - Create: `src/components/Mixer/MixerLayer.tsx`
 
 - [ ] **Step 1: Create MixerLayer**
@@ -570,7 +576,7 @@ export const MixerLayer = ({ sequence, onChange, onDelete }: MixerLayerProps) =>
     <div>
       <div
         role='none'
-        className={mx('grid grid-cols-[min-content_min-content_1fr_min-content_min-content] items-center min-h-10', ghostHover)}
+        className='grid grid-cols-[min-content_min-content_1fr_min-content_min-content] items-center min-h-10'}
       >
         <List.ItemDragHandle />
         <Icon icon={sourceIcon[sequence.sourceType] ?? 'ph--question--regular'} size={4} classNames='mx-1' />
@@ -603,6 +609,7 @@ Expected: Build succeeds.
 ### Task 7: Mixer Component
 
 **Files:**
+
 - Create: `src/components/Mixer/Mixer.tsx`
 - Create: `src/components/Mixer/index.ts`
 - Create: `src/components/Mixer/Mixer.stories.tsx`
@@ -815,6 +822,7 @@ git commit -m "feat(plugin-sleep): add Mixer component with layer list and story
 ### Task 8: Wire Mixer into SleepArticle
 
 **Files:**
+
 - Modify: `src/containers/SleepArticle/SleepArticle.tsx`
 
 - [ ] **Step 1: Replace BinauralPlayer with Mixer**

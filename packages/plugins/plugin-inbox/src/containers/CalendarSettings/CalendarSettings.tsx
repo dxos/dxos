@@ -20,6 +20,7 @@ export const CalendarSettings = ({ subject }: SurfaceComponentProps<Calendar.Cal
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
+  const calendarSchema = useMemo(() => omitId(Calendar.Calendar), []);
 
   const handleChange = useCallback(
     (values: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
@@ -59,7 +60,7 @@ export const CalendarSettings = ({ subject }: SurfaceComponentProps<Calendar.Cal
 
   return (
     <div className='flex flex-col gap-4'>
-      <Form.Root schema={omitId(Calendar.Calendar)} values={subject} db={db} onValuesChanged={handleChange}>
+      <Form.Root schema={calendarSchema} values={subject} db={db} onValuesChanged={handleChange}>
         <Form.Viewport>
           <Form.Content>
             <Form.FieldSet />

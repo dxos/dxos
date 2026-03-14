@@ -235,7 +235,7 @@ const TriggerListItem = ({
         )}
       </div>
 
-      {actionProps ? <List.ItemButton {...actionProps} autoHide={false} /> : <div />}
+      {actionProps ? <List.ItemIconButton {...actionProps} autoHide={false} /> : <div />}
 
       {onDelete && <List.ItemDeleteButton onClick={handleDelete} />}
     </List.Item>

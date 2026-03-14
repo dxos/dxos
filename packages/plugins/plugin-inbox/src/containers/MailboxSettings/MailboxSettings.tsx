@@ -20,6 +20,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
+  const mailboxSchema = useMemo(() => omitId(Mailbox.Mailbox), []);
 
   const handleChange = useCallback(
     (values: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
@@ -60,7 +61,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
 
   return (
     <div className='flex flex-col gap-4'>
-      <Form.Root schema={omitId(Mailbox.Mailbox)} values={subject} db={db} onValuesChanged={handleChange}>
+      <Form.Root schema={mailboxSchema} values={subject} db={db} onValuesChanged={handleChange}>
         <Form.Viewport>
           <Form.Content>
             <Form.FieldSet />

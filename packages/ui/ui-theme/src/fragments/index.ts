@@ -9,7 +9,6 @@ export * from './disabled';
 export * from './elevation';
 export * from './focus';
 export * from './hover';
-export * from './selected';
 export * from './size';
 export * from './text';
 export * from './valence';

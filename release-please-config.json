@@ -675,11 +675,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-sleep/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-space/package.json",
           "jsonpath": "$.version"
         },
@@ -741,6 +736,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-wnfs/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-zen/package.json",
           "jsonpath": "$.version"
         },
         {

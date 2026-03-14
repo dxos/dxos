@@ -391,9 +391,6 @@
       "path": "packages/plugins/plugin-sketch/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-sleep/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-space/tsconfig.json"
     },
     {
@@ -431,6 +428,9 @@
     },
     {
       "path": "packages/plugins/plugin-wnfs/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-zen/tsconfig.json"
     },
     {
       "path": "packages/sdk/app-framework/tsconfig.json"
