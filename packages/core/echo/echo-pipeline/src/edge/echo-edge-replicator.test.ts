@@ -43,7 +43,7 @@ describe('EchoEdgeReplicator', () => {
     await server.sendMessage(forbidden);
     await connectionOpen.waitForCount(1);
 
-    await replicator.disconnect(Context.default());
+    await replicator.disconnect();
   });
 
   describe('shouldAdvertise', () => {
@@ -83,8 +83,8 @@ describe('EchoEdgeReplicator', () => {
   const connectReplicator = async (client: EdgeClient, context: AutomergeReplicatorContext) => {
     // EdgeHttpClient functionality is not tested here.
     const replicator = new EchoEdgeReplicator({ edgeConnection: client, edgeHttpClient: {} as EdgeHttpClient });
-    await replicator.connect(Context.default(), context);
-    onTestFinished(() => replicator.disconnect(Context.default()));
+    await replicator.connect(context);
+    onTestFinished(() => replicator.disconnect());
     return replicator;
   };
 

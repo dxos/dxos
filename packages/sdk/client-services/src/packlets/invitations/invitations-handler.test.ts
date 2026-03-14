@@ -95,7 +95,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         await acceptInvitation(guest, invitation);
 
         await guest.sink.waitFor(Invitation.State.READY_FOR_AUTHENTICATION);
-        await guest.peer.networkManager.close(Context.default());
+        await guest.peer.networkManager.close();
         await host.sink.waitFor(Invitation.State.CONNECTING);
 
         await sleep(10);
@@ -254,16 +254,16 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
       const peer = testBuilder.createPeer();
       await peer.createIdentity();
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
-      await peer.echoHost.addReplicator(Context.default(), peer.meshEchoReplicator);
+      await peer.echoHost.addReplicator(peer.meshEchoReplicator);
       if (spaceKey == null) {
-        const space = await peer.dataSpaceManager.createSpace(Context.default());
+        const space = await peer.dataSpaceManager.createSpace(new Context());
         spaceKey = space.key;
       }
       const invitationHandler = new InvitationsHandler(peer.networkManager, undefined, {
         teleport: { controlHeartbeatInterval: 250 }, // faster peer failure detection
       });
       const protocol = new SpaceInvitationProtocol(peer.dataSpaceManager, peer.identity, peer.keyring, spaceKey);
-      const ctx = Context.default();
+      const ctx = new Context();
       onTestFinished(async () => {
         await ctx.dispose();
       });
@@ -273,7 +273,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
 
     const hostInvitation = async (setup: PeerSetup, invitation: Invitation) => {
       await setup.ctx.dispose();
-      setup.ctx = Context.default();
+      setup.ctx = new Context();
       onTestFinished(async () => {
         await setup.ctx.dispose();
       });
@@ -282,7 +282,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
 
     const acceptInvitation = async (setup: PeerSetup, invitation: Invitation): Promise<Trigger<string>> => {
       await setup.ctx.dispose();
-      setup.ctx = Context.default();
+      setup.ctx = new Context();
       onTestFinished(async () => {
         await setup.ctx.dispose();
       });
@@ -359,7 +359,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
     };
 
     const createInvitation = async (setup: PeerSetup, options?: Partial<Invitation>): Promise<Invitation> => {
-      const observable = await setup.peer.invitationsManager.createInvitation(Context.default(), {
+      const observable = await setup.peer.invitationsManager.createInvitation(setup.ctx, {
         type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         authMethod: Invitation.AuthMethod.SHARED_SECRET,
@@ -369,7 +369,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
       });
       // cancel to avoid interfering with invitations-handler direct invocations
       const invitation = observable.get();
-      await setup.peer.invitationsManager.cancelInvitation(Context.default(), invitation);
+      await setup.peer.invitationsManager.cancelInvitation(invitation);
       return { ...invitation, swarmKey: PublicKey.random() };
     };
   },

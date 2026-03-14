@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Context } from '@dxos/context';
 import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -45,11 +44,11 @@ export class MeshEchoReplicator implements AutomergeReplicator {
 
   private _context: AutomergeReplicatorContext | null = null;
 
-  async connect(ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
+  async connect(context: AutomergeReplicatorContext): Promise<void> {
     this._context = context;
   }
 
-  async disconnect(ctx: Context): Promise<void> {
+  async disconnect(): Promise<void> {
     for (const connection of this._connections) {
       if (connection.isEnabled) {
         this._context?.onConnectionClosed(connection);
@@ -67,7 +66,6 @@ export class MeshEchoReplicator implements AutomergeReplicator {
   }
 
   createExtension(
-    ctx: Context,
     extensionFactory?: TeleportAutomergeReplicator.AutomergeReplicatorFactory,
   ): TeleportAutomergeReplicator.AutomergeReplicator {
     invariant(this._context);
@@ -187,7 +185,7 @@ export class MeshEchoReplicator implements AutomergeReplicator {
     return connection.replicatorExtension;
   }
 
-  async authorizeDevice(ctx: Context, spaceKey: PublicKey, deviceKey: PublicKey): Promise<void> {
+  async authorizeDevice(spaceKey: PublicKey, deviceKey: PublicKey): Promise<void> {
     log('authorizeDevice', { spaceKey, deviceKey });
     const spaceId = await createIdFromSpaceKey(spaceKey);
     defaultMap(this._authorizedDevices, spaceId, () => new ComplexSet(PublicKey.hash)).add(deviceKey);

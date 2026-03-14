@@ -32,11 +32,11 @@ export interface AutomergeDocumentLoader {
 
   objectPresent(id: ObjectId): boolean;
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
-  loadObjectDocument(ctx: Context, objectId: string | string[]): void;
+  loadObjectDocument(objectId: string | string[]): void;
   getObjectDocumentId(objectId: string): string | undefined;
   getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
-  createDocumentForObject(ctx: Context, objectId: string): DocHandleProxy<DatabaseDirectory>;
-  onObjectLinksUpdated(ctx: Context, links: SpaceDocumentLinks): void;
+  createDocumentForObject(objectId: string): DocHandleProxy<DatabaseDirectory>;
+  onObjectLinksUpdated(links: SpaceDocumentLinks): void;
   onObjectBoundToDocument(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): void;
 
   /**
@@ -131,7 +131,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     );
   }
 
-  public loadObjectDocument(ctx: Context, objectIdOrMany: string | string[]): void {
+  public loadObjectDocument(objectIdOrMany: string | string[]): void {
     const objectIds = Array.isArray(objectIdOrMany) ? objectIdOrMany : [objectIdOrMany];
     let hasUrlsToLoad = false;
     const urlsToLoad: DatabaseDirectory['links'] = {};
@@ -150,7 +150,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       }
     }
     if (hasUrlsToLoad) {
-      this._loadLinkedObjects(ctx, urlsToLoad);
+      this._loadLinkedObjects(urlsToLoad);
     }
   }
 
@@ -165,14 +165,14 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return documentUrl && interpretAsDocumentId(documentUrl.toString() as AutomergeUrl);
   }
 
-  public onObjectLinksUpdated(ctx: Context, links: SpaceDocumentLinks): void {
+  public onObjectLinksUpdated(links: SpaceDocumentLinks): void {
     if (!links) {
       return;
     }
     const linksAwaitingLoad = Object.entries(links).filter(([objectId]) =>
       this._objectsPendingDocumentLoad.has(objectId),
     );
-    this._loadLinkedObjects(ctx, Object.fromEntries(linksAwaitingLoad));
+    this._loadLinkedObjects(Object.fromEntries(linksAwaitingLoad));
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
   }
 
@@ -181,9 +181,9 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return this._spaceRootDocHandle;
   }
 
-  public createDocumentForObject(ctx: Context, objectId: string): DocHandleProxy<DatabaseDirectory> {
+  public createDocumentForObject(objectId: string): DocHandleProxy<DatabaseDirectory> {
     invariant(this._spaceRootDocHandle, 'Database was not initialized with root object.');
-    const spaceDocHandle = this._repo.create<DatabaseDirectory>(ctx, {
+    const spaceDocHandle = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: { spaceKey: this._spaceKey.toHex() },
     });
@@ -234,7 +234,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return (spaceRootDoc.links ?? {})[objectId]?.toString() as AutomergeUrl;
   }
 
-  private _loadLinkedObjects(ctx: Context, links: SpaceDocumentLinks): void {
+  private _loadLinkedObjects(links: SpaceDocumentLinks): void {
     if (!links) {
       return;
     }
@@ -254,15 +254,15 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
         log.warn('object document was already loaded', logMeta);
         continue;
       }
-      const handle = this._repo.find<DatabaseDirectory>(ctx, automergeUrl as DocumentId);
+      const handle = this._repo.find<DatabaseDirectory>(automergeUrl as DocumentId);
       log.debug('document loading triggered', logMeta);
       this._objectDocumentHandles.set(objectId, handle);
-      void this._loadHandleForObject(ctx, handle, objectId);
+      void this._loadHandleForObject(handle, objectId);
     }
   }
 
   private async _initDocHandle(ctx: Context, url: string): Promise<DocHandleProxy<DatabaseDirectory>> {
-    const docHandle = this._repo.find<DatabaseDirectory>(ctx, url as DocumentId);
+    const docHandle = this._repo.find<DatabaseDirectory>(url as DocumentId);
     await warnAfterTimeout(5_000, 'Automerge root doc load timeout (CoreDatabase)', async () => {
       await cancelWithContext(ctx, docHandle.whenReady()); // TODO(dmaretskyi): Temporary 5s timeout for debugging.
     });
@@ -277,11 +277,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     });
   }
 
-  private async _loadHandleForObject(
-    ctx: Context,
-    handle: DocHandleProxy<DatabaseDirectory>,
-    objectId: string,
-  ): Promise<void> {
+  private async _loadHandleForObject(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): Promise<void> {
     invariant(handle.url, 'Document URL is not available');
     try {
       if (this._currentlyLoadingObjects.has({ url: handle.url, objectId })) {
@@ -313,7 +309,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
         err,
       });
       if (shouldRetryLoading) {
-        await this._loadHandleForObject(ctx, handle, objectId);
+        await this._loadHandleForObject(handle, objectId);
       }
     }
   }

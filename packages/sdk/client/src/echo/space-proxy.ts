@@ -607,7 +607,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     // Needed to have space root set to be able to make next check.
     await this._databaseInitialized.wait();
 
-    if (this._db.coreDatabase.getNumberOfInlineObjects(this._ctx) > 1) {
+    if (this._db.coreDatabase.getNumberOfInlineObjects() > 1) {
       await this._createEpoch({
         migration: CreateEpochRequest.Migration.FRAGMENT_AUTOMERGE_ROOT,
       });

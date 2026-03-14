@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import { Context, LifecycleState, Resource } from '@dxos/context';
+import { LifecycleState, Resource } from '@dxos/context';
 import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { EchoClient, type EchoDatabaseImpl, type QueueFactory, createFeedServiceLayer } from '@dxos/echo-db';
@@ -117,7 +117,7 @@ class FunctionContext extends Resource {
     super();
     this.context = context;
     if (context.services.dataService && context.services.queryService) {
-      this.client = new EchoClient().connectToService(Context.default(), {
+      this.client = new EchoClient().connectToService({
         dataService: context.services.dataService,
         queryService: context.services.queryService,
         queueService: context.services.queueService,
@@ -125,11 +125,11 @@ class FunctionContext extends Resource {
     }
   }
 
-  override async _open(_ctx: Context) {
+  override async _open() {
     await this.client?.open();
     this.db =
       this.client && this.context.spaceId
-        ? this.client.constructDatabase(this._ctx, {
+        ? this.client.constructDatabase({
             spaceId: this.context.spaceId ?? failedInvariant(),
             spaceKey: PublicKey.fromHex(this.context.spaceKey ?? failedInvariant('spaceKey missing in context')),
             reactiveSchemaQuery: false,
@@ -140,12 +140,10 @@ class FunctionContext extends Resource {
     await this.db?.setSpaceRoot(this.context.spaceRootUrl ?? failedInvariant('spaceRootUrl missing in context'));
     await this.db?.open();
     this.queues =
-      this.client && this.context.spaceId
-        ? this.client.constructQueueFactory(this._ctx, this.context.spaceId)
-        : undefined;
+      this.client && this.context.spaceId ? this.client.constructQueueFactory(this.context.spaceId) : undefined;
   }
 
-  override async _close(_ctx: Context) {
+  override async _close() {
     await this.db?.close();
     await this.client?.close();
   }

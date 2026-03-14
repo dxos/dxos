@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Context } from '@dxos/context';
 import { Filter, Obj, type Query } from '@dxos/echo';
 import { EncodedReference as EncodedRef, type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -30,14 +29,14 @@ export type ImportOptions = {
 export class Serializer {
   static version = 1;
 
-  async export(ctx: Context, database: EchoDatabase, query?: Query.Any): Promise<SerializedSpace> {
+  async export(database: EchoDatabase, query?: Query.Any): Promise<SerializedSpace> {
     const loadedObjects: Array<Obj.Any | undefined> = [];
 
     if (query) {
       const objects = await database.query(query).run();
       loadedObjects.push(...objects);
     } else {
-      const ids = database.coreDatabase.getAllObjectIds(ctx);
+      const ids = database.coreDatabase.getAllObjectIds();
       for (const chunk of chunkArray(ids, MAX_LOAD_OBJECT_CHUNK_SIZE)) {
         const objects = await database.query(Filter.id(...chunk)).run({ timeout: 60_000 });
         loadedObjects.push(...objects);
@@ -55,7 +54,7 @@ export class Serializer {
     return data;
   }
 
-  async import(ctx: Context, database: EchoDatabase, data: SerializedSpace, opts?: ImportOptions): Promise<void> {
+  async import(database: EchoDatabase, data: SerializedSpace, opts?: ImportOptions): Promise<void> {
     invariant(data.version === Serializer.version, `Invalid version: ${data.version}`);
 
     const { objects } = data;
@@ -63,7 +62,7 @@ export class Serializer {
       const shouldImport = opts?.onObject ? await opts.onObject(object) : true;
 
       if (shouldImport) {
-        await this._importObject(ctx, database, object);
+        await this._importObject(database, object);
       }
     }
     await database.flush();
@@ -73,7 +72,7 @@ export class Serializer {
     return Obj.toJSON(object);
   }
 
-  private async _importObject(ctx: Context, database: EchoDatabase, data: Obj.JSON): Promise<void> {
+  private async _importObject(database: EchoDatabase, data: Obj.JSON): Promise<void> {
     const obj = await Obj.fromJSON(data, {
       refResolver: database.graph.createRefResolver({ context: { space: database.spaceId } }),
     });

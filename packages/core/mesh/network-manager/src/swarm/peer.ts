@@ -106,7 +106,7 @@ export class Peer {
   /**
    * Respond to remote offer.
    */
-  async onOffer(ctx: Context, message: OfferMessage): Promise<Answer> {
+  async onOffer(message: OfferMessage): Promise<Answer> {
     const remote = message.author;
 
     if (
@@ -131,7 +131,7 @@ export class Peer {
 
         if (this.connection) {
           // Close our connection and accept remote peer's connection.
-          await this.closeConnection(ctx, new ConnectionDisplacedError());
+          await this.closeConnection(new ConnectionDisplacedError());
         }
       } else {
         // Continue with our origination attempt, the remote peer will close its connection and accept ours.
@@ -143,20 +143,20 @@ export class Peer {
       if (!this.connection) {
         // Connection might have been already established.
         invariant(message.sessionId);
-        const connection = this._createConnection(ctx, false, message.sessionId);
+        const connection = this._createConnection(false, message.sessionId);
 
         try {
           await this._connectionLimiter.connecting(message.sessionId);
-          connection.initiate(ctx);
+          connection.initiate();
 
-          await connection.openConnection(ctx);
+          await connection.openConnection();
         } catch (err: any) {
           if (!(err instanceof CancelledError)) {
             log.info('connection error', { topic: this.topic, peerId: this.localInfo, remoteId: this.remoteInfo, err });
           }
 
           // Calls `onStateChange` with CLOSED state.
-          await this.closeConnection(ctx, err);
+          await this.closeConnection(err);
         }
 
         return { accept: true };
@@ -169,19 +169,19 @@ export class Peer {
   /**
    * Initiate a connection to the remote peer.
    */
-  async initiateConnection(ctx: Context): Promise<void> {
+  async initiateConnection(): Promise<void> {
     invariant(!this.initiating, 'Initiation in progress.');
     invariant(!this.connection, 'Already connected.');
     const sessionId = PublicKey.random();
     log('initiating...', { local: this.localInfo, topic: this.topic, remote: this.remoteInfo, sessionId });
 
-    const connection = this._createConnection(ctx, true, sessionId);
+    const connection = this._createConnection(true, sessionId);
     this.initiating = true;
 
     let answer: Answer;
     try {
       await this._connectionLimiter.connecting(sessionId);
-      connection.initiate(ctx);
+      connection.initiate();
 
       answer = await this._signalMessaging.offer({
         author: this.localInfo,
@@ -197,7 +197,7 @@ export class Peer {
       }
     } catch (err: any) {
       log('initiation error: send offer', { err, topic: this.topic, local: this.localInfo, remote: this.remoteInfo });
-      await connection.abort(ctx, err);
+      await connection.abort(err);
       throw err;
     } finally {
       this.initiating = false;
@@ -215,7 +215,7 @@ export class Peer {
         local: this.localInfo,
         remote: this.remoteInfo,
       });
-      await connection.abort(ctx, err);
+      await connection.abort(err);
       throw err;
     } finally {
       this.initiating = false;
@@ -223,7 +223,7 @@ export class Peer {
 
     try {
       log('opening connection as initiator');
-      await connection.openConnection(ctx);
+      await connection.openConnection();
       this._callbacks.onAccepted();
     } catch (err: any) {
       log('initiation error: open connection', {
@@ -235,7 +235,7 @@ export class Peer {
       // TODO(nf): unsure when this will be called and the connection won't abort itself. but if it does fall through we should probably abort and not close.
       log.warn('closing connection due to unhandled error on openConnection', { err });
       // Calls `onStateChange` with CLOSED state.
-      await this.closeConnection(ctx, err);
+      await this.closeConnection(err);
       throw err;
     } finally {
       this.initiating = false;
@@ -246,7 +246,7 @@ export class Peer {
    * Create new connection.
    * Either we're initiating a connection or creating one in response to an offer from the other peer.
    */
-  private _createConnection(ctx: Context, initiator: boolean, sessionId: PublicKey): Connection {
+  private _createConnection(initiator: boolean, sessionId: PublicKey): Connection {
     log('creating connection', {
       topic: this.topic,
       peerId: this.localInfo,
@@ -354,7 +354,7 @@ export class Peer {
       });
 
       // Calls `onStateChange` with CLOSED state.
-      void this.closeConnection(this._ctx, err);
+      void this.closeConnection(err);
     });
 
     this.connection = connection;
@@ -362,7 +362,7 @@ export class Peer {
     return connection;
   }
 
-  async closeConnection(ctx: Context, err?: Error): Promise<void> {
+  async closeConnection(err?: Error): Promise<void> {
     if (!this.connection) {
       return;
     }
@@ -373,27 +373,27 @@ export class Peer {
 
     // Triggers `onStateChange` callback which will clean up the connection.
     // Won't throw.
-    await connection.close(ctx, { error: err });
+    await connection.close({ error: err });
 
     log('closed', { peerId: this.remoteInfo, sessionId: connection.sessionId });
   }
 
-  async onSignal(ctx: Context, message: SignalMessage): Promise<void> {
+  async onSignal(message: SignalMessage): Promise<void> {
     if (!this.connection) {
       log('dropping signal message for non-existent connection', { message });
       return;
     }
 
-    await this.connection.signal(ctx, message);
+    await this.connection.signal(message);
   }
 
   @synchronized
-  async safeDestroy(ctx: Context, reason?: string): Promise<void> {
+  async safeDestroy(reason?: string): Promise<void> {
     await this._ctx.dispose();
     log('Destroying peer', { peerId: this.remoteInfo, topic: this.topic });
 
     // Won't throw.
-    await this?.connection?.close(ctx, { reason });
+    await this?.connection?.close({ reason });
   }
 }
 

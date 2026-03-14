@@ -114,7 +114,7 @@ export class SpacesServiceImpl implements SpacesService {
       });
     }
     const credentials = await createAdmissionCredentials(
-      identity.getIdentityCredentialSigner(Context.default()),
+      identity.getIdentityCredentialSigner(),
       request.memberKey,
       space.key,
       space.genesisFeedKey,
@@ -193,7 +193,7 @@ export class SpacesServiceImpl implements SpacesService {
   async postMessage({ spaceKey, channel, message }: PostMessageRequest): Promise<void> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-    await space.postMessage(Context.default(), getChannelId(channel), message);
+    await space.postMessage(getChannelId(channel), message);
   }
 
   subscribeMessages({ spaceKey, channel }: SubscribeMessagesRequest): Stream<GossipMessage> {
@@ -201,7 +201,7 @@ export class SpacesServiceImpl implements SpacesService {
       scheduleTask(ctx, async () => {
         const dataSpaceManager = await this._getDataSpaceManager();
         const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-        const handle = space.listen(Context.default(), getChannelId(channel), (message) => {
+        const handle = space.listen(getChannelId(channel), (message) => {
           next(message);
         });
         ctx.onDispose(() => handle.unsubscribe());
@@ -236,7 +236,7 @@ export class SpacesServiceImpl implements SpacesService {
       } else {
         invariant(!credential.id, 'Id on unsigned credentials is not allowed');
         invariant(this._identityManager.identity, 'Identity is not available');
-        const signer = this._identityManager.identity.getIdentityCredentialSigner(Context.default());
+        const signer = this._identityManager.identity.getIdentityCredentialSigner();
         invariant(credential.issuer.equals(signer.getIssuer()));
         const signedCredential = await signer.createCredential({
           subject: credential.subject.id,
@@ -250,13 +250,13 @@ export class SpacesServiceImpl implements SpacesService {
   async createEpoch({ spaceKey, migration, automergeRootUrl }: CreateEpochRequest): Promise<CreateEpochResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
-    const result = await space.createEpoch(Context.default(), { migration, newAutomergeRoot: automergeRootUrl });
+    const result = await space.createEpoch({ migration, newAutomergeRoot: automergeRootUrl });
     return { epochCredential: result?.credential, controlTimeframe: result?.timeframe };
   }
 
   async admitContact(request: AdmitContactRequest): Promise<void> {
     const dataSpaceManager = await this._getDataSpaceManager();
-    await dataSpaceManager.admitMember(Context.default(), {
+    await dataSpaceManager.admitMember({
       spaceKey: request.spaceKey,
       identityKey: request.contact.identityKey,
       role: request.role,
@@ -265,7 +265,7 @@ export class SpacesServiceImpl implements SpacesService {
 
   async joinBySpaceKey({ spaceKey }: JoinBySpaceKeyRequest): Promise<JoinSpaceResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
-    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(Context.default(), spaceKey);
+    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(spaceKey);
     return this._joinByAdmission({ credential });
   }
 
@@ -274,14 +274,13 @@ export class SpacesServiceImpl implements SpacesService {
     assertArgument(SpaceId.isValid(request.spaceId), 'spaceId', 'Invalid space ID');
 
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space =
-      dataSpaceManager.getSpaceById(Context.default(), request.spaceId) ?? raise(new Error('Space not found'));
+    const space = dataSpaceManager.getSpaceById(request.spaceId) ?? raise(new Error('Space not found'));
     await writer.begin({ spaceId: space.id });
     const rootUrl = space.automergeSpaceState.lastEpoch?.subject.assertion.automergeRoot;
     assertState(rootUrl, 'Space does not have a root URL');
     await writer.setCurrentRootUrl(rootUrl);
 
-    for await (const [documentId, data] of space.getAllDocuments(Context.default())) {
+    for await (const [documentId, data] of space.getAllDocuments()) {
       await writer.writeDocument(documentId, data);
     }
 
@@ -367,7 +366,7 @@ export class SpacesServiceImpl implements SpacesService {
       creator: space.inner.spaceState.creator?.key,
       cache: space.cache,
       metrics: space.metrics,
-      edgeReplication: space.getEdgeReplicationSetting(Context.default()),
+      edgeReplication: space.getEdgeReplicationSetting(),
     };
   }
 

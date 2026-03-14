@@ -127,8 +127,8 @@ export class Identity {
     await this.space.open(ctx);
   }
 
-  public async joinNetwork(ctx: Context): Promise<void> {
-    await this.space.startProtocol(ctx);
+  public async joinNetwork(): Promise<void> {
+    await this.space.startProtocol();
     await this._edgeFeedReplicator?.open();
   }
 
@@ -149,12 +149,10 @@ export class Identity {
     await this.space.close();
   }
 
-  async ready(ctx: Context): Promise<void> {
+  async ready(): Promise<void> {
     await this._deviceStateMachine.deviceChainReady.wait();
 
-    await this.controlPipeline.state.waitUntilReachedTargetTimeframe(ctx, {
-      timeout: LOAD_CONTROL_FEEDS_TIMEOUT,
-    });
+    await this.controlPipeline.state.waitUntilReachedTargetTimeframe({ timeout: LOAD_CONTROL_FEEDS_TIMEOUT });
   }
 
   get profileDocument(): ProfileDocument | undefined {
@@ -196,7 +194,7 @@ export class Identity {
    * Issues credentials as identity.
    * Requires identity to be ready.
    */
-  getIdentityCredentialSigner(ctx: Context): CredentialSigner {
+  getIdentityCredentialSigner(): CredentialSigner {
     invariant(this._deviceStateMachine.deviceCredentialChain, 'Device credential chain is not ready.');
     return createCredentialSignerWithChain(
       this._signer,
@@ -208,23 +206,20 @@ export class Identity {
   /**
    * Issues credentials as device.
    */
-  getDeviceCredentialSigner(ctx: Context): CredentialSigner {
+  getDeviceCredentialSigner(): CredentialSigner {
     return createCredentialSignerWithKey(this._signer, this.deviceKey);
   }
 
-  async updateDefaultSpace(ctx: Context, spaceId: SpaceId): Promise<void> {
-    const credential = await this.getDeviceCredentialSigner(ctx).createCredential({
+  async updateDefaultSpace(spaceId: SpaceId): Promise<void> {
+    const credential = await this.getDeviceCredentialSigner().createCredential({
       subject: this.identityKey,
       assertion: { '@type': 'dxos.halo.credentials.DefaultSpace', spaceId },
     });
     const receipt = await this.controlPipeline.writer.write({ credential: { credential } });
-    await this.controlPipeline.state.waitUntilTimeframe(ctx, new Timeframe([[receipt.feedKey, receipt.seq]]));
+    await this.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
   }
 
-  async admitDevice(
-    ctx: Context,
-    { deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest,
-  ): Promise<Credential> {
+  async admitDevice({ deviceKey, controlFeedKey, dataFeedKey }: DeviceAdmissionRequest): Promise<Credential> {
     log('Admitting device:', {
       identityKey: this.identityKey,
       hostDevice: this.deviceKey,
@@ -232,7 +227,7 @@ export class Identity {
       controlFeedKey,
       dataFeedKey,
     });
-    const signer = this.getIdentityCredentialSigner(ctx);
+    const signer = this.getIdentityCredentialSigner();
     const deviceCredential = await signer.createCredential({
       subject: deviceKey,
       assertion: {
@@ -272,6 +267,6 @@ export class Identity {
   }
 
   private _onFeedAdded = async (feed: FeedWrapper<any>) => {
-    await this._edgeFeedReplicator!.addFeed(Context.default(), feed);
+    await this._edgeFeedReplicator!.addFeed(feed);
   };
 }

@@ -4,7 +4,6 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { MemorySignalManager, MemorySignalManagerContext } from '@dxos/messaging';
 import { MemoryTransportFactory, SwarmNetworkManager } from '@dxos/network-manager';
@@ -37,12 +36,11 @@ describe('space/space-protocol', () => {
     await presence2.open();
     const protocol2 = peer2.createSpaceProtocol(topic, gossip2);
 
-    const ctx = Context.default();
-    await protocol1.start(ctx);
-    onTestFinished(() => protocol1.stop(ctx));
+    await protocol1.start();
+    onTestFinished(() => protocol1.stop());
 
-    await protocol2.start(ctx);
-    onTestFinished(() => protocol2.stop(ctx));
+    await protocol2.start();
+    onTestFinished(() => protocol2.stop());
 
     await expect
       .poll(() => presence1.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer2.identityKey)), {
@@ -98,12 +96,11 @@ describe('space/space-protocol', () => {
       }),
     });
 
-    const ctx = Context.default();
-    await protocol1.start(ctx);
-    onTestFinished(() => protocol1.stop(ctx));
+    await protocol1.start();
+    onTestFinished(() => protocol1.stop());
 
-    await protocol2.start(ctx);
-    onTestFinished(() => protocol2.stop(ctx));
+    await protocol2.start();
+    onTestFinished(() => protocol2.stop());
 
     await expect.poll(() => protocol1.sessions.get(peerId2)?.authStatus).toEqual(AuthStatus.FAILURE);
   });
@@ -122,12 +119,11 @@ describe('space/space-protocol', () => {
     const peer2 = await builder.createPeer();
     const protocol2 = peer2.createSpaceProtocol(topic);
 
-    const ctx = Context.default();
-    await protocol1.start(ctx);
-    await protocol2.start(ctx);
+    await protocol1.start();
+    await protocol2.start();
 
-    onTestFinished(() => protocol1.stop(ctx));
-    onTestFinished(() => protocol2.stop(ctx));
+    onTestFinished(() => protocol1.stop());
+    onTestFinished(() => protocol2.stop());
 
     //
     // Create feeds.
@@ -142,8 +138,8 @@ describe('space/space-protocol', () => {
     const feed1 = await feedStore1.openFeed(await builder1.keyring.createKey(), { writable: true });
     const feed2 = await feedStore2.openFeed(feed1.key);
 
-    await protocol1.addFeed(ctx, feed1);
-    await protocol2.addFeed(ctx, feed2);
+    await protocol1.addFeed(feed1);
+    await protocol2.addFeed(feed2);
 
     //
     // Append message.

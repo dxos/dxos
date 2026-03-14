@@ -44,7 +44,7 @@ const createDatabaseDirectory = async (
   spaceKey: string,
   objects: Record<string, ObjectStructure>,
 ): Promise<Awaited<ReturnType<typeof host.createDoc<DatabaseDirectory>>>> => {
-  const handle = await host.createDoc<DatabaseDirectory>(Context.default(), {
+  const handle = await host.createDoc<DatabaseDirectory>({
     version: SpaceDocVersion.CURRENT,
     access: { spaceKey },
     objects: {},
@@ -223,7 +223,7 @@ describe('AutomergeDataSource', () => {
     const spaceKey = SpaceId.random();
 
     // Create a document with outdated version.
-    const handle = await host.createDoc<DatabaseDirectory>(Context.default(), {
+    const handle = await host.createDoc<DatabaseDirectory>({
       version: 0 as SpaceDocVersion, // Outdated version.
       access: { spaceKey },
       objects: {},
@@ -273,7 +273,7 @@ describe('AutomergeDataSource', () => {
     const host = await setupAutomergeHost(level);
 
     // Create a document without access.spaceKey.
-    const handle = await host.createDoc<DatabaseDirectory>(Context.default(), {
+    const handle = await host.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       objects: {},
       links: {},

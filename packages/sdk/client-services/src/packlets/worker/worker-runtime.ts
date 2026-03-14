@@ -145,7 +145,7 @@ export class WorkerRuntime {
       await this._acquireLock();
       this._config = await this._configProvider();
       const signals = this._config.get('runtime.services.signaling');
-      this._clientServices.initialize(Context.default(), {
+      this._clientServices.initialize({
         config: this._config,
         signalManager: this._config.get('runtime.client.edgeFeatures')?.signaling
           ? undefined
@@ -176,7 +176,7 @@ export class WorkerRuntime {
     this._releaseLock();
     this._broadcastChannel?.close();
     this._broadcastChannel = undefined;
-    await this._clientServices.close(Context.default());
+    await this._clientServices.close();
     await this._runtime.dispose();
     await this._onStop?.();
     await this._livenessLock.release();

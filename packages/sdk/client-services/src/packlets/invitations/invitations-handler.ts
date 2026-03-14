@@ -110,7 +110,7 @@ export class InvitationsHandler {
             });
             const deviceKey = admissionRequest.device?.deviceKey ?? admissionRequest.space?.deviceKey;
             invariant(deviceKey);
-            const admissionResponse = await protocol.admit(ctx, invitation, admissionRequest, extension.guestProfile);
+            const admissionResponse = await protocol.admit(invitation, admissionRequest, extension.guestProfile);
 
             // Updating credentials complete.
             extension.completedTrigger.wake(deviceKey);
@@ -302,7 +302,7 @@ export class InvitationsHandler {
               });
               const introductionResponse = await extension.rpc.InvitationHostService.introduce({
                 invitationId: invitation.invitationId,
-                ...protocol.createIntroduction(connectionCtx),
+                ...protocol.createIntroduction(),
               });
               log.verbose('dxos.sdk.invitations-handler.guest.introduce-response', {
                 invitationId: invitation.invitationId,
@@ -316,7 +316,6 @@ export class InvitationsHandler {
                 switch (invitation.authMethod) {
                   case Invitation.AuthMethod.SHARED_SECRET:
                     await this._handleGuestOtpAuth(
-                      connectionCtx,
                       extension,
                       (state) => guardedState.set(extension, state),
                       otpEnteredTrigger,
@@ -325,7 +324,6 @@ export class InvitationsHandler {
                     break;
                   case Invitation.AuthMethod.KNOWN_PUBLIC_KEY:
                     await this._handleGuestKpkAuth(
-                      connectionCtx,
                       extension,
                       (state) => guardedState.set(extension, state),
                       invitation,
@@ -340,14 +338,14 @@ export class InvitationsHandler {
                 invitationId: invitation.invitationId,
                 ...protocol.toJSON(),
               });
-              const admissionRequest = await protocol.createAdmissionRequest(connectionCtx, deviceProfile);
+              const admissionRequest = await protocol.createAdmissionRequest(deviceProfile);
               const admissionResponse = await extension.rpc.InvitationHostService.admit(admissionRequest);
 
               // Remote connection no longer needed.
               admitted = true;
 
               // 4. Record credential in our HALO.
-              const result = await protocol.accept(connectionCtx, admissionResponse, admissionRequest);
+              const result = await protocol.accept(admissionResponse, admissionRequest);
 
               // 5. Success.
               log.verbose('dxos.sdk.invitations-handler.guest.admitted-by-host', {
@@ -392,7 +390,7 @@ export class InvitationsHandler {
 
     const edgeInvitationHandler = new EdgeInvitationHandler(this._connectionProps?.edgeInvitations, this._edgeClient, {
       onInvitationSuccess: async (admissionResponse, admissionRequest) => {
-        const result = await protocol.accept(ctx, admissionResponse, admissionRequest);
+        const result = await protocol.accept(admissionResponse, admissionRequest);
         log.info('admitted by edge', { ...protocol.toJSON() });
         guardedState.complete({ ...guardedState.current, ...result, state: Invitation.State.SUCCESS });
       },
@@ -400,7 +398,7 @@ export class InvitationsHandler {
     edgeInvitationHandler.handle(ctx, guardedState, protocol, deviceProfile);
 
     scheduleTask(ctx, async () => {
-      const error = checkInvitation(ctx, protocol, invitation);
+      const error = checkInvitation(protocol, invitation);
       if (error) {
         stream.error(error);
         await ctx.dispose();
@@ -438,7 +436,7 @@ export class InvitationsHandler {
     } else {
       label = `invitation host for space ${invitation.spaceKey?.truncate()}`;
     }
-    const swarmConnection = await this._networkManager.joinSwarm(ctx, {
+    const swarmConnection = await this._networkManager.joinSwarm({
       topic: invitation.swarmKey,
       protocolProvider: createTeleportProtocolFactory(async (teleport) => {
         teleport.addExtension('dxos.halo.invitations', extensionFactory());
@@ -451,7 +449,6 @@ export class InvitationsHandler {
   }
 
   private async _handleGuestOtpAuth(
-    ctx: Context,
     extension: InvitationGuestExtension,
     setState: (newState: Invitation.State) => void,
     authenticated: Trigger<string>,
@@ -481,7 +478,6 @@ export class InvitationsHandler {
   }
 
   private async _handleGuestKpkAuth(
-    ctx: Context,
     extension: InvitationGuestExtension,
     setState: (newState: Invitation.State) => void,
     invitation: Invitation,
@@ -504,12 +500,12 @@ export class InvitationsHandler {
   }
 }
 
-const checkInvitation = (ctx: Context, protocol: InvitationProtocol, invitation: Partial<Invitation>) => {
+const checkInvitation = (protocol: InvitationProtocol, invitation: Partial<Invitation>) => {
   const expiresOn = getExpirationTime(invitation);
   if (expiresOn && expiresOn.getTime() < Date.now()) {
     return new InvalidInvitationError({ message: 'Invitation already expired.' });
   }
-  return protocol.checkInvitation(ctx, invitation);
+  return protocol.checkInvitation(invitation);
 };
 
 export const createAdmissionKeypair = (): AdmissionKeypair => {

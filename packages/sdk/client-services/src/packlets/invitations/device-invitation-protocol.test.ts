@@ -27,14 +27,14 @@ describe('services/device', () => {
       await peer.close();
     });
 
-    const identity = await peer.createIdentity(Context.default());
+    const identity = await peer.createIdentity();
     expect(identity).not.to.be.undefined;
   });
 
   test('creates and accepts invitation', async () => {
     const [host, guest] = await chain<ServiceContext>([closeAfterTest])(createPeers(2));
 
-    const identity1 = await host.createIdentity(Context.default());
+    const identity1 = await host.createIdentity();
     expect(host.identityManager.identity).to.eq(identity1);
 
     await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.DEVICE } }));
@@ -44,7 +44,7 @@ describe('services/device', () => {
   test('invitation when already joined', async () => {
     const [host, guest] = await chain<ServiceContext>([closeAfterTest])(createPeers(2));
 
-    const identity1 = await host.createIdentity(Context.default());
+    const identity1 = await host.createIdentity();
     expect(host.identityManager.identity).to.eq(identity1);
 
     await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.DEVICE } }));

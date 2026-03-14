@@ -6,7 +6,7 @@ import { next as A, type Heads } from '@automerge/automerge';
 import { type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 
 import { UpdateScheduler } from '@dxos/async';
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -51,7 +51,7 @@ export class DocumentsSynchronizer extends Resource {
     super();
   }
 
-  async addDocuments(ctx: Context, documentIds: DocumentId[]): Promise<void> {
+  async addDocuments(documentIds: DocumentId[]): Promise<void> {
     await Promise.all(
       documentIds.map(async (documentId) => {
         try {
@@ -60,9 +60,11 @@ export class DocumentsSynchronizer extends Resource {
             async () => {
               try {
                 log('loading document', { documentId });
-                const doc = await this._params.automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId as DocumentId, {
-                  fetchFromNetwork: true,
-                });
+                const doc = await this._params.automergeHost.loadDoc<DatabaseDirectory>(
+                  Context.default(),
+                  documentId as DocumentId,
+                  { fetchFromNetwork: true },
+                );
                 this._startSync(doc);
                 this._pendingUpdates.add(doc.documentId);
                 this._sendUpdatesJob!.trigger();
@@ -87,25 +89,23 @@ export class DocumentsSynchronizer extends Resource {
     }
   }
 
-  protected override async _open(ctx: Context): Promise<void> {
-    this._sendUpdatesJob = new UpdateScheduler(this._ctx, () => this._checkAndSendUpdates(), {
+  protected override async _open(): Promise<void> {
+    this._sendUpdatesJob = new UpdateScheduler(this._ctx, this._checkAndSendUpdates.bind(this), {
       maxFrequency: MAX_UPDATE_FREQ,
     });
   }
 
-  protected override async _close(ctx: Context): Promise<void> {
+  protected override async _close(): Promise<void> {
     await this._sendUpdatesJob!.join();
     this._syncStates.clear();
   }
 
-  async update(ctx: Context, updates: DocumentUpdate[]): Promise<void> {
+  async update(updates: DocumentUpdate[]): Promise<void> {
     for (const { documentId, mutation } of updates) {
-      await this._writeMutation(ctx, documentId as DocumentId, mutation);
+      await this._writeMutation(documentId as DocumentId, mutation);
     }
     // TODO(mykola): This should not be required.
-    await this._params.automergeHost.flush(ctx, {
-      documentIds: updates.map(({ documentId }) => documentId as DocumentId),
-    });
+    await this._params.automergeHost.flush(this._ctx, { documentIds: updates.map(({ documentId }) => documentId as DocumentId) });
   }
 
   private _startSync(doc: DocHandle<DatabaseDirectory>) {
@@ -166,7 +166,7 @@ export class DocumentsSynchronizer extends Resource {
     return mutation;
   }
 
-  private async _writeMutation(ctx: Context, documentId: DocumentId, mutation: Uint8Array): Promise<void> {
+  private async _writeMutation(documentId: DocumentId, mutation: Uint8Array): Promise<void> {
     if (this._lifecycleState === LifecycleState.CLOSED) {
       return;
     }
@@ -176,7 +176,7 @@ export class DocumentsSynchronizer extends Resource {
     invariant(syncState, 'Sync state for document not found');
     const headsBefore = A.getHeads(syncState.handle.doc());
     // This will update corresponding handle in the repo.
-    await this._params.automergeHost.createDoc(ctx, mutation, { documentId, preserveHistory: true });
+    await this._params.automergeHost.createDoc(mutation, { documentId, preserveHistory: true });
 
     if (A.equals(headsBefore, syncState.lastSentHead)) {
       // No new mutations were discovered on network, so we do not need to send updates from worker to client.

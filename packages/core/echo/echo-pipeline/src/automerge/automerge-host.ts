@@ -28,7 +28,7 @@ import {
 import type * as Record from 'effect/Record';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
-import { type Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
+import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
 import { type CollectionId, DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -178,12 +178,10 @@ export class AutomergeHost extends Resource {
       monitor: dataMonitor,
     });
     this._echoNetworkAdapter = new EchoNetworkAdapter({
-      getContainingSpaceForDocument: (documentId) => this._getContainingSpaceForDocument(documentId),
-      isDocumentInRemoteCollection: (params) => this._isDocumentInRemoteCollection(this._ctx, params),
-      onCollectionStateQueried: (collectionId, peerId) =>
-        this._onCollectionStateQueried(this._ctx, collectionId, peerId),
-      onCollectionStateReceived: (collectionId, peerId, state) =>
-        this._onCollectionStateReceived(this._ctx, collectionId, peerId, state),
+      getContainingSpaceForDocument: this._getContainingSpaceForDocument.bind(this),
+      isDocumentInRemoteCollection: this._isDocumentInRemoteCollection.bind(this),
+      onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
+      onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
       monitor: dataMonitor,
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
@@ -201,7 +199,7 @@ export class AutomergeHost extends Resource {
     this._onHeadsChangedTask = new DeferredTask(this._ctx, async () => {
       const docHeads = Array.from(this._headsUpdates.entries());
       this._headsUpdates.clear();
-      this._onHeadsChanged(this._ctx, docHeads);
+      this._onHeadsChanged(docHeads);
     });
 
     await this._storage.open?.();
@@ -220,20 +218,21 @@ export class AutomergeHost extends Resource {
     let updatingAuthScope = false;
     Event.wrap(this._echoNetworkAdapter, 'peer-candidate').on(
       this._ctx,
-      ((e: PeerCandidatePayload) => !updatingAuthScope && this._onPeerConnected(this._ctx, e.peerId)) as any,
+      ((e: PeerCandidatePayload) => !updatingAuthScope && this._onPeerConnected(e.peerId)) as any,
     );
     Event.wrap(this._echoNetworkAdapter, 'peer-disconnected').on(
       this._ctx,
-      ((e: PeerDisconnectedPayload) => !updatingAuthScope && this._onPeerDisconnected(this._ctx, e.peerId)) as any,
+      ((e: PeerDisconnectedPayload) => !updatingAuthScope && this._onPeerDisconnected(e.peerId)) as any,
     );
 
     this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId, newDocsAppeared }) => {
-      this._onRemoteCollectionStateUpdated(this._ctx, collectionId, peerId);
+      this._onRemoteCollectionStateUpdated(collectionId, peerId);
       this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
+      // We use collection lookups during share policy check, so we might need to update share policy for the new doc
       if (newDocsAppeared) {
         updatingAuthScope = true;
         try {
-          this._echoNetworkAdapter.onConnectionAuthScopeChanged(this._ctx, peerId);
+          this._echoNetworkAdapter.onConnectionAuthScopeChanged(peerId);
         } finally {
           updatingAuthScope = false;
         }
@@ -261,16 +260,16 @@ export class AutomergeHost extends Resource {
       this._repo.shareConfigChanged();
     });
 
-    await this._echoNetworkAdapter.open(ctx);
+    await this._echoNetworkAdapter.open();
     await this._collectionSynchronizer.open();
-    await this._echoNetworkAdapter.open(ctx);
-    await this._echoNetworkAdapter.whenConnected(ctx);
+    await this._echoNetworkAdapter.open();
+    await this._echoNetworkAdapter.whenConnected();
   }
 
   protected override async _close(ctx: Context): Promise<void> {
     await this._collectionSynchronizer.close();
     await this._storage.close?.();
-    await this._echoNetworkAdapter.close(ctx);
+    await this._echoNetworkAdapter.close();
     this._syncTask = undefined;
     this._onHeadsChangedTask = undefined;
     this._sharePolicyChangedTask = undefined;
@@ -290,12 +289,12 @@ export class AutomergeHost extends Resource {
 
   async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
-    await this._echoNetworkAdapter.addReplicator(ctx, replicator);
+    await this._echoNetworkAdapter.addReplicator(replicator);
   }
 
   async removeReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
-    await this._echoNetworkAdapter.removeReplicator(ctx, replicator);
+    await this._echoNetworkAdapter.removeReplicator(replicator);
   }
 
   /**
@@ -350,11 +349,7 @@ export class AutomergeHost extends Resource {
   /**
    * Create new persisted document.
    */
-  async createDoc<T>(
-    ctx: Context,
-    initialValue?: T | Doc<T> | Uint8Array,
-    opts?: CreateDocOptions,
-  ): Promise<DocHandle<T>> {
+  async createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): Promise<DocHandle<T>> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     if (opts?.preserveHistory) {
       if (initialValue instanceof Uint8Array) {
@@ -385,7 +380,7 @@ export class AutomergeHost extends Resource {
     }
   }
 
-  async waitUntilHeadsReplicated(ctx: Context, heads: DocHeadsList): Promise<void> {
+  async waitUntilHeadsReplicated(heads: DocHeadsList): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const entries = heads.entries;
     if (!entries?.length) {
@@ -404,7 +399,7 @@ export class AutomergeHost extends Resource {
     if (headsToWait.length > 0) {
       await Promise.all(
         headsToWait.map(async (entry) => {
-          const handle = await this.loadDoc<DatabaseDirectory>(ctx, entry.documentId as DocumentId);
+          const handle = await this.loadDoc<DatabaseDirectory>(Context.default(), entry.documentId as DocumentId);
           await waitForHeads(handle, entry.heads!);
         }),
       );
@@ -483,7 +478,7 @@ export class AutomergeHost extends Resource {
     this._headsStore.setHeads(handle.documentId, heads, batch);
   }
 
-  private _shouldSyncCollection(_ctx: Context, collectionId: string, peerId: PeerId): boolean {
+  private _shouldSyncCollection(collectionId: string, peerId: PeerId): boolean {
     const peerMetadata = this._repo.peerMetadataByPeerId[peerId];
     if (isEchoPeerMetadata(peerMetadata)) {
       return this._echoNetworkAdapter.shouldSyncCollection(peerId, { collectionId });
@@ -518,16 +513,13 @@ export class AutomergeHost extends Resource {
   }
 
   @trace.info({ depth: null })
-  private _automergePeers(ctx: Context): PeerId[] {
+  private _automergePeers(): PeerId[] {
     return this._repo.peers;
   }
 
-  private async _isDocumentInRemoteCollection(
-    ctx: Context,
-    params: RemoteDocumentExistenceCheckProps,
-  ): Promise<boolean> {
-    for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds(ctx)) {
-      const remoteCollections = this._collectionSynchronizer.getRemoteCollectionStates(ctx, collectionId);
+  private async _isDocumentInRemoteCollection(params: RemoteDocumentExistenceCheckProps): Promise<boolean> {
+    for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
+      const remoteCollections = this._collectionSynchronizer.getRemoteCollectionStates(collectionId);
       const remotePeerDocs = remoteCollections.get(params.peerId as PeerId)?.documents;
       if (remotePeerDocs && params.documentId in remotePeerDocs) {
         return true;
@@ -614,25 +606,25 @@ export class AutomergeHost extends Resource {
   // Collection sync.
   //
 
-  getLocalCollectionState(ctx: Context, collectionId: string): CollectionState | undefined {
-    return this._collectionSynchronizer.getLocalCollectionState(ctx, collectionId);
+  getLocalCollectionState(collectionId: string): CollectionState | undefined {
+    return this._collectionSynchronizer.getLocalCollectionState(collectionId);
   }
 
-  getRemoteCollectionStates(ctx: Context, collectionId: string): ReadonlyMap<PeerId, CollectionState> {
-    return this._collectionSynchronizer.getRemoteCollectionStates(ctx, collectionId);
+  getRemoteCollectionStates(collectionId: string): ReadonlyMap<PeerId, CollectionState> {
+    return this._collectionSynchronizer.getRemoteCollectionStates(collectionId);
   }
 
-  refreshCollection(ctx: Context, collectionId: string): void {
-    this._collectionSynchronizer.refreshCollection(ctx, collectionId);
+  refreshCollection(collectionId: string): void {
+    this._collectionSynchronizer.refreshCollection(collectionId);
   }
 
-  async getCollectionSyncState(ctx: Context, collectionId: string): Promise<SpaceSyncState> {
+  async getCollectionSyncState(collectionId: string): Promise<SpaceSyncState> {
     const result: SpaceSyncState = {
       peers: [],
     };
 
-    const localState = this.getLocalCollectionState(ctx, collectionId);
-    const remoteState = this.getRemoteCollectionStates(ctx, collectionId);
+    const localState = this.getLocalCollectionState(collectionId);
+    const remoteState = this.getRemoteCollectionStates(collectionId);
 
     if (!localState) {
       return result;
@@ -659,57 +651,60 @@ export class AutomergeHost extends Resource {
   /**
    * Update the local collection state based on the locally stored document heads.
    */
-  async updateLocalCollectionState(ctx: Context, collectionId: string, documentIds: DocumentId[]): Promise<void> {
+  async updateLocalCollectionState(collectionId: string, documentIds: DocumentId[]): Promise<void> {
     const heads = await this.getHeads(documentIds);
     const documents: Record<DocumentId, Heads> = Object.fromEntries(
       heads.map((heads, index) => [documentIds[index], heads ?? []]),
     );
-    this._collectionSynchronizer.setLocalCollectionState(ctx, collectionId, { documents });
+    this._collectionSynchronizer.setLocalCollectionState(collectionId, { documents });
 
-    const interestedPeers = this._echoNetworkAdapter.getPeersInterestedInCollection(ctx, collectionId);
+    // Proactively push our updated local state to peers that are interested in this collection.
+    // This reduces reliance on the next periodic query and prevents replication stalls in fast paths
+    // where the remote queries before our local state is ready.
+    const interestedPeers = this._echoNetworkAdapter.getPeersInterestedInCollection(collectionId);
     if (interestedPeers.length > 0) {
       for (const peerId of interestedPeers) {
-        this._sendCollectionState(ctx, collectionId, peerId, { documents });
+        this._sendCollectionState(collectionId, peerId, { documents });
       }
     }
   }
 
-  async clearLocalCollectionState(ctx: Context, collectionId: string): Promise<void> {
-    this._collectionSynchronizer.clearLocalCollectionState(ctx, collectionId);
+  async clearLocalCollectionState(collectionId: string): Promise<void> {
+    this._collectionSynchronizer.clearLocalCollectionState(collectionId);
   }
 
-  private _onCollectionStateQueried(ctx: Context, collectionId: string, peerId: PeerId): void {
-    this._collectionSynchronizer.onCollectionStateQueried(ctx, collectionId, peerId);
+  private _onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
+    this._collectionSynchronizer.onCollectionStateQueried(collectionId, peerId);
   }
 
-  private _onCollectionStateReceived(ctx: Context, collectionId: string, peerId: PeerId, state: unknown): void {
-    this._collectionSynchronizer.onRemoteStateReceived(ctx, collectionId, peerId, decodeCollectionState(state));
+  private _onCollectionStateReceived(collectionId: string, peerId: PeerId, state: unknown): void {
+    this._collectionSynchronizer.onRemoteStateReceived(collectionId, peerId, decodeCollectionState(state));
   }
 
-  private _queryCollectionState(ctx: Context, collectionId: string, peerId: PeerId): void {
-    this._echoNetworkAdapter.queryCollectionState(ctx, collectionId, peerId);
+  private _queryCollectionState(collectionId: string, peerId: PeerId): void {
+    this._echoNetworkAdapter.queryCollectionState(collectionId, peerId);
   }
 
-  private _sendCollectionState(ctx: Context, collectionId: string, peerId: PeerId, state: CollectionState): void {
-    this._echoNetworkAdapter.sendCollectionState(ctx, collectionId, peerId, encodeCollectionState(state));
+  private _sendCollectionState(collectionId: string, peerId: PeerId, state: CollectionState): void {
+    this._echoNetworkAdapter.sendCollectionState(collectionId, peerId, encodeCollectionState(state));
   }
 
-  private _onPeerConnected(ctx: Context, peerId: PeerId): void {
-    this._collectionSynchronizer.onConnectionOpen(ctx, peerId);
+  private _onPeerConnected(peerId: PeerId): void {
+    this._collectionSynchronizer.onConnectionOpen(peerId);
   }
 
-  private _onPeerDisconnected(ctx: Context, peerId: PeerId): void {
-    this._collectionSynchronizer.onConnectionClosed(ctx, peerId);
+  private _onPeerDisconnected(peerId: PeerId): void {
+    this._collectionSynchronizer.onConnectionClosed(peerId);
   }
 
-  private _onRemoteCollectionStateUpdated(ctx: Context, collectionId: string, peerId: PeerId): void {
+  private _onRemoteCollectionStateUpdated(collectionId: string, peerId: PeerId): void {
     this._collectionsToSync.add({ collectionId, peerId });
     this._syncTask?.schedule();
   }
 
   private async _handleCollectionSync(ctx: Context, collectionId: string, peerId: PeerId) {
-    const localState = this._collectionSynchronizer.getLocalCollectionState(ctx, collectionId);
-    const remoteState = this._collectionSynchronizer.getRemoteCollectionStates(ctx, collectionId).get(peerId);
+    const localState = this._collectionSynchronizer.getLocalCollectionState(collectionId);
+    const remoteState = this._collectionSynchronizer.getRemoteCollectionStates(collectionId).get(peerId);
 
     if (!localState || !remoteState) {
       return;
@@ -722,7 +717,7 @@ export class AutomergeHost extends Resource {
     }
 
     const toReplicateWithoutBatching = [...different];
-    const bundleSyncEnabled = this._echoNetworkAdapter.bundleSyncEnabledForPeer(ctx, peerId);
+    const bundleSyncEnabled = this._echoNetworkAdapter.bundleSyncEnabledForPeer(peerId);
     if (bundleSyncEnabled && missingOnRemote.length >= BUNDLE_SYNC_THRESHOLD) {
       log('pushing bundle', { amount: missingOnRemote.length });
       const { syncInteractively } = await this._pushInBundles(ctx, peerId, missingOnRemote);
@@ -819,7 +814,7 @@ export class AutomergeHost extends Resource {
       };
     });
 
-    await this._echoNetworkAdapter.pushBundle(ctx, peerId, docs.filter(isNonNullable));
+    await this._echoNetworkAdapter.pushBundle(peerId, docs.filter(isNonNullable));
   }
 
   private async _pullInBundles(
@@ -868,15 +863,15 @@ export class AutomergeHost extends Resource {
     }
     // NOTE: We are expecting that documents that are being pulled are not present locally, so we are pulling all changes.
     const docHeads = Object.fromEntries(documentIds.map((documentId) => [documentId, []]));
-    const bundle = await this._echoNetworkAdapter.pullBundle(ctx, peerId, docHeads);
+    const bundle = await this._echoNetworkAdapter.pullBundle(peerId, docHeads);
     return { docsToImport: bundle };
   }
 
-  private _onHeadsChanged(ctx: Context, docHeads: [DocumentId, Heads][]): void {
+  private _onHeadsChanged(docHeads: [DocumentId, Heads][]): void {
     const collectionsChanged = new Set<CollectionId>();
 
-    for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds(ctx)) {
-      const state = this._collectionSynchronizer.getLocalCollectionState(ctx, collectionId);
+    for (const collectionId of this._collectionSynchronizer.getRegisteredCollectionIds()) {
+      const state = this._collectionSynchronizer.getLocalCollectionState(collectionId);
       if (!state) {
         continue;
       }
@@ -892,7 +887,7 @@ export class AutomergeHost extends Resource {
       }
 
       if (newState) {
-        this._collectionSynchronizer.setLocalCollectionState(ctx, collectionId, newState);
+        this._collectionSynchronizer.setLocalCollectionState(collectionId, newState);
         collectionsChanged.add(collectionId as CollectionId);
       }
     }

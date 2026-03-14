@@ -47,7 +47,7 @@ export class FunctionsClient extends Resource {
 
   protected override async _open() {
     const { dataService, queryService } = await this._serviceContainer.createServices();
-    this._echoClient.connectToService(this._ctx, { dataService, queryService });
+    this._echoClient.connectToService({ dataService, queryService });
     await this._echoClient.open();
   }
 

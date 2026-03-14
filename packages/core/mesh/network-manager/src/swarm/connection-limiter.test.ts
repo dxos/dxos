@@ -5,7 +5,6 @@
 import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 
 import { ConnectionLimiter } from './connection-limiter';

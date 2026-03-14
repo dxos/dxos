@@ -213,12 +213,12 @@ export class DataSpaceManager extends Resource {
     return this._spaces;
   }
 
-  getSpaceById(ctx: Context, spaceId: SpaceId): DataSpace | undefined {
+  getSpaceById(spaceId: SpaceId): DataSpace | undefined {
     return [...this._spaces.values()].find((space) => space.id === spaceId);
   }
 
   @synchronized
-  protected override async _open(ctx: Context): Promise<void> {
+  protected override async _open(): Promise<void> {
     log('open');
     log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
@@ -227,7 +227,7 @@ export class DataSpaceManager extends Resource {
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         log('load space', { spaceMetadata });
-        const space = await this._constructSpace(ctx, spaceMetadata);
+        const space = await this._constructSpace(spaceMetadata);
         // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
         if (this._runtimeProps?.autoActivateSpaces && spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
           spacesToActivate.push(space);
@@ -300,7 +300,7 @@ export class DataSpaceManager extends Resource {
         Object.entries(options.documents).map(async ([documentId, data]) => {
           log('creating document...', { documentId });
           // TODO(dmaretskyi): Broken types -- the bytes get interpreted as CRDT data.
-          const newDoc = await this._echoHost.createDoc(ctx, data as any as DatabaseDirectory, {
+          const newDoc = await this._echoHost.createDoc(data as any as DatabaseDirectory, {
             preserveHistory: true,
           });
 
@@ -324,15 +324,15 @@ export class DataSpaceManager extends Resource {
       const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
       DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
 
-      root = await this._echoHost.openSpaceRoot(ctx, spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
+      root = await this._echoHost.openSpaceRoot(spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
     } else {
-      root = await this._echoHost.createSpaceRoot(ctx, spaceKey);
+      root = await this._echoHost.createSpaceRoot(spaceKey);
     }
-    await this._echoHost.flush(ctx);
+    await this._echoHost.flush();
 
     log('constructing space...', { spaceKey });
 
-    const space = await this._constructSpace(ctx, metadata);
+    const space = await this._constructSpace(metadata);
     await space.open(ctx);
 
     log('adding space...', { spaceKey });
@@ -352,7 +352,7 @@ export class DataSpaceManager extends Resource {
     return space;
   }
 
-  async isDefaultSpace(ctx: Context, space: DataSpace): Promise<boolean> {
+  async isDefaultSpace(space: DataSpace): Promise<boolean> {
     if (!space.databaseRoot) {
       return false;
     }
@@ -380,7 +380,7 @@ export class DataSpaceManager extends Resource {
 
   async createDefaultSpace(ctx: Context): Promise<DataSpace> {
     const space = await this.createSpace(ctx, {});
-    const document = await this._getSpaceRootDocument(ctx, space);
+    const document = await this._getSpaceRootDocument(space);
 
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
@@ -400,14 +400,14 @@ export class DataSpaceManager extends Resource {
       setDeep(doc, ['objects', propertiesId], properties);
     });
 
-    await this._echoHost.flush(ctx);
+    await this._echoHost.flush();
     return space;
   }
 
-  private async _getSpaceRootDocument(ctx: Context, space: DataSpace): Promise<DocHandle<DatabaseDirectory>> {
+  private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<DatabaseDirectory>> {
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, automergeIndex as any, {
+    const document = await this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), automergeIndex as any, {
       fetchFromNetwork: true,
     });
     await document.whenReady();
@@ -434,16 +434,16 @@ export class DataSpaceManager extends Resource {
       dataTimeframe: opts.dataTimeframe,
     };
 
-    const space = await this._constructSpace(ctx, metadata);
+    const space = await this._constructSpace(metadata);
     await space.open(ctx);
     await this._metadataStore.addSpace(metadata);
-    space.initializeDataPipelineAsync(ctx);
+    space.initializeDataPipelineAsync();
 
     this.updated.emit();
     return space;
   }
 
-  async admitMember(ctx: Context, options: AdmitMemberOptions): Promise<Credential> {
+  async admitMember(options: AdmitMemberOptions): Promise<Credential> {
     const space = this._spaceManager.spaces.get(options.spaceKey);
     invariant(space);
 
@@ -477,9 +477,9 @@ export class DataSpaceManager extends Resource {
    * Used by invitation handler.
    * TODO(dmaretskyi): Consider removing.
    */
-  async waitUntilSpaceReady(ctx: Context, spaceKey: PublicKey): Promise<void> {
+  async waitUntilSpaceReady(spaceKey: PublicKey): Promise<void> {
     await cancelWithContext(
-      ctx,
+      this._ctx,
       this.updated.waitForCondition(() => {
         const space = this._spaces.get(spaceKey);
         return !!space && space.state === SpaceState.SPACE_READY;
@@ -487,8 +487,8 @@ export class DataSpaceManager extends Resource {
     );
   }
 
-  public async requestSpaceAdmissionCredential(ctx: Context, spaceKey: PublicKey): Promise<Credential> {
-    return this._spaceManager.requestSpaceAdmissionCredential(ctx, {
+  public async requestSpaceAdmissionCredential(spaceKey: PublicKey): Promise<Credential> {
+    return this._spaceManager.requestSpaceAdmissionCredential({
       spaceKey,
       identityKey: this._signingContext.identityKey,
       timeout: 15_000,
@@ -514,10 +514,10 @@ export class DataSpaceManager extends Resource {
     if (space.isOpen) {
       switch (setting) {
         case EdgeReplicationSetting.DISABLED:
-          await this._echoEdgeReplicator?.disconnectFromSpace(ctx, space.id);
+          await this._echoEdgeReplicator?.disconnectFromSpace(space.id);
           break;
         case EdgeReplicationSetting.ENABLED:
-          await this._echoEdgeReplicator?.connectToSpace(ctx, space.id);
+          await this._echoEdgeReplicator?.connectToSpace(space.id);
           break;
       }
     }
@@ -525,7 +525,7 @@ export class DataSpaceManager extends Resource {
     space.stateUpdate.emit();
   }
 
-  private async _constructSpace(ctx: Context, metadata: SpaceMetadata): Promise<DataSpace> {
+  private async _constructSpace(metadata: SpaceMetadata): Promise<DataSpace> {
     log('construct space', { metadata });
     const gossip = new Gossip({
       localPeerId: this._signingContext.deviceKey,
@@ -546,7 +546,7 @@ export class DataSpaceManager extends Resource {
         sparse: true,
       }));
 
-    const space: Space = await this._spaceManager.constructSpace(ctx, {
+    const space: Space = await this._spaceManager.constructSpace({
       metadata,
       swarmIdentity: {
         identityKey: this._signingContext.identityKey,
@@ -566,7 +566,7 @@ export class DataSpaceManager extends Resource {
               gossip.createExtension({ remotePeerId: session.remotePeerId }),
             );
             session.addExtension('dxos.mesh.teleport.notarization', dataSpace.notarizationPlugin.createExtension());
-            await this._connectEchoMeshReplicator(this._ctx, space, session);
+            await this._connectEchoMeshReplicator(space, session);
           } catch (err: any) {
             log.warn('error on authorized connection', { err });
             await session.close(err);
@@ -577,16 +577,16 @@ export class DataSpaceManager extends Resource {
       },
       onMemberRolesChanged: async (members: MemberInfo[]) => {
         if (dataSpace?.state === SpaceState.SPACE_READY) {
-          this._handleMemberRoleChanges(this._ctx, presence, space.protocol, members);
+          this._handleMemberRoleChanges(presence, space.protocol, members);
         }
       },
       memberKey: this._signingContext.identityKey,
       onDelegatedInvitationStatusChange: (invitation, isActive) => {
-        return this._handleInvitationStatusChange(this._ctx, dataSpace, invitation, isActive);
+        return this._handleInvitationStatusChange(dataSpace, invitation, isActive);
       },
     });
-    controlFeed && (await space.setControlFeed(ctx, controlFeed));
-    dataFeed && (await space.setDataFeed(ctx, dataFeed));
+    controlFeed && (await space.setControlFeed(controlFeed));
+    dataFeed && (await space.setDataFeed(dataFeed));
 
     const dataSpace = new DataSpace({
       inner: space,
@@ -605,8 +605,8 @@ export class DataSpaceManager extends Resource {
         afterReady: async () => {
           log('after space ready', { space: space.key, open: this._lifecycleState === LifecycleState.OPEN });
           if (this._lifecycleState === LifecycleState.OPEN) {
-            await this._createDelegatedInvitations(this._ctx, dataSpace, [...space.spaceState.invitations.entries()]);
-            this._handleMemberRoleChanges(this._ctx, presence, space.protocol, [...space.spaceState.members.values()]);
+            await this._createDelegatedInvitations(dataSpace, [...space.spaceState.invitations.entries()]);
+            this._handleMemberRoleChanges(presence, space.protocol, [...space.spaceState.members.values()]);
             this.updated.emit();
           }
         },
@@ -621,53 +621,48 @@ export class DataSpaceManager extends Resource {
       activeEdgeNotarizationPollingInterval: this._runtimeProps?.activeEdgeNotarizationPollingInterval,
     });
     dataSpace.postOpen.append(async () => {
-      const setting = dataSpace.getEdgeReplicationSetting(this._ctx);
+      const setting = dataSpace.getEdgeReplicationSetting();
       if (!setting || setting === EdgeReplicationSetting.ENABLED) {
-        await this._echoEdgeReplicator?.connectToSpace(this._ctx, dataSpace.id);
+        await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);
       } else if (this._echoEdgeReplicator) {
         log('not connecting EchoEdgeReplicator because of EdgeReplicationSetting', { spaceId: dataSpace.id });
       }
     });
     dataSpace.preClose.append(async () => {
-      const setting = dataSpace.getEdgeReplicationSetting(this._ctx);
+      const setting = dataSpace.getEdgeReplicationSetting();
       if (!setting || setting === EdgeReplicationSetting.ENABLED) {
-        await this._echoEdgeReplicator?.disconnectFromSpace(this._ctx, dataSpace.id);
+        await this._echoEdgeReplicator?.disconnectFromSpace(dataSpace.id);
       }
     });
 
     presence.newPeer.on((peerState) => {
       if (dataSpace.state === SpaceState.SPACE_READY) {
-        this._handleNewPeerConnected(this._ctx, space, peerState);
+        this._handleNewPeerConnected(space, peerState);
       }
     });
 
     if (metadata.controlTimeframe) {
-      dataSpace.inner.controlPipeline.state.setTargetTimeframe(ctx, metadata.controlTimeframe);
+      dataSpace.inner.controlPipeline.state.setTargetTimeframe(metadata.controlTimeframe);
     }
 
     this._spaces.set(metadata.key, dataSpace);
     return dataSpace;
   }
 
-  private async _connectEchoMeshReplicator(ctx: Context, space: Space, session: Teleport): Promise<void> {
+  private async _connectEchoMeshReplicator(space: Space, session: Teleport): Promise<void> {
     const replicator = this._meshReplicator;
     if (!replicator) {
       log.warn('p2p automerge replication disabled', { space: space.key });
       return;
     }
-    await replicator.authorizeDevice(ctx, space.key, session.remotePeerId);
+    await replicator.authorizeDevice(space.key, session.remotePeerId);
     // session ended during device authorization
     if (session.isOpen) {
-      session.addExtension('dxos.mesh.teleport.automerge', replicator.createExtension(ctx));
+      session.addExtension('dxos.mesh.teleport.automerge', replicator.createExtension());
     }
   }
 
-  private _handleMemberRoleChanges(
-    ctx: Context,
-    presence: Presence,
-    spaceProtocol: SpaceProtocol,
-    memberInfo: MemberInfo[],
-  ): void {
+  private _handleMemberRoleChanges(presence: Presence, spaceProtocol: SpaceProtocol, memberInfo: MemberInfo[]): void {
     let closedSessions = 0;
     for (const member of memberInfo) {
       if (member.key.equals(presence.getLocalState().identityKey)) {
@@ -692,7 +687,7 @@ export class DataSpaceManager extends Resource {
     spaceProtocol.updateTopology();
   }
 
-  private _handleNewPeerConnected(ctx: Context, space: Space, peerState: PeerState): void {
+  private _handleNewPeerConnected(space: Space, peerState: PeerState): void {
     const role = space.spaceState.getMemberRole(peerState.identityKey);
     if (role === SpaceMember.Role.REMOVED) {
       const session = peerState.peerId && space.protocol.sessions.get(peerState.peerId);
@@ -704,7 +699,6 @@ export class DataSpaceManager extends Resource {
   }
 
   private async _handleInvitationStatusChange(
-    ctx: Context,
     dataSpace: DataSpace | undefined,
     delegatedInvitation: DelegateInvitationCredential,
     isActive: boolean,
@@ -713,21 +707,20 @@ export class DataSpaceManager extends Resource {
       return;
     }
     if (isActive) {
-      await this._createDelegatedInvitations(ctx, dataSpace, [
+      await this._createDelegatedInvitations(dataSpace, [
         [delegatedInvitation.credentialId, delegatedInvitation.invitation],
       ]);
     } else {
-      await this._invitationsManager.cancelInvitation(ctx, delegatedInvitation.invitation);
+      await this._invitationsManager.cancelInvitation(delegatedInvitation.invitation);
     }
   }
 
   private async _createDelegatedInvitations(
-    ctx: Context,
     space: DataSpace,
     invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
   ): Promise<void> {
     const tasks = invitations.map(([credentialId, invitation]) => {
-      return this._invitationsManager.createInvitation(ctx, {
+      return this._invitationsManager.createInvitation(Context.default(), {
         type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         spaceKey: space.key,

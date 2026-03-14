@@ -230,7 +230,7 @@ export const createInvitation = async (
   };
 
   if (host instanceof ServiceContext) {
-    return host.invitationsManager.createInvitation(Context.default(), {
+    return host.invitationsManager.createInvitation(new Context(), {
       kind: Invitation.Kind.SPACE,
       ...options,
     });
@@ -247,7 +247,7 @@ export const acceptInvitation = (
   invitation = sanitizeInvitation(invitation);
 
   if (guest instanceof ServiceContext) {
-    return guest.invitationsManager.acceptInvitation(Context.default(), {
+    return guest.invitationsManager.acceptInvitation(new Context(), {
       invitation,
       deviceProfile: guestDeviceProfile,
     });

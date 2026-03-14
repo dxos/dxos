@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Context } from '@dxos/context';
 import { getCredentialAssertion } from '@dxos/credentials';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -33,28 +32,28 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  checkCanInviteNewMembers(ctx: Context): Error | undefined {
+  checkCanInviteNewMembers(): Error | undefined {
     return undefined;
   }
 
-  getInvitationContext(ctx: Context): Partial<Invitation> & Pick<Invitation, 'kind'> {
+  getInvitationContext(): Partial<Invitation> & Pick<Invitation, 'kind'> {
     return {
       kind: Invitation.Kind.DEVICE,
     };
   }
 
-  async delegate(ctx: Context): Promise<PublicKey> {
+  async delegate(): Promise<PublicKey> {
     throw new Error('delegation not supported');
   }
 
-  async cancelDelegation(ctx: Context): Promise<void> {
+  async cancelDelegation(): Promise<void> {
     throw new Error('delegation not supported');
   }
 
-  async admit(ctx: Context, _: Invitation, request: AdmissionRequest): Promise<AdmissionResponse> {
+  async admit(_: Invitation, request: AdmissionRequest): Promise<AdmissionResponse> {
     invariant(request.device);
     const identity = this._getIdentity();
-    const credential = await identity.admitDevice(ctx, request.device);
+    const credential = await identity.admitDevice(request.device);
     invariant(getCredentialAssertion(credential)['@type'] === 'dxos.halo.credentials.AuthorizedDevice');
 
     return {
@@ -68,7 +67,7 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  checkInvitation(ctx: Context, invitation: Partial<Invitation>): AlreadyJoinedError | undefined {
+  checkInvitation(invitation: Partial<Invitation>): AlreadyJoinedError | undefined {
     try {
       const identity = this._getIdentity();
       if (identity) {
@@ -79,11 +78,11 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     }
   }
 
-  createIntroduction(ctx: Context): IntroductionRequest {
+  createIntroduction(): IntroductionRequest {
     return {};
   }
 
-  async createAdmissionRequest(ctx: Context, deviceProfile?: DeviceProfileDocument): Promise<AdmissionRequest> {
+  async createAdmissionRequest(deviceProfile?: DeviceProfileDocument): Promise<AdmissionRequest> {
     const deviceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
@@ -98,12 +97,14 @@ export class DeviceInvitationProtocol implements InvitationProtocol {
     };
   }
 
-  async accept(ctx: Context, response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
+  async accept(response: AdmissionResponse, request: AdmissionRequest): Promise<Partial<Invitation>> {
     invariant(response.device);
     const { identityKey, haloSpaceKey, genesisFeedKey, controlTimeframe } = response.device;
 
     invariant(request.device);
     const { deviceKey, controlFeedKey, dataFeedKey, profile } = request.device;
+
+    // TODO(wittjosiah): When multiple identities are supported, verify identity doesn't already exist before accepting.
 
     await this._acceptIdentity({
       identityKey,

@@ -8,7 +8,6 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
@@ -129,7 +128,7 @@ describe('IndexEngine', () => {
       dataSource.push([obj1]);
 
       // First update.
-      const { updated } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      const { updated } = yield* engine.update(dataSource, { spaceId: null });
       // Updates objectMeta, FTS, and reverseRef indexes.
       expect(updated).toBe(2);
 
@@ -160,7 +159,7 @@ describe('IndexEngine', () => {
       dataSource.push([obj1Updated]);
 
       // Second update.
-      const { updated: updated2 } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      const { updated: updated2 } = yield* engine.update(dataSource, { spaceId: null });
       expect(updated2).toBe(2);
 
       // Verify update.
@@ -226,7 +225,7 @@ describe('IndexEngine', () => {
 
       dataSource.push(objects);
 
-      yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      yield* engine.update(dataSource, { spaceId: null });
 
       const resultsA = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_A });
       expect(resultsA).toHaveLength(2);

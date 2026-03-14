@@ -173,7 +173,7 @@ describe('RtcTransportChannel', () => {
       },
       channel,
       connection: {
-        createDataChannel: async (_topic: string) => {
+        createDataChannel: async (topic: string) => {
           return createChannelPromise;
         },
       } as any as RtcPeerConnection,

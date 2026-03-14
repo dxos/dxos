@@ -97,7 +97,7 @@ export type CreateEpochOptions = {
 @trackLeaks('open', 'close')
 @trace.resource()
 export class DataSpace {
-  private _ctx = Context.default();
+  private _ctx = new Context();
   @trace.info()
   private readonly _inner: Space;
 
@@ -114,9 +114,7 @@ export class DataSpace {
   private readonly _edgeFeedReplicator?: EdgeFeedReplicator = undefined;
 
   // TODO(dmaretskyi): Move into Space?
-  private readonly _automergeSpaceState = new AutomergeSpaceState((rootUrl) =>
-    this._onNewAutomergeRoot(this._ctx, rootUrl),
-  );
+  private readonly _automergeSpaceState = new AutomergeSpaceState((rootUrl) => this._onNewAutomergeRoot(rootUrl));
 
   private readonly _epochProcessingMutex = new Mutex();
 
@@ -139,6 +137,7 @@ export class DataSpace {
 
   constructor(params: DataSpaceProps) {
     this._inner = params.inner;
+    this._inner.stateUpdate.on(this._ctx, () => this.stateUpdate.emit());
 
     this._gossip = params.gossip;
     this._presence = params.presence;
@@ -238,8 +237,6 @@ export class DataSpace {
   }
 
   private async _open(ctx: Context): Promise<void> {
-    this._inner.stateUpdate.on(this._ctx, () => this.stateUpdate.emit());
-
     await this._presence.open();
     await this._gossip.open();
     await this._notarizationPlugin.open();
@@ -252,7 +249,7 @@ export class DataSpace {
     }
 
     await this._inner.open(ctx);
-    await this._inner.startProtocol(ctx);
+    await this._inner.startProtocol();
 
     await this._edgeFeedReplicator?.open();
 
@@ -279,7 +276,7 @@ export class DataSpace {
     this._state = SpaceState.SPACE_CLOSED;
     log('new state', { state: SpaceState[this._state] });
     await this._ctx.dispose();
-    this._ctx = Context.default();
+    this._ctx = new Context();
 
     if (this._edgeFeedReplicator) {
       this.inner.protocol.feedAdded.remove(this._onFeedAdded);
@@ -299,18 +296,18 @@ export class DataSpace {
     await this._gossip.close();
   }
 
-  async postMessage(ctx: Context, channel: string, message: any): Promise<void> {
+  async postMessage(channel: string, message: any): Promise<void> {
     return this._gossip.postMessage(channel, message);
   }
 
-  listen(ctx: Context, channel: string, callback: (message: GossipMessage) => void): { unsubscribe: () => void } {
+  listen(channel: string, callback: (message: GossipMessage) => void): { unsubscribe: () => void } {
     return this._gossip.listen(channel, callback);
   }
 
   /**
    * Initialize the data pipeline in a separate task.
    */
-  initializeDataPipelineAsync(_ctx: Context): void {
+  initializeDataPipelineAsync(): void {
     scheduleTask(this._ctx, async () => {
       try {
         this.metrics.pipelineInitBegin = new Date();
@@ -358,19 +355,19 @@ export class DataSpace {
     log('space is ready');
   }
 
-  async *getAllDocuments(ctx: Context): AsyncIterable<[string, Uint8Array]> {
+  async *getAllDocuments(): AsyncIterable<[string, Uint8Array]> {
     invariant(this._databaseRoot, 'Space is not ready');
     const doc = this._databaseRoot.doc() ?? failedInvariant();
     const root = save(doc);
     yield [this._databaseRoot.documentId, root];
 
     for (const documentUrl of this._databaseRoot.getAllLinkedDocuments()) {
-      const data = await this._echoHost.exportDoc(documentUrl);
+      const data = await this._echoHost.exportDoc(Context.default(), documentUrl);
       yield [documentUrl.replace(/^automerge:/, ''), data];
     }
   }
 
-  private async _enterReadyState(ctx: Context): Promise<void> {
+  private async _enterReadyState(): Promise<void> {
     await this._callbacks.beforeReady?.();
 
     this._state = SpaceState.SPACE_READY;
@@ -382,14 +379,15 @@ export class DataSpace {
 
   @trace.span({ showInBrowserTimeline: true })
   private async _initializeAndReadControlPipeline(ctx: Context): Promise<void> {
-    await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe(ctx, {
+    await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
+      ctx,
       timeout: 10_000,
       breakOnStall: false,
     });
 
     this.metrics.controlPipelineReady = new Date();
 
-    await this._createWritableFeeds(ctx);
+    await this._createWritableFeeds();
     log('writable feeds created');
     this.stateUpdate.emit();
 
@@ -406,11 +404,11 @@ export class DataSpace {
   }
 
   @timed(10_000)
-  private async _createWritableFeeds(ctx: Context): Promise<void> {
+  private async _createWritableFeeds(): Promise<void> {
     const credentials: Credential[] = [];
     if (!this.inner.controlFeedKey) {
       const controlFeed = await this._feedStore.openFeed(await this._keyring.createKey(), { writable: true });
-      await this.inner.setControlFeed(ctx, controlFeed);
+      await this.inner.setControlFeed(controlFeed);
 
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
@@ -430,7 +428,7 @@ export class DataSpace {
         writable: true,
         sparse: true,
       });
-      await this.inner.setDataFeed(ctx, dataFeed);
+      await this.inner.setDataFeed(dataFeed);
 
       credentials.push(
         await this._signingContext.credentialSigner.createCredential({
@@ -450,7 +448,7 @@ export class DataSpace {
       try {
         log('will notarize credentials for feed admission', { count: credentials.length });
         // Never times out
-        await this.notarizationPlugin.notarize({ ctx, credentials, timeout: 0 });
+        await this.notarizationPlugin.notarize({ ctx: this._ctx, credentials, timeout: 0 });
 
         log('credentials notarized');
       } catch (err) {
@@ -466,7 +464,7 @@ export class DataSpace {
     }
   }
 
-  private _onNewAutomergeRoot(ctx: Context, rootUrl: string): void {
+  private _onNewAutomergeRoot(rootUrl: string): void {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
     let handle: DocHandle<DatabaseDirectory>;
@@ -477,7 +475,7 @@ export class DataSpace {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
           handle = await cancelWithContext(
             this._ctx,
-            this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
+            this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), rootUrl as AutomergeUrl, {
               fetchFromNetwork: true,
             }),
           );
@@ -500,7 +498,7 @@ export class DataSpace {
 
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
-        const root = await this._echoHost.openSpaceRoot(this._ctx, this.id, handle.url);
+        const root = await this._echoHost.openSpaceRoot(this.id, handle.url);
 
         // NOTE: Make sure this assignment happens synchronously together with the state change.
         this._databaseRoot = root;
@@ -508,7 +506,7 @@ export class DataSpace {
           this._state = SpaceState.SPACE_REQUIRES_MIGRATION;
           this.stateUpdate.emit();
         } else if (this._state !== SpaceState.SPACE_READY) {
-          await this._enterReadyState(this._ctx);
+          await this._enterReadyState();
         } else {
           this.stateUpdate.emit();
         }
@@ -522,7 +520,7 @@ export class DataSpace {
   }
 
   // TODO(dmaretskyi): Use profile from signing context.
-  async updateOwnProfile(ctx: Context, profile: ProfileDocument): Promise<void> {
+  async updateOwnProfile(profile: ProfileDocument): Promise<void> {
     const credential = await this._signingContext.credentialSigner.createCredential({
       subject: this._signingContext.identityKey,
       assertion: {
@@ -533,15 +531,15 @@ export class DataSpace {
     await this.inner.controlPipeline.writer.write({ credential: { credential } });
   }
 
-  async createEpoch(ctx: Context, options?: CreateEpochOptions): Promise<CreateEpochResult | null> {
-    const epochCtx = ctx.derive();
+  async createEpoch(options?: CreateEpochOptions): Promise<CreateEpochResult | null> {
+    const ctx = this._ctx.derive();
 
     // Preserving existing behavior.
     if (!options?.migration) {
       return null;
     }
 
-    const { newRoot } = await runEpochMigration(epochCtx, {
+    const { newRoot } = await runEpochMigration(ctx, {
       echoHost: this._echoHost,
       spaceId: this.id,
       spaceKey: this.key,
@@ -570,8 +568,8 @@ export class DataSpace {
     });
 
     const timeframe = new Timeframe([[receipt.feedKey, receipt.seq]]);
-    await this.inner.controlPipeline.state.waitUntilTimeframe(ctx, timeframe);
-    await this._echoHost.updateIndexes(ctx);
+    await this.inner.controlPipeline.state.waitUntilTimeframe(timeframe);
+    await this._echoHost.updateIndexes();
 
     return { credential, timeframe };
   }
@@ -584,7 +582,7 @@ export class DataSpace {
 
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_ACTIVE);
     await this._open(ctx);
-    this.initializeDataPipelineAsync(ctx);
+    this.initializeDataPipelineAsync();
   }
 
   @synchronized
@@ -601,12 +599,12 @@ export class DataSpace {
     this.stateUpdate.emit();
   }
 
-  getEdgeReplicationSetting(ctx: Context) {
+  getEdgeReplicationSetting() {
     return this._metadataStore.getSpaceEdgeReplicationSetting(this.key);
   }
 
   private _onFeedAdded = async (feed: FeedWrapper<any>) => {
-    await this._edgeFeedReplicator!.addFeed(this._ctx, feed);
+    await this._edgeFeedReplicator!.addFeed(feed);
   };
 }
 

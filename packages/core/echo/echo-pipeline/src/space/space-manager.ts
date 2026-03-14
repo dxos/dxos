@@ -5,7 +5,6 @@
 import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 
 import { Trigger, synchronized, trackLeaks } from '@dxos/async';
-import { type Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
@@ -85,25 +84,22 @@ export class SpaceManager {
   }
 
   @synchronized
-  async open(ctx: Context): Promise<void> {}
+  async open(): Promise<void> {}
 
   @synchronized
-  async close(ctx: Context): Promise<void> {
-    await Promise.all([...this._spaces.values()].map((space) => space.close(ctx)));
+  async close(): Promise<void> {
+    await Promise.all([...this._spaces.values()].map((space) => space.close()));
   }
 
-  async constructSpace(
-    ctx: Context,
-    {
-      metadata,
-      swarmIdentity,
-      onAuthorizedConnection,
-      onAuthFailure,
-      onDelegatedInvitationStatusChange,
-      onMemberRolesChanged,
-      memberKey,
-    }: ConstructSpaceProps,
-  ): Promise<Space> {
+  async constructSpace({
+    metadata,
+    swarmIdentity,
+    onAuthorizedConnection,
+    onAuthFailure,
+    onDelegatedInvitationStatusChange,
+    onMemberRolesChanged,
+    memberKey,
+  }: ConstructSpaceProps): Promise<Space> {
     log.trace('dxos.echo.space-manager.construct-space', trace.begin({ id: this._instanceId }));
     log('constructing space...', { spaceKey: metadata.genesisFeedKey });
 
@@ -139,10 +135,7 @@ export class SpaceManager {
     return space;
   }
 
-  public async requestSpaceAdmissionCredential(
-    ctx: Context,
-    params: RequestSpaceAdmissionCredentialProps,
-  ): Promise<Credential> {
+  public async requestSpaceAdmissionCredential(params: RequestSpaceAdmissionCredentialProps): Promise<Credential> {
     const traceKey = 'dxos.echo.space-manager.request-space-admission';
     log.trace(traceKey, trace.begin({ id: this._instanceId }));
     log('requesting space admission credential...', { spaceKey: params.spaceKey });
@@ -167,7 +160,7 @@ export class SpaceManager {
     });
 
     try {
-      await protocol.start(ctx);
+      await protocol.start();
       const credential = await onCredentialResolved.wait({ timeout: params.timeout });
       log.trace(traceKey, trace.end({ id: this._instanceId }));
       return credential;
@@ -175,11 +168,11 @@ export class SpaceManager {
       log.trace(traceKey, trace.error({ id: this._instanceId, error: err }));
       throw err;
     } finally {
-      await protocol.stop(ctx);
+      await protocol.stop();
     }
   }
 
-  public findSpaceByRootDocumentId(ctx: Context, documentId: string): Space | undefined {
+  public findSpaceByRootDocumentId(documentId: string): Space | undefined {
     return [...this._spaces.values()].find((space) => {
       return space.spaceState.credentials.some((credential) => {
         const assertion = getCredentialAssertion(credential);

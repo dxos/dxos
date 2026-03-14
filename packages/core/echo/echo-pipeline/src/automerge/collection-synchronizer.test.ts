@@ -8,7 +8,6 @@ import type { DocumentId, PeerId } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { range } from '@dxos/util';
 
 import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
@@ -22,15 +21,15 @@ describe('CollectionSynchronizer', () => {
     const collectionId = 'collection-test';
 
     const peer1 = await new CollectionSynchronizer({
-      queryCollectionState: (ctx, collectionId, peerId) =>
+      queryCollectionState: (collectionId, peerId) =>
         queueMicrotask(async () => {
           await sleep(LATENCY);
-          peer2.onCollectionStateQueried(Context.default(), collectionId, peerId);
+          peer2.onCollectionStateQueried(collectionId, peerId);
         }),
-      sendCollectionState: (ctx, collectionId, peerId, state) =>
+      sendCollectionState: (collectionId, peerId, state) =>
         queueMicrotask(async () => {
           await sleep(LATENCY);
-          peer2.onRemoteStateReceived(Context.default(), collectionId, peerId, structuredClone(state));
+          peer2.onRemoteStateReceived(collectionId, peerId, structuredClone(state));
         }),
       shouldSyncCollection: () => true,
     }).open();
@@ -38,15 +37,15 @@ describe('CollectionSynchronizer', () => {
       await peer1.close();
     });
     const peer2 = await new CollectionSynchronizer({
-      queryCollectionState: (ctx, collectionId, peerId) =>
+      queryCollectionState: (collectionId, peerId) =>
         queueMicrotask(async () => {
           await sleep(LATENCY);
-          peer1.onCollectionStateQueried(Context.default(), collectionId, peerId);
+          peer1.onCollectionStateQueried(collectionId, peerId);
         }),
-      sendCollectionState: (ctx, collectionId, peerId, state) =>
+      sendCollectionState: (collectionId, peerId, state) =>
         queueMicrotask(async () => {
           await sleep(LATENCY);
-          peer1.onRemoteStateReceived(Context.default(), collectionId, peerId, structuredClone(state));
+          peer1.onRemoteStateReceived(collectionId, peerId, structuredClone(state));
         }),
       shouldSyncCollection: () => true,
     }).open();
@@ -54,24 +53,24 @@ describe('CollectionSynchronizer', () => {
       await peer2.close();
     });
 
-    peer1.onConnectionOpen(Context.default(), peerId2);
-    peer2.onConnectionOpen(Context.default(), peerId1);
+    peer1.onConnectionOpen(peerId2);
+    peer2.onConnectionOpen(peerId1);
 
     const updated = Promise.all([
       peer1.remoteStateUpdated.waitFor((ev) => ev.collectionId === collectionId && ev.peerId === peerId2),
       peer2.remoteStateUpdated.waitFor((ev) => ev.collectionId === collectionId && ev.peerId === peerId1),
     ]);
 
-    peer1.setLocalCollectionState(Context.default(), collectionId, STATE_1);
-    peer2.setLocalCollectionState(Context.default(), collectionId, STATE_2);
+    peer1.setLocalCollectionState(collectionId, STATE_1);
+    peer2.setLocalCollectionState(collectionId, STATE_2);
 
-    peer1.refreshCollection(Context.default(), collectionId);
-    peer2.refreshCollection(Context.default(), collectionId);
+    peer1.refreshCollection(collectionId);
+    peer2.refreshCollection(collectionId);
 
     await updated;
 
-    expect(peer1.getRemoteCollectionStates(Context.default(), collectionId).get(peerId2)).to.deep.equal(STATE_2);
-    expect(peer2.getRemoteCollectionStates(Context.default(), collectionId).get(peerId1)).to.deep.equal(STATE_1);
+    expect(peer1.getRemoteCollectionStates(collectionId).get(peerId2)).to.deep.equal(STATE_2);
+    expect(peer2.getRemoteCollectionStates(collectionId).get(peerId1)).to.deep.equal(STATE_1);
   });
 
   test('diff collection state', () => {

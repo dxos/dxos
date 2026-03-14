@@ -54,13 +54,13 @@ export class SpaceProxy extends Resource {
       throw new Error(`Space not found: ${this._id}`);
     }
 
-    this._db = this._echoClient.constructDatabase(this._ctx, {
+    this._db = this._echoClient.constructDatabase({
       spaceId: this._id,
       spaceKey: PublicKey.from(meta.spaceKey),
       reactiveSchemaQuery: false,
       owningObject: this,
     });
 
-    await this._db.coreDatabase.open(this._ctx, { rootUrl: meta.rootDocumentId });
+    await this._db.coreDatabase.open({ rootUrl: meta.rootDocumentId });
   }
 }

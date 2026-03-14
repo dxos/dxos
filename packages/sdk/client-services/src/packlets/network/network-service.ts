@@ -3,7 +3,6 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
@@ -45,7 +44,7 @@ export class NetworkServiceImpl implements NetworkService {
   }
 
   async updateConfig(request: UpdateConfigRequest): Promise<void> {
-    await this.networkManager.setConnectionState(Context.default(), request.swarm);
+    await this.networkManager.setConnectionState(request.swarm);
   }
 
   async joinSwarm(request: JoinRequest): Promise<void> {

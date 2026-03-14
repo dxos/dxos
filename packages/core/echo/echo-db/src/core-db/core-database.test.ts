@@ -331,19 +331,19 @@ describe('CoreDatabase', () => {
         let coreDb: CoreDatabase;
         {
           // Create db.
-          const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
+          const root = await peer.host.createSpaceRoot(spaceKey);
           // NOTE: Client closes the database when it is closed.
           const spaceId = await createIdFromSpaceKey(spaceKey);
           const db = peer.client.constructDatabase({ spaceId, spaceKey });
           void db.setSpaceRoot(root.url);
           coreDb = db.coreDatabase;
         }
-        expect(coreDb.getAllObjectIds(Context.default())).to.deep.eq([]);
+        expect(coreDb.getAllObjectIds()).to.deep.eq([]);
         void coreDb.open(Context.default(), { rootUrl: fakeUrl });
         const barrier = new Trigger();
         setTimeout(() => barrier.wake());
         await barrier.wait();
-        expect(coreDb.getAllObjectIds(Context.default())).to.deep.eq([]);
+        expect(coreDb.getAllObjectIds()).to.deep.eq([]);
       });
     });
 
@@ -354,7 +354,7 @@ describe('CoreDatabase', () => {
       const { db, graph } = await testBuilder.createDatabase();
       await graph.schemaRegistry.register([TestSchema.Person]);
       const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
-      await db.coreDatabase.atomicReplaceObject(Context.default(), contact.id, {
+      await db.coreDatabase.atomicReplaceObject(contact.id, {
         type: DXN.parse('dxn:type:com.example.type.task:0.1.0'),
         data: { name: 'Bar' },
       });
@@ -423,7 +423,7 @@ const addObjectToDoc = <T extends { id: string }>(
 };
 
 const createTestRootDoc = async (repo: RepoProxy): Promise<DocHandleProxy<DatabaseDirectory>> => {
-  const handle = repo.create<DatabaseDirectory>(Context.default(), { version: SpaceDocVersion.CURRENT });
+  const handle = repo.create<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT });
   await handle.whenReady();
   return handle;
 };

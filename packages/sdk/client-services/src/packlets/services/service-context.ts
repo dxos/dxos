@@ -161,17 +161,16 @@ export class ServiceContext extends Resource {
       this.keyring,
       this._edgeHttpClient,
       () => this.identityManager.identity,
-      (params) => this._acceptIdentity(this._ctx, params),
+      this._acceptIdentity.bind(this),
     );
 
     this.echoHost = new EchoHost({
       kv: this.level,
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
-      getSpaceKeyByRootDocumentId: (documentId) =>
-        this.spaceManager.findSpaceByRootDocumentId(this._ctx, documentId)?.key,
+      getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
       syncQueue: async (request) => {
-        return this._feedSyncer?.syncBlocking(this._ctx, {
+        return this._feedSyncer?.syncBlocking({
           spaceId: request.spaceId as SpaceId,
           subspaceTag: request.subspaceTag,
           shouldPush: request.shouldPush,
@@ -187,7 +186,7 @@ export class ServiceContext extends Resource {
     );
     this.invitationsManager = new InvitationsManager(
       this.invitations,
-      (invitation) => this.getInvitationHandler(this._ctx, invitation),
+      (invitation) => this.getInvitationHandler(invitation),
       this.metadataStore,
     );
 
@@ -199,7 +198,7 @@ export class ServiceContext extends Resource {
         new DeviceInvitationProtocol(
           this.keyring,
           () => this.identityManager.identity ?? failUndefined(),
-          (params) => this._acceptIdentity(this._ctx, params),
+          this._acceptIdentity.bind(this),
         ),
     );
 
@@ -227,33 +226,33 @@ export class ServiceContext extends Resource {
 
   @Trace.span()
   protected override async _open(ctx: Context): Promise<void> {
-    await this._checkStorageVersion(ctx);
+    await this._checkStorageVersion();
 
     log('opening...');
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
 
     await this.identityManager.open(ctx);
 
-    await this._setNetworkIdentity(ctx);
+    await this._setNetworkIdentity();
 
     await this._edgeConnection?.open();
     await this.signalManager.open();
-    await this.networkManager.open(ctx);
+    await this.networkManager.open();
 
     await this.echoHost.open(ctx);
 
     if (this._meshReplicator) {
-      await this.echoHost.addReplicator(ctx, this._meshReplicator);
+      await this.echoHost.addReplicator(this._meshReplicator);
     }
     if (this._echoEdgeReplicator) {
-      await this.echoHost.addReplicator(ctx, this._echoEdgeReplicator);
+      await this.echoHost.addReplicator(this._echoEdgeReplicator);
     }
 
     await this.metadataStore.load();
-    await this.spaceManager.open(ctx);
+    await this.spaceManager.open();
 
     if (this.identityManager.identity) {
-      await this.identityManager.identity.joinNetwork(ctx);
+      await this.identityManager.identity.joinNetwork();
       await this._initialize(ctx);
     }
 
@@ -276,11 +275,11 @@ export class ServiceContext extends Resource {
     }
     await this.dataSpaceManager?.close();
     await this.edgeAgentManager?.close();
-    await this.identityManager.close(ctx);
-    await this.spaceManager.close(ctx);
+    await this.identityManager.close();
+    await this.spaceManager.close();
     await this.echoHost.close(ctx);
 
-    await this.networkManager.close(ctx);
+    await this.networkManager.close();
     await this.signalManager.close();
     await this._edgeConnection?.close();
     await this.feedStore.close();
@@ -289,15 +288,15 @@ export class ServiceContext extends Resource {
     log('closed');
   }
 
-  async createIdentity(ctx: Context, params: CreateIdentityOptions = {}) {
-    const identity = await this.identityManager.createIdentity(ctx, params);
-    await this._setNetworkIdentity(ctx);
-    await identity.joinNetwork(ctx);
-    await this._initialize(ctx);
+  async createIdentity(params: CreateIdentityOptions = {}) {
+    const identity = await this.identityManager.createIdentity(params);
+    await this._setNetworkIdentity();
+    await identity.joinNetwork();
+    await this._initialize(new Context());
     return identity;
   }
 
-  getInvitationHandler(ctx: Context, invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
+  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
     if (this.identityManager.identity == null && invitation.kind === Invitation.Kind.SPACE) {
       throw new Error('Identity must be created before joining a space.');
     }
@@ -306,26 +305,26 @@ export class ServiceContext extends Resource {
     return factory(invitation);
   }
 
-  async broadcastProfileUpdate(ctx: Context, profile: ProfileDocument | undefined): Promise<void> {
+  async broadcastProfileUpdate(profile: ProfileDocument | undefined): Promise<void> {
     if (!profile || !this.dataSpaceManager) {
       return;
     }
 
     for (const space of this.dataSpaceManager.spaces.values()) {
-      await space.updateOwnProfile(ctx, profile);
+      await space.updateOwnProfile(profile);
     }
   }
 
-  private async _acceptIdentity(ctx: Context, params: JoinIdentityProps) {
-    const { identity, identityRecord } = await this.identityManager.prepareIdentity(ctx, params);
-    await this._setNetworkIdentity(ctx, { deviceCredential: params.authorizedDeviceCredential! });
-    await identity.joinNetwork(ctx);
-    await this.identityManager.acceptIdentity(ctx, identity, identityRecord, params.deviceProfile);
-    await this._initialize(ctx);
+  private async _acceptIdentity(params: JoinIdentityProps) {
+    const { identity, identityRecord } = await this.identityManager.prepareIdentity(params);
+    await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential! });
+    await identity.joinNetwork();
+    await this.identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
+    await this._initialize(new Context());
     return identity;
   }
 
-  private async _checkStorageVersion(ctx: Context): Promise<void> {
+  private async _checkStorageVersion(): Promise<void> {
     await this.metadataStore.load();
     if (this.metadataStore.version !== STORAGE_VERSION) {
       throw new InvalidStorageVersionError(STORAGE_VERSION, this.metadataStore.version);
@@ -339,7 +338,7 @@ export class ServiceContext extends Resource {
     log('initializing spaces...');
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
-      credentialSigner: identity.getIdentityCredentialSigner(ctx),
+      credentialSigner: identity.getIdentityCredentialSigner(),
       identityKey: identity.identityKey,
       deviceKey: identity.deviceKey,
       getProfile: () => identity.profileDocument,
@@ -413,7 +412,7 @@ export class ServiceContext extends Resource {
     await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync);
   }
 
-  private async _setNetworkIdentity(ctx: Context, params?: { deviceCredential: Credential }): Promise<void> {
+  private async _setNetworkIdentity(params?: { deviceCredential: Credential }): Promise<void> {
     using _ = await this._edgeIdentityUpdateMutex.acquire();
 
     let edgeIdentity: EdgeIdentity;
@@ -435,7 +434,7 @@ export class ServiceContext extends Resource {
       } else {
         // TODO: throw here or from identity if device chain can't be loaded, to avoid indefinite hangup
         await warnAfterTimeout(10_000, 'Waiting for identity to be ready for edge connection', async () => {
-          await identity.ready(ctx);
+          await identity.ready();
         });
 
         invariant(identity.deviceCredentialChain);
@@ -454,7 +453,7 @@ export class ServiceContext extends Resource {
 
     this._edgeConnection?.setIdentity(edgeIdentity);
     this._edgeHttpClient?.setIdentity(edgeIdentity);
-    this.networkManager.setPeerInfo(ctx, {
+    this.networkManager.setPeerInfo({
       identityKey: edgeIdentity.identityKey,
       peerKey: edgeIdentity.peerKey,
     });

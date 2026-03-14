@@ -164,7 +164,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * @deprecated Use `query` method instead.
    */
   get objects(): T[] {
-    return this._getObjectsSync();
+    return this.getObjectsSync();
   }
 
   get refResolver(): Ref.Resolver {
@@ -258,7 +258,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * @deprecated Use `query` method instead.
    */
   async queryObjects(): Promise<T[]> {
-    const objects = await this._fetchObjectsJSON();
+    const objects = await this.fetchObjectsJSON();
     const decodedObjects = await Promise.all(
       objects
         .map(async (obj) => {
@@ -280,7 +280,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     return decodedObjects as T[];
   }
 
-  async _fetchObjectsJSON(): Promise<ObjectJSON[]> {
+  async fetchObjectsJSON(): Promise<ObjectJSON[]> {
     const { objects } = await this._service.queryQueue({
       query: {
         queuesNamespace: this._subspaceTag,
@@ -303,7 +303,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
    * Internal use.
    * Doesn't trigger update events.
    */
-  _getObjectsSync(): T[] {
+  getObjectsSync(): T[] {
     return this._objects;
   }
 

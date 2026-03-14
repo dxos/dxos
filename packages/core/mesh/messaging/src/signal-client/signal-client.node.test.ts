@@ -163,7 +163,7 @@ describe('SignalClient', () => {
     return {
       author: { peerKey: from.peerKey.toHex() },
       recipient: { peerKey: to.peerKey.toHex() },
-      payload,
+      payload: PAYLOAD,
     };
   };
 

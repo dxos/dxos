@@ -118,7 +118,7 @@ export class WebsocketSignalManager extends Resource implements SignalManager {
     await this._forEachServer((server) => server.leave({ topic, peer }));
   }
 
-  async query(_params: QueryRequest): Promise<SwarmResponse> {
+  async query({ topic }: QueryRequest): Promise<SwarmResponse> {
     throw new Error('Not implemented');
   }
 

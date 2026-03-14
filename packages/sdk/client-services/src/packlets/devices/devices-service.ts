@@ -4,7 +4,6 @@
 
 import { SubscriptionList } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import {
@@ -25,7 +24,7 @@ export class DevicesServiceImpl implements DevicesService {
   ) {}
 
   async updateDevice(profile: DeviceProfileDocument): Promise<Device> {
-    return this._identityManager.updateDeviceProfile(Context.default(), profile);
+    return this._identityManager.updateDeviceProfile(profile);
   }
 
   queryDevices(): Stream<QueryDevicesResponse> {

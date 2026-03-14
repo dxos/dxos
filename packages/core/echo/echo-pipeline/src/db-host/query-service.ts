@@ -13,7 +13,12 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { type RuntimeProvider } from '@dxos/effect';
 import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
-import { type QueryRequest, type QueryResponse, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
+import {
+  type QueryRequest,
+  type QueryResponse,
+  type QueryResult,
+  type QueryService,
+} from '@dxos/protocols/proto/dxos/echo/query';
 import { trace } from '@dxos/tracing';
 
 import { type AutomergeHost } from '../automerge';
@@ -49,7 +54,7 @@ type ActiveQuery = {
 };
 
 @trace.resource()
-export class QueryServiceImpl extends Resource {
+export class QueryServiceImpl extends Resource implements QueryService {
   // TODO(dmaretskyi): We need to implement query deduping. Idle composer has 80 queries with only 10 being unique.
   private readonly _queries = new Set<ActiveQuery>();
 
@@ -74,12 +79,12 @@ export class QueryServiceImpl extends Resource {
     });
   }
 
-  override async _open(ctx: Context): Promise<void> {
-    this._updateQueries = new DeferredTask(this._ctx, () => this._executeQueries(this._ctx));
+  override async _open(): Promise<void> {
+    this._updateQueries = new DeferredTask(this._ctx, this._executeQueries.bind(this));
   }
 
   @synchronized
-  override async _close(ctx: Context): Promise<void> {
+  override async _close(): Promise<void> {
     await this._updateQueries.join();
     await Promise.all(Array.from(this._queries).map((query) => query.close()));
   }
@@ -100,9 +105,9 @@ export class QueryServiceImpl extends Resource {
   }
 
   execQuery(request: QueryRequest): Stream<QueryResponse> {
-    return new Stream<QueryResponse>(({ next, close, ctx: streamCtx }) => {
-      const queryEntry = this._createQuery(streamCtx, request, next, close, close);
-      scheduleMicroTask(streamCtx, async () => {
+    return new Stream<QueryResponse>(({ next, close, ctx }) => {
+      const queryEntry = this._createQuery(ctx, request, next, close, close);
+      scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
         queryEntry.open = true;
         this._updateQueries.schedule();
@@ -160,7 +165,7 @@ export class QueryServiceImpl extends Resource {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _executeQueries(ctx: Context) {
+  private async _executeQueries() {
     // TODO(dmaretskyi): How do we integrate this tracing info into the tracing API.
     const begin = performance.now();
     let count = 0;
@@ -172,11 +177,11 @@ export class QueryServiceImpl extends Resource {
         count++;
 
         try {
-          const { changed } = await query.executor.execQuery(ctx);
+          const { changed } = await query.executor.execQuery();
           query.dirty = false;
           if (changed || query.firstResult) {
             query.firstResult = false;
-            query.sendResults(query.executor.getResults(ctx));
+            query.sendResults(query.executor.getResults());
           }
         } catch (err) {
           log.catch(err);

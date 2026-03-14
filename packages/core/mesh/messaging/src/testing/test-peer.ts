@@ -49,7 +49,7 @@ export class TestPeer extends Resource {
     await this.signalManager.open();
     this.messenger.open();
     await this.messenger
-      .listen(this._ctx, {
+      .listen({
         peer: this.peerInfo,
         onMessage: async (msg) => {
           this.defaultReceived.emit(msg);

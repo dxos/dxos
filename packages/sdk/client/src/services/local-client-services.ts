@@ -230,7 +230,7 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    await this._host?.close(Context.default());
+    await this._host?.close();
 
     // Clean up OPFS worker and runtime.
     this._opfsWorker?.terminate();

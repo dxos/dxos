@@ -5,7 +5,6 @@
 import { type Heads } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 
-import { type Context } from '@dxos/context';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type AutomergeProtocolMessage } from '@dxos/protocols';
 
@@ -14,12 +13,12 @@ export interface AutomergeReplicator {
   /**
    * Called on when replicator is added to EchoHost.
    */
-  connect(ctx: Context, context: AutomergeReplicatorContext): Promise<void>;
+  connect(context: AutomergeReplicatorContext): Promise<void>;
 
   /**
    * Called on when replicator is removed from EchoHost.
    */
-  disconnect(ctx: Context): Promise<void>;
+  disconnect(): Promise<void>;
 }
 
 export interface AutomergeReplicatorContext {
@@ -80,13 +79,13 @@ export interface AutomergeReplicatorConnection {
   /**
    * Pushes the batch of documents to the remote peer.
    */
-  pushBundle?(ctx: Context, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]): Promise<void>;
+  pushBundle?(bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]): Promise<void>;
 
   /**
    * Pulls the batch of documents from the remote peer.
    */
   // TODO(mykola): Use automerge-repo-bundles Bundle type here.
-  pullBundle?(ctx: Context, docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>>;
+  pullBundle?(docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>>;
 }
 
 export type ShouldAdvertiseProps = {

@@ -4,7 +4,6 @@
 
 import { describe, onTestFinished, test } from 'vitest';
 
-import { Context } from '@dxos/context';
 import { createStorage } from '@dxos/random-access-storage';
 
 import { TestAgentBuilder, WebsocketNetworkManagerProvider } from '../testing';
@@ -24,17 +23,16 @@ describe('space-manager', () => {
       await builder.close();
     });
 
-    const ctx = Context.default();
     const peer1 = await builder.createPeer();
     const spaceManager1 = peer1.spaceManager;
-    await spaceManager1.open(ctx);
+    await spaceManager1.open();
 
     const peer2 = await builder.createPeer();
     const spaceManager2 = peer2.spaceManager;
-    await spaceManager2.open(ctx);
+    await spaceManager2.open();
 
-    onTestFinished(() => spaceManager1.close(ctx));
-    onTestFinished(() => spaceManager2.close(ctx));
+    onTestFinished(() => spaceManager1.close());
+    onTestFinished(() => spaceManager2.close());
 
     // const space1 = await spaceManager1.createSpace();
     // expect(space1.isOpen).to.be.true;

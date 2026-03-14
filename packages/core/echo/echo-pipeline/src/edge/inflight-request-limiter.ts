@@ -3,7 +3,7 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { type Context, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type AutomergeProtocolMessage } from '@dxos/protocols';
 
@@ -26,13 +26,13 @@ export class InflightRequestLimiter extends Resource {
     super();
   }
 
-  protected override async _open(_ctx: Context): Promise<void> {
+  protected override async _open(): Promise<void> {
     this._inflightRequestBalance = 0;
     this._requestBarrier.reset();
     this._requestBarrier.wake();
   }
 
-  protected override async _close(_ctx: Context): Promise<void> {
+  protected override async _close(): Promise<void> {
     this._inflightRequestBalance = 0;
     this._requestBarrier.throw(new Error('Rate limiter closed.'));
     clearTimeout(this._resetBalanceTimeout);

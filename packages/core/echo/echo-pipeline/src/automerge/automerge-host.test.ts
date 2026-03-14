@@ -22,7 +22,7 @@ describe('AutomergeHost', () => {
   test('can create documents', async () => {
     const level = await createLevel();
     const host = await setupAutomergeHost({ level });
-    const handle = await host.createDoc<any>(Context.default());
+    const handle = await host.createDoc<any>();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
@@ -33,7 +33,7 @@ describe('AutomergeHost', () => {
   test('changes are preserved in storage', async () => {
     const level = await createLevel();
     const host = await setupAutomergeHost({ level });
-    const handle = await host.createDoc<any>(Context.default());
+    const handle = await host.createDoc<any>();
     handle.change((doc: any) => {
       doc.text = 'Hello world';
     });
@@ -62,7 +62,7 @@ describe('AutomergeHost', () => {
     const loadPromise = host.loadDoc(Context.default(), documentId);
 
     // Create the document from binary - this should resolve the load
-    const createdHandle = await host.createDoc(Context.default(), binary, { preserveHistory: true, documentId });
+    const createdHandle = await host.createDoc(binary, { preserveHistory: true, documentId });
 
     // The load should now resolve
     const loadedHandle = await loadPromise;
@@ -74,7 +74,7 @@ describe('AutomergeHost', () => {
 
     const level = await createLevel(tmpPath);
     const host = await setupAutomergeHost({ level });
-    const handle = await host.createDoc(Context.default(), { text: 'Hello world' });
+    const handle = await host.createDoc({ text: 'Hello world' });
     const expectedHeads = getHeads(handle.doc()!);
     await host.flush(Context.default());
 
@@ -94,7 +94,7 @@ describe('AutomergeHost', () => {
 
     const level = await createLevel(tmpPath);
     const host = await setupAutomergeHost({ level });
-    const handles = await Promise.all(range(2, () => host.createDoc(Context.default(), { text: 'Hello world' })));
+    const handles = await Promise.all(range(2, () => host.createDoc({ text: 'Hello world' })));
     const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.doc()!));
     await host.flush(Context.default());
 
@@ -127,7 +127,7 @@ describe('AutomergeHost', () => {
     {
       const host2 = await setupAutomergeHost({ level: level2 });
       for (const i of range(NUM_DOCUMENTS)) {
-        const handle = await host2.createDoc(Context.default(), { docIndex: i });
+        const handle = await host2.createDoc({ docIndex: i });
         documentIds.push(handle.documentId);
       }
       await host2.flush(Context.default());
@@ -141,13 +141,11 @@ describe('AutomergeHost', () => {
     await host2.addReplicator(Context.default(), await network.createReplicator());
 
     const collectionId = 'test-collection';
-    await host1.updateLocalCollectionState(Context.default(), collectionId, documentIds);
-    await host2.updateLocalCollectionState(Context.default(), collectionId, documentIds);
+    await host1.updateLocalCollectionState(collectionId, documentIds);
+    await host2.updateLocalCollectionState(collectionId, documentIds);
 
     for (const documentId of documentIds) {
-      await expect
-        .poll(() => host1.getHeads([documentId]))
-        .toEqual(await host2.getHeads([documentId]));
+      await expect.poll(() => host1.getHeads([documentId])).toEqual(await host2.getHeads([documentId]));
     }
 
     await host1.close();

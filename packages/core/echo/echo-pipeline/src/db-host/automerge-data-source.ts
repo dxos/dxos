@@ -93,7 +93,9 @@ export class AutomergeDataSource implements IndexDataSource {
 
       for (const { documentId, heads: docHeads } of changedDocuments) {
         try {
-          const handle = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId));
+          const handle = yield* Effect.promise(() =>
+            this.#automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId),
+          );
           const doc = handle.doc();
           if (!doc) {
             continue;

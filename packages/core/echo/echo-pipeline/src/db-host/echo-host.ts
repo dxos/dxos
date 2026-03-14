@@ -6,7 +6,7 @@ import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId 
 import type * as SqlClient from '@effect/sql/SqlClient';
 
 import { DeferredTask, sleep } from '@dxos/async';
-import { type Context, LifecycleState, Resource } from '@dxos/context';
+import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -16,6 +16,7 @@ import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
+import { type FeedProtocol } from '@dxos/protocols';
 import type { SyncQueueRequest } from '@dxos/protocols/proto/dxos/client/services';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
@@ -80,7 +81,7 @@ export class EchoHost extends Resource {
 
   private _updateIndexes!: DeferredTask;
 
-  private _queuesService: LocalQueueServiceImpl;
+  private _queuesService: FeedProtocol.QueueService;
 
   private _indexesUpToDate = false;
 
@@ -186,7 +187,7 @@ export class EchoHost extends Resource {
     return this._dataService;
   }
 
-  get queuesService(): LocalQueueServiceImpl {
+  get queuesService(): FeedProtocol.QueueService {
     return this._queuesService;
   }
 
@@ -221,13 +222,9 @@ export class EchoHost extends Resource {
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       if (e.previousRootId) {
-        void this._automergeHost.clearLocalCollectionState(
-          this._ctx,
-          deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId),
-        );
+        void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId));
       }
       void this._automergeHost.updateLocalCollectionState(
-        this._ctx,
         deriveCollectionIdFromSpaceId(e.spaceId, e.spaceRootId),
         e.documentIds,
       );
@@ -248,14 +245,14 @@ export class EchoHost extends Resource {
   /**
    * Flush all pending writes to the underlying storage.
    */
-  async flush(ctx: Context): Promise<void> {
-    await this._automergeHost.flush(ctx);
+  async flush(): Promise<void> {
+    await this._automergeHost.flush(this._ctx);
   }
 
   /**
    * Perform any pending index updates.
    */
-  async updateIndexes(ctx: Context): Promise<void> {
+  async updateIndexes(): Promise<void> {
     do {
       await this._updateIndexes.runBlocking();
     } while (!this._indexesUpToDate);
@@ -275,18 +272,18 @@ export class EchoHost extends Resource {
   /**
    * Create new persisted document.
    */
-  async createDoc<T>(ctx: Context, initialValue?: T, opts?: CreateDocOptions): Promise<DocHandle<T>> {
-    return this._automergeHost.createDoc(ctx, initialValue, opts);
+  async createDoc<T>(initialValue?: T, opts?: CreateDocOptions): Promise<DocHandle<T>> {
+    return this._automergeHost.createDoc(initialValue, opts);
   }
 
   /**
    * Create new space root.
    */
-  async createSpaceRoot(ctx: Context, spaceKey: PublicKey): Promise<DatabaseRoot> {
+  async createSpaceRoot(spaceKey: PublicKey): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const spaceId = await createIdFromSpaceKey(spaceKey);
 
-    const automergeRoot = await this._automergeHost.createDoc<DatabaseDirectory>(ctx, {
+    const automergeRoot = await this._automergeHost.createDoc<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: { spaceKey: spaceKey.toHex() },
 
@@ -295,15 +292,15 @@ export class EchoHost extends Resource {
       links: {},
     });
 
-    await this._automergeHost.flush(ctx, { documentIds: [automergeRoot.documentId] });
+    await this._automergeHost.flush(this._ctx, { documentIds: [automergeRoot.documentId] });
 
-    return await this.openSpaceRoot(ctx, spaceId, automergeRoot.url);
+    return await this.openSpaceRoot(spaceId, automergeRoot.url);
   }
 
   // TODO(dmaretskyi): Change to document id.
-  async openSpaceRoot(ctx: Context, spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
+  async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), automergeUrl, {
       fetchFromNetwork: true,
     });
     await handle.whenReady();
@@ -312,34 +309,34 @@ export class EchoHost extends Resource {
   }
 
   // TODO(dmaretskyi): Change to document id.
-  async closeSpaceRoot(ctx: Context, _automergeUrl: AutomergeUrl): Promise<void> {
+  async closeSpaceRoot(_automergeUrl: AutomergeUrl): Promise<void> {
     todo();
   }
 
   /**
    * Install data replicator.
    */
-  async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
-    await this._automergeHost.addReplicator(ctx, replicator);
+  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
+    await this._automergeHost.addReplicator(this._ctx, replicator);
   }
 
   /**
    * Remove data replicator.
    */
-  async removeReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
-    await this._automergeHost.removeReplicator(ctx, replicator);
+  async removeReplicator(replicator: AutomergeReplicator): Promise<void> {
+    await this._automergeHost.removeReplicator(this._ctx, replicator);
   }
 
   /**
    * Run collection sync for the given space.
    * Does not wait for the sync to complete.
    */
-  async runCollectionSync(ctx: Context, spaceId: SpaceId) {
+  async runCollectionSync(spaceId: SpaceId) {
     const root = this._spaceStateManager.getRootBySpaceId(spaceId);
     if (!root) {
       throw new Error(`Space not found: ${spaceId}`);
     }
-    this._automergeHost.refreshCollection(ctx, deriveCollectionIdFromSpaceId(spaceId, root.documentId));
+    this._automergeHost.refreshCollection(deriveCollectionIdFromSpaceId(spaceId, root.documentId));
   }
 
   private _runUpdateIndexes = async (): Promise<void> => {
@@ -349,7 +346,7 @@ export class EchoHost extends Resource {
     {
       performance.mark('indexEngine.update.automerge:start');
       const { updated, done } = await this._indexEngine
-        .update(this._ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
+        .update(this._automergeDataSource, { spaceId: null, limit: 50 })
         .pipe(RuntimeProvider.runPromise(this._runtime));
       totalUpdated += updated;
       totalDone &&= done;
@@ -370,7 +367,7 @@ export class EchoHost extends Resource {
     {
       performance.mark('indexEngine.update.queue:start');
       const { updated, done } = await this._indexEngine
-        .update(this._ctx, this._queueDataSource, { spaceId: null, limit: 50 })
+        .update(this._queueDataSource, { spaceId: null, limit: 50 })
         .pipe(RuntimeProvider.runPromise(this._runtime));
       totalUpdated += updated;
       totalDone &&= done;

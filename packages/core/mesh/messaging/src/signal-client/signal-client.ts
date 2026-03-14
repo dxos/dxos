@@ -115,6 +115,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
       }
     });
 
+    // Reconcile subscriptions periodically.
     scheduleTaskInterval(
       this._ctx,
       async () => {
@@ -143,6 +144,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     if (this._state === SignalState.CLOSED || this._ctx.disposed) {
       return;
     }
+    // Don't log consecutive reconciliation failures.
     if (this._state === SignalState.CONNECTED && !this._lastReconciliationFailed) {
       log.warn('SignalClient error:', err);
     }
@@ -174,17 +176,17 @@ export class SignalClient extends Resource implements SignalClientMethods {
   async join(args: JoinRequest): Promise<void> {
     log('joining', { topic: args.topic, peerId: args.peer.peerKey });
     this._monitor.recordJoin();
-    this.localState.join(this._ctx, { topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
+    this.localState.join({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
     this._reconcileTask?.schedule();
   }
 
   async leave(args: LeaveRequest): Promise<void> {
     log('leaving', { topic: args.topic, peerId: args.peer.peerKey });
     this._monitor.recordLeave();
-    this.localState.leave(this._ctx, { topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
+    this.localState.leave({ topic: args.topic, peerId: PublicKey.from(args.peer.peerKey) });
   }
 
-  async query(_params: QueryRequest): Promise<SwarmResponse> {
+  async query(params: QueryRequest): Promise<SwarmResponse> {
     throw new Error('Not implemented');
   }
 
@@ -194,7 +196,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
       invariant(this._state === SignalState.CONNECTED, 'Not connected to Signal Server');
       invariant(msg.author.peerKey, 'Author key required');
       invariant(msg.recipient.peerKey, 'Recipient key required');
-      await this._client!.sendMessage(this._ctx, {
+      await this._client!.sendMessage({
         author: PublicKey.from(msg.author.peerKey),
         recipient: PublicKey.from(msg.recipient.peerKey),
         payload: msg.payload,
@@ -205,14 +207,14 @@ export class SignalClient extends Resource implements SignalClientMethods {
   async subscribeMessages(peer: PeerInfo): Promise<void> {
     invariant(peer.peerKey, 'Peer key required');
     log('subscribing to messages', { peer });
-    this.localState.subscribeMessages(this._ctx, PublicKey.from(peer.peerKey));
+    this.localState.subscribeMessages(PublicKey.from(peer.peerKey));
     this._reconcileTask?.schedule();
   }
 
   async unsubscribeMessages(peer: PeerInfo): Promise<void> {
     invariant(peer.peerKey, 'Peer key required');
     log('unsubscribing from messages', { peer });
-    this.localState.unsubscribeMessages(this._ctx, PublicKey.from(peer.peerKey));
+    this.localState.unsubscribeMessages(PublicKey.from(peer.peerKey));
   }
 
   private _scheduleReconcileAfterError(): void {
@@ -225,10 +227,11 @@ export class SignalClient extends Resource implements SignalClientMethods {
 
     this._monitor.recordConnectionStartTime();
 
+    // Create new context for each connection.
     this._connectionCtx = this._ctx.derive();
     this._connectionCtx.onDispose(async () => {
       log('connection context disposed');
-      const { failureCount } = await this.localState.safeCloseStreams(this._ctx);
+      const { failureCount } = await this.localState.safeCloseStreams();
       this._monitor.recordStreamCloseErrors(failureCount);
     });
 
@@ -249,6 +252,8 @@ export class SignalClient extends Resource implements SignalClientMethods {
             }
             log('socket disconnected', { state: this._state });
             if (this._state === SignalState.ERROR) {
+              // Ignore disconnects after error.
+              // Handled by error handler before disconnect handler.
               this._setState(SignalState.DISCONNECTED);
             } else {
               this._onDisconnected();
@@ -332,7 +337,7 @@ export class SignalClient extends Resource implements SignalClientMethods {
     this._connectionCtx = undefined;
 
     this._clientReady.reset();
-    await this._client?.close(this._ctx).catch(() => {});
+    await this._client?.close().catch(() => {});
     this._client = undefined;
   }
 }

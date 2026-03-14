@@ -8,7 +8,6 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { Context } from '@dxos/context';
 import {
   Collection,
   Dataset,
@@ -787,7 +786,7 @@ describe('Query', () => {
 
     {
       const db = await peer.openDatabase(spaceKey, root);
-      await db.coreDatabase.updateIndexes(Context.default());
+      await db.coreDatabase.updateIndexes();
       const queryResult = await db.query(Query.select(Filter.everything())).run();
       expect(queryResult.length).to.eq(2);
 

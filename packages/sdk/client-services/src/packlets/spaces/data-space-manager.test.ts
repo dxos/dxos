@@ -23,13 +23,10 @@ describe('DataSpaceManager', () => {
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
-    const space = await peer.dataSpaceManager.createSpace(Context.default());
+    const space = await peer.dataSpaceManager.createSpace(new Context());
 
     // Process all written mutations.
-    await space.inner.controlPipeline.state.waitUntilTimeframe(
-      Context.default(),
-      space.inner.controlPipeline.state.endTimeframe,
-    );
+    await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
 
     expect(space.inner.spaceState.genesisCredential).to.exist;
     expect(space.inner.spaceState.members.size).to.equal(1);
@@ -49,11 +46,8 @@ describe('DataSpaceManager', () => {
     await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
     await connectReplicators([peer1, peer2]);
 
-    const space1 = await peer1.dataSpaceManager.createSpace(Context.default());
-    await space1.inner.controlPipeline.state.waitUntilTimeframe(
-      Context.default(),
-      space1.inner.controlPipeline.state.endTimeframe,
-    );
+    const space1 = await peer1.dataSpaceManager.createSpace(new Context());
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
     await writeMessages(
@@ -67,11 +61,11 @@ describe('DataSpaceManager', () => {
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
-    const space2 = await peer2.dataSpaceManager.acceptSpace(Context.default(), {
+    const space2 = await peer2.dataSpaceManager.acceptSpace(new Context(), {
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey,
     });
-    await peer2.dataSpaceManager.waitUntilSpaceReady(Context.default(), space2.key);
+    await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
 
     log('', {
       peer1: {
@@ -88,14 +82,8 @@ describe('DataSpaceManager', () => {
       },
     });
 
-    await space1.inner.controlPipeline.state.waitUntilTimeframe(
-      Context.default(),
-      space1.inner.controlPipeline.state.endTimeframe,
-    );
-    await space2.inner.controlPipeline.state.waitUntilTimeframe(
-      Context.default(),
-      space1.inner.controlPipeline.state.endTimeframe,
-    );
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
+    await space2.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     log('', {
       space1: {
@@ -128,11 +116,8 @@ describe('DataSpaceManager', () => {
     await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
     await connectReplicators([peer1, peer2]);
 
-    const space1 = await peer1.dataSpaceManager.createSpace(Context.default());
-    await space1.inner.controlPipeline.state.waitUntilTimeframe(
-      Context.default(),
-      space1.inner.controlPipeline.state.endTimeframe,
-    );
+    const space1 = await peer1.dataSpaceManager.createSpace(new Context());
+    await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
     await writeMessages(
@@ -146,22 +131,22 @@ describe('DataSpaceManager', () => {
     );
 
     // Accept must be called after admission so that the peer can authenticate for notarization.
-    const space2 = await peer2.dataSpaceManager.acceptSpace(Context.default(), {
+    const space2 = await peer2.dataSpaceManager.acceptSpace(new Context(), {
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey,
     });
 
     // Coincidentally, this also waits until a P2P connection is established between peers.
     // TODO(dmaretskyi): Refine this to wait for connection specifically.
-    await peer2.dataSpaceManager.waitUntilSpaceReady(Context.default(), space2.key);
+    await peer2.dataSpaceManager.waitUntilSpaceReady(space2.key);
 
     const [receivedMessage, inc] = latch({ count: 1 });
-    space2.listen(Context.default(), 'test', (message) => {
+    space2.listen('test', (message) => {
       expect(message.channelId).to.equal('test');
       inc();
     });
 
-    await space1.postMessage(Context.default(), 'test', { '@type': 'google.protobuf.Any', test: true });
+    await space1.postMessage('test', { '@type': 'google.protobuf.Any', test: true });
     await receivedMessage();
   });
 
@@ -173,17 +158,14 @@ describe('DataSpaceManager', () => {
       await peer.createIdentity();
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
-      const space = await peer.dataSpaceManager.createSpace(Context.default());
-      await space.inner.controlPipeline.state.waitUntilTimeframe(
-        Context.default(),
-        space.inner.controlPipeline.state.endTimeframe,
-      );
+      const space = await peer.dataSpaceManager.createSpace(new Context());
+      await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
       expect(space.state).to.equal(SpaceState.SPACE_READY);
 
-      await space.deactivate(Context.default());
+      await space.deactivate(new Context());
       expect(space.state).to.equal(SpaceState.SPACE_INACTIVE);
 
-      await space.activate(Context.default());
+      await space.activate(new Context());
       await asyncTimeout(
         space.stateUpdate.waitForCondition(() => space.state === SpaceState.SPACE_READY),
         500,
@@ -197,12 +179,12 @@ describe('DataSpaceManager', () => {
       await peer.createIdentity();
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
-      await peer.dataSpaceManager.createSpace(Context.default());
+      await peer.dataSpaceManager.createSpace(new Context());
       await reloadDataSpaces(peer);
 
       const space = getFirstSpace(peer);
       expect(space.state).to.equal(SpaceState.SPACE_CLOSED);
-      await space.activate(Context.default());
+      await space.activate(new Context());
       await asyncTimeout(
         space.stateUpdate.waitForCondition(() => space.state === SpaceState.SPACE_READY),
         500,
@@ -216,10 +198,10 @@ describe('DataSpaceManager', () => {
       await peer.createIdentity();
       await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
-      await peer.dataSpaceManager.createSpace(Context.default());
+      await peer.dataSpaceManager.createSpace(new Context());
       await reloadDataSpaces(peer);
 
-      await getFirstSpace(peer).deactivate(Context.default());
+      await getFirstSpace(peer).deactivate(new Context());
 
       await reloadDataSpaces(peer);
 
@@ -228,7 +210,7 @@ describe('DataSpaceManager', () => {
   });
 
   const connectReplicators = (peers: TestPeer[]) => {
-    return Promise.all(peers.map((peer) => peer.echoHost.addReplicator(Context.default(), peer.meshEchoReplicator)));
+    return Promise.all(peers.map((peer) => peer.echoHost.addReplicator(peer.meshEchoReplicator)));
   };
 
   const reloadDataSpaces = async (peer: TestPeer) => {

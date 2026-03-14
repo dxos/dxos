@@ -5,7 +5,7 @@
 import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
-import { Context, LifecycleState, Resource } from '@dxos/context';
+import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { Database, type Entity, Obj, QueryAST, Ref } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
@@ -188,7 +188,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   @synchronized
   protected override async _close(): Promise<void> {
     await this._schemaRegistry.close();
-    await this._coreDatabase.close(this._ctx);
+    await this._coreDatabase.close();
   }
 
   @synchronized
@@ -275,7 +275,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     const target = getProxyTarget(obj) as ProxyTarget & Entity.Unknown;
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
-    this._coreDatabase.addCore(Context.default(), getObjectCore(obj), opts);
+    this._coreDatabase.addCore(getObjectCore(obj), opts);
     return obj;
   }
 
@@ -307,7 +307,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         // TODO(dmaretskyi): Output validation.
         delete (output as any).id;
 
-        await this._coreDatabase.atomicReplaceObject(Context.default(), object.id, {
+        await this._coreDatabase.atomicReplaceObject(object.id, {
           data: output,
           type: migration.toType,
         });
@@ -332,21 +332,21 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    * Update service references after reconnection.
    */
   _updateServices({ dataService, queryService }: { dataService: DataService; queryService: QueryService }): void {
-    this._coreDatabase._updateServices(this._ctx, { dataService, queryService });
+    this._coreDatabase._updateServices({ dataService, queryService });
   }
 
   /**
    * Handle reconnection to re-establish RPC streams.
    */
   async _onReconnect(): Promise<void> {
-    await this._coreDatabase._onReconnect(this._ctx);
+    await this._coreDatabase._onReconnect();
   }
 
   /**
    * @internal
    */
   async _loadObjectById(objectId: string, options: LoadObjectOptions = {}): Promise<Entity.Unknown | undefined> {
-    const core = await this._coreDatabase.loadObjectCoreById(this._ctx, objectId, options);
+    const core = await this._coreDatabase.loadObjectCoreById(objectId, options);
     if (!core || (core?.isDeleted() && !options.allowDeleted)) {
       return undefined;
     }

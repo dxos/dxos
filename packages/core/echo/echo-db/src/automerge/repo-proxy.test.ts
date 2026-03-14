@@ -28,7 +28,7 @@ describe('RepoProxy', () => {
     await openAndClose(clientRepo);
 
     log.break();
-    const clientHandle = clientRepo.create<{ text: string }>(Context.default());
+    const clientHandle = clientRepo.create<{ text: string }>();
     await clientHandle.whenReady();
     log.break();
 
@@ -68,8 +68,8 @@ describe('RepoProxy', () => {
     await openAndClose(clientRepo);
 
     const text = 'Hello World!';
-    const hostHandle = await host.createDoc<{ text: string }>(Context.default(), { text });
-    const clientHandle = clientRepo.find<{ text: string }>(Context.default(), hostHandle.url);
+    const hostHandle = await host.createDoc<{ text: string }>({ text });
+    const clientHandle = clientRepo.find<{ text: string }>(hostHandle.url);
     await asyncTimeout(clientHandle.whenReady(), 1000);
     expect(clientHandle.doc()?.text).to.equal(text);
   });
@@ -84,18 +84,18 @@ describe('RepoProxy', () => {
     await openAndClose(repo2);
     const network = await new TestReplicationNetwork().open();
 
-    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
-    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer1.host.addReplicator(await network.createReplicator());
+    await peer2.host.addReplicator(await network.createReplicator());
 
     const text = 'Hello World!';
-    const handle1 = repo1.create<{ text: string }>(Context.default(), { text });
+    const handle1 = repo1.create<{ text: string }>({ text });
     await handle1.whenReady();
     await repo1.flush();
 
-    const handle2 = repo2.find<{ text: string }>(Context.default(), handle1.url!);
+    const handle2 = repo2.find<{ text: string }>(handle1.url!);
     await handle2.whenReady();
     expect(handle2.doc()?.text).to.equal(text);
-    await peer1.host.flush(Context.default());
+    await peer1.host.flush();
 
     {
       // Change from another peer.
@@ -123,7 +123,7 @@ describe('RepoProxy', () => {
 
       const text = 'Hello World!';
 
-      const clientHandle = clientRepo.create<{ text: string }>(Context.default());
+      const clientHandle = clientRepo.create<{ text: string }>();
       await clientHandle.whenReady();
       url = clientHandle.url!;
       clientHandle.change((doc: any) => {
@@ -131,7 +131,7 @@ describe('RepoProxy', () => {
       });
 
       await clientRepo.flush();
-      await host.flush(Context.default());
+      await host.flush();
       await clientRepo.close();
       await host.close();
       await level.close();
@@ -144,7 +144,7 @@ describe('RepoProxy', () => {
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
 
-      const clientHandle = clientRepo.find<{ text: string }>(Context.default(), url);
+      const clientHandle = clientRepo.find<{ text: string }>(url);
       await asyncTimeout(clientHandle.whenReady(), 1000);
       expect(clientHandle.doc()?.text).to.equal('Hello World!');
     }
@@ -161,7 +161,7 @@ describe('RepoProxy', () => {
       await openAndClose(clientRepo);
 
       const text = 'Hello World!';
-      const clientHandle = clientRepo.create<{ text: string }>(Context.default(), { text: text });
+      const clientHandle = clientRepo.create<{ text: string }>({ text: text });
       await sleep(200); // Wait for the object to be saved without flush.
       url = clientHandle.url!;
       await level.close();
@@ -175,7 +175,7 @@ describe('RepoProxy', () => {
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
 
-      const clientHandle = clientRepo.find<{ text: string }>(Context.default(), url);
+      const clientHandle = clientRepo.find<{ text: string }>(url);
       await asyncTimeout(clientHandle.whenReady(), 1000);
 
       expect(clientHandle.doc()?.text).to.equal('Hello World!');
@@ -194,7 +194,7 @@ describe('RepoProxy', () => {
 
       const text = 'Hello World!';
       type TestDoc = { text: string };
-      const clientHandle = clientRepo.create<TestDoc>(Context.default());
+      const clientHandle = clientRepo.create<TestDoc>();
       await clientRepo.flush();
       clientHandle.change((doc: TestDoc) => (doc.text = text));
       url = clientHandle.url!;
@@ -210,7 +210,7 @@ describe('RepoProxy', () => {
       const [clientRepo] = createProxyRepos(dataService);
       await openAndClose(clientRepo);
 
-      const clientHandle = clientRepo.find<{ text: string }>(Context.default(), url);
+      const clientHandle = clientRepo.find<{ text: string }>(url);
       await asyncTimeout(clientHandle.whenReady(), 1000);
 
       expect(clientHandle.doc()?.text).to.equal('Hello World!');
@@ -222,7 +222,7 @@ describe('RepoProxy', () => {
     const [clientRepo] = createProxyRepos(dataService);
     await openAndClose(clientRepo);
 
-    const handle = clientRepo.create<{ client: number; host: number }>(Context.default());
+    const handle = clientRepo.create<{ client: number; host: number }>();
     await handle.whenReady();
     const hostHandle = await host.loadDoc<{ client: number; host: number }>(Context.default(), handle.url!);
 
@@ -257,9 +257,9 @@ describe('RepoProxy', () => {
     await openAndClose(clientRepo);
 
     const text = 'Hello World!';
-    const handle = clientRepo.create<{ text: string }>(Context.default(), { text });
+    const handle = clientRepo.create<{ text: string }>({ text });
 
-    const cloneHandle = clientRepo.import<{ text: string }>(Context.default(), A.save(handle.doc()));
+    const cloneHandle = clientRepo.import<{ text: string }>(A.save(handle.doc()));
     await cloneHandle.whenReady();
     expect(cloneHandle.doc()?.text).to.equal(text);
 
@@ -278,11 +278,11 @@ describe('RepoProxy', () => {
     const handles = [];
 
     for (let i = 0; i < numberOfDocuments / 2; i++) {
-      handles.push(clientRepo.create<{ text: string }>(Context.default(), { text }));
+      handles.push(clientRepo.create<{ text: string }>({ text }));
     }
 
     for (let i = 0; i < numberOfDocuments / 2; i++) {
-      const handle = clientRepo.create<{ text: string }>(Context.default());
+      const handle = clientRepo.create<{ text: string }>();
       handle.change((doc: any) => {
         doc.text = text;
       });
@@ -319,7 +319,7 @@ describe('RepoProxy', () => {
     // Create documents in repo1.
     const handles1: DocHandleProxy<DocStruct>[] = [];
     for (let i = 0; i < amountToCreateInEachRepo; i++) {
-      handles1.push(repo1.create<DocStruct>(Context.default()));
+      handles1.push(repo1.create<DocStruct>());
       handles1[i].change((doc: DocStruct) => {
         doc.text1 = text1;
       });
@@ -329,7 +329,7 @@ describe('RepoProxy', () => {
     // Create documents in repo2.
     const handles2: DocHandleProxy<DocStruct>[] = [];
     for (let i = 0; i < amountToCreateInEachRepo; i++) {
-      handles2.push(repo2.create<DocStruct>(Context.default()));
+      handles2.push(repo2.create<DocStruct>());
       handles2[i].change((doc: DocStruct) => {
         doc.text2 = text2;
       });
@@ -338,22 +338,22 @@ describe('RepoProxy', () => {
 
     // Replicate documents from repo1 to repo2.
     for (const handle of handles1) {
-      const foundHandle = repo2.find<DocStruct>(Context.default(), handle.url!);
+      const foundHandle = repo2.find<DocStruct>(handle.url!);
       await foundHandle.whenReady();
       foundHandle.change((doc: DocStruct) => {
         doc.text2 = text2;
       });
-      handles2.push(repo2.find<DocStruct>(Context.default(), handle.url!));
+      handles2.push(repo2.find<DocStruct>(handle.url!));
     }
 
     // Replicate documents from repo2 to repo1.
     for (const handle of handles2) {
-      const foundHandle = repo1.find<DocStruct>(Context.default(), handle.url!);
+      const foundHandle = repo1.find<DocStruct>(handle.url!);
       await foundHandle.whenReady();
       foundHandle.change((doc: DocStruct) => {
         doc.text1 = text1;
       });
-      handles1.push(repo1.find<DocStruct>(Context.default(), handle.url!));
+      handles1.push(repo1.find<DocStruct>(handle.url!));
     }
 
     // Check that all documents are replicated.
@@ -381,7 +381,7 @@ const setup = async (kv = createTestLevel()) => {
   const refreshCollectionState = async () => {
     const documentIds = Record.keys(host.handles);
     log('refreshCollectionState', { documentIds });
-    await host.updateLocalCollectionState(Context.default(), 'default', documentIds);
+    await host.updateLocalCollectionState('default', documentIds);
   };
   return { kv, host, dataService, refreshCollectionState };
 };

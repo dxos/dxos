@@ -90,7 +90,7 @@ export class Space extends Resource {
 
       if (!info.key.equals(params.genesisFeed.key)) {
         scheduleMicroTask(this._ctx, async () => {
-          await this.protocol.addFeed(this._ctx, await params.feedProvider(info.key, { sparse }));
+          await this.protocol.addFeed(await params.feedProvider(info.key, { sparse }));
         });
       }
     });
@@ -152,14 +152,14 @@ export class Space extends Resource {
     return this._controlPipeline.pipeline;
   }
 
-  async setControlFeed(ctx: Context, feed: FeedWrapper<FeedMessage>): Promise<this> {
+  async setControlFeed(feed: FeedWrapper<FeedMessage>): Promise<this> {
     invariant(!this._controlFeed, 'Control feed already set.');
     this._controlFeed = feed;
-    await this._controlPipeline.setWriteFeed(ctx, feed);
+    await this._controlPipeline.setWriteFeed(feed);
     return this;
   }
 
-  async setDataFeed(ctx: Context, feed: FeedWrapper<FeedMessage>): Promise<this> {
+  async setDataFeed(feed: FeedWrapper<FeedMessage>): Promise<this> {
     invariant(!this._dataFeed, 'Data feed already set.');
     this._dataFeed = feed;
     return this;
@@ -168,7 +168,7 @@ export class Space extends Resource {
   /**
    * Use for diagnostics.
    */
-  getControlFeeds(ctx: Context): FeedInfo[] {
+  getControlFeeds(): FeedInfo[] {
     return Array.from(this._controlPipeline.spaceState.feeds.values());
   }
 
@@ -177,25 +177,25 @@ export class Space extends Resource {
     log('opening...');
 
     // Order is important.
-    await this._controlPipeline.start(ctx);
+    await this._controlPipeline.start();
 
     log('opened');
   }
 
   @synchronized
-  public async startProtocol(ctx: Context): Promise<void> {
+  public async startProtocol(): Promise<void> {
     invariant(this.isOpen);
-    await this.protocol.start(ctx);
-    await this.protocol.addFeed(ctx, await this._feedProvider(this._genesisFeedKey));
+    await this.protocol.start();
+    await this.protocol.addFeed(await this._feedProvider(this._genesisFeedKey));
   }
 
   @synchronized
-  protected override async _close(ctx: Context): Promise<void> {
+  protected override async _close(): Promise<void> {
     log('closing...', { key: this._key });
 
     // Closes in reverse order to open.
-    await this.protocol.stop(ctx);
-    await this._controlPipeline.stop(ctx);
+    await this.protocol.stop();
+    await this._controlPipeline.stop();
 
     log('closed');
   }

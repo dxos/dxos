@@ -18,9 +18,9 @@ const MIN_QUERY_INTERVAL = 5_000;
 const POLL_INTERVAL = 10_000;
 
 export type CollectionSynchronizerProps = {
-  sendCollectionState: (ctx: Context, collectionId: string, peerId: PeerId, state: CollectionState) => void;
-  queryCollectionState: (ctx: Context, collectionId: string, peerId: PeerId) => void;
-  shouldSyncCollection: (ctx: Context, collectionId: string, peerId: PeerId) => boolean;
+  sendCollectionState: (collectionId: string, peerId: PeerId, state: CollectionState) => void;
+  queryCollectionState: (collectionId: string, peerId: PeerId) => void;
+  shouldSyncCollection: (collectionId: string, peerId: PeerId) => boolean;
 };
 
 /**
@@ -55,7 +55,7 @@ export class CollectionSynchronizer extends Resource {
       async () => {
         for (const collectionId of this._perCollectionStates.keys()) {
           if (this._activeCollections.has(collectionId)) {
-            this.refreshCollection(this._ctx, collectionId);
+            this.refreshCollection(collectionId);
             await asyncReturn();
           }
         }
@@ -64,65 +64,65 @@ export class CollectionSynchronizer extends Resource {
     );
   }
 
-  getRegisteredCollectionIds(ctx: Context): string[] {
+  getRegisteredCollectionIds(): string[] {
     return [...this._activeCollections];
   }
 
-  getLocalCollectionState(ctx: Context, collectionId: string): CollectionState | undefined {
+  getLocalCollectionState(collectionId: string): CollectionState | undefined {
     return this._perCollectionStates.get(collectionId)?.localState;
   }
 
-  setLocalCollectionState(ctx: Context, collectionId: string, state: CollectionState): void {
+  setLocalCollectionState(collectionId: string, state: CollectionState): void {
     this._activeCollections.add(collectionId);
 
     log('setLocalCollectionState', { collectionId, state });
-    this._getOrCreatePerCollectionState(ctx, collectionId).localState = state;
+    this._getOrCreatePerCollectionState(collectionId).localState = state;
 
     for (const peerId of this._connectedPeers) {
-      this._diffCollectionState(ctx, collectionId, peerId);
+      this._diffCollectionState(collectionId, peerId);
     }
 
     queueMicrotask(async () => {
       if (!this._ctx.disposed && this._activeCollections.has(collectionId)) {
-        this._refreshInterestedPeers(this._ctx, collectionId);
-        this.refreshCollection(this._ctx, collectionId);
+        this._refreshInterestedPeers(collectionId);
+        this.refreshCollection(collectionId);
       }
     });
   }
 
-  clearLocalCollectionState(ctx: Context, collectionId: string): void {
+  clearLocalCollectionState(collectionId: string): void {
     this._activeCollections.delete(collectionId);
     this._perCollectionStates.delete(collectionId);
     log('clearLocalCollectionState', { collectionId });
   }
 
-  getRemoteCollectionStates(ctx: Context, collectionId: string): ReadonlyMap<PeerId, CollectionState> {
-    return this._getOrCreatePerCollectionState(ctx, collectionId).remoteStates;
+  getRemoteCollectionStates(collectionId: string): ReadonlyMap<PeerId, CollectionState> {
+    return this._getOrCreatePerCollectionState(collectionId).remoteStates;
   }
 
-  refreshCollection(ctx: Context, collectionId: string): void {
+  refreshCollection(collectionId: string): void {
     let scheduleAnotherRefresh = false;
-    const state = this._getOrCreatePerCollectionState(ctx, collectionId);
+    const state = this._getOrCreatePerCollectionState(collectionId);
     for (const peerId of this._connectedPeers) {
       if (state.interestedPeers.has(peerId)) {
         const lastQueried = state.lastQueried.get(peerId) ?? 0;
         if (Date.now() - lastQueried > MIN_QUERY_INTERVAL) {
           state.lastQueried.set(peerId, Date.now());
-          this._queryCollectionState(ctx, collectionId, peerId);
+          this._queryCollectionState(collectionId, peerId);
         } else {
           scheduleAnotherRefresh = true;
         }
       }
     }
     if (scheduleAnotherRefresh) {
-      scheduleTask(this._ctx, () => this.refreshCollection(this._ctx, collectionId), MIN_QUERY_INTERVAL);
+      scheduleTask(this._ctx, () => this.refreshCollection(collectionId), MIN_QUERY_INTERVAL);
     }
   }
 
   /**
    * Callback when a connection to a peer is established.
    */
-  onConnectionOpen(ctx: Context, peerId: PeerId): void {
+  onConnectionOpen(peerId: PeerId): void {
     log('onConnectionOpen', { peerId });
     const spanId = getSpanName(peerId);
     trace.spanStart({
@@ -140,10 +140,10 @@ export class CollectionSynchronizer extends Resource {
         return;
       }
       for (const [collectionId, state] of this._perCollectionStates.entries()) {
-        if (this._activeCollections.has(collectionId) && this._shouldSyncCollection(this._ctx, collectionId, peerId)) {
+        if (this._activeCollections.has(collectionId) && this._shouldSyncCollection(collectionId, peerId)) {
           state.interestedPeers.add(peerId);
           state.lastQueried.set(peerId, Date.now());
-          this._queryCollectionState(this._ctx, collectionId, peerId);
+          this._queryCollectionState(collectionId, peerId);
         }
       }
     });
@@ -152,7 +152,7 @@ export class CollectionSynchronizer extends Resource {
   /**
    * Callback when a connection to a peer is closed.
    */
-  onConnectionClosed(ctx: Context, peerId: PeerId): void {
+  onConnectionClosed(peerId: PeerId): void {
     log('onConnectionClosed', { peerId });
 
     this._connectedPeers.delete(peerId);
@@ -165,27 +165,27 @@ export class CollectionSynchronizer extends Resource {
   /**
    * Callback when a peer queries the state of a collection.
    */
-  onCollectionStateQueried(ctx: Context, collectionId: string, peerId: PeerId): void {
-    const perCollectionState = this._getOrCreatePerCollectionState(ctx, collectionId);
+  onCollectionStateQueried(collectionId: string, peerId: PeerId): void {
+    const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
 
     if (perCollectionState.localState) {
-      this._sendCollectionState(ctx, collectionId, peerId, perCollectionState.localState);
+      this._sendCollectionState(collectionId, peerId, perCollectionState.localState);
     }
   }
 
   /**
    * Callback when a peer sends the state of a collection.
    */
-  onRemoteStateReceived(ctx: Context, collectionId: string, peerId: PeerId, state: CollectionState): void {
+  onRemoteStateReceived(collectionId: string, peerId: PeerId, state: CollectionState): void {
     log('onRemoteStateReceived', { collectionId, peerId, state });
     validateCollectionState(state);
-    const perCollectionState = this._getOrCreatePerCollectionState(ctx, collectionId);
+    const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
     perCollectionState.remoteStates.set(peerId, state);
-    this._diffCollectionState(ctx, collectionId, peerId);
+    this._diffCollectionState(collectionId, peerId);
   }
 
-  private _diffCollectionState(ctx: Context, collectionId: string, peerId: PeerId) {
-    const perCollectionState = this._getOrCreatePerCollectionState(ctx, collectionId);
+  private _diffCollectionState(collectionId: string, peerId: PeerId) {
+    const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
     const remoteState = perCollectionState.remoteStates.get(peerId);
     if (!remoteState) {
       return;
@@ -224,7 +224,7 @@ export class CollectionSynchronizer extends Resource {
     }
   }
 
-  private _getOrCreatePerCollectionState(ctx: Context, collectionId: string): PerCollectionState {
+  private _getOrCreatePerCollectionState(collectionId: string): PerCollectionState {
     return defaultMap(this._perCollectionStates, collectionId, () => ({
       localState: undefined,
       remoteStates: new Map(),
@@ -233,12 +233,12 @@ export class CollectionSynchronizer extends Resource {
     }));
   }
 
-  private _refreshInterestedPeers(ctx: Context, collectionId: string): void {
+  private _refreshInterestedPeers(collectionId: string): void {
     for (const peerId of this._connectedPeers) {
-      if (this._shouldSyncCollection(ctx, collectionId, peerId)) {
-        this._getOrCreatePerCollectionState(ctx, collectionId).interestedPeers.add(peerId);
+      if (this._shouldSyncCollection(collectionId, peerId)) {
+        this._getOrCreatePerCollectionState(collectionId).interestedPeers.add(peerId);
       } else {
-        this._getOrCreatePerCollectionState(ctx, collectionId).interestedPeers.delete(peerId);
+        this._getOrCreatePerCollectionState(collectionId).interestedPeers.delete(peerId);
       }
     }
   }

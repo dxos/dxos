@@ -91,7 +91,7 @@ export const createPeers = async (numPeers: number, signalManagerFactory?: () =>
 };
 
 export const createIdentity = async (peer: ServiceContext) => {
-  await peer.createIdentity(Context.default());
+  await peer.createIdentity();
   return peer;
 };
 
@@ -243,7 +243,7 @@ export class TestPeer {
 
   async createIdentity(): Promise<void> {
     this._props.signingContext ??= await createSigningContext(this.keyring);
-    this.networkManager.setPeerInfo(Context.default(), {
+    this.networkManager.setPeerInfo({
       identityKey: this._props.signingContext.identityKey.toHex(),
       peerKey: this._props.signingContext.deviceKey.toHex(),
     });

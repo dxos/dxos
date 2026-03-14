@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Context } from '@dxos/context';
 import { generateSeedPhrase, keyPairFromSeedPhrase } from '@dxos/credentials';
 import { sign } from '@dxos/crypto';
 import { type EdgeHttpClient } from '@dxos/edge-client';
@@ -33,10 +32,9 @@ export class EdgeIdentityRecoveryManager {
     private readonly _acceptRecoveredIdentity: (params: JoinIdentityProps) => Promise<Identity>,
   ) {}
 
-  public async createRecoveryCredential(
-    ctx: Context,
-    { data }: CreateRecoveryCredentialRequest,
-  ): Promise<{ recoveryCode: string | undefined }> {
+  public async createRecoveryCredential({
+    data,
+  }: CreateRecoveryCredentialRequest): Promise<{ recoveryCode: string | undefined }> {
     const identity = this._identityProvider();
     invariant(identity);
 
@@ -57,7 +55,7 @@ export class EdgeIdentityRecoveryManager {
     }
 
     const identityKey = identity.identityKey;
-    const credential = await identity.getIdentityCredentialSigner(ctx).createCredential({
+    const credential = await identity.getIdentityCredentialSigner().createCredential({
       subject: identityKey,
       assertion: {
         '@type': 'dxos.halo.credentials.IdentityRecovery',
@@ -69,12 +67,12 @@ export class EdgeIdentityRecoveryManager {
     });
 
     const receipt = await identity.controlPipeline.writer.write({ credential: { credential } });
-    await identity.controlPipeline.state.waitUntilTimeframe(ctx, new Timeframe([[receipt.feedKey, receipt.seq]]));
+    await identity.controlPipeline.state.waitUntilTimeframe(new Timeframe([[receipt.feedKey, receipt.seq]]));
 
     return { recoveryCode };
   }
 
-  public async requestRecoveryChallenge(ctx: Context) {
+  public async requestRecoveryChallenge() {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const deviceKey = await this._keyring.createKey();
@@ -99,17 +97,14 @@ export class EdgeIdentityRecoveryManager {
     }
   }
 
-  public async recoverIdentityWithExternalSignature(
-    ctx: Context,
-    {
-      lookupKey,
-      deviceKey,
-      controlFeedKey,
-      signature,
-      clientDataJson,
-      authenticatorData,
-    }: RecoverIdentityRequest.ExternalSignature,
-  ): Promise<void> {
+  public async recoverIdentityWithExternalSignature({
+    lookupKey,
+    deviceKey,
+    controlFeedKey,
+    signature,
+    clientDataJson,
+    authenticatorData,
+  }: RecoverIdentityRequest.ExternalSignature): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const request: EdgeRecoverIdentityRequest = {
@@ -142,7 +137,7 @@ export class EdgeIdentityRecoveryManager {
   /**
    * Recovery identity using an opaque token sent to the user's email.
    */
-  public async recoverIdentityWithToken(ctx: Context, { token }: { token: string }): Promise<void> {
+  public async recoverIdentityWithToken({ token }: { token: string }): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const deviceKey = await this._keyring.createKey();
@@ -166,7 +161,7 @@ export class EdgeIdentityRecoveryManager {
     });
   }
 
-  public async recoverIdentity(ctx: Context, { recoveryCode }: { recoveryCode: string }): Promise<void> {
+  public async recoverIdentity({ recoveryCode }: { recoveryCode: string }): Promise<void> {
     invariant(this._edgeClient, 'Not connected to EDGE.');
 
     const recoveryKeypair = keyPairFromSeedPhrase(recoveryCode);

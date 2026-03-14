@@ -29,7 +29,7 @@ describe('space/space', () => {
 
     await agent.spaceGenesis(space);
 
-    await space.controlPipeline.state!.waitUntilTimeframe(Context.default(), space.controlPipeline.state!.endTimeframe);
+    await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
 
     await builder.close();
     expect(space.isOpen).toBeFalsy();
@@ -48,9 +48,8 @@ describe('space/space', () => {
       const agent = await builder.createPeer();
       const space = await agent.createSpace(agent.identityKey);
 
-      const ctx = Context.default();
-      await space.open(ctx);
-      await space.startProtocol(ctx);
+      await space.open(Context.default());
+      await space.startProtocol();
       expect(space.isOpen).toBeTruthy();
       onTestFinished(async () => {
         await space.close();
@@ -58,10 +57,7 @@ describe('space/space', () => {
 
       await agent.spaceGenesis(space);
 
-      await space.controlPipeline.state!.waitUntilTimeframe(
-        Context.default(),
-        space.controlPipeline.state!.endTimeframe,
-      );
+      await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
 
       return [agent, space];
     });
@@ -74,9 +70,8 @@ describe('space/space', () => {
       const agent = await builder.createPeer();
       const space = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, undefined, true);
 
-      const ctx = Context.default();
-      await space.open(ctx);
-      await space.startProtocol(ctx);
+      await space.open(Context.default());
+      await space.startProtocol();
       expect(space.isOpen).toBeTruthy();
       onTestFinished(async () => {
         await space.close();
@@ -111,16 +106,10 @@ describe('space/space', () => {
       // Initial data exchange.
 
       // Agent 1 reads all feed messages.
-      await space1.controlPipeline.state!.waitUntilTimeframe(
-        Context.default(),
-        space1.controlPipeline.state!.endTimeframe,
-      );
+      await space1.controlPipeline.state!.waitUntilTimeframe(space1.controlPipeline.state!.endTimeframe);
 
       // Agent 2 reads all feed messages.
-      await space2.controlPipeline.state!.waitUntilTimeframe(
-        Context.default(),
-        space1.controlPipeline.state!.endTimeframe,
-      );
+      await space2.controlPipeline.state!.waitUntilTimeframe(space1.controlPipeline.state!.endTimeframe);
     }
 
     // TODO(burdon): Write multiple items (extract for all tests).
@@ -146,10 +135,7 @@ describe('space/space', () => {
 
     await agent.spaceGenesis(space1);
 
-    await space1.controlPipeline.state!.waitUntilTimeframe(
-      Context.default(),
-      space1.controlPipeline.state!.endTimeframe,
-    );
+    await space1.controlPipeline.state!.waitUntilTimeframe(space1.controlPipeline.state!.endTimeframe);
 
     await space1.close();
     expect(space1.isOpen).toBeFalsy();
@@ -158,10 +144,7 @@ describe('space/space', () => {
     const space2 = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, space1.dataFeedKey);
 
     await space2.open(Context.default());
-    await space2.controlPipeline.state!.waitUntilTimeframe(
-      Context.default(),
-      space2.controlPipeline.state!.endTimeframe,
-    );
+    await space2.controlPipeline.state!.waitUntilTimeframe(space2.controlPipeline.state!.endTimeframe);
   });
 
   test('re-open', async () => {
@@ -181,10 +164,7 @@ describe('space/space', () => {
 
       await agent.spaceGenesis(space);
 
-      await space.controlPipeline.state!.waitUntilTimeframe(
-        Context.default(),
-        space.controlPipeline.state!.endTimeframe,
-      );
+      await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
 
       await space.close();
       expect(space.isOpen).toBeFalsy();
@@ -195,10 +175,7 @@ describe('space/space', () => {
       await space.open(Context.default());
       expect(space.isOpen).toBeTruthy();
 
-      await space.controlPipeline.state!.waitUntilTimeframe(
-        Context.default(),
-        space.controlPipeline.state!.endTimeframe,
-      );
+      await space.controlPipeline.state!.waitUntilTimeframe(space.controlPipeline.state!.endTimeframe);
     }
   });
 });

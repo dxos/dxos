@@ -3,7 +3,6 @@
 //
 
 import { type Event } from '@dxos/async';
-import { type Context } from '@dxos/context';
 import { discoveryKey, subtleCrypto } from '@dxos/crypto';
 import { type FeedWrapper } from '@dxos/feed-store';
 import { PublicKey } from '@dxos/keys';
@@ -128,7 +127,7 @@ export class SpaceProtocol {
   }
 
   // TODO(burdon): Create abstraction for Space (e.g., add keys and have provider).
-  async addFeed(ctx: Context, feed: FeedWrapper<FeedMessage>): Promise<void> {
+  async addFeed(feed: FeedWrapper<FeedMessage>): Promise<void> {
     log('addFeed', { key: feed.key });
 
     this._feeds.add(feed);
@@ -140,7 +139,7 @@ export class SpaceProtocol {
   }
 
   // TODO(burdon): Rename open? Common open/close interfaces for all services?
-  async start(ctx: Context): Promise<void> {
+  async start(): Promise<void> {
     if (this._connection) {
       return;
     }
@@ -152,8 +151,8 @@ export class SpaceProtocol {
 
     log('starting...');
     const topic = await this._topic;
-    this._connection = await this._networkManager.joinSwarm(ctx, {
-      protocolProvider: this._createProtocolProvider(ctx, credentials),
+    this._connection = await this._networkManager.joinSwarm({
+      protocolProvider: this._createProtocolProvider(credentials),
       topic,
       topology: this._topology,
       label: `swarm ${topic.truncate()} for space ${this._spaceKey.truncate()}`,
@@ -166,7 +165,7 @@ export class SpaceProtocol {
     this._topology.forceUpdate();
   }
 
-  async stop(ctx: Context): Promise<void> {
+  async stop(): Promise<void> {
     await this.blobSync.close();
 
     if (this._connection) {
@@ -176,7 +175,7 @@ export class SpaceProtocol {
     }
   }
 
-  private _createProtocolProvider(ctx: Context, credentials: Uint8Array | undefined): WireProtocolProvider {
+  private _createProtocolProvider(credentials: Uint8Array | undefined): WireProtocolProvider {
     return (wireProps) => {
       const session = new SpaceProtocolSession({
         wireProps,

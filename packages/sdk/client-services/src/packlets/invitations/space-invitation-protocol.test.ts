@@ -25,26 +25,26 @@ describe('services/space-invitations-protocol', () => {
   test('genesis', async () => {
     const [peer] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
-    const space = await peer.dataSpaceManager!.createSpace(Context.default());
+    const space = await peer.dataSpaceManager!.createSpace(new Context());
     expect(peer.dataSpaceManager!.spaces.has(space.key)).to.be.true;
 
-    await space.close(Context.default());
+    await space.close(new Context());
   });
 
   test('genesis & ready', async () => {
     const [peer] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
 
-    const space = await peer.dataSpaceManager!.createSpace(Context.default());
+    const space = await peer.dataSpaceManager!.createSpace(new Context());
     expect(peer.dataSpaceManager!.spaces.has(space.key)).to.be.true;
 
-    await peer.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space.key);
-    await space.close(Context.default());
+    await peer.dataSpaceManager?.waitUntilSpaceReady(space.key);
+    await space.close(new Context());
   });
 
   test('invitation with no auth', async () => {
     const [host, guest] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
-    const space1 = await host.dataSpaceManager!.createSpace(Context.default());
+    const space1 = await host.dataSpaceManager!.createSpace(new Context());
     const spaceKey = space1.key;
 
     await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.SPACE, spaceKey } }));
@@ -55,23 +55,20 @@ describe('services/space-invitations-protocol', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      await host.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space1.key);
-      await guest.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space2.key);
+      await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
+      await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
 
-      await space2.inner.controlPipeline.state.waitUntilTimeframe(
-        Context.default(),
-        space1.inner.controlPipeline.state.timeframe,
-      );
+      await space2.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
 
-      await space1.close(Context.default());
-      await space2.close(Context.default());
+      await space1.close(new Context());
+      await space2.close(new Context());
     }
   });
 
   test('invitation when already joined', async () => {
     const [host, guest] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
 
-    const space1 = await host.dataSpaceManager!.createSpace(Context.default());
+    const space1 = await host.dataSpaceManager!.createSpace(new Context());
     const spaceKey = space1.key;
 
     await Promise.all(performInvitation({ host, guest, options: { kind: Invitation.Kind.SPACE, spaceKey } }));
@@ -82,8 +79,8 @@ describe('services/space-invitations-protocol', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      await host.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space1.key);
-      await guest.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space2.key);
+      await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
+      await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
     }
 
     const [_, guestResult] = performInvitation({
@@ -100,7 +97,7 @@ describe('services/space-invitations-protocol', () => {
 
     let attempt = 0;
 
-    const space1 = await host.dataSpaceManager!.createSpace(Context.default());
+    const space1 = await host.dataSpaceManager!.createSpace(new Context());
 
     const [{ invitation: invitation1, error: error1 }, { invitation: invitation2, error: error2 }] = await Promise.all(
       performInvitation({
@@ -142,16 +139,13 @@ describe('services/space-invitations-protocol', () => {
       expect(space1).not.to.be.undefined;
       expect(space2).not.to.be.undefined;
 
-      await host.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space1.key);
-      await guest.dataSpaceManager?.waitUntilSpaceReady(Context.default(), space2.key);
+      await host.dataSpaceManager?.waitUntilSpaceReady(space1.key);
+      await guest.dataSpaceManager?.waitUntilSpaceReady(space2.key);
 
-      await space2.inner.controlPipeline.state.waitUntilTimeframe(
-        Context.default(),
-        space1.inner.controlPipeline.state.timeframe,
-      );
+      await space2.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.timeframe);
 
-      await space1.close(Context.default());
-      await space2.close(Context.default());
+      await space1.close(new Context());
+      await space2.close(new Context());
     }
 
     expect(
@@ -161,7 +155,7 @@ describe('services/space-invitations-protocol', () => {
 
   test('timeout', async () => {
     const [host, guest] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
-    const space = await host.dataSpaceManager!.createSpace(Context.default());
+    const space = await host.dataSpaceManager!.createSpace(new Context());
     const hostInvitation = await createInvitation(host, {
       kind: Invitation.Kind.SPACE,
       spaceKey: space.key,
@@ -187,7 +181,7 @@ describe('services/space-invitations-protocol', () => {
     const hostConnected = new Trigger<Invitation>();
     const guestConnected = new Trigger<Invitation>();
 
-    const space1 = await host.dataSpaceManager!.createSpace(Context.default());
+    const space1 = await host.dataSpaceManager!.createSpace(new Context());
 
     const invitationPromises = performInvitation({
       host,
@@ -220,7 +214,7 @@ describe('services/space-invitations-protocol', () => {
     expect(invitation1?.state).to.eq(Invitation.State.CANCELLED);
     expect(error).to.exist;
 
-    await space1.close(Context.default());
+    await space1.close(new Context());
   });
 
   // TODO(burdon): Flaky.
@@ -230,7 +224,7 @@ describe('services/space-invitations-protocol', () => {
   //     createPeers(GUEST_COUNT + 1)
   //   );
 
-  //   const hostSpace = await host.dataSpaceManager!.createSpace(Context.default());
+  //   const hostSpace = await host.dataSpaceManager!.createSpace(new Context());
   //   const swarmKey = PublicKey.random();
   //   const hostObservable = await host.spaceInvitations!.createInvitation(hostSpace, {
   //     swarmKey,

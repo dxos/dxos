@@ -5,7 +5,6 @@
 import WebSocket from 'isomorphic-ws';
 
 import { Trigger } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { EdgeWebsocketProtocol } from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
@@ -46,7 +45,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
         ws.send('__pong__');
         return;
       }
-      const message = muxer.receiveData(Context.default(), await toUint8Array(data));
+      const message = muxer.receiveData(await toUint8Array(data));
       if (!message) {
         return;
       }
@@ -77,7 +76,7 @@ export const createTestEdgeWsServer = async (port = DEFAULT_PORT, params?: TestE
     currentConnection: () => connection,
     sendResponseMessage,
     sendMessage: (msg: Message) => {
-      return connection!.muxer.send(Context.default(), msg);
+      return connection!.muxer.send(msg);
     },
     closeConnection: () => {
       closeTrigger.reset();
@@ -105,7 +104,6 @@ const createResponseSender = (connection: () => WebSocketMuxer) => {
   return (request: Message, responsePayload: Uint8Array) => {
     const recipient = request.source!;
     void connection().send(
-      Context.default(),
       buf.create(MessageSchema, {
         source: {
           identityKey: recipient.identityKey,

@@ -70,7 +70,7 @@ export const subscribeToNetworkTopics = ({ networkManager }: { networkManager: S
         const topics = networkManager.topics;
         const labeledTopics = topics.map((topic) => ({
           topic,
-          label: networkManager.getSwarm(Context.default(), topic)?.label ?? topic.toHex(),
+          label: networkManager.getSwarm(topic)?.label ?? topic.toHex(),
         }));
         next({ topics: labeledTopics });
       } catch (err: any) {
@@ -102,7 +102,7 @@ export const getNetworkPeers = (
     throw new Error('Expected a network topic');
   }
 
-  const map = networkManager.getSwarmMap(Context.default(), PublicKey.from(request.topic));
+  const map = networkManager.getSwarmMap(PublicKey.from(request.topic));
   return {
     peers: map?.peers.map((peer) => ({
       ...peer,

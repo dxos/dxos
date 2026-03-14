@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
@@ -50,7 +49,7 @@ describe('Integration tests', () => {
     await using db = await peer.createDatabase();
     await dataAssertion.seed(db);
 
-    await peer.host.updateIndexes(Context.default());
+    await peer.host.updateIndexes();
     await peer.close();
     await peer.open();
 
@@ -67,7 +66,7 @@ describe('Integration tests', () => {
 
     await peer.close();
     await peer.open();
-    await peer.host.updateIndexes(Context.default());
+    await peer.host.updateIndexes();
 
     await using db2 = await peer.openLastDatabase();
     await dataAssertion.verify(db2);
@@ -80,13 +79,13 @@ describe('Integration tests', () => {
     await using db = await peer.createDatabase();
     await dataAssertion.seed(db);
     await db.flush();
-    const heads = await db.coreDatabase.getDocumentHeads(Context.default());
+    const heads = await db.coreDatabase.getDocumentHeads();
 
     await peer.reload();
 
     await using db2 = await peer.openLastDatabase();
-    await db2.coreDatabase.waitUntilHeadsReplicated(Context.default(), heads);
-    await db2.coreDatabase.updateIndexes(Context.default());
+    await db2.coreDatabase.waitUntilHeadsReplicated(heads);
+    await db2.coreDatabase.updateIndexes();
     await dataAssertion.verify(db2);
   });
 
@@ -116,7 +115,7 @@ describe('Integration tests', () => {
     await using db = await peer.createDatabase(spaceKey);
     await dataAssertion.seed(db);
 
-    await peer.host.updateIndexes(Context.default());
+    await peer.host.updateIndexes();
     await peer.client.close();
     await peer.client.open();
 
@@ -132,14 +131,14 @@ describe('Integration tests', () => {
     await using db = await peer.createDatabase(spaceKey);
     await dataAssertion.seed(db);
     await db.flush();
-    const heads = await db.coreDatabase.getDocumentHeads(Context.default());
+    const heads = await db.coreDatabase.getDocumentHeads();
 
     await using client2 = await peer.createClient();
     await using db2 = await peer.openDatabase(spaceKey, db.rootUrl!, {
       client: client2,
     });
-    await db2.coreDatabase.waitUntilHeadsReplicated(Context.default(), heads);
-    await db2.coreDatabase.updateIndexes(Context.default());
+    await db2.coreDatabase.waitUntilHeadsReplicated(heads);
+    await db2.coreDatabase.updateIndexes();
     await dataAssertion.verify(db2);
   });
 
@@ -204,17 +203,17 @@ describe('Integration tests', () => {
 
     await using peer1 = await builder.createPeer();
     await using peer2 = await builder.createPeer();
-    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
-    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer1.host.addReplicator(await network.createReplicator());
+    await peer2.host.addReplicator(await network.createReplicator());
 
     await using db1 = await peer1.createDatabase(spaceKey);
     await dataAssertion.seed(db1);
     await db1.flush();
-    const heads = await db1.coreDatabase.getDocumentHeads(Context.default());
+    const heads = await db1.coreDatabase.getDocumentHeads();
 
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
-    await db2.coreDatabase.waitUntilHeadsReplicated(Context.default(), heads);
-    await db2.coreDatabase.updateIndexes(Context.default());
+    await db2.coreDatabase.waitUntilHeadsReplicated(heads);
+    await db2.coreDatabase.updateIndexes();
     await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
     await dataAssertion.verify(db2);
   });
@@ -226,18 +225,18 @@ describe('Integration tests', () => {
 
     await using peer1 = await builder.createPeer();
     await using peer2 = await builder.createPeer();
-    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
-    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer1.host.addReplicator(await network.createReplicator());
+    await peer2.host.addReplicator(await network.createReplicator());
 
     {
       await using db1 = await peer1.createDatabase(spaceKey1);
       await dataAssertion.seed(db1);
       await db1.flush();
-      const heads = await db1.coreDatabase.getDocumentHeads(Context.default());
+      const heads = await db1.coreDatabase.getDocumentHeads();
 
       await using db2 = await peer2.openDatabase(spaceKey1, db1.rootUrl!);
-      await db2.coreDatabase.waitUntilHeadsReplicated(Context.default(), heads);
-      await db2.coreDatabase.updateIndexes(Context.default());
+      await db2.coreDatabase.waitUntilHeadsReplicated(heads);
+      await db2.coreDatabase.updateIndexes();
       await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
       await dataAssertion.verify(db2);
     }
@@ -246,11 +245,11 @@ describe('Integration tests', () => {
       await using db1 = await peer1.createDatabase(spaceKey2);
       await dataAssertion.seed(db1);
       await db1.flush();
-      const heads = await db1.coreDatabase.getDocumentHeads(Context.default());
+      const heads = await db1.coreDatabase.getDocumentHeads();
 
       await using db2 = await peer2.openDatabase(spaceKey2, db1.rootUrl!);
-      await db2.coreDatabase.waitUntilHeadsReplicated(Context.default(), heads);
-      await db2.coreDatabase.updateIndexes(Context.default());
+      await db2.coreDatabase.waitUntilHeadsReplicated(heads);
+      await db2.coreDatabase.updateIndexes();
       await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
       await dataAssertion.verify(db2);
     }
@@ -271,24 +270,24 @@ describe('Integration tests', () => {
     const teleportConnections = await teleportTestBuilder.connect(teleportPeer1, teleportPeer2);
     const replicator1 = new MeshEchoReplicator();
     const replicator2 = new MeshEchoReplicator();
-    await peer1.host.addReplicator(Context.default(), replicator1);
-    await peer2.host.addReplicator(Context.default(), replicator2);
-    teleportConnections[0].teleport.addExtension('replicator', replicator1.createExtension(Context.default()));
-    teleportConnections[1].teleport.addExtension('replicator', replicator2.createExtension(Context.default()));
+    await peer1.host.addReplicator(replicator1);
+    await peer2.host.addReplicator(replicator2);
+    teleportConnections[0].teleport.addExtension('replicator', replicator1.createExtension());
+    teleportConnections[1].teleport.addExtension('replicator', replicator2.createExtension());
 
-    await replicator1.authorizeDevice(Context.default(), spaceKey, teleportPeer2.peerId);
-    await replicator2.authorizeDevice(Context.default(), spaceKey, teleportPeer1.peerId);
+    await replicator1.authorizeDevice(spaceKey, teleportPeer2.peerId);
+    await replicator2.authorizeDevice(spaceKey, teleportPeer1.peerId);
 
     // TODO(dmaretskyi): No need to call `peer1.host.replicateDocument`.
 
     await using db1 = await peer1.createDatabase(spaceKey);
     await dataAssertion.seed(db1);
     await db1.flush();
-    const heads = await db1.coreDatabase.getDocumentHeads(Context.default());
+    const heads = await db1.coreDatabase.getDocumentHeads();
 
     await using db2 = await asyncTimeout(peer2.openDatabase(spaceKey, db1.rootUrl!), 1_000);
-    await db2.coreDatabase.waitUntilHeadsReplicated(Context.default(), heads);
-    await db2.coreDatabase.updateIndexes(Context.default());
+    await db2.coreDatabase.waitUntilHeadsReplicated(heads);
+    await db2.coreDatabase.updateIndexes();
     await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
     await dataAssertion.verify(db2);
   });
@@ -307,19 +306,19 @@ describe('Integration tests', () => {
     const teleportConnections = await teleportTestBuilder.connect(teleportPeer1, teleportPeer2);
     const replicator1 = new MeshEchoReplicator();
     const replicator2 = new MeshEchoReplicator();
-    await peer1.host.addReplicator(Context.default(), replicator1);
-    await peer2.host.addReplicator(Context.default(), replicator2);
+    await peer1.host.addReplicator(replicator1);
+    await peer2.host.addReplicator(replicator2);
     teleportConnections[0].teleport.addExtension(
       'replicator',
-      replicator1.createExtension(Context.default(), brokenAutomergeReplicatorFactory),
+      replicator1.createExtension(brokenAutomergeReplicatorFactory),
     );
     teleportConnections[1].teleport.addExtension(
       'replicator',
-      replicator2.createExtension(Context.default(), testAutomergeReplicatorFactory),
+      replicator2.createExtension(testAutomergeReplicatorFactory),
     );
 
-    await replicator1.authorizeDevice(Context.default(), spaceKey, teleportPeer2.peerId);
-    await replicator2.authorizeDevice(Context.default(), spaceKey, teleportPeer1.peerId);
+    await replicator1.authorizeDevice(spaceKey, teleportPeer2.peerId);
+    await replicator2.authorizeDevice(spaceKey, teleportPeer1.peerId);
 
     await teleportConnections[0].whenOpen(true);
     await using db1 = await peer1.createDatabase(spaceKey);
@@ -348,8 +347,8 @@ describe('Integration tests', () => {
 
       await using peer2 = await builder.createPeer();
 
-      await peer1.host.addReplicator(Context.default(), await network.createReplicator());
-      await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+      await peer1.host.addReplicator(await network.createReplicator());
+      await peer2.host.addReplicator(await network.createReplicator());
 
       await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
 
@@ -375,8 +374,8 @@ describe('Integration tests', () => {
 
     await using peer1 = await builder.createPeer();
     await using peer2 = await builder.createPeer();
-    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
-    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer1.host.addReplicator(await network.createReplicator());
+    await peer2.host.addReplicator(await network.createReplicator());
 
     await using db1 = await peer1.createDatabase(spaceKey);
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
@@ -588,17 +587,17 @@ describe('load tests', () => {
 
     await using peer1 = await builder.createPeer();
     await using peer2 = await builder.createPeer();
-    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
-    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer1.host.addReplicator(await network.createReplicator());
+    await peer2.host.addReplicator(await network.createReplicator());
 
     await using db1 = await peer1.createDatabase(spaceKey);
     await dataAssertion.seed(db1);
     await db1.flush();
-    const heads = await db1.coreDatabase.getDocumentHeads(Context.default());
+    const heads = await db1.coreDatabase.getDocumentHeads();
 
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
-    await db2.coreDatabase.waitUntilHeadsReplicated(Context.default(), heads);
-    await db2.coreDatabase.updateIndexes(Context.default());
+    await db2.coreDatabase.waitUntilHeadsReplicated(heads);
+    await db2.coreDatabase.updateIndexes();
     await dataAssertion.waitForReplication(db2); // https://github.com/dxos/dxos/issues/7240
     await dataAssertion.verify(db2);
   });

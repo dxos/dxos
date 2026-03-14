@@ -53,7 +53,7 @@ export class EdgeFeedReplicator extends Resource {
     this._spaceId = spaceId;
   }
 
-  protected override async _open(ctx: Context): Promise<void> {
+  protected override async _open(): Promise<void> {
     log('open');
     // TODO: handle reconnects
     this._ctx.onDispose(
@@ -74,32 +74,32 @@ export class EdgeFeedReplicator extends Resource {
 
         const payload = decodeCbor(message.payload!.value) as ProtocolMessage;
         log('receive', { from: message.source, feedKey: payload.feedKey, type: payload.type });
-        this._onMessage(this._ctx, payload);
+        this._onMessage(payload);
       }),
     );
 
     this._ctx.onDispose(
       this._messenger.onReconnected(() => {
-        scheduleMicroTask(this._ctx, () => this._handleReconnect(this._ctx));
+        scheduleMicroTask(this._ctx, () => this._handleReconnect());
       }),
     );
   }
 
-  private async _handleReconnect(ctx: Context): Promise<void> {
-    await this._resetConnection(ctx);
+  private async _handleReconnect(): Promise<void> {
+    await this._resetConnection();
     if (this._messenger.status.state === EdgeStatus.ConnectionState.CONNECTED) {
-      this._startReplication(ctx);
+      this._startReplication();
     }
   }
 
-  protected override async _close(ctx: Context): Promise<void> {
+  protected override async _close(): Promise<void> {
     log('close');
-    await this._resetConnection(ctx);
+    await this._resetConnection();
   }
 
-  private _startReplication(ctx: Context): void {
+  private _startReplication(): void {
     this._connected = true;
-    const connectionCtx = this._createConnectionContext(ctx);
+    const connectionCtx = this._createConnectionContext();
     this._connectionCtx = connectionCtx;
     log('connection context created');
     scheduleMicroTask(connectionCtx, async () => {
@@ -109,7 +109,7 @@ export class EdgeFeedReplicator extends Resource {
     });
   }
 
-  private async _resetConnection(ctx: Context): Promise<void> {
+  private async _resetConnection(): Promise<void> {
     log('resetConnection');
     this._connected = false;
     await this._connectionCtx?.dispose();
@@ -117,7 +117,7 @@ export class EdgeFeedReplicator extends Resource {
     this._remoteLength.clear();
   }
 
-  async addFeed(ctx: Context, feed: FeedWrapper<any>): Promise<void> {
+  async addFeed(feed: FeedWrapper<any>): Promise<void> {
     log('addFeed', { key: feed.key, connected: this._connected, hasConnectionCtx: !!this._connectionCtx });
     this._feeds.set(feed.key, feed);
 
@@ -126,23 +126,23 @@ export class EdgeFeedReplicator extends Resource {
     }
   }
 
-  private _getPushMutex(ctx: Context, key: PublicKey): Mutex {
+  private _getPushMutex(key: PublicKey): Mutex {
     return defaultMap(this._pushMutex, key, () => new Mutex());
   }
 
   private async _replicateFeed(ctx: Context, feed: FeedWrapper<any>): Promise<void> {
     log('replicateFeed', { key: feed.key });
-    await this._sendMessage(ctx, {
+    await this._sendMessage({
       type: 'get-metadata',
       feedKey: feed.key.toHex(),
     });
 
     Event.wrap(feed.core as any, 'append').on(ctx, async () => {
-      await this._pushBlocksIfNeeded(this._ctx, feed);
+      await this._pushBlocksIfNeeded(feed);
     });
   }
 
-  private async _sendMessage(ctx: Context, message: ProtocolMessage): Promise<void> {
+  private async _sendMessage(message: ProtocolMessage): Promise<void> {
     if (!this._connectionCtx) {
       log('message dropped because connection was disposed');
       return;
@@ -171,7 +171,7 @@ export class EdgeFeedReplicator extends Resource {
     );
   }
 
-  private _onMessage(ctx: Context, message: ProtocolMessage): void {
+  private _onMessage(message: ProtocolMessage): void {
     if (!this._connectionCtx) {
       log.warn('received message after connection context was disposed');
       return;
@@ -186,7 +186,7 @@ export class EdgeFeedReplicator extends Resource {
             return;
           }
 
-          using _guard = await this._getPushMutex(ctx, feed.key).acquire();
+          using _guard = await this._getPushMutex(feed.key).acquire();
 
           this._remoteLength.set(feedKey, message.length);
 
@@ -194,7 +194,7 @@ export class EdgeFeedReplicator extends Resource {
           if (message.length > feed.length) {
             log('requesting missing blocks', logMeta);
 
-            await this._sendMessage(ctx, {
+            await this._sendMessage({
               type: 'request',
               feedKey: feedKey.toHex(),
               range: { from: feed.length, to: message.length },
@@ -202,7 +202,7 @@ export class EdgeFeedReplicator extends Resource {
           } else if (message.length < feed.length) {
             log('pushing blocks to remote', logMeta);
 
-            await this._pushBlocks(ctx, feed, message.length, feed.length);
+            await this._pushBlocks(feed, message.length, feed.length);
           }
 
           break;
@@ -218,7 +218,7 @@ export class EdgeFeedReplicator extends Resource {
             return;
           }
 
-          await this._integrateBlocks(ctx, feed, message.blocks);
+          await this._integrateBlocks(feed, message.blocks);
           break;
         }
 
@@ -229,7 +229,7 @@ export class EdgeFeedReplicator extends Resource {
     });
   }
 
-  private async _pushBlocks(ctx: Context, feed: FeedWrapper<any>, from: number, to: number): Promise<void> {
+  private async _pushBlocks(feed: FeedWrapper<any>, from: number, to: number): Promise<void> {
     log('pushing blocks', { feed: feed.key.toHex(), from, to });
 
     const blocks: FeedBlock[] = await Promise.all(
@@ -247,7 +247,7 @@ export class EdgeFeedReplicator extends Resource {
       }),
     );
 
-    await this._sendMessage(ctx, {
+    await this._sendMessage({
       type: 'data',
       feedKey: feed.key.toHex(),
       blocks,
@@ -255,7 +255,7 @@ export class EdgeFeedReplicator extends Resource {
     this._remoteLength.set(feed.key, to);
   }
 
-  private async _integrateBlocks(ctx: Context, feed: FeedWrapper<any>, blocks: FeedBlock[]): Promise<void> {
+  private async _integrateBlocks(feed: FeedWrapper<any>, blocks: FeedBlock[]): Promise<void> {
     log('integrating blocks', { feed: feed.key.toHex(), blocks: blocks.length });
 
     for (const block of blocks) {
@@ -273,8 +273,8 @@ export class EdgeFeedReplicator extends Resource {
     }
   }
 
-  private async _pushBlocksIfNeeded(ctx: Context, feed: FeedWrapper<any>): Promise<void> {
-    using _ = await this._getPushMutex(ctx, feed.key).acquire();
+  private async _pushBlocksIfNeeded(feed: FeedWrapper<any>): Promise<void> {
+    using _ = await this._getPushMutex(feed.key).acquire();
 
     if (!this._remoteLength.has(feed.key)) {
       log('blocks not pushed because remote length is unknown');
@@ -283,11 +283,11 @@ export class EdgeFeedReplicator extends Resource {
 
     const remoteLength = this._remoteLength.get(feed.key)!;
     if (remoteLength < feed.length) {
-      await this._pushBlocks(ctx, feed, remoteLength, feed.length);
+      await this._pushBlocks(feed, remoteLength, feed.length);
     }
   }
 
-  private _createConnectionContext(ctx: Context): Context {
+  private _createConnectionContext(): Context {
     const connectionCtx = new Context({
       onError: async (err: any) => {
         if (connectionCtx !== this._connectionCtx) {
@@ -295,7 +295,7 @@ export class EdgeFeedReplicator extends Resource {
         }
         if (err instanceof EdgeIdentityChangedError || err instanceof EdgeConnectionClosedError) {
           log('resetting on reconnect');
-          await this._resetConnection(this._ctx);
+          await this._resetConnection();
         } else {
           this._ctx.raise(err);
         }

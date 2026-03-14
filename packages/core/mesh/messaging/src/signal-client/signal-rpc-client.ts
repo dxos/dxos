@@ -47,7 +47,6 @@ export type SignalRPCClientProps = {
  * @deprecated
  */
 export class SignalRPCClient {
-  private readonly _ctx = Context.default();
   private readonly _socket: WebSocket;
   private readonly _rpc: ProtoRpcPeer<Services>;
   private readonly _connectTrigger = new Trigger();
@@ -77,6 +76,7 @@ export class SignalRPCClient {
       port: {
         send: (msg) => {
           if (this._closed) {
+            // Do not send messages after close.
             return;
           }
           try {
@@ -104,7 +104,7 @@ export class SignalRPCClient {
       try {
         await this._rpc!.open();
         if (this._closed) {
-          await this._safeCloseRpc(this._ctx);
+          await this._safeCloseRpc();
           return;
         }
         log(`RPC open ${this._url}`);
@@ -114,6 +114,10 @@ export class SignalRPCClient {
         scheduleTaskInterval(
           this._keepaliveCtx,
           async () => {
+            // TODO(nf): use RFC6455 ping/pong once implemented in the browser?
+            // TODO(nf): check for pong response from server (once implemented)
+            // Current implementation of signal server ignores all text data messages, and does not send a response.
+            // However this is enough to detect breakages in the connection as TCP will reset the connection if ACKs are not received.
             this._socket?.send('__ping__');
           },
           SIGNAL_KEEPALIVE_INTERVAL,
@@ -129,7 +133,7 @@ export class SignalRPCClient {
       log(`Disconnected ${this._url}`);
       this._callbacks.onDisconnected?.();
       this._closeComplete.wake();
-      await this.close(this._ctx);
+      await this.close();
     };
 
     this._socket.onerror = async (event: WebSocket.ErrorEvent) => {
@@ -140,7 +144,7 @@ export class SignalRPCClient {
       this._closed = true;
 
       this._callbacks.onError?.(event.error ?? new Error(event.message));
-      await this._safeCloseRpc(this._ctx);
+      await this._safeCloseRpc();
 
       log.warn(`Socket ${event.type ?? 'unknown'} error`, { message: event.message, url: this._url });
     };
@@ -148,7 +152,7 @@ export class SignalRPCClient {
     log.trace('dxos.mesh.signal-rpc-client.constructor', trace.end({ id: traceId }));
   }
 
-  async close(ctx: Context): Promise<void> {
+  async close(): Promise<void> {
     if (this._closed) {
       return;
     }
@@ -156,9 +160,10 @@ export class SignalRPCClient {
 
     await this._keepaliveCtx?.dispose();
     try {
-      await this._safeCloseRpc(ctx);
+      await this._safeCloseRpc();
 
       if (this._socket.readyState === WebSocket.OPEN || this._socket.readyState === WebSocket.CONNECTING) {
+        // close() only starts the closing handshake.
         this._socket.close();
       }
 
@@ -169,7 +174,7 @@ export class SignalRPCClient {
     }
   }
 
-  async join(ctx: Context, { topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
+  async join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }) {
     log('join', { topic, peerId, metadata: this._callbacks?.getMetadata?.() });
     invariant(!this._closed, 'SignalRPCClient is closed');
     await this._connectTrigger.wait();
@@ -182,7 +187,7 @@ export class SignalRPCClient {
     return swarmStream;
   }
 
-  async receiveMessages(ctx: Context, peerId: PublicKey): Promise<Stream<SignalMessage>> {
+  async receiveMessages(peerId: PublicKey): Promise<Stream<SignalMessage>> {
     log('receiveMessages', { peerId });
     invariant(!this._closed, 'SignalRPCClient is closed');
     await this._connectTrigger.wait();
@@ -193,18 +198,15 @@ export class SignalRPCClient {
     return messageStream;
   }
 
-  async sendMessage(
-    ctx: Context,
-    {
-      author,
-      recipient,
-      payload,
-    }: {
-      author: PublicKey;
-      recipient: PublicKey;
-      payload: Any;
-    },
-  ): Promise<void> {
+  async sendMessage({
+    author,
+    recipient,
+    payload,
+  }: {
+    author: PublicKey;
+    recipient: PublicKey;
+    payload: Any;
+  }): Promise<void> {
     log('sendMessage', { author, recipient, payload, metadata: this._callbacks?.getMetadata?.() });
     invariant(!this._closed, 'SignalRPCClient is closed');
     await this._connectTrigger.wait();
@@ -216,7 +218,7 @@ export class SignalRPCClient {
     });
   }
 
-  private async _safeCloseRpc(_ctx: Context): Promise<void> {
+  private async _safeCloseRpc(): Promise<void> {
     try {
       this._connectTrigger.reset();
       await this._rpc.close();

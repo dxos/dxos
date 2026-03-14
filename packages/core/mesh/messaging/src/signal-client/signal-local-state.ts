@@ -54,7 +54,7 @@ export class SignalLocalState {
     private readonly _onSwarmEvent: (params: SwarmEvent) => Promise<void>,
   ) {}
 
-  async safeCloseStreams(_ctx: Context): Promise<{ failureCount: number }> {
+  async safeCloseStreams(): Promise<{ failureCount: number }> {
     const streams = ([...this._swarmStreams.values()] as Stream<any>[]).concat([...this.messageStreams.values()]);
     this._swarmStreams.clear();
     this.messageStreams.clear();
@@ -62,21 +62,21 @@ export class SignalLocalState {
     return { failureCount };
   }
 
-  join(ctx: Context, { topic, peerId }: { topic: PublicKey; peerId: PublicKey }): void {
+  join({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): void {
     this._joinedTopics.add({ topic, peerId });
   }
 
-  leave(ctx: Context, { topic, peerId }: { topic: PublicKey; peerId: PublicKey }): void {
+  leave({ topic, peerId }: { topic: PublicKey; peerId: PublicKey }): void {
     void this._swarmStreams.get({ topic, peerId })?.close();
     this._swarmStreams.delete({ topic, peerId });
     this._joinedTopics.delete({ topic, peerId });
   }
 
-  subscribeMessages(ctx: Context, peerId: PublicKey): void {
+  subscribeMessages(peerId: PublicKey): void {
     this._subscribedMessages.add({ peerId });
   }
 
-  unsubscribeMessages(ctx: Context, peerId: PublicKey): void {
+  unsubscribeMessages(peerId: PublicKey): void {
     log('unsubscribing from messages', { peerId });
     this._subscribedMessages.delete({ peerId });
     void this.messageStreams.get(peerId)?.close();
@@ -90,7 +90,9 @@ export class SignalLocalState {
   }
 
   private async _reconcileSwarmSubscriptions(ctx: Context, client: SignalRPCClient): Promise<void> {
+    // Unsubscribe from topics that are no longer needed.
     for (const { topic, peerId } of this._swarmStreams.keys()) {
+      // Join desired topics.
       if (this._joinedTopics.has({ topic, peerId })) {
         continue;
       }
@@ -99,12 +101,16 @@ export class SignalLocalState {
       this._swarmStreams.delete({ topic, peerId });
     }
 
+    // Subscribe to topics that are needed.
     for (const { topic, peerId } of this._joinedTopics.values()) {
+      // Join desired topics.
       if (this._swarmStreams.has({ topic, peerId })) {
         continue;
       }
 
-      const swarmStream = await asyncTimeout(cancelWithContext(ctx, client.join(ctx, { topic, peerId })), 5_000);
+      const swarmStream = await asyncTimeout(cancelWithContext(ctx, client.join({ topic, peerId })), 5_000);
+      // Subscribing to swarm events.
+      // TODO(mykola): What happens when the swarm stream is closed? Maybe send leave event for each peer?
       swarmStream.subscribe(async (swarmEvent: SwarmEventProto) => {
         if (this._joinedTopics.has({ topic, peerId })) {
           log('swarm event', { swarmEvent });
@@ -127,12 +133,15 @@ export class SignalLocalState {
         }
       });
 
+      // Saving swarm stream.
       this._swarmStreams.set({ topic, peerId }, swarmStream);
     }
   }
 
   private async _reconcileMessageSubscriptions(ctx: Context, client: SignalRPCClient): Promise<void> {
+    // Unsubscribe from messages that are no longer needed.
     for (const peerId of this.messageStreams.keys()) {
+      // Join desired topics.
       if (this._subscribedMessages.has({ peerId })) {
         continue;
       }
@@ -141,12 +150,13 @@ export class SignalLocalState {
       this.messageStreams.delete(peerId);
     }
 
+    // Subscribe to messages that are needed.
     for (const { peerId } of this._subscribedMessages.values()) {
       if (this.messageStreams.has(peerId)) {
         continue;
       }
 
-      const messageStream = await asyncTimeout(cancelWithContext(ctx, client.receiveMessages(ctx, peerId)), 5_000);
+      const messageStream = await asyncTimeout(cancelWithContext(ctx, client.receiveMessages(peerId)), 5_000);
       messageStream.subscribe(async (signalMessage: SignalMessage) => {
         if (this._subscribedMessages.has({ peerId })) {
           const message: Message = {
@@ -158,6 +168,7 @@ export class SignalLocalState {
         }
       });
 
+      // Saving message stream.
       this.messageStreams.set(peerId, messageStream);
     }
   }

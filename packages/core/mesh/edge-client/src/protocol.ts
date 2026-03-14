@@ -28,7 +28,7 @@ export class Protocol {
   toJson(message: Message): any {
     try {
       return buf.toJson(MessageSchema, message, { registry: this.typeRegistry });
-    } catch {
+    } catch (err) {
       return { type: this.getPayloadType(message) };
     }
   }

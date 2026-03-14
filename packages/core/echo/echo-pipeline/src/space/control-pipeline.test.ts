@@ -4,7 +4,6 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Context } from '@dxos/context';
 import { CredentialGenerator, createCredential } from '@dxos/credentials';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { Keyring } from '@dxos/keyring';
@@ -60,11 +59,10 @@ describe('space/control-pipeline', () => {
     });
     expect(admittedFeeds).toEqual([]);
 
-    const ctx = Context.default();
-    await controlPipeline.setWriteFeed(ctx, genesisFeed);
-    await controlPipeline.start(ctx);
+    await controlPipeline.setWriteFeed(genesisFeed);
+    await controlPipeline.start();
 
-    onTestFinished(() => controlPipeline.stop(ctx));
+    onTestFinished(() => controlPipeline.stop());
 
     //
     // Genesis
@@ -82,7 +80,7 @@ describe('space/control-pipeline', () => {
         });
       }
 
-      await controlPipeline.pipeline.state.waitUntilTimeframe(ctx, controlPipeline.pipeline.state.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key]);
     }
 
@@ -106,7 +104,7 @@ describe('space/control-pipeline', () => {
         },
       });
 
-      await controlPipeline.pipeline.state.waitUntilTimeframe(ctx, controlPipeline.pipeline.state.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key]);
     }
 
@@ -131,7 +129,7 @@ describe('space/control-pipeline', () => {
       });
 
       const end = controlPipeline.pipeline.state.endTimeframe;
-      await controlPipeline.pipeline.state.waitUntilTimeframe(ctx, end);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(end);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
     }
 
@@ -160,7 +158,7 @@ describe('space/control-pipeline', () => {
         timeframe: new Timeframe(),
       });
 
-      await controlPipeline.pipeline.state.waitUntilTimeframe(ctx, controlPipeline.pipeline.state.endTimeframe);
+      await controlPipeline.pipeline.state.waitUntilTimeframe(controlPipeline.pipeline.state.endTimeframe);
       expect(admittedFeeds).toEqual([genesisFeed.key, controlFeed2.key, dataFeed1.key]);
     }
   });

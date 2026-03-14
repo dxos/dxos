@@ -65,7 +65,7 @@ describe('Spaces', () => {
 
     const host = testBuilder.createClientServicesHost();
     await host.open(new Context());
-    onTestFinished(() => host.close(Context.default()));
+    onTestFinished(() => host.close());
     const [client, server] = testBuilder.createClientServer(host);
     void server.open();
     onTestFinished(() => server.close());

@@ -232,7 +232,6 @@ export class SpaceQuerySource implements QuerySource {
       results.push(
         ...(
           await this._database.coreDatabase.batchLoadObjectCores(
-            ctx,
             (filter as QueryAST.FilterObject).id as ObjectId[],
           )
         )

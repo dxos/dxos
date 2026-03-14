@@ -63,25 +63,21 @@ export class InvitationsManager {
     }
 
     const handler = this._getHandler(options);
-    const invitationError = handler.checkCanInviteNewMembers(ctx);
+    const invitationError = handler.checkCanInviteNewMembers();
     if (invitationError != null) {
       throw invitationError;
     }
-    const invitation = this._createInvitation(ctx, handler, options);
+    const invitation = this._createInvitation(handler, options);
 
-    const {
-      ctx: invitationCtx,
-      stream,
-      observableInvitation,
-    } = this._createObservableInvitation(ctx, handler, invitation);
+    const { ctx: invitationCtx, stream, observableInvitation } = this._createObservableInvitation(handler, invitation);
 
     this._createInvitations.set(invitation.invitationId, observableInvitation);
     this.invitationCreated.emit(invitation);
-    this._onInvitationComplete(ctx, observableInvitation, async () => {
+    this._onInvitationComplete(observableInvitation, async () => {
       this._createInvitations.delete(observableInvitation.get().invitationId);
       this.removedCreated.emit(observableInvitation.get());
       if (observableInvitation.get().persistent) {
-        await this._safeDeleteInvitation(ctx, observableInvitation.get());
+        await this._safeDeleteInvitation(observableInvitation.get());
       }
     });
 
@@ -100,7 +96,7 @@ export class InvitationsManager {
 
   async loadPersistentInvitations(ctx: Context): Promise<{ invitations: Invitation[] }> {
     if (this._persistentInvitationsLoaded) {
-      const invitations = this.getCreatedInvitations(ctx).filter((i) => i.persistent);
+      const invitations = this.getCreatedInvitations().filter((i) => i.persistent);
       return { invitations };
     }
     try {
@@ -136,7 +132,7 @@ export class InvitationsManager {
       invitation,
       stream,
       otpEnteredTrigger,
-    } = this._createObservableAcceptingInvitation(ctx, handler, options);
+    } = this._createObservableAcceptingInvitation(handler, options);
     this._invitationsHandler.acceptInvitation(
       invitationCtx,
       stream,
@@ -148,7 +144,7 @@ export class InvitationsManager {
     this._acceptInvitations.set(invitation.get().invitationId, invitation);
     this.invitationAccepted.emit(invitation.get());
 
-    this._onInvitationComplete(ctx, invitation, () => {
+    this._onInvitationComplete(invitation, () => {
       this._acceptInvitations.delete(invitation.get().invitationId);
       this.removedAccepted.emit(invitation.get());
     });
@@ -156,7 +152,7 @@ export class InvitationsManager {
     return invitation;
   }
 
-  async authenticate(ctx: Context, { invitationId, authCode }: AuthenticationRequest): Promise<void> {
+  async authenticate({ invitationId, authCode }: AuthenticationRequest): Promise<void> {
     log('authenticating...');
     invariant(invitationId);
     const observable = this._acceptInvitations.get(invitationId);
@@ -167,7 +163,7 @@ export class InvitationsManager {
     }
   }
 
-  async cancelInvitation(ctx: Context, { invitationId }: { invitationId: string }): Promise<void> {
+  async cancelInvitation({ invitationId }: { invitationId: string }): Promise<void> {
     log('cancelInvitation...', { invitationId });
     invariant(invitationId);
     const created = this._createInvitations.get(invitationId);
@@ -177,7 +173,7 @@ export class InvitationsManager {
       }
       if (created.get().type === Invitation.Type.DELEGATED) {
         const handler = this._getHandler(created.get());
-        await handler.cancelDelegation(ctx, created.get());
+        await handler.cancelDelegation(created.get());
       }
       await created.cancel();
       this._createInvitations.delete(invitationId);
@@ -193,11 +189,11 @@ export class InvitationsManager {
     }
   }
 
-  getCreatedInvitations(ctx: Context): Invitation[] {
+  getCreatedInvitations(): Invitation[] {
     return [...this._createInvitations.values()].map((i) => i.get());
   }
 
-  getAcceptedInvitations(ctx: Context): Invitation[] {
+  getAcceptedInvitations(): Invitation[] {
     return [...this._acceptInvitations.values()].map((i) => i.get());
   }
 
@@ -209,7 +205,7 @@ export class InvitationsManager {
     }
   }
 
-  private _createInvitation(ctx: Context, protocol: InvitationProtocol, _options?: Partial<Invitation>): Invitation {
+  private _createInvitation(protocol: InvitationProtocol, _options?: Partial<Invitation>): Invitation {
     const {
       invitationId = PublicKey.random().toHex(),
       type = Invitation.Type.INTERACTIVE,
@@ -246,23 +242,22 @@ export class InvitationsManager {
       multiUse,
       delegationCredentialId: options?.delegationCredentialId,
       ...options,
-      ...protocol.getInvitationContext(ctx),
+      ...protocol.getInvitationContext(),
     } satisfies Invitation;
   }
 
   private _createObservableInvitation(
-    ctx: Context,
     handler: InvitationProtocol,
     invitation: Invitation,
   ): { ctx: Context; stream: PushStream<Invitation>; observableInvitation: CancellableInvitation } {
     const stream = new PushStream<Invitation>();
-    const invitationCtx = new Context({
+    const ctx = new Context({
       onError: (err) => {
         stream.error(err);
-        void invitationCtx.dispose();
+        void ctx.dispose();
       },
     });
-    invitationCtx.onDispose(() => {
+    ctx.onDispose(() => {
       log('complete', { ...handler.toJSON() });
       stream.complete();
     });
@@ -271,14 +266,13 @@ export class InvitationsManager {
       subscriber: stream.observable,
       onCancel: async () => {
         stream.next({ ...invitation, state: Invitation.State.CANCELLED });
-        await invitationCtx.dispose();
+        await ctx.dispose();
       },
     });
-    return { ctx: invitationCtx, stream, observableInvitation };
+    return { ctx, stream, observableInvitation };
   }
 
   private _createObservableAcceptingInvitation(
-    ctx: Context,
     handler: InvitationProtocol,
     initialState: Invitation,
   ): {
@@ -289,7 +283,7 @@ export class InvitationsManager {
   } {
     const otpEnteredTrigger = new Trigger<string>();
     const stream = new PushStream<Invitation>();
-    const invitationCtx = new Context({
+    const ctx = new Context({
       onError: (err) => {
         if (err instanceof TimeoutError) {
           log('timeout', { ...handler.toJSON() });
@@ -298,10 +292,10 @@ export class InvitationsManager {
           log.warn('auth failed', err);
           stream.next({ ...initialState, state: Invitation.State.ERROR });
         }
-        void invitationCtx.dispose();
+        void ctx.dispose();
       },
     });
-    invitationCtx.onDispose(() => {
+    ctx.onDispose(() => {
       log('complete', { ...handler.toJSON() });
       stream.complete();
     });
@@ -310,13 +304,13 @@ export class InvitationsManager {
       subscriber: stream.observable,
       onCancel: async () => {
         stream.next({ ...initialState, state: Invitation.State.CANCELLED });
-        await invitationCtx.dispose();
+        await ctx.dispose();
       },
       onAuthenticate: async (code: string) => {
         otpEnteredTrigger.wake(code);
       },
     });
-    return { ctx: invitationCtx, invitation, stream, otpEnteredTrigger };
+    return { ctx, invitation, stream, otpEnteredTrigger };
   }
 
   private async _persistIfRequired(
@@ -326,7 +320,7 @@ export class InvitationsManager {
     invitation: Invitation,
   ): Promise<void> {
     if (invitation.type === Invitation.Type.DELEGATED && invitation.delegationCredentialId == null) {
-      const delegationCredentialId = await handler.delegate(ctx, invitation);
+      const delegationCredentialId = await handler.delegate(invitation);
       changeStream.next({ ...invitation, delegationCredentialId });
     } else if (invitation.persistent) {
       await this._metadataStore.addInvitation(invitation);
@@ -334,7 +328,7 @@ export class InvitationsManager {
     }
   }
 
-  private async _safeDeleteInvitation(ctx: Context, invitation: Invitation): Promise<void> {
+  private async _safeDeleteInvitation(invitation: Invitation): Promise<void> {
     try {
       await this._metadataStore.removeInvitation(invitation.invitationId);
     } catch (err) {
@@ -342,7 +336,7 @@ export class InvitationsManager {
     }
   }
 
-  private _onInvitationComplete(ctx: Context, invitation: CancellableInvitation, callback: () => void): void {
+  private _onInvitationComplete(invitation: CancellableInvitation, callback: () => void): void {
     invitation.subscribe(
       () => {},
       () => {},

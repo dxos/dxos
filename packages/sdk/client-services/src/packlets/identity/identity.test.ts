@@ -50,8 +50,8 @@ describe('identity/identity', () => {
     await writeGenesisCredential(setup);
 
     // Wait for identity to be ready.
-    await setup.identity.ready(Context.default());
-    const identitySigner = setup.identity.getIdentityCredentialSigner(Context.default());
+    await setup.identity.ready();
+    const identitySigner = setup.identity.getIdentityCredentialSigner();
     const credential = await identitySigner.createCredential({
       subject: setup.identityKey,
       assertion: {
@@ -71,7 +71,7 @@ describe('identity/identity', () => {
 
     const owner = await setupIdentity({ signalContext });
     await writeGenesisCredential(owner);
-    await owner.identity.ready(Context.default());
+    await owner.identity.ready();
 
     const secondDevice = (
       await setupIdentity({
@@ -86,7 +86,7 @@ describe('identity/identity', () => {
     // Second device admission
     //
     {
-      const signer = owner.identity.getIdentityCredentialSigner(Context.default());
+      const signer = owner.identity.getIdentityCredentialSigner();
       void owner.identity.controlPipeline.writer.write({
         credential: {
           credential: await signer.createCredential({
@@ -100,7 +100,7 @@ describe('identity/identity', () => {
         },
       });
 
-      await secondDevice.ready(Context.default());
+      await secondDevice.ready();
     }
 
     expect(Array.from(owner.identity.authorizedDeviceKeys.keys())).toEqual([owner.deviceKey, secondDevice.deviceKey]);
@@ -204,9 +204,8 @@ describe('identity/identity', () => {
       onDelegatedInvitationStatusChange: async () => {},
       onMemberRolesChanged: async () => {},
     });
-    const ctx = Context.default();
-    await space.setControlFeed(ctx, controlFeed);
-    await space.setDataFeed(ctx, dataFeed);
+    await space.setControlFeed(controlFeed);
+    await space.setDataFeed(dataFeed);
 
     const identity = new Identity({
       signer: keyring,
@@ -219,7 +218,7 @@ describe('identity/identity', () => {
     });
 
     await identity.open(new Context());
-    await identity.joinNetwork(Context.default());
+    await identity.joinNetwork();
     onTestFinished(() => identity.close(new Context()));
     return { identity, identityKey, keyring, deviceKey, controlFeed, spaceKey, dataFeed };
   };

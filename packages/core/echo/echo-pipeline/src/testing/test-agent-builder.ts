@@ -135,10 +135,7 @@ export class TestAgent {
     }
 
     this._networkManager = this._networkManagerProvider();
-    this._networkManager.setPeerInfo(Context.default(), {
-      peerKey: this.deviceKey.toHex(),
-      identityKey: this.identityKey.toHex(),
-    });
+    this._networkManager.setPeerInfo({ peerKey: this.deviceKey.toHex(), identityKey: this.identityKey.toHex() });
 
     return this._networkManager;
   }
@@ -184,9 +181,8 @@ export class TestAgent {
       await this.metadataStore.addSpace(metadata);
     }
 
-    const ctx = Context.default();
-    await this.spaceManager.open(ctx);
-    const space = await this.spaceManager.constructSpace(ctx, {
+    await this.spaceManager.open();
+    const space = await this.spaceManager.constructSpace({
       metadata,
       swarmIdentity: {
         identityKey: this.identityKey,
@@ -204,10 +200,10 @@ export class TestAgent {
       onDelegatedInvitationStatusChange: async () => {},
       onMemberRolesChanged: async () => {},
     });
-    await space.setControlFeed(ctx, controlFeed);
-    await space.setDataFeed(ctx, dataFeed);
+    await space.setControlFeed(controlFeed);
+    await space.setDataFeed(dataFeed);
 
-    await space.open(ctx);
+    await space.open(new Context());
 
     this._spaces.set(spaceKey, space);
     return space;

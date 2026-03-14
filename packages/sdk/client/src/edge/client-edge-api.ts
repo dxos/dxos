@@ -3,7 +3,6 @@
 //
 
 import { Event } from '@dxos/async';
-import { type Context } from '@dxos/context';
 import { type Database, type Entity, Filter, type Hypergraph, Query, type QueryResult } from '@dxos/echo';
 import { type QueryContext, QueryResultImpl } from '@dxos/echo-db';
 import { QueryAST } from '@dxos/echo-protocol';
@@ -81,12 +80,12 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
 
   constructor(private readonly _params: RemoteEdgeQueryContextParams) {}
 
-  getResults(ctx: Context): QueryResult.EntityEntry<T>[] {
+  getResults(): QueryResult.EntityEntry<T>[] {
     // Reactive queries are not supported for remote edge queries.
     return [];
   }
 
-  async run(ctx: Context, query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.EntityEntry<T>[]> {
+  async run(query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.EntityEntry<T>[]> {
     const start = Date.now();
 
     log('executing edge query', { spaceId: this._params.spaceId, query });
@@ -118,16 +117,16 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
     return results;
   }
 
-  update(ctx: Context, query: QueryAST.Query): void {
+  update(query: QueryAST.Query): void {
     this._query = query;
     // Note: We don't emit changed events since reactive queries are not supported.
   }
 
-  start(ctx: Context): void {
+  start(): void {
     // No-op: Reactive queries are not supported for remote edge queries.
   }
 
-  stop(ctx: Context): void {
+  stop(): void {
     // No-op: Reactive queries are not supported for remote edge queries.
   }
 }

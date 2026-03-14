@@ -3,7 +3,6 @@
 //
 
 import { Stream } from '@dxos/codec-protobuf/stream';
-import { Context } from '@dxos/context';
 import {
   type AcceptInvitationRequest,
   type AuthenticationRequest,
@@ -29,9 +28,9 @@ export class InvitationsServiceImpl implements InvitationsService {
   }
 
   createInvitation(options: Invitation): Stream<Invitation> {
-    return new Stream<Invitation>(({ next, close }) => {
+    return new Stream<Invitation>(({ ctx, next, close }) => {
       void this._invitationsManager
-        .createInvitation(Context.default(), options)
+        .createInvitation(ctx, options)
         .then((invitation) => {
           trace.metrics.increment('dxos.invitation.created');
           invitation.subscribe(next, close, close);
@@ -41,18 +40,18 @@ export class InvitationsServiceImpl implements InvitationsService {
   }
 
   acceptInvitation(request: AcceptInvitationRequest): Stream<Invitation> {
-    const invitation = this._invitationsManager.acceptInvitation(Context.default(), request);
-    return new Stream<Invitation>(({ next, close }) => {
+    return new Stream<Invitation>(({ ctx, next, close }) => {
+      const invitation = this._invitationsManager.acceptInvitation(ctx, request);
       invitation.subscribe(next, close, close);
     });
   }
 
   async authenticate(request: AuthenticationRequest): Promise<void> {
-    return this._invitationsManager.authenticate(Context.default(), request);
+    return this._invitationsManager.authenticate(request);
   }
 
   async cancelInvitation(request: { invitationId: string }): Promise<void> {
-    return this._invitationsManager.cancelInvitation(Context.default(), request);
+    return this._invitationsManager.cancelInvitation(request);
   }
 
   queryInvitations(): Stream<QueryInvitationsResponse> {
@@ -104,14 +103,14 @@ export class InvitationsServiceImpl implements InvitationsService {
       next({
         action: QueryInvitationsResponse.Action.ADDED,
         type: QueryInvitationsResponse.Type.CREATED,
-        invitations: this._invitationsManager.getCreatedInvitations(Context.default()),
+        invitations: this._invitationsManager.getCreatedInvitations(),
         existing: true,
       });
 
       next({
         action: QueryInvitationsResponse.Action.ADDED,
         type: QueryInvitationsResponse.Type.ACCEPTED,
-        invitations: this._invitationsManager.getAcceptedInvitations(Context.default()),
+        invitations: this._invitationsManager.getAcceptedInvitations(),
         existing: true,
       });
 

@@ -20,7 +20,6 @@ import {
   createPeers,
   performInvitation,
 } from '@dxos/client-services/testing';
-import { Context } from '@dxos/context';
 import { MetadataStore } from '@dxos/echo-pipeline';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -288,7 +287,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
         hooks: {
           guest: {
             onConnected: () => {
-              void guest.networkManager.setConnectionState(Context.default(), ConnectionState.OFFLINE);
+              void guest.networkManager.setConnectionState(ConnectionState.OFFLINE);
               return true;
             },
           },
@@ -298,7 +297,7 @@ const testSuite = (getProps: () => PerformInvitationProps, getPeers: () => [Serv
     await expectErrorState({ hostResult, guestResult });
 
     // Test cleanup fails if the guest is offline.
-    await guest.networkManager.setConnectionState(Context.default(), ConnectionState.ONLINE);
+    await guest.networkManager.setConnectionState(ConnectionState.ONLINE);
   });
 };
 
@@ -313,7 +312,7 @@ describe('Invitations', () => {
         const peers = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(2));
         host = peers[0];
         guest = peers[1];
-        space = await host.dataSpaceManager!.createSpace(Context.default());
+        space = await host.dataSpaceManager!.createSpace();
       });
 
       testSuite(
@@ -334,7 +333,7 @@ describe('Invitations', () => {
         const peers = await chain<ServiceContext>([closeAfterTest])(createPeers(2));
         host = peers[0];
         guest = peers[1];
-        await host.createIdentity(Context.default());
+        await host.createIdentity();
       });
 
       testSuite(
@@ -361,13 +360,13 @@ describe('Invitations', () => {
 
         const { service, metadata } = createInvitationsApi(hostContext);
         hostMetadata = metadata;
-        space = await hostContext.dataSpaceManager.createSpace(Context.default());
+        space = await hostContext.dataSpaceManager.createSpace();
         host = new InvitationsProxy(service, undefined, () => ({
           kind: Invitation.Kind.SPACE,
           spaceKey: space.key,
         }));
 
-        onTestFinished(() => space.close(Context.default()));
+        onTestFinished(() => space.close());
       });
       test('invitations expire', async () => {
         const expired = new Trigger();
@@ -406,13 +405,13 @@ describe('Invitations', () => {
         invariant(guestContext.dataSpaceManager);
         const hostApi = createInvitationsApi(hostContext);
         // TODO(nf): require calling manually outside of service-host?
-        await hostApi.manager.loadPersistentInvitations(Context.default());
+        await hostApi.manager.loadPersistentInvitations();
 
         const { service: guestService, manager: guestManager } = createInvitationsApi(guestContext);
-        await guestManager.loadPersistentInvitations(Context.default());
+        await guestManager.loadPersistentInvitations();
 
-        const space = await hostContext?.dataSpaceManager.createSpace(Context.default());
-        onTestFinished(() => space.close(Context.default()));
+        const space = await hostContext?.dataSpaceManager.createSpace();
+        onTestFinished(() => space.close());
 
         const guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.SPACE }));
         let persistentInvitationId: string;
@@ -437,7 +436,7 @@ describe('Invitations', () => {
             condition: () => hostContext.networkManager.topics.includes(persistentInvitation.get().swarmKey),
           });
           // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
-          await hostContext.networkManager.leaveSwarm(Context.default(), persistentInvitation.get().swarmKey);
+          await hostContext.networkManager.leaveSwarm(persistentInvitation.get().swarmKey);
         }
 
         const { service: newHostService, manager: newHostManager } = createInvitationsApi(
@@ -449,7 +448,7 @@ describe('Invitations', () => {
           spaceKey: space.key,
         }));
 
-        const loadedInvitations = await newHostManager.loadPersistentInvitations(Context.default());
+        const loadedInvitations = await newHostManager.loadPersistentInvitations();
         await host.open();
         expect(loadedInvitations.invitations).to.have.lengthOf(1);
 
@@ -504,8 +503,8 @@ describe('Invitations', () => {
 
         const hostApi = createInvitationsApi(hostContext);
 
-        const space = await hostContext?.dataSpaceManager.createSpace(Context.default());
-        onTestFinished(() => space.close(Context.default()));
+        const space = await hostContext?.dataSpaceManager.createSpace();
+        onTestFinished(() => space.close());
 
         {
           const tempHost = new InvitationsProxy(hostApi.service, undefined, () => ({
@@ -514,7 +513,7 @@ describe('Invitations', () => {
             persistent: false,
           }));
           // TODO(nf): require calling manually outside of service-host?
-          await hostApi.manager.loadPersistentInvitations(Context.default());
+          await hostApi.manager.loadPersistentInvitations();
           await tempHost.open();
 
           const createdTrigger = new Trigger();
@@ -531,7 +530,7 @@ describe('Invitations', () => {
           hostContext,
           hostApi.metadata,
         );
-        await newHostManager.loadPersistentInvitations(Context.default());
+        await newHostManager.loadPersistentInvitations();
         expect(hostApi.metadata.getInvitations()).to.have.lengthOf(0);
 
         const host = new InvitationsProxy(newHostService, undefined, () => ({
@@ -540,7 +539,7 @@ describe('Invitations', () => {
         }));
         await host.open();
 
-        const loadedInvitations = await newHostManager.loadPersistentInvitations(Context.default());
+        const loadedInvitations = await newHostManager.loadPersistentInvitations();
         expect(loadedInvitations.invitations).to.have.lengthOf(0);
         expect(host.created.get()).to.have.lengthOf(0);
       });
@@ -562,14 +561,14 @@ describe('Invitations', () => {
         const { service: hostService } = createInvitationsApi(hostContext);
         const { service: guestService } = createInvitationsApi(guestContext);
 
-        space = await hostContext.dataSpaceManager.createSpace(Context.default());
+        space = await hostContext.dataSpaceManager.createSpace();
         host = new InvitationsProxy(hostService, undefined, () => ({
           kind: Invitation.Kind.SPACE,
           spaceKey: space.key,
         }));
         guest = new InvitationsProxy(guestService, undefined, () => ({ kind: Invitation.Kind.SPACE }));
 
-        onTestFinished(() => space.close(Context.default()));
+        onTestFinished(() => space.close());
       });
 
       testSuite(
@@ -589,7 +588,7 @@ describe('Invitations', () => {
         hostContext = peers[0];
         guestContext = peers[1];
 
-        await hostContext.createIdentity(Context.default());
+        await hostContext.createIdentity();
 
         const { service: hostService } = createInvitationsApi(hostContext);
         const { service: guestService } = createInvitationsApi(guestContext);
@@ -686,7 +685,7 @@ const createInvitationsApi = (
 ) => {
   const manager = new InvitationsManager(
     context.invitations,
-    (invitation) => context.getInvitationHandler(Context.default(), invitation),
+    (invitation) => context.getInvitationHandler(invitation),
     metadata,
   );
   const service = new InvitationsServiceImpl(manager);

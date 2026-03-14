@@ -14,7 +14,7 @@ import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { stateToString } from './utils';
 
 export interface FlowLockHolder {
-  hasFlowLock(ctx: Context): boolean;
+  hasFlowLock(): boolean;
 }
 
 export interface GuardedInvitationState {
@@ -41,7 +41,7 @@ export const createGuardedInvitationState = (
   let lastActiveLockHolder: FlowLockHolder | null = null;
   let currentInvitation = { ...invitation };
   const isStateChangeAllowed = (lockHolder: FlowLockHolder | null) => {
-    if (ctx.disposed || (lockHolder !== null && mutex.isLocked() && !lockHolder.hasFlowLock(ctx))) {
+    if (ctx.disposed || (lockHolder !== null && mutex.isLocked() && !lockHolder.hasFlowLock())) {
       return false;
     }
     // don't allow transitions from a terminal state unless a new extension acquired mutex

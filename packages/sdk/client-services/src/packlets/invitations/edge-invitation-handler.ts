@@ -89,7 +89,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     let requestCount = 0;
     const tryHandleInvitation = async () => {
       requestCount++;
-      const admissionRequest = await protocol.createAdmissionRequest(ctx, deviceProfile);
+      const admissionRequest = await protocol.createAdmissionRequest(deviceProfile);
       if (admissionRequest.space) {
         try {
           await this._handleSpaceInvitationFlow(ctx, guardedState, admissionRequest.space, spaceId);
@@ -98,14 +98,14 @@ export class EdgeInvitationHandler implements FlowLockHolder {
             log.info('join space with edge unsuccessful', {
               reason: error.message,
               retryable: error.isRetryable,
-              after: error.retryAfterMs ?? this._calculateNextRetryMs(ctx),
+              after: error.retryAfterMs ?? this._calculateNextRetryMs(),
             });
             if (error.isRetryable && requestCount < MAX_RETRIES_PER_INVITATION) {
-              scheduleTask(ctx, tryHandleInvitation, error.retryAfterMs ?? this._calculateNextRetryMs(ctx));
+              scheduleTask(ctx, tryHandleInvitation, error.retryAfterMs ?? this._calculateNextRetryMs());
             }
           } else if (requestCount < MAX_RETRIES_PER_INVITATION) {
             log.info('failed to handle invitation with edge', { error });
-            scheduleTask(ctx, tryHandleInvitation, this._calculateNextRetryMs(ctx));
+            scheduleTask(ctx, tryHandleInvitation, this._calculateNextRetryMs());
           }
         }
       }
@@ -126,12 +126,12 @@ export class EdgeInvitationHandler implements FlowLockHolder {
 
       guardedState.set(this, Invitation.State.CONNECTING);
 
-      const response = await this._joinSpaceByInvitation(ctx, guardedState, spaceId, {
+      const response = await this._joinSpaceByInvitation(guardedState, spaceId, {
         identityKey: admissionRequest.identityKey.toHex(),
         invitationId: guardedState.current.invitationId,
       });
 
-      const admissionResponse = await this._mapToAdmissionResponse(ctx, response);
+      const admissionResponse = await this._mapToAdmissionResponse(response);
       await this._callbacks.onInvitationSuccess(admissionResponse, { space: admissionRequest });
     } catch (error) {
       guardedState.set(this, Invitation.State.ERROR);
@@ -142,7 +142,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     }
   }
 
-  private async _mapToAdmissionResponse(ctx: Context, edgeResponse: JoinSpaceResponseBody): Promise<AdmissionResponse> {
+  private async _mapToAdmissionResponse(edgeResponse: JoinSpaceResponseBody): Promise<AdmissionResponse> {
     const credentialBytes = Buffer.from(edgeResponse.spaceMemberCredential, 'base64');
     const codec = schema.getCodecForType('dxos.halo.credentials.Credential');
     return {
@@ -153,7 +153,6 @@ export class EdgeInvitationHandler implements FlowLockHolder {
   }
 
   private async _joinSpaceByInvitation(
-    ctx: Context,
     guardedState: GuardedInvitationState,
     spaceId: SpaceId,
     request: JoinSpaceRequest,
@@ -179,11 +178,11 @@ export class EdgeInvitationHandler implements FlowLockHolder {
     }
   }
 
-  public hasFlowLock(ctx: Context): boolean {
+  public hasFlowLock(): boolean {
     return this._flowLock != null;
   }
 
-  private _calculateNextRetryMs(ctx: Context): number {
+  private _calculateNextRetryMs(): number {
     return this._retryInterval + Math.random() * this._retryJitter;
   }
 }

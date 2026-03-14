@@ -5,7 +5,6 @@
 import { describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 
 import { TestWireProtocol } from '../testing/test-wire-protocol';
@@ -45,9 +44,9 @@ describe.skip('Connection', () => {
       sessionId,
       true,
       {
-        offer: async (_msg) => ({ accept: true }),
+        offer: async (msg) => ({ accept: true }),
         signal: async (msg) => {
-          await fastConnection.signal(Context.default(), msg);
+          await fastConnection.signal(msg);
         },
       },
       slowPeerProtocol.factory({
@@ -67,9 +66,9 @@ describe.skip('Connection', () => {
       sessionId,
       false,
       {
-        offer: async (_msg) => ({ accept: true }),
+        offer: async (msg) => ({ accept: true }),
         signal: async (msg) => {
-          await slowConnection.signal(Context.default(), msg);
+          await slowConnection.signal(msg);
         },
       },
       fastPeerProtocol.factory({
@@ -81,12 +80,12 @@ describe.skip('Connection', () => {
       createRtcTransportFactory(),
     );
 
-    fastConnection.initiate(Context.default());
-    await fastConnection.openConnection(Context.default());
+    fastConnection.initiate();
+    await fastConnection.openConnection();
     await sleep(200);
 
-    slowConnection.initiate(Context.default());
-    await slowConnection.openConnection(Context.default());
+    slowConnection.initiate();
+    await slowConnection.openConnection();
 
     await Promise.all([
       slowPeerProtocol.testConnection(PublicKey.from(fastPeer.peerKey), 'test message 1'),

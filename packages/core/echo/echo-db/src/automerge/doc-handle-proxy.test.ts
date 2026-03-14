@@ -5,7 +5,6 @@
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { AutomergeHost, DocumentsSynchronizer } from '@dxos/echo-pipeline';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -18,7 +17,7 @@ describe('DocHandleProxy', () => {
 
     const { host } = await setup();
     // Create document on host first so synchronizer can load it.
-    const workerHandle = await host.createDoc<{ text: string }>(Context.default());
+    const workerHandle = await host.createDoc<{ text: string }>();
     const documentId = workerHandle.documentId;
 
     const clientHandle = new DocHandleProxy<{ text: string }>({ onDelete: () => {} });
@@ -29,10 +28,10 @@ describe('DocHandleProxy', () => {
 
     const docsSynchronizer = new DocumentsSynchronizer({ automergeHost: host, sendUpdates: () => {} });
     await openAndClose(docsSynchronizer);
-    await docsSynchronizer.addDocuments(Context.default(), [documentId]);
+    await docsSynchronizer.addDocuments([documentId]);
 
     const mutation = clientHandle._getPendingChanges()!;
-    await docsSynchronizer.update(Context.default(), [{ documentId, mutation }]);
+    await docsSynchronizer.update([{ documentId, mutation }]);
     expect(workerHandle.doc()?.text).to.equal(text);
   });
 
@@ -40,7 +39,7 @@ describe('DocHandleProxy', () => {
     const text = 'Hello World!';
 
     const { host } = await setup();
-    const workerHandle = await host.createDoc<{ text: string }>(Context.default());
+    const workerHandle = await host.createDoc<{ text: string }>();
 
     const clientHandle = new DocHandleProxy<{ text: string }>({
       documentId: workerHandle.documentId,
@@ -54,7 +53,7 @@ describe('DocHandleProxy', () => {
       },
     });
     await openAndClose(docsSynchronizer);
-    await docsSynchronizer.addDocuments(Context.default(), [workerHandle.documentId]);
+    await docsSynchronizer.addDocuments([workerHandle.documentId]);
     workerHandle.change((doc: { text: string }) => {
       doc.text = text;
     });
@@ -68,7 +67,7 @@ describe('DocHandleProxy', () => {
     type DocType = { clientText: string; foreignPeerText: string };
 
     const { host } = await setup();
-    const workerHandle = await host.createDoc<DocType>(Context.default());
+    const workerHandle = await host.createDoc<DocType>();
     const synchronizer = new DocumentsSynchronizer({
       automergeHost: host,
       sendUpdates: ({ updates }) => updates?.forEach((update) => clientHandle._integrateHostUpdate(update.mutation)),
@@ -89,12 +88,12 @@ describe('DocHandleProxy', () => {
     // Send foreign mutation to client.
     const clientReceiveChange = new Trigger();
     clientHandle.once('change', () => clientReceiveChange.wake());
-    await synchronizer.addDocuments(Context.default(), [workerHandle.documentId]);
+    await synchronizer.addDocuments([workerHandle.documentId]);
     await clientReceiveChange.wait();
 
     // Send client mutation to foreign peer.
     const clientUpdate = clientHandle._getPendingChanges()!;
-    await synchronizer.update(Context.default(), [{ documentId: workerHandle.documentId, mutation: clientUpdate }]);
+    await synchronizer.update([{ documentId: workerHandle.documentId, mutation: clientUpdate }]);
 
     for (const handle of [clientHandle, workerHandle] as const) {
       expect(handle.doc()?.clientText).to.equal(clientText);

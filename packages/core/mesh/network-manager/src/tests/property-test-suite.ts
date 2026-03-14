@@ -6,7 +6,6 @@ import * as fc from 'fast-check';
 import { type ModelRunSetup } from 'fast-check';
 import { test } from 'vitest';
 
-import { Context } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap, ComplexSet, range } from '@dxos/util';
@@ -63,7 +62,7 @@ export const propertyTestSuite = () => {
 
       real.peers.forEach((peer) =>
         peer.networkManager.topics.forEach((topic) => {
-          peer.networkManager.getSwarm(Context.default(), topic)!.errors.assertNoUnhandledErrors();
+          peer.networkManager.getSwarm(topic)!.errors.assertNoUnhandledErrors();
         }),
       );
     };
@@ -72,7 +71,7 @@ export const propertyTestSuite = () => {
       constructor(readonly peerId: PublicKey) {}
 
       check = (model: Model) => !model.peers.has(this.peerId);
-      async run(_model: Model, _real: Real) {
+      async run(model: Model, real: Real) {
         // TODO(burdon): ???
         throw new Error('Not implemented.');
         // model.peers.add(this.peerId);
@@ -98,7 +97,7 @@ export const propertyTestSuite = () => {
         model.joinedPeers.delete(this.peerId);
 
         const peer = real.peers.get(this.peerId);
-        await peer!.networkManager.close(Context.default());
+        await peer!.networkManager.close();
         real.peers.delete(this.peerId);
 
         await assertState(model, real);
@@ -120,7 +119,7 @@ export const propertyTestSuite = () => {
         // afterTest(() => presence.stop());
         // const protocol = createProtocolFactory(model.topic, this.peerId, [presence]);
 
-        await peer.networkManager.joinSwarm(Context.default(), {
+        await peer.networkManager.joinSwarm({
           peerInfo: {
             peerKey: this.peerId.toHex(),
             identityKey: this.peerId.toHex(),
@@ -147,7 +146,7 @@ export const propertyTestSuite = () => {
         model.joinedPeers.delete(this.peerId);
 
         const peer = real.peers.get(this.peerId)!;
-        await peer.networkManager.leaveSwarm(Context.default(), model.topic);
+        await peer.networkManager.leaveSwarm(model.topic);
         peer.presence = undefined;
 
         await assertState(model, real);
