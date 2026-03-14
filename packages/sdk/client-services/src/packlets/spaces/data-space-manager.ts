@@ -328,7 +328,7 @@ export class DataSpaceManager extends Resource {
     } else {
       root = await this._echoHost.createSpaceRoot(spaceKey);
     }
-    await this._echoHost.flush();
+    await this._echoHost.flush(ctx);
 
     log('constructing space...', { spaceKey });
 
@@ -400,7 +400,7 @@ export class DataSpaceManager extends Resource {
       setDeep(doc, ['objects', propertiesId], properties);
     });
 
-    await this._echoHost.flush();
+    await this._echoHost.flush(ctx);
     return space;
   }
 

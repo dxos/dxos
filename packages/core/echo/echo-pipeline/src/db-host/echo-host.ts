@@ -245,8 +245,8 @@ export class EchoHost extends Resource {
   /**
    * Flush all pending writes to the underlying storage.
    */
-  async flush(): Promise<void> {
-    await this._automergeHost.flush(this._ctx);
+  async flush(ctx: Context): Promise<void> {
+    await this._automergeHost.flush(ctx);
   }
 
   /**
