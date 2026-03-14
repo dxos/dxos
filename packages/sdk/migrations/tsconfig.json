@@ -10,9 +10,6 @@
   ],
   "references": [
     {
-      "path": "../../common/context"
-    },
-    {
       "path": "../../common/invariant"
     },
     {
