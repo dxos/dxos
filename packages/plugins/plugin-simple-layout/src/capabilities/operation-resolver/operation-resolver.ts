@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation, isPinnedWorkspace } from '@dxos/app-toolkit';
+import { getCompanionVariant, LayoutOperation, isPinnedWorkspace } from '@dxos/app-toolkit';
 import { Operation, OperationResolver } from '@dxos/operation';
 
 import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapability } from '../../types';
@@ -44,6 +44,7 @@ export default Capability.makeModule(
       //
       // UpdateComplementary - Controls companion drawer.
       //
+      // TODO(wittjosiah): Not sure if we should be using this for the drawer.
       OperationResolver.make({
         operation: LayoutOperation.UpdateComplementary,
         handler: Effect.fnUntraced(function* (input) {
@@ -51,6 +52,13 @@ export default Capability.makeModule(
             updateState((state) => ({
               ...state,
               drawerState: 'closed',
+            }));
+          } else if (input.subject) {
+            const variant = getCompanionVariant(input.subject);
+            updateState((state) => ({
+              ...state,
+              companionVariant: variant,
+              drawerState: input.state === 'expanded' ? 'expanded' : 'open',
             }));
           }
         }),

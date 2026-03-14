@@ -205,7 +205,11 @@ export const isSeparatorPrefixed = (qualifiedId: string): boolean => {
 /**
  * Get the parent qualified ID (everything before the last `/` segment).
  */
-export const getParentId = (qualifiedId: string): string | undefined => {
+export const getParentId = (qualifiedId: string | undefined): string | undefined => {
+  if (!qualifiedId) {
+    return undefined;
+  }
+
   const lastSlash = qualifiedId.lastIndexOf('/');
   return lastSlash > 0 ? qualifiedId.slice(0, lastSlash) : undefined;
 };

@@ -37,7 +37,7 @@ export type MailboxArticleProps = SurfaceComponentProps<
 
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const id = attendableId ?? getObjectPathFromObject(mailbox);
+  const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const db = Obj.getDatabase(mailbox);
 
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
@@ -129,9 +129,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
           const companionId = `${COMPANION_PREFIX}message`;
           if (layout.mode === 'simple') {
-            // Simple layout: navigate to companion as standalone view.
-            void invokePromise(LayoutOperation.Open, {
-              subject: [companionId],
+            // Simple layout: open drawer with message companion.
+            void invokePromise(LayoutOperation.UpdateComplementary, {
+              subject: companionId,
+              state: 'expanded',
             });
           } else {
             // Deck layout: open as companion panel.
