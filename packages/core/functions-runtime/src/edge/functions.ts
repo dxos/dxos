@@ -43,19 +43,14 @@ export const createEdgeClient = (client: Client): EdgeHttpClient => {
 /**
  * @deprecated Use {@link FunctionsServiceClient} instead.
  */
-export const uploadWorkerFunction = async ({
-  client,
-  version,
-  name,
-  functionId,
-  ownerPublicKey,
-  entryPoint,
-  assets,
-}: UploadWorkerArgs): Promise<UploadFunctionResponseBody> => {
+export const uploadWorkerFunction = async (
+  ctx: Context,
+  { client, version, name, functionId, ownerPublicKey, entryPoint, assets }: UploadWorkerArgs,
+): Promise<UploadFunctionResponseBody> => {
   log('uploading function', { functionId, name, version, ownerPublicKey });
   const edgeClient = createEdgeClient(client);
   const response = await edgeClient.uploadFunction(
-    Context.default(),
+    ctx,
     { functionId },
     { name, version, ownerPublicKey: ownerPublicKey.toHex(), entryPoint, assets },
   );
@@ -76,9 +71,13 @@ export const uploadWorkerFunction = async ({
 /**
  * @deprecated Use {@link FunctionsServiceClient} instead.
  */
-export const getDeployedFunctions = async (client: Client, dedupe = false): Promise<Function.Function[]> => {
+export const getDeployedFunctions = async (
+  ctx: Context,
+  client: Client,
+  dedupe = false,
+): Promise<Function.Function[]> => {
   const edgeClient = createEdgeClient(client);
-  const result = await edgeClient.listFunctions(Context.default());
+  const result = await edgeClient.listFunctions(ctx);
   const functions: Function.Function[] = result.uploadedFunctions.flatMap((record: any) => {
     // Record shape is determined by EDGE API. We defensively parse.
     const latest = record.latestVersion ?? {};
@@ -117,6 +116,7 @@ export const getDeployedFunctions = async (client: Client, dedupe = false): Prom
  * @deprecated Use {@link FunctionsServiceClient} instead.
  */
 export const invokeFunction = async (
+  ctx: Context,
   edgeClient: EdgeHttpClient,
   fn: Function.Function,
   input: unknown,
@@ -133,7 +133,7 @@ export const invokeFunction = async (
   // COMPAT: Previously functionId was a URL `/<guid>`. Now it's just the `<guid>`.
   const cleanedId = functionId.replace(/^\//, '');
   return await edgeClient.invokeFunction(
-    Context.default(),
+    ctx,
     { functionId: cleanedId, spaceId, cpuTimeLimit, subrequestsLimit },
     input,
   );
