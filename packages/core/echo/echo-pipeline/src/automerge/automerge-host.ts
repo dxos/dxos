@@ -193,7 +193,7 @@ export class AutomergeHost extends Resource {
     this._getSpaceKeyByRootDocumentId = getSpaceKeyByRootDocumentId;
   }
 
-  protected override async _open(): Promise<void> {
+  protected override async _open(ctx: Context): Promise<void> {
     this._peerId = `host-${this._peerIdProvider?.() ?? PublicKey.random().toHex()}` as PeerId;
 
     this._onHeadsChangedTask = new DeferredTask(this._ctx, async () => {
@@ -247,7 +247,7 @@ export class AutomergeHost extends Resource {
       await Promise.all(
         collectionToSync.map(async ({ collectionId, peerId }) => {
           try {
-            await this._handleCollectionSync(collectionId, peerId);
+            await this._handleCollectionSync(this._ctx, collectionId, peerId);
           } catch (err) {
             log.error('failed to sync collection', { collectionId, peerId, err });
           }
@@ -266,7 +266,7 @@ export class AutomergeHost extends Resource {
     await this._echoNetworkAdapter.whenConnected();
   }
 
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     await this._collectionSynchronizer.close();
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
@@ -287,12 +287,12 @@ export class AutomergeHost extends Resource {
     return this._repo.handles;
   }
 
-  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
+  async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     await this._echoNetworkAdapter.addReplicator(replicator);
   }
 
-  async removeReplicator(replicator: AutomergeReplicator): Promise<void> {
+  async removeReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     await this._echoNetworkAdapter.removeReplicator(replicator);
   }
@@ -338,7 +338,7 @@ export class AutomergeHost extends Resource {
     return handle;
   }
 
-  async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
+  async exportDoc(id: AnyDocumentId): Promise<Uint8Array> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const documentId = interpretAsDocumentId(id);
 
@@ -556,7 +556,7 @@ export class AutomergeHost extends Resource {
    * Flush documents to disk.
    */
   @trace.span({ showInBrowserTimeline: true })
-  async flush({ documentIds }: FlushRequest = {}): Promise<void> {
+  async flush(ctx: Context, { documentIds }: FlushRequest = {}): Promise<void> {
     // Note: Sync protocol for client and services ensures that all handles should have all changes.
 
     const loadedDocuments = (documentIds ?? Object.keys(this._repo.handles)).filter(
@@ -702,7 +702,7 @@ export class AutomergeHost extends Resource {
     this._syncTask?.schedule();
   }
 
-  private async _handleCollectionSync(collectionId: string, peerId: PeerId) {
+  private async _handleCollectionSync(ctx: Context, collectionId: string, peerId: PeerId) {
     const localState = this._collectionSynchronizer.getLocalCollectionState(collectionId);
     const remoteState = this._collectionSynchronizer.getRemoteCollectionStates(collectionId).get(peerId);
 
@@ -720,7 +720,7 @@ export class AutomergeHost extends Resource {
     const bundleSyncEnabled = this._echoNetworkAdapter.bundleSyncEnabledForPeer(peerId);
     if (bundleSyncEnabled && missingOnRemote.length >= BUNDLE_SYNC_THRESHOLD) {
       log('pushing bundle', { amount: missingOnRemote.length });
-      const { syncInteractively } = await this._pushInBundles(peerId, missingOnRemote);
+      const { syncInteractively } = await this._pushInBundles(ctx, peerId, missingOnRemote);
       toReplicateWithoutBatching.push(...syncInteractively);
     } else {
       log.verbose('failed to push bundle, replicating interactively', {
@@ -732,7 +732,7 @@ export class AutomergeHost extends Resource {
     }
     if (bundleSyncEnabled && missingOnLocal.length >= BUNDLE_SYNC_THRESHOLD) {
       log('pulling bundle', { amount: missingOnLocal.length });
-      const { syncInteractively } = await this._pullInBundles(peerId, missingOnLocal);
+      const { syncInteractively } = await this._pullInBundles(ctx, peerId, missingOnLocal);
       toReplicateWithoutBatching.push(...syncInteractively);
     } else {
       log.verbose('failed to pull bundle, replicating interactively', {
@@ -765,6 +765,7 @@ export class AutomergeHost extends Resource {
 
   // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
   private async _pushInBundles(
+    ctx: Context,
     peerId: PeerId,
     documentIds: DocumentId[],
   ): Promise<{ syncInteractively: DocumentId[] }> {
@@ -779,7 +780,7 @@ export class AutomergeHost extends Resource {
           if (bundle.length === 0) {
             return;
           }
-          await this._pushBundle(peerId, bundle).catch((err) => {
+          await this._pushBundle(ctx, peerId, bundle).catch((err) => {
             log.warn('failed to push bundle, replicating interactively', { peerId, bundle, err });
             syncInteractively.push(...bundle);
           });
@@ -790,7 +791,7 @@ export class AutomergeHost extends Resource {
     return { syncInteractively };
   }
 
-  private async _pushBundle(peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
+  private async _pushBundle(ctx: Context, peerId: PeerId, documentIds: DocumentId[]): Promise<void> {
     if (this._ctx.disposed) {
       return;
     }
@@ -813,10 +814,11 @@ export class AutomergeHost extends Resource {
       };
     });
 
-    await this._echoNetworkAdapter.pushBundle(peerId, docs.filter(isNonNullable));
+    await this._echoNetworkAdapter.pushBundle(ctx, peerId, docs.filter(isNonNullable));
   }
 
   private async _pullInBundles(
+    ctx: Context,
     peerId: PeerId,
     documentIds: DocumentId[],
   ): Promise<{ syncInteractively: DocumentId[] }> {
@@ -832,7 +834,7 @@ export class AutomergeHost extends Resource {
           if (bundle.length === 0) {
             return;
           }
-          const result = await this._pullBundle(peerId, bundle).catch((err) => {
+          const result = await this._pullBundle(ctx, peerId, bundle).catch((err) => {
             log.warn('failed to pull bundle, replicating interactively', { peerId, bundle, err });
             syncInteractively.push(...bundle);
           });
@@ -852,6 +854,7 @@ export class AutomergeHost extends Resource {
   }
 
   private async _pullBundle(
+    ctx: Context,
     peerId: PeerId,
     documentIds: DocumentId[],
   ): Promise<{ docsToImport: Record<DocumentId, Uint8Array> } | undefined> {
@@ -860,7 +863,7 @@ export class AutomergeHost extends Resource {
     }
     // NOTE: We are expecting that documents that are being pulled are not present locally, so we are pulling all changes.
     const docHeads = Object.fromEntries(documentIds.map((documentId) => [documentId, []]));
-    const bundle = await this._echoNetworkAdapter.pullBundle(peerId, docHeads);
+    const bundle = await this._echoNetworkAdapter.pullBundle(ctx, peerId, docHeads);
     return { docsToImport: bundle };
   }
 

@@ -72,7 +72,6 @@ export type RetryConfig = {
 
 type EdgeHttpRequestArgs = {
   method: string;
-  context?: Context;
   retry?: RetryConfig;
   body?: any;
   /**
@@ -88,8 +87,7 @@ type EdgeHttpRequestArgs = {
   auth?: boolean;
 };
 
-export type EdgeHttpGetArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'auth'>;
-export type EdgeHttpPostArgs = Pick<EdgeHttpRequestArgs, 'context' | 'retry' | 'body' | 'auth'>;
+export type EdgeHttpCallArgs = Pick<EdgeHttpRequestArgs, 'retry' | 'auth'>;
 
 export type GetCronTriggersResponse = {
   cronIds: string[];
@@ -125,23 +123,28 @@ export class EdgeHttpClient {
   // Status
   //
 
-  public async getStatus(args?: EdgeHttpGetArgs): Promise<EdgeStatus> {
-    return this._call(new URL('/status', this.baseUrl), { ...args, method: 'GET', auth: true });
+  public async getStatus(ctx: Context, args?: EdgeHttpCallArgs): Promise<EdgeStatus> {
+    return this._call(ctx, new URL('/status', this.baseUrl), { ...args, method: 'GET', auth: true });
   }
 
   //
   // Agents
   //
 
-  public createAgent(body: CreateAgentRequestBody, args?: EdgeHttpGetArgs): Promise<CreateAgentResponseBody> {
-    return this._call(new URL('/agents/create', this.baseUrl), { ...args, method: 'POST', body });
+  public createAgent(
+    ctx: Context,
+    body: CreateAgentRequestBody,
+    args?: EdgeHttpCallArgs,
+  ): Promise<CreateAgentResponseBody> {
+    return this._call(ctx, new URL('/agents/create', this.baseUrl), { ...args, method: 'POST', body });
   }
 
   public getAgentStatus(
+    ctx: Context,
     request: { ownerIdentityKey: PublicKey },
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<GetAgentStatusResponseBody> {
-    return this._call(new URL(`/users/${request.ownerIdentityKey.toHex()}/agent/status`, this.baseUrl), {
+    return this._call(ctx, new URL(`/users/${request.ownerIdentityKey.toHex()}/agent/status`, this.baseUrl), {
       ...args,
       method: 'GET',
     });
@@ -151,16 +154,21 @@ export class EdgeHttpClient {
   // Credentials
   //
 
-  public getCredentialsForNotarization(spaceId: SpaceId, args?: EdgeHttpGetArgs): Promise<GetNotarizationResponseBody> {
-    return this._call(new URL(`/spaces/${spaceId}/notarization`, this.baseUrl), { ...args, method: 'GET' });
+  public getCredentialsForNotarization(
+    ctx: Context,
+    spaceId: SpaceId,
+    args?: EdgeHttpCallArgs,
+  ): Promise<GetNotarizationResponseBody> {
+    return this._call(ctx, new URL(`/spaces/${spaceId}/notarization`, this.baseUrl), { ...args, method: 'GET' });
   }
 
   public async notarizeCredentials(
+    ctx: Context,
     spaceId: SpaceId,
     body: PostNotarizationRequestBody,
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<void> {
-    await this._call(new URL(`/spaces/${spaceId}/notarization`, this.baseUrl), { ...args, body, method: 'POST' });
+    await this._call(ctx, new URL(`/spaces/${spaceId}/notarization`, this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //
@@ -168,10 +176,11 @@ export class EdgeHttpClient {
   //
 
   public async recoverIdentity(
+    ctx: Context,
     body: RecoverIdentityRequest,
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<RecoverIdentityResponseBody> {
-    return this._call(new URL('/identity/recover', this.baseUrl), { ...args, body, method: 'POST' });
+    return this._call(ctx, new URL('/identity/recover', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //
@@ -179,11 +188,12 @@ export class EdgeHttpClient {
   //
 
   public async joinSpaceByInvitation(
+    ctx: Context,
     spaceId: SpaceId,
     body: JoinSpaceRequest,
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<JoinSpaceResponseBody> {
-    return this._call(new URL(`/spaces/${spaceId}/join`, this.baseUrl), { ...args, body, method: 'POST' });
+    return this._call(ctx, new URL(`/spaces/${spaceId}/join`, this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //
@@ -191,18 +201,19 @@ export class EdgeHttpClient {
   //
 
   public async initiateOAuthFlow(
+    ctx: Context,
     body: InitiateOAuthFlowRequest,
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<InitiateOAuthFlowResponse> {
-    return this._call(new URL('/oauth/initiate', this.baseUrl), { ...args, body, method: 'POST' });
+    return this._call(ctx, new URL('/oauth/initiate', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //
   // Spaces
   //
 
-  async createSpace(body: CreateSpaceRequest, args?: EdgeHttpGetArgs): Promise<CreateSpaceResponseBody> {
-    return this._call(new URL('/spaces/create', this.baseUrl), { ...args, body, method: 'POST' });
+  async createSpace(ctx: Context, body: CreateSpaceRequest, args?: EdgeHttpCallArgs): Promise<CreateSpaceResponseBody> {
+    return this._call(ctx, new URL('/spaces/create', this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //
@@ -210,14 +221,16 @@ export class EdgeHttpClient {
   //
 
   public async queryQueue(
+    ctx: Context,
     subspaceTag: string,
     spaceId: SpaceId,
     query: FeedProtocol.QueueQuery,
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<FeedProtocol.QueryResult> {
     const queueId = query.queueIds?.[0];
     invariant(queueId, 'queueId required');
     return this._call(
+      ctx,
       createUrl(new URL(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}/query`, this.baseUrl), {
         after: query.after,
         before: query.before,
@@ -233,13 +246,14 @@ export class EdgeHttpClient {
   }
 
   public async insertIntoQueue(
+    ctx: Context,
     subspaceTag: string,
     spaceId: SpaceId,
     queueId: ObjectId,
     objects: unknown[],
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<void> {
-    return this._call(new URL(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}`, this.baseUrl), {
+    return this._call(ctx, new URL(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}`, this.baseUrl), {
       ...args,
       body: { objects },
       method: 'POST',
@@ -247,13 +261,15 @@ export class EdgeHttpClient {
   }
 
   public async deleteFromQueue(
+    ctx: Context,
     subspaceTag: string,
     spaceId: SpaceId,
     queueId: ObjectId,
     objectIds: ObjectId[],
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<void> {
     return this._call(
+      ctx,
       createUrl(new URL(`/spaces/${subspaceTag}/${spaceId}/queue/${queueId}`, this.baseUrl), {
         ids: objectIds.join(','),
       }),
@@ -269,9 +285,10 @@ export class EdgeHttpClient {
   //
 
   public async uploadFunction(
+    ctx: Context,
     pathParts: { functionId?: string },
     body: UploadFunctionRequest,
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<UploadFunctionResponseBody> {
     const formData = new FormData();
     formData.append('name', body.name ?? '');
@@ -288,7 +305,7 @@ export class EdgeHttpClient {
     }
 
     const path = ['functions', ...(pathParts.functionId ? [pathParts.functionId] : [])].join('/');
-    return this._call(new URL(path, this.baseUrl), {
+    return this._call(ctx, new URL(path, this.baseUrl), {
       ...args,
       body: formData,
       method: 'PUT',
@@ -296,11 +313,12 @@ export class EdgeHttpClient {
     });
   }
 
-  public async listFunctions(args?: EdgeHttpGetArgs): Promise<any> {
-    return this._call(new URL('/functions', this.baseUrl), { ...args, method: 'GET' });
+  public async listFunctions(ctx: Context, args?: EdgeHttpCallArgs): Promise<any> {
+    return this._call(ctx, new URL('/functions', this.baseUrl), { ...args, method: 'GET' });
   }
 
   public async invokeFunction(
+    ctx: Context,
     params: {
       functionId: string;
       version?: string;
@@ -309,7 +327,7 @@ export class EdgeHttpClient {
       subrequestsLimit?: number;
     },
     input: unknown,
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<any> {
     const url = new URL(`/functions/${params.functionId}`, this.baseUrl);
     if (params.version) {
@@ -325,7 +343,7 @@ export class EdgeHttpClient {
       url.searchParams.set('subrequestsLimit', params.subrequestsLimit.toString());
     }
 
-    return this._call(url, {
+    return this._call(ctx, url, {
       ...args,
       body: input,
       method: 'POST',
@@ -337,12 +355,13 @@ export class EdgeHttpClient {
   //
 
   public async executeWorkflow(
+    ctx: Context,
     spaceId: SpaceId,
     graphId: ObjectId,
     input: any,
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<ExecuteWorkflowResponseBody> {
-    return this._call(new URL(`/workflows/${spaceId}/${graphId}`, this.baseUrl), {
+    return this._call(ctx, new URL(`/workflows/${spaceId}/${graphId}`, this.baseUrl), {
       ...args,
       body: input,
       method: 'POST',
@@ -353,14 +372,17 @@ export class EdgeHttpClient {
   // Triggers
   //
 
-  public async getCronTriggers(spaceId: SpaceId): Promise<GetCronTriggersResponse> {
-    return this._call<GetCronTriggersResponse>(new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl), {
-      method: 'GET',
-    });
+  public async getCronTriggers(ctx: Context, spaceId: SpaceId): Promise<GetCronTriggersResponse> {
+    return this._call<GetCronTriggersResponse>(
+      ctx,
+      new URL(`/test/functions/${spaceId}/triggers/crons`, this.baseUrl),
+      { method: 'GET' },
+    );
   }
 
-  public async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId) {
-    return this._call(new URL(`/test/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
+  public async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId, args?: EdgeHttpCallArgs) {
+    return this._call(ctx, new URL(`/test/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
+      ...args,
       method: 'POST',
     });
   }
@@ -373,11 +395,12 @@ export class EdgeHttpClient {
    * Execute a QueryAST query against a space.
    */
   public async execQuery(
+    ctx: Context,
     spaceId: SpaceId,
     body: QueryRequestProto,
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<QueryResponseProto> {
-    return this._call(new URL(`/spaces/${spaceId}/exec-query`, this.baseUrl), { ...args, body, method: 'POST' });
+    return this._call(ctx, new URL(`/spaces/${spaceId}/exec-query`, this.baseUrl), { ...args, body, method: 'POST' });
   }
 
   //
@@ -385,19 +408,21 @@ export class EdgeHttpClient {
   //
 
   public async importBundle(
-    spaceId: SpaceId, //
+    ctx: Context,
+    spaceId: SpaceId,
     body: ImportBundleRequest,
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<void> {
-    return this._call(new URL(`/spaces/${spaceId}/import`, this.baseUrl), { ...args, body, method: 'PUT' });
+    return this._call(ctx, new URL(`/spaces/${spaceId}/import`, this.baseUrl), { ...args, body, method: 'PUT' });
   }
 
   public async exportBundle(
+    ctx: Context,
     spaceId: SpaceId,
     body: ExportBundleRequest,
-    args?: EdgeHttpGetArgs,
+    args?: EdgeHttpCallArgs,
   ): Promise<ExportBundleResponse> {
-    return this._call(new URL(`/spaces/${spaceId}/export`, this.baseUrl), {
+    return this._call(ctx, new URL(`/spaces/${spaceId}/export`, this.baseUrl), {
       ...args,
       body,
       method: 'POST',
@@ -421,9 +446,8 @@ export class EdgeHttpClient {
   }
 
   // TODO(burdon): Refactor with effect (see edge-http-client.test.ts).
-  private async _call<T>(url: URL, args: EdgeHttpRequestArgs): Promise<T> {
+  private async _call<T>(ctx: Context, url: URL, args: EdgeHttpRequestArgs): Promise<T> {
     const shouldRetry = createRetryHandler(args);
-    const requestContext = args.context ?? Context.default();
     log('fetch', { url, request: args.body });
 
     let handledAuth = false;
@@ -474,7 +498,7 @@ export class EdgeHttpClient {
         processingError = EdgeCallFailedError.fromProcessingFailureCause(error);
       }
 
-      if (processingError?.isRetryable && (await shouldRetry(requestContext, processingError.retryAfterMs))) {
+      if (processingError?.isRetryable && (await shouldRetry(ctx, processingError.retryAfterMs))) {
         log.verbose('retrying edge request', { url, processingError });
       } else {
         throw processingError!;

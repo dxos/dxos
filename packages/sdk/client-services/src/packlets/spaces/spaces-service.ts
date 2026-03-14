@@ -6,6 +6,7 @@ import type { AutomergeUrl } from '@automerge/automerge-repo';
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import {
   type CredentialProcessor,
   createAdmissionCredentials,
@@ -69,7 +70,7 @@ export class SpacesServiceImpl implements SpacesService {
   async createSpace(): Promise<Space> {
     this._requireIdentity();
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = await dataSpaceManager.createSpace();
+    const space = await dataSpaceManager.createSpace(Context.default());
     await this._updateMetrics();
     return this._serializeSpace(space);
   }
@@ -81,11 +82,11 @@ export class SpacesServiceImpl implements SpacesService {
     if (state) {
       switch (state) {
         case SpaceState.SPACE_ACTIVE:
-          await space.activate();
+          await space.activate(Context.default());
           break;
 
         case SpaceState.SPACE_INACTIVE:
-          await space.deactivate();
+          await space.deactivate(Context.default());
           break;
         default:
           throw new ApiError({ message: 'Invalid space state' });
@@ -93,7 +94,7 @@ export class SpacesServiceImpl implements SpacesService {
     }
 
     if (edgeReplication !== undefined) {
-      await dataSpaceManager.setSpaceEdgeReplicationSetting(spaceKey, edgeReplication);
+      await dataSpaceManager.setSpaceEdgeReplicationSetting(Context.default(), spaceKey, edgeReplication);
     }
   }
 
@@ -291,7 +292,7 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     const extracted = await extractSpaceArchive(request.archive);
     invariant(extracted.metadata.echo?.currentRootUrl, 'Space archive does not contain a root URL');
-    const space = await dataSpaceManager.createSpace({
+    const space = await dataSpaceManager.createSpace(Context.default(), {
       documents: extracted.documents,
       rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
     });
@@ -308,7 +309,7 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     let dataSpace = dataSpaceManager.spaces.get(assertion.spaceKey);
     if (!dataSpace) {
-      dataSpace = await dataSpaceManager.acceptSpace({
+      dataSpace = await dataSpaceManager.acceptSpace(Context.default(), {
         spaceKey: assertion.spaceKey,
         genesisFeedKey: assertion.genesisFeedKey,
       });

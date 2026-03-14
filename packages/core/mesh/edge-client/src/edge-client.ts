@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Context as OtelContext, context as otelContext, propagation } from '@opentelemetry/api';
+
 import {
   Event,
   PersistentLifecycle,
@@ -10,11 +12,12 @@ import {
   scheduleMicroTask,
   scheduleTaskInterval,
 } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-
+import { TRACE_PROCESSOR, TRACE_SPAN_ATTRIBUTE } from '@dxos/tracing';
 import { protocol } from './defs';
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { EdgeWsConnection } from './edge-ws-connection';
@@ -45,7 +48,7 @@ export interface EdgeConnection extends Required<Lifecycle> {
   get isOpen(): boolean;
   get status(): EdgeStatus;
   setIdentity(identity: EdgeIdentity): void;
-  send(message: Message): Promise<void>;
+  send(ctx: Context, message: Message): Promise<void>;
   onMessage(listener: MessageListener): () => void;
   onReconnected(listener: ReconnectListener): () => void;
 }
@@ -126,7 +129,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * Send message.
    * NOTE: The message is guaranteed to be delivered but the service must respond with a message to confirm processing.
    */
-  public async send(message: Message) {
+  public async send(ctx: Context, message: Message) {
     if (this._ready.state !== TriggerState.RESOLVED) {
       log('waiting for websocket');
       await this._ready.wait({ timeout: this._config.timeout ?? DEFAULT_TIMEOUT });
@@ -141,6 +144,22 @@ export class EdgeClient extends Resource implements EdgeConnection {
       (message.source.peerKey !== this._identity.peerKey || message.source.identityKey !== this.identityKey)
     ) {
       throw new EdgeIdentityChangedError();
+    }
+
+    const spanId = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE);
+    const otlpContext =
+      typeof spanId === 'number'
+        ? (TRACE_PROCESSOR.remoteTracing.getSpanContext(spanId) as OtelContext | undefined)
+        : undefined;
+
+    if (otlpContext) {
+      const activeSpan: Record<string, string> = {};
+      propagation.inject(otlpContext, activeSpan);
+      message.traceContext = {
+        $typeName: 'dxos.edge.messenger.TraceContext',
+        traceparent: activeSpan.traceparent,
+        tracestate: activeSpan.tracestate,
+      };
     }
 
     this._currentConnection.send(message);

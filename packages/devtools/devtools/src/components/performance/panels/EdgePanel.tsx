@@ -23,7 +23,7 @@ export const EdgePanel = ({ edge, ...props }: CustomPanelProps<{ edge?: QueryEdg
 
   const [edgeStatus, setEdgeStatus] = useState<EdgeStatus | undefined>();
   const handleRefresh = async () => {
-    const status = await client.edge.http.getStatus();
+    const status = await client.edge.http.getStatus(Context.default());
     setEdgeStatus(status);
   };
 

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Context } from '@dxos/context';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import type { EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
@@ -25,7 +26,9 @@ export class QueueServiceImpl implements QueueService {
 
   async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
     invariant(request.query?.queuesNamespace);
+    const ctx = Context.default();
     const result = await this._client.queryQueue(
+      ctx,
       request.query.queuesNamespace,
       request.query.spaceId as SpaceId,
       request.query,
@@ -34,7 +37,9 @@ export class QueueServiceImpl implements QueueService {
   }
 
   insertIntoQueue(request: InsertIntoQueueRequest): Promise<void> {
+    const ctx = Context.default();
     return this._client.insertIntoQueue(
+      ctx,
       request.subspaceTag!,
       request.spaceId as SpaceId,
       request.queueId as ObjectId,
@@ -43,7 +48,9 @@ export class QueueServiceImpl implements QueueService {
   }
 
   deleteFromQueue(request: DeleteFromQueueRequest): Promise<void> {
+    const ctx = Context.default();
     return this._client.deleteFromQueue(
+      ctx,
       request.subspaceTag!,
       request.spaceId as SpaceId,
       request.queueId as ObjectId,

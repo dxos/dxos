@@ -10,6 +10,7 @@ import { type DID } from 'iso-did/types';
 import { type Client } from '@dxos/client';
 import { type SpaceId } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
+import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, Function, setUserFunctionIdInMetadata } from '@dxos/functions';
@@ -42,18 +43,14 @@ export const createEdgeClient = (client: Client): EdgeHttpClient => {
 /**
  * @deprecated Use {@link FunctionsServiceClient} instead.
  */
-export const uploadWorkerFunction = async ({
-  client,
-  version,
-  name,
-  functionId,
-  ownerPublicKey,
-  entryPoint,
-  assets,
-}: UploadWorkerArgs): Promise<UploadFunctionResponseBody> => {
+export const uploadWorkerFunction = async (
+  ctx: Context,
+  { client, version, name, functionId, ownerPublicKey, entryPoint, assets }: UploadWorkerArgs,
+): Promise<UploadFunctionResponseBody> => {
   log('uploading function', { functionId, name, version, ownerPublicKey });
   const edgeClient = createEdgeClient(client);
   const response = await edgeClient.uploadFunction(
+    ctx,
     { functionId },
     { name, version, ownerPublicKey: ownerPublicKey.toHex(), entryPoint, assets },
   );
@@ -74,9 +71,13 @@ export const uploadWorkerFunction = async ({
 /**
  * @deprecated Use {@link FunctionsServiceClient} instead.
  */
-export const getDeployedFunctions = async (client: Client, dedupe = false): Promise<Function.Function[]> => {
+export const getDeployedFunctions = async (
+  ctx: Context,
+  client: Client,
+  dedupe = false,
+): Promise<Function.Function[]> => {
   const edgeClient = createEdgeClient(client);
-  const result = await edgeClient.listFunctions();
+  const result = await edgeClient.listFunctions(ctx);
   const functions: Function.Function[] = result.uploadedFunctions.flatMap((record: any) => {
     // Record shape is determined by EDGE API. We defensively parse.
     const latest = record.latestVersion ?? {};
@@ -115,6 +116,7 @@ export const getDeployedFunctions = async (client: Client, dedupe = false): Prom
  * @deprecated Use {@link FunctionsServiceClient} instead.
  */
 export const invokeFunction = async (
+  ctx: Context,
   edgeClient: EdgeHttpClient,
   fn: Function.Function,
   input: unknown,
@@ -130,7 +132,11 @@ export const invokeFunction = async (
   }
   // COMPAT: Previously functionId was a URL `/<guid>`. Now it's just the `<guid>`.
   const cleanedId = functionId.replace(/^\//, '');
-  return await edgeClient.invokeFunction({ functionId: cleanedId, spaceId, cpuTimeLimit, subrequestsLimit }, input);
+  return await edgeClient.invokeFunction(
+    ctx,
+    { functionId: cleanedId, spaceId, cpuTimeLimit, subrequestsLimit },
+    input,
+  );
 };
 
 export const incrementSemverPatch = (version: string): string => {

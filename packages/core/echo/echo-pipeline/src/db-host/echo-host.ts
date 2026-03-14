@@ -57,7 +57,7 @@ export type EchoHostProps = {
   /**
    * Callback to run blocking queue sync.
    */
-  syncQueue?: (request: SyncQueueRequest) => Promise<void>;
+  syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
 };
 
 /**
@@ -245,8 +245,8 @@ export class EchoHost extends Resource {
   /**
    * Flush all pending writes to the underlying storage.
    */
-  async flush(): Promise<void> {
-    await this._automergeHost.flush();
+  async flush(ctx: Context): Promise<void> {
+    await this._automergeHost.flush(ctx);
   }
 
   /**
@@ -265,8 +265,8 @@ export class EchoHost extends Resource {
     return await this._automergeHost.loadDoc(ctx, documentId, opts);
   }
 
-  async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
-    return await this._automergeHost.exportDoc(ctx, id);
+  async exportDoc(id: AnyDocumentId): Promise<Uint8Array> {
+    return await this._automergeHost.exportDoc(id);
   }
 
   /**
@@ -292,7 +292,7 @@ export class EchoHost extends Resource {
       links: {},
     });
 
-    await this._automergeHost.flush({ documentIds: [automergeRoot.documentId] });
+    await this._automergeHost.flush(this._ctx, { documentIds: [automergeRoot.documentId] });
 
     return await this.openSpaceRoot(spaceId, automergeRoot.url);
   }
@@ -317,14 +317,14 @@ export class EchoHost extends Resource {
    * Install data replicator.
    */
   async addReplicator(replicator: AutomergeReplicator): Promise<void> {
-    await this._automergeHost.addReplicator(replicator);
+    await this._automergeHost.addReplicator(this._ctx, replicator);
   }
 
   /**
    * Remove data replicator.
    */
   async removeReplicator(replicator: AutomergeReplicator): Promise<void> {
-    await this._automergeHost.removeReplicator(replicator);
+    await this._automergeHost.removeReplicator(this._ctx, replicator);
   }
 
   /**

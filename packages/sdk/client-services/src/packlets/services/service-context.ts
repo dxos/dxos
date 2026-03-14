@@ -169,8 +169,8 @@ export class ServiceContext extends Resource {
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
-      syncQueue: async (request) => {
-        return this._feedSyncer?.syncBlocking({
+      syncQueue: async (ctx, request) => {
+        return this._feedSyncer?.syncBlocking(ctx, {
           spaceId: request.spaceId as SpaceId,
           subspaceTag: request.subspaceTag,
           shouldPush: request.shouldPush,
@@ -258,7 +258,7 @@ export class ServiceContext extends Resource {
 
     await this._feedSyncer?.open();
 
-    const loadedInvitations = await this.invitationsManager.loadPersistentInvitations();
+    const loadedInvitations = await this.invitationsManager.loadPersistentInvitations(ctx);
     log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
     log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
@@ -273,9 +273,9 @@ export class ServiceContext extends Resource {
     if (this._deviceSpaceSync && this.identityManager.identity) {
       await this.identityManager.identity.space.spaceState.removeCredentialProcessor(this._deviceSpaceSync);
     }
-    await this.dataSpaceManager?.close();
+    await this.dataSpaceManager?.close(ctx);
     await this.edgeAgentManager?.close();
-    await this.identityManager.close();
+    await this.identityManager.close(ctx);
     await this.spaceManager.close();
     await this.echoHost.close(ctx);
 
@@ -399,7 +399,7 @@ export class ServiceContext extends Resource {
 
         try {
           log('accepting space recorded in halo', { details: assertion });
-          await this.dataSpaceManager.acceptSpace({
+          await this.dataSpaceManager.acceptSpace(this._ctx, {
             spaceKey: assertion.spaceKey,
             genesisFeedKey: assertion.genesisFeedKey,
           });

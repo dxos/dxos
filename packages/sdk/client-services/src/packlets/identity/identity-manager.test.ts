@@ -64,7 +64,7 @@ describe('identity/identity-manager', () => {
   test('creates identity', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open(new Context());
-    onTestFinished(() => identityManager.close());
+    onTestFinished(() => identityManager.close(Context.default()));
 
     const identity = await identityManager.createIdentity();
     expect(identity).to.exist;
@@ -77,7 +77,7 @@ describe('identity/identity-manager', () => {
     await peer1.metadataStore.load();
     await peer1.identityManager.open(new Context());
     const identity1 = await peer1.identityManager.createIdentity();
-    await peer1.identityManager.close();
+    await peer1.identityManager.close(Context.default());
     await peer1.feedStore.close();
     await peer1.metadataStore.close();
 
@@ -95,7 +95,7 @@ describe('identity/identity-manager', () => {
   test('update profile', async () => {
     const { identityManager } = await setupPeer();
     await identityManager.open(new Context());
-    onTestFinished(() => identityManager.close());
+    onTestFinished(() => identityManager.close(Context.default()));
 
     const identity = await identityManager.createIdentity();
     expect(identity.profileDocument?.displayName).to.be.undefined;

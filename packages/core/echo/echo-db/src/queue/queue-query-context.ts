@@ -32,7 +32,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
   /**
    * One-shot run.
    */
-  async run(query: QueryAST.Query): Promise<QueryResult.EntityEntry<T>[]> {
+  async run(_ctx: Context, query: QueryAST.Query): Promise<QueryResult.EntityEntry<T>[]> {
     const trivial = isSimpleSelectionQuery(query);
     if (!trivial) {
       throw new Error('Query not supported.');
