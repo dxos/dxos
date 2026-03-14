@@ -370,7 +370,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
     return true;
   }
 
-  async pushBundle(bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
+  async pushBundle(ctx: Context, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
     const request: ImportBundleRequest = {
       bundle: bundle.map(({ documentId, data, heads }) => ({
         documentId,
@@ -378,12 +378,12 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
         heads,
       })),
     };
-    await this._edgeHttpClient.importBundle(this._spaceId, request);
+    await this._edgeHttpClient.importBundle(this._spaceId, request, { context: ctx });
   }
 
-  async pullBundle(docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>> {
+  async pullBundle(ctx: Context, docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>> {
     const request: ExportBundleRequest = { docHeads };
-    const response = await this._edgeHttpClient.exportBundle(this._spaceId, request);
+    const response = await this._edgeHttpClient.exportBundle(this._spaceId, request, { context: ctx });
     return Object.fromEntries(response.bundle.map((doc) => [doc.documentId, DocumentCodec.decode(doc.mutation)]));
   }
 

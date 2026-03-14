@@ -16,17 +16,22 @@ import { Context } from '@dxos/context';
 
 ## Which methods need ctx
 
-Add `ctx: Context` to methods on the **networking path** — any call chain that reaches:
+`ctx: Context` is **always the first parameter** in every method on the networking path. No exceptions — not in an options bag, not as the last parameter.
 
-- **EDGE calls** (edge service RPCs).
-- **WebSocket messages** (signaling, gossip).
+Add `ctx: Context` as first parameter to methods on any call chain that reaches:
+
+- **`EdgeHttpClient` methods** — all HTTP calls to EDGE services (`notarizeCredentials`, `execQuery`, `importBundle`, `exportBundle`, etc.).
+- **`EdgeWsConnection.send` / `EdgeClient.send`** — all WebSocket messages to EDGE (signaling, gossip, replication).
 - **Swarm / WebRTC connections** (mesh replication, peer discovery).
 - **Feed replication** (Hypercore feed read/write over the network).
 - **Credential notarization** (writes that hit the control pipeline and propagate to peers).
 
+Every method in the call chain — from entry point through signal managers, messengers, replicators, down to the terminal networking call — must accept `ctx: Context` as its first parameter and forward it.
+
 Do **not** add ctx to:
 
 - **Public user-facing APIs** (called by app/plugin developers) — these create `ctx = Context.default()` internally and forward it.
+- **React components and hooks** — UI code should not propagate ctx; create `Context.default()` at the boundary if calling into SDK.
 - **Infrastructure / plumbing** — worker setup, service registry wiring, serialization, import/export helpers.
 - **Pure local operations** — in-memory data transforms, UI state, local database reads that never leave the process.
 - **Leaf utility methods** — small methods that don't call other methods (getters, simple lookups, validation helpers). Adding ctx to these adds noise without tracing value.
@@ -123,19 +128,21 @@ class SpaceList {
   private _setupSpacesStream(): void {
     stream.subscribe((data) => {
       scheduleMicroTask(this._ctx, async () => {
-        await spaceProxy._processUpdate(data);     // no ctx
+        await spaceProxy._processUpdate(data); // no ctx
       });
     });
   }
 }
 
 class SpaceProxy {
-  async _processUpdate(data: Data): Promise<void> {     // no ctx
-    await this._initialize();                            // no ctx
+  async _processUpdate(data: Data): Promise<void> {
+    // no ctx
+    await this._initialize(); // no ctx
   }
 
-  private async _initialize(): Promise<void> {          // no ctx
-    await this._initializeDb(Context.default());         // orphaned root!
+  private async _initialize(): Promise<void> {
+    // no ctx
+    await this._initializeDb(Context.default()); // orphaned root!
   }
 
   @trace.span()
@@ -151,7 +158,7 @@ class SpaceList {
   private _setupSpacesStream(): void {
     stream.subscribe((data) => {
       scheduleMicroTask(this._ctx, async () => {
-        await spaceProxy._processUpdate(this._ctx, data);  // lifecycle ctx
+        await spaceProxy._processUpdate(this._ctx, data); // lifecycle ctx
       });
     });
   }
@@ -159,11 +166,11 @@ class SpaceList {
 
 class SpaceProxy {
   async _processUpdate(ctx: Context, data: Data): Promise<void> {
-    await this._initialize(ctx);                     // forwards ctx
+    await this._initialize(ctx); // forwards ctx
   }
 
   private async _initialize(ctx: Context): Promise<void> {
-    await this._initializeDb(ctx);                   // forwards ctx
+    await this._initializeDb(ctx); // forwards ctx
   }
 
   @trace.span()
@@ -174,6 +181,7 @@ class SpaceProxy {
 ```
 
 Tracing who provides the root context:
+
 - **Public API entry point**: creates `Context.default()` → passes to internal chain
 - **Callback / event handler**: uses `this._ctx` (lifecycle) → passes to internal chain
 - **Detached async work**: uses `this._ctx` (lifecycle) → passes to internal chain

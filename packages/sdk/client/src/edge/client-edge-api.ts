@@ -94,7 +94,7 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
     const response = await this._params.edgeClient.execQuery(this._params.spaceId, {
       query: JSON.stringify(query),
       reactivity: QueryReactivity.ONE_SHOT,
-    });
+    }, { context: _ctx });
 
     const results: QueryResult.EntityEntry<T>[] = [];
 

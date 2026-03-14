@@ -814,7 +814,7 @@ export class AutomergeHost extends Resource {
       };
     });
 
-    await this._echoNetworkAdapter.pushBundle(peerId, docs.filter(isNonNullable));
+    await this._echoNetworkAdapter.pushBundle(ctx, peerId, docs.filter(isNonNullable));
   }
 
   private async _pullInBundles(
@@ -863,7 +863,7 @@ export class AutomergeHost extends Resource {
     }
     // NOTE: We are expecting that documents that are being pulled are not present locally, so we are pulling all changes.
     const docHeads = Object.fromEntries(documentIds.map((documentId) => [documentId, []]));
-    const bundle = await this._echoNetworkAdapter.pullBundle(peerId, docHeads);
+    const bundle = await this._echoNetworkAdapter.pullBundle(ctx, peerId, docHeads);
     return { docsToImport: bundle };
   }
 
