@@ -138,6 +138,9 @@ catalogs:
     '@dnd-kit/utilities':
       specifier: ^3.2.0
       version: 3.2.0
+    '@dxos/context':
+      specifier: ^0.8.3
+      version: 0.8.3
     '@dxos/wa-sqlite':
       specifier: ^0.2.1
       version: 0.2.1
@@ -4401,9 +4404,6 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../blueprints
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
@@ -7784,6 +7784,9 @@ importers:
       '@dxos/config':
         specifier: workspace:*
         version: link:../../sdk/config
+      '@dxos/context':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -8924,6 +8927,9 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugin-observability
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
@@ -13125,12 +13131,18 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/functions':
+        specifier: workspace:*
+        version: link:../../core/functions
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -13520,6 +13532,9 @@ importers:
 
   packages/sdk/app-toolkit:
     dependencies:
+      '@atlaskit/pragmatic-drag-and-drop-hitbox':
+        specifier: 'catalog:'
+        version: 1.1.0
       '@dxos/ai':
         specifier: workspace:*
         version: link:../../core/ai
@@ -13541,15 +13556,27 @@ importers:
       '@dxos/functions':
         specifier: workspace:*
         version: link:../../core/functions
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../types
@@ -20492,6 +20519,27 @@ packages:
     resolution: {integrity: sha512-h65/pn2IPCCIWwdlR2BMLqRkDxpTEONA+HQW3n765HBijLYGyrnTCLa2YQt8VVjjSQD6EfFlTE6aS2Q/b6nb2g==}
     peerDependencies:
       react: ~19.2.3
+
+  '@dxos/context@0.8.3':
+    resolution: {integrity: sha512-PKpfYpUQNCNtK6oKo1Je0qOI1eBiXcdljEu68GW80427U2Oin/hry/EtsrMq3iXLUgpqjRr9hvKU/d/fXsWNDw==}
+
+  '@dxos/debug@0.8.3':
+    resolution: {integrity: sha512-sDsOvwejoVKdLPpBK3yd4RAX8/sZf3C4ZtmmSJm9rmb8kv6NcyJgiPYZZFOJIArEL6Xm4Z9aHfDhOjrK8p4YtQ==}
+
+  '@dxos/invariant@0.8.3':
+    resolution: {integrity: sha512-PWu7u8LxPwGwOedstv4SfB6q4ZtZpclercV5xERai3HNAf+cl1ExA1KOLjgeKQVZsI7Ip3K5dM4mymhA98+KQg==}
+
+  '@dxos/keys@0.8.3':
+    resolution: {integrity: sha512-+ht+usY5oFawxnZaojtACBRQMj8lLzmh+P0QrJ6MAw8UpCqD+NkTC3IdWnHncUJZyAd597k21Kr1NCn8ukFsAg==}
+
+  '@dxos/log@0.8.3':
+    resolution: {integrity: sha512-DASNu0aGPE2dr2St5SLsGF1hxp26DvYXBlvJuIwHFYF8R3QM8Yv/fFplX3M7imAn9becykMr2GtQ+vXKOB6HdQ==}
+
+  '@dxos/node-std@0.8.3':
+    resolution: {integrity: sha512-aR4HR7nd7/xbvl//3XKxUTXtAPywHrW/n0UI1vuutKodRNgmmnnz+doNkCkUQlkVPe6zf/ITAtty9JJdqjQIEA==}
+
+  '@dxos/util@0.8.3':
+    resolution: {integrity: sha512-g59XyzcFcNx31+Hw/lyWeJaHpWN9qbERlnAeFrcX1Ck0rYKacyiBWLKM7Z7ghXH0xr8eNUCHeGqk7GS+zAuH+g==}
 
   '@dxos/wa-sqlite@0.2.1':
     resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
@@ -31699,6 +31747,10 @@ packages:
   lodash.flattendeep@4.4.0:
     resolution: {integrity: sha512-uHaJFihxmJcEX3kT4I23ABqKKalJ/zDrDg0lsFtc1h+3uw49SIJ5beyhx5ExVRti3AvKoOJngIj7xz3oylPdWQ==}
 
+  lodash.get@4.4.2:
+    resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
+    deprecated: This package is deprecated. Use the optional chaining (?.) operator instead.
+
   lodash.includes@4.3.0:
     resolution: {integrity: sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==}
 
@@ -31736,11 +31788,18 @@ packages:
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
 
+  lodash.omit@4.5.0:
+    resolution: {integrity: sha512-XeqSp49hNGmlkj2EJlfrQFIzQ6lXdNro9sddtQzcJY8QaoC2GO0DT7xaIokHeyM+mIT0mPMlPvkYzg2xCuHdZg==}
+    deprecated: This package is deprecated. Use destructuring assignment syntax instead.
+
   lodash.once@4.1.1:
     resolution: {integrity: sha512-Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==}
 
   lodash.orderby@4.6.0:
     resolution: {integrity: sha512-T0rZxKmghOOf5YPnn8EY5iLYeWCpZq8G41FfqoVHH5QDTAFaghJRmAdLiadEDq+ztgM2q5PjA+Z1fOwGrLgmtg==}
+
+  lodash.set@4.3.2:
+    resolution: {integrity: sha512-4hNPN5jlm/N/HLMCO43v8BXKq9Z7QdAGc/VGrRD61w8gN9g/6jF9A4L1pbUgBLCffi0w9VsXfTOij5x8iTyFvg==}
 
   lodash.snakecase@4.1.1:
     resolution: {integrity: sha512-QZ1d4xoBHYUeuouhEq3lk3Uq7ldgyFXGBhg04+oRLnIz8o9T65Eh+8YdroUwn846zchkA9yDsDl5CVVaV2nqYw==}
@@ -39391,6 +39450,53 @@ snapshots:
     dependencies:
       react: 19.2.3
       tslib: 2.8.1
+
+  '@dxos/context@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/log': 0.8.3
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+
+  '@dxos/debug@0.8.3':
+    dependencies:
+      '@dxos/node-std': 0.8.3
+
+  '@dxos/invariant@0.8.3': {}
+
+  '@dxos/keys@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/node-std': 0.8.3
+      effect: 3.19.16
+      ulidx: 2.3.0
+
+  '@dxos/log@0.8.3':
+    dependencies:
+      '@dxos/node-std': 0.8.3
+      '@dxos/util': 0.8.3
+      chalk: 4.1.2
+      js-yaml: 4.1.1
+      lodash.defaultsdeep: 4.6.1
+      lodash.omit: 4.5.0
+
+  '@dxos/node-std@0.8.3':
+    dependencies:
+      assert: 2.0.0
+      events: 3.3.0
+      path-browserify: 1.0.1
+      readable-stream: 3.6.2
+      util: 0.12.5
+
+  '@dxos/util@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/keys': 0.8.3
+      '@dxos/node-std': 0.8.3
+      lodash.get: 4.4.2
+      lodash.set: 4.3.2
 
   '@dxos/wa-sqlite@0.2.1': {}
 
@@ -52332,6 +52438,8 @@ snapshots:
 
   lodash.flattendeep@4.4.0: {}
 
+  lodash.get@4.4.2: {}
+
   lodash.includes@4.3.0: {}
 
   lodash.isarguments@3.1.0: {}
@@ -52356,9 +52464,13 @@ snapshots:
 
   lodash.merge@4.6.2: {}
 
+  lodash.omit@4.5.0: {}
+
   lodash.once@4.1.1: {}
 
   lodash.orderby@4.6.0: {}
+
+  lodash.set@4.3.2: {}
 
   lodash.snakecase@4.1.1: {}
 
