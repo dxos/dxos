@@ -160,6 +160,7 @@ export class EdgeFeedReplicator extends Resource {
 
     log('send', { type: message.type });
     await this._messenger.send(
+      ctx,
       buf.create(RouterMessageSchema, {
         source: {
           identityKey: this._messenger.identityKey,
