@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Context as OtelContext, context as otelContext, propagation } from '@opentelemetry/api';
+
 import {
   Event,
   PersistentLifecycle,
@@ -10,12 +12,12 @@ import {
   scheduleMicroTask,
   scheduleTaskInterval,
 } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-
-import { Context } from '@dxos/context';
+import { TRACE_PROCESSOR, TRACE_SPAN_ATTRIBUTE } from '@dxos/tracing';
 import { protocol } from './defs';
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { EdgeWsConnection } from './edge-ws-connection';
@@ -144,7 +146,23 @@ export class EdgeClient extends Resource implements EdgeConnection {
       throw new EdgeIdentityChangedError();
     }
 
-    this._currentConnection.send(ctx, message);
+    const spanId = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE);
+    const otlpContext =
+      typeof spanId === 'number'
+        ? (TRACE_PROCESSOR.remoteTracing.getSpanContext(spanId) as OtelContext | undefined)
+        : undefined;
+
+    if (otlpContext) {
+      const activeSpan: Record<string, string> = {};
+      propagation.inject(otlpContext, activeSpan);
+      message.traceContext = {
+        $typeName: 'dxos.edge.messenger.TraceContext',
+        traceparent: activeSpan.traceparent,
+        tracestate: activeSpan.tracestate,
+      };
+    }
+
+    this._currentConnection.send(message);
   }
 
   public onMessage(listener: MessageListener) {

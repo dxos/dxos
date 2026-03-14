@@ -36,6 +36,15 @@ export class RemoteTracing {
     this._tracing = processor;
   }
 
+  /** Returns the opaque OTEL context for the given DXOS span ID, if one exists. */
+  getSpanContext(spanId: number): unknown | undefined {
+    const tracingSpan = this._idToSpan.get(spanId);
+    if (tracingSpan) {
+      return this._spanMap.get(tracingSpan)?.spanContext;
+    }
+    return undefined;
+  }
+
   /** Wraps execution so that the remote span is active as parent context. */
   wrapExecution<T>(span: TracingSpan, fn: () => T): T {
     const remoteSpan = this._spanMap.get(span);
