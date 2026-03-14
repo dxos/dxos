@@ -12708,6 +12708,9 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
+      '@dxos/context':
+        specifier: 'catalog:'
+        version: 0.8.3
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -14091,9 +14094,6 @@ importers:
       '@dxos/client':
         specifier: workspace:*
         version: link:../client
-      '@dxos/context':
-        specifier: workspace:*
-        version: link:../../common/context
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo

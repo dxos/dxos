@@ -45,6 +45,7 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/cli-util": "workspace:*",
     "@dxos/client": "workspace:*",
+    "@dxos/context": "catalog:",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
