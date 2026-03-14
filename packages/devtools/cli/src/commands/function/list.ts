@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 
 import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { Database, Filter } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
@@ -31,7 +32,7 @@ export const list = Command.make(
     const functions = remote
       ? yield* Effect.gen(function* () {
           const client = yield* ClientService;
-          return yield* Effect.promise(() => getDeployedFunctions(client, true));
+          return yield* Effect.promise(() => getDeployedFunctions(Context.default(), client, true));
         })
       : dbFunctions;
 

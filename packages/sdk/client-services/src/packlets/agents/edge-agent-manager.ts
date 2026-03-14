@@ -93,7 +93,7 @@ export class EdgeAgentManager extends Resource {
 
     this._lastKnownDeviceCount = this._identity.authorizedDeviceKeys.size;
     this._fetchAgentStatusTask = new DeferredTask(this._ctx, async () => {
-      await this._fetchAgentStatus();
+      await this._fetchAgentStatus(this._ctx);
     });
     this._fetchAgentStatusTask.schedule();
 
@@ -118,11 +118,11 @@ export class EdgeAgentManager extends Resource {
     this._lastKnownDeviceCount = 0;
   }
 
-  protected async _fetchAgentStatus(): Promise<void> {
+  protected async _fetchAgentStatus(ctx: Context): Promise<void> {
     invariant(this._edgeHttpClient);
     try {
       log('fetching agent status');
-      const { agent } = await this._edgeHttpClient.getAgentStatus(this._ctx, {
+      const { agent } = await this._edgeHttpClient.getAgentStatus(ctx, {
         ownerIdentityKey: this._identity.identityKey,
       });
       const wasAgentCreatedDuringQuery = this._agentStatus === EdgeAgentStatus.ACTIVE;

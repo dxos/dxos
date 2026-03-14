@@ -95,8 +95,8 @@ export class Swarm {
 
     this._swarmMessenger = new SwarmMessenger({
       sendMessage: async (ctx, msg) => await this._messenger.sendMessage(ctx, msg),
-      onSignal: async (msg) => await this.onSignal(msg),
-      onOffer: async (msg) => await this.onOffer(msg),
+      onSignal: async (ctx, msg) => await this.onSignal(ctx, msg),
+      onOffer: async (ctx, msg) => await this.onOffer(ctx, msg),
       topic: this._topic,
     });
     log.trace('dxos.mesh.swarm.constructor', trace.end({ id: this._instanceId }));
@@ -136,7 +136,7 @@ export class Swarm {
       payloadType: 'dxos.mesh.swarm.SwarmMessage',
       onMessage: async (message) => {
         await this._swarmMessenger
-          .receiveMessage(message)
+          .receiveMessage(this._ctx, message)
           // TODO(nf): discriminate between errors
           .catch((err) => log.info('Error while receiving message', { err }));
       },
@@ -205,7 +205,7 @@ export class Swarm {
   }
 
   @synchronized
-  async onOffer(message: OfferMessage): Promise<Answer> {
+  async onOffer(_ctx: Context, message: OfferMessage): Promise<Answer> {
     log('offer', { message });
     if (this._ctx.disposed) {
       log('ignored for disposed swarm');
@@ -243,7 +243,7 @@ export class Swarm {
     return peer;
   }
 
-  async onSignal(message: SignalMessage): Promise<void> {
+  async onSignal(ctx: Context, message: SignalMessage): Promise<void> {
     log('signal', { message });
     if (this._ctx.disposed) {
       log.info('ignored for offline swarm');
@@ -257,7 +257,7 @@ export class Swarm {
     invariant(message.author);
 
     const peer = this._getOrCreatePeer(message.author);
-    await peer.onSignal(message);
+    await peer.onSignal(ctx, message);
   }
 
   // For debug purposes
@@ -404,7 +404,7 @@ export class Swarm {
     }
 
     log('initiating connection...', { remotePeer });
-    await peer.initiateConnection();
+    await peer.initiateConnection(ctx);
     this._topology.update();
     log('initiated', { remotePeer });
   }

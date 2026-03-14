@@ -5,6 +5,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { type Client } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { DXN, type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Function, Trigger } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
@@ -22,7 +23,7 @@ const ensureFunction = async (
   db: Database.Database,
   functionKey: string,
 ): Promise<Function.Function | undefined> => {
-  const deployed = await getDeployedFunctions(client, true);
+  const deployed = await getDeployedFunctions(Context.default(), client, true);
   const match = deployed.find((fn) => fn.key === functionKey);
   if (!match) {
     return undefined;

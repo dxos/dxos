@@ -43,17 +43,17 @@ describe('Signal Integration Test', () => {
     onTestFinished(() => messenger.close());
     await messenger.listen({
       peer,
-      onMessage: async (message) => await messageRouter.receiveMessage(message),
+      onMessage: async (message) => await messageRouter.receiveMessage(Context.default(), message),
     });
 
     const receivedSignals: SignalMessage[] = [];
-    const signalMock = async (msg: SignalMessage) => {
+    const signalMock = async (_ctx: Context, msg: SignalMessage) => {
       receivedSignals.push(msg);
     };
     const messageRouter = new SwarmMessenger({
       sendMessage: (ctx, message) => messenger.sendMessage(ctx, message),
       onSignal: signalMock,
-      onOffer: async () => ({ accept: true }),
+      onOffer: async (_ctx) => ({ accept: true }),
       topic,
     });
 
@@ -86,7 +86,7 @@ describe('Signal Integration Test', () => {
     await promise2;
 
     expect(
-      await peerNetworking1.messageRouter.offer({
+      await peerNetworking1.messageRouter.offer(Context.default(), {
         topic,
         author: peerNetworking1.peer,
         recipient: peerNetworking2.peer,
@@ -98,7 +98,7 @@ describe('Signal Integration Test', () => {
     ).toEqual(expect.objectContaining({ accept: true }));
 
     expect(
-      await peerNetworking2.messageRouter.offer({
+      await peerNetworking2.messageRouter.offer(Context.default(), {
         topic,
         author: peerNetworking2.peer,
         recipient: peerNetworking1.peer,
@@ -120,7 +120,7 @@ describe('Signal Integration Test', () => {
           signalBatch: undefined,
         },
       };
-      await peerNetworking1.messageRouter.signal(message);
+      await peerNetworking1.messageRouter.signal(Context.default(), message);
 
       await expect.poll(() => peerNetworking2.receivedSignals[0]).toEqual(expect.objectContaining(message));
     }
@@ -136,7 +136,7 @@ describe('Signal Integration Test', () => {
           signalBatch: undefined,
         },
       };
-      await peerNetworking2.messageRouter.signal(message);
+      await peerNetworking2.messageRouter.signal(Context.default(), message);
 
       await expect.poll(() => peerNetworking1.receivedSignals[0]).toEqual(expect.objectContaining(message));
     }

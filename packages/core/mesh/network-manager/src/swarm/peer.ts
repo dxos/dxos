@@ -378,13 +378,13 @@ export class Peer {
     log('closed', { peerId: this.remoteInfo, sessionId: connection.sessionId });
   }
 
-  async onSignal(message: SignalMessage): Promise<void> {
+  async onSignal(ctx: Context, message: SignalMessage): Promise<void> {
     if (!this.connection) {
       log('dropping signal message for non-existent connection', { message });
       return;
     }
 
-    await this.connection.signal(message);
+    await this.connection.signal(ctx, message);
   }
 
   @synchronized

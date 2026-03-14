@@ -3,7 +3,7 @@
 //
 
 import { DeferredTask, Event, Trigger, scheduleTask, scheduleTaskInterval, sleep, synchronized } from '@dxos/async';
-import { Context, Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
+import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { ErrorStream } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -373,14 +373,14 @@ export class Connection {
 
     try {
       if (process.env.NODE_ENV !== 'test') {
-        await cancelWithContext(this._ctx, sleep(this._signallingDelay));
+        await cancelWithContext(ctx, sleep(this._signallingDelay));
         this._signallingDelay = Math.min(this._signallingDelay * 2, MAX_SIGNALLING_DELAY);
       }
 
       const signals = [...this._outgoingSignalBuffer];
       this._outgoingSignalBuffer.length = 0;
 
-      await this._signalMessaging.signal({
+      await this._signalMessaging.signal(ctx, {
         author: this.localInfo,
         recipient: this.remoteInfo,
         sessionId: this.sessionId,
@@ -406,7 +406,7 @@ export class Connection {
   /**
    * Receive a signal from the remote peer.
    */
-  async signal(msg: SignalMessage): Promise<void> {
+  async signal(_ctx: Context, msg: SignalMessage): Promise<void> {
     invariant(msg.sessionId);
     if (!msg.sessionId.equals(this.sessionId)) {
       log('dropping signal for incorrect session id');
