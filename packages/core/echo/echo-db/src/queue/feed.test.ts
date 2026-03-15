@@ -108,6 +108,28 @@ describe('Feed', () => {
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
   });
 
+  test('feed objects have database returned with Obj.getDatabase', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'database-test' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.append(feed, [alice]);
+
+      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      expect(results).toHaveLength(1);
+
+      const feedObject = results[0];
+      const objDb = Obj.getDatabase(feedObject);
+      expect(objDb).toBeDefined();
+      expect(objDb?.spaceId).toEqual(db.spaceId);
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
   // TODO(wittjosiah): Implement when queue retention is supported.
   test.todo('setRetention configures feed retention policy');
 });
