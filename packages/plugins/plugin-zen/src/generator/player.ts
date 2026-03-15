@@ -2,20 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { SampleName } from '../types/Sequence';
-
-// Static imports so Vite resolves asset URLs at build time.
-import fireplaceUrl from '../../media/nature/fireplace.m4a?url';
-import oceanUrl from '../../media/nature/ocean.m4a?url';
-import rainUrl from '../../media/nature/rain.m4a?url';
-import streamUrl from '../../media/nature/stream.m4a?url';
-
-const SAMPLE_URLS: Record<SampleName, string> = {
-  fireplace: fireplaceUrl,
-  ocean: oceanUrl,
-  rain: rainUrl,
-  stream: streamUrl,
-};
+import { SAMPLE_URLS } from './sounds';
 
 /**
  * Audio player for bundled m4a samples.
@@ -30,9 +17,9 @@ export class SamplePlayer {
   private _playing = false;
   private _volume: number;
   private _muted = false;
-  private _sample: SampleName;
+  private _sample: string;
 
-  constructor(context: AudioContext, destination: AudioNode, sample: SampleName, volume = 0.5) {
+  constructor(context: AudioContext, destination: AudioNode, sample: string, volume = 0.5) {
     this._context = context;
     this._destination = destination;
     this._sample = sample;
@@ -43,7 +30,7 @@ export class SamplePlayer {
     return this._playing;
   }
 
-  get sample(): SampleName {
+  get sample(): string {
     return this._sample;
   }
 
@@ -79,8 +66,17 @@ export class SamplePlayer {
     this._sourceNode.connect(this._gainNode);
     this._gainNode.connect(this._destination);
 
-    await this._audio.play();
-    this._playing = true;
+    try {
+      await this._audio.play();
+      this._playing = true;
+    } catch {
+      // Clean up partial graph on failure.
+      this._gainNode?.disconnect();
+      this._sourceNode?.disconnect();
+      this._audio = undefined;
+      this._sourceNode = undefined;
+      this._gainNode = undefined;
+    }
   }
 
   /** Stop playback and release resources. */

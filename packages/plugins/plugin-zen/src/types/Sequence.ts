@@ -8,16 +8,14 @@ import { PublicKey } from '@dxos/keys';
 
 import { BinauralConfigSchema, DEFAULT_CONFIG } from '../generator';
 
-export const SampleName = Schema.Literal('fireplace', 'ocean', 'rain', 'stream');
+export const SAMPLE_NAMES: string[] = ['fireplace', 'ocean', 'rain', 'stream', 'thunder', 'gong-1', 'gong-2'];
 
-export type SampleName = Schema.Schema.Type<typeof SampleName>;
-
-export const SAMPLE_NAMES: SampleName[] = ['fireplace', 'ocean', 'rain', 'stream'];
+const DEFAULT_SAMPLE = 'rain';
 
 /** Sample audio source. */
 export const SampleSourceSchema = Schema.Struct({
   type: Schema.Literal('sample'),
-  sample: SampleName.annotations({ description: 'Bundled sample.' }),
+  sample: Schema.String.annotations({ description: 'Bundled sample.' }),
 });
 
 /** Generator audio source. */
@@ -44,13 +42,19 @@ export const Sequence = Schema.Struct({
 
 export type Sequence = Schema.Schema.Type<typeof Sequence>;
 
+/** Default sources by type. */
+export const DEFAULT_SOURCES: Record<Source['type'], Source> = {
+  sample: { type: 'sample', sample: DEFAULT_SAMPLE },
+  generator: { type: 'generator', ...DEFAULT_CONFIG },
+};
+
 /** Get display name for a source. */
 export const getSourceLabel = (source: Source): string => {
   return source.type === 'sample' ? source.sample : 'generator';
 };
 
 /** Create a sample-based sequence. */
-export const makeSampleSequence = (sample: SampleName = 'rain'): Sequence => ({
+export const makeSampleSequence = (sample = DEFAULT_SAMPLE): Sequence => ({
   id: PublicKey.random().toString(),
   source: { type: 'sample', sample },
   volume: 0.5,

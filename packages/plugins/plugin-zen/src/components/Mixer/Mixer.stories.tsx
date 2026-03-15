@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Oscilloscope } from '@dxos/react-ui-sfx';
 
-import { useMixerEngine } from '../../generator';
+import { useMixerEngine } from '../../hooks';
 
 import { Mixer } from './Mixer';
 

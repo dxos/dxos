@@ -57,8 +57,8 @@ export const useAudioStream = (active?: boolean, options?: UseAudioStreamOptions
           dataArrayRef.current = new Uint8Array(analyserRef.current.frequencyBinCount);
           options.source.connect(analyserRef.current);
           sourceRef.current = options.source;
-        } else if (!options || options.microphone) {
-          // Use microphone (default when no options provided, or explicitly requested).
+        } else if (!options || (!('source' in options) && options.microphone !== false)) {
+          // Use microphone when no options provided, or when source key is absent and microphone not disabled.
           log.info('initializing microphone');
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           tracksRef.current = stream.getTracks();

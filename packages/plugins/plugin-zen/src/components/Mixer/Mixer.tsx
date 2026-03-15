@@ -112,9 +112,9 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
               <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
               <Toolbar.Separator />
               <Toolbar.IconButton
-                icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
+                icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
-                label={playing ? 'Pause' : 'Play'}
+                label={playing ? 'Stop' : 'Play'}
                 onClick={handlePlay}
               />
             </Toolbar.Root>

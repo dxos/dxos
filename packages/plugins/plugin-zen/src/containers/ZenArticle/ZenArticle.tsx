@@ -8,7 +8,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Panel } from '@dxos/react-ui';
 import { Oscilloscope } from '@dxos/react-ui-sfx';
 
-import { useMixerEngine } from '../../generator';
+import { useMixerEngine } from '../../hooks';
 import { type Dream } from '../../types';
 import { Mixer } from '../../components';
 
