@@ -43,7 +43,11 @@ export const SequencePanel = forwardRef<HTMLDivElement, SequencePanelProps>(
         const updated = { ...sequence, ...newValues };
 
         // Seed default source when discriminator changes.
-        if (changedKeys.includes('source.type') && newValues.source?.type && newValues.source.type !== sequence.source.type) {
+        if (
+          changedKeys.includes('source.type') &&
+          newValues.source?.type &&
+          newValues.source.type !== sequence.source.type
+        ) {
           updated.source = Sequence.DEFAULT_SOURCES[newValues.source.type];
         }
 

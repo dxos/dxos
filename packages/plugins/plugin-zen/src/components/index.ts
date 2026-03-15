@@ -6,4 +6,3 @@ export * from './BinauralPlayer';
 export * from './Editor';
 export * from './Mixer';
 export * from './SequencePanel';
-
