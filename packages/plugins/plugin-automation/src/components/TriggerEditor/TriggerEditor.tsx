@@ -52,6 +52,7 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
     [trigger],
   );
 
+  const triggerSchema = useMemo(() => omitId(Trigger.Trigger), []);
   const defaultValues = useMemo(() => {
     const { id: _, ...values } = trigger;
     return values;
@@ -60,9 +61,9 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
   return (
     <Form.Root<TriggerFormSchema>
       {...formProps}
-      schema={omitId(Trigger.Trigger)}
-      defaultValues={defaultValues}
       db={db}
+      schema={triggerSchema}
+      defaultValues={defaultValues}
       fieldMap={fieldMap}
       onValuesChanged={handleValuesChanged}
     >

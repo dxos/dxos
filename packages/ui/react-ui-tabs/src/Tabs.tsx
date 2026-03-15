@@ -24,7 +24,7 @@ import {
   useForwardedRef,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { ghostSelectedContainerMd, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 type TabsActivePart = 'list' | 'panel';
 
@@ -228,7 +228,7 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
         onClick={handleClick}
         classNames={[
           orientation === 'vertical' && 'block justify-start text-start w-full',
-          orientation === 'vertical' && ghostSelectedContainerMd,
+          orientation === 'vertical' && 'dx-selected',
           classNames,
         ]}
       >
@@ -264,7 +264,7 @@ const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps)
         onClick={handleClick}
         classNames={[
           orientation === 'vertical' && 'justify-start text-start w-full',
-          orientation === 'vertical' && ghostSelectedContainerMd,
+          orientation === 'vertical' && 'dx-selected',
           classNames,
         ]}
       />

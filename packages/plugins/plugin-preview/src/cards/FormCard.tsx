@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
@@ -16,7 +16,8 @@ import { meta } from '../meta';
 
 export const FormCard = ({ subject, projection }: SurfaceComponentProps & { projection?: ProjectionModel }) => {
   const { t } = useTranslation(meta.id);
-  const schema = Obj.getSchema(subject);
+  const echoSchema = Obj.getSchema(subject);
+  const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);
 
   const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {
     const paths = Object.keys(changed).filter((path) => changed[path]);
@@ -35,7 +36,7 @@ export const FormCard = ({ subject, projection }: SurfaceComponentProps & { proj
 
   return (
     <Card.Content>
-      <Form.Root schema={omitId(schema)} projection={projection} values={subject} autoSave onSave={handleSave}>
+      <Form.Root schema={schema} projection={projection} values={subject} autoSave onSave={handleSave}>
         <Form.Viewport>
           <Form.Content>
             <Form.FieldSet />
