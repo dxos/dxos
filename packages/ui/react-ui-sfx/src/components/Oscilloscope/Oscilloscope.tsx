@@ -6,9 +6,10 @@ import { curveCatmullRom, line, scaleLinear } from 'd3';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { useAudioStream } from '../../hooks';
 import { ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+import { useAudioStream } from '../../hooks';
 
 export type Point = { x: number; y: number };
 
@@ -17,35 +18,58 @@ const defaultRange: [number, number] = [0, 256];
 const curveGenerator = line<Point>()
   // .curve(curveBasis)
   // .curve(curveBundle)
-  .curve(curveCatmullRom.alpha(0.5))
+  .curve(curveCatmullRom.alpha(0.9))
   .x((d) => d.x)
   .y((d) => d.y);
 
 type GraphProps = ThemedClassName<{
-  n?: number;
   range?: [number, number];
   data?: number[];
+  bins?: number;
   grid?: boolean;
   trail?: number;
 }>;
 
 // TODO(burdon): Radix style to separate Grid from Graph.
-const Graph = ({ classNames, n = 10, range = defaultRange, data = [], grid, trail = 8 }: GraphProps) => {
+const Graph = ({ classNames, data = [], bins = data.length, range = defaultRange, grid, trail = 4 }: GraphProps) => {
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
-  const scaleX = useMemo(() => scaleLinear([0, n - 1], [-width / 2, width / 2]), [width, n]);
+  const scaleX = useMemo(() => scaleLinear([0, bins - 1], [-width / 2, width / 2]), [width, bins]);
   const scaleY = useMemo(() => scaleLinear(range, [height / 2, -height / 2]), [height, range]);
+  console.log(data);
 
   const i = useRef(0);
   const paths = useRef<string[]>([]);
-  const points = data.map((value, i) => ({ x: scaleX(i), y: scaleY(value) }));
-  const path = curveGenerator(points) ?? '';
-  if (i.current % 10 === 0) {
-    paths.current.splice(0, 0, path);
-    paths.current.length = trail;
-  } else {
-    paths.current.splice(0, 1, path);
+
+  // When data goes empty, drain the trail one path at a time.
+  const [, forceUpdate] = useState(0);
+  useEffect(() => {
+    if (data.length > 0 || paths.current.length === 0) {
+      return;
+    }
+
+    const t = setInterval(() => {
+      paths.current.pop();
+      forceUpdate((n) => n + 1);
+      if (paths.current.length === 0) {
+        clearInterval(t);
+      }
+    }, 50);
+    return () => clearInterval(t);
+  }, [data.length]);
+
+  const points = data.map((value, idx) => ({ x: scaleX(idx), y: scaleY(value) }));
+  if (data.length > 0) {
+    const path = curveGenerator(points) ?? '';
+    if (i.current % trail === 0) {
+      paths.current.splice(0, 0, path);
+      paths.current.length = trail;
+    } else {
+      paths.current.splice(0, 1, path);
+    }
+    i.current++;
   }
-  i.current++;
+
+  console.log(paths.current.length);
 
   const gridSize = 8;
   return (
@@ -106,20 +130,32 @@ export type OscilloscopeProps = ThemedClassName<{
 export const Oscilloscope = ({ classNames, active, source }: OscilloscopeProps) => {
   const { getData } = useAudioStream(active, { source });
   const [data, setData] = useState<number[]>([]);
+
   useEffect(() => {
-    if (!active) {
+    if (!active || !source) {
+      setData([]);
       return;
     }
 
+    let cancelled = false;
     const sample = () => {
-      const data = Array.from(getData() ?? []).slice(4); // Cut off.
-      setData([0, 0, 0, 0, ...data.map((v) => v), 0, 0, 0, 0]);
+      if (cancelled) {
+        return;
+      }
+
+      const raw = Array.from(getData() ?? []).slice(4); // Cut off DC offset.
+      setData([0, 0, ...raw]);
     };
 
-    requestAnimationFrame(sample);
+    const raf = requestAnimationFrame(sample);
     const t = setInterval(sample, 1_000 / 50);
-    return () => clearInterval(t);
-  }, [active]);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      clearInterval(t);
+      setData([]);
+    };
+  }, [active, source]);
 
-  return <Graph classNames={classNames} data={data} range={[-150, 356]} n={data.length} grid />;
+  return <Graph classNames={classNames} data={data} range={[-150, 356]} grid />;
 };
