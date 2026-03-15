@@ -181,7 +181,7 @@ const LayerListItem = forwardRef<HTMLDivElement, LayerListItemProps>(
         <List.ItemDragHandle />
         <Icon icon={sourceIcon[sequence.source.type] ?? 'ph--question--regular'} size={4} classNames='mx-1' />
         <List.ItemTitle>{sequence.name ?? Sequence.getSourceLabel(sequence.source)}</List.ItemTitle>
-        <IconButton
+        <List.ItemIconButton
           icon={sequence.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
           iconOnly
           label={sequence.muted ? 'Unmute' : 'Mute'}

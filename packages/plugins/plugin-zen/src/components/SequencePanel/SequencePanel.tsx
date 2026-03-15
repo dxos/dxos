@@ -9,11 +9,32 @@ import { composableProps } from '@dxos/ui-theme';
 import { Form, type FormFieldMap, SelectField, omitId } from '@dxos/react-ui-form';
 
 import { Sequence } from '../../types';
+import { SAMPLE_URLS } from '../../generator';
 
-const sourceTypeOptions = [
-  { label: 'Sample', value: 'sample' },
-  { label: 'Generator', value: 'generator' },
-];
+// Custom field map to render the source.type discriminator as a select.
+const fieldMap = useMemo<FormFieldMap>(
+  () => ({
+    'source.type': (fieldProps) => (
+      <SelectField
+        {...fieldProps}
+        options={[
+          { label: 'Sample', value: 'sample' },
+          { label: 'Generator', value: 'generator' },
+        ]}
+      />
+    ),
+    'source.sample': (fieldProps) => (
+      <SelectField
+        {...fieldProps}
+        options={Object.keys(SAMPLE_URLS).map((key) => ({
+          label: key,
+          value: key,
+        }))}
+      />
+    ),
+  }),
+  [],
+);
 
 export type SequencePanelProps = ComposableProps<HTMLDivElement> & {
   sequence: Sequence.Sequence;
@@ -24,14 +45,6 @@ export type SequencePanelProps = ComposableProps<HTMLDivElement> & {
 export const SequencePanel = forwardRef<HTMLDivElement, SequencePanelProps>(
   ({ sequence, onUpdate, ...props }, forwardedRef) => {
     const schema = useMemo(() => omitId(Sequence.Sequence), []);
-
-    // Custom field map to render the source.type discriminator as a select.
-    const fieldMap = useMemo<FormFieldMap>(
-      () => ({
-        'source.type': (fieldProps) => <SelectField {...fieldProps} options={sourceTypeOptions} />,
-      }),
-      [],
-    );
 
     const handleValuesChanged = useCallback(
       (newValues: Partial<Sequence.Sequence>, { changed }: { changed: Record<string, boolean> }) => {
@@ -58,12 +71,12 @@ export const SequencePanel = forwardRef<HTMLDivElement, SequencePanelProps>(
 
     return (
       <div {...composableProps<HTMLDivElement>(props)} ref={forwardedRef}>
-        <Form.Root
+        <Form.Root<Omit<Sequence.Sequence, 'id'>>
           key={sequence.id}
           schema={schema}
-          defaultValues={sequence as any}
+          defaultValues={sequence}
           fieldMap={fieldMap}
-          onValuesChanged={handleValuesChanged as any}
+          onValuesChanged={handleValuesChanged}
         >
           <Form.Viewport>
             <Form.Content>
