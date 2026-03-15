@@ -22,7 +22,7 @@ export const ZenArticle = ({ role, subject: dream }: ZenArticleProps) => {
       <Panel.Content className='grid grid-rows-[3fr_1fr]'>
         <Mixer engine={engine} />
         <div role='none' className='flex flex-col h-full py-4'>
-          <Oscilloscope active={playing} source={outputNode} />
+          <Oscilloscope mode='waveform' active={playing} source={outputNode} />
         </div>
       </Panel.Content>
     </Panel.Root>

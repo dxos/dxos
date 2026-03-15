@@ -121,14 +121,23 @@ const Graph = ({ classNames, data = [], bins = data.length, range = defaultRange
   );
 };
 
+export type OscilloscopeMode = 'frequency' | 'waveform';
+
 export type OscilloscopeProps = ThemedClassName<{
   active?: boolean;
+  mode?: OscilloscopeMode;
+  /** X-axis window as [startIndex, endIndex] into the data array. Shows all bins if omitted. */
+  domain?: [number, number];
+  /** Y-axis domain. Defaults to mode-appropriate range. */
+  range?: [number, number];
   /** Optional AudioNode source. Falls back to microphone if not provided. */
   source?: AudioNode;
 }>;
 
-export const Oscilloscope = ({ classNames, active, source }: OscilloscopeProps) => {
-  const { getData } = useAudioStream(active, { source });
+export const Oscilloscope = ({ classNames, active, mode = 'frequency', domain, range, source }: OscilloscopeProps) => {
+  // Waveform needs a much larger window to capture full cycles; frequency mode uses fewer bins.
+  const fftSize = mode === 'waveform' ? 2048 : 64;
+  const { getData, getTimeDomainData } = useAudioStream(active, { source, fftSize });
   const [data, setData] = useState<number[]>([]);
 
   useEffect(() => {
@@ -143,8 +152,13 @@ export const Oscilloscope = ({ classNames, active, source }: OscilloscopeProps) 
         return;
       }
 
-      const raw = Array.from(getData() ?? []).slice(4); // Cut off DC offset.
-      setData([0, 0, ...raw]);
+      if (mode === 'waveform') {
+        const raw = Array.from(getTimeDomainData() ?? []);
+        setData(raw);
+      } else {
+        const raw = Array.from(getData() ?? []).slice(4); // Cut off DC offset.
+        setData([0, 0, ...raw]);
+      }
     };
 
     const raf = requestAnimationFrame(sample);
@@ -155,7 +169,11 @@ export const Oscilloscope = ({ classNames, active, source }: OscilloscopeProps) 
       clearInterval(t);
       setData([]);
     };
-  }, [active, source]);
+  }, [active, source, mode]);
 
-  return <Graph classNames={classNames} data={data} range={[-150, 356]} grid />;
+  // Frequency: 0–255 from baseline. Waveform: 0–255 centered at 128 (silence).
+  const defaultRange: [number, number] = mode === 'waveform' ? [0, 255] : [-150, 356];
+  const displayData = domain ? data.slice(domain[0], domain[1]) : data;
+
+  return <Graph classNames={classNames} data={displayData} range={range ?? defaultRange} grid />;
 };

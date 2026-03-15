@@ -8,6 +8,7 @@ import { log } from '@dxos/log';
 
 export type UseAudioStream = {
   getData: () => Uint8Array | undefined;
+  getTimeDomainData: () => Uint8Array | undefined;
   getAverage: () => number;
 };
 
@@ -16,6 +17,8 @@ export type UseAudioStreamOptions = {
   source?: AudioNode;
   /** When true, use microphone as source. Ignored when `source` is provided. */
   microphone?: boolean;
+  /** AnalyserNode FFT size. Must be a power of 2. Higher = more time-domain samples for waveform mode. Default 64. */
+  fftSize?: number;
 };
 
 /**
@@ -49,11 +52,11 @@ export const useAudioStream = (active?: boolean, options?: UseAudioStreamOptions
 
     const initAudio = async () => {
       try {
-        if (options?.source) {
+            if (options?.source) {
           // Use provided AudioNode source.
           audioContextRef.current = (options.source as any).context;
           analyserRef.current = audioContextRef.current!.createAnalyser();
-          analyserRef.current.fftSize = 64;
+          analyserRef.current.fftSize = options?.fftSize ?? 64;
           dataArrayRef.current = new Uint8Array(analyserRef.current.frequencyBinCount);
           options.source.connect(analyserRef.current);
           sourceRef.current = options.source;
@@ -64,7 +67,7 @@ export const useAudioStream = (active?: boolean, options?: UseAudioStreamOptions
           tracksRef.current = stream.getTracks();
           audioContextRef.current = new AudioContext();
           analyserRef.current = audioContextRef.current.createAnalyser();
-          analyserRef.current.fftSize = 64;
+          analyserRef.current.fftSize = options?.fftSize ?? 64;
           dataArrayRef.current = new Uint8Array(analyserRef.current.frequencyBinCount);
           sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
           sourceRef.current.connect(analyserRef.current);
@@ -79,7 +82,7 @@ export const useAudioStream = (active?: boolean, options?: UseAudioStreamOptions
     return () => {
       close();
     };
-  }, [active, options?.source]);
+  }, [active, options?.source, options?.fftSize]);
 
   return {
     getData: () => {
@@ -88,6 +91,15 @@ export const useAudioStream = (active?: boolean, options?: UseAudioStreamOptions
       }
 
       analyserRef.current?.getByteFrequencyData(dataArrayRef.current as Uint8Array<ArrayBuffer>);
+      return dataArrayRef.current;
+    },
+
+    getTimeDomainData: () => {
+      if (!analyserRef.current || !dataArrayRef.current) {
+        return undefined;
+      }
+
+      analyserRef.current.getByteTimeDomainData(dataArrayRef.current as Uint8Array<ArrayBuffer>);
       return dataArrayRef.current;
     },
 
