@@ -1,57 +1,23 @@
-# Voxel Plugin
+# plugin-voxel
 
-- This file represents the specification and plan for the Voxel plugin.
-- Update this document to record progress, issues, and any implementation notes.
+3D voxel editor for block-based world building.
 
-## Spec
+## Status
 
-### Data model
+Labs (experimental).
 
-NOTE: We need to develop agent-specific instructions for creating data sets, incl. concurrency, refs, and reactivity issues.
+## Description
 
-- Each `Voxel` has an x/y/z coordinate and a `hue`.
-- The `World` should have a map of Voxel objects indexed by `${x}-${y}-${z}` coordinates.
-- ECHO objects (`@dxos/echo/Obj`) will automatically serialize and deserialize data and handle reactivity.
+An interactive 3D voxel editor for creating and editing block-based environments. Supports placing, removing, and coloring voxels with orbit camera controls.
 
-### Phase 1
+## Features
 
-- [x] Select current color in toolbar
-- [x] Orbit, pan, and zoom should use the default Blender key/mouse controls (for OS/X); also Option-drag to orbit
-- [x] Show "ghost" voxel at cursor
-- [x] Select current tool in toolbar: Select, Add, Remove
-- [x] Click to add/remove depending on tool mode
-- [x] Show hints in floating panel at bottom of editor (not in toolbar)
-- [x] CMD-drag (and middle button) to move/rotate world (not right-click)
-- [x] Base grid should be 50% transparent
-- [x] BUG: Currently main axis isn't visible; should be in different color
-- [x] Hide any voxels that are outside of the current grid size
-- [x] Grid should have separate x/y dimension
-- [x] Use `ChromaticPalette` `styles` from hash-styles for palette (replace hard coded values)
-- [x] Factor out toolbar into separate component with story
-- [x] Add "Clear" button in toolbar
-- [x] Remove ground plane and orbit controls from card view
-- [x] Configure block size via config option in Voxel.World
+- **Voxel placement**: Add and remove blocks in a 3D grid.
+- **Color palette**: Apply colors to individual voxels.
+- **Orbit controls**: Rotate, zoom, and pan the 3D viewport.
+- **3D rendering**: Three.js-based WebGL rendering.
+- **ECHO persistence**: Voxel state stored and synced via ECHO.
 
-### Phase 2 (Modeler)
+## Schema
 
-- [x] Toolbar to toggle grid visibility
-- [x] Model class that maintains a collection of 3D objects that are rendered as voxels (e.g., cube, wall, sphere, cylinder, text characters)
-- [x] Toolbar to generate (and render) a random object from the Model objects
-- [x] Implement agent blueprint for creating/deleting blocks (e.g., "create tower five blocks high")
-
-### Phase 3 (Advanced Features)
-
-- [ ] Sleep plugin
-- nonprofit (ENO)
-- avatar -- meets others and describe the journey
-- p2p social network -- send love to the world
-
-- [ ] Life mode (e.g., blocks grow, shrink, move, etc.)
-
-- [ ] Separate 3D model; compatible with blender (import/export)
-- [ ] Undo/Redo with Cmd+Z / Cmd+Shift+Z (generalize with ECHO)
-- [ ] Physics simulation (e.g., gravity, collision, block toppling)
-- [ ] Game mode (e.g., missiles/projectiles to knock down structures)
-- [ ] Export to glTF/OBJ for downloading voxel models as standard 3D formats
-- [ ] Collaborative cursors showing other users' ghost cursors and tool selections via ECHO
-- [ ] Import image
+- `org.dxos.type.voxel` — Voxel world object with block data.
