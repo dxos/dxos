@@ -64,6 +64,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
             return await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
               dxn: this._dxn.extend([(obj as any).id]),
+              database: this._database,
             });
           } catch (err) {
             log.verbose('schema validation error; object ignored', { obj, error: err });
@@ -120,6 +121,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     private readonly _service: FeedProtocol.QueueService,
     private readonly _refResolver: Ref.Resolver,
     private readonly _dxn: DXN,
+    private readonly _database?: Database.Database,
   ) {
     const { subspaceTag, spaceId, queueId } = this._dxn.asQueueDXN() ?? {};
     this._subspaceTag = subspaceTag ?? failedInvariant();
@@ -266,6 +268,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
             const decoded = await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
               dxn: this._dxn.extend([(obj as any).id]),
+              database: this._database,
             });
             this._objectCache.set(decoded.id, decoded as T);
             return decoded;
@@ -295,6 +298,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     const decoded = await Obj.fromJSON(obj, {
       refResolver: this._refResolver,
       dxn: this._dxn.extend([(obj as any).id]),
+      database: this._database,
     });
     return decoded;
   }
