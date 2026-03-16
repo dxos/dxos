@@ -88,7 +88,7 @@ export const handler = Effect.fn(function* ({
   }
 
   // Flush and sync after joining
-  yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
+  yield* Effect.tryPromise(() => space.db.flush());
   yield* waitForSync(space);
 
   if (json) {

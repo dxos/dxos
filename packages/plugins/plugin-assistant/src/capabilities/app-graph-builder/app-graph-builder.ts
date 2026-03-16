@@ -93,7 +93,7 @@ export default Capability.makeModule(
                 for (const blueprint of blueprints) {
                   space.db.remove(blueprint);
                 }
-                yield* Database.flush({ indexes: true });
+                yield* Database.flush();
               }),
               properties: {
                 label: ['reset blueprints label', { ns: meta.id }],

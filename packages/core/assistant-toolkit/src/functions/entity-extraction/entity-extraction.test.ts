@@ -57,7 +57,7 @@ describe('Entity extraction', () => {
             ],
           }),
         );
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const result = yield* FunctionInvocationService.invokeFunction(entityExtraction, {
           source: email,
         });

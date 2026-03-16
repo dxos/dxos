@@ -42,7 +42,7 @@ export default defineFunction({
     }
     query = query.limit(limit);
 
-    yield* Database.flush({ indexes: true });
+    yield* Database.flush();
     const results = yield* Database.runQuery(query);
     return results.map((obj) => Entity.toJSON(obj));
   }),

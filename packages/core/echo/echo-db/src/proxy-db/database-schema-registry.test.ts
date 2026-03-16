@@ -185,7 +185,7 @@ describe('schema registry', () => {
     {
       await using db = await peer.createDatabase();
       await db.schemaRegistry.register([Contact]);
-      await db.flush({ indexes: true });
+      await db.flush();
     }
 
     await peer.reload();

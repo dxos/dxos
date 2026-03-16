@@ -41,7 +41,7 @@ export default defineFunction({
     log.info('Creating research document', { subject, name, content });
 
     // TODO(burdon): Auto flush before and after calling function?
-    yield* Database.flush({ indexes: true });
+    yield* Database.flush();
     yield* TracingService.emitStatus({ message: 'Creating research document...' });
 
     const target = yield* Database.load(subject);
@@ -63,7 +63,7 @@ export default defineFunction({
       }),
     );
 
-    yield* Database.flush({ indexes: true });
+    yield* Database.flush();
     log.info('Created research document', { subject, object });
 
     return {

@@ -56,7 +56,7 @@ describe('buildViewIndex', () => {
       }),
     );
     db.add(Obj.make(TestViewWrapper, { view: Ref.make(viewObj) }));
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const allSchemas = db.schemaRegistry.query({ location: ['runtime'] }).runSync();
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
@@ -71,7 +71,7 @@ describe('buildViewIndex', () => {
       }),
     );
     db.add(Obj.make(TestViewWrapper, { view: Ref.make(viewObj) }));
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const allSchemas = db.schemaRegistry.query({ location: ['runtime'] }).runSync();
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
@@ -87,7 +87,7 @@ describe('buildViewIndex', () => {
       }),
     );
     const tableView = db.add(Obj.make(TestViewWrapper, { view: Ref.make(viewObj) }));
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const allSchemas = db.schemaRegistry.query({ location: ['runtime'] }).runSync();
     const viewIndex = buildViewIndex(registry.get.bind(registry) as any, { db } as any, allSchemas);
@@ -98,7 +98,7 @@ describe('buildViewIndex', () => {
   });
 
   test('returns empty index when no view schemas exist', async ({ expect }) => {
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const userSchemas = db.schemaRegistry
       .query({ location: ['runtime'] })

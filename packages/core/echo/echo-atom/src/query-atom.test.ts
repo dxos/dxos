@@ -48,7 +48,7 @@ describe('AtomQuery', () => {
   test('creates atom with initial results', async () => {
     db.add(Obj.make(TestItem, { name: 'Object 1', value: 100 }));
     db.add(Obj.make(TestItem, { name: 'Object 2', value: 100 }));
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const queryResult: QueryResult.QueryResult<TestItem> = db.query(
       Query.select(Filter.type(TestItem, { value: 100 })),
@@ -64,7 +64,7 @@ describe('AtomQuery', () => {
 
   test('registry.subscribe fires on QueryResult changes', async () => {
     db.add(Obj.make(TestItem, { name: 'Initial', value: 200 }));
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const queryResult: QueryResult.QueryResult<TestItem> = db.query(
       Query.select(Filter.type(TestItem, { value: 200 })),
@@ -87,7 +87,7 @@ describe('AtomQuery', () => {
 
     // Add a new object that matches the query.
     db.add(Obj.make(TestItem, { name: 'New Object', value: 200 }));
-    await db.flush({ indexes: true, updates: true });
+    await db.flush({ updates: true });
 
     // Subscription should have fired.
     expect(updateCount).toBeGreaterThan(0);
@@ -97,7 +97,7 @@ describe('AtomQuery', () => {
   test('registry.subscribe fires when objects are removed', async () => {
     const obj1 = db.add(Obj.make(TestItem, { name: 'Object 1', value: 300 }));
     db.add(Obj.make(TestItem, { name: 'Object 2', value: 300 }));
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const queryResult: QueryResult.QueryResult<TestItem> = db.query(
       Query.select(Filter.type(TestItem, { value: 300 })),
@@ -120,7 +120,7 @@ describe('AtomQuery', () => {
 
     // Remove an object.
     db.remove(obj1);
-    await db.flush({ indexes: true, updates: true });
+    await db.flush({ updates: true });
 
     // Subscription should have fired.
     expect(updateCount).toBeGreaterThan(0);
@@ -130,7 +130,7 @@ describe('AtomQuery', () => {
 
   test('unsubscribing from registry stops receiving updates', async () => {
     db.add(Obj.make(TestItem, { name: 'Initial', value: 400 }));
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const queryResult: QueryResult.QueryResult<TestItem> = db.query(
       Query.select(Filter.type(TestItem, { value: 400 })),
@@ -151,7 +151,7 @@ describe('AtomQuery', () => {
 
     // Add object and verify subscription fires.
     db.add(Obj.make(TestItem, { name: 'Object 2', value: 400 }));
-    await db.flush({ indexes: true, updates: true });
+    await db.flush({ updates: true });
     const countAfterFirstAdd = updateCount;
     expect(countAfterFirstAdd).toBeGreaterThan(0);
 
@@ -160,7 +160,7 @@ describe('AtomQuery', () => {
 
     // Add another object.
     db.add(Obj.make(TestItem, { name: 'Object 3', value: 400 }));
-    await db.flush({ indexes: true, updates: true });
+    await db.flush({ updates: true });
 
     // Update count should not have changed after unsubscribe.
     expect(updateCount).toBe(countAfterFirstAdd);
@@ -180,7 +180,7 @@ describe('AtomQuery', () => {
 
   test('multiple atoms from same query share underlying subscription', async () => {
     db.add(Obj.make(TestItem, { name: 'Object', value: 500 }));
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const queryResult: QueryResult.QueryResult<TestItem> = db.query(
       Query.select(Filter.type(TestItem, { value: 500 })),
