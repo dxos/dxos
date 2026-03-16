@@ -11,7 +11,6 @@ packages:
 
 catalog:
   3d-force-graph: ^1.76.1
-  '@1password/op-js': ^0.1.13
   '@ai-sdk/react': ^3.0.99
   '@antv/graphlib': ^2.0.4
   '@antv/layout': ^1.2.13
@@ -303,7 +302,6 @@ catalog:
   '@xyflow/react': ^12.8.1
   JSONStream: ^1.3.5
   abstract-level: ^1.0.2
-  adm-zip: ^0.5.16
   agents: ^0.3.10
   ai: ^6.0.97
   ajv: ^8.18.0
@@ -339,7 +337,6 @@ catalog:
   chromatic: ^13.0.1
   classnames: ^2.3.2
   cli-highlight: ^2.1.11
-  cli-table3: ^0.6.5
   codemirror: ^6.0.1
   codemirror-lang-spreadsheet: ^1.3.0
   color-hash: ^1.0.3
