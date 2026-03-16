@@ -44,7 +44,7 @@ describe('Memory Blueprint', () => {
         yield* AiConversationService.run({
           prompt: 'Remember that my favorite programming language is TypeScript.',
         });
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const memories = yield* Database.runQuery(Query.select(Filter.type(Memory)));
         expect(memories.length).toBeGreaterThanOrEqual(1);
       },
@@ -97,7 +97,7 @@ describe('Memory Blueprint', () => {
         yield* AiConversationService.run({
           prompt: 'Delete the memory about "Outdated fact".',
         });
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const memories = yield* Database.runQuery(Query.select(Filter.type(Memory)));
         const found = memories.find((memory) => memory.title === 'Outdated fact');
         expect(found).toBeUndefined();
@@ -116,7 +116,7 @@ describe('Memory Blueprint', () => {
         yield* AiConversationService.run({
           prompt: "I'm going to LA next week. Find me some good hotels and remember the recommendations.",
         });
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const memories = yield* Database.runQuery(Query.select(Filter.type(Memory)));
         expect(memories.length).toBeGreaterThanOrEqual(1);
         const hasLAMemory = memories.some(

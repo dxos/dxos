@@ -79,7 +79,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       }),
     );
     await sync(space);
-    await space.db.flush({ indexes: true });
+    await space.db.flush();
     await space.internal.syncToEdge({
       onProgress: (state) => console.log('sync', state ?? 'no connection to edge'),
     });
@@ -104,7 +104,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       }),
     );
     await sync(space);
-    await space.db.flush({ indexes: true });
+    await space.db.flush();
     await space.internal.syncToEdge({
       onProgress: (state) => console.log('sync', state ?? 'no connection to edge'),
     });
@@ -166,7 +166,7 @@ const setup = async () => {
 };
 
 const sync = async (space: Space) => {
-  await space.db.flush({ indexes: true });
+  await space.db.flush();
   await space.internal.syncToEdge({
     onProgress: (state) =>
       console.log(state ? `${state.unsyncedDocumentCount} documents syncing...` : 'connecting to edge...'),

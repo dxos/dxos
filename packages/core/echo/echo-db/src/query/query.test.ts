@@ -97,7 +97,7 @@ describe('Query', () => {
     beforeEach(async () => {
       ({ db } = await builder.createDatabase({ types: [...Dataset.Dataset.members] }));
       createTestObjects().forEach((object) => db.add(object));
-      await db.flush({ indexes: true });
+      await db.flush();
     });
 
     test('query nothing', async () => {
@@ -191,7 +191,7 @@ describe('Query', () => {
     test('filter by reference', async () => {
       const objA = db.add(Obj.make(TestSchema.Expando, { value: 100 }));
       const objB = db.add(Obj.make(TestSchema.Expando, { value: 200, ref: Ref.make(objA) }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const objects = await db.query(Filter.type(TestSchema.Expando, { ref: Ref.make(objA) })).run();
       expect(objects).toEqual([objB]);
@@ -202,7 +202,7 @@ describe('Query', () => {
       Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
       db.add(obj);
 
-      await db.flush({ indexes: true });
+      await db.flush();
       const objects = await db
         .query(Filter.foreignKeys(TestSchema.Expando, [{ id: 'test-id', source: 'test-source' }]))
         .run();
@@ -260,7 +260,7 @@ describe('Query', () => {
       db.add(Feed.make({ name: 'test-feed' }));
       db.add(Collection.make({ name: 'test-collection' }));
       db.add(View.make({}));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const datasets = await db.query(Query.type(Dataset.Dataset)).run();
       expect(datasets).to.have.length(3);
@@ -310,7 +310,7 @@ describe('Query', () => {
       const task = Obj.make(TestSchema.Task, { title: 'Queue type selector task' });
       await queue.append([task]);
 
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const obj: TestSchema.Task = await db
         .query(
@@ -346,8 +346,8 @@ describe('Query', () => {
       const queueTask2 = Obj.make(TestSchema.Task, { title: 'queue2-task' });
       await queue2.append([queueTask2]);
 
-      await db1.flush({ indexes: true });
-      await db2.flush({ indexes: true });
+      await db1.flush();
+      await db2.flush();
 
       const graph = peer.client.graph;
       const bothSpaces = [db1.spaceId, db2.spaceId];
@@ -438,8 +438,8 @@ describe('Query', () => {
 
       db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
-      await db1.flush({ indexes: true });
-      await db2.flush({ indexes: true });
+      await db1.flush();
+      await db2.flush();
 
       const fromDb1 = await db1.query(Query.select(Filter.type(TestSchema.Person)).from(db1)).run();
       expect(fromDb1).toHaveLength(1);
@@ -457,8 +457,8 @@ describe('Query', () => {
 
       db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
-      await db1.flush({ indexes: true });
-      await db2.flush({ indexes: true });
+      await db1.flush();
+      await db2.flush();
 
       const result = await db1.query(Query.select(Filter.type(TestSchema.Person)).from(db2)).run();
       expect(result).toHaveLength(1);
@@ -472,8 +472,8 @@ describe('Query', () => {
 
       db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
-      await db1.flush({ indexes: true });
-      await db2.flush({ indexes: true });
+      await db1.flush();
+      await db2.flush();
 
       const result = await db1.query(Query.select(Filter.type(TestSchema.Person)).from([db1, db2])).run();
       expect(result).toHaveLength(2);
@@ -487,8 +487,8 @@ describe('Query', () => {
 
       db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
-      await db1.flush({ indexes: true });
-      await db2.flush({ indexes: true });
+      await db1.flush();
+      await db2.flush();
 
       const result = await peer.client.graph
         .query(Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces'))
@@ -505,7 +505,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space TypeScript Task' }));
       await queue.append([Obj.make(TestSchema.Task, { title: 'Queue TypeScript Task' })]);
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const withFeeds: TestSchema.Task[] = await db
         .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db, { includeFeeds: true }))
@@ -528,8 +528,8 @@ describe('Query', () => {
       db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       db1.add(Obj.make(TestSchema.Task, { title: 'Task 1' }));
       db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
-      await db1.flush({ indexes: true });
-      await db2.flush({ indexes: true });
+      await db1.flush();
+      await db2.flush();
 
       const people = await peer.client.graph
         .query(Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces'))
@@ -551,7 +551,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
       db.add(Obj.make(TestSchema.Person, { name: 'Charlie' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const result = await db.query(Query.select(Filter.type(TestSchema.Person)).limit(2).from(db)).run();
       expect(result).toHaveLength(2);
@@ -575,7 +575,7 @@ describe('Query', () => {
         Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
         Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
       ]);
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Query from feed should only return feed items.
       const feedResults = await db.query(Query.select(Filter.type(TestSchema.Task)).from(feed)).run();
@@ -597,7 +597,7 @@ describe('Query', () => {
       const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
       const spaceItem = db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
       await queue.append([feedItem]);
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Filter.id for a feed item should find it when scoped to feed.
       const feedResult = await db.query(Query.select(Filter.id(feedItem.id)).from(feed)).run();
@@ -625,7 +625,7 @@ describe('Query', () => {
         Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
         Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
       ]);
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const feedResults = await db.query(Query.type(TestSchema.Task).from(feed)).run();
       expect(feedResults).toHaveLength(2);
@@ -639,7 +639,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
       db.add(Obj.make(TestSchema.Task, { title: 'Task 1' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const subquery = Query.select(Filter.type(TestSchema.Person)).from(db);
       const results = await db
@@ -658,8 +658,8 @@ describe('Query', () => {
       db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
       db1.add(Obj.make(TestSchema.Task, { title: 'Task 1' }));
       db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
-      await db1.flush({ indexes: true });
-      await db2.flush({ indexes: true });
+      await db1.flush();
+      await db2.flush();
 
       const results = await peer.client.graph.query(Query.from(db1).select(Filter.type(TestSchema.Person))).run();
 
@@ -675,7 +675,7 @@ describe('Query', () => {
       const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
       db.add(Obj.make(TestSchema.Task, { title: 'Task for Alice', assignee: Ref.make(alice) }));
       db.add(Obj.make(TestSchema.Task, { title: 'Task for Bob', assignee: Ref.make(bob) }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const subquery = Query.select(Filter.type(TestSchema.Task, { title: 'Task for Alice' })).from(db);
       const results = await db.query(Query.from(subquery).reference('assignee')).run();
@@ -810,7 +810,7 @@ describe('Query', () => {
     const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
     db.remove(obj2);
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const queryResult = await db.query(Query.select(Filter.everything())).run();
     expect(queryResult.length).to.eq(1);
@@ -869,7 +869,7 @@ describe('Query', () => {
 
       const contactV1 = db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
       const contactV2 = db.add(Obj.make(ContactV2, { name: 'Brian Smith' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const assertQueries = async (db: EchoDatabase) => {
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
@@ -993,7 +993,7 @@ describe('Query', () => {
         }),
       );
 
-      await db.flush({ indexes: true });
+      await db.flush();
     });
 
     test('traverse relation source to target', async () => {
@@ -1036,7 +1036,7 @@ describe('Query', () => {
           objects: [Ref.make(person1)],
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const objects = await db
         .query(Query.select(Filter.type(TestSchema.Expando, { name: 'Contacts' })).reference('objects'))
@@ -1077,7 +1077,7 @@ describe('Query', () => {
         }),
       );
 
-      await sqlDb.flush({ indexes: true });
+      await sqlDb.flush();
 
       // When no property is specified, referencedBy() should return all incoming references (including nested ones).
       const allIncoming = await sqlDb
@@ -1103,7 +1103,7 @@ describe('Query', () => {
           objects: [Ref.make(person1)],
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const objects = await db
         .query(Query.select(Filter.type(TestSchema.Person)).referencedBy(TestSchema.Expando, 'objects'))
@@ -1131,7 +1131,7 @@ describe('Query', () => {
           subject: Ref.make(person1),
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const objects = await db
         .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy())
@@ -1208,7 +1208,7 @@ describe('Query', () => {
           name: 'Child',
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Query for parent from child.
       const objects = await db.query(Query.select(Filter.id(child.id)).parent()).run();
@@ -1231,7 +1231,7 @@ describe('Query', () => {
           name: 'Child 2',
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
       // writeFileSync('index-core.db', await peer.exportSqliteDatabase());
       // console.log('exported ./index-core.db');
 
@@ -1257,7 +1257,7 @@ describe('Query', () => {
           name: 'Child',
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Query for grandparent from child (going through parent).
       const parents = await db.query(Query.select(Filter.id(child.id)).parent()).run();
@@ -1289,7 +1289,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
       db.add(Obj.make(TestSchema.Task, { title: 'perf optimizations' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       {
         const objects = await db.query(Query.select(Filter.text('fix the tests', { type: 'vector' }))).run();
@@ -1315,7 +1315,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
       db.add(Obj.make(TestSchema.Task, { title: 'perf optimizations' }));
 
-      await db.flush({ indexes: true });
+      await db.flush();
 
       {
         const objects = await db.query(Query.select(Filter.text('fix the tests', { type: 'full-text' }))).run();
@@ -1348,7 +1348,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Advanced Python Programming' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // TODO(mykola): Defalut to full-text
       const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
@@ -1387,7 +1387,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'Programming with JavaScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Best Practices' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Python for Data Science' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const objects = await db.query(Query.select(Filter.text('JavaScript', { type: 'full-text' }))).run();
       expect(objects).toHaveLength(2);
@@ -1402,7 +1402,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Advanced Python Programming' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Partial word "Script" should match "TypeScript".
       {
@@ -1437,7 +1437,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming Guide' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Basics' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Words in different order should still match.
       {
@@ -1458,7 +1458,7 @@ describe('Query', () => {
       const { db } = await builder.createDatabase();
 
       const obj = db.add(Obj.make(TestSchema.Expando, { title: 'Original Title' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Poll until indexer2 has processed the document.
       {
@@ -1470,7 +1470,7 @@ describe('Query', () => {
       Obj.change(obj, (o) => {
         o.title = 'Updated Title';
       });
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Verify search results.
       {
@@ -1530,7 +1530,7 @@ describe('Query', () => {
       console.timeEnd('create');
 
       console.time('flush');
-      await db.flush({ indexes: true });
+      await db.flush();
       console.timeEnd('flush');
 
       console.time('query');
@@ -1561,7 +1561,7 @@ describe('Query', () => {
       ]);
 
       // Wait for indexing.
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Search in specific queue.
       {
@@ -1611,7 +1611,7 @@ describe('Query', () => {
       await queue.append([Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
 
       // Wait for indexing.
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Search with allQueuesFromSpaces: true should return both space and queue objects.
       {
@@ -1639,7 +1639,7 @@ describe('Query', () => {
       const queue = queues.create();
       const task = Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' });
       await queue.append([task]);
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const obj: TestSchema.Task = await db
         .query(
@@ -1664,7 +1664,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming' })); // Medium relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming' })); // No match.
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })));
       const entries = await query.runEntries();
@@ -1686,7 +1686,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Order by rank descending (best matches first) - default direction.
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank()));
@@ -1710,7 +1710,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Order by rank ascending (worst matches first).
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank('asc')));
@@ -1732,7 +1732,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Non-FTS Test Object 1' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Non-FTS Test Object 2' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Non-FTS query (all expandos, no text search).
       const query = db.query(Query.select(Filter.type(TestSchema.Expando)));
@@ -1755,7 +1755,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Order by rank descending and limit to top 2 results.
       const query = db.query(
@@ -1784,7 +1784,7 @@ describe('Query', () => {
         db.add(object);
       }
 
-      await db.flush({ indexes: true });
+      await db.flush();
     });
 
     test('fires only once when new objects are added', async () => {
@@ -1800,7 +1800,7 @@ describe('Query', () => {
       expect(count).to.equal(0);
 
       db.add(createTestObject({ value: 100 }));
-      await db.flush({ updates: true, indexes: true });
+      await db.flush({ updates: true });
       expect(count).to.equal(1);
       expect(lastResult).to.have.length(4);
     });
@@ -1816,7 +1816,7 @@ describe('Query', () => {
         expect(query.results).to.have.length(2);
       });
       db.remove(objects[0]);
-      await db.flush({ updates: true, indexes: true });
+      await db.flush({ updates: true });
       expect(count).to.equal(1);
     });
 
@@ -1892,7 +1892,7 @@ describe('Query', () => {
       });
 
       db.add(createTestObject({ value: 100 }));
-      await db.flush({ updates: true, indexes: true });
+      await db.flush({ updates: true });
 
       expect(count1).toEqual(1);
       expect(count2).toEqual(1);
@@ -1909,7 +1909,7 @@ describe('Query', () => {
       const person2 = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
       const person3 = db.add(Obj.make(TestSchema.Person, { name: 'Charlie' }));
       expect([person1, person2, person3].filter(Boolean)).to.have.length(3);
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Track all updates to observe the bug.
       log.break();
@@ -1925,7 +1925,7 @@ describe('Query', () => {
       ctx.onTestFinished(unsub);
 
       // Wait for initial renders to complete.
-      await db.flush({ indexes: true, updates: true });
+      await db.flush({ updates: true });
       log.break();
 
       // THE BUG REPRODUCTION: Delete Bob.
@@ -1934,7 +1934,7 @@ describe('Query', () => {
       log.break();
 
       // Wait for all reactive updates to complete.
-      await db.flush({ indexes: true, updates: true });
+      await db.flush({ updates: true });
       log.break();
 
       // TODO(ZaymonFC): Remove this comment once the flash bug is resolved.
@@ -1964,7 +1964,7 @@ describe('Query', () => {
 
       // Create 10 test objects: 1, 2, 3, ..., 10.
       const objects = Array.from({ length: 10 }, (_, i) => db.add(Obj.make(TestSchema.Expando, { value: i + 1 })));
-      await db.flush({ indexes: true, updates: true });
+      await db.flush({ updates: true });
 
       // Track all updates to observe the bug.
       const updates: number[][] = [];
@@ -1978,7 +1978,7 @@ describe('Query', () => {
       ctx.onTestFinished(unsub);
 
       // Wait for initial renders to complete.
-      await db.flush({ indexes: true, updates: true });
+      await db.flush({ updates: true });
 
       // THE BUG REPRODUCTION: Delete all items in a loop.
       for (const item of objects) {
@@ -1987,7 +1987,7 @@ describe('Query', () => {
 
       // Wait for all reactive updates to complete.
       // TODO(dmaretskyi): Does this ensure queries were re-run?
-      await db.flush({ indexes: true, updates: true });
+      await db.flush({ updates: true });
 
       // NOTE: There might be multiple updates dependending on how database components execute updates.
       // All objects loaded.
@@ -2066,7 +2066,7 @@ describe('Query', () => {
 
 const createObjects = async (peer: EchoTestPeer, db: EchoDatabase, options: { count: number }) => {
   const objects = range(options.count, () => db.add(createTestObject()));
-  await db.flush({ indexes: true });
+  await db.flush();
   return objects;
 };
 

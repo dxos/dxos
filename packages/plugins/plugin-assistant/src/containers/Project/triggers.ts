@@ -145,5 +145,5 @@ export const syncTriggers = async (project: Project.Project) => {
     }
   }
 
-  await db.flush({ indexes: true });
+  await db.flush();
 };

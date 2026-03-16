@@ -48,7 +48,7 @@ export const handler = Effect.fn(function* ({ name }: { name: Option.Option<stri
   }
 
   // Flush and sync before completion
-  yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
+  yield* Effect.tryPromise(() => space.db.flush());
   yield* waitForSync(space);
 });
 

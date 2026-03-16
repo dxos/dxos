@@ -52,7 +52,7 @@ describe('Research', () => {
             website: 'https://blueyard.com',
           }),
         );
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const result = yield* FunctionInvocationService.invokeFunction(research, {
           query: 'Founders and portfolio of BlueYard.',
         });
@@ -60,7 +60,7 @@ describe('Research', () => {
         console.log(inspect(result, { depth: null, colors: true }));
         console.log(JSON.stringify(result, null, 2));
 
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const researchGraph = yield* ResearchGraph.query();
         if (researchGraph) {
           const data = yield* Database.load(researchGraph.queue).pipe(
@@ -89,7 +89,7 @@ describe('Research', () => {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const researchBlueprint = yield* Database.add(Obj.clone(ResearchBlueprint.make()));
         const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
         yield* Effect.promise(() =>

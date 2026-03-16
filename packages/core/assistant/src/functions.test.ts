@@ -57,7 +57,7 @@ describe('Research', () => {
             website: 'https://blueyard.com',
           }),
         );
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         yield* new AiSession().run({
           prompt: `What is the name of the organization? ${org.id}`,
           toolkit: yield* createToolkit({

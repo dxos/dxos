@@ -28,7 +28,7 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await client.halo.createIdentity();
     await client.addTypes([TestSchema.Expando]);
     client.spaces.default.db.add(Obj.make(TestSchema.Expando, { name: 'Test' }));
-    await client.spaces.default.db.flush({ indexes: true });
+    await client.spaces.default.db.flush();
   });
 
   test('two clients share coordinator', async () => {
@@ -46,9 +46,9 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     expect(client2.halo.identity.get()).toEqual(identity);
     await client2.spaces.default.db.query(Filter.everything()).run();
 
-    // TODO(dmaretskyi): tried doing DB write -> flush(indexes) -> query here but flush(indexes) doesnt work
+    // TODO(dmaretskyi): tried doing DB write -> flush -> query here but flush doesnt work
     // const object = client1.spaces.default.db.add(Obj.make(TestSchema.Expando, { name: 'Test' }));
-    // await client1.spaces.default.db.flush({ indexes: true });
+    // await client1.spaces.default.db.flush();
     // const objects = await client2.spaces.default.db.query(Filter.type(TestSchema.Expando, { name: 'Test' })).run();
     // expect(objects).toHaveLength(1);
     // expect(objects[0]).toEqual(object);

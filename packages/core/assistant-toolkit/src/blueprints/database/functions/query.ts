@@ -111,7 +111,7 @@ export default defineFunction({
     }
 
     // Update indexes before querying to make sure we get the latest results.
-    yield* Database.flush({ indexes: true });
+    yield* Database.flush();
     const results = yield* Database.runQuery(query);
     if (includeContent) {
       return results.map((obj) => Entity.toJSON(obj));

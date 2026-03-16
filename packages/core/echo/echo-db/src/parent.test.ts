@@ -103,7 +103,7 @@ describe('Parent Hierarchy', () => {
       const c = db.add(Obj.make(TestSchema.Person, { [Obj.Parent]: p, name: 'Child' }));
 
       childId = c.id;
-      await db.flush({ indexes: true });
+      await db.flush();
     }
 
     await peer.reload();
@@ -157,7 +157,7 @@ describe('Parent Hierarchy', () => {
       expect(Obj.isDeleted(parent)).to.be.true;
       expect(Obj.isDeleted(child)).to.be.true;
 
-      await db.flush({ indexes: true });
+      await db.flush();
     }
 
     await peer.reload();
