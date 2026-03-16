@@ -288,8 +288,15 @@ export class ServiceContext extends Resource {
     log('closed');
   }
 
-  async createIdentity(ctx, params: CreateIdentityOptions = {}) {
-    const identity = await this.identityManager.createIdentity(params);
+  async createIdentity(params?: CreateIdentityOptions): Promise<ReturnType<IdentityManager['createIdentity']> extends Promise<infer T> ? T : never>;
+  async createIdentity(ctx: Context, params?: CreateIdentityOptions): Promise<ReturnType<IdentityManager['createIdentity']> extends Promise<infer T> ? T : never>;
+  async createIdentity(
+    arg1: Context | CreateIdentityOptions = Context.default(),
+    arg2: CreateIdentityOptions = {},
+  ) {
+    const ctx = arg1 instanceof Context ? arg1 : Context.default();
+    const params = arg1 instanceof Context ? arg2 : arg1;
+    const identity = await this.identityManager.createIdentity(params ?? {});
     await this._setNetworkIdentity();
     await identity.joinNetwork(ctx);
     await this._initialize(ctx);
