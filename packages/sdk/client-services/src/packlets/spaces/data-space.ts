@@ -249,7 +249,7 @@ export class DataSpace {
     }
 
     await this._inner.open(ctx);
-    await this._inner.startProtocol();
+    await this._inner.startProtocol(ctx);
 
     await this._edgeFeedReplicator?.open();
 

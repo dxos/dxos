@@ -218,7 +218,7 @@ describe('identity/identity', () => {
     });
 
     await identity.open(new Context());
-    await identity.joinNetwork();
+    await identity.joinNetwork(Context.default());
     onTestFinished(() => identity.close(new Context()));
     return { identity, identityKey, keyring, deviceKey, controlFeed, spaceKey, dataFeed };
   };

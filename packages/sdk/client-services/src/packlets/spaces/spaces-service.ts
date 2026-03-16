@@ -265,7 +265,7 @@ export class SpacesServiceImpl implements SpacesService {
 
   async joinBySpaceKey({ spaceKey }: JoinBySpaceKeyRequest): Promise<JoinSpaceResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
-    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(spaceKey);
+    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(Context.default(), { spaceKey });
     return this._joinByAdmission({ credential });
   }
 

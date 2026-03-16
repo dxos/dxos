@@ -95,7 +95,7 @@ describe.skipIf(process.env.CI && !process.env.RUN_FLAKY_TESTS)(
         await acceptInvitation(guest, invitation);
 
         await guest.sink.waitFor(Invitation.State.READY_FOR_AUTHENTICATION);
-        await guest.peer.networkManager.close();
+        await guest.peer.networkManager.close(Context.default());
         await host.sink.waitFor(Invitation.State.CONNECTING);
 
         await sleep(10);

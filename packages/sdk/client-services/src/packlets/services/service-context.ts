@@ -252,7 +252,7 @@ export class ServiceContext extends Resource {
     await this.spaceManager.open();
 
     if (this.identityManager.identity) {
-      await this.identityManager.identity.joinNetwork();
+      await this.identityManager.identity.joinNetwork(ctx);
       await this._initialize(ctx);
     }
 
@@ -279,7 +279,7 @@ export class ServiceContext extends Resource {
     await this.spaceManager.close();
     await this.echoHost.close(ctx);
 
-    await this.networkManager.close();
+    await this.networkManager.close(ctx);
     await this.signalManager.close();
     await this._edgeConnection?.close();
     await this.feedStore.close();
@@ -288,11 +288,11 @@ export class ServiceContext extends Resource {
     log('closed');
   }
 
-  async createIdentity(params: CreateIdentityOptions = {}) {
+  async createIdentity(ctx, params: CreateIdentityOptions = {}) {
     const identity = await this.identityManager.createIdentity(params);
     await this._setNetworkIdentity();
-    await identity.joinNetwork();
-    await this._initialize(new Context());
+    await identity.joinNetwork(ctx);
+    await this._initialize(ctx);
     return identity;
   }
 
@@ -318,7 +318,7 @@ export class ServiceContext extends Resource {
   private async _acceptIdentity(params: JoinIdentityProps) {
     const { identity, identityRecord } = await this.identityManager.prepareIdentity(params);
     await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential! });
-    await identity.joinNetwork();
+    await identity.joinNetwork(this._ctx);
     await this.identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
     await this._initialize(new Context());
     return identity;

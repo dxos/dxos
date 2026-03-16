@@ -112,7 +112,7 @@ describe('identity/identity-manager', () => {
       peerKey: identity1.deviceKey.toHex(),
       identityKey: identity1.identityKey.toHex(),
     });
-    await identity1.joinNetwork();
+    await identity1.joinNetwork(Context.default());
 
     const peer2 = await setupPeer({ signalContext });
 
@@ -148,7 +148,7 @@ describe('identity/identity-manager', () => {
       peerKey: identity2.deviceKey.toHex(),
       identityKey: identity2.identityKey.toHex(),
     });
-    await identity2.joinNetwork();
+    await identity2.joinNetwork(Context.default());
 
     // Identity2 is not yet ready at this point. Peer1 needs to admit peer2 device key and feed keys.
     await peer2.identityManager.acceptIdentity(identity2, identityRecord);

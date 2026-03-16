@@ -437,7 +437,7 @@ describe('Invitations', () => {
             condition: () => hostContext.networkManager.topics.includes(persistentInvitation.get().swarmKey),
           });
           // TODO(nf): expose this in API as suspendInvitation()/SuspendableInvitation?
-          await hostContext.networkManager.leaveSwarm(persistentInvitation.get().swarmKey);
+          await hostContext.networkManager.leaveSwarm(Context.default(), persistentInvitation.get().swarmKey);
         }
 
         const { service: newHostService, manager: newHostManager } = createInvitationsApi(
