@@ -5,9 +5,10 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { COMPANION_PREFIX, LayoutOperation } from '@dxos/app-toolkit';
+import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { AttentionOperation } from '@dxos/plugin-attention/types';
 import { DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -24,15 +25,17 @@ const byDate =
   ({ startDate: a }: Event.Event, { startDate: b }: Event.Event) =>
     a < b ? -direction : a > b ? direction : 0;
 
-export const CalendarArticle = ({ role, subject: calendar }: SurfaceComponentProps<Calendar.Calendar>) => {
+export type CalendarArticleProps = SurfaceComponentProps<Calendar.Calendar> & { attendableId?: string };
+
+export const CalendarArticle = ({ role, subject: calendar, attendableId }: CalendarArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
-  const id = Obj.getDXN(calendar).toString();
-  const { singleSelect } = useSelectionActions([id]);
+  const layout = useLayout();
+  const id = attendableId ?? Obj.getDXN(calendar).toString();
   const selected = useSelected(id, 'single');
   const db = Obj.getDatabase(calendar);
 
-  // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
+  // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
   useObject(calendar);
   const feed = calendar.feed?.target as Feed.Feed | undefined;
 
@@ -43,12 +46,24 @@ export const CalendarArticle = ({ role, subject: calendar }: SurfaceComponentPro
 
   const handleSelect = useCallback(
     (event: Event.Event) => {
-      singleSelect(event.id);
-      void invokePromise(DeckOperation.ChangeCompanion, {
-        companion: `${COMPANION_PREFIX}event`,
+      void invokePromise(AttentionOperation.Select, {
+        contextId: id,
+        selection: { mode: 'single', id: event.id },
       });
+
+      const companionId = `${COMPANION_PREFIX}event`;
+      if (layout.mode === 'simple') {
+        void invokePromise(LayoutOperation.UpdateComplementary, {
+          subject: companionId,
+          state: 'expanded',
+        });
+      } else {
+        void invokePromise(DeckOperation.ChangeCompanion, {
+          companion: companionId,
+        });
+      }
     },
-    [singleSelect, invokePromise, id],
+    [id, invokePromise, layout.mode],
   );
 
   // TODO(burdon): Create story.
