@@ -29,6 +29,7 @@ export const useAudioStream = (active?: boolean, options?: UseAudioStreamOptions
   const audioContextRef = useRef<AudioContext>(undefined);
   const analyserRef = useRef<AnalyserNode>(undefined);
   const dataArrayRef = useRef<Uint8Array>(undefined);
+  const timeDomainArrayRef = useRef<Uint8Array>(undefined);
   const tracksRef = useRef<MediaStreamTrack[]>(undefined);
   const sourceRef = useRef<AudioNode>(undefined);
 
@@ -58,6 +59,7 @@ export const useAudioStream = (active?: boolean, options?: UseAudioStreamOptions
           analyserRef.current = audioContextRef.current!.createAnalyser();
           analyserRef.current.fftSize = options?.fftSize ?? 64;
           dataArrayRef.current = new Uint8Array(analyserRef.current.frequencyBinCount);
+          timeDomainArrayRef.current = new Uint8Array(analyserRef.current.fftSize);
           options.source.connect(analyserRef.current);
           sourceRef.current = options.source;
         } else if (!options || (!('source' in options) && options.microphone !== false)) {
@@ -69,6 +71,7 @@ export const useAudioStream = (active?: boolean, options?: UseAudioStreamOptions
           analyserRef.current = audioContextRef.current.createAnalyser();
           analyserRef.current.fftSize = options?.fftSize ?? 64;
           dataArrayRef.current = new Uint8Array(analyserRef.current.frequencyBinCount);
+          timeDomainArrayRef.current = new Uint8Array(analyserRef.current.fftSize);
           sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
           sourceRef.current.connect(analyserRef.current);
         }
@@ -95,12 +98,12 @@ export const useAudioStream = (active?: boolean, options?: UseAudioStreamOptions
     },
 
     getTimeDomainData: () => {
-      if (!analyserRef.current || !dataArrayRef.current) {
+      if (!analyserRef.current || !timeDomainArrayRef.current) {
         return undefined;
       }
 
-      analyserRef.current.getByteTimeDomainData(dataArrayRef.current as Uint8Array<ArrayBuffer>);
-      return dataArrayRef.current;
+      analyserRef.current.getByteTimeDomainData(timeDomainArrayRef.current as Uint8Array<ArrayBuffer>);
+      return timeDomainArrayRef.current;
     },
 
     getAverage: () => {

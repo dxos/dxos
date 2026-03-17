@@ -35,13 +35,31 @@ const Graph = ({ classNames, data = [], bins = data.length, range = defaultRange
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>();
   const scaleX = useMemo(() => scaleLinear([0, bins - 1], [-width / 2, width / 2]), [width, bins]);
   const scaleY = useMemo(() => scaleLinear(range, [height / 2, -height / 2]), [height, range]);
-  console.log(data);
 
   const i = useRef(0);
   const paths = useRef<string[]>([]);
 
-  // When data goes empty, drain the trail one path at a time.
   const [, forceUpdate] = useState(0);
+
+  // Update path trail when data changes.
+  useEffect(() => {
+    if (data.length === 0) {
+      return;
+    }
+
+    const points = data.map((value, idx) => ({ x: scaleX(idx), y: scaleY(value) }));
+    const path = curveGenerator(points) ?? '';
+    if (i.current % trail === 0) {
+      paths.current.splice(0, 0, path);
+      paths.current.length = trail;
+    } else {
+      paths.current.splice(0, 1, path);
+    }
+    i.current++;
+    forceUpdate((n) => n + 1);
+  }, [data, scaleX, scaleY, trail]);
+
+  // When data goes empty, drain the trail one path at a time.
   useEffect(() => {
     if (data.length > 0 || paths.current.length === 0) {
       return;
@@ -56,20 +74,6 @@ const Graph = ({ classNames, data = [], bins = data.length, range = defaultRange
     }, 50);
     return () => clearInterval(t);
   }, [data.length]);
-
-  const points = data.map((value, idx) => ({ x: scaleX(idx), y: scaleY(value) }));
-  if (data.length > 0) {
-    const path = curveGenerator(points) ?? '';
-    if (i.current % trail === 0) {
-      paths.current.splice(0, 0, path);
-      paths.current.length = trail;
-    } else {
-      paths.current.splice(0, 1, path);
-    }
-    i.current++;
-  }
-
-  console.log(paths.current.length);
 
   const gridSize = 8;
   return (
@@ -141,7 +145,7 @@ export const Oscilloscope = ({ classNames, active, mode = 'frequency', domain, r
   const [data, setData] = useState<number[]>([]);
 
   useEffect(() => {
-    if (!active || !source) {
+    if (!active) {
       setData([]);
       return;
     }
