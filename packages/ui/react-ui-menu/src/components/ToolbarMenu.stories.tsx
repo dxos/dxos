@@ -2,9 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
+import { Atom, RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
 import { IconButton } from '@dxos/react-ui';
@@ -56,7 +56,8 @@ export const DropdownMenu: Story = {
 
 export const Toolbar: Story = {
   render: () => {
-    const nestedMenuActions = useMemo(() => createNestedActionsResolver(), []);
+    const registry = useContext(RegistryContext);
+    const nestedMenuActions = useMemo(() => createNestedActionsResolver({ registry }), [registry]);
 
     return (
       <Menu.Root {...nestedMenuActions}>
