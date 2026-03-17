@@ -5,7 +5,7 @@
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
 import * as SqlClient from '@effect/sql/SqlClient';
 
-import { DeferredTask, sleep } from '@dxos/async';
+import { asyncTimeout, DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -221,7 +221,12 @@ export class EchoHost extends Resource {
     await this._spaceStateManager.open(ctx);
     log('echo-host: space state manager opened');
 
-    await RuntimeProvider.runPromise(this._runtime)(testSqlite());
+    // Timeout needs to be outside effect runtime to catch the layer hanging on startup.
+    await asyncTimeout(
+      () => RuntimeProvider.runPromise(this._runtime)(testSqlite()),
+      15_000,
+      new Error('SQLite quick check timed out'),
+    );
 
     log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
@@ -438,7 +443,4 @@ const testSqlite = () =>
       throw new Error('SQLite quick check failed');
     }
     log.info('SQLite quick check passed');
-  }).pipe(
-    Effect.timeout(Duration.seconds(15)),
-    Effect.catchTag('TimeoutException', () => Effect.die('SQLite quick check timed out')),
-  );
+  });
