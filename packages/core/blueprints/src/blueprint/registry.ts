@@ -5,6 +5,7 @@
 import { log } from '@dxos/log';
 
 import { type Blueprint } from './blueprint';
+import * as Context from 'effect/Context';
 
 /**
  * Blueprint registry.
@@ -38,3 +39,5 @@ export class Registry {
     return this._blueprints;
   }
 }
+
+export class RegistryService extends Context.Tag('@dxos/blueprints/RegistryService')<RegistryService, Registry>() {}

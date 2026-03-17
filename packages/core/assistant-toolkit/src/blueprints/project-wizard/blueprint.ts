@@ -6,11 +6,11 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { ProjectFunctions } from './functions';
+import { ProjectWizardFunctions } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.project-wizard';
 
-const functions = [ProjectFunctions.AddArtifact];
+const functions = [ProjectWizardFunctions.CreateProject];
 
 /**
  * Creates the Project blueprint. This is a function to avoid circular dependency issues.

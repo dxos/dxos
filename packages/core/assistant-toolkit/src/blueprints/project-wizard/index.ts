@@ -3,4 +3,4 @@
 //
 
 export { default as ProjectBlueprint } from './blueprint';
-export { ProjectFunctions } from './functions';
+export { ProjectWizardFunctions } from './functions';
