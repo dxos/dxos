@@ -24,6 +24,8 @@ import { isNonNullable } from '@dxos/util';
 import { ChatModule, type ComponentProps } from '../components';
 import { config, getDecorators } from '../testing';
 
+// TODO(burdon): Move into Chat.stories.tsx
+
 const panelClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden';
 
 type StoryProps = {
