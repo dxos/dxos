@@ -10,7 +10,6 @@ import { Form, type FormFieldMap, SelectField, omitId } from '@dxos/react-ui-for
 
 import { Sequence } from '../../types';
 import { BRAINWAVE_PRESETS, SAMPLE_URLS } from '../../generator';
-import { SAMPLE_URLS } from '../../generator';
 
 export type SequencerProps = ComposableProps<HTMLDivElement> & {
   sequence: Sequence.Sequence;
@@ -56,7 +55,6 @@ export const Sequencer = forwardRef<HTMLDivElement, SequencerProps>(
 
         const updated = { ...sequence, ...newValues };
 
-        // TODO(burdon): Update if generator preset changed.
         // Seed default source when discriminator changes.
         if (
           changedKeys.includes('source.type') &&
