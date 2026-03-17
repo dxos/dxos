@@ -2,11 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Annotation, type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -30,7 +32,7 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 gap-4'>
-            <ObjectCard data={subject} />
+            <ObjectCard data={subject} classNames='dx-card-max-width' />
 
             {related.length > 0 && (
               <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'dx-card-max-width' : 'w-full')}>
@@ -53,11 +55,19 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
 const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; classNames?: string }) => {
   const objectMenuItems = useObjectMenuItems(subject);
   const data = useMemo(() => ({ subject }), [subject]);
+  const icon = Function.pipe(
+    Obj.getSchema(subject),
+    Option.fromNullable,
+    Option.flatMap(Annotation.IconAnnotation.get),
+    Option.map(({ icon }) => icon),
+    Option.getOrElse(() => 'ph--placeholder--regular'),
+  );
+
   return (
     <Menu.Root>
       <Card.Root classNames={classNames}>
         <Card.Toolbar>
-          <Card.IconBlock />
+          <Card.Icon icon={icon} />
           <Card.Title>{Entity.getLabel(subject)}</Card.Title>
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
             <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
