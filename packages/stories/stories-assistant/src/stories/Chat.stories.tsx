@@ -167,6 +167,26 @@ const DefaultStory = ({ modules: modulesProp, showContext, blueprints = [] }: St
           </StackItem.Root>
         );
       })}
+
+      {showContext && <StackContainer objects={objects} />}
+    </Stack>
+  );
+};
+
+const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
+  return (
+    <Stack
+      orientation='vertical'
+      classNames='gap-(--stack-gap)'
+      size='contain'
+      rail={false}
+      itemsCount={objects.length}
+    >
+      {objects.map((object) => (
+        <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
+          <Surface.Surface role='section' limit={1} data={{ subject: object }} />
+        </StackItem.Root>
+      ))}
     </Stack>
   );
 };
