@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
@@ -31,8 +33,8 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       {
         id: Mailbox.Mailbox.typename,
         metadata: {
-          icon: 'ph--tray--regular',
-          iconHue: 'rose',
+          icon: Annotation.IconAnnotation.get(Mailbox.Mailbox).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Mailbox.Mailbox).pipe(Option.getOrThrow).hue ?? 'white',
           blueprints: [InboxBlueprint.key],
           inputSchema: CreateMailboxSchema,
           createObject: ((props) => Effect.sync(() => Mailbox.make(props))) satisfies CreateObject,
@@ -41,16 +43,16 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       {
         id: Message.Message.typename,
         metadata: {
-          icon: 'ph--note--regular',
-          iconHue: 'rose',
+          icon: Annotation.IconAnnotation.get(Message.Message).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Message.Message).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: (() => Effect.succeed(Message.make({ sender: 'user' }))) satisfies CreateObject,
         },
       },
       {
         id: Calendar.Calendar.typename,
         metadata: {
-          icon: 'ph--calendar--regular',
-          iconHue: 'rose',
+          icon: Annotation.IconAnnotation.get(Calendar.Calendar).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Calendar.Calendar).pipe(Option.getOrThrow).hue ?? 'white',
           blueprints: [CalendarBlueprint.key],
           inputSchema: CreateCalendarSchema,
           createObject: ((props) => Effect.sync(() => Calendar.make(props))) satisfies CreateObject,
@@ -59,8 +61,8 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       {
         id: Event.Event.typename,
         metadata: {
-          icon: 'ph--calendar-dot--regular',
-          iconHue: 'rose',
+          icon: Annotation.IconAnnotation.get(Event.Event).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Event.Event).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props) => Effect.sync(() => Event.make(props))) satisfies CreateObject,
         },
       },

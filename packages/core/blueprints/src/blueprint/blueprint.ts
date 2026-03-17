@@ -84,7 +84,7 @@ export const Blueprint = Schema.Struct({
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--blueprint--regular',
-    hue: 'blue',
+    hue: 'sky',
   }),
 );
 

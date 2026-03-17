@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 
 export const TLDRAW_SCHEMA = 'tldraw.com/2';
@@ -32,6 +32,10 @@ export const Sketch = Schema.Struct({
   Type.object({
     typename: 'org.dxos.type.sketch',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--compass-tool--regular',
+    hue: 'indigo',
   }),
 );
 export interface Sketch extends Schema.Schema.Type<typeof Sketch> {}

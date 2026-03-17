@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import { Sequence } from './Sequence';
@@ -24,6 +24,10 @@ export const Dream = Schema.Struct({
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--moon-stars--regular',
+    hue: 'violet',
+  }),
 );
 
 export interface Dream extends Schema.Schema.Type<typeof Dream> {}

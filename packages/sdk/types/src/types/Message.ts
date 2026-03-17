@@ -46,8 +46,8 @@ export const Message = Schema.Struct({
   }),
   LabelAnnotation.set(['properties.subject']),
   Annotation.IconAnnotation.set({
-    icon: 'ph--envelope--regular',
-    hue: 'red',
+    icon: 'ph--note--regular',
+    hue: 'rose',
   }),
 );
 

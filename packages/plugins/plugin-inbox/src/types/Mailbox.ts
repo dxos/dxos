@@ -49,7 +49,7 @@ export const Mailbox = Schema.Struct({
   }),
   Annotation.IconAnnotation.set({
     icon: 'ph--tray--regular',
-    hue: 'red',
+    hue: 'rose',
   }),
   FeedAnnotation.set(true),
 );

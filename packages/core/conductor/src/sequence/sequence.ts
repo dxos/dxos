@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { Key, Obj, Type } from '@dxos/echo';
+import { Annotation, Key, Obj, Type } from '@dxos/echo';
 
 // TODO(burdon): Rename (Sequence) and create NS.
 
@@ -33,6 +33,10 @@ export const Sequence = Schema.Struct({
   Type.object({
     typename: 'org.dxos.type.sequence',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--circuitry--regular',
+    hue: 'sky',
   }),
 );
 export interface Sequence extends Schema.Schema.Type<typeof Sequence> {}

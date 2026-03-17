@@ -15,6 +15,7 @@ import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Query from './Query';
 import * as Type from './Type';
+import * as Annotation from './Annotation';
 
 /**
  * Stored field metadata (e.g., for UX).
@@ -79,6 +80,10 @@ const ViewSchema = Schema.Struct({
     version: '0.1.0',
   }),
   internal.SystemTypeAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--funnel--regular',
+    hue: 'green',
+  }),
 );
 
 export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
