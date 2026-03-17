@@ -554,7 +554,7 @@ describe('TriggerDispatcher', () => {
         Obj.change(person, (p) => {
           p.fullName = 'Robert Jones';
         });
-        yield* Database.flush();
+        yield* Database.flush({ indexes: true });
 
         // Should trigger again for the update
         results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });
@@ -604,7 +604,7 @@ describe('TriggerDispatcher', () => {
         Obj.change(person, (p) => {
           p.fullName = 'Charles Brown';
         });
-        yield* Database.flush();
+        yield* Database.flush({ indexes: true });
 
         // Third invocation - should trigger for the update
         results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['subscription'] });

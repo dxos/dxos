@@ -687,9 +687,12 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectTo
  *
  * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
  * @param options.dxn - Override object DXN. Changes the result of `Obj.getDXN`.
+ * @param options.database - Database to associate with the object.
  */
-export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Unknown> =
-  objInternal.objectFromJSON as any;
+export const fromJSON: (
+  json: unknown,
+  options?: { refResolver?: Ref.Resolver; dxn?: DXN; database?: Database.Database },
+) => Promise<Unknown> = objInternal.objectFromJSON as any;
 
 /**
  * Comparator function type for sorting objects.

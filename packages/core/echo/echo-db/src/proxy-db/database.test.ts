@@ -177,7 +177,7 @@ describe('Database', () => {
 
     const obj1 = db.add(Obj.make(TestSchema.Expando, { name: 'Object 1' }));
     const obj2 = db.add(Obj.make(TestSchema.Expando, { name: 'Object 2' }));
-    await db.flush({ indexes: true });
+    await db.flush();
 
     {
       const objects = await db.query(Filter.id(obj1.id)).run();

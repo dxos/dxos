@@ -62,7 +62,7 @@ test('migrate 1 object', async () => {
   await graph.schemaRegistry.register([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
-  await db.flush({ indexes: true });
+  await db.flush();
   await db.runMigrations([migrationV2]);
 
   const objects = await db.query(Filter.type(ContactV2)).run();
@@ -81,7 +81,7 @@ test('incrementally migrates new objects', async () => {
   await graph.schemaRegistry.register([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
-  await db.flush({ indexes: true });
+  await db.flush();
   await db.runMigrations([migrationV2]);
 
   {
@@ -91,7 +91,7 @@ test('incrementally migrates new objects', async () => {
   }
 
   db.add(Obj.make(ContactV1, { firstName: 'Jane', lastName: 'Smith' }));
-  await db.flush({ indexes: true });
+  await db.flush();
   await db.runMigrations([migrationV2]);
 
   {
@@ -116,7 +116,7 @@ test('chained migrations', async () => {
   await graph.schemaRegistry.register([ContactV1, ContactV2, ContactV3]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
-  await db.flush({ indexes: true });
+  await db.flush();
   await db.runMigrations([migrationV2, migrationV3]);
 
   const objects = await db.query(Filter.type(ContactV3)).run();
@@ -145,7 +145,7 @@ test('chained migrations', async () => {
 //       query: { type: 'com.example.type.b1e66ff8' },
 //     }),
 //   );
-//   await db.flush({ indexes: true });
+//   await db.flush();
 //   await db.runMigrations([ViewTypeV1ToV2]);
 
 //   const objects = await db.query(Filter.type(ViewTypeV2)).run();

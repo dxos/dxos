@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useEffect, useRef } from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
+import { Capabilities } from '@dxos/app-framework';
+import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
+import { getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
@@ -38,6 +40,27 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
     blueprintRegistry,
     settings,
   });
+
+  const registry = useCapability(Capabilities.AtomRegistry);
+  const stateAtom = useCapability(AssistantCapabilities.State);
+  const pendingSubmitted = useRef(false);
+  useEffect(() => {
+    if (!processor || !chat || pendingSubmitted.current) {
+      return;
+    }
+
+    const chatPath = getObjectPathFromObject(chat);
+    const state = registry.get(stateAtom);
+    const pendingPrompt = state.pendingPrompts[chatPath];
+    if (pendingPrompt) {
+      pendingSubmitted.current = true;
+      registry.update(stateAtom, (current) => {
+        const { [chatPath]: _, ...rest } = current.pendingPrompts;
+        return { ...current, pendingPrompts: rest };
+      });
+      void processor.request({ message: pendingPrompt });
+    }
+  }, [processor, chat, registry, stateAtom]);
 
   if (!processor) {
     return null;

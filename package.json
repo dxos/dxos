@@ -45,7 +45,6 @@
     "tslib": "catalog:"
   },
   "devDependencies": {
-    "@1password/op-js": "catalog:",
     "@cloudflare/vitest-pool-workers": "catalog:",
     "@cloudflare/workers-types": "catalog:",
     "@dxos/async": "workspace:*",
@@ -99,11 +98,9 @@
     "@vitest/spy": "catalog:",
     "@vitest/ui": "catalog:",
     "@vitest/utils": "catalog:",
-    "adm-zip": "catalog:",
     "chalk": "catalog:",
     "chalk-table": "catalog:",
     "cli-highlight": "catalog:",
-    "cli-table3": "catalog:",
     "concurrently": "catalog:",
     "depcheck": "catalog:",
     "effect": "catalog:",

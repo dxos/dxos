@@ -95,7 +95,7 @@ export default defineFunction({
         };
       }
 
-      yield* Database.flush({ indexes: true });
+      yield* Database.flush();
       yield* TracingService.emitStatus({ message: 'Starting research...' });
 
       const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
