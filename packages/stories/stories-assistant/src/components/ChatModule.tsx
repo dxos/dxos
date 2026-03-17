@@ -46,7 +46,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
           {/* TODO(burdon): Remove relative. */}
           <Chat.Viewport classNames='relative'>
             <Toolbar.Root>
-              <div className='px-1 grow truncate text-subdued'>{chat?.name}</div>
+              <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
               <Popover.Root>
                 <Popover.Trigger asChild>
                   <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />

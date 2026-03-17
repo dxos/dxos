@@ -175,7 +175,7 @@ const ContextStack = ({ objects }: { objects: Obj.Unknown[] }) => {
   return (
     <StackItem.Content toolbar>
       <Toolbar.Root>
-        <div className='items-center'>Chat Context Objects</div>
+        <Toolbar.Text className='flex-1 text-center'>Chat Context Objects</Toolbar.Text>
       </Toolbar.Root>
       <Stack orientation='vertical' size='contain' rail={false} itemsCount={objects.length}>
         {objects.map((object) => (
