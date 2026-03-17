@@ -10,7 +10,11 @@ import { ProjectFunctions } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.project';
 
-const functions = [ProjectFunctions.AddArtifact];
+const functions = [
+  ProjectFunctions.AddArtifact,
+  ProjectFunctions.GetContext,
+  ProjectFunctions.SyncTriggers,
+];
 
 /**
  * Creates the Project blueprint. This is a function to avoid circular dependency issues.
@@ -21,40 +25,19 @@ const make = () =>
     name: 'Project blueprint',
     instructions: Template.make({
       source: trim`
-        You work on an project. Each project has a spec - the goal of the project.
-        The project plan shows the current progress of the project.
-        Project has an number of associated artifacts you can read/write.
-        Spec and plan are also artifacts.
-        You can edit them if necessary.
-
-        IMPORTANT: When create a new artifact, always add it to the project using the add-artifact function.
-
-        {{#with project}}
-        <project id="{{id}}" name="{{name}}">
-          <spec>
-            {{spec}}
-          </spec>
-          <plan>
-            {{plan}}
-          </plan>
-
-          <artifacts>
-          {{#each artifacts}}
-            <artifact type="{{type}}" dxn="{{dxn}}">
-              {{name}}
-            </artifact>
-          {{/each}}
-          </artifacts>
-        </project>
-        {{/with}}
+        Projects are a way to organize agent chats and work.
+        Project have a spec - the goal of the project.
+        Typically projects have specific topic associated with it, such as a research project, a design project, a development project, etc.
+        Project have a number of associated artifacts agent can read/write.
+        Projects can be subscribed to feeds, so the agent can automatically process events from the feeds.
+        One example is subscribing to an email inbox, so the agent can automatically process emails.
+        Project has a reference to a chat, that the agent runs in.
+        Project has an input queue, that the agent processes events from.
+        Project has a list of subscriptions, and then the triggers get created from those.
+        [sync-triggers] function is to re-create triggers based on the subscriptions in the project object.
+        
+        When reacting to user request in context of a project, call [get-context] function to get the context of the project.
       `,
-      inputs: [
-        {
-          name: 'project',
-          kind: 'function',
-          function: 'org.dxos.function.project.get-context',
-        },
-      ],
     }),
     tools: Blueprint.toolDefinitions({ functions }),
   });

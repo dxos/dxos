@@ -47,6 +47,7 @@ export const createNotebook = (): Notebook.Notebook =>
         prompt: Ref.make(
           createObject(
             Prompt.make({
+              key: 'dxos.org/prompt/test/color',
               instructions: 'Very briefly, what colors are associated with the numbers {{a}} and {{b}}.',
             }),
           ),
@@ -63,6 +64,7 @@ export const createNotebook = (): Notebook.Notebook =>
         prompt: Ref.make(
           createObject(
             Prompt.make({
+              key: 'dxos.org/prompt/test/summarize',
               instructions: 'Very briefly, summarize the documents: {{docs}}',
             }),
           ),

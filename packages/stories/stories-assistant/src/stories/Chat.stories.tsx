@@ -805,6 +805,7 @@ export const WithResearchQueue: Story = {
 
       const researchPrompt = space.db.add(
         Prompt.make({
+          key: 'dxos.org/prompt/test/research',
           name: 'Research',
           description: 'Research organization',
           input: Schema.Struct({
@@ -935,6 +936,7 @@ export const WithProject: Story = {
 
       const researchPrompt = space.db.add(
         Prompt.make({
+          key: 'dxos.org/prompt/test/research',
           name: 'Research',
           description: 'Research organization',
           input: Schema.Struct({
@@ -1092,6 +1094,7 @@ export const WithPrompt: Story = {
       space.db.add(serializeFunction(AgentFunctions.Prompt));
       space.db.add(
         Prompt.make({
+          key: 'dxos.org/prompt/test/research',
           name: 'Research',
           description: 'Research organization',
           input: Schema.Struct({

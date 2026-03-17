@@ -14,6 +14,7 @@ import { Prompt, Template } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Chat } from '../../types';
 
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-0';
 
@@ -22,6 +23,7 @@ export default defineFunction({
   name: 'Agent',
   description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
   inputSchema: Schema.Struct({
+    chat: Schema.optional(Ref.Ref(Chat.Chat)),
     prompt: Ref.Ref(Prompt.Prompt),
     systemPrompt: Schema.optional(Ref.Ref(Prompt.Prompt)),
     /**

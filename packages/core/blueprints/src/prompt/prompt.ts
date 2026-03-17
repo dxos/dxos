@@ -15,6 +15,11 @@ import * as Template from '../template';
  */
 export const Prompt = Schema.Struct({
   /**
+   * Global registry ID.
+   */
+  key: Schema.String,
+
+  /**
    * Name of the prompt.
    */
   name: Schema.optional(Schema.String),
@@ -64,20 +69,23 @@ export const Prompt = Schema.Struct({
 export interface Prompt extends Schema.Schema.Type<typeof Prompt> {}
 
 export const make = (params: {
+  key: string;
   name?: string;
   description?: string;
   input?: Schema.Schema.AnyNoContext;
   output?: Schema.Schema.AnyNoContext;
-  instructions?: string;
+  instructions?: string | Template.Template;
   blueprints?: Ref.Ref<Blueprint>[];
   context?: any[];
 }): Prompt =>
   Obj.make(Prompt, {
+    key: params.key,
     name: params.name,
     description: params.description,
     input: JsonSchema.toJsonSchema(params.input ?? Schema.Void),
     output: JsonSchema.toJsonSchema(params.output ?? Schema.Void),
-    instructions: Template.make({ source: params.instructions }),
+    instructions:
+      typeof params.instructions === 'object' ? params.instructions : Template.make({ source: params.instructions }),
     blueprints: params.blueprints ?? [],
     context: params.context ?? [],
   });

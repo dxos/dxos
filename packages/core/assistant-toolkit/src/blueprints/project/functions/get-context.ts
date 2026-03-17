@@ -14,7 +14,8 @@ import { Plan, Project } from '../../../types';
 export default defineFunction({
   key: 'org.dxos.function.project.get-context',
   name: 'Get Project Context',
-  description: 'Get the context of an project.',
+  description:
+    'Get the context of an project. This function is used by Project agent to inject context into the prompt template..',
   inputSchema: Schema.Struct({}),
   outputSchema: Schema.Struct({
     id: Schema.String,
