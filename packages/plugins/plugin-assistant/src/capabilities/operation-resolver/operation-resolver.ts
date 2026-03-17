@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { AgentFunctions, Chat } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
@@ -106,6 +107,19 @@ export default Capability.makeModule(
             ...current,
             currentChat: { ...current.currentChat, [companionToId]: chatId },
           }));
+        }),
+      }),
+      OperationResolver.make({
+        operation: AssistantOperation.RunPromptInNewChat,
+        handler: Effect.fnUntraced(function* ({ db, prompt }) {
+          const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
+          const chatPath = getObjectPathFromObject(chat);
+          yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({
+            ...current,
+            pendingPrompts: { ...current.pendingPrompts, [chatPath]: prompt },
+          }));
+          yield* Operation.invoke(LayoutOperation.Open, { subject: [chatPath] });
+          return { object: chat };
         }),
       }),
     ]);

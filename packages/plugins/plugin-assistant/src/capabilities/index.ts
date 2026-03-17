@@ -7,6 +7,7 @@ export * from './app-graph-builder';
 export * from './blueprint-definition';
 export * from './edge-model-resolver';
 export * from './local-model-resolver';
+export * from './markdown';
 export * from './operation-resolver';
 export * from './react-surface';
 export * from './settings';

@@ -68,6 +68,20 @@ export namespace AssistantOperation {
     },
   });
 
+  export const RunPromptInNewChat = Operation.make({
+    meta: { key: `${ASSISTANT_OPERATION}.run-prompt-in-new-chat`, name: 'Run Prompt In New Chat' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        db: Database.Database,
+        prompt: Schema.String,
+      }),
+      output: Schema.Struct({
+        object: Chat.Chat,
+      }),
+    },
+  });
+
   export const BlueprintForm = Schema.Struct({
     key: Schema.String,
     name: Schema.String,

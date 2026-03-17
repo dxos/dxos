@@ -13,6 +13,7 @@ import { Obj, Type } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
@@ -24,6 +25,7 @@ import {
   BlueprintDefinition,
   EdgeModelResolver,
   LocalModelResolver,
+  MarkdownExtension,
   OperationResolver,
   ReactSurface,
   Settings,
@@ -111,6 +113,11 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     activatesBefore: [AppActivationEvents.SetupArtifactDefinition],
   }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'markdown',
+    activatesOn: MarkdownEvents.SetupExtensions,
+    activate: MarkdownExtension,
+  }),
   Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
