@@ -441,11 +441,7 @@ const ChatToolbar = ({ classNames, companionTo, ...props }: ChatToolbarProps) =>
   const menu = useChatToolbarActions({ chat, companionTo });
 
   return (
-    <Menu.Root
-      {...props}
-      {...menu}
-      attendableId={companionTo ? Obj.getDXN(companionTo).toString() : chat ? Obj.getDXN(chat).toString() : ''}
-    >
+    <Menu.Root {...props} {...menu}>
       <Menu.Toolbar classNames={classNames} textBlockWidth />
     </Menu.Root>
   );

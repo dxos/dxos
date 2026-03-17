@@ -46,9 +46,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.chat`,
         role: 'article',
-        filter: (data): data is { subject: Chat.Chat; variant: undefined } =>
-          Obj.instanceOf(Chat.Chat, data.subject) && data.variant !== 'assistant-chat',
-        component: ({ data, role, ref }) => <ChatContainer role={role} subject={data.subject} ref={ref} />,
+        filter: (data): data is { attendableId: string; subject: Chat.Chat; variant: undefined } =>
+          typeof data.attendableId === 'string' &&
+          Obj.instanceOf(Chat.Chat, data.subject) &&
+          data.variant !== 'assistant-chat',
+        component: ({ data, role, ref }) => (
+          <ChatContainer role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />
+        ),
       }),
       Surface.create({
         id: `${meta.id}.project`,
@@ -66,7 +70,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.companion-chat`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
+        filter: (
+          data,
+        ): data is { attendableId: string; companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
+          typeof data.attendableId === 'string' &&
           Obj.isObject(data.companionTo) &&
           (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === 'assistant-chat'),
         component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
