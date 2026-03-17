@@ -7,6 +7,8 @@ import * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
+import { Sequence } from './Sequence';
+
 // TODO(burdon): These should configurable.
 export const Soundtrack = Schema.Literal('fireplace', 'ocean', 'rain', 'stream');
 
@@ -27,6 +29,7 @@ export const Dream = Schema.Struct({
       description: 'Bundled soundtrack to play.',
     }),
   ),
+  sequences: Schema.optional(Schema.Array(Sequence)),
 }).pipe(
   Type.object({
     typename: 'dxos.org.type.Dream',
@@ -37,6 +40,6 @@ export const Dream = Schema.Struct({
 
 export interface Dream extends Schema.Schema.Type<typeof Dream> {}
 
-export const make = ({ name, duration = 30, soundtrack = 'rain' }: Partial<Schema.Schema.Type<typeof Dream>> = {}) => {
-  return Obj.make(Dream, { name, duration, soundtrack });
+export const make = ({ name, duration = 30, soundtrack = 'rain', sequences }: Partial<Schema.Schema.Type<typeof Dream>> = {}) => {
+  return Obj.make(Dream, { name, duration, soundtrack, sequences });
 };
