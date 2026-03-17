@@ -85,7 +85,7 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
       debug={debug}
       dragHandleRef={dragHandleRef}
     >
-      <Board.Column.Header label={column.name ?? t('untitled view title')} dragHandleRef={dragHandleRef} />
+      <Board.Column.Header label={column.name || t('untitled view title')} dragHandleRef={dragHandleRef} />
       <Board.Column.Body data={column} Tile={Tile} />
     </Board.Column.Root>
   );
