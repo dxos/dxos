@@ -173,7 +173,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
 
 const ContextStack = ({ objects }: { objects: Obj.Unknown[] }) => {
   return (
-    <StackItem.Content toolbar>
+    <StackItem.Content toolbar classNames={panelClassNames}>
       <Toolbar.Root>
         <Toolbar.Text className='flex-1 text-center'>Chat Context Objects</Toolbar.Text>
       </Toolbar.Root>
