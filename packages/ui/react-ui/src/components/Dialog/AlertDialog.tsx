@@ -2,26 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import {
-  AlertDialogAction as AlertDialogActionPrimitive,
-  type AlertDialogActionProps as AlertDialogActionPrimitiveProps,
-  AlertDialogCancel as AlertDialogCancelPrimitive,
-  type AlertDialogCancelProps as AlertDialogCancelPrimitiveProps,
-  AlertDialogContent as AlertDialogContentPrimitive,
-  type AlertDialogContentProps as AlertDialogContentPrimitiveProps,
-  AlertDialogDescription as AlertDialogDescriptionPrimitive,
-  type AlertDialogDescriptionProps as AlertDialogDescriptionPrimitiveProps,
-  AlertDialogOverlay as AlertDialogOverlayPrimitive,
-  type AlertDialogOverlayProps as AlertDialogOverlayPrimitiveProps,
-  AlertDialogPortal as AlertDialogPortalPrimitive,
-  type AlertDialogPortalProps as AlertDialogPortalPrimitiveProps,
-  Root as AlertDialogRootPrimitive,
-  type AlertDialogProps as AlertDialogRootPrimitiveProps,
-  AlertDialogTitle as AlertDialogTitlePrimitive,
-  type AlertDialogTitleProps as AlertDialogTitlePrimitiveProps,
-  AlertDialogTrigger as AlertDialogTriggerPrimitive,
-  type AlertDialogTriggerProps as AlertDialogTriggerPrimitiveProps,
-} from '@radix-ui/react-alert-dialog';
+import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type ForwardRefExoticComponent,
@@ -41,11 +22,11 @@ import { ElevationProvider } from '../ElevationProvider';
 // Root
 //
 
-type AlertDialogRootProps = AlertDialogRootPrimitiveProps;
+type AlertDialogRootProps = AlertDialogPrimitive.AlertDialogProps;
 
 const AlertDialogRoot: FunctionComponent<AlertDialogRootProps> = (props) => (
   <ElevationProvider elevation='dialog'>
-    <AlertDialogRootPrimitive {...props} />
+    <AlertDialogPrimitive.Root {...props} />
   </ElevationProvider>
 );
 
@@ -53,39 +34,39 @@ const AlertDialogRoot: FunctionComponent<AlertDialogRootProps> = (props) => (
 // Trigger
 //
 
-type AlertDialogTriggerProps = AlertDialogTriggerPrimitiveProps;
+type AlertDialogTriggerProps = AlertDialogPrimitive.AlertDialogTriggerProps;
 
-const AlertDialogTrigger: FunctionComponent<AlertDialogTriggerProps> = AlertDialogTriggerPrimitive;
+const AlertDialogTrigger: FunctionComponent<AlertDialogTriggerProps> = AlertDialogPrimitive.Trigger;
 
 //
 // Portal
 //
 
-type AlertDialogPortalProps = AlertDialogPortalPrimitiveProps;
+type AlertDialogPortalProps = AlertDialogPrimitive.AlertDialogPortalProps;
 
-const AlertDialogPortal: FunctionComponent<AlertDialogPortalProps> = AlertDialogPortalPrimitive;
+const AlertDialogPortal: FunctionComponent<AlertDialogPortalProps> = AlertDialogPrimitive.Portal;
 
 //
 // Cancel
 //
 
-type AlertDialogCancelProps = AlertDialogCancelPrimitiveProps;
+type AlertDialogCancelProps = AlertDialogPrimitive.AlertDialogCancelProps;
 
-const AlertDialogCancel: FunctionComponent<AlertDialogCancelProps> = AlertDialogCancelPrimitive;
+const AlertDialogCancel: FunctionComponent<AlertDialogCancelProps> = AlertDialogPrimitive.Cancel;
 
 //
 // Action
 //
 
-type AlertDialogActionProps = AlertDialogActionPrimitiveProps;
+type AlertDialogActionProps = AlertDialogPrimitive.AlertDialogActionProps;
 
-const AlertDialogAction: FunctionComponent<AlertDialogActionProps> = AlertDialogActionPrimitive;
+const AlertDialogAction: FunctionComponent<AlertDialogActionProps> = AlertDialogPrimitive.Action;
 
 //
 // Title
 //
 
-type AlertDialogTitleProps = ThemedClassName<AlertDialogTitlePrimitiveProps> & { srOnly?: boolean };
+type AlertDialogTitleProps = ThemedClassName<AlertDialogPrimitive.AlertDialogTitleProps> & { srOnly?: boolean };
 
 const AlertDialogTitle: ForwardRefExoticComponent<AlertDialogTitleProps> = forwardRef<
   HTMLHeadingElement,
@@ -93,7 +74,7 @@ const AlertDialogTitle: ForwardRefExoticComponent<AlertDialogTitleProps> = forwa
 >(({ classNames, srOnly, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <AlertDialogTitlePrimitive {...props} className={tx('dialog.title', { srOnly }, classNames)} ref={forwardedRef} />
+    <AlertDialogPrimitive.Title {...props} className={tx('dialog.title', { srOnly }, classNames)} ref={forwardedRef} />
   );
 });
 
@@ -101,7 +82,9 @@ const AlertDialogTitle: ForwardRefExoticComponent<AlertDialogTitleProps> = forwa
 // Description
 //
 
-type AlertDialogDescriptionProps = ThemedClassName<AlertDialogDescriptionPrimitiveProps> & { srOnly?: boolean };
+type AlertDialogDescriptionProps = ThemedClassName<AlertDialogPrimitive.AlertDialogDescriptionProps> & {
+  srOnly?: boolean;
+};
 
 const AlertDialogDescription: ForwardRefExoticComponent<AlertDialogTitleProps> = forwardRef<
   HTMLParagraphElement,
@@ -109,7 +92,7 @@ const AlertDialogDescription: ForwardRefExoticComponent<AlertDialogTitleProps> =
 >(({ classNames, srOnly, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <AlertDialogDescriptionPrimitive
+    <AlertDialogPrimitive.Description
       {...props}
       className={tx('dialog.description', { srOnly }, classNames)}
       ref={forwardedRef}
@@ -139,7 +122,7 @@ const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLa
 // Overlay
 //
 
-type AlertDialogOverlayProps = ThemedClassName<AlertDialogOverlayPrimitiveProps> & {
+type AlertDialogOverlayProps = ThemedClassName<AlertDialogPrimitive.AlertDialogOverlayProps> & {
   blockAlign?: 'center' | 'start' | 'end';
 };
 
@@ -149,7 +132,7 @@ const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = f
 >(({ classNames, children, blockAlign, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <AlertDialogOverlayPrimitive
+    <AlertDialogPrimitive.Overlay
       {...props}
       data-block-align={blockAlign}
       className={tx(
@@ -164,7 +147,7 @@ const AlertDialogOverlay: ForwardRefExoticComponent<AlertDialogOverlayProps> = f
       ref={forwardedRef}
     >
       <OverlayLayoutProvider inOverlayLayout>{children}</OverlayLayoutProvider>
-    </AlertDialogOverlayPrimitive>
+    </AlertDialogPrimitive.Overlay>
   );
 });
 
@@ -174,7 +157,7 @@ AlertDialogOverlay.displayName = ALERT_DIALOG_OVERLAY_NAME;
 // Content
 //
 
-type AlertDialogContentProps = ThemedClassName<AlertDialogContentPrimitiveProps> & { size?: DialogSize };
+type AlertDialogContentProps = ThemedClassName<AlertDialogPrimitive.AlertDialogContentProps> & { size?: DialogSize };
 
 const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = forwardRef<
   HTMLDivElement,
@@ -183,13 +166,13 @@ const AlertDialogContent: ForwardRefExoticComponent<AlertDialogContentProps> = f
   const { tx } = useThemeContext();
   const { inOverlayLayout } = useOverlayLayoutContext(ALERT_DIALOG_CONTENT_NAME);
   return (
-    <AlertDialogContentPrimitive
+    <AlertDialogPrimitive.Content
       {...props}
       className={tx('dialog.content', { inOverlayLayout, size }, classNames)}
       ref={forwardedRef}
     >
       <Column.Root>{children}</Column.Root>
-    </AlertDialogContentPrimitive>
+    </AlertDialogPrimitive.Content>
   );
 });
 

@@ -2,19 +2,19 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Toggle as TogglePrimitive, type ToggleProps as TogglePrimitiveProps } from '@radix-ui/react-toggle';
+import * as TogglePrimitive from '@radix-ui/react-toggle';
 import React, { forwardRef } from 'react';
 
 import { Button, type ButtonProps } from './Button';
 
-type ToggleProps = Omit<TogglePrimitiveProps, 'asChild'> & ButtonProps;
+type ToggleProps = Omit<TogglePrimitive.ToggleProps, 'asChild'> & ButtonProps;
 
 const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
   ({ defaultPressed, pressed, onPressedChange, ...props }, forwardedRef) => {
     return (
-      <TogglePrimitive {...{ defaultPressed, pressed, onPressedChange }} asChild>
+      <TogglePrimitive.Root {...{ defaultPressed, pressed, onPressedChange }} asChild>
         <Button {...props} ref={forwardedRef} />
-      </TogglePrimitive>
+      </TogglePrimitive.Root>
     );
   },
 );

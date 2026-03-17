@@ -111,71 +111,75 @@ ISSUE: Prevent spreading other props (e.g., `extensions` in MarkdownToolbar)
 
 Problem: some components are not propagating props to spread on their root DOM element when used as a slot child.
 
-- [x] Create column-formatted markdown tables with an entry for each react-ui-xxx package listing only compound (radix-style) components.
-- [x] For each compound component, determine if the Root component is: headless (i.e., doesn't implement a DOM node), implements ComposableProps, implements SlottableProps.
+- [ ] Create column-formatted markdown tables with an entry for each react-ui-xxx package listing only compound (radix-style) components.
+- [ ] For each compound component, determine if the Root component is:
+  - headless (i.e., doesn't implement a DOM node)
+  - implements SlottableProps
+  - implements ComposableProps
+  - if ComposableProps correctly spreads ...props on the first child element
 
 ##### react-ui (core)
 
-Components:
+Composite Components:
 
-| Component  | Root Headless | ComposableProps | SlottableProps | Notes                                                         |
-| ---------- | ------------- | --------------- | -------------- | ------------------------------------------------------------- |
-| Avatars    | Yes           | No              | No             | Root is context-only.                                         |
-| Breadcrumb | No            | No              | No             | Root renders div/ol/li. Has asChild via ThemedClassName.      |
-| Card       | No            | No              | Yes            | Root, Title, Content, Row, Section, Heading, Text.            |
-| Dialog     | Yes           | No              | No             | Root is headless context wrapper. Content/Overlay render DOM. |
-| Input      | No            | No              | No             | Root delegates to InputRoot (@dxos/react-input).              |
-| List       | No            | No              | No             | Root wraps ListPrimitive with DensityProvider.                |
-| Main       | Yes           | No              | No             | Root is context-only.                                         |
-| Menu       | Yes           | No              | No             | DropdownMenu/ContextMenu Roots are headless.                  |
-| Message    | No            | No              | No             | Root uses ThemedClassName, not SlottableProps.                 |
-| Popover    | Yes           | No              | No             | Root is headless (wraps PopperPrimitive.Root).                |
-| ScrollArea | No            | No              | Yes            | Root uses SlottableProps.                                     |
-| Select     | Yes           | No              | No             | Root delegates to SelectPrimitive.Root (headless).            |
-| Splitter   | No            | No              | Yes            | Root and Panel use SlottableProps.                            |
-| Toast      | No            | No              | No             | Root uses ThemedClassName.                                    |
-| Toolbar    | No            | No              | Partial        | Root uses ThemedClassName. Text sub-part uses SlottableProps. |
-| Tooltip    | Yes           | No              | No             | TooltipProvider is context-only.                              |
+| Component  | Root Headless | ComposableProps | SlottableProps | Notes                                                                               |
+| ---------- | ------------- | --------------- | -------------- | ----------------------------------------------------------------------------------- |
+| Avatars    | Yes           | No              | No             | Root is context-only (AvatarProvider).                                              |
+| Breadcrumb | No            | No              | No             | Root renders Primitive.div with role='navigation'. Has asChild via ThemedClassName. |
+| Card       | No            | No              | Yes            | Root uses SlottableProps + composableProps(). Renders Slot/Primitive.div.           |
+| Dialog     | Yes           | No              | No             | Root wraps ElevationProvider + DialogRootPrimitive (both context-only).             |
+| Input      | Yes           | No              | No             | Root delegates to InputRoot (@dxos/react-input), context-only.                      |
+| List       | No            | No              | No             | Root wraps ListPrimitive with DensityProvider.                                      |
+| Main       | Yes           | No              | No             | Root is context-only (MainProvider).                                                |
+| Menu       | No            | No              | No             | DropdownMenu/ContextMenu are themed wrappers. Content/Items apply tx() classNames.  |
+| Message    | No            | No              | No             | Root renders MessageProvider + Primitive.div. Uses ThemedClassName.                 |
+| Popover    | Yes           | No              | No             | Root wraps PopoverProvider + PopperPrimitive.Root (both context-only).              |
+| ScrollArea | No            | No              | Yes            | Root renders ScrollAreaProvider + Primitive.div. Uses SlottableProps.               |
+| Select     | Yes           | No              | No             | Root delegates to SelectPrimitive.Root (headless).                                  |
+| Splitter   | No            | No              | Yes            | Root renders SplitterProvider + Primitive.div. Root and Panel use SlottableProps.   |
+| Toast      | No            | No              | No             | Root wraps ToastRootPrimitive + ElevationProvider. Uses ThemedClassName.            |
+| Toolbar    | No            | No              | Partial        | Root renders ToolbarPrimitive.Root. Text sub-part uses SlottableProps.              |
+| Tooltip    | Yes           | No              | No             | Provider wraps PopperPrimitive.Root + TooltipContextProvider (both context-only).   |
 
 Primitives:
 
-| Primitive | Root Headless | ComposableProps | SlottableProps | Notes                                                     |
-| --------- | ------------- | --------------- | -------------- | --------------------------------------------------------- |
+| Primitive | Root Headless | ComposableProps | SlottableProps | Notes                                                      |
+| --------- | ------------- | --------------- | -------------- | ---------------------------------------------------------- |
 | Column    | No            | No              | Yes            | Root, Row, Segment all use SlottableProps.                 |
 | Container | No            | No              | Yes            | Uses SlottableProps (not compound, single export).         |
-| Flex      | No            | Yes             | No             | Uses ComposableProps (not compound, single export).        |
-| Grid      | No            | Yes             | No             | Uses ComposableProps (not compound, single export).        |
+| Flex      | No            | Yes             | No             | Uses ComposableProps. Renders plain div. Spreads ...props. |
+| Grid      | No            | Yes             | No             | Uses ComposableProps. Renders plain div. Spreads ...props. |
 | Panel     | No            | No              | Yes            | Root, Toolbar, Content, Statusbar all use SlottableProps.  |
 
 ##### react-ui-xxx extension packages
 
-| Package                | Component   | Root Headless | ComposableProps | SlottableProps | Notes                                                         |
-| ---------------------- | ----------- | ------------- | --------------- | -------------- | ------------------------------------------------------------- |
-| react-ui-board         | Board       | Yes           | No              | No             | Root is context-only.                                         |
-| react-ui-board         | Chain       | Yes           | No              | No             | Root wraps ReactFlow (headless wrapper).                      |
-| react-ui-calendar      | Calendar    | Yes           | No              | No             | Root is context-only.                                         |
-| react-ui-canvas-editor | Editor      | Yes           | No              | No             | Root is context-only (EditorContext.Provider).                |
-| react-ui-chat          | ChatDialog  | No            | No              | No             | Root wraps Dialog.Root.                                       |
-| react-ui-components    | TogglePanel | No            | No              | No             | Uses Slot directly for asChild.                               |
-| react-ui-editor        | Editor      | Yes           | No              | No             | Root is context-only (EditorContext.Provider).                |
-| react-ui-form          | Form        | Yes           | No              | No             | Root is context-only.                                         |
-| react-ui-form          | Settings    | No            | No              | No             | Root wraps ScrollArea.Root.                                   |
-| react-ui-gameboard     | Gameboard   | Yes           | No              | No             | Root is context-only.                                         |
-| react-ui-geo           | Globe       | No            | No              | No             | Root renders div + SVG canvas.                                |
-| react-ui-geo           | Map         | No            | No              | No             | Root wraps MapContainer (React-Leaflet).                      |
-| react-ui-grid          | Grid        | No            | No              | No             | Root renders div with GridProvider.                           |
-| react-ui-list          | Accordion   | No            | No              | No             | Root wraps AccordionPrimitive.Root.                           |
-| react-ui-list          | List        | Yes           | No              | No             | Root is headless.                                             |
-| react-ui-list          | Tree        | Yes           | No              | No             | Root is headless.                                             |
-| react-ui-masonry       | Masonry     | No            | No              | No             | Root renders div (masonic virtualization).                    |
-| react-ui-menu          | Menu        | Yes           | No              | No             | Root wraps NaturalDropdownMenu.Root (headless). Props not forwarded. |
-| react-ui-mosaic        | Mosaic      | No            | No              | No             | Root renders Slot/Primitive.div. Sub-parts use ComposableProps. |
-| react-ui-mosaic        | Board       | Yes           | No              | No             | Root is context-only.                                         |
-| react-ui-searchlist    | SearchList  | Yes           | No              | No             | Root is context-only.                                         |
-| react-ui-searchlist    | Listbox     | Yes           | No              | No             | Root is context-only.                                         |
-| react-ui-searchlist    | Combobox    | Yes           | No              | No             | Root is context-only.                                         |
-| react-ui-stack         | StackItem   | No            | No              | No             | Root renders div.                                             |
-| react-ui-table         | Table       | Yes           | No              | No             | Root is headless. Main sub-part uses ComposableProps.         |
-| react-ui-tabs          | Tabs        | No            | No              | No             | Root wraps Radix TabsPrimitive.Root.                          |
-| react-ui-thread        | Thread      | No            | No              | No             | Root renders div with grid layout.                            |
-| react-ui-thread        | Message     | No            | No              | No             | Root renders Avatar.Root wrapper.                             |
+| Package                | Component   | Root Headless | ComposableProps | SlottableProps | Notes                                                                          |
+| ---------------------- | ----------- | ------------- | --------------- | -------------- | ------------------------------------------------------------------------------ |
+| react-ui-board         | Board       | Yes           | No              | No             | Root is context-only (BoardContextProvider).                                   |
+| react-ui-board         | Chain       | No            | No              | No             | Root renders ReactFlow DOM directly.                                           |
+| react-ui-calendar      | Calendar    | Yes           | No              | No             | Root is context-only (CalendarContextProvider).                                |
+| react-ui-canvas-editor | Editor      | No            | No              | No             | Root renders EditorContext.Provider wrapping a div.                            |
+| react-ui-chat          | ChatDialog  | No            | No              | No             | Root wraps ChatDialogContextProvider + Dialog.Root with nested DOM.            |
+| react-ui-components    | TogglePanel | No            | No              | No             | Uses Slot directly for asChild.                                                |
+| react-ui-editor        | Editor      | Yes           | No              | No             | Root renders EditorContextProvider + EditorMenuProvider (both context-only).   |
+| react-ui-form          | Form        | Yes           | No              | No             | Root is context-only (FormContextProvider).                                    |
+| react-ui-form          | Settings    | No            | No              | No             | Root wraps ScrollArea.Root with nested DOM structure.                          |
+| react-ui-gameboard     | Gameboard   | Yes           | No              | No             | Root is context-only (GameboardContextProvider).                               |
+| react-ui-geo           | Globe       | No            | No              | No             | Root renders div + GlobeContextProvider + SVG canvas.                          |
+| react-ui-geo           | Map         | No            | No              | No             | Root wraps MapContextProvider + MapContainer (React-Leaflet DOM).              |
+| react-ui-grid          | Grid        | No            | No              | No             | Root renders GridProvider + div with display:contents.                         |
+| react-ui-list          | Accordion   | No            | No              | No             | Root wraps AccordionProvider + AccordionPrimitive.Root (renders div).          |
+| react-ui-list          | List        | Yes           | No              | No             | Root is context-only (ListProvider).                                           |
+| react-ui-list          | Tree        | No            | No              | No             | Root renders Treegrid.Root (DOM) wrapping TreeProvider.                        |
+| react-ui-masonry       | Masonry     | No            | No              | No             | Root renders div (masonic virtualization).                                     |
+| react-ui-menu          | Menu        | No            | No              | No             | Root wraps MenuProvider + NaturalDropdownMenu.Root. Props not fully forwarded. |
+| react-ui-mosaic        | Mosaic      | No            | No              | No             | Root renders Slot/Primitive.div. Sub-parts use ComposableProps.                |
+| react-ui-mosaic        | Board       | Yes           | No              | No             | Root is context-only (BoardContextProvider).                                   |
+| react-ui-searchlist    | SearchList  | Yes           | No              | No             | Root is context-only (dual SearchList context providers).                      |
+| react-ui-searchlist    | Listbox     | No            | No              | No             | Root renders ListboxProvider + ul with role="listbox".                         |
+| react-ui-searchlist    | Combobox    | Yes           | No              | No             | Root wraps Popover.Root (headless) + ComboboxProvider.                         |
+| react-ui-stack         | StackItem   | No            | No              | No             | Root renders StackItemContext.Provider + div/article/section.                  |
+| react-ui-table         | Table       | Yes           | No              | No             | Root renders only Fragment. Main sub-part uses ComposableProps.                |
+| react-ui-tabs          | Tabs        | No            | No              | No             | Root wraps TabsContextProvider + TabsPrimitive.Root (renders div).             |
+| react-ui-thread        | Thread      | No            | No              | No             | Root renders div with role="group" and grid layout.                            |
+| react-ui-thread        | Message     | No            | No              | No             | Root renders Avatar.Root wrapping a div.                                       |
