@@ -14,7 +14,7 @@ export const Dream = Schema.Struct({
   duration: Schema.optional(
     Schema.Number.annotations({
       description: 'Playback duration in seconds.',
-      default: 18_000,
+      default: 300,
     }),
   ),
   sequences: Schema.optional(Schema.Array(Sequence)),
@@ -28,6 +28,6 @@ export const Dream = Schema.Struct({
 
 export interface Dream extends Schema.Schema.Type<typeof Dream> {}
 
-export const make = ({ name, duration = 1800, sequences }: Partial<Schema.Schema.Type<typeof Dream>> = {}) => {
+export const make = ({ name, duration, sequences }: Partial<Schema.Schema.Type<typeof Dream>> = {}) => {
   return Obj.make(Dream, { name, duration, sequences });
 };
