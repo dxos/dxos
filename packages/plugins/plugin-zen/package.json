@@ -54,6 +54,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",

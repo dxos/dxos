@@ -2,14 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
+import { useCountdown } from '../../hooks';
+
 import { MixerEngine } from '../../generator';
-import { Sequence } from '../../types';
+import { Dream, Sequence } from '../../types';
 
 import { Sequencer } from '../Sequencer';
 
@@ -18,14 +21,18 @@ import { Sequencer } from '../Sequencer';
 //
 
 export type MixerProps = ThemedClassName<{
+  dream: Dream.Dream;
   engine: MixerEngine;
 }>;
 
 /** Multi-layer audio mixer with sequencer layers. */
-export const Mixer = ({ classNames, engine }: MixerProps) => {
+export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   const [playing, setPlaying] = useState(false);
-  const [layers, setLayers] = useState<Sequence.Sequence[]>([Sequence.makeSampleSequence('rain')]);
+  const layers = dream.sequences ?? [];
   const [selected, setSelected] = useState<string | undefined>();
+  const durationSeconds = dream.duration ?? 0;
+  const timed = durationSeconds > 0;
+  const { remaining, formattedTime, start: startCountdown, stop: stopCountdown } = useCountdown(durationSeconds);
 
   // Keep last selected layer visible during close animation.
   const selectedLayer = useMemo(() => layers.find((layer) => layer.id === selected), [layers, selected]);
@@ -34,6 +41,26 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
     lastSelectedLayer.current = selectedLayer;
   }
   const displayedLayer = selectedLayer ?? lastSelectedLayer.current;
+
+  const FADE_OUT_SECONDS = 10;
+  const fadingRef = useRef(false);
+
+  // Begin fade-out when approaching end; auto-stop at zero.
+  useEffect(() => {
+    if (!playing || !timed) {
+      return;
+    }
+    if (remaining <= FADE_OUT_SECONDS && remaining > 0 && !fadingRef.current) {
+      fadingRef.current = true;
+      engine.fadeOut(remaining);
+    }
+    if (remaining === 0) {
+      fadingRef.current = false;
+      void engine.stop();
+      setPlaying(false);
+      stopCountdown();
+    }
+  }, [playing, timed, remaining, engine, stopCountdown]);
 
   // Cleanup on unmount.
   useEffect(() => {
@@ -44,24 +71,35 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
 
   const handlePlay = useCallback(async () => {
     if (playing) {
+      fadingRef.current = false;
       await engine.stop();
       setPlaying(false);
+      if (timed) {
+        stopCountdown();
+      }
     } else {
-      await engine.play(layers);
+      fadingRef.current = false;
+      await engine.play([...layers]);
       setPlaying(true);
+      if (timed) {
+        startCountdown();
+      }
     }
-  }, [playing, layers, engine]);
+  }, [playing, timed, layers, engine, startCountdown, stopCountdown]);
 
   const handleStop = useCallback(async () => {
     await engine.stop();
     setPlaying(false);
-  }, [engine]);
+    stopCountdown();
+  }, [engine, stopCountdown]);
 
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
-    setLayers((prev) => [...prev, sequence]);
+    Obj.change(dream, (d) => {
+      d.sequences = [...(d.sequences ?? []), sequence];
+    });
     setSelected(sequence.id);
-  }, []);
+  }, [dream]);
 
   const handleSelect = useCallback((id: string) => {
     setSelected((prev) => (prev === id ? undefined : id));
@@ -69,7 +107,9 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
 
   const handleDelete = useCallback(
     (id: string) => {
-      setLayers((prev) => prev.filter((layer) => layer.id !== id));
+      Obj.change(dream, (d) => {
+        d.sequences = (d.sequences ?? []).filter((layer) => layer.id !== id);
+      });
       if (selected === id) {
         setSelected(undefined);
       }
@@ -77,27 +117,32 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
         void engine.removeLayer(id);
       }
     },
-    [selected, playing, engine],
+    [dream, selected, playing, engine],
   );
 
   const handleChange = useCallback(
     (updated: Sequence.Sequence) => {
-      setLayers((prev) => prev.map((layer) => (layer.id === updated.id ? updated : layer)));
+      Obj.change(dream, (d) => {
+        d.sequences = (d.sequences ?? []).map((layer) => (layer.id === updated.id ? updated : layer));
+      });
       if (playing) {
         void engine.updateLayer(updated);
       }
     },
-    [playing, engine],
+    [dream, playing, engine],
   );
 
-  const handleMove = useCallback((fromIndex: number, toIndex: number) => {
-    setLayers((prev) => {
-      const next = [...prev];
-      const [moved] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, moved);
-      return next;
-    });
-  }, []);
+  const handleMove = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      Obj.change(dream, (d) => {
+        const next = [...(d.sequences ?? [])];
+        const [moved] = next.splice(fromIndex, 1);
+        next.splice(toIndex, 0, moved);
+        d.sequences = next;
+      });
+    },
+    [dream],
+  );
 
   const isSequence = useCallback((item: unknown): item is Sequence.Sequence => {
     return typeof item === 'object' && item !== null && 'id' in item && 'source' in item;
@@ -111,6 +156,9 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
             <Toolbar.Root>
               <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
               <Toolbar.Separator />
+              {playing && timed && (
+                <span className='font-mono text-sm tabular-nums text-description px-1'>{formattedTime}</span>
+              )}
               <Toolbar.IconButton
                 icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
