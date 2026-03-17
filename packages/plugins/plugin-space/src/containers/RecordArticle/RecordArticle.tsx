@@ -2,15 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { type SurfaceComponentProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { Annotation, type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Card as MosaicCard } from '@dxos/react-ui';
+import { Card, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { Menu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
@@ -19,7 +21,6 @@ import { meta } from '../../meta';
 export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(subject);
-  const data = useMemo(() => ({ subject }), [subject]);
   const related = useRelatedObjects(db, subject, {
     references: true,
     relations: true,
@@ -31,16 +32,14 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 gap-4'>
-            <div role='none' className='flex w-full dx-card-max-width'>
-              <Surface.Surface role='section' data={data} limit={1} />
-            </div>
+            <ObjectCard data={subject} classNames='dx-card-max-width' />
 
             {related.length > 0 && (
               <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'dx-card-max-width' : 'w-full')}>
                 <label className='mt-2 text-sm text-description'>{t('related objects label')}</label>
                 <Masonry.Root<Entity.Unknown>
                   items={related}
-                  render={Card}
+                  render={ObjectCard}
                   columnCount={singleColumn ? 1 : undefined}
                   intrinsicHeight
                 />
@@ -53,16 +52,33 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
   );
 };
 
-const Card = ({ data: subject }: { data: Entity.Unknown }) => {
+const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; classNames?: string }) => {
+  const objectMenuItems = useObjectMenuItems(subject);
   const data = useMemo(() => ({ subject }), [subject]);
+  const icon = Function.pipe(
+    Obj.getSchema(subject),
+    Option.fromNullable,
+    Option.flatMap(Annotation.IconAnnotation.get),
+    Option.map(({ icon }) => icon),
+    Option.getOrElse(() => 'ph--placeholder--regular'),
+  );
+
   return (
-    <MosaicCard.Root>
-      <MosaicCard.Toolbar>
-        <span />
-        <MosaicCard.Title>{Entity.getLabel(subject)}</MosaicCard.Title>
-      </MosaicCard.Toolbar>
-      <Surface.Surface role='card--content' data={data} limit={1} />
-    </MosaicCard.Root>
+    <Menu.Root>
+      <Card.Root classNames={classNames}>
+        <Card.Toolbar>
+          <Card.Icon icon={icon} />
+          <Card.Title>{Entity.getLabel(subject)}</Card.Title>
+          <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+          </Menu.Trigger>
+          <Menu.Content items={objectMenuItems} />
+        </Card.Toolbar>
+        <Card.Content>
+          <Surface.Surface role='card--content' data={data} limit={1} />
+        </Card.Content>
+      </Card.Root>
+    </Menu.Root>
   );
 };
 
@@ -119,6 +135,6 @@ const useRelatedObjects = (
       related.push(...targetObjects, ...sourceObjects);
     }
 
-    return related;
+    return Array.from(new Set(related));
   }, [record, objects]);
 };

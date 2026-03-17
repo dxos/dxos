@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
 import React, { useCallback, useState } from 'react';
@@ -12,10 +12,10 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '../../meta';
-import { InboxOperation, type Mailbox } from '../../types';
+import { InboxOperation, type Calendar } from '../../types';
 
-export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
-  const db = Obj.getDatabase(mailbox);
+export const CalendarEmpty = ({ calendar }: { calendar: Calendar.Calendar }) => {
+  const db = Obj.getDatabase(calendar);
   const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
@@ -34,14 +34,14 @@ export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
   const handleSync = useCallback(async () => {
     setSyncing(true);
     try {
-      await invokePromise(InboxOperation.SyncMailbox, { mailbox });
+      await invokePromise(InboxOperation.SyncCalendar, { calendar });
     } finally {
       setSyncing(false);
     }
-  }, [invokePromise, mailbox]);
+  }, [invokePromise, calendar]);
 
-  const gmailToken = tokens.find((token) => token.source.includes('google'));
-  if (!gmailToken) {
+  const googleToken = tokens.find((token) => token.source.includes('google'));
+  if (!googleToken) {
     const authSurfaceData = { source: 'google.com' };
     const hasAuthSurface = Surface.isAvailable(pluginManager.capabilities, {
       role: 'integration--auth',
@@ -67,9 +67,9 @@ export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
 
   return (
     <div className='flex flex-col items-center gap-4 p-8'>
-      <p className='text-description'>{t('empty mailbox message')}</p>
+      <p className='text-description'>{t('empty calendar message')}</p>
       <Button onClick={handleSync} disabled={syncing}>
-        {t('sync mailbox label')}
+        {t('sync calendar label')}
       </Button>
     </div>
   );

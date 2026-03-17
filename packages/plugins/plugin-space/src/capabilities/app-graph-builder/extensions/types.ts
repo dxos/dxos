@@ -88,12 +88,13 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
-        // TODO(wittjosiah): Make schema queries reactive to simplify this.
         // Reactive subscription to database schema objects so the connector re-runs on schema changes.
         get(AtomQuery.make(space.db, Filter.type(Type.PersistentType)));
         // Reactive subscription to client/plugin-contributed schemas so the connector re-runs when new schemas or static schemas are added.
-        get(capabilities.atom(AppCapabilities.Schema));
-        const allSchemas = space.db.schemaRegistry.query({ location: ['runtime', 'database'] }).runSync();
+        const staticSchemas = get(capabilities.atom(AppCapabilities.Schema)).flat();
+        // TODO(wittjosiah): Schema registry needs to support reactive queries as well as changes to static schemas.
+        const databaseSchemas = space.db.schemaRegistry.query({ location: ['database'] }).runSync();
+        const allSchemas = [...staticSchemas, ...databaseSchemas];
 
         const userSchemas = allSchemas.filter((schema) => {
           if (getTypeAnnotation(schema)?.kind === EntityKind.Relation) {

@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
+import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -70,14 +70,13 @@ export const MasonryContainer = ({
 
 const Item = ({ data }: { data: any }) => {
   const objectMenuItems = useObjectMenuItems(data);
-  const handleNavigate = useObjectNavigate(data);
 
   return (
     <Menu.Root>
       <Card.Root>
         <Card.Toolbar>
           <span />
-          <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
+          <Card.Title>{Obj.getLabel(data)}</Card.Title>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
             <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
