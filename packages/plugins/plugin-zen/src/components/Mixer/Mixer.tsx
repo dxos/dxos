@@ -26,7 +26,7 @@ export type MixerProps = ThemedClassName<{
 /** Multi-layer audio mixer with sequencer layers. */
 export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   const [playing, setPlaying] = useState(false);
-  const layers: Sequence.Sequence[] = (dream.sequences ?? []) as Sequence.Sequence[];
+  const layers = dream.sequences ?? [];
   const [selected, setSelected] = useState<string | undefined>();
 
   // Keep last selected layer visible during close animation.
@@ -49,7 +49,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
       await engine.stop();
       setPlaying(false);
     } else {
-      await engine.play(layers);
+      await engine.play([...layers]);
       setPlaying(true);
     }
   }, [playing, layers, engine]);

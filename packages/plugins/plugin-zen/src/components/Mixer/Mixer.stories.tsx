@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
+import { useSpaces } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Oscilloscope } from '@dxos/react-ui-sfx';
 
@@ -15,7 +17,26 @@ import { Mixer } from './Mixer';
 
 const DefaultStory = () => {
   const { engine, playing, outputNode } = useMixerEngine();
-  const dream = useMemo(() => Dream.make({ sequences: [Sequence.makeSampleSequence('rain')] }), []);
+  const spaces = useSpaces();
+  const space = spaces[0];
+  const [dream, setDream] = React.useState<Dream.Dream | undefined>();
+
+  React.useEffect(() => {
+    if (space && !dream) {
+      setDream(
+        space.db.add(
+          Dream.make({
+            name: 'Test Dream',
+            sequences: [Sequence.makeSampleSequence('rain')],
+          }),
+        ),
+      );
+    }
+  }, [space, dream]);
+
+  if (!dream) {
+    return <></>;
+  }
 
   return (
     <div className='dx-container grid grid-cols-[1fr_1fr] gap-8 px-8'>
@@ -30,7 +51,11 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-zen/components/Mixer',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [
+    withClientProvider({ createIdentity: true, createSpace: true, types: [Dream.Dream] }),
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+  ],
   parameters: {
     layout: 'fullscreen',
   },
