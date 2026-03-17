@@ -223,7 +223,7 @@ export class EchoHost extends Resource {
 
     // Timeout needs to be outside effect runtime to catch the layer hanging on startup.
     await asyncTimeout(
-      () => RuntimeProvider.runPromise(this._runtime)(testSqlite()),
+      RuntimeProvider.runPromise(this._runtime)(testSqlite()),
       15_000,
       new Error('SQLite quick check timed out'),
     );
