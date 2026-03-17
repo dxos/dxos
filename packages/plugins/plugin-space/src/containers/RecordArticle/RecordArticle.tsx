@@ -27,7 +27,7 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
   const singleColumn = related.length === 1;
 
   return (
-    <Panel.Root role={role} className='dx-article'>
+    <Panel.Root role={role} className='dx-document'>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 gap-4'>

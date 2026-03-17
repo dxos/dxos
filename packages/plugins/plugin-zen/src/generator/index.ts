@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './binaural-generator';
+export * from './generator';
 export * from './mixer';
 export * from './player';
+export * from './sounds';

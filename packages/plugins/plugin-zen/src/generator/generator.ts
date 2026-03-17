@@ -33,15 +33,27 @@ export type BinauralConfig = Schema.Schema.Type<typeof BinauralConfigSchema>;
 
 /** Brainwave frequency ranges. */
 export const BRAINWAVE_PRESETS: Record<BrainwavePreset, { beatFrequency: number; label: string }> = {
-  delta: { beatFrequency: 2, label: 'Delta (deep sleep)' },
-  theta: { beatFrequency: 6, label: 'Theta (light sleep)' },
-  alpha: { beatFrequency: 10, label: 'Alpha (relaxation)' },
-  beta: { beatFrequency: 20, label: 'Beta (focus)' },
+  delta: {
+    beatFrequency: 2,
+    label: 'Delta (deep sleep)',
+  },
+  theta: {
+    beatFrequency: 6,
+    label: 'Theta (light sleep)',
+  },
+  alpha: {
+    beatFrequency: 10,
+    label: 'Alpha (relaxation)',
+  },
+  beta: {
+    beatFrequency: 20,
+    label: 'Beta (focus)',
+  },
 };
 
 export const DEFAULT_CONFIG: BinauralConfig = {
   preset: 'delta',
-  baseFrequency: 200,
+  baseFrequency: 100,
   beatFrequency: 2,
   volume: 0.3,
   noiseEnabled: false,

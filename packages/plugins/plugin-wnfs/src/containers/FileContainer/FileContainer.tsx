@@ -45,7 +45,7 @@ export const FileContainer = ({ role, subject: file }: FileContainerProps) => {
   }
 
   return (
-    <Panel.Root role={role} className='dx-article'>
+    <Panel.Root role={role} className='dx-document'>
       <Panel.Content asChild>
         <FilePreview type={file.type} url={blobUrl} />
       </Panel.Content>

@@ -51,7 +51,7 @@ const meta = {
   // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
   decorators: [
     withTheme(),
-    withLayout({ classNames: 'w-prose-max-width' }),
+    withLayout({ classNames: 'w-document-max-width' }),
     withPluginManager({
       plugins: [OperationPlugin(), RuntimePlugin(), ClientPlugin({})],
     }),

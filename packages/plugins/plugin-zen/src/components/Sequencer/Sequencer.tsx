@@ -9,26 +9,39 @@ import { composableProps } from '@dxos/ui-theme';
 import { Form, type FormFieldMap, SelectField, omitId } from '@dxos/react-ui-form';
 
 import { Sequence } from '../../types';
+import { SAMPLE_URLS } from '../../generator';
 
-const sourceTypeOptions = [
-  { label: 'Sample', value: 'sample' },
-  { label: 'Generator', value: 'generator' },
-];
-
-export type SequencePanelProps = ComposableProps<HTMLDivElement> & {
+export type SequencerProps = ComposableProps<HTMLDivElement> & {
   sequence: Sequence.Sequence;
   onUpdate: (sequence: Sequence.Sequence) => void;
 };
 
 /** Form editor for a single sequence layer. */
-export const SequencePanel = forwardRef<HTMLDivElement, SequencePanelProps>(
+export const Sequencer = forwardRef<HTMLDivElement, SequencerProps>(
   ({ sequence, onUpdate, ...props }, forwardedRef) => {
     const schema = useMemo(() => omitId(Sequence.Sequence), []);
 
     // Custom field map to render the source.type discriminator as a select.
     const fieldMap = useMemo<FormFieldMap>(
       () => ({
-        'source.type': (fieldProps) => <SelectField {...fieldProps} options={sourceTypeOptions} />,
+        'source.type': (fieldProps) => (
+          <SelectField
+            {...fieldProps}
+            options={[
+              { label: 'Sample', value: 'sample' },
+              { label: 'Generator', value: 'generator' },
+            ]}
+          />
+        ),
+        'source.sample': (fieldProps) => (
+          <SelectField
+            {...fieldProps}
+            options={Object.keys(SAMPLE_URLS).map((key) => ({
+              label: key,
+              value: key,
+            }))}
+          />
+        ),
       }),
       [],
     );
@@ -42,6 +55,7 @@ export const SequencePanel = forwardRef<HTMLDivElement, SequencePanelProps>(
 
         const updated = { ...sequence, ...newValues };
 
+        // TODO(burdon): Update if generator preset changed.
         // Seed default source when discriminator changes.
         if (
           changedKeys.includes('source.type') &&
@@ -58,12 +72,12 @@ export const SequencePanel = forwardRef<HTMLDivElement, SequencePanelProps>(
 
     return (
       <div {...composableProps<HTMLDivElement>(props)} ref={forwardedRef}>
-        <Form.Root
+        <Form.Root<Omit<Sequence.Sequence, 'id'>>
           key={sequence.id}
           schema={schema}
-          defaultValues={sequence as any}
+          defaultValues={sequence}
           fieldMap={fieldMap}
-          onValuesChanged={handleValuesChanged as any}
+          onValuesChanged={handleValuesChanged}
         >
           <Form.Viewport>
             <Form.Content>

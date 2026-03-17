@@ -37,7 +37,7 @@ export const ChatModule = ({ space }: ComponentProps) => {
 
   return (
     <Chat.Root chat={chat} processor={processor}>
-      <Panel.Root className='dx-article'>
+      <Panel.Root className='dx-document'>
         <Panel.Toolbar asChild>
           <Chat.Toolbar />
         </Panel.Toolbar>

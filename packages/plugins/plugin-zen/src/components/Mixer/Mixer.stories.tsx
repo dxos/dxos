@@ -19,7 +19,7 @@ const DefaultStory = () => {
     <div className='dx-container grid grid-cols-[1fr_1fr] gap-8 px-8'>
       <Mixer engine={engine} />
       <div className='flex flex-col justify-center'>
-        <Oscilloscope classNames='h-[400px] border-green-500' active={playing} source={outputNode} />
+        <Oscilloscope classNames='h-[400px] border-green-500' mode='waveform' active={playing} source={outputNode} />
       </div>
     </div>
   );

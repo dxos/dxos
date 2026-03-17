@@ -26,5 +26,6 @@ export const useMixerEngine = (): UseMixerEngineResult => {
       }),
     [],
   );
+
   return { engine, playing, outputNode };
 };

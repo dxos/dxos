@@ -2,16 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ComposableProps, Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { MixerEngine } from '../../generator';
 import { Sequence } from '../../types';
 
-import { SequencePanel } from '../SequencePanel';
+import { Sequencer } from '../Sequencer';
 
 //
 // Mixer
@@ -128,14 +128,14 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
             >
               {({ items }) =>
                 items.map((layer) => (
-                  <List.Item key={layer.id} asChild item={layer} selected={layer.id === selected}>
-                    <LayerListItem
-                      sequence={layer}
-                      onLayerSelect={handleSelect}
-                      onLayerUpdate={handleChange}
-                      onLayerDelete={handleDelete}
-                    />
-                  </List.Item>
+                  <LayerListItem
+                    key={layer.id}
+                    item={layer}
+                    selected={layer.id === selected}
+                    onLayerSelect={handleSelect}
+                    onLayerUpdate={handleChange}
+                    onLayerDelete={handleDelete}
+                  />
                 ))
               }
             </List.Root>
@@ -144,7 +144,7 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
       </Splitter.Panel>
 
       <Splitter.Panel asChild position='lower'>
-        {displayedLayer && <SequencePanel sequence={displayedLayer} onUpdate={handleChange} />}
+        {displayedLayer && <Sequencer sequence={displayedLayer} onUpdate={handleChange} />}
       </Splitter.Panel>
     </Splitter.Root>
   );
@@ -154,49 +154,46 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
 // LayerListItem
 //
 
-type LayerListItemProps = ComposableProps<HTMLDivElement> & {
-  sequence: Sequence.Sequence;
+const sourceIcon: Record<string, string> = {
+  generator: 'ph--wave-sine--regular',
+  sample: 'ph--waveform--regular',
+};
+
+type LayerListItemProps = {
+  item: Sequence.Sequence;
+  selected: boolean;
   onLayerSelect: (id: string) => void;
   onLayerUpdate: (sequence: Sequence.Sequence) => void;
   onLayerDelete: (id: string) => void;
 };
 
-const sourceIcon: Record<string, string> = {
-  sample: 'ph--music-note--regular',
-  generator: 'ph--wave-sine--regular',
-};
-
 /** Single layer row in the mixer list. */
-const LayerListItem = forwardRef<HTMLDivElement, LayerListItemProps>(
-  ({ sequence, onLayerSelect, onLayerUpdate, onLayerDelete, ...props }, ref) => {
-    return (
-      <div
-        {...composableProps<HTMLDivElement>(props, {
-          className: 'grid grid-cols-[min-content_min-content_1fr_min-content_min-content] items-center min-h-10',
-          role: 'none',
-        })}
-        onClick={() => onLayerSelect(sequence.id)}
-        ref={ref}
-      >
-        <List.ItemDragHandle />
-        <Icon icon={sourceIcon[sequence.source.type] ?? 'ph--question--regular'} size={4} classNames='mx-1' />
-        <List.ItemTitle>{sequence.name ?? Sequence.getSourceLabel(sequence.source)}</List.ItemTitle>
-        <IconButton
-          icon={sequence.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
-          iconOnly
-          label={sequence.muted ? 'Unmute' : 'Mute'}
-          onClick={(event) => {
-            event.stopPropagation();
-            onLayerUpdate({ ...sequence, muted: !sequence.muted });
-          }}
-        />
-        <List.ItemDeleteButton
-          onClick={(event: React.MouseEvent) => {
-            event.stopPropagation();
-            onLayerDelete(sequence.id);
-          }}
-        />
-      </div>
-    );
-  },
-);
+const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDelete }: LayerListItemProps) => {
+  return (
+    <List.Item
+      item={item}
+      selected={selected}
+      classNames='grid grid-cols-[min-content_min-content_1fr_min-content_min-content] items-center'
+      onClick={() => onLayerSelect(item.id)}
+    >
+      <List.ItemDragHandle />
+      <Icon classNames='mr-2' size={4} icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
+      <List.ItemTitle>{item.name ?? Sequence.getSourceLabel(item.source)}</List.ItemTitle>
+      <IconButton
+        icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
+        iconOnly
+        label={item.muted ? 'Unmute' : 'Mute'}
+        onClick={(event) => {
+          event.stopPropagation();
+          onLayerUpdate({ ...item, muted: !item.muted });
+        }}
+      />
+      <List.ItemDeleteButton
+        onClick={(event: React.MouseEvent) => {
+          event.stopPropagation();
+          onLayerDelete(item.id);
+        }}
+      />
+    </List.Item>
+  );
+};

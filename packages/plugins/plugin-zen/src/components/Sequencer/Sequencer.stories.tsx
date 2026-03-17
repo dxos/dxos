@@ -9,20 +9,20 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Sequence } from '../../types';
 
-import { SequencePanel } from './SequencePanel';
+import { Sequencer } from './Sequencer';
 
 const SampleStory = () => {
   const [sequence, setSequence] = useState(Sequence.makeSampleSequence('rain'));
-  return <SequencePanel sequence={sequence} onUpdate={setSequence} />;
+  return <Sequencer sequence={sequence} onUpdate={setSequence} />;
 };
 
 const GeneratorStory = () => {
   const [sequence, setSequence] = useState(Sequence.makeGeneratorSequence());
-  return <SequencePanel sequence={sequence} onUpdate={setSequence} />;
+  return <Sequencer sequence={sequence} onUpdate={setSequence} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-zen/components/SequencePanel',
+  title: 'plugins/plugin-zen/components/Sequencer',
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',

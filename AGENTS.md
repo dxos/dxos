@@ -3,9 +3,9 @@
 ## IMPORTANT
 
 - When you start, the first thing you should do is tell the user if you understand these instructions and list the config files you are aware of.
-- ALWAYS test your work after each step.
 - If you are unsure about the best way to implement something, ask the user for clarification.
 - When asking the user a question; either make it yes/no, or provide numbered options.
+- ALWAYS test your work after each step.
 
 ## Dependencies
 
@@ -28,7 +28,7 @@
 
 - **IMPORTANT**: Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
 
-## DXOS
+## Knowledge
 
 - **IMPORTANT**: Follow DXOS-specific rules in `.agents/sdk/*`.
 - Update these documents when you learn better patterns; or when the user asks you to correct your implementation.
@@ -79,10 +79,10 @@ Examples:
   - Check `moon run :test` succeeds
   - Commit and push any pending changes
   - Monitor CI: `pnpm -w gh-action --verify --watch`
-  - Address all PR review comments (fix or explain why not) and post a reply to all comments
+  - **IMPORTANT**: Address all PR review comments (fix or explain why not) and post a reply to all comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
-  - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"
-  - After the CI succeeds, remove the local worktree and branch.
+  - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".
+  - After the PR is merged, remove the local worktree and branch.
 
 ## Cursor Cloud specific instructions
 

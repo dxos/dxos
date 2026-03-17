@@ -4,10 +4,10 @@
 
 import type { Sequence } from '../types/Sequence';
 
-import { BinauralGenerator } from './binaural-generator';
+import { BinauralGenerator } from './generator';
 import { SamplePlayer } from './player';
 
-type LayerSource = BinauralGenerator | SamplePlayer;
+export type LayerSource = BinauralGenerator | SamplePlayer;
 
 export type MixerState = {
   playing: boolean;

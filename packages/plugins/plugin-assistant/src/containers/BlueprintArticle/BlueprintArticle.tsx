@@ -17,7 +17,7 @@ export const BlueprintArticle = ({ role, attendableId, subject }: BlueprintArtic
   const { hasAttention } = useAttention(attendableId);
 
   return (
-    <Panel.Root role={role} classNames='dx-article'>
+    <Panel.Root role={role} classNames='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} />
       </Panel.Toolbar>

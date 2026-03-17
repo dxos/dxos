@@ -36,7 +36,7 @@ export default Capability.makeModule(() =>
           const db = Obj.getDatabase(data.companionTo);
           // TODO(wittjosiah): Filter the invocations to those relevant to the project.
           return (
-            <Panel.Root role={role} className='dx-article'>
+            <Panel.Root role={role} className='dx-document'>
               <Panel.Content asChild>
                 <InvocationTraceContainer db={db} detailAxis='block' />
               </Panel.Content>

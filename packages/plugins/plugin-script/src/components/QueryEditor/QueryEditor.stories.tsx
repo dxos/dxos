@@ -82,13 +82,7 @@ const meta = {
   title: 'plugins/plugin-script/components/QueryEditor',
   component: QueryEditor,
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({
-      layout: 'column',
-      classNames: 'w-prose-max-width',
-    }),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-document-max-width' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

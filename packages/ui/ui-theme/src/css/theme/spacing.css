@@ -6,8 +6,7 @@
   /** Minimum inset from the viewport edge for floating surfaces. */
   --spacing-screen-border: 1rem;
 
-  --spacing-article-max-width: 50rem;
-  --spacing-prose-max-width: 50rem;
+  --spacing-document-max-width: 50rem;
 
   --spacing-popover-min-width: 12rem;
 

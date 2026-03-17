@@ -189,7 +189,7 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
   );
 
   return (
-    <Panel.Root role={role} className='dx-article'>
+    <Panel.Root role={role} className='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} textBlockWidth>
           <DropdownMenu.Root>
