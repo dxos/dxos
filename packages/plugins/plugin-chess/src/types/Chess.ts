@@ -5,7 +5,7 @@
 import { Chess as ChessJS } from 'chess.js';
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 
@@ -35,6 +35,10 @@ export const Game = Schema.Struct({
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--shield-chevron--regular',
+    hue: 'amber',
+  }),
 );
 
 export interface Game extends Schema.Schema.Type<typeof Game> {}

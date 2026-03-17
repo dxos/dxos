@@ -26,7 +26,7 @@ export const Chat = Schema.Struct({
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--atom--regular',
-    hue: 'blue',
+    hue: 'sky',
   }),
 );
 

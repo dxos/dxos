@@ -86,11 +86,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
     }
   }, [playing, timed, layers, engine, startCountdown, stopCountdown]);
 
-  // const handleStop = useCallback(async () => {
-  //   await engine.stop();
-  //   setPlaying(false);
-  //   stopCountdown();
-  // }, [engine, stopCountdown]);
+
 
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
@@ -155,7 +151,9 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
             <Toolbar.Root>
               <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
               <Toolbar.Separator />
-              {playing && timed && <span className='tabular-nums text-description px-1'>{formattedTime}</span>}
+              {playing && timed && (
+                <span className='font-mono text-sm tabular-nums text-description px-1'>{formattedTime}</span>
+              )}
               <Toolbar.IconButton
                 icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly

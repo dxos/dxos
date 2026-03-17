@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { Format, GeneratorAnnotation, LabelAnnotation, PropertyMeta } from '@dxos/echo/internal';
 
 import * as Geo from './Geo';
@@ -115,6 +115,10 @@ export const Person = PersonSchema.pipe(
   }),
   Schema.annotations({ title: 'Person' }),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--user--regular',
+    hue: 'neutral',
+  }),
 );
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}

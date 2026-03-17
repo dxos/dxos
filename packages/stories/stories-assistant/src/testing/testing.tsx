@@ -156,7 +156,9 @@ const buildPluginManagerOptions = ({
           yield* Effect.promise(() => space.db.flush({ indexes: true }));
         }),
       // Directly importing the "@dxos/client/opfs-worker" didn't work.
-      createOpfsWorker: () => new Worker(new URL('./opfs-worker', import.meta.url), { type: 'module' }),
+      createOpfsWorker: props.config?.values.runtime?.client?.storage?.persistent
+        ? () => new Worker(new URL('./opfs-worker', import.meta.url), { type: 'module' })
+        : undefined,
       ...props,
     }),
 

@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { AppGraphBuilder, OperationResolver, ReactSurface } from './capabilities';
@@ -20,16 +22,16 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
       {
         id: Journal.Journal.typename,
         metadata: {
-          icon: 'ph--calendar-check--regular',
-          iconHue: 'indigo',
+          icon: Annotation.IconAnnotation.get(Journal.Journal).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Journal.Journal).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props) => Effect.sync(() => Journal.make(props))) satisfies CreateObject,
         },
       },
       {
         id: Outline.Outline.typename,
         metadata: {
-          icon: 'ph--tree-structure--regular',
-          iconHue: 'indigo',
+          icon: Annotation.IconAnnotation.get(Outline.Outline).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Outline.Outline).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props) => Effect.sync(() => Outline.make(props))) satisfies CreateObject,
         },
       },

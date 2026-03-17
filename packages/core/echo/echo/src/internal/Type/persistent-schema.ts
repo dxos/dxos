@@ -25,8 +25,8 @@ export const PersistentSchema = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
   IconAnnotation.set({
-    icon: 'ph--brackets-curly--regular',
-    hue: 'blue',
+    icon: 'ph--database--regular',
+    hue: 'green',
   }),
 );
 
