@@ -52,7 +52,7 @@ export const useAudioStream = (active?: boolean, options?: UseAudioStreamOptions
 
     const initAudio = async () => {
       try {
-            if (options?.source) {
+        if (options?.source) {
           // Use provided AudioNode source.
           audioContextRef.current = (options.source as any).context;
           analyserRef.current = audioContextRef.current!.createAnalyser();
