@@ -13,9 +13,12 @@ import { Operation, OperationResolver } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { SpaceOperation } from '@dxos/plugin-space/types';
+import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { CollectionModel } from '@dxos/schema';
 import { Message, Organization, Person } from '@dxos/types';
 
+import { CalendarFunctions, GmailFunctions } from '../../functions';
+import { meta } from '../../meta';
 import { Calendar, InboxOperation, Mailbox } from '../../types';
 import { buildDraftMessageProps } from '../../util';
 
@@ -175,6 +178,60 @@ export default Capability.makeModule(
             hidden: true,
           });
           yield* Operation.invoke(LayoutOperation.Open, { subject: [getObjectPathFromObject(draft)] });
+        }),
+      }),
+      OperationResolver.make({
+        operation: InboxOperation.SyncMailbox,
+        handler: Effect.fnUntraced(function* ({ mailbox }) {
+          const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
+          const db = Obj.getDatabase(mailbox);
+          invariant(db);
+          const runtime = computeRuntime.getRuntime(db.spaceId);
+          yield* Effect.tryPromise(() =>
+            runtime.runPromise(
+              invokeFunctionWithTracing(GmailFunctions.Sync, {
+                mailbox: Ref.make(mailbox),
+              }),
+            ),
+          ).pipe(
+            Effect.catchAll((error) => {
+              log.catch(error);
+              return Operation.invoke(LayoutOperation.AddToast, {
+                id: `${meta.id}/sync-mailbox-error`,
+                icon: 'ph--warning--regular',
+                duration: 5_000,
+                title: ['sync mailbox error title', { ns: meta.id }],
+                closeLabel: ['close label', { ns: meta.id }],
+              });
+            }),
+          );
+        }),
+      }),
+      OperationResolver.make({
+        operation: InboxOperation.SyncCalendar,
+        handler: Effect.fnUntraced(function* ({ calendar }) {
+          const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
+          const db = Obj.getDatabase(calendar);
+          invariant(db);
+          const runtime = computeRuntime.getRuntime(db.spaceId);
+          yield* Effect.tryPromise(() =>
+            runtime.runPromise(
+              invokeFunctionWithTracing(CalendarFunctions.Sync, {
+                calendar: Ref.make(calendar),
+              }),
+            ),
+          ).pipe(
+            Effect.catchAll((error) => {
+              log.catch(error);
+              return Operation.invoke(LayoutOperation.AddToast, {
+                id: `${meta.id}/sync-calendar-error`,
+                icon: 'ph--warning--regular',
+                duration: 5_000,
+                title: ['sync calendar error title', { ns: meta.id }],
+                closeLabel: ['close label', { ns: meta.id }],
+              });
+            }),
+          );
         }),
       }),
     ]);

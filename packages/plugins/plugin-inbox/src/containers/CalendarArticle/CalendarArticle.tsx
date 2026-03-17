@@ -15,7 +15,7 @@ import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
-import { EventList } from '../../components';
+import { CalendarEmpty, EventList } from '../../components';
 import { meta } from '../../meta';
 import { type Calendar } from '../../types';
 
@@ -73,8 +73,12 @@ export const CalendarArticle = ({ role, subject: calendar }: SurfaceComponentPro
                 <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
               </Toolbar.Root>
             </Panel.Toolbar>
-            <Panel.Content asChild>
-              <EventList events={objects} selected={selected} onSelect={handleSelect} />
+            <Panel.Content>
+              {objects.length > 0 ? (
+                <EventList events={objects} selected={selected} onSelect={handleSelect} />
+              ) : (
+                <CalendarEmpty calendar={calendar} />
+              )}
             </Panel.Content>
           </Panel.Root>
         </div>
