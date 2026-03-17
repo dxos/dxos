@@ -30,7 +30,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   const [playing, setPlaying] = useState(false);
   const layers = dream.sequences ?? [];
   const [selected, setSelected] = useState<string | undefined>();
-  const durationSeconds = dream.duration ?? 1800;
+  const durationSeconds = dream.duration ?? 0;
+  const timed = durationSeconds > 0;
   const { remaining, formattedTime, start: startCountdown, stop: stopCountdown } = useCountdown(durationSeconds);
 
   // Keep last selected layer visible during close animation.
@@ -46,7 +47,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   // Begin fade-out when approaching end; auto-stop at zero.
   useEffect(() => {
-    if (!playing) {
+    if (!playing || !timed) {
       return;
     }
     if (remaining <= FADE_OUT_SECONDS && remaining > 0 && !fadingRef.current) {
@@ -59,7 +60,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
       setPlaying(false);
       stopCountdown();
     }
-  }, [playing, remaining, engine, stopCountdown]);
+  }, [playing, timed, remaining, engine, stopCountdown]);
 
   // Cleanup on unmount.
   useEffect(() => {
@@ -73,14 +74,18 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
       fadingRef.current = false;
       await engine.stop();
       setPlaying(false);
-      stopCountdown();
+      if (timed) {
+        stopCountdown();
+      }
     } else {
       fadingRef.current = false;
       await engine.play([...layers]);
       setPlaying(true);
-      startCountdown();
+      if (timed) {
+        startCountdown();
+      }
     }
-  }, [playing, layers, engine, startCountdown, stopCountdown]);
+  }, [playing, timed, layers, engine, startCountdown, stopCountdown]);
 
   const handleStop = useCallback(async () => {
     await engine.stop();
@@ -151,7 +156,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
             <Toolbar.Root>
               <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
               <Toolbar.Separator />
-              {playing && <span className='font-mono text-sm tabular-nums text-description px-1'>{formattedTime}</span>}
+              {playing && timed && <span className='font-mono text-sm tabular-nums text-description px-1'>{formattedTime}</span>}
               <Toolbar.IconButton
                 icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
