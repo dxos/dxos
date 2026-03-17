@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { useState } from 'react';
 import React, { useCallback } from 'react';
 
+import { Context } from '@dxos/context';
 import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
@@ -44,7 +45,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
 
   useAsyncEffect(async () => {
     setLoading(true);
-    const functions = await getDeployedFunctions(client, true);
+    const functions = await getDeployedFunctions(Context.default(), client, true);
     setFunctions(functions);
     setLoading(false);
   }, []);
