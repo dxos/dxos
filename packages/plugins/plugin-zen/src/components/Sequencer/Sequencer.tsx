@@ -78,7 +78,7 @@ export const Sequencer = forwardRef<HTMLDivElement, SequencerProps>(
     return (
       <div {...composableProps<HTMLDivElement>(props)} ref={forwardedRef}>
         <Form.Root<Omit<Sequence.Sequence, 'id'>>
-          key={sequence.id}
+          key={`${sequence.id}-${sequence.source.type}-${sequence.source.type === 'generator' ? sequence.source.preset : sequence.source.sample}`}
           schema={schema}
           defaultValues={sequence}
           fieldMap={fieldMap}
