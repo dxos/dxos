@@ -179,13 +179,19 @@ export class LocalClientServices implements ClientServicesProvider {
     //   If _host.open() throws, _isOpen remains false, and close() returns early without
     //   cleaning up _opfsWorker and _runtime. Consider wrapping in try/catch to clean up on failure.
     let sqliteLayer;
+    log.info('initiatlizing sqlite', {
+      createOpfsWorker: !!this._createOpfsWorker,
+      sqlitePath: this._sqlitePath,
+    });
     if (this._createOpfsWorker) {
       // Browser: use OPFS worker for persistent storage.
       this._opfsWorker = this._createOpfsWorker();
       sqliteLayer = SqliteClient.layer({ worker: Effect.succeed(this._opfsWorker) });
+      log.info('using sqlite opfs worker');
     } else if (this._sqlitePath) {
       // Node/Bun: use file-based SQLite for persistent indexing.
       sqliteLayer = layerFile(this._sqlitePath);
+      log.info('using sqlite file', { sqlitePath: this._sqlitePath });
     } else {
       // Fallback to in-memory SQLite (indexes lost on restart).
       log.warn('Using in-memory SQLite; indexes will be lost on restart. Consider setting sqlitePath for Node/Bun.');
