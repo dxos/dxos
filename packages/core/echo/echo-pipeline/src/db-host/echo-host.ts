@@ -437,10 +437,10 @@ const testSqlite = () =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
     const databases = yield* sql<{ seq: number; name: string; file: string }>`PRAGMA database_list`;
-    log.info('SQLite databases', { databases });
+    log('SQLite databases', { databases });
     const [result] = yield* sql<{ quick_check: string }>`PRAGMA quick_check`;
     if (result.quick_check !== 'ok') {
       throw new Error('SQLite quick check failed');
     }
-    log.info('SQLite quick check passed');
+    log('SQLite quick check passed');
   });

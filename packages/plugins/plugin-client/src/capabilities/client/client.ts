@@ -67,6 +67,7 @@ export default Capability.makeModule(
       //  Perhaps move to using layer has source of truth and add a getter capability for the client.
       Capability.contributes(ClientCapabilities.Client, client, () =>
         Effect.gen(function* () {
+          log.info('client capability: destroying client');
           subscription.unsubscribe();
           yield* Effect.tryPromise(() => client.destroy());
         }),

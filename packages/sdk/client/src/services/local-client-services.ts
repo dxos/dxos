@@ -179,7 +179,7 @@ export class LocalClientServices implements ClientServicesProvider {
     //   If _host.open() throws, _isOpen remains false, and close() returns early without
     //   cleaning up _opfsWorker and _runtime. Consider wrapping in try/catch to clean up on failure.
     let sqliteLayer;
-    log.info('initiatlizing sqlite', {
+    log('initiatlizing sqlite', {
       createOpfsWorker: !!this._createOpfsWorker,
       sqlitePath: this._sqlitePath,
     });
@@ -187,11 +187,11 @@ export class LocalClientServices implements ClientServicesProvider {
       // Browser: use OPFS worker for persistent storage.
       this._opfsWorker = this._createOpfsWorker();
       sqliteLayer = SqliteClient.layer({ worker: Effect.succeed(this._opfsWorker) });
-      log.info('using sqlite opfs worker');
+      log('using sqlite opfs worker');
     } else if (this._sqlitePath) {
       // Node/Bun: use file-based SQLite for persistent indexing.
       sqliteLayer = layerFile(this._sqlitePath);
-      log.info('using sqlite file', { sqlitePath: this._sqlitePath });
+      log('using sqlite file', { sqlitePath: this._sqlitePath });
     } else {
       // Fallback to in-memory SQLite (indexes lost on restart).
       log.warn('Using in-memory SQLite; indexes will be lost on restart. Consider setting sqlitePath for Node/Bun.');
@@ -238,11 +238,12 @@ export class LocalClientServices implements ClientServicesProvider {
 
     await this._host?.close();
 
+    log('local-client-services: terminated effect runtime', { runtimePresent: !!this._runtime });
+    await this._runtime?.dispose();
+    this._runtime = undefined;
     // Clean up OPFS worker and runtime.
     this._opfsWorker?.terminate();
     this._opfsWorker = undefined;
-    await this._runtime?.dispose();
-    this._runtime = undefined;
 
     this._isOpen = false;
   }

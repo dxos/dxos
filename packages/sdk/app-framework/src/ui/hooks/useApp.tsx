@@ -111,7 +111,7 @@ export const useApp = ({
   );
   const manager = useMemo(() => {
     const mgr = pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled });
-    log.info('useApp: useMemo created/reused manager', { provided: !!pluginManager });
+    log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
     return mgr;
   }, [pluginManager, pluginLoader, plugins, core, enabled]);
 
@@ -129,6 +129,8 @@ export const useApp = ({
   }, [manager]);
 
   useAsyncEffect(async () => {
+    log('useApp: effect mount');
+
     manager.capabilities.contribute({
       interface: Capabilities.PluginManager,
       implementation: manager,
@@ -185,6 +187,7 @@ export const useApp = ({
     }, timeout);
 
     return () => {
+      log('useApp: effect cleanup');
       clearTimeout(timeoutId);
       void runAndForwardErrors(Fiber.interrupt(fiber));
       manager.capabilities.remove(Capabilities.PluginManager, manager);

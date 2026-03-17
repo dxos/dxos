@@ -63,7 +63,7 @@ export const createConfig = ({
   framework: {
     name: '@storybook/react-vite',
     options: {
-      strictMode: false,
+      strictMode: true,
     },
   },
   stories: baseStories ?? stories,
