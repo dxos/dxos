@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
 import { MixerEngine } from '../../generator';
-import { Sequence } from '../../types';
+import { Dream, Sequence } from '../../types';
 
 import { Sequencer } from '../Sequencer';
 
@@ -18,13 +19,14 @@ import { Sequencer } from '../Sequencer';
 //
 
 export type MixerProps = ThemedClassName<{
+  dream: Dream.Dream;
   engine: MixerEngine;
 }>;
 
 /** Multi-layer audio mixer with sequencer layers. */
-export const Mixer = ({ classNames, engine }: MixerProps) => {
+export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   const [playing, setPlaying] = useState(false);
-  const [layers, setLayers] = useState<Sequence.Sequence[]>([Sequence.makeSampleSequence('rain')]);
+  const layers = dream.sequences ?? [];
   const [selected, setSelected] = useState<string | undefined>();
 
   // Keep last selected layer visible during close animation.
@@ -47,7 +49,7 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
       await engine.stop();
       setPlaying(false);
     } else {
-      await engine.play(layers);
+      await engine.play([...layers]);
       setPlaying(true);
     }
   }, [playing, layers, engine]);
@@ -59,9 +61,11 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
 
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
-    setLayers((prev) => [...prev, sequence]);
+    Obj.change(dream, (d) => {
+      d.sequences = [...(d.sequences ?? []), sequence];
+    });
     setSelected(sequence.id);
-  }, []);
+  }, [dream]);
 
   const handleSelect = useCallback((id: string) => {
     setSelected((prev) => (prev === id ? undefined : id));
@@ -69,7 +73,9 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
 
   const handleDelete = useCallback(
     (id: string) => {
-      setLayers((prev) => prev.filter((layer) => layer.id !== id));
+      Obj.change(dream, (d) => {
+        d.sequences = (d.sequences ?? []).filter((layer) => layer.id !== id);
+      });
       if (selected === id) {
         setSelected(undefined);
       }
@@ -77,27 +83,32 @@ export const Mixer = ({ classNames, engine }: MixerProps) => {
         void engine.removeLayer(id);
       }
     },
-    [selected, playing, engine],
+    [dream, selected, playing, engine],
   );
 
   const handleChange = useCallback(
     (updated: Sequence.Sequence) => {
-      setLayers((prev) => prev.map((layer) => (layer.id === updated.id ? updated : layer)));
+      Obj.change(dream, (d) => {
+        d.sequences = (d.sequences ?? []).map((layer) => (layer.id === updated.id ? updated : layer));
+      });
       if (playing) {
         void engine.updateLayer(updated);
       }
     },
-    [playing, engine],
+    [dream, playing, engine],
   );
 
-  const handleMove = useCallback((fromIndex: number, toIndex: number) => {
-    setLayers((prev) => {
-      const next = [...prev];
-      const [moved] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, moved);
-      return next;
-    });
-  }, []);
+  const handleMove = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      Obj.change(dream, (d) => {
+        const next = [...(d.sequences ?? [])];
+        const [moved] = next.splice(fromIndex, 1);
+        next.splice(toIndex, 0, moved);
+        d.sequences = next;
+      });
+    },
+    [dream],
+  );
 
   const isSequence = useCallback((item: unknown): item is Sequence.Sequence => {
     return typeof item === 'object' && item !== null && 'id' in item && 'source' in item;
