@@ -5,12 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
-import { Obj, Ref, Type } from '@dxos/echo';
 import { OperationResolver } from '@dxos/operation';
-import { ManagedCollection } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { Sheet, SheetOperation } from '../../types';
+import { SheetOperation } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed([
@@ -30,15 +28,6 @@ export default Capability.makeModule(() =>
       }),
     ]),
     Capability.contributes(Capabilities.OperationResolver, [
-      OperationResolver.make({
-        operation: SheetOperation.OnCreateSpace,
-        handler: Effect.fnUntraced(function* ({ rootCollection }) {
-          const collection = ManagedCollection.makeManagedCollection({ key: Type.getTypename(Sheet.Sheet) });
-          Obj.change(rootCollection, (c) => {
-            c.objects.push(Ref.make(collection));
-          });
-        }),
-      }),
       OperationResolver.make({
         operation: SheetOperation.InsertAxis,
         handler: ({ model, axis, index, count }) =>

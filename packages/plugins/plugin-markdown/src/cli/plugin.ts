@@ -20,7 +20,6 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
       id: Markdown.Document.typename,
       metadata: {
         createObject: ((props) => Effect.sync(() => Markdown.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),

@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
 import { ComputeGraph } from '@dxos/conductor';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
@@ -19,10 +21,9 @@ export const ConductorPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: CanvasBoard.CanvasBoard.typename,
       metadata: {
-        icon: 'ph--infinity--regular',
-        iconHue: 'sky',
+        icon: Annotation.IconAnnotation.get(CanvasBoard.CanvasBoard).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(CanvasBoard.CanvasBoard).pipe(Option.getOrThrow).hue ?? 'white',
         createObject: ((props) => Effect.sync(() => CanvasBoard.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),

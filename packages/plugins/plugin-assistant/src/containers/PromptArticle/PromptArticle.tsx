@@ -19,9 +19,9 @@ import { meta } from '../../meta';
 
 export type PromptArticleProps = SurfaceComponentProps<Prompt.Prompt>;
 
-export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
+export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const { hasAttention } = useAttention(Obj.getDXN(subject).toString());
+  const { hasAttention } = useAttention(attendableId);
   const db = Obj.getDatabase(subject);
 
   const inputData = useMemo<FunctionDefinition.Input<typeof AgentFunctions.Prompt> | undefined>(
@@ -45,7 +45,7 @@ export const PromptArticle = ({ role, subject }: PromptArticleProps) => {
   );
 
   return (
-    <Panel.Root role={role} className='dx-article'>
+    <Panel.Root role={role} className='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} onClick={handleRun}>
           <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run prompt label')} onClick={handleRun} />

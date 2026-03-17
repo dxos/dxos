@@ -32,7 +32,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
           Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
           Query.select(Filter.text(query, { type: 'full-text' }))
             .select(Filter.type(Text.Text))
-            .referencedBy('dxos.org/type/Document', 'content'),
+            .referencedBy('org.dxos.type.document', 'content'),
         ),
   );
 
@@ -53,7 +53,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Panel.Root className='dx-article'>
+      <Panel.Root className='dx-document'>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <SearchList.Input placeholder={t('search placeholder')} />

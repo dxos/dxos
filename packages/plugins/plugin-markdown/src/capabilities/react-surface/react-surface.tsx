@@ -28,16 +28,24 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/surface/document`,
+        id: `${meta.id}.surface.document`,
         role: ['article', 'section', 'tabpanel'],
-        filter: (data): data is { subject: Markdown.Document; variant: undefined } =>
-          Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
+        filter: (data): data is { attendableId: string; subject: Markdown.Document; variant: undefined } =>
+          typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
         component: ({ data, role, ref }) => {
-          return <Container id={Obj.getDXN(data.subject).toString()} subject={data.subject} role={role} ref={ref} />;
+          return (
+            <Container
+              id={Obj.getDXN(data.subject).toString()}
+              attendableId={data.attendableId}
+              subject={data.subject}
+              role={role}
+              ref={ref}
+            />
+          );
         },
       }),
       Surface.create({
-        id: `${meta.id}/surface/text`,
+        id: `${meta.id}.surface.text`,
         role: ['article', 'section', 'tabpanel'],
         filter: (data): data is { id: string; subject: Text.Text } =>
           typeof data.id === 'string' && Obj.instanceOf(Text.Text, data.subject),
@@ -46,7 +54,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/surface/plugin-settings`,
+        id: `${meta.id}.surface.plugin-settings`,
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
@@ -56,7 +64,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/surface/preview`,
+        id: `${meta.id}.surface.preview`,
         role: 'card--content',
         filter: (data): data is { subject: Markdown.Document | Text.Text } =>
           Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
@@ -70,7 +78,7 @@ export default Capability.makeModule(() =>
  * Common wrapper.
  */
 const Container = forwardRef<HTMLDivElement, SurfaceComponentProps<Markdown.Document | Text.Text, { id: string }>>(
-  ({ id, subject, role }, forwardedRef) => {
+  ({ id, attendableId, subject, role }, forwardedRef) => {
     const selectionManager = useCapability(AttentionCapabilities.Selection);
     const settings = useAtomCapability(MarkdownCapabilities.Settings);
     const [state, setState] = useAtomCapabilityState(MarkdownCapabilities.State);
@@ -89,6 +97,7 @@ const Container = forwardRef<HTMLDivElement, SurfaceComponentProps<Markdown.Docu
         role={role}
         subject={subject}
         id={id}
+        attendableId={attendableId}
         settings={settings}
         selectionManager={selectionManager}
         extensionProviders={extensionProviders}

@@ -30,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 // Typewriter
 //
 
-const typewriterItems = localStorage.getItem('dxos.org/testing/typewriter')?.split(',');
+const typewriterItems = localStorage.getItem('org.dxos.testing.typewriter')?.split(',');
 
 export const Typewriter: Story = {
   render: () => (

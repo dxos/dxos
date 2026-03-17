@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
@@ -62,12 +64,12 @@ export const Project = Schema.Struct({
   }),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Project',
+    typename: 'org.dxos.type.project',
     version: '0.1.0',
   }),
   Annotation.IconAnnotation.set({
     icon: 'ph--circuitry--regular',
-    hue: 'green',
+    hue: 'sky',
   }),
   QueueAnnotation.set(true),
 );

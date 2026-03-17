@@ -12,7 +12,7 @@ import { CollectionModel } from '@dxos/schema';
 import { Markdown } from '../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/markdown/create',
+  key: 'org.dxos.function.markdown.create',
   name: 'Create',
   description: 'Creates a new markdown document and adds it to the space.',
   inputSchema: Schema.Struct({

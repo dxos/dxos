@@ -7,7 +7,9 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import type { DXN } from '@dxos/keys';
 import { defineFunction, FunctionDefinition, Trigger } from '@dxos/functions';
+import { FeedAnnotation } from '@dxos/schema';
 import { default as Agent } from './agent';
 import { default as Qualifier } from './qualifier';
 import { Prompt } from '@dxos/blueprints';
@@ -27,6 +29,35 @@ const PROJECT_TRIGGER_EXTENSION_KEY = 'dxos.org/extension/ProjectTrigger';
  * Foreign key {@link PROJECT_TRIGGER_TARGET_EXTENSION_KEY} => <dxn string of subscription target>
  */
 const PROJECT_TRIGGER_TARGET_EXTENSION_KEY = 'dxos.org/extension/ProjectTriggerTarget';
+
+/** Checks if an object's schema has the FeedAnnotation (e.g. Mailbox, Calendar). */
+const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
+  const schema = Obj.getSchema(obj);
+  if (!schema) {
+    return false;
+  }
+  const annotation = FeedAnnotation.get(schema);
+  return Option.isSome(annotation) && annotation.value === true;
+};
+
+/** Resolves queue DXN from a subscription target (Feed, or object with FeedAnnotation). */
+const resolveQueueDxn = (
+  target: Obj.Unknown,
+): Effect.Effect<DXN | undefined, never, never> =>
+  Effect.gen(function* () {
+    let feedObj: Feed.Feed | undefined;
+    if (Obj.instanceOf(Feed.Feed, target)) {
+      feedObj = target;
+    } else if (hasFeedAnnotation(target)) {
+      const feedRef = (target as { feed?: Ref.Ref<Feed.Feed> }).feed;
+      feedObj = feedRef ? yield* Effect.promise(() => feedRef.tryLoad()) : undefined;
+    }
+    return Option.fromNullable(feedObj).pipe(
+      Option.filter(Obj.instanceOf(Feed.Feed)),
+      Option.flatMap((feed) => Option.fromNullable(Feed.getQueueDxn(feed))),
+      Option.getOrUndefined,
+    );
+  });
 
 export default defineFunction({
   key: 'dxos.org/function/project/sync-triggers',
@@ -71,11 +102,7 @@ export default defineFunction({
         continue;
       }
 
-      const queueDxn = Option.some(target).pipe(
-        Option.filter(Obj.instanceOf(Feed.Feed)),
-        Option.map(Feed.getQueueDxn),
-        Option.getOrUndefined,
-      );
+      const queueDxn = yield* resolveQueueDxn(target);
       if (!queueDxn) {
         continue;
       }

@@ -64,7 +64,7 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
                 const propertiesSnapshot = get(AtomObj.make(space.properties));
                 return {
                   id: space.id,
-                  type: 'dxos.org/type/Space',
+                  type: 'org.dxos.type.space',
                   properties: {
                     label: propertiesSnapshot.name,
                   },
@@ -88,7 +88,7 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
             const objects = get(AtomQuery.make(space.db, Query.type(TestSchema.Expando, { type: 'test' })));
             return objects.map((object) => ({
               id: object.id,
-              type: 'dxos.org/type/test',
+              type: 'org.dxos.type.test',
               properties: { label: object.name },
               data: object,
             }));
@@ -347,7 +347,7 @@ export const TreeView: Story = {
             return {
               id: node.id,
               label: node.id,
-              icon: node.type === 'dxos.org/type/Space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
+              icon: node.type === 'org.dxos.type.space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
               parentOf,
             };
           });

@@ -9,11 +9,11 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Chat, Plan, Project, ProjectBlueprint, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { HasSubject } from '@dxos/types';
@@ -25,15 +25,16 @@ import {
   BlueprintDefinition,
   EdgeModelResolver,
   LocalModelResolver,
+  MarkdownExtension,
   OperationResolver,
   ReactSurface,
-  Repair,
   Settings,
   Toolkit,
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { AssistantEvents, AssistantOperation } from './types';
+import * as Option from 'effect/Option';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -43,8 +44,8 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       {
         id: Type.getTypename(Chat.Chat),
         metadata: {
-          icon: 'ph--atom--regular',
-          iconHue: 'sky',
+          icon: Annotation.IconAnnotation.get(Chat.Chat).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Chat.Chat).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props, { db }) =>
             Operation.invoke(AssistantOperation.CreateChat, { db, name: props?.name }).pipe(
               Effect.map(({ object }) => object),
@@ -54,8 +55,8 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       {
         id: Type.getTypename(Blueprint.Blueprint),
         metadata: {
-          icon: 'ph--blueprint--regular',
-          iconHue: 'sky',
+          icon: Annotation.IconAnnotation.get(Blueprint.Blueprint).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Blueprint.Blueprint).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: AssistantOperation.BlueprintForm,
           createObject: ((props) => Effect.sync(() => Blueprint.make(props))) satisfies CreateObject,
         },
@@ -63,25 +64,24 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       {
         id: Type.getTypename(Prompt.Prompt),
         metadata: {
-          icon: 'ph--scroll--regular',
-          iconHue: 'sky',
+          icon: Annotation.IconAnnotation.get(Prompt.Prompt).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Prompt.Prompt).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props) => Effect.sync(() => Prompt.make(props))) satisfies CreateObject,
         },
       },
       {
         id: Type.getTypename(Sequence),
         metadata: {
-          icon: 'ph--circuitry--regular',
-          iconHue: 'sky',
+          icon: Annotation.IconAnnotation.get(Sequence).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Sequence).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props) => Effect.sync(() => Obj.make(Sequence, props))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
       {
         id: Type.getTypename(Project.Project),
         metadata: {
-          icon: 'ph--circuitry--regular',
-          iconHue: 'sky',
+          icon: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((_, { db }) =>
             Project.makeInitialized(
               {
@@ -90,7 +90,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
               },
               ProjectBlueprint.make(),
             ).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
     ],
@@ -116,6 +115,11 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
+    id: 'markdown',
+    activatesOn: MarkdownEvents.SetupExtensions,
+    activate: MarkdownExtension,
+  }),
+  Plugin.addModule({
     // TODO(wittjosiah): Does not integrate with settings store.
     //   Should this be a different event?
     //   Should settings store be renamed to be more generic?
@@ -131,10 +135,6 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           Operation.invoke(AssistantOperation.OnCreateSpace, params),
         ),
       ),
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.SpacesReady,
-    activate: Repair,
   }),
   Plugin.addModule({
     activatesOn: AssistantEvents.SetupAiServiceProviders,

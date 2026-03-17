@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -78,7 +78,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         if (newValues.archived && !archived) {
           void invokePromise(SpaceOperation.Close, { space });
           void invokePromise(LayoutOperation.SwitchWorkspace, {
-            subject: client.spaces.default.id,
+            subject: getSpacePath(client.spaces.default.id),
           });
         } else if (!newValues.archived && archived) {
           void invokePromise(SpaceOperation.Open, { space });

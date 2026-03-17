@@ -30,20 +30,19 @@ import { ComputeGraph } from '../../notebook';
 import { type Notebook } from '../../types';
 
 const INCLUDE_BLUEPRINTS = [
-  'dxos.org/blueprint/assistant',
-  'dxos.org/blueprint/database',
-  'dxos.org/blueprint/markdown',
+  'org.dxos.blueprint.assistant',
+  'org.dxos.blueprint.database',
+  'org.dxos.blueprint.markdown',
 ];
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
 export type NotebookContainerProps = SurfaceComponentProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
 
-export const NotebookContainer = ({ role, subject: notebook, env }: NotebookContainerProps) => {
+export const NotebookContainer = ({ role, subject: notebook, attendableId, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);
   const registry = useContext(RegistryContext);
-  const db = notebook && Obj.getDatabase(notebook);
-  const attendableId = notebook ? Obj.getDXN(notebook).toString() : '';
+  const db = Obj.getDatabase(notebook);
   const { hasAttention } = useAttention(attendableId);
 
   // TODO(burdon): Consolidate execution and state (with graph).
@@ -190,7 +189,7 @@ export const NotebookContainer = ({ role, subject: notebook, env }: NotebookCont
   );
 
   return (
-    <Panel.Root role={role} className='dx-article'>
+    <Panel.Root role={role} className='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} textBlockWidth>
           <DropdownMenu.Root>

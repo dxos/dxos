@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
@@ -10,9 +10,12 @@ import { Panel } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
 import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '../../components';
+import { Life, generateRandomModel } from '../../models';
 import { Voxel } from '../../types';
 
 export type VoxelArticleProps = SurfaceComponentProps<Voxel.World>;
+
+const LIFE_TICK_MS = 500;
 
 const TOOL_HINTS: Record<ToolMode, string> = {
   select: 'Option-drag to orbit | Shift-drag to pan | Scroll to zoom',
@@ -25,11 +28,35 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
   const voxels = useMemo(() => Voxel.toVoxelArray(voxelMap), [voxelMap]);
   const [selectedHue, setSelectedHue] = useState<Hue>(DEFAULT_HUE);
   const [toolMode, setToolMode] = useState<ToolMode>('add');
+  const [showGrid, setShowGrid] = useState(true);
+  const [selectedPosition, setSelectedPosition] = useState<{ x: number; y: number; z: number } | null>(null);
+  const [lifeRunning, setLifeRunning] = useState(false);
   const { gridX, gridY, blockSize } = Voxel.getGridDimensions(world);
+
+  const lifeRef = useRef<Life | null>(null);
+  if (!lifeRef.current || lifeRef.current['_gridX'] !== gridX || lifeRef.current['_gridY'] !== gridY) {
+    lifeRef.current = new Life({ gridX, gridY, hue: selectedHue });
+  }
+
+  // Life simulation loop.
+  useEffect(() => {
+    if (!lifeRunning) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const currentVoxels = Voxel.toVoxelArray(world.voxels);
+      const nextVoxels = lifeRef.current!.tick(currentVoxels);
+      updateVoxels(Voxel.toVoxelMap(nextVoxels) as any);
+    }, LIFE_TICK_MS);
+
+    return () => clearInterval(interval);
+  }, [lifeRunning, world, updateVoxels]);
 
   const handleAddVoxel = useCallback(
     (voxel: Voxel.VoxelData) => {
       const key = Voxel.voxelKey(voxel.x, voxel.y, voxel.z);
+      setSelectedPosition({ x: voxel.x, y: voxel.y, z: voxel.z });
       updateVoxels((map) => {
         if (map !== undefined) {
           if (!(key in map)) {
@@ -56,7 +83,37 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
   );
 
   const handleClear = useCallback(() => {
+    setLifeRunning(false);
     updateVoxels({});
+  }, [updateVoxels]);
+
+  const handleGenerate = useCallback(() => {
+    const origin = selectedPosition ?? { x: 0, y: 0, z: 0 };
+    const { voxels: newVoxels } = generateRandomModel(origin, selectedHue);
+    updateVoxels((map) => {
+      if (map !== undefined) {
+        for (const voxel of newVoxels) {
+          const key = Voxel.voxelKey(voxel.x, voxel.y, voxel.z);
+          map[key] = { hue: voxel.hue };
+        }
+      } else {
+        return Voxel.toVoxelMap(newVoxels) as any;
+      }
+    });
+  }, [selectedHue, selectedPosition, updateVoxels]);
+
+  const handleToggleGrid = useCallback(() => {
+    setShowGrid((prev) => !prev);
+  }, []);
+
+  const handleToggleLife = useCallback(() => {
+    setLifeRunning((prev) => !prev);
+  }, []);
+
+  const handleSeedLife = useCallback(() => {
+    setLifeRunning(false);
+    const pattern = lifeRef.current!.randomPattern();
+    updateVoxels(Voxel.toVoxelMap(pattern) as any);
   }, [updateVoxels]);
 
   return (
@@ -65,9 +122,15 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
         <VoxelToolbar
           toolMode={toolMode}
           selectedHue={selectedHue}
+          showGrid={showGrid}
+          lifeRunning={lifeRunning}
           onToolModeChange={setToolMode}
           onHueChange={setSelectedHue}
+          onToggleGrid={handleToggleGrid}
           onClear={handleClear}
+          onGenerate={handleGenerate}
+          onToggleLife={handleToggleLife}
+          onSeedLife={handleSeedLife}
         />
       </Panel.Toolbar>
       <Panel.Content asChild>
@@ -79,6 +142,8 @@ export const VoxelArticle = ({ subject: world }: VoxelArticleProps) => {
             blockSize={blockSize}
             toolMode={toolMode}
             selectedHue={selectedHue}
+            showGrid={showGrid}
+            selectedPosition={selectedPosition}
             onAddVoxel={handleAddVoxel}
             onRemoveVoxel={handleRemoveVoxel}
           />

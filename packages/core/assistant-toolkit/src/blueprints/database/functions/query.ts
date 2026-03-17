@@ -12,7 +12,7 @@ import { trim } from '@dxos/util';
 
 // TODO(burdon): Move to toolkit (i.e., tool not function).
 export default defineFunction({
-  key: 'dxos.org/function/database/query',
+  key: 'org.dxos.function.database.query',
   name: 'Query',
   description: trim`
       Query for objects in ECHO.
@@ -36,14 +36,14 @@ export default defineFunction({
 
       <example description="All tasks related to Cyberdyne and Bob">
         {
-          "typename": "dxos.org/type/Task",
+          "typename": "org.dxos.type.task",
           "text": "cyberdyne bob",
         }
       </example>
 
       <example description="Financial report Q1 2026">
         {
-          "typename": "dxos.org/type/Document",
+          "typename": "org.dxos.type.document",
           "text": "financial report Q1 2026",
           "includeContent": true
           "limit": 3
@@ -54,7 +54,7 @@ export default defineFunction({
     typename: Schema.optional(
       Schema.String.annotations({
         description: 'The typename of the objects to list.',
-        example: 'dxos.org/type/Task',
+        example: 'org.dxos.type.task',
       }),
     ),
     text: Schema.optional(
@@ -111,7 +111,7 @@ export default defineFunction({
     }
 
     // Update indexes before querying to make sure we get the latest results.
-    yield* Database.flush({ indexes: true });
+    yield* Database.flush();
     const results = yield* Database.runQuery(query);
     if (includeContent) {
       return results.map((obj) => Entity.toJSON(obj));

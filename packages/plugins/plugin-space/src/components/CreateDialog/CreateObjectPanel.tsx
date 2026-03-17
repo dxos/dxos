@@ -29,7 +29,6 @@ export type CreateObjectOption = {
 export type Metadata = {
   createObject: CreateObject;
   inputSchema?: Schema.Schema.AnyNoContext;
-  addToCollectionOnCreate?: boolean;
   icon?: string;
 };
 
@@ -85,6 +84,10 @@ export const CreateObjectPanel = ({
     [resolve, onCreateObject],
   );
 
+  const inputSchema = useMemo(
+    () => (metadata && typeof metadata === 'object' && metadata.inputSchema ? omitId(metadata.inputSchema) : undefined),
+    [metadata],
+  );
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
   // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
@@ -101,7 +104,7 @@ export const CreateObjectPanel = ({
       <Form.Root
         testId='create-object-form'
         autoFocus
-        schema={omitId(metadata.inputSchema)}
+        schema={inputSchema}
         defaultValues={initialFormValues}
         db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
         fieldProvider={inputSurfaceLookup}

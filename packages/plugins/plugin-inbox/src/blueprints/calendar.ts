@@ -8,7 +8,7 @@ import { trim } from '@dxos/util';
 
 import { CalendarFunctions } from '../functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/calendar';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.calendar';
 
 const functions = Object.values(CalendarFunctions);
 

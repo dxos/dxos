@@ -17,6 +17,7 @@ export const translations = [
         'typename label_one': 'Table',
         'typename label_other': 'Tables',
         'object name placeholder': 'New table',
+        'add object label': 'Add table',
         'rename object label': 'Rename table',
         'delete object label': 'Delete table',
         'object deleted label': 'Table deleted',

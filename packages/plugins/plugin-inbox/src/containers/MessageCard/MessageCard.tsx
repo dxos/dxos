@@ -19,7 +19,7 @@ export const MessageCard = ({ subject: message }: SurfaceComponentProps<Message.
     <Card.Content>
       <Card.Toolbar>
         <Card.IconBlock>
-          <DxAvatar hue={hue} hueVariant='surface' variant='square' size={7} fallback={from} />
+          <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
         </Card.IconBlock>
         <div className='flex gap-3 items-center justify-between col-span-2'>
           <p className='grow truncate'>{from}</p>

@@ -6,37 +6,31 @@ import * as FileSystem from '@effect/platform/FileSystem';
 import * as Path from '@effect/platform/Path';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import * as Yaml from 'yaml';
 
-import { DX_CONFIG, getProfilePath } from '@dxos/client-protocol';
+import { DX_CONFIG } from '@dxos/client-protocol';
 
 // TODO(wittjosiah): Factor out to app-framework?
 
-const PLUGINS_FILE = 'plugins.json';
-
 const PluginsSchema = Schema.Array(Schema.String);
 
-/**
- * Get the path to the plugins configuration file for a profile.
- */
-const getPluginsPath = (profile: string): Effect.Effect<string, never, Path.Path> =>
-  Effect.gen(function* () {
-    const path = yield* Path.Path;
-    return path.join(getProfilePath(DX_CONFIG, profile), PLUGINS_FILE);
-  });
+/** CLI-only: path to plugins/<profile>.yml (sibling to profile/). */
+const getPluginsConfigPath = (profile: string) => `${DX_CONFIG}/plugins/${profile}.yml`;
 
 /**
- * Load enabled plugins from profile storage.
+ * Load enabled plugins from plugins/<profile>.yml (sibling to profile/).
  * Returns the list of enabled plugin IDs, or an empty array if the file doesn't exist.
  */
 export const loadEnabledPlugins = Effect.fn(function* ({ profile }: { profile: string }) {
   const fs = yield* FileSystem.FileSystem;
-  const pluginsPath = yield* getPluginsPath(profile);
+  const pluginsPath = getPluginsConfigPath(profile);
 
   const content = yield* fs
     .readFileString(pluginsPath)
     .pipe(Effect.catchTag('SystemError', () => Effect.succeed('[]')));
 
-  const parsed = yield* Schema.decodeUnknown(Schema.parseJson(PluginsSchema))(content).pipe(
+  const raw = Yaml.parse(content);
+  const parsed = yield* Schema.decodeUnknown(PluginsSchema)(raw ?? []).pipe(
     Effect.catchAll(() => Effect.succeed([] as string[])),
   );
 
@@ -44,14 +38,13 @@ export const loadEnabledPlugins = Effect.fn(function* ({ profile }: { profile: s
 });
 
 /**
- * Save enabled plugins to profile storage.
+ * Save enabled plugins to plugins/<profile>.yml.
  */
 export const saveEnabledPlugins = Effect.fn(function* ({ profile, enabled }: { profile: string; enabled: string[] }) {
   const fs = yield* FileSystem.FileSystem;
-  const pluginsPath = yield* getPluginsPath(profile);
-  const profileDir = getProfilePath(DX_CONFIG, profile);
-
-  yield* fs.makeDirectory(profileDir, { recursive: true });
-  const encoded = Schema.encodeSync(Schema.parseJson(PluginsSchema))(enabled);
-  yield* fs.writeFileString(pluginsPath, encoded + '\n');
+  const path = yield* Path.Path;
+  const pluginsPath = getPluginsConfigPath(profile);
+  yield* fs.makeDirectory(path.dirname(pluginsPath), { recursive: true });
+  const encoded = Yaml.stringify(enabled);
+  yield* fs.writeFileString(pluginsPath, encoded);
 });

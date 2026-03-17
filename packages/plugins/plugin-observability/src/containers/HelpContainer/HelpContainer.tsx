@@ -40,7 +40,7 @@ export const HelpContainer = () => {
       await invokePromise(ObservabilityOperation.CaptureUserFeedback, values);
       await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
       await invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}/feedback-success`,
+        id: `${meta.id}.feedback-success`,
         icon: 'ph--paper-plane-tilt--regular',
         duration: 3000,
         title: ['feedback toast label', { ns: meta.id }],

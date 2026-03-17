@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Format, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
@@ -21,11 +21,15 @@ export const Map = Schema.Struct({
   coordinates: Schema.Array(Format.GeoPoint).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Map',
-    version: '0.3.0',
+    typename: 'org.dxos.type.map',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--compass--regular',
+    hue: 'green',
+  }),
 );
 
 export interface Map extends Schema.Schema.Type<typeof Map> {}
@@ -46,20 +50,3 @@ export const make = ({ name, center, zoom, coordinates, view }: MakeProps = {}):
     coordinates,
   });
 };
-
-//
-// V2
-//
-
-export const MapV2 = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  center: Schema.optional(Format.GeoPoint),
-  zoom: Schema.optional(Schema.Number),
-  coordinates: Schema.Array(Format.GeoPoint).pipe(Schema.optional),
-}).pipe(
-  Type.object({
-    typename: 'dxos.org/type/Map',
-    version: '0.2.0',
-  }),
-  LabelAnnotation.set(['name']),
-);

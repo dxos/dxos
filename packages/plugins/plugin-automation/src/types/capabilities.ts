@@ -39,5 +39,5 @@ export namespace AutomationCapabilities {
   /**
    * Runtime for executing agents, functions, and triggers.
    */
-  export const ComputeRuntime = Capability.make<ComputeRuntimeProvider>(`${meta.id}/capability/compute-runtime`);
+  export const ComputeRuntime = Capability.make<ComputeRuntimeProvider>(`${meta.id}.capability.compute-runtime`);
 }

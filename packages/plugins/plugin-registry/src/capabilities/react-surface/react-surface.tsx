@@ -15,7 +15,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/all`,
+        id: `${meta.id}.all`,
         role: 'article',
         filter: (data): data is any => data.subject === `${REGISTRY_KEY}>all`,
         component: () => {
@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/installed`,
+        id: `${meta.id}.installed`,
         role: 'article',
         filter: (data): data is any => data.subject === `${REGISTRY_KEY}>installed`,
         component: () => {
@@ -47,7 +47,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/recommended`,
+        id: `${meta.id}.recommended`,
         role: 'article',
         filter: (data): data is any => data.subject === `${REGISTRY_KEY}>recommended`,
         component: () => {
@@ -65,7 +65,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/labs`,
+        id: `${meta.id}.labs`,
         role: 'article',
         filter: (data): data is any => data.subject === `${REGISTRY_KEY}>labs`,
         component: () => {
@@ -76,7 +76,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/plugin-details`,
+        id: `${meta.id}.plugin-details`,
         role: 'article',
         filter: (data): data is { subject: Plugin.Plugin } => Plugin.isPlugin(data.subject),
         component: ({ data: { subject } }) => {

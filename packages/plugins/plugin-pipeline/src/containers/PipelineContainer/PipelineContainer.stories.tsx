@@ -42,7 +42,7 @@ const DefaultStory = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px] overflow-hidden h-full w-full'>
-      <PipelineContainer role='article' subject={pipeline} />
+      <PipelineContainer role='article' subject={pipeline} attendableId='test' />
       <PipelineObjectSettings pipeline={pipeline} classNames='border-s border-separator' />
     </div>
   );

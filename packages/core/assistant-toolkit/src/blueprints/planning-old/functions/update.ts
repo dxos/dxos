@@ -12,7 +12,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { MarkdownTasks, type TaskOperation } from './task-list';
 
 export default defineFunction({
-  key: 'dxos.org/function/markdown/update-tasks',
+  key: 'org.dxos.function.markdown.update-tasks',
   name: 'Update markdown',
   description: 'Creates and updates tasks in markdown documents.',
   inputSchema: Schema.Struct({

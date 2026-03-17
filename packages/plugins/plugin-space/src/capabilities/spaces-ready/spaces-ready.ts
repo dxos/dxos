@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -48,7 +48,7 @@ export default Capability.makeModule(
     // Check if deck state indicates we should switch to default space.
     const layout = registry.get(layoutAtom);
     if (layout.workspace === 'default') {
-      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(defaultSpace.id) });
     }
 
     // Initialize space sharing lock in default space.

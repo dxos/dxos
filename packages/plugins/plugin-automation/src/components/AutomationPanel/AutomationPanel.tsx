@@ -50,7 +50,6 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
     annotation: {
       location: ['database', 'runtime'],
       kind: ['user'],
-      registered: ['registered'],
     },
   });
 
@@ -236,7 +235,7 @@ const TriggerListItem = ({
         )}
       </div>
 
-      {actionProps ? <List.ItemButton {...actionProps} autoHide={false} /> : <div />}
+      {actionProps ? <List.ItemIconButton {...actionProps} autoHide={false} /> : <div />}
 
       {onDelete && <List.ItemDeleteButton onClick={handleDelete} />}
     </List.Item>

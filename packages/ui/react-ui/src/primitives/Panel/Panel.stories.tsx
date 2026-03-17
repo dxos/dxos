@@ -26,7 +26,7 @@ const List = () => {
 
 const DefaultStory = () => {
   return (
-    <Panel.Root className='dx-article'>
+    <Panel.Root className='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root classNames='gap-2'>
           <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />

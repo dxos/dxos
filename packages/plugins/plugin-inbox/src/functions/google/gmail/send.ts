@@ -16,15 +16,15 @@ import { GoogleMail } from '../../apis';
 import { GoogleCredentials } from '../../services/google-credentials';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/google-mail-send',
+  key: 'org.dxos.function.inbox.google-mail-send',
   name: 'Send Gmail',
   description: 'Send emails via Gmail.',
   inputSchema: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
-    // TODO(dmaretskyi): This should be a ref s we can send a message from database.
+    // TODO(dmaretskyi): This should be a ref so we can send a message from database.
     message: Message.Message,
-    feed: Ref.Ref(Feed.Feed).pipe(
-      Schema.annotations({ description: 'Optional mailbox feed to send from. Uses feed credentials if provided.' }),
+    mailbox: Ref.Ref(Mailbox.Mailbox).pipe(
+      Schema.annotations({ description: 'Optional mailbox to send from. Uses mailbox credentials if provided.' }),
       Schema.optional,
     ),
   }),
@@ -32,10 +32,10 @@ export default defineFunction({
     id: Schema.String,
     threadId: Schema.String,
   }),
-  types: [Message.Message, Feed.Feed, Mailbox.Config],
-  handler: ({ data: { userId = 'me', message, feed: feedRef } }) =>
+  types: [Message.Message, Feed.Feed, Mailbox.Mailbox],
+  handler: ({ data: { userId = 'me', message, mailbox: mailboxRef } }) =>
     Effect.gen(function* () {
-      log('sending email', { userId, feed: feedRef?.dxn.toString() });
+      log('sending email', { userId, mailbox: mailboxRef?.dxn.toString() });
 
       // Extract details from the message object.
       // TODO(burdon): Refine Message schema to have explicit To/Subject fields or use properties.
@@ -81,6 +81,6 @@ export default defineFunction({
     }).pipe(
       Effect.provide(FetchHttpClient.layer),
       // Use feed config credentials if provided, otherwise fall back to database credentials.
-      Effect.provide(feedRef ? GoogleCredentials.fromMailbox(feedRef) : GoogleCredentials.default),
+      Effect.provide(mailboxRef ? GoogleCredentials.fromMailbox(mailboxRef) : GoogleCredentials.default),
     ),
 });

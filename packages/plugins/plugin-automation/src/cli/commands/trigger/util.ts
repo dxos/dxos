@@ -12,10 +12,10 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { FormBuilder } from '@dxos/cli-util';
-import { Annotation, Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, Entity, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
 import { Function, Trigger } from '@dxos/functions';
-import { QueueAnnotation } from '@dxos/schema';
+import { FeedAnnotation } from '@dxos/schema';
 
 export type TriggerRemoteStatus = 'available' | 'not available' | 'n/a';
 
@@ -330,46 +330,55 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
 
 /**
  * Selects a queue interactively from available queues in the database.
- * Queries schemas with QueueAnnotation, then queries objects of those types,
- * and extracts queue DXNs from the objects' queue properties.
+ * Queries schemas with FeedAnnotation, then queries objects of those types,
+ * and extracts queue DXNs from the objects' feed properties.
  */
 export const selectQueue = Effect.fn(function* () {
-  // Query schema registry for schemas with QueueAnnotation
+  // Query schema registry for schemas with FeedAnnotation.
   const schemas = yield* Database.runSchemaQuery({ location: ['database', 'runtime'] });
 
-  // Filter schemas that have QueueAnnotation
-  const queueSchemas = schemas.filter((schema) => {
-    const annotation = QueueAnnotation.get(schema);
+  // Filter schemas that have FeedAnnotation.
+  const feedSchemas = schemas.filter((schema) => {
+    const annotation = FeedAnnotation.get(schema);
     return Option.isSome(annotation) && annotation.value === true;
   });
 
-  if (queueSchemas.length === 0) {
-    return yield* Effect.fail(new Error('No schemas with Queue annotation found'));
+  if (feedSchemas.length === 0) {
+    return yield* Effect.fail(new Error('No schemas with Feed annotation found'));
   }
 
-  // Collect all objects with queues
+  // Collect all objects with queues.
   const queueChoices: Array<{ title: string; value: string; description?: string }> = [];
 
-  // Process each schema, skipping ones that fail
-  for (const schema of queueSchemas) {
+  // Process each feed schema, loading the Feed object to extract queue DXN.
+  for (const schema of feedSchemas) {
     yield* Effect.gen(function* () {
       const typename = Type.getTypename(schema);
       const objects = yield* Database.runQuery(Filter.type(typename));
 
       for (const obj of objects) {
-        // Access the queue property (which is a Ref<Queue>)
-        const queueRef = (obj as any).queue as Ref.Ref<any> | undefined;
-        if (!queueRef) {
+        // Access the feed property (which is a Ref<Feed>).
+        const feedRef = (obj as any).feed as Ref.Ref<any> | undefined;
+        if (!feedRef) {
           continue;
         }
 
-        const queueDxn = queueRef.dxn.toString();
+        const feedObj = yield* Effect.promise(() => feedRef.tryLoad());
+        if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj)) {
+          continue;
+        }
+
+        const queueDxn = Feed.getQueueDxn(feedObj);
+        if (!queueDxn) {
+          continue;
+        }
+
         const label = Obj.getLabel(obj) ?? obj.id;
         const description = Obj.getTypename(obj);
 
         queueChoices.push({
           title: label,
-          value: queueDxn,
+          value: queueDxn.toString(),
           description,
         });
       }

@@ -65,7 +65,7 @@ describe('Projection', () => {
         type: TypeEnum.Ref,
         format: Format.TypeFormat.Ref,
         referencePath: 'name',
-        referenceSchema: 'example.com/type/Organization',
+        referenceSchema: 'com.example.type.organization',
       });
     }
   });
@@ -90,7 +90,7 @@ describe('Projection', () => {
 
   test('maintains field order during initialization', async ({ expect }) => {
     const schema = Obj.make(Type.PersistentType, {
-      typename: 'example.com/type/Person',
+      typename: 'com.example.type.person',
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(
         Schema.Struct({

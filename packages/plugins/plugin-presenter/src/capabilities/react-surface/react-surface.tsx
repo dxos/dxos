@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/document`,
+        id: `${meta.id}.document`,
         role: 'article',
         position: 'hoist',
         filter: (data): data is { subject: { type: typeof meta.id; object: Markdown.Document } } =>
@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <DocumentPresenterContainer document={data.subject.object} />,
       }),
       Surface.create({
-        id: `${meta.id}/collection`,
+        id: `${meta.id}.collection`,
         role: 'article',
         position: 'hoist',
         filter: (data): data is { subject: { type: typeof meta.id; object: Collection.Collection } } =>
@@ -51,13 +51,13 @@ export default Capability.makeModule(() =>
         component: ({ role, data }) => <CollectionPresenterContainer role={role} subject={data.subject.object} />,
       }),
       Surface.create({
-        id: `${meta.id}/slide`,
+        id: `${meta.id}.slide`,
         role: 'slide',
         filter: (data): data is { subject: Markdown.Document } => Obj.instanceOf(Markdown.Document, data.subject),
         component: ({ data }) => <MarkdownSlide document={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/plugin-settings`,
+        id: `${meta.id}.plugin-settings`,
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,

@@ -11,22 +11,22 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { SketchContainer, SketchSettings } from '../../containers';
 import { meta } from '../../meta';
-import { Diagram, SketchCapabilities, type SketchSettingsProps } from '../../types';
+import { Sketch, SketchCapabilities, type SketchSettingsProps } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/sketch`,
+        id: `${meta.id}.sketch`,
         role: ['article', 'section', 'slide'],
-        filter: (data): data is { subject: Diagram.Diagram } => Diagram.isDiagram(data.subject, Diagram.TLDRAW_SCHEMA),
+        filter: (data): data is { subject: Sketch.Sketch } => Sketch.isSketch(data.subject, Sketch.TLDRAW_SCHEMA),
         component: ({ data, role }) => {
           const settings = useAtomCapability(SketchCapabilities.Settings);
           return <SketchContainer role={role} subject={data.subject} settings={settings} />;
         },
       }),
       Surface.create({
-        id: `${meta.id}/plugin-settings`,
+        id: `${meta.id}.plugin-settings`,
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,

@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/files',
+  id: 'org.dxos.plugin.files',
   name: 'Files',
   description: trim`
     Bridge between your local file system and workspace, allowing you to open and edit files directly.

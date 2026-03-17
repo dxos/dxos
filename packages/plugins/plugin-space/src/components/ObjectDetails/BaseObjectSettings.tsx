@@ -35,7 +35,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
     return Function.pipe(
       Obj.getSchema(object),
       Option.fromNullable,
-      Option.map((schema) => BaseSchema.pipe(Schema.extend(schema))),
+      Option.map((schema) => omitId(BaseSchema.pipe(Schema.extend(schema)))),
       Option.getOrUndefined,
     );
   }, [object]);
@@ -87,7 +87,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
         Obj.change(object, () => {
           for (const path of nonTagPaths) {
             const parts = splitJsonPath(path);
-            const value = Obj.getValue(values, parts);
+            const value = Obj.getValue(values as any, parts);
             Obj.setValue(object, parts, value);
           }
         });
@@ -102,8 +102,8 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
 
   return (
     <Form.Root
-      schema={omitId(formSchema)}
-      defaultValues={values}
+      schema={formSchema}
+      defaultValues={values as any}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'

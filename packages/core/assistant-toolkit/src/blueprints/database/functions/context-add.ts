@@ -11,7 +11,7 @@ import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/database/context-add',
+  key: 'org.dxos.function.database.context-add',
   name: 'Add to context',
   description: trim`
     Adds the object to the chat context.

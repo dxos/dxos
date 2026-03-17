@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ComputeGraph, ComputeGraphModel } from '@dxos/conductor';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { Graph } from '@dxos/graph';
 
 // TODO(burdon): Consider interop with TLDraw and GeoJSON standards?
@@ -57,8 +57,12 @@ export const CanvasBoard = Schema.Struct({
   layout: Graph.Graph,
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/CanvasBoard',
+    typename: 'org.dxos.type.canvas-board',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--infinity--regular',
+    hue: 'sky',
   }),
 );
 

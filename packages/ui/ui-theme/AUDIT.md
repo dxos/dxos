@@ -85,7 +85,7 @@ None
 - `dx-card-popover`
 - `dx-card-square`
 - `dx-contain-layout`
-- `dx-article`
+- `dx-document`
 - `dx-density-coarse`
 - `dx-size-container`
 - `dx-sticky-bottom-from-statusbar-bottom`

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, type Plugin as Plugin$ } from '@dxos/app-framework';
 import { GraphBuilder, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, SettingsOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, SettingsOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { isNonNullable } from '@dxos/util';
 
@@ -22,7 +22,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}/action`,
+        id: `${meta.id}.action`,
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -42,7 +42,7 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}/core`,
+        id: `${meta.id}.core`,
         match: NodeMatcher.whenRoot,
         connector: () =>
           Effect.succeed([
@@ -60,8 +60,8 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}/plugins`,
-        match: NodeMatcher.whenId(SETTINGS_ID),
+        id: `${meta.id}.plugins`,
+        match: NodeMatcher.whenId(getSpacePath(SETTINGS_ID)),
         connector: (node, get) => {
           const [manager] = get(managerAtom);
           const allSettings = get(settingsAtom);

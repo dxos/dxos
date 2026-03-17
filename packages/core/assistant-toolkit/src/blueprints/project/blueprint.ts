@@ -8,9 +8,13 @@ import { trim } from '@dxos/util';
 
 import { ProjectFunctions } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/project';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.project';
 
-const functions = [ProjectFunctions.AddArtifact];
+const functions = [
+  ProjectFunctions.AddArtifact,
+  ProjectFunctions.GetContext,
+  ProjectFunctions.SyncTriggers,
+];
 
 /**
  * Creates the Project blueprint. This is a function to avoid circular dependency issues.

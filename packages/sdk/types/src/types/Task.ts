@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { View as _View } from '@dxos/echo';
 import {
@@ -85,10 +87,14 @@ export const Task = Schema.Struct({
   // tags: [String],
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Task',
-    version: '0.2.0',
+    typename: 'org.dxos.type.task',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['title']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--check-circle--regular',
+    hue: 'neutral',
+  }),
 );
 
 export interface Task extends Schema.Schema.Type<typeof Task> {}

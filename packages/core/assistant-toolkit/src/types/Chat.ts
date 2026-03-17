@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
@@ -18,13 +20,13 @@ export const Chat = Schema.Struct({
   traceQueue: Ref.Ref(Queue).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/assistant/Chat',
-    version: '0.2.0',
+    typename: 'org.dxos.type.assistant.chat',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--atom--regular',
-    hue: 'blue',
+    hue: 'sky',
   }),
 );
 
@@ -39,7 +41,7 @@ export const CompanionTo = Schema.Struct({
   id: Obj.ID,
 }).pipe(
   Type.relation({
-    typename: 'dxos.org/relation/assistant/CompanionTo',
+    typename: 'org.dxos.relation.assistant.companion-to',
     version: '0.1.0',
     source: Chat,
     target: Obj.Unknown,

@@ -33,7 +33,7 @@ describe('AtomRef - Basic Functionality', () => {
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
     db.add(targetObj);
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const ref = Ref.make(targetObj);
     const atom = AtomRef.make(ref);
@@ -48,7 +48,7 @@ describe('AtomRef - Basic Functionality', () => {
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
     db.add(targetObj);
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const ref = Ref.make(targetObj);
     const atom = AtomRef.make(ref);
@@ -90,7 +90,7 @@ describe('AtomRef - Referential Equality', () => {
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
     db.add(targetObj);
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const ref = Ref.make(targetObj);
 
@@ -116,7 +116,7 @@ describe('AtomRef - Referential Equality', () => {
     });
     db.add(targetObj1);
     db.add(targetObj2);
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const ref1 = Ref.make(targetObj1);
     const ref2 = Ref.make(targetObj2);
@@ -133,7 +133,7 @@ describe('AtomRef - Referential Equality', () => {
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
     db.add(targetObj);
-    await db.flush({ indexes: true });
+    await db.flush();
 
     // Create two separate refs to the same target.
     const ref1 = Ref.make(targetObj);
@@ -158,7 +158,7 @@ describe('AtomRef - Referential Equality', () => {
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
     db.add(targetObj);
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const ref = Ref.make(targetObj);
 
@@ -197,7 +197,7 @@ describe('AtomRef - Expando Objects', () => {
   test('works with Expando objects', async () => {
     const targetObj = Obj.make(TestSchema.Expando, { name: 'Expando Target', value: 42 });
     db.add(targetObj);
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const ref = Ref.make(targetObj);
     const atom = AtomRef.make(ref);

@@ -32,7 +32,7 @@ const DefaultStory = () => {
     faker.helpers.multiple(
       () =>
         PluginNS.define({
-          id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
+          id: `org.dxos.plugin.plugin-${faker.string.uuid()}`,
           name: `${faker.commerce.productName()}`,
           description: faker.lorem.sentences(Math.ceil(Math.random() * 3)),
           tags: faker.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),

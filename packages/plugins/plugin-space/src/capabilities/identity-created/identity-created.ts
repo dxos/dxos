@@ -19,10 +19,10 @@ export default Capability.makeModule(
     yield* Effect.tryPromise(() => defaultSpace.waitUntilReady());
 
     // Create root collection structure.
-    Obj.change(defaultSpace.properties, (p) => {
-      p[Collection.Collection.typename] = Ref.make(Collection.make());
+    Obj.change(defaultSpace.properties, (properties) => {
+      properties[Collection.Collection.typename] = Ref.make(Collection.make());
       if (Migrations.versionProperty) {
-        p[Migrations.versionProperty] = Migrations.targetVersion;
+        properties[Migrations.versionProperty] = Migrations.targetVersion;
       }
     });
   }),

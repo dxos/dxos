@@ -13,12 +13,12 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 
 import { meta } from './meta';
 
-const PRESENTER_OPERATION = `${meta.id}/operation`;
+const PRESENTER_OPERATION = `${meta.id}.operation`;
 
 // TODO(wittjosiah): This appears to be unused.
 export namespace PresenterOperation {
   export const TogglePresentation = Operation.make({
-    meta: { key: `${PRESENTER_OPERATION}/toggle-presentation`, name: 'Toggle Presentation' },
+    meta: { key: `${PRESENTER_OPERATION}.toggle-presentation`, name: 'Toggle Presentation' },
     schema: {
       input: Schema.Struct({
         object: Schema.Union(Markdown.Document, Collection.Collection),
@@ -50,5 +50,5 @@ export const PresenterSettingsSchema = Schema.mutable(
 export type PresenterSettingsProps = Schema.Schema.Type<typeof PresenterSettingsSchema>;
 
 export namespace PresenterCapabilities {
-  export const Settings = Capability.make<Atom.Writable<PresenterSettingsProps>>(`${meta.id}/capability/settings`);
+  export const Settings = Capability.make<Atom.Writable<PresenterSettingsProps>>(`${meta.id}.capability.settings`);
 }

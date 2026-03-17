@@ -6,7 +6,6 @@ import React, { type PropsWithChildren, createContext, useCallback, useContext, 
 
 import { type CellAddress, type CellRange, type CompleteCellRange, type ComputeGraph } from '@dxos/compute';
 import { raise } from '@dxos/debug';
-import { Obj } from '@dxos/echo';
 import {
   Grid,
   type GridContentProps,
@@ -20,6 +19,7 @@ import { type Sheet } from '../../types';
 
 export type SheetContextValue = {
   id: string;
+  attendableId: string;
 
   model: SheetModel;
 
@@ -57,6 +57,7 @@ export const useSheetContext = (): SheetContextValue => {
 export type SheetRootProps = {
   graph: ComputeGraph;
   sheet: Sheet.Sheet;
+  attendableId: string;
   readonly?: boolean;
   ignoreAttention?: boolean;
 } & Pick<SheetContextValue, 'onInfo'>;
@@ -65,6 +66,7 @@ export const SheetRoot = ({
   children,
   graph,
   sheet,
+  attendableId,
   readonly,
   ignoreAttention,
   onInfo,
@@ -75,8 +77,8 @@ export const SheetRoot = ({
   }
 
   return (
-    <Grid.Root id={Obj.getDXN(sheet).toString()}>
-      <SheetProviderImpl model={model} onInfo={onInfo} ignoreAttention={ignoreAttention}>
+    <Grid.Root id={attendableId}>
+      <SheetProviderImpl model={model} attendableId={attendableId} onInfo={onInfo} ignoreAttention={ignoreAttention}>
         {children}
       </SheetProviderImpl>
     </Grid.Root>
@@ -86,10 +88,13 @@ export const SheetRoot = ({
 const SheetProviderImpl = ({
   __gridScope,
   children,
+  attendableId,
   ignoreAttention,
   model,
   onInfo,
-}: GridScopedProps<PropsWithChildren<Pick<SheetContextValue, 'ignoreAttention' | 'model' | 'onInfo'>>>) => {
+}: GridScopedProps<
+  PropsWithChildren<Pick<SheetContextValue, 'attendableId' | 'ignoreAttention' | 'model' | 'onInfo'>>
+>) => {
   const { id, editing, setEditing } = useGridContext('SheetProvider', __gridScope);
 
   const [cursor, setCursorInternal] = useState<CellAddress>();
@@ -120,6 +125,7 @@ const SheetProviderImpl = ({
     <SheetContext.Provider
       value={{
         id,
+        attendableId,
         model,
         editing,
         setEditing,

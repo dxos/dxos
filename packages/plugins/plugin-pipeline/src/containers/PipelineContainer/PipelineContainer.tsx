@@ -14,8 +14,8 @@ import {
   type SurfaceComponentProps,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { DeckOperation } from '@dxos/plugin-deck/types';
 import { Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { useMenu } from '@dxos/react-ui-menu';
@@ -28,24 +28,23 @@ const PIPELINE_ITEM = 'PipelineItem';
 
 export type PipelineContainerProps = SurfaceComponentProps<Pipeline.Pipeline>;
 
-export const PipelineContainer = ({ role, subject: pipeline }: PipelineContainerProps) => {
+export const PipelineContainer = ({ role, subject: pipeline, attendableId }: PipelineContainerProps) => {
   const registry = useCapability(Capabilities.AtomRegistry);
   const model = usePipelineBoardModel(pipeline, registry);
   const { invokePromise } = useOperationInvoker();
-  const attendableId = Obj.getDXN(pipeline).toString();
   const { hasAttention } = useAttention(attendableId);
 
   const handleColumnAdd = useCallback(
     () =>
       invokePromise(DeckOperation.ChangeCompanion, {
-        companion: `${attendableId}${ATTENDABLE_PATH_SEPARATOR}settings`,
+        companion: `${COMPANION_PREFIX}settings`,
       }),
-    [invokePromise, attendableId],
+    [invokePromise],
   );
 
   return (
     <PipelineComponent.Root Item={PipelineItem} onAddColumn={handleColumnAdd}>
-      <Panel.Root role={role} className='dx-article'>
+      <Panel.Root role={role}>
         <Panel.Toolbar asChild>
           <PipelineComponent.Toolbar disabled={!hasAttention} />
         </Panel.Toolbar>

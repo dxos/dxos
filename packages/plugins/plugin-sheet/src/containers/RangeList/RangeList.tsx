@@ -45,7 +45,7 @@ export const RangeList = ({ sheet }: RangeListProps) => {
         <List.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>
           {({ items: ranges }) =>
             ranges.map((range, i) => (
-              <List.Item key={i} item={range} classNames={['p-2', ghostHover]}>
+              <List.Item key={i} item={range}>
                 <List.ItemDragHandle />
                 <List.ItemTitle onClick={() => handleSelectRange(range)}>
                   {t('range title', {

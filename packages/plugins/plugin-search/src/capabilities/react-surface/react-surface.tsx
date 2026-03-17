@@ -8,12 +8,11 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/plugin-space';
-import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
+import { type Space, isSpace } from '@dxos/react-client/echo';
 
 import { SEARCH_DIALOG } from '../../constants';
-import { SearchDialog, type SearchDialogProps, SearchMain, SpaceMain } from '../../containers';
+import { SearchDialog, type SearchDialogProps, SearchMain } from '../../containers';
 import { SearchContextProvider } from '../../hooks';
-import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -29,7 +28,7 @@ export default Capability.makeModule(() =>
         ),
       }),
       Surface.create({
-        id: `${SEARCH_DIALOG}/search-input`,
+        id: `${SEARCH_DIALOG}.search-input`,
         role: 'search-input',
         component: () => {
           const space = useActiveSpace();
@@ -42,7 +41,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${SEARCH_DIALOG}/search`,
+        id: `${SEARCH_DIALOG}.search`,
         role: 'deck-companion--search',
         filter: (data): data is { subject: Space } => isSpace(data.subject),
         component: ({ data }) => {
@@ -57,15 +56,6 @@ export default Capability.makeModule(() =>
             </SearchContextProvider>
           );
         },
-      }),
-      Surface.create({
-        id: `${meta.id}/space-article`,
-        role: 'article',
-        position: 'hoist',
-        filter: (data): data is { subject: Space } =>
-          // TODO(wittjosiah): Need to avoid shotgun parsing space state everywhere.
-          isSpace(data.subject) && data.subject.state.get() === SpaceState.SPACE_READY,
-        component: ({ data }) => <SpaceMain space={data.subject} />,
       }),
     ]),
   ),

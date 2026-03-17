@@ -16,7 +16,7 @@ import { FtsIndex } from './fts-index';
 import type { IndexerObject } from './interface';
 import { ObjectMetaIndex } from './object-meta-index';
 
-const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
+const TYPE_PERSON = DXN.parse('dxn:type:com.example.type.person:0.1.0').toString();
 const TYPE_DEFAULT = DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString();
 
 const TestLayer = Layer.merge(
@@ -103,7 +103,7 @@ describe('FtsIndex', () => {
         recordId: null,
         data: {
           id: objectId,
-          [ATTR_TYPE]: DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString(),
+          [ATTR_TYPE]: DXN.parse('dxn:type:com.example.type.person:0.1.0').toString(),
           title: 'Original Title',
         },
       };

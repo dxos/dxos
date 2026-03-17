@@ -25,6 +25,7 @@ export const EmailSpec = Schema.Struct({
 });
 export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
 
+// TODO(wittjosiah): Remove. Migrate to Subscription triggers once EDGE supports them for feed queries.
 export const QueueSpec = Schema.Struct({
   kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
 
@@ -132,7 +133,7 @@ const TriggerSchema = Schema.Struct({
    *
    * @example
    * {
-   *   item: '{{$.trigger.event}}',
+   *   item: '{{event.item}}',
    *   instructions: 'Summarize and perform entity-extraction'
    *   mailbox: { '/': 'dxn:echo:AAA:ZZZ' }
    * }
@@ -140,7 +141,7 @@ const TriggerSchema = Schema.Struct({
   input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Trigger',
+    typename: 'org.dxos.type.trigger',
     version: '0.1.0',
   }),
   Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),

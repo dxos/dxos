@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Prompt from '@effect/ai/Prompt';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';

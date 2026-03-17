@@ -15,7 +15,7 @@ export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Map',
+    typename: 'com.example.type.map',
     version: '0.1.0',
   }),
 );

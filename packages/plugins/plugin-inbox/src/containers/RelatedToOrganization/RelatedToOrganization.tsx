@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { COMPANION_PREFIX, LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
-import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/types';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -46,11 +46,16 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
         const view = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
         yield* Effect.promise(() => invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' }));
         if (view) {
-          const id = Obj.getDXN(view).toString();
-          yield* Effect.promise(() => invokePromise(LayoutOperation.Open, { subject: [id], workspace: db?.spaceId }));
+          const id = getObjectPathFromObject(view);
+          yield* Effect.promise(() =>
+            invokePromise(LayoutOperation.Open, {
+              subject: [id],
+              workspace: db ? getSpacePath(db.spaceId) : undefined,
+            }),
+          );
           yield* Effect.promise(() =>
             invokePromise(DeckOperation.ChangeCompanion, {
-              companion: [id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
+              companion: `${COMPANION_PREFIX}selected-objects`,
             }),
           );
           yield* Effect.promise(() =>

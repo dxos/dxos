@@ -29,11 +29,12 @@ export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Even
     const startDate = event.start.dateTime || event.start.date!;
     const endDate = event.end?.dateTime || event.end?.date || startDate;
 
-    // Parse organizer/owner.
+    // Parse organizer/owner. Keys with undefined values must be omitted entirely
+    // because ECHO's DSON storage serializes undefined as null, which fails schema decode.
     const owner = event.organizer?.email
       ? {
           email: event.organizer.email,
-          name: event.organizer.displayName,
+          ...(event.organizer.displayName ? { name: event.organizer.displayName } : {}),
         }
       : undefined;
 
@@ -46,16 +47,16 @@ export const mapEvent: (event: GoogleCalendar.Event) => Effect.Effect<Event.Even
             const contact = yield* Resolver.resolve(Person.Person, { email: a.email! });
             return {
               email: a.email!,
-              name: a.displayName,
-              contact: contact && Ref.make(contact),
+              ...(a.displayName ? { name: a.displayName } : {}),
+              ...(contact ? { contact: Ref.make(contact) } : {}),
             };
           }),
         ),
     );
 
     return Event.make({
-      title: event.summary,
-      description: event.description && normalizeText(event.description),
+      ...(event.summary ? { title: event.summary } : {}),
+      ...(event.description ? { description: normalizeText(event.description) } : {}),
       owner: owner!,
       attendees,
       startDate,

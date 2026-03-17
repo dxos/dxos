@@ -22,7 +22,7 @@ const orientationStyles: Record<Orientation, HTMLAttributes<HTMLElement>['classN
   // TODO(wittjosiah): Stop using left/right here.
   sibling:
     'h-(--line-thickness) left-(--horizontal-indent) right-0 bg-accent-surface before:left-(--negative-terminal-size)',
-  child: 'w-full top-0 bottom-0 border-[length:--line-thickness] before:invisible',
+  child: 'inset-0 border-[length:var(--line-thickness)] before:invisible',
 };
 
 const instructionStyles: Record<InstructionType, HTMLAttributes<HTMLElement>['className']> = {

@@ -55,6 +55,7 @@ import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { VoxelPlugin } from '@dxos/plugin-voxel';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
+import { ZenPlugin } from '@dxos/plugin-zen';
 import { isTruthy } from '@dxos/util';
 
 import { steps } from './help';
@@ -133,6 +134,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
       TranscriptionPlugin.meta.id,
+      ZenPlugin.meta.id,
     ],
   ]
     .filter(isTruthy)
@@ -228,6 +230,7 @@ export const getPlugins = ({
     VoxelPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),
+    ZenPlugin(),
   ]
     .filter(isTruthy)
     .flat();

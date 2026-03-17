@@ -62,11 +62,11 @@ describe('Database Blueprint', () => {
         yield* addDatabaseBlueprint();
         yield* AiConversationService.run({
           prompt:
-            'Add a new schema called "Project" with typename "example.com/type/Project" and fields: name (string), description (string), and status (string).',
+            'Add a new schema called "Project" with typename "com.example.type.project" and fields: name (string), description (string), and status (string).',
         });
         const { db } = yield* Database.Service;
         const schemas = yield* Effect.promise(() =>
-          db.schemaRegistry.query({ typename: 'example.com/type/Project', location: ['database', 'runtime'] }).run(),
+          db.schemaRegistry.query({ typename: 'com.example.type.project', location: ['database', 'runtime'] }).run(),
         );
         expect(schemas.length).toBeGreaterThanOrEqual(1);
       },
@@ -90,6 +90,26 @@ describe('Database Blueprint', () => {
         });
         const orgs = yield* Database.runQuery(Query.type(Organization.Organization, { name: 'Cyberdyne Systems' }));
         expect(orgs).toHaveLength(1);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'object-create: create an object with a reference',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* addDatabaseBlueprint();
+        yield* AiConversationService.run({
+          prompt: 'Create a preson fullName="John Doe" with a reference to the organization "Cyberdyne Systems".',
+        });
+        const orgs = yield* Database.runQuery(Query.type(Organization.Organization, { name: 'Cyberdyne Systems' }));
+        const persons = yield* Database.runQuery(Query.type(Person.Person, { fullName: 'John Doe' }));
+        expect(orgs).toHaveLength(1);
+        expect(persons).toHaveLength(1);
+        expect(persons[0].organization.target).toBe(orgs[0]);
       },
       provideTestLayers,
       TestHelpers.provideTestContext,

@@ -17,7 +17,7 @@ import { type Message } from '@dxos/types';
 import { Project } from '../../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/project/agent',
+  key: 'org.dxos.function.project.agent',
   name: 'Project Agent',
   description: 'Agentic worker that drives the project autonomously.',
   inputSchema: Schema.Struct({

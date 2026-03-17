@@ -32,7 +32,7 @@ import PROMPT from './research-instructions.tpl?raw';
  * Exec external service and return the results as a Subgraph.
  */
 export default defineFunction({
-  key: 'dxos.org/function/research',
+  key: 'org.dxos.function.research',
   name: 'Research',
   description: trim`
     Search the web to research information about the given subject.
@@ -95,7 +95,7 @@ export default defineFunction({
         };
       }
 
-      yield* Database.flush({ indexes: true });
+      yield* Database.flush();
       yield* TracingService.emitStatus({ message: 'Starting research...' });
 
       const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));

@@ -88,7 +88,7 @@ const Grid = () => {
 
   return (
     <div className='flex w-[40rem] overflow-hidden'>
-      <Sheet.Root graph={graph} sheet={sheet}>
+      <Sheet.Root graph={graph} sheet={sheet} attendableId='test'>
         <Sheet.Content />
       </Sheet.Root>
     </div>

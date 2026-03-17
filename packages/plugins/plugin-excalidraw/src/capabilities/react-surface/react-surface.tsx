@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
-import { Diagram } from '@dxos/plugin-sketch/types';
+import { Sketch } from '@dxos/plugin-sketch/types';
 
 import { SketchContainer, SketchSettings } from '../../containers';
 import { meta } from '../../meta';
@@ -19,9 +19,9 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/sketch`,
+        id: `${meta.id}.sketch`,
         role: ['article', 'section', 'slide'],
-        filter: (data): data is { subject: Diagram.Diagram } => Diagram.isDiagram(data.subject, EXCALIDRAW_SCHEMA),
+        filter: (data): data is { subject: Sketch.Sketch } => Sketch.isSketch(data.subject, EXCALIDRAW_SCHEMA),
         component: ({ data, role }) => {
           const settings = useAtomCapability(ExcalidrawCapabilities.Settings);
 
@@ -36,7 +36,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/plugin-settings`,
+        id: `${meta.id}.plugin-settings`,
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,

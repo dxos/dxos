@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Thread } from '@dxos/types';
 
@@ -15,8 +17,12 @@ export const Channel = Schema.Struct({
   threads: Ref.Ref(Thread.Thread).pipe(Schema.Array, FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Channel',
+    typename: 'org.dxos.type.channel',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--hash--regular',
+    hue: 'rose',
   }),
 );
 

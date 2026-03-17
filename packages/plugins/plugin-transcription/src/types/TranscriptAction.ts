@@ -14,11 +14,11 @@ import { meta } from '../meta';
 // Operations
 //
 
-const TRANSCRIPT_OPERATION = `${meta.id}/operation`;
+const TRANSCRIPT_OPERATION = `${meta.id}.operation`;
 
 export namespace TranscriptOperation {
   export const Create = Operation.make({
-    meta: { key: `${TRANSCRIPT_OPERATION}/create`, name: 'Create Transcript' },
+    meta: { key: `${TRANSCRIPT_OPERATION}.create`, name: 'Create Transcript' },
     schema: {
       input: Schema.Struct({
         name: Schema.optional(Schema.String),

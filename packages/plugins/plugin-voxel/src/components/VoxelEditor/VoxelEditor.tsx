@@ -131,6 +131,10 @@ export type VoxelEditorProps = {
   toolMode?: ToolMode;
   /** Currently selected hue. */
   selectedHue?: Hue;
+  /** Whether to show the ground grid (default true). */
+  showGrid?: boolean;
+  /** Position of the currently selected/last-placed voxel. */
+  selectedPosition?: { x: number; y: number; z: number } | null;
   /** Read-only mode (no interaction, no ground plane, no orbit controls). */
   readOnly?: boolean;
   /** Called when user clicks to add a voxel. */
@@ -158,6 +162,16 @@ const GhostCursor = ({ position, hue, isRemove }: { position: GhostPosition; hue
         <lineBasicMaterial color={displayColor} transparent opacity={0.8} />
       </lineSegments>
     </mesh>
+  );
+};
+
+/** Wireframe outline indicating the currently selected voxel. */
+const SelectionIndicator = ({ position }: { position: [number, number, number] }) => {
+  return (
+    <lineSegments position={position} raycast={() => {}}>
+      <edgesGeometry args={[new THREE.BoxGeometry(1.02, 1.02, 1.02)]} />
+      <lineBasicMaterial color={0xffff00} linewidth={2} />
+    </lineSegments>
   );
 };
 
@@ -233,15 +247,23 @@ const Grid = ({ gridX, gridY, onClick, onPointerMove, onPointerOut }: GridProps)
 
   return (
     <group>
-      {/* Ground fill plane. */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[centerX, -0.501, centerZ]}>
+      {/* Ground fill plane (pushed back via polygonOffset to avoid z-fighting with grid lines). */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[centerX, -0.5, centerZ]}>
         <planeGeometry args={[gridX, gridY]} />
-        <meshStandardMaterial color={0xcccccc} side={THREE.DoubleSide} transparent opacity={0.1} />
+        <meshStandardMaterial
+          color={0xcccccc}
+          side={THREE.DoubleSide}
+          transparent
+          opacity={0.1}
+          polygonOffset
+          polygonOffsetFactor={1}
+          polygonOffsetUnits={1}
+        />
       </mesh>
-      {/* Click target (slightly above fill to catch raycasts). */}
+      {/* Click target (invisible, sits just above grid lines). */}
       <mesh
         rotation={[-Math.PI / 2, 0, 0]}
-        position={[centerX, -0.499, centerZ]}
+        position={[centerX, -0.49, centerZ]}
         onClick={onClick}
         onPointerMove={onPointerMove}
         onPointerOut={onPointerOut}
@@ -347,6 +369,8 @@ type VoxelSceneProps = {
   blockSize: number;
   toolMode: ToolMode;
   selectedHue: Hue;
+  showGrid?: boolean;
+  selectedPosition?: { x: number; y: number; z: number } | null;
   readOnly?: boolean;
   onAddVoxel?: (voxel: Voxel.VoxelData) => void;
   onRemoveVoxel?: (position: { x: number; y: number; z: number }) => void;
@@ -360,11 +384,39 @@ const VoxelScene = ({
   blockSize,
   toolMode,
   selectedHue,
+  showGrid = true,
+  selectedPosition,
   readOnly,
   onAddVoxel,
   onRemoveVoxel,
 }: VoxelSceneProps) => {
   const [ghostPosition, setGhostPosition] = useState<GhostPosition>(null);
+  const isDraggingRef = useRef(false);
+  const { gl } = useThree();
+
+  // Suppress ghost cursor during drag (orbit/pan) for performance.
+  useEffect(() => {
+    const handlePointerDown = () => {
+      isDraggingRef.current = false;
+    };
+    const handlePointerMove = (event: PointerEvent) => {
+      if (event.buttons > 0) {
+        isDraggingRef.current = true;
+        setGhostPosition(null);
+      }
+    };
+    const handlePointerUp = () => {
+      isDraggingRef.current = false;
+    };
+    gl.domElement.addEventListener('pointerdown', handlePointerDown);
+    gl.domElement.addEventListener('pointermove', handlePointerMove);
+    gl.domElement.addEventListener('pointerup', handlePointerUp);
+    return () => {
+      gl.domElement.removeEventListener('pointerdown', handlePointerDown);
+      gl.domElement.removeEventListener('pointermove', handlePointerMove);
+      gl.domElement.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [gl]);
 
   // Filter voxels to only show those within grid bounds (centered at origin, z >= 0).
   const halfX = Math.floor(gridX / 2);
@@ -402,6 +454,9 @@ const VoxelScene = ({
 
   const handleVoxelPointerMove = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
+      if (isDraggingRef.current) {
+        return;
+      }
       if (toolMode === 'select') {
         setGhostPosition(null);
         return;
@@ -440,6 +495,9 @@ const VoxelScene = ({
 
   const handleGroundPointerMove = useCallback(
     (event: ThreeEvent<PointerEvent>) => {
+      if (isDraggingRef.current) {
+        return;
+      }
       if (toolMode !== 'add' || !event.point) {
         setGhostPosition(null);
         return;
@@ -459,7 +517,7 @@ const VoxelScene = ({
       <pointLight position={[-10, 10, -10]} intensity={0.3} />
 
       <group scale={[blockSize, blockSize, blockSize]}>
-        {!readOnly && (
+        {!readOnly && showGrid && (
           <Grid
             gridX={gridX}
             gridY={gridY}
@@ -481,6 +539,9 @@ const VoxelScene = ({
         ))}
 
         {!readOnly && <GhostCursor position={ghostPosition} hue={selectedHue} isRemove={toolMode === 'remove'} />}
+        {!readOnly && selectedPosition && (
+          <SelectionIndicator position={toThree(selectedPosition.x, selectedPosition.y, selectedPosition.z)} />
+        )}
       </group>
 
       {readOnly ? (
@@ -508,6 +569,8 @@ export const VoxelEditor = ({
   blockSize = 1,
   toolMode = 'add',
   selectedHue = DEFAULT_HUE,
+  showGrid = true,
+  selectedPosition,
   readOnly,
   onAddVoxel,
   onRemoveVoxel,
@@ -531,6 +594,8 @@ export const VoxelEditor = ({
         blockSize={blockSize}
         toolMode={toolMode}
         selectedHue={selectedHue}
+        showGrid={showGrid}
+        selectedPosition={selectedPosition}
         readOnly={readOnly}
         onAddVoxel={onAddVoxel}
         onRemoveVoxel={onRemoveVoxel}

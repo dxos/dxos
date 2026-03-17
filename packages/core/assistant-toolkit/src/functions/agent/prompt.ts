@@ -19,7 +19,7 @@ import { Chat } from '../../types';
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-0';
 
 export default defineFunction({
-  key: 'dxos.org/function/prompt',
+  key: 'org.dxos.function.prompt',
   name: 'Agent',
   description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
   inputSchema: Schema.Struct({
@@ -57,7 +57,7 @@ export default defineFunction({
       ? Database.load(data.input).pipe(Effect.map(Obj.toJSON))
       : Effect.succeed(data.input);
 
-    yield* Database.flush({ indexes: true });
+    yield* Database.flush();
     const prompt = yield* Database.load(data.prompt);
     const systemPrompt = data.systemPrompt ? yield* Database.load(data.systemPrompt) : undefined;
     yield* TracingService.emitStatus({ message: `Running ${prompt.id}` });

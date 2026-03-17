@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as boardTranslations } from '@dxos/react-ui-board';
 
@@ -19,10 +21,9 @@ export const BoardPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Board.Board.typename,
       metadata: {
-        icon: 'ph--squares-four--regular',
-        iconHue: 'green',
+        icon: Annotation.IconAnnotation.get(Board.Board).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Board.Board).pipe(Option.getOrThrow).hue ?? 'white',
         createObject: ((props) => Effect.sync(() => Board.makeBoard(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),

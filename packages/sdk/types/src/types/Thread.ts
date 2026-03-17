@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -21,7 +23,7 @@ export const Thread = Schema.Struct({
   messages: Schema.Array(Ref.Ref(Message.Message)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Thread',
+    typename: 'org.dxos.type.thread',
     version: '0.1.0',
   }),
   // TODO(wittjosiah): Remove.

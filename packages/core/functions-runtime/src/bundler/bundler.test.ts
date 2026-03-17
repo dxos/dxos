@@ -36,7 +36,7 @@ describe.skip('Bundler', () => {
       import { Filter } from './runtime.js';
 
       export default function handler () {
-        return Filter.typename('dxos.org/type/Example');
+        return Filter.typename('org.dxos.type.example');
       }
     `,
     });
@@ -77,7 +77,7 @@ describe.skip('Bundler', () => {
         import * as Schema from 'effect/Schema';
 
         export default defineFunction({
-          key: 'dxos.org/script/forex-effect',
+          key: 'org.dxos.script.forex-effect',
           name: 'Forex Effect',
           description: 'Returns the exchange rate between two currencies.',
 

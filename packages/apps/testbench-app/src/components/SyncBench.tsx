@@ -24,14 +24,14 @@ const runtime = Atom.runtime(BrowserKeyValueStore.layerLocalStorage);
 
 const showConfigAtom = Atom.kvs({
   runtime: runtime,
-  key: 'dxos.org/testbench-app/show-config',
+  key: 'org.dxos.testbench-app.show-config',
   schema: Schema.Boolean,
   defaultValue: () => false,
 }).pipe(Atom.keepAlive);
 
 const spaceIdAtom = Atom.kvs({
   runtime: runtime,
-  key: 'dxos.org/testbench-app/space-id',
+  key: 'org.dxos.testbench-app.space-id',
   schema: Schema.String,
   defaultValue: () => '',
 }).pipe(Atom.keepAlive);

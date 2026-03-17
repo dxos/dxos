@@ -17,8 +17,8 @@ const Separator = forwardRef<HTMLDivElement, SeparatorProps>(
     const { tx } = useThemeContext();
     return (
       <SeparatorPrimitive
-        orientation={orientation}
         {...props}
+        orientation={orientation}
         className={tx('separator.root', { orientation, subdued }, classNames)}
         ref={forwardedRef}
       />

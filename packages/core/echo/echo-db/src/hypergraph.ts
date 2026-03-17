@@ -129,6 +129,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return ref;
   }
 
+  getDatabase(spaceId: SpaceId): EchoDatabaseImpl | undefined {
+    return this._databases.get(spaceId);
+  }
+
   /**
    * @param hostDb Host database for reference resolution.
    * @param middleware Called with the loaded object. The caller may change the object.

@@ -63,7 +63,7 @@ export const TokensPanel = ({
         ) : (
           <Settings.Group>
             <TokenManager tokens={tokens} onDelete={onDelete} />
-            {tokens.length > 0 && <Separator classNames='my-4' />}
+            {tokens.length > 0 && <Separator />}
             <NewTokenSelector spaceId={spaceId} onAddAccessToken={onAddAccessToken} onCustomToken={onNew} />
           </Settings.Group>
         )}

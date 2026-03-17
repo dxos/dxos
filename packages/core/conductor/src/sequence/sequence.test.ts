@@ -108,7 +108,7 @@ describe.skip('Sequence', () => {
       ),
     ];
 
-    await db.flush({ indexes: true });
+    await db.flush();
 
     // const [exa, localSearch, graphWriter] = [
     // createExaTool({ apiKey: EXA_API_KEY }),

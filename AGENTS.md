@@ -3,9 +3,9 @@
 ## IMPORTANT
 
 - When you start, the first thing you should do is tell the user if you understand these instructions and list the config files you are aware of.
-- ALWAYS test your work after each step.
 - If you are unsure about the best way to implement something, ask the user for clarification.
 - When asking the user a question; either make it yes/no, or provide numbered options.
+- ALWAYS test your work after each step.
 
 ## Dependencies
 
@@ -24,12 +24,18 @@
 - Check package tasks: see `moon.yml` in package directory.
 - **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Filter out warnings from your output.
 
-## Important
+## Planning
 
-- Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
+- **IMPORTANT**: Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
+
+## Knowledge
+
+- **IMPORTANT**: Follow DXOS-specific rules in `.agents/sdk/*`.
+- Update these documents when you learn better patterns; or when the user asks you to correct your implementation.
 
 ## Code Style
 
+- Follow the DXOS SDK guide.
 - Use TypeScript with single quotes for strings.
 - Prefer functional programming and arrow functions.
 - Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
@@ -73,16 +79,16 @@ Examples:
   - Check `moon run :test` succeeds
   - Commit and push any pending changes
   - Monitor CI: `pnpm -w gh-action --verify --watch`
-  - Address all PR review comments (fix or explain why not) and post a reply to all comments
+  - **IMPORTANT**: Address all PR review comments (fix or explain why not) and post a reply to all comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
-  - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"
-  - After the CI succeeds, remove the local worktree and branch.
+  - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".
+  - After the PR is merged, remove the local worktree and branch.
 
 ## Cursor Cloud specific instructions
 
 ### Toolchain
 
-This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.3. All are managed by **proto** (see `.prototools`). In the cloud VM, proto is installed at `~/.proto` and must be on PATH (`export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"`). Do **not** use nvm; proto shims must take precedence.
+This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4. All are managed by **proto** (see `.prototools`). In the cloud VM, proto is installed at `~/.proto` and must be on PATH (`export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"`). Do **not** use nvm; proto shims must take precedence.
 
 ### Running services
 

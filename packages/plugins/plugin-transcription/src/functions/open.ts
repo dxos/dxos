@@ -12,7 +12,7 @@ import { Message, Transcript } from '@dxos/types';
 import { renderByline } from '../util';
 
 export default defineFunction({
-  key: 'dxos.org/function/transcription/open',
+  key: 'org.dxos.function.transcription.open',
   name: 'Open',
   description: 'Opens and reads the contents of a transcription object.',
   inputSchema: Schema.Struct({

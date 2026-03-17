@@ -13,7 +13,7 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-export const OBJECT_RENAME_POPOVER = `${meta.id}/ObjectRenamePopover`;
+export const OBJECT_RENAME_POPOVER = `${meta.id}.ObjectRenamePopover`;
 
 export const ObjectRenamePopover = ({ object }: { object: Obj.Unknown }) => {
   const { t } = useTranslation(meta.id);

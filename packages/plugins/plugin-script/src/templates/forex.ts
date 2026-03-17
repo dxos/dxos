@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { defineFunction } from '@dxos/functions';
 
 export default defineFunction({
-  key: 'dxos.org/script/forex',
+  key: 'org.dxos.script.forex',
   name: 'Forex',
   description: 'Returns the exchange rate between two currencies.',
 

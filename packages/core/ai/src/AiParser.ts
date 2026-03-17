@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as Response from '@effect/ai/Response';
 import type * as Tool from '@effect/ai/Tool';
 import * as Effect from 'effect/Effect';

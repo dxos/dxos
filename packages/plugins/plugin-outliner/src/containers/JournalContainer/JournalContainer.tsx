@@ -50,7 +50,7 @@ export const JournalContainer = ({ role, subject: journal, showCalendar = true }
             </Calendar.Root>
           )}
 
-          <JournalComponent journal={journal} classNames='dx-article' onSelect={handleSelect} />
+          <JournalComponent journal={journal} classNames='dx-document' onSelect={handleSelect} />
         </div>
       </Panel.Content>
     </Panel.Root>
