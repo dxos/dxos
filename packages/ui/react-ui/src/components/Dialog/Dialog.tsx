@@ -199,7 +199,7 @@ const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTML
 
 type DialogDescriptionProps = ThemedClassName<DialogPrimitive.DialogDescriptionProps> & { srOnly?: boolean };
 
-const DialogDescription: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<
+const DialogDescription: ForwardRefExoticComponent<DialogDescriptionProps> = forwardRef<
   HTMLParagraphElement,
   DialogDescriptionProps
 >(({ classNames, srOnly, ...props }, forwardedRef) => {
