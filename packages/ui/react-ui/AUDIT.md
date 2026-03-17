@@ -114,9 +114,8 @@ Problem: some components are not propagating props to spread on their root DOM e
 - [ ] Create column-formatted markdown tables with an entry for each react-ui-xxx package listing only compound (radix-style) components.
 - [ ] For each compound component, determine if the Root component is:
   - headless (i.e., doesn't implement a DOM node)
-  - implements SlottableProps
-  - implements ComposableProps
-  - if ComposableProps correctly spreads ...props on the first child element
+  - implements SlottableProps: Yes/No
+  - implements ComposableProps: Yes/No/ISSUE if does not spread ...props on the first child element.
 
 ##### react-ui (core)
 
