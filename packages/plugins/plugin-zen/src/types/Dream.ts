@@ -40,6 +40,11 @@ export const Dream = Schema.Struct({
 
 export interface Dream extends Schema.Schema.Type<typeof Dream> {}
 
-export const make = ({ name, duration = 30, soundtrack = 'rain', sequences }: Partial<Schema.Schema.Type<typeof Dream>> = {}) => {
+export const make = ({
+  name,
+  duration = 30,
+  soundtrack = 'rain',
+  sequences,
+}: Partial<Schema.Schema.Type<typeof Dream>> = {}) => {
   return Obj.make(Dream, { name, duration, soundtrack, sequences });
 };
