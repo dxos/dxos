@@ -119,6 +119,6 @@ const useRelatedObjects = (
       related.push(...targetObjects, ...sourceObjects);
     }
 
-    return related;
+    return Array.from(new Set(related));
   }, [record, objects]);
 };
