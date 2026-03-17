@@ -46,6 +46,7 @@
   "dependencies": {
     "@automerge/automerge": "catalog:",
     "@automerge/automerge-repo": "catalog:",
+    "@automerge/automerge-subduction": "0.4.0-alpha.1",
     "@dxos/async": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -91,7 +92,8 @@
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
     "fast-check": "catalog:",
-    "get-port-please": "catalog:"
+    "get-port-please": "catalog:",
+    "ws": "catalog:"
   },
   "publishConfig": {
     "access": "public"
