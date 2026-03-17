@@ -19,7 +19,7 @@ type ToastViewportProps = ThemedClassName<ToastPrimitive.ToastViewportProps>;
 
 const ToastViewport = forwardRef<HTMLOListElement, ToastViewportProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  return <ToastPrimitive.Viewport className={tx('toast.viewport', {}, classNames)} ref={forwardedRef} />;
+  return <ToastPrimitive.Viewport {...props} className={tx('toast.viewport', {}, classNames)} ref={forwardedRef} />;
 });
 
 type ToastRootProps = ThemedClassName<ToastPrimitive.ToastProps>;

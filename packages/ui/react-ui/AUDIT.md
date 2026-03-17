@@ -111,7 +111,7 @@ ISSUE: Prevent spreading other props (e.g., `extensions` in MarkdownToolbar)
 
 Problem: some components are not propagating props to spread on their root DOM element when used as a slot child.
 
-- [ ] Create column-aligned markdown tables with an entry for each react-ui-xxx package listing only compound (radix-style) components.
+- [ ] Create column-aligned Markdown tables with an entry for each react-ui-xxx package listing only compound (radix-style) components.
   - Consolidate all react-ui-xxx components into a single table with a column representing the package name.
   - Create an empty row between packages.
 - [ ] Each row should include the following columns (in order):

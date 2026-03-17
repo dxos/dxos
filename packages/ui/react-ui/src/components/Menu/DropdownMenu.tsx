@@ -74,7 +74,6 @@ const DropdownMenuRoot: FC<DropdownMenuRootProps> = ({
   defaultOpen,
   onOpenChange,
   modal = true,
-  ...props
 }: ScopedProps<DropdownMenuRootProps>) => {
   const menuScope = useMenuScope(__scopeDropdownMenu);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
@@ -88,14 +87,14 @@ const DropdownMenuRoot: FC<DropdownMenuRootProps> = ({
     <DropdownMenuProvider
       scope={__scopeDropdownMenu}
       triggerId={useId()}
-      triggerRef={triggerRef as RefObject<HTMLButtonElement | null>}
+      triggerRef={triggerRef}
       contentId={useId()}
       open={open}
       onOpenChange={setOpen}
       onOpenToggle={useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen])}
       modal={modal}
     >
-      <MenuPrimitive.Root {...props} {...menuScope} open={open} onOpenChange={setOpen} dir={dir} modal={modal}>
+      <MenuPrimitive.Root {...menuScope} open={open} onOpenChange={setOpen} dir={dir} modal={modal}>
         {children}
       </MenuPrimitive.Root>
     </DropdownMenuProvider>
