@@ -24,9 +24,9 @@ export default Capability.makeModule(
 
     log('creating client');
     const client = new Client(options);
-    log('initializing client');
+    log('initializing client (calling client.initialize())...');
     yield* Effect.tryPromise(() => client.initialize());
-    log('initialized client');
+    log('client.initialize() returned successfully');
     if (onClientInitialized) {
       yield* onClientInitialized({ client }).pipe(
         Effect.provideService(Capability.Service, capabilityManager),
