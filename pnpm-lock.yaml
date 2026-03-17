@@ -13371,6 +13371,9 @@ importers:
         specifier: 3.19.16
         version: 3.19.16
     devDependencies:
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
