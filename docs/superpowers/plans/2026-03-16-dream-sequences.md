@@ -13,6 +13,7 @@
 ### Task 1: Add `sequences` field to Dream schema
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-zen/src/types/Dream.ts`
 
 - [ ] **Step 1: Add `sequences` field to Dream schema**
@@ -67,11 +68,13 @@
 ### Task 2: Update Mixer to accept and mutate a Dream prop
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx`
 
 - [ ] **Step 1: Add `dream` prop and remove local sequences state**
 
   Replace:
+
   ```typescript
   export type MixerProps = ThemedClassName<{
     engine: MixerEngine;
@@ -84,6 +87,7 @@
   ```
 
   With:
+
   ```typescript
   import { Obj } from '@dxos/echo';
   import { Dream, Sequence } from '../../types'; // Dream is a namespace; Sequence retained for existing usages
@@ -102,6 +106,7 @@
 - [ ] **Step 2: Update `handleAdd` to use `Obj.change`**
 
   Replace:
+
   ```typescript
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
@@ -111,6 +116,7 @@
   ```
 
   With:
+
   ```typescript
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
@@ -124,6 +130,7 @@
 - [ ] **Step 3: Update `handleDelete` to use `Obj.change`**
 
   Replace:
+
   ```typescript
   const handleDelete = useCallback(
     (id: string) => {
@@ -140,6 +147,7 @@
   ```
 
   With:
+
   ```typescript
   const handleDelete = useCallback(
     (id: string) => {
@@ -160,6 +168,7 @@
 - [ ] **Step 4: Update `handleChange` to use `Obj.change`**
 
   Replace:
+
   ```typescript
   const handleChange = useCallback(
     (updated: Sequence.Sequence) => {
@@ -173,6 +182,7 @@
   ```
 
   With:
+
   ```typescript
   const handleChange = useCallback(
     (updated: Sequence.Sequence) => {
@@ -190,6 +200,7 @@
 - [ ] **Step 5: Update `handleMove` to use `Obj.change`**
 
   Replace:
+
   ```typescript
   const handleMove = useCallback((fromIndex: number, toIndex: number) => {
     setLayers((prev) => {
@@ -202,6 +213,7 @@
   ```
 
   With:
+
   ```typescript
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
@@ -249,16 +261,19 @@
 ### Task 3: Wire Dream into ZenArticle → Mixer
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-zen/src/containers/ZenArticle/ZenArticle.tsx`
 
 - [ ] **Step 1: Pass `dream` to `<Mixer>`**
 
   Replace:
+
   ```typescript
   <Mixer engine={engine} />
   ```
 
   With:
+
   ```typescript
   <Mixer dream={dream} engine={engine} />
   ```
@@ -280,12 +295,14 @@
 ### Task 4: Update Mixer story to use an ECHO-backed Dream
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-zen/src/components/Mixer/Mixer.stories.tsx`
 - Modify: `packages/plugins/plugin-zen/package.json` (add devDependency)
 
 - [ ] **Step 1: Add `@dxos/react-client` to the pnpm catalog**
 
   Run:
+
   ```bash
   pnpm add --filter "@dxos/plugin-zen" --save-catalog "@dxos/react-client"
   ```
