@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React, { type FC, useCallback } from 'react';
+import React, { type FC, useCallback, useMemo } from 'react';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
@@ -62,6 +62,7 @@ import {
   ChessModule,
   CommentsModule,
   type ComponentProps,
+  ContextModule,
   ExecutionGraphModule,
   GraphModule,
   InboxModule,
@@ -95,7 +96,7 @@ type StoryProps = {
   blueprints?: string[];
 };
 
-const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
+const DefaultStory = ({ modules: modulesProp, showContext, blueprints = [] }: StoryProps) => {
   const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
 
@@ -130,9 +131,10 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
     log.info('event', { event });
   }, []);
 
-  const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
-  const binder = useContextBinder(chats.at(-1)?.queue.target);
-  const objects = binder?.getObjects() ?? [];
+  // TODO(burdon): Prop to add DatabaseModule?
+  const modules = useMemo(() => {
+    return [...modulesProp, ...(showContext ? [[ContextModule]] : [])];
+  }, [modulesProp, showContext]);
 
   if (!space) {
     return <Loading data={{ space: !!space }} />;
@@ -143,12 +145,12 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
       orientation='horizontal'
       size='split'
       rail={false}
-      itemsCount={modules.length + (showContext ? 1 : 0)}
+      itemsCount={modules.length}
       classNames='absolute inset-0 gap-(--stack-gap)'
     >
       {modules.map((Components, i) => {
         return (
-          <StackItem.Root key={i} item={{ id: `${i}` }}>
+          <StackItem.Root key={i} item={{ id: `column-${i}` }}>
             <Stack
               orientation='vertical'
               classNames='gap-(--stack-gap)'
@@ -157,7 +159,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
               rail={false}
             >
               {Components.map((Component, i) => (
-                <StackItem.Root key={i} item={{ id: `${i}` }} classNames={panelClassNames}>
+                <StackItem.Root key={i} item={{ id: `module-${i}` }} classNames={panelClassNames}>
                   <Component space={space} onEvent={handleEvent} />
                 </StackItem.Root>
               ))}
@@ -165,26 +167,7 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
           </StackItem.Root>
         );
       })}
-
-      {showContext && <ContextStack objects={objects} />}
     </Stack>
-  );
-};
-
-const ContextStack = ({ objects }: { objects: Obj.Unknown[] }) => {
-  return (
-    <StackItem.Content toolbar classNames={panelClassNames}>
-      <Toolbar.Root>
-        <Toolbar.Text className='flex-1 text-center'>Chat Context Objects</Toolbar.Text>
-      </Toolbar.Root>
-      <Stack orientation='vertical' size='contain' rail={false} itemsCount={objects.length}>
-        {objects.map((object) => (
-          <StackItem.Root key={object.id} classNames={panelClassNames} item={object}>
-            <Surface.Surface role='section' limit={1} data={{ subject: object }} />
-          </StackItem.Root>
-        ))}
-      </Stack>
-    </StackItem.Content>
   );
 };
 
