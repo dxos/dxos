@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Prompt } from '@dxos/blueprints';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { LabelAnnotation } from '@dxos/echo/internal';
 import { Graph } from '@dxos/plugin-explorer/types';
@@ -34,6 +34,10 @@ export const Notebook = Schema.Struct({
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--notebook--regular',
+    hue: 'sky',
+  }),
 );
 
 export type Notebook = Schema.Schema.Type<typeof Notebook>;

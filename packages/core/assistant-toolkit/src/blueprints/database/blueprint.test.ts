@@ -98,6 +98,26 @@ describe('Database Blueprint', () => {
   );
 
   it.effect(
+    'object-create: create an object with a reference',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* addDatabaseBlueprint();
+        yield* AiConversationService.run({
+          prompt: 'Create a preson fullName="John Doe" with a reference to the organization "Cyberdyne Systems".',
+        });
+        const orgs = yield* Database.runQuery(Query.type(Organization.Organization, { name: 'Cyberdyne Systems' }));
+        const persons = yield* Database.runQuery(Query.type(Person.Person, { fullName: 'John Doe' }));
+        expect(orgs).toHaveLength(1);
+        expect(persons).toHaveLength(1);
+        expect(persons[0].organization.target).toBe(orgs[0]);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
     'object-delete: delete an object',
     Effect.fnUntraced(
       function* (_) {

@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { ReactSurface } from './capabilities';
@@ -18,8 +20,8 @@ export const ZenPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Dream.Dream.typename,
       metadata: {
-        icon: 'ph--moon-stars--regular',
-        iconHue: 'violet',
+        icon: Annotation.IconAnnotation.get(Dream.Dream).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Dream.Dream).pipe(Option.getOrThrow).hue ?? 'white',
         createObject: ((props) => Effect.sync(() => Dream.make(props))) satisfies CreateObject,
         addToCollectionOnCreate: true,
       },

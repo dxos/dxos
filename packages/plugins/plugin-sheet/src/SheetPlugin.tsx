@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
 import { AutomationEvents } from '@dxos/plugin-automation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
@@ -23,8 +25,8 @@ export const SheetPlugin = Plugin.define(meta).pipe(
       id: Sheet.Sheet.typename,
       metadata: {
         label: (object: Sheet.Sheet) => object.name,
-        icon: 'ph--grid-nine--regular',
-        iconHue: 'indigo',
+        icon: Annotation.IconAnnotation.get(Sheet.Sheet).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Sheet.Sheet).pipe(Option.getOrThrow).hue ?? 'white',
         serializer,
         comments: 'anchored',
         createObject: ((props) => Effect.sync(() => Sheet.make(props))) satisfies CreateObject,

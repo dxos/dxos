@@ -13,3 +13,4 @@ export * from './websearch';
 export * from './browser';
 export * from './database';
 export * from './memory';
+export * from './automation';

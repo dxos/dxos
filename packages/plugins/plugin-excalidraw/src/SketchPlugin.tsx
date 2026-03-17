@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
 import { Sketch } from '@dxos/plugin-sketch/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
@@ -18,8 +20,8 @@ export const ExcalidrawPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Sketch.Sketch.typename,
       metadata: {
-        icon: 'ph--compass-tool--regular',
-        iconHue: 'indigo',
+        icon: Annotation.IconAnnotation.get(Sketch.Sketch).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Sketch.Sketch).pipe(Option.getOrThrow).hue ?? 'white',
         createObject: ((props) => Effect.sync(() => Sketch.make(props))) satisfies CreateObject,
       },
     },

@@ -3,11 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Ref, Tag, Type } from '@dxos/echo';
+import { Annotation, Ref, Tag, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
@@ -52,8 +53,8 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       {
         id: Collection.Collection.typename,
         metadata: {
-          icon: 'ph--folder--regular',
-          iconHue: 'neutral',
+          icon: Annotation.IconAnnotation.get(Collection.Collection).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Collection.Collection).pipe(Option.getOrThrow).hue ?? 'white',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
           inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
@@ -63,8 +64,8 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       {
         id: Type.getTypename(Type.PersistentType),
         metadata: {
-          icon: 'ph--database--regular',
-          iconHue: 'green',
+          icon: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: SpaceOperation.StoredSchemaForm,
           createObject: ((props, { db }) =>
             Effect.gen(function* () {
@@ -80,24 +81,24 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       {
         id: Organization.Organization.typename,
         metadata: {
-          icon: 'ph--building-office--regular',
-          iconHue: 'neutral',
+          icon: Annotation.IconAnnotation.get(Organization.Organization).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Organization.Organization).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props) => Effect.sync(() => Organization.make(props))) satisfies CreateObject,
         },
       },
       {
         id: Person.Person.typename,
         metadata: {
-          icon: 'ph--user--regular',
-          iconHue: 'neutral',
+          icon: Annotation.IconAnnotation.get(Person.Person).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Person.Person).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props) => Effect.sync(() => Person.make(props))) satisfies CreateObject,
         },
       },
       {
         id: Task.Task.typename,
         metadata: {
-          icon: 'ph--check-circle--regular',
-          iconHue: 'neutral',
+          icon: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: Task.Task,
           createObject: ((props) => Effect.sync(() => Task.make(props))) satisfies CreateObject,
         },

@@ -57,7 +57,7 @@ export const Prompt = Schema.Struct({
   }),
   Annotation.IconAnnotation.set({
     icon: 'ph--scroll--regular',
-    hue: 'blue',
+    hue: 'sky',
   }),
 );
 

@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { ReactSurface } from './capabilities';
@@ -18,8 +20,8 @@ export const TemplatePlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Template.Data.typename,
       metadata: {
-        icon: 'ph--asterisk--regular',
-        iconHue: 'sky',
+        icon: Annotation.IconAnnotation.get(Template.Data).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Template.Data).pipe(Option.getOrThrow).hue ?? 'white',
         createObject: ((props) => Effect.sync(() => Template.make(props))) satisfies CreateObject,
       },
     },
