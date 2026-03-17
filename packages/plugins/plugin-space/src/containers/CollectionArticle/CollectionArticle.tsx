@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { useCapabilities } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
@@ -67,17 +67,12 @@ type ObjectItem = {
 const ObjectTile: MosaicStackTileComponent<ObjectItem> = (props) => {
   const item = props.data;
   const { t } = useTranslation(meta.id);
-  const { invokeSync } = useOperationInvoker();
 
   const typename = Obj.getTypename(item.object) ?? '';
   const label =
     Obj.getLabel(item.object) ??
     toLocalizedString(['object name placeholder', { ns: typename, defaultValue: item.id }], t);
   const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
-
-  const handleClick = () => {
-    invokeSync(LayoutOperation.Open, { subject: [item.id] });
-  };
 
   return (
     <Card.Root fullWidth>
@@ -89,7 +84,7 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = (props) => {
           iconOnly
           iconClassNames={styles?.surfaceText}
         />
-        <Card.Title onClick={handleClick}>{label}</Card.Title>
+        <Card.Title>{label}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
     </Card.Root>
