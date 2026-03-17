@@ -97,7 +97,7 @@ describe('Database Blueprint', () => {
     { timeout: 60_000 },
   );
 
-  it.effect.only(
+  it.effect(
     'object-create: create an object with a reference',
     Effect.fnUntraced(
       function* (_) {
