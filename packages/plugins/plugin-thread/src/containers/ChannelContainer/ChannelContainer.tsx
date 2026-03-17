@@ -141,7 +141,7 @@ export const ChannelContainer = ({
 
   if (channel && channel.defaultThread.target && space) {
     return (
-      <Panel.Root classNames='dx-article'>
+      <Panel.Root classNames='dx-document'>
         <Panel.Toolbar asChild>
           <ChannelToolbar attendableId={attendableId} role={role} onJoinCall={handleJoin} />
         </Panel.Toolbar>

@@ -35,7 +35,7 @@ export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Panel.Root className='dx-article'>
+      <Panel.Root className='dx-document'>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <SearchList.Input placeholder={t('search placeholder')} />

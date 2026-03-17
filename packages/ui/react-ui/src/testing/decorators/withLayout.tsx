@@ -61,7 +61,7 @@ const layouts: Record<ContainerType, FC<ContainerProps>> = {
 
   centered: ({ classNames, children }: ContainerProps) => (
     <div role='none' className={mx('fixed inset-0 grid overflow-hidden place-items-center bg-base-surface')}>
-      <div role='none' className={mx('flex flex-col w-[40rem] bg-group-surface', classNames)}>
+      <div role='none' className={mx('flex flex-col bg-group-surface', classNames)}>
         {children}
       </div>
     </div>

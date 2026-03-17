@@ -55,6 +55,7 @@ export const Sequencer = forwardRef<HTMLDivElement, SequencerProps>(
 
         const updated = { ...sequence, ...newValues };
 
+        // TODO(burdon): Update if generator preset changed.
         // Seed default source when discriminator changes.
         if (
           changedKeys.includes('source.type') &&

@@ -135,7 +135,7 @@ export const StackContainer = ({ attendableId, subject: collection }: StackConta
   );
 
   return (
-    <StackItem.Content toolbar classNames='dx-article overflow-hidden border-l border-r border-subdued-separator'>
+    <StackItem.Content toolbar classNames='dx-document'>
       <Toolbar.Root>
         <Toolbar.IconButton
           icon='ph--plus--regular'

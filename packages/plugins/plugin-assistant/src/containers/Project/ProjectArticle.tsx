@@ -47,7 +47,7 @@ export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
   const stackObjects = [...artifacts, ...inputQueueItems].filter(isNonNullable);
 
   return (
-    <Panel.Root className='dx-article'>
+    <Panel.Root className='dx-document'>
       <Panel.Content>
         {/* TODO(burdon): Factor out. */}
         {stackObjects.length === 0 && (

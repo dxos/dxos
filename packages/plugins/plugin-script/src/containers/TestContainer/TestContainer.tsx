@@ -19,7 +19,7 @@ export const TestContainer = ({ role, script }: TestContainerProps) => {
   const state = useToolbarState();
   useDeployState({ state, script });
   return (
-    <Panel.Root role={role} className='dx-article'>
+    <Panel.Root role={role} className='dx-document'>
       <Panel.Content asChild>
         <TestPanel functionUrl={state.value.functionUrl} />
       </Panel.Content>

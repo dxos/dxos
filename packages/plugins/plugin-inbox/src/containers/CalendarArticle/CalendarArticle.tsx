@@ -56,7 +56,7 @@ export const CalendarArticle = ({ role, subject: calendar }: SurfaceComponentPro
     <Panel.Root role={role} classNames='@container'>
       <Panel.Content asChild>
         <div role='none' className='grid @2xl:grid-cols-[min-content_1fr] overflow-hidden'>
-          <div role='none' className='hidden @2xl:flex'>
+          <div role='none' className='invisible @2xl:visible'>
             <NaturalCalendar.Root>
               <Panel.Toolbar asChild>
                 <NaturalCalendar.Toolbar />

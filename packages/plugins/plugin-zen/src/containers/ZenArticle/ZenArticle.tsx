@@ -18,7 +18,7 @@ export const ZenArticle = ({ role, subject: dream }: ZenArticleProps) => {
   const { engine, playing, outputNode } = useMixerEngine();
 
   return (
-    <Panel.Root role={role} classNames='dx-article'>
+    <Panel.Root role={role} classNames='dx-document'>
       <Panel.Content className='grid grid-rows-[3fr_1fr]'>
         <Mixer engine={engine} />
         <div role='none' className='flex flex-col h-full py-4'>

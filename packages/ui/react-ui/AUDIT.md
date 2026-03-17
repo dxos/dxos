@@ -48,7 +48,7 @@ They need to be made headless (context-only) so they can be moved outside Panel.
 - [x] Wrap toolbars in Panel.Toolbar asChild where missing
 - [x] Make non-headless intermediate Root components headless (Chessboard.Root, PipelineComponent.Root, TableComponent.Root)
 - [x] All primitives must spread ...props and useClassName; use SlottableProps
-- [x] Consistent use of `dx-article`, `@container`
+- [x] Consistent use of `dx-document`, `@container`
 - [x] Audit radix primitives; rename `Root` to `Comp` for all radix asChild elements
 
 ## Cleanup

@@ -40,10 +40,10 @@
   }
 
   /**
-   * Article width.
+   * Document width.
    */
-  .dx-article {
-    @apply mx-auto w-full max-w-article-max-width;
+  .dx-document {
+    @apply mx-auto w-full max-w-document-max-width;
   }
 
   /**

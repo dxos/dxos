@@ -83,7 +83,7 @@ export default Capability.makeModule(() =>
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
           return (
-            <Panel.Root role={role} className='dx-article'>
+            <Panel.Root role={role} className='dx-document'>
               <Panel.Content asChild>
                 <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
               </Panel.Content>
