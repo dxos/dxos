@@ -19,6 +19,7 @@ import * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
 import * as Type from './Type';
+import * as Annotation from './Annotation';
 
 /**
  * Runtime schema for a Feed object.
@@ -39,6 +40,10 @@ export const Feed = Schema.Struct({
     version: '0.1.0',
   }),
   internal.SystemTypeAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--rows--regular',
+    hue: 'yellow',
+  }),
 );
 
 /**
