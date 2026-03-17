@@ -89,6 +89,15 @@ export class MixerEngine {
     this._emitState();
   }
 
+  /** Smoothly fade master volume to zero over the given duration. */
+  fadeOut(seconds: number): void {
+    if (this._masterGain && this._context) {
+      const now = this._context.currentTime;
+      this._masterGain.gain.setValueAtTime(this._masterGain.gain.value, now);
+      this._masterGain.gain.linearRampToValueAtTime(0, now + seconds);
+    }
+  }
+
   /** Remove and stop a single layer. */
   async removeLayer(id: string): Promise<void> {
     const existing = this._sources.get(id);

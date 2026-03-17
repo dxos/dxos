@@ -9,6 +9,8 @@ import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel } from
 import { List } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 
+import { useCountdown } from '../../hooks';
+
 import { MixerEngine } from '../../generator';
 import { Dream, Sequence } from '../../types';
 
@@ -28,6 +30,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   const [playing, setPlaying] = useState(false);
   const layers = dream.sequences ?? [];
   const [selected, setSelected] = useState<string | undefined>();
+  const durationSeconds = dream.duration ?? 1800;
+  const { remaining, formattedTime, start: startCountdown, stop: stopCountdown } = useCountdown(durationSeconds);
 
   // Keep last selected layer visible during close animation.
   const selectedLayer = useMemo(() => layers.find((layer) => layer.id === selected), [layers, selected]);
@@ -36,6 +40,26 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
     lastSelectedLayer.current = selectedLayer;
   }
   const displayedLayer = selectedLayer ?? lastSelectedLayer.current;
+
+  const FADE_OUT_SECONDS = 10;
+  const fadingRef = useRef(false);
+
+  // Begin fade-out when approaching end; auto-stop at zero.
+  useEffect(() => {
+    if (!playing) {
+      return;
+    }
+    if (remaining <= FADE_OUT_SECONDS && remaining > 0 && !fadingRef.current) {
+      fadingRef.current = true;
+      engine.fadeOut(remaining);
+    }
+    if (remaining === 0) {
+      fadingRef.current = false;
+      void engine.stop();
+      setPlaying(false);
+      stopCountdown();
+    }
+  }, [playing, remaining, engine, stopCountdown]);
 
   // Cleanup on unmount.
   useEffect(() => {
@@ -46,18 +70,23 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handlePlay = useCallback(async () => {
     if (playing) {
+      fadingRef.current = false;
       await engine.stop();
       setPlaying(false);
+      stopCountdown();
     } else {
+      fadingRef.current = false;
       await engine.play([...layers]);
       setPlaying(true);
+      startCountdown();
     }
-  }, [playing, layers, engine]);
+  }, [playing, layers, engine, startCountdown, stopCountdown]);
 
   const handleStop = useCallback(async () => {
     await engine.stop();
     setPlaying(false);
-  }, [engine]);
+    stopCountdown();
+  }, [engine, stopCountdown]);
 
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
@@ -122,6 +151,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
             <Toolbar.Root>
               <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
               <Toolbar.Separator />
+              {playing && <span className='font-mono text-sm tabular-nums text-description px-1'>{formattedTime}</span>}
               <Toolbar.IconButton
                 icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly

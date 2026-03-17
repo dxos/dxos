@@ -9,24 +9,12 @@ import { LabelAnnotation } from '@dxos/echo/internal';
 
 import { Sequence } from './Sequence';
 
-// TODO(burdon): These should configurable.
-export const Soundtrack = Schema.Literal('fireplace', 'ocean', 'rain', 'stream');
-
-export type Soundtrack = Schema.Schema.Type<typeof Soundtrack>;
-
-export const SOUNDTRACKS: Soundtrack[] = ['fireplace', 'ocean', 'rain', 'stream'];
-
 export const Dream = Schema.Struct({
   name: Schema.optional(Schema.String),
   duration: Schema.optional(
     Schema.Number.annotations({
-      description: 'Playback duration in minutes.',
-      default: 300,
-    }),
-  ),
-  soundtrack: Schema.optional(
-    Soundtrack.annotations({
-      description: 'Bundled soundtrack to play.',
+      description: 'Playback duration in seconds.',
+      default: 18_000,
     }),
   ),
   sequences: Schema.optional(Schema.Array(Sequence)),
@@ -40,11 +28,6 @@ export const Dream = Schema.Struct({
 
 export interface Dream extends Schema.Schema.Type<typeof Dream> {}
 
-export const make = ({
-  name,
-  duration = 30,
-  soundtrack = 'rain',
-  sequences,
-}: Partial<Schema.Schema.Type<typeof Dream>> = {}) => {
-  return Obj.make(Dream, { name, duration, soundtrack, sequences });
+export const make = ({ name, duration = 1800, sequences }: Partial<Schema.Schema.Type<typeof Dream>> = {}) => {
+  return Obj.make(Dream, { name, duration, sequences });
 };
