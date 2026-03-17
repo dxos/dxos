@@ -12,7 +12,7 @@ export const Dream = Schema.Struct({
   duration: Schema.optional(
     Schema.Number.annotations({
       description: 'Playback duration in seconds.',
-      default: 30,
+      default: 300,
     }),
   ),
 }).pipe(
