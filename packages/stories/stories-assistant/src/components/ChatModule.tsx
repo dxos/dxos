@@ -60,7 +60,14 @@ export const ChatModule = ({ space }: ComponentProps) => {
               </Popover.Root>
             </Toolbar.Root>
             <Chat.Thread />
-            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
+            <Chat.Prompt
+              {...chatProps}
+              classNames='border-none rounded-none'
+              outline
+              preset={preset?.id}
+              online={online}
+              onOnlineChange={setOnline}
+            />
           </Chat.Viewport>
         </Panel.Content>
       </Panel.Root>
