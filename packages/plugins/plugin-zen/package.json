@@ -43,7 +43,7 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/keys": "catalog:",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
