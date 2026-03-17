@@ -24,7 +24,6 @@ import React, {
   type ComponentPropsWithRef,
   type ComponentPropsWithoutRef,
   type ComponentRef,
-  type ElementRef,
   type FC,
   type ReactNode,
   type RefObject,
@@ -144,7 +143,7 @@ PopoverAnchor.displayName = ANCHOR_NAME;
 
 const TRIGGER_NAME = 'PopoverTrigger';
 
-type PopoverTriggerElement = ElementRef<typeof Primitive.button>;
+type PopoverTriggerElement = ComponentRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
 interface PopoverTriggerProps extends PrimitiveButtonProps {
   asChild?: boolean;
@@ -397,7 +396,7 @@ const PopoverContentNonModal = forwardRef<PopoverContentTypeElement, PopoverCont
   },
 );
 
-type PopoverContentImplElement = ElementRef<typeof PopperPrimitive.Content>;
+type PopoverContentImplElement = ComponentRef<typeof PopperPrimitive.Content>;
 type FocusScopeProps = ComponentPropsWithoutRef<typeof FocusScope>;
 type DismissableLayerProps = ComponentPropsWithoutRef<typeof DismissableLayer>;
 type PopperContentProps = ThemedClassName<ComponentPropsWithoutRef<typeof PopperPrimitive.Content>>;
@@ -514,7 +513,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
 
 const CLOSE_NAME = 'PopoverClose';
 
-type PopoverCloseElement = ElementRef<typeof Primitive.button>;
+type PopoverCloseElement = ComponentRef<typeof Primitive.button>;
 interface PopoverCloseProps extends PrimitiveButtonProps {}
 
 const PopoverClose = forwardRef<PopoverCloseElement, PopoverCloseProps>(
@@ -540,7 +539,7 @@ PopoverClose.displayName = CLOSE_NAME;
 
 const ARROW_NAME = 'PopoverArrow';
 
-type PopoverArrowElement = ElementRef<typeof PopperPrimitive.Arrow>;
+type PopoverArrowElement = ComponentRef<typeof PopperPrimitive.Arrow>;
 type PopperArrowProps = ThemedClassName<ComponentPropsWithoutRef<typeof PopperPrimitive.Arrow>>;
 interface PopoverArrowProps extends PopperArrowProps {}
 

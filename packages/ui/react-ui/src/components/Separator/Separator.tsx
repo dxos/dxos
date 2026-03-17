@@ -1,22 +1,19 @@
 //
 // Copyright 2023 DXOS.org
 //
-import {
-  Separator as SeparatorPrimitive,
-  type SeparatorProps as SeparatorPrimitiveProps,
-} from '@radix-ui/react-separator';
+import * as SeparatorPrimitive from '@radix-ui/react-separator';
 import React, { forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-type SeparatorProps = ThemedClassName<SeparatorPrimitiveProps> & { subdued?: boolean };
+type SeparatorProps = ThemedClassName<SeparatorPrimitive.SeparatorProps> & { subdued?: boolean };
 
 const Separator = forwardRef<HTMLDivElement, SeparatorProps>(
   ({ classNames, orientation = 'horizontal', subdued, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <SeparatorPrimitive
+      <SeparatorPrimitive.Root
         {...props}
         orientation={orientation}
         className={tx('separator.root', { orientation, subdued }, classNames)}

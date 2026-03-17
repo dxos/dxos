@@ -9,20 +9,20 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Sequence } from '../../types';
 
-import { Sequencer } from './Sequencer';
+import { Sound } from './Sound';
 
 const SampleStory = () => {
   const [sequence, setSequence] = useState(Sequence.makeSampleSequence('rain'));
-  return <Sequencer sequence={sequence} onUpdate={setSequence} />;
+  return <Sound sequence={sequence} onUpdate={setSequence} />;
 };
 
 const GeneratorStory = () => {
   const [sequence, setSequence] = useState(Sequence.makeGeneratorSequence());
-  return <Sequencer sequence={sequence} onUpdate={setSequence} />;
+  return <Sound sequence={sequence} onUpdate={setSequence} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-zen/components/Sequencer',
+  title: 'plugins/plugin-zen/components/Sound',
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',

@@ -4,4 +4,4 @@
 
 export * from './Editor';
 export * from './Mixer';
-export * from './Sequencer';
+export * from './Sound';

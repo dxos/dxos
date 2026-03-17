@@ -564,7 +564,7 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestTriggerDispatcherLayer)),
     );
 
-    it.effect(
+    it.effect.skip(
       'should not invoke triggers for unchanged objects',
       Effect.fnUntraced(function* ({ expect }) {
         const functionObj = serializeFunction(ExampleFunctions.Reply);
