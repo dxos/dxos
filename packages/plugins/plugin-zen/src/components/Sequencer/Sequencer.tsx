@@ -9,7 +9,7 @@ import { composableProps } from '@dxos/ui-theme';
 import { Form, type FormFieldMap, SelectField, omitId } from '@dxos/react-ui-form';
 
 import { Sequence } from '../../types';
-import { SAMPLE_URLS } from '../../generator';
+import { BRAINWAVE_PRESETS, SAMPLE_URLS } from '../../generator';
 
 export type SequencerProps = ComposableProps<HTMLDivElement> & {
   sequence: Sequence.Sequence;
@@ -55,7 +55,6 @@ export const Sequencer = forwardRef<HTMLDivElement, SequencerProps>(
 
         const updated = { ...sequence, ...newValues };
 
-        // TODO(burdon): Update if generator preset changed.
         // Seed default source when discriminator changes.
         if (
           changedKeys.includes('source.type') &&
@@ -63,6 +62,12 @@ export const Sequencer = forwardRef<HTMLDivElement, SequencerProps>(
           newValues.source.type !== sequence.source.type
         ) {
           updated.source = Sequence.DEFAULT_SOURCES[newValues.source.type];
+        }
+
+        // Sync beatFrequency when generator preset changes.
+        if (changedKeys.includes('source.preset') && updated.source.type === 'generator') {
+          const { beatFrequency } = BRAINWAVE_PRESETS[updated.source.preset];
+          updated.source = { ...updated.source, beatFrequency };
         }
 
         onUpdate(updated);
