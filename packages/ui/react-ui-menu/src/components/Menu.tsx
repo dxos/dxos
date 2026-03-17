@@ -224,9 +224,9 @@ const MenuRoot = ({ children, open, defaultOpen, onOpenChange, caller, ...props 
   const closeMenu = useCallback(() => setMenuOpen(false), [setMenuOpen]);
 
   return (
-    <MenuProvider {...props}>
+    <MenuProvider>
       <MenuDropdownContext.Provider value={{ closeMenu, caller }}>
-        <NaturalDropdownMenu.Root open={menuOpen} onOpenChange={setMenuOpen}>
+        <NaturalDropdownMenu.Root {...props} open={menuOpen} onOpenChange={setMenuOpen}>
           {children}
         </NaturalDropdownMenu.Root>
       </MenuDropdownContext.Provider>

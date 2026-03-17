@@ -51,7 +51,6 @@ export const CalendarArticle = ({ role, subject: calendar }: SurfaceComponentPro
     [singleSelect, invokePromise, id],
   );
 
-  // TODO(burdon): Create story.
   return (
     <Panel.Root role={role} classNames='@container'>
       <Panel.Content asChild>

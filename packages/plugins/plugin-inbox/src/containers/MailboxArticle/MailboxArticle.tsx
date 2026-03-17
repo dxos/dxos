@@ -180,7 +180,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   }, [filterVisible, filterProp, parser]);
 
   return (
-    <Panel.Root className='dx-document'>
+    <Panel.Root>
       <Panel.Toolbar>
         {/* TODO(burdon): Factor out menu. */}
         <ElevationProvider elevation='positioned'>

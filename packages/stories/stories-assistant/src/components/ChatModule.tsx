@@ -38,12 +38,14 @@ export const ChatModule = ({ space }: ComponentProps) => {
   return (
     <Chat.Root chat={chat} processor={processor}>
       <Panel.Root className='dx-document'>
-        <Panel.Toolbar asChild>
+        {/* TODO(burdon): Chat.Toolbar => Menu.Root which doesn't handle slot. Need to audit Root components. */}
+        <Panel.Toolbar>
           <Chat.Toolbar />
         </Panel.Toolbar>
         <Panel.Content asChild>
+          {/* TODO(burdon): Remove relative. */}
           <Chat.Viewport classNames='relative'>
-            <Toolbar.Root classNames='border-b border-subdued-separator'>
+            <Toolbar.Root>
               <div className='px-1 grow truncate text-subdued'>{chat?.name}</div>
               <Popover.Root>
                 <Popover.Trigger asChild>
@@ -57,11 +59,8 @@ export const ChatModule = ({ space }: ComponentProps) => {
                 </Popover.Portal>
               </Popover.Root>
             </Toolbar.Root>
-
             <Chat.Thread />
-            <div role='none' className='p-4'>
-              <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
-            </div>
+            <Chat.Prompt {...chatProps} outline preset={preset?.id} online={online} onOnlineChange={setOnline} />
           </Chat.Viewport>
         </Panel.Content>
       </Panel.Root>

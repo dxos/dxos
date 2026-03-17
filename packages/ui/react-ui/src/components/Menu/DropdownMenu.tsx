@@ -67,8 +67,16 @@ interface DropdownMenuRootProps {
   modal?: boolean;
 }
 
-const DropdownMenuRoot: FC<DropdownMenuRootProps> = (props: ScopedProps<DropdownMenuRootProps>) => {
-  const { __scopeDropdownMenu, children, dir, open: openProp, defaultOpen, onOpenChange, modal = true } = props;
+const DropdownMenuRoot: FC<DropdownMenuRootProps> = ({
+  __scopeDropdownMenu,
+  children,
+  dir,
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  modal = true,
+  ...props
+}: ScopedProps<DropdownMenuRootProps>) => {
   const menuScope = useMenuScope(__scopeDropdownMenu);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const [open = false, setOpen] = useControllableState({
@@ -88,7 +96,7 @@ const DropdownMenuRoot: FC<DropdownMenuRootProps> = (props: ScopedProps<Dropdown
       onOpenToggle={useCallback(() => setOpen((prevOpen) => !prevOpen), [setOpen])}
       modal={modal}
     >
-      <MenuPrimitive.Root {...menuScope} open={open} onOpenChange={setOpen} dir={dir} modal={modal}>
+      <MenuPrimitive.Root {...props} {...menuScope} open={open} onOpenChange={setOpen} dir={dir} modal={modal}>
         {children}
       </MenuPrimitive.Root>
     </DropdownMenuProvider>

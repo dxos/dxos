@@ -61,6 +61,8 @@ They need to be made headless (context-only) so they can be moved outside Panel.
 
 - [ ] Splitter (e.g., JournalContainer); mobile layout
 
+- [ ] HOC/marker interface for components.
+
 - [ ] Dialog.Body should delegate grid to children
   - Search for all Dialog.Content cases.
   - Push down pattern to lower-level components like Form, SearchList.
@@ -105,147 +107,75 @@ ISSUE: Prevent spreading other props (e.g., `extensions` in MarkdownToolbar)
 
 ### Slot Composition Audit
 
-Components used as direct children of an `asChild` parent (slotted children).
-When a Radix `Slot` parent merges props, the child receives a `className` prop via the merge mechanism.
-Components must use `composableProps` to reconcile the incoming `className` with their own `classNames`.
+#### Phase 1
 
-Status:
+Problem: some components are not propagating props to spread on their root DOM element when used as a slot child.
 
-- OK: Uses `composableProps` — properly merges `className` + `classNames`.
-- ISSUE: Uses `ThemedClassName` only — parent's `className` from Slot merge is lost (overridden by `tx`/`mx`).
+- [x] Create column-formatted markdown tables with an entry for each react-ui-xxx package listing only compound (radix-style) components.
+- [x] For each compound component, determine if the Root component is: headless (i.e., doesn't implement a DOM node), implements ComposableProps, implements SlottableProps.
 
-#### react-ui
+##### react-ui (core)
 
-| Component              | Type              | Status | Slotted by                                                                                            |
-| ---------------------- | ----------------- | ------ | ----------------------------------------------------------------------------------------------------- |
-| `Button`               | `ThemedClassName` | ISSUE  | `ToolbarPrimitive.Button`, `Dialog.Trigger`, `ToggleGroupItemPrimitive`, `TabsPrimitive.Trigger`, etc |
-| `ButtonGroup`          | `ThemedClassName` | ISSUE  | `ToggleGroupPrimitive`                                                                                |
-| `Card.Root`            | `SlottableProps`  | OK     | —                                                                                                     |
-| `Column.Root`          | `SlottableProps`  | OK     | —                                                                                                     |
-| `Column.Row`           | `SlottableProps`  | OK     | —                                                                                                     |
-| `Column.Segment`       | `SlottableProps`  | OK     | —                                                                                                     |
-| `Flex`                 | `ComposableProps` | OK     | `Column.Segment`                                                                                      |
-| `Grid`                 | `ComposableProps` | OK     | `Panel.Content`                                                                                       |
-| `Icon`                 | `ThemedClassName` | ISSUE  | `SelectPrimitive.Icon`                                                                                |
-| `IconButton`           | `ThemedClassName` | ISSUE  | `ToolbarPrimitive.Button`, `Tooltip.Trigger`, `TabsPrimitive.Trigger`                                 |
-| `Link`                 | `ThemedClassName` | ISSUE  | `ToolbarPrimitive.Link`, `Breadcrumb.Link`                                                            |
-| `List`                 | `ThemedClassName` | ISSUE  | `Panel.Content`                                                                                       |
-| `ListItem.Heading`     | `ThemedClassName` | ISSUE  | stories                                                                                               |
-| `ListItem.Root`        | `ThemedClassName` | ISSUE  | `CollapsiblePrimitive`                                                                                |
-| `Panel.Content`        | `SlottableProps`  | OK     | —                                                                                                     |
-| `Panel.Root`           | `SlottableProps`  | OK     | —                                                                                                     |
-| `Panel.Statusbar`      | `SlottableProps`  | OK     | —                                                                                                     |
-| `Panel.Toolbar`        | `SlottableProps`  | OK     | —                                                                                                     |
-| `ScrollArea.Root`      | `SlottableProps`  | OK     | `Panel.Content`                                                                                       |
-| `ScrollContainer.Root` | `ThemedClassName` | ISSUE  | `Panel.Content`                                                                                       |
-| `Select.TriggerButton` | `ThemedClassName` | ISSUE  | `Toolbar.Button`                                                                                      |
-| `Splitter.Root`        | `SlottableProps`  | OK     | `Panel.Content`                                                                                       |
-| `Toggle`               | (wraps Button)    | OK     | `ToolbarPrimitive.Button`                                                                             |
-| `Toolbar.Root`         | `ThemedClassName` | OK     | `Panel.Toolbar`                                                                                       |
-| `Toolbar.Text`         | `SlottableProps`  | OK     | —                                                                                                     |
+Components:
 
-#### react-ui-board
+| Component  | Root Headless | ComposableProps | SlottableProps | Notes                                                         |
+| ---------- | ------------- | --------------- | -------------- | ------------------------------------------------------------- |
+| Avatars    | Yes           | No              | No             | Root is context-only.                                         |
+| Breadcrumb | No            | No              | No             | Root renders div/ol/li. Has asChild via ThemedClassName.      |
+| Card       | No            | No              | Yes            | Root, Title, Content, Row, Section, Heading, Text.            |
+| Dialog     | Yes           | No              | No             | Root is headless context wrapper. Content/Overlay render DOM. |
+| Input      | No            | No              | No             | Root delegates to InputRoot (@dxos/react-input).              |
+| List       | No            | No              | No             | Root wraps ListPrimitive with DensityProvider.                |
+| Main       | Yes           | No              | No             | Root is context-only.                                         |
+| Menu       | Yes           | No              | No             | DropdownMenu/ContextMenu Roots are headless.                  |
+| Message    | No            | No              | No             | Root uses ThemedClassName, not SlottableProps.                 |
+| Popover    | Yes           | No              | No             | Root is headless (wraps PopperPrimitive.Root).                |
+| ScrollArea | No            | No              | Yes            | Root uses SlottableProps.                                     |
+| Select     | Yes           | No              | No             | Root delegates to SelectPrimitive.Root (headless).            |
+| Splitter   | No            | No              | Yes            | Root and Panel use SlottableProps.                            |
+| Toast      | No            | No              | No             | Root uses ThemedClassName.                                    |
+| Toolbar    | No            | No              | Partial        | Root uses ThemedClassName. Text sub-part uses SlottableProps. |
+| Tooltip    | Yes           | No              | No             | TooltipProvider is context-only.                              |
 
-| Component         | Type              | Status | Slotted by      |
-| ----------------- | ----------------- | ------ | --------------- |
-| `Board.Container` | `ThemedClassName` | ISSUE  | `Panel.Content` |
-| `Board.Toolbar`   | `ThemedClassName` | ISSUE  | `Panel.Toolbar` |
+Primitives:
 
-#### react-ui-calendar
+| Primitive | Root Headless | ComposableProps | SlottableProps | Notes                                                     |
+| --------- | ------------- | --------------- | -------------- | --------------------------------------------------------- |
+| Column    | No            | No              | Yes            | Root, Row, Segment all use SlottableProps.                 |
+| Container | No            | No              | Yes            | Uses SlottableProps (not compound, single export).         |
+| Flex      | No            | Yes             | No             | Uses ComposableProps (not compound, single export).        |
+| Grid      | No            | Yes             | No             | Uses ComposableProps (not compound, single export).        |
+| Panel     | No            | No              | Yes            | Root, Toolbar, Content, Statusbar all use SlottableProps.  |
 
-| Component          | Type              | Status | Slotted by      |
-| ------------------ | ----------------- | ------ | --------------- |
-| `Calendar.Grid`    | `ThemedClassName` | ISSUE  | `Panel.Content` |
-| `Calendar.Toolbar` | `ThemedClassName` | ISSUE  | `Panel.Toolbar` |
+##### react-ui-xxx extension packages
 
-#### react-ui-chat
-
-| Component       | Type              | Status | Slotted by                                 |
-| --------------- | ----------------- | ------ | ------------------------------------------ |
-| `Chat.Toolbar`  | `ThemedClassName` | OK     | `Panel.Toolbar` (delegates to `Menu.Root`) |
-| `Chat.Viewport` | `ThemedClassName` | OK     | `Panel.Content` (spreads props, uses `mx`) |
-
-#### react-ui-mosaic
-
-| Component         | Type              | Status | Slotted by |
-| ----------------- | ----------------- | ------ | ---------- |
-| `Focus.Group`     | `ThemedClassName` | OK     | —          |
-| `MosaicContainer` | `ComposableProps` | OK     | —          |
-| `MosaicStack`     | `ComposableProps` | OK     | —          |
-| `MosaicTile`      | `ComposableProps` | OK     | —          |
-
-#### react-ui-searchlist
-
-| Component            | Type              | Status | Slotted by      |
-| -------------------- | ----------------- | ------ | --------------- |
-| `SearchList.Content` | `ThemedClassName` | ISSUE  | `Panel.Content` |
-
-#### react-ui-stack
-
-| Component | Type              | Status | Slotted by      |
-| --------- | ----------------- | ------ | --------------- |
-| `Stack`   | `ThemedClassName` | ISSUE  | `Panel.Content` |
-
-#### react-ui-table
-
-| Component       | Type              | Status | Slotted by      |
-| --------------- | ----------------- | ------ | --------------- |
-| `Table.Main`    | `ComposableProps` | OK     | `Panel.Content` |
-| `Table.Toolbar` | `ThemedClassName` | ISSUE  | `Panel.Toolbar` |
-
-#### react-ui-tabs
-
-| Component      | Type          | Status | Slotted by              |
-| -------------- | ------------- | ------ | ----------------------- |
-| `Tabs.Trigger` | `ButtonProps` | ISSUE  | `TabsPrimitive.Trigger` |
-
-#### plugin components (slotted by Panel)
-
-| Component                   | Type               | Status | Slotted by        |
-| --------------------------- | ------------------ | ------ | ----------------- |
-| `BaseObjectSettings`        | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `ChannelToolbar`            | `ThemedClassName`  | OK     | `Panel.Toolbar`   |
-| `ChatContainer`             | plain              | OK     | `Panel.Content`   |
-| `ComposeEmailPanel`         | plain              | OK     | `Panel.Content`   |
-| `D3ForceGraph`              | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `Event.Toolbar`             | `ThemedClassName`  | OK     | `Panel.Toolbar`   |
-| `Event.Viewport`            | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `EventList`                 | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `FilePreview`               | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `InvocationTraceContainer`  | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `KanbanBoard.Root`          | plain              | OK     | `Panel.Content`   |
-| `MarkdownEditor.Content`    | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `MarkdownEditor.Toolbar`    | `ThemedClassName`  | OK     | `Panel.Toolbar`   |
-| `Message.Toolbar`           | `ThemedClassName`  | OK     | `Panel.Toolbar`   |
-| `Message.Viewport`          | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `NotebookStack`             | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `Outline`                   | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `PipelineComponent.Content` | plain              | OK     | `Panel.Content`   |
-| `PipelineComponent.Toolbar` | `ToolbarRootProps` | OK     | `Panel.Toolbar`   |
-| `PresenterLayout`           | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `RevealPlayer`              | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `ScriptToolbar`             | `MenuRootProps`    | OK     | `Panel.Toolbar`   |
-| `Sheet.Content`             | `ComposableProps`  | OK     | `Panel.Content`   |
-| `Sheet.Statusbar`           | `ComposableProps`  | OK     | `Panel.Statusbar` |
-| `Sheet.Toolbar`             | `MenuRootProps`    | OK     | `Panel.Toolbar`   |
-| `SpaceGenerator`            | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `Surface.Surface`           | plain              | OK     | `Panel.Content`   |
-| `TemplateEditor`            | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `TestPanel`                 | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `Transcription`             | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `TypescriptEditor`          | `ThemedClassName`  | OK     | `Panel.Content`   |
-| `VoxelEditor`               | plain              | OK     | `Panel.Content`   |
-| `VoxelToolbar`              | `ToolbarRootProps` | OK     | `Panel.Toolbar`   |
-
-Components marked ISSUE need to:
-
-1. Change type from `ThemedClassName<...>` to `SlottableProps<...>` (or `ComposableProps<...>` if no `asChild`).
-2. Use `composableProps(props)` to extract and merge `className` + `classNames`.
-3. Pass merged `className` to `tx()`/`mx()` instead of raw `classNames`.
-
-### RULE
-
-- Only container components (that expand) can be asChild of Panel.Content
-- Create HOC for container
-
-withSlot();
+| Package                | Component   | Root Headless | ComposableProps | SlottableProps | Notes                                                         |
+| ---------------------- | ----------- | ------------- | --------------- | -------------- | ------------------------------------------------------------- |
+| react-ui-board         | Board       | Yes           | No              | No             | Root is context-only.                                         |
+| react-ui-board         | Chain       | Yes           | No              | No             | Root wraps ReactFlow (headless wrapper).                      |
+| react-ui-calendar      | Calendar    | Yes           | No              | No             | Root is context-only.                                         |
+| react-ui-canvas-editor | Editor      | Yes           | No              | No             | Root is context-only (EditorContext.Provider).                |
+| react-ui-chat          | ChatDialog  | No            | No              | No             | Root wraps Dialog.Root.                                       |
+| react-ui-components    | TogglePanel | No            | No              | No             | Uses Slot directly for asChild.                               |
+| react-ui-editor        | Editor      | Yes           | No              | No             | Root is context-only (EditorContext.Provider).                |
+| react-ui-form          | Form        | Yes           | No              | No             | Root is context-only.                                         |
+| react-ui-form          | Settings    | No            | No              | No             | Root wraps ScrollArea.Root.                                   |
+| react-ui-gameboard     | Gameboard   | Yes           | No              | No             | Root is context-only.                                         |
+| react-ui-geo           | Globe       | No            | No              | No             | Root renders div + SVG canvas.                                |
+| react-ui-geo           | Map         | No            | No              | No             | Root wraps MapContainer (React-Leaflet).                      |
+| react-ui-grid          | Grid        | No            | No              | No             | Root renders div with GridProvider.                           |
+| react-ui-list          | Accordion   | No            | No              | No             | Root wraps AccordionPrimitive.Root.                           |
+| react-ui-list          | List        | Yes           | No              | No             | Root is headless.                                             |
+| react-ui-list          | Tree        | Yes           | No              | No             | Root is headless.                                             |
+| react-ui-masonry       | Masonry     | No            | No              | No             | Root renders div (masonic virtualization).                    |
+| react-ui-menu          | Menu        | Yes           | No              | No             | Root wraps NaturalDropdownMenu.Root (headless). Props not forwarded. |
+| react-ui-mosaic        | Mosaic      | No            | No              | No             | Root renders Slot/Primitive.div. Sub-parts use ComposableProps. |
+| react-ui-mosaic        | Board       | Yes           | No              | No             | Root is context-only.                                         |
+| react-ui-searchlist    | SearchList  | Yes           | No              | No             | Root is context-only.                                         |
+| react-ui-searchlist    | Listbox     | Yes           | No              | No             | Root is context-only.                                         |
+| react-ui-searchlist    | Combobox    | Yes           | No              | No             | Root is context-only.                                         |
+| react-ui-stack         | StackItem   | No            | No              | No             | Root renders div.                                             |
+| react-ui-table         | Table       | Yes           | No              | No             | Root is headless. Main sub-part uses ComposableProps.         |
+| react-ui-tabs          | Tabs        | No            | No              | No             | Root wraps Radix TabsPrimitive.Root.                          |
+| react-ui-thread        | Thread      | No            | No              | No             | Root renders div with grid layout.                            |
+| react-ui-thread        | Message     | No            | No              | No             | Root renders Avatar.Root wrapper.                             |

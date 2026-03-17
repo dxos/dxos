@@ -90,13 +90,17 @@
 
   :root {
     --dx-rail-content: 3rem;
+    /** TODO(burdon): Audit. */
+    /** TODO(burdon): Density (2 sizes). */
     --dx-rail-size: calc(var(--dx-rail-content) + 1px);
     --dx-rail-item: calc(var(--dx-rail-content) - 1rem);
-    --dx-rail-action: calc(var(--dx-rail-content) - 0.5rem + 1px);
+    /* TODO(burdon): Added 1px for border. */
+    /* TODO(burdon): Remove direct usage. */
+    --dx-rail-action: calc(var(--dx-rail-content) - 0.5rem);
 
     --dx-topbar-size: var(--dx-rail-size);
-    --dx-toolbar-size: var(--dx-rail-content);
-    --dx-statusbar-size: var(--dx-rail-content);
+    --dx-toolbar-size: var(--dx-rail-action);
+    --dx-statusbar-size: var(--dx-rail-action);
 
     --dx-nav-sidebar-size: 23rem;
     --dx-complementary-sidebar-size: 25rem;

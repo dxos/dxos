@@ -7,7 +7,7 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 
 import { GenericToolkit } from '@dxos/ai';
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
@@ -129,7 +129,7 @@ const buildPluginManagerOptions = ({
       ],
       onClientInitialized: ({ client }) =>
         Effect.gen(function* () {
-          log('onClientInitialized', { identity: client.halo.identity.get()?.did });
+          log.info('onClientInitialized', { identity: client.halo.identity.get()?.did });
           // Abort if already initialized.
           if (client.halo.identity.get()) {
             return;
@@ -217,7 +217,7 @@ const PluginManagerHost: React.FC<{
 export const getDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => {
   if (lazyPlugins) {
     return [
-      ((Story: React.FC, context: { id: string }) => {
+      ((Story: FC, context: { id: string }) => {
         const [lazyResult, setLazyResult] = useState<LazyPluginsResult | null>(null);
 
         useEffect(() => {

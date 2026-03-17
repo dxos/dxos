@@ -17,14 +17,13 @@ const panelRoot: ComponentFunction<PanelProps> = (_, ...etc) =>
     ...etc,
   );
 
-// TODO(burdon): Drop asChild (or make it not necessary).
-
 const panelToolbar: ComponentFunction<PanelProps> = (_, ...etc) =>
   mx(
     // prettier-ignore
     '[grid-area:toolbar]',
-    'border-b border-subdued-separator relative',
+    'h-(--dx-toolbar-size)', // TODO(burdon): Option.
     '[.dx-main-mobile-layout_&]:px-3',
+    // 'border-b border-subdued-separator relative',
     ...etc,
   );
 
@@ -39,6 +38,7 @@ const panelStatusbar: ComponentFunction<PanelProps> = (_, ...etc) =>
   mx(
     // prettier-ignore
     '[grid-area:statusbar]',
+    'h-(--dx-statusbar-size)', // TODO(burdon): Option.
     ...etc,
   );
 
