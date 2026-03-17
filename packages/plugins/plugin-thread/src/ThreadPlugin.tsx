@@ -3,10 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Ref, Type } from '@dxos/echo';
+import { Annotation, Ref, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
@@ -42,8 +43,8 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
       {
         id: Type.getTypename(Channel.Channel),
         metadata: {
-          icon: 'ph--hash--regular',
-          iconHue: 'rose',
+          icon: Annotation.IconAnnotation.get(Channel.Channel).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Channel.Channel).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props) => Effect.sync(() => Channel.make(props))) satisfies CreateObject,
         },
       },

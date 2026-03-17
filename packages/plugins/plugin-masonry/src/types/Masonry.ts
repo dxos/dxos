@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
@@ -28,6 +28,10 @@ export const Masonry = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--wall--regular',
+    hue: 'green',
+  }),
 );
 
 export interface Masonry extends Schema.Schema.Type<typeof Masonry> {}

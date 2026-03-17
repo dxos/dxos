@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
@@ -43,6 +43,10 @@ export const Kanban = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--kanban--regular',
+    hue: 'green',
+  }),
 );
 
 /** Instance type; use Kanban.Kanban in type position so namespace has .Kanban as type and .KanbanSchema as schema. */

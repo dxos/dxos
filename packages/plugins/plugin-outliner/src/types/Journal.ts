@@ -5,7 +5,7 @@
 import { isAfter, isBefore, isEqual } from 'date-fns';
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
@@ -34,6 +34,10 @@ export const Journal = Schema.Struct({
   Type.object({
     typename: 'org.dxos.type.journal',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--calendar-check--regular',
+    hue: 'indigo',
   }),
 );
 

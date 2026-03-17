@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 import { type MakeOptional } from '@dxos/util';
@@ -54,6 +54,10 @@ export const Event = Schema.Struct({
   }),
   LabelAnnotation.set(['title']),
   DescriptionAnnotation.set('description'),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--calendar-dot--regular',
+    hue: 'rose',
+  }),
 );
 
 export interface Event extends Schema.Schema.Type<typeof Event> {}

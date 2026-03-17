@@ -69,7 +69,7 @@ export const Project = Schema.Struct({
   }),
   Annotation.IconAnnotation.set({
     icon: 'ph--circuitry--regular',
-    hue: 'green',
+    hue: 'sky',
   }),
   QueueAnnotation.set(true),
 );

@@ -6,10 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { FormInputAnnotation, Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { IconAnnotation } from '@dxos/schema';
 
 export const Column = Schema.Struct({
   name: Schema.String,
@@ -32,7 +31,10 @@ export const Pipeline = Schema.Struct({
   }),
   Schema.annotations({ title: 'Pipeline' }),
   LabelAnnotation.set(['name']),
-  IconAnnotation.set('ph--path--regular'),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--path--regular',
+    hue: 'purple',
+  }),
 );
 
 export type Pipeline = Schema.Schema.Type<typeof Pipeline>;
