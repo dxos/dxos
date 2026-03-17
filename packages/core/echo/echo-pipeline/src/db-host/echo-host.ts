@@ -3,7 +3,7 @@
 //
 
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
-import type * as SqlClient from '@effect/sql/SqlClient';
+import * as SqlClient from '@effect/sql/SqlClient';
 
 import { DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
@@ -40,6 +40,8 @@ import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueryServiceImpl } from './query-service';
 import { QueueDataSource } from './queue-data-source';
 import { SpaceStateManager } from './space-state-manager';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
 
 export type EchoHostProps = {
   kv: LevelDB;
@@ -207,14 +209,28 @@ export class EchoHost extends Resource {
   }
 
   protected override async _open(ctx: Context): Promise<void> {
+    log('echo-host: opening automerge host...');
     await this._automergeHost.open();
-    await this._queryService.open(ctx);
-    await this._spaceStateManager.open(ctx);
+    log('echo-host: automerge host opened');
 
+    log('echo-host: opening query service...');
+    await this._queryService.open(ctx);
+    log('echo-host: query service opened');
+
+    log('echo-host: opening space state manager...');
+    await this._spaceStateManager.open(ctx);
+    log('echo-host: space state manager opened');
+
+    await RuntimeProvider.runPromise(this._runtime)(testSqlite());
+
+    log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
+    log('echo-host: index engine migration done');
     this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
 
+    log('echo-host: running feed store migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
+    log('echo-host: feed store migration done');
     this._feedStore.onNewBlocks.on(this._ctx, () => {
       this._queryService.invalidateQueries();
       this._updateIndexes.schedule();
@@ -234,6 +250,7 @@ export class EchoHost extends Resource {
       this._updateIndexes.schedule();
     });
     this._updateIndexes.schedule();
+    log('echo-host: open complete');
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -407,3 +424,21 @@ export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
   dataStats: EchoDataStats;
 };
+
+/**
+ * Sqlite health check on startup.
+ */
+const testSqlite = () =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const databases = yield* sql<{ seq: number; name: string; file: string }>`PRAGMA database_list`;
+    log.info('SQLite databases', { databases });
+    const [result] = yield* sql<{ quick_check: string }>`PRAGMA quick_check`;
+    if (result.quick_check !== 'ok') {
+      throw new Error('SQLite quick check failed');
+    }
+    log.info('SQLite quick check passed');
+  }).pipe(
+    Effect.timeout(Duration.seconds(15)),
+    Effect.catchTag('TimeoutException', () => Effect.die('SQLite quick check timed out')),
+  );
