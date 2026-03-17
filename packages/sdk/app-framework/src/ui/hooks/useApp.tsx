@@ -129,8 +129,6 @@ export const useApp = ({
   }, [manager]);
 
   useAsyncEffect(async () => {
-    log.info('useApp: effect mount');
-
     manager.capabilities.contribute({
       interface: Capabilities.PluginManager,
       implementation: manager,
@@ -187,7 +185,6 @@ export const useApp = ({
     }, timeout);
 
     return () => {
-      log.info('useApp: effect cleanup');
       clearTimeout(timeoutId);
       void runAndForwardErrors(Fiber.interrupt(fiber));
       manager.capabilities.remove(Capabilities.PluginManager, manager);
