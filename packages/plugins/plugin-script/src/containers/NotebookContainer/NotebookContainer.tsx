@@ -191,7 +191,7 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
   return (
     <Panel.Root role={role} className='dx-document'>
       <Panel.Toolbar asChild>
-        <Toolbar.Root disabled={!hasAttention} textBlockWidth>
+        <Toolbar.Root disabled={!hasAttention}>
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <IconButton icon='ph--plus--regular' iconOnly label={t('notebook cell insert label')} />

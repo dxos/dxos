@@ -40,7 +40,7 @@ export type ToolbarMenuActionGroupProperties = (
 ) &
   (MenuSingleSelectActionGroup | MenuMultipleSelectActionGroup);
 
-export type ToolbarMenuProps = ToolbarRootProps & { textBlockWidth?: boolean };
+export type ToolbarMenuProps = ToolbarRootProps;
 
 export type ToolbarMenuActionGroupProps = {
   group: MenuItemGroup<ToolbarMenuActionGroupProperties>;
@@ -178,32 +178,21 @@ const ToggleGroupToolbarItem = ({
   );
 };
 
-// TODO(burdon): Reconcile with react-ui/Toolbar (incl. textBlockWidth)
-export const ToolbarMenu = ({
-  __menuScope,
-  classNames,
-  textBlockWidth,
-  ...props
-}: MenuScopedProps<ToolbarMenuProps>) => {
+export const ToolbarMenu = ({ __menuScope, classNames, ...props }: MenuScopedProps<ToolbarMenuProps>) => {
   const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
   const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
 
   return (
-    <NaturalToolbar.Root
-      {...props}
-      textBlockWidth={textBlockWidth}
-      classNames={[attendableId, classNames]}
-      disabled={!alwaysActive && !hasAttention}
-    >
+    <NaturalToolbar.Root {...props} classNames={[attendableId, classNames]} disabled={!alwaysActive && !hasAttention}>
       {items?.map((item: MenuItem, index: number) => (
-        <ToolbarMenuItem key={item.id ?? index} item={item} />
+        <ToolbarMenuItem key={item.id ?? index} __menuScope={__menuScope} item={item} />
       ))}
     </NaturalToolbar.Root>
   );
 };
 
-const ToolbarMenuItem = ({ item }: { item: MenuItem }) => {
+const ToolbarMenuItem = ({ __menuScope, item, ...props }: MenuScopedProps<{ item: MenuItem }>) => {
   if (isSeparator(item)) {
     return <NaturalToolbar.Separator variant={item.properties.variant} />;
   }
@@ -211,11 +200,21 @@ const ToolbarMenuItem = ({ item }: { item: MenuItem }) => {
   // TODO(thure): Figure out type narrowing that doesn’t require so much use of `as`.
   if (isMenuGroup(item)) {
     if (item.properties.variant === 'dropdownMenu') {
-      return <DropdownMenuToolbarItem group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>} />;
+      return (
+        <DropdownMenuToolbarItem
+          __menuScope={__menuScope}
+          group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>}
+        />
+      );
     } else {
-      return <ToggleGroupToolbarItem group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>} />;
+      return (
+        <ToggleGroupToolbarItem
+          __menuScope={__menuScope}
+          group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>}
+        />
+      );
     }
   }
 
-  return <ActionToolbarItem action={item as MenuAction} />;
+  return <ActionToolbarItem __menuScope={__menuScope} action={item as MenuAction} />;
 };
