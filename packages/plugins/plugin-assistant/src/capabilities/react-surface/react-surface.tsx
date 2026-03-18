@@ -25,6 +25,7 @@ import {
   ProjectArticle,
   ProjectSettings,
   PromptArticle,
+  TracePanel,
   TriggerStatus,
 } from '../../containers';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
@@ -115,6 +116,12 @@ export default Capability.makeModule(() =>
         role: 'dialog',
         filter: (data): data is { props: { chat: Chat.Chat } } => data.component === ASSISTANT_DIALOG,
         component: ({ data }) => <ChatDialog {...data.props} />,
+      }),
+      Surface.create({
+        id: `${meta.id}.trace`,
+        role: 'deck-companion--trace',
+        filter: (data): data is { subject: 'trace' } => data.subject === 'trace',
+        component: () => <TracePanel />,
       }),
       Surface.create({
         id: `${meta.id}.status`,

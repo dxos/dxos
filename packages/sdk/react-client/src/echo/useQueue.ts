@@ -19,6 +19,7 @@ export type UseQueueOptions = {
 
 /**
  * Polls the given Edge queue.
+ * @deprecated Use `useQuery` instead.
  */
 // TODO(burdon): Replace polling with socket?
 // TODO(dmaretskyi): Move into client package.
