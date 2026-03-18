@@ -48,6 +48,7 @@ export const translations = [
       [meta.id]: {
         'plugin name': 'Inbox',
         'empty mailbox message': 'Mailbox empty',
+        'empty calendar message': 'Calendar empty',
         'no message message': 'Select a message to view it',
         'action archive': 'Archive',
         'action delete': 'Delete',

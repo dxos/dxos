@@ -18,6 +18,7 @@ export const translations = [
         'add custom token': 'Custom Token',
         'delete token': 'Delete Token',
         'new integration label': 'New Integration',
+        'connect integration label': 'Connect {{provider}}',
       },
     },
   },

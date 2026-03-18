@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps, useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
+import { type SurfaceComponentProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { type Project } from '@dxos/assistant-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -81,7 +81,6 @@ export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
 const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
   ({ data, location, debug }, forwardedRef) => {
     const objectMenuItems = useObjectMenuItems(data);
-    const handleNavigate = useObjectNavigate(data);
 
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
@@ -90,7 +89,7 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
             <Card.Root ref={forwardedRef} data-testid='board-item'>
               <Card.Toolbar>
                 <Card.IconBlock></Card.IconBlock>
-                <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
+                <Card.Title>{Obj.getLabel(data)}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
                 <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
                   <Toolbar.IconButton
