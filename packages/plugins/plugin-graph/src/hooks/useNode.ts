@@ -30,12 +30,25 @@ export const useConnections = (
   return useAtomValue(graph.connections(id ?? '', relation));
 };
 
+/**
+ * React hook to get actions available for a node.
+ *
+ * @param graph Graph containing the node.
+ * @param id Id of the node.
+ * @returns Actions available for the node.
+ */
 export const useActions = (graph: Graph.ReadableGraph, id?: string): Node.Node[] => {
   const atom = useMemo(() => graph.actions(id ?? ''), [graph, id]);
   return useAtomValue(atom);
 };
 
-/** Subscribe to just the edge topology (inbound/outbound IDs) of a node without subscribing to node content. */
+/**
+ * Subscribe to just the edge topology (inbound/outbound IDs) of a node without subscribing to node content.
+ *
+ * @param graph Graph containing the node.
+ * @param id Id of the node.
+ * @returns Edge topology for the node.
+ */
 export const useEdges = (graph: Graph.ReadableGraph, id?: string): Graph.Edges => {
   const atom = useMemo(() => graph.edges(id ?? ''), [graph, id]);
   return useAtomValue(atom);
