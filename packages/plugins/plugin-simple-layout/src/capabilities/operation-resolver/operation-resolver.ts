@@ -52,6 +52,7 @@ export default Capability.makeModule(
             updateState((state) => ({
               ...state,
               drawerState: 'closed',
+              companionVariant: undefined,
             }));
           } else if (input.subject) {
             const variant = getCompanionVariant(input.subject);

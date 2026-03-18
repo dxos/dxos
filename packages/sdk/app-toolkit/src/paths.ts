@@ -83,6 +83,13 @@ export const getCollectionsPath = (spaceId: string, ...segments: string[]): stri
   return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
 };
 
+/**
+ * Qualified path to a child object within a collection node.
+ * Appends the object ID to the collection's qualified path.
+ */
+export const getCollectionObjectPath = (collectionQualifiedId: string, objectId: string): string =>
+  `${collectionQualifiedId}/${objectId}`;
+
 //
 // URL routing helpers.
 // These are the only supported way to translate between browser pathnames and qualified graph IDs.

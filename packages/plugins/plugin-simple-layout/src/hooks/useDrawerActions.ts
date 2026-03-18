@@ -47,7 +47,7 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
         // Add companion tab actions.
         const { nodes, edges } = createCompanionActions(graph, stateAtom, get, {
           idPrefix: 'drawer',
-          selectedVariant: state.companionVariant,
+          selectedVariant: state.drawerState !== 'closed' ? state.companionVariant : undefined,
           updateState,
         });
 

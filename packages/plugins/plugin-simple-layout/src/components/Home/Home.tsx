@@ -45,7 +45,7 @@ export const Home = (_: HomeProps) => {
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+            <SearchList.Input placeholder={t('search placeholder')} />
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
@@ -113,7 +113,7 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
             hue={data.properties.hue}
             hueVariant='transparent'
             variant='square'
-            size={12}
+            size={8}
             fallback={name}
           />
           <Avatar.Label>{name}</Avatar.Label>
