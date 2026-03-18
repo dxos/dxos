@@ -114,6 +114,7 @@ class ManagerImpl implements PluginManager {
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
   private readonly _inFlightFibers = Effect.runSync(Ref.make<Array<Fiber.Fiber<unknown, unknown>>>([]));
+  private readonly _shutdownSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   private readonly _shuttingDown = Effect.runSync(Ref.make(false));
 
   constructor({
@@ -308,24 +309,31 @@ class ManagerImpl implements PluginManager {
     params?: { before?: string; after?: string },
   ): Effect.Effect<boolean, Error> {
     const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
-    return Effect.withFiberRuntime((fiber) =>
-      this._activateEvent(key, params, fiber).pipe(
-        together(
-          Effect.sleep(Duration.seconds(15)).pipe(
-            Effect.andThen(Effect.sync(() => log.warn('event activation is taking a long time', { event: key }))),
+    return Effect.gen(this, function* () {
+      if (yield* this._isShuttingDown()) {
+        log('skipping activation during shutdown', { key, ...params });
+        return false;
+      }
+
+      return yield* Effect.withFiberRuntime<boolean, Error>((fiber) =>
+        this._activateEvent(key, params, fiber).pipe(
+          together(
+            Effect.sleep(Duration.seconds(15)).pipe(
+              Effect.andThen(Effect.sync(() => log.warn('event activation is taking a long time', { event: key }))),
+            ),
           ),
+          Performance.addTrackEntry({
+            name: typeof event === 'string' ? event : ActivationEvent.eventKey(event),
+            devtools: {
+              dataType: 'track-entry',
+              track: 'Event Activation',
+              trackGroup: 'Composer',
+              color: 'primary',
+            },
+          }),
         ),
-        Performance.addTrackEntry({
-          name: typeof event === 'string' ? event : ActivationEvent.eventKey(event),
-          devtools: {
-            dataType: 'track-entry',
-            track: 'Event Activation',
-            trackGroup: 'Composer',
-            color: 'primary',
-          },
-        }),
-      ),
-    );
+      );
+    });
   }
 
   /**
@@ -373,35 +381,33 @@ class ManagerImpl implements PluginManager {
   }
 
   shutdown(): Effect.Effect<boolean, Error> {
-    return Effect.gen(this, function* () {
-      if (yield* this._isShuttingDown()) {
+    return this._shutdownSemaphore.withPermits(1)(
+      Effect.gen(this, function* () {
+        yield* Ref.set(this._shuttingDown, true);
+        log('shutdown');
+
+        yield* this._interruptInFlightActivations();
+
+        const activeIds = [...this._get(this._activeAtom)].reverse();
+        const allModules = this._get(this._modulesAtom);
+        const modulesToDeactivate = activeIds
+          .map((id) => allModules.find((module) => module.id === id))
+          .filter((module): module is Plugin.PluginModule => module != null);
+
+        for (const module of modulesToDeactivate) {
+          yield* this._deactivateModule(module);
+        }
+
+        this._set(this._eventsFiredAtom, []);
+        this._set(this._pendingResetAtom, []);
+        this._moduleMemoMap.clear();
+        yield* Ref.set(this._activatingEvents, []);
+        yield* Ref.set(this._activatingModules, []);
+
+        log('shutdown complete');
         return true;
-      }
-
-      yield* Ref.set(this._shuttingDown, true);
-      log('shutdown');
-
-      yield* this._interruptInFlightActivations();
-
-      const activeIds = [...this._get(this._activeAtom)].reverse();
-      const allModules = this._get(this._modulesAtom);
-      const modulesToDeactivate = activeIds
-        .map((id) => allModules.find((module) => module.id === id))
-        .filter((module): module is Plugin.PluginModule => module != null);
-
-      for (const module of modulesToDeactivate) {
-        yield* this._deactivateModule(module);
-      }
-
-      this._set(this._eventsFiredAtom, []);
-      this._set(this._pendingResetAtom, []);
-      this._moduleMemoMap.clear();
-      yield* Ref.set(this._activatingEvents, []);
-      yield* Ref.set(this._activatingModules, []);
-
-      log('shutdown complete');
-      return true;
-    }).pipe(Effect.ensuring(Ref.set(this._shuttingDown, false)));
+      }).pipe(Effect.ensuring(Ref.set(this._shuttingDown, false))),
+    );
   }
 
   //
@@ -536,11 +542,6 @@ class ManagerImpl implements PluginManager {
   ): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       yield* this._trackFiber(this._inFlightFibers, fiber);
-      if (yield* this._isShuttingDown()) {
-        log('skipping activation during shutdown', { key, ...params });
-        return false;
-      }
-
       log('activating', { key, ...params });
       yield* Ref.update(this._activatingEvents, (activating) => Array.append(activating, key));
       this._clearPendingReset(key);
@@ -811,10 +812,6 @@ class ManagerImpl implements PluginManager {
     capabilities: Capability.Any[],
   ): Effect.Effect<void, Error> {
     return Effect.gen(this, function* () {
-      if (yield* this._isShuttingDown()) {
-        return;
-      }
-
       capabilities.forEach((capability) => {
         this.capabilities.contribute({ module: module.id, ...capability });
       });
