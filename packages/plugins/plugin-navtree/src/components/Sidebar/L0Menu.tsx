@@ -325,18 +325,9 @@ export const L0Menu = ({
       {/* TODO(wittjosiah): Use L0Item trigger. */}
       <Menu.Root onAction={handleAction}>
         <Menu.Trigger asChild data-testid='spacePlugin.addSpace'>
-          <IconButton
-            variant='ghost'
-            icon='ph--list--regular'
-            iconOnly
-            label={t('app menu label')}
-            size={5}
-            classNames={[
-              l0ItemRoot,
-              'grid place-items-center dx-focus-ring-group',
-              '[body[data-platform="macos"]_&]:mt-[30px]',
-            ]}
-          />
+          <div role='none' className='grid place-items-center'>
+            <IconButton variant='ghost' icon='ph--list--regular' iconOnly label={t('app menu label')} size={5} />
+          </div>
         </Menu.Trigger>
         <Menu.Content group={parent} items={menuActions} />
       </Menu.Root>
