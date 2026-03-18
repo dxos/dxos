@@ -46,24 +46,24 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 };
 
 export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
-  isDev?: boolean;
   error?: Error;
+  logBuffer: LogBuffer;
+  observability?: Promise<Observability.Observability>;
   needRefresh?: boolean;
   onRefresh?: () => void;
-  observability?: Promise<Observability.Observability>;
-  logBuffer: LogBuffer;
+  onReset?: () => Promise<void>;
 };
 
 export const ResetDialog = ({
-  isDev,
   error: propsError,
-  needRefresh,
-  onRefresh,
-  observability: observabilityProp,
   logBuffer,
+  observability: observabilityProp,
+  needRefresh,
   defaultOpen,
   open,
   onOpenChange,
+  onRefresh,
+  onReset,
 }: ResetDialogProps) => {
   const { t } = useTranslation('composer'); // TODO(burdon): Const.
   const [isNotMobile] = useMediaQuery('md');
@@ -82,11 +82,6 @@ export const ResetDialog = ({
     const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
     download(file, fileName);
   }, [download, logBuffer]);
-
-  const handleReset = useCallback(async () => {
-    localStorage.clear();
-    window.location.href = window.location.origin;
-  }, []);
 
   const handleSaveFeedback = useCallback(
     async (values: UserFeedback) => {
@@ -166,7 +161,7 @@ export const ResetDialog = ({
               {t('safe mode label')}
             </Button>
 
-            {isDev && (
+            {onReset && (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <Button data-testid='resetDialog.reset' variant='destructive'>
@@ -176,7 +171,7 @@ export const ResetDialog = ({
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content side='top'>
                     <DropdownMenu.Viewport>
-                      <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={handleReset}>
+                      <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={onReset}>
                         {t('reset app confirm label')}
                       </DropdownMenu.Item>
                     </DropdownMenu.Viewport>

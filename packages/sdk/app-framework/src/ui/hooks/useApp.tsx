@@ -109,6 +109,7 @@ export const useApp = ({
     () => (safeMode ? [] : cacheEnabled && cached.length > 0 ? cached : defaults),
     [safeMode, cacheEnabled, cached, defaults],
   );
+  const isExternalManager = !!pluginManager;
   const manager = useMemo(() => {
     const mgr = pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled });
     log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
@@ -190,8 +191,9 @@ export const useApp = ({
       log('useApp: effect cleanup');
       clearTimeout(timeoutId);
       void runAndForwardErrors(Fiber.interrupt(fiber));
-      manager.capabilities.remove(Capabilities.PluginManager, manager);
-      manager.capabilities.remove(Capabilities.AtomRegistry, manager.registry);
+      if (!isExternalManager) {
+        void runAndForwardErrors(manager.shutdown());
+      }
     };
   }, [manager]);
 

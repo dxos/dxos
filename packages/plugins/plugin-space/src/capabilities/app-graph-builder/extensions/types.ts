@@ -88,13 +88,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
-        // Reactive subscription to database schema objects so the connector re-runs on schema changes.
-        get(AtomQuery.make(space.db, Filter.type(Type.PersistentType)));
-        // Reactive subscription to client/plugin-contributed schemas so the connector re-runs when new schemas or static schemas are added.
-        const staticSchemas = get(capabilities.atom(AppCapabilities.Schema)).flat();
-        // TODO(wittjosiah): Schema registry needs to support reactive queries as well as changes to static schemas.
-        const databaseSchemas = space.db.schemaRegistry.query({ location: ['database'] }).runSync();
-        const allSchemas = uniqueSchemasByTypename([...staticSchemas, ...databaseSchemas]);
+        const allSchemas = get(
+          AtomQuery.fromQuery(space.db.schemaRegistry.query({ location: ['database', 'runtime'] })),
+        );
 
         const userSchemas = allSchemas.filter((schema) => {
           if (getTypeAnnotation(schema)?.kind === EntityKind.Relation) {
@@ -140,7 +136,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       },
       connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client?.graph.schemaRegistry.query({ location: ['runtime'] }).runSync() ?? [];
+        const schemas = client
+          ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
+          : [];
 
         const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.AnyObj) : schema.typename;
 
@@ -218,7 +216,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       },
       actions: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client?.graph.schemaRegistry.query({ location: ['runtime'] }).runSync() ?? [];
+        const schemas = client
+          ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
+          : [];
 
         const targetTypename = Type.getTypename(schema as Type.AnyObj);
         const viewIndex = buildViewIndex(get, space, schemas);

@@ -57,6 +57,8 @@ const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
   const { t } = useTranslation(translationKey);
 
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
+  const buttonVariant =
+    (action.properties as { variant?: string }).variant === 'primary' ? ('primary' as const) : ('ghost' as const);
 
   const handleClick = useCallback(() => {
     if (onAction) {
@@ -67,7 +69,7 @@ const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
   }, [action, onAction]);
 
   const commonProps = {
-    variant: 'ghost' as const,
+    variant: buttonVariant,
     disabled,
     classNames,
     onClick: handleClick,

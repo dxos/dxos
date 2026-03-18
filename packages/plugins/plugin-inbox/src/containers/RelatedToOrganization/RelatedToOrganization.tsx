@@ -20,7 +20,7 @@ import { type Organization, Person } from '@dxos/types';
 import { RelatedContacts } from '../../components';
 
 export const RelatedToOrganization = ({ subject: organization }: SurfaceComponentProps<Organization.Organization>) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invoke } = useOperationInvoker();
   const db = Obj.getDatabase(organization);
   const defaultDb = useDatabase();
   const currentSpaceContacts = useQuery(db, Filter.type(Person.Person));
@@ -43,30 +43,14 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
   const handleContactClick = useCallback(
     (contact: Person.Person) =>
       Effect.gen(function* () {
-        const view = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
-        yield* Effect.promise(() => invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' }));
-        if (view) {
-          const id = getObjectPathFromObject(view);
-          yield* Effect.promise(() =>
-            invokePromise(LayoutOperation.Open, {
-              subject: [id],
-              workspace: db ? getSpacePath(db.spaceId) : undefined,
-            }),
-          );
-          yield* Effect.promise(() =>
-            invokePromise(DeckOperation.ChangeCompanion, {
-              companion: `${COMPANION_PREFIX}selected-objects`,
-            }),
-          );
-          yield* Effect.promise(() =>
-            invokePromise(AttentionOperation.Select, {
-              contextId: id,
-              selection: { mode: 'multi', ids: [contact.id] },
-            }),
-          );
-        }
+        const contactPath = getObjectPathFromObject(contact);
+        yield* invoke(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
+        yield* invoke(LayoutOperation.Open, {
+          subject: [contactPath],
+          workspace: db ? getSpacePath(db.spaceId) : undefined,
+        });
       }).pipe(runAndForwardErrors),
-    [invokePromise, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, db, defaultDb],
+    [invoke, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, db, defaultDb],
   );
 
   return <RelatedContacts contacts={related} onContactClick={handleContactClick} />;

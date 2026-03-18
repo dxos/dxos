@@ -218,9 +218,11 @@ type StepExecutionResult = {
 
 declare global {
   interface ImportMeta {
-    env: {
-      DX_TRACE_QUERY_EXECUTION: string;
-    };
+    env: ImportMetaEnv;
+  }
+
+  interface ImportMetaEnv {
+    DX_TRACE_QUERY_EXECUTION: string;
   }
 }
 
