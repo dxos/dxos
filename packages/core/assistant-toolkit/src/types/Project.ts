@@ -8,21 +8,44 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
+import * as Option from 'effect/Option';
+
 import { AiContextBinder, AiContextService, type ContextBinding } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { Annotation, Type } from '@dxos/echo';
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { Annotation, Database, Feed, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
+import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { QueueAnnotation, Text } from '@dxos/schema';
+import { FeedAnnotation, QueueAnnotation, Text } from '@dxos/schema';
 import type { Message } from '@dxos/types';
+
+import { ProjectFunctions } from '../blueprints/project/functions';
 
 import * as Chat from './Chat';
 import * as Plan from './Plan';
+
+/**
+ * Foreign key {@link PROJECT_TRIGGER_EXTENSION_KEY} => <project id : ObjectId>
+ */
+const PROJECT_TRIGGER_EXTENSION_KEY = 'org.dxos.extension.ProjectTrigger';
+
+/**
+ * Foreign key {@link PROJECT_TRIGGER_TARGET_EXTENSION_KEY} => <dxn string of subscription target>
+ */
+const PROJECT_TRIGGER_TARGET_EXTENSION_KEY = 'org.dxos.extension.ProjectTriggerTarget';
+
+/** Checks if an object's schema has the FeedAnnotation. */
+const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
+  const schema = Obj.getSchema(obj);
+  if (!schema) {
+    return false;
+  }
+  const annotation = FeedAnnotation.get(schema);
+  return Option.isSome(annotation) && annotation.value === true;
+};
 
 /**
  * Project schema definition.
@@ -196,3 +219,125 @@ export const getFromChatContext: Effect.Effect<Project, never, AiContextService>
   const project = projects[0];
   return project;
 });
+
+/**
+ * Syncs triggers in the database with the project subscriptions.
+ *
+ * @param project - The project whose triggers should be synced.
+ * @returns An Effect that syncs triggers.
+ */
+export const syncTriggers = (project: Project): Effect.Effect<void, never, Database.Service> =>
+  Effect.gen(function* () {
+    const triggers = yield* Database.runQuery(
+      Filter.foreignKeys(Trigger.Trigger, [{ source: PROJECT_TRIGGER_EXTENSION_KEY, id: project.id }]),
+    );
+
+    // Delete triggers that are not in subscriptions.
+    for (const trigger of triggers) {
+      const target = Obj.getKeys(trigger, PROJECT_TRIGGER_TARGET_EXTENSION_KEY).at(0)?.id;
+
+      const exists = project.subscriptions.find((subscription) => subscription.dxn.toString() === target);
+      if (!exists && !(project.useQualifyingAgent && target === Obj.getDXN(project)?.toString())) {
+        yield* Database.remove(trigger);
+      }
+    }
+
+    // Add triggers that are not in the database.
+    for (const subscription of project.subscriptions) {
+      const relevantTrigger = triggers.find((trigger) =>
+        Obj.getKeys(trigger, PROJECT_TRIGGER_TARGET_EXTENSION_KEY).some(
+          (key) => key.id === subscription.dxn.toString(),
+        ),
+      );
+      if (relevantTrigger) {
+        continue;
+      }
+
+      const targetOption = yield* Database.loadOption(subscription);
+      if (Option.isNone(targetOption)) {
+        continue;
+      }
+      const target = targetOption.value;
+
+      let feedObj: Feed.Feed | undefined;
+      if (Obj.instanceOf(Feed.Feed, target)) {
+        feedObj = target;
+      } else if (hasFeedAnnotation(target)) {
+        const feedRef = (target as Obj.Unknown & { feed?: Ref.Ref<Feed.Feed> }).feed;
+        feedObj = feedRef ? Option.getOrUndefined(yield* Database.loadOption(feedRef)) : undefined;
+      }
+
+      const queueDxn = Option.fromNullable(feedObj).pipe(
+        Option.filter(Obj.instanceOf(Feed.Feed)),
+        Option.map(Feed.getQueueDxn),
+        Option.getOrUndefined,
+      );
+      if (!queueDxn) {
+        continue;
+      }
+
+      yield* Database.add(
+        Trigger.make({
+          [Obj.Parent]: project,
+          [Obj.Meta]: {
+            keys: [
+              // TODO(dmaretskyi): Query by parent instead of manually adding keys.
+              { source: PROJECT_TRIGGER_EXTENSION_KEY, id: project.id },
+              { source: PROJECT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.dxn.toString() },
+            ],
+          },
+          enabled: true,
+          spec: {
+            kind: 'queue',
+            queue: queueDxn.toString(),
+          },
+          function: Ref.make(
+            FunctionDefinition.serialize(
+              project.useQualifyingAgent ? ProjectFunctions.Qualifier : ProjectFunctions.Agent,
+            ),
+          ),
+          input: {
+            project: Ref.make(project),
+            event: '{{event}}',
+          },
+          concurrency: project.useQualifyingAgent ? 5 : undefined,
+        }),
+      );
+    }
+
+    if (project.useQualifyingAgent) {
+      const qualifierTrigger = triggers.find((trigger) =>
+        Obj.getKeys(trigger, PROJECT_TRIGGER_TARGET_EXTENSION_KEY).some(
+          (key) => key.id === Obj.getDXN(project)?.toString(),
+        ),
+      );
+      if (!qualifierTrigger && project.queue) {
+        yield* Database.add(
+          Trigger.make({
+            [Obj.Parent]: project,
+            [Obj.Meta]: {
+              keys: [
+                { source: PROJECT_TRIGGER_EXTENSION_KEY, id: project.id },
+                {
+                  source: PROJECT_TRIGGER_TARGET_EXTENSION_KEY,
+                  id: Obj.getDXN(project)?.toString() ?? '',
+                },
+              ],
+            },
+            function: Ref.make(FunctionDefinition.serialize(ProjectFunctions.Agent)),
+            enabled: true,
+            spec: {
+              kind: 'queue',
+              queue: project.queue.dxn.toString(),
+            },
+            input: {
+              project: Ref.make(project),
+              event: '{{event}}',
+            },
+          }),
+        );
+      }
+    }
+
+    yield* Database.flush();
+  });

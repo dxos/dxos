@@ -22,8 +22,6 @@ import { Button } from '@dxos/react-ui';
 import { ButtonGroup, Input } from '@dxos/react-ui';
 import { FeedAnnotation } from '@dxos/schema';
 
-import { syncTriggers } from './triggers';
-
 export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Project.Project>) => {
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
 
@@ -48,10 +46,13 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
   const [specInitialValue] = useObject(spec, 'content');
 
   useEffect(() => {
+    const db = Obj.getDatabase(project);
+    if (!db) return;
+    const runtime = computeRuntime.getRuntime(db.spaceId);
     return Obj.subscribe(project, () => {
-      queueMicrotask(() => syncTriggers(project));
+      queueMicrotask(() => runtime.runPromise(Project.syncTriggers(project)));
     });
-  }, [project]);
+  }, [project, computeRuntime]);
 
   const db = Obj.getDatabase(project);
   const feedFilter = useMemo(() => {

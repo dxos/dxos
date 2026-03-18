@@ -4280,6 +4280,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions

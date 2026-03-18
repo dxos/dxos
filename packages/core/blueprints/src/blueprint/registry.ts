@@ -4,9 +4,11 @@
 
 import { log } from '@dxos/log';
 
-import { type Blueprint } from './blueprint';
+import { Blueprint } from './blueprint';
 import * as Context from 'effect/Context';
-
+import { BaseError } from '@dxos/errors';
+import * as Effect from 'effect/Effect';
+import { Database, Filter, Obj } from '@dxos/echo';
 /**
  * Blueprint registry.
  */
@@ -41,3 +43,33 @@ export class Registry {
 }
 
 export class RegistryService extends Context.Tag('@dxos/blueprints/RegistryService')<RegistryService, Registry>() {}
+
+/**
+ * Resolves a blueprint from the registry.
+ * Does not check the local database for the blueprint.
+ */
+export const resolve = (key: string): Effect.Effect<Blueprint, NotFoundError, RegistryService> =>
+  Effect.gen(function* () {
+    const registry = yield* RegistryService;
+    const blueprint = registry.getByKey(key);
+    if (!blueprint) {
+      return yield* Effect.fail(new NotFoundError({ context: { key } }));
+    }
+    return blueprint;
+  });
+
+/**
+ * Upserts a blueprint into the database.
+ * If the blueprint already exists in the database, local blueprint is returned.
+ * Otherwise, it will be added.
+ */
+export const upsert = (key: string): Effect.Effect<Blueprint, NotFoundError, RegistryService | Database.Service> =>
+  Effect.gen(function* () {
+    const local = yield* Database.runQuery(Filter.type(Blueprint, { key }));
+    if (local.length > 0) {
+      return local[0];
+    }
+    return yield* Database.add(Obj.clone(yield* resolve(key), { deep: true }));
+  });
+
+export class NotFoundError extends BaseError.extend('BlueprintNotFound', 'Blueprint not found') {}
