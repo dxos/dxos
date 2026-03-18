@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { Event } from '@dxos/async';
+import { type CleanupFn, Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { type DXN, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -22,6 +22,8 @@ const SYSTEM_SCHEMA = ['org.dxos.type.schema'];
  */
 export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   private readonly _registry = new Map<string, Type.AnyEntity[]>();
+  /** Emitted when schemas are registered. */
+  readonly schemaChanges = new Event();
 
   constructor(schemas: Type.AnyEntity[] = [Type.PersistentType]) {
     schemas.forEach((schema) => {
@@ -50,17 +52,18 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
         versions.push(schema);
       });
 
+    this.schemaChanges.emit();
+
     // TODO(wittjosiah): This registry only support static schemas.
     return [];
   }
 
-  // TODO(wittjosiah): This is not currently reactive to newly registered schemas.
-  //   Implement once interface is simplified.
   query<Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
     query?: Q & SchemaRegistry.Query,
   ): QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>> {
     const self = this;
     const changes = new Event();
+    let unsubscribe: CleanupFn | undefined;
     return new SchemaRegistryPreparedQueryImpl<SchemaRegistry.ExtractQueryResult<Q>>({
       changes,
       getResultsSync() {
@@ -69,8 +72,18 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
       async getResults() {
         return filterOrderResults(self.schemas, query ?? {}) as SchemaRegistry.ExtractQueryResult<Q>[];
       },
-      async start() {},
-      async stop() {},
+      async start() {
+        if (unsubscribe) {
+          return;
+        }
+        unsubscribe = self.schemaChanges.on(() => {
+          changes.emit();
+        });
+      },
+      async stop() {
+        unsubscribe?.();
+        unsubscribe = undefined;
+      },
     });
   }
 

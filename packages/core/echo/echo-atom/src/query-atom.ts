@@ -8,7 +8,26 @@ import { DXN, Database, type Entity, type Filter, Query, type QueryResult } from
 import { WeakDictionary } from '@dxos/util';
 
 /**
- * Create a self-updating atom from an existing QueryResult.
+ * Create a self-updating atom from any QueryResult (e.g. schema registry queries).
+ * Internally subscribes to queryResult and uses get.setSelf to update.
+ * Cleanup is handled via get.addFinalizer.
+ *
+ * Note: This creates a new atom each time. For memoization, use `make` instead.
+ *
+ * @param queryResult - The QueryResult to wrap.
+ * @returns An atom that automatically updates when query results change.
+ */
+export const fromQueryResult = <T>(queryResult: QueryResult.QueryResult<T>): Atom.Atom<T[]> =>
+  Atom.make((get) => {
+    const unsubscribe = queryResult.subscribe(() => {
+      get.setSelf(queryResult.runSync());
+    });
+    get.addFinalizer(unsubscribe);
+    return queryResult.runSync();
+  });
+
+/**
+ * Create a self-updating atom from an existing QueryResult of entities.
  * Internally subscribes to queryResult and uses get.setSelf to update.
  * Cleanup is handled via get.addFinalizer.
  *
@@ -18,18 +37,7 @@ import { WeakDictionary } from '@dxos/util';
  * @returns An atom that automatically updates when query results change.
  */
 export const fromQuery = <T extends Entity.Unknown>(queryResult: QueryResult.QueryResult<T>): Atom.Atom<T[]> =>
-  Atom.make((get) => {
-    // TODO(wittjosiah): Consider subscribing to individual objects here as well, and grabbing their snapshots.
-    // Subscribe to QueryResult changes.
-    const unsubscribe = queryResult.subscribe(() => {
-      get.setSelf(queryResult.results);
-    });
-
-    // Register cleanup for when atom is no longer used.
-    get.addFinalizer(unsubscribe);
-
-    return queryResult.results;
-  });
+  fromQueryResult(queryResult);
 
 // Registry: key → Queryable (WeakRef with auto-cleanup when GC'd).
 const queryableRegistry = new WeakDictionary<string, Database.Queryable>();
