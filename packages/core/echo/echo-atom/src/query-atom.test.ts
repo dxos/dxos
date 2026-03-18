@@ -6,10 +6,11 @@ import * as Registry from '@effect-atom/atom/Registry';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { sleep } from '@dxos/async';
 import { Obj, type QueryResult, Type } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { type EchoDatabase } from '@dxos/echo-db';
+import { type EchoDatabase, RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { SpaceId } from '@dxos/keys';
 
@@ -259,5 +260,129 @@ describe('AtomQuery with queues', () => {
     expect(results).toHaveLength(1);
     expect(results[0].id).toEqual(jane.id);
     expect(results[0].name).toEqual('jane');
+  });
+});
+
+const SchemaA = Schema.Struct({
+  name: Schema.String,
+}).pipe(
+  Type.object({
+    typename: 'com.example.type.a',
+    version: '0.1.0',
+  }),
+);
+
+const SchemaB = Schema.Struct({
+  value: Schema.Number,
+}).pipe(
+  Type.object({
+    typename: 'com.example.type.b',
+    version: '0.1.0',
+  }),
+);
+
+describe('AtomQuery.fromQuery with schema registry', () => {
+  let schemaRegistry: RuntimeSchemaRegistry;
+  let registry: Registry.Registry;
+
+  beforeEach(() => {
+    schemaRegistry = new RuntimeSchemaRegistry([]);
+    registry = Registry.make();
+  });
+
+  test('creates atom with initial results from schema query', async ({ expect }) => {
+    await schemaRegistry.register([SchemaA]);
+
+    const queryResult = schemaRegistry.query();
+    const atom = AtomQuery.fromQuery(queryResult);
+    const results = registry.get(atom);
+
+    expect(results).toHaveLength(1);
+    expect(Type.getTypename(results[0])).toBe('com.example.type.a');
+  });
+
+  test('atom updates when new schemas are registered', async ({ expect }) => {
+    await schemaRegistry.register([SchemaA]);
+
+    const queryResult = schemaRegistry.query();
+    const atom = AtomQuery.fromQuery(queryResult);
+
+    // Get initial results and subscribe.
+    const initialResults = registry.get(atom);
+    expect(initialResults).toHaveLength(1);
+
+    let updateCount = 0;
+    let latestResults: Type.AnyEntity[] = [];
+    registry.subscribe(atom, () => {
+      updateCount++;
+      latestResults = registry.get(atom);
+    });
+
+    // Allow reactive query to start (deferred via queueMicrotask).
+    await sleep(10);
+
+    // Register a new schema.
+    await schemaRegistry.register([SchemaB]);
+
+    expect(updateCount).toBeGreaterThan(0);
+    expect(latestResults).toHaveLength(2);
+    expect(latestResults.map(Type.getTypename).sort()).toEqual(['com.example.type.a', 'com.example.type.b']);
+  });
+
+  test('atom works with empty initial results', ({ expect }) => {
+    const queryResult = schemaRegistry.query();
+    const atom = AtomQuery.fromQuery(queryResult);
+    const results = registry.get(atom);
+
+    expect(results).toHaveLength(0);
+  });
+
+  test('atom with filtered query only reflects matching schemas', async ({ expect }) => {
+    const queryResult = schemaRegistry.query({ typename: 'com.example.type.a' });
+    const atom = AtomQuery.fromQuery(queryResult);
+
+    // Get initial (empty) results and subscribe.
+    const initialResults = registry.get(atom);
+    expect(initialResults).toHaveLength(0);
+
+    let latestResults: Type.AnyEntity[] = [];
+    registry.subscribe(atom, () => {
+      latestResults = registry.get(atom);
+    });
+
+    await sleep(10);
+
+    // Register non-matching schema.
+    await schemaRegistry.register([SchemaB]);
+    // Results updated but still empty for this filter.
+    expect(latestResults).toHaveLength(0);
+
+    // Register matching schema.
+    await schemaRegistry.register([SchemaA]);
+    expect(latestResults).toHaveLength(1);
+    expect(Type.getTypename(latestResults[0])).toBe('com.example.type.a');
+  });
+
+  test('unsubscribing from atom stops updates', async ({ expect }) => {
+    const queryResult = schemaRegistry.query();
+    const atom = AtomQuery.fromQuery(queryResult);
+
+    registry.get(atom);
+
+    let updateCount = 0;
+    const unsubscribe = registry.subscribe(atom, () => {
+      updateCount++;
+    });
+
+    await sleep(10);
+
+    await schemaRegistry.register([SchemaA]);
+    const countAfterFirst = updateCount;
+    expect(countAfterFirst).toBeGreaterThan(0);
+
+    unsubscribe();
+
+    await schemaRegistry.register([SchemaB]);
+    expect(updateCount).toBe(countAfterFirst);
   });
 });

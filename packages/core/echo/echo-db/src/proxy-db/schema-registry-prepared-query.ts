@@ -13,7 +13,7 @@ const resultToEntry = <T extends Type.AnyEntity>(result: T): QueryResult.Entry<T
 
 // TODO(wittjosiah): Simplify this interface.
 export interface SchemaRegistryQueryResolver<T> {
-  // TODO(wittjosiah): This looks unused, remove?
+  /** Emitted by the resolver when underlying data changes. */
   changes: Event<void>;
 
   /**
@@ -39,6 +39,7 @@ export class SchemaRegistryPreparedQueryImpl<T extends Type.AnyEntity> implement
   private _isReactiveQueryRunning = false;
   private _subscriberCount = 0;
   private _isFiring = false;
+  private _changesSubscription?: CleanupFn;
 
   constructor(private readonly _resolver: SchemaRegistryQueryResolver<T>) {}
 
@@ -134,6 +135,9 @@ export class SchemaRegistryPreparedQueryImpl<T extends Type.AnyEntity> implement
 
       try {
         await this._resolver.start();
+        this._changesSubscription = this._resolver.changes.on(() => {
+          this._changes.emit(this);
+        });
         this._isReactiveQueryRunning = true;
       } catch (err) {
         log.catch(err);
@@ -152,6 +156,8 @@ export class SchemaRegistryPreparedQueryImpl<T extends Type.AnyEntity> implement
       }
 
       try {
+        this._changesSubscription?.();
+        this._changesSubscription = undefined;
         await this._resolver.stop();
         this._isReactiveQueryRunning = false;
       } catch (err) {

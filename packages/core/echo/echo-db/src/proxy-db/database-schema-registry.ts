@@ -251,9 +251,16 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         if (unsubscribe) {
           return;
         }
-        unsubscribe = self._subscribe(() => {
+        const unsubscribeDatabase = self._subscribe(() => {
           changes.emit();
         });
+        const unsubscribeRuntime = self._db.graph.schemaRegistry.schemaChanges.on(() => {
+          changes.emit();
+        });
+        unsubscribe = () => {
+          unsubscribeDatabase();
+          unsubscribeRuntime();
+        };
       },
       async stop() {
         unsubscribe?.();
