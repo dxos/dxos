@@ -10,7 +10,7 @@ import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
-import React, { StrictMode } from 'react';
+import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
@@ -182,16 +182,22 @@ const main = async () => {
       updateServiceWorker,
     } = useRegisterSW();
 
+    const handleReset = useCallback(async () => {
+      localStorage.clear();
+      await services.services.SystemService?.reset();
+      window.location.href = window.location.origin;
+    }, [services]);
+
     return (
       <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
         <Tooltip.Provider>
           <ResetDialog
-            isDev={conf.isDev}
             error={error}
+            logBuffer={logBuffer}
+            observability={observability}
             needRefresh={needRefresh}
             onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
-            observability={observability}
-            logBuffer={logBuffer}
+            onReset={import.meta.env.DEV ? handleReset : undefined}
           />
         </Tooltip.Provider>
       </ThemeProvider>
