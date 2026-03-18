@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type SchemaProperty } from '@dxos/effect';
