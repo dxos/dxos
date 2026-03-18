@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { useEffect, useState } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, type Ref, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, type Ref, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -70,12 +72,19 @@ export const MasonryContainer = ({
 
 const Item = ({ data }: { data: any }) => {
   const objectMenuItems = useObjectMenuItems(data);
+  const icon = Function.pipe(
+    Obj.getSchema(data),
+    Option.fromNullable,
+    Option.flatMap(Annotation.IconAnnotation.get),
+    Option.map(({ icon }) => icon),
+    Option.getOrElse(() => 'ph--placeholder--regular'),
+  );
 
   return (
     <Menu.Root>
       <Card.Root>
         <Card.Toolbar>
-          <span />
+          <Card.Icon icon={icon} />
           <Card.Title>{Obj.getLabel(data)}</Card.Title>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>

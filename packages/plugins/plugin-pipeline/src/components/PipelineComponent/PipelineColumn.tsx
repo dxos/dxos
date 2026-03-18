@@ -3,10 +3,12 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
-import { JsonSchema, Obj, Query, Type } from '@dxos/echo';
+import { Annotation, JsonSchema, Obj, Query, Type } from '@dxos/echo';
 import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -108,13 +110,20 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const { Item } = usePipeline(ITEM_TILE_NAME);
+    const icon = Function.pipe(
+      Obj.getSchema(data),
+      Option.fromNullable,
+      Option.flatMap(Annotation.IconAnnotation.get),
+      Option.map(({ icon }) => icon),
+      Option.getOrElse(() => 'ph--placeholder--regular'),
+    );
 
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
         <Focus.Group asChild>
           <Card.Root classNames={classNames} ref={composedRef}>
             <Card.Toolbar>
-              <Card.DragHandle />
+              <Card.Icon icon={icon} />
               <Card.Title>{Obj.getLabel(data)}</Card.Title>
               <Card.Menu />
             </Card.Toolbar>
