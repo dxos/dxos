@@ -17,7 +17,8 @@ import { type Graph, type Node } from '@dxos/app-graph';
  */
 // TODO(wittjosiah): Factor out to @dxos/app-graph/react.
 export const useNode = <T = any>(graph: Graph.ReadableGraph, id?: string): Node.Node<T> | undefined => {
-  return Option.getOrElse(useAtomValue(graph.node(id ?? '')), () => undefined);
+  const atom = useMemo(() => graph.node(id ?? ''), [graph, id]);
+  return Option.getOrElse(useAtomValue(atom), () => undefined);
 };
 
 export const useConnections = (
@@ -29,10 +30,12 @@ export const useConnections = (
 };
 
 export const useActions = (graph: Graph.ReadableGraph, id?: string): Node.Node[] => {
-  return useAtomValue(graph.actions(id ?? ''));
+  const atom = useMemo(() => graph.actions(id ?? ''), [graph, id]);
+  return useAtomValue(atom);
 };
 
 /** Subscribe to just the edge topology (inbound/outbound IDs) of a node without subscribing to node content. */
 export const useEdges = (graph: Graph.ReadableGraph, id?: string): Graph.Edges => {
-  return useAtomValue(graph.edges(id ?? ''));
+  const atom = useMemo(() => graph.edges(id ?? ''), [graph, id]);
+  return useAtomValue(atom);
 };
