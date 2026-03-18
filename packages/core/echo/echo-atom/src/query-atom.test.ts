@@ -281,7 +281,7 @@ const SchemaB = Schema.Struct({
   }),
 );
 
-describe('AtomQuery.fromQueryResult with schema registry', () => {
+describe('AtomQuery.fromQuery with schema registry', () => {
   let schemaRegistry: RuntimeSchemaRegistry;
   let registry: Registry.Registry;
 
@@ -294,7 +294,7 @@ describe('AtomQuery.fromQueryResult with schema registry', () => {
     await schemaRegistry.register([SchemaA]);
 
     const queryResult = schemaRegistry.query();
-    const atom = AtomQuery.fromQueryResult(queryResult);
+    const atom = AtomQuery.fromQuery(queryResult);
     const results = registry.get(atom);
 
     expect(results).toHaveLength(1);
@@ -305,7 +305,7 @@ describe('AtomQuery.fromQueryResult with schema registry', () => {
     await schemaRegistry.register([SchemaA]);
 
     const queryResult = schemaRegistry.query();
-    const atom = AtomQuery.fromQueryResult(queryResult);
+    const atom = AtomQuery.fromQuery(queryResult);
 
     // Get initial results and subscribe.
     const initialResults = registry.get(atom);
@@ -331,7 +331,7 @@ describe('AtomQuery.fromQueryResult with schema registry', () => {
 
   test('atom works with empty initial results', ({ expect }) => {
     const queryResult = schemaRegistry.query();
-    const atom = AtomQuery.fromQueryResult(queryResult);
+    const atom = AtomQuery.fromQuery(queryResult);
     const results = registry.get(atom);
 
     expect(results).toHaveLength(0);
@@ -339,7 +339,7 @@ describe('AtomQuery.fromQueryResult with schema registry', () => {
 
   test('atom with filtered query only reflects matching schemas', async ({ expect }) => {
     const queryResult = schemaRegistry.query({ typename: 'com.example.type.a' });
-    const atom = AtomQuery.fromQueryResult(queryResult);
+    const atom = AtomQuery.fromQuery(queryResult);
 
     // Get initial (empty) results and subscribe.
     const initialResults = registry.get(atom);
@@ -365,7 +365,7 @@ describe('AtomQuery.fromQueryResult with schema registry', () => {
 
   test('unsubscribing from atom stops updates', async ({ expect }) => {
     const queryResult = schemaRegistry.query();
-    const atom = AtomQuery.fromQueryResult(queryResult);
+    const atom = AtomQuery.fromQuery(queryResult);
 
     registry.get(atom);
 

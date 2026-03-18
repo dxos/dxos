@@ -89,7 +89,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       },
       connector: (space, get) => {
         const allSchemas = get(
-          AtomQuery.fromQueryResult(space.db.schemaRegistry.query({ location: ['database', 'runtime'] })),
+          AtomQuery.fromQuery(space.db.schemaRegistry.query({ location: ['database', 'runtime'] })),
         );
 
         const userSchemas = allSchemas.filter((schema) => {
@@ -137,7 +137,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client
-          ? get(AtomQuery.fromQueryResult(client.graph.schemaRegistry.query({ location: ['runtime'] })))
+          ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
           : [];
 
         const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.AnyObj) : schema.typename;
@@ -217,7 +217,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       actions: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client
-          ? get(AtomQuery.fromQueryResult(client.graph.schemaRegistry.query({ location: ['runtime'] })))
+          ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
           : [];
 
         const targetTypename = Type.getTypename(schema as Type.AnyObj);

@@ -17,7 +17,7 @@ import { WeakDictionary } from '@dxos/util';
  * @param queryResult - The QueryResult to wrap.
  * @returns An atom that automatically updates when query results change.
  */
-export const fromQueryResult = <T>(queryResult: QueryResult.QueryResult<T>): Atom.Atom<T[]> =>
+export const fromQuery = <T>(queryResult: QueryResult.QueryResult<T>): Atom.Atom<T[]> =>
   Atom.make((get) => {
     const unsubscribe = queryResult.subscribe(() => {
       get.setSelf(queryResult.runSync());
@@ -25,19 +25,6 @@ export const fromQueryResult = <T>(queryResult: QueryResult.QueryResult<T>): Ato
     get.addFinalizer(unsubscribe);
     return queryResult.runSync();
   });
-
-/**
- * Create a self-updating atom from an existing QueryResult of entities.
- * Internally subscribes to queryResult and uses get.setSelf to update.
- * Cleanup is handled via get.addFinalizer.
- *
- * Note: This creates a new atom each time. For memoization, use `make` instead.
- *
- * @param queryResult - The QueryResult to wrap.
- * @returns An atom that automatically updates when query results change.
- */
-export const fromQuery = <T extends Entity.Unknown>(queryResult: QueryResult.QueryResult<T>): Atom.Atom<T[]> =>
-  fromQueryResult(queryResult);
 
 // Registry: key → Queryable (WeakRef with auto-cleanup when GC'd).
 const queryableRegistry = new WeakDictionary<string, Database.Queryable>();
