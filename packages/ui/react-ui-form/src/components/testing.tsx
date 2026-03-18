@@ -6,7 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
-import { mx, textBlockWidth } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 type TestLayoutProps = ThemedClassName<PropsWithChildren<{ json?: any }>>;
 
@@ -25,7 +25,7 @@ type TestPanelProps = ThemedClassName<PropsWithChildren>;
 
 const TestPanel = ({ classNames, children }: TestPanelProps) => {
   return (
-    <div role='none' className={mx(['h-full bg-modal-surface rounded-md', textBlockWidth, classNames])}>
+    <div role='none' className={mx(['dx-document h-full bg-modal-surface rounded-md', classNames])}>
       {children}
     </div>
   );

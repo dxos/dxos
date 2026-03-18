@@ -9,7 +9,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem } from '@dxos/react-ui-stack';
-import { getSize, mx, textBlockWidth } from '@dxos/ui-theme';
+import { getSize, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { type StackSectionItem } from '../../types';
@@ -113,7 +113,7 @@ export const StackSection = ({
         </CollapsiblePrimitive.Content>
         {view.collapsed && (
           <StackItem.Content classNames='dx-attention-surface'>
-            <h2 className={mx('flex items-center p-4 font-medium', textBlockWidth)}>{view.title}</h2>
+            <h2 className={mx('flex items-center p-4 font-medium')}>{view.title}</h2>
           </StackItem.Content>
         )}
       </StackItem.Root>

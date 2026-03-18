@@ -40,7 +40,7 @@ export type ToolbarMenuActionGroupProperties = (
 ) &
   (MenuSingleSelectActionGroup | MenuMultipleSelectActionGroup);
 
-export type ToolbarMenuProps = ToolbarRootProps & { textBlockWidth?: boolean };
+export type ToolbarMenuProps = ToolbarRootProps;
 
 export type ToolbarMenuActionGroupProps = {
   group: MenuItemGroup<ToolbarMenuActionGroupProperties>;
@@ -52,15 +52,11 @@ export type ToolbarMenuActionProps = {
   action: MenuAction;
 };
 
-const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: MenuAction }>) => {
+const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: MenuAction }>) => {
   const { iconSize, onAction } = useMenuScoped('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
 
-  const { icon, iconOnly = true, disabled, testId, hidden, classNames, variant } = action.properties;
-  const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
-  const rootProps = icon
-    ? { icon, size: iconSize, iconOnly, label: actionLabel(action, t) }
-    : { children: <ActionLabel action={action} /> };
+  const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
 
   const handleClick = useCallback(() => {
     if (onAction) {
@@ -70,23 +66,38 @@ const ActionToolbarItem = ({ action, __menuScope }: MenuScopedProps<{ action: Me
     }
   }, [action, onAction]);
 
-  return hidden ? null : (
-    <Root
+  const commonProps = {
+    variant: 'ghost' as const,
+    disabled,
+    classNames,
+    onClick: handleClick,
+    ...(testId && { 'data-testid': testId }),
+  };
+
+  if (hidden) {
+    return null;
+  }
+
+  return icon ? (
+    <NaturalToolbar.IconButton
       key={action.id}
-      disabled={disabled}
-      onClick={handleClick}
-      variant={variant ?? 'ghost'}
-      {...(testId && { 'data-testid': testId })}
-      {...(rootProps as any)}
-      classNames={classNames}
+      {...commonProps}
+      icon={icon}
+      size={iconSize}
+      iconOnly={iconOnly}
+      label={actionLabel(action, t)}
     />
+  ) : (
+    <NaturalToolbar.Button key={action.id} {...commonProps}>
+      <ActionLabel action={action} />
+    </NaturalToolbar.Button>
   );
 };
 
 const DropdownMenuToolbarItem = ({
+  __menuScope,
   group,
   items: propsItems,
-  __menuScope,
 }: MenuScopedProps<ToolbarMenuActionGroupProps>) => {
   const { iconOnly, disabled, testId } = group.properties;
   const { t } = useTranslation(translationKey);
@@ -126,10 +137,11 @@ const DropdownMenuToolbarItem = ({
   );
 };
 
-const ToggleGroupItem = ({ group, action, __menuScope }: MenuScopedProps<ToolbarMenuActionProps>) => {
+const ToggleGroupItem = ({ __menuScope, group, action }: MenuScopedProps<ToolbarMenuActionProps>) => {
   const { iconSize, onAction } = useMenuScoped('ToggleGroupItem', __menuScope);
   const { t } = useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
+
   const handleClick = useCallback(() => {
     if (onAction) {
       onAction(action, { parent: group });
@@ -137,85 +149,95 @@ const ToggleGroupItem = ({ group, action, __menuScope }: MenuScopedProps<Toolbar
       void executeMenuAction(action, { parent: group });
     }
   }, [action, group, onAction]);
-  const Root = icon ? NaturalToolbar.ToggleGroupIconItem : NaturalToolbar.ToggleGroupItem;
-  const rootProps = icon
-    ? { icon, size: iconSize, iconOnly, label: actionLabel(action, t) }
-    : { children: <ActionLabel action={action} /> };
 
-  return hidden ? null : (
-    <Root
-      key={action.id}
-      value={action.id as any}
-      disabled={disabled}
-      onClick={handleClick}
-      variant='ghost'
-      {...(testId && { 'data-testid': testId })}
-      {...(rootProps as any)}
-      classNames={classNames}
+  const commonProps = {
+    value: action.id,
+    disabled,
+    variant: 'ghost' as const,
+    classNames,
+    onClick: handleClick,
+    ...(testId && { 'data-testid': testId }),
+  };
+
+  return hidden ? null : icon ? (
+    <NaturalToolbar.ToggleGroupIconItem
+      {...commonProps}
+      icon={icon}
+      size={iconSize}
+      iconOnly={iconOnly}
+      label={actionLabel(action, t)}
     />
+  ) : (
+    <NaturalToolbar.ToggleGroupItem {...commonProps}>
+      <ActionLabel action={action} />
+    </NaturalToolbar.ToggleGroupItem>
   );
 };
 
 const ToggleGroupToolbarItem = ({
-  group,
-  items: propsItems,
   __menuScope,
+  group,
+  items: itemsProp,
 }: MenuScopedProps<ToolbarMenuActionGroupProps>) => {
-  const items = useMenuItems(group, propsItems, 'ToggleGroupToolbarItem', __menuScope);
-  const { selectCardinality, value } = group.properties;
+  const items = useMenuItems(group, itemsProp, 'ToggleGroupToolbarItem', __menuScope);
+  const { selectCardinality } = group.properties;
 
-  return (
-    // TODO(thure): Fix.
-    // @ts-ignore
-    <NaturalToolbar.ToggleGroup type={selectCardinality} value={value}>
-      {
-        // TODO(thure): Handle other menu item types.
-        (items as MenuAction[]).map((action) => (
-          <ToggleGroupItem key={action.id} group={group} action={action} />
-        ))
-      }
-    </NaturalToolbar.ToggleGroup>
-  );
+  // TODO(thure): Handle other menu item types.
+  const children = (items as MenuAction[]).map((action) => (
+    <ToggleGroupItem key={action.id} group={group} action={action} />
+  ));
+
+  if (selectCardinality === 'multiple') {
+    return (
+      <NaturalToolbar.ToggleGroup type='multiple' value={group.properties.value}>
+        {children}
+      </NaturalToolbar.ToggleGroup>
+    );
+  } else {
+    return (
+      <NaturalToolbar.ToggleGroup type='single' value={group.properties.value}>
+        {children}
+      </NaturalToolbar.ToggleGroup>
+    );
+  }
 };
 
-// TODO(burdon): Reconcile with react-ui/Toolbar (incl. textBlockWidth)
-export const ToolbarMenu = ({
-  __menuScope,
-  classNames,
-  textBlockWidth,
-  ...props
-}: MenuScopedProps<ToolbarMenuProps>) => {
+export const ToolbarMenu = ({ __menuScope, classNames, ...props }: MenuScopedProps<ToolbarMenuProps>) => {
   const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
   const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
 
   return (
-    <NaturalToolbar.Root
-      {...props}
-      textBlockWidth={textBlockWidth}
-      classNames={[attendableId, classNames]}
-      disabled={!alwaysActive && !hasAttention}
-    >
-      {items?.map((item: MenuItem, index: number) => (
-        <ToolbarMenuItem key={item.id ?? index} item={item} />
+    <NaturalToolbar.Root {...props} classNames={[attendableId, classNames]} disabled={!alwaysActive && !hasAttention}>
+      {items?.map((item: MenuItem) => (
+        <ToolbarMenuItem key={item.id} __menuScope={__menuScope} item={item} />
       ))}
     </NaturalToolbar.Root>
   );
 };
 
-const ToolbarMenuItem = ({ item }: { item: MenuItem }) => {
+const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem }>) => {
   if (isSeparator(item)) {
     return <NaturalToolbar.Separator variant={item.properties.variant} />;
   }
 
-  // TODO(thure): Figure out type narrowing that doesn’t require so much use of `as`.
   if (isMenuGroup(item)) {
     if (item.properties.variant === 'dropdownMenu') {
-      return <DropdownMenuToolbarItem group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>} />;
+      return (
+        <DropdownMenuToolbarItem
+          __menuScope={__menuScope}
+          group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>}
+        />
+      );
     } else {
-      return <ToggleGroupToolbarItem group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>} />;
+      return (
+        <ToggleGroupToolbarItem
+          __menuScope={__menuScope}
+          group={item as MenuItemGroup<ToolbarMenuActionGroupProperties>}
+        />
+      );
     }
   }
 
-  return <ActionToolbarItem action={item as MenuAction} />;
+  return <ActionToolbarItem __menuScope={__menuScope} action={item as MenuAction} />;
 };

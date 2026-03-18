@@ -42,7 +42,7 @@ export const MarkdownEditorToolbar = ({
   }, [editorView]);
 
   if (!editorView) {
-    return <div {...props} />;
+    return <div className={className} {...rest} />;
   }
 
   return (
