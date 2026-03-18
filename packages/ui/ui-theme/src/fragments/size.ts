@@ -2,10 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type CSSProperties } from 'react';
+
 import { type Size } from '@dxos/ui-types';
 
 import { mx } from '../util';
-import { CSSProperties } from 'react';
 
 export const largeIconSize = {
   '--icon-size': '1.25rem',

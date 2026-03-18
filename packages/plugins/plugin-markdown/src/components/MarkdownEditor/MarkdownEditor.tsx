@@ -19,6 +19,7 @@ import {
   useEditorMenu,
   useEditorToolbar,
 } from '@dxos/react-ui-editor';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
@@ -38,7 +39,6 @@ import {
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
 } from './MarkdownEditorToolbar';
-import { ThemedClassName } from '@dxos/react-ui';
 
 //
 // Context

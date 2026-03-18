@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type SchemaProperty } from '@dxos/effect';
-import { isTruthy } from '@dxos/util';
 
 import { type FormHandlerProps } from '../../hooks';
 import { getFormProperties } from '../../util';
@@ -105,24 +104,22 @@ export const FormFieldSet = ({
   return (
     <>
       {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}
-      {properties
-        .map((property) => {
-          const name = property.name.toString();
-          return (
-            <FormFieldErrorBoundary key={name} path={[...(path ?? []), name]}>
-              <FormField
-                type={property.type}
-                name={name}
-                path={[...(path ?? []), name]}
-                readonly={readonly}
-                layout={layout}
-                projection={projection}
-                {...props}
-              />
-            </FormFieldErrorBoundary>
-          );
-        })
-        .filter(isTruthy)}
+      {properties.map((property) => {
+        const name = property.name.toString();
+        return (
+          <FormFieldErrorBoundary key={name} path={[...(path ?? []), name]}>
+            <FormField
+              type={property.type}
+              name={name}
+              path={[...(path ?? []), name]}
+              readonly={readonly}
+              layout={layout}
+              projection={projection}
+              {...props}
+            />
+          </FormFieldErrorBoundary>
+        );
+      })}
     </>
   );
 };

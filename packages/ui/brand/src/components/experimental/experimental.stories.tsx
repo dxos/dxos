@@ -45,7 +45,11 @@ export const Default: Story = {
     const [logo, setLogo] = useState(false);
     const handleSpin = async () => {
       const audio = new Audio(ident);
-      await audio.play();
+      try {
+        await audio.play();
+      } catch (e) {
+        console.warn('Audio playback failed:', e);
+      }
       setTimeout(() => {
         setLogo(true);
       }, 1_500);
