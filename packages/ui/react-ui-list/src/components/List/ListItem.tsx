@@ -18,6 +18,7 @@ import React, {
   type MutableRefObject,
   type PropsWithChildren,
   type ReactNode,
+  RefObject,
   useEffect,
   useRef,
   useState,
@@ -62,7 +63,7 @@ const stateStyles: { [Key in ItemDragState['type']]?: HTMLAttributes<HTMLDivElem
 
 type ListItemContext<T extends ListItemRecord> = {
   item: T;
-  dragHandleRef: MutableRefObject<HTMLElement | null>;
+  dragHandleRef: RefObject<HTMLButtonElement | null>;
 };
 
 /**
@@ -101,7 +102,7 @@ export const ListItem = <T extends ListItemRecord>({
   const Comp = asChild ? Slot : 'div';
   const { isItem, readonly, dragPreview, setState: setRootState } = useListContext(LIST_ITEM_NAME);
   const ref = useRef<HTMLDivElement | null>(null);
-  const dragHandleRef = useRef<HTMLElement | null>(null);
+  const dragHandleRef = useRef<HTMLButtonElement | null>(null);
   const [state, setState] = useState<ItemDragState>(idle);
 
   useEffect(() => {
@@ -253,12 +254,12 @@ export const ListItemDragHandle = ({ disabled }: Pick<IconButtonProps, 'disabled
   const { t } = useTranslation(osTranslations);
   return (
     <IconButton
-      iconOnly
       variant='ghost'
-      label={t('drag handle label')}
-      ref={dragHandleRef as any}
-      icon='ph--dots-six-vertical--regular'
       disabled={disabled}
+      icon='ph--dots-six-vertical--regular'
+      iconOnly
+      label={t('drag handle label')}
+      ref={dragHandleRef}
     />
   );
 };
