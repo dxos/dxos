@@ -29,6 +29,9 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
 
   return (
     <Panel.Root role={role} className='dx-document'>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root />
+      </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 gap-4'>

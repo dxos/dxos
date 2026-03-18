@@ -4,9 +4,16 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type HTMLAttributes, type PropsWithChildren, createContext, forwardRef, useContext } from 'react';
+import React, {
+  CSSProperties,
+  type HTMLAttributes,
+  type PropsWithChildren,
+  createContext,
+  forwardRef,
+  useContext,
+} from 'react';
 
-import { composableProps, mx } from '@dxos/ui-theme';
+import { composableProps, largeIconSize, mx } from '@dxos/ui-theme';
 import { type Density, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -79,12 +86,7 @@ const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(({ children, cl
   const { tx } = useThemeContext();
 
   return (
-    <Toolbar.Root
-      {...props}
-      style={{ '--icon-size': '1.25rem' } as React.CSSProperties}
-      classNames={[tx('card.toolbar', {}), classNames]}
-      ref={forwardedRef}
-    >
+    <Toolbar.Root {...props} style={largeIconSize} classNames={[tx('card.toolbar', {}), classNames]} ref={forwardedRef}>
       {children}
     </Toolbar.Root>
   );

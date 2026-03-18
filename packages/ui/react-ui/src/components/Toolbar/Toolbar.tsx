@@ -37,7 +37,7 @@ import { Separator, type SeparatorProps } from '../Separator';
 type ToolbarRootProps = ThemedClassName<
   ToolbarPrimitive.ToolbarProps &
     ToolbarStyleProps & {
-      textBlockWidth?: boolean;
+      textBlockWidth?: boolean; // TODO(burdon): Remove?
     }
 >;
 

@@ -50,6 +50,7 @@ type TabsRootProps = ThemedClassName<TabsPrimitive.TabsProps> &
     defaultActivePart: TabsActivePart;
   }>;
 
+// TODO(burdon): Reconcile padding with Toolbar.
 const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
   (
     {
@@ -160,6 +161,7 @@ const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => 
 
 type TabsTablistProps = ThemedClassName<TabsPrimitive.TabsListProps>;
 
+// TODO(burdon): Should have same geometry as Toolbar.
 const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
   const { orientation, verticalVariant } = useTabsContext('TabsTablist');
   return (

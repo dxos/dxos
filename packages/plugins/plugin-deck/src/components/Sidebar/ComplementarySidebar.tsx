@@ -3,6 +3,7 @@
 //
 
 import React, {
+  CSSProperties,
   Fragment,
   type MouseEvent,
   type PropsWithChildren,
@@ -16,7 +17,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
 import { IconButton, type Label, Main, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { mx } from '@dxos/ui-theme';
+import { largeIconSize, mx } from '@dxos/ui-theme';
 
 import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
@@ -93,6 +94,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       <Tabs.Root orientation='vertical' verticalVariant='stateless' value={internalValue} classNames='contents'>
         <div
           role='none'
+          style={largeIconSize}
           className={mx(
             'absolute z-[1] inset-y-0 end-0 !w-(--dx-r0-size)',
             'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-subdued-separator',

@@ -8,7 +8,7 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
 import { log } from '@dxos/log';
-import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
+import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu, ThemedClassName } from '@dxos/react-ui';
 
 import {
   type AddMenuItemsProps,
@@ -200,13 +200,11 @@ const useMenu = (consumerName: string): MenuContextValue => {
 // Menu.Root
 //
 
-type MenuRootProps = PropsWithChildren<
-  Omit<MenuProviderProps, 'children'> &
-    Pick<DropdownMenuRootProps, 'open' | 'defaultOpen' | 'onOpenChange'> & {
-      /** Identifies the component that owns this menu (passed to action handlers). */
-      caller?: string;
-    }
->;
+type MenuRootProps = MenuProviderProps &
+  Pick<DropdownMenuRootProps, 'children' | 'open' | 'defaultOpen' | 'onOpenChange'> & {
+    /** Identifies the component that owns this menu (passed to action handlers). */
+    caller?: string;
+  };
 
 /**
  * Menu context boundary.

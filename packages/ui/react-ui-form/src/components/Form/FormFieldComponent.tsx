@@ -31,7 +31,6 @@ export type FormFieldStateProps<T = any> = {
 
 /**
  * Presentation mode.
- *
  * - full: Show label, control, and status.
  * - compact: Show label and control.
  * - inline: Control only.

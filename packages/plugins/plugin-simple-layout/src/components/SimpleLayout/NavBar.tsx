@@ -5,9 +5,8 @@
 import { type Atom } from '@effect-atom/atom-react';
 import React from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/ui-theme';
+import { ThemedClassName } from '@dxos/react-ui';
 
 const NAVBAR_NAME = 'SimpleLayout.NavBar';
 
@@ -25,8 +24,8 @@ export const NavBar = ({ classNames, actions, onAction }: NavBarProps) => {
   const menu = useMenuActions(actions);
 
   return (
-    <Menu.Root {...menu} alwaysActive onAction={onAction}>
-      <Menu.Toolbar density='coarse' classNames={mx(classNames)} />
+    <Menu.Root {...menu} classNames={classNames} alwaysActive onAction={onAction}>
+      <Menu.Toolbar density='coarse' />
     </Menu.Root>
   );
 };

@@ -68,13 +68,13 @@ const [PopoverProvider, usePopoverContext] = createPopoverContext<PopoverContext
 // PopoverRoot
 //
 
-interface PopoverRootProps {
+type PopoverRootProps = {
   children?: ReactNode;
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   modal?: boolean;
-}
+};
 
 const PopoverRoot: FC<PopoverRootProps> = (props: ScopedProps<PopoverRootProps>) => {
   const { __scopePopover, children, open: openProp, defaultOpen, onOpenChange, modal = false } = props;
@@ -117,7 +117,7 @@ const ANCHOR_NAME = 'PopoverAnchor';
 
 type PopoverAnchorElement = ComponentRef<typeof PopperPrimitive.Anchor>;
 type PopperAnchorProps = ComponentPropsWithoutRef<typeof PopperPrimitive.Anchor>;
-interface PopoverAnchorProps extends PopperAnchorProps {}
+type PopoverAnchorProps = PopperAnchorProps;
 
 const PopoverAnchor = forwardRef<PopoverAnchorElement, PopoverAnchorProps>(
   (props: ScopedProps<PopoverAnchorProps>, forwardedRef) => {
@@ -145,9 +145,9 @@ const TRIGGER_NAME = 'PopoverTrigger';
 
 type PopoverTriggerElement = ComponentRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
-interface PopoverTriggerProps extends PrimitiveButtonProps {
+type PopoverTriggerProps = PrimitiveButtonProps & {
   asChild?: boolean;
-}
+};
 
 const PopoverTrigger = forwardRef<PopoverTriggerElement, PopoverTriggerProps>(
   (props: ScopedProps<PopoverTriggerProps>, forwardedRef) => {
@@ -188,9 +188,9 @@ PopoverTrigger.displayName = TRIGGER_NAME;
 
 const VIRTUAL_TRIGGER_NAME = 'PopoverVirtualTrigger';
 
-interface PopoverVirtualTriggerProps {
+type PopoverVirtualTriggerProps = {
   virtualRef: RefObject<PopoverTriggerElement | null>;
-}
+};
 
 const PopoverVirtualTrigger = (props: ScopedProps<PopoverVirtualTriggerProps>) => {
   const { __scopePopover, virtualRef } = props;
@@ -218,7 +218,7 @@ const [PortalProvider, usePortalContext] = createPopoverContext<PortalContextVal
 });
 
 type PortalProps = ComponentPropsWithoutRef<typeof PortalPrimitive>;
-interface PopoverPortalProps {
+type PopoverPortalProps = {
   children?: ReactNode;
   /**
    * Specify a container element to portal the content into.
@@ -229,7 +229,7 @@ interface PopoverPortalProps {
    * controlling animation with React animation libraries.
    */
   forceMount?: true;
-}
+};
 
 const PopoverPortal: FC<PopoverPortalProps> = (props: ScopedProps<PopoverPortalProps>) => {
   const { __scopePopover, forceMount, children, container } = props;
@@ -401,8 +401,7 @@ type FocusScopeProps = ComponentPropsWithoutRef<typeof FocusScope>;
 type DismissableLayerProps = ComponentPropsWithoutRef<typeof DismissableLayer>;
 type PopperContentProps = ThemedClassName<ComponentPropsWithoutRef<typeof PopperPrimitive.Content>>;
 
-interface PopoverContentImplProps
-  extends Omit<PopperContentProps, 'onPlaced'>, Omit<DismissableLayerProps, 'onDismiss'> {
+type PopoverContentImplProps = Omit<PopperContentProps, 'onPlaced'> & Omit<DismissableLayerProps, 'onDismiss'> & {
   /**
    * Whether focus should be trapped within the `Popover`
    * (default: false)
@@ -420,7 +419,7 @@ interface PopoverContentImplProps
    * Can be prevented.
    */
   onCloseAutoFocus?: FocusScopeProps['onUnmountAutoFocus'];
-}
+};
 
 const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentImplProps>(
   (props: ScopedProps<PopoverContentImplProps>, forwardedRef) => {
@@ -514,7 +513,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
 const CLOSE_NAME = 'PopoverClose';
 
 type PopoverCloseElement = ComponentRef<typeof Primitive.button>;
-interface PopoverCloseProps extends PrimitiveButtonProps {}
+type PopoverCloseProps = PrimitiveButtonProps;
 
 const PopoverClose = forwardRef<PopoverCloseElement, PopoverCloseProps>(
   (props: ScopedProps<PopoverCloseProps>, forwardedRef) => {
@@ -541,7 +540,7 @@ const ARROW_NAME = 'PopoverArrow';
 
 type PopoverArrowElement = ComponentRef<typeof PopperPrimitive.Arrow>;
 type PopperArrowProps = ThemedClassName<ComponentPropsWithoutRef<typeof PopperPrimitive.Arrow>>;
-interface PopoverArrowProps extends PopperArrowProps {}
+type PopoverArrowProps = PopperArrowProps;
 
 const PopoverArrow = forwardRef<PopoverArrowElement, PopoverArrowProps>(
   (props: ScopedProps<PopoverArrowProps>, forwardedRef) => {

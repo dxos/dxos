@@ -41,7 +41,7 @@
    */
   .dx-density-coarse {
     --spacing-form-padding: var(--spacing-trim-md);
-    --spacing-icon-button-padding: var(--spacing-trim-sm);
+    /* --spacing-icon-button-padding: var(--spacing-trim-sm); */
     --spacing-scroll-padding: 8px;
   }
 }

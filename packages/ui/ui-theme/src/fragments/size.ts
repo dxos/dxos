@@ -5,6 +5,11 @@
 import { type Size } from '@dxos/ui-types';
 
 import { mx } from '../util';
+import { CSSProperties } from 'react';
+
+export const largeIconSize = {
+  '--icon-size': '1.25rem',
+} as CSSProperties;
 
 const sizeWidthMap = new Map<Size, string>([
   [0, 'w-0'],
