@@ -23,7 +23,7 @@ export const useFilteredTypes = (db?: Database.Database): Type.AnyEntity[] => {
           new Set(
             query.results
               .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
-              .filter((schema) => SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))),
+              .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))),
           ),
         );
 
