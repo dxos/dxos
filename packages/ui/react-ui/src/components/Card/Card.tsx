@@ -360,12 +360,12 @@ export const Card = {
   ToolbarSeparator: Toolbar.Separator,
 
   // Toolbar blocks
+  IconBlock: CardIconBlock,
   DragHandle: CardDragHandle,
   CloseIconButton: CloseIconButton,
   Menu: CardMenu,
-
-  Title: CardTitle,
   Icon: CardIcon,
+  Title: CardTitle,
 
   // Content
   Content: CardContent,

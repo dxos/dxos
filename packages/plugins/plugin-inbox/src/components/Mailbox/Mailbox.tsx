@@ -103,8 +103,15 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       <Focus.Group asChild>
         <Card.Root onClick={handleClick} ref={setRef}>
           <Card.Toolbar>
-            <Card.IconBlock onClick={handleAvatarClick}>
-              <DxAvatar hue={hue} hueVariant='surface' variant='square' size={7} fallback={from} />
+            <Card.IconBlock>
+              <DxAvatar
+                hue={hue}
+                hueVariant='surface'
+                variant='square'
+                size={7}
+                fallback={from}
+                onClick={handleAvatarClick}
+              />
             </Card.IconBlock>
             <Card.Title classNames='flex items-center gap-3'>
               <span className='grow truncate font-medium'>{subject}</span>

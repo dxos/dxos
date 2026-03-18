@@ -61,7 +61,7 @@ const PreviewCard = () => {
         <Popover.Viewport classNames='dx-card-popover-width'>
           <Card.Root border={false}>
             <Card.Toolbar>
-              <Card.Icon toolbar icon='ph--file-text--regular' />
+              <Card.Icon icon='ph--file-text--regular' />
               <Card.Title>{target.label}</Card.Title>
               <Popover.Close asChild>
                 <Card.CloseIconButton />
@@ -167,7 +167,7 @@ const PreviewBlockComponent = ({ link, el, view }: { link: PreviewLinkRef; el: H
       <Card.Root classNames={hoverableControls}>
         {!view?.state.readOnly && (
           <Card.Toolbar>
-            <Card.Icon toolbar icon='ph--bookmark--regular' />
+            <Card.Icon icon='ph--bookmark--regular' />
             <Card.Title>{link.label}</Card.Title>
             {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
             <Menu.Trigger asChild disabled={!menuItems?.length}>
