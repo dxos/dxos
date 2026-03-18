@@ -36,7 +36,10 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
   // TODO(wittjosiah): Move alternate-tree nodes to a non-child relation so they don't need filtering.
   const visibleChildren = useMemo(
-    () => children.filter((node) => node.properties.disposition !== 'alternate-tree' && node.properties.disposition !== 'hidden'),
+    () =>
+      children.filter(
+        (node) => node.properties.disposition !== 'alternate-tree' && node.properties.disposition !== 'hidden',
+      ),
     [children],
   );
 

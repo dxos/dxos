@@ -117,9 +117,7 @@ const useCollectionItems = (
       objects.map((obj) => {
         const typename = Obj.getTypename(obj);
         const metadata = typename ? resolveMetadata(typename) : {};
-        const targetPath = attendableId
-          ? getCollectionObjectPath(attendableId, obj.id)
-          : getObjectPathFromObject(obj);
+        const targetPath = attendableId ? getCollectionObjectPath(attendableId, obj.id) : getObjectPathFromObject(obj);
 
         return {
           id: Obj.getDXN(obj).toString(),
