@@ -24,10 +24,15 @@ export type DefinitionTypeId = typeof DefinitionTypeId;
  * Contains schema and metadata, but no runtime logic.
  */
 export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition.Variance<I, O, S> {
-  readonly schema: {
-    readonly input: Schema<I>;
-    readonly output: Schema<O>;
-  };
+  /**
+   * Input schema for the operation.
+   */
+  readonly input: Schema<I>;
+  /**
+   * Output schema for the operation.
+   */
+  readonly output: Schema<O>;
+
   readonly meta: {
     readonly key: string;
     readonly name?: string;
@@ -38,6 +43,7 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
      */
     readonly deployedId?: string;
   };
+
   /**
    * Execution mode for the operation.
    * - 'sync': Operation completes synchronously (fast, UI-blocking acceptable).
@@ -49,13 +55,13 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
    * ECHO types the operation uses.
    * Ensures types are available when the operation is executed remotely.
    */
-  readonly types?: readonly Type.AnyEntity[];
+  readonly types: readonly Type.AnyEntity[];
 
   /**
    * Effect services required by this operation.
    * These services will be automatically provided to the handler at invocation time.
    */
-  readonly services?: readonly Context.Tag<any, any>[];
+  readonly services: readonly Context.Tag<any, any>[];
 }
 
 /**
@@ -108,8 +114,10 @@ export type WithHandler<T extends Definition.Any> = T & {
  * Props for creating an Operation definition.
  * Derived from OperationDefinition with executionMode made optional (defaults to 'async').
  */
-export type Props<I, O> = Omit<Definition<I, O>, DefinitionTypeId | 'pipe' | 'executionMode'> & {
+export type Props<I, O> = Omit<Definition<I, O>, DefinitionTypeId | 'pipe' | 'executionMode' | 'types' | 'services'> & {
   readonly executionMode?: 'sync' | 'async';
+  readonly types?: Definition<I, O>['types'];
+  readonly services?: Definition<I, O>['services'];
 };
 
 /**
@@ -120,13 +128,15 @@ export type Props<I, O> = Omit<Definition<I, O>, DefinitionTypeId | 'pipe' | 'ex
 export const make = <const P extends Props<any, any>>(
   props: P,
 ): Definition<
-  Schema$.Schema.Type<P['schema']['input']>,
-  Schema$.Schema.Type<P['schema']['output']>,
+  Schema$.Schema.Type<P['input']>,
+  Schema$.Schema.Type<P['output']>,
   Context.Tag.Identifier<NonNullable<P['services']>[number]>
 > => {
   return {
     ...props,
     executionMode: props.executionMode ?? 'async',
+    types: props.types ?? [],
+    services: props.services ?? [],
     pipe() {
       // eslint-disable-next-line prefer-rest-params
       return Pipeable.pipeArguments(this, arguments);
