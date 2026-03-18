@@ -75,6 +75,13 @@ export interface PluginManager {
   ): Effect.Effect<boolean, Error>;
   deactivate(id: string): Effect.Effect<boolean, Error>;
   reset(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error>;
+
+  /**
+   * Shuts down the manager by deactivating all active modules in reverse activation order,
+   * clearing all capabilities, and resetting lifecycle bookkeeping.
+   * Plugins, core, enabled, and modules remain intact so the manager can be reused.
+   */
+  shutdown(): Effect.Effect<boolean, Error>;
 }
 
 /**
@@ -492,6 +499,31 @@ class ManagerImpl implements PluginManager {
       } else {
         return false;
       }
+    });
+  }
+
+  shutdown(): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
+      log('shutdown');
+
+      const activeIds = [...this._get(this._activeAtom)].reverse();
+      const allModules = this._get(this._modulesAtom);
+      const modulesToDeactivate = activeIds
+        .map((id) => allModules.find((module) => module.id === id))
+        .filter((module): module is Plugin.PluginModule => module != null);
+
+      for (const module of modulesToDeactivate) {
+        yield* this._deactivateModule(module);
+      }
+
+      this._set(this._eventsFiredAtom, []);
+      this._set(this._pendingResetAtom, []);
+      this._moduleMemoMap.clear();
+      yield* Ref.set(this._activatingEvents, []);
+      yield* Ref.set(this._activatingModules, []);
+
+      log('shutdown complete');
+      return true;
     });
   }
 

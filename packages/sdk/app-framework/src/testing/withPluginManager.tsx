@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useMemo } from 'react';
 
 import { raise } from '@dxos/debug';
+import { runAndForwardErrors } from '@dxos/effect';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { type MaybeProvider, getProviderValue } from '@dxos/util';
 
@@ -66,7 +67,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
       [init],
     );
 
-    // Set-up root capability.
+    // Set-up root capability and shutdown on unmount.
     useEffect(() => {
       const capability = Capability.contributes(Capabilities.ReactRoot, {
         id: context.id,
@@ -80,6 +81,7 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
 
       return () => {
         pluginManager.capabilities.remove(capability.interface, capability.implementation);
+        void runAndForwardErrors(pluginManager.shutdown());
       };
     }, [pluginManager, context]);
 

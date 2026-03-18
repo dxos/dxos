@@ -842,4 +842,207 @@ describe('PluginManager', () => {
       assert.strictEqual(strings[0].string, 'concurrent');
     }),
   );
+
+  it.effect('should deactivate all active modules on shutdown', () =>
+    Effect.gen(function* () {
+      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+        Plugin.addModule({
+          activatesOn: ActivationEvents.Startup,
+          id: 'Plugin1',
+          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+        }),
+        Plugin.make,
+      );
+      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+        Plugin.addModule({
+          activatesOn: ActivationEvents.Startup,
+          id: 'Plugin2',
+          activate: () => Effect.succeed(Capability.contributes(Number, { number: 42 })),
+        }),
+        Plugin.make,
+      );
+      const plugin1 = Plugin1();
+      const plugin2 = Plugin2();
+      plugins = [plugin1, plugin2];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(Plugin1.meta.id);
+      yield* manager.add(Plugin2.meta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.strictEqual(manager.getActive().length, 2);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 1);
+      assert.strictEqual(manager.capabilities.getAll(Number).length, 1);
+
+      const result = yield* manager.shutdown();
+      assert.isTrue(result);
+      assert.deepStrictEqual(manager.getActive(), []);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 0);
+      assert.strictEqual(manager.capabilities.getAll(Number).length, 0);
+    }),
+  );
+
+  it.effect('should run capability deactivate hooks during shutdown', () =>
+    Effect.gen(function* () {
+      let deactivated = false;
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'WithDeactivate',
+          activatesOn: ActivationEvents.Startup,
+          activate: () =>
+            Effect.succeed(
+              Capability.contributes(String, { string: 'hello' }, () =>
+                Effect.sync(() => {
+                  deactivated = true;
+                }),
+              ),
+            ),
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.isFalse(deactivated);
+
+      yield* manager.shutdown();
+      assert.isTrue(deactivated);
+    }),
+  );
+
+  it.effect('should deactivate modules in reverse activation order during shutdown', () =>
+    Effect.gen(function* () {
+      const deactivationOrder: string[] = [];
+      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+        Plugin.addModule({
+          activatesOn: ActivationEvents.Startup,
+          id: 'First',
+          activate: () =>
+            Effect.succeed(
+              Capability.contributes(String, { string: 'first' }, () =>
+                Effect.sync(() => {
+                  deactivationOrder.push('First');
+                }),
+              ),
+            ),
+        }),
+        Plugin.make,
+      );
+      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+        Plugin.addModule({
+          activatesOn: ActivationEvents.Startup,
+          id: 'Second',
+          activate: () =>
+            Effect.succeed(
+              Capability.contributes(Number, { number: 2 }, () =>
+                Effect.sync(() => {
+                  deactivationOrder.push('Second');
+                }),
+              ),
+            ),
+        }),
+        Plugin.make,
+      );
+      plugins = [Plugin1(), Plugin2()];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(Plugin1.meta.id);
+      yield* manager.add(Plugin2.meta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+
+      yield* manager.shutdown();
+      assert.deepStrictEqual(deactivationOrder, ['Second', 'First']);
+    }),
+  );
+
+  it.effect('should clear lifecycle bookkeeping during shutdown', () =>
+    Effect.gen(function* () {
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.isTrue(manager.getEventsFired().length > 0);
+
+      yield* manager.shutdown();
+      assert.deepStrictEqual(manager.getEventsFired(), []);
+      assert.deepStrictEqual(manager.getPendingReset(), []);
+      assert.deepStrictEqual(manager.getActive(), []);
+    }),
+  );
+
+  it.effect('should preserve plugins, core, enabled, and modules after shutdown', () =>
+    Effect.gen(function* () {
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+
+      const pluginsBefore = manager.getPlugins();
+      const coreBefore = manager.getCore();
+      const enabledBefore = manager.getEnabled();
+      const modulesBefore = manager.getModules();
+
+      yield* manager.shutdown();
+
+      assert.deepStrictEqual(manager.getPlugins(), pluginsBefore);
+      assert.deepStrictEqual(manager.getCore(), coreBefore);
+      assert.deepStrictEqual(manager.getEnabled(), enabledBefore);
+      assert.deepStrictEqual(manager.getModules(), modulesBefore);
+    }),
+  );
+
+  it.effect('should allow re-activation after shutdown', () =>
+    Effect.gen(function* () {
+      let activateCount = 0;
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => {
+            activateCount++;
+            return Effect.succeed(Capability.contributes(String, { string: 'hello' }));
+          },
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.strictEqual(activateCount, 1);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+
+      yield* manager.shutdown();
+      assert.deepStrictEqual(manager.getActive(), []);
+
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.strictEqual(activateCount, 2);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 1);
+    }),
+  );
 });

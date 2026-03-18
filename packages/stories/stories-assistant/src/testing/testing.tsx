@@ -7,7 +7,7 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import React, { FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { GenericToolkit } from '@dxos/ai';
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
@@ -20,6 +20,7 @@ import {
   Plugin,
   PluginManager,
 } from '@dxos/app-framework';
+import { runAndForwardErrors } from '@dxos/effect';
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
@@ -205,6 +206,7 @@ const PluginManagerHost: React.FC<{
 
     return () => {
       manager.capabilities.remove(capability.interface, capability.implementation);
+      void runAndForwardErrors(manager.shutdown());
     };
   }, [manager, contextId, children]);
 
