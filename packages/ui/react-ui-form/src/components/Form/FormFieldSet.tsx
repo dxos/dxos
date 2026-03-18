@@ -102,7 +102,7 @@ export const FormFieldSet = ({
   }
 
   return (
-    <div role='none' {...props}>
+    <>
       {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}
       {properties.map((property) => {
         const name = property.name.toString();
@@ -115,11 +115,12 @@ export const FormFieldSet = ({
               readonly={readonly}
               layout={layout}
               projection={projection}
+              {...props}
             />
           </FormFieldErrorBoundary>
         );
       })}
-    </div>
+    </>
   );
 };
 
