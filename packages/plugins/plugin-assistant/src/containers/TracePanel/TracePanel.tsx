@@ -6,11 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
 import { Filter, Obj, Query } from '@dxos/echo';
-import {
-    InvocationOutcome,
-    InvocationTraceEndEvent,
-    InvocationTraceStartEvent
-} from '@dxos/functions-runtime';
+import { InvocationOutcome, InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
