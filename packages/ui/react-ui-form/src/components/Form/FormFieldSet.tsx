@@ -63,7 +63,8 @@ export const FormFieldSet = ({
     }
 
     // TODO(wittjosiah): Reconcile FormInputAnnotation with projection hidden properties & exclude function.
-    const props = getFormProperties(schema.ast);
+    const schemaProps = getFormProperties(schema.ast);
+    const filteredProps = exclude ? exclude(schemaProps) : schemaProps;
 
     // Use projection-based field management when view and projection are available.
     if (projection) {
@@ -71,7 +72,7 @@ export const FormFieldSet = ({
       const hiddenProperties = new Set(projection.getHiddenProperties());
 
       // Filter properties to only include visible ones and order by projection.
-      const visibleProps = props.filter((prop) => !hiddenProperties.has(prop.name.toString()));
+      const visibleProps = filteredProps.filter((prop) => !hiddenProperties.has(prop.name.toString()));
       const orderedProps: SchemaProperty[] = [];
 
       // Add properties in projection field order.
@@ -91,10 +92,9 @@ export const FormFieldSet = ({
     }
 
     // Fallback to legacy filter/sort behavior.
-    const filtered = exclude ? exclude(props) : props;
     return sort
-      ? filtered.sort(({ name: a }, { name: b }) => sort.indexOf(a.toString()) - sort.indexOf(b.toString()))
-      : filtered;
+      ? [...filteredProps].sort(({ name: a }, { name: b }) => sort.indexOf(a.toString()) - sort.indexOf(b.toString()))
+      : filteredProps;
   }, [schema, values, exclude, sort, projection]);
 
   if ((readonly || layout === 'static') && values == null) {
@@ -102,7 +102,7 @@ export const FormFieldSet = ({
   }
 
   return (
-    <>
+    <div role='none' {...props}>
       {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}
       {properties.map((property) => {
         const name = property.name.toString();
@@ -115,12 +115,11 @@ export const FormFieldSet = ({
               readonly={readonly}
               layout={layout}
               projection={projection}
-              {...props}
             />
           </FormFieldErrorBoundary>
         );
       })}
-    </>
+    </div>
   );
 };
 
