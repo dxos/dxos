@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import React from 'react';
+
 import { Filter } from '@dxos/echo';
 import { Assistant, useContextBinder } from '@dxos/plugin-assistant';
 import { useQuery } from '@dxos/react-client/echo';
