@@ -231,7 +231,6 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
         variant='ghost'
         label={label ?? t('toolbar drag handle label')}
         classNames='cursor-pointer'
-        size={5}
         disabled={!forwardedRef}
         ref={forwardedRef}
       />
@@ -248,6 +247,7 @@ type ToolbarCloseIconButtonProps = { onClick?: () => void; label?: string };
 const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconButtonProps>(
   ({ onClick, label }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
+
     return (
       <ToolbarIconButton
         iconOnly
@@ -255,7 +255,6 @@ const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconBut
         variant='ghost'
         label={label ?? t('toolbar close label')}
         classNames='cursor-pointer'
-        size={5}
         onClick={onClick}
         ref={forwardedRef}
       />

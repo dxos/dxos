@@ -25,23 +25,25 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   );
 
   return (
-    <Mosaic.Tile {...props} className='border border-separator rounded-xs font-mono'>
-      <Menu.Root>
-        <Card.Toolbar>
-          <Card.DragHandle ref={dragHandleRef} />
-          <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
-          {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-          <Menu.Trigger asChild disabled={!menuItems?.length}>
-            <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
-          </Menu.Trigger>
-          <Menu.Content items={menuItems} />
-        </Card.Toolbar>
-      </Menu.Root>
-      {open && (
-        <Card.Row>
-          <Json data={props.data} classNames='text-xs' />
-        </Card.Row>
-      )}
+    <Mosaic.Tile {...props} asChild>
+      <Card.Root>
+        <Menu.Root>
+          <Card.Toolbar>
+            <Card.DragHandle ref={dragHandleRef} />
+            <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
+            {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+            <Menu.Trigger asChild disabled={!menuItems?.length}>
+              <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
+            </Menu.Trigger>
+            <Menu.Content items={menuItems} />
+          </Card.Toolbar>
+        </Menu.Root>
+        {open && (
+          <Card.Row>
+            <Json data={props.data} classNames='text-xs' />
+          </Card.Row>
+        )}
+      </Card.Root>
     </Mosaic.Tile>
   );
 };

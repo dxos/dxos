@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React, { type FC } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
@@ -52,7 +51,6 @@ import {
   ChatModule,
   ChessModule,
   CommentsModule,
-  type ComponentProps,
   ExecutionGraphModule,
   GraphModule,
   InboxModule,
@@ -67,6 +65,7 @@ import {
   TriggersModule,
 } from '../components';
 import {
+  ModuleContainer,
   ResearchInputQueue,
   accessTokensFromEnv,
   addTestData,
@@ -76,8 +75,6 @@ import {
   getDecorators,
   organizations,
   testTypes,
-  ModuleContainer,
-  ModuleContainerProps,
 } from '../testing';
 
 const storybook: Meta<typeof ModuleContainer> = {
@@ -381,13 +378,12 @@ export const WithCalendar: Story = {
 export const WithMap: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ Map, MapPlugin }, { TablePlugin }, { Table }, { createLocationSchema: createSchema }] =
-        await Promise.all([
-          import('@dxos/plugin-map'),
-          import('@dxos/plugin-table'),
-          import('@dxos/react-ui-table/types'),
-          import('@dxos/plugin-map/testing'),
-        ]);
+      const [{ Map, MapPlugin }, { TablePlugin }, { Table }, { createLocationSchema: _ }] = await Promise.all([
+        import('@dxos/plugin-map'),
+        import('@dxos/plugin-table'),
+        import('@dxos/react-ui-table/types'),
+        import('@dxos/plugin-map/testing'),
+      ]);
       return { plugins: [MapPlugin(), TablePlugin()], types: [View.View, Map.Map, Table.Table] };
     },
     config: config.remote,

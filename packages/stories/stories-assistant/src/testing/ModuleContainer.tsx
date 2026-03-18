@@ -2,50 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo } from 'react';
 
-import { ToolId } from '@dxos/ai';
-import { EXA_API_KEY } from '@dxos/ai/testing';
 import { Capabilities } from '@dxos/app-framework';
-import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
-import {
-  AgentFunctions,
-  LinearBlueprint,
-  MarkdownBlueprint,
-  ResearchBlueprint,
-  ResearchDataTypes,
-  ResearchGraph,
-  WebSearchBlueprint,
-} from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt, Template } from '@dxos/blueprints';
-import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
-import { View } from '@dxos/echo';
-import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
-import { invariant } from '@dxos/invariant';
+import { Blueprint } from '@dxos/blueprints';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { AssistantBlueprint, translations, useContextBinder } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
-import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
-import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
-import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
-import { MapBlueprint } from '@dxos/plugin-map/blueprints';
-import { Markdown } from '@dxos/plugin-markdown/types';
-import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
-import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
+import { useSpace } from '@dxos/react-client/echo';
+import { useAsyncEffect } from '@dxos/react-ui';
+import { Loading } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { type ComponentProps, ContextModule } from '../components';
-
-const panelClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden';
 
 export type ModuleContainerProps = {
   modules: FC<ComponentProps>[][];
@@ -116,7 +89,11 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
               rail={false}
             >
               {Components.map((Component, i) => (
-                <StackItem.Root key={i} item={{ id: `module-${i}` }} classNames={panelClassNames}>
+                <StackItem.Root
+                  key={i}
+                  item={{ id: `module-${i}` }}
+                  classNames='bg-base-surface rounded-xs border border-separator overflow-hidden'
+                >
                   <Component space={space} onEvent={handleEvent} />
                 </StackItem.Root>
               ))}

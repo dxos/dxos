@@ -44,10 +44,9 @@ const IconOnlyButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   },
 );
 
-// TODO(burdon): Inherit size from container/density.
 const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
   (
-    { size = 5, icon, iconOnly, iconEnd, iconClassNames, label, caretDown, noTooltip: _, classNames, ...props },
+    { size, icon, iconOnly, iconEnd, iconClassNames, label, caretDown, noTooltip: _, classNames, ...props },
     forwardedRef,
   ) => {
     const { tx } = useThemeContext();

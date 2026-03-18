@@ -110,7 +110,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
         ref={forwardedRef}
       >
-        <Column.Root>{children}</Column.Root>
+        <Column.Root gutter='md'>{children}</Column.Root>
       </DialogPrimitive.Content>
     );
   },

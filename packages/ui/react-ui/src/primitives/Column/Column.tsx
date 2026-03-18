@@ -17,13 +17,12 @@ import { useThemeContext } from '../../hooks';
 
 const COLUMN_ROOT_NAME = 'Column.Root';
 
-type GutterSize = 'sm' | 'md' | 'lg' | 'rail';
+type GutterSize = 'sm' | 'md' | 'lg';
 
 const gutterSizes: Record<GutterSize, string> = {
   sm: 'var(--dx-gutter-sm)',
   md: 'var(--dx-gutter-md)',
   lg: 'var(--dx-gutter-lg)',
-  rail: 'var(--dx-rail-item)',
 };
 
 type ColumnRootProps = SlottableProps<HTMLDivElement, { gutter?: GutterSize }>;
