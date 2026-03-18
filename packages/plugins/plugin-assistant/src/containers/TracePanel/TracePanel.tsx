@@ -5,16 +5,21 @@
 import * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
-import { type Database, Filter, Query } from '@dxos/echo';
-import { InvocationOutcome, InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
+import { Obj, type Database } from '@dxos/echo';
+import {
+  InvocationOutcome,
+  InvocationTraceEndEvent,
+  InvocationTraceStartEvent,
+  type InvocationTraceEvent,
+} from '@dxos/functions-runtime';
+import { type DXN } from '@dxos/keys';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { useActiveSpace } from '@dxos/plugin-space';
-import { useQuery, type Space } from '@dxos/react-client/echo';
+import { useQueue } from '@dxos/react-client/echo';
 import { Input, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Commit, Timeline } from '@dxos/react-ui-components';
 
 import { meta } from '../../meta';
-import { dbg } from '@dxos/log';
 
 export const TracePanel = () => {
   const space = useActiveSpace();
@@ -22,37 +27,32 @@ export const TracePanel = () => {
     return null;
   }
 
-  return <TracePanelMain space={space} />;
+  return <TracePanelMain db={space.db} queueDxn={space.properties.invocationTraceQueue?.dxn} />;
 };
 
-const TracePanelMain = ({ space }: { space: Space }) => {
+const TracePanelMain = ({ db, queueDxn }: { db: Database.Database; queueDxn?: DXN }) => {
   const { t } = useTranslation(meta.id);
-  const { state, start, stop } = useTriggerRuntimeControls(space.db);
+  const { state, start, stop } = useTriggerRuntimeControls(db);
   const isRunning = state?.enabled ?? false;
 
-  // TODO(dmaretskyi): Make a feed.
-  const traceQueueDxn = dbg(space.properties.invocationTraceQueue?.dxn);
-  const events = useQuery(
-    space.db,
-    traceQueueDxn
-      ? Query.select(Filter.everything()).from({ queues: [traceQueueDxn.toString()] })
-      : Query.select(Filter.nothing()),
-  );
+  const queue = useQueue<InvocationTraceEvent>(queueDxn, { pollInterval: 1_000 });
 
   const { branches, commits } = useMemo(() => {
+    const events = queue?.objects ?? [];
     const branches: string[] = ['invocations'];
     const commits: Commit[] = [];
 
-    dbg(events);
-    const sorted = [...events].sort((a: any, b: any) => a.timestamp - b.timestamp);
+    const sorted = [...events].sort((a, b) => a.timestamp - b.timestamp).slice(-80);
     for (const event of sorted) {
       if (Schema.is(InvocationTraceStartEvent)(event)) {
+        const fn = event.trigger?.target?.function?.target;
+        const label = fn ? Obj.getLabel(fn) : event.invocationId.slice(0, 8);
         commits.push({
           id: event.id,
           branch: 'invocations',
           parents: commits.length > 0 ? [commits[commits.length - 1].id] : [],
           icon: 'ph--play--regular',
-          message: `Start ${event.invocationId.slice(0, 8)}`,
+          message: `Start ${label}`,
           timestamp: new Date(event.timestamp),
         });
       } else if (Schema.is(InvocationTraceEndEvent)(event)) {
@@ -74,7 +74,7 @@ const TracePanelMain = ({ space }: { space: Space }) => {
     }
 
     return { branches, commits };
-  }, [events]);
+  }, [queue?.objects]);
 
   return (
     <Panel.Root>
@@ -82,8 +82,8 @@ const TracePanelMain = ({ space }: { space: Space }) => {
         <Toolbar.Root>
           <Input.Root>
             <Input.Switch checked={isRunning} onCheckedChange={isRunning ? stop : start} />
-            <span className='text-sm'>{t('trigger runtime label')}</span>
           </Input.Root>
+          <span className='text-sm'>{t('trigger runtime label')}</span>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
