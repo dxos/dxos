@@ -195,4 +195,3 @@ export const getFromChatContext: Effect.Effect<Project, never, AiContextService>
   const project = projects[0];
   return project;
 });
-
