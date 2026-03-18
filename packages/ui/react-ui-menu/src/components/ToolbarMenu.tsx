@@ -56,11 +56,7 @@ const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
   const { iconSize, onAction } = useMenuScoped('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
 
-  const { icon, iconOnly = true, disabled, testId, hidden, classNames, variant } = action.properties;
-  const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
-  const rootProps = icon
-    ? { icon, size: iconSize, iconOnly, label: actionLabel(action, t) }
-    : { children: <ActionLabel action={action} /> };
+  const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
 
   const handleClick = useCallback(() => {
     if (onAction) {
@@ -70,16 +66,31 @@ const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
     }
   }, [action, onAction]);
 
-  return hidden ? null : (
-    <Root
+  const commonProps = {
+    variant: 'ghost' as const,
+    disabled,
+    classNames,
+    onClick: handleClick,
+    ...(testId && { 'data-testid': testId }),
+  };
+
+  if (hidden) {
+    return null;
+  }
+
+  return icon ? (
+    <NaturalToolbar.IconButton
       key={action.id}
-      variant={variant ?? 'ghost'}
-      disabled={disabled}
-      onClick={handleClick}
-      {...(testId && { 'data-testid': testId })}
-      {...(rootProps as any)}
-      classNames={classNames}
+      {...commonProps}
+      icon={icon}
+      size={iconSize}
+      iconOnly={iconOnly}
+      label={actionLabel(action, t)}
     />
+  ) : (
+    <NaturalToolbar.Button key={action.id} {...commonProps}>
+      <ActionLabel action={action} />
+    </NaturalToolbar.Button>
   );
 };
 
