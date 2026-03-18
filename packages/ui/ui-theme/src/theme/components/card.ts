@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Density, type ComponentFunction, type Theme } from '@dxos/ui-types';
+import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 

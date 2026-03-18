@@ -31,7 +31,6 @@ import React, {
 import { useElevationContext, useThemeContext } from '../../hooks';
 import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding';
 import { type ThemedClassName } from '../../util';
-import { mx } from '@dxos/ui-theme';
 
 type Direction = 'ltr' | 'rtl';
 

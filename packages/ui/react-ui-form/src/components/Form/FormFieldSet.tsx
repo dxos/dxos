@@ -95,7 +95,7 @@ export const FormFieldSet = ({
     return sort
       ? filtered.sort(({ name: a }, { name: b }) => sort.indexOf(a.toString()) - sort.indexOf(b.toString()))
       : filtered;
-  }, [schema, values, exclude, sort, projection?.fields]);
+  }, [schema, values, exclude, sort, projection]);
 
   if ((readonly || layout === 'static') && values == null) {
     return null;

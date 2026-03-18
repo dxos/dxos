@@ -8,7 +8,7 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type MouseEvent, type PropsWithChildren, useCallback, useContext, useMemo } from 'react';
 
 import { log } from '@dxos/log';
-import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu, ThemedClassName } from '@dxos/react-ui';
+import { type DropdownMenuRootProps, Icon, DropdownMenu as NaturalDropdownMenu } from '@dxos/react-ui';
 
 import {
   type AddMenuItemsProps,

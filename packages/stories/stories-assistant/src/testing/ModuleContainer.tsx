@@ -37,7 +37,7 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
     }
 
     const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
-    const chat = chats[0];
+    const chat = chats.at(-1);
     if (!chat) {
       return;
     }
