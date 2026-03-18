@@ -8,8 +8,9 @@ import { Obj, Ref } from '@dxos/echo';
 import { Blueprint } from '@dxos/blueprints';
 
 import { defineFunction } from '@dxos/functions';
+
 import { Project } from '../../../types';
-import { ProjectBlueprint } from '../../project';
+import { ProjectBlueprint, syncProjectTriggers } from '../../project';
 
 // TODO(dmaretskyi): Remove this with proper function typing.
 const fixEffectType = <A, E, R>(
@@ -50,7 +51,7 @@ export default defineFunction({
       },
       Obj.clone(ProjectBlueprint.make()),
     );
-    yield* Project.syncTriggers(project);
+    yield* syncProjectTriggers(project);
     return project;
   }, fixEffectType),
 });

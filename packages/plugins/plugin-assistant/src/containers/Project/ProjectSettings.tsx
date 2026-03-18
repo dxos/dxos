@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/assistant-toolkit';
+import { Project, syncProjectTriggers } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { QueueService } from '@dxos/functions';
@@ -50,7 +50,7 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
     if (!db) return;
     const runtime = computeRuntime.getRuntime(db.spaceId);
     return Obj.subscribe(project, () => {
-      queueMicrotask(() => runtime.runPromise(Project.syncTriggers(project)));
+      queueMicrotask(() => runtime.runPromise(syncProjectTriggers(project)));
     });
   }, [project, computeRuntime]);
 
