@@ -15,10 +15,8 @@ import { useOperationResolver } from './useOperationResolver';
 
 const TestOperation = Operation.make({
   meta: { key: 'test/operation', name: 'Test Operation' },
-  schema: {
-    input: Schema.Struct({ value: Schema.String }),
-    output: Schema.Struct({ result: Schema.String }),
-  },
+  input: Schema.Struct({ value: Schema.String }),
+  output: Schema.Struct({ result: Schema.String }),
 });
 
 describe('useOperationResolver', () => {

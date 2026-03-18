@@ -26,8 +26,8 @@ describe('Function/Operation Compatibility', () => {
     expect(op.meta.key).toBe('test.function');
     expect(op.meta.name).toBe('Test Function');
     expect(op.meta.description).toBe('A test function');
-    expect(Schema.isSchema(op.schema.input)).toBe(true);
-    expect(Schema.isSchema(op.schema.output)).toBe(true);
+    expect(Schema.isSchema(op.input)).toBe(true);
+    expect(Schema.isSchema(op.output)).toBe(true);
   });
 
   test('converted operation has matching schemas', () => {
@@ -53,11 +53,11 @@ describe('Function/Operation Compatibility', () => {
 
     // Verify schemas match
     const testInput = { name: 'Alice', age: 30 };
-    const validatedInput = Schema.decodeSync(op.schema.input)(testInput);
+    const validatedInput = Schema.decodeSync(op.input)(testInput);
     expect(validatedInput).toEqual(testInput);
 
     const testOutput = { greeting: 'Hello, Alice!' };
-    const validatedOutput = Schema.decodeSync(op.schema.output)(testOutput);
+    const validatedOutput = Schema.decodeSync(op.output)(testOutput);
     expect(validatedOutput).toEqual(testOutput);
   });
 
@@ -105,7 +105,7 @@ describe('Function/Operation Compatibility', () => {
     const op = FunctionDefinition.toOperation(func);
 
     expect(op.meta.key).toBe('test.no-output');
-    expect(Schema.isSchema(op.schema.output)).toBe(true);
+    expect(Schema.isSchema(op.output)).toBe(true);
   });
 
   test('converted operation includes handler', () => {

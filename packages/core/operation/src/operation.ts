@@ -152,7 +152,8 @@ export const make = <const P extends Props<any, any>>(
  * @example
  * ```ts
  * const MyOp = Operation.make({
- *   schema: { input: Schema.Void, output: Schema.Void },
+ *   input: Schema.Void,
+ *   output: Schema.Void,
  *   meta: { key: 'my-op' },
  *   services: [DatabaseService],
  * });

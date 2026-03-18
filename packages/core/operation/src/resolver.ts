@@ -39,10 +39,10 @@ export interface OperationResolver<I = any, O = any, E extends Error = Error, R 
 export type OperationResolverProps<Def extends Definition<any, any>, E extends Error = never> = {
   operation: Def;
   handler: (
-    input: Schema.Schema.Type<Def['schema']['input']>,
-  ) => Effect.Effect<Schema.Schema.Type<Def['schema']['output']>, E, AllowedServices<Def>>;
+    input: Schema.Schema.Type<Def['input']>,
+  ) => Effect.Effect<Schema.Schema.Type<Def['output']>, E, AllowedServices<Def>>;
   position?: Position;
-  filter?: (input: Schema.Schema.Type<Def['schema']['input']>) => boolean;
+  filter?: (input: Schema.Schema.Type<Def['input']>) => boolean;
 };
 
 /**
@@ -54,7 +54,8 @@ export type OperationResolverProps<Def extends Definition<any, any>, E extends E
  * ```ts
  * // Operation with Database.Service requirement
  * const MyOp = Operation.make({
- *   schema: { input: Schema.Struct({}), output: Schema.Struct({ result: Schema.String }) },
+ *   input: Schema.Struct({}),
+ *   output: Schema.Struct({ result: Schema.String }),
  *   meta: { key: 'my-op' },
  *   services: [Database.Service],
  * });
@@ -72,14 +73,14 @@ export type OperationResolverProps<Def extends Definition<any, any>, E extends E
 export const make = <Def extends Definition<any, any>, E extends Error = never>(
   props: OperationResolverProps<Def, E>,
 ): OperationResolver<
-  Schema.Schema.Type<Def['schema']['input']>,
-  Schema.Schema.Type<Def['schema']['output']>,
+  Schema.Schema.Type<Def['input']>,
+  Schema.Schema.Type<Def['output']>,
   E,
   AllowedServices<Def>
 > => {
   return props as OperationResolver<
-    Schema.Schema.Type<Def['schema']['input']>,
-    Schema.Schema.Type<Def['schema']['output']>,
+    Schema.Schema.Type<Def['input']>,
+    Schema.Schema.Type<Def['output']>,
     E,
     AllowedServices<Def>
   >;

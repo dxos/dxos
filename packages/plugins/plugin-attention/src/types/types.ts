@@ -30,12 +30,10 @@ export namespace AttentionOperation {
       description: 'Select items in an attention context.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        contextId: Schema.String.annotations({ description: 'The id of the attention context.' }),
-        selection: SelectionSchema.annotations({ description: 'The selection to apply.' }),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      contextId: Schema.String.annotations({ description: 'The id of the attention context.' }),
+      selection: SelectionSchema.annotations({ description: 'The selection to apply.' }),
+    }),
+    output: Schema.Void,
   });
 }

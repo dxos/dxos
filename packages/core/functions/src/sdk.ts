@@ -208,10 +208,8 @@ export const toOperation = <T, O, S extends FunctionServices = FunctionServices>
   functionDef: FunctionDefinition<T, O, S>,
 ): Operation.Definition<T, O> & { handler: Operation.Handler<T, O, any, S> } => {
   const op = Operation.make({
-    schema: {
-      input: functionDef.inputSchema,
-      output: functionDef.outputSchema ?? Schema.Any,
-    },
+    input: functionDef.inputSchema,
+    output: functionDef.outputSchema ?? Schema.Any,
     meta: {
       key: functionDef.key,
       name: functionDef.name,

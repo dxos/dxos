@@ -45,12 +45,10 @@ export namespace ObservabilityOperation {
       description: 'Toggle observability on or off.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        state: Schema.optional(Schema.Boolean),
-      }),
-      output: Schema.Boolean,
-    },
+    input: Schema.Struct({
+      state: Schema.optional(Schema.Boolean),
+    }),
+    output: Schema.Boolean,
   });
 
   export const CaptureUserFeedback = Operation.make({
@@ -60,10 +58,8 @@ export namespace ObservabilityOperation {
       description: 'Capture user feedback.',
     },
     services: [Capability.Service],
-    schema: {
-      input: UserFeedback,
-      output: Schema.Void,
-    },
+    input: UserFeedback,
+    output: Schema.Void,
   });
 
   export const SendEvent = Operation.make({
@@ -73,12 +69,10 @@ export namespace ObservabilityOperation {
       description: 'Send an observability event.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        name: Schema.String.annotations({ description: 'The name of the event.' }),
-        properties: Schema.optional(Schema.Any).annotations({ description: 'Event properties.' }),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      name: Schema.String.annotations({ description: 'The name of the event.' }),
+      properties: Schema.optional(Schema.Any).annotations({ description: 'Event properties.' }),
+    }),
+    output: Schema.Void,
   });
 }
