@@ -4,7 +4,7 @@
 
 import { type Decorator, type StoryContext } from '@storybook/react';
 import * as Effect from 'effect/Effect';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { raise } from '@dxos/debug';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -44,6 +44,13 @@ export const setupPluginManager = ({
   return pluginManager;
 };
 
+type ManagedPluginManagerState = {
+  fireEvents?: (ActivationEvent.ActivationEvent | string)[];
+  pluginManager: PluginManager.PluginManager;
+  setupEvents?: ActivationEvent.ActivationEvent[];
+  storyId: string;
+};
+
 export type WithPluginManagerOptions = UseAppOptions & {
   /** @deprecated */
   capabilities?: MaybeProvider<Capability.Any[], CapabilityManager.CapabilityManager>;
@@ -61,16 +68,16 @@ export type WithPluginManagerInitializer<Args = void> =
  */
 export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args> = {}): Decorator => {
   return (Story, context) => {
+    const storyId = context.id;
     const options = typeof init === 'function' ? init(context as any) : init;
-    const { pluginManager, setupEvents } = useMemo(
-      () => ({ pluginManager: setupPluginManager(options), setupEvents: options.setupEvents }),
-      [init],
-    );
+    const [managerState, setManagerState] = useState<ManagedPluginManagerState>();
 
-    // Set-up root capability and shutdown on unmount.
+    // Storybook replaces the full context object often, so key manager ownership by story id.
     useEffect(() => {
+      const pluginManager = setupPluginManager(options);
+
       const capability = Capability.contributes(Capabilities.ReactRoot, {
-        id: context.id,
+        id: storyId,
         root: () => <Story />,
       });
 
@@ -79,22 +86,37 @@ export const withPluginManager = <Args,>(init: WithPluginManagerInitializer<Args
         module: 'org.dxos.app-framework.with-plugin-manager',
       });
 
+      setManagerState({
+        pluginManager,
+        setupEvents: options.setupEvents,
+        fireEvents: options.fireEvents,
+        storyId,
+      });
+
       return () => {
         pluginManager.capabilities.remove(capability.interface, capability.implementation);
         void runAndForwardErrors(pluginManager.shutdown());
       };
-    }, [pluginManager, context]);
+    }, [storyId, init]);
 
-    // Fire events.
-    useAsyncEffect(async () => {
-      await Promise.all(options.fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
-    }, [pluginManager]);
+    // Avoid mounting useApp with a stale manager from the previous story.
+    if (!managerState || managerState.storyId !== storyId) {
+      return <></>;
+    }
 
-    // Create app.
-    const App = useApp({ pluginManager, setupEvents });
-
-    return <App />;
+    return <WithPluginManagerApp {...managerState} />;
   };
+};
+
+const WithPluginManagerApp = ({ fireEvents, pluginManager, setupEvents, storyId }: ManagedPluginManagerState) => {
+  // Fire deprecated events only after the effect-owned manager for this story exists.
+  useAsyncEffect(async () => {
+    await Promise.all(fireEvents?.map((event) => pluginManager.activate(event)) ?? []);
+  }, [fireEvents, pluginManager, storyId]);
+
+  const App = useApp({ pluginManager, setupEvents });
+
+  return <App />;
 };
 
 const storyMeta = {
