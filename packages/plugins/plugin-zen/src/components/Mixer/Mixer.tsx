@@ -158,7 +158,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
               />
             </Toolbar.Root>
           </Panel.Toolbar>
-          <Panel.Content asChild>
+          <Panel.Content>
             <List.Root<Sequence.Sequence>
               items={layers}
               getId={(item) => item.id}

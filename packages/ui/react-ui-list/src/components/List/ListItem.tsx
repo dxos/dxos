@@ -185,7 +185,7 @@ export const ListItem = <T extends ListItemRecord>({
         ref={ref}
         role='listitem'
         aria-selected={selected}
-        className={mx('relative dx-selected dx-hover', classNames, stateStyles[state.type])}
+        className={mx('relative dx-selected dx-hover p-1', classNames, stateStyles[state.type])}
         {...props}
       >
         {children}
