@@ -24,7 +24,7 @@ interface UseQueryFn {
 
 /**
  * Create subscription.
- * 
+ *
  * @param queryOrFilter - The query or filter to apply. Query is memoized based on the AST. No need to call useMemo.
  */
 export const useQuery: UseQueryFn = (
