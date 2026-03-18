@@ -192,7 +192,7 @@ export const ToolbarMenu = ({ __menuScope, classNames, ...props }: MenuScopedPro
   );
 };
 
-const ToolbarMenuItem = ({ __menuScope, item, ...props }: MenuScopedProps<{ item: MenuItem }>) => {
+const ToolbarMenuItem = ({ __menuScope, item }: MenuScopedProps<{ item: MenuItem }>) => {
   if (isSeparator(item)) {
     return <NaturalToolbar.Separator variant={item.properties.variant} />;
   }
