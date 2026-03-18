@@ -38,7 +38,7 @@
     "jest/valid-describe-callback": "off",
     "jest/valid-expect": "off",
     "jest/valid-title": "off",
-    "no-unused-vars": "error",
+    "no-unused-vars": "off", // TODO(burdon): Fix no-unused-imports.
     "oxc/only-used-in-recursion": "off",
     "promise/no-callback-in-promise": "off",
     "promise/valid-params": "off",
