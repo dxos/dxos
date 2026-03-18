@@ -138,26 +138,26 @@ const main = async () => {
       useLocalServices || !useSharedWorker
         ? undefined
         : () =>
-          new SharedWorker(new URL('./shared-worker', import.meta.url), {
-            type: 'module',
-            name: 'dxos-client-worker',
-          }),
+            new SharedWorker(new URL('./shared-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-client-worker',
+            }),
     createDedicatedWorker:
       useLocalServices || useSharedWorker
         ? undefined
         : () =>
-          new Worker(new URL('./dedicated-worker', import.meta.url), {
-            type: 'module',
-            name: 'dxos-client-worker',
-          }),
+            new Worker(new URL('./dedicated-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-client-worker',
+            }),
     createCoordinatorWorker:
       useLocalServices || useSharedWorker || useSingleClientMode
         ? undefined
         : () =>
-          new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
-            type: 'module',
-            name: 'dxos-coordinator-worker',
-          }),
+            new SharedWorker(new URL('./coordinator-worker', import.meta.url), {
+              type: 'module',
+              name: 'dxos-coordinator-worker',
+            }),
     // TODO(wittjosiah): Instrument opfs worker?
     createOpfsWorker: () => new Worker(new URL('@dxos/client/opfs-worker', import.meta.url), { type: 'module' }),
     singleClientMode: useSingleClientMode,
