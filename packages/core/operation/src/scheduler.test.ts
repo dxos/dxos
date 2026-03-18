@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, expect } from 'vitest';
 
-import * as OperationInvoker from './invoker';
-import * as Operation from './operation';
+import * as OperationInvoker from './OperationInvoker';
+import * as Operation from './Operation';
 import * as Scheduler from './scheduler';
 
 //

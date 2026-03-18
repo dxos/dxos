@@ -10,6 +10,8 @@ import type * as Schema$ from 'effect/Schema';
 import { type Type } from '@dxos/echo';
 import type * as Types from 'effect/Types';
 
+// @import-as-namespace
+
 /**
  * Schema type that accepts any Encoded form but requires no Context.
  * This allows ECHO object schemas where Type !== Encoded due to [KindId] symbol.

@@ -14,9 +14,9 @@ import * as TestClock from 'effect/TestClock';
 import { describe, expect, test } from 'vitest';
 
 import { NoHandlerError } from './errors';
-import * as OperationInvoker from './invoker';
-import * as Operation from './operation';
-import * as OperationResolver from './resolver';
+import * as OperationInvoker from './OperationInvoker';
+import * as Operation from './Operation';
+import * as OperationResolver from './OperationResolver';
 
 //
 // Test Operations
