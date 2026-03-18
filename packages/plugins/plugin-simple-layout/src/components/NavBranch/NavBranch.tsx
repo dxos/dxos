@@ -36,7 +36,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
   // TODO(wittjosiah): Move alternate-tree nodes to a non-child relation so they don't need filtering.
   const visibleChildren = useMemo(
-    () => children.filter((node) => node.properties.disposition !== 'alternate-tree'),
+    () => children.filter((node) => node.properties.disposition !== 'alternate-tree' && node.properties.disposition !== 'hidden'),
     [children],
   );
 
@@ -118,7 +118,7 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
             icon={data.properties.icon}
             hueVariant='transparent'
             variant='square'
-            size={12}
+            size={8}
             fallback={name}
           />
           <Avatar.Label>{name}</Avatar.Label>
