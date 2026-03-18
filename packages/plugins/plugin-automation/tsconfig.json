@@ -45,6 +45,9 @@
       "path": "../../core/assistant"
     },
     {
+      "path": "../../core/blueprints"
+    },
+    {
       "path": "../../core/conductor"
     },
     {

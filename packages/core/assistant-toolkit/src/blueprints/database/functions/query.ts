@@ -101,7 +101,11 @@ export default defineFunction({
         query = query.select(Filter.type(schema[0]));
       }
     } else if (typename) {
-      query = Query.select(Filter.type(typename));
+      const schema = yield* Database.runSchemaQuery({ typename, location: ['database', 'runtime'] });
+      if (schema.length === 0) {
+        return yield* Effect.fail(new Error(`Schema ${typename} not found`));
+      }
+      query = Query.select(Filter.type(schema[0]));
     } else {
       query = Query.select(Filter.everything());
     }

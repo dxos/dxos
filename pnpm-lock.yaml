@@ -4277,6 +4277,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../echo/echo
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/functions':
         specifier: workspace:*
         version: link:../functions
@@ -7352,6 +7355,9 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
+      '@dxos/blueprints':
+        specifier: workspace:*
+        version: link:../../core/blueprints
       '@dxos/cli-util':
         specifier: workspace:*
         version: link:../../devtools/cli-util
