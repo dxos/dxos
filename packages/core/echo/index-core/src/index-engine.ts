@@ -29,7 +29,7 @@ export interface DataSourceCursor {
   spaceId: SpaceId | null;
 
   /**
-   * documentId or queueId.
+   * documentId or queueNamespace.
    */
   resourceId: string | null;
 
