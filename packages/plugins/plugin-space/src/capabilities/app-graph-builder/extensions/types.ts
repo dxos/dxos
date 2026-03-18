@@ -94,7 +94,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         const staticSchemas = get(capabilities.atom(AppCapabilities.Schema)).flat();
         // TODO(wittjosiah): Schema registry needs to support reactive queries as well as changes to static schemas.
         const databaseSchemas = space.db.schemaRegistry.query({ location: ['database'] }).runSync();
-        const allSchemas = [...staticSchemas, ...databaseSchemas];
+        const allSchemas = uniqueSchemasByTypename([...staticSchemas, ...databaseSchemas]);
 
         const userSchemas = allSchemas.filter((schema) => {
           if (getTypeAnnotation(schema)?.kind === EntityKind.Relation) {
@@ -241,6 +241,16 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 //
 // Helpers
 //
+
+/** Returns schemas keyed uniquely by typename, preferring later entries. */
+const uniqueSchemasByTypename = <TSchema extends Type.AnyEntity>(schemas: TSchema[]): TSchema[] => {
+  const uniqueSchemas = new Map<string, TSchema>();
+  for (const schema of schemas) {
+    uniqueSchemas.set(Type.getTypename(schema), schema);
+  }
+
+  return [...uniqueSchemas.values()];
+};
 
 /** Builds a graph node for a schema in the Types subtree. */
 const createSchemaNode = ({
