@@ -14,3 +14,4 @@ export * from './browser';
 export * from './database';
 export * from './memory';
 export * from './automation';
+export * from './project-wizard';

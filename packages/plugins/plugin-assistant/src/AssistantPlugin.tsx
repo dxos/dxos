@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Chat, Plan, Project, ProjectBlueprint, ResearchGraph } from '@dxos/assistant-toolkit';
+import { Chat, Memory, Plan, Project, ProjectBlueprint, ResearchGraph } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Annotation, Obj, Type } from '@dxos/echo';
@@ -106,6 +106,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Project.Project,
       Plan.Plan,
       Sequence,
+      Memory.Memory,
     ],
   }),
   AppPlugin.addSettingsModule({ activate: Settings }),

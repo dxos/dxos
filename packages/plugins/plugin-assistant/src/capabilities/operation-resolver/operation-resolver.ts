@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
-import { AgentFunctions, Chat } from '@dxos/assistant-toolkit';
+import { AgentFunctions, Chat, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
@@ -61,12 +61,22 @@ export default Capability.makeModule(
           if (!defaultDatabaseBlueprint) {
             defaultDatabaseBlueprint = db.add(DatabaseBlueprint.make());
           }
+          let defaultProjectWizardBlueprint = blueprints.find(
+            (blueprint) => blueprint.key === ProjectWizardBlueprint.key,
+          );
+          if (!defaultProjectWizardBlueprint) {
+            defaultProjectWizardBlueprint = db.add(ProjectWizardBlueprint.make());
+          }
 
           const binder = new AiContextBinder({ queue, registry });
           yield* Effect.promise(() =>
             binder.use((b: AiContextBinder) =>
               b.bind({
-                blueprints: [Ref.make(defaultAssistantBlueprint!), Ref.make(defaultDatabaseBlueprint!)],
+                blueprints: [
+                  Ref.make(defaultAssistantBlueprint!),
+                  Ref.make(defaultDatabaseBlueprint!),
+                  Ref.make(defaultProjectWizardBlueprint!),
+                ],
               }),
             ),
           );
