@@ -47,17 +47,17 @@ export type ItemDragState =
       container: HTMLElement;
     }
   | {
-      type: 'w-dragging';
+      type: 'is-dragging';
     }
   | {
-      type: 'w-dragging-over';
+      type: 'is-dragging-over';
       closestEdge: Edge | null;
     };
 
 export const idle: ItemDragState = { type: 'idle' };
 
 const stateStyles: { [Key in ItemDragState['type']]?: HTMLAttributes<HTMLDivElement>['className'] } = {
-  'w-dragging': 'opacity-50',
+  'is-dragging': 'opacity-50',
 };
 
 type ListItemContext<T extends ListItemRecord> = {
@@ -135,8 +135,8 @@ export const ListItem = <T extends ListItemRecord>({
             }
           : undefined,
         onDragStart: () => {
-          setState({ type: 'w-dragging' });
-          setRootState({ type: 'w-dragging', item });
+          setState({ type: 'is-dragging' });
+          setRootState({ type: 'is-dragging', item });
         },
         onDrop: () => {
           setState(idle);
@@ -158,7 +158,7 @@ export const ListItem = <T extends ListItemRecord>({
         getIsSticky: () => true,
         onDragEnter: ({ self }) => {
           const closestEdge = extractClosestEdge(self.data);
-          setState({ type: 'w-dragging-over', closestEdge });
+          setState({ type: 'is-dragging-over', closestEdge });
         },
         onDragLeave: () => {
           setState(idle);
@@ -166,10 +166,10 @@ export const ListItem = <T extends ListItemRecord>({
         onDrag: ({ self }) => {
           const closestEdge = extractClosestEdge(self.data);
           setState((current) => {
-            if (current.type === 'w-dragging-over' && current.closestEdge === closestEdge) {
+            if (current.type === 'is-dragging-over' && current.closestEdge === closestEdge) {
               return current;
             }
-            return { type: 'w-dragging-over', closestEdge };
+            return { type: 'is-dragging-over', closestEdge };
           });
         },
         onDrop: () => {
@@ -182,15 +182,15 @@ export const ListItem = <T extends ListItemRecord>({
   return (
     <ListItemProvider item={item} dragHandleRef={dragHandleRef}>
       <Comp
-        ref={ref}
+        {...props}
         role='listitem'
         aria-selected={selected}
-        className={mx('relative dx-selected dx-hover p-1', classNames, stateStyles[state.type])}
-        {...props}
+        className={mx('relative p-1 dx-selected dx-hover', classNames, stateStyles[state.type])}
+        ref={ref}
       >
         {children}
       </Comp>
-      {state.type === 'w-dragging-over' && state.closestEdge && (
+      {state.type === 'is-dragging-over' && state.closestEdge && (
         <NaturalListItem.DropIndicator edge={state.closestEdge} />
       )}
     </ListItemProvider>
