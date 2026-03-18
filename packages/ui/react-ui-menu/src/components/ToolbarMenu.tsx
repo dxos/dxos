@@ -141,6 +141,7 @@ const ToggleGroupItem = ({ __menuScope, group, action }: MenuScopedProps<Toolbar
   const { iconSize, onAction } = useMenuScoped('ToggleGroupItem', __menuScope);
   const { t } = useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
+
   const handleClick = useCallback(() => {
     if (onAction) {
       onAction(action, { parent: group });
@@ -148,22 +149,28 @@ const ToggleGroupItem = ({ __menuScope, group, action }: MenuScopedProps<Toolbar
       void executeMenuAction(action, { parent: group });
     }
   }, [action, group, onAction]);
-  const Root = icon ? NaturalToolbar.ToggleGroupIconItem : NaturalToolbar.ToggleGroupItem;
-  const rootProps = icon
-    ? { icon, size: iconSize, iconOnly, label: actionLabel(action, t) }
-    : { children: <ActionLabel action={action} /> };
 
-  return hidden ? null : (
-    <Root
-      key={action.id}
-      value={action.id as any}
-      disabled={disabled}
-      onClick={handleClick}
-      variant='ghost'
-      {...(testId && { 'data-testid': testId })}
-      {...(rootProps as any)}
-      classNames={classNames}
+  const commonProps = {
+    value: action.id,
+    disabled,
+    variant: 'ghost' as const,
+    classNames,
+    onClick: handleClick,
+    ...(testId && { 'data-testid': testId }),
+  };
+
+  return hidden ? null : icon ? (
+    <NaturalToolbar.ToggleGroupIconItem
+      {...commonProps}
+      icon={icon}
+      size={iconSize}
+      iconOnly={iconOnly}
+      label={actionLabel(action, t)}
     />
+  ) : (
+    <NaturalToolbar.ToggleGroupItem {...commonProps}>
+      <ActionLabel action={action} />
+    </NaturalToolbar.ToggleGroupItem>
   );
 };
 
@@ -202,8 +209,8 @@ export const ToolbarMenu = ({ __menuScope, classNames, ...props }: MenuScopedPro
 
   return (
     <NaturalToolbar.Root {...props} classNames={[attendableId, classNames]} disabled={!alwaysActive && !hasAttention}>
-      {items?.map((item: MenuItem, index: number) => (
-        <ToolbarMenuItem key={item.id ?? index} __menuScope={__menuScope} item={item} />
+      {items?.map((item: MenuItem) => (
+        <ToolbarMenuItem key={item.id} __menuScope={__menuScope} item={item} />
       ))}
     </NaturalToolbar.Root>
   );
