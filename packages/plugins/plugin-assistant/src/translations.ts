@@ -95,6 +95,7 @@ export const translations = [
         'tool error label': 'Tool call failed',
 
         'invocations label': 'Invocations',
+        'trace label': 'Trace',
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
