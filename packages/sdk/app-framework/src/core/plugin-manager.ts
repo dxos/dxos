@@ -629,7 +629,10 @@ class ManagerImpl implements PluginManager {
     });
   }
 
-  private _getBeforeEvents(modules: Plugin.PluginModule[], activatingEvents: string[]): ActivationEvent.ActivationEvent[] {
+  private _getBeforeEvents(
+    modules: Plugin.PluginModule[],
+    activatingEvents: string[],
+  ): ActivationEvent.ActivationEvent[] {
     return Function.pipe(
       modules,
       Array.flatMap((module) => module.activatesBefore ?? []),
@@ -639,7 +642,10 @@ class ManagerImpl implements PluginManager {
     );
   }
 
-  private _getAfterEvents(modules: Plugin.PluginModule[], activatingEvents: string[]): ActivationEvent.ActivationEvent[] {
+  private _getAfterEvents(
+    modules: Plugin.PluginModule[],
+    activatingEvents: string[],
+  ): ActivationEvent.ActivationEvent[] {
     return Function.pipe(
       modules,
       Array.flatMap((module) => module.activatesAfter ?? []),
@@ -842,7 +848,6 @@ class ManagerImpl implements PluginManager {
       return true;
     });
   }
-
 }
 
 /**
