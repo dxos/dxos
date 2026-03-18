@@ -22,9 +22,8 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import * as VisuallyHiddenPrimitive from '@radix-ui/react-visually-hidden';
 import React, {
   type ComponentPropsWithoutRef,
-  type ElementRef,
+  type ComponentRef,
   type FC,
-  type MutableRefObject,
   type ReactNode,
   type RefObject,
   type SyntheticEvent,
@@ -61,7 +60,7 @@ type TooltipContextValue = {
   onOpen(): void;
   onClose(): void;
   onPointerInTransitChange(inTransit: boolean): void;
-  isPointerInTransitRef: MutableRefObject<boolean>;
+  isPointerInTransitRef: RefObject<boolean>;
   disableHoverableContent: boolean;
 };
 
@@ -247,7 +246,7 @@ const TooltipVirtualTrigger = ({
 
 const TRIGGER_NAME = 'TooltipTrigger';
 
-type TooltipTriggerElement = ElementRef<typeof Primitive.button>;
+type TooltipTriggerElement = ComponentRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
 type TooltipTriggerProps = PrimitiveButtonProps &
   Pick<TooltipProps, 'delayDuration'> & {
@@ -480,7 +479,7 @@ const [VisuallyHiddenContentContextProvider, useVisuallyHiddenContentContext] = 
   isInside: false,
 });
 
-type TooltipContentImplElement = ElementRef<typeof PopperPrimitive.Content>;
+type TooltipContentImplElement = ComponentRef<typeof PopperPrimitive.Content>;
 type DismissableLayerProps = ComponentPropsWithoutRef<typeof DismissableLayer>;
 type PopperContentProps = ComponentPropsWithoutRef<typeof PopperPrimitive.Content>;
 interface TooltipContentImplProps extends Omit<PopperContentProps, 'onPlaced'> {
@@ -581,7 +580,7 @@ TooltipContent.displayName = CONTENT_NAME;
 
 const ARROW_NAME = 'TooltipArrow';
 
-type TooltipArrowElement = ElementRef<typeof PopperPrimitive.Arrow>;
+type TooltipArrowElement = ComponentRef<typeof PopperPrimitive.Arrow>;
 type PopperArrowProps = ComponentPropsWithoutRef<typeof PopperPrimitive.Arrow>;
 interface TooltipArrowProps extends PopperArrowProps {}
 

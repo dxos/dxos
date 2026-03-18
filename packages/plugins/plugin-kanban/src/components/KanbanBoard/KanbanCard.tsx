@@ -5,7 +5,7 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
+import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Card, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
@@ -31,7 +31,6 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
   const dragHandleRef = useCallback((el: HTMLButtonElement | null) => setDragHandle(el), []);
 
   const objectMenuItems = useObjectMenuItems(data);
-  const handleNavigate = useObjectNavigate(data);
 
   const menuItems = useMemo(
     () => [
@@ -62,7 +61,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
           <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} />
-              <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
+              <Card.Title>{Obj.getLabel(data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Menu.Trigger asChild disabled={!menuItems?.length}>
                 <Toolbar.IconButton

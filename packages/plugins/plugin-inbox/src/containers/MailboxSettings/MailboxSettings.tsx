@@ -20,27 +20,6 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
-  const mailboxSchema = useMemo(() => omitId(Mailbox.Mailbox), []);
-
-  const handleChange = useCallback(
-    (values: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
-      if (!isValid) {
-        return;
-      }
-
-      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
-      if (changedPaths.length > 0) {
-        Obj.change(subject, () => {
-          for (const path of changedPaths) {
-            const parts = splitJsonPath(path);
-            const value = Obj.getValue(values, parts);
-            Obj.setValue(subject, parts, value);
-          }
-        });
-      }
-    },
-    [subject],
-  );
 
   const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
     db,
@@ -53,6 +32,7 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
     if (!db) {
       return;
     }
+
     void invokePromise(LayoutOperation.Open, {
       subject: [`${getSpacePath(db.spaceId)}/settings/org.dxos.plugin.automation.automations`],
       workspace: getSpacePath(db.spaceId),
@@ -61,13 +41,6 @@ export const MailboxSettings = ({ subject }: SurfaceComponentProps<Mailbox.Mailb
 
   return (
     <div className='flex flex-col gap-4'>
-      <Form.Root schema={mailboxSchema} values={subject} db={db} onValuesChanged={handleChange}>
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
       <h2>{t('mailbox sync label')}</h2>
       <div className='p-1 flex flex-row gap-1'>
         <ButtonGroup>

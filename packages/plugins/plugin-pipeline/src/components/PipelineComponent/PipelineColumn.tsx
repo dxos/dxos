@@ -6,7 +6,6 @@ import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
-import { useObjectNavigate } from '@dxos/app-toolkit/ui';
 import { JsonSchema, Obj, Query, Type } from '@dxos/echo';
 import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
@@ -86,7 +85,7 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
       debug={debug}
       dragHandleRef={dragHandleRef}
     >
-      <Board.Column.Header label={column.name ?? t('untitled view title')} dragHandleRef={dragHandleRef} />
+      <Board.Column.Header label={column.name || t('untitled view title')} dragHandleRef={dragHandleRef} />
       <Board.Column.Body data={column} Tile={Tile} />
     </Board.Column.Root>
   );
@@ -109,7 +108,6 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const { Item } = usePipeline(ITEM_TILE_NAME);
-    const handleNavigate = useObjectNavigate(data);
 
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
@@ -117,7 +115,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
           <Card.Root classNames={classNames} ref={composedRef}>
             <Card.Toolbar>
               <Card.DragHandle />
-              <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
+              <Card.Title>{Obj.getLabel(data)}</Card.Title>
               <Card.Menu />
             </Card.Toolbar>
             <Card.Content>

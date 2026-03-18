@@ -7,14 +7,13 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Obj } from '@dxos/echo';
 import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { mx } from '@dxos/ui-theme';
 
 import { useCountdown } from '../../hooks';
 
 import { MixerEngine } from '../../generator';
 import { Dream, Sequence } from '../../types';
 
-import { Sequencer } from '../Sequencer';
+import { Sound } from '../Sound';
 
 //
 // Mixer
@@ -87,12 +86,6 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
     }
   }, [playing, timed, layers, engine, startCountdown, stopCountdown]);
 
-  const handleStop = useCallback(async () => {
-    await engine.stop();
-    setPlaying(false);
-    stopCountdown();
-  }, [engine, stopCountdown]);
-
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
     Obj.change(dream, (d) => {
@@ -156,9 +149,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
             <Toolbar.Root>
               <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
               <Toolbar.Separator />
-              {playing && timed && (
-                <span className='font-mono text-sm tabular-nums text-description px-1'>{formattedTime}</span>
-              )}
+              {playing && timed && <span className='tabular-nums text-description p-1'>{formattedTime}</span>}
               <Toolbar.IconButton
                 icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
@@ -192,7 +183,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
       </Splitter.Panel>
 
       <Splitter.Panel asChild position='lower'>
-        {displayedLayer && <Sequencer sequence={displayedLayer} onUpdate={handleChange} />}
+        {displayedLayer && <Sound sequence={displayedLayer} onUpdate={handleChange} />}
       </Splitter.Panel>
     </Splitter.Root>
   );

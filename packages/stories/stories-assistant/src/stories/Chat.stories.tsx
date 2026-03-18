@@ -37,7 +37,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
+import { ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { Text, ViewModel } from '@dxos/schema';
@@ -166,26 +166,25 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
         );
       })}
 
-      {showContext && <StackContainer objects={objects} />}
+      {showContext && <ContextStack objects={objects} />}
     </Stack>
   );
 };
 
-const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
+const ContextStack = ({ objects }: { objects: Obj.Unknown[] }) => {
   return (
-    <Stack
-      orientation='vertical'
-      classNames='gap-(--stack-gap)'
-      size='contain'
-      rail={false}
-      itemsCount={objects.length}
-    >
-      {objects.map((object) => (
-        <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
-          <Surface.Surface role='section' limit={1} data={{ subject: object }} />
-        </StackItem.Root>
-      ))}
-    </Stack>
+    <StackItem.Content toolbar classNames={panelClassNames}>
+      <Toolbar.Root>
+        <Toolbar.Text className='flex-1 text-center'>Chat Context Objects</Toolbar.Text>
+      </Toolbar.Root>
+      <Stack orientation='vertical' size='contain' rail={false} itemsCount={objects.length}>
+        {objects.map((object) => (
+          <StackItem.Root key={object.id} classNames={panelClassNames} item={object}>
+            <Surface.Surface role='section' limit={1} data={{ subject: object }} />
+          </StackItem.Root>
+        ))}
+      </Stack>
+    </StackItem.Content>
   );
 };
 
@@ -451,7 +450,7 @@ export const WithGmail: Story = {
   }),
   args: {
     showContext: true,
-    modules: [[ChatModule], [InboxModule], [TokenManagerModule]],
+    modules: [[ChatModule], [InboxModule, TokenManagerModule]],
     blueprints: [AssistantBlueprint.key, InboxBlueprint.key],
   },
 };
