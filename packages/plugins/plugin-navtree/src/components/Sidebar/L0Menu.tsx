@@ -331,7 +331,7 @@ export const L0Menu = ({
             iconOnly
             label={t('app menu label')}
             size={5}
-            className={mx(
+            classNames={mx(
               l0ItemRoot,
               'grid place-items-center dx-focus-ring-group',
               '[body[data-platform="macos"]_&]:mt-[30px]',

@@ -24,7 +24,7 @@ export const NavBar = ({ classNames, actions, onAction }: NavBarProps) => {
   const menu = useMenuActions(actions);
 
   return (
-    <Menu.Root {...menu} classNames={classNames} alwaysActive onAction={onAction}>
+    <Menu.Root {...menu} alwaysActive onAction={onAction}>
       <Menu.Toolbar density='coarse' />
     </Menu.Root>
   );
