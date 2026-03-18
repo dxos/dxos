@@ -36,30 +36,31 @@ import React, {
 } from 'react';
 import { RemoveScroll } from 'react-remove-scroll';
 
-import { useElevationContext, useThemeContext } from '../../hooks';
-import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding';
+import { useSafeCollisionPadding, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
 //
 // Context
 //
 
+type ScopedProps<P> = P & { __scopePopover?: Scope };
+
 const POPOVER_NAME = 'Popover';
 
-type ScopedProps<P> = P & { __scopePopover?: Scope };
 const [createPopoverContext, createPopoverScope] = createContextScope(POPOVER_NAME, [createPopperScope]);
+
 const usePopperScope = createPopperScope();
 
 type PopoverContextValue = {
   triggerRef: RefObject<HTMLButtonElement>;
   contentId: string;
+  hasCustomAnchor: boolean;
+  modal: boolean;
   open: boolean;
   onOpenChange(open: boolean): void;
   onOpenToggle(): void;
-  hasCustomAnchor: boolean;
   onCustomAnchorAdd(): void;
   onCustomAnchorRemove(): void;
-  modal: boolean;
 };
 
 const [PopoverProvider, usePopoverContext] = createPopoverContext<PopoverContextValue>(POPOVER_NAME);
@@ -401,25 +402,26 @@ type FocusScopeProps = ComponentPropsWithoutRef<typeof FocusScope>;
 type DismissableLayerProps = ComponentPropsWithoutRef<typeof DismissableLayer>;
 type PopperContentProps = ThemedClassName<ComponentPropsWithoutRef<typeof PopperPrimitive.Content>>;
 
-type PopoverContentImplProps = Omit<PopperContentProps, 'onPlaced'> & Omit<DismissableLayerProps, 'onDismiss'> & {
-  /**
-   * Whether focus should be trapped within the `Popover`
-   * (default: false)
-   */
-  trapFocus?: FocusScopeProps['trapped'];
+type PopoverContentImplProps = Omit<PopperContentProps, 'onPlaced'> &
+  Omit<DismissableLayerProps, 'onDismiss'> & {
+    /**
+     * Whether focus should be trapped within the `Popover`
+     * (default: false)
+     */
+    trapFocus?: FocusScopeProps['trapped'];
 
-  /**
-   * Event handler called when auto-focusing on open.
-   * Can be prevented.
-   */
-  onOpenAutoFocus?: FocusScopeProps['onMountAutoFocus'];
+    /**
+     * Event handler called when auto-focusing on open.
+     * Can be prevented.
+     */
+    onOpenAutoFocus?: FocusScopeProps['onMountAutoFocus'];
 
-  /**
-   * Event handler called when auto-focusing on close.
-   * Can be prevented.
-   */
-  onCloseAutoFocus?: FocusScopeProps['onUnmountAutoFocus'];
-};
+    /**
+     * Event handler called when auto-focusing on close.
+     * Can be prevented.
+     */
+    onCloseAutoFocus?: FocusScopeProps['onUnmountAutoFocus'];
+  };
 
 const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentImplProps>(
   (props: ScopedProps<PopoverContentImplProps>, forwardedRef) => {
