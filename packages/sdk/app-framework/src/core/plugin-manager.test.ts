@@ -4,6 +4,8 @@
 
 import { afterEach, assert, describe, it } from '@effect/vitest';
 import { type Atom, Registry } from '@effect-atom/atom-react';
+import * as Cause from 'effect/Cause';
+import * as Exit from 'effect/Exit';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -979,6 +981,49 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getEventsFired(), []);
       assert.deepStrictEqual(manager.getPendingReset(), []);
       assert.deepStrictEqual(manager.getActive(), []);
+    }),
+  );
+
+  it.effect('should interrupt in-flight activation during shutdown', () =>
+    Effect.gen(function* () {
+      const activationStarted = yield* Effect.makeLatch(false);
+      const allowActivationToComplete = yield* Effect.makeLatch(false);
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () =>
+            Effect.gen(function* () {
+              yield* activationStarted.open;
+              yield* allowActivationToComplete.await;
+              return Capability.contributes(String, { string: 'hello' });
+            }),
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+
+      const activationFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+      yield* activationStarted.await;
+
+      const shutdownFiber = yield* Effect.fork(manager.shutdown());
+      yield* allowActivationToComplete.open;
+
+      const shutdownResult = yield* Fiber.join(shutdownFiber);
+      const activationExit = yield* Fiber.await(activationFiber);
+
+      assert.isTrue(shutdownResult);
+      assert.isTrue(Exit.isFailure(activationExit));
+      if (Exit.isFailure(activationExit)) {
+        assert.isTrue(Cause.isInterruptedOnly(activationExit.cause));
+      }
+      assert.strictEqual(manager.capabilities.getAll(String).length, 0);
+      assert.deepStrictEqual(manager.getActive(), []);
+      assert.deepStrictEqual(manager.getEventsFired(), []);
     }),
   );
 

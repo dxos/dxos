@@ -3,10 +3,13 @@
 //
 
 import { assert, describe, it } from '@effect/vitest';
+import { render, waitFor } from '@testing-library/react';
 import * as Effect from 'effect/Effect';
+import React from 'react';
 
 import { ActivationEvents, Capabilities } from '../../common';
 import { Capability, Plugin, PluginManager } from '../../core';
+import { useApp } from './useApp';
 
 const String = Capability.make<{ string: string }>('org.dxos.test.string');
 const testMeta = { id: 'org.dxos.plugin.test', name: 'Test' };
@@ -20,7 +23,68 @@ const pluginLoader = (plugins: Plugin.Plugin[]) =>
     return plugin;
   });
 
+const TestHost = ({ manager }: { manager: PluginManager.PluginManager }) => {
+  const App = useApp({ pluginManager: manager });
+  return <App />;
+};
+
 describe('useApp cleanup integration', () => {
+  it.effect('external manager is not shut down when useApp does not own it', () =>
+    Effect.gen(function* () {
+      const plugin = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+        }),
+        Plugin.make,
+      )();
+
+      const manager = PluginManager.make({
+        pluginLoader: pluginLoader([plugin]),
+        plugins: [plugin],
+      });
+
+      manager.capabilities.contribute({
+        interface: Capabilities.PluginManager,
+        implementation: manager,
+        module: 'org.dxos.app-framework.plugin-manager',
+      });
+      manager.capabilities.contribute({
+        interface: Capabilities.AtomRegistry,
+        implementation: manager.registry,
+        module: 'org.dxos.app-framework.atom-registry',
+      });
+
+      const view = yield* Effect.promise(() => Promise.resolve(render(<TestHost manager={manager} />)));
+      yield* Effect.promise(() =>
+        waitFor(() => {
+          assert.strictEqual(manager.capabilities.getAll(Capabilities.PluginManager).length, 1);
+          assert.strictEqual(manager.capabilities.getAll(Capabilities.AtomRegistry).length, 1);
+          assert.strictEqual(manager.capabilities.getAll(String).length, 1);
+          assert.isTrue(manager.getActive().length > 0);
+        }),
+      );
+
+      yield* Effect.promise(() => Promise.resolve(view.unmount()));
+      yield* Effect.promise(() =>
+        waitFor(() => {
+          assert.strictEqual(manager.capabilities.getAll(Capabilities.PluginManager).length, 1);
+          assert.strictEqual(manager.capabilities.getAll(Capabilities.AtomRegistry).length, 1);
+          assert.strictEqual(manager.capabilities.getAll(String).length, 1);
+          assert.isTrue(manager.getActive().length > 0);
+        }),
+      );
+
+      yield* manager.shutdown();
+
+      assert.strictEqual(manager.capabilities.getAll(Capabilities.PluginManager).length, 1);
+      assert.strictEqual(manager.capabilities.getAll(Capabilities.AtomRegistry).length, 1);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 0);
+      assert.deepStrictEqual(manager.getActive(), []);
+    }),
+  );
+
   it.effect('shutdown deactivates modules and clears bookkeeping', () =>
     Effect.gen(function* () {
       const plugin = Plugin.define(testMeta).pipe(
@@ -57,51 +121,6 @@ describe('useApp cleanup integration', () => {
       assert.strictEqual(manager.capabilities.getAll(String).length, 0);
       assert.deepStrictEqual(manager.getActive(), []);
       assert.deepStrictEqual(manager.getEventsFired(), []);
-    }),
-  );
-
-  it.effect('external manager is not shut down when useApp does not own it', () =>
-    Effect.gen(function* () {
-      const plugin = Plugin.define(testMeta).pipe(
-        Plugin.addModule({
-          id: 'Hello',
-          activatesOn: ActivationEvents.Startup,
-          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
-        }),
-        Plugin.make,
-      )();
-
-      const manager = PluginManager.make({
-        pluginLoader: pluginLoader([plugin]),
-        plugins: [plugin],
-      });
-
-      // External manager contributes its own root capabilities.
-      manager.capabilities.contribute({
-        interface: Capabilities.PluginManager,
-        implementation: manager,
-        module: 'org.dxos.app-framework.plugin-manager',
-      });
-      manager.capabilities.contribute({
-        interface: Capabilities.AtomRegistry,
-        implementation: manager.registry,
-        module: 'org.dxos.app-framework.atom-registry',
-      });
-      yield* manager.activate(ActivationEvents.Startup);
-
-      // Simulate useApp cleanup for externally-owned manager:
-      // shutdown is NOT called, only the fiber is interrupted.
-      // The external owner is responsible for shutdown.
-      assert.strictEqual(manager.capabilities.getAll(Capabilities.PluginManager).length, 1);
-      assert.strictEqual(manager.capabilities.getAll(Capabilities.AtomRegistry).length, 1);
-      assert.strictEqual(manager.capabilities.getAll(String).length, 1);
-      assert.isTrue(manager.getActive().length > 0);
-
-      // External owner eventually calls shutdown.
-      yield* manager.shutdown();
-
-      assert.strictEqual(manager.capabilities.getAll(String).length, 0);
-      assert.deepStrictEqual(manager.getActive(), []);
     }),
   );
 

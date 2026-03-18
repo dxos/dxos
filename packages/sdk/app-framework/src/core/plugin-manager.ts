@@ -113,6 +113,8 @@ class ManagerImpl implements PluginManager {
   private readonly _moduleSemaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
+  private readonly _inFlightFibers = Effect.runSync(Ref.make<Array<Fiber.Fiber<unknown, unknown>>>([]));
+  private readonly _shuttingDown = Effect.runSync(Ref.make(false));
 
   constructor({
     pluginLoader,
@@ -306,155 +308,23 @@ class ManagerImpl implements PluginManager {
     params?: { before?: string; after?: string },
   ): Effect.Effect<boolean, Error> {
     const key = typeof event === 'string' ? event : ActivationEvent.eventKey(event);
-    return Effect.gen(this, function* () {
-      log('activating', { key, ...params });
-      yield* Ref.update(this._activatingEvents, (activating) => Array.append(activating, key));
-      const pendingIndex = this._get(this._pendingResetAtom).findIndex((event) => event === key);
-      if (pendingIndex !== -1) {
-        this._update(this._pendingResetAtom, (pending) => pending.filter((event) => event !== key));
-      }
-
-      const activatingEvents = yield* this._activatingEvents;
-      const activatingModules = yield* this._activatingModules;
-      const modules = this._getInactiveModulesByEvent(key).filter((module) => {
-        const allOf = ActivationEvent.isAllOf(module.activatesOn);
-        if (!allOf) {
-          return true;
-        }
-
-        // Check to see if all of the events in the `allOf` have been fired.
-        // An event can be considered "fired" if it is in the `eventsFired` list or if it is currently being activated.
-        const events = ActivationEvent.getEvents(module.activatesOn).filter(
-          (event) => ActivationEvent.eventKey(event) !== key,
-        );
-        return (
-          events.every(
-            (event) =>
-              this._get(this._eventsFiredAtom).includes(ActivationEvent.eventKey(event)) ||
-              activatingEvents.includes(ActivationEvent.eventKey(event)),
-          ) && !activatingModules.includes(module.id)
-        );
-      });
-      yield* Ref.update(this._activatingModules, (activating) =>
-        Array.appendAll(
-          activating,
-          modules.map((module) => module.id),
-        ),
-      );
-      if (modules.length === 0) {
-        log('no modules to activate', { key });
-        if (!this._get(this._eventsFiredAtom).includes(key)) {
-          this._update(this._eventsFiredAtom, (events) => [...events, key]);
-        }
-        return false;
-      }
-
-      log('activating modules', { key, modules: modules.map((module) => module.id) });
-      yield* PubSub.publish(this.activation, { event: key, state: 'activating' });
-
-      // Fire activatesBefore events.
-      const beforeEvents = Function.pipe(
-        modules,
-        Array.flatMap((module) => module.activatesBefore ?? []),
-        HashSet.fromIterable,
-        HashSet.toValues,
-        Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
-      );
-      yield* Function.pipe(
-        beforeEvents,
-        Array.map((event) => this.activate(event, { before: key })),
-        Effect.allWith({ concurrency: 'unbounded' }),
+    return Effect.withFiberRuntime((fiber) =>
+      this._activateEvent(key, params, fiber).pipe(
         together(
-          Effect.sleep(Duration.seconds(10)).pipe(
-            Effect.andThen(
-              Effect.sync(() =>
-                log.warn('activatesBefore is taking a long time', {
-                  event: key,
-                  beforeEvents: beforeEvents.map(ActivationEvent.eventKey),
-                }),
-              ),
-            ),
+          Effect.sleep(Duration.seconds(15)).pipe(
+            Effect.andThen(Effect.sync(() => log.warn('event activation is taking a long time', { event: key }))),
           ),
         ),
-      );
-
-      // Concurrently triggers loading of lazy capabilities.
-      const getCapabilities = yield* Function.pipe(
-        modules,
-        Array.map((mod) => this._loadModule(mod)),
-        Effect.allWith({ concurrency: 'unbounded' }),
-        Effect.catchAll((error) => {
-          return Effect.gen(this, function* () {
-            yield* PubSub.publish(this.activation, { event: key, state: 'error', error });
-            return yield* Effect.fail(error);
-          });
+        Performance.addTrackEntry({
+          name: typeof event === 'string' ? event : ActivationEvent.eventKey(event),
+          devtools: {
+            dataType: 'track-entry',
+            track: 'Event Activation',
+            trackGroup: 'Composer',
+            color: 'primary',
+          },
         }),
-      );
-
-      // Contribute the capabilities from the activated modules.
-      yield* Function.pipe(
-        modules,
-        Array.zip(getCapabilities),
-        Array.map(([module, capabilities]) => this._contributeCapabilities(module, capabilities)),
-        // TODO(wittjosiah): This currently can't be run in parallel.
-        //   Running this with concurrency causes races with `allOf` activation events.
-        Effect.all,
-      );
-
-      // Fire activatesAfter events.
-      const afterEvents = Function.pipe(
-        modules,
-        Array.flatMap((module) => module.activatesAfter ?? []),
-        HashSet.fromIterable,
-        HashSet.toValues,
-        Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
-      );
-      yield* Function.pipe(
-        afterEvents,
-        Array.map((event) => this.activate(event, { after: key })),
-        Effect.allWith({ concurrency: 'unbounded' }),
-        together(
-          Effect.sleep(Duration.seconds(10)).pipe(
-            Effect.andThen(
-              Effect.sync(() =>
-                log.warn('activatesAfter is taking a long time', {
-                  event: key,
-                  afterEvents: afterEvents.map(ActivationEvent.eventKey),
-                }),
-              ),
-            ),
-          ),
-        ),
-      );
-
-      yield* Ref.update(this._activatingEvents, (activating) => Array.filter(activating, (event) => event !== key));
-      yield* Ref.update(this._activatingModules, (activating) =>
-        Array.filter(activating, (module) => !modules.map((module) => module.id).includes(module)),
-      );
-
-      if (!this._get(this._eventsFiredAtom).includes(key)) {
-        this._update(this._eventsFiredAtom, (events) => [...events, key]);
-      }
-
-      yield* PubSub.publish(this.activation, { event: key, state: 'activated' });
-      log('activated', { key });
-
-      return true;
-    }).pipe(
-      together(
-        Effect.sleep(Duration.seconds(15)).pipe(
-          Effect.andThen(Effect.sync(() => log.warn('event activation is taking a long time', { event: key }))),
-        ),
       ),
-      Performance.addTrackEntry({
-        name: typeof event === 'string' ? event : ActivationEvent.eventKey(event),
-        devtools: {
-          dataType: 'track-entry',
-          track: 'Event Activation',
-          trackGroup: 'Composer',
-          color: 'primary',
-        },
-      }),
     );
   }
 
@@ -504,7 +374,14 @@ class ManagerImpl implements PluginManager {
 
   shutdown(): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
+      if (yield* this._isShuttingDown()) {
+        return true;
+      }
+
+      yield* Ref.set(this._shuttingDown, true);
       log('shutdown');
+
+      yield* this._interruptInFlightActivations();
 
       const activeIds = [...this._get(this._activeAtom)].reverse();
       const allModules = this._get(this._modulesAtom);
@@ -524,8 +401,12 @@ class ManagerImpl implements PluginManager {
 
       log('shutdown complete');
       return true;
-    });
+    }).pipe(Effect.ensuring(Ref.set(this._shuttingDown, false)));
   }
+
+  //
+  // State helpers
+  //
 
   private _get<T>(atom: Atom.Atom<T>): T {
     return this.registry.get(atom);
@@ -539,26 +420,8 @@ class ManagerImpl implements PluginManager {
     this._set(atom, updater(this._get(atom)));
   }
 
-  private _addPlugin(plugin: Plugin.Plugin): void {
-    log('add plugin', { id: plugin.meta.id });
-    // TODO(wittjosiah): Find a way to add a warning for duplicate plugins that doesn't cause log spam.
-    this._update(this._pluginsAtom, (plugins) => (plugins.includes(plugin) ? plugins : [...plugins, plugin]));
-  }
-
-  private _removePlugin(id: string): void {
-    log('remove plugin', { id });
-    this._update(this._pluginsAtom, (plugins) => plugins.filter((plugin) => plugin.meta.id !== id));
-  }
-
-  private _addModule(module: Plugin.PluginModule): void {
-    log('add module', { id: module.id });
-    // TODO(wittjosiah): Find a way to add a warning for duplicate modules that doesn't cause log spam.
-    this._update(this._modulesAtom, (modules) => (modules.includes(module) ? modules : [...modules, module]));
-  }
-
-  private _removeModule(id: string): void {
-    log('remove module', { id });
-    this._update(this._modulesAtom, (modules) => modules.filter((module) => module.id !== id));
+  private _isShuttingDown(): Effect.Effect<boolean> {
+    return Ref.get(this._shuttingDown);
   }
 
   private _getPlugin(id: string): Plugin.Plugin | undefined {
@@ -600,6 +463,253 @@ class ManagerImpl implements PluginManager {
       log('pending reset', { events: pendingReset });
       this._update(this._pendingResetAtom, (current) => [...current, ...pendingReset]);
     }
+  }
+
+  private _clearPendingReset(key: string): void {
+    const pendingIndex = this._get(this._pendingResetAtom).findIndex((event) => event === key);
+    if (pendingIndex !== -1) {
+      this._update(this._pendingResetAtom, (pending) => pending.filter((event) => event !== key));
+    }
+  }
+
+  //
+  // Fiber helpers
+  //
+
+  private _interruptInFlightActivations(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      const inFlightFibers = yield* Ref.get(this._inFlightFibers);
+      yield* Effect.forEach(inFlightFibers, (fiber) => Fiber.interrupt(fiber), {
+        concurrency: 'unbounded',
+      });
+    });
+  }
+
+  private _trackFiber(
+    ref: Ref.Ref<Array<Fiber.Fiber<unknown, unknown>>>,
+    fiber: Fiber.Fiber<unknown, unknown>,
+  ): Effect.Effect<void> {
+    return Ref.update(ref, (fibers) => [...fibers, fiber]);
+  }
+
+  private _untrackFiber(
+    ref: Ref.Ref<Array<Fiber.Fiber<unknown, unknown>>>,
+    fiber: Fiber.Fiber<unknown, unknown>,
+  ): Effect.Effect<void> {
+    return Ref.update(ref, (fibers) => fibers.filter((trackedFiber) => trackedFiber !== fiber));
+  }
+
+  //
+  // Registration helpers
+  //
+
+  private _addPlugin(plugin: Plugin.Plugin): void {
+    log('add plugin', { id: plugin.meta.id });
+    // TODO(wittjosiah): Find a way to add a warning for duplicate plugins that doesn't cause log spam.
+    this._update(this._pluginsAtom, (plugins) => (plugins.includes(plugin) ? plugins : [...plugins, plugin]));
+  }
+
+  private _removePlugin(id: string): void {
+    log('remove plugin', { id });
+    this._update(this._pluginsAtom, (plugins) => plugins.filter((plugin) => plugin.meta.id !== id));
+  }
+
+  private _addModule(module: Plugin.PluginModule): void {
+    log('add module', { id: module.id });
+    // TODO(wittjosiah): Find a way to add a warning for duplicate modules that doesn't cause log spam.
+    this._update(this._modulesAtom, (modules) => (modules.includes(module) ? modules : [...modules, module]));
+  }
+
+  private _removeModule(id: string): void {
+    log('remove module', { id });
+    this._update(this._modulesAtom, (modules) => modules.filter((module) => module.id !== id));
+  }
+
+  //
+  // Activation helpers
+  //
+
+  private _activateEvent(
+    key: string,
+    params: { before?: string; after?: string } | undefined,
+    fiber: Fiber.Fiber<unknown, unknown>,
+  ): Effect.Effect<boolean, Error> {
+    return Effect.gen(this, function* () {
+      yield* this._trackFiber(this._inFlightFibers, fiber);
+      if (yield* this._isShuttingDown()) {
+        log('skipping activation during shutdown', { key, ...params });
+        return false;
+      }
+
+      log('activating', { key, ...params });
+      yield* Ref.update(this._activatingEvents, (activating) => Array.append(activating, key));
+      this._clearPendingReset(key);
+
+      const activatingEvents = yield* this._activatingEvents;
+      const activatingModules = yield* this._activatingModules;
+      const modules = this._getModulesForActivation(key, activatingEvents, activatingModules);
+      if (modules.length === 0) {
+        log('no modules to activate', { key });
+        if (!this._get(this._eventsFiredAtom).includes(key)) {
+          this._update(this._eventsFiredAtom, (events) => [...events, key]);
+        }
+        return false;
+      }
+
+      return yield* this._activateModulesForEvent(key, modules, activatingEvents);
+    }).pipe(
+      Effect.ensuring(
+        Effect.all([
+          this._untrackFiber(this._inFlightFibers, fiber),
+          Ref.update(this._activatingEvents, (activating) => Array.filter(activating, (event) => event !== key)),
+        ]),
+      ),
+    );
+  }
+
+  private _activateModulesForEvent(
+    key: string,
+    modules: Plugin.PluginModule[],
+    activatingEvents: string[],
+  ): Effect.Effect<boolean, Error> {
+    const activatingModuleIds = modules.map((module) => module.id);
+    return Effect.gen(this, function* () {
+      yield* Ref.update(this._activatingModules, (activating) => Array.appendAll(activating, activatingModuleIds));
+
+      log('activating modules', { key, modules: activatingModuleIds });
+      yield* PubSub.publish(this.activation, { event: key, state: 'activating' });
+
+      yield* this._activateRelatedEvents(key, this._getBeforeEvents(modules, activatingEvents), 'before');
+
+      const capabilities = yield* this._loadCapabilitiesForModules(key, modules);
+      yield* this._contributeCapabilitiesForModules(modules, capabilities);
+
+      yield* this._activateRelatedEvents(key, this._getAfterEvents(modules, activatingEvents), 'after');
+
+      if (!this._get(this._eventsFiredAtom).includes(key)) {
+        this._update(this._eventsFiredAtom, (events) => [...events, key]);
+      }
+
+      yield* PubSub.publish(this.activation, { event: key, state: 'activated' });
+      log('activated', { key });
+
+      return true;
+    }).pipe(
+      Effect.ensuring(
+        Ref.update(this._activatingModules, (activating) =>
+          Array.filter(activating, (module) => !activatingModuleIds.includes(module)),
+        ),
+      ),
+    );
+  }
+
+  private _getModulesForActivation(
+    key: string,
+    activatingEvents: string[],
+    activatingModules: string[],
+  ): Plugin.PluginModule[] {
+    return this._getInactiveModulesByEvent(key).filter((module) => {
+      const allOf = ActivationEvent.isAllOf(module.activatesOn);
+      if (!allOf) {
+        return true;
+      }
+
+      // Check to see if all of the events in the `allOf` have been fired.
+      // An event can be considered "fired" if it is in the `eventsFired` list or if it is currently being activated.
+      const events = ActivationEvent.getEvents(module.activatesOn).filter(
+        (event) => ActivationEvent.eventKey(event) !== key,
+      );
+      return (
+        events.every(
+          (event) =>
+            this._get(this._eventsFiredAtom).includes(ActivationEvent.eventKey(event)) ||
+            activatingEvents.includes(ActivationEvent.eventKey(event)),
+        ) && !activatingModules.includes(module.id)
+      );
+    });
+  }
+
+  private _getBeforeEvents(modules: Plugin.PluginModule[], activatingEvents: string[]): ActivationEvent.ActivationEvent[] {
+    return Function.pipe(
+      modules,
+      Array.flatMap((module) => module.activatesBefore ?? []),
+      HashSet.fromIterable,
+      HashSet.toValues,
+      Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
+    );
+  }
+
+  private _getAfterEvents(modules: Plugin.PluginModule[], activatingEvents: string[]): ActivationEvent.ActivationEvent[] {
+    return Function.pipe(
+      modules,
+      Array.flatMap((module) => module.activatesAfter ?? []),
+      HashSet.fromIterable,
+      HashSet.toValues,
+      Array.filter((event) => !activatingEvents.includes(ActivationEvent.eventKey(event))),
+    );
+  }
+
+  private _activateRelatedEvents(
+    key: string,
+    events: ActivationEvent.ActivationEvent[],
+    phase: 'before' | 'after',
+  ): Effect.Effect<void, Error> {
+    const logLabel = phase === 'before' ? 'activatesBefore' : 'activatesAfter';
+    const eventKey = phase === 'before' ? 'beforeEvents' : 'afterEvents';
+    return Function.pipe(
+      events,
+      Array.map((event) => this.activate(event, phase === 'before' ? { before: key } : { after: key })),
+      Effect.allWith({ concurrency: 'unbounded' }),
+      together(
+        Effect.sleep(Duration.seconds(10)).pipe(
+          Effect.andThen(
+            Effect.sync(() =>
+              log.warn(`${logLabel} is taking a long time`, {
+                event: key,
+                [eventKey]: events.map(ActivationEvent.eventKey),
+              }),
+            ),
+          ),
+        ),
+      ),
+      Effect.asVoid,
+    );
+  }
+
+  //
+  // Module lifecycle helpers
+  //
+
+  private _loadCapabilitiesForModules(
+    key: string,
+    modules: Plugin.PluginModule[],
+  ): Effect.Effect<Capability.Any[][], Error> {
+    return Function.pipe(
+      modules,
+      Array.map((mod) => this._loadModule(mod)),
+      Effect.allWith({ concurrency: 'unbounded' }),
+      Effect.catchAll((error) => {
+        return Effect.gen(this, function* () {
+          yield* PubSub.publish(this.activation, { event: key, state: 'error', error });
+          return yield* Effect.fail(error);
+        });
+      }),
+    );
+  }
+
+  private _contributeCapabilitiesForModules(
+    modules: Plugin.PluginModule[],
+    capabilities: Capability.Any[][],
+  ): Effect.Effect<void, Error> {
+    return Function.pipe(
+      modules,
+      Array.zip(capabilities),
+      Array.map(([module, capabilitySet]) => this._contributeCapabilities(module, capabilitySet)),
+      // TODO(wittjosiah): This currently can't be run in parallel.
+      //   Running this with concurrency causes races with `allOf` activation events.
+      Effect.all,
+      Effect.asVoid,
+    );
   }
 
   private _getModuleSemaphore(moduleId: Plugin.PluginModule['id']): Effect.Semaphore {
@@ -663,7 +773,7 @@ class ManagerImpl implements PluginManager {
         );
 
         // Fork the load to run in background, completing the deferred when done.
-        yield* Effect.forkDaemon(
+        const fiber = yield* Effect.forkDaemon(
           loadEffect.pipe(
             Effect.tap((result) => Deferred.succeed(deferred, result)),
             Effect.catchAllCause((cause) => {
@@ -678,6 +788,10 @@ class ManagerImpl implements PluginManager {
             }),
           ),
         );
+        yield* this._trackFiber(this._inFlightFibers, fiber);
+        yield* Effect.forkDaemon(
+          Fiber.await(fiber).pipe(Effect.andThen(() => this._untrackFiber(this._inFlightFibers, fiber))),
+        );
 
         return deferred;
       }).pipe(semaphore.withPermits(1));
@@ -691,6 +805,10 @@ class ManagerImpl implements PluginManager {
     capabilities: Capability.Any[],
   ): Effect.Effect<void, Error> {
     return Effect.gen(this, function* () {
+      if (yield* this._isShuttingDown()) {
+        return;
+      }
+
       capabilities.forEach((capability) => {
         this.capabilities.contribute({ module: module.id, ...capability });
       });
@@ -724,6 +842,7 @@ class ManagerImpl implements PluginManager {
       return true;
     });
   }
+
 }
 
 /**
