@@ -29,7 +29,12 @@ export default Capability.makeModule(() =>
         position: 'hoist',
         filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
         component: ({ data, role }) => {
-          return <PersonCard role={role} subject={data.subject} />;
+          return (
+            <>
+              <PersonCard role={role} subject={data.subject} />
+              <Surface.Surface role='related' data={data} limit={1} />
+            </>
+          );
         },
       }),
       Surface.create({
@@ -39,7 +44,12 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Organization.Organization } =>
           Obj.instanceOf(Organization.Organization, data.subject),
         component: ({ data, role }) => {
-          return <OrganizationCard role={role} subject={data.subject} />;
+          return (
+            <>
+              <OrganizationCard role={role} subject={data.subject} />
+              <Surface.Surface role='related' data={data} limit={1} />
+            </>
+          );
         },
       }),
       Surface.create({
