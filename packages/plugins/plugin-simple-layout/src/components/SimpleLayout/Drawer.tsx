@@ -55,7 +55,7 @@ export const Drawer = () => {
     <Panel.Root>
       <Panel.Toolbar>
         <Menu.Root {...menu} alwaysActive onAction={onAction}>
-          <Menu.Toolbar density='coarse' />
+          <Menu.Toolbar />
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

@@ -2,11 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
 import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { mx, textBlockWidth, toolbarLayout } from '@dxos/ui-theme';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { translationKey } from '../translations';
@@ -183,29 +182,23 @@ const ToggleGroupToolbarItem = ({
 export const ToolbarMenu = ({
   __menuScope,
   classNames,
-  textBlockWidth: textBlockWidthProp,
+  textBlockWidth,
   ...props
 }: MenuScopedProps<ToolbarMenuProps>) => {
   const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
   const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenu', __menuScope);
   const { hasAttention } = useAttention(attendableId);
-  const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
-  const innerRootProps = textBlockWidthProp
-    ? { role: 'none', className: mx(textBlockWidth, toolbarLayout, 'h-full') }
-    : {};
 
   return (
     <NaturalToolbar.Root
       {...props}
+      textBlockWidth={textBlockWidth}
       classNames={[attendableId, classNames]}
       disabled={!alwaysActive && !hasAttention}
-      layoutManaged={textBlockWidthProp}
     >
-      <InnerRoot {...innerRootProps}>
-        {items?.map((item: MenuItem, i: number) => (
-          <ToolbarMenuItem key={item.id ?? i} item={item} />
-        ))}
-      </InnerRoot>
+      {items?.map((item: MenuItem, index: number) => (
+        <ToolbarMenuItem key={item.id ?? index} item={item} />
+      ))}
     </NaturalToolbar.Root>
   );
 };

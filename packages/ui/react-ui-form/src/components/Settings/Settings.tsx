@@ -43,7 +43,7 @@ type SettingsRootProps = PropsWithChildren;
 
 const SettingsRoot = ({ children }: SettingsRootProps) => {
   return (
-    <ScrollArea.Root orientation='vertical' className='dx-document'>
+    <ScrollArea.Root className='dx-document' orientation='vertical' margin>
       <ScrollArea.Viewport classNames='p-trim-md'>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );

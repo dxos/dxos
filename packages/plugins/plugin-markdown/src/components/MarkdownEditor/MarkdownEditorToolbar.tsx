@@ -9,7 +9,6 @@ import { type FileInfo } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { EditorToolbar, type EditorToolbarProps } from '@dxos/react-ui-editor';
-import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { FileUpload, type FileUploadAction } from './FileUpload';
 import { composableProps } from '@dxos/ui-theme';

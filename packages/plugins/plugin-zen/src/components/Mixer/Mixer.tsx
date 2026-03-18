@@ -5,13 +5,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel } from '@dxos/react-ui';
+import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 
 import { useCountdown } from '../../hooks';
 
 import { MixerEngine } from '../../generator';
 import { Dream, Sequence } from '../../types';
+import { meta } from '../../meta';
 
 import { Sound } from '../Sound';
 
@@ -100,8 +101,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleDelete = useCallback(
     (id: string) => {
-      Obj.change(dream, (d) => {
-        d.sequences = (d.sequences ?? []).filter((layer) => layer.id !== id);
+      Obj.change(dream, (dream) => {
+        dream.sequences = (dream.sequences ?? []).filter((layer) => layer.id !== id);
       });
       if (selected === id) {
         setSelected(undefined);
@@ -113,25 +114,25 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
     [dream, selected, playing, engine],
   );
 
-  const handleChange = useCallback(
+  const handleUpdate = useCallback(
     (updated: Sequence.Sequence) => {
-      Obj.change(dream, (d) => {
-        d.sequences = (d.sequences ?? []).map((layer) => (layer.id === updated.id ? updated : layer));
+      Obj.change(dream, (dream) => {
+        dream.sequences = (dream.sequences ?? []).map((layer) => (layer.id === updated.id ? updated : layer));
       });
       if (playing) {
         void engine.updateLayer(updated);
       }
     },
-    [dream, playing, engine],
+    [engine, dream, playing],
   );
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
-      Obj.change(dream, (d) => {
-        const next = [...(d.sequences ?? [])];
+      Obj.change(dream, (dream) => {
+        const next = [...(dream.sequences ?? [])];
         const [moved] = next.splice(fromIndex, 1);
         next.splice(toIndex, 0, moved);
-        d.sequences = next;
+        dream.sequences = next;
       });
     },
     [dream],
@@ -158,7 +159,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
               />
             </Toolbar.Root>
           </Panel.Toolbar>
-          <Panel.Content asChild>
+          <Panel.Content>
             <List.Root<Sequence.Sequence>
               items={layers}
               getId={(item) => item.id}
@@ -172,7 +173,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
                     item={layer}
                     selected={layer.id === selected}
                     onLayerSelect={handleSelect}
-                    onLayerUpdate={handleChange}
+                    onLayerUpdate={handleUpdate}
                     onLayerDelete={handleDelete}
                   />
                 ))
@@ -183,7 +184,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
       </Splitter.Panel>
 
       <Splitter.Panel asChild position='lower'>
-        {displayedLayer && <Sound sequence={displayedLayer} onUpdate={handleChange} />}
+        {displayedLayer && <Sound sequence={displayedLayer} onUpdate={handleUpdate} />}
       </Splitter.Panel>
     </Splitter.Root>
   );
@@ -208,20 +209,22 @@ type LayerListItemProps = {
 
 /** Single layer row in the mixer list. */
 const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDelete }: LayerListItemProps) => {
+  const { t } = useTranslation(meta.id);
   return (
     <List.Item
       item={item}
       selected={selected}
-      classNames='grid grid-cols-[min-content_min-content_1fr_min-content_min-content] items-center'
+      classNames='grid grid-cols-[min-content_min-content_1fr_min-content_min-content] gap-1 items-center'
       onClick={() => onLayerSelect(item.id)}
     >
       <List.ItemDragHandle />
-      <Icon classNames='mr-2' size={4} icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
+      <Icon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
       <List.ItemTitle>{item.name ?? Sequence.getSourceLabel(item.source)}</List.ItemTitle>
       <IconButton
+        variant='ghost'
         icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
         iconOnly
-        label={item.muted ? 'Unmute' : 'Mute'}
+        label={t(item.muted ? 'unmute button label' : 'mute button label')}
         onClick={(event) => {
           event.stopPropagation();
           onLayerUpdate({ ...item, muted: !item.muted });

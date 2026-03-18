@@ -2,16 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React, { type FC, useCallback } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Capabilities } from '@dxos/app-framework';
-import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { AiContextBinder } from '@dxos/assistant';
 import {
   AgentFunctions,
   LinearBlueprint,
@@ -26,9 +21,7 @@ import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { AssistantBlueprint, translations, useContextBinder } from '@dxos/plugin-assistant';
-import { Assistant } from '@dxos/plugin-assistant/types';
+import { AssistantBlueprint, translations } from '@dxos/plugin-assistant';
 import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
 import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
@@ -36,10 +29,7 @@ import { MapBlueprint } from '@dxos/plugin-map/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
-import { Stack, StackItem } from '@dxos/react-ui-stack';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text, ViewModel } from '@dxos/schema';
 import {
   AccessToken,
@@ -54,14 +44,13 @@ import {
   Task,
   Transcript,
 } from '@dxos/types';
-import { isNonNullable, trim } from '@dxos/util';
+import { trim } from '@dxos/util';
 
 import {
   BlueprintModule,
   ChatModule,
   ChessModule,
   CommentsModule,
-  type ComponentProps,
   ExecutionGraphModule,
   GraphModule,
   InboxModule,
@@ -76,6 +65,7 @@ import {
   TriggersModule,
 } from '../components';
 import {
+  ModuleContainer,
   ResearchInputQueue,
   accessTokensFromEnv,
   addTestData,
@@ -87,110 +77,9 @@ import {
   testTypes,
 } from '../testing';
 
-const panelClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden';
-
-type StoryProps = {
-  modules: FC<ComponentProps>[][];
-  showContext?: boolean;
-  blueprints?: string[];
-};
-
-const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
-  const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
-  const atomRegistry = useCapability(Capabilities.AtomRegistry);
-
-  const space = useSpace();
-  useAsyncEffect(async () => {
-    if (!space) {
-      return;
-    }
-
-    const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
-    const chat = chats[0];
-    if (!chat) {
-      return;
-    }
-
-    // Add blueprints to context.
-    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions.map((blueprint) => blueprint.make()));
-    const blueprintObjects = blueprints
-      .map((key) => {
-        const blueprint = blueprintRegistry.getByKey(key);
-        if (blueprint) {
-          return space.db.add(Obj.clone(blueprint));
-        }
-      })
-      .filter(isNonNullable);
-
-    const binder = new AiContextBinder({ queue: await chat.queue.load(), registry: atomRegistry });
-    await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
-  }, [space, blueprints, blueprintsDefinitions]);
-
-  const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
-    log.info('event', { event });
-  }, []);
-
-  const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
-  const binder = useContextBinder(chats.at(-1)?.queue.target);
-  const objects = binder?.getObjects() ?? [];
-
-  if (!space) {
-    return <Loading data={{ space: !!space }} />;
-  }
-
-  return (
-    <Stack
-      orientation='horizontal'
-      size='split'
-      rail={false}
-      itemsCount={modules.length + (showContext ? 1 : 0)}
-      classNames='absolute inset-0 gap-(--stack-gap)'
-    >
-      {modules.map((Components, i) => {
-        return (
-          <StackItem.Root key={i} item={{ id: `${i}` }}>
-            <Stack
-              orientation='vertical'
-              classNames='gap-(--stack-gap)'
-              size={i > 0 ? 'contain' : 'split'}
-              itemsCount={Components.length}
-              rail={false}
-            >
-              {Components.map((Component, i) => (
-                <StackItem.Root key={i} item={{ id: `${i}` }} classNames={panelClassNames}>
-                  <Component space={space} onEvent={handleEvent} />
-                </StackItem.Root>
-              ))}
-            </Stack>
-          </StackItem.Root>
-        );
-      })}
-
-      {showContext && <ContextStack objects={objects} />}
-    </Stack>
-  );
-};
-
-const ContextStack = ({ objects }: { objects: Obj.Unknown[] }) => {
-  return (
-    <StackItem.Content toolbar classNames={panelClassNames}>
-      <Toolbar.Root>
-        <Toolbar.Text className='flex-1 text-center'>Chat Context Objects</Toolbar.Text>
-      </Toolbar.Root>
-      <Stack orientation='vertical' size='contain' rail={false} itemsCount={objects.length}>
-        {objects.map((object) => (
-          <StackItem.Root key={object.id} classNames={panelClassNames} item={object}>
-            <Surface.Surface role='section' limit={1} data={{ subject: object }} />
-          </StackItem.Root>
-        ))}
-      </Stack>
-    </StackItem.Content>
-  );
-};
-
-const storybook: Meta<typeof DefaultStory> = {
+const storybook: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Chat',
-  render: DefaultStory,
+  render: ModuleContainer,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
@@ -489,13 +378,12 @@ export const WithCalendar: Story = {
 export const WithMap: Story = {
   decorators: getDecorators({
     lazyPlugins: async () => {
-      const [{ Map, MapPlugin }, { TablePlugin }, { Table }, { createLocationSchema: createSchema }] =
-        await Promise.all([
-          import('@dxos/plugin-map'),
-          import('@dxos/plugin-table'),
-          import('@dxos/react-ui-table/types'),
-          import('@dxos/plugin-map/testing'),
-        ]);
+      const [{ Map, MapPlugin }, { TablePlugin }, { Table }, { createLocationSchema: _ }] = await Promise.all([
+        import('@dxos/plugin-map'),
+        import('@dxos/plugin-table'),
+        import('@dxos/react-ui-table/types'),
+        import('@dxos/plugin-map/testing'),
+      ]);
       return { plugins: [MapPlugin(), TablePlugin()], types: [View.View, Map.Map, Table.Table] };
     },
     config: config.remote,

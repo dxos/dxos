@@ -29,6 +29,7 @@ import { DxAvatar } from '@dxos/lit-ui/react';
 import { useActionRunner } from '@dxos/plugin-graph';
 import {
   Icon,
+  IconButton,
   ListItem,
   ScrollArea,
   type ThemedClassName,
@@ -87,10 +88,8 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
           const { properties: { caller } = {} } = item;
           return void runAction(item as Node.Action, caller ? { parent, path, caller } : { parent, path });
         }
-
         case 'tab':
           return onTabChange?.(item);
-
         case 'link':
           return onSelect?.({ item, path, current: !getItem(path).current, option: event.altKey });
       }
@@ -325,28 +324,10 @@ export const L0Menu = ({
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
       <Menu.Root onAction={handleAction}>
-        <Menu.Trigger
-          asChild
-          data-testid='spacePlugin.addSpace'
-          className={mx(
-            l0ItemRoot,
-            'grid place-items-center dx-focus-ring-group',
-            '[body[data-platform="macos"]_&]:mt-[30px]',
-          )}
-        >
-          <Tooltip.Trigger content={t('app menu label')} side='right' asChild>
-            <Tabs.TabPrimitive value='options' asChild role='button'>
-              <div
-                role='none'
-                className={mx(
-                  l0ItemContent,
-                  'h-(--dx-rail-action) w-(--dx-rail-action) group-hover/l0item:bg-hover-surface',
-                )}
-              >
-                <Icon icon='ph--list--regular' size={5} />
-              </div>
-            </Tabs.TabPrimitive>
-          </Tooltip.Trigger>
+        <Menu.Trigger asChild data-testid='spacePlugin.addSpace'>
+          <div role='none' className='grid place-items-center'>
+            <IconButton variant='ghost' icon='ph--list--regular' iconOnly label={t('app menu label')} size={5} />
+          </div>
         </Menu.Trigger>
         <Menu.Content group={parent} items={menuActions} />
       </Menu.Root>
@@ -357,7 +338,7 @@ export const L0Menu = ({
           <div
             role='none'
             className={mx([
-              'flex flex-col gap-1 pt-1',
+              'flex flex-col gap-2 pt-1',
               '[body[data-platform="macos"]_&]:py-[30px]',
               '[body[data-platform="ios"]_&]:py-[max(env(safe-area-inset-top),0.25rem)]',
             ])}

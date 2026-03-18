@@ -15,9 +15,6 @@ import { type ThemeExtensionsOptions } from './extensions';
 export const editorWidth = '!mx-auto w-full max-w-[min(50rem,100%-4rem)]';
 
 export const editorSlots: ThemeExtensionsOptions['slots'] = {
-  scroll: {
-    className: 'pt-2',
-  },
   content: {
     className: editorWidth,
   },

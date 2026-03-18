@@ -4,7 +4,7 @@
 
 @layer dx-components {
   .dx-hover {
-    @apply hover:bg-highlight-surface hover:text-highlight-surface-text;
+    @apply hover:bg-highlight-surface! hover:text-highlight-surface-text!;
   }
 
   .dx-highlighted {

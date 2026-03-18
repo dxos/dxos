@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { arc } from 'd3';
 import React, { useRef, useState } from 'react';
 
-import { Button, Icon, IconButton, ThemedClassName } from '@dxos/react-ui';
+import { Button, Icon, IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -17,7 +17,7 @@ import { DXOS } from '../icons';
 import { type AnimationController, ComposerLogo, ComposerSpinner } from './experimental';
 import { ComposerLogo as AltComposerLogo, brandColors } from './ComposerLogo';
 
-// import ident from '../../../assets/sounds/ident-1.mp3';
+import ident from '../../../assets/sounds/ident-2.mp3';
 
 // https://pixabay.com/sound-effects/search/logo/?pagi=2
 
@@ -44,8 +44,12 @@ export const Default: Story = {
     const controller = useRef<AnimationController>(null);
     const [logo, setLogo] = useState(false);
     const handleSpin = async () => {
-      // const audio = new Audio(ident);
-      // await audio.play();
+      const audio = new Audio(ident);
+      try {
+        await audio.play();
+      } catch (e) {
+        console.warn('Audio playback failed:', e);
+      }
       setTimeout(() => {
         setLogo(true);
       }, 1_500);

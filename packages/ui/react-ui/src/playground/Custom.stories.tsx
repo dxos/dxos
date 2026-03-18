@@ -28,7 +28,7 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
               label='Test'
               icon='ph--atom--regular'
               iconOnly
-              size={7}
+              size={6}
               density='coarse'
               classNames='px-1.5'
             />

@@ -200,13 +200,11 @@ const useMenu = (consumerName: string): MenuContextValue => {
 // Menu.Root
 //
 
-type MenuRootProps = PropsWithChildren<
-  Omit<MenuProviderProps, 'children'> &
-    Pick<DropdownMenuRootProps, 'open' | 'defaultOpen' | 'onOpenChange'> & {
-      /** Identifies the component that owns this menu (passed to action handlers). */
-      caller?: string;
-    }
->;
+type MenuRootProps = MenuProviderProps &
+  Pick<DropdownMenuRootProps, 'children' | 'open' | 'defaultOpen' | 'onOpenChange'> & {
+    /** Identifies the component that owns this menu (passed to action handlers). */
+    caller?: string;
+  };
 
 /**
  * Menu context boundary.

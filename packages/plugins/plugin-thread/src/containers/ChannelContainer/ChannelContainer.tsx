@@ -215,7 +215,7 @@ const ChannelToolbar = ({ attendableId, role, onJoinCall }: ChannelToolbarProps)
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
       <Menu.Root {...menuProps} attendableId={attendableId}>
-        <Menu.Toolbar textBlockWidth />
+        <Menu.Toolbar />
       </Menu.Root>
     </ElevationProvider>
   );
