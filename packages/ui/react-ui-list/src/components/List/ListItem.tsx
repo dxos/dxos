@@ -15,7 +15,6 @@ import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentProps,
   type HTMLAttributes,
-  type MutableRefObject,
   type PropsWithChildren,
   type ReactNode,
   RefObject,
@@ -101,12 +100,12 @@ export const ListItem = <T extends ListItemRecord>({
 }: ListItemProps<T>) => {
   const Comp = asChild ? Slot : 'div';
   const { isItem, readonly, dragPreview, setState: setRootState } = useListContext(LIST_ITEM_NAME);
-  const ref = useRef<HTMLDivElement | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLButtonElement | null>(null);
   const [state, setState] = useState<ItemDragState>(idle);
 
   useEffect(() => {
-    const element = ref.current;
+    const element = rootRef.current;
     invariant(element);
     return combine(
       //
@@ -187,7 +186,7 @@ export const ListItem = <T extends ListItemRecord>({
         role='listitem'
         aria-selected={selected}
         className={mx('relative p-1 dx-selected dx-hover', classNames, stateStyles[state.type])}
-        ref={ref}
+        ref={rootRef}
       >
         {children}
       </Comp>
@@ -238,11 +237,11 @@ export const ListItemDeleteButton = ({
   const { t } = useTranslation(osTranslations);
   return (
     <IconButton
-      iconOnly
-      variant='ghost'
       {...props}
-      icon={icon}
+      variant='ghost'
       disabled={isDisabled}
+      icon={icon}
+      iconOnly
       label={label ?? t('delete label')}
       classNames={[classNames, autoHide && disabled && 'hidden']}
     />
@@ -274,7 +273,9 @@ export const ListItemDragPreview = <T extends ListItemRecord>({
 };
 
 export const ListItemWrapper = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div className={mx('flex w-full gap-2', classNames)}>{children}</div>
+  <div role='none' className={mx('flex w-full gap-2', classNames)}>
+    {children}
+  </div>
 );
 
 export const ListItemTitle = ({
@@ -282,7 +283,7 @@ export const ListItemTitle = ({
   children,
   ...props
 }: ThemedClassName<PropsWithChildren<ComponentProps<'div'>>>) => (
-  <div className={mx('flex grow items-center truncate', classNames)} {...props}>
+  <div role='none' className={mx('flex grow items-center truncate', classNames)} {...props}>
     {children}
   </div>
 );
