@@ -71,7 +71,6 @@ const EVENT_VIEWPORT_NAME = 'Event.Viewport';
 
 type EventViewportProps = ComposableProps;
 
-// TODO(burdon): Exemplar: copy this patter for all compound Viewports.
 const EventViewport = ({ children, ...props }: EventViewportProps) => {
   return (
     <ScrollArea.Root {...composableProps(props, { role: 'none' })} thin>

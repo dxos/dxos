@@ -23,15 +23,15 @@ export type ScrollAreaStyleProps = {
 
 export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation, margin, thin }, ...etc) =>
   mx(
-    'overflow-hidden',
-
-    orientation === 'vertical' && 'group/scroll-v dx-container',
-    orientation === 'horizontal' && 'group/scroll-h dx-container',
-    orientation === 'all' && 'group/scroll-all dx-container',
+    'dx-container',
 
     // TODO(burdon): Audit composition.
     // Apply col-span-full only when inside a Column.Root grid (detected via dx-column marker).
     '[.dx-column_&]:col-span-full',
+
+    orientation === 'vertical' && 'group/scroll-v',
+    orientation === 'horizontal' && 'group/scroll-h',
+    orientation === 'all' && 'group/scroll-all',
 
     // NOTE: Uses --gutter CSS variable
     // If contained within Column.Root grid, the gutter is set by that component.

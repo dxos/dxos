@@ -28,10 +28,9 @@ const DefaultStory = () => {
   const db = useDatabase();
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
   const calendar = calendars[0];
-  const operationInvokers = useCapabilities(Capabilities.OperationInvoker);
 
-  if (!db || !calendar || operationInvokers.length === 0) {
-    return <Loading data={{ db: !!db, calendar: !!calendar, operationInvoker: operationInvokers.length > 0 }} />;
+  if (!db || !calendar) {
+    return <Loading data={{ db: !!db, calendar: !!calendar }} />;
   }
 
   return <CalendarArticle subject={calendar} />;
@@ -41,9 +40,7 @@ const meta = {
   title: 'plugins/plugin-inbox/containers/CalendarArticle',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    withAttention(),
     withPluginManager({
       plugins: [
         ...corePlugins(),
