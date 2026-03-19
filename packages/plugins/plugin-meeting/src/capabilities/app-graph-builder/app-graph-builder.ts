@@ -6,13 +6,12 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
 import { DeckOperation, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
@@ -176,7 +175,7 @@ export default Capability.makeModule(
                 if (!transcriptionEnabled) {
                   log.warn('transcription disabled');
                 } else {
-                  const companion = `${COMPANION_PREFIX}transcript`;
+                  const companion = companionSegment('transcript');
                   yield* Operation.invoke(DeckOperation.ChangeCompanion, { companion });
                 }
               }),

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 import { sleep } from '@dxos/async';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { companionSegment } from '@dxos/app-toolkit';
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation, OperationResolver } from '@dxos/operation';
@@ -171,7 +171,7 @@ export default Capability.makeModule(
             // Follow-up operations.
             yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
             yield* Operation.invoke(DeckOperation.ChangeCompanion, {
-              companion: `${COMPANION_PREFIX}comments`,
+              companion: companionSegment('comments'),
             });
           }),
         }),

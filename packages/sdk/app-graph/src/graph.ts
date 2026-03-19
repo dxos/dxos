@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
 
 import * as Node from './node';
-import { Separators, normalizeRelation, shallowEqual } from './util';
+import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, shallowEqual } from './util';
 
 const graphSymbol = Symbol('graph');
 
@@ -183,7 +183,7 @@ class GraphImpl implements WritableGraph {
   // TODO(wittjosiah): Atom feature request, support for something akin to `ComplexMap` to allow for complex arguments.
   readonly _connections = Atom.family<string, Atom.Atom<Node.Node[]>>((key) => {
     return Atom.make((get) => {
-      if (!key || key.indexOf(Separators.primary) <= 0) {
+      if (!key || primaryParts(key).length < 2) {
         return [];
       }
       const { id, relation } = relationFromConnectionKey(key);
@@ -706,7 +706,7 @@ const expandImpl = <T extends ExpandableGraph | WritableGraph>(
 ): T => {
   const internal = getInternal(graph);
   const normalizedRelation = normalizeRelation(relation);
-  const key = `${id}${Separators.primary}${relationKey(normalizedRelation)}`;
+  const key = primaryKey(id, relationKey(normalizedRelation));
   const nodeOpt = internal._registry.get(internal._node(id));
   if (Option.isNone(nodeOpt)) {
     // Node not yet in graph: record expand to run when the node is added.
@@ -900,11 +900,10 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       graph.onNodeChanged.emit({ id, node: newNode });
 
       // Apply any expands that were deferred because this node did not exist yet.
-      const prefix = `${id}${Separators.primary}`;
-      const toApply = [...internal._pendingExpands].filter((k) => k.startsWith(prefix));
+      const toApply = [...internal._pendingExpands].filter((k) => primaryParts(k)[0] === id);
       for (const pendingKey of toApply) {
         internal._pendingExpands.delete(pendingKey);
-        const relation = relationFromKey(pendingKey.slice(prefix.length));
+        const relation = relationFromKey(primaryParts(pendingKey)[1]);
         Record.set(internal._expanded, pendingKey, true);
         internal._onExpand?.(id, relation);
       }
@@ -1226,26 +1225,23 @@ export const make = (params?: GraphProps): Graph => {
 
 export const relationKey = (relation: Node.RelationInput): string => {
   const normalized = normalizeRelation(relation);
-  return `${normalized.kind}${Separators.secondary}${normalized.direction}`;
+  return secondaryKey(normalized.kind, normalized.direction);
 };
 
 export const relationFromKey = (encoded: string): Node.Relation => {
-  const separatorIndex = encoded.lastIndexOf(Separators.secondary);
-  invariant(separatorIndex > 0 && separatorIndex < encoded.length - 1, `Invalid relation key: ${encoded}`);
-  const kind = encoded.slice(0, separatorIndex);
-  const directionRaw = encoded.slice(separatorIndex + 1);
+  const parts = secondaryParts(encoded);
+  invariant(parts.length === 2 && parts[0].length > 0 && parts[1].length > 0, `Invalid relation key: ${encoded}`);
+  const [kind, directionRaw] = parts;
   invariant(directionRaw === 'outbound' || directionRaw === 'inbound', `Invalid relation direction: ${directionRaw}`);
   return Node.relation(kind, directionRaw);
 };
 
 const connectionKey = (id: string, relation: Node.RelationInput): string =>
-  `${id}${Separators.primary}${relationKey(relation)}`;
+  primaryKey(id, relationKey(relation));
 
 const relationFromConnectionKey = (key: string): { id: string; relation: Node.Relation } => {
-  const separatorIndex = key.indexOf(Separators.primary);
-  invariant(separatorIndex > 0 && separatorIndex < key.length - 1, `Invalid connection key: ${key}`);
-  const id = key.slice(0, separatorIndex);
-  const encodedRelation = key.slice(separatorIndex + 1);
+  const [id, encodedRelation] = primaryParts(key);
+  invariant(id && encodedRelation, `Invalid connection key: ${key}`);
   return { id, relation: relationFromKey(encodedRelation) };
 };
 

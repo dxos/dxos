@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, COMPANION_PREFIX, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment, LayoutOperation } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -177,7 +177,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             {
-              id: `${COMPANION_PREFIX}trace`,
+              id: companionSegment('trace'),
               type: DECK_COMPANION_TYPE,
               data: 'trace' as const,
               properties: {

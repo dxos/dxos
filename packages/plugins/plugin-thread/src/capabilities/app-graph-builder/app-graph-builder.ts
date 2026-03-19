@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -133,7 +133,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             {
-              id: `${COMPANION_PREFIX}comments`,
+              id: companionSegment('comments'),
               type: PLANK_COMPANION_TYPE,
               data: 'comments',
               properties: {

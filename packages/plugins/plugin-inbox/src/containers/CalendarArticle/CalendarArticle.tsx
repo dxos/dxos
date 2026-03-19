@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { COMPANION_PREFIX, LayoutOperation } from '@dxos/app-toolkit';
+import { companionSegment, LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/types';
@@ -50,15 +50,15 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
         selection: { mode: 'single', id: event.id },
       });
 
-      const companionId = `${COMPANION_PREFIX}event`;
+      const companion = companionSegment('event');
       if (layout.mode === 'simple') {
         void invokePromise(LayoutOperation.UpdateComplementary, {
-          subject: companionId,
+          subject: companion,
           state: 'expanded',
         });
       } else {
         void invokePromise(DeckOperation.ChangeCompanion, {
-          companion: companionId,
+          companion,
         });
       }
     },
