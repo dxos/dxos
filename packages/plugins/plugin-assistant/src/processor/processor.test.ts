@@ -39,7 +39,9 @@ const TestServicesLayer = Layer.mergeAll(
     // types: [],
   }),
   // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  FunctionInvocationServiceLayerTestMocked({ functions: OperationHandlerSet.empty }).pipe(Layer.provideMerge(TracingService.layerNoop)),
+  FunctionInvocationServiceLayerTestMocked({ functions: OperationHandlerSet.empty }).pipe(
+    Layer.provideMerge(TracingService.layerNoop),
+  ),
 );
 
 const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(

@@ -26,7 +26,7 @@ const ForexEffect = Operation.make({
 
 export default ForexEffect.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ( { from: rawFrom, to: rawTo }) {
+    Effect.fnUntraced(function* ({ from: rawFrom, to: rawTo }) {
       const from = rawFrom.toUpperCase();
       const to = rawTo.toUpperCase();
       const json: any = yield* HttpClientRequest.get(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`).pipe(

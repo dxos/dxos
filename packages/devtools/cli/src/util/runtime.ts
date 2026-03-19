@@ -14,12 +14,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { type Database, Feed, type Key } from '@dxos/echo';
-import {
-  CredentialsService,
-  type FunctionInvocationService,
-  type QueueService,
-  TracingService,
-} from '@dxos/functions';
+import { CredentialsService, type FunctionInvocationService, type QueueService, TracingService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,

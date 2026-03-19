@@ -22,7 +22,15 @@ import { Assistant } from '@dxos/plugin-assistant/types';
 
 import { App, render } from '../../components';
 import { theme } from '../../theme';
-import { type AiChatServices, Provider, chatLayer, createLogBuffer, operationHandlers, toolkits, types } from '../../util';
+import {
+  type AiChatServices,
+  Provider,
+  chatLayer,
+  createLogBuffer,
+  operationHandlers,
+  toolkits,
+  types,
+} from '../../util';
 
 import { Chat } from './components';
 import { ChatProcessor } from './processor';
