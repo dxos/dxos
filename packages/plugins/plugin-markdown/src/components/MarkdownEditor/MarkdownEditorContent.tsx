@@ -30,7 +30,7 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { useSelectCurrentThread } from '../../hooks';
+import { editorViewRegistry } from '../../editorViewRegistry';
 import { meta } from '../../meta';
 
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
@@ -134,7 +134,12 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
 
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
 
-    useSelectCurrentThread(editorView, id, attendableId ?? id);
+    useEffect(() => {
+      if (editorView) {
+        editorViewRegistry.register(attendableId ?? id, editorView, id);
+        return () => editorViewRegistry.unregister(attendableId ?? id);
+      }
+    }, [editorView, attendableId, id]);
 
     useTest(editorView);
 

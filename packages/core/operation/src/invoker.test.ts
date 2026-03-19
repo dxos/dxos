@@ -211,63 +211,6 @@ describe('OperationInvoker', () => {
     }),
   );
 
-  it.effect('filter handlers by predicate', () =>
-    Effect.gen(function* () {
-      const conditionalHandler: OperationResolver.OperationResolver = {
-        operation: Compute,
-        filter: (data: { value: number }) => data?.value > 1,
-        handler: (data: { value: number }) => Effect.succeed({ value: data.value * 3 }),
-      };
-      const invoker = OperationInvoker.make(() => Effect.succeed([conditionalHandler, computeHandler]));
-
-      // value=1 should use computeHandler (multiplies by 2, has sleep).
-      const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 1 }));
-      yield* TestClock.adjust('10 millis');
-      const a = yield* Fiber.join(fiberA);
-      expect(a.value).toBe(2);
-
-      // value=2 should use conditionalHandler (multiplies by 3, no sleep).
-      const b = yield* invoker.invoke(Compute, { value: 2 });
-      expect(b.value).toBe(6);
-    }),
-  );
-
-  it.effect('hoist handlers', () =>
-    Effect.gen(function* () {
-      const hoistedHandler: OperationResolver.OperationResolver = {
-        operation: Compute,
-        position: 'hoist',
-        handler: (data: { value: number }) => Effect.succeed({ value: data.value * 3 }),
-      };
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, hoistedHandler]));
-      const result = yield* invoker.invoke(Compute, { value: 1 });
-
-      expect(result.value).toBe(3);
-    }),
-  );
-
-  it.effect('fallback handlers', () =>
-    Effect.gen(function* () {
-      const conditionalHandler: OperationResolver.OperationResolver = {
-        operation: Compute,
-        filter: (data: { value: number }) => data?.value === 1,
-        handler: (data: { value: number }) => Effect.succeed({ value: data.value * 2 }),
-      };
-      const fallbackHandler: OperationResolver.OperationResolver = {
-        operation: Compute,
-        position: 'fallback',
-        handler: (data: { value: number }) => Effect.succeed({ value: data.value * 3 }),
-      };
-      const invoker = OperationInvoker.make(() => Effect.succeed([conditionalHandler, fallbackHandler]));
-
-      const a = yield* invoker.invoke(Compute, { value: 1 });
-      expect(a.value).toBe(2);
-
-      const b = yield* invoker.invoke(Compute, { value: 2 });
-      expect(b.value).toBe(6);
-    }),
-  );
-
   it.effect('non-struct inputs & outputs', () =>
     Effect.gen(function* () {
       const invoker = OperationInvoker.make(() => Effect.succeed([addHandler]));

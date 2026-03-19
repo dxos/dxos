@@ -29,6 +29,19 @@ export namespace MarkdownOperation {
     },
   });
 
+  export const ScrollToAnchor = Operation.make({
+    meta: { key: `${MARKDOWN_OPERATION}.scroll-to-anchor`, name: 'Scroll To Anchor' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        subject: Schema.String.annotations({ description: 'Attendable ID of the markdown editor.' }),
+        cursor: Schema.String.annotations({ description: 'Cursor position to scroll to.' }),
+        ref: Schema.optional(Schema.String.annotations({ description: 'Reference ID (e.g. thread ID).' })),
+      }),
+      output: Schema.Void,
+    },
+  });
+
   // TODO(wittjosiah): This appears to be unused.
   export const SetViewMode = Operation.make({
     meta: { key: `${MARKDOWN_OPERATION}.set-view-mode`, name: 'Set View Mode' },

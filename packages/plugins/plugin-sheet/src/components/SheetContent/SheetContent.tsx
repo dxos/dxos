@@ -9,6 +9,7 @@ import React, {
   type MouseEvent,
   type WheelEvent,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -36,7 +37,8 @@ import {
 import { composableProps } from '@dxos/ui-theme';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
-import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
+import { gridRegistry } from '../../gridRegistry';
+import { useSelectThreadOnCellFocus } from '../../integrations';
 import { meta } from '../../meta';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetOperation } from '../../types';
 import { useSheetContext } from '../SheetRoot';
@@ -75,8 +77,19 @@ export type SheetContentProps = ComposableProps;
 
 export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
   const { t } = useTranslation(meta.id);
-  const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
-    useSheetContext();
+  const {
+    id,
+    attendableId,
+    model,
+    editing,
+    setCursor,
+    setRange,
+    cursor,
+    cursorFallbackRange,
+    activeRefs,
+    setActiveRefs,
+    ignoreAttention,
+  } = useSheetContext();
 
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
@@ -318,7 +331,13 @@ export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props
     [model],
   );
 
-  useUpdateFocusedCellOnThreadSelection(dxGrid);
+  useEffect(() => {
+    if (dxGrid) {
+      gridRegistry.register(attendableId, dxGrid, setActiveRefs);
+      return () => gridRegistry.unregister(attendableId);
+    }
+  }, [dxGrid, attendableId, setActiveRefs]);
+
   useSelectThreadOnCellFocus();
 
   return (

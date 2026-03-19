@@ -13140,6 +13140,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -13343,6 +13346,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../../core/operation
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space

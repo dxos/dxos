@@ -11,7 +11,7 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { Table } from '@dxos/react-ui-table/types';
@@ -32,10 +32,18 @@ export const TablePlugin = Plugin.define(meta).pipe(
         iconHue: Annotation.IconAnnotation.get(Table.Table).pipe(Option.getOrThrow).hue ?? 'white',
         comments: 'unanchored',
         inputSchema: CreateTableSchema,
-        createObject: ((props, { db }) =>
-          Effect.promise(async () => {
-            const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db, typename: props.typename });
-            return Table.make({ name: props.name, view, jsonSchema });
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = yield* Effect.promise(async () => {
+              const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: options.db, typename: props.typename });
+              return Table.make({ name: props.name, view, jsonSchema });
+            });
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
           })) satisfies CreateObject,
       },
     },

@@ -2,11 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { OperationResolver } from '@dxos/operation';
+import { Cursor, setSelection } from '@dxos/ui-editor';
 
+import { editorViewRegistry } from '../../editorViewRegistry';
 import { Markdown, MarkdownCapabilities, MarkdownOperation } from '../../types';
 
 export default Capability.makeModule(
@@ -17,6 +20,29 @@ export default Capability.makeModule(
         handler: ({ name, content }) =>
           Effect.succeed({
             object: Markdown.make({ name, content }),
+          }),
+      }),
+      OperationResolver.make({
+        operation: MarkdownOperation.ScrollToAnchor,
+        handler: ({ subject, cursor }) =>
+          Effect.sync(() => {
+            const entry = editorViewRegistry.get(subject);
+            if (!entry) {
+              return;
+            }
+            const range = Cursor.getRangeFromCursor(entry.view.state, cursor);
+            if (range) {
+              const selection =
+                entry.view.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
+              const effects: any[] = [EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 })];
+              if (selection) {
+                effects.push(setSelection.of({ current: entry.documentId }));
+              }
+              entry.view.dispatch({
+                effects,
+                selection: selection ? { anchor: range.from } : undefined,
+              });
+            }
           }),
       }),
       // TODO(wittjosiah): This appears to be unused.

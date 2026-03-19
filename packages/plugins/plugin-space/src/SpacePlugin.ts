@@ -58,7 +58,16 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
           inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-          createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Collection.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: false,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -67,15 +76,19 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           icon: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: SpaceOperation.StoredSchemaForm,
-          createObject: ((props, { db }) =>
+          createObject: (((props, options) =>
             Effect.gen(function* () {
               const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
-                db,
+                db: options.db,
                 name: props.name,
                 schema: createDefaultSchema(),
               });
-              return result.object;
-            })) satisfies CreateObject,
+              return {
+                id: result.id,
+                subject: [],
+                object: result.object,
+              };
+            })) satisfies CreateObject),
         },
       },
       {
@@ -83,7 +96,16 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Organization.Organization).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Organization.Organization).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props) => Effect.sync(() => Organization.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Organization.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -91,7 +113,16 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Person.Person).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Person.Person).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props) => Effect.sync(() => Person.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Person.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -100,7 +131,16 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           icon: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: Task.Task,
-          createObject: ((props) => Effect.sync(() => Task.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Task.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
     ],

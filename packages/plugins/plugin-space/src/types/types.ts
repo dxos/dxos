@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type * as Effect from 'effect/Effect';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability, Plugin } from '@dxos/app-framework';
@@ -119,16 +119,26 @@ export interface TypedObjectSerializer<T extends Obj.Unknown = Obj.Unknown> {
 }
 
 /**
- * Factory function that creates an object directly using Type.make().
- * Returns an Effect that resolves to the created object.
- *
- * Options include:
- * - `db`: The database to use for object creation.
+ * Result of creating and adding an object.
+ */
+export type CreateObjectResult = {
+  id: string;
+  subject: readonly string[];
+  object: Obj.Unknown;
+};
+
+/**
+ * Factory function that creates an object and adds it to a target (database or collection).
+ * Returns an Effect that resolves to the created object result with navigation subject.
  */
 export type CreateObject = (
   props: any,
-  options: { db: Database.Database },
-) => Effect.Effect<Obj.Unknown, Error, Capability.Service | Operation.Service>;
+  options: {
+    db: Database.Database;
+    target: Database.Database | Collection.Collection;
+    targetNodeId?: string;
+  },
+) => Effect.Effect<CreateObjectResult, Error, Capability.Service | Operation.Service>;
 
 // TODO(burdon): Move to FormatEnum or SDK.
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
