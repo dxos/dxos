@@ -9,7 +9,6 @@ import handlebars from 'handlebars';
 import { Database } from '@dxos/echo';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
 import { FunctionInvocationService, type FunctionNotFoundError, type TracingService } from '@dxos/functions';
-import { type Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
