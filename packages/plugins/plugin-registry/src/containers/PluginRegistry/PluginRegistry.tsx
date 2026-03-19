@@ -20,70 +20,78 @@ import { getPluginPath } from '../../meta';
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
   a.localeCompare(b);
 
-export type PluginRegistryProps = ComposableProps & {
-  id: string;
-  plugins: Plugin.Plugin[];
-};
+export type PluginRegistryProps = ComposableProps<
+  HTMLDivElement,
+  {
+    id: string;
+    plugins: Plugin.Plugin[];
+  }
+>;
 
-export const PluginRegistry = forwardRef<HTMLDivElement, PluginRegistryProps>(({ id, plugins: pluginsProp, ...props }, forwardedRef) => {
-  const manager = usePluginManager();
-  const { invoke, invokePromise } = useOperationInvoker();
-  const plugins = useMemo(() => pluginsProp.sort(sortByPluginMeta), [pluginsProp]);
-  const enabled = useAtomValue(manager.enabled);
-  const allSettings = useCapabilities(AppCapabilities.Settings);
+export const PluginRegistry = forwardRef<HTMLDivElement, PluginRegistryProps>(
+  ({ id, plugins: pluginsProp, ...props }, forwardedRef) => {
+    const manager = usePluginManager();
+    const { invoke, invokePromise } = useOperationInvoker();
+    const plugins = useMemo(() => pluginsProp.sort(sortByPluginMeta), [pluginsProp]);
+    const enabled = useAtomValue(manager.enabled);
+    const allSettings = useCapabilities(AppCapabilities.Settings);
 
-  // TODO(wittjosiah): Factor out to an intent?
-  const handleChange = useCallback(
-    (id: string, enabled: boolean) =>
-      Effect.gen(function* () {
-        if (enabled) {
-          yield* manager.enable(id);
-        } else {
-          yield* manager.disable(id);
-        }
+    // TODO(wittjosiah): Factor out to an intent?
+    const handleChange = useCallback(
+      (id: string, enabled: boolean) =>
+        Effect.gen(function* () {
+          if (enabled) {
+            yield* manager.enable(id);
+          } else {
+            yield* manager.disable(id);
+          }
 
-        yield* invoke(ObservabilityOperation.SendEvent, {
-          name: 'plugins.toggle',
-          properties: {
-            plugin: id,
-            enabled,
-          },
-        });
-      }).pipe(runAndForwardErrors),
-    [invoke, manager],
-  );
+          yield* invoke(ObservabilityOperation.SendEvent, {
+            name: 'plugins.toggle',
+            properties: {
+              plugin: id,
+              enabled,
+            },
+          });
+        }).pipe(runAndForwardErrors),
+      [invoke, manager],
+    );
 
-  const handleClick = useCallback(
-    (pluginId: string) =>
-      invokePromise(LayoutOperation.Open, {
-        subject: [getPluginPath(pluginId)],
-        pivotId: id,
-        positioning: 'end',
-      }),
-    [invokePromise, id],
-  );
+    const handleClick = useCallback(
+      (pluginId: string) =>
+        invokePromise(LayoutOperation.Open, {
+          subject: [getPluginPath(pluginId)],
+          pivotId: id,
+          positioning: 'end',
+        }),
+      [invokePromise, id],
+    );
 
-  const hasSettings = useCallback((pluginId: string) => allSettings.some((s) => s.prefix === pluginId), [allSettings]);
+    const hasSettings = useCallback(
+      (pluginId: string) => allSettings.some((s) => s.prefix === pluginId),
+      [allSettings],
+    );
 
-  const handleSettings = useCallback(
-    (pluginId: string) => invokePromise(SettingsOperation.Open, { plugin: pluginId }),
-    [invokePromise],
-  );
+    const handleSettings = useCallback(
+      (pluginId: string) => invokePromise(SettingsOperation.Open, { plugin: pluginId }),
+      [invokePromise],
+    );
 
-  return (
-    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
-      <ScrollArea.Viewport>
-        <PluginList
-          plugins={plugins}
-          enabled={enabled}
-          onClick={handleClick}
-          onChange={handleChange}
-          hasSettings={hasSettings}
-          onSettings={handleSettings}
-        />
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
-  );
-});
+    return (
+      <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+        <ScrollArea.Viewport>
+          <PluginList
+            plugins={plugins}
+            enabled={enabled}
+            onClick={handleClick}
+            onChange={handleChange}
+            hasSettings={hasSettings}
+            onSettings={handleSettings}
+          />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
 
 PluginRegistry.displayName = 'PluginRegistry';

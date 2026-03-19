@@ -35,12 +35,12 @@ export type ScriptToolbarProps = Partial<MenuRootProps> & {
 export const ScriptToolbar = ({ script, role, state, ...props }: ScriptToolbarProps) => {
   const { t } = useTranslation(meta.id);
   const options = useDeployDeps({ script });
-  const menu = useMemo(() => createToolbarActions({ state, script, t, ...options }), [state, script, options, t]);
-  const actions = useMenuActions(menu);
+  const menuCreator = useMemo(() => createToolbarActions({ state, script, t, ...options }), [state, script, options, t]);
+  const menuActions = useMenuActions(menuCreator);
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <Menu.Root {...actions} attendableId={Obj.getDXN(script).toString()}>
+      <Menu.Root {...menuActions} attendableId={Obj.getDXN(script).toString()}>
         <Menu.Toolbar {...props} />
       </Menu.Root>
     </ElevationProvider>

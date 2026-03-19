@@ -15,9 +15,10 @@ import { Outline, type OutlineController, type OutlineProps } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
-export type JournalProps = Omit<ComposableProps, 'onSelect'> & {
-  journal: JournalType.Journal;
-} & Pick<JournalEntryProps, 'onSelect'>;
+export type JournalProps = Omit<ComposableProps<HTMLDivElement>, 'onSelect'> &
+  Pick<JournalEntryProps, 'onSelect'> & {
+    journal: JournalType.Journal;
+  };
 
 // TODO(burdon): Virtualize.
 export const Journal = forwardRef<HTMLDivElement, JournalProps>(({ journal, onSelect, ...props }, forwardedRef) => {

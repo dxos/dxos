@@ -12,10 +12,12 @@ import { composableProps } from '@dxos/ui-theme';
 
 const zeroWidthSpace = '\u200b';
 
-export type SyntaxHighlighterProps = ComposableProps &
+export type SyntaxHighlighterProps = ComposableProps<
+  HTMLDivElement,
   NaturalSyntaxHighlighterProps & {
     fallback?: string;
-  };
+  }
+>;
 
 /**
  * NOTE: Using `light-async` version directly from dist to avoid any chance of the heavy one being loaded.

@@ -381,7 +381,7 @@ SearchListInput.displayName = 'SearchList.Input';
 // Viewport
 //
 
-type SearchListViewportProps = ComposableProps;
+type SearchListViewportProps = ComposableProps<HTMLDivElement>;
 
 const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
   ({ children, ...props }, forwardedRef) => {

@@ -108,13 +108,17 @@ const BoardColumnRoot = BoardColumnRootInner as <TColumn = unknown>(
 
 const BOARD_COLUMN_HEADER_NAME = 'Board.Column.Header';
 
-type BoardColumnHeaderProps = ThemedClassName<{ label: string; dragHandleRef: ReactRef<HTMLButtonElement> }>;
+type BoardColumnHeaderProps = ComposableProps<
+  HTMLDivElement,
+  { label: string; dragHandleRef: ReactRef<HTMLButtonElement> }
+>;
 
 const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
-  ({ classNames, label, dragHandleRef }, forwardedRef) => {
+  ({ label, dragHandleRef, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { model } = useBoard(BOARD_COLUMN_HEADER_NAME);
     const column = useBoardColumn();
+    const { className, ...rest } = composableProps(props);
     const columnMenuItems = useMemo(
       () =>
         column != null && model.onColumnDelete
@@ -131,7 +135,8 @@ const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
     return (
       <Menu.Root>
         <Toolbar.Root
-          classNames={mx('border-b border-separator', classNames)}
+          {...rest}
+          className={mx('border-b border-separator', className)}
           data-testid='board-column-header'
           ref={forwardedRef}
         >
@@ -161,11 +166,13 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
-type BoardColumnBodyProps = ComposableProps &
+type BoardColumnBodyProps = ComposableProps<
+  HTMLDivElement,
   Pick<BoardColumnProps, 'data'> &
-  Pick<MosaicContainerProps, 'eventHandler' | 'debug'> & {
-    Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
-  };
+    Pick<MosaicContainerProps, 'eventHandler' | 'debug'> & {
+      Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
+    }
+>;
 
 const BoardColumnBody = forwardRef<HTMLDivElement, BoardColumnBodyProps>(
   ({ data, eventHandler, Tile = BoardItem, debug, ...props }, forwardedRef) => {

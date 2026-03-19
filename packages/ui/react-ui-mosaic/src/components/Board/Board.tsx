@@ -90,12 +90,15 @@ const BoardRoot = BoardRootInner as <TColumn = any, TItem = any>(props: BoardRoo
 
 const BOARD_CONTENT_NAME = 'Board.Content';
 
-type BoardContentProps<TColumn = any> = ComposableProps & {
-  id: string;
-  debug?: boolean;
-  eventHandler?: MosaicEventHandler<TColumn>;
-  Tile?: MosaicStackProps<TColumn>['Tile'];
-};
+type BoardContentProps<TColumn = any> = ComposableProps<
+  HTMLDivElement,
+  {
+    id: string;
+    debug?: boolean;
+    eventHandler?: MosaicEventHandler<TColumn>;
+    Tile?: MosaicStackProps<TColumn>['Tile'];
+  }
+>;
 
 const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
   ({ id: _id, debug, eventHandler, Tile = DefaultBoardColumn, ...props }, forwardedRef) => {

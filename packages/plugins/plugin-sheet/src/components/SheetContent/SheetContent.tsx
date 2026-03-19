@@ -71,7 +71,7 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
-export type SheetContentProps = ComposableProps;
+export type SheetContentProps = ComposableProps<HTMLDivElement>;
 
 export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
   const { t } = useTranslation(meta.id);

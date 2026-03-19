@@ -23,15 +23,6 @@ export type MailboxAction =
 
 export type MailboxActionHandler = (action: MailboxAction) => void;
 
-export type MailboxProps = {
-  id: string;
-  messages: Message.Message[];
-  labels?: MailboxType.Labels;
-  currentMessageId?: string;
-  ignoreAttention?: boolean;
-  onAction?: MailboxActionHandler;
-};
-
 type MessageTileData = {
   message: Message.Message;
   labels?: MailboxType.Labels;
@@ -154,6 +145,15 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 });
 
 MessageTile.displayName = 'MessageTile';
+
+export type MailboxProps = {
+  id: string;
+  messages: Message.Message[];
+  labels?: MailboxType.Labels;
+  currentMessageId?: string;
+  ignoreAttention?: boolean;
+  onAction?: MailboxActionHandler;
+};
 
 /**
  * Card-based mailbox component using mosaic layout.

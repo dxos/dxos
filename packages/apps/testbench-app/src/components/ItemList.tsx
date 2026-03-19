@@ -14,26 +14,31 @@ import { composableProps, mx, subtleHover } from '@dxos/ui-theme';
 
 const MAX_RENDERED_COUNT = 80;
 
-export type ItemListProps<T> = ComposableProps & { objects: T[] } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
+export type ItemListProps<T> = ComposableProps<
+  HTMLDivElement,
+  {
+    objects: T[];
+  } & Pick<ItemProps<T>, 'debug' | 'onDelete'>
+>;
 
 export const ItemList = forwardRef<HTMLDivElement, ItemListProps<Obj.Any>>(
   ({ objects, debug, ...props }, forwardedRef) => {
     return (
       <ScrollArea.Root {...composableProps(props)} padding ref={forwardedRef}>
         <ScrollArea.Viewport>
-        {objects
-          .slice(0, MAX_RENDERED_COUNT)
-          .map(
-            (object) =>
-              (debug && <DebugItem key={object.id} object={object} {...props} />) || (
-                <Item key={object.id} object={object} {...props} />
-              ),
+          {objects
+            .slice(0, MAX_RENDERED_COUNT)
+            .map(
+              (object) =>
+                (debug && <DebugItem key={object.id} object={object} {...props} />) || (
+                  <Item key={object.id} object={object} {...props} />
+                ),
+            )}
+          {objects.length > MAX_RENDERED_COUNT && (
+            <div className='text-xs text-gray-400'>({objects.length - MAX_RENDERED_COUNT} more items)</div>
           )}
-        {objects.length > MAX_RENDERED_COUNT && (
-          <div className='text-xs text-gray-400'>({objects.length - MAX_RENDERED_COUNT} more items)</div>
-        )}
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     );
   },
 );

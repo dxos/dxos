@@ -177,7 +177,7 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = ComposableProps;
+type FormViewportProps = ComposableProps<HTMLDivElement>;
 
 const FormViewport = forwardRef<HTMLDivElement, FormViewportProps>(({ children, ...props }, forwardedRef) => {
   return (

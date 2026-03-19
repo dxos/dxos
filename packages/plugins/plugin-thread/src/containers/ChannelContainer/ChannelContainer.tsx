@@ -3,7 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ChangeEvent, forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
@@ -13,7 +13,7 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
+import { ComposableProps, ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { Menu, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
@@ -23,6 +23,7 @@ import { meta } from '../../meta';
 import { ThreadCapabilities } from '../../types';
 import { type Channel } from '../../types';
 import { ChatContainer } from '../ChatContainer';
+import { composableProps } from '@dxos/ui-theme';
 
 export type ChannelContainerProps = SurfaceComponentProps<
   Channel.Channel | undefined,
@@ -202,20 +203,25 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
   return useMenuActions(creator);
 };
 
-type ChannelToolbarProps = {
-  attendableId?: string;
-  role?: string;
-  onJoinCall?: () => void;
-};
+type ChannelToolbarProps = ComposableProps<
+  HTMLDivElement,
+  {
+    attendableId?: string;
+    role?: string;
+    onJoinCall?: () => void;
+  }
+>;
 
-const ChannelToolbar = ({ attendableId, role, onJoinCall }: ChannelToolbarProps) => {
-  const menuProps = useChannelToolbarActions(onJoinCall);
+const ChannelToolbar = forwardRef<HTMLDivElement, ChannelToolbarProps>(
+  ({ attendableId, role, onJoinCall, ...props }, forwardRef) => {
+    const menuActions = useChannelToolbarActions(onJoinCall);
 
-  return (
-    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <Menu.Root {...menuProps} attendableId={attendableId}>
-        <Menu.Toolbar />
-      </Menu.Root>
-    </ElevationProvider>
-  );
-};
+    return (
+      <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+        <Menu.Root {...menuActions} attendableId={attendableId}>
+          <Menu.Toolbar {...composableProps(props)} ref={forwardRef} />
+        </Menu.Root>
+      </ElevationProvider>
+    );
+  },
+);

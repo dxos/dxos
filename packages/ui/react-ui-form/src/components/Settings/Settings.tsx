@@ -40,7 +40,7 @@ const styles = {
 // Root
 //
 
-type SettingsRootProps = ComposableProps;
+type SettingsRootProps = ComposableProps<HTMLDivElement>;
 
 const SettingsRoot = forwardRef<HTMLDivElement, SettingsRootProps>(({ children, ...props }, forwardedRef) => {
   const { className, ...composedProps } = composableProps(props);

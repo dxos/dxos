@@ -25,7 +25,7 @@ import { type ClassNameValue } from './theme';
  *
  * @see slot.stories.tsx (@dxos/react-ui)
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+// TODO(burdon): Warn if child is not ComposableProps.
 export type SlottableProps<E extends HTMLElement, P extends Record<string, unknown> = {}> = HTMLAttributes<E> &
   P & {
     classNames?: ClassNameValue;
@@ -42,18 +42,23 @@ export type SlottableProps<E extends HTMLElement, P extends Record<string, unkno
  * @example
  * ```tsx
  * const Leaf = forwardRef<HTMLButtonElement, ComposableProps & PropsWithChildren>(
- *   ({ children, ...props }, ref) => {
+ *   ({ children, ...props }, forwardedRef) => {
  *     const { className, ...rest } = composableProps(props);
- *     return <button {...rest} className={className} ref={ref}>{children}</button>;
+ *     return <button {...rest} className={className} ref={forwardedRef}>{children}</button>;
  *   },
  * );
  * ```
  *
  * @see slot.stories.tsx (@dxos/react-ui)
  */
-export type ComposableProps<P extends HTMLElement = HTMLElement> = HTMLAttributes<P> & {
-  classNames?: ClassNameValue;
-};
+// TODO(burdon): P as Void
+export type ComposableProps<E extends HTMLElement = HTMLElement, P extends Record<string, unknown> = {}> = Omit<
+  HTMLAttributes<E>,
+  'dir'
+> &
+  P & {
+    classNames?: ClassNameValue;
+  };
 
 /**
  * Marks a component as slot-compatible — its root element accepts and merges
