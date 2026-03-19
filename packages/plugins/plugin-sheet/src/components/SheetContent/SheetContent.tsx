@@ -15,7 +15,7 @@ import React, {
   useState,
 } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
@@ -37,10 +37,9 @@ import {
 import { composableProps } from '@dxos/ui-theme';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
-import { gridRegistry } from '../../gridRegistry';
 import { useSelectThreadOnCellFocus } from '../../integrations';
 import { meta } from '../../meta';
-import { DEFAULT_COLS, DEFAULT_ROWS, SheetOperation } from '../../types';
+import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities, SheetOperation } from '../../types';
 import { useSheetContext } from '../SheetRoot';
 
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
@@ -331,12 +330,13 @@ export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props
     [model],
   );
 
+  const [gridInstances] = useCapabilities(SheetCapabilities.GridInstances);
   useEffect(() => {
-    if (dxGrid) {
-      gridRegistry.register(attendableId, dxGrid, setActiveRefs);
-      return () => gridRegistry.unregister(attendableId);
+    if (dxGrid && gridInstances) {
+      gridInstances.register(attendableId, dxGrid, setActiveRefs);
+      return () => gridInstances.unregister(attendableId);
     }
-  }, [dxGrid, attendableId, setActiveRefs]);
+  }, [dxGrid, gridInstances, attendableId, setActiveRefs]);
 
   useSelectThreadOnCellFocus();
 

@@ -14,7 +14,7 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 
-import { AnchorSort, ComputeGraphRegistry, Markdown, OperationResolver, ReactSurface } from './capabilities';
+import { AnchorSort, ComputeGraphRegistry, Markdown, OperationResolver, ReactSurface, SheetState } from './capabilities';
 import { meta } from './meta';
 import { serializer } from './serializer';
 import { translations } from './translations';
@@ -48,6 +48,10 @@ export const SheetPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: SheetState,
+  }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
     activate: ComputeGraphRegistry,
