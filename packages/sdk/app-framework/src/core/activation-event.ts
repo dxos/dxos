@@ -33,7 +33,8 @@ export const make = (id: string, specifier?: string) => {
 /**
  * Helper to create an activation event key.
  */
-export const eventKey = (event: ActivationEvent) => (event.specifier ? compositeKey(event.id, event.specifier) : event.id);
+export const eventKey = (event: ActivationEvent) =>
+  event.specifier ? compositeKey(event.id, event.specifier) : event.id;
 
 /**
  * Helper to create an activation event that triggers when any of the given events are activated.

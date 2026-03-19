@@ -13,8 +13,7 @@ export const REGISTRY_KEY = 'plugin-registry';
 const CATEGORY_SEPARATOR = '>';
 
 /** Build a registry category node ID. */
-export const registryCategoryId = (category: string): string =>
-  `${REGISTRY_KEY}${CATEGORY_SEPARATOR}${category}`;
+export const registryCategoryId = (category: string): string => `${REGISTRY_KEY}${CATEGORY_SEPARATOR}${category}`;
 
 /** Qualified graph path to a specific plugin node. */
 export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/${pluginId}`;

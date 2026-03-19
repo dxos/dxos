@@ -827,8 +827,7 @@ const qualifyNodeArgs =
       };
     });
 
-const connectorKey = (id: string, relation: Node.RelationInput): string =>
-  primaryKey(id, Graph.relationKey(relation));
+const connectorKey = (id: string, relation: Node.RelationInput): string => primaryKey(id, Graph.relationKey(relation));
 
 const relationFromConnectorKey = (key: string): { id: string; relation: Node.Relation } => {
   const [id, encodedRelation] = primaryParts(key);

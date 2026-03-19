@@ -1236,8 +1236,7 @@ export const relationFromKey = (encoded: string): Node.Relation => {
   return Node.relation(kind, directionRaw);
 };
 
-const connectionKey = (id: string, relation: Node.RelationInput): string =>
-  primaryKey(id, relationKey(relation));
+const connectionKey = (id: string, relation: Node.RelationInput): string => primaryKey(id, relationKey(relation));
 
 const relationFromConnectionKey = (key: string): { id: string; relation: Node.Relation } => {
   const [id, encodedRelation] = primaryParts(key);
