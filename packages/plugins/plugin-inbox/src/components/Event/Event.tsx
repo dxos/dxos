@@ -55,8 +55,8 @@ const EventToolbar = ({ classNames, onNoteCreate, ...props }: EventToolbarProps)
   const actions = useEventToolbarActions({ onNoteCreate });
 
   return (
-    <Menu.Root {...props} {...actions} attendableId={attendableId}>
-      <Menu.Toolbar classNames={classNames} />
+    <Menu.Root {...actions} attendableId={attendableId}>
+      <Menu.Toolbar {...props} classNames={classNames} />
     </Menu.Root>
   );
 };

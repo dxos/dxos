@@ -59,8 +59,7 @@ const createToolbarActions = ({
   });
 };
 
-export type SheetToolbarProps = { id: string } & Partial<MenuRootProps> &
-  PropsWithChildren<{ id: string } & Partial<MenuRootProps>>;
+export type SheetToolbarProps = PropsWithChildren<{ id: string } & Partial<MenuRootProps>>;
 
 export const SheetToolbar = ({ id, ...props }: SheetToolbarProps) => {
   const { model, cursorFallbackRange } = useSheetContext();
@@ -85,11 +84,11 @@ export const SheetToolbar = ({ id, ...props }: SheetToolbarProps) => {
     () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange, customActions }),
     [model, stateAtom, registry, cursorFallbackRange, customActions],
   );
-  const menu = useMenuActions(actionsCreator);
+  const actions = useMenuActions(actionsCreator);
 
   return (
-    <Menu.Root {...props} {...menu} attendableId={id}>
-      <Menu.Toolbar />
+    <Menu.Root {...actions} attendableId={id}>
+      <Menu.Toolbar {...props} />
     </Menu.Root>
   );
 };

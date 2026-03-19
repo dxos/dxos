@@ -117,24 +117,24 @@ const TriggerStatusPopover = ({
   isRunning,
   state,
   currentFunctionName,
-  lastInvocation,
+  lastInvocation, // TODO(burdon): Show.
   onToggle,
 }: TriggerStatusPopoverProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className='min-w-[240px] p-2 space-y-3'>
-      {/* Runtime Toggle */}
-      <Settings.ItemInput title={t('trigger runtime label')} description={t('trigger runtime description')}>
-        <Input.Switch classNames='justify-self-end' checked={isRunning} onCheckedChange={onToggle} />
-      </Settings.ItemInput>
+    <div className='flex flex-col gap-2 p-2 min-w-[240px]'>
+      <Input.Root>
+        <div className='flex items-center gap-2'>
+          <Input.Switch checked={isRunning} onCheckedChange={onToggle} />
+          <Input.Label>{t('trigger runtime label')}</Input.Label>
+        </div>
+      </Input.Root>
 
-      {/* Status Indicator */}
-      <div className='flex items-center gap-2 pt-2 border-t border-separator'>
-        <Icon icon={getIcon(state)} classNames={mx(getIconClassNames(state), 'shrink-0')} />
-        <span className='text-sm'>{t(`trigger status ${state} label`)}</span>
+      <div className='flex flex-col gap-1'>
+        <div className='text-sm'>{t(`trigger status ${state} label`)}</div>
         {currentFunctionName && state === 'running' && (
-          <span className='text-xs text-description'>{currentFunctionName}</span>
+          <div className='text-xs text-description'>{currentFunctionName}</div>
         )}
       </div>
     </div>

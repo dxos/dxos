@@ -209,6 +209,8 @@ type MenuRootProps = MenuProviderProps &
 /**
  * Menu context boundary.
  *
+ * NOTE: This component is headless since it's root div has `contents`.
+ *
  * Provides the menu context (action dispatch, contribution registry, icon size, etc.)
  * and an optional dropdown root for use with `Menu.Trigger` + `Menu.Content`.
  */
