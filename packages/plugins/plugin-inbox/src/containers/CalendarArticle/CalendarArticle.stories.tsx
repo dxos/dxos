@@ -23,7 +23,6 @@ import { Calendar } from '../../types';
 
 import { CalendarArticle } from './CalendarArticle';
 
-
 const DefaultStory = () => {
   const db = useDatabase();
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
