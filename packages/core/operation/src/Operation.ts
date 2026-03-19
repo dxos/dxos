@@ -282,6 +282,8 @@ export const PersistentOperation = Schema$.Struct({
   // TODO(dmaretskyi): Add this field to Operation.Definition.
   binding: Schema$.optional(Schema$.String),
 }).pipe(
+  // TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
+  //  backward compatibility with existing data and avoid requiring data migration.
   Type.object({
     typename: 'org.dxos.type.function',
     version: '0.1.0',
