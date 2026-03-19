@@ -18,7 +18,7 @@ import { ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
-import { type Key } from '@dxos/echo';
+import { Database, type Key } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 
@@ -51,7 +51,7 @@ export const triggerRuntimeLayer = ({
 }: TriggerRuntimeLayerOptions): Layer.Layer<
   TriggerRuntimeServices,
   ConfigError.ConfigError | PlatformError.PlatformError,
-  ClientService | ConfigService | FileSystem.FileSystem | Database.Service
+  ClientService | ConfigService | FileSystem.FileSystem
 > => {
   // Set up KeyValueStore for trigger state storage
   const kvStoreLayer = Layer.unwrapEffect(
