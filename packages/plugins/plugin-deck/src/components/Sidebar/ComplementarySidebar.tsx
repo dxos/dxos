@@ -17,7 +17,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
 import { IconButton, type Label, Main, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { largeIconSize, mx } from '@dxos/ui-theme';
+import { iconSize, mx } from '@dxos/ui-theme';
 
 import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
@@ -94,7 +94,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       <Tabs.Root orientation='vertical' verticalVariant='stateless' value={internalValue} classNames='contents'>
         <div
           role='none'
-          style={largeIconSize}
+          style={iconSize(5)}
           className={mx(
             'absolute z-[1] inset-y-0 end-0 !w-(--dx-r0-size)',
             'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-subdued-separator',
@@ -123,8 +123,12 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             ))}
           </Tabs.Tablist>
           {!hoistStatusbar && (
-            <div role='none' className='grid grid-cols-1 auto-rows-(--dx-rail-item) p-1 overflow-y-auto'>
-              <Surface.Surface role='status-bar--r0-footer' limit={1} />
+            <div
+              role='none'
+              className='grid grid-cols-1 auto-rows-(--dx-rail-item) gap-0.5 overflow-y-auto'
+              style={iconSize(4)}
+            >
+              <Surface.Surface role='status-indicator' />
             </div>
           )}
           <div role='none' className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>

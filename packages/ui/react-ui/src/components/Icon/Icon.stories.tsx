@@ -6,7 +6,7 @@ import { IconBase, type IconProps, type IconWeight } from '@phosphor-icons/react
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type FC, type ReactElement, type SVGProps, forwardRef } from 'react';
 
-import { getSize, mx } from '@dxos/ui-theme';
+import { getSize, iconSize, mx } from '@dxos/ui-theme';
 
 import { withTheme } from '../../testing';
 
@@ -50,29 +50,60 @@ const createIcon = ({
   return CustomIcon;
 };
 
-const DefaultStory = ({ CustomIcon }: { CustomIcon: FC<IconProps> }) => {
-  return (
-    <div className='grid grid-cols-2 gap-8'>
-      <CustomIcon weight={'regular'} className={mx(getSize(16))} />
-      <Icon icon='ph--github-logo--regular' classNames={mx(getSize(16))} />
-    </div>
-  );
-};
-
 const meta = {
   title: 'ui/react-ui-core/components/Icon',
-  render: DefaultStory,
+  component: Icon,
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
-} satisfies Meta<typeof DefaultStory>;
+} satisfies Meta<typeof Icon>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  args: {
+    icon: 'ph--github-logo--regular',
+  },
+};
+
+export const Static: Story = {
+  args: {
+    icon: 'ph--github-logo--regular',
+    classNames: getSize(8),
+  },
+};
+
+export const Dynamic: Story = {
+  args: {
+    icon: 'ph--github-logo--regular',
+  },
+  render: (args) => {
+    return (
+      <div className='flex gap-4'>
+        <Icon {...args} />
+        <div className='flex gap-4' style={iconSize(8)}>
+          <Icon {...args} />
+          <div className='flex gap-4' style={iconSize(null)}>
+            <Icon {...args} />
+          </div>
+        </div>
+      </div>
+    );
+  },
+};
+
+export const Custom = {
+  render: ({ CustomIcon }: { CustomIcon: FC<IconProps> }) => {
+    return (
+      <div className='grid grid-cols-2 gap-8'>
+        <CustomIcon weight={'regular'} className={mx(getSize(16))} />
+        <Icon icon='ph--github-logo--regular' classNames={mx(getSize(16))} />
+      </div>
+    );
+  },
   args: {
     CustomIcon: createIcon({
       name: 'GithubLogo',

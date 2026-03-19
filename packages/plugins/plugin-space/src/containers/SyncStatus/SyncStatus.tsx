@@ -10,7 +10,7 @@ import { type QueryEdgeStatusResponse } from '@dxos/protocols/proto/dxos/client/
 import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
-import { Icon, Popover, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
@@ -44,22 +44,20 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
     }
 
     const t = setTimeout(() => {
-      // TODO(wittjosiah): Use semantic color tokens.
-      setClassNames('text-orange-500');
+      setClassNames('text-orange-500'); // TODO(wittjosiah): Use semantic color tokens.
     }, SYNC_STALLED_TIMEOUT);
     return () => clearTimeout(t);
   }, [offline, needsToUpload, needsToDownload]);
 
-  const title = t(`${status} label`);
-  const icon = <Icon icon={getIcon(status)} classNames={classNames} />;
-
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <StatusBar.Item title={title}>{icon}</StatusBar.Item>
+        <StatusBar.Item>
+          <IconButton icon={getIcon(status)} iconOnly label={t(`${status} label`)} classNames={classNames} />
+        </StatusBar.Item>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content>
+        <Popover.Content side='left'>
           <EdgeConnectionPopover />
           <Popover.Arrow />
         </Popover.Content>

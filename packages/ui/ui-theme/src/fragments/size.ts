@@ -8,94 +8,63 @@ import { type Size } from '@dxos/ui-types';
 
 import { mx } from '../util';
 
-export const largeIconSize = {
-  '--icon-size': '1.25rem',
-} as CSSProperties;
+const SIZE_VALUES: Size[] = [
+  0,
+  'px',
+  0.5,
+  1,
+  1.5,
+  2,
+  2.5,
+  3,
+  3.5,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  14,
+  16,
+  20,
+  24,
+  28,
+  32,
+  36,
+  40,
+  44,
+  48,
+  52,
+  56,
+  60,
+  64,
+  72,
+  80,
+  96,
+];
 
-const sizeWidthMap = new Map<Size, string>([
-  [0, 'w-0'],
-  ['px', 'w-px'], // 1px
-  [0.5, 'w-0.5'],
-  [1, 'w-1'],
-  [1.5, 'w-1.5'],
-  [2, 'w-2'],
-  [2.5, 'w-2.5'],
-  [3, 'w-3'],
-  [3.5, 'w-3.5'],
-  [4, 'w-4'],
-  [5, 'w-5'],
-  [6, 'w-6'],
-  [7, 'w-7'],
-  [8, 'w-8'],
-  [9, 'w-9'],
-  [10, 'w-10'],
-  [11, 'w-11'],
-  [12, 'w-12'],
-  [14, 'w-14'],
-  [16, 'w-16'],
-  [20, 'w-20'],
-  [24, 'w-24'],
-  [28, 'w-28'],
-  [32, 'w-32'],
-  [36, 'w-36'],
-  [40, 'w-40'],
-  [44, 'w-44'],
-  [48, 'w-48'],
-  [52, 'w-52'],
-  [56, 'w-56'],
-  [60, 'w-60'],
-  [64, 'w-64'],
-  [72, 'w-72'],
-  [80, 'w-80'],
-  [96, 'w-96'],
-]);
+const sizeMap = new Map<Size, { w: string; h: string }>(
+  SIZE_VALUES.map((size) => {
+    const suffix = size === 'px' ? 'px' : size;
+    return [size, { w: `w-${suffix}`, h: `h-${suffix}` }];
+  }),
+);
 
-const sizeHeightMap = new Map<Size, string>([
-  [0, 'h-0'],
-  ['px', 'h-px'], // 1px
-  [0.5, 'h-0.5'],
-  [1, 'h-1'],
-  [1.5, 'h-1.5'],
-  [2, 'h-2'],
-  [2.5, 'h-2.5'],
-  [3, 'h-3'],
-  [3.5, 'h-3.5'],
-  [4, 'h-4'],
-  [5, 'h-5'],
-  [6, 'h-6'],
-  [7, 'h-7'],
-  [8, 'h-8'],
-  [9, 'h-9'],
-  [10, 'h-10'],
-  [11, 'h-11'],
-  [12, 'h-12'],
-  [14, 'h-14'],
-  [16, 'h-16'],
-  [20, 'h-20'],
-  [24, 'h-24'],
-  [28, 'h-28'],
-  [32, 'h-32'],
-  [36, 'h-36'],
-  [40, 'h-40'],
-  [44, 'h-44'],
-  [48, 'h-48'],
-  [52, 'h-52'],
-  [56, 'h-56'],
-  [60, 'h-60'],
-  [64, 'h-64'],
-  [72, 'h-72'],
-  [80, 'h-80'],
-  [96, 'h-96'],
-]);
+export const getHeight = (size: Size) => sizeMap.get(size)?.h;
+export const getWidth = (size: Size) => sizeMap.get(size)?.w;
+export const getSize = (size: Size) => mx(getHeight(size), getWidth(size));
 
-const sizes = new Set(sizeWidthMap.keys());
+export const sizeValue = (size: Size): number => (size === 'px' ? 1 : size);
+export const sizeToRem = (size: Size): string => (size === 'px' ? '1px' : `${(size as number) * 0.25}rem`);
 
-export const getSizeHeight = sizeHeightMap.get.bind(sizeHeightMap);
-export const getSizeWidth = sizeWidthMap.get.bind(sizeWidthMap);
-export const getSize = (size: Size) => mx(getSizeHeight(size), getSizeWidth(size));
+export const iconSize = (size: Size | null): CSSProperties =>
+  ({ '--icon-size': size ? sizeToRem(size) : 'initial' }) as CSSProperties;
 
 export const computeSize = (value: number, defaultSize: Size) => {
-  if (sizes.has(value as Size)) {
+  if (SIZE_VALUES.includes(value as Size)) {
     return value as Size;
   } else if (value <= 0) {
     return 0;
@@ -106,18 +75,16 @@ export const computeSize = (value: number, defaultSize: Size) => {
     const halfSeries = Math.floor(value * 2) / 2;
     const doubleSeries = Math.floor(value / 2) * 2;
     const quadrupleSeries = Math.floor(value / 4) * 4;
-    if (sizes.has(halfSeries as Size)) {
+    if (SIZE_VALUES.includes(halfSeries as Size)) {
       return halfSeries as Size;
-    } else if (sizes.has(wholeSeries as Size)) {
+    } else if (SIZE_VALUES.includes(wholeSeries as Size)) {
       return wholeSeries as Size;
-    } else if (sizes.has(doubleSeries as Size)) {
+    } else if (SIZE_VALUES.includes(doubleSeries as Size)) {
       return doubleSeries as Size;
-    } else if (sizes.has(quadrupleSeries as Size)) {
+    } else if (SIZE_VALUES.includes(quadrupleSeries as Size)) {
       return quadrupleSeries as Size;
     } else {
       return defaultSize;
     }
   }
 };
-
-export const sizeValue = (size: Size): number => (size === 'px' ? 1 : size);

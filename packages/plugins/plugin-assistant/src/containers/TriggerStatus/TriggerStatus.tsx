@@ -9,7 +9,7 @@ import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { type Database } from '@dxos/react-client/echo';
-import { Icon, Input, Popover, useTranslation } from '@dxos/react-ui';
+import { Icon, IconButton, Input, Popover, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { mx } from '@dxos/ui-theme';
 
@@ -52,6 +52,7 @@ export const TriggerStatus = () => {
 };
 
 const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
+  const { t } = useTranslation(meta.id);
   const { state, start, stop } = useTriggerRuntimeControls(db);
   const isRunning = state?.enabled ?? false;
 
@@ -76,17 +77,20 @@ const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
     return 'idle';
   }, [isRunning, state?.invocations]);
 
-  const { t } = useTranslation(meta.id);
-  const title = t(`trigger status ${triggerState} label`);
-  const icon = <Icon icon={getIcon(triggerState)} classNames={getIconClassNames(triggerState)} />;
-
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <StatusBar.Item title={title}>{icon}</StatusBar.Item>
+        <StatusBar.Item>
+          <IconButton
+            icon={getIcon(triggerState)}
+            iconOnly
+            label={t(`trigger status ${triggerState} label`)}
+            classNames={getIconClassNames(triggerState)}
+          />
+        </StatusBar.Item>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content>
+        <Popover.Content side='left'>
           <TriggerStatusPopover
             isRunning={isRunning}
             state={triggerState}

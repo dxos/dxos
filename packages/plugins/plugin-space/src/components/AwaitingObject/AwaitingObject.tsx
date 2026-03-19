@@ -64,17 +64,17 @@ export const AwaitingObject = ({ id }: { id: string }) => {
         <Toast.Title classNames='flex items-center gap-2'>
           {found ? (
             <>
-              <Icon icon='ph--check-circle--regular' size={5} />
+              <Icon icon='ph--check-circle--regular' />
               <span>{t('found object label')}</span>
             </>
           ) : waiting ? (
             <>
-              <Icon icon='ph--circle-notch--regular' size={5} classNames='animate-spin' />
+              <Icon icon='ph--circle-notch--regular' classNames='animate-spin' />
               <span>{t('waiting for object label')}</span>
             </>
           ) : (
             <>
-              <Icon icon='ph--circle-dashed--regular' size={5} />
+              <Icon icon='ph--circle-dashed--regular' />
               <span>{t('object not found label')}</span>
             </>
           )}

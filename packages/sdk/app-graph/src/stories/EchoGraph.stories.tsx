@@ -216,7 +216,6 @@ const Controls = ({ children }: PropsWithChildren) => {
           <Input.Root>
             <Input.TextInput
               autoComplete='off'
-              size={5}
               classNames='w-[100px] text-right pe-[22px]'
               placeholder='Interval'
               value={actionInterval}

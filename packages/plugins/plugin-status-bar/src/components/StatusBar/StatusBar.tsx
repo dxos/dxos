@@ -5,8 +5,38 @@
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, type PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { IconButton, Tooltip, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+//
+// Item
+//
+
+type StatusBarItemProps = ThemedClassName<PropsWithChildren<{ label?: string }>>;
+
+const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
+  ({ classNames, children, label, ...props }, forwardedRef) => {
+    // if (label) {
+    //   return (
+    //     <Tooltip.Provider>
+    //       <Tooltip.Trigger asChild content={label} side='left'>
+    //         <IconButton icon='ph--circle--regular' iconOnly label='xx' />
+    //       </Tooltip.Trigger>
+    //     </Tooltip.Provider>
+    //   );
+    // }
+
+    return (
+      <div {...props} role='status' className={mx('grid place-items-center', classNames)} ref={forwardedRef}>
+        {children}
+      </div>
+    );
+  },
+);
+
+//
+// Text
+//
 
 type StatusBarTextProps = ThemedClassName<{ children: ReactNode }>;
 
@@ -16,8 +46,15 @@ const StatusBarText = forwardRef<HTMLSpanElement, StatusBarTextProps>(({ classNa
   </span>
 ));
 
+//
+// Button
+//
+
 type StatusBarButtonProps = ThemedClassName<ComponentPropsWithRef<'button'> & { asChild?: boolean }>;
 
+/**
+ * @deprecated
+ */
 const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
   ({ classNames, children, asChild, ...props }, forwardedRef) => {
     const classes = mx(
@@ -39,22 +76,9 @@ const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
   },
 );
 
-export default StatusBarButton;
-
-type StatusBarItemProps = ThemedClassName<ComponentPropsWithRef<'div'>>;
-
-const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
-  ({ classNames, children, ...props }, forwardedRef) => (
-    <div
-      role='menuitem'
-      className={mx('flex items-center justify-center gap-2 p-1 px-2 rounded-xs select-none', classNames)}
-      ref={forwardedRef}
-      {...props}
-    >
-      {children}
-    </div>
-  ),
-);
+//
+// Content
+//
 
 type StartContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
@@ -64,6 +88,10 @@ const StartContent = forwardRef<HTMLDivElement, StartContentProps>(({ classNames
   </div>
 ));
 
+//
+// EndContent
+//
+
 type EndContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, children }, forwardedRef) => (
@@ -72,9 +100,13 @@ const EndContent = forwardRef<HTMLDivElement, EndContentProps>(({ classNames, ch
   </div>
 ));
 
+//
+// StatusBar
+//
+
 export const StatusBar = {
-  Text: StatusBarText,
   Item: StatusBarItem,
+  Text: StatusBarText,
   Button: StatusBarButton,
   StartContent,
   EndContent,

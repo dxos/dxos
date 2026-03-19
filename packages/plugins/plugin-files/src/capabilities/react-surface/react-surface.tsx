@@ -39,7 +39,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: `${meta.id}.status`,
-        role: 'status',
+        role: 'status-indicator',
         filter: (data): data is Record<string, unknown> => {
           const settings = registry.get(settingsAtom);
           return !!settings.autoExport;

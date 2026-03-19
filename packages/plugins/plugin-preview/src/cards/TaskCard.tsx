@@ -16,12 +16,15 @@ export const TaskCard = ({ subject }: SurfaceComponentProps<Task.Task>) => {
 
   return (
     <Card.Content>
-      <Card.Heading classNames='min-w-0 flex-1 truncate'>{title}</Card.Heading>
-      {statusOption && (
-        <span className='dx-tag' data-hue={statusOption.color}>
-          {statusOption.title}
-        </span>
-      )}
+      <Card.Row>
+        {statusOption && (
+          <div>
+            <span className='dx-tag' data-hue={statusOption.color}>
+              {statusOption.title}
+            </span>
+          </div>
+        )}
+      </Card.Row>
     </Card.Content>
   );
 };
@@ -30,11 +33,12 @@ export const TaskCard = ({ subject }: SurfaceComponentProps<Task.Task>) => {
 const getActiveStatusOption = (status?: string) => {
   const properties = SchemaAST.getPropertySignatures(Task.Task.ast);
   const statusProperty = properties.find((p) => p.name === 'status');
+  // TODO(thure): Typescript asserts `.type` doesn’t have `.types`, but in runtime it does.
   const statusMeta = SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(
-    // TODO(thure): Typescript asserts `.type` doesn’t have `.types`, but in runtime it does.
     (statusProperty!.type as any).types[0],
   );
-  const options = // TODO(thure): Typescript asserts `statusMeta` doesn’t have `.value`, but in runtime it does.
-    (statusMeta as any).value.singleSelect.options as { id: string; title: string; color: string }[];
+
+  // TODO(thure): Typescript asserts `statusMeta` doesn’t have `.value`, but in runtime it does.
+  const options = (statusMeta as any).value.singleSelect.options as { id: string; title: string; color: string }[];
   return options.find(({ id }) => id === status);
 };

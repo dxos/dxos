@@ -98,7 +98,7 @@ export const Toolbar = ({
 
         {(participants !== undefined && (
           <div className='flex justify-center items-center gap-2 w-[5rem] text-xs text-subdued'>
-            <Icon icon='ph--users--regular' size={4} />
+            <Icon icon='ph--users--regular' />
             <div>{participants}</div>
           </div>
         )) || <NaturalToolbar.Separator variant='gap' />}

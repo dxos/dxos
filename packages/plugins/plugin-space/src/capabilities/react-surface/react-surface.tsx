@@ -347,7 +347,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: `${meta.id}.status`,
-        role: 'status',
+        role: 'status-indicator',
         component: () => <SyncStatus />,
       }),
     ]);
