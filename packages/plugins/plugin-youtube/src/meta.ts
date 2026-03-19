@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/youtube',
+  id: 'org.dxos.plugin.youtube',
   name: 'YouTube',
   description: trim`
     YouTube channel subscription and video feed management.
