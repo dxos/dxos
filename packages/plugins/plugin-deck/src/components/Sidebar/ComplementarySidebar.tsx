@@ -3,7 +3,6 @@
 //
 
 import React, {
-  CSSProperties,
   Fragment,
   type MouseEvent,
   type PropsWithChildren,

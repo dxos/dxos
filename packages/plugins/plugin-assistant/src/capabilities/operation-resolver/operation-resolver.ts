@@ -9,7 +9,7 @@ import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
 import { AgentFunctions, Chat, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Blueprint } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { TracingService, serializeFunction } from '@dxos/functions';

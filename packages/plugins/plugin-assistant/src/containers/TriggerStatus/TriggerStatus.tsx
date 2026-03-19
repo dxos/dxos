@@ -9,9 +9,7 @@ import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { type Database } from '@dxos/react-client/echo';
-import { Icon, IconButton, Input, Popover, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
-import { mx } from '@dxos/ui-theme';
+import { IconButton, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 

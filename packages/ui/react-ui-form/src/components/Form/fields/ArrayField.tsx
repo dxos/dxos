@@ -4,7 +4,7 @@
 
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
-import React, { Fragment, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
 import { findNode, getArrayElementType, getDiscriminatedType, isDiscriminatedUnion, isNestedType } from '@dxos/effect';
 import { IconButton, useTranslation } from '@dxos/react-ui';

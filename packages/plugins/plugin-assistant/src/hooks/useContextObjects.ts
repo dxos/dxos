@@ -6,7 +6,7 @@ import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { useCallback } from 'react';
 
 import { type AiContextBinder } from '@dxos/assistant';
-import { type DXN, type Database, type Obj, Ref } from '@dxos/echo';
+import { type DXN, type Database, type Obj } from '@dxos/echo';
 
 export type UseContextObjectsProps = {
   db?: Database.Database;

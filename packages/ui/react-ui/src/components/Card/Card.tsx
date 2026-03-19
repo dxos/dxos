@@ -4,14 +4,7 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  CSSProperties,
-  type HTMLAttributes,
-  type PropsWithChildren,
-  createContext,
-  forwardRef,
-  useContext,
-} from 'react';
+import React, { type PropsWithChildren, createContext, forwardRef, useContext } from 'react';
 
 import { composableProps, iconSize, mx } from '@dxos/ui-theme';
 import { type Density, type SlottableProps } from '@dxos/ui-types';
