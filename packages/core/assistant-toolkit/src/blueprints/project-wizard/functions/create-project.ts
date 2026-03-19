@@ -5,8 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Blueprint } from '@dxos/blueprints';
-import { Database, Obj, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
+import { Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { CreateProject } from './definitions';

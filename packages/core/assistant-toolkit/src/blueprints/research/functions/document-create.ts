@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Obj, Relation } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';

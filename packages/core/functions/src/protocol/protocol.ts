@@ -25,7 +25,6 @@ import { CredentialsService, FunctionInvocationService, QueueService, TracingSer
 import { Operation } from '@dxos/operation';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
-import { dbg } from '@dxos/log';
 
 /**
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.
