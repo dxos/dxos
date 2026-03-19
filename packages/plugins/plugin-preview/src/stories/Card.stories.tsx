@@ -3,14 +3,16 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
+import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Organization, type Person, type Pipeline, type Task } from '@dxos/types';
 
-import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import { FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 import { translations } from '../translations';
 
 import { DefaultStory, createOrganization, createPerson, createProject, createTask } from './testing';
@@ -72,5 +74,36 @@ export const _Task: StoryObj<typeof DefaultStory<Task.Task>> = {
     Component: TaskCard,
     createObject: createTask,
     image: true,
+  },
+};
+
+export const _Json = {
+  render: () => {
+    const data = {
+      subject: {
+        id: faker.string.uuid(),
+        name: faker.person.fullName(),
+        email: faker.internet.email(),
+        tags: [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()],
+        nested: {
+          count: faker.number.int({ max: 100 }),
+          active: faker.datatype.boolean(),
+        },
+      },
+    };
+
+    return (
+      <div className='flex justify-center p-16'>
+        <div className='dx-card-min-width dx-card-max-width'>
+          <Card.Root>
+            <Card.Toolbar>
+              <Card.IconBlock />
+              <Card.Title>JSON</Card.Title>
+            </Card.Toolbar>
+            <JsonCard data={data} />
+          </Card.Root>
+        </div>
+      </div>
+    );
   },
 };
