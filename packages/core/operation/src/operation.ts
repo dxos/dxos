@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Context from 'effect/Context';
+import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import * as Pipeable from 'effect/Pipeable';
-import type * as Schema$ from 'effect/Schema';
+import * as Schema$ from 'effect/Schema';
 
-import { type Type } from '@dxos/echo';
+import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import type * as Types from 'effect/Types';
 
 // @import-as-namespace
@@ -38,6 +38,7 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
   readonly meta: {
     readonly key: string;
     readonly name?: string;
+    readonly version?: string;
     readonly description?: string;
     /**
      * Deployment ID for remote invocation.
@@ -128,7 +129,7 @@ export type Props<I, O> = Omit<Definition<I, O>, DefinitionTypeId | 'pipe' | 'ex
  * The returned type preserves the literal types of props (including services).
  */
 export const make = <const P extends Props<any, any>>(
-  props: P,
+  props: Types.NoExcessProperties<Props<any, any>, P>,
 ): Definition<
   Schema$.Schema.Type<P['input']>,
   Schema$.Schema.Type<P['output']>,
@@ -223,6 +224,111 @@ export type InvokeRemote = <I, O, E>(
   input: I,
   options?: { timeout?: number },
 ) => Effect.Effect<O, E>;
+
+/**
+ * Database record of an operation.
+ */
+export const PersistentOperation = Schema$.Struct({
+  /**
+   * Global registry ID.
+   * NOTE: The `key` property refers to the original registry entry.
+   */
+  // TODO(burdon): Create Format type for DXN-like ids, such as this and schema type.
+  // TODO(dmaretskyi): Consider making it part of ECHO meta.
+  // TODO(dmaretskyi): Make required.
+  key: Schema$.optional(Schema$.String).annotations({
+    description: 'Unique registration key for the blueprint',
+  }),
+
+  name: Schema$.NonEmptyString,
+  version: Schema$.String,
+
+  description: Schema$.optional(Schema$.String),
+
+  /**
+   * ISO date string of the last deployment.
+   */
+  updated: Schema$.optional(Schema$.String),
+
+  // Reference to a source script if it exists within ECHO.
+  // TODO(burdon): Don't ref ScriptType directly (core).
+  source: Schema$.optional(Ref.Ref(Obj.Unknown)),
+
+  inputSchema: Schema$.optional(JsonSchema.JsonSchema),
+  outputSchema: Schema$.optional(JsonSchema.JsonSchema),
+
+  /**
+   * List of required services.
+   * Match the Context.Tag keys of the FunctionServices variants.
+   */
+  services: Schema$.optional(Schema$.Array(Schema$.String)),
+
+  // Local binding to a function name.
+  // TODO(dmaretskyi): Add this field to Operation.Definition.
+  binding: Schema$.optional(Schema$.String),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.function',
+    version: '0.1.0',
+  }),
+  Annotation.LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
+  Annotation.SystemTypeAnnotation.set(true),
+);
+export interface PersistentOperation extends Schema$.Schema.Type<typeof PersistentOperation> {}
+
+/**
+ * Serialize an operation definition to a persistent operation record.
+ */
+export const serialize = (operation: Definition.Any): PersistentOperation => {
+  return Obj.make(PersistentOperation, {
+    key: operation.meta.key,
+    name: operation.meta.name ?? '',
+    version: operation.meta.version ?? '0.0.0',
+    description: operation.meta.description,
+    updated: undefined,
+    source: undefined,
+    inputSchema: JsonSchema.toJsonSchema(operation.input),
+    outputSchema: JsonSchema.toJsonSchema(operation.output),
+    services: operation.services.map((service) => service.key),
+  });
+};
+
+/**
+ * Deserialize a persistent operation record to an operation definition.
+ */
+export const deserialize = (record: PersistentOperation): Definition.Any => {
+  return make({
+    input: record.inputSchema ? JsonSchema.toEffectSchema(record.inputSchema) : Schema$.Unknown,
+    output: record.outputSchema ? JsonSchema.toEffectSchema(record.outputSchema) : Schema$.Unknown,
+    services: record.services?.map((service) => Context.GenericTag(service)) ?? [],
+    executionMode: 'async',
+    types: [],
+    meta: {
+      key: record.key ?? record.name,
+      name: record.name,
+      version: record.version,
+      description: record.description,
+    },
+  });
+};
+
+/**
+ * Update properties on the target operation record from the source operation record.
+ */
+export const setFrom = (target: PersistentOperation, source: PersistentOperation) => {
+  Obj.change(target, (target) => {
+    target.key = source.key ?? target.key;
+    target.name = source.name ?? target.name;
+    target.version = source.version;
+    target.description = source.description;
+    target.updated = source.updated;
+    // TODO(dmaretskyi): A workaround for an ECHO bug.
+    target.inputSchema = source.inputSchema ? JSON.parse(JSON.stringify(source.inputSchema)) : undefined;
+    target.outputSchema = source.outputSchema ? JSON.parse(JSON.stringify(source.outputSchema)) : undefined;
+    Obj.getMeta(target).keys = JSON.parse(JSON.stringify(Obj.getMeta(source).keys));
+  });
+};
 
 //
 // Re-export service types and functions for Operation namespace.
