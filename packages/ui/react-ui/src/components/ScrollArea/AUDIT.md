@@ -56,5 +56,14 @@ The following ~34 files contain `<ScrollArea.Root>` but root element status need
 
 ## Phase 3
 
-- [ ] Ensure all radix-style composite components that include Viewports are Composable
-  - Examples: SearchList.Viewport, Form.Viewport, Board.Content, Event.Viewport, etc.
+- [ ] Ensure all radix-style composite components that include Viewports (Phase 1) are Composable.
+  - Follow the exemplar: `Event.Viewport` in `plugin-inbox`
+- [ ] Re-run audit (Phase 1).
+- [ ] Add any implementaiton notes or observations in this document.
+
+## Phase 4
+
+- [ ] Adapt `react-ui-list` `List to` include `List.Viewport`.
+- [ ] Reconcile with `react-primitives/react-list` and `react-ui` `List`.
+- [ ] Port usages of `react-ui-list`.
+- [ ] Factor out styles (hover, selected, etc.)
