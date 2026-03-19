@@ -105,13 +105,13 @@ const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
   );
 };
 
-interface TriggerStatusPopoverProps {
+type TriggerStatusPopoverProps = {
   isRunning: boolean;
   state: TriggerStatusState;
   currentFunctionName?: string;
   lastInvocation?: InvocationsState;
   onToggle: () => void;
-}
+};
 
 const TriggerStatusPopover = ({
   isRunning,
@@ -123,7 +123,7 @@ const TriggerStatusPopover = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className='flex flex-col gap-2 p-2 min-w-[240px]'>
+    <div className='flex flex-col gap-2 p-2 w-[240px]'>
       <Input.Root>
         <div className='flex items-center gap-2'>
           <Input.Switch checked={isRunning} onCheckedChange={onToggle} />

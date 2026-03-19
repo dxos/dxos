@@ -11,7 +11,7 @@ import { useClient } from '@dxos/react-client';
 import { useStream } from '@dxos/react-client/devtools';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { iconSize, mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
 import { createClientSaveTracker, getIcon, getStatus } from '../../components';
@@ -57,7 +57,7 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
         </StatusBar.Item>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content side='left'>
+        <Popover.Content side='left' classNames=''>
           <EdgeConnectionPopover />
           <Popover.Arrow />
         </Popover.Content>
@@ -66,23 +66,18 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
   );
 };
 
-const useEdgeStatus = (): EdgeStatus | undefined => {
+const EdgeConnectionPopover = () => {
+  const { t } = useTranslation(meta.id);
   const client = useClient();
   const { status } = useStream(
     () => client.services.services.EdgeAgentService!.queryEdgeStatus(),
     {} as QueryEdgeStatusResponse,
   );
-  return status;
-};
-
-const EdgeConnectionPopover = () => {
-  const status = useEdgeStatus();
-  const { t } = useTranslation(meta.id);
 
   const isConnected = status?.state === EdgeStatus.ConnectionState.CONNECTED;
 
   return (
-    <div className='min-w-[240px] p-2'>
+    <div className='flex flex-col gap-2 w-[240px] p-2' style={iconSize(4)}>
       {/* Connection Status Header */}
       <div className='flex items-center gap-2 mb-2'>
         <Icon
@@ -96,38 +91,35 @@ const EdgeConnectionPopover = () => {
 
       {/* Connection Details */}
       {status?.state === EdgeStatus.ConnectionState.NOT_CONNECTED && (
-        <div className='flex items-center gap-2 text-sm text-description'>
+        <div className='grid grid-cols-[min-content_1fr_min-content_min-content] gap-2'>
           <Icon icon='ph--cloud-x--regular' />
-          <span>{t('sync no connection label')}</span>
+          <span className='text-description'>{t('sync no connection label')}</span>
         </div>
       )}
 
       {status?.state === EdgeStatus.ConnectionState.CONNECTED && (
-        <div className='space-y-2'>
+        <div className='grid grid-cols-[min-content_1fr_min-content_min-content] gap-2 gap-y-1'>
           {/* Latency */}
-          <div className='flex items-center justify-between text-sm'>
-            <div className='flex items-center gap-2 text-description'>
-              <Icon icon='ph--timer--regular' />
-              <span>{t('sync latency label')}</span>
-            </div>
+          <div className='col-span-full grid grid-cols-subgrid gap-2 items-center text-sm'>
+            <Icon icon='ph--timer--regular' />
+            <span className='text-description'>{t('sync latency label')}</span>
+            <div />
             <UnitValue value={status.rtt} format={Unit.Millisecond} />
           </div>
 
           {/* Upload Speed */}
-          <div className='flex items-center justify-between text-sm'>
-            <div className='flex items-center gap-2 text-description'>
-              <Icon icon='ph--arrow-up--regular' />
-              <span>{t('sync upload label')}</span>
-            </div>
+          <div className='col-span-full grid grid-cols-subgrid gap-2 items-center text-sm'>
+            <Icon icon='ph--arrow-up--regular' classNames='text-green-500' />
+            <span className='text-description'>{t('sync upload label')}</span>
+            <UnitValue value={status.messagesSent} format={Unit.Thousand} />
             <UnitValue value={status.rateBytesUp} format={Unit.Kilobyte} suffix='/s' />
           </div>
 
           {/* Download Speed */}
-          <div className='flex items-center justify-between text-sm'>
-            <div className='flex items-center gap-2 text-sm text-description'>
-              <Icon icon='ph--arrow-down--regular' />
-              <span>{t('sync download label')}</span>
-            </div>
+          <div className='col-span-full grid grid-cols-subgrid gap-2 items-center text-sm'>
+            <Icon icon='ph--arrow-down--regular' classNames='text-orange-500' />
+            <span className='text-description'>{t('sync download label')}</span>
+            <UnitValue value={status.messagesReceived} format={Unit.Thousand} />
             <UnitValue value={status.rateBytesDown} format={Unit.Kilobyte} suffix='/s' />
           </div>
         </div>
