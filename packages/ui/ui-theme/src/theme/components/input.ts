@@ -21,9 +21,7 @@ import {
   staticFocusRing,
   subduedFocus,
 } from '../../fragments';
-import { snapSize, sizeValue, textValence } from '../../util';
-import { computeSize, sizeValue, textValence } from '../../util';
-import { getSize, getHeight, getWidth, mx } from '../../util';
+import { getSize, getHeight, getWidth, mx, snapSize, sizeValue, textValence } from '../../util';
 
 export type InputStyleProps = Partial<{
   variant: 'default' | 'subdued' | 'static';
