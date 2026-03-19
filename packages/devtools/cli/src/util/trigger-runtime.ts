@@ -18,11 +18,9 @@ import { ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
-import { Database, Query } from '@dxos/echo';
 import { type Key } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { functions as blueprintFunctions, toolkits } from './blueprints';
 import { type AiChatServices, chatLayer } from './runtime';
@@ -74,21 +72,10 @@ export const triggerRuntimeLayer = ({
   // Build on top of chat layer, adding trigger-specific services
   return Layer.unwrapEffect(
     Effect.gen(function* () {
-      // Load functions from the database
-      const functionObjects = yield* Database.runQuery(Query.type(Operation.PersistentOperation));
-      const dbFunctions = functionObjects.map((fn) => Operation.deserialize(fn));
-
-      // Merge database functions with blueprint functions
-      const functions = OperationHandlerSet.merge(
-        ...dbFunctions.map((fn) => OperationHandlerSet.make(fn)),
-        blueprintFunctions,
-      );
-
-      // Use the same merged toolkit as chat.
       const toolkit = GenericToolkit.merge(...toolkits);
 
       // Use chat layer as the base (with 'edge' provider since we're using Edge AI service)
-      const baseChatLayer = chatLayer({ provider: 'edge', spaceId, functions });
+      const baseChatLayer = chatLayer({ provider: 'edge', spaceId, functions: blueprintFunctions });
 
       // Add trigger-specific services on top
       // Note: Tool services use the merged toolkit, matching how ChatProcessor.execute() does it
@@ -98,7 +85,7 @@ export const triggerRuntimeLayer = ({
         Layer.provideMerge(TracingService.layerNoop),
         Layer.provideMerge(ToolExecutionServices),
         Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
-        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
+        Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: blueprintFunctions })),
         Layer.provideMerge(baseChatLayer),
       );
     }),

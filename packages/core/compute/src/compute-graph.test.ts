@@ -51,7 +51,7 @@ describe('ComputeGraph', () => {
 
     const trigger = new Trigger();
     graph.update.once(() => trigger.wake());
-    space.db.add(Function.make({ name: 'forex', version: '0.0.1', binding: 'FOREX' }));
+    space.db.add(Obj.make(Operation.PersistentOperation, { name: 'forex', version: '0.0.1', binding: 'FOREX' }));
     await trigger.wait();
 
     const stored = graph.mapFunctionBindingToId('=FOREX(C6,C7)');

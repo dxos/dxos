@@ -18,22 +18,6 @@ const Forex = Operation.make({
     to: Schema.String.annotations({ description: 'The target currency' }),
   }),
   output: Schema.Any,
-  handler: async ({ data: { from: rawFrom, to: rawTo } }) => {
-    const from = rawFrom.toUpperCase();
-    const to = rawTo.toUpperCase();
-    const res = yield* Effect.promise(() => fetch(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`));
-    if (!res.ok) {
-      throw new Error(`Rates API returned ${res.status}: ${res.statusText}`);
-    }
-
-    const json = yield* Effect.promise(() => res.json());
-    const rate = json?.data?.rates?.[to];
-    if (rate == null) {
-      throw new Error(`No rate found for ${from} -> ${to}`);
-    }
-
-    return rate.toString();
-  },
 });
 
 export default Forex.pipe(

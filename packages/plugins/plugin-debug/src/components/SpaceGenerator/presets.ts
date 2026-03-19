@@ -4,11 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AgentFunctions, EntityExtractionFunctions, ResearchBlueprint } from '@dxos/assistant-toolkit';
+import { AgentPrompt, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
-import { Trigger, serializeFunction } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { GmailFunctions } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
@@ -138,7 +139,7 @@ export const generator = () => ({
                 kind: 'timer',
                 cron: '* * * * *', // Every minute.
               },
-              function: Ref.make(serializeFunction(GmailFunctions.Sync)),
+              function: Ref.make(Operation.serialize(GmailFunctions.Sync)),
               input: {
                 mailbox: Ref.make(mailbox),
               },
@@ -153,7 +154,7 @@ export const generator = () => ({
                 kind: 'queue',
                 queue: queueDxn,
               },
-              function: Ref.make(serializeFunction(EntityExtractionFunctions.Extract)),
+              function: Ref.make(Operation.serialize(EntityExtraction)),
               input: {
                 source: '{{event.item}}',
               },
@@ -189,7 +190,7 @@ export const generator = () => ({
                   ast: organizationsQuery.ast,
                 },
               },
-              function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
+              function: Ref.make(Operation.serialize(AgentPrompt)),
               input: {
                 prompt: Ref.make(researchPrompt),
                 input: '{{event.subject}}',
