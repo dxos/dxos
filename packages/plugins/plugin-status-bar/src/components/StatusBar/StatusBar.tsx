@@ -5,8 +5,38 @@
 import { Slot } from '@radix-ui/react-slot';
 import React, { type ComponentPropsWithRef, type PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { IconButton, Tooltip, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+//
+// Item
+//
+
+type StatusBarItemProps = ThemedClassName<PropsWithChildren<{ label?: string }>>;
+
+const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
+  ({ classNames, children, label, ...props }, forwardedRef) => {
+    // if (label) {
+    //   return (
+    //     <Tooltip.Provider>
+    //       <Tooltip.Trigger asChild content={label} side='left'>
+    //         <IconButton icon='ph--circle--regular' iconOnly label='xx' />
+    //       </Tooltip.Trigger>
+    //     </Tooltip.Provider>
+    //   );
+    // }
+
+    return (
+      <div {...props} role='status' className={mx('grid place-items-center', classNames)} ref={forwardedRef}>
+        {children}
+      </div>
+    );
+  },
+);
+
+//
+// Text
+//
 
 //
 // Item
