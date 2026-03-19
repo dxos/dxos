@@ -16,12 +16,13 @@ export default RemoveVoxels.pipe(
     Effect.fn(function* ({ world, positions }) {
       const loaded = (yield* Database.load(world)) as Voxel.World;
       let removed = 0;
-      Obj.change(loaded, (obj: Voxel.World) => {
+      Obj.change(loaded, (obj) => {
         if (obj.voxels) {
+          const voxelMap = obj.voxels as Obj.Mutable<typeof obj.voxels>;
           for (const position of positions) {
             const key = Voxel.voxelKey(position.x, position.y, position.z);
-            if (key in obj.voxels) {
-              delete obj.voxels[key];
+            if (key in voxelMap) {
+              delete voxelMap[key];
               removed++;
             }
           }
