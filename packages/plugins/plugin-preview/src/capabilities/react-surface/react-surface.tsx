@@ -12,7 +12,7 @@ import { Card } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../../cards';
+import { FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../../cards';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>
@@ -82,6 +82,16 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Obj.Unknown; projection?: ProjectionModel } => Obj.isObject(data.subject),
         component: ({ data, role }) => {
           return <FormCard role={role} subject={data.subject} projection={data.projection} />;
+        },
+      }),
+
+      Surface.create({
+        id: `${meta.id}.fallback-json`,
+        role: 'card--content',
+        position: 'fallback',
+        filter: (data): data is Record<string, unknown> => true,
+        component: ({ data }) => {
+          return <JsonCard data={data} />;
         },
       }),
 
