@@ -23,8 +23,8 @@ import { Blueprint } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
-import { type OperationHandlerSet } from '@dxos/operation';
 import { log } from '@dxos/log';
+import { type OperationHandlerSet } from '@dxos/operation';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 

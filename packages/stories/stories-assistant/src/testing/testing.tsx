@@ -25,7 +25,14 @@ import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-fram
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
-import { AgentHandlers, DesignBlueprint, MarkdownBlueprint, PlanningBlueprint } from '@dxos/assistant-toolkit';
+import {
+  AgentHandlers,
+  DesignBlueprint,
+  MarkdownBlueprint,
+  MarkdownHandlers,
+  PlanningBlueprint,
+  PlanningHandlers,
+} from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
@@ -293,9 +300,8 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
         Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, DesignBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
-        Capability.contributes(AppCapabilities.Functions, MarkdownBlueprint.operations),
-        Capability.contributes(AppCapabilities.Functions, DesignBlueprint.operations),
-        Capability.contributes(AppCapabilities.Functions, PlanningBlueprint.operations),
+        Capability.contributes(AppCapabilities.Functions, MarkdownHandlers),
+        Capability.contributes(AppCapabilities.Functions, PlanningHandlers),
         Capability.contributes(AppCapabilities.Functions, AgentHandlers),
         Capability.contributes(AppCapabilities.Functions, ExampleHandlers),
       ]),

@@ -15,12 +15,12 @@ import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { type Database, Feed, type Key } from '@dxos/echo';
 import { CredentialsService, type FunctionInvocationService, type QueueService, TracingService } from '@dxos/functions';
-import { type OperationHandlerSet } from '@dxos/operation';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   RemoteFunctionExecutionService,
 } from '@dxos/functions-runtime';
+import { type OperationHandlerSet } from '@dxos/operation';
 
 // TODO(burdon): Factor out (see plugin-assistant/processor.ts)
 export type AiChatServices =
