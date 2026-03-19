@@ -32,10 +32,12 @@ External packages importing fragment definitions from `ui-theme/src/fragments`.
 
 **Total fragments:** 21
 **Total imports (external + internal):** 96
+
 - **External:** 63
 - **Internal:** 33
 
 **Most imported overall:**
+
 - `hoverableControls` (9 external)
 - `hoverableFocusedWithinControls` (9 external)
 - `ghostHover` (8 external + 2 internal = 10 total)
@@ -43,12 +45,14 @@ External packages importing fragment definitions from `ui-theme/src/fragments`.
 - `focusRing` (2 external + 5 internal = 7 total)
 
 **Internal imports by file:**
+
 - `input.ts`: 8 definitions (coarseBlockSize, coarseDimensions, fineBlockSize, fineDimensions, focusRing, staticDisabled, staticFocusRing, subduedFocus)
 - `list.ts`: 3 definitions (densityBlockSize, focusRing, ghostHover)
 - `menu.ts`: 2 definitions (dataDisabled, subduedFocus)
 - `button.ts`, `link.ts`, `popover.ts`, `toast.ts`: 1 definition each (ghostHover, focusRing, focusRing, focusRing)
 
 **Completely unused:** 7 fragments
+
 - `subtleHover` from `hover.ts`
 - `hoverableOpenControlItem`, `groupHoverControlItemWithTransition` from `hover.ts` (only 2-3 uses)
 - `descriptionTextPrimary` from `text.ts` (only 1 use)
