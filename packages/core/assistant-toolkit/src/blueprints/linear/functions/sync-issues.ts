@@ -78,33 +78,30 @@ export const LINEAR_UPDATED_AT_KEY = 'linear.app/updatedAt';
 
 export default SyncIssues.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(
-      function* ({ team }) {
-        const credential = yield* CredentialsService.getCredential({ service: 'linear.app' });
-        const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(credential.apiKey!)));
+    Effect.fnUntraced(function* ({ team }) {
+      const credential = yield* CredentialsService.getCredential({ service: 'linear.app' });
+      const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(credential.apiKey!)));
 
-        const after = yield* getLatestUpdateTimestamp(team, Task.Task);
-        log.info('will fetch', { after });
+      const after = yield* getLatestUpdateTimestamp(team, Task.Task);
+      log.info('will fetch', { after });
 
-        const response = yield* client.post('https://api.linear.app/graphql', {
-          body: yield* graphqlRequestBody(queryIssues, {
-            teamId: team,
-            after,
-          }),
-        });
-        const json: any = yield* response.json;
-        const tasks = (json.data.team.issues.edges as any[]).map((edge: any) =>
-          mapLinearIssue(edge.node as LinearIssue, { teamId: team }),
-        );
-        log.info('Fetched tasks', { count: tasks.length });
+      const response = yield* client.post('https://api.linear.app/graphql', {
+        body: yield* graphqlRequestBody(queryIssues, {
+          teamId: team,
+          after,
+        }),
+      });
+      const json: any = yield* response.json;
+      const tasks = (json.data.team.issues.edges as any[]).map((edge: any) =>
+        mapLinearIssue(edge.node as LinearIssue, { teamId: team }),
+      );
+      log.info('Fetched tasks', { count: tasks.length });
 
-        return {
-          objects: yield* syncObjects(tasks, { foreignKeyId: LINEAR_ID_KEY }),
-          syncComplete: tasks.length < 150,
-        };
-      },
-      Effect.provide(FetchHttpClient.layer),
-    ),
+      return {
+        objects: yield* syncObjects(tasks, { foreignKeyId: LINEAR_ID_KEY }),
+        syncComplete: tasks.length < 150,
+      };
+    }, Effect.provide(FetchHttpClient.layer)),
   ),
 );
 

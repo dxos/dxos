@@ -14,11 +14,11 @@ Blueprints define AI toolkits for a domain (e.g. markdown, kanban). They combine
 
 A blueprint has three parts:
 
-| Field        | Type                              | Purpose                                                |
-| ------------ | --------------------------------- | ------------------------------------------------------ |
-| `key`        | `string`                          | Globally unique key (reverse-domain style).             |
+| Field        | Type                                      | Purpose                                                 |
+| ------------ | ----------------------------------------- | ------------------------------------------------------- |
+| `key`        | `string`                                  | Globally unique key (reverse-domain style).             |
 | `operations` | `OperationHandlerSet.OperationHandlerSet` | Handler set for runtime invocation.                     |
-| `make`       | `() => Blueprint.Blueprint`       | Factory that creates the Blueprint instance with tools. |
+| `make`       | `() => Blueprint.Blueprint`               | Factory that creates the Blueprint instance with tools. |
 
 Example (see `packages/plugins/plugin-markdown/src/blueprints/markdown-blueprint.ts`):
 
@@ -139,8 +139,10 @@ To invoke an operation directly:
 import { FunctionInvocationService } from '@dxos/functions';
 import { Create } from './definitions';
 
-const result = yield* FunctionInvocationService.invokeFunction(Create, {
-  name: 'My Doc',
-  content: 'Hello world.',
-});
+const result =
+  yield *
+  FunctionInvocationService.invokeFunction(Create, {
+    name: 'My Doc',
+    content: 'Hello world.',
+  });
 ```

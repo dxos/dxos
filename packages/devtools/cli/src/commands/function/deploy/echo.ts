@@ -19,7 +19,12 @@ import { Operation } from '@dxos/operation';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 
-export const DATA_TYPES: Type.AnyEntity[] = [Operation.PersistentOperation, Script.Script, Collection.Collection, Text.Text];
+export const DATA_TYPES: Type.AnyEntity[] = [
+  Operation.PersistentOperation,
+  Script.Script,
+  Collection.Collection,
+  Text.Text,
+];
 
 export const getNextVersion = (fnObject: Option.Option<Operation.PersistentOperation>) => {
   return Option.match(fnObject, {
@@ -28,17 +33,22 @@ export const getNextVersion = (fnObject: Option.Option<Operation.PersistentOpera
   });
 };
 
-export const loadFunctionObject: (space: Space, functionId: string) => Effect.Effect<Operation.PersistentOperation, Error, never> =
-  Effect.fn(function* (space: Space, functionId: string) {
-    // TODO(wittjosiah): Derive Database.Service from ClientService.
-    const functions = yield* Effect.tryPromise(() => space.db.query(Filter.type(Operation.PersistentOperation)).run());
-    const functionObject = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
-    if (!functionObject) {
-      return yield* Effect.fail(new Error(`Function ECHO object not found for ${functionId}`));
-    }
+export const loadFunctionObject: (
+  space: Space,
+  functionId: string,
+) => Effect.Effect<Operation.PersistentOperation, Error, never> = Effect.fn(function* (
+  space: Space,
+  functionId: string,
+) {
+  // TODO(wittjosiah): Derive Database.Service from ClientService.
+  const functions = yield* Effect.tryPromise(() => space.db.query(Filter.type(Operation.PersistentOperation)).run());
+  const functionObject = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
+  if (!functionObject) {
+    return yield* Effect.fail(new Error(`Function ECHO object not found for ${functionId}`));
+  }
 
-    return functionObject;
-  });
+  return functionObject;
+});
 
 /**
  * @deprecated

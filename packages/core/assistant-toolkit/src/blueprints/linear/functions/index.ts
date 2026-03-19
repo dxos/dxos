@@ -6,6 +6,4 @@ import { OperationHandlerSet } from '@dxos/operation';
 
 export * from './definitions';
 
-export const LinearHandlers = OperationHandlerSet.lazy(
-  () => import('./sync-issues'),
-);
+export const LinearHandlers = OperationHandlerSet.lazy(() => import('./sync-issues'));

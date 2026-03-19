@@ -30,5 +30,12 @@ export const AgentPrompt = Operation.make({
     input: Schema.Any.pipe(Schema.annotations({ title: 'Input' })),
   }),
   output: Schema.Any,
-  services: [AiService.AiService, Database.Service, TracingService, ToolExecutionService, ToolResolverService, FunctionInvocationService],
+  services: [
+    AiService.AiService,
+    Database.Service,
+    TracingService,
+    ToolExecutionService,
+    ToolResolverService,
+    FunctionInvocationService,
+  ],
 });

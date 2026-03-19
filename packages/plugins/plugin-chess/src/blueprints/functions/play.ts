@@ -23,7 +23,9 @@ export default Play.pipe(
         chess.load(object.fen);
       }
 
-      if (!(side === 'any' || (chess.turn() === 'w' && side === 'white') || (chess.turn() === 'b' && side === 'black'))) {
+      if (
+        !(side === 'any' || (chess.turn() === 'w' && side === 'white') || (chess.turn() === 'b' && side === 'black'))
+      ) {
         return { move: undefined, pgn: object.pgn! };
       }
 

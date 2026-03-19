@@ -15,7 +15,8 @@ export namespace LocalFilesOperation {
   export const SelectRoot = Operation.make({
     meta: { key: `${FILES_OPERATION}.select-root`, name: 'Select Root Directory' },
     services: [Capability.Service],
-    input: Schema.Void, output: Schema.Void,
+    input: Schema.Void,
+    output: Schema.Void,
   });
 
   export const Export = Operation.make({

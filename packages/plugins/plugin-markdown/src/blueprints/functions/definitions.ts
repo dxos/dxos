@@ -70,8 +70,7 @@ export const Update = Operation.make({
       description: 'The ID of the markdown document.',
     }),
     edits: Schema.Array(Edit).annotations({
-      description:
-        'The edits to apply to the document. Each edit finds oldString and replaces it with newString.',
+      description: 'The edits to apply to the document. Each edit finds oldString and replaces it with newString.',
     }),
   }),
   output: Schema.Struct({

@@ -150,7 +150,7 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
   Context.Tag.Identifier<NonNullable<P['services']>[number]>
 > => {
   return {
-    [DefinitionTypeId]: { },
+    [DefinitionTypeId]: {},
     ...props,
     executionMode: props.executionMode ?? 'async',
     types: props.types ?? [],

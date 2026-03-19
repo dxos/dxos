@@ -101,11 +101,7 @@ export const syncProjectTriggers = (project: Project.Project): Effect.Effect<voi
             kind: 'queue',
             queue: queueDxn.toString(),
           },
-          function: Ref.make(
-            Operation.serialize(
-              project.useQualifyingAgent ? Qualifier : Agent,
-            ),
-          ),
+          function: Ref.make(Operation.serialize(project.useQualifyingAgent ? Qualifier : Agent)),
           input: {
             project: Ref.make(project),
             event: '{{event}}',

@@ -73,7 +73,11 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
   return (
     <Settings.Container>
       {functions.length > 0 && (
-        <List.Root<Operation.PersistentOperation> items={functions} isItem={Schema.is(Operation.PersistentOperation)} getId={(func) => func.id}>
+        <List.Root<Operation.PersistentOperation>
+          items={functions}
+          isItem={Schema.is(Operation.PersistentOperation)}
+          getId={(func) => func.id}
+        >
           {({ items }) => (
             <div role='list' className='flex flex-col w-full'>
               {items?.map((func) => (

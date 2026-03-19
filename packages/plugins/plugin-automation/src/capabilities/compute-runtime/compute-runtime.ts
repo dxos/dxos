@@ -109,7 +109,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             ),
           ),
           Layer.provideMerge(
-              FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
+            FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
               Layer.provideMerge(genericToolkitProvider),
               Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: operationHandlers })),
               Layer.provideMerge(

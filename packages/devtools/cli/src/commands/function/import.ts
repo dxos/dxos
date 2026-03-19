@@ -51,7 +51,9 @@ export const importCommand = Command.make(
       }
 
       // Query database for existing functions with the same key
-      const existingFunctions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation, { key: selectedKey }));
+      const existingFunctions = yield* Database.runQuery(
+        Filter.type(Operation.PersistentOperation, { key: selectedKey }),
+      );
 
       let updatedFunctions: Operation.PersistentOperation[];
       if (existingFunctions.length > 0) {

@@ -16,4 +16,7 @@ export const GmailFunctions: {
   Sync,
 };
 
-export const GmailHandlers = OperationHandlerSet.lazy(() => import('./send'), () => import('./sync'));
+export const GmailHandlers = OperationHandlerSet.lazy(
+  () => import('./send'),
+  () => import('./sync'),
+);

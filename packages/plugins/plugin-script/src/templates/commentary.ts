@@ -158,7 +158,9 @@ export default Commentary.pipe(
         if (docs.length === 0) {
           // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
           const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.space-properties'));
-          const rootCollection = yield* Database.load<Collection.Collection>(properties[Collection.Collection.typename]);
+          const rootCollection = yield* Database.load<Collection.Collection>(
+            properties[Collection.Collection.typename],
+          );
 
           log.info('rootCollection', { rootCollection });
 

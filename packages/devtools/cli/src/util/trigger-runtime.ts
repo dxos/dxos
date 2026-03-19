@@ -79,7 +79,10 @@ export const triggerRuntimeLayer = ({
       const dbFunctions = functionObjects.map((fn) => Operation.deserialize(fn));
 
       // Merge database functions with blueprint functions
-      const functions = OperationHandlerSet.merge(...dbFunctions.map((fn) => OperationHandlerSet.make(fn)), blueprintFunctions);
+      const functions = OperationHandlerSet.merge(
+        ...dbFunctions.map((fn) => OperationHandlerSet.make(fn)),
+        blueprintFunctions,
+      );
 
       // Use the same merged toolkit as chat.
       const toolkit = GenericToolkit.merge(...toolkits);

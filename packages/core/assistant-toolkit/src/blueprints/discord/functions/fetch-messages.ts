@@ -64,9 +64,7 @@ export default FetchMessages.pipe(
         if (!after && !last) {
           throw new Error('cannot specify both `after` and `last`');
         }
-        const afterTs = last
-          ? Date.now() / 1000 - TimeRange.toSeconds(last)
-          : (after ?? DEFAULT_AFTER);
+        const afterTs = last ? Date.now() / 1000 - TimeRange.toSeconds(last) : (after ?? DEFAULT_AFTER);
 
         const rest = yield* DiscordREST;
 

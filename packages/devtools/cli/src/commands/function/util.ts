@@ -16,7 +16,10 @@ export type FunctionStatus = 'not imported' | 'up-to-date' | 'update available';
 /**
  * Determines the status of a deployed function relative to the space database.
  */
-export const getFunctionStatus = (fn: Operation.PersistentOperation, functions: Operation.PersistentOperation[]): FunctionStatus => {
+export const getFunctionStatus = (
+  fn: Operation.PersistentOperation,
+  functions: Operation.PersistentOperation[],
+): FunctionStatus => {
   const dbFunction = functions.find((f) => f.key === fn.key);
   if (!dbFunction) {
     return 'not imported';

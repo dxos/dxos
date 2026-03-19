@@ -311,7 +311,8 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
     filteredTriggers.map((trigger) =>
       Effect.gen(function* () {
         const fn = trigger.function ? yield* Database.load(trigger.function) : undefined;
-        const functionName = fn && Obj.instanceOf(Operation.PersistentOperation, fn) ? (fn.name ?? fn.key ?? fn.id) : undefined;
+        const functionName =
+          fn && Obj.instanceOf(Operation.PersistentOperation, fn) ? (fn.name ?? fn.key ?? fn.id) : undefined;
         const title = functionName ?? trigger.id;
         const description = `${trigger.enabled ? 'enabled' : 'disabled'} - ${trigger.spec?.kind ?? 'unknown'}`;
 

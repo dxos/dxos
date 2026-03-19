@@ -75,9 +75,7 @@ export default EntityExtraction.pipe(
           AiService.model('@anthropic/claude-sonnet-4-0'), // TODO(dmaretskyi): Extract.
           ToolExecutionServices,
           FunctionInvocationService.layerNotAvailable,
-        ).pipe(
-          Layer.provide(GenericToolkit.providerEmpty),
-        ),
+        ).pipe(Layer.provide(GenericToolkit.providerEmpty)),
       ),
     ),
   ),

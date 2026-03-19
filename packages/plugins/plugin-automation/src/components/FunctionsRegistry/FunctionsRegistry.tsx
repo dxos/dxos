@@ -51,7 +51,9 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
 
   const hanleImportOrUpdate = useCallback(
     async (func: OperationModule.Operation.PersistentOperation) => {
-      const functions = await space.db.query(Query.type(OperationModule.Operation.PersistentOperation, { key: func.key })).run();
+      const functions = await space.db
+        .query(Query.type(OperationModule.Operation.PersistentOperation, { key: func.key }))
+        .run();
       const [existingFunc] = functions;
       if (!existingFunc) {
         space.db.add(func);
@@ -65,7 +67,11 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
   return (
     <Settings.Container>
       {functions.length > 0 && (
-        <List.Root<OperationModule.Operation.PersistentOperation> items={functions} isItem={Schema.is(OperationModule.Operation.PersistentOperation)} getId={(func) => func.id}>
+        <List.Root<OperationModule.Operation.PersistentOperation>
+          items={functions}
+          isItem={Schema.is(OperationModule.Operation.PersistentOperation)}
+          getId={(func) => func.id}
+        >
           {({ items }) => (
             <div role='list' className='flex flex-col w-full'>
               {items?.map((func) => (

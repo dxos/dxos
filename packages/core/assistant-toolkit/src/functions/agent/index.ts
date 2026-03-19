@@ -6,6 +6,4 @@ import { OperationHandlerSet } from '@dxos/operation';
 
 export * from './definitions';
 
-export const AgentHandlers = OperationHandlerSet.lazy(
-  () => import('./prompt'),
-);
+export const AgentHandlers = OperationHandlerSet.lazy(() => import('./prompt'));

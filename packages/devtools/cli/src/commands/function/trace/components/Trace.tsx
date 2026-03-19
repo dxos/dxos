@@ -163,7 +163,10 @@ const formatStatus = (outcome?: InvocationOutcome): string => {
 };
 
 // Effect: Query for Function objects to resolve target names.
-const useFunctionQuery = (db: Database.Database, setFunctions: (functions: Operation.PersistentOperation[]) => void) => {
+const useFunctionQuery = (
+  db: Database.Database,
+  setFunctions: (functions: Operation.PersistentOperation[]) => void,
+) => {
   createEffect(() => {
     const functionsQuery = db.query(Filter.type(Operation.PersistentOperation));
     const update = () => {

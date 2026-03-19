@@ -11,4 +11,3 @@ export const MarkdownHandlers = OperationHandlerSet.lazy(
   () => import('./open'),
   () => import('./update'),
 );
-

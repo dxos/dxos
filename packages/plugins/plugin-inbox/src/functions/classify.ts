@@ -69,7 +69,9 @@ export default Classify.pipe(
 
         log.info('selected tag label', { selectedTagLabel });
 
-        const selectedTag = tags.find((tag) => tag.label.toLowerCase().trim() === selectedTagLabel.toLowerCase().trim());
+        const selectedTag = tags.find(
+          (tag) => tag.label.toLowerCase().trim() === selectedTagLabel.toLowerCase().trim(),
+        );
 
         if (!selectedTag) {
           return yield* Effect.fail(new Error(`Tag not found: ${selectedTagLabel}`));

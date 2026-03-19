@@ -27,8 +27,7 @@ export const QueryWorld = Operation.make({
   meta: {
     key: 'dxos.org/function/voxel/query-world',
     name: 'Query world',
-    description:
-      'Returns the current state of the voxel world including all voxels, grid dimensions, and block size.',
+    description: 'Returns the current state of the voxel world including all voxels, grid dimensions, and block size.',
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotations({

@@ -33,7 +33,6 @@ const add = AddDefinition.pipe(
 );
 
 describe('ComputeGraphRegistry', () => {
-
   test('invokes user function through compute graph', async () => {
     const computeRuntime = createMockedComputeRuntimeProvider({
       functions: OperationHandlerSet.make(add),

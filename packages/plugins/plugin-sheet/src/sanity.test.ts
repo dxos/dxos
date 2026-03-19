@@ -34,7 +34,9 @@ describe('test', () => {
     //  - ERROR "process.nextTick is not a function"
     //  - ERROR "Identifier 'Buffer' has already been declared" if { nodeExternal: true }
     const space = await client.spaces.create();
-    const fn = space.db.add(Obj.make(Operation.PersistentOperation, { name: 'test', version: '0.0.1', binding: 'HELLO' }));
+    const fn = space.db.add(
+      Obj.make(Operation.PersistentOperation, { name: 'test', version: '0.0.1', binding: 'HELLO' }),
+    );
     expect(fn).to.exist;
   });
 });

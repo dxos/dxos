@@ -156,7 +156,8 @@ const getWorkflowOptions = (graphs: ComputeGraph[]) => {
 };
 
 const getFunctionOptions = (scripts: Script.Script[], functions: Operation.PersistentOperation[]) => {
-  const getLabel = (fn: Operation.PersistentOperation) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
+  const getLabel = (fn: Operation.PersistentOperation) =>
+    scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
   return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
 };
 
