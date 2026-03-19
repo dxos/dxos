@@ -41,7 +41,7 @@ export const setup = async (config: Config) => {
 };
 
 export const sync = async (space: Space) => {
-  await space.db.flush({ indexes: true });
+  await space.db.flush();
   await space.internal.syncToEdge({
     onProgress: (state) =>
       console.log(state ? `${state.unsyncedDocumentCount} documents syncing...` : 'connecting to edge...'),

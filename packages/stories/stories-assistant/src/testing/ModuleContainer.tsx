@@ -2,48 +2,42 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type FC, useCallback } from 'react';
+import React, { type FC, useCallback, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { translations, useContextBinder } from '@dxos/plugin-assistant';
 import { Assistant } from '@dxos/plugin-assistant/types';
-import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
+import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
+import { Loading } from '@dxos/react-ui/testing';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
 
-import { ChatModule, type ComponentProps } from '../components';
-import { config, getDecorators } from '../testing';
+import { type ComponentProps, ContextModule } from '../components';
 
-const panelClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden';
-
-type StoryProps = {
+export type ModuleContainerProps = {
   modules: FC<ComponentProps>[][];
   blueprints?: string[];
   showContext?: boolean;
 };
 
-const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
-  const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
+export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showContext }: ModuleContainerProps) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
-
+  const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
   const space = useSpace();
+
   useAsyncEffect(async () => {
     if (!space) {
       return;
     }
 
     const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
-    const chat = chats[0];
+    const chat = chats.at(-1);
     if (!chat) {
       return;
     }
@@ -67,9 +61,10 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
     log.info('event', { event });
   }, []);
 
-  const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
-  const binder = useContextBinder(chats.at(-1)?.queue.target);
-  const objects = binder?.getObjects() ?? [];
+  // TODO(burdon): Prop to add DatabaseModule?
+  const modules = useMemo(() => {
+    return [...modulesProp, ...(showContext ? [[ContextModule]] : [])];
+  }, [modulesProp, showContext]);
 
   if (!space) {
     return <Loading data={{ space: !!space }} />;
@@ -80,12 +75,12 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
       orientation='horizontal'
       size='split'
       rail={false}
-      itemsCount={modules.length + (showContext ? 1 : 0)}
+      itemsCount={modules.length}
       classNames='absolute inset-0 gap-(--stack-gap)'
     >
       {modules.map((Components, i) => {
         return (
-          <StackItem.Root key={i} item={{ id: `${i}` }}>
+          <StackItem.Root key={i} item={{ id: `column-${i}` }}>
             <Stack
               orientation='vertical'
               classNames='gap-(--stack-gap)'
@@ -94,7 +89,11 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
               rail={false}
             >
               {Components.map((Component, i) => (
-                <StackItem.Root key={i} item={{ id: `${i}` }} classNames={panelClassNames}>
+                <StackItem.Root
+                  key={i}
+                  item={{ id: `module-${i}` }}
+                  classNames='bg-base-surface rounded-xs border border-separator overflow-hidden'
+                >
                   <Component space={space} onEvent={handleEvent} />
                 </StackItem.Root>
               ))}
@@ -102,50 +101,6 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => 
           </StackItem.Root>
         );
       })}
-
-      {showContext && <StackContainer objects={objects} />}
     </Stack>
   );
-};
-
-const StackContainer = ({ objects }: { objects: Obj.Any[] }) => {
-  return (
-    <Stack
-      orientation='vertical'
-      classNames='gap-(--stack-gap)'
-      size='contain'
-      rail={false}
-      itemsCount={objects.length}
-    >
-      {objects.map((object) => (
-        <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
-          <Surface.Surface role='section' limit={1} data={{ subject: object }} />
-        </StackItem.Root>
-      ))}
-    </Stack>
-  );
-};
-
-const storybook: Meta<typeof DefaultStory> = {
-  title: 'stories/stories-assistant/Projects',
-  render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  parameters: {
-    layout: 'fullscreen',
-    translations,
-  },
-};
-
-export default storybook;
-
-type Story = StoryObj<typeof storybook>;
-
-export const Default: Story = {
-  decorators: getDecorators({
-    plugins: [MarkdownPlugin()],
-    config: config.remote,
-  }),
-  args: {
-    modules: [[ChatModule]],
-  },
 };

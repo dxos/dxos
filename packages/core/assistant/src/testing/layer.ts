@@ -15,6 +15,7 @@ import { TracingServiceExt, TriggerDispatcher, TriggerStateStore } from '@dxos/f
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
 import { ToolExecutionServices } from '../functions';
+import { Blueprint } from '@dxos/blueprints';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
@@ -22,6 +23,7 @@ interface TestLayerOptions {
   functions?: FunctionDefinition.Any[];
   toolkits?: GenericToolkit.GenericToolkit[];
   types?: Type.AnyEntity[];
+  blueprints?: Blueprint.Blueprint[];
   credentials?: ServiceCredential[];
   /*
    * Tracing configuration.
@@ -41,9 +43,14 @@ export const AssistantTestLayer = ({
   credentials = [],
   tracing = 'noop',
   disableLlmMemoization = false,
+  blueprints = [],
 }: TestLayerOptions = {}) => {
   const toolkit = GenericToolkit.merge(...toolkits);
-  return Layer.mergeAll(AiService.model(model), ToolExecutionServices).pipe(
+  return Layer.mergeAll(
+    AiService.model(model),
+    ToolExecutionServices,
+    Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
+  ).pipe(
     Layer.provideMerge(
       FunctionInvocationServiceLayerTest({
         functions,

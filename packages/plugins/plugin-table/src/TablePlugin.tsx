@@ -4,9 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Option from 'effect/Option';
+
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Type } from '@dxos/echo';
+import { Annotation, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
@@ -26,8 +28,8 @@ export const TablePlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Type.getTypename(Table.Table),
       metadata: {
-        icon: 'ph--table--regular',
-        iconHue: 'green',
+        icon: Annotation.IconAnnotation.get(Table.Table).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Table.Table).pipe(Option.getOrThrow).hue ?? 'white',
         comments: 'unanchored',
         inputSchema: CreateTableSchema,
         createObject: ((props, { db }) =>

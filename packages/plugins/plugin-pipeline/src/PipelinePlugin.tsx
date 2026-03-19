@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { Pipeline } from '@dxos/types';
 
@@ -19,8 +21,8 @@ export const PipelinePlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Pipeline.Pipeline.typename,
       metadata: {
-        icon: 'ph--path--regular',
-        iconHue: 'purple',
+        icon: Annotation.IconAnnotation.get(Pipeline.Pipeline).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Pipeline.Pipeline).pipe(Option.getOrThrow).hue ?? 'white',
         createObject: ((props) => Effect.sync(() => Pipeline.make(props))) satisfies CreateObject,
       },
     },

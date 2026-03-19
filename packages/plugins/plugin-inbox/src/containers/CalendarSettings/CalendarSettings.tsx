@@ -20,27 +20,6 @@ export const CalendarSettings = ({ subject }: SurfaceComponentProps<Calendar.Cal
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
-  const calendarSchema = useMemo(() => omitId(Calendar.Calendar), []);
-
-  const handleChange = useCallback(
-    (values: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
-      if (!isValid) {
-        return;
-      }
-
-      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
-      if (changedPaths.length > 0) {
-        Obj.change(subject, () => {
-          for (const path of changedPaths) {
-            const parts = splitJsonPath(path);
-            const value = Obj.getValue(values, parts);
-            Obj.setValue(subject, parts, value);
-          }
-        });
-      }
-    },
-    [subject],
-  );
 
   const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
     db,
@@ -60,13 +39,6 @@ export const CalendarSettings = ({ subject }: SurfaceComponentProps<Calendar.Cal
 
   return (
     <div className='flex flex-col gap-4'>
-      <Form.Root schema={calendarSchema} values={subject} db={db} onValuesChanged={handleChange}>
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
       <h2>{t('calendar sync label')}</h2>
       <div className='p-1 flex flex-row gap-1'>
         <ButtonGroup>

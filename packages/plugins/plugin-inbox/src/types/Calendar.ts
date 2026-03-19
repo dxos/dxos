@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
@@ -27,6 +27,10 @@ export const Calendar = Schema.Struct({
     version: '0.1.0',
   }),
   FeedAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--calendar--regular',
+    hue: 'rose',
+  }),
 );
 
 export interface Calendar extends Schema.Schema.Type<typeof Calendar> {}

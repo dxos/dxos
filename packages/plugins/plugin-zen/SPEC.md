@@ -7,7 +7,7 @@
 
 - `Dream` is the primary ECHO type with properties: `name`, `duration`, `soundtrack`.
 - `soundtrack` is a string enum selecting from bundled sound files.
-- `duration` is the playback duration in minutes.
+- `duration` is the playback duration in seconds.
 
 ## Phase 1 (Shell)
 

@@ -200,16 +200,16 @@ const useMenu = (consumerName: string): MenuContextValue => {
 // Menu.Root
 //
 
-type MenuRootProps = PropsWithChildren<
-  Omit<MenuProviderProps, 'children'> &
-    Pick<DropdownMenuRootProps, 'open' | 'defaultOpen' | 'onOpenChange'> & {
-      /** Identifies the component that owns this menu (passed to action handlers). */
-      caller?: string;
-    }
->;
+type MenuRootProps = MenuProviderProps &
+  Pick<DropdownMenuRootProps, 'children' | 'open' | 'defaultOpen' | 'onOpenChange'> & {
+    /** Identifies the component that owns this menu (passed to action handlers). */
+    caller?: string;
+  };
 
 /**
  * Menu context boundary.
+ *
+ * NOTE: This component is headless since it's root div has `contents`.
  *
  * Provides the menu context (action dispatch, contribution registry, icon size, etc.)
  * and an optional dropdown root for use with `Menu.Trigger` + `Menu.Content`.

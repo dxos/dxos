@@ -17,7 +17,7 @@ export type StreamerOptions = {
 };
 
 /**
- * Extension that adds a blinking cursor widget at the end of the document.
+ * Extension that animates streaming content.
  */
 export const streamer = (options: StreamerOptions = {}): Extension => {
   return [

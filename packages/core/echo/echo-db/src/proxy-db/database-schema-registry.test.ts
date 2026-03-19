@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { sleep } from '@dxos/async';
 import { JsonSchema, Obj, Type } from '@dxos/echo';
 import { Filter } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo/internal';
@@ -159,6 +160,30 @@ describe('schema registry', () => {
     expect(retrieved.map(Type.getTypename)).toEqual(['com.example.type.person']);
   });
 
+  test('reactive query updates when runtime schemas are registered', async () => {
+    const { registry, db } = await setupTest();
+
+    const queryResult = registry.query({ location: ['database', 'runtime'] });
+
+    let updateCount = 0;
+    let latestResults: Type.AnyEntity[] = [];
+    const unsubscribe = queryResult.subscribe(() => {
+      updateCount++;
+      latestResults = queryResult.results;
+    });
+
+    // Allow the reactive query to start (deferred via queueMicrotask).
+    await sleep(10);
+
+    // Register a runtime schema after the query is already subscribed.
+    await db.graph.schemaRegistry.register([Organization]);
+
+    expect(updateCount).toBeGreaterThan(0);
+    expect(latestResults.map(Type.getTypename)).toContain('com.example.type.organization');
+
+    unsubscribe();
+  });
+
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
     const schemaToStore = Obj.make(Type.PersistentType, {
@@ -185,7 +210,7 @@ describe('schema registry', () => {
     {
       await using db = await peer.createDatabase();
       await db.schemaRegistry.register([Contact]);
-      await db.flush({ indexes: true });
+      await db.flush();
     }
 
     await peer.reload();

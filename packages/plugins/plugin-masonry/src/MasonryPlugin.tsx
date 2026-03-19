@@ -4,9 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Option from 'effect/Option';
+
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Type } from '@dxos/echo';
+import { Annotation, Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { ViewModel } from '@dxos/schema';
 
@@ -20,8 +22,8 @@ export const MasonryPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Type.getTypename(Masonry.Masonry),
       metadata: {
-        icon: 'ph--wall--regular',
-        iconHue: 'green',
+        icon: Annotation.IconAnnotation.get(Masonry.Masonry).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Masonry.Masonry).pipe(Option.getOrThrow).hue ?? 'white',
         inputSchema: MasonryAction.MasonryProps,
         createObject: ((props, { db }) =>
           Effect.promise(async () => {

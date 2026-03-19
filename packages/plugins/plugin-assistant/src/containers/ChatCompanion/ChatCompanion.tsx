@@ -25,6 +25,7 @@ import ChatContainer from '../ChatContainer';
 export type ChatCompanionProps = {
   role?: string;
   data: {
+    attendableId: string;
     subject: Chat.Chat | 'assistant-chat';
     companionTo: Obj.Unknown;
   };
@@ -214,6 +215,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     return (
       <ChatContainer
         role={role}
+        attendableId={data.attendableId}
         space={space}
         subject={chat}
         companionTo={companionTo}

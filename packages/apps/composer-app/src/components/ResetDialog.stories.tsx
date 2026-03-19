@@ -36,7 +36,7 @@ export const Default: Story = {
 export const WithError: Story = {
   args: {
     defaultOpen: true,
-    isDev: true,
+    onReset: async () => console.log('reset'),
     error: Object.assign(new Error('Failed to load storage'), { name: 'StorageError' }),
     logBuffer: new LogBuffer(),
     onRefresh: () => console.log('refresh'),

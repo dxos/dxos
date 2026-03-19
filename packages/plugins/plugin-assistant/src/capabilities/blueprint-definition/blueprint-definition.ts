@@ -20,6 +20,8 @@ import {
   ResearchBlueprint,
   WebSearchBlueprint,
   MemoryBlueprint,
+  AutomationBlueprint,
+  ProjectWizardBlueprint,
 } from '@dxos/assistant-toolkit';
 
 import { AssistantBlueprint } from '../../blueprints';
@@ -36,6 +38,8 @@ const blueprintDefinition = Capability.makeModule(() =>
     Capability.contributes(AppCapabilities.BlueprintDefinition, ProjectBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, MemoryBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, AutomationBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, ProjectWizardBlueprint),
 
     Capability.contributes(AppCapabilities.Functions, Record.values(AgentFunctions)),
     Capability.contributes(AppCapabilities.Functions, Record.values(EntityExtractionFunctions)),

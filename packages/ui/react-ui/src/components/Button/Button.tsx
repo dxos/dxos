@@ -12,12 +12,12 @@ import { type Density, type Elevation } from '@dxos/ui-types';
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-interface ButtonProps extends ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> {
+type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> & {
   variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'destructive';
   density?: Density;
   elevation?: Elevation;
   asChild?: boolean;
-}
+};
 
 type ButtonGroupContextValue = { inGroup?: boolean };
 

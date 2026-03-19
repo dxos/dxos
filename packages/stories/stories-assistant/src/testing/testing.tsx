@@ -7,7 +7,7 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { GenericToolkit } from '@dxos/ai';
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
@@ -20,6 +20,7 @@ import {
   Plugin,
   PluginManager,
 } from '@dxos/app-framework';
+import { runAndForwardErrors } from '@dxos/effect';
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
@@ -129,7 +130,7 @@ const buildPluginManagerOptions = ({
       ],
       onClientInitialized: ({ client }) =>
         Effect.gen(function* () {
-          log('onClientInitialized', { identity: client.halo.identity.get()?.did });
+          log.info('onClientInitialized', { identity: client.halo.identity.get()?.did });
           // Abort if already initialized.
           if (client.halo.identity.get()) {
             return;
@@ -156,7 +157,9 @@ const buildPluginManagerOptions = ({
           yield* Effect.promise(() => space.db.flush({ indexes: true }));
         }),
       // Directly importing the "@dxos/client/opfs-worker" didn't work.
-      createOpfsWorker: () => new Worker(new URL('./opfs-worker', import.meta.url), { type: 'module' }),
+      createOpfsWorker: props.config?.values.runtime?.client?.storage?.persistent
+        ? () => new Worker(new URL('./opfs-worker', import.meta.url), { type: 'module' })
+        : undefined,
       ...props,
     }),
 
@@ -203,6 +206,7 @@ const PluginManagerHost: React.FC<{
 
     return () => {
       manager.capabilities.remove(capability.interface, capability.implementation);
+      void runAndForwardErrors(manager.shutdown());
     };
   }, [manager, contextId, children]);
 
@@ -217,7 +221,7 @@ const PluginManagerHost: React.FC<{
 export const getDecorators = ({ lazyPlugins, ...props }: DecoratorsProps) => {
   if (lazyPlugins) {
     return [
-      ((Story: React.FC, context: { id: string }) => {
+      ((Story: FC, context: { id: string }) => {
         const [lazyResult, setLazyResult] = useState<LazyPluginsResult | null>(null);
 
         useEffect(() => {

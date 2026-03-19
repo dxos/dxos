@@ -141,7 +141,7 @@ export const ChannelContainer = ({
 
   if (channel && channel.defaultThread.target && space) {
     return (
-      <Panel.Root classNames='dx-article'>
+      <Panel.Root classNames='dx-document'>
         <Panel.Toolbar asChild>
           <ChannelToolbar attendableId={attendableId} role={role} onJoinCall={handleJoin} />
         </Panel.Toolbar>
@@ -215,7 +215,7 @@ const ChannelToolbar = ({ attendableId, role, onJoinCall }: ChannelToolbarProps)
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
       <Menu.Root {...menuProps} attendableId={attendableId}>
-        <Menu.Toolbar textBlockWidth />
+        <Menu.Toolbar />
       </Menu.Root>
     </ElevationProvider>
   );

@@ -12,7 +12,6 @@ import { type Message } from '@dxos/types';
 
 import { getMessageProps } from '../../util';
 
-// TODO(burdon): Clean-up common card components.
 export const MessageCard = ({ subject: message }: SurfaceComponentProps<Message.Message>) => {
   const { date, email, from, hue, snippet } = getMessageProps(message, new Date(), true);
   return (
@@ -22,8 +21,8 @@ export const MessageCard = ({ subject: message }: SurfaceComponentProps<Message.
           <DxAvatar hue={hue} hueVariant='surface' variant='square' size={7} fallback={from} />
         </Card.IconBlock>
         <div className='flex gap-3 items-center justify-between col-span-2'>
-          <p className='grow truncate'>{from}</p>
-          <p className='text-xs text-description text-right whitespace-nowrap pe-2'>{date}</p>
+          <span className='grow truncate'>{from}</span>
+          <span className='text-xs text-description text-right whitespace-nowrap pe-2'>{date}</span>
         </div>
       </Card.Toolbar>
       <Card.Row>

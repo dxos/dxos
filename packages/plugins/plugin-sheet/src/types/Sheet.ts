@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { addressFromA1Notation, isFormula } from '@dxos/compute';
-import { Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 
 import { addressToIndex, initialize, mapFormulaRefsToIndices } from './util';
@@ -66,6 +66,10 @@ export const Sheet = Schema.Struct({
   Type.object({
     typename: 'org.dxos.type.sheet',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--grid-nine--regular',
+    hue: 'indigo',
   }),
 );
 

@@ -72,9 +72,9 @@ export default Capability.makeModule(
         id: `${meta.id}.collection-fallback`,
         role: 'article',
         position: 'fallback',
-        filter: (data): data is { subject: Collection.Collection } =>
+        filter: (data): data is { attendableId?: string; subject: Collection.Collection } =>
           Obj.instanceOf(Collection.Collection, data.subject),
-        component: ({ data }) => <CollectionArticle subject={data.subject} />,
+        component: ({ data }) => <CollectionArticle attendableId={data.attendableId} subject={data.subject} />,
       }),
       Surface.create({
         id: `${meta.id}.record-article`,
@@ -347,7 +347,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: `${meta.id}.status`,
-        role: 'status',
+        role: 'status-indicator',
         component: () => <SyncStatus />,
       }),
     ]);

@@ -44,7 +44,7 @@ export const PopoverCardContainer = ({
   return (
     <Popover.Root open>
       <Popover.Trigger asChild>
-        <Icon icon={icon} size={5} />
+        <Icon icon={icon} />
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>

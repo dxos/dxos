@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
+import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -53,7 +53,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Panel.Root className='dx-article'>
+      <Panel.Root className='dx-document'>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <SearchList.Input placeholder={t('search placeholder')} />
@@ -80,16 +80,13 @@ const SearchResultTile: MosaicStackTileComponent<SearchResult> = (props) => {
   const data = props.data;
   const object = data.object!;
   const objectMenuItems = useObjectMenuItems(object);
-  const handleNavigate = useObjectNavigate(object);
 
   return (
     <Menu.Root>
       <Card.Root key={data.id}>
         <Card.Toolbar>
           <Card.DragHandle />
-          <Card.Title onClick={handleNavigate}>
-            {data.label ?? (data.object && Entity.getLabel(data.object))}
-          </Card.Title>
+          <Card.Title>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
             <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />

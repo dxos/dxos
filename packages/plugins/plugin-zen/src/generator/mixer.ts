@@ -4,10 +4,10 @@
 
 import type { Sequence } from '../types/Sequence';
 
-import { BinauralGenerator } from './binaural-generator';
+import { BinauralGenerator } from './generator';
 import { SamplePlayer } from './player';
 
-type LayerSource = BinauralGenerator | SamplePlayer;
+export type LayerSource = BinauralGenerator | SamplePlayer;
 
 export type MixerState = {
   playing: boolean;
@@ -87,6 +87,15 @@ export class MixerEngine {
 
     this._playing = false;
     this._emitState();
+  }
+
+  /** Smoothly fade master volume to zero over the given duration. */
+  fadeOut(seconds: number): void {
+    if (this._masterGain && this._context) {
+      const now = this._context.currentTime;
+      this._masterGain.gain.setValueAtTime(this._masterGain.gain.value, now);
+      this._masterGain.gain.linearRampToValueAtTime(0, now + seconds);
+    }
   }
 
   /** Remove and stop a single layer. */

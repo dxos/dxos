@@ -133,7 +133,7 @@ export default Capability.makeModule(
           );
 
           return (
-            <Panel.Root role={role} className='dx-article'>
+            <Panel.Root role={role} className='dx-document'>
               <Panel.Content asChild>
                 <SpaceGenerator space={data.subject.space} onCreateObjects={handleCreateObject} />
               </Panel.Content>
@@ -181,7 +181,8 @@ export default Capability.makeModule(
 
       Surface.create({
         id: `${meta.id}.status`,
-        role: 'status',
+        role: 'status-indicator',
+        position: 'hoist',
         component: () => <DebugStatus />,
       }),
       //

@@ -18,6 +18,8 @@ export namespace AssistantCapabilities {
     Schema.Struct({
       /** Map of primary object dxn to current chat dxn. */
       currentChat: Schema.Record({ key: Schema.String, value: Schema.UndefinedOr(Schema.String) }),
+      /** Map of chat object path to prompt text to auto-submit when the chat opens. */
+      pendingPrompts: Schema.Record({ key: Schema.String, value: Schema.UndefinedOr(Schema.String) }),
     }),
   );
 

@@ -6,8 +6,7 @@
   /** Minimum inset from the viewport edge for floating surfaces. */
   --spacing-screen-border: 1rem;
 
-  --spacing-article-max-width: 50rem;
-  --spacing-prose-max-width: 50rem;
+  --spacing-document-max-width: 50rem;
 
   --spacing-popover-min-width: 12rem;
 
@@ -38,13 +37,13 @@
 
 @layer dx-tokens {
   /**
-   * Density: coarse
+   * TODO(burdon): Density: coarse
    */
-  .dx-density-coarse {
+  /* .dx-density-coarse {
     --spacing-form-padding: var(--spacing-trim-md);
     --spacing-icon-button-padding: var(--spacing-trim-sm);
     --spacing-scroll-padding: 8px;
-  }
+  } */
 }
 
 @layer dx-tokens {
@@ -58,10 +57,10 @@
     --dx-lacuna-4: 0.5rem;
     --dx-lacuna-6: 0.75rem;
 
-    --dx-gutter-xs: 0.125rem;
+    --dx-gutter-xs: 0.125rem; /* Input rings */
     --dx-gutter-sm: 0.5rem;
-    --dx-gutter-md: 1rem;
-    --dx-gutter-lg: 2rem;
+    --dx-gutter-md: 2rem; /* 32px (fine card) */
+    --dx-gutter-lg: 2.5rem; /* 40px (dialog, coarse card) */
   }
 
   :root {
@@ -83,6 +82,8 @@
 
     --dx-input-fine: var(--dx-lacuna-3);
     --dx-input-coarse: var(--dx-lacuna-4);
+
+    --dx-default-icons-size: 1.25rem; /* size=5 */
   }
 
   [data-grid-focus-indicator-variant='stack'] {
@@ -91,13 +92,17 @@
 
   :root {
     --dx-rail-content: 3rem;
+    /** TODO(burdon): Audit. */
+    /** TODO(burdon): Density (2 sizes). */
     --dx-rail-size: calc(var(--dx-rail-content) + 1px);
     --dx-rail-item: calc(var(--dx-rail-content) - 1rem);
-    --dx-rail-action: calc(var(--dx-rail-content) - 0.5rem + 1px);
+    /* TODO(burdon): Added 1px for border. */
+    /* TODO(burdon): Remove direct usage. */
+    --dx-rail-action: calc(var(--dx-rail-content) - 0.5rem);
 
     --dx-topbar-size: var(--dx-rail-size);
-    --dx-toolbar-size: var(--dx-rail-content);
-    --dx-statusbar-size: var(--dx-rail-content);
+    --dx-toolbar-size: var(--dx-rail-action);
+    --dx-statusbar-size: var(--dx-rail-action);
 
     --dx-nav-sidebar-size: 23rem;
     --dx-complementary-sidebar-size: 25rem;

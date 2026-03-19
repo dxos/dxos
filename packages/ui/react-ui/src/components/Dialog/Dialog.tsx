@@ -2,24 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { createContext } from '@radix-ui/react-context';
-import {
-  DialogClose as DialogClosePrimitive,
-  type DialogCloseProps as DialogClosePrimitiveProps,
-  DialogContent as DialogContentPrimitive,
-  DialogDescription as DialogDescriptionPrimitive,
-  type DialogDescriptionProps as DialogDescriptionPrimitiveProps,
-  DialogOverlay as DialogOverlayPrimitive,
-  type DialogOverlayProps as DialogOverlayPrimitiveProps,
-  DialogPortal as DialogPortalPrimitive,
-  type DialogPortalProps as DialogPortalPrimitiveProps,
-  Root as DialogRootPrimitive,
-  type DialogProps as DialogRootPrimitiveProps,
-  DialogTitle as DialogTitlePrimitive,
-  type DialogTitleProps as DialogTitlePrimitiveProps,
-  DialogTrigger as DialogTriggerPrimitive,
-  type DialogTriggerProps as DialogTriggerPrimitiveProps,
-} from '@radix-ui/react-dialog';
 import React, {
   type ComponentPropsWithRef,
   type ForwardRefExoticComponent,
@@ -41,11 +25,11 @@ import { ElevationProvider } from '../ElevationProvider';
 // Root
 //
 
-type DialogRootProps = DialogRootPrimitiveProps;
+type DialogRootProps = DialogPrimitive.DialogProps;
 
 const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
   <ElevationProvider elevation='dialog'>
-    <DialogRootPrimitive {...props} />
+    <DialogPrimitive.Root {...props} />
   </ElevationProvider>
 );
 
@@ -53,17 +37,17 @@ const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
 // Trigger
 //
 
-type DialogTriggerProps = DialogTriggerPrimitiveProps;
+type DialogTriggerProps = DialogPrimitive.DialogTriggerProps;
 
-const DialogTrigger: FunctionComponent<DialogTriggerProps> = DialogTriggerPrimitive;
+const DialogTrigger: FunctionComponent<DialogTriggerProps> = DialogPrimitive.Trigger;
 
 //
 // Portal
 //
 
-type DialogPortalProps = DialogPortalPrimitiveProps;
+type DialogPortalProps = DialogPrimitive.DialogPortalProps;
 
-const DialogPortal: FunctionComponent<DialogPortalProps> = DialogPortalPrimitive;
+const DialogPortal: FunctionComponent<DialogPortalProps> = DialogPrimitive.Portal;
 
 //
 // Overlay
@@ -78,21 +62,23 @@ const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLa
   {},
 );
 
-type DialogOverlayProps = ThemedClassName<DialogOverlayPrimitiveProps & { blockAlign?: 'center' | 'start' | 'end' }>;
+type DialogOverlayProps = ThemedClassName<
+  DialogPrimitive.DialogOverlayProps & { blockAlign?: 'center' | 'start' | 'end' }
+>;
 
 const DialogOverlay: ForwardRefExoticComponent<DialogOverlayProps> = forwardRef<HTMLDivElement, DialogOverlayProps>(
   ({ classNames, children, blockAlign, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
 
     return (
-      <DialogOverlayPrimitive
+      <DialogPrimitive.Overlay
         {...props}
         data-block-align={blockAlign}
         className={tx('dialog.overlay', {}, classNames)}
         ref={forwardedRef}
       >
         <OverlayLayoutProvider inOverlayLayout>{children}</OverlayLayoutProvider>
-      </DialogOverlayPrimitive>
+      </DialogPrimitive.Overlay>
     );
   },
 );
@@ -105,7 +91,7 @@ DialogOverlay.displayName = DIALOG_OVERLAY_NAME;
 
 const DIALOG_CONTENT_NAME = 'DialogContent';
 
-type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogContentPrimitive>> & {
+type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Content>> & {
   size?: DialogSize;
   inOverlayLayout?: boolean;
 };
@@ -116,7 +102,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
 
     return (
-      <DialogContentPrimitive
+      <DialogPrimitive.Content
         {...props}
         // NOTE: Radix warning unless set to undefined.
         // https://www.radix-ui.com/primitives/docs/components/dialog#description
@@ -124,8 +110,8 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
         ref={forwardedRef}
       >
-        <Column.Root>{children}</Column.Root>
-      </DialogContentPrimitive>
+        <Column.Root gutter='md'>{children}</Column.Root>
+      </DialogPrimitive.Content>
     );
   },
 );
@@ -196,13 +182,13 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDi
 // Title
 //
 
-type DialogTitleProps = ThemedClassName<DialogTitlePrimitiveProps> & { srOnly?: boolean };
+type DialogTitleProps = ThemedClassName<DialogPrimitive.DialogTitleProps> & { srOnly?: boolean };
 
 const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <DialogTitlePrimitive {...props} className={tx('dialog.title', { srOnly }, classNames)} ref={forwardedRef} />
+      <DialogPrimitive.Title {...props} className={tx('dialog.title', { srOnly }, classNames)} ref={forwardedRef} />
     );
   },
 );
@@ -211,15 +197,15 @@ const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTML
 // Description
 //
 
-type DialogDescriptionProps = ThemedClassName<DialogDescriptionPrimitiveProps> & { srOnly?: boolean };
+type DialogDescriptionProps = ThemedClassName<DialogPrimitive.DialogDescriptionProps> & { srOnly?: boolean };
 
-const DialogDescription: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<
+const DialogDescription: ForwardRefExoticComponent<DialogDescriptionProps> = forwardRef<
   HTMLParagraphElement,
   DialogDescriptionProps
 >(({ classNames, srOnly, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <DialogDescriptionPrimitive
+    <DialogPrimitive.Description
       {...props}
       className={tx('dialog.description', { srOnly }, classNames)}
       ref={forwardedRef}
@@ -251,9 +237,9 @@ const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forward
 // Close
 //
 
-type DialogCloseProps = DialogClosePrimitiveProps;
+type DialogCloseProps = DialogPrimitive.DialogCloseProps;
 
-const DialogClose: FunctionComponent<DialogCloseProps> = DialogClosePrimitive;
+const DialogClose: FunctionComponent<DialogCloseProps> = DialogPrimitive.Close;
 
 //
 // Dialog

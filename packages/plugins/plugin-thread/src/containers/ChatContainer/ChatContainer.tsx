@@ -137,7 +137,7 @@ export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
   return (
     <div role='none' className='flex items-center'>
       <StackItem.SigilButton attendableId={attendableId}>
-        <Icon icon='ph--chat--regular' size={5} />
+        <Icon icon='ph--chat--regular' />
       </StackItem.SigilButton>
       <StackItem.HeadingLabel attendableId={attendableId}>{t('chat heading')}</StackItem.HeadingLabel>
     </div>

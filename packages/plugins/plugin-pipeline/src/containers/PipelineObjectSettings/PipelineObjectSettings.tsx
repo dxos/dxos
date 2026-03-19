@@ -14,7 +14,7 @@ import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from
 import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
-import { Pipeline, Task } from '@dxos/types';
+import { Pipeline } from '@dxos/types';
 import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
@@ -145,13 +145,13 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
       return;
     }
     const newView = ViewModel.make({
-      query: Query.select(Filter.type(Task.Task)),
-      jsonSchema: JsonSchema.toJsonSchema(Task.Task),
+      query: Query.select(Filter.nothing()),
+      jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
     });
     space.db.add(newView);
     updateColumns((columns) => {
       columns.push({
-        name: 'Tasks',
+        name: '',
         // Type assertion needed due to QueryAST type variance.
         view: Ref.make(newView) as (typeof columns)[number]['view'],
         order: [],
@@ -182,7 +182,9 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
                 >
                   <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-xs cursor-pointer min-h-10')}>
                     <List.ItemDragHandle />
-                    <List.ItemTitle onClick={() => handleToggleField(column)}>{column.name}</List.ItemTitle>
+                    <List.ItemTitle onClick={() => handleToggleField(column)}>
+                      {column.name || t('untitled view title')}
+                    </List.ItemTitle>
                     <List.ItemDeleteButton
                       label={t('delete view label')}
                       autoHide={false}

@@ -108,10 +108,10 @@ export const TableToolbar = ({
     () => createTableToolbarActions({ stateAtom, onAdd, onSave, customActions }),
     [stateAtom, onAdd, onSave, customActions],
   );
-  const menu = useMenuActions(actionsCreator);
+  const actions = useMenuActions(actionsCreator);
 
   return (
-    <Menu.Root {...menu} attendableId={attendableId}>
+    <Menu.Root {...actions} attendableId={attendableId}>
       <Menu.Toolbar {...props} classNames={classNames} />
     </Menu.Root>
   );

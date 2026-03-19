@@ -2,9 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Option from 'effect/Option';
+
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Type } from '@dxos/echo';
+import { Annotation, Type } from '@dxos/echo';
 
 import {
   AppGraphBuilder,
@@ -28,8 +30,8 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
       id: Type.getTypename(Meeting.Meeting),
       metadata: {
         label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
-        icon: 'ph--note--regular',
-        iconHue: 'rose',
+        icon: Annotation.IconAnnotation.get(Meeting.Meeting).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Meeting.Meeting).pipe(Option.getOrThrow).hue ?? 'white',
       },
     },
   }),

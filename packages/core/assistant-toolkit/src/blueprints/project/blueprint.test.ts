@@ -77,7 +77,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
         );
         const chatQueue = project.chat?.target?.queue?.target as any;
         invariant(chatQueue, 'Project chat queue not found.');
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
         yield* Effect.promise(() => conversation.context.open());
 
@@ -117,7 +117,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
             blueprint,
           ),
         );
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
 
         const inboxQueue = yield* QueueService.createQueue();
         yield* Database.add(
@@ -188,11 +188,11 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
             blueprint,
           ),
         );
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
 
         const chatQueue = project.chat?.target?.queue?.target as any;
         invariant(chatQueue, 'Project chat queue not found.');
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
         yield* Effect.promise(() => conversation.context.open());
 

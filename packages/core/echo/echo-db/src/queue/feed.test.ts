@@ -79,7 +79,7 @@ describe('Feed', () => {
       yield* Database.add(Feed.make({ name: 'messages', kind: 'org.dxos.plugin.messages.v1' }));
       yield* Database.add(Feed.make({ name: 'other-notifications', kind: 'org.dxos.plugin.notifications.v1' }));
 
-      yield* Database.flush({ indexes: true });
+      yield* Database.flush();
 
       const notificationFeeds = yield* Database.runQuery(
         Filter.type(Feed.Feed, { kind: 'org.dxos.plugin.notifications.v1' }),

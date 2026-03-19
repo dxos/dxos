@@ -55,7 +55,7 @@ export default defineFunction({
       ? Database.load(data.input).pipe(Effect.map(Obj.toJSON))
       : Effect.succeed(data.input);
 
-    yield* Database.flush({ indexes: true });
+    yield* Database.flush();
     const prompt = yield* Database.load(data.prompt);
     const systemPrompt = data.systemPrompt ? yield* Database.load(data.systemPrompt) : undefined;
     yield* TracingService.emitStatus({ message: `Running ${prompt.id}` });

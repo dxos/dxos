@@ -165,7 +165,6 @@ export const ThreadCompanion = ({ attendableId, subject }: { attendableId?: stri
     />
   );
 
-  // TODO(burdon): Root should be headless.
   return (
     <Tabs.Root
       value={showResolvedThreads ? 'all' : 'unresolved'}
@@ -175,7 +174,8 @@ export const ThreadCompanion = ({ attendableId, subject }: { attendableId?: stri
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Tabs.Tablist>
+            {/* TODO(burdon): TabeList should have the same geometry as Toolbar. */}
+            <Tabs.Tablist classNames='py-0 px-1'>
               <Tabs.Tab value='unresolved' classNames='text-sm'>
                 {t('show unresolved label')}
               </Tabs.Tab>

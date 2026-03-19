@@ -119,13 +119,12 @@ const CalendarToolbar = ({ classNames, ...props }: CalendarToolbarProps) => {
     <div
       {...props}
       role='none'
-      className={mx('shrink-0 w-full m-auto grid grid-cols-3 items-center bg-toolbar-surface', classNames)}
+      className={mx('shrink-0 grid grid-cols-3 items-center bg-toolbar-surface', classNames)}
       style={{ width: defaultWidth }}
     >
       <div className='flex justify-start'>
         <IconButton
           variant='ghost'
-          size={5}
           icon='ph--calendar--regular'
           iconOnly
           classNames='aspect-square'
@@ -210,14 +209,7 @@ const CalendarGrid = ({ classNames, rows, onSelect, ...props }: CalendarGridProp
     ({ key, index, style }) => {
       const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modal-surface';
       return (
-        <div
-          key={key}
-          {...props}
-          role='none'
-          style={style}
-          className='w-full grid grid-cols-[1fr_max-content_1fr] snap-center'
-        >
-          <div role='none' className={mx(getBgColor(getDate(start, index, 0, weekStartsOn)))} />
+        <div key={key} {...props} role='none' style={style} className='grid'>
           <div
             role='none'
             className='grid grid-cols-7 bg-input-surface'
@@ -253,14 +245,12 @@ const CalendarGrid = ({ classNames, rows, onSelect, ...props }: CalendarGridProp
                     <Icon
                       classNames='absolute bottom-0'
                       icon={num > 3 ? 'ph--dots-three--regular' : 'ph--dot--regular'}
-                      size={5}
                     />
                   )}
                 </div>
               );
             })}
           </div>
-          <div className={mx(getBgColor(getDate(start, index, 6, weekStartsOn)))} />
         </div>
       );
     },
@@ -269,15 +259,13 @@ const CalendarGrid = ({ classNames, rows, onSelect, ...props }: CalendarGridProp
 
   return (
     <div role='none' className={mx('flex flex-col h-full w-full justify-center overflow-hidden', classNames)}>
-      {/* Day labels */}
-      <div role='none' className='flex justify-center bg-group-surface'>
-        <div role='none' className='flex w-full grid grid-cols-7' style={{ width: defaultWidth }}>
-          {days.map((date, i) => (
-            <div key={i} role='none' className='flex justify-center p-2 text-sm font-thin'>
-              {date}
-            </div>
-          ))}
-        </div>
+      {/* Day of week labels */}
+      <div role='none' className='grid w-full grid-cols-7' style={{ width: defaultWidth }}>
+        {days.map((date, i) => (
+          <div key={i} role='none' className='flex justify-center p-2 text-sm font-thin'>
+            {date}
+          </div>
+        ))}
       </div>
 
       {/* Grid */}
@@ -285,8 +273,7 @@ const CalendarGrid = ({ classNames, rows, onSelect, ...props }: CalendarGridProp
         <List
           ref={listRef}
           role='none'
-          // TODO(burdon): Snap isn't working.
-          className='[&>div]:snap-y scrollbar-none outline-hidden'
+          className='scrollbar-none outline-hidden'
           width={width}
           height={maxHeight ?? height}
           rowCount={maxRows}

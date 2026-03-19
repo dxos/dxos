@@ -467,7 +467,7 @@ const GeneratorStory = () => {
 
 const meta = {
   title: 'plugins/plugin-sleep/components/SequenceEditor',
-  decorators: [withTheme(), withLayout({ classNames: 'w-prose-max-width' })],
+  decorators: [withTheme(), withLayout({ classNames: 'w-document-max-width' })],
   parameters: { layout: 'centered' },
 } satisfies Meta;
 
@@ -579,7 +579,7 @@ export const MixerLayer = ({ sequence, onChange, onDelete }: MixerLayerProps) =>
         className='grid grid-cols-[min-content_min-content_1fr_min-content_min-content] items-center min-h-10'}
       >
         <List.ItemDragHandle />
-        <Icon icon={sourceIcon[sequence.sourceType] ?? 'ph--question--regular'} size={4} classNames='mx-1' />
+        <Icon icon={sourceIcon[sequence.sourceType] ?? 'ph--question--regular'} classNames='mx-1' />
         <List.ItemTitle onClick={() => setExpanded(!expanded)}>
           {sequence.name ?? sequence.sourceType}
         </List.ItemTitle>
@@ -785,7 +785,7 @@ import { Mixer } from './Mixer';
 const meta = {
   title: 'plugins/plugin-sleep/components/Mixer',
   component: Mixer,
-  decorators: [withTheme(), withLayout({ classNames: 'w-prose-max-width' })],
+  decorators: [withTheme(), withLayout({ classNames: 'w-document-max-width' })],
   parameters: { layout: 'centered' },
 } satisfies Meta<typeof Mixer>;
 
@@ -847,7 +847,7 @@ export type SleepArticleProps = SurfaceComponentProps<Dream.Dream>;
 
 export const SleepArticle = ({ role, subject: dream }: SleepArticleProps) => {
   return (
-    <Panel.Root role={role} classNames='dx-article'>
+    <Panel.Root role={role} classNames='dx-document'>
       <Panel.Content>
         <Editor dream={dream} />
         <Mixer classNames='mt-4' />

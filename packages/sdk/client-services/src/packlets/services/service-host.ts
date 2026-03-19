@@ -392,8 +392,13 @@ export class ClientServicesHost {
       EdgeAgentService: new EdgeAgentServiceImpl(agentManagerProvider, this._edgeConnection),
     });
 
+    log('service-host: opening service context...');
     await this._serviceContext.open(ctx);
+    log('service-host: service context opened');
+
+    log('service-host: opening identity service...');
     await identityService.open();
+    log('service-host: identity service opened');
 
     const devtoolsProxy = this._config?.get('runtime.client.devtoolsProxy');
     if (devtoolsProxy) {

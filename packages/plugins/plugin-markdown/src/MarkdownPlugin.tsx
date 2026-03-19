@@ -3,10 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { type Obj, Ref } from '@dxos/echo';
+import { Annotation, type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
@@ -33,9 +34,10 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Markdown.Document.typename,
       metadata: {
+        // TODO(dmaretskyi): Remove label, icon and iconHue and query them of schema.
         label: (object: Markdown.Document) => object.name || object.fallbackName,
-        icon: 'ph--text-aa--regular',
-        iconHue: 'indigo',
+        icon: Annotation.IconAnnotation.get(Markdown.Document).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Markdown.Document).pipe(Option.getOrThrow).hue ?? 'white',
         blueprints: [MarkdownBlueprint.key],
         graphProps: {
           managesAutofocus: true,

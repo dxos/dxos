@@ -172,6 +172,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
           </Panel.Toolbar>
           <Panel.Content asChild>
             <TableComponent.Main
+              classNames='border-t border-separator'
               key={attendableId}
               ref={tableRef}
               model={model}

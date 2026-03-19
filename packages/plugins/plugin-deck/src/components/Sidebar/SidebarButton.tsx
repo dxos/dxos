@@ -86,7 +86,6 @@ export const ToggleComplementarySidebarButton = ({
       icon='ph--sidebar-simple--regular'
       iconOnly
       label={t('open complementary sidebar label')}
-      size={inR0 ? 5 : 4}
       tooltipSide={inR0 ? 'left' : undefined}
       onClick={handleClick}
     />

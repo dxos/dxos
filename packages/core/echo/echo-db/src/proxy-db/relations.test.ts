@@ -42,7 +42,7 @@ describe('Relations', () => {
     expect(Relation.getSource(manager) === person).to.be.true;
     expect(Relation.getTarget(manager) === org).to.be.true;
 
-    await db.flush({ indexes: true });
+    await db.flush();
     await testBuilder.lastPeer!.reload();
     {
       const db = await testBuilder.lastPeer!.openLastDatabase();

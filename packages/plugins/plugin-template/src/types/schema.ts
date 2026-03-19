@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 
 export namespace Template {
   export const Data = Schema.Struct({
@@ -13,6 +13,10 @@ export namespace Template {
     Type.object({
       typename: 'org.dxos.type.data',
       version: '0.1.0',
+    }),
+    Annotation.IconAnnotation.set({
+      icon: 'ph--asterisk--regular',
+      hue: 'sky',
     }),
   );
 

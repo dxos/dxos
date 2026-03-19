@@ -101,7 +101,11 @@ export default defineFunction({
         query = query.select(Filter.type(schema[0]));
       }
     } else if (typename) {
-      query = Query.select(Filter.type(typename));
+      const schema = yield* Database.runSchemaQuery({ typename, location: ['database', 'runtime'] });
+      if (schema.length === 0) {
+        return yield* Effect.fail(new Error(`Schema ${typename} not found`));
+      }
+      query = Query.select(Filter.type(schema[0]));
     } else {
       query = Query.select(Filter.everything());
     }
@@ -111,7 +115,7 @@ export default defineFunction({
     }
 
     // Update indexes before querying to make sure we get the latest results.
-    yield* Database.flush({ indexes: true });
+    yield* Database.flush();
     const results = yield* Database.runQuery(query);
     if (includeContent) {
       return results.map((obj) => Entity.toJSON(obj));

@@ -17,13 +17,12 @@ import { useThemeContext } from '../../hooks';
 
 const COLUMN_ROOT_NAME = 'Column.Root';
 
-type GutterSize = 'sm' | 'md' | 'lg' | 'rail';
+type GutterSize = 'sm' | 'md' | 'lg';
 
 const gutterSizes: Record<GutterSize, string> = {
   sm: 'var(--dx-gutter-sm)',
   md: 'var(--dx-gutter-md)',
   lg: 'var(--dx-gutter-lg)',
-  rail: 'var(--dx-rail-item)',
 };
 
 type ColumnRootProps = SlottableProps<HTMLDivElement, { gutter?: GutterSize }>;
@@ -31,7 +30,7 @@ type ColumnRootProps = SlottableProps<HTMLDivElement, { gutter?: GutterSize }>;
 /**
  * Creates a vertical channel with left/right gutter columns.
  * The `--gutter` CSS variable is set for nested components (Dialog, ScrollArea, Form.Viewport, etc.).
- * Use `gutter='rail'` for icon-slot row layouts (Card); `gutter='md'` for whitespace layouts (Dialog).
+ * Use `gutter='sm'` for compact layouts; `gutter='md'` (default) for whitespace layouts (Dialog); `gutter='lg'` for wider spacing.
  * Direct children must use Column.Row (spans all 3 cols) or Column.Segment (center col only).
  *
  * NOTE: The theme applies a `dx-column` marker class to this element.

@@ -434,19 +434,15 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Unknown } & ComponentPropsWithoutRef<typeof Menu.Root>>;
+type ChatToolbarProps = { companionTo?: Obj.Unknown } & ComponentPropsWithoutRef<typeof Menu.Root>;
 
-const ChatToolbar = ({ classNames, companionTo, ...props }: ChatToolbarProps) => {
+const ChatToolbar = ({ companionTo, ...props }: ChatToolbarProps) => {
   const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
-  const menu = useChatToolbarActions({ chat, companionTo });
+  const actions = useChatToolbarActions({ chat, companionTo });
 
   return (
-    <Menu.Root
-      {...props}
-      {...menu}
-      attendableId={companionTo ? Obj.getDXN(companionTo).toString() : chat ? Obj.getDXN(chat).toString() : ''}
-    >
-      <Menu.Toolbar classNames={classNames} textBlockWidth />
+    <Menu.Root {...actions}>
+      <Menu.Toolbar {...props} />
     </Menu.Root>
   );
 };

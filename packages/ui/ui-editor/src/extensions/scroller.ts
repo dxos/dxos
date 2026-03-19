@@ -117,8 +117,9 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
           }
         }
 
+        // TODO(burdon): Smooth scrolling doesn't work when the document is being streamed into.
         requestAnimationFrame(() => {
-          this.view.scrollDOM.scrollTo({ top: targetScrollTop, behavior });
+          this.view.scrollDOM.scrollTo({ top: targetScrollTop }); //, behavior });
         });
       }
     },

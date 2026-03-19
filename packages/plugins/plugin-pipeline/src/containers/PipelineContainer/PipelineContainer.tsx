@@ -44,7 +44,7 @@ export const PipelineContainer = ({ role, subject: pipeline, attendableId }: Pip
 
   return (
     <PipelineComponent.Root Item={PipelineItem} onAddColumn={handleColumnAdd}>
-      <Panel.Root role={role} className='dx-article'>
+      <Panel.Root role={role}>
         <Panel.Toolbar asChild>
           <PipelineComponent.Toolbar disabled={!hasAttention} />
         </Panel.Toolbar>

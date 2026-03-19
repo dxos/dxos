@@ -34,28 +34,12 @@ import { Separator, type SeparatorProps } from '../Separator';
 // Root
 //
 
-type ToolbarRootProps = ThemedClassName<
-  ToolbarPrimitive.ToolbarProps &
-    ToolbarStyleProps & {
-      textBlockWidth?: boolean;
-    }
->;
+type ToolbarRootProps = ThemedClassName<ToolbarPrimitive.ToolbarProps & ToolbarStyleProps>;
 
-// TODO(burdon): Implement asChild property.
 const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
-  (
-    { children, density, disabled, layoutManaged, textBlockWidth: textBlockWidthProp, orientation, ...props },
-    forwardedRef,
-  ) => {
+  ({ children, density, disabled, layoutManaged, orientation, ...props }, forwardedRef) => {
     const { className, dir: _, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
-    const InnerRoot = textBlockWidthProp ? 'div' : Fragment;
-    const innerRootProps = textBlockWidthProp
-      ? {
-          role: 'none',
-          className: tx('toolbar.inner', { layoutManaged }, className),
-        }
-      : {};
 
     return (
       <ToolbarPrimitive.Root
@@ -65,7 +49,7 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
         className={tx('toolbar.root', { density, disabled, layoutManaged }, className)}
         ref={forwardedRef}
       >
-        <InnerRoot {...innerRootProps}>{children}</InnerRoot>
+        {children}
       </ToolbarPrimitive.Root>
     );
   },
@@ -231,7 +215,6 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
         variant='ghost'
         label={label ?? t('toolbar drag handle label')}
         classNames='cursor-pointer'
-        size={5}
         disabled={!forwardedRef}
         ref={forwardedRef}
       />
@@ -248,6 +231,7 @@ type ToolbarCloseIconButtonProps = { onClick?: () => void; label?: string };
 const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconButtonProps>(
   ({ onClick, label }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
+
     return (
       <ToolbarIconButton
         iconOnly
@@ -255,7 +239,6 @@ const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconBut
         variant='ghost'
         label={label ?? t('toolbar close label')}
         classNames='cursor-pointer'
-        size={5}
         onClick={onClick}
         ref={forwardedRef}
       />

@@ -8,23 +8,23 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { arc } from 'd3';
 import React, { useRef, useState } from 'react';
 
-import { Button, Icon, IconButton, ThemedClassName } from '@dxos/react-ui';
+import { Button, Icon, IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import { DXOS } from '../icons';
 
 import { type AnimationController, ComposerLogo, ComposerSpinner } from './experimental';
+import { ComposerLogo as AltComposerLogo, brandColors } from './ComposerLogo';
 
-// import ident from '../../../assets/sounds/ident-1.mp3';
+import ident from '../../../assets/sounds/ident-2.mp3';
 
 // https://pixabay.com/sound-effects/search/logo/?pagi=2
 
 const meta = {
   title: 'ui/brand/experimental/Logo',
-  component: ComposerLogo,
   decorators: [withTheme()],
-} satisfies Meta<typeof ComposerLogo>;
+} satisfies Meta;
 
 export default meta;
 
@@ -44,8 +44,12 @@ export const Default: Story = {
     const controller = useRef<AnimationController>(null);
     const [logo, setLogo] = useState(false);
     const handleSpin = async () => {
-      // const audio = new Audio(ident);
-      // await audio.play();
+      const audio = new Audio(ident);
+      try {
+        await audio.play();
+      } catch (e) {
+        console.warn('Audio playback failed:', e);
+      }
       setTimeout(() => {
         setLogo(true);
       }, 1_500);
@@ -65,7 +69,9 @@ export const Default: Story = {
           </div>
 
           <div className={mx('transition opacity-0 duration-1000', logo && 'opacity-100')}>
-            <div className={mx('text-[100px] text-teal-400 font-[k2d] italic')}>composer</div>
+            <div className={mx('text-[100px] text-teal-400')} style={{ fontFamily: 'Poiret One' }}>
+              composer
+            </div>
             <div className={mx('flex items-center -mt-[20px] text-neutral-700')}>
               <span className='ml-[210px] mt-[2px] mr-2'>Powered by DXOS</span>
               <div>
@@ -114,23 +120,19 @@ export const Pacman: Story = {
         <div className='flex flex-col'>
           <div className='flex items-center p-4'>
             <div className='flex ml-8 mr-[100px]'>
-              <div>
-                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-blue-500' />
-              </div>
-              <div>
-                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-purple-500' />
-              </div>
-              <div>
-                <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-red-500' />
-              </div>
+              <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-blue-500' />
+              <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-purple-500' />
+              <Icon icon='ph--ghost--duotone' classNames='w-[180px] h-[180px] text-red-500' />
             </div>
 
-            <ComposerLogo size={145} classNames={['fill-yellow-200', 'fill-yellow-300', 'fill-yellow-400']} />
+            <div className='w-[180px]'>
+              <ComposerLogo size={145} classNames={['fill-yellow-200', 'fill-yellow-300', 'fill-yellow-400']} />
+            </div>
 
             <div className='flex -ml-10'>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className='p-4'>
-                  <Icon icon='ph--square--duotone' classNames='w-6 h-6 text-yellow-200' />
+                  <Icon icon='ph--circle--duotone' classNames='w-6 h-6 text-yellow-200' />
                 </div>
               ))}
             </div>
@@ -209,11 +211,6 @@ export const Linear: Story = {
   },
 };
 
-// Brand icon colors, outer → inner.
-const brandColors = ['rgb(5,40,61)', 'rgb(10,75,105)', 'rgb(1,122,183)', 'rgb(6,197,253)'];
-// const brandColors = ['rgb(5,40,61)', 'rgb(5,92,125)', 'rgb(6,145,189)', 'rgb(6,197,253)'];
-// const brandColors = ['rgb(5,40,61)', 'rgb(5,76,105)', 'rgb(6,127,167)', 'rgb(6,197,253)'];
-
 export const Radial: Story = {
   render: () => {
     const size = 256;
@@ -245,64 +242,6 @@ export const Radial: Story = {
   },
 };
 
-/**
- * Build a single brand-accurate C-arc layer.
- *
- * Shape: left semicircle ring (6 → 9 → 12 o'clock) with a
- * horizontal-then-diagonal stepped edge at each open end, matching the
- * Composer brand icon geometry. Two 90° arcs avoid the 180° SVG ambiguity.
- */
-const makeBrandLayerPath = (cx: number, cy: number, r1: number, r2: number, r3: number, r4: number): string => {
-  const frac = 0.3;
-  const topOuter = r1 * frac;
-  const topInner = r2 * frac;
-  const botOuter = r4 * frac;
-  const botInner = r3 * frac;
-  return [
-    // Start at outer top-right.
-    `M ${cx + topOuter} ${cy - r1}`,
-    // Move left to 12-oclock.
-    `L ${cx} ${cy - r1}`,
-    // Outer arc CW: 12 → 9 → 6 o'clock (through the west side).
-    `A ${r1} ${r1} 0 0 0 ${cx - r1} ${cy}`,
-    `A ${r1} ${r1} 0 0 0 ${cx} ${cy + r1}`,
-    // Bottom outer: extend right.
-    `L ${cx + botOuter} ${cy + r1}`,
-    // Diagonal to inner bottom-right.
-    `L ${cx + botInner} ${cy + r2}`,
-    // Move left to inner 6-oclock.
-    `L ${cx} ${cy + r2}`,
-    // Inner arc CCW: 6 → 9 → 12 o'clock (back through the west side).
-    `A ${r2} ${r2} 0 0 1 ${cx - r2} ${cy}`,
-    `A ${r2} ${r2} 0 0 1 ${cx} ${cy - r2}`,
-    // Top inner: extend right.
-    `L ${cx + topInner} ${cy - r2}`,
-    // Close: diagonal back to start.
-    'Z',
-  ].join(' ');
-};
-
-const ComposerArc = ({ classNames, size = 512 }: ThemedClassName<{ size?: number }>) => {
-  const cx = size / 2;
-  const cy = size / 2;
-  const n = brandColors.length;
-  const ringWidth = size / 2 / (n + 1); // Try 1.6 to remove inner circle.
-  const gap = 0;
-
-  return (
-    <svg aria-hidden='true' width={size} height={size} className={mx(classNames)}>
-      {brandColors.map((color, i) => {
-        const outerR = size / 2 - i * ringWidth;
-        const innerR = outerR - ringWidth + gap;
-        const mirror = n - 1 - i;
-        const mirrorOuterR = size / 2 - mirror * ringWidth;
-        const mirrorInnerR = mirrorOuterR - ringWidth + gap;
-        return <path key={i} d={makeBrandLayerPath(cx, cy, outerR, innerR, mirrorOuterR, mirrorInnerR)} fill={color} />;
-      })}
-    </svg>
-  );
-};
-
 const useToggle = (initial = false) => {
   const [toggled, setToggled] = useState(initial);
   return [toggled, () => setToggled(!toggled)] as const;
@@ -319,7 +258,7 @@ export const Oblique: Story = {
           <IconButton icon='ph--square--duotone' label='Visibility' onClick={() => setVisible()} />
         </div>
         <div className='absolute grid place-items-center'>
-          <ComposerArc
+          <AltComposerLogo
             size={size}
             classNames={mx(
               'opacity-0 scale-10 transition-all rotate-[540deg] __translate-x-[980px] duration-500 delay-0 ease-in',
@@ -328,7 +267,7 @@ export const Oblique: Story = {
           />
         </div>
         <div className='absolute grid place-items-center'>
-          <ComposerArc
+          <AltComposerLogo
             size={size}
             classNames={mx(
               'opacity-0 blur-xs scale-10 rotate-360 __translate-y-[-100px]',

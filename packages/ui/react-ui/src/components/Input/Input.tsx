@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Root as CheckboxPrimitive, type CheckboxProps as CheckboxPrimitiveProps } from '@radix-ui/react-checkbox';
+import * as CheckboxPrimitive from '@radix-ui/react-checkbox';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, { type ComponentPropsWithRef, type ForwardRefExoticComponent, forwardRef } from 'react';
 
@@ -193,7 +193,7 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
   },
 );
 
-type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitiveProps, 'children'>> & {
+type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.CheckboxProps, 'children'>> & {
   size?: Size;
 };
 
@@ -222,7 +222,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
     const { tx } = useThemeContext();
 
     return (
-      <CheckboxPrimitive
+      <CheckboxPrimitive.Root
         {...{
           ...props,
           checked,
@@ -241,7 +241,7 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
           icon={checked === 'indeterminate' ? 'ph--minus--regular' : 'ph--check--regular'}
           classNames={tx('input.checkboxIndicator', { size, checked })}
         />
-      </CheckboxPrimitive>
+      </CheckboxPrimitive.Root>
     );
   },
 );

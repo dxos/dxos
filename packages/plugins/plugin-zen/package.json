@@ -43,7 +43,7 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
-    "@dxos/keys": "catalog:",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
@@ -54,6 +54,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",
@@ -68,6 +69,7 @@
     "react": "catalog:",
     "react-dom": "catalog:"
   },
+  "private": true,
   "publishConfig": {
     "access": "public"
   }

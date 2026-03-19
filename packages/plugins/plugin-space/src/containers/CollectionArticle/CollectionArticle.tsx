@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getCollectionObjectPath, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
@@ -28,14 +28,14 @@ const useMetadataResolver = () => {
 /**
  * Article view for collections.
  */
-export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.Collection>) => {
+export const CollectionArticle = ({ subject, attendableId }: SurfaceComponentProps<Collection.Collection>) => {
   const { t } = useTranslation(meta.id);
   const resolveMetadata = useMetadataResolver();
-  const { items, handleSearch } = useCollectionItems(subject, resolveMetadata);
+  const { items, handleSearch } = useCollectionItems(subject, resolveMetadata, attendableId);
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Panel.Root className='dx-article'>
+      <Panel.Root className='dx-document'>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <SearchList.Input placeholder={t('search placeholder')} />
@@ -60,14 +60,14 @@ export const CollectionArticle = ({ subject }: SurfaceComponentProps<Collection.
 type ObjectItem = {
   id: string;
   object: Obj.Unknown;
+  targetPath: string;
   icon: string;
   iconHue?: string;
 };
 
-const ObjectTile: MosaicStackTileComponent<ObjectItem> = (props) => {
-  const item = props.data;
+const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   const { t } = useTranslation(meta.id);
-  const { invokeSync } = useOperationInvoker();
+  const { invokePromise } = useOperationInvoker();
 
   const typename = Obj.getTypename(item.object) ?? '';
   const label =
@@ -75,12 +75,13 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = (props) => {
     toLocalizedString(['object name placeholder', { ns: typename, defaultValue: item.id }], t);
   const styles = item.iconHue ? getStyles(item.iconHue) : undefined;
 
-  const handleClick = () => {
-    invokeSync(LayoutOperation.Open, { subject: [item.id] });
-  };
+  const handleClick = useCallback(
+    () => void invokePromise(LayoutOperation.Open, { subject: [item.targetPath] }),
+    [invokePromise, item.targetPath],
+  );
 
   return (
-    <Card.Root fullWidth>
+    <Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Toolbar>
         <Card.ToolbarIconButton
           variant='ghost'
@@ -89,7 +90,7 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = (props) => {
           iconOnly
           iconClassNames={styles?.surfaceText}
         />
-        <Card.Title onClick={handleClick}>{label}</Card.Title>
+        <Card.Title>{label}</Card.Title>
         <Card.Menu />
       </Card.Toolbar>
     </Card.Root>
@@ -101,29 +102,34 @@ type MetadataResolver = (typename: string) => { icon?: string; iconHue?: string 
 /**
  * Combined hook to get collection items with search/filter support.
  */
-const useCollectionItems = (collection: Collection.Collection, resolveMetadata: MetadataResolver) => {
+const useCollectionItems = (
+  collection: Collection.Collection,
+  resolveMetadata: MetadataResolver,
+  attendableId?: string,
+) => {
   const objects = useMemo(
     () => (collection.objects ?? []).map((ref) => ref.target).filter((obj): obj is Obj.Unknown => Obj.isObject(obj)),
     [collection.objects],
   );
 
-  // Convert objects to items with resolved metadata.
   const items = useMemo(
     () =>
       objects.map((obj) => {
         const typename = Obj.getTypename(obj);
         const metadata = typename ? resolveMetadata(typename) : {};
+        const targetPath = attendableId ? getCollectionObjectPath(attendableId, obj.id) : getObjectPathFromObject(obj);
+
         return {
           id: Obj.getDXN(obj).toString(),
           object: obj,
+          targetPath,
           icon: metadata.icon ?? 'ph--placeholder--regular',
           iconHue: metadata.iconHue,
         } satisfies ObjectItem;
       }),
-    [objects, resolveMetadata],
+    [objects, resolveMetadata, attendableId],
   );
 
-  // Use searchlist results for filtering.
   const { results, handleSearch } = useSearchListResults({
     items,
     extract: (item) => Obj.getLabel(item.object) ?? item.id,

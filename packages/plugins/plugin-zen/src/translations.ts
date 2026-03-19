@@ -22,6 +22,8 @@ export const translations = [
       },
       [meta.id]: {
         'plugin name': 'Zen',
+        'unmute button label': 'Unmute',
+        'mute button label': 'Mute',
       },
     },
   },

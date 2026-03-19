@@ -20,7 +20,7 @@ export const CommandsTrigger = () => {
       onClick={() => invokeSync(LayoutOperation.UpdateDialog, { subject: COMMANDS_DIALOG, blockAlign: 'start' })}
     >
       <span className='text-description font-normal grow text-start'>{t('command list input placeholder')}</span>
-      <Icon icon='ph--magnifying-glass--regular' size={5} />
+      <Icon icon='ph--magnifying-glass--regular' />
     </Button>
   );
 };

@@ -21,10 +21,11 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   const snippet = useMemo(() => getSnippet(subject), [subject]);
   const info = getInfo(subject);
 
+  // TODO(burdon): Standardize px-1.
   return (
     <Card.Content>
       {snippet && (
-        <Card.Section>
+        <Card.Section className='px-1'>
           <MarkdownEditor.Root id={subject.id} viewMode='readonly'>
             <MarkdownEditor.Content
               initialValue={snippet}
@@ -37,7 +38,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
         </Card.Section>
       )}
       <Card.Section>
-        <Card.Text classNames='text-xs text-description'>
+        <Card.Text classNames='px-1.5 text-xs text-description'>
           {info.words} {t('words label', { count: info.words })}
         </Card.Text>
       </Card.Section>

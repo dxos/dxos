@@ -30,6 +30,7 @@ import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '../../types';
+import { Blueprint } from '@dxos/blueprints';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -85,11 +86,19 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           },
         });
 
+        const blueprints = this.#capabilities
+          .getAll(AppCapabilities.BlueprintDefinition)
+          .flatMap((blueprint) => blueprint.make());
+
         const space = client.spaces.get(spaceId);
         invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
-        return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
+        return Layer.mergeAll(
+          TriggerDispatcher.layer({ timeControl: 'natural' }),
+          // TODO(dmaretskyi): Make blueprints reactive and registry accept an atom.
+          Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
+        ).pipe(
           Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
           Layer.provideMerge(
             Layer.mergeAll(

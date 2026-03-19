@@ -43,7 +43,7 @@ type SettingsRootProps = PropsWithChildren;
 
 const SettingsRoot = ({ children }: SettingsRootProps) => {
   return (
-    <ScrollArea.Root orientation='vertical' className='dx-article'>
+    <ScrollArea.Root className='dx-document' orientation='vertical' margin>
       <ScrollArea.Viewport classNames='p-trim-md'>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -150,7 +150,7 @@ const SettingsContainer = ({ classNames, children }: ThemedClassName<PropsWithCh
     <div
       role='none'
       className={mx([
-        'dx-article',
+        'dx-document',
         '*:first:mt-0! *:last:mb-0! px-trim-md py-trim-md',
         'border border-separator rounded-md',
         classNames,

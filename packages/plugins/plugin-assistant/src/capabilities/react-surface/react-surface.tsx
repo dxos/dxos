@@ -25,6 +25,7 @@ import {
   ProjectArticle,
   ProjectSettings,
   PromptArticle,
+  TracePanel,
   TriggerStatus,
 } from '../../containers';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
@@ -46,9 +47,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.chat`,
         role: 'article',
-        filter: (data): data is { subject: Chat.Chat; variant: undefined } =>
-          Obj.instanceOf(Chat.Chat, data.subject) && data.variant !== 'assistant-chat',
-        component: ({ data, role, ref }) => <ChatContainer role={role} subject={data.subject} ref={ref} />,
+        filter: (data): data is { attendableId: string; subject: Chat.Chat; variant: undefined } =>
+          typeof data.attendableId === 'string' &&
+          Obj.instanceOf(Chat.Chat, data.subject) &&
+          data.variant !== 'assistant-chat',
+        component: ({ data, role, ref }) => (
+          <ChatContainer role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />
+        ),
       }),
       Surface.create({
         id: `${meta.id}.project`,
@@ -66,7 +71,10 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.companion-chat`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
+        filter: (
+          data,
+        ): data is { attendableId: string; companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
+          typeof data.attendableId === 'string' &&
           Obj.isObject(data.companionTo) &&
           (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === 'assistant-chat'),
         component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
@@ -83,7 +91,7 @@ export default Capability.makeModule(() =>
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
           return (
-            <Panel.Root role={role} className='dx-article'>
+            <Panel.Root role={role} className='dx-document'>
               <Panel.Content asChild>
                 <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
               </Panel.Content>
@@ -110,8 +118,14 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <ChatDialog {...data.props} />,
       }),
       Surface.create({
+        id: `${meta.id}.trace`,
+        role: 'deck-companion--trace',
+        filter: (data): data is { subject: 'trace' } => data.subject === 'trace',
+        component: () => <TracePanel />,
+      }),
+      Surface.create({
         id: `${meta.id}.status`,
-        role: 'status',
+        role: 'status-indicator',
         component: () => <TriggerStatus />,
       }),
     ]),

@@ -12,6 +12,8 @@ import { SpaceSchema } from '@dxos/react-client/echo';
 import { Actor } from '@dxos/types';
 
 import { meta } from '../meta';
+import * as Mailbox from './Mailbox';
+import * as Calendar from './Calendar';
 
 const INBOX_OPERATION = `${meta.id}.operation`;
 
@@ -53,6 +55,28 @@ export namespace InboxOperation {
         body: Schema.optional(Schema.String),
         // TODO(wittjosiah): Should be Mailbox.Mailbox.
         mailbox: Schema.optional(Schema.Any),
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const SyncMailbox = Operation.make({
+    meta: { key: `${INBOX_OPERATION}.sync-mailbox`, name: 'Sync Mailbox' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        mailbox: Mailbox.Mailbox,
+      }),
+      output: Schema.Void,
+    },
+  });
+
+  export const SyncCalendar = Operation.make({
+    meta: { key: `${INBOX_OPERATION}.sync-calendar`, name: 'Sync Calendar' },
+    services: [Capability.Service],
+    schema: {
+      input: Schema.Struct({
+        calendar: Calendar.Calendar,
       }),
       output: Schema.Void,
     },
