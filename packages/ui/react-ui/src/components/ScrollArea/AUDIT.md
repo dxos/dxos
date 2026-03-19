@@ -17,19 +17,19 @@ All components and compound component exports that have `<ScrollArea.Root>` as t
 | `plugin-registry`             | `PluginRegistry.tsx`    | `PluginRegistry`       | Direct   | -          |
 | `plugin-thread`               | `ChatContainer.tsx`     | `ChatContainer`        | Direct   | -          |
 | `plugin-thread`               | `ThreadCompanion.tsx`   | `ThreadCompanion`      | Direct   | -          |
-| `react-ui`                    | `ScrollContainer.tsx`   | `ScrollContainer.Root` | Compound | -          |
-| `react-ui-form`               | `Form.tsx`              | `Form.Viewport`        | Compound | -          |
-| `react-ui-form`               | `Settings.tsx`          | `Settings.Root`        | Compound | -          |
-| `react-ui-mosaic`             | `Board.tsx`             | `Board.Content`        | Compound | -          |
-| `react-ui-mosaic`             | `Column.tsx`            | `BoardColumn.Body`     | Compound | -          |
-| `react-ui-searchlist`         | `SearchList.tsx`        | `SearchList.Viewport`  | Compound | -          |
+| `react-ui`                    | `ScrollContainer.tsx`   | `ScrollContainer.Root` | Compound | Yes        |
+| `react-ui-form`               | `Form.tsx`              | `Form.Viewport`        | Compound | Yes        |
+| `react-ui-form`               | `Settings.tsx`          | `Settings.Root`        | Compound | Yes        |
+| `react-ui-mosaic`             | `Board.tsx`             | `Board.Content`        | Compound | Yes        |
+| `react-ui-mosaic`             | `Column.tsx`            | `BoardColumn.Body`     | Compound | Yes        |
+| `react-ui-searchlist`         | `SearchList.tsx`        | `SearchList.Viewport`  | Compound | Yes        |
 | `react-ui-syntax-highlighter` | `SyntaxHighlighter.tsx` | `SyntaxHighlighter`    | Direct   | -          |
 
 ## Phase 2
 
 - [x] Ensure all radix-style composite components that include Viewports (Phase 1) are Composable.
   - Follow the exemplar: `Event.Viewport` in `plugin-inbox`
-- [x] Re-run audit (Phase 1).
+- [x] Re-run and update audit (Phase 1).
 - [x] Add any implementaiton notes or observations in this document.
 
 ### Phase 2 Implementation Complete
@@ -46,6 +46,7 @@ All 6 composite components wrapping `ScrollArea.Root` have been made Composable:
 #### Implementation Pattern
 
 Each component now follows the exemplar pattern:
+
 - Accept `ComposableProps` type or extend it
 - Use `composableProps()` utility to extract standard HTML attributes (className, role, etc.)
 - Component-specific ScrollArea.Root props (thin, margin, padding, orientation) are kept separate
@@ -84,3 +85,7 @@ The following ~34 files contain `<ScrollArea.Root>` but root element status need
 - [ ] Reconcile with `react-primitives/react-list` and `react-ui` `List`.
 - [ ] Port usages of `react-ui-list`.
 - [ ] Factor out styles (hover, selected, etc.)
+
+## Misc
+
+- Rename vars: Obj.change(journal, (obj)
