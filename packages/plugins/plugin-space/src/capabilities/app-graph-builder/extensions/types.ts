@@ -202,7 +202,12 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
                 droppable: false,
               });
             })
-            .filter(isNonNullable),
+            .filter(isNonNullable)
+            .toSorted((nodeA, nodeB) => {
+              const labelA = typeof nodeA.properties.label === 'string' ? nodeA.properties.label : '';
+              const labelB = typeof nodeB.properties.label === 'string' ? nodeB.properties.label : '';
+              return labelA.localeCompare(labelB);
+            }),
         );
       },
     }),
