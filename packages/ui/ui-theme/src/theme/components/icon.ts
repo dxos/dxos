@@ -4,8 +4,7 @@
 
 import { type ComponentFunction, type Size, type Theme } from '@dxos/ui-types';
 
-import { getSize } from '../../fragments';
-import { mx } from '../../util';
+import { getSize, mx } from '../../util';
 
 export type IconStyleProps = {
   size?: Size;

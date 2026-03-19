@@ -4,8 +4,8 @@
 
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
-import { dataDisabled, subduedFocus, surfaceShadow, surfaceZIndex } from '../../fragments';
-import { mx } from '../../util';
+import { dataDisabled, subduedFocus } from '../../fragments';
+import { mx, surfaceShadow, surfaceZIndex } from '../../util';
 
 export type MenuStyleProps = Partial<{
   constrainBlockSize: boolean;
