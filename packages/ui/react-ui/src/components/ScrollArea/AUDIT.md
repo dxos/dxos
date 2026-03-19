@@ -56,5 +56,5 @@ The following ~34 files contain `<ScrollArea.Root>` but root element status need
 
 ## Phase 3
 
-- [ ] Ensure all radix-style composite components that include Viewports are Composible
+- [ ] Ensure all radix-style composite components that include Viewports are Composable
   - Examples: SearchList.Viewport, Form.Viewport, Board.Content, Event.Viewport, etc.

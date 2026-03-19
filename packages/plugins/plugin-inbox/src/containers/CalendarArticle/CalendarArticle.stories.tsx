@@ -8,7 +8,6 @@ import React from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapabilities } from '@dxos/app-framework/ui';
 import { Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client';
