@@ -206,7 +206,9 @@ const meta = {
                   }),
                 );
               }
-            }).pipe(Effect.provide(Layer.merge(Database.layer(defaultSpace.db), createFeedServiceLayer(defaultSpace.queues))));
+            }).pipe(
+              Effect.provide(Layer.merge(Database.layer(defaultSpace.db), createFeedServiceLayer(defaultSpace.queues))),
+            );
           }),
         }),
         InboxPlugin(),

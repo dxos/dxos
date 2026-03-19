@@ -112,16 +112,17 @@ It does **not** include `SpacePlugin` (to avoid circular dependencies). Import `
 
 When using `withPluginManager`, prefer plugins over standalone decorators. The plugin system provides these capabilities through `corePlugins()`:
 
-| Decorator | Plugin Equivalent | Provided by `corePlugins()` |
-|---|---|---|
-| `withTheme()` | `ThemePlugin()` | Yes |
-| `withAttention()` | `AttentionPlugin()` | Yes |
-| `withLayout()` | `StorybookPlugin({})` | No (add separately) |
-| `withClientProvider()` | `ClientPlugin({...})` | No (add separately) |
+| Decorator              | Plugin Equivalent     | Provided by `corePlugins()` |
+| ---------------------- | --------------------- | --------------------------- |
+| `withTheme()`          | `ThemePlugin()`       | Yes                         |
+| `withAttention()`      | `AttentionPlugin()`   | Yes                         |
+| `withLayout()`         | `StorybookPlugin({})` | No (add separately)         |
+| `withClientProvider()` | `ClientPlugin({...})` | No (add separately)         |
 
 **Do not mix plugins with their decorator equivalents.** For example, do not use `withTheme()` alongside `corePlugins()` (which already includes `ThemePlugin`). Do not use `withClientProvider()` alongside `ClientPlugin()`.
 
 **Correct:**
+
 ```typescript
 decorators: [
   withPluginManager({
@@ -136,6 +137,7 @@ decorators: [
 ```
 
 **Incorrect:**
+
 ```typescript
 decorators: [
   withTheme(),                 // redundant — corePlugins includes ThemePlugin
@@ -169,10 +171,11 @@ ClientPlugin({
 ```
 
 This replaces the boilerplate:
+
 ```typescript
-yield* Effect.promise(() => client.halo.createIdentity());
-yield* Effect.promise(() => client.spaces.waitUntilReady());
-yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+yield * Effect.promise(() => client.halo.createIdentity());
+yield * Effect.promise(() => client.spaces.waitUntilReady());
+yield * Effect.promise(() => client.spaces.default.waitUntilReady());
 ```
 
 ## Story Structure
@@ -200,6 +203,7 @@ export const Default: Story = {};
 ### Title Convention
 
 Follow the directory structure:
+
 - Plugins: `plugins/plugin-foo/containers/FooArticle` or `plugins/plugin-foo/components/FooBar`
 - UI packages: `ui/react-ui-foo/FooComponent`
 
@@ -240,12 +244,13 @@ import { createObjectFactory } from '@dxos/schema/testing';
 import { faker } from '@dxos/random';
 
 const factory = createObjectFactory(space.db, faker);
-yield* Effect.promise(() =>
-  factory([
-    { type: Person.Person, count: 20 },
-    { type: Organization.Organization, count: 10 },
-  ]),
-);
+yield *
+  Effect.promise(() =>
+    factory([
+      { type: Person.Person, count: 20 },
+      { type: Organization.Organization, count: 10 },
+    ]),
+  );
 ```
 
 ### Seed Faker
