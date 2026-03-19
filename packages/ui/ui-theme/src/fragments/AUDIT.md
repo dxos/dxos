@@ -2,60 +2,48 @@
 
 External packages importing fragment definitions from `ui-theme/src/fragments`.
 
-**Note:** After merging `burdon/icon-size`, the following have been moved to `util/`:
-- `elevation.ts` → `util/elevation.ts`
-- `size.ts` → `util/size.ts`
-- `valence.ts` → `util/valence.ts`
+**Note:** `elevation.ts`, `size.ts`, and `valence.ts` have been moved to `util/` on the `burdon/icon-size` branch.
 
-## Remaining in `fragments/`
+## Current Fragment Exports
 
-### `density.ts`
-- `densityBlockSize` — *not found in grep*
-- `coarseBlockSize` — *not found in grep*
-- `fineDimensions` — *not found in grep*
-
-### `disabled.ts`
-- `staticDisabled` — *not found in grep*
-- `dataDisabled` — *not found in grep*
-
-### `focus.ts`
-- `focusRing` — 2 imports
-- `subduedFocus` — *not found in grep*
-- `staticFocusRing` — *not found in grep*
-
-### `hover.ts` (most imported)
-- `ghostHover` — 7 imports
-- `subtleHover` — 4 imports
-- `hoverableControls` — 8 imports
-- `hoverableControlItem` — 7 imports
-- `hoverableFocusedWithinControls` — 8 imports
-- `hoverableOpenControlItem` — 3 imports
-- `groupHoverControlItemWithTransition` — 2 imports
-
-### `text.ts`
-- `descriptionMessage` — 5 imports
-- `descriptionTextPrimary` — 1 import
-
-## Moved to `util/`
-
-### `elevation.ts` (now `util/elevation.ts`)
-- `surfaceShadow` — 2 imports
-- `surfaceZIndex` — 1 import
-
-### `size.ts` (now `util/size.ts`)
-- `getSize` — 12 imports
-- `iconSize` — 5 imports
-
-### `valence.ts` (now `util/valence.ts`)
-- `textValence` — 1 import
-- `messageValence` — 1 import
+| File | Definition | External Imports |
+|------|-----------|-----------------|
+| `density.ts` | `densityBlockSize` | 0 |
+| `density.ts` | `coarseBlockSize` | 0 |
+| `density.ts` | `coarseDimensions` | 0 |
+| `density.ts` | `fineBlockSize` | 0 |
+| `density.ts` | `fineDimensions` | 0 |
+| `disabled.ts` | `staticDisabled` | 0 |
+| `disabled.ts` | `dataDisabled` | 0 |
+| `focus.ts` | `focusRing` | 2 |
+| `focus.ts` | `subduedFocus` | 0 |
+| `focus.ts` | `staticFocusRing` | 0 |
+| `hover.ts` | `subtleHover` | 4 |
+| `hover.ts` | `ghostHover` | 7 |
+| `hover.ts` | `ghostFocusWithin` | 0 |
+| `hover.ts` | `hoverableControls` | 8 |
+| `hover.ts` | `groupHoverControlItemWithTransition` | 2 |
+| `hover.ts` | `hoverableFocusedKeyboardControls` | 0 |
+| `hover.ts` | `hoverableFocusedWithinControls` | 8 |
+| `hover.ts` | `hoverableOpenControlItem` | 3 |
+| `hover.ts` | `hoverableControlItem` | 7 |
+| `text.ts` | `descriptionTextPrimary` | 1 |
+| `text.ts` | `descriptionMessage` | 5 |
 
 ## Summary
 
-**Most commonly imported (in fragments):**
-1. `hoverableControls` & `hoverableFocusedWithinControls` (8 each)
-2. `ghostHover` & `hoverableControlItem` (7 each)
+**Total fragments:** 21
+**Unused fragments:** 15 (71%)
+**Used fragments:** 6 (29%)
 
-**Unused fragments:**
-- All exports from `density.ts` and `disabled.ts`
-- Most from `focus.ts` except `focusRing`
+**Most imported:**
+- `hoverableControls` (8)
+- `hoverableFocusedWithinControls` (8)
+- `ghostHover` (7)
+- `hoverableControlItem` (7)
+
+**Candidates for removal:**
+- All exports from `density.ts` (5 unused)
+- All exports from `disabled.ts` (2 unused)
+- `subduedFocus`, `staticFocusRing` from `focus.ts`
+- `ghostFocusWithin`, `hoverableFocusedKeyboardControls` from `hover.ts`
