@@ -2,11 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import { defineOperation } from '@dxos/operation';
-
 /**
- * YouTube plugin operations.
+ * YouTube plugin operations (placeholder for future expansion).
  */
 export const YouTubeOperation = {
-  OnCreateSpace: defineOperation<{ spaceId: string }>(),
-};
+  // Operations will be defined here when needed.
+} as const;

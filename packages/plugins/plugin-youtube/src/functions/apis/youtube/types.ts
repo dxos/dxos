@@ -142,6 +142,8 @@ export const VideoItem = Schema.Struct({
   statistics: Schema.optional(VideoStatistics),
 });
 
+export type VideoItem = Schema.Schema.Type<typeof VideoItem>;
+
 /**
  * YouTube videos list response.
  */

@@ -13,7 +13,8 @@ import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
-import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder } from '@dxos/plugin-graph';
 
 import { YouTubeFunctions } from '../../functions';
@@ -55,7 +56,7 @@ export default Capability.makeModule(
           )[0];
           return Effect.succeed([
             {
-              id: `${matched.nodeId}${ATTENDABLE_PATH_SEPARATOR}video`,
+              id: `${matched.nodeId}${COMPANION_PREFIX}video`,
               type: PLANK_COMPANION_TYPE,
               data: video ?? 'video',
               properties: {

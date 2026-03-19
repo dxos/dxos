@@ -12,7 +12,7 @@ import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref as EchoRef } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 
@@ -151,13 +151,15 @@ const fetchPlaylistVideos = (uploadsPlaylistId: string, maxVideos?: number) => {
   );
 };
 
+type TranscriptData = { segments: Video.TranscriptSegment[]; fullText: string };
+
 /**
- * Maps YouTube API video item to YouTubeVideo type.
+ * Maps YouTube API video item to YouTubeVideo data.
  */
-const mapVideo = (
+const mapVideoData = (
   item: YouTube.VideoItem,
-  transcript?: { segments: unknown[]; fullText: string },
-): Video.YouTubeVideo => ({
+  transcript?: TranscriptData,
+): Omit<Video.YouTubeVideo, 'id' | '~@dxos/echo/Kind'> => ({
   title: item.snippet?.title ?? 'Untitled',
   videoId: item.id,
   description: item.snippet?.description,
@@ -172,7 +174,7 @@ const mapVideo = (
   viewCount: item.statistics?.viewCount ? parseInt(item.statistics.viewCount, 10) : undefined,
   likeCount: item.statistics?.likeCount ? parseInt(item.statistics.likeCount, 10) : undefined,
   transcript: transcript?.fullText,
-  transcriptSegments: transcript?.segments as Video.YouTubeVideo['transcriptSegments'],
+  transcriptSegments: transcript?.segments,
   transcriptFetched: true,
 });
 
@@ -212,19 +214,20 @@ const streamVideosToFeed = Effect.fn(function* (
     Stream.flatMap(
       (item) =>
         Effect.gen(function* () {
-          let transcript: { segments: unknown[]; fullText: string } | undefined;
+          let transcript: TranscriptData | undefined;
 
           if (includeTranscripts) {
             log('fetching transcript', { videoId: item.id });
-            transcript = yield* fetchTranscript(item.id);
-            if (transcript) {
+            const result = yield* fetchTranscript(item.id);
+            if (result) {
+              transcript = result;
               log('transcript fetched', { videoId: item.id, length: transcript.fullText.length });
             } else {
               log('no transcript available', { videoId: item.id });
             }
           }
 
-          return mapVideo(item, transcript);
+          return mapVideoData(item, transcript);
         }),
       {
         concurrency: STREAMING_CONFIG.transcriptFetchConcurrency,
@@ -242,7 +245,7 @@ const streamVideosToFeed = Effect.fn(function* (
         return videos.length;
       }),
     ),
-    Stream.runFold(0, (acc, count) => acc + count),
+    Stream.runFold(0, (acc, batchCount) => acc + batchCount),
   );
 
   return count;
@@ -253,7 +256,7 @@ export default defineFunction({
   name: 'Sync YouTube Channel',
   description: 'Sync videos from a YouTube channel to the feed.',
   inputSchema: Schema.Struct({
-    channel: Type.Ref(Channel.YouTubeChannel).annotations({
+    channel: EchoRef.Ref(Channel.YouTubeChannel).annotations({
       description: 'Reference to the YouTube channel to sync videos from.',
     }),
     restrictedMode: Schema.Boolean.pipe(
@@ -282,7 +285,8 @@ export default defineFunction({
       log('syncing youtube channel', { channel: channelRef.dxn.toString(), restrictedMode, includeTranscripts });
       const channel = yield* Database.load(channelRef);
 
-      const channelUrl = channel.channelUrl ?? channel.channelId;
+      const channelUrl =
+        (channel as Channel.YouTubeChannel).channelUrl ?? (channel as Channel.YouTubeChannel).channelId;
       if (!channelUrl) {
         return yield* Effect.fail(new Error('No channel URL or ID configured'));
       }
@@ -293,7 +297,7 @@ export default defineFunction({
       const { channelId, channelTitle, uploadsPlaylistId } = yield* getUploadsPlaylistId(channelInfo);
       log('found channel', { channelId, channelTitle, uploadsPlaylistId });
 
-      Obj.change(channel, (channelObj) => {
+      Obj.change(channel as Channel.YouTubeChannel, (channelObj) => {
         channelObj.channelId = channelId;
         if (!channelObj.name) {
           channelObj.name = channelTitle;
@@ -301,9 +305,9 @@ export default defineFunction({
       });
 
       // Get the feed and query for existing videos.
-      const feed = yield* Database.load(channel.feed as Ref.Ref<Feed.Feed>);
-      const existingVideos = yield* Feed.runQuery(feed, Filter.schema(Schema.Struct({ videoId: Schema.String })));
-      const existingVideoIds = new Set(existingVideos.map((video) => video.videoId));
+      const feed = yield* Database.load((channel as Channel.YouTubeChannel).feed as EchoRef.Ref<Feed.Feed>);
+      const existingVideos = yield* Feed.runQuery(feed, Filter.type(Video.YouTubeVideo));
+      const existingVideoIds = new Set(existingVideos.map((video: Video.YouTubeVideo) => video.videoId));
       log('existing videos', { count: existingVideoIds.size });
 
       const newVideosCount = yield* streamVideosToFeed(
@@ -314,7 +318,7 @@ export default defineFunction({
         includeTranscripts,
       );
 
-      Obj.change(channel, (channelObj) => {
+      Obj.change(channel as Channel.YouTubeChannel, (channelObj) => {
         channelObj.lastSyncedAt = new Date().toISOString();
       });
 
