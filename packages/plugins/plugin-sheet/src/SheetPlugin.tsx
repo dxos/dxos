@@ -14,7 +14,14 @@ import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 
-import { AnchorSort, ComputeGraphRegistry, Markdown, OperationResolver, ReactSurface, SheetState } from './capabilities';
+import {
+  AnchorSort,
+  ComputeGraphRegistry,
+  Markdown,
+  OperationResolver,
+  ReactSurface,
+  SheetState,
+} from './capabilities';
 import { meta } from './meta';
 import { serializer } from './serializer';
 import { translations } from './translations';

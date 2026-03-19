@@ -76,7 +76,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
           icon: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: SpaceOperation.StoredSchemaForm,
-          createObject: (((props, options) =>
+          createObject: ((props, options) =>
             Effect.gen(function* () {
               const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
                 db: options.db,
@@ -88,7 +88,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
                 subject: [],
                 object: result.object,
               };
-            })) satisfies CreateObject),
+            })) satisfies CreateObject,
         },
       },
       {

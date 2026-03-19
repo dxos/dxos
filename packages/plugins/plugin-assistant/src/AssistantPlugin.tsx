@@ -47,7 +47,10 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           iconHue: Annotation.IconAnnotation.get(Chat.Chat).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props, options) =>
             Effect.gen(function* () {
-              const { object } = yield* Operation.invoke(AssistantOperation.CreateChat, { db: options.db, name: props?.name });
+              const { object } = yield* Operation.invoke(AssistantOperation.CreateChat, {
+                db: options.db,
+                name: props?.name,
+              });
               return yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,

@@ -35,7 +35,10 @@ export const TablePlugin = Plugin.define(meta).pipe(
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const object = yield* Effect.promise(async () => {
-              const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: options.db, typename: props.typename });
+              const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+                db: options.db,
+                typename: props.typename,
+              });
               return Table.make({ name: props.name, view, jsonSchema });
             });
             return yield* Operation.invoke(SpaceOperation.AddObject, {

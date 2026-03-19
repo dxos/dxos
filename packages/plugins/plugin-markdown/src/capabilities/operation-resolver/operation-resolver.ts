@@ -31,8 +31,7 @@ export default Capability.makeModule(
           }
           const range = Cursor.getRangeFromCursor(entry.view.state, cursor);
           if (range) {
-            const selection =
-              entry.view.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
+            const selection = entry.view.state.selection.main.from !== range.from ? { anchor: range.from } : undefined;
             const effects: any[] = [EditorView.scrollIntoView(range.from, { y: 'start', yMargin: 96 })];
             if (selection) {
               effects.push(setSelection.of({ current: entry.documentId }));

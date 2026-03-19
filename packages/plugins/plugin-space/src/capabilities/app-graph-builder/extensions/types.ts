@@ -336,11 +336,11 @@ const createSchemaActions = ({
                   typename,
                 });
               } else {
-                const result = yield* (createObjectFn({}, { db: space.db, target: space.db }) as Effect.Effect<
+                const result = yield* createObjectFn({}, { db: space.db, target: space.db }) as Effect.Effect<
                   { subject: readonly string[] },
                   Error,
                   never
-                >);
+                >;
                 if (result.subject.length > 0) {
                   yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
                 }
