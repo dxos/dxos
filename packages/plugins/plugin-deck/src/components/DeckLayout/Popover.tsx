@@ -73,6 +73,7 @@ export const PopoverContent = () => {
   const popoverSubject = state.popoverContent?.subject;
   const isObjectPopover = Obj.isObject(popoverSubject);
   const objectMenuItems = useObjectMenuItems(popoverSubject);
+  const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const icon = isObjectPopover
     ? Function.pipe(
         Obj.getSchema(popoverSubject),
@@ -82,6 +83,7 @@ export const PopoverContent = () => {
         Option.getOrElse(() => 'ph--placeholder--regular'),
       )
     : undefined;
+
   const handleClose = useCallback(() => {
     setOpen(false);
     updateEphemeral((state) => ({
@@ -124,17 +126,20 @@ export const PopoverContent = () => {
             <Menu.Root>
               <Card.Root border={false} classNames='dx-card-popover'>
                 <Card.Toolbar>
-                  {icon ? <Card.Icon icon={icon} /> : <Card.IconBlock />}
-                  {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
-                  <Menu.Trigger asChild disabled={!objectMenuItems.length}>
-                    <Toolbar.IconButton
-                      iconOnly
-                      variant='ghost'
-                      icon='ph--dots-three-vertical--regular'
-                      label='Actions'
-                    />
-                  </Menu.Trigger>
-                  <Menu.Content items={objectMenuItems} />
+                  <Card.IconBlock padding>{icon && <Card.Icon icon={icon} />}</Card.IconBlock>
+                  <Card.Title>{title}</Card.Title>
+                  {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+                  <Card.IconBlock padding>
+                    <Menu.Trigger asChild disabled={!objectMenuItems.length}>
+                      <Toolbar.IconButton
+                        variant='ghost'
+                        icon='ph--dots-three-vertical--regular'
+                        iconOnly
+                        label='Actions'
+                      />
+                    </Menu.Trigger>
+                    <Menu.Content items={objectMenuItems} />
+                  </Card.IconBlock>
                 </Card.Toolbar>
                 <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
               </Card.Root>
