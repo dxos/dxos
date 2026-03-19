@@ -6,32 +6,32 @@ All components and compound component exports that have `<ScrollArea.Root>` as t
 
 **Note:** This audit is being systematically verified. Total of 50+ files contain `<ScrollArea.Root>` but many use it in nested positions. This table documents only those where it IS the root element of an export.
 
-| Package                      | Filename                   | Component                | Type     | Composable |
-| ---------------------------- | -------------------------- | ------------------------ | -------- | ---------- |
-| `composer-crx`               | `Options.tsx`              | `Options`                | Direct   | -          |
-| `testbench-app`              | `ItemList.tsx`             | `ItemList`               | Direct   | -          |
-| `plugin-assistant`           | `Toolbox.tsx`              | `Toolbox`                | Direct   | -          |
-| `plugin-inbox`               | `Event.tsx`                | `Event.Viewport`         | Compound | -          |
-| `plugin-outliner`            | `Journal.tsx`              | `Journal`                | Direct   | -          |
-| `plugin-registry`            | `PluginDetail.tsx`         | `PluginDetail`           | Direct   | -          |
-| `plugin-registry`            | `PluginRegistry.tsx`       | `PluginRegistry`         | Direct   | -          |
-| `plugin-thread`              | `ChatContainer.tsx`        | `ChatContainer`          | Direct   | -          |
-| `plugin-thread`              | `ThreadCompanion.tsx`      | `ThreadCompanion`        | Direct   | -          |
-| `react-ui`                   | `ScrollContainer.tsx`      | `ScrollContainer.Root`   | Compound | -          |
-| `react-ui-form`              | `Form.tsx`                 | `Form.Viewport`          | Compound | -          |
-| `react-ui-form`              | `Settings.tsx`             | `Settings.Root`          | Compound | -          |
-| `react-ui-mosaic`            | `Board.tsx`                | `Board.Content`          | Compound | -          |
-| `react-ui-mosaic`            | `Column.tsx`               | `BoardColumn.Body`       | Compound | -          |
-| `react-ui-searchlist`        | `SearchList.tsx`           | `SearchList.Viewport`    | Compound | -          |
-| `react-ui-syntax-highlighter`| `SyntaxHighlighter.tsx`    | `SyntaxHighlighter`      | Direct   | -          |
+| Package                       | Filename                | Component              | Type     | Composable |
+| ----------------------------- | ----------------------- | ---------------------- | -------- | ---------- |
+| `composer-crx`                | `Options.tsx`           | `Options`              | Direct   | -          |
+| `testbench-app`               | `ItemList.tsx`          | `ItemList`             | Direct   | -          |
+| `plugin-assistant`            | `Toolbox.tsx`           | `Toolbox`              | Direct   | -          |
+| `plugin-inbox`                | `Event.tsx`             | `Event.Viewport`       | Compound | Yes        |
+| `plugin-outliner`             | `Journal.tsx`           | `Journal`              | Direct   | -          |
+| `plugin-registry`             | `PluginDetail.tsx`      | `PluginDetail`         | Direct   | -          |
+| `plugin-registry`             | `PluginRegistry.tsx`    | `PluginRegistry`       | Direct   | -          |
+| `plugin-thread`               | `ChatContainer.tsx`     | `ChatContainer`        | Direct   | -          |
+| `plugin-thread`               | `ThreadCompanion.tsx`   | `ThreadCompanion`      | Direct   | -          |
+| `react-ui`                    | `ScrollContainer.tsx`   | `ScrollContainer.Root` | Compound | -          |
+| `react-ui-form`               | `Form.tsx`              | `Form.Viewport`        | Compound | -          |
+| `react-ui-form`               | `Settings.tsx`          | `Settings.Root`        | Compound | -          |
+| `react-ui-mosaic`             | `Board.tsx`             | `Board.Content`        | Compound | -          |
+| `react-ui-mosaic`             | `Column.tsx`            | `BoardColumn.Body`     | Compound | -          |
+| `react-ui-searchlist`         | `SearchList.tsx`        | `SearchList.Viewport`  | Compound | -          |
+| `react-ui-syntax-highlighter` | `SyntaxHighlighter.tsx` | `SyntaxHighlighter`    | Direct   | -          |
 
 **Summary:**
 
 - **Total verified exports:** 16
 - **Direct components:** 9
 - **Compound components:** 7
-- **With ComposableProps:** 0
-- **Without ComposableProps:** 16
+- **With ComposableProps:** 1 (Event.Viewport)
+- **Without ComposableProps:** 15
 
 ## Phase 2: Remaining Files to Audit
 
@@ -56,5 +56,5 @@ The following ~34 files contain `<ScrollArea.Root>` but root element status need
 
 ## Phase 3
 
-- [ ] Ensure all radix-style composite components that include Viewports are Composible.
+- [ ] Ensure all radix-style composite components that include Viewports are Composible
   - Examples: SearchList.Viewport, Form.Viewport, Board.Content, Event.Viewport, etc.
