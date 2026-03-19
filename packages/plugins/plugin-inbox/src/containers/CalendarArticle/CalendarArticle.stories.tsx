@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { Capabilities } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
@@ -14,8 +13,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withAttention } from '@dxos/react-ui-attention/testing';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { InboxPlugin } from '../../InboxPlugin';
 import { createEvents } from '../../testing';
