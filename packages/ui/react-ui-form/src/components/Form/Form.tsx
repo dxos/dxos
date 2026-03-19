@@ -10,14 +10,14 @@ import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import {
+  ComposableProps,
   IconButton,
   type IconButtonProps,
   ScrollArea,
-  type ScrollAreaRootProps,
   type ThemedClassName,
   useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import {
   type FormHandler,
@@ -177,24 +177,16 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = PropsWithChildren<ScrollAreaRootProps>;
+type FormViewportProps = ComposableProps;
 
-const FormViewport = ({
-  children,
-  classNames,
-  margin = true,
-  padding = true,
-  thin = true,
-  ...props
-}: FormViewportProps) => {
+const FormViewport = ({ children, ...props }: FormViewportProps) => {
   return (
     <ScrollArea.Root
+      {...composableProps(props)}
       orientation='vertical'
-      classNames={classNames}
-      margin={margin}
-      padding={padding}
-      thin={thin}
-      {...props}
+      margin
+      padding
+      thin
     >
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>

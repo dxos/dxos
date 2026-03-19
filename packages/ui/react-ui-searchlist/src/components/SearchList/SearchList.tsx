@@ -19,6 +19,7 @@ import React, {
 } from 'react';
 
 import {
+  ComposableProps,
   type Density,
   type Elevation,
   Icon,
@@ -29,7 +30,7 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -380,12 +381,16 @@ SearchListInput.displayName = 'SearchList.Input';
 // Viewport
 //
 
-type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
+type SearchListViewportProps = ComposableProps;
 
 const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
-  ({ classNames, children }, forwardedRef) => {
+  ({ children, ...props }, forwardedRef) => {
     return (
-      <ScrollArea.Root role='listbox' classNames={mx(classNames)} thin ref={forwardedRef}>
+      <ScrollArea.Root
+        {...composableProps(props, { role: 'listbox' })}
+        thin
+        ref={forwardedRef}
+      >
         <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
       </ScrollArea.Root>
     );

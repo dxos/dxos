@@ -17,9 +17,9 @@ import React, {
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { ComposableProps, IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -161,12 +161,13 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
-type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> &
+type BoardColumnBodyProps = ComposableProps &
+  Pick<BoardColumnProps, 'data'> &
   Pick<MosaicContainerProps, 'eventHandler' | 'debug'> & {
     Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
   };
 
-const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
+const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug, ...props }: BoardColumnBodyProps) => {
   const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const items = useAtomValue(model.items(data));
@@ -180,7 +181,13 @@ const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug }: BoardC
       eventHandler={eventHandler}
       debug={debug}
     >
-      <ScrollArea.Root orientation='vertical' thin margin padding>
+      <ScrollArea.Root
+        {...composableProps(props)}
+        orientation='vertical'
+        thin
+        margin
+        padding
+      >
         <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
           <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
         </ScrollArea.Viewport>
