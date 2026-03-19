@@ -15,6 +15,7 @@ import { Collection, Database, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { OperationHandlerSet } from '@dxos/operation';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -30,7 +31,11 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [DatabaseBlueprint, MarkdownBlueprint, BrowserBlueprint].flatMap((blueprint) => blueprint.functions),
+  operationHandlers: OperationHandlerSet.merge(
+    DatabaseBlueprint.operations,
+    MarkdownBlueprint.operations,
+    BrowserBlueprint.operations,
+  ),
   types: [Blueprint.Blueprint, Person.Person, Markdown.Document, SpaceProperties, Collection.Collection],
   tracing: 'pretty',
 });

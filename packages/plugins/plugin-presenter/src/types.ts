@@ -19,13 +19,11 @@ const PRESENTER_OPERATION = `${meta.id}.operation`;
 export namespace PresenterOperation {
   export const TogglePresentation = Operation.make({
     meta: { key: `${PRESENTER_OPERATION}.toggle-presentation`, name: 'Toggle Presentation' },
-    schema: {
-      input: Schema.Struct({
-        object: Schema.Union(Markdown.Document, Collection.Collection),
-        state: Schema.optional(Schema.Boolean),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      object: Schema.Union(Markdown.Document, Collection.Collection),
+      state: Schema.optional(Schema.Boolean),
+    }),
+    output: Schema.Void,
   });
 }
 

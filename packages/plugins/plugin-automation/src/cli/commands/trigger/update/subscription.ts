@@ -14,7 +14,8 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { DXN, Database, Filter, JsonSchema, Obj, Query, Ref } from '@dxos/echo';
-import { Function, Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
 import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
@@ -61,7 +62,7 @@ export const subscription = Command.make(
 ).pipe(
   Command.withDescription('Update a subscription trigger.'),
   Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
-  Command.provideEffectDiscard(() => withTypes(Function.Function, Trigger.Trigger)),
+  Command.provideEffectDiscard(() => withTypes(Operation.PersistentOperation, Trigger.Trigger)),
 );
 
 /**
@@ -95,10 +96,10 @@ const extractCurrentTypename = (spec: Trigger.SubscriptionSpec | undefined): Opt
  * @returns The current function (either original or newly assigned)
  */
 const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionIdOption: Option.Option<string>) {
-  let currentFn: Function.Function | undefined = trigger.function
+  let currentFn: Operation.PersistentOperation | undefined = trigger.function
     ? yield* Database.load(trigger.function) as any
     : undefined;
-  if (currentFn && !Obj.instanceOf(Function.Function, currentFn)) {
+  if (currentFn && !Obj.instanceOf(Operation.PersistentOperation, currentFn)) {
     currentFn = undefined;
   }
   const currentFunctionName = currentFn ? (currentFn.name ?? currentFn.id) : undefined;
@@ -115,9 +116,9 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
       onNone: () => selectFunction(),
       onSome: (id) => Effect.succeed(id),
     });
-    const functions = yield* Database.runQuery(Filter.type(Function.Function));
+    const functions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
     const foundFn = functions.find((fn) => fn.id === functionId);
-    if (!foundFn || !Obj.instanceOf(Function.Function, foundFn)) {
+    if (!foundFn || !Obj.instanceOf(Operation.PersistentOperation, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
     Obj.change(trigger, (mutableTrigger) => {
@@ -227,7 +228,7 @@ const updateSpec = Effect.fn(function* (
  */
 const updateInput = Effect.fn(function* (
   trigger: Trigger.Trigger,
-  fn: Function.Function,
+  fn: Operation.PersistentOperation,
   inputOption: Option.Option<Record<string, any>>,
 ) {
   const currentInput = trigger.input as Record<string, any> | undefined;

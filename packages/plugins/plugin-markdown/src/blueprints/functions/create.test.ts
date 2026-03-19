@@ -23,12 +23,12 @@ import { HasSubject } from '@dxos/types';
 import { WithProperties } from '../../testing';
 import MarkdownBlueprint from '../markdown-blueprint';
 
-import create from './create';
+import { Create } from './definitions';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [...MarkdownBlueprint.functions],
+  operationHandlers: MarkdownBlueprint.operations,
   types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
   tracing: 'pretty',
 });
@@ -40,7 +40,7 @@ describe('create', () => {
       function* (_) {
         const name = 'BlueYard';
         const content = 'Founders and portfolio of BlueYard.';
-        const result = yield* FunctionInvocationService.invokeFunction(create, {
+        const result = yield* FunctionInvocationService.invokeFunction(Create, {
           name,
           content,
         });

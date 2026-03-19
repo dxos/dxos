@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
 import { type Entity, Obj, Relation, Type } from '@dxos/echo';
-import { Function, Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { faker } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -62,7 +63,7 @@ const meta = {
         TestSchema.Organization,
         TestSchema.Person,
         TestSchema.Project,
-        Function.Function,
+        Operation.PersistentOperation,
         Trigger.Trigger,
         WorksAt,
       ],
@@ -96,7 +97,7 @@ const meta = {
 
         const functions = Array.from({ length: 3 }, (_, index) =>
           space.db.add(
-            Function.make({
+            Obj.make(Operation.PersistentOperation, {
               name: `function-${index}`,
               version: '0.1.0',
               description: faker.lorem.sentence(),

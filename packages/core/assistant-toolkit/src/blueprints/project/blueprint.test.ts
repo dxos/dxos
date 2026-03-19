@@ -15,10 +15,11 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionDefinition, QueueService, Trigger } from '@dxos/functions';
+import { QueueService, Trigger } from '@dxos/functions';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -30,13 +31,13 @@ import { Chat, Plan, Project } from '../../types';
 import { PlanningBlueprint } from '../planning';
 
 import ProjectBlueprintDef from './blueprint';
-import { ProjectFunctions } from './functions';
+import { Agent, ProjectHandlers } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [...Object.values(ProjectFunctions), ...MarkdownBlueprint.functions],
+  operationHandlers: OperationHandlerSet.merge(ProjectHandlers, MarkdownBlueprint.operations),
   types: [
     Project.Project,
     Plan.Plan,
@@ -127,7 +128,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
               kind: 'queue',
               queue: inboxQueue.dxn.toString(),
             },
-            function: Ref.make(FunctionDefinition.serialize(ProjectFunctions.Agent)),
+            function: Ref.make(Operation.serialize(Agent)),
             input: {
               project: Ref.make(project),
               event: '{{event}}',

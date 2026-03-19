@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { FunctionDefinition, Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { FeedAnnotation } from '@dxos/schema';
 
+import { Agent, Qualifier } from './functions/definitions';
 import { Project } from '../../types';
-
-import { ProjectFunctions } from './functions';
 
 /**
  * Foreign key {@link PROJECT_TRIGGER_EXTENSION_KEY} => <project id : ObjectId>.
@@ -101,11 +101,7 @@ export const syncProjectTriggers = (project: Project.Project): Effect.Effect<voi
             kind: 'queue',
             queue: queueDxn.toString(),
           },
-          function: Ref.make(
-            FunctionDefinition.serialize(
-              project.useQualifyingAgent ? ProjectFunctions.Qualifier : ProjectFunctions.Agent,
-            ),
-          ),
+          function: Ref.make(Operation.serialize(project.useQualifyingAgent ? Qualifier : Agent)),
           input: {
             project: Ref.make(project),
             event: '{{event}}',
@@ -134,7 +130,7 @@ export const syncProjectTriggers = (project: Project.Project): Effect.Effect<voi
                 },
               ],
             },
-            function: Ref.make(FunctionDefinition.serialize(ProjectFunctions.Agent)),
+            function: Ref.make(Operation.serialize(Agent)),
             enabled: true,
             spec: {
               kind: 'queue',

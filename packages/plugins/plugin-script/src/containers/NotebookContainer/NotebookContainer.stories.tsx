@@ -8,9 +8,9 @@ import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AgentFunctions } from '@dxos/assistant-toolkit';
+import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
-import { Function, serializeFunction } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -50,7 +50,7 @@ const meta: Meta<typeof NotebookContainer> = {
               services: SERVICES_CONFIG.REMOTE,
             },
           }),
-          types: [...DataTypes, Notebook.Notebook, Function.Function, Markdown.Document],
+          types: [...DataTypes, Notebook.Notebook, Operation.PersistentOperation, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* Effect.promise(() => client.halo.createIdentity());
@@ -60,7 +60,7 @@ const meta: Meta<typeof NotebookContainer> = {
 
               space.db.add(createNotebook());
               space.db.add(Markdown.make({ content: '# Hello World' }));
-              space.db.add(serializeFunction(AgentFunctions.Prompt));
+              space.db.add(Operation.serialize(AgentPrompt));
             }),
         }),
         AssistantPlugin(),

@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { Function } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { type CellValue } from '@dxos/vendor-hyperformula';
 import { DetailedCellError } from '@dxos/vendor-hyperformula';
 
@@ -15,7 +15,7 @@ import { TestBuilder } from './testing';
 describe('ComputeGraph', () => {
   let testBuilder: TestBuilder;
   beforeEach(async () => {
-    testBuilder = new TestBuilder({ types: [Function.Function] });
+    testBuilder = new TestBuilder({ types: [Operation.PersistentOperation] });
     await testBuilder.open();
   });
   afterEach(async () => {
@@ -30,7 +30,9 @@ describe('ComputeGraph', () => {
     // Create script.
     const trigger = new Trigger();
     graph.update.once(() => trigger.wake());
-    const functionObject = space.db.add(Function.make({ name: 'test', version: '0.0.1', binding: 'TEST' }));
+    const functionObject = space.db.add(
+      Obj.make(Operation.PersistentOperation, { name: 'test', version: '0.0.1', binding: 'TEST' }),
+    );
     await trigger.wait();
     const functions = graph.getFunctions({ echo: true });
     expect(functions).to.toHaveLength(1);
@@ -49,7 +51,7 @@ describe('ComputeGraph', () => {
 
     const trigger = new Trigger();
     graph.update.once(() => trigger.wake());
-    space.db.add(Function.make({ name: 'forex', version: '0.0.1', binding: 'FOREX' }));
+    space.db.add(Obj.make(Operation.PersistentOperation, { name: 'forex', version: '0.0.1', binding: 'FOREX' }));
     await trigger.wait();
 
     const stored = graph.mapFunctionBindingToId('=FOREX(C6,C7)');

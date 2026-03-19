@@ -7,7 +7,8 @@ import React, { useCallback, useRef } from 'react';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
 import { Ref, getSnapshot, isInstanceOf } from '@dxos/echo/internal';
-import { Function, Script } from '@dxos/functions';
+import { Script } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { useClient } from '@dxos/react-client';
 import { Filter, parseId } from '@dxos/react-client/echo';
 import {
@@ -66,7 +67,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
         return;
       }
 
-      const [fn] = await space.db.query(Filter.type(Function.Function, { source: Ref.make(object) })).run();
+      const [fn] = await space.db.query(Filter.type(Operation.PersistentOperation, { source: Ref.make(object) })).run();
       if (!fn) {
         return;
       }

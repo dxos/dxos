@@ -7,67 +7,56 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
-import { TracingService, defineFunction } from '@dxos/functions';
+import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
+
+import { Summarize } from './definitions';
 
 /**
  * Summarize a transcript of a meeting.
  */
-export default defineFunction({
-  key: 'org.dxos.function.transcription.summarize',
-  name: 'Summarize',
-  description: 'Summarize a transcript of a meeting.',
-  inputSchema: Schema.Struct({
-    transcript: Schema.String.annotations({
-      description: 'The transcript of the meeting.',
-    }),
-    notes: Schema.optional(Schema.String).annotations({
-      description: 'Additional notes from the participants.',
-    }),
-  }),
-  outputSchema: Schema.Struct({
-    summary: Schema.String.annotations({
-      description: 'The summary of the transcript.',
-    }),
-  }),
-  handler: Effect.fnUntraced(
-    function* ({ data: { transcript, notes } }) {
-      const result = yield* new AiSession().run({
-        prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,
-        history: [],
-        system: systemPrompt,
-        observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
-      });
+export default Summarize.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(
+      function* ({ transcript, notes }) {
+        const result = yield* new AiSession().run({
+          prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,
+          history: [],
+          system: systemPrompt,
+          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
+        });
 
-      const summary = Function.pipe(
-        result,
-        Array.findLast((msg) => msg.sender.role === 'assistant' && msg.blocks.some((block) => block._tag === 'text')),
-        Option.flatMap((msg) =>
-          Function.pipe(
-            msg.blocks,
-            Array.findLast((block) => block._tag === 'text'),
-            Option.map((block) => block.text),
+        const summary = Function.pipe(
+          result,
+          Array.findLast((msg) => msg.sender.role === 'assistant' && msg.blocks.some((block) => block._tag === 'text')),
+          Option.flatMap((msg) =>
+            Function.pipe(
+              msg.blocks,
+              Array.findLast((block) => block._tag === 'text'),
+              Option.map((block) => block.text),
+            ),
           ),
-        ),
-        Option.getOrThrowWith(() => new Error('No summary found')),
-      );
+          Option.getOrThrowWith(() => new Error('No summary found')),
+        );
 
-      return { summary };
-    },
-    Effect.provide(
-      Layer.mergeAll(
-        AiService.model('@anthropic/claude-sonnet-4-0'),
-        ToolResolverService.layerEmpty,
-        ToolExecutionService.layerEmpty,
-        TracingService.layerNoop,
+        return { summary };
+      },
+      Effect.provide(
+        Layer.mergeAll(
+          AiService.model('@anthropic/claude-sonnet-4-0'),
+          ToolResolverService.layerEmpty,
+          ToolExecutionService.layerEmpty,
+          TracingService.layerNoop,
+          FunctionInvocationService.layerNotAvailable,
+        ),
       ),
     ),
   ),
-});
+);
 
 const systemPrompt = trim`
   You are a helpful assistant that summarizes transcripts of meetings.

@@ -14,9 +14,11 @@ import { DynamicRuntime, causeToError, runAndForwardErrors } from '@dxos/effect'
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { NoHandlerError } from './errors';
-import * as Operation from './operation';
-import type * as OperationResolver from './resolver';
+import * as Operation from './Operation';
+import type * as OperationResolver from './OperationResolver';
 import * as Scheduler from './scheduler';
+
+// @import-as-namespace
 
 /**
  * Invocation event emitted after each operation.
