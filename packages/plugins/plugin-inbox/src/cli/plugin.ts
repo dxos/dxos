@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { Operation } from '@dxos/operation';
+import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
 import { OperationResolver } from '../capabilities/operation-resolver';
@@ -20,13 +21,31 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       {
         id: Mailbox.Mailbox.typename,
         metadata: {
-          createObject: ((props) => Effect.sync(() => Mailbox.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Mailbox.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
         id: Calendar.Calendar.typename,
         metadata: {
-          createObject: ((props) => Effect.sync(() => Calendar.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Calendar.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
     ],

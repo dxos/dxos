@@ -5,8 +5,6 @@
 import type * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 
-import type { Position } from '@dxos/util';
-
 import type * as Operation from './Operation';
 import type { Service as OperationService } from './service';
 
@@ -26,14 +24,12 @@ type AllowedServices<Def extends Operation.Definition<any, any>> =
   | OperationService;
 
 /**
- * Operation resolver - maps an operation definition to a handler with optional filter.
+ * Operation resolver - maps an operation definition to a handler.
  * Handlers are provided with HandlerContext (Operation.Service) by the invoker.
  */
 export interface OperationResolver<I = any, O = any, E extends Error = Error, R = HandlerContext> {
   operation: Operation.Definition<I, O>;
   handler: Operation.Handler<I, O, E, R>;
-  position?: Position;
-  filter?: (input: I) => boolean;
 }
 
 /**
@@ -45,8 +41,6 @@ export type OperationResolverProps<Def extends Operation.Definition<any, any>, E
   handler: (
     input: Schema.Schema.Type<Def['input']>,
   ) => Effect.Effect<Schema.Schema.Type<Def['output']>, E, AllowedServices<Def>>;
-  position?: Position;
-  filter?: (input: Schema.Schema.Type<Def['input']>) => boolean;
 };
 
 /**

@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { Operation } from '@dxos/operation';
+import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 import { Text } from '@dxos/schema';
 
 // NOTE: Must not import from index to avoid pulling in react dependencies.
@@ -19,7 +20,16 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Markdown.Document.typename,
       metadata: {
-        createObject: ((props) => Effect.sync(() => Markdown.make(props))) satisfies CreateObject,
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = Markdown.make(props);
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
+          })) satisfies CreateObject,
       },
     },
   }),

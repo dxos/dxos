@@ -12,7 +12,7 @@ import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
@@ -45,7 +45,16 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Channel.Channel).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Channel.Channel).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props) => Effect.sync(() => Channel.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Channel.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {

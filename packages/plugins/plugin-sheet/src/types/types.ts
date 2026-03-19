@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
@@ -60,6 +61,17 @@ export namespace SheetOperation {
       axisIndex: Schema.String,
     }),
     output: DropAxisOutput,
+  });
+
+  export const ScrollToAnchor = Operation.make({
+    meta: { key: `${SHEET_OPERATION}.scroll-to-anchor`, name: 'Scroll To Anchor' },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      subject: Schema.String.annotations({ description: 'Attendable ID of the sheet.' }),
+      cursor: Schema.String.annotations({ description: 'Cell range coordinates.' }),
+      ref: Schema.optional(Schema.Any.annotations({ description: 'Active refs for highlighting.' })),
+    }),
+    output: Schema.Void,
   });
 
   /**
