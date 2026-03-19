@@ -59,6 +59,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
 
     return (
       <Mosaic.Tile
+        ref={rootRef}
         asChild
         dragHandle={dragHandleRef.current}
         id={data.id}
@@ -75,8 +76,8 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
               ref={composedRef}
             >
               <Card.Toolbar>
-                <Card.DragHandle ref={dragHandleRef} />
-                <Card.Title>{label}</Card.Title>
+                <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
+                <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
                 <Menu.Trigger asChild disabled={!items?.length}>
                   <Toolbar.IconButton
