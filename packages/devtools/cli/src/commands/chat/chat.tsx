@@ -22,7 +22,7 @@ import { Assistant } from '@dxos/plugin-assistant/types';
 
 import { App, render } from '../../components';
 import { theme } from '../../theme';
-import { type AiChatServices, Provider, chatLayer, createLogBuffer, functions, toolkits, types } from '../../util';
+import { type AiChatServices, Provider, chatLayer, createLogBuffer, operationHandlers, toolkits, types } from '../../util';
 
 import { Chat } from './components';
 import { ChatProcessor } from './processor';
@@ -80,7 +80,7 @@ export const chat = Command.make(
       const processor = new ChatProcessor({
         runtime,
         toolkit,
-        functions,
+        functions: operationHandlers,
         metadata: service.metadata,
         registry,
       });
@@ -164,6 +164,6 @@ export const chat = Command.make(
     }),
 ).pipe(
   Command.withDescription('Open chat interface.'),
-  Command.provide(({ provider, spaceId }) => chatLayer({ provider, spaceId, functions })),
+  Command.provide(({ provider, spaceId }) => chatLayer({ provider, spaceId, functions: operationHandlers })),
   Command.provideEffectDiscard(() => withTypes(...types)),
 );

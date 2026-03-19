@@ -92,7 +92,7 @@ const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
           <TriggerStatusPopover
             isRunning={isRunning}
             state={triggerState}
-            currentFunctionName={state?.invocations.at(-1)?.function?.name ?? state?.invocations.at(-1)?.function?.key}
+            currentFunctionName={state?.invocations.at(-1)?.function?.meta.name ?? state?.invocations.at(-1)?.function?.meta.key}
             lastInvocation={state?.invocations.at(-1)}
             onToggle={isRunning ? stop : start}
           />

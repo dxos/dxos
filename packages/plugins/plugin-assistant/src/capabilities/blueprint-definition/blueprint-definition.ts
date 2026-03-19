@@ -3,26 +3,26 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Record from 'effect/Record';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import {
-  AgentFunctions,
+  AgentHandlers,
   BrowserBlueprint,
   DatabaseBlueprint,
   DiscordBlueprint,
-  EntityExtractionFunctions,
+  EntityExtractionHandlers,
   LinearBlueprint,
   PlanningBlueprint,
   ProjectBlueprint,
-  ProjectFunctions,
+  ProjectHandlers,
   ResearchBlueprint,
   WebSearchBlueprint,
   MemoryBlueprint,
   AutomationBlueprint,
   ProjectWizardBlueprint,
 } from '@dxos/assistant-toolkit';
+import type { OperationHandlerSet } from '@dxos/operation';
 
 import { AssistantBlueprint } from '../../blueprints';
 
@@ -41,13 +41,9 @@ const blueprintDefinition = Capability.makeModule(() =>
     Capability.contributes(AppCapabilities.BlueprintDefinition, AutomationBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, ProjectWizardBlueprint),
 
-    Capability.contributes(AppCapabilities.Functions, Record.values(AgentFunctions)),
-    Capability.contributes(AppCapabilities.Functions, Record.values(EntityExtractionFunctions)),
-    Capability.contributes(AppCapabilities.Functions, [
-      ProjectFunctions.Agent,
-      ProjectFunctions.GetContext,
-      ProjectFunctions.Qualifier,
-    ]),
+    Capability.contributes(AppCapabilities.Functions, AgentHandlers),
+    Capability.contributes(AppCapabilities.Functions, EntityExtractionHandlers),
+    Capability.contributes(AppCapabilities.Functions, ProjectHandlers),
   ]),
 );
 

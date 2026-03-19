@@ -24,6 +24,7 @@ import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
+import { type OperationHandlerSet } from '@dxos/operation';
 import { type Message } from '@dxos/types';
 import { isTruthy } from '@dxos/util';
 
@@ -32,7 +33,7 @@ import { type AiChatServices, blueprintRegistry } from '../../util';
 export type ChatProcessorOptions = {
   runtime: Runtime.Runtime<AiChatServices>;
   toolkit: GenericToolkit.GenericToolkit;
-  functions: Operation.Definition.Any[];
+  functions: OperationHandlerSet.OperationHandlerSet;
   metadata?: AiService.ServiceMetadata;
   registry?: Registry.Registry;
 };
@@ -41,7 +42,7 @@ export type ChatProcessorOptions = {
 export class ChatProcessor {
   private readonly _runtime: Runtime.Runtime<AiChatServices>;
   private readonly _toolkit: GenericToolkit.GenericToolkit;
-  private readonly _functions: Operation.Definition.Any[];
+  private readonly _functions: OperationHandlerSet.OperationHandlerSet;
   private readonly _metadata?: AiService.ServiceMetadata;
   private readonly _registry?: Registry.Registry;
 

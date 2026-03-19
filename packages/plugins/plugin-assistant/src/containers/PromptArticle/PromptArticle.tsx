@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { AgentFunctions } from '@dxos/assistant-toolkit';
+import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
@@ -24,7 +24,7 @@ export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProp
   const { hasAttention } = useAttention(attendableId);
   const db = Obj.getDatabase(subject);
 
-  const inputData = useMemo<Operation.Definition.Input<typeof AgentFunctions.Prompt> | undefined>(
+  const inputData = useMemo<Operation.Definition.Input<typeof AgentPrompt> | undefined>(
     () =>
       subject && db
         ? {
@@ -39,7 +39,7 @@ export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProp
     db?.spaceId,
     () => {
       invariant(inputData);
-      return invokeFunctionWithTracing(AgentFunctions.Prompt, inputData);
+      return invokeFunctionWithTracing(AgentPrompt, inputData);
     },
     [inputData],
   );
