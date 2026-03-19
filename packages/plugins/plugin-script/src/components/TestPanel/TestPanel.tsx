@@ -121,12 +121,7 @@ export const TestPanel = ({ classNames, onInvoke }: TestPanelProps) => {
           />
         </Input.Root>
         <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
-        <Toolbar.IconButton
-          icon='ph--trash--regular'
-          label='Clear'
-          iconOnly
-          onClick={handleClear}
-        />
+        <Toolbar.IconButton icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
       </Toolbar.Root>
     </div>
   );
