@@ -21,6 +21,11 @@ Key properties:
 
 Import: `import { Operation, OperationHandlerSet } from '@dxos/operation';`
 
+## Naming
+
+- Definitions: use a plain name without a `Definition` suffix (e.g. `ReadName`, `Fibonacci`).
+- Handlers: may add a `Handler` suffix (e.g. `ReadNameHandler`).
+
 ## Defining an Operation
 
 Use `Operation.make` to create a definition. Definitions live in a separate file from handlers.
@@ -60,10 +65,14 @@ export const MyOperation = Operation.make({
 
 ## Writing a Handler
 
-Each handler file default-exports the definition piped through `Operation.withHandler`.
-The handler function receives the decoded input and returns an `Effect`.
+There are two patterns for attaching handlers, depending on whether the handler needs to be deployable to EDGE.
+
+### Pattern 1: Deployable handlers (one file per handler)
+
+Use this when handlers may be deployed to EDGE. Each handler file default-exports the definition piped through `Operation.withHandler`. The barrel `index.ts` uses `OperationHandlerSet.lazy(...)` to load them on demand.
 
 ```ts
+// handler-a.ts
 import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/operation';
 import { MyOperation } from './definitions';
@@ -77,7 +86,36 @@ export default MyOperation.pipe(
 );
 ```
 
-### Handler patterns
+```ts
+// index.ts
+import { OperationHandlerSet } from '@dxos/operation';
+export * from './definitions';
+
+export const MyHandlers = OperationHandlerSet.lazy(
+  () => import('./handler-a'),
+  () => import('./handler-b'),
+);
+```
+
+### Pattern 2: Inline handler set (tests, local-only code)
+
+When handlers don't need individual files (e.g. tests, local-only logic), create the `OperationHandlerSet` directly with `OperationHandlerSet.make(...)`. No need to define individual handler variables — build the set inline:
+
+```ts
+import { Operation, OperationHandlerSet } from '@dxos/operation';
+
+const Handlers = OperationHandlerSet.make(
+  Operation.withHandler(
+    ReadName,
+    Effect.fnUntraced(function* ({ org }) {
+      const resolved = yield* Database.load(org);
+      return resolved.name ?? '<no org>';
+    }),
+  ),
+);
+```
+
+### Handler examples
 
 **Simple handler** (no services):
 
@@ -105,23 +143,11 @@ export default MyOp.pipe(
 );
 ```
 
-**Handler with `Schema.Any` input/output** (pass-through):
-
-```ts
-export default EchoOp.pipe(
-  Operation.withHandler(
-    Effect.fn(function* (input) {
-      return input;
-    }),
-  ),
-);
-```
-
 Note: Services need to be explicitly listed in the operation definition.
 
 ## File Structure
 
-Follow this layout (see `packages/core/functions/src/example/` for reference):
+For deployable operations, follow this layout (see `packages/core/functions/src/example/` for reference):
 
 ```
 my-operations/
@@ -168,8 +194,11 @@ export default OpA.pipe(
 
 ### `index.ts` — Barrel with lazy handler set
 
+Export definitions and create a lazy handler set. See `packages/plugins/plugin-markdown/src/blueprints/functions/` for reference.
+
 ```ts
 import { OperationHandlerSet } from '@dxos/operation';
+
 export * from './definitions';
 
 export const MyHandlers = OperationHandlerSet.lazy(
@@ -177,6 +206,8 @@ export const MyHandlers = OperationHandlerSet.lazy(
   () => import('./handler-b'),
 );
 ```
+
+For blueprints: pass the definitions to `Blueprint.toolDefinitions({ operations: [Create, Open, Update] })`, and pass `MyHandlers` to the blueprint definition's `operations` field.
 
 ## OperationHandlerSet
 

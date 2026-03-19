@@ -6,10 +6,10 @@ import * as Schema from 'effect/Schema';
 
 import { asyncTimeout } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { type FunctionDefinition } from '@dxos/functions';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
+import { Operation } from '@dxos/operation';
 
 export const ExtractionInput = Schema.Struct({
   message: Message.Message,
@@ -31,7 +31,7 @@ export interface ExtractionOutput extends Schema.Schema.Type<typeof ExtractionOu
 
 export type ProcessTranscriptMessageProps = {
   input: ExtractionInput;
-  function: FunctionDefinition<ExtractionInput, ExtractionOutput>;
+  function: Operation.Definition<ExtractionInput, ExtractionOutput>;
   executor: FunctionExecutor;
 
   options?: {
@@ -49,7 +49,7 @@ export type ProcessTranscriptMessageProps = {
   };
 };
 
-export type ExtractionFunction = FunctionDefinition<ExtractionInput, ExtractionOutput>;
+export type ExtractionFunction = Operation.Definition<ExtractionInput, ExtractionOutput>;
 
 /**
  * Extract entities from the transcript message and add them to the message.
@@ -58,9 +58,9 @@ export type ExtractionFunction = FunctionDefinition<ExtractionInput, ExtractionO
 export const processTranscriptMessage = async (params: ProcessTranscriptMessageProps): Promise<ExtractionOutput> => {
   try {
     if (params.options?.timeout && params.options.timeout > 0) {
-      return await asyncTimeout(params.executor.invoke(params.function, params.input), params.options.timeout);
+      // return await asyncTimeout(params.executor.invoke(params.function, params.input), params.options.timeout);
     } else {
-      return await params.executor.invoke(params.function, params.input);
+      // return await params.executor.invoke(params.function, params.input);
     }
   } catch (error) {
     if (params.options?.fallbackToRaw) {
@@ -73,4 +73,7 @@ export const processTranscriptMessage = async (params: ProcessTranscriptMessageP
       throw error;
     }
   }
+
+  // TODO(dmaretskyi): Restore extraction logic.
+  return { message: params.input.message, timeElapsed: 0 };
 };

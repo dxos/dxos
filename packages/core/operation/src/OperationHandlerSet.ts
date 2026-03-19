@@ -16,6 +16,12 @@ export interface OperationHandlerSet {
   getHandlers(): Promise<Operation.WithHandler<Operation.Definition.Any>[]>;
 }
 
+export const empty: OperationHandlerSet = {
+  [TypeId]: TypeId,
+  handlers: Effect.succeed([]),
+  getHandlers: () => Promise.resolve([]),
+};
+
 /**
  * Creates a new operation handler set from a list of handlers.
  *

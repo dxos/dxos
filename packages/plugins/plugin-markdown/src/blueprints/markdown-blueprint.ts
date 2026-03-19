@@ -6,17 +6,15 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { MarkdownFunctions } from './functions';
+import { MarkdownHandlers, Create, Open, Update } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
-
-const functions = Object.values(MarkdownFunctions);
 
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Markdown',
-    tools: Blueprint.toolDefinitions({ operations: functions }),
+    tools: Blueprint.toolDefinitions({ operations: [Create, Open, Update] }),
     instructions: Template.make({
       // TODO(wittjosiah): Move example to function input schema annotation.
       source: trim`
@@ -39,7 +37,7 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
+  operations: MarkdownHandlers,
   make,
 };
 
