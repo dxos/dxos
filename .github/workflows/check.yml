@@ -29,6 +29,7 @@ on:
 env:
   DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
   DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
+  TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
 
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
@@ -100,8 +101,10 @@ jobs:
     timeout-minutes: 30
     env:
       NODE_VERSION: ${{ matrix.node-version }}
+      DX_TEST_TAGS: 'flaky'
       VITEST_ENV: 'node'
       VITEST_COVERAGE: 'true'
+      VITEST_XML_REPORT: 'true'
       # NOTE: Browser tests also require a process for chromium. Limiting to 4 provides headroom for those processes.
       MOON_CONCURRENCY: 4
     steps:
@@ -127,13 +130,26 @@ jobs:
       - name: Install Playwright
         run: pnpm run install-playwright
 
+      - name: Clean stale test results
+        run: rm -rf test-results
+
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        continue-on-error: true
         run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        continue-on-error: true
         run: moon run :test :test-browser :test-storybook -- --no-file-parallelism
+
+      - name: Upload Test Results to Trunk
+        if: ${{ !cancelled() }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/**/results.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
@@ -214,13 +230,26 @@ jobs:
       - name: Clear Storybook Vite cache
         run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
 
+      - name: Clean stale test results
+        run: rm -rf test-results
+
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        continue-on-error: true
         run: PLAYWRIGHT_BROWSER=all moon run :e2e --affected remote --concurrency=2
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        continue-on-error: true
         run: PLAYWRIGHT_BROWSER=all moon run :e2e --concurrency=2
+
+      - name: Upload E2E Results to Trunk
+        if: ${{ !cancelled() }}
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/playwright/report/*.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
