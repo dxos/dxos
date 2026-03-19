@@ -139,33 +139,33 @@ interface ObjectPropUpdateCallback<T> {
 
 ### useObject signatures
 
-| Signature | Input | Return |
-| --- | --- | --- |
-| `useObject(ref)` | `Ref.Ref<T>` | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
-| `useObject(ref)` | `Ref.Ref<T> \| undefined` | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
-| `useObject(obj)` | `T` | `[Obj.Snapshot<T>, ObjectUpdateCallback<T>]` |
-| `useObject(obj)` | `T \| undefined` | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
-| `useObject(objOrRef)` | `T \| Ref.Ref<T>` | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
-| `useObject(obj, property)` | `T, K` | `[T[K], ObjectPropUpdateCallback<T[K]>]` |
-| `useObject(obj, property)` | `T \| undefined, K` | `[T[K] \| undefined, ObjectPropUpdateCallback<T[K]>]` |
-| `useObject(ref, property)` | `Ref.Ref<T>, K` | `[T[K] \| undefined, ObjectPropUpdateCallback<T[K]>]` |
-| `useObject(ref, property)` | `Ref.Ref<T> \| undefined, K` | `[T[K] \| undefined, ObjectPropUpdateCallback<T[K]>]` |
+| Signature                  | Input                        | Return                                                    |
+| -------------------------- | ---------------------------- | --------------------------------------------------------- |
+| `useObject(ref)`           | `Ref.Ref<T>`                 | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
+| `useObject(ref)`           | `Ref.Ref<T> \| undefined`    | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
+| `useObject(obj)`           | `T`                          | `[Obj.Snapshot<T>, ObjectUpdateCallback<T>]`              |
+| `useObject(obj)`           | `T \| undefined`             | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
+| `useObject(objOrRef)`      | `T \| Ref.Ref<T>`            | `[Obj.Snapshot<T> \| undefined, ObjectUpdateCallback<T>]` |
+| `useObject(obj, property)` | `T, K`                       | `[T[K], ObjectPropUpdateCallback<T[K]>]`                  |
+| `useObject(obj, property)` | `T \| undefined, K`          | `[T[K] \| undefined, ObjectPropUpdateCallback<T[K]>]`     |
+| `useObject(ref, property)` | `Ref.Ref<T>, K`              | `[T[K] \| undefined, ObjectPropUpdateCallback<T[K]>]`     |
+| `useObject(ref, property)` | `Ref.Ref<T> \| undefined, K` | `[T[K] \| undefined, ObjectPropUpdateCallback<T[K]>]`     |
 
 ### useObjects signature
 
-| Signature | Input | Return |
-| --- | --- | --- |
+| Signature          | Input                   | Return              |
+| ------------------ | ----------------------- | ------------------- |
 | `useObjects(refs)` | `readonly Ref.Ref<T>[]` | `Obj.Snapshot<T>[]` |
 
 ### useQuery signatures
 
-| Signature | Input | Return |
-| --- | --- | --- |
-| `useQuery(resource, query)` | `Database.Queryable \| undefined, Query` | `Entity[]` |
+| Signature                    | Input                                     | Return     |
+| ---------------------------- | ----------------------------------------- | ---------- |
+| `useQuery(resource, query)`  | `Database.Queryable \| undefined, Query`  | `Entity[]` |
 | `useQuery(resource, filter)` | `Database.Queryable \| undefined, Filter` | `Entity[]` |
 
 ### useSchema signature
 
-| Signature | Input | Return |
-| --- | --- | --- |
+| Signature                   | Input                                                 | Return                        |
+| --------------------------- | ----------------------------------------------------- | ----------------------------- |
 | `useSchema(db?, typename?)` | `Database.Database \| undefined, string \| undefined` | `Type.AnyEntity \| undefined` |
