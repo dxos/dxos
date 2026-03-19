@@ -56,7 +56,7 @@ const make = () =>
         },
       ],
     }),
-    tools: Blueprint.toolDefinitions({ functions }),
+    tools: Blueprint.toolDefinitions({ operations: functions }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {

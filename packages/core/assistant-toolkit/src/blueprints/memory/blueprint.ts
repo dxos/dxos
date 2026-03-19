@@ -32,7 +32,7 @@ const make = () =>
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
-    tools: Blueprint.toolDefinitions({ functions }),
+    tools: Blueprint.toolDefinitions({ operations: functions }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {

@@ -33,7 +33,7 @@ const make = () =>
         IMPORTANT: Before attempting to create a project call the [project-rules] tool to get the rules for creating a project.
       `,
     }),
-    tools: Blueprint.toolDefinitions({ functions }),
+    tools: Blueprint.toolDefinitions({ operations: functions }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {

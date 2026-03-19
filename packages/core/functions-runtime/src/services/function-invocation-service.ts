@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { Database, Feed } from '@dxos/echo';
 import { CredentialsService, FunctionInvocationService, type InvocationServices, QueueService } from '@dxos/functions';
-import { type FunctionDefinition } from '@dxos/functions';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { FunctionImplementationResolver, LocalFunctionExecutionService } from './local-function-execution';
 import { RemoteFunctionExecutionService } from './remote-function-execution-service';
@@ -24,12 +24,12 @@ export const FunctionInvocationServiceLayer = Layer.effect(
 
     return {
       invokeFunction: <I, O>(
-        functionDef: FunctionDefinition<I, O>,
+        functionDef: Operation.Definition<I, O, any>,
         input: I,
       ): Effect.Effect<O, never, InvocationServices> =>
         Effect.gen(function* () {
-          if (functionDef.meta?.deployedFunctionId) {
-            return yield* remoteExecutionService.callFunction<I, O>(functionDef.meta.deployedFunctionId, input);
+          if (functionDef.meta?.deployedId) {
+            return yield* remoteExecutionService.callFunction<I, O>(functionDef.meta.deployedId, input);
           }
 
           return yield* localExecutionService.invokeFunction(functionDef, input);
@@ -71,11 +71,10 @@ export const FunctionInvocationServiceLayerWithLocalLoopbackExecutor = Layer.eff
 /**
  * Layer for testing with optional function implementations.
  */
-// TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
 export const FunctionInvocationServiceLayerTest = ({
-  functions = [],
+  functions = OperationHandlerSet.make(),
 }: {
-  functions?: readonly FunctionDefinition.Any[];
+  functions?: OperationHandlerSet.OperationHandlerSet;
 } = {}): Layer.Layer<
   FunctionInvocationService,
   never,
@@ -88,14 +87,11 @@ export const FunctionInvocationServiceLayerTest = ({
 
 /**
  * @deprecated Use {@link FunctionInvocationServiceLayerTest} instead.
- * Layer for testing with all services mocked/unavailable.
  */
-// TODO(dmaretskyi): This shouldn't default to all services being not available.
-// TODO(dmaretskyi): Don't provide `FunctionImplementationResolver`.
 export const FunctionInvocationServiceLayerTestMocked = ({
   functions,
 }: {
-  functions?: readonly FunctionDefinition.Any[];
+  functions?: OperationHandlerSet.OperationHandlerSet;
 }): Layer.Layer<FunctionInvocationService> =>
   FunctionInvocationServiceLayerTest({ functions }).pipe(
     Layer.provide(AiService.notAvailable),

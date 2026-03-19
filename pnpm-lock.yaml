@@ -4292,6 +4292,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../operation
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -5159,6 +5162,9 @@ importers:
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std
+      '@dxos/operation':
+        specifier: workspace:*
+        version: link:../operation
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../protocols

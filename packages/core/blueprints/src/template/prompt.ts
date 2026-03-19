@@ -8,12 +8,8 @@ import handlebars from 'handlebars';
 
 import { Database } from '@dxos/echo';
 import type { ObjectNotFoundError } from '@dxos/echo/Err';
-import {
-  type FunctionDefinition,
-  FunctionInvocationService,
-  type FunctionNotFoundError,
-  type TracingService,
-} from '@dxos/functions';
+import { FunctionInvocationService, type FunctionNotFoundError, type TracingService } from '@dxos/functions';
+import { type Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
@@ -40,11 +36,8 @@ export const processTemplate = (
     const variables = yield* Effect.forEach(template.inputs ?? [], (input) =>
       Effect.gen(function* () {
         if (input.kind === 'function') {
-          const fn = (yield* functionInvoker.resolveFunction(input.function!)) as FunctionDefinition<
-            {},
-            unknown,
-            never
-          >;
+          // TODO(dmaretskyi): create FunctionInvoker.invokeByKey function.
+          const fn = yield* functionInvoker.resolveFunction(input.function!);
           const result = yield* functionInvoker.invokeFunction(fn, {});
           return [input.name, result] as const;
         } else {

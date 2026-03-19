@@ -16,7 +16,7 @@ const make = () =>
     key: BLUEPRINT_KEY,
     name: 'Planning',
     description: 'Plans and tracks complex tasks with artifact management.',
-    tools: Blueprint.toolDefinitions({ functions: [PlanningFunctions.UpdateTasks] }),
+    tools: Blueprint.toolDefinitions({ operations: [PlanningFunctions.UpdateTasks] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {

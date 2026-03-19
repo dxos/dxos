@@ -70,7 +70,7 @@ import { MyOperation } from './definitions';
 
 export default MyOperation.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ data: { value } }) {
+    Effect.fn(function* ({ value }) {
       return { result: String(value * 2) };
     }),
   ),
@@ -84,8 +84,8 @@ export default MyOperation.pipe(
 ```ts
 export default MyOp.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ data }) {
-      return { result: process(data) };
+    Effect.fn(function* (input) {
+      return { result: process(input) };
     }),
   ),
 );
@@ -96,7 +96,7 @@ export default MyOp.pipe(
 ```ts
 export default MyOp.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ data }) {
+    Effect.fn(function* (input) {
       const db = yield* Database.Service;
       // use db...
       return { result: 'ok' };
@@ -110,8 +110,8 @@ export default MyOp.pipe(
 ```ts
 export default EchoOp.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ data }) {
-      return data;
+    Effect.fn(function* (input) {
+      return input;
     }),
   ),
 );
@@ -159,7 +159,7 @@ import { OpA } from './definitions';
 
 export default OpA.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ data: { n } }) {
+    Effect.fn(function* ({ n }) {
       return { result: String(n) };
     }),
   ),
@@ -180,7 +180,9 @@ export const MyHandlers = OperationHandlerSet.lazy(
 
 ## OperationHandlerSet
 
-Groups handlers for registration with the runtime.
+Groups handlers for registration with the runtime. The type for a handler set is `OperationHandlerSet.OperationHandlerSet`.
+
+Whenever you need to pass around a collection of handlers (test layers, registration, etc.), use `OperationHandlerSet.OperationHandlerSet` as the type — never `Operation.WithHandler<...>[]`.
 
 | Factory                          | Use case                                      |
 | -------------------------------- | --------------------------------------------- |
@@ -191,7 +193,14 @@ Groups handlers for registration with the runtime.
 ```ts
 import { OperationHandlerSet } from '@dxos/operation';
 
+// Merge multiple sets.
 const AllHandlers = OperationHandlerSet.merge(FeatureAHandlers, FeatureBHandlers);
+
+// Wrap resolved handlers (e.g. for tests).
+const TestHandlers = OperationHandlerSet.make(MyHandler, OtherHandler);
+
+// Accept as a parameter.
+const setup = (handlers: OperationHandlerSet.OperationHandlerSet) => { ... };
 ```
 
 ## Invoking Operations
@@ -256,11 +265,25 @@ import { MyFunc } from './definitions';
 
 export default MyFunc.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ data: { value } }) {
+    Effect.fn(function* ({ value }) {
       return { result: String(value) };
     }),
   ),
 );
+```
+
+### Handler input
+
+Operation handlers receive the input directly, not wrapped in `{ data }`:
+
+```ts
+// Old (FunctionDefinition) — input wrapped in { data, context }:
+handler: ({ data: { a, b } }) => a + b
+
+// New (Operation) — input passed directly:
+Operation.withHandler(Effect.fn(function* ({ a, b }) {
+  return a + b;
+}))
 ```
 
 ### Key differences
@@ -272,7 +295,7 @@ export default MyFunc.pipe(
 | Schema fields        | `inputSchema` / `outputSchema`               | `input` / `output`                                                                |
 | Metadata             | Top-level `key`, `name`, `description`       | Nested under `meta: { key, name, description }`                                   |
 | Handler              | Inline `handler` property                    | Separate: `Operation.withHandler(handler)`                                        |
-| Handler input        | `({ context, data }) => ...`                 | `Effect.fn(function* ({ data }) { ... })`                                         |
+| Handler input        | `({ context, data }) => ...`                 | `Effect.fn(function* (input) { ... })`                                            |
 | Handler return       | Plain value, Promise, or Effect              | Always `Effect`                                                                   |
 | Services             | `string[]` keys                              | `Context.Tag[]` references                                                        |
 | File structure       | Single file with definition + handler        | Split: `definitions.ts` + per-handler files                                       |

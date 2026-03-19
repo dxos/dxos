@@ -20,7 +20,7 @@ const make = () =>
     instructions: {
       source: Ref.make(Text.make()),
     },
-    tools: Blueprint.toolDefinitions({ functions, tools: ['AnthropicWebSearch'] }),
+    tools: Blueprint.toolDefinitions({ operations: functions, tools: ['AnthropicWebSearch'] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
