@@ -40,8 +40,8 @@ export const ScriptToolbar = ({ script, role, state, ...props }: ScriptToolbarPr
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <Menu.Root {...props} {...actions} attendableId={Obj.getDXN(script).toString()}>
-        <Menu.Toolbar />
+      <Menu.Root {...actions} attendableId={Obj.getDXN(script).toString()}>
+        <Menu.Toolbar {...props} />
       </Menu.Root>
     </ElevationProvider>
   );
