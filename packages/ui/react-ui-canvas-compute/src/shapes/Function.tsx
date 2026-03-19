@@ -7,7 +7,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { AnyOutput, FunctionInput } from '@dxos/conductor';
 import { Ref, getSnapshot, isInstanceOf } from '@dxos/echo/internal';
-import { Function, Script } from '@dxos/functions';
+import { Script } from '@dxos/functions';
 import { useClient } from '@dxos/react-client';
 import { Filter, parseId } from '@dxos/react-client/echo';
 import {

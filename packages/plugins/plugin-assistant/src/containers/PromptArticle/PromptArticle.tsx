@@ -24,7 +24,7 @@ export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProp
   const { hasAttention } = useAttention(attendableId);
   const db = Obj.getDatabase(subject);
 
-  const inputData = useMemo<FunctionDefinition.Input<typeof AgentFunctions.Prompt> | undefined>(
+  const inputData = useMemo<Operation.Definition.Input<typeof AgentFunctions.Prompt> | undefined>(
     () =>
       subject && db
         ? {

@@ -29,7 +29,7 @@ import { AgentFunctions, DesignBlueprint, MarkdownBlueprint, PlanningBlueprint }
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { ExampleFunctions, Function, Trigger } from '@dxos/functions';
+import { ExampleFunctions, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { OperationResolver } from '@dxos/operation';
