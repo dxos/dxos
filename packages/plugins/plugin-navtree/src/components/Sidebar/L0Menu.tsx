@@ -320,6 +320,8 @@ export const L0Menu = ({
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
         'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
         '!w-(--dx-l0-size) bg-toolbar-surface border-e border-subdued-separator dx-app-drag pb-[env(safe-area-inset-bottom)]',
+        '[body[data-platform="macos"]_&]:pt-[30px]',
+        '[body[data-platform="ios"]_&]:pt-[max(env(safe-area-inset-top),0.25rem)]',
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
@@ -337,11 +339,7 @@ export const L0Menu = ({
         <ScrollArea.Viewport>
           <div
             role='none'
-            className={mx([
-              'flex flex-col gap-2 pt-1',
-              '[body[data-platform="macos"]_&]:py-[30px]',
-              '[body[data-platform="ios"]_&]:py-[max(env(safe-area-inset-top),0.25rem)]',
-            ])}
+            className='flex flex-col gap-2 pt-1'
           >
             {topLevelItems.map((item) => (
               <L0Item
