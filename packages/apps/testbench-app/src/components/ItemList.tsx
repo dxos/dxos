@@ -2,24 +2,25 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
+import { ComposableProps, IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { mapSchemaToFields } from '@dxos/schema';
 import { automerge, createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
-import { mx, subtleHover } from '@dxos/ui-theme';
+import { composableProps, mx, subtleHover } from '@dxos/ui-theme';
 
 const MAX_RENDERED_COUNT = 80;
 
-export type ItemListProps<T> = { objects: T[] } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
+export type ItemListProps<T> = ComposableProps & { objects: T[] } & Pick<ItemProps<T>, 'debug' | 'onDelete'>;
 
-export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) => {
-  return (
-    <ScrollArea.Root padding>
-      <ScrollArea.Viewport>
+export const ItemList = forwardRef<HTMLDivElement, ItemListProps<Obj.Any>>(
+  ({ objects, debug, ...props }, forwardedRef) => {
+    return (
+      <ScrollArea.Root {...composableProps(props)} padding ref={forwardedRef}>
+        <ScrollArea.Viewport>
         {objects
           .slice(0, MAX_RENDERED_COUNT)
           .map(
@@ -33,8 +34,11 @@ export const ItemList = ({ objects, debug, ...props }: ItemListProps<Obj.Any>) =
         )}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
-  );
-};
+    );
+  },
+);
+
+ItemList.displayName = 'ItemList';
 
 const labelProps = 'shrink-0 w-20 text-right text-primary-500 px-2 py-[2px]';
 

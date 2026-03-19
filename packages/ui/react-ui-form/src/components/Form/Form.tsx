@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
-import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, forwardRef, useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
@@ -179,7 +179,7 @@ const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
 type FormViewportProps = ComposableProps;
 
-const FormViewport = ({ children, ...props }: FormViewportProps) => {
+const FormViewport = forwardRef<HTMLDivElement, FormViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
     <ScrollArea.Root
       {...composableProps(props)}
@@ -187,11 +187,12 @@ const FormViewport = ({ children, ...props }: FormViewportProps) => {
       margin
       padding
       thin
+      ref={forwardedRef}
     >
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
 
 FormViewport.displayName = FORM_VIEWPORT_NAME;
 

@@ -167,34 +167,37 @@ type BoardColumnBodyProps = ComposableProps &
     Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
   };
 
-const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug, ...props }: BoardColumnBodyProps) => {
-  const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
-  const [viewport, setViewport] = useState<HTMLElement | null>(null);
-  const items = useAtomValue(model.items(data));
+const BoardColumnBody = forwardRef<HTMLDivElement, BoardColumnBodyProps>(
+  ({ data, eventHandler, Tile = BoardItem, debug, ...props }, forwardedRef) => {
+    const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
+    const items = useAtomValue(model.items(data));
 
-  return (
-    <Mosaic.Container
-      asChild
-      withFocus
-      orientation='vertical'
-      autoScroll={viewport}
-      eventHandler={eventHandler}
-      debug={debug}
-    >
-      <ScrollArea.Root
-        {...composableProps(props)}
+    return (
+      <Mosaic.Container
+        asChild
+        withFocus
         orientation='vertical'
-        thin
-        margin
-        padding
+        autoScroll={viewport}
+        eventHandler={eventHandler}
+        debug={debug}
       >
-        <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
-          <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </Mosaic.Container>
-  );
-};
+        <ScrollArea.Root
+          {...composableProps(props)}
+          orientation='vertical'
+          thin
+          margin
+          padding
+          ref={forwardedRef}
+        >
+          <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
+            <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Mosaic.Container>
+    );
+  },
+);
 
 BoardColumnBody.displayName = BOARD_COLUMN_BODY_NAME;
 

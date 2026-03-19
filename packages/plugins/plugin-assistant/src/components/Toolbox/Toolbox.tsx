@@ -2,31 +2,32 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, forwardRef, useEffect, useState } from 'react';
 
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, type Ref } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { ComposableProps, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { type AiChatProcessor } from '../../processor';
 import { ServiceType } from '../../types';
 
-export type ToolboxProps = ThemedClassName<{
+export type ToolboxProps = ComposableProps & {
   services?: { service: ServiceType }[];
   functions?: Function.Function[];
   // TODO(burdon): Combine into single array.
   blueprints?: readonly Blueprint.Blueprint[];
   activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
-}>;
+};
 
-export const Toolbox = ({ classNames, functions, services, blueprints, activeBlueprints }: ToolboxProps) => {
-  return (
-    <ScrollArea.Root thin orientation='vertical'>
-      <ScrollArea.Viewport classNames={classNames}>
+export const Toolbox = forwardRef<HTMLDivElement, ToolboxProps>(
+  ({ functions, services, blueprints, activeBlueprints, ...props }, forwardedRef) => {
+    return (
+      <ScrollArea.Root {...composableProps(props)} thin orientation='vertical' ref={forwardedRef}>
+        <ScrollArea.Viewport>
         {blueprints && blueprints.length > 0 && (
           <Section
             title='Blueprints'
@@ -65,8 +66,11 @@ export const Toolbox = ({ classNames, functions, services, blueprints, activeBlu
         )}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
-  );
-};
+    );
+  },
+);
+
+Toolbox.displayName = 'Toolbox';
 
 type SectionProps = {
   title: string;

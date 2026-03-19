@@ -4,14 +4,15 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo } from 'react';
+import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
-import { ScrollArea } from '@dxos/react-ui';
+import { ComposableProps, ScrollArea } from '@dxos/react-ui';
+import { composableProps } from '@dxos/ui-theme';
 
 import { PluginList } from '../../components';
 import { getPluginPath } from '../../meta';
@@ -19,12 +20,12 @@ import { getPluginPath } from '../../meta';
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
   a.localeCompare(b);
 
-export type PluginRegistryProps = {
+export type PluginRegistryProps = ComposableProps & {
   id: string;
   plugins: Plugin.Plugin[];
 };
 
-export const PluginRegistry = ({ id, plugins: pluginsProp }: PluginRegistryProps) => {
+export const PluginRegistry = forwardRef<HTMLDivElement, PluginRegistryProps>(({ id, plugins: pluginsProp, ...props }, forwardedRef) => {
   const manager = usePluginManager();
   const { invoke, invokePromise } = useOperationInvoker();
   const plugins = useMemo(() => pluginsProp.sort(sortByPluginMeta), [pluginsProp]);
@@ -70,7 +71,7 @@ export const PluginRegistry = ({ id, plugins: pluginsProp }: PluginRegistryProps
   );
 
   return (
-    <ScrollArea.Root orientation='vertical'>
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
       <ScrollArea.Viewport>
         <PluginList
           plugins={plugins}
@@ -83,4 +84,6 @@ export const PluginRegistry = ({ id, plugins: pluginsProp }: PluginRegistryProps
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
+
+PluginRegistry.displayName = 'PluginRegistry';

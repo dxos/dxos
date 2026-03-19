@@ -2,12 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ChangeEvent, useEffect, useState } from 'react';
+import React, { type ChangeEvent, forwardRef, useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
 import { SpaceId } from '@dxos/keys';
-import { Input, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { ComposableProps, Input, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { composableProps } from '@dxos/ui-theme';
 
 import { DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP, getProp } from '../../config';
 import { translationKey } from '../../translations';
@@ -16,7 +17,9 @@ const headerGrid = 'grid grid-cols-[8rem_2fr_1fr_8rem] p-4 overflow-hidden';
 const propertiesGrid =
   'grid grid-cols-[8rem_1fr_1fr_8rem] p-4 overflow-hidden items-center [&_label]:m-0 [&_label]:text-base';
 
-export const Options = () => {
+export type OptionsProps = ComposableProps;
+
+export const Options = forwardRef<HTMLDivElement, OptionsProps>(({ children, ...props }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const [developerMode, setDeveloperMode] = useState(false);
   const [spaceMode, setSpaceMode] = useState(false);
@@ -56,7 +59,7 @@ export const Options = () => {
   };
 
   return (
-    <ScrollArea.Root orientation='vertical'>
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
       <ScrollArea.Viewport>
         <div className={headerGrid}>
           <a href='https://dxos.org/composer' target='_blank' rel='noreferrer' className='flex justify-end -me-4'>
@@ -110,4 +113,6 @@ export const Options = () => {
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
+
+Options.displayName = 'Options';

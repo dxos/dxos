@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import {
   Button,
@@ -42,7 +42,7 @@ const styles = {
 
 type SettingsRootProps = ComposableProps;
 
-const SettingsRoot = ({ children, ...props }: SettingsRootProps) => {
+const SettingsRoot = forwardRef<HTMLDivElement, SettingsRootProps>(({ children, ...props }, forwardedRef) => {
   const { className, ...composedProps } = composableProps(props);
   return (
     <ScrollArea.Root
@@ -50,11 +50,12 @@ const SettingsRoot = ({ children, ...props }: SettingsRootProps) => {
       className={mx('dx-document', className)}
       orientation='vertical'
       margin
+      ref={forwardedRef}
     >
       <ScrollArea.Viewport classNames='p-trim-md'>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
 
 SettingsRoot.displayName = SETTINGS_ROOT_NAME;
 

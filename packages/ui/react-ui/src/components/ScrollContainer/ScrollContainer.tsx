@@ -18,7 +18,7 @@ import React, {
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useForwardedRef } from '@dxos/react-hooks';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
@@ -58,9 +58,9 @@ type RootProps = ThemedClassName<
 /**
  * Scroll container that automatically scrolls to the bottom when new content is added.
  */
+// TODO(burdon): Make headless and move ScrollArea to Viewport.
 const Root = forwardRef<ScrollController, RootProps>(
-  ({ children, classNames: classNamesProp, pin, fade, behavior: behaviorProp = 'smooth' }, forwardedRef) => {
-    const { className, ...composedProps } = composableProps({ classNames: classNamesProp });
+  ({ children, classNames, pin, fade, behavior: behaviorProp = 'smooth' }, forwardedRef) => {
     const scrollerRef = useRef<HTMLDivElement>(null);
     const autoScrollRef = useRef(false);
     const [overflow, setOverflow] = useState(false);
@@ -140,7 +140,7 @@ const Root = forwardRef<ScrollController, RootProps>(
               )}
             />
           )}
-          <ScrollArea.Root {...composedProps} classNames={mx('min-h-0', className)} thin>
+          <ScrollArea.Root classNames={mx('min-h-0', classNames)} thin>
             <ScrollArea.Viewport ref={scrollerRef}>{children}</ScrollArea.Viewport>
           </ScrollArea.Root>
         </div>

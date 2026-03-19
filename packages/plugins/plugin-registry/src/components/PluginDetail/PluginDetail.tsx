@@ -2,22 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
-import { Icon, Input, Link, useTranslation } from '@dxos/react-ui';
-import { ScrollArea } from '@dxos/react-ui';
-import { getStyles, mx } from '@dxos/ui-theme';
+import { ComposableProps, Icon, Input, Link, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { composableProps, getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-export type PluginDetailProps = {
+export type PluginDetailProps = ComposableProps & {
   plugin: Plugin.Plugin;
   enabled?: boolean;
   onEnabledChange?: (enabled: boolean) => void;
 };
 
-export const PluginDetail = ({ plugin, enabled, onEnabledChange }: PluginDetailProps) => {
+export const PluginDetail = forwardRef<HTMLDivElement, PluginDetailProps>(({ plugin, enabled, onEnabledChange, ...props }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const {
     id,
@@ -32,7 +31,7 @@ export const PluginDetail = ({ plugin, enabled, onEnabledChange }: PluginDetailP
   const styles = getStyles(iconHue);
 
   return (
-    <ScrollArea.Root orientation='vertical'>
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
       <ScrollArea.Viewport>
         <div role='none' className='dx-document grid grid-cols-[min-content_1fr] gap-4 p-4'>
           <div role='none'>
@@ -78,4 +77,6 @@ export const PluginDetail = ({ plugin, enabled, onEnabledChange }: PluginDetailP
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
+
+PluginDetail.displayName = 'PluginDetail';
