@@ -22,7 +22,6 @@ import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
-
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
 const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
