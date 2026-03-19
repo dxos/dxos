@@ -121,7 +121,9 @@ export const upsertComposerScript = Effect.fn(function* ({
   const scriptFileName = name ?? path.basename(filePath, path.extname(filePath));
 
   if (functionObject.source) {
-    const script = (yield* Effect.tryPromise(() => functionObject.source!.load() as Promise<Script.Script>)) as Script.Script;
+    const script = (yield* Effect.tryPromise(
+      () => functionObject.source!.load() as Promise<Script.Script>,
+    )) as Script.Script;
     const source = (yield* Effect.tryPromise(() => script.source!.load())) as Text.Text;
     Obj.change(source, (s: Obj.Mutable<Text.Text>) => {
       s.content = scriptFileContent;
