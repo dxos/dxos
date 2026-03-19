@@ -16,6 +16,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - Surface should implement appropriate `<Suspense>` boundaries.
 - Surface components should end with the following suffixes if there is an unambiguous matching role: Article, Card, Dialog, Popover, Settings.
 - `src/components` and `src/containers` should contain only index files and directories.
+- Capability modules in `src/capabilities/` should use lazy exports via `Capability.lazy()` in their `index.ts` (e.g., `export const MyCapability = Capability.lazy('MyCapability', () => import('./my-capability'));`).
 
 ### General Code style
 

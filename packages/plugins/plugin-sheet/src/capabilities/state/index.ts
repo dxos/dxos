@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { default as SheetState } from './state';
+import { Capability } from '@dxos/app-framework';
+
+export const SheetState = Capability.lazy('SheetState', () => import('./state'));
