@@ -181,7 +181,8 @@ export default Capability.makeModule(
 
       Surface.create({
         id: `${meta.id}.status`,
-        role: 'status',
+        role: 'status-indicator',
+        position: 'hoist',
         component: () => <DebugStatus />,
       }),
       //

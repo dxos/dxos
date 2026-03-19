@@ -144,7 +144,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
             <Toast.Root>
               <Toast.Body>
                 <Toast.Title>
-                  <Icon icon='ph--gift--duotone' size={5} classNames='inline mr-1' />
+                  <Icon icon='ph--gift--duotone' classNames='inline mr-1' />
                   <span>{toast.title}</span>
                 </Toast.Title>
                 {toast.description && <Toast.Description>{toast.description}</Toast.Description>}

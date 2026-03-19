@@ -13,6 +13,7 @@ export type CardStyleProps = {
   variant?: 'default' | 'subtitle' | 'description';
   density?: Density;
   truncate?: boolean;
+  padding?: boolean;
 };
 
 const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
@@ -72,8 +73,12 @@ const cardLink: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 const cardLinkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link-label min-w-0 flex-1 truncate', ...etc);
 
-const cardIconBlock: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__icon-block grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center [&>*]:p-1', ...etc);
+const cardIconBlock: ComponentFunction<CardStyleProps> = ({ padding }, ...etc) =>
+  mx(
+    'dx-card__icon-block grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center',
+    padding && '[&>*]:p-1',
+    ...etc,
+  );
 
 export const cardTheme: Theme<CardStyleProps> = {
   root: cardRoot,

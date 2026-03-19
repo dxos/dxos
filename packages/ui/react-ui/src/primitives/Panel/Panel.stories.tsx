@@ -43,8 +43,8 @@ const DefaultStory = () => {
 
       <Panel.Statusbar asChild>
         <Toolbar.Root classNames='justify-between'>
-          <Toolbar.IconButton variant='ghost' icon='ph--house--regular' iconOnly label='Add' size={4} />
-          <Toolbar.IconButton variant='ghost' icon='ph--alarm--regular' iconOnly label='Status' size={4} />
+          <Toolbar.IconButton variant='ghost' icon='ph--house--regular' iconOnly label='Add' />
+          <Toolbar.IconButton variant='ghost' icon='ph--alarm--regular' iconOnly label='Status' />
         </Toolbar.Root>
       </Panel.Statusbar>
     </Panel.Root>

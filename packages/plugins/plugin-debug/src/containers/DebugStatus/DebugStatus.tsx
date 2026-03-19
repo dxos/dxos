@@ -9,7 +9,7 @@ import { useActiveSpace } from '@dxos/plugin-space';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Icon } from '@dxos/react-ui';
+import { Icon, IconButton } from '@dxos/react-ui';
 
 const styles = {
   success: 'text-sky-300 dark:text-green-700',
@@ -89,14 +89,20 @@ const ErrorIndicator = () => {
 
   if (errorRef.current) {
     return (
-      <StatusBar.Button title={errorRef.current.message} onClick={handleReset}>
-        <Icon icon='ph--warning-circle--duotone' size={4} classNames={styles.error} />
-      </StatusBar.Button>
+      <StatusBar.Item>
+        <IconButton
+          icon='ph--warning-circle--duotone'
+          iconOnly
+          label={errorRef.current.message}
+          classNames={styles.error}
+          onClick={handleReset}
+        />
+      </StatusBar.Item>
     );
   } else {
     return (
-      <StatusBar.Item title='No errors.'>
-        <Icon icon='ph--check--regular' size={4} />
+      <StatusBar.Item>
+        <IconButton variant='ghost' icon='ph--check--regular' iconOnly label='No errors.' />
       </StatusBar.Item>
     );
   }
@@ -114,14 +120,20 @@ const SwarmIndicator = () => {
 
   if (state === 0) {
     return (
-      <StatusBar.Item title='Connected to swarm.'>
-        <Icon icon='ph--lightning--regular' size={4} />
+      <StatusBar.Item>
+        <IconButton variant='ghost' icon='ph--lightning--regular' iconOnly label='Connected to swarm.' />
       </StatusBar.Item>
     );
   } else {
     return (
-      <StatusBar.Item title='Disconnected from swarm.'>
-        <Icon icon='ph--lightning-slash--regular' size={4} classNames={styles.warning} />
+      <StatusBar.Item>
+        <IconButton
+          variant='ghost'
+          icon='ph--lightning-slash--regular'
+          iconOnly
+          label='Disconnected from swarm.'
+          classNames={styles.warning}
+        />
       </StatusBar.Item>
     );
   }
@@ -156,21 +168,33 @@ const SavingIndicator = () => {
   switch (state) {
     case 2:
       return (
-        <StatusBar.Item title='Edit not saved.'>
-          <Icon icon='ph--circle--duotone' size={4} classNames={styles.warning} />
+        <StatusBar.Item>
+          <IconButton
+            variant='ghost'
+            icon='ph--circle--duotone'
+            iconOnly
+            label='Edit not saved.'
+            classNames={styles.warning}
+          />
         </StatusBar.Item>
       );
     case 1:
       return (
-        <StatusBar.Item title='Saving...'>
-          <Icon icon='ph--circle--duotone' size={4} classNames={styles.success} />
+        <StatusBar.Item>
+          <IconButton
+            variant='ghost'
+            icon='ph--circle--duotone'
+            iconOnly
+            label='Saving...'
+            classNames={styles.success}
+          />
         </StatusBar.Item>
       );
     case 0:
     default:
       return (
-        <StatusBar.Item title='Modified indicator.'>
-          <Icon icon='ph--circle--duotone' size={4} />
+        <StatusBar.Item>
+          <IconButton variant='ghost' icon='ph--circle--duotone' iconOnly label='Modified indicator.' />
         </StatusBar.Item>
       );
   }

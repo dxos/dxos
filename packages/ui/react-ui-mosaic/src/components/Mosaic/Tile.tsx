@@ -90,6 +90,15 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
 
+    // Sync forwarded ref into rootRef when parent's ref is set by a descendant (e.g. BoardItem's Card.Root).
+    // Then we can read rootRef.current only in the effects below.
+    useLayoutEffect(() => {
+      const el = forwardedRef && 'current' in forwardedRef ? (forwardedRef.current as HTMLDivElement | null) : null;
+      if (el != null) {
+        (rootRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+      }
+    }, [forwardedRef]);
+
     // State.
     const {
       id: containerId,
@@ -118,7 +127,11 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
     );
 
     useLayoutEffect(() => {
-      const root = rootRef.current;
+      const forwardedEl =
+        forwardedRef != null && 'current' in forwardedRef
+          ? (forwardedRef as React.RefObject<HTMLDivElement | null>).current
+          : null;
+      const root = (rootRef.current ?? forwardedEl) as HTMLDivElement | null;
       if (!root || !containerId || scrolling) {
         return;
       }
@@ -190,7 +203,17 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
           },
         }),
       );
-    }, [rootRef, dragHandle, eventHandler, data, scrolling, allowedEdges, setActiveLocation]);
+    }, [
+      rootRef,
+      forwardedRef,
+      containerId,
+      dragHandle,
+      eventHandler,
+      data,
+      scrolling,
+      allowedEdges,
+      setActiveLocation,
+    ]);
 
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).

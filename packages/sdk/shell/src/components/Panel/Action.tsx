@@ -93,7 +93,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
         data-testid={testId}
         onClick={activeAction.onClick}
       >
-        {activeAction.icon && <Icon icon={activeAction.icon} size={5} />}
+        {activeAction.icon && <Icon icon={activeAction.icon} />}
         <span>{activeAction.label}</span>
       </Button>
       <DropdownMenu.Root>
@@ -122,7 +122,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                     classNames='gap-2'
                     data-testid={action.testId}
                   >
-                    {action.icon && <Icon icon={action.icon} size={5} />}
+                    {action.icon && <Icon icon={action.icon} />}
                     <div role='none' className='flex-1 min-w-0 space-b-1'>
                       <p id={`${id}__label`}>{action.label}</p>
                       {action.description && (

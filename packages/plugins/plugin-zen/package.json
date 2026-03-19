@@ -69,6 +69,7 @@
     "react": "catalog:",
     "react-dom": "catalog:"
   },
+  "private": true,
   "publishConfig": {
     "access": "public"
   }

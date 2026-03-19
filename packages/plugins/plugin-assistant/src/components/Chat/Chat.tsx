@@ -438,11 +438,11 @@ type ChatToolbarProps = { companionTo?: Obj.Unknown } & ComponentPropsWithoutRef
 
 const ChatToolbar = ({ companionTo, ...props }: ChatToolbarProps) => {
   const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
-  const menu = useChatToolbarActions({ chat, companionTo });
+  const actions = useChatToolbarActions({ chat, companionTo });
 
   return (
-    <Menu.Root {...props} {...menu}>
-      <Menu.Toolbar />
+    <Menu.Root {...actions}>
+      <Menu.Toolbar {...props} />
     </Menu.Root>
   );
 };
