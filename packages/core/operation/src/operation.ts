@@ -113,6 +113,20 @@ export type WithHandler<T extends Definition.Any> = T & {
   handler: Definition.HandlerType<T>;
 };
 
+/**
+ * Checks if a value is an operation definition.
+ */
+export const isOperationDefinition = (value: unknown): value is Definition.Any => {
+  return typeof value === 'object' && value !== null && DefinitionTypeId in value;
+};
+
+/**
+ * Checks if a value is an operation with a handler.
+ */
+export const isOperationWithHandler = (value: unknown): value is WithHandler<Definition.Any> => {
+  return isOperationDefinition(value) && 'handler' in value;
+};
+
 /**a
  * Props for creating an Operation definition.
  * Derived from OperationDefinition with executionMode made optional (defaults to 'async').
@@ -128,14 +142,15 @@ export type Props<I, O> = Omit<Definition<I, O>, DefinitionTypeId | 'pipe' | 'ex
  * Applies default executionMode of 'async' if not specified.
  * The returned type preserves the literal types of props (including services).
  */
-export const make = <const P extends Props<any, any>>(
-  props: Types.NoExcessProperties<Props<any, any>, P>,
+export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P>>(
+  props: P,
 ): Definition<
   Schema$.Schema.Type<P['input']>,
   Schema$.Schema.Type<P['output']>,
   Context.Tag.Identifier<NonNullable<P['services']>[number]>
 > => {
   return {
+    [DefinitionTypeId]: { },
     ...props,
     executionMode: props.executionMode ?? 'async',
     types: props.types ?? [],
