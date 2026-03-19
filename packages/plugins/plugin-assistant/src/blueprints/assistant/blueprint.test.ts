@@ -20,7 +20,7 @@ import AssistantBlueprint from './blueprint';
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [...Object.values(DatabaseBlueprint.functions)],
+  operationHandlers: DatabaseBlueprint.operations,
   types: [Organization.Organization, Blueprint.Blueprint],
   tracing: 'pretty',
 });

@@ -19,6 +19,6 @@ export default ContextAdd.pipe(
           objects: [obj],
         }),
       );
-    }) as any,
+    }),
   ),
 );

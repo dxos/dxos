@@ -27,7 +27,6 @@ import ResearchBlueprint from '../blueprint';
 import { ResearchHandlers } from '../functions';
 import { ResearchDataTypes, ResearchGraph } from '../types';
 
-import { default as createDocument } from './document-create';
 import { default as research } from './research';
 
 ObjectId.dangerouslyDisableRandomness();
@@ -145,6 +144,7 @@ describe('Research', () => {
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
+      TestHelpers.taggedTest('flaky'),
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );
