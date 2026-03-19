@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
@@ -19,129 +18,90 @@ import {
   makeGraphWriterHandler,
   makeGraphWriterToolkit,
 } from '@dxos/assistant-toolkit';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { TracingService, defineFunction } from '@dxos/functions';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as Mailbox from '../types/Mailbox';
 import { renderMarkdown } from '../util';
 
+import { Summarize } from './definitions';
+
 /**
  * Summarize a mailbox.
  */
-export default defineFunction({
-  key: 'org.dxos.function.inbox.email-summarize',
-  name: 'Summarize',
-  description: 'Summarize a mailbox.',
-  inputSchema: Schema.Struct({
-    mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
-      description: 'Reference to the mailbox object.',
-    }),
-    skip: Schema.Number.pipe(
-      Schema.annotations({
-        description: 'The number of messages to skip.',
-      }),
-      Schema.optional,
-    ),
-    limit: Schema.Number.pipe(
-      Schema.annotations({
-        description: 'The maximum number of messages to read. Do not provide a value unless directly asked.',
-      }),
-      Schema.optional,
-    ),
-  }),
-  outputSchema: Schema.Struct({
-    summary: Schema.String.annotations({
-      description: 'The summary of the mailbox.',
-    }),
-  }),
-  types: [Feed.Feed, Mailbox.Mailbox],
-  services: [Database.Service, Feed.Service],
-  handler: Effect.fnUntraced(
-    function* ({ data: { mailbox: mailboxRef, skip = 0, limit = 20 } }) {
-      const mailbox = yield* Database.load(mailboxRef);
-      const feed = yield* Database.load(mailbox.feed);
-      const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
-      const messages = Function.pipe(
-        objects,
-        Array.reverse,
-        Array.drop(skip),
-        Array.take(limit),
-        Array.filter((message) => Obj.instanceOf(Message.Message, message)),
-        Array.flatMap(renderMarkdown),
-        Array.join('\n\n'),
-      );
+export default Summarize.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(
+      function* ({ mailbox: mailboxRef, skip = 0, limit = 20 }) {
+        const mailbox = yield* Database.load(mailboxRef);
+        const feed = yield* Database.load(mailbox.feed);
+        const objects = yield* Feed.runQuery(feed, Filter.type(Message.Message));
+        const messages = Function.pipe(
+          objects,
+          Array.reverse,
+          Array.drop(skip),
+          Array.take(limit),
+          Array.filter((message) => Obj.instanceOf(Message.Message, message)),
+          Array.flatMap(renderMarkdown),
+          Array.join('\n\n'),
+        );
 
-      const GraphWriterToolkit = makeGraphWriterToolkit({
-        // TODO(wittjosiah): Anthropic does not support GeoPoint schema currently, causing legacy schemas to be needed.
-        schema: [Person.LegacyPerson, Pipeline.Pipeline, Organization.LegacyOrganization],
-      });
-      const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit);
+        const GraphWriterToolkit = makeGraphWriterToolkit({
+          schema: [Person.LegacyPerson, Pipeline.Pipeline, Organization.LegacyOrganization],
+        });
+        const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit);
 
-      const toolkit = yield* Toolkit.merge(LocalSearchToolkit, GraphWriterToolkit).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            //
-            GraphWriterHandler,
-            LocalSearchHandler,
-          ).pipe(Layer.provide(ResearchGraph.contextQueueLayer)),
-        ),
-      );
-
-      const result = yield* new AiSession().run({
-        prompt: messages,
-        history: [],
-        system: systemPrompt,
-        toolkit,
-        observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
-      });
-
-      const summary = Function.pipe(
-        result,
-        Array.findLast((msg) => msg.sender.role === 'assistant' && msg.blocks.some((block) => block._tag === 'text')),
-        Option.flatMap((msg) =>
-          Function.pipe(
-            msg.blocks,
-            Array.findLast((block) => block._tag === 'text'),
-            Option.map((block) => block.text),
+        const toolkit = yield* Toolkit.merge(LocalSearchToolkit, GraphWriterToolkit).pipe(
+          Effect.provide(
+            Layer.mergeAll(
+              //
+              GraphWriterHandler,
+              LocalSearchHandler,
+            ).pipe(Layer.provide(ResearchGraph.contextQueueLayer)),
           ),
-        ),
-        Option.getOrThrowWith(() => new Error('No summary found')),
-      );
+        );
 
-      return { summary };
-    },
-    Effect.provide(
-      Layer.mergeAll(
-        AiService.model('@anthropic/claude-sonnet-4-5'),
-        ToolResolverService.layerEmpty,
-        ToolExecutionService.layerEmpty,
-        TracingService.layerNoop,
+        const result = yield* new AiSession().run({
+          prompt: messages,
+          history: [],
+          system: systemPrompt,
+          toolkit,
+          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
+        });
+
+        const summary = Function.pipe(
+          result,
+          Array.findLast((msg) => msg.sender.role === 'assistant' && msg.blocks.some((block) => block._tag === 'text')),
+          Option.flatMap((msg) =>
+            Function.pipe(
+              msg.blocks,
+              Array.findLast((block) => block._tag === 'text'),
+              Option.map((block) => block.text),
+            ),
+          ),
+          Option.getOrThrowWith(() => new Error('No summary found')),
+        );
+
+        return { summary };
+      },
+      Effect.provide(
+        Layer.mergeAll(
+          AiService.model('@anthropic/claude-sonnet-4-5'),
+          ToolResolverService.layerEmpty,
+          ToolExecutionService.layerEmpty,
+          TracingService.layerNoop,
+          FunctionInvocationService.layerNotAvailable,
+        ),
       ),
     ),
   ),
-});
+);
 
-const researchPrompt = trim`
-  # Research
-  As the first step perform research:
-    - Identify people, companies, projects, etc.
-    - Search local database for existing entitities.
-    - If the local entities don't exist, add new ones with graph-write tool.
-    - In your summary include references to objects instead of their names in the following format:
-
-    <example>
-      We need to talk about @dxn:queue:data:B6INSIBY3CBEF4M5VZRYBCMAHQMPYK5AJ:01K24XMVHSZHS97SG1VTVQDM5Z:01K24XPK464FSCKVQJAB2H662M
-    </example>
-`;
-
-// TODO(wittjosiah): Research is causing summaries to include a bunch of unreadable dxn references.
-const includeResearch = false;
 const systemPrompt = trim`
   You are a helpful assistant that summarizes mailboxes.
-
-  ${includeResearch ? researchPrompt : ''}
 
   # Goal
   Create a markdown summary of the mailbox with text notes provided.

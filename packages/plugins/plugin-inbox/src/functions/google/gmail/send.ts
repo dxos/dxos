@@ -4,10 +4,8 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { Feed, Ref } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -15,34 +13,14 @@ import * as Mailbox from '../../../types/Mailbox';
 import { GoogleMail } from '../../apis';
 import { GoogleCredentials } from '../../services/google-credentials';
 
-export default defineFunction({
-  key: 'org.dxos.function.inbox.google-mail-send',
-  name: 'Send Gmail',
-  description: 'Send emails via Gmail.',
-  inputSchema: Schema.Struct({
-    userId: Schema.String.pipe(Schema.optional),
-    // TODO(dmaretskyi): This should be a ref so we can send a message from database.
-    message: Message.Message,
-    mailbox: Ref.Ref(Mailbox.Mailbox).pipe(
-      Schema.annotations({ description: 'Optional mailbox to send from. Uses mailbox credentials if provided.' }),
-      Schema.optional,
-    ),
-  }),
-  outputSchema: Schema.Struct({
-    id: Schema.String,
-    threadId: Schema.String,
-  }),
-  types: [Message.Message, Feed.Feed, Mailbox.Mailbox],
-  handler: ({ data: { userId = 'me', message, mailbox: mailboxRef } }) =>
+import { GmailSend } from '../../definitions';
+
+export default GmailSend.pipe(
+  Operation.withHandler(({ userId = 'me', message, mailbox: mailboxRef }) =>
     Effect.gen(function* () {
       log('sending email', { userId, mailbox: mailboxRef?.dxn.toString() });
 
-      // Extract details from the message object.
-      // TODO(burdon): Refine Message schema to have explicit To/Subject fields or use properties.
-      // Currently assuming properties or we might need to parse body?
-      // For now, let's look for them in properties or fallback to a convention.
-
-      const to = message.properties?.to; // Assuming 'to' is stored in properties for now.
+      const to = message.properties?.to;
       const subject = message.properties?.subject;
       const cc = message.properties?.cc;
       const bcc = message.properties?.bcc;
@@ -52,11 +30,9 @@ export default defineFunction({
       const text = message.blocks.find((b) => b._tag === 'text')?.text;
 
       if (!to || !text) {
-        // Failure if essential fields are missing.
         return yield* Effect.fail(new Error('Missing "to" or content in message.'));
       }
 
-      // Construct MIME message.
       const headers = [
         `To: ${to}`,
         `Subject: ${subject ?? 'No Subject'}`,
@@ -80,7 +56,7 @@ export default defineFunction({
       };
     }).pipe(
       Effect.provide(FetchHttpClient.layer),
-      // Use feed config credentials if provided, otherwise fall back to database credentials.
       Effect.provide(mailboxRef ? GoogleCredentials.fromMailbox(mailboxRef) : GoogleCredentials.default),
     ),
-});
+  ),
+);

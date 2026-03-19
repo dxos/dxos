@@ -27,6 +27,7 @@ import {
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
+import { OperationHandlerSet } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '../../types';
@@ -74,10 +75,10 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const registry = this.#capabilities.get(Capabilities.AtomRegistry);
 
         // TODO(dmaretskyi): Make these reactive.
-        const functions = [
-          ...this.#capabilities.getAll(AppCapabilities.Functions).flat(),
-          ...this.#capabilities.getAll(AppCapabilities.BlueprintDefinition).flatMap((blueprint) => blueprint.functions),
-        ];
+        const operationHandlers = OperationHandlerSet.merge(
+          ...this.#capabilities.getAll(AppCapabilities.Functions),
+          ...this.#capabilities.getAll(AppCapabilities.BlueprintDefinition).map((blueprint) => blueprint.operations),
+        );
 
         const genericToolkitProvider = Layer.succeed(GenericToolkit.Provider, {
           getToolkit: () => {
@@ -108,9 +109,9 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             ),
           ),
           Layer.provideMerge(
-            FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
+              FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
               Layer.provideMerge(genericToolkitProvider),
-              Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
+              Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: operationHandlers })),
               Layer.provideMerge(
                 RemoteFunctionExecutionService.fromClient(
                   client,

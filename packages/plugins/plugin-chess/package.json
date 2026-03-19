@@ -63,6 +63,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/functions": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",

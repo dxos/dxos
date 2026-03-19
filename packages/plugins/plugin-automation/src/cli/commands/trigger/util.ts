@@ -14,7 +14,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { FormBuilder } from '@dxos/cli-util';
 import { Annotation, Database, Entity, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getProperties } from '@dxos/effect';
-import { Function, Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { FeedAnnotation } from '@dxos/schema';
 
 export type TriggerRemoteStatus = 'available' | 'not available' | 'n/a';
@@ -60,7 +61,10 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
       fn,
       FormBuilder.nest(
         'function',
-        FormBuilder.make().pipe(FormBuilder.set('key', fn!.key), FormBuilder.set('dxn', fn!.dxn?.toString())),
+        FormBuilder.make().pipe(
+          FormBuilder.set('key', (fn as Operation.PersistentOperation).key),
+          FormBuilder.set('dxn', Obj.getDXN(fn as Obj.Unknown).toString()),
+        ),
       ),
     ),
     FormBuilder.nestedOption('spec', Option.fromNullable(trigger.spec).pipe(Option.map(printSpec))),
@@ -272,7 +276,7 @@ export const promptForSchemaInput = Effect.fn(function* (
  * Queries the database for functions and prompts the user to select one.
  */
 export const selectFunction = Effect.fn(function* () {
-  const functions = yield* Database.runQuery(Filter.type(Function.Function));
+  const functions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
 
   if (functions.length === 0) {
     return yield* Effect.fail(new Error('No functions available'));
@@ -280,7 +284,7 @@ export const selectFunction = Effect.fn(function* () {
 
   const selected = yield* Prompt.select({
     message: 'Select a function:',
-    choices: functions.map((fn: Function.Function) => ({
+    choices: functions.map((fn: Operation.PersistentOperation) => ({
       title: fn.name ?? fn.id,
       value: fn.id,
       description: fn.description,
@@ -307,7 +311,7 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
     filteredTriggers.map((trigger) =>
       Effect.gen(function* () {
         const fn = trigger.function ? yield* Database.load(trigger.function) : undefined;
-        const functionName = fn && Obj.instanceOf(Function.Function, fn) ? (fn.name ?? fn.key ?? fn.id) : undefined;
+        const functionName = fn && Obj.instanceOf(Operation.PersistentOperation, fn) ? (fn.name ?? fn.key ?? fn.id) : undefined;
         const title = functionName ?? trigger.id;
         const description = `${trigger.enabled ? 'enabled' : 'disabled'} - ${trigger.spec?.kind ?? 'unknown'}`;
 
