@@ -17,7 +17,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - Surface components should end with the following suffixes if there is an unambiguous matching role: Article, Card, Dialog, Popover, Settings.
 - `src/components` and `src/containers` should contain only index files and directories.
 - Capability modules in `src/capabilities/` should use lazy exports via `Capability.lazy()` in their `index.ts` (e.g., `export const MyCapability = Capability.lazy('MyCapability', () => import('./my-capability'));`).
-- All interfaces should be real-time reactive. Data from ECHO is reactive by default; use atoms, queries, and reactive patterns so that UI updates automatically when underlying data changes without manual refresh or polling.
+- All interfaces should be real-time reactive. ECHO objects must be subscribed to using appropriate hooks (e.g., `useQuery`, `AtomObj`, `AtomQuery`) to receive live updates; use atoms, queries, and reactive patterns so that UI updates automatically when underlying data changes without manual refresh or polling.
 
 ### General Code style
 
