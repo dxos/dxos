@@ -25,14 +25,21 @@ import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-fram
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { AiContextBinder, ArtifactId } from '@dxos/assistant';
-import { AgentFunctions, DesignBlueprint, MarkdownBlueprint, PlanningBlueprint } from '@dxos/assistant-toolkit';
+import {
+  AgentHandlers,
+  DesignBlueprint,
+  MarkdownBlueprint,
+  MarkdownHandlers,
+  PlanningBlueprint,
+  PlanningHandlers,
+} from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
 import { Obj, Ref } from '@dxos/echo';
-import { ExampleFunctions, Function, Trigger } from '@dxos/functions';
+import { ExampleHandlers, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { OperationResolver } from '@dxos/operation';
+import { Operation, OperationResolver } from '@dxos/operation';
 import { Assistant, AssistantOperation, AssistantPlugin } from '@dxos/plugin-assistant';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
@@ -122,7 +129,7 @@ const buildPluginManagerOptions = ({
         AccessToken.AccessToken,
         Assistant.Chat,
         Blueprint.Blueprint,
-        Function.Function,
+        Operation.PersistentOperation,
         Markdown.Document,
         Prompt.Prompt,
         Trigger.Trigger,
@@ -293,11 +300,10 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
         Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, DesignBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
-        Capability.contributes(AppCapabilities.Functions, MarkdownBlueprint.functions),
-        Capability.contributes(AppCapabilities.Functions, DesignBlueprint.functions),
-        Capability.contributes(AppCapabilities.Functions, PlanningBlueprint.functions),
-        Capability.contributes(AppCapabilities.Functions, Object.values(AgentFunctions)),
-        Capability.contributes(AppCapabilities.Functions, Object.values(ExampleFunctions)),
+        Capability.contributes(AppCapabilities.Functions, MarkdownHandlers),
+        Capability.contributes(AppCapabilities.Functions, PlanningHandlers),
+        Capability.contributes(AppCapabilities.Functions, AgentHandlers),
+        Capability.contributes(AppCapabilities.Functions, ExampleHandlers),
       ]),
   }),
   Plugin.addModule({
@@ -340,7 +346,6 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
         }),
         OperationResolver.make({
           operation: AssistantOperation.CreateChat,
-          position: 'hoist',
           handler: ({ db, name }) =>
             Effect.gen(function* () {
               const registry = yield* Capability.get(Capabilities.AtomRegistry);

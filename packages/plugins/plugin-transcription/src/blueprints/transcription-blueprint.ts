@@ -6,17 +6,15 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { TranscriptionFunctions } from '../functions';
+import { Open, Summarize, TranscriptionHandlers } from '../functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.transcription';
-
-const functions = Object.values(TranscriptionFunctions);
 
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Transcription',
-    tools: Blueprint.toolDefinitions({ functions }),
+    tools: Blueprint.toolDefinitions({ operations: [Open, Summarize] }),
     instructions: Template.make({
       source: trim`
         You can open and summarize a meeting transcript.
@@ -26,7 +24,7 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
+  operations: TranscriptionHandlers,
   make,
 };
 

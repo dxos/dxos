@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import type * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { defineFunction } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
 export const toolkit = Toolkit.make(
   Tool.make('time', {
@@ -28,20 +28,26 @@ export const layer = toolkit.toLayer({
   }),
 }) satisfies Layer.Layer<Tool.Handler<'time'>>;
 
-const random = defineFunction({
-  key: 'example.com/function/random',
-  name: 'random',
-  description: 'Gets a random number.',
-  // TODO(burdon): Change type to parameters, success, failure.
-  inputSchema: Schema.Void,
-  outputSchema: Schema.Struct({
+const Random = Operation.make({
+  meta: {
+    key: 'example.com/function/random',
+    name: 'random',
+    description: 'Gets a random number.',
+  },
+  input: Schema.Void,
+  output: Schema.Struct({
     value: Schema.String,
   }),
-  handler: Effect.fn(function* () {
-    return {
-      value: Math.floor(Math.random() * 10).toString(),
-    };
-  }),
 });
+
+const random = Random.pipe(
+  Operation.withHandler(
+    Effect.fn(function* () {
+      return {
+        value: Math.floor(Math.random() * 10).toString(),
+      };
+    }),
+  ),
+);
 
 export const functions = [random];

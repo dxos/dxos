@@ -27,6 +27,7 @@ const PACKAGES = [
   '@dxos/schema',
   '@dxos/types',
   '@dxos/util',
+  '@dxos/operation',
 ];
 
 const IGNORED = [

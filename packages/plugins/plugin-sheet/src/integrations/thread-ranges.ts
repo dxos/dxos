@@ -2,23 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { useOperationInvoker, useOperationResolver } from '@dxos/app-framework/ui';
-import { companionSegment, LayoutOperation } from '@dxos/app-toolkit';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { companionSegment } from '@dxos/app-toolkit';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
-import { OperationResolver } from '@dxos/operation';
 import { DeckOperation } from '@dxos/plugin-deck/types';
 import { ThreadOperation } from '@dxos/plugin-thread/types';
 import { Filter, Query, useQuery } from '@dxos/react-client/echo';
-import { type DxGridElement, type GridContentProps } from '@dxos/react-ui-grid';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { useSheetContext } from '../components';
-import { meta } from '../meta';
 
 export const completeCellRangeToThreadCursor = (range: CompleteCellRange): string => {
   return `${range.from.col},${range.from.row},${range.to.col},${range.to.row}`;
@@ -35,32 +31,6 @@ export const parseThreadAnchorAsCellRange = (cursor: string): CompleteCellRange 
       to: { col: parseInt(toCol), row: parseInt(toRow) },
     };
   }
-};
-
-export const useUpdateFocusedCellOnThreadSelection = (grid: DxGridElement | null) => {
-  const { attendableId: sheetId, model, setActiveRefs } = useSheetContext();
-
-  const scrollIntoViewHandler = useMemo(
-    () =>
-      OperationResolver.make({
-        operation: LayoutOperation.ScrollIntoView,
-        position: 'hoist',
-        filter: (input) => input.subject === sheetId && !!input.cursor,
-        handler: (input) =>
-          Effect.sync(() => {
-            const { cursor, ref } = input;
-            if (cursor) {
-              setActiveRefs(ref as GridContentProps['activeRefs']);
-              // TODO(Zan): Everywhere we refer to the cursor in a thread context should change to `anchor`.
-              const range = parseThreadAnchorAsCellRange(cursor);
-              range && grid?.setFocus({ ...range.to, plane: 'grid' }, true);
-            }
-          }),
-      }),
-    [sheetId, setActiveRefs, grid],
-  );
-
-  useOperationResolver(meta.id, scrollIntoViewHandler);
 };
 
 export const useSelectThreadOnCellFocus = () => {

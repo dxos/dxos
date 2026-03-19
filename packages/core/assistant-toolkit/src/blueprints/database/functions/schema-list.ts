@@ -3,32 +3,25 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
 import { Database, JsonSchema, Type } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
-import { trim } from '@dxos/util';
+import { Operation } from '@dxos/operation';
 
-export default defineFunction({
-  key: 'org.dxos.function.database.schema-list',
-  name: 'List schemas',
-  description: trim`
-    Lists schemas definitions.
-  `,
-  inputSchema: Schema.Struct({
-    limit: Schema.optional(Schema.Number),
-  }),
-  outputSchema: Schema.Array(Schema.Unknown),
-  handler: Effect.fn(function* () {
-    const { db } = yield* Database.Service;
-    const schema = yield* Effect.promise(() => db.schemaRegistry.query({ location: ['database', 'runtime'] }).run());
-    return schema.map((schema) => {
-      const meta = Type.getMeta(schema);
-      return {
-        typename: Type.getTypename(schema),
-        jsonSchema: JsonSchema.toJsonSchema(schema),
-        kind: meta?.sourceSchema ? 'relation' : 'record',
-      };
-    });
-  }),
-});
+import { SchemaList } from './definitions';
+
+export default SchemaList.pipe(
+  Operation.withHandler(
+    Effect.fn(function* () {
+      const { db } = yield* Database.Service;
+      const schema = yield* Effect.promise(() => db.schemaRegistry.query({ location: ['database', 'runtime'] }).run());
+      return schema.map((schema) => {
+        const meta = Type.getMeta(schema);
+        return {
+          typename: Type.getTypename(schema),
+          jsonSchema: JsonSchema.toJsonSchema(schema),
+          kind: meta?.sourceSchema ? 'relation' : 'record',
+        };
+      });
+    }),
+  ),
+);

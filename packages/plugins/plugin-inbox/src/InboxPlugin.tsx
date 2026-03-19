@@ -11,7 +11,7 @@ import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
 import { CalendarBlueprint, InboxBlueprint } from './blueprints';
@@ -37,7 +37,14 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           iconHue: Annotation.IconAnnotation.get(Mailbox.Mailbox).pipe(Option.getOrThrow).hue ?? 'white',
           blueprints: [InboxBlueprint.key],
           inputSchema: CreateMailboxSchema,
-          createObject: ((props) => Effect.sync(() => Mailbox.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Mailbox.make(props);
+              return yield* Operation.invoke(InboxOperation.AddMailbox, {
+                object,
+                target: options.target,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -45,7 +52,16 @@ export const InboxPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Message.Message).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Message.Message).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: (() => Effect.succeed(Message.make({ sender: 'user' }))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Message.make({ sender: 'user' });
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -55,7 +71,16 @@ export const InboxPlugin = Plugin.define(meta).pipe(
           iconHue: Annotation.IconAnnotation.get(Calendar.Calendar).pipe(Option.getOrThrow).hue ?? 'white',
           blueprints: [CalendarBlueprint.key],
           inputSchema: CreateCalendarSchema,
-          createObject: ((props) => Effect.sync(() => Calendar.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Calendar.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -63,7 +88,16 @@ export const InboxPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Event.Event).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Event.Event).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props) => Effect.sync(() => Event.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Event.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
     ],

@@ -8,7 +8,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
 import {
-  AgentFunctions,
+  AgentPrompt,
   LinearBlueprint,
   MarkdownBlueprint,
   ResearchBlueprint,
@@ -19,7 +19,8 @@ import {
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
-import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
+import { Reply, Script, Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { AssistantBlueprint, translations } from '@dxos/plugin-assistant';
 import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
@@ -605,7 +606,7 @@ export const WithTriggers: Story = {
     onInit: async ({ space }) => {
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(ExampleFunctions.Reply)),
+          function: Ref.make(Operation.serialize(Reply)),
           enabled: true,
           spec: {
             kind: 'timer',
@@ -655,7 +656,7 @@ export const WithChessTrigger: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(ChessFunctions.Play)),
+          function: Ref.make(Operation.serialize(ChessFunctions.Play)),
           enabled: true,
           spec: {
             kind: 'subscription',
@@ -707,7 +708,7 @@ export const WithResearchQueue: Story = {
 
       space.db.add(
         Trigger.make({
-          function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
+          function: Ref.make(Operation.serialize(AgentPrompt)),
           enabled: true,
           spec: {
             kind: 'queue',
@@ -840,7 +841,7 @@ export const WithProject: Story = {
       );
 
       const researchTrigger = Trigger.make({
-        function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
+        function: Ref.make(Operation.serialize(AgentPrompt)),
         enabled: true,
         spec: {
           kind: 'subscription',
@@ -976,7 +977,7 @@ export const WithPrompt: Story = {
     config: config.remote,
     types: [Text.Text],
     onInit: async ({ space }) => {
-      space.db.add(serializeFunction(AgentFunctions.Prompt));
+      space.db.add(Operation.serialize(AgentPrompt));
       space.db.add(
         Prompt.make({
           name: 'Research',

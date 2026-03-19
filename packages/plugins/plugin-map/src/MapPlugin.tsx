@@ -8,7 +8,8 @@ import * as Option from 'effect/Option';
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Type } from '@dxos/echo';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { Operation } from '@dxos/operation';
+import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 import { ViewModel } from '@dxos/schema';
 
 import { AppGraphBuilder, BlueprintDefinition, MapState, OperationResolver, ReactSurface } from './capabilities';
@@ -26,18 +27,26 @@ export const MapPlugin = Plugin.define(meta).pipe(
         icon: Annotation.IconAnnotation.get(Map.Map).pipe(Option.getOrThrow).icon,
         iconHue: Annotation.IconAnnotation.get(Map.Map).pipe(Option.getOrThrow).hue ?? 'white',
         inputSchema: MapAction.CreateMap,
-        createObject: ((props, { db }) =>
-          Effect.promise(async () => {
-            const view = props.typename
-              ? (
-                  await ViewModel.makeFromDatabase({
-                    db,
-                    typename: props.typename,
-                    pivotFieldName: props.locationFieldName,
-                  })
-                ).view
-              : undefined;
-            return Map.make({ name: props.name, view });
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = yield* Effect.promise(async () => {
+              const view = props.typename
+                ? (
+                    await ViewModel.makeFromDatabase({
+                      db: options.db,
+                      typename: props.typename,
+                      pivotFieldName: props.locationFieldName,
+                    })
+                  ).view
+                : undefined;
+              return Map.make({ name: props.name, view });
+            });
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
           })) satisfies CreateObject,
       },
     },

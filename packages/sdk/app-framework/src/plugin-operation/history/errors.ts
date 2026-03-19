@@ -2,10 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationError } from '@dxos/operation';
+import { BaseError } from '@dxos/errors';
 
-export class EmptyHistoryError extends OperationError {
-  constructor() {
-    super('EMPTY_HISTORY', 'Cannot undo: history is empty.');
-  }
-}
+export class EmptyHistoryError extends BaseError.extend('EmptyHistoryError', 'Cannot undo: history is empty.') {}

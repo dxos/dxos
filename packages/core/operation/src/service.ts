@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import type { Key } from '@dxos/echo';
 
-import type * as Operation from './operation';
+import type * as Operation from './Operation';
 
 /**
  * Options for operation invocation.

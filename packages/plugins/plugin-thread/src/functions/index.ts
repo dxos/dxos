@@ -2,8 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import CreateProposals from './create-proposals';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const ThreadFunctions = {
-  CreateProposals,
-};
+export * from './definitions';
+
+export const ThreadHandlers = OperationHandlerSet.lazy(() => import('./create-proposals'));

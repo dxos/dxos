@@ -4,7 +4,8 @@
 
 import { type Client } from '@dxos/client';
 import { Obj, Ref } from '@dxos/echo';
-import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
@@ -20,7 +21,7 @@ type DeployScriptProps = {
   script: Script.Script;
   client: Client;
   space: Space;
-  fn?: Function.Function;
+  fn?: Operation.PersistentOperation;
   existingFunctionId?: string;
 };
 
@@ -84,12 +85,12 @@ const validateDeployInputs = (script: Script.Script, space: Space): Error | null
 
 const createOrUpdateFunctionInSpace = (
   space: Space,
-  fn: Function.Function | undefined,
+  fn: Operation.PersistentOperation | undefined,
   script: Script.Script,
-  newFunction: Function.Function,
-): Function.Function => {
+  newFunction: Operation.PersistentOperation,
+): Operation.PersistentOperation => {
   if (fn) {
-    Function.setFrom(fn, newFunction);
+    Operation.setFrom(fn, newFunction);
     return fn;
   } else {
     Obj.change(newFunction, (f) => {

@@ -13,6 +13,7 @@ const SEARCH_OPERATION = `${meta.id}.operation`;
 export namespace SearchOperation {
   export const OpenSearch = Operation.make({
     meta: { key: `${SEARCH_OPERATION}.open-search`, name: 'Open Search' },
-    schema: { input: Schema.Void, output: Schema.Void },
+    input: Schema.Void,
+    output: Schema.Void,
   });
 }

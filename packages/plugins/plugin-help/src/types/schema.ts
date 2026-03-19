@@ -39,6 +39,7 @@ export namespace HelpOperation {
   export const Start = Operation.make({
     meta: { key: `${HELP_OPERATION}.start`, name: 'Start Help' },
     services: [Capability.Service],
-    schema: { input: Schema.Void, output: Schema.Void },
+    input: Schema.Void,
+    output: Schema.Void,
   });
 }

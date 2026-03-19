@@ -3,23 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { Database, Ref } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 
-import { Memory } from '../../../types/Memory';
+import { DeleteMemory } from './definitions';
 
-export default defineFunction({
-  key: 'dxos.org/function/memory/delete',
-  name: 'Delete memory',
-  description: 'Deletes a memory from the database. Use this to remove outdated or incorrect memories.',
-  inputSchema: Schema.Struct({
-    memory: Ref.Ref(Memory),
-  }),
-  outputSchema: Schema.Void,
-  handler: Effect.fn(function* ({ data: { memory } }) {
-    const memoryObj = yield* Database.load(memory);
-    yield* Database.remove(memoryObj);
-  }),
-});
+export default DeleteMemory.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ memory }) {
+      const memoryObj = yield* Database.load(memory);
+      yield* Database.remove(memoryObj);
+    }),
+  ),
+);

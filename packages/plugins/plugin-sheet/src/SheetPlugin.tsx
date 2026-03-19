@@ -8,16 +8,24 @@ import * as Option from 'effect/Option';
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { AutomationEvents } from '@dxos/plugin-automation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 
-import { AnchorSort, ComputeGraphRegistry, Markdown, OperationResolver, ReactSurface } from './capabilities';
+import {
+  AnchorSort,
+  ComputeGraphRegistry,
+  Markdown,
+  OperationResolver,
+  ReactSurface,
+  SheetState,
+} from './capabilities';
 import { meta } from './meta';
 import { serializer } from './serializer';
 import { translations } from './translations';
-import { Sheet } from './types';
+import { Sheet, SheetOperation } from './types';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
@@ -29,7 +37,17 @@ export const SheetPlugin = Plugin.define(meta).pipe(
         iconHue: Annotation.IconAnnotation.get(Sheet.Sheet).pipe(Option.getOrThrow).hue ?? 'white',
         serializer,
         comments: 'anchored',
-        createObject: ((props) => Effect.sync(() => Sheet.make(props))) satisfies CreateObject,
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = Sheet.make(props);
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
+          })) satisfies CreateObject,
+        scrollToAnchor: SheetOperation.ScrollToAnchor,
       },
     },
   }),
@@ -37,6 +55,10 @@ export const SheetPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: SheetState,
+  }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
     activate: ComputeGraphRegistry,
