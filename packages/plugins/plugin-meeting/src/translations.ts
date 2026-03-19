@@ -17,6 +17,7 @@ export const translations = [
         'typename label_one': 'Meeting',
         'typename label_other': 'Meetings',
         'object name placeholder': 'New meeting',
+        'add object label': 'Add meeting',
         'rename object label': 'Rename meeting',
         'delete object label': 'Delete meeting',
         'object deleted label': 'Meeting deleted',
@@ -36,7 +37,7 @@ export const translations = [
 
         'meeting companion label': 'Meeting Notes',
         'notes label': 'Notes',
-        'summary label': 'Summary',
+        'stats label': 'Stats',
         'regenerate summary label': 'Regenerate Summary',
         'generate summary label': 'Generate Summary',
 

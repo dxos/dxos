@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 export {
   DescriptionAnnotation,
   FormInputAnnotation,
@@ -15,11 +17,12 @@ export {
   getTypeAnnotation,
   setDescriptionWithSchema,
   setLabelWithSchema,
-} from './internal/annotations';
+  IconAnnotation,
+} from './internal/Annotation';
 
 import type * as Schema from 'effect/Schema';
 
-import * as internalAnnotations from './internal/annotations';
+import * as internalAnnotations from './internal/Annotation';
 
 interface MakeProps<T> {
   id: string;
@@ -34,7 +37,7 @@ interface MakeProps<T> {
  * @example
  * ```ts
  * const ColorAnnotation = Annotation.make({
- *   id: 'dxos.org/annotation/Color',
+ *   id: 'org.dxos.annotation.color',
  *   schema: Schema.String,
  * });
  *

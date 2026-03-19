@@ -23,7 +23,7 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className={mx('flex items-center mie-1', classNames)}>
+    <div className={mx('flex items-center me-1', classNames)}>
       {children}
 
       <IconButton

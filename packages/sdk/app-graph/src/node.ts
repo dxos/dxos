@@ -15,17 +15,17 @@ export const RootId = 'root';
 /**
  * Root node type.
  */
-export const RootType = 'dxos.org/type/GraphRoot';
+export const RootType = 'org.dxos.type.graph-root';
 
 /**
  * Action node type.
  */
-export const ActionType = 'dxos.org/type/GraphAction';
+export const ActionType = 'org.dxos.type.graph-action';
 
 /**
  * Action group node type.
  */
-export const ActionGroupType = 'dxos.org/type/GraphActionGroup';
+export const ActionGroupType = 'org.dxos.type.graph-action-group';
 
 /**
  * Represents a node in the graph.
@@ -69,7 +69,19 @@ export type NodeFilter<TData = any, TProperties extends Record<string, any> = Re
   connectedNode: Node,
 ) => node is Node<TData, TProperties>;
 
-export type Relation = 'outbound' | 'inbound';
+export type RelationDirection = 'outbound' | 'inbound';
+
+export type Relation = Readonly<{
+  kind: string;
+  direction: RelationDirection;
+}>;
+
+export type RelationInput = Relation | string;
+
+export const relation = (kind: string, direction: RelationDirection = 'outbound'): Relation => ({ kind, direction });
+// TODO(wittjosiah): Consider moving these helpers out of the core API.
+export const childRelation = (direction: RelationDirection = 'outbound'): Relation => relation('child', direction);
+export const actionRelation = (direction: RelationDirection = 'outbound'): Relation => relation('action', direction);
 
 export const isGraphNode = (data: unknown): data is Node =>
   data && typeof data === 'object' && 'id' in data && 'properties' in data && data.properties
@@ -84,7 +96,7 @@ export type NodeArg<TData, TProperties extends Record<string, any> = Record<stri
   nodes?: NodeArg<unknown>[];
 
   /** Will automatically add specified edges. */
-  edges?: [string, Relation][];
+  edges?: [string, RelationInput][];
 };
 
 //
@@ -94,6 +106,9 @@ export type NodeArg<TData, TProperties extends Record<string, any> = Record<stri
 export type InvokeProps = {
   /** Node the invoked action is connected to. */
   parent?: Node;
+
+  /** Path from root to the node in the current tree context. */
+  path?: string[];
 
   caller?: string;
 };

@@ -4,8 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Option from 'effect/Option';
+
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
 
 import { ChessBlueprint } from './blueprints';
@@ -20,11 +23,10 @@ export const ChessPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Chess.Game.typename,
       metadata: {
-        icon: 'ph--shield-chevron--regular',
-        iconHue: 'amber',
+        icon: Annotation.IconAnnotation.get(Chess.Game).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Chess.Game).pipe(Option.getOrThrow).hue ?? 'white',
         blueprints: [ChessBlueprint.key],
         createObject: ((props) => Effect.sync(() => Chess.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),

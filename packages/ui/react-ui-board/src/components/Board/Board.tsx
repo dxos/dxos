@@ -155,9 +155,9 @@ BoardRoot.displayName = 'Board.Root';
 
 const BOARD_CONTAINER_NAME = 'Board.Container';
 
-type BoardContainerProps = ThemedClassName<PropsWithChildren>;
+type BoardContainerProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
 
-const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
+const BoardContainer = ({ classNames, children, ...props }: BoardContainerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width, height } = useResizeDetector({ targetRef: containerRef });
   const { bounds, grid, center } = useBoardContext(BOARD_CONTAINER_NAME);
@@ -188,6 +188,7 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
 
   return (
     <div
+      {...props}
       ref={containerRef}
       className={mx(
         'flex items-center justify-center overflow-auto scrollbar-none overscroll-x-contain',
@@ -200,7 +201,7 @@ const BoardContainer = ({ classNames, children }: BoardContainerProps) => {
       }}
     >
       {/* NOTE: This ensures that the children are centered if they are smaller than the container. */}
-      <div className='max-bs-full max-is-full'>{children}</div>
+      <div className='max-h-full max-w-full'>{children}</div>
     </div>
   );
 };
@@ -328,8 +329,8 @@ const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) =
       ref={ref}
       style={rect}
       className={mx(
-        'group/cell absolute flex items-center justify-center border rounded opacity-50',
-        active ? 'border-transparent ring ring-accentSurface' : 'border-separator border-dashed',
+        'group/cell absolute flex items-center justify-center border rounded-sm opacity-50',
+        active ? 'border-transparent ring ring-accent-surface' : 'border-separator border-dashed',
       )}
     >
       {onAddClick && (

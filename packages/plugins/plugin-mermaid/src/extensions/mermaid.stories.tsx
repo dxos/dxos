@@ -39,11 +39,11 @@ const DefaultStory = ({ text }: StoryProps) => {
     [themeMode],
   );
 
-  return <div className='is-[50rem]' ref={parentRef} {...focusAttributes} />;
+  return <div className='w-[50rem]' ref={parentRef} {...focusAttributes} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-mermaid/extensions',
+  title: 'plugins/plugin-mermaid/extensions/mermaid',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;

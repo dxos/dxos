@@ -1,0 +1,23 @@
+/**
+ * Selected / Highlighted state utilities
+ */
+
+@layer dx-components {
+  .dx-hover {
+    @apply hover:bg-highlight-surface! hover:text-highlight-surface-text!;
+  }
+
+  .dx-highlighted {
+    @apply data-[highlighted]:bg-highlight-surface
+      data-[highlighted]:text-highlight-surface-text
+      hover:data-[highlighted]:bg-highlight-surface-hover;
+  }
+
+  .dx-selected {
+    @apply aria-selected:bg-selected-surface
+      aria-selected:text-selected-surface-text
+      hover:aria-selected:text-selected-surface-text
+      aria-selected:font-semibold aria-selected:tracking-normal
+      transition-[color,font-variation-settings,letter-spacing];
+  }
+}

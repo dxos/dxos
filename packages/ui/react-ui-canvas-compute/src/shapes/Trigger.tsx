@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useEffect } from 'react';
 
 import { VoidInput } from '@dxos/conductor';
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { Trigger, TriggerEvent } from '@dxos/functions';
 import { DXN, SpaceId } from '@dxos/keys';
@@ -21,7 +21,7 @@ export const TriggerShape = Schema.extend(
   ComputeShape,
   Schema.Struct({
     type: Schema.Literal('trigger'),
-    functionTrigger: Schema.optional(Type.Ref(Trigger.Trigger)),
+    functionTrigger: Schema.optional(Ref.Ref(Trigger.Trigger)),
   }),
 );
 
@@ -91,7 +91,7 @@ export const TriggerComponent = ({ shape }: TriggerComponentProps) => {
 const TriggerKindSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
   return (
     <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.TriggerButton variant='ghost' classNames='is-full !pli-0' />
+      <Select.TriggerButton variant='ghost' classNames='w-full px-0!' />
       <Select.Portal>
         <Select.Content>
           <Select.ScrollUpButton />

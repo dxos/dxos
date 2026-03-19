@@ -294,7 +294,7 @@ export const Streaming: Story = {
     const scrollerRef = useRef<ScrollController>(null);
 
     return (
-      <div className='flex flex-col is-full bs-full overflow-hidden'>
+      <div className='flex flex-col w-full h-full overflow-hidden'>
         <Toolbar.Root>
           <Button onClick={() => setRunning(true)}>Start</Button>
           <Button onClick={() => setRunning(false)}>Stop</Button>
@@ -327,7 +327,7 @@ const toolCalls = [
         providerExecuted: false,
       },
       {
-        _tag: 'summary',
+        _tag: 'stats',
         model: 'claude-opus-4-20250514',
         duration: 8809,
         message: 'OK',
@@ -360,7 +360,7 @@ const toolCalls = [
         providerExecuted: false,
       },
       {
-        _tag: 'summary',
+        _tag: 'stats',
         model: 'claude-opus-4-20250514',
         duration: 6661,
         message: 'OK',
@@ -413,7 +413,7 @@ const testExecutionGraph = [
         providerExecuted: false,
       },
       {
-        _tag: 'summary',
+        _tag: 'stats',
         model: 'claude-opus-4-20250514',
         duration: 5217,
         message: 'OK',
@@ -438,7 +438,7 @@ const testExecutionGraph = [
         toolCallId: 'toolu_01Diussd9i7CVjeaq8hc1AbU',
         name: 'dxos_org_function_research',
         result:
-          '{"note":"The research run in test-mode and was mocked. Proceed as usual. We reference John Doe to test reference: dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","objects":[{"id":"01K616X0C5ZK6NMRDSAHX1VD7T","@type":"dxn:type:dxos.org/type/Person:0.1.0","@dxn":"dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","@meta":{"keys":[]},"emails":[{"value":"john.doe@example.com"}],"phoneNumbers":[{"value":"123-456-7890"}],"preferredName":"John Doe"}]}',
+          '{"note":"The research run in test-mode and was mocked. Proceed as usual. We reference John Doe to test reference: dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","objects":[{"id":"01K616X0C5ZK6NMRDSAHX1VD7T","@type":"dxn:type:org.dxos.type.person:0.1.0","@dxn":"dxn:echo:BIPW3L5QLSIYF4EZTKNL3S4O7PKMVRXGP:01K616X0C5ZK6NMRDSAHX1VD7T","@meta":{"keys":[]},"emails":[{"value":"john.doe@example.com"}],"phoneNumbers":[{"value":"123-456-7890"}],"preferredName":"John Doe"}]}',
         providerExecuted: false,
       },
     ],
@@ -507,7 +507,7 @@ const testExecutionGraph = [
       //   },
       // },
       {
-        _tag: 'summary',
+        _tag: 'stats',
         model: 'claude-opus-4-20250514',
         duration: 6617,
         message: 'OK',

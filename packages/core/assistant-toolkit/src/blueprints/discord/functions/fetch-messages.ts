@@ -75,7 +75,7 @@ type Thread = {
 };
 
 export default defineFunction({
-  key: 'dxos.org/function/fetch-discord-messages',
+  key: 'org.dxos.function.fetch-discord-messages',
   name: 'Sync Discord messages',
   inputSchema: Schema.Struct({
     serverId: Schema.String.annotations({

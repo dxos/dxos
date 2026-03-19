@@ -55,13 +55,11 @@
     "@dxos/util": "workspace:*",
     "chalk": "catalog:",
     "js-yaml": "catalog:",
-    "lodash.defaultsdeep": "catalog:",
-    "lodash.omit": "catalog:"
+    "lodash.defaultsdeep": "catalog:"
   },
   "devDependencies": {
     "@types/js-yaml": "catalog:",
-    "@types/lodash.defaultsdeep": "catalog:",
-    "@types/lodash.omit": "catalog:"
+    "@types/lodash.defaultsdeep": "catalog:"
   },
   "publishConfig": {
     "access": "public"

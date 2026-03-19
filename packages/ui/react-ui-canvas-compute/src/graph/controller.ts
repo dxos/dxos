@@ -25,7 +25,7 @@ import {
   isNotExecuted,
 } from '@dxos/conductor';
 import { Resource } from '@dxos/context';
-import type { Database } from '@dxos/echo';
+import type { Database, Feed } from '@dxos/echo';
 import { unwrapExit } from '@dxos/effect';
 import {
   ComputeEventLogger,
@@ -87,6 +87,7 @@ type ComputeOutputEvent = {
 export type ComputeServices =
   | AiService.AiService
   | Database.Service
+  | Feed.Service
   | QueueService
   | CredentialsService
   | FunctionInvocationService;

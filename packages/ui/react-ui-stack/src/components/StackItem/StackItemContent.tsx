@@ -24,9 +24,9 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
     const style = useMemo(
       () => ({
         gridTemplateRows: [
-          toolbar && role === 'section' ? 'calc(var(--toolbar-size) - 1px)' : 'var(--toolbar-size)',
+          toolbar && role === 'section' ? 'calc(var(--dx-toolbar-size) - 1px)' : 'var(--dx-toolbar-size)',
           '1fr',
-          statusbar && 'var(--statusbar-size)',
+          statusbar && 'var(--dx-statusbar-size)',
         ]
           .filter(Boolean)
           .join(' '),
@@ -40,12 +40,12 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
         role='none'
         style={style}
         className={mx(
-          'group grid grid-cols-[100%] density-coarse',
-          stackItemSize === 'contain' && 'min-bs-0 overflow-hidden',
+          'group grid grid-cols-[100%] dx-density-coarse',
+          stackItemSize === 'contain' && 'min-h-0 overflow-hidden',
           toolbar &&
             role === 'section' &&
-            '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:block-start-0 [&_.dx-toolbar]:-mbe-px [&_.dx-toolbar]:min-is-0',
-          toolbar && '[&>.dx-toolbar]:relative [&>.dx-toolbar]:border-be [&>.dx-toolbar]:border-subduedSeparator',
+            '[&_.dx-toolbar]:sticky [&_.dx-toolbar]:z-[1] [&_.dx-toolbar]:top-0 [&_.dx-toolbar]:-mb-px [&_.dx-toolbar]:min-w-0',
+          toolbar && '[&>.dx-toolbar]:relative [&>.dx-toolbar]:border-b [&>.dx-toolbar]:border-subdued-separator',
           classNames,
         )}
         data-popover-collision-boundary={true}

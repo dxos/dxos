@@ -4,14 +4,14 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Clipboard, ElevationProvider, Tooltip, useThemeContext } from '@dxos/react-ui';
+import { Clipboard, Column, ElevationProvider, Tooltip, useThemeContext } from '@dxos/react-ui';
 
 export type StorybookDialogProps = PropsWithChildren & {
   inOverlayLayout?: boolean;
 };
 
 /**
- * @deprecated
+ * @deprecated Create decorator.
  */
 export const StorybookDialog = (props: StorybookDialogProps) => {
   const { inOverlayLayout = false } = props;
@@ -22,9 +22,9 @@ export const StorybookDialog = (props: StorybookDialogProps) => {
         <Clipboard.Provider>
           <div
             role='group'
-            className={tx('dialog.content', { inOverlayLayout }, 'is-[20rem] p-1', inOverlayLayout ? 'm-4' : '')}
+            className={tx('dialog.content', { inOverlayLayout }, 'w-[30rem]', inOverlayLayout ? 'm-4' : '')}
           >
-            {props.children}
+            <Column.Root>{props.children}</Column.Root>
           </div>
         </Clipboard.Provider>
       </ElevationProvider>

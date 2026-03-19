@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Chat, Initiative } from '@dxos/assistant-toolkit';
+import { Chat, Project } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
@@ -21,6 +21,7 @@ export const translations = [
         'typename label_one': 'Blueprint',
         'typename label_other': 'Blueprints',
         'object name placeholder': 'New blueprint',
+        'add object label': 'Add blueprint',
         'rename object label': 'Rename blueprint',
         'delete object label': 'Delete blueprint',
         'object deleted label': 'Blueprint deleted',
@@ -31,6 +32,7 @@ export const translations = [
         'typename label_one': 'Prompt',
         'typename label_other': 'Prompts',
         'object name placeholder': 'New prompt',
+        'add object label': 'Add prompt',
         'rename object label': 'Rename prompt',
         'delete object label': 'Delete prompt',
         'object deleted label': 'Prompt deleted',
@@ -42,6 +44,7 @@ export const translations = [
         'typename label_one': 'Sequence',
         'typename label_other': 'Sequences',
         'object name placeholder': 'New sequence',
+        'add object label': 'Add sequence',
         'rename object label': 'Rename sequence',
         'delete object label': 'Delete sequence',
         'object deleted label': 'Sequence deleted',
@@ -49,19 +52,21 @@ export const translations = [
       [Chat.Chat.typename]: {
         'typename label': 'AI Chat',
         'object name placeholder': 'New AI Chat',
+        'add object label': 'Add AI chat',
         'rename object label': 'Rename AI Chat',
         'delete object label': 'Delete AI Chat',
         'object deleted label': 'AI Chat deleted',
       },
-      [Initiative.Initiative.typename]: {
-        'typename label': 'Initiative',
-        'typename label_zero': 'Initiatives',
-        'typename label_one': 'Initiative',
-        'typename label_other': 'Initiatives',
-        'object name placeholder': 'New initiative',
-        'rename object label': 'Rename initiative',
-        'delete object label': 'Delete initiative',
-        'object deleted label': 'Initiative deleted',
+      [Project.Project.typename]: {
+        'typename label': 'Project',
+        'typename label_zero': 'Projects',
+        'typename label_one': 'Project',
+        'typename label_other': 'Projects',
+        'object name placeholder': 'New project',
+        'add object label': 'Add project',
+        'rename object label': 'Rename project',
+        'delete object label': 'Delete project',
+        'object deleted label': 'Project deleted',
       },
       // TODO(burdon): Reconcile with react-ui-chat.
       [meta.id]: {
@@ -90,6 +95,7 @@ export const translations = [
         'tool error label': 'Tool call failed',
 
         'invocations label': 'Invocations',
+        'trace label': 'Trace',
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
@@ -106,7 +112,7 @@ export const translations = [
         'chat update name label': 'Update AI Chat name',
 
         'toolkit label': 'Toolkit',
-        'summary label': 'Summary',
+        'stats label': 'Stats',
 
         'search placeholder': 'Search...',
         'prompt placeholder': 'Enter question or command...',
@@ -130,8 +136,7 @@ export const translations = [
         'trigger status idle label': 'Triggers idle',
         'trigger status running label': 'Trigger running',
         'trigger status error label': 'Trigger error',
-        'trigger runtime label': 'Trigger Runtime',
-        'trigger runtime description': 'Enable automatic trigger execution',
+        'trigger runtime label': 'Auto trigger execution',
         'trigger last invocation label': 'Last run',
         'trigger duration label': 'Duration',
       },

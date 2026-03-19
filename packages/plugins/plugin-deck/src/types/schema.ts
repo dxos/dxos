@@ -11,17 +11,15 @@ import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
-
-export const PLANK_COMPANION_TYPE = `${meta.id}/plank-companion`;
-export const DECK_COMPANION_TYPE = `${meta.id}/deck-companion`;
+export const PLANK_COMPANION_TYPE = `${meta.id}.plank-companion`;
+export const DECK_COMPANION_TYPE = `${meta.id}.deck-companion`;
 
 // TODO(Zan): In the future we should consider adding new planks adjacent to the attended plank.
 export const NewPlankPositions = ['start', 'end'] as const;
 export type NewPlankPositioning = (typeof NewPlankPositions)[number];
 
-export const OverscrollOptions = ['none', 'centering'] as const;
-export type Overscroll = (typeof OverscrollOptions)[number];
+export const OverScrollToProps = ['none', 'centering'] as const;
+export type Overscroll = (typeof OverScrollToProps)[number];
 
 export type Part = 'solo' | 'deck' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
@@ -32,7 +30,7 @@ export const DeckSettingsSchema = Schema.Struct({
   enableStatusbar: Schema.optional(Schema.Boolean),
   enableNativeRedirect: Schema.optional(Schema.Boolean),
   newPlankPositioning: Schema.optional(Schema.Literal(...NewPlankPositions)),
-  overscroll: Schema.optional(Schema.Literal(...OverscrollOptions)),
+  overscroll: Schema.optional(Schema.Literal(...OverScrollToProps)),
   // TODO(burdon): Rename layoutMode? (e.g., bento | encapsulated?)
   encapsulatedPlanks: Schema.optional(Schema.Boolean),
 }).pipe(Schema.mutable);
@@ -46,8 +44,8 @@ export const DeckState = Schema.Struct({
   /** If false, the deck has not yet left solo mode and new planks should be soloed. */
   initialized: Schema.Boolean,
   active: Schema.mutable(Schema.Array(Schema.String)),
-  // TODO(wittjosiah): Piping into both mutable and optional caused invalid typescript output.
-  activeCompanions: Schema.optional(Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.String }))),
+  companionOpen: Schema.Boolean,
+  companionVariant: Schema.optional(Schema.String),
   inactive: Schema.mutable(Schema.Array(Schema.String)),
   solo: Schema.optional(Schema.String),
   fullscreen: Schema.Boolean,
@@ -59,7 +57,8 @@ export type DeckState = Schema.Schema.Type<typeof DeckState>;
 export const defaultDeck: DeckState = {
   initialized: false,
   active: [],
-  activeCompanions: {},
+  companionOpen: false,
+  companionVariant: undefined,
   inactive: [],
   solo: undefined,
   fullscreen: false,
@@ -138,12 +137,12 @@ export namespace DeckAction {
   export type Adjustment = Schema.Schema.Type<typeof Adjustment>;
 
   // An atomic transaction to apply to the deck, describing which element to move to which location.
-  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.id}/action/adjust`, {
+  export class Adjust extends Schema.TaggedClass<Adjust>()(`${meta.id}.action.adjust`, {
     input: Adjustment,
     output: Schema.Void,
   }) {}
 
-  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${meta.id}/action/update-plank-size`, {
+  export class UpdatePlankSize extends Schema.TaggedClass<UpdatePlankSize>()(`${meta.id}.action.update-plank-size`, {
     input: Schema.Struct({
       id: Schema.String,
       size: Schema.Number,
@@ -151,9 +150,8 @@ export namespace DeckAction {
     output: Schema.Void,
   }) {}
 
-  export class ChangeCompanion extends Schema.TaggedClass<ChangeCompanion>()(`${meta.id}/action/change-companion`, {
+  export class ChangeCompanion extends Schema.TaggedClass<ChangeCompanion>()(`${meta.id}.action.change-companion`, {
     input: Schema.Struct({
-      primary: Schema.String,
       companion: Schema.Union(Schema.String, Schema.Null),
     }),
     output: Schema.Void,
@@ -176,7 +174,7 @@ export namespace DeckOperation {
 
   export const Adjust = Operation.make({
     meta: {
-      key: `${meta.id}/operation/adjust`,
+      key: `${meta.id}.operation.adjust`,
       name: 'Adjust',
       description: 'Adjust the layout of a plank.',
     },
@@ -192,7 +190,7 @@ export namespace DeckOperation {
 
   export const UpdatePlankSize = Operation.make({
     meta: {
-      key: `${meta.id}/operation/update-plank-size`,
+      key: `${meta.id}.operation.update-plank-size`,
       name: 'Update Plank Size',
       description: 'Update the size of a plank.',
     },
@@ -208,14 +206,13 @@ export namespace DeckOperation {
 
   export const ChangeCompanion = Operation.make({
     meta: {
-      key: `${meta.id}/operation/change-companion`,
+      key: `${meta.id}.operation.change-companion`,
       name: 'Change Companion',
       description: 'Change the companion plank for a primary plank.',
     },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        primary: Schema.String,
         companion: Schema.Union(Schema.String, Schema.Null),
       }),
       output: Schema.Void,

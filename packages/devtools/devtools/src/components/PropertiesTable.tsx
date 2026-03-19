@@ -10,7 +10,6 @@ import React, { type FC, type ReactNode } from 'react';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-// TODO(burdon): Factor out styles.
 const styles = {
   key: 'text-mono text-green-500',
   unit: 'text-sm text-neutral-400 ml-1',
@@ -83,7 +82,7 @@ export type PropertiesSlots = {
 
 export const defaultSlots: PropertiesSlots = {
   key: {
-    className: 'pli-4 align-baseline text-neutral-500 overflow-hidden is-40 text-sm',
+    className: 'px-4 align-baseline text-neutral-500 overflow-hidden w-40 text-sm',
   },
 };
 

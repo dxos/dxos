@@ -26,7 +26,7 @@ describe.skip('Linear', { timeout: 600_000 }, () => {
     'sync',
     Effect.fnUntraced(
       function* (_) {
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
 
         yield* FunctionInvocationService.invokeFunction(fetchLinearIssues, {
           team: '1127c63a-6f77-4725-9229-50f6cd47321c',
@@ -48,7 +48,7 @@ describe.skip('Linear', { timeout: 600_000 }, () => {
           tasks: tasks.map((_) => `(${_.id}) ${Obj.getLabel(_)} [${Obj.getKeys(_, LINEAR_ID_KEY)[0]?.id}]`),
         });
 
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
       },
       Effect.provide(TestLayer),
       TestHelpers.taggedTest('sync'),

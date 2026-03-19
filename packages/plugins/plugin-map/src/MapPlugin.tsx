@@ -3,12 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Type } from '@dxos/echo';
+import { Annotation, Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 
 import { AppGraphBuilder, BlueprintDefinition, MapState, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -22,14 +23,14 @@ export const MapPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Type.getTypename(Map.Map),
       metadata: {
-        icon: 'ph--compass--regular',
-        iconHue: 'green',
+        icon: Annotation.IconAnnotation.get(Map.Map).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Map.Map).pipe(Option.getOrThrow).hue ?? 'white',
         inputSchema: MapAction.CreateMap,
         createObject: ((props, { db }) =>
           Effect.promise(async () => {
             const view = props.typename
               ? (
-                  await View.makeFromDatabase({
+                  await ViewModel.makeFromDatabase({
                     db,
                     typename: props.typename,
                     pivotFieldName: props.locationFieldName,

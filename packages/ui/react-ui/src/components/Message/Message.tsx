@@ -58,11 +58,11 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
     const titleId = useId('message__title', propsTitleId);
     const descriptionId = useId('message__description', propsDescriptionId);
     const elevation = useElevationContext(propsElevation);
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
 
     return (
       <MessageProvider {...{ titleId, descriptionId, valence }}>
-        <Root
+        <Comp
           role={valence === 'neutral' ? 'paragraph' : 'alert'}
           {...props}
           className={tx('message.root', { valence, elevation }, classNames)}
@@ -71,7 +71,7 @@ const MessageRoot = forwardRef<HTMLDivElement, MessageRootProps>(
           ref={forwardedRef}
         >
           {children}
-        </Root>
+        </Comp>
       </MessageProvider>
     );
   },
@@ -91,19 +91,16 @@ type MessageTitleProps = Omit<ThemedClassName<ComponentPropsWithRef<typeof Primi
 const MESSAGE_TITLE_NAME = 'MessageTitle';
 
 const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
-  ({ asChild, classNames, children, icon, ...props }, forwardedRef) => {
+  ({ asChild, classNames, children, icon: iconProp, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { titleId, valence } = useMessageContext(MESSAGE_TITLE_NAME);
-    const Root = asChild ? Slot : Primitive.h2;
+    const Comp = asChild ? Slot : Primitive.h2;
+    const icon = iconProp ?? messageIcons[valence];
     return (
-      <Root {...props} className={tx('message.header', {}, classNames)} id={titleId} ref={forwardedRef}>
-        {!icon && valence === 'neutral' ? (
-          <div />
-        ) : (
-          <Icon size={5} icon={icon ?? messageIcons[valence]} classNames={tx('message.icon', { valence })} />
-        )}
+      <Comp {...props} className={tx('message.header', {}, classNames)} id={titleId} ref={forwardedRef}>
+        {!icon && valence === 'neutral' ? <div /> : <Icon icon={icon} classNames={tx('message.icon', { valence })} />}
         <span className={tx('message.title', {}, classNames)}>{children}</span>
-      </Root>
+      </Comp>
     );
   },
 );
@@ -124,11 +121,11 @@ const MessageContent = forwardRef<HTMLParagraphElement, MessageContentProps>(
   ({ asChild, classNames, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { descriptionId } = useMessageContext(MESSAGE_CONTENT_NAME);
-    const Root = asChild ? Slot : Primitive.p;
+    const Comp = asChild ? Slot : Primitive.p;
     return (
-      <Root {...props} className={tx('message.content', {}, classNames)} id={descriptionId} ref={forwardedRef}>
+      <Comp {...props} className={tx('message.content', {}, classNames)} id={descriptionId} ref={forwardedRef}>
         {children}
-      </Root>
+      </Comp>
     );
   },
 );

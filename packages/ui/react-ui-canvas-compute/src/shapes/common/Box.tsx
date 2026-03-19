@@ -31,15 +31,14 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
     const { debug } = useEditorContext();
 
     return (
-      <div ref={forwardedRef} className='flex flex-col bs-full is-full justify-between'>
-        <div className='flex shrink-0 is-full justify-between items-center bs-[32px] bg-hoverSurface'>
+      <div ref={forwardedRef} className='flex flex-col h-full w-full justify-between'>
+        <div className='flex shrink-0 w-full justify-between items-center h-[32px] bg-input-surface'>
           <Icon icon={icon} classNames='mx-2' />
           <div className='grow text-sm truncate'>{debug ? shape.type : (name ?? shape.text ?? title)}</div>
           <IconButton
             classNames='p-1 text-green-500'
             variant='ghost'
             icon='ph--play--regular'
-            size={4}
             label='run'
             iconOnly
             onDoubleClick={(ev) => ev.stopPropagation()}
@@ -49,15 +48,14 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
             }}
           />
         </div>
-        <div className={mx('flex flex-col bs-full grow overflow-hidden', classNames)}>{children}</div>
-        <div className='flex shrink-0 is-full justify-between items-center bs-[32px] bg-hoverSurface'>
-          <div className='grow pli-2 text-sm truncate'>{debug ? shape.id : status}</div>
+        <div className={mx('flex flex-col h-full grow overflow-hidden', classNames)}>{children}</div>
+        <div className='flex shrink-0 w-full justify-between items-center h-[32px] bg-input-surface'>
+          <div className='grow px-2 text-sm truncate'>{debug ? shape.id : status}</div>
           {openable && (
             <IconButton
               classNames='p-1'
               variant='ghost'
               icon={open ? 'ph--caret-up--regular' : 'ph--caret-down--regular'}
-              size={4}
               label={open ? 'close' : 'open'}
               iconOnly
               onClick={(ev) => {

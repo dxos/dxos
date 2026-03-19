@@ -42,7 +42,7 @@ const loadAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken> | unde
 
 /**
  * Service for accessing Google API credentials.
- * Provides the Google API token either from an object's access token or falls back to database credentials.
+ * Provides the Google API token either from a mailbox/calendar's access token or falls back to database credentials.
  */
 export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   GoogleCredentials,
@@ -52,46 +52,34 @@ export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   }
 >() {
   /**
-   * Creates a credentials layer from a mailbox.
-   * Pre-loads the access token during layer construction.
+   * Creates a credentials layer from a mailbox object ref.
    */
-  static fromMailbox = (mailbox: Mailbox.Mailbox) =>
-    Layer.effect(GoogleCredentials, Effect.map(loadAccessToken(mailbox.accessToken, 'mailbox'), makeService));
-
-  /**
-   * Creates a credentials layer from a mailbox ref.
-   * Loads the mailbox and pre-loads the access token during layer construction.
-   */
-  static fromMailboxRef = (mailboxRef: Ref.Ref<Mailbox.Mailbox>) =>
+  static fromMailbox = (mailboxRef: Ref.Ref<Mailbox.Mailbox>) =>
     Layer.effect(
       GoogleCredentials,
-      Effect.flatMap(Database.load(mailboxRef), (mailbox) =>
-        Effect.map(loadAccessToken(mailbox.accessToken, 'mailbox'), makeService),
-      ),
+      Effect.gen(function* () {
+        const mailbox = yield* Database.load(mailboxRef);
+        const token = yield* loadAccessToken(mailbox.accessToken, 'mailbox');
+        return makeService(token);
+      }),
     );
 
   /**
-   * Creates a credentials layer from a calendar.
-   * Pre-loads the access token during layer construction.
+   * Creates a credentials layer from a calendar object ref.
    */
-  static fromCalendar = (calendar: Calendar.Calendar) =>
-    Layer.effect(GoogleCredentials, Effect.map(loadAccessToken(calendar.accessToken, 'calendar'), makeService));
-
-  /**
-   * Creates a credentials layer from a calendar ref.
-   * Loads the calendar and pre-loads the access token during layer construction.
-   */
-  static fromCalendarRef = (calendarRef: Ref.Ref<Calendar.Calendar>) =>
+  static fromCalendar = (calendarRef: Ref.Ref<Calendar.Calendar>) =>
     Layer.effect(
       GoogleCredentials,
-      Effect.flatMap(Database.load(calendarRef), (calendar) =>
-        Effect.map(loadAccessToken(calendar.accessToken, 'calendar'), makeService),
-      ),
+      Effect.gen(function* () {
+        const calendar = yield* Database.load(calendarRef);
+        const token = yield* loadAccessToken(calendar.accessToken, 'calendar');
+        return makeService(token);
+      }),
     );
 
   /**
    * Default layer that uses database credentials.
-   * Use this for operations that don't have an associated mailbox or calendar.
+   * Use this for operations that don't have an associated config.
    */
   static default = Layer.succeed(GoogleCredentials, makeService(undefined));
 

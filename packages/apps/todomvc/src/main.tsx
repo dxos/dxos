@@ -4,7 +4,6 @@
 
 import './main.css';
 
-import { withProfiler } from '@sentry/react';
 import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
@@ -23,7 +22,7 @@ const router = createBrowserRouter([
   },
 ]);
 
-const App = withProfiler(() => <RouterProvider router={router} />);
+const App = () => <RouterProvider router={router} />;
 
 const root = createRoot(document.getElementById('root')!);
 root.render(

@@ -22,7 +22,7 @@ export const ExecutionGraphModule = ({ space, traceQueue }: ComponentProps & { t
   const { branches, commits } = useExecutionGraph(queue);
 
   return (
-    <div className='flex flex-col bs-full'>
+    <div className='flex flex-col h-full'>
       <Timeline branches={branches} commits={commits} />
     </div>
   );

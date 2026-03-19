@@ -5,7 +5,6 @@
 import { expect, test } from '@playwright/test';
 
 import { AppManager } from './app-manager';
-import { INITIAL_OBJECT_COUNT } from './constants';
 import { Markdown } from './plugins';
 
 const perfomInvitation = async (host: AppManager, guest: AppManager) => {
@@ -19,15 +18,7 @@ const perfomInvitation = async (host: AppManager, guest: AppManager) => {
 };
 
 const navigateToNewDocument = async (app: AppManager) => {
-  // Check if Documents collection (nth=1) is collapsed by looking for "Click to open" in its text.
-  const documentsCollection = app.page.getByTestId('spacePlugin.object').nth(3);
-  const documentsText = await documentsCollection.textContent();
-  const isCollapsed = documentsText?.includes('Click to open');
-  if (isCollapsed) {
-    await app.toggleCollectionCollapsed(3); // Documents managed collection.
-  }
-
-  await app.navigateToObject(4); // New document.
+  await app.navigateToObject(0); // New document.
 };
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
@@ -59,7 +50,7 @@ test.describe('Collaboration tests', () => {
   test("guest joins host's space", async () => {
     // Host creates a space and adds a markdown object
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     {
       // Focus new editor before space invitation.
@@ -74,10 +65,10 @@ test.describe('Collaboration tests', () => {
 
     // Guest waits for the space to be ready and confirms it has the markdown object.
     await guest.waitForSpaceReady();
-    await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT);
-    // TODO(wittjosiah): Sometimes navigation fails without a delay.
-    await guest.page.waitForTimeout(1_000);
+    await guest.toggleTypesSection();
+    await guest.toggleSchemaNode('org.dxos.type.document');
+    await guest.toggleTypeCollectionAll('org.dxos.type.document');
+    await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
     {
@@ -93,7 +84,7 @@ test.describe('Collaboration tests', () => {
 
   test("host and guest can see each others' cursors when same document is in focus", async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
@@ -105,10 +96,10 @@ test.describe('Collaboration tests', () => {
     await perfomInvitation(host, guest);
 
     await guest.waitForSpaceReady();
-    await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT);
-    // TODO(wittjosiah): Sometimes navigation fails without a delay.
-    await guest.page.waitForTimeout(1_000);
+    await guest.toggleTypesSection();
+    await guest.toggleSchemaNode('org.dxos.type.document');
+    await guest.toggleTypeCollectionAll('org.dxos.type.document');
+    await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
     // Find the plank in the guest.
@@ -137,7 +128,7 @@ test.describe('Collaboration tests', () => {
 
   test("host and guest can see each others' changes in same document", async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
@@ -158,10 +149,10 @@ test.describe('Collaboration tests', () => {
 
     // Guest waits for the space to be ready and confirms it has the markdown object
     await guest.waitForSpaceReady();
-    await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT);
-    // TODO(wittjosiah): Sometimes navigation fails without a delay.
-    await guest.page.waitForTimeout(1_000);
+    await guest.toggleTypesSection();
+    await guest.toggleSchemaNode('org.dxos.type.document');
+    await guest.toggleTypeCollectionAll('org.dxos.type.document');
+    await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
     // Get guest's markdown planks and find the locator for the shared document
@@ -208,7 +199,7 @@ test.describe('Collaboration tests', () => {
     test.setTimeout(90_000);
 
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     // Focus on host's textbox and wait for it to be ready
     const hostPlank = host.deck.plank();
@@ -219,10 +210,10 @@ test.describe('Collaboration tests', () => {
 
     await perfomInvitation(host, guest);
     await guest.waitForSpaceReady();
-    await guest.toggleSpaceCollapsed(1, true);
-    await expect(guest.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT);
-    // TODO(wittjosiah): Sometimes navigation fails without a delay.
-    await guest.page.waitForTimeout(1_000);
+    await guest.toggleTypesSection();
+    await guest.toggleSchemaNode('org.dxos.type.document');
+    await guest.toggleTypeCollectionAll('org.dxos.type.document');
+    await expect(guest.getObjectLinks()).toHaveCount(1);
     await navigateToNewDocument(guest);
 
     const guestPlank = guest.deck.plank();

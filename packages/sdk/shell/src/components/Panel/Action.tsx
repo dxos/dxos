@@ -3,12 +3,28 @@
 //
 
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type Dispatch, type SetStateAction, forwardRef } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+  forwardRef,
+} from 'react';
 
-import { Button, type ButtonProps, DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import {
+  Button,
+  type ButtonProps,
+  DropdownMenu,
+  Icon,
+  IconButton,
+  type ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
+
+// TODO(burdon): Move to react-ui.
 
 export type LargeButtonProps = ButtonProps & {
   isFull?: boolean;
@@ -21,14 +37,6 @@ export type ActionMenuItem = {
   testId?: string;
 } & Pick<ButtonProps, 'onClick'>;
 
-export type BifurcatedActionProps = {
-  actions: Record<string, ActionMenuItem>;
-  activeAction?: string;
-  onChangeActiveAction?: Dispatch<SetStateAction<string>>;
-  defaultActiveAction?: string;
-  'data-testid'?: string;
-} & Omit<LargeButtonProps, 'children' | 'onClick'>;
-
 const defaultActions = {
   noopAction: {
     label: 'No-op',
@@ -37,6 +45,18 @@ const defaultActions = {
     onClick: () => {},
   },
 } as Record<string, ActionMenuItem>;
+
+//
+// BifurcatedAction
+//
+
+export type BifurcatedActionProps = {
+  actions: Record<string, ActionMenuItem>;
+  activeAction?: string;
+  onChangeActiveAction?: Dispatch<SetStateAction<string>>;
+  defaultActiveAction?: string;
+  'data-testid'?: string;
+} & Omit<LargeButtonProps, 'children' | 'onClick'>;
 
 export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionProps>((props, forwardedRef) => {
   const {
@@ -64,16 +84,16 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
   const { t } = useTranslation(translationKey);
 
   return (
-    <div role='none' className={mx('mbs-2 flex gap-px items-center', isFull && 'is-full')}>
+    <div role='none' className={mx('mt-2 flex gap-px items-center', isFull && 'w-full')}>
       <Button
         {...rest}
-        classNames={['bs-11 flex-1 min-is-0 flex gap-2 rounded-ie-none', classNames]}
+        classNames={['h-11 flex-1 min-w-0 flex gap-2 rounded-ie-none', classNames]}
         ref={forwardedRef}
         variant={variant}
         data-testid={testId}
         onClick={activeAction.onClick}
       >
-        {activeAction.icon && <Icon icon={activeAction.icon} size={5} />}
+        {activeAction.icon && <Icon icon={activeAction.icon} />}
         <span>{activeAction.label}</span>
       </Button>
       <DropdownMenu.Root>
@@ -83,7 +103,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
             size={4}
             label={t('invite options label')}
             iconOnly
-            classNames={['bs-11 flex-none rounded-is-none', classNames]}
+            classNames={['h-11 flex-none rounded-w-none', classNames]}
             data-testid={dropdownTestId}
           />
         </DropdownMenu.Trigger>
@@ -102,11 +122,11 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                     classNames='gap-2'
                     data-testid={action.testId}
                   >
-                    {action.icon && <Icon icon={action.icon} size={5} />}
-                    <div role='none' className='flex-1 min-is-0 space-b-1'>
+                    {action.icon && <Icon icon={action.icon} />}
+                    <div role='none' className='flex-1 min-w-0 space-b-1'>
                       <p id={`${id}__label`}>{action.label}</p>
                       {action.description && (
-                        <p id={`${id}__description`} className={descriptionText}>
+                        <p id={`${id}__description`} className='text-description'>
                           {action.description}
                         </p>
                       )}
@@ -126,14 +146,49 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
   );
 });
 
+//
+// Action
+//
+
 /**
- * @deprecated
+ * @deprecated Use Button directly.
  */
 export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, forwardedRef) => {
   const { children, classNames, variant, isFull = true, ...rest } = props;
   return (
-    <Button {...rest} classNames={[isFull && 'is-full', classNames]} ref={forwardedRef} variant={variant}>
+    <Button {...rest} classNames={[isFull && 'w-full', classNames]} variant={variant} ref={forwardedRef}>
       {children}
     </Button>
   );
 });
+
+//
+// Actions
+//
+
+type ActionBarProps = Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'children'> & {
+  children: ReactNode | ReactNode[];
+};
+
+/**
+ * @deprecated Use Dialog.ActionBar
+ */
+const ActionBar = forwardRef<HTMLDivElement, ActionBarProps>(({ classNames, children, ...props }, forwardedRef) => {
+  return (
+    <div
+      {...props}
+      className={mx(
+        'flex flex-col gap-2 mt-2',
+        Array.isArray(children) && children.length > 1 ? 'justify-between' : 'justify-center',
+        classNames,
+      )}
+      ref={forwardedRef}
+    >
+      {children}
+    </div>
+  );
+});
+
+export { ActionBar };
+
+export type { ActionBarProps };

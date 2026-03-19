@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { JsonSchema, Obj, Type } from '@dxos/echo';
+import { JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { Graph } from '@dxos/graph';
 
@@ -27,12 +27,12 @@ export const ComputeNode = Schema.extend(
     /**
      * For composition nodes.
      */
-    subgraph: Schema.optional(Schema.suspend((): Type.Ref<ComputeGraph> => Type.Ref(ComputeGraph))),
+    subgraph: Schema.optional(Schema.suspend((): Ref.RefSchema<ComputeGraph> => Ref.Ref(ComputeGraph))),
 
     /**
      * For composition of function nodes.
      */
-    function: Schema.optional(Type.Ref(Function.Function)),
+    function: Schema.optional(Ref.Ref(Function.Function)),
 
     /**
      * For template nodes determines the type of the value.
@@ -92,7 +92,7 @@ export const ComputeGraph = Schema.Struct({
   output: Schema.optional(ComputeNode),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/ComputeGraph',
+    typename: 'org.dxos.type.compute-graph',
     version: '0.1.0',
   }),
 );

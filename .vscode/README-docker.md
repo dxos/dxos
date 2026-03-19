@@ -1,6 +1,7 @@
 # DXOS Agent
 
 # Docker
+
 TODO
 
 Basic observability data will be sent to the DXOS team in order to improve the product. This includes
@@ -9,7 +10,9 @@ public key, is included with this data and no private data ever leaves your devi
 To disable sending observability data, set the environment variable `DX_DISABLE_OBSERVABILITY=true`.
 
 # Main documentation
+
 https://github.com/dxos/dxos
 
 # License
+
 [MIT](https://github.com/dxos/dxos/blob/main/LICENSE) Copyright 2023 © DXOS

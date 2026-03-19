@@ -8,6 +8,7 @@ import { createConfig, packages } from '../../.storybook/main';
 
 export default createConfig({
   stories: [
+    join(packages, '/plugins/plugin-kanban/src/**/*.stories.tsx'),
     join(packages, '/plugins/plugin-sheet/src/**/*.stories.tsx'),
     join(packages, '/sdk/react-client/src/**/*.stories.tsx'),
     join(packages, '/sdk/shell/src/stories/*.stories.tsx'),

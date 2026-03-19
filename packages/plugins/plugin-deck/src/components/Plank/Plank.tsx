@@ -14,19 +14,24 @@ import React, {
 } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { debounce } from '@dxos/async';
 import { type Node, useNode } from '@dxos/plugin-graph';
-import { ATTENDABLE_PATH_SEPARATOR, useAttentionAttributes } from '@dxos/react-ui-attention';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
-import { useCompanions, useDeckState, useMainSize } from '../../hooks';
-import { parseEntryId } from '../../layout';
-import { DeckOperation, type DeckSettingsProps, type LayoutMode, type ResolvedPart } from '../../types';
+import { useCompanions, useDeckState, useMainSize, useSelectedCompanion } from '../../hooks';
+import {
+  DeckOperation,
+  type DeckSettingsProps,
+  type LayoutMode,
+  PLANK_COMPANION_TYPE,
+  type ResolvedPart,
+} from '../../types';
 
-import { PlankContentError, PlankError } from './PlankError';
+import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 
@@ -38,7 +43,7 @@ const UNKNOWN_ID = 'unknown_id';
 
 export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path' | 'order' | 'active' | 'settings'> & {
   id?: string;
-  companionId?: string;
+  companionVariant?: string;
 };
 
 // TODO(burdon): Factor out conditional rendering.
@@ -59,12 +64,14 @@ export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path
  * A Plank is the main container for surfaces within a Deck.
  * It may be paired with a companion plank that enables the user to select one of multiple companion surfaces.
  */
-export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProps) => {
+export const Plank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: PlankProps) => {
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const companions = useCompanions(id);
-  const currentCompanion = companions.find(({ id }) => id === companionId);
-  const hasCompanion = !!(companionId && currentCompanion);
+  const { companionId } = useSelectedCompanion(companions, companionVariant);
+  const resolvedCompanionId = companionVariant ? companionId : undefined;
+  const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
+  const hasCompanion = !!(resolvedCompanionId && currentCompanion);
 
   return (
     <PlankContainer
@@ -82,7 +89,7 @@ export const Plank = memo(({ id = UNKNOWN_ID, companionId, ...props }: PlankProp
       />
       {hasCompanion && (
         <PlankComponent
-          id={companionId}
+          id={resolvedCompanionId}
           node={currentCompanion}
           primary={node}
           companions={companions}
@@ -113,8 +120,8 @@ const PlankContainer = ({ children, solo, companion, encapsulate }: PlankContain
       role='none'
       data-popover-collision-boundary={true}
       className={mx(
-        'absolute inset-[--main-spacing] grid',
-        encapsulate && 'border border-separator rounded overflow-hidden',
+        'absolute inset-(--main-spacing) grid',
+        encapsulate && 'border border-separator rounded-sm overflow-hidden',
         companion && 'grid-cols-[6fr_4fr]', // TODO(burdon): Resize.
         railGridHorizontal,
         mainIntrinsicSize,
@@ -172,8 +179,8 @@ const PlankComponent = memo(
 
     const rootElement = useRef<HTMLDivElement | null>(null);
 
-    const { variant } = parseEntryId(id);
-    const sizeKey = `${id.split('+')[0]}${variant ? `${ATTENDABLE_PATH_SEPARATOR}${variant}` : ''}`;
+    const variant = node?.type === PLANK_COMPANION_TYPE ? getCompanionVariant(id) : undefined;
+    const sizeKey = id.split('+')[0];
     const size = deck.plankSizing[sizeKey] as number | undefined;
 
     const handleSizeChange = useCallback(
@@ -231,18 +238,18 @@ const PlankComponent = memo(
     const Root = part.startsWith('solo') ? 'article' : StackItem.Root;
     const fullscreen = layoutMode === 'solo--fullscreen';
     const className = mx(
-      'attention-surface relative dx-focus-ring-inset-over-all density-coarse',
+      'dx-attention-surface relative dx-focus-ring-inset-over-all dx-density-coarse',
       isSolo && 'absolute inset-0',
       isSolo && mainIntrinsicSize,
       railGridHorizontal,
       part.startsWith('solo') && 'grid',
-      part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-is-0',
+      part.startsWith('solo-') && 'grid-rows-subgrid row-span-2 min-w-0',
       fullscreen && 'grid-rows-1',
-      part === 'deck' && (companioned === 'companion' ? '!border-separator border-ie' : '!border-separator border-li'),
-      part === 'solo-companion' && '!border-separator border-is',
+      part === 'deck' && (companioned === 'companion' ? 'border-separator! border-e' : 'border-separator! border-x'),
+      part === 'solo-companion' && 'border-separator! border-s',
       settings?.encapsulatedPlanks &&
         !part.startsWith('solo') &&
-        'mli-[--main-spacing] !border-separator border rounded overflow-hidden',
+        'mx-(--main-spacing) border-separator! border rounded-sm overflow-hidden',
     );
 
     return (
@@ -286,7 +293,7 @@ const PlankComponent = memo(
               role='article'
               data={data}
               limit={1}
-              fallback={PlankContentError}
+              fallback={PlankErrorFallback}
               placeholder={placeholder}
             />
           </>

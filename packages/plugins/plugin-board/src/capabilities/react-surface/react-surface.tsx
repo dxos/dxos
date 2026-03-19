@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 
-import { BoardContainer } from '../../components';
+import { BoardContainer } from '../../containers';
 import { meta } from '../../meta';
 import { Board } from '../../types';
 
@@ -19,8 +19,11 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Board.Board } => Obj.instanceOf(Board.Board, data.subject),
-        component: ({ role, data }) => <BoardContainer role={role} subject={data.subject} />,
+        filter: (data): data is { attendableId: string; subject: Board.Board } =>
+          typeof data.attendableId === 'string' && Obj.instanceOf(Board.Board, data.subject),
+        component: ({ role, data }) => (
+          <BoardContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
     ]),
   ),

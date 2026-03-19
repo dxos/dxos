@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment, memo } from 'react';
+import React, { Fragment, memo, useMemo } from 'react';
 
 import { Node } from '@dxos/app-graph';
 import { Popover, Treegrid, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
-import { useLoadDescendents } from '../../hooks';
+import { useActions } from '../../hooks';
 import { meta } from '../../meta';
 import { NAV_TREE_ITEM } from '../NavTree';
 import { useNavTreeContext } from '../NavTreeContext';
@@ -17,25 +17,49 @@ import { NavTreeItemAction } from './NavTreeItemAction';
 
 export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {
   const { t } = useTranslation(meta.id);
-  const { useActions, renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
+  const { renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;
-  const { actions: _actions, groupedActions } = useActions(item);
-  const [primaryAction, ...secondaryActions] = _actions.toSorted((a, _b) =>
-    a.properties?.disposition === 'list-item-primary' ? -1 : 1,
+  const { actions: actionsProp, groupedActions } = useActions(item);
+  const sortedActions = useMemo(
+    () =>
+      actionsProp.toSorted((actionA, actionB) => {
+        const primaryA = actionA.properties?.disposition === 'list-item-primary';
+        const primaryB = actionB.properties?.disposition === 'list-item-primary';
+        if (primaryA && !primaryB) {
+          return -1;
+        }
+        if (primaryB && !primaryA) {
+          return 1;
+        }
+        return 0;
+      }),
+    [actionsProp],
+  );
+  const [primaryAction, ...secondaryActions] = sortedActions;
+
+  const actions = useMemo(
+    () =>
+      (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : sortedActions)
+        .flatMap((action) => (Node.isAction(action) ? [action] : []))
+        .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition)),
+    [sortedActions, primaryAction],
   );
 
-  const actions = (primaryAction?.properties?.disposition === 'list-item-primary' ? secondaryActions : _actions)
-    .flatMap((action) => (Node.isAction(action) ? [action] : []))
-    .filter((a) => ['list-item', 'list-item-primary'].includes(a.properties?.disposition));
+  const primaryMenuActions = useMemo(
+    () =>
+      primaryAction
+        ? Node.isAction(primaryAction)
+          ? [primaryAction]
+          : groupedActions[primaryAction?.id ?? '']
+        : undefined,
+    [primaryAction, groupedActions],
+  );
 
-  useLoadDescendents(item);
-  useLoadDescendents(primaryAction && !Node.isAction(primaryAction) ? (primaryAction as Node.Node) : undefined);
-
-  const ActionRoot = popoverAnchorId === `dxos.org/ui/${NAV_TREE_ITEM}/${item.id}` ? Popover.Anchor : Fragment;
+  const ActionRoot = popoverAnchorId === `${NAV_TREE_ITEM}:${item.id}` ? Popover.Anchor : Fragment;
 
   return (
-    <div role='none' className='contents app-no-drag'>
+    <div role='none' className='contents dx-app-no-drag'>
       {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled ? (
         <Treegrid.Cell classNames='contents'>
           <NavTreeItemAction
@@ -43,8 +67,9 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
             label={toLocalizedString(primaryAction.properties?.label, t)}
             icon={primaryAction.properties?.icon ?? 'ph--placeholder--regular'}
             parent={item}
+            path={path}
             monolithic={Node.isAction(primaryAction)}
-            menuActions={Node.isAction(primaryAction) ? [primaryAction] : groupedActions[primaryAction?.id ?? '']}
+            menuActions={primaryMenuActions}
             menuType={primaryAction.properties?.menuType}
             caller={NAV_TREE_ITEM}
           />
@@ -60,6 +85,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
               label={t('tree item actions label')}
               icon='ph--dots-three-vertical--regular'
               parent={item}
+              path={path}
               menuActions={actions}
               menuType='dropdown'
               caller={NAV_TREE_ITEM}

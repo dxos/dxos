@@ -6,7 +6,7 @@ import { next as A, type Doc } from '@automerge/automerge';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Type } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
 import { defineFunction } from '@dxos/functions';
 import { trim } from '@dxos/util';
@@ -28,13 +28,13 @@ const Edit = Schema.Struct({
 // TODO(wittjosiah): Reconcile with ThreadAction.AddProposal.
 // Based on opencode's MutilEdit tool: https://deepwiki.com/search/how-does-text-edit-tool-work_a159bc76-5401-424e-b29f-f087d1ea4f78
 export default defineFunction({
-  key: 'dxos.org/function/markdown/update',
+  key: 'org.dxos.function.markdown.update',
   name: 'Update',
   description: trim`
     Applies a set of edits to the markdown document.
   `,
   inputSchema: Schema.Struct({
-    doc: Type.Ref(Markdown.Document).annotations({
+    doc: Ref.Ref(Markdown.Document).annotations({
       description: 'The ID of the markdown document.',
     }),
     edits: Schema.Array(Edit).annotations({

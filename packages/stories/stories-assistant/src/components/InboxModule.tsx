@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { Filter } from '@dxos/echo';
@@ -12,8 +12,8 @@ import { useQuery } from '@dxos/react-client/echo';
 import { type ComponentProps } from './types';
 
 export const InboxModule = ({ space }: ComponentProps) => {
-  const [mailbox] = useQuery(space.db, Filter.type(Mailbox.Mailbox));
-  const data = useMemo(() => ({ subject: mailbox }), [mailbox]);
+  const mailboxes = useQuery(space.db, Filter.type(Mailbox.Mailbox));
+  const mailbox = mailboxes[0];
 
   return <Surface.Surface role='article' data={{ subject: mailbox }} limit={1} />;
 };

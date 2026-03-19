@@ -20,7 +20,7 @@ import {
   ChatContainer,
   ThreadCompanion,
   ThreadSettings,
-} from '../../components';
+} from '../../containers';
 import { meta } from '../../meta';
 import { Channel, ThreadCapabilities, type ThreadSettingsProps } from '../../types';
 
@@ -28,13 +28,16 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/channel`,
+        id: `${meta.id}.channel`,
         role: 'article',
-        filter: (data): data is { subject: Channel.Channel } => Obj.instanceOf(Channel.Channel, data.subject),
-        component: ({ data: { subject }, role }) => <ChannelContainer role={role} subject={subject} />,
+        filter: (data): data is { attendableId: string; subject: Channel.Channel } =>
+          typeof data.attendableId === 'string' && Obj.instanceOf(Channel.Channel, data.subject),
+        component: ({ data: { subject, attendableId }, role }) => (
+          <ChannelContainer role={role} subject={subject} attendableId={attendableId} />
+        ),
       }),
       Surface.create({
-        id: `${meta.id}/chat-companion`,
+        id: `${meta.id}.chat-companion`,
         role: 'article',
         filter: (data): data is { companionTo: Channel.Channel; subject: 'chat' } =>
           Obj.instanceOf(Channel.Channel, data.companionTo) && data.subject === 'chat',
@@ -49,7 +52,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/thread`,
+        id: `${meta.id}.thread`,
         role: 'article',
         filter: (data): data is { subject: Thread.Thread } => Obj.instanceOf(Thread.Thread, data.subject),
         component: ({ data: { subject } }) => {
@@ -62,15 +65,15 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/comments`,
+        id: `${meta.id}.comments`,
         role: 'article',
-        filter: (data): data is { companionTo: { threads: Ref.Ref<Thread.Thread>[] } } =>
+        filter: (data): data is { attendableId?: string; companionTo: { threads: Ref.Ref<Thread.Thread>[] } } =>
           data.subject === 'comments' && Obj.isObject(data.companionTo),
         // TODO(wittjosiah): This isn't scrolling properly in a plank.
-        component: ({ data }) => <ThreadCompanion subject={data.companionTo} />,
+        component: ({ data }) => <ThreadCompanion attendableId={data.attendableId} subject={data.companionTo} />,
       }),
       Surface.create({
-        id: `${meta.id}/plugin-settings`,
+        id: `${meta.id}.plugin-settings`,
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
@@ -80,12 +83,12 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/assistant`,
+        id: `${meta.id}.assistant`,
         role: 'deck-companion--active-call',
         component: () => <CallSidebar />,
       }),
       Surface.create({
-        id: `${meta.id}/devtools-overview`,
+        id: `${meta.id}.devtools-overview`,
         role: 'devtools-overview',
         component: () => {
           const call = useCapability(ThreadCapabilities.CallManager);

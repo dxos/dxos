@@ -8,7 +8,20 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
-import { type Entity, type Hypergraph, Obj, Order, Ref, Relation, Type } from '@dxos/echo';
+import {
+  Collection,
+  Dataset,
+  type Entity,
+  Feed,
+  type Hypergraph,
+  Obj,
+  Order,
+  Ref,
+  Relation,
+  Type,
+  View,
+} from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -20,8 +33,6 @@ import { range } from '@dxos/util';
 import { getObjectCore } from '../echo-handler';
 import { type EchoDatabase } from '../proxy-db';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '../testing';
-
-import { Filter, Query } from './api';
 
 faker.seed(1);
 
@@ -84,9 +95,9 @@ describe('Query', () => {
     let db: EchoDatabase;
 
     beforeEach(async () => {
-      ({ db } = await builder.createDatabase());
+      ({ db } = await builder.createDatabase({ types: [...Dataset.Dataset.members] }));
       createTestObjects().forEach((object) => db.add(object));
-      await db.flush({ indexes: true });
+      await db.flush();
     });
 
     test('query nothing', async () => {
@@ -180,7 +191,7 @@ describe('Query', () => {
     test('filter by reference', async () => {
       const objA = db.add(Obj.make(TestSchema.Expando, { value: 100 }));
       const objB = db.add(Obj.make(TestSchema.Expando, { value: 200, ref: Ref.make(objA) }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const objects = await db.query(Filter.type(TestSchema.Expando, { ref: Ref.make(objA) })).run();
       expect(objects).toEqual([objB]);
@@ -191,7 +202,7 @@ describe('Query', () => {
       Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
       db.add(obj);
 
-      await db.flush({ indexes: true });
+      await db.flush();
       const objects = await db
         .query(Filter.foreignKeys(TestSchema.Expando, [{ id: 'test-id', source: 'test-source' }]))
         .run();
@@ -230,19 +241,29 @@ describe('Query', () => {
       }
 
       {
-        const objects = await db.query(Query.select(Filter.everything()), { deleted: 'exclude' }).run();
+        const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'exclude' })).run();
         expect(objects).to.have.length(7);
       }
 
       {
-        const objects = await db.query(Query.select(Filter.everything()), { deleted: 'include' }).run();
+        const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'include' })).run();
         expect(objects).to.have.length(10);
       }
 
       {
-        const objects = await db.query(Query.select(Filter.everything()), { deleted: 'only' }).run();
+        const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'only' })).run();
         expect(objects).to.have.length(3);
       }
+    });
+
+    test('enumerate datasets', async () => {
+      db.add(Feed.make({ name: 'test-feed' }));
+      db.add(Collection.make({ name: 'test-collection' }));
+      db.add(View.make({}));
+      await db.flush();
+
+      const datasets = await db.query(Query.type(Dataset.Dataset)).run();
+      expect(datasets).to.have.length(3);
     });
   });
 
@@ -251,11 +272,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.2.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.2.0' }));
 
       const peer = await builder.createPeer({ types: [ContactV1, ContactV2] });
       const db = await peer.createDatabase();
@@ -266,16 +287,16 @@ describe('Query', () => {
       const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
       await queue.append([contactV1, contactV2]);
 
-      const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')))).run();
+      const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person')))).run();
       expect(both).toHaveLength(2);
 
       const v1 = await queue
-        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.1.0'))))
+        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.1.0'))))
         .run();
       expect(v1).toEqual([contactV1]);
 
       const v2 = await queue
-        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0'))))
+        .query(Query.select(Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.2.0'))))
         .run();
       expect(v2).toEqual([contactV2]);
     });
@@ -289,11 +310,11 @@ describe('Query', () => {
       const task = Obj.make(TestSchema.Task, { title: 'Queue type selector task' });
       await queue.append([task]);
 
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const obj: TestSchema.Task = await db
         .query(
-          Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).options({
+          Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).from({
             queues: [queue.dxn.toString()],
           }),
         )
@@ -303,6 +324,387 @@ describe('Query', () => {
       expect(obj.id).toEqual(task.id);
       expect(obj.title).toEqual('Queue type selector task');
       expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
+    });
+
+    test('query options with 2 spaces and 2 queues', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Task, TestSchema.Person] });
+
+      const db1 = await peer.createDatabase();
+      const queueFactory1 = peer.client.constructQueueFactory(db1.spaceId);
+      const queue1 = queueFactory1.create();
+
+      const db2 = await peer.createDatabase();
+      const queueFactory2 = peer.client.constructQueueFactory(db2.spaceId);
+      const queue2 = queueFactory2.create();
+
+      const spaceTask1 = db1.add(Obj.make(TestSchema.Task, { title: 'space1-task' }));
+      const spacePerson1 = db1.add(Obj.make(TestSchema.Person, { name: 'space1-person' }));
+      const queueTask1 = Obj.make(TestSchema.Task, { title: 'queue1-task' });
+      await queue1.append([queueTask1]);
+
+      const spaceTask2 = db2.add(Obj.make(TestSchema.Task, { title: 'space2-task' }));
+      const queueTask2 = Obj.make(TestSchema.Task, { title: 'queue2-task' });
+      await queue2.append([queueTask2]);
+
+      await db1.flush();
+      await db2.flush();
+
+      const graph = peer.client.graph;
+      const bothSpaces = [db1.spaceId, db2.spaceId];
+
+      {
+        // Default: no queue options → only space objects.
+        const results = await graph.query(Query.select(Filter.type(TestSchema.Task)).from([db1, db2])).run();
+        const titles = results.map((r: TestSchema.Task) => r.title).sort();
+        expect(titles).toEqual([spaceTask1.title, spaceTask2.title]);
+      }
+
+      {
+        // allQueuesFromSpaces: true → space + all queue objects.
+        const results = await graph
+          .query(Query.select(Filter.type(TestSchema.Task)).from([db1, db2], { includeFeeds: true }))
+          .run();
+        const titles = results.map((r: TestSchema.Task) => r.title).sort();
+        expect(titles).toEqual([queueTask1.title, queueTask2.title, spaceTask1.title, spaceTask2.title]);
+      }
+
+      {
+        // Specific queue → space objects + only that queue's objects.
+        const results = await graph
+          .query(
+            Query.select(Filter.type(TestSchema.Task)).from({
+              spaceIds: bothSpaces,
+              queues: [queue1.dxn.toString()],
+            }),
+          )
+          .run();
+        const titles = results.map((r: TestSchema.Task) => r.title).sort();
+        expect(titles).toEqual([queueTask1.title, spaceTask1.title, spaceTask2.title]);
+      }
+
+      {
+        // Other specific queue → space objects + only that queue's objects.
+        const results = await graph
+          .query(
+            Query.select(Filter.type(TestSchema.Task)).from({
+              spaceIds: bothSpaces,
+              queues: [queue2.dxn.toString()],
+            }),
+          )
+          .run();
+        const titles = results.map((r: TestSchema.Task) => r.title).sort();
+        expect(titles).toEqual([queueTask2.title, spaceTask1.title, spaceTask2.title]);
+      }
+
+      {
+        // Both queues explicitly → same as allQueuesFromSpaces.
+        const results = await graph
+          .query(
+            Query.select(Filter.type(TestSchema.Task)).from({
+              spaceIds: bothSpaces,
+              queues: [queue1.dxn.toString(), queue2.dxn.toString()],
+            }),
+          )
+          .run();
+        const titles = results.map((r: TestSchema.Task) => r.title).sort();
+        expect(titles).toEqual([queueTask1.title, queueTask2.title, spaceTask1.title, spaceTask2.title]);
+      }
+
+      {
+        // Single space with allQueuesFromSpaces → only that space's objects + queues.
+        const results = await graph
+          .query(Query.select(Filter.type(TestSchema.Task)).from(db1, { includeFeeds: true }))
+          .run();
+        const titles = results.map((r: TestSchema.Task) => r.title).sort();
+        expect(titles).toEqual([queueTask1.title, spaceTask1.title]);
+      }
+
+      {
+        // Different type filter → queue options don't affect non-matching types.
+        const results = await graph
+          .query(Query.select(Filter.type(TestSchema.Person)).from([db1, db2], { includeFeeds: true }))
+          .run();
+        expect(results).toHaveLength(1);
+        expect((results[0] as TestSchema.Person).name).toEqual(spacePerson1.name);
+      }
+    });
+  });
+
+  describe('from() clause', () => {
+    test('from(db) scopes query to that database', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person] });
+      const db1 = await peer.createDatabase();
+      const db2 = await peer.createDatabase();
+
+      db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      await db1.flush();
+      await db2.flush();
+
+      const fromDb1 = await db1.query(Query.select(Filter.type(TestSchema.Person)).from(db1)).run();
+      expect(fromDb1).toHaveLength(1);
+      expect(fromDb1[0]).toMatchObject({ name: 'Alice' });
+
+      const fromDb2 = await db2.query(Query.select(Filter.type(TestSchema.Person)).from(db2)).run();
+      expect(fromDb2).toHaveLength(1);
+      expect(fromDb2[0]).toMatchObject({ name: 'Bob' });
+    });
+
+    test('from(db) on another database overrides implicit scoping', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person] });
+      const db1 = await peer.createDatabase();
+      const db2 = await peer.createDatabase();
+
+      db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      await db1.flush();
+      await db2.flush();
+
+      const result = await db1.query(Query.select(Filter.type(TestSchema.Person)).from(db2)).run();
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({ name: 'Bob' });
+    });
+
+    test('from([db1, db2]) queries across multiple databases', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person] });
+      const db1 = await peer.createDatabase();
+      const db2 = await peer.createDatabase();
+
+      db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      await db1.flush();
+      await db2.flush();
+
+      const result = await db1.query(Query.select(Filter.type(TestSchema.Person)).from([db1, db2])).run();
+      expect(result).toHaveLength(2);
+      expect(result.map((obj) => obj.name).sort()).toEqual(['Alice', 'Bob']);
+    });
+
+    test('from(all-accessible-spaces) queries all spaces via graph', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person] });
+      const db1 = await peer.createDatabase();
+      const db2 = await peer.createDatabase();
+
+      db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      await db1.flush();
+      await db2.flush();
+
+      const result = await peer.client.graph
+        .query(Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces'))
+        .run();
+      expect(result).toHaveLength(2);
+      expect(result.map((obj) => obj.name).sort()).toEqual(['Alice', 'Bob']);
+    });
+
+    test('from(db, { includeFeeds: true }) includes feeds in full-text search', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      db.add(Obj.make(TestSchema.Task, { title: 'Space TypeScript Task' }));
+      await queue.append([Obj.make(TestSchema.Task, { title: 'Queue TypeScript Task' })]);
+      await db.flush();
+
+      const withFeeds: TestSchema.Task[] = await db
+        .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db, { includeFeeds: true }))
+        .run();
+      expect(withFeeds).toHaveLength(2);
+      expect(withFeeds.map((obj) => obj.title).sort()).toEqual(['Queue TypeScript Task', 'Space TypeScript Task']);
+
+      const withoutFeeds: TestSchema.Task[] = await db
+        .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db))
+        .run();
+      expect(withoutFeeds).toHaveLength(1);
+      expect(withoutFeeds[0].title).toBe('Space TypeScript Task');
+    });
+
+    test('from(all-accessible-spaces) via graph queries type across spaces', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      const db1 = await peer.createDatabase();
+      const db2 = await peer.createDatabase();
+
+      db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db1.add(Obj.make(TestSchema.Task, { title: 'Task 1' }));
+      db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      await db1.flush();
+      await db2.flush();
+
+      const people = await peer.client.graph
+        .query(Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces'))
+        .run();
+      expect(people).toHaveLength(2);
+      expect(people.map((obj) => obj.name).sort()).toEqual(['Alice', 'Bob']);
+
+      const tasks = await peer.client.graph
+        .query(Query.select(Filter.type(TestSchema.Task)).from('all-accessible-spaces'))
+        .run();
+      expect(tasks).toHaveLength(1);
+      expect(tasks[0]).toMatchObject({ title: 'Task 1' });
+    });
+
+    test('from() combined with limit', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person] });
+      const db = await peer.createDatabase();
+
+      db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Charlie' }));
+      await db.flush();
+
+      const result = await db.query(Query.select(Filter.type(TestSchema.Person)).limit(2).from(db)).run();
+      expect(result).toHaveLength(2);
+    });
+
+    test('from(feed) scopes query to feed items', async () => {
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      // Create a feed object and bind it to the queue.
+      const feed = db.add(Feed.make({ name: 'test-feed' }));
+      Obj.change(feed, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      });
+
+      // Add items to the queue and a separate item to the space.
+      db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await queue.append([
+        Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
+        Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
+      ]);
+      await db.flush();
+
+      // Query from feed should only return feed items.
+      const feedResults = await db.query(Query.select(Filter.type(TestSchema.Task)).from(feed)).run();
+      expect(feedResults).toHaveLength(2);
+      expect(feedResults.map((obj: any) => obj.title).sort()).toEqual(['Feed Task 1', 'Feed Task 2']);
+    });
+
+    test('from(feed) with Filter.id scopes to feed', async () => {
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const feed = db.add(Feed.make({ name: 'test-feed' }));
+      Obj.change(feed, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      });
+
+      const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
+      const spaceItem = db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await queue.append([feedItem]);
+      await db.flush();
+
+      // Filter.id for a feed item should find it when scoped to feed.
+      const feedResult = await db.query(Query.select(Filter.id(feedItem.id)).from(feed)).run();
+      expect(feedResult).toHaveLength(1);
+      expect((feedResult[0] as any).title).toBe('Feed Task');
+
+      // Filter.id for a space item should NOT find it when scoped to feed.
+      const spaceResult = await db.query(Query.select(Filter.id(spaceItem.id)).from(feed)).run();
+      expect(spaceResult).toHaveLength(0);
+    });
+
+    test('from(feed) with no queue DXN returns empty results', async () => {
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      const feed = db.add(Feed.make({ name: 'empty-feed' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await db.flush({ indexes: true });
+
+      const results = await db.query(Query.select(Filter.type(TestSchema.Task)).from(feed)).run();
+      expect(results).toHaveLength(0);
+    });
+
+    test('from({ queues: [] }) returns empty results', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await db.flush({ indexes: true });
+
+      const results = await db.query(Query.select(Filter.type(TestSchema.Task)).from({ queues: [] })).run();
+      expect(results).toHaveLength(0);
+    });
+
+    test('Query.type(...).from(feed) scopes query to feed items', async () => {
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const queue = queues.create();
+
+      const feed = db.add(Feed.make({ name: 'test-feed' }));
+      Obj.change(feed, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      });
+
+      db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
+      await queue.append([
+        Obj.make(TestSchema.Task, { title: 'Feed Task 1' }),
+        Obj.make(TestSchema.Task, { title: 'Feed Task 2' }),
+      ]);
+      await db.flush();
+
+      const feedResults = await db.query(Query.type(TestSchema.Task).from(feed)).run();
+      expect(feedResults).toHaveLength(2);
+      expect(feedResults.map((obj: any) => obj.title).sort()).toEqual(['Feed Task 1', 'Feed Task 2']);
+    });
+
+    test('Query.select(...).from(subquery) filters results of inner query', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Task 1' }));
+      await db.flush();
+
+      const subquery = Query.select(Filter.type(TestSchema.Person)).from(db);
+      const results = await db
+        .query(Query.select(Filter.props<TestSchema.Person>({ name: 'Alice' })).from(subquery))
+        .run();
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({ name: 'Alice' });
+    });
+
+    test('Query.from(db).select(...) scopes then filters', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      const db1 = await peer.createDatabase();
+      const db2 = await peer.createDatabase();
+
+      db1.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      db1.add(Obj.make(TestSchema.Task, { title: 'Task 1' }));
+      db2.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      await db1.flush();
+      await db2.flush();
+
+      const results = await peer.client.graph.query(Query.from(db1).select(Filter.type(TestSchema.Person))).run();
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({ name: 'Alice' });
+    });
+
+    test('Query.from(subquery).reference() traverses from subquery results', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      const db = await peer.createDatabase();
+
+      const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+      const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Task for Alice', assignee: Ref.make(alice) }));
+      db.add(Obj.make(TestSchema.Task, { title: 'Task for Bob', assignee: Ref.make(bob) }));
+      await db.flush();
+
+      const subquery = Query.select(Filter.type(TestSchema.Task, { title: 'Task for Alice' })).from(db);
+      const results = await db.query(Query.from(subquery).reference('assignee')).run();
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({ name: 'Alice' });
     });
   });
 
@@ -431,7 +833,7 @@ describe('Query', () => {
     const [obj1, obj2] = await createObjects(peer, db, { count: 2 });
 
     db.remove(obj2);
-    await db.flush({ indexes: true });
+    await db.flush();
 
     const queryResult = await db.query(Query.select(Filter.everything())).run();
     expect(queryResult.length).to.eq(1);
@@ -478,11 +880,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.2.0' }));
+      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.2.0' }));
 
       const { peer, db } = await builder.createDatabase({
         types: [ContactV1, ContactV2],
@@ -490,16 +892,16 @@ describe('Query', () => {
 
       const contactV1 = db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
       const contactV2 = db.add(Obj.make(ContactV2, { name: 'Brian Smith' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const assertQueries = async (db: EchoDatabase) => {
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV2), [contactV2]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person')), [contactV1, contactV2]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.1.0')), [contactV1]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0')), [contactV2]);
-        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:example.com/type/Person:0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person')), [contactV1, contactV2]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.1.0')), [contactV1]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:type:com.example.type.person:0.2.0')), [contactV2]);
       };
 
       await assertQueries(db);
@@ -614,7 +1016,7 @@ describe('Query', () => {
         }),
       );
 
-      await db.flush({ indexes: true });
+      await db.flush();
     });
 
     test('traverse relation source to target', async () => {
@@ -657,7 +1059,7 @@ describe('Query', () => {
           objects: [Ref.make(person1)],
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const objects = await db
         .query(Query.select(Filter.type(TestSchema.Expando, { name: 'Contacts' })).reference('objects'))
@@ -698,7 +1100,7 @@ describe('Query', () => {
         }),
       );
 
-      await sqlDb.flush({ indexes: true });
+      await sqlDb.flush();
 
       // When no property is specified, referencedBy() should return all incoming references (including nested ones).
       const allIncoming = await sqlDb
@@ -724,7 +1126,7 @@ describe('Query', () => {
           objects: [Ref.make(person1)],
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const objects = await db
         .query(Query.select(Filter.type(TestSchema.Person)).referencedBy(TestSchema.Expando, 'objects'))
@@ -752,7 +1154,7 @@ describe('Query', () => {
           subject: Ref.make(person1),
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const objects = await db
         .query(Query.select(Filter.type(TestSchema.Person, { name: 'Alice' })).referencedBy())
@@ -829,7 +1231,7 @@ describe('Query', () => {
           name: 'Child',
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Query for parent from child.
       const objects = await db.query(Query.select(Filter.id(child.id)).parent()).run();
@@ -852,7 +1254,7 @@ describe('Query', () => {
           name: 'Child 2',
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
       // writeFileSync('index-core.db', await peer.exportSqliteDatabase());
       // console.log('exported ./index-core.db');
 
@@ -878,7 +1280,7 @@ describe('Query', () => {
           name: 'Child',
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Query for grandparent from child (going through parent).
       const parents = await db.query(Query.select(Filter.id(child.id)).parent()).run();
@@ -910,7 +1312,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
       db.add(Obj.make(TestSchema.Task, { title: 'perf optimizations' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       {
         const objects = await db.query(Query.select(Filter.text('fix the tests', { type: 'vector' }))).run();
@@ -936,7 +1338,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Task, { title: 'fix the tests' }));
       db.add(Obj.make(TestSchema.Task, { title: 'perf optimizations' }));
 
-      await db.flush({ indexes: true });
+      await db.flush();
 
       {
         const objects = await db.query(Query.select(Filter.text('fix the tests', { type: 'full-text' }))).run();
@@ -969,7 +1371,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Advanced Python Programming' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // TODO(mykola): Defalut to full-text
       const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
@@ -1008,7 +1410,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'Programming with JavaScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Best Practices' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Python for Data Science' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const objects = await db.query(Query.select(Filter.text('JavaScript', { type: 'full-text' }))).run();
       expect(objects).toHaveLength(2);
@@ -1023,7 +1425,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'Introduction to TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Getting Started with React' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Advanced Python Programming' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Partial word "Script" should match "TypeScript".
       {
@@ -1058,7 +1460,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming Guide' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'JavaScript Basics' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Words in different order should still match.
       {
@@ -1079,7 +1481,7 @@ describe('Query', () => {
       const { db } = await builder.createDatabase();
 
       const obj = db.add(Obj.make(TestSchema.Expando, { title: 'Original Title' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Poll until indexer2 has processed the document.
       {
@@ -1091,7 +1493,7 @@ describe('Query', () => {
       Obj.change(obj, (o) => {
         o.title = 'Updated Title';
       });
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Verify search results.
       {
@@ -1151,7 +1553,7 @@ describe('Query', () => {
       console.timeEnd('create');
 
       console.time('flush');
-      await db.flush({ indexes: true });
+      await db.flush();
       console.timeEnd('flush');
 
       console.time('query');
@@ -1182,13 +1584,15 @@ describe('Query', () => {
       ]);
 
       // Wait for indexing.
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Search in specific queue.
       {
         const objects = await db
           .query(
-            Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).from({
+              queues: [queue.dxn.toString()],
+            }),
           )
           .run();
         expect(objects).toHaveLength(1);
@@ -1198,7 +1602,7 @@ describe('Query', () => {
       // Search for React.
       {
         const objects = await db
-          .query(Query.select(Filter.text('React', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }))
+          .query(Query.select(Filter.text('React', { type: 'full-text' })).from({ queues: [queue.dxn.toString()] }))
           .run();
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Getting Started with React');
@@ -1208,7 +1612,9 @@ describe('Query', () => {
       {
         const objects = await db
           .query(
-            Query.select(Filter.text('JavaScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+            Query.select(Filter.text('JavaScript', { type: 'full-text' })).from({
+              queues: [queue.dxn.toString()],
+            }),
           )
           .run();
         expect(objects).toHaveLength(0);
@@ -1228,16 +1634,12 @@ describe('Query', () => {
       await queue.append([Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' })]);
 
       // Wait for indexing.
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Search with allQueuesFromSpaces: true should return both space and queue objects.
       {
         const objects: TestSchema.Task[] = await db
-          .query(
-            Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({
-              allQueuesFromSpaces: true,
-            }),
-          )
+          .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db, { includeFeeds: true }))
           .run();
         expect(objects).toHaveLength(2);
         expect(objects.map((_) => _.title).sort()).toEqual(['Queue Object TypeScript', 'Space Object TypeScript']);
@@ -1245,9 +1647,7 @@ describe('Query', () => {
 
       // Search without allQueuesFromSpaces should return only space objects.
       {
-        const objects = await db
-          .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({}))
-          .run();
+        const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Space Object TypeScript');
       }
@@ -1262,11 +1662,13 @@ describe('Query', () => {
       const queue = queues.create();
       const task = Obj.make(TestSchema.Task, { title: 'Queue Object TypeScript' });
       await queue.append([task]);
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const obj: TestSchema.Task = await db
         .query(
-          Query.select(Filter.text('TypeScript', { type: 'full-text' })).options({ queues: [queue.dxn.toString()] }),
+          Query.select(Filter.text('TypeScript', { type: 'full-text' })).from({
+            queues: [queue.dxn.toString()],
+          }),
         )
         .first();
       expect(obj).toBeDefined();
@@ -1285,7 +1687,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming' })); // Medium relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'Python Programming' })); // No match.
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })));
       const entries = await query.runEntries();
@@ -1307,7 +1709,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Order by rank descending (best matches first) - default direction.
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank()));
@@ -1331,7 +1733,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript' })); // Single occurrence.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' })); // High relevance.
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript Programming Guide' })); // Medium relevance.
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Order by rank ascending (worst matches first).
       const query = db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).orderBy(Order.rank('asc')));
@@ -1353,7 +1755,7 @@ describe('Query', () => {
 
       db.add(Obj.make(TestSchema.Expando, { title: 'Non-FTS Test Object 1' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'Non-FTS Test Object 2' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Non-FTS query (all expandos, no text search).
       const query = db.query(Query.select(Filter.type(TestSchema.Expando)));
@@ -1376,7 +1778,7 @@ describe('Query', () => {
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript' }));
       db.add(Obj.make(TestSchema.Expando, { title: 'TypeScript TypeScript TypeScript TypeScript' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Order by rank descending and limit to top 2 results.
       const query = db.query(
@@ -1405,7 +1807,7 @@ describe('Query', () => {
         db.add(object);
       }
 
-      await db.flush({ indexes: true });
+      await db.flush();
     });
 
     test('fires only once when new objects are added', async () => {
@@ -1421,7 +1823,7 @@ describe('Query', () => {
       expect(count).to.equal(0);
 
       db.add(createTestObject({ value: 100 }));
-      await db.flush({ updates: true, indexes: true });
+      await db.flush({ updates: true });
       expect(count).to.equal(1);
       expect(lastResult).to.have.length(4);
     });
@@ -1437,7 +1839,7 @@ describe('Query', () => {
         expect(query.results).to.have.length(2);
       });
       db.remove(objects[0]);
-      await db.flush({ updates: true, indexes: true });
+      await db.flush({ updates: true });
       expect(count).to.equal(1);
     });
 
@@ -1513,7 +1915,7 @@ describe('Query', () => {
       });
 
       db.add(createTestObject({ value: 100 }));
-      await db.flush({ updates: true, indexes: true });
+      await db.flush({ updates: true });
 
       expect(count1).toEqual(1);
       expect(count2).toEqual(1);
@@ -1530,7 +1932,7 @@ describe('Query', () => {
       const person2 = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
       const person3 = db.add(Obj.make(TestSchema.Person, { name: 'Charlie' }));
       expect([person1, person2, person3].filter(Boolean)).to.have.length(3);
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Track all updates to observe the bug.
       log.break();
@@ -1546,7 +1948,7 @@ describe('Query', () => {
       ctx.onTestFinished(unsub);
 
       // Wait for initial renders to complete.
-      await db.flush({ indexes: true, updates: true });
+      await db.flush({ updates: true });
       log.break();
 
       // THE BUG REPRODUCTION: Delete Bob.
@@ -1555,7 +1957,7 @@ describe('Query', () => {
       log.break();
 
       // Wait for all reactive updates to complete.
-      await db.flush({ indexes: true, updates: true });
+      await db.flush({ updates: true });
       log.break();
 
       // TODO(ZaymonFC): Remove this comment once the flash bug is resolved.
@@ -1585,7 +1987,7 @@ describe('Query', () => {
 
       // Create 10 test objects: 1, 2, 3, ..., 10.
       const objects = Array.from({ length: 10 }, (_, i) => db.add(Obj.make(TestSchema.Expando, { value: i + 1 })));
-      await db.flush({ indexes: true, updates: true });
+      await db.flush({ updates: true });
 
       // Track all updates to observe the bug.
       const updates: number[][] = [];
@@ -1599,7 +2001,7 @@ describe('Query', () => {
       ctx.onTestFinished(unsub);
 
       // Wait for initial renders to complete.
-      await db.flush({ indexes: true, updates: true });
+      await db.flush({ updates: true });
 
       // THE BUG REPRODUCTION: Delete all items in a loop.
       for (const item of objects) {
@@ -1608,7 +2010,7 @@ describe('Query', () => {
 
       // Wait for all reactive updates to complete.
       // TODO(dmaretskyi): Does this ensure queries were re-run?
-      await db.flush({ indexes: true, updates: true });
+      await db.flush({ updates: true });
 
       // NOTE: There might be multiple updates dependending on how database components execute updates.
       // All objects loaded.
@@ -1687,7 +2089,7 @@ describe('Query', () => {
 
 const createObjects = async (peer: EchoTestPeer, db: EchoDatabase, options: { count: number }) => {
   const objects = range(options.count, () => db.add(createTestObject()));
-  await db.flush({ indexes: true });
+  await db.flush();
   return objects;
 };
 

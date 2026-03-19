@@ -9,13 +9,12 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { Observability } from '@dxos/observability';
 import { OperationResolver } from '@dxos/operation';
 
-import { type ObservabilitySettingsProps } from '../../components';
+import { type ObservabilitySettingsProps } from '../../containers';
 import { meta } from '../../meta';
 import { ObservabilityCapabilities, ObservabilityOperation } from '../../types';
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: { namespace: string }) {
-    const { namespace } = props!;
+  Effect.fnUntraced(function* ({ namespace }: { namespace: string }) {
     const capabilities = yield* Capability.Service;
 
     return Capability.contributes(Capabilities.OperationResolver, [

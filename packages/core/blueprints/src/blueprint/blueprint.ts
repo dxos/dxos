@@ -11,6 +11,23 @@ import { type FunctionDefinition } from '@dxos/functions';
 import * as Template from '../template';
 
 /**
+ * MCP server definition.
+ */
+export const McpServer = Schema.Struct({
+  /**
+   * URL of the MCP server.
+   */
+  url: Schema.String.annotations({
+    description: 'URL of the MCP server',
+  }),
+
+  protocol: Schema.Union(Schema.Literal('sse'), Schema.Literal('http')).annotations({
+    description: 'Protocol of the MCP server',
+  }),
+});
+export interface McpServer extends Schema.Schema.Type<typeof McpServer> {}
+
+/**
  * Blueprint schema defines the structure for AI assistant blueprints.
  * Blueprints contain instructions, tools, and artifacts that guide the AI's behavior.
  * Blueprints may use tools to create and read artifacts, which are managed by the assistant.
@@ -53,13 +70,22 @@ export const Blueprint = Schema.Struct({
   tools: Schema.Array(ToolId).annotations({
     description: 'Array of tools that the AI assistant can use when this blueprint is active',
   }),
+
+  /**
+   * Array of MCP servers that the AI assistant can use when this blueprint is active.
+   */
+  mcpServers: Schema.optional(Schema.Array(McpServer)),
 }).pipe(
   Type.object({
     // TODO(burdon): Is this a DXN? Need to create a Format type for these IDs.
-    typename: 'dxos.org/type/Blueprint',
+    typename: 'org.dxos.type.blueprint',
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--blueprint--regular',
+    hue: 'sky',
+  }),
 );
 
 /**

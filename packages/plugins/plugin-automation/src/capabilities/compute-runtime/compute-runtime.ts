@@ -8,12 +8,14 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
+import { GenericToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
+import { ToolExecutionServices } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { Database, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
 import { CredentialsService, QueueService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
@@ -28,6 +30,7 @@ import { type SpaceId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '../../types';
+import { Blueprint } from '@dxos/blueprints';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -71,7 +74,10 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const registry = this.#capabilities.get(Capabilities.AtomRegistry);
 
         // TODO(dmaretskyi): Make these reactive.
-        const functions = this.#capabilities.getAll(AppCapabilities.Functions).flat();
+        const functions = [
+          ...this.#capabilities.getAll(AppCapabilities.Functions).flat(),
+          ...this.#capabilities.getAll(AppCapabilities.BlueprintDefinition).flatMap((blueprint) => blueprint.functions),
+        ];
 
         const genericToolkitProvider = Layer.succeed(GenericToolkit.Provider, {
           getToolkit: () => {
@@ -80,11 +86,19 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           },
         });
 
+        const blueprints = this.#capabilities
+          .getAll(AppCapabilities.BlueprintDefinition)
+          .flatMap((blueprint) => blueprint.make());
+
         const space = client.spaces.get(spaceId);
         invariant(space, `Invalid space: ${spaceId}`);
         yield* Effect.promise(() => space.waitUntilReady());
 
-        return Layer.mergeAll(TriggerDispatcher.layer({ timeControl: 'natural' })).pipe(
+        return Layer.mergeAll(
+          TriggerDispatcher.layer({ timeControl: 'natural' }),
+          // TODO(dmaretskyi): Make blueprints reactive and registry accept an atom.
+          Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
+        ).pipe(
           Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
           Layer.provideMerge(
             Layer.mergeAll(
@@ -108,6 +122,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               Layer.provideMerge(CredentialsService.layerFromDatabase()),
               Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
               Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
+              Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
             ),
           ),
         );

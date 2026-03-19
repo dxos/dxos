@@ -54,8 +54,8 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
 
   return (
     <div className='p-2 overflow-auto' role='none'>
-      <div className='is-flex justify-between items-start' role='none'>
-        <div className='is-full flex flex-row justify-between' role='none'>
+      <div className='flex justify-between items-start' role='none'>
+        <div className='w-full flex flex-row justify-between' role='none'>
           <h3 className='text-lg font-medium mb-1'>{targetName}</h3>
           <IconButton icon='ph--x--regular' iconOnly label='Close panel' onClick={onClose} />
         </div>
@@ -73,7 +73,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
       </div>
 
       {span.error && (
-        <div className='mlb-2 text-sm font-medium'>
+        <div className='my-2 text-sm font-medium'>
           {span.error.name}: {span.error.message}
         </div>
       )}
@@ -82,7 +82,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
         <div className='mt-3'>
           <details className='text-sm'>
             <summary className='cursor-pointer font-medium'>Input Data</summary>
-            <pre className='mt-2 p-2 bg-neutral/5 rounded text-xs overflow-auto'>
+            <pre className='mt-2 p-2 bg-neutral/5 rounded-sm text-xs overflow-auto'>
               {JSON.stringify(span.input, null, 2)}
             </pre>
           </details>

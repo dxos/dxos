@@ -5,25 +5,23 @@
 import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
-import { type Capabilities } from '@dxos/app-framework';
-import { type AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { type AppCapabilities, getCompanionVariant } from '@dxos/app-toolkit';
 import { Node } from '@dxos/plugin-graph';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
 import { byPosition } from '@dxos/util';
 
 import { type SimpleLayoutState } from '../types';
 
 // TODO(wittjosiah): Factor out to shared location with plugin-deck.
-export const PLANK_COMPANION_TYPE = 'dxos.org/plugin/deck/plank-companion';
+export const PLANK_COMPANION_TYPE = 'org.dxos.plugin.deck.plank-companion';
 
 export type CompanionActionsConfig = {
   /** Prefix for companion action IDs (e.g. 'navbar' or 'drawer') */
   idPrefix: string;
   /** Optional: highlight companion with this variant */
   selectedVariant?: string;
-  /** invokeSync function for dispatching operations */
-  invokeSync: Capabilities.OperationInvoker['invokeSync'];
+  /** State updater for toggling the drawer. */
+  updateState: (fn: (state: SimpleLayoutState) => SimpleLayoutState) => void;
 };
 
 /**
@@ -37,14 +35,14 @@ export const createCompanionActions = (
   get: (atom: Atom.Atom<any>) => any,
   config: CompanionActionsConfig,
 ): Pick<ActionGraphProps, 'nodes' | 'edges'> => {
-  const { idPrefix, selectedVariant, invokeSync } = config;
+  const { idPrefix, selectedVariant, updateState } = config;
 
   // Derive activeId from state atom.
   const state = get(stateAtom);
   const activeId = state.active ?? state.workspace;
 
   // Get companions from graph connections for activeId.
-  const activeConnections = activeId ? get(graph.connections(activeId)) : [];
+  const activeConnections = activeId ? get(graph.connections(activeId, 'child')) : [];
   const companions = activeConnections
     .filter((node: Node.Node) => node.type === PLANK_COMPANION_TYPE)
     .toSorted((a: Node.Node, b: Node.Node) => byPosition(a.properties, b.properties));
@@ -52,12 +50,8 @@ export const createCompanionActions = (
   const nodes: ActionGraphProps['nodes'] = [];
   const edges: ActionGraphProps['edges'] = [];
 
-  // Add companion actions.
-  // TODO(burdon): Cap at 6 items.
   companions.forEach((companion: Node.Node) => {
-    // Extract variant for highlighting if needed.
-    const [, companionVariant] = companion.id.split(ATTENDABLE_PATH_SEPARATOR);
-
+    const companionVariant = getCompanionVariant(companion.id);
     const companionAction = {
       id: `${idPrefix}-companion-${companion.id}`,
       type: Node.ActionType,
@@ -65,20 +59,24 @@ export const createCompanionActions = (
         icon: companion.properties.icon ?? 'ph--placeholder--regular',
         label: companion.properties.label,
         iconOnly: true,
-        // Conditionally add variant highlighting.
         ...(selectedVariant !== undefined && {
           variant: selectedVariant === companionVariant ? 'primary' : 'ghost',
         }),
       },
       data: () =>
         Effect.sync(() =>
-          invokeSync(LayoutOperation.Open, {
-            subject: [companion.id],
+          updateState((current) => {
+            const closing = current.companionVariant === companionVariant && current.drawerState !== 'closed';
+            return {
+              ...current,
+              companionVariant: closing ? undefined : companionVariant,
+              drawerState: closing ? 'closed' : 'open',
+            };
           }),
         ),
     };
     nodes.push(companionAction);
-    edges.push({ source: 'root', target: companionAction.id });
+    edges.push({ source: 'root', target: companionAction.id, relation: 'child' });
   });
 
   return { nodes, edges };

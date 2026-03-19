@@ -62,14 +62,7 @@ export default defineConfig({
     ConfigPlugin({
       root: dirname,
     }),
-    ThemePlugin({
-      root: dirname,
-      content: [
-        path.resolve(dirname, './index.html'),
-        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        path.join(rootDir, '/packages/ui/*/src/**/*.{js,ts,jsx,tsx}'),
-      ],
-    }),
+    ThemePlugin({}),
     IconsPlugin({
       symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
       assetPath: (name, variant) =>

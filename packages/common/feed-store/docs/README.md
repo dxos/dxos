@@ -37,6 +37,7 @@ class FeedStoreOptions {
   factory
 }
 ```
+
 ```mermaid
 classDiagram
 direction TB
@@ -136,15 +137,15 @@ dxos/hypercore --> dxos/random-access-storage
 
 ## Dependencies
 
-| Module | Direct |
-|---|---|
-| [`@dxos/async`](../../async/docs/README.md) | &check; |
-| [`@dxos/codec-protobuf`](../../codec-protobuf/docs/README.md) | &check; |
-| [`@dxos/context`](../../context/docs/README.md) | &check; |
-| [`@dxos/crypto`](../../crypto/docs/README.md) | &check; |
-| [`@dxos/debug`](../../debug/docs/README.md) | &check; |
-| [`@dxos/hypercore`](../../hypercore/docs/README.md) | &check; |
-| [`@dxos/keys`](../../keys/docs/README.md) | &check; |
-| [`@dxos/log`](../../log/docs/README.md) | &check; |
+| Module                                                                      | Direct  |
+| --------------------------------------------------------------------------- | ------- |
+| [`@dxos/async`](../../async/docs/README.md)                                 | &check; |
+| [`@dxos/codec-protobuf`](../../codec-protobuf/docs/README.md)               | &check; |
+| [`@dxos/context`](../../context/docs/README.md)                             | &check; |
+| [`@dxos/crypto`](../../crypto/docs/README.md)                               | &check; |
+| [`@dxos/debug`](../../debug/docs/README.md)                                 | &check; |
+| [`@dxos/hypercore`](../../hypercore/docs/README.md)                         | &check; |
+| [`@dxos/keys`](../../keys/docs/README.md)                                   | &check; |
+| [`@dxos/log`](../../log/docs/README.md)                                     | &check; |
 | [`@dxos/random-access-storage`](../../random-access-storage/docs/README.md) | &check; |
-| [`@dxos/util`](../../util/docs/README.md) | &check; |
+| [`@dxos/util`](../../util/docs/README.md)                                   | &check; |

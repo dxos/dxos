@@ -5,11 +5,12 @@
 import { type Registry } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
 
-import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type } from '@dxos/echo';
+import { type View } from '@dxos/echo';
 import {
   ProjectionModel,
   type SchemaPropertyDefinition,
-  View,
+  ViewModel,
   createEchoChangeCallback,
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
@@ -35,16 +36,16 @@ export const getBaseSchema = ({
   properties,
   jsonSchema,
 }: {
-  schema?: Type.Entity.Any;
+  schema?: Type.AnyEntity;
   typename?: string;
   properties?: TablePropertyDefinition[];
   jsonSchema?: Types.DeepMutable<JsonSchema.JsonSchema>;
 }): { typename: string; jsonSchema: Types.DeepMutable<JsonSchema.JsonSchema> } => {
   if (typename && properties) {
     const schema = getSchemaFromPropertyDefinitions(typename, properties);
-    return { typename: schema.typename, jsonSchema: Type.toJsonSchema(schema) };
+    return { typename: schema.typename, jsonSchema: JsonSchema.toJsonSchema(schema) };
   } else if (schema) {
-    return { typename: Type.getTypename(schema)!, jsonSchema: Type.toJsonSchema(schema) };
+    return { typename: Type.getTypename(schema)!, jsonSchema: JsonSchema.toJsonSchema(schema) };
   } else if (typename && jsonSchema) {
     return { typename, jsonSchema };
   } else {
@@ -61,7 +62,7 @@ export const makeDynamicTable = ({
   jsonSchema: Types.DeepMutable<JsonSchema.JsonSchema>;
   properties?: TablePropertyDefinition[];
 }): { projection: ProjectionModel; object: Table.Table } => {
-  const view = View.make({
+  const view = ViewModel.make({
     query: Query.select(Filter.everything()),
     jsonSchema,
     ...(properties && { fields: properties.map((property) => property.name) }),

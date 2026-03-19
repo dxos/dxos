@@ -278,7 +278,7 @@ const GlobeDebug = (props: { position?: ControlPosition }) => {
   const { size, zoom, translation, rotation } = useGlobeContext();
   return (
     <div
-      class={`z-10 absolute w-96 p-2 overflow-hidden border border-green-700 rounded ${
+      class={`z-10 absolute w-96 p-2 overflow-hidden border border-green-700 rounded-sm ${
         controlPositions[props.position ?? 'topleft']
       }`}
     >

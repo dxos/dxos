@@ -10,7 +10,7 @@ export const Todo = Schema.Struct({
   name: Schema.optional(Schema.String),
 }).pipe(
   Type.object({
-    typename: 'example.org/type/Todo',
+    typename: 'com.example.type.todo',
     version: '0.1.0',
   }),
 );

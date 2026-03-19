@@ -6,14 +6,15 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type Database, Entity, Filter, Ref, Type } from '@dxos/echo';
+import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { useQuery, useSchema as useSchema$ } from '@dxos/echo-react';
 import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
-import { descriptionText, mx } from '@dxos/ui-theme';
+import { ParentLabelAnnotationId } from '@dxos/schema';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../../translations';
 import { ObjectPicker, type ObjectPickerContentProps, type RefOption } from '../../ObjectPicker';
@@ -25,10 +26,11 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
   return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };
 
-const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results) =>
+const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results, { parentLabel } = {}) =>
   results.map((result) => {
     const id = Entity.getDXN(result).toString();
-    const label = Entity.getLabel(result);
+    const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
+    const label = parent ? Entity.getLabel(parent) : Entity.getLabel(result);
     return { id, label: label ?? id };
   });
 
@@ -36,8 +38,8 @@ const defaultResultsHook: NonNullable<RefFieldProps['resultsHook']> = (db, typen
   useQuery(
     db,
     typename
-      ? // For Type.Ref(Type.Obj) we want to show all objects.
-        typename === Type.getTypename(Type.Obj)
+      ? // For Ref.Ref(Obj.Unknown) we want to show all objects.
+        typename === Type.getTypename(Obj.Unknown)
         ? Filter.everything()
         : Filter.typename(typename)
       : Filter.nothing(),
@@ -47,9 +49,9 @@ export type RefFieldProps = FormFieldComponentProps &
   Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> & {
     db?: Database.Database;
     resultsHook?: (db?: Database.Database, typename?: string) => Entity.Any[];
-    schemaHook?: (db?: Database.Database, typename?: string) => Type.Entity.Any;
-    getOptions?: (objects: Entity.Any[]) => RefOption[];
-    onCreate?: (schema: Type.Entity.Any, values: any) => void;
+    schemaHook?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
+    getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
+    onCreate?: (schema: Type.AnyEntity, values: any) => void;
   };
 
 export const RefField = (props: RefFieldProps) => {
@@ -80,7 +82,10 @@ export const RefField = (props: RefFieldProps) => {
   );
 
   const results = useResults(db, typename);
-  const options = useMemo(() => getOptions(results), [results, getOptions]);
+  const options = useMemo(() => {
+    const parentLabel = type ? findAnnotation<boolean>(type, ParentLabelAnnotationId) === true : false;
+    return getOptions(results, { parentLabel });
+  }, [results, getOptions, type]);
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
@@ -143,9 +148,9 @@ export const RefField = (props: RefFieldProps) => {
       <div>
         {readonly ? (
           !item ? (
-            <p className={mx(descriptionText, 'mbe-2')}>{t('empty readonly ref field label')}</p>
+            <p className={mx('text-description', 'mb-2')}>{t('empty readonly ref field label')}</p>
           ) : (
-            <DxAnchor key={item.id} dxn={item.id} rootclassname='mie-1'>
+            <DxAnchor key={item.id} dxn={item.id} rootclassname='me-1'>
               {item.label}
             </DxAnchor>
           )
@@ -153,13 +158,13 @@ export const RefField = (props: RefFieldProps) => {
           <ObjectPicker.Root>
             <ObjectPicker.Trigger asChild classNames='p-0'>
               {item ? (
-                <div className='flex gap-2 is-full'>
+                <div className='flex gap-2 w-full'>
                   <Input.Root key={item.id}>
-                    <Input.TextInput value={item.label} readOnly classNames='is-full' />
+                    <Input.TextInput value={item.label} readOnly classNames='w-full' />
                   </Input.Root>
                 </div>
               ) : (
-                <Button classNames='is-full text-start gap-2'>
+                <Button classNames='w-full text-start gap-2'>
                   <div role='none' className='grow overflow-hidden'>
                     <span className='flex truncate text-description'>{placeholder ?? t('ref field placeholder')}</span>
                   </div>
@@ -169,7 +174,7 @@ export const RefField = (props: RefFieldProps) => {
             </ObjectPicker.Trigger>
             <ObjectPicker.Portal>
               <ObjectPicker.Content
-                classNames='popover-card-width'
+                classNames='dx-card-popover-width'
                 options={options}
                 selectedIds={selectedIds}
                 createSchema={createSchema && omitId(createSchema)}

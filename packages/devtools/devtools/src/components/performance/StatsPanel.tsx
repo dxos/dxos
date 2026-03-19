@@ -26,7 +26,7 @@ import {
   TimeSeries,
 } from './panels';
 
-const LOCAL_STORAGE_KEY = 'dxos.org/plugin/debug/panels';
+const LOCAL_STORAGE_KEY = 'org.dxos.plugin.debug.panels';
 
 const PANEL_KEYS = [
   'ts',
@@ -104,7 +104,7 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
   return (
     <div
       role='none'
-      className='flex flex-col is-full bs-full max-bs-[calc(var(--radix-popover-content-available-height)-2*var(--dx-modalLine))] overflow-y-auto divide-y divide-separator'
+      className='flex flex-col w-full h-full max-h-[calc(var(--radix-popover-content-available-height)-2*var(--dx-modal-line))] overflow-y-auto divide-y divide-separator'
     >
       <Panel
         id='main'
@@ -118,7 +118,7 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
             value='ghost'
             onClick={handleToggleLive}
           >
-            <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} size={4} />
+            <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} />
           </Toggle>
         }
       />

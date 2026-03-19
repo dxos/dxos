@@ -12,7 +12,7 @@ export type StringifyReplacer = (key: string, value: any) => typeof SKIP | any;
 /**
  * Safely stringifies an object.
  */
-export function safeStringify(obj: any, filter: StringifyReplacer = defaultFilter, indent = 2) {
+export function safeStringify(obj: any, filter: StringifyReplacer | undefined = defaultFilter, indent = 2) {
   const seen = new WeakMap<object, string>();
 
   // NOTE: Called for the root object with undefined key.
@@ -21,6 +21,9 @@ export function safeStringify(obj: any, filter: StringifyReplacer = defaultFilte
       let path = key;
       if (!key) {
         path = '$';
+        if (value != null && typeof value === 'object') {
+          seen.set(value, path);
+        }
         return value;
       } else if (this) {
         const parentPath = seen.get(this);
@@ -38,7 +41,7 @@ export function safeStringify(obj: any, filter: StringifyReplacer = defaultFilte
       }
 
       // Ignore exotic objects (non-plain objects like DOM elements, class instances, etc.)
-      if (typeof value === 'object' && Object.getPrototypeOf(value) !== Object.prototype) {
+      if (typeof value === 'object' && Object.getPrototypeOf(value) !== Object.prototype && !Array.isArray(value)) {
         return undefined;
       }
 
@@ -65,7 +68,11 @@ export function safeStringify(obj: any, filter: StringifyReplacer = defaultFilte
     }
   }
 
-  return JSON.stringify(obj, replacer, indent);
+  try {
+    return JSON.stringify(obj, replacer, indent);
+  } catch (error: any) {
+    return `ERROR: ${error.message}`;
+  }
 }
 
 export type CreateReplacerProps = {
@@ -105,6 +112,11 @@ export const createReplacer = ({
       return SKIP;
     }
 
+    // Show array length.
+    if (maxArrayLen != null && Array.isArray(value) && value.length > maxArrayLen) {
+      return `[length: ${value.length}]`;
+    }
+
     // Store depth for this object.
     if (value && typeof value === 'object') {
       depthMap.set(value, currentDepth);
@@ -127,11 +139,6 @@ export const createReplacer = ({
       } catch {
         return value;
       }
-    }
-
-    // Show array length.
-    if (maxArrayLen != null && Array.isArray(value) && value.length > maxArrayLen) {
-      return `[length: ${value.length}]`;
     }
 
     // Truncate strings.

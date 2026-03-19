@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Filter } from '@dxos/echo';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 
 import { type ComponentProps } from './types';
 
@@ -17,7 +17,7 @@ export const ResearchOutputModule = ({ space }: ComponentProps) => {
   const queue = useQueue(researchGraph?.queue.dxn);
 
   return (
-    <ul className='flex flex-col gap-4 p-4 bs-full overflow-y-auto'>
+    <ul className='flex flex-col gap-4 p-4 h-full overflow-y-auto'>
       {queue?.objects.map((object) => (
         <li key={object.id}>
           <Card.Root>

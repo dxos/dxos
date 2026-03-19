@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Relation, Type } from '@dxos/echo';
+import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -13,11 +13,11 @@ import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/research/document-create',
+  key: 'org.dxos.function.research.document-create',
   name: 'Create research document',
   description: 'Creates a note summarizing the research.',
   inputSchema: Schema.Struct({
-    subject: Type.Ref(Type.Obj).annotations({
+    subject: Ref.Ref(Obj.Unknown).annotations({
       description: trim`
         ID of the object (organization, contact, etc.) for which the research was performed. 
       `,
@@ -41,7 +41,7 @@ export default defineFunction({
     log.info('Creating research document', { subject, name, content });
 
     // TODO(burdon): Auto flush before and after calling function?
-    yield* Database.flush({ indexes: true });
+    yield* Database.flush();
     yield* TracingService.emitStatus({ message: 'Creating research document...' });
 
     const target = yield* Database.load(subject);
@@ -63,7 +63,7 @@ export default defineFunction({
       }),
     );
 
-    yield* Database.flush({ indexes: true });
+    yield* Database.flush();
     log.info('Created research document', { subject, object });
 
     return {

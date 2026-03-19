@@ -9,7 +9,7 @@ import { render, screen } from '@testing-library/react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { describe, test } from 'vitest';
 
-import { get } from '@dxos/util';
+import { getDeep } from '@dxos/util';
 
 import { automerge } from './automerge';
 
@@ -46,7 +46,7 @@ const Test: FC<{ handle: DocHandle<TestObject>; generator: Generator }> = ({ han
     ];
 
     const view = new EditorView({
-      state: EditorState.create({ doc: get(handle.doc()!, path), extensions }),
+      state: EditorState.create({ doc: getDeep(handle.doc()!, path), extensions }),
       parent: ref.current!,
     });
 

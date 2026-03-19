@@ -63,6 +63,7 @@ export {
 // Deprecated
 //
 
-export { MessageV1, MessageV1ToV2 } from './Message';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
 export { LegacyOrganization } from './Organization';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
 export { LegacyPerson } from './Person';

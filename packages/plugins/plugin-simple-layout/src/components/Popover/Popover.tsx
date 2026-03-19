@@ -6,8 +6,9 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+
 import { Popover, type PopoverContentInteractOutsideEvent, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 
 import { useSimpleLayoutState } from '../../hooks';
 import { meta } from '../../meta';
@@ -57,7 +58,6 @@ export const PopoverContent = () => {
   const { t } = useTranslation(meta.id);
   const { state, updateState } = useSimpleLayoutState();
   const { setOpen } = useLayoutPopoverContext('PopoverContent');
-
   const handleClose = useCallback(() => {
     setOpen(false);
     updateState((s) => ({
@@ -102,12 +102,12 @@ export const PopoverContent = () => {
         <Popover.Viewport>
           {state.popoverKind === 'base' && <Surface.Surface role='popover' data={state.popoverContent} limit={1} />}
           {state.popoverKind === 'card' && (
-            <Card.Root border={false} classNames='popover-card-max-width'>
+            <Card.Root border={false} classNames='dx-card-popover'>
               <Card.Toolbar>
                 {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                 <span />
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
-                <Card.Close onClick={handleClose} />
+                <Card.CloseIconButton onClick={handleClose} />
               </Card.Toolbar>
               <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
             </Card.Root>

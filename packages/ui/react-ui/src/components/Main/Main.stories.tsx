@@ -44,11 +44,11 @@ const DefaultStory = (_args: StoryMainArgs) => {
       <Main.NavigationSidebar label='Navigation'>
         <Toolbar.Root>
           <h1>Navigation</h1>
-          <Toolbar.Separator variant='gap' classNames='grow' />
+          <Toolbar.Separator />
           <NavigationSidebarToggle close />
         </Toolbar.Root>
       </Main.NavigationSidebar>
-      <Main.Content classNames='is-full'>
+      <Main.Content classNames='w-full'>
         <Toolbar.Root>
           <NavigationSidebarToggle />
           <div className='flex items-center grow justify-center'>Main</div>
@@ -58,7 +58,7 @@ const DefaultStory = (_args: StoryMainArgs) => {
       <Main.ComplementarySidebar label='Complementary'>
         <Toolbar.Root>
           <ComplementarySidebarToggle close />
-          <Toolbar.Separator variant='gap' classNames='grow' />
+          <Toolbar.Separator />
           <h1>Complementary</h1>
         </Toolbar.Root>
       </Main.ComplementarySidebar>

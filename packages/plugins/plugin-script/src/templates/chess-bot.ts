@@ -6,17 +6,17 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { Chess } from '@dxos/plugin-chess/types';
 
 export default defineFunction({
-  key: 'dxos.org/script/chess-bot',
+  key: 'org.dxos.script.chess-bot',
   name: 'Chess Bot',
   description: 'Plays a random move in a chess game.',
 
   inputSchema: Schema.Struct({
-    game: Type.Ref(Chess.Game).annotations({
+    game: Ref.Ref(Chess.Game).annotations({
       description: 'The chess game to comment on.',
     }),
     player: Schema.optional(Schema.Literal('white', 'black')).annotations({

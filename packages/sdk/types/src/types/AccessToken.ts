@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { Format, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 
 export const AccessToken = Schema.Struct({
@@ -25,13 +27,17 @@ export const AccessToken = Schema.Struct({
   }),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/AccessToken',
+    typename: 'org.dxos.type.access-token',
     version: '0.1.0',
   }),
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),
   LabelAnnotation.set(['note']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--key--regular',
+    hue: 'yellow',
+  }),
   SystemTypeAnnotation.set(true),
 );
 

@@ -6,7 +6,7 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Feed, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -16,14 +16,14 @@ import { GoogleMail } from '../../apis';
 import { GoogleCredentials } from '../../services/google-credentials';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/google-mail-send',
+  key: 'org.dxos.function.inbox.google-mail-send',
   name: 'Send Gmail',
   description: 'Send emails via Gmail.',
   inputSchema: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
-    // TODO(dmaretskyi): This should be a ref s we can send a message from database.
+    // TODO(dmaretskyi): This should be a ref so we can send a message from database.
     message: Message.Message,
-    mailbox: Type.Ref(Mailbox.Mailbox).pipe(
+    mailbox: Ref.Ref(Mailbox.Mailbox).pipe(
       Schema.annotations({ description: 'Optional mailbox to send from. Uses mailbox credentials if provided.' }),
       Schema.optional,
     ),
@@ -32,7 +32,7 @@ export default defineFunction({
     id: Schema.String,
     threadId: Schema.String,
   }),
-  types: [Message.Message, Mailbox.Mailbox],
+  types: [Message.Message, Feed.Feed, Mailbox.Mailbox],
   handler: ({ data: { userId = 'me', message, mailbox: mailboxRef } }) =>
     Effect.gen(function* () {
       log('sending email', { userId, mailbox: mailboxRef?.dxn.toString() });
@@ -80,7 +80,7 @@ export default defineFunction({
       };
     }).pipe(
       Effect.provide(FetchHttpClient.layer),
-      // Use mailbox credentials if provided, otherwise fall back to database credentials.
-      Effect.provide(mailboxRef ? GoogleCredentials.fromMailboxRef(mailboxRef) : GoogleCredentials.default),
+      // Use feed config credentials if provided, otherwise fall back to database credentials.
+      Effect.provide(mailboxRef ? GoogleCredentials.fromMailbox(mailboxRef) : GoogleCredentials.default),
     ),
 });

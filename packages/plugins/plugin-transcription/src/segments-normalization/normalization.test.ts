@@ -98,7 +98,7 @@ describe.skip('SentenceNormalization', () => {
     }
 
     log.info('sentences', {
-      originalMessages: JSON.stringify(messages, null, 2),
+      messages: JSON.stringify(messages, null, 2),
       sentences: JSON.stringify(sentences, null, 2),
     });
     throw new Error('test');

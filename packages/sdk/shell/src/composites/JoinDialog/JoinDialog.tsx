@@ -9,8 +9,7 @@ import { AlertDialog, type AlertDialogContentProps, useId, useVisualViewport } f
 import { JoinPanel, type JoinPanelProps } from '../../panels';
 
 export interface JoinDialogProps
-  extends Omit<AlertDialogContentProps, 'children'>,
-    Omit<JoinPanelProps, 'exitActionParent' | 'doneActionParent'> {}
+  extends Omit<AlertDialogContentProps, 'children'>, Omit<JoinPanelProps, 'exitActionParent' | 'doneActionParent'> {}
 
 export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
   const titleId = useId('joinDialog__title');
@@ -24,14 +23,16 @@ export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
       <AlertDialog.Portal>
         <AlertDialog.Overlay classNames='backdrop-blur' {...(height && { style: { blockSize: `${height}px` } })}>
           <AlertDialog.Content aria-labelledby={titleId}>
-            <JoinPanel
-              {...{
-                ...joinPanelProps,
-                titleId,
-                exitActionParent: <AlertDialog.Cancel asChild />,
-                doneActionParent: <AlertDialog.Action asChild />,
-              }}
-            />
+            <AlertDialog.Body>
+              <JoinPanel
+                {...{
+                  ...joinPanelProps,
+                  titleId,
+                  exitActionParent: <AlertDialog.Cancel asChild />,
+                  doneActionParent: <AlertDialog.Action asChild />,
+                }}
+              />
+            </AlertDialog.Body>
           </AlertDialog.Content>
         </AlertDialog.Overlay>
       </AlertDialog.Portal>

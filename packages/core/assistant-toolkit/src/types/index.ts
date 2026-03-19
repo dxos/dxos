@@ -3,5 +3,6 @@
 //
 
 export * as Chat from './Chat';
-export * as Initiative from './Initiative';
+export * as Project from './Project';
 export * as Plan from './Plan';
+export * as Memory from './Memory';

@@ -18,6 +18,7 @@ export const translations = [
         'typename label_one': 'Map',
         'typename label_other': 'Maps',
         'object name placeholder': 'New map',
+        'add object label': 'Add map',
         'rename object label': 'Rename map',
         'delete object label': 'Delete map',
         'object deleted label': 'Map deleted',

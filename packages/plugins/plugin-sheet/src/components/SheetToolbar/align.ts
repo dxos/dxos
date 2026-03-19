@@ -17,7 +17,7 @@ import {
 import { meta } from '../../meta';
 import { type SheetModel } from '../../model';
 import { type AlignKey, type AlignValue, alignKey, rangeFromIndex, rangeToIndex } from '../../types';
-import { useSheetContext } from '../SheetContext';
+import { useSheetContext } from '../SheetRoot';
 
 import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
 
@@ -117,8 +117,8 @@ export const createAlign = (context: AlignActionsContext): ActionGraphProps => {
   return {
     nodes: [alignGroup, ...alignActions],
     edges: [
-      { source: 'root', target: 'align' },
-      ...alignActions.map(({ id }) => ({ source: alignGroup.id, target: id })),
+      { source: 'root', target: 'align', relation: 'child' },
+      ...alignActions.map(({ id }) => ({ source: alignGroup.id, target: id, relation: 'child' })),
     ],
   };
 };

@@ -3,6 +3,7 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
   - storybook
 tasks:
@@ -17,7 +18,3 @@ tasks:
       - src/shaders/glsl/*.*
     outputs:
       - src/shaders/glsl/gen
-  test:
-    inputs:
-      - .storybook/*
-      - /tools/storybook-react/.storybook/main.ts

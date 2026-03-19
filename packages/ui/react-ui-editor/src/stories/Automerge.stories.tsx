@@ -16,8 +16,7 @@ import { Query, useQuery, useSpace } from '@dxos/react-client/echo';
 import { type Identity, useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { Button, useThemeContext } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { render } from '@dxos/storybook-utils';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createDataExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { useTextEditor } from '../hooks';
@@ -51,7 +50,7 @@ const Editor = ({ source, messenger, identity, autoFocus }: EditorProps) => {
     [source, themeMode],
   );
 
-  return <div ref={parentRef} className='flex is-full' />;
+  return <div ref={parentRef} className='flex w-full' />;
 };
 
 const DefaultStory = () => {
@@ -77,11 +76,11 @@ const DefaultStory = () => {
   }, []);
 
   if (!object1 || !object2) {
-    return null;
+    return <Loading data={{ object1: !!object1, object2: !!object2 }} />;
   }
 
   return (
-    <div className='bs-full is-full grid grid-cols-2 gap-4'>
+    <div className='h-full w-full grid grid-cols-2 gap-4'>
       <Editor source={object1} autoFocus />
       <Editor source={object2} />
     </div>
@@ -117,7 +116,7 @@ const EchoStory = () => {
   }, [objects, source]);
 
   return (
-    <div className='bs-full is-full flex flex-col overflow-hidden'>
+    <div className='h-full w-full flex flex-col overflow-hidden'>
       <pre className='p-2 text-xs text-subdued'>
         {JSON.stringify({ index, identity: identity?.identityKey.truncate(), spaceId, objects }, null, 2)}
       </pre>
@@ -150,7 +149,7 @@ type Story = StoryObj<typeof meta>;
 
 // TODO(burdon): ERROR: factories.ts:126 Error: Non-base58 character
 export const Default: Story = {
-  render: render(DefaultStory),
+  render: DefaultStory,
 };
 
 // TODO(burdon): Failing (doesn't sync)
@@ -170,5 +169,5 @@ export const WithEcho: Story = {
       },
     }),
   ],
-  render: render(EchoStory),
+  render: EchoStory,
 };

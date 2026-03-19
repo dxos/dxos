@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 
 /**
  * @deprecated Use @dxos/echo/testing.
@@ -15,7 +15,7 @@ export namespace TestSchema {
     content: Schema.String,
   }).pipe(
     Type.object({
-      typename: 'dxos.org/TextV0',
+      typename: 'org.dxos.text-v0',
       version: '0.1.0',
     }),
   );
@@ -24,10 +24,10 @@ export namespace TestSchema {
 
   export const DocumentType = Schema.Struct({
     title: Schema.optional(Schema.String), // TODO(burdon): Change to name.
-    content: Type.Ref(TextV0Type),
+    content: Ref.Ref(TextV0Type),
   }).pipe(
     Type.object({
-      typename: 'braneframe.com/Document',
+      typename: 'com.braneframe.document',
       version: '0.1.0',
     }),
   );
@@ -44,12 +44,12 @@ export namespace TestSchema {
         }),
       ),
     ),
-  }).pipe(Type.object({ typename: 'braneframe.com/Contact', version: '0.1.0' }));
+  }).pipe(Type.object({ typename: 'com.braneframe.contact', version: '0.1.0' }));
 
   const BlockSchema = Schema.Struct({
     timestamp: Schema.String,
-    content: Schema.optional(Type.Ref(TextV0Type)),
-    object: Schema.optional(Type.Ref(Type.Obj)),
+    content: Schema.optional(Ref.Ref(TextV0Type)),
+    object: Schema.optional(Ref.Ref(Obj.Unknown)),
   });
 
   export interface BlockType extends Schema.Schema.Type<typeof BlockSchema> {}
@@ -60,7 +60,7 @@ export namespace TestSchema {
     date: Schema.optional(Schema.String),
     subject: Schema.optional(Schema.String),
     blocks: Schema.mutable(Schema.Array(BlockSchema)),
-    links: Schema.optional(Schema.Array(Type.Ref(Type.Obj))),
+    links: Schema.optional(Schema.Array(Ref.Ref(Obj.Unknown))),
     read: Schema.optional(Schema.Boolean),
     context: Schema.optional(
       Schema.Struct({
@@ -71,7 +71,7 @@ export namespace TestSchema {
     ),
   }).pipe(
     Type.object({
-      typename: 'braneframe.com/Message',
+      typename: 'com.braneframe.message',
       version: '0.1.0',
     }),
   );
@@ -79,7 +79,7 @@ export namespace TestSchema {
 
   export const ThreadType = Schema.Struct({
     title: Schema.optional(Schema.String),
-    messages: Schema.mutable(Schema.Array(Type.Ref(MessageType))),
+    messages: Schema.mutable(Schema.Array(Ref.Ref(MessageType))),
     context: Schema.optional(
       Schema.Struct({
         space: Schema.optional(Schema.String),
@@ -89,7 +89,7 @@ export namespace TestSchema {
     ),
   }).pipe(
     Type.object({
-      typename: 'braneframe.com/Thread',
+      typename: 'com.braneframe.thread',
       version: '0.1.0',
     }),
   );

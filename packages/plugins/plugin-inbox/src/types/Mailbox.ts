@@ -4,11 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
-import { Queue } from '@dxos/echo-db';
-import { QueueAnnotation } from '@dxos/schema';
+import { FeedAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
 // TODO(burdon): Implement as labels?
@@ -26,10 +24,10 @@ export const Labels = Schema.Record({
 
 export type Labels = Schema.Schema.Type<typeof Labels>;
 
-// TODO(burdon): Rename MessageBox? (not email specific).
+/** Mailbox object schema. */
 export const Mailbox = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  queue: Type.Ref(Queue).pipe(FormInputAnnotation.set(false)),
+  name: Schema.String.pipe(Schema.optional),
+  feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   labels: Labels.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Factor out to relation?
   filters: Schema.Array(
@@ -39,42 +37,52 @@ export const Mailbox = Schema.Struct({
     }),
   ).pipe(FormInputAnnotation.set(false)),
   accessToken: Schema.optional(
-    Type.Ref(AccessToken.AccessToken).annotations({
+    Ref.Ref(AccessToken.AccessToken).annotations({
       title: 'Account',
       description: 'Google account credentials for syncing this mailbox.',
     }),
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Mailbox',
+    typename: 'org.dxos.type.mailbox',
     version: '0.1.0',
   }),
-  QueueAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--tray--regular',
+    hue: 'rose',
+  }),
+  FeedAnnotation.set(true),
 );
 
-export type Mailbox = Schema.Schema.Type<typeof Mailbox>;
+export interface Mailbox extends Schema.Schema.Type<typeof Mailbox> {}
+
+/** Checks if a value is a Mailbox object. */
+export const instanceOf = (value: unknown): value is Mailbox => Obj.instanceOf(Mailbox, value);
 
 export const CreateMailboxSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   accessToken: Schema.optional(
-    Type.Ref(AccessToken.AccessToken).annotations({
+    Ref.Ref(AccessToken.AccessToken).annotations({
       title: 'Account',
       description: 'Google account credentials for syncing this mailbox.',
     }),
   ),
 });
 
-type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'queue' | 'filters'> & {
-  space: Space;
+type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'filters'> & {
   filters?: { name: string; filter: string }[];
 };
 
-export const make = ({ space, ...props }: MailboxProps) => {
-  const queue = space.queues.create();
-  return Obj.make(Mailbox, {
-    queue: Ref.fromDXN(queue.dxn),
+/** Creates a mailbox object with a backing feed. */
+export const make = (props: MailboxProps = {}) => {
+  const feed = Feed.make();
+  const mailbox = Obj.make(Mailbox, {
+    feed: Ref.make(feed),
     labels: {},
     filters: [],
     ...props,
   });
+  // TODO(wittjosiah): Parent should be declarative in the schema.
+  Obj.setParent(feed, mailbox);
+  return mailbox;
 };

@@ -2,13 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationPlugin, type Plugin } from '@dxos/app-framework';
+import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
 import { type Config } from '@dxos/client';
 import { AutomationPlugin } from '@dxos/plugin-automation/cli';
 import { ChessPlugin } from '@dxos/plugin-chess/cli';
 import { ClientPlugin } from '@dxos/plugin-client/cli';
 import { InboxPlugin } from '@dxos/plugin-inbox/cli';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/cli';
+import { ObservabilityPlugin } from '@dxos/plugin-observability/cli';
 import { RegistryPlugin } from '@dxos/plugin-registry/cli';
 import { SpacePlugin } from '@dxos/plugin-space/cli';
 import { TokenManagerPlugin } from '@dxos/plugin-token-manager/cli';
@@ -23,8 +24,10 @@ export type PluginConfig = {
 export const getCore = (): string[] => [
   AutomationPlugin.meta.id,
   ClientPlugin.meta.id,
+  ObservabilityPlugin.meta.id,
   OperationPlugin.meta.id,
   RegistryPlugin.meta.id,
+  RuntimePlugin.meta.id,
   SpacePlugin.meta.id,
   TokenManagerPlugin.meta.id,
 ];
@@ -32,18 +35,16 @@ export const getCore = (): string[] => [
 export const getDefaults = (): string[] => [ChessPlugin.meta.id, InboxPlugin.meta.id, MarkdownPlugin.meta.id];
 
 export const getPlugins = ({ config }: PluginConfig): Plugin.Plugin[] => {
-  // Derive sqlitePath from config's dataRoot for persistent indexing in CLI.
-  const dataRoot = config?.get('runtime.client.storage.dataRoot');
-  const sqlitePath = dataRoot ? `${dataRoot}/sqlite.db` : undefined;
-
   return [
     AutomationPlugin(),
     ChessPlugin(),
-    ClientPlugin({ config, sqlitePath }),
+    ClientPlugin({ config }),
     InboxPlugin(),
     MarkdownPlugin(),
+    ObservabilityPlugin(),
     OperationPlugin(),
     RegistryPlugin(),
+    RuntimePlugin(),
     SpacePlugin({}),
     TokenManagerPlugin(),
   ];

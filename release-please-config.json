@@ -360,6 +360,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/mcp-client/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/mesh/edge-client/package.json",
           "jsonpath": "$.version"
         },
@@ -705,11 +710,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-theme-editor/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-thread/package.json",
           "jsonpath": "$.version"
         },
@@ -730,12 +730,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-voxel/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-wnfs/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-youtube/package.json",
+          "path": "packages/plugins/plugin-zen/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -840,12 +845,12 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/lit-theme-editor/package.json",
+          "path": "packages/ui/lit-ui/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
-          "path": "packages/ui/lit-ui/package.json",
+          "path": "packages/ui/react-primitives/react-error-boundary/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -941,11 +946,6 @@
         {
           "type": "json",
           "path": "packages/ui/react-ui-grid/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/ui/react-ui-kanban/package.json",
           "jsonpath": "$.version"
         },
         {

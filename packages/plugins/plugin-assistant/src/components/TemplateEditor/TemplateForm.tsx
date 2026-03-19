@@ -8,7 +8,6 @@ import React, { Fragment, useCallback, useEffect } from 'react';
 import { type Template } from '@dxos/blueprints';
 import { type Obj } from '@dxos/echo';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { attentionSurface, groupBorder, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -61,14 +60,14 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
   );
 
   return (
-    <div className={mx('flex flex-col is-full overflow-hidden gap-4', groupBorder)}>
+    <div className='flex flex-col w-full overflow-hidden gap-4'>
       {/* {commandEditable && (
         <div className='flex items-center pl-4'>
           <span className='text-neutral-500'>/</span>
           <Input.Root>
             <Input.TextInput
               placeholder={t('command placeholder')}
-              classNames='is-full bg-transparent m-2'
+              classNames='w-full bg-transparent m-2'
               value={template.command ?? ''}
               onChange={(event) => {
                 onChange?.((t) => {
@@ -80,20 +79,20 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
         </div>
       )} */}
 
-      <TemplateEditor id={id} template={template} classNames={[attentionSurface, 'min-h-[120px]']} />
+      <TemplateEditor id={id} template={template} classNames='bg-base-surface min-h-[120px]' />
 
       {(template.inputs?.length ?? 0) > 0 && (
         <div className='grid grid-cols-[10rem_10rem_1fr] gap-1 items-center'>
           {template.inputs?.filter(isNonNullable).map((input) => (
             <Fragment key={input.name}>
-              <div className='pis-3 text-blueText'>{input.name}</div>
+              <div className='ps-3 text-blue-text'>{input.name}</div>
 
               <Input.Root>
                 <Select.Root
                   value={input.kind}
                   onValueChange={(kind) => handleInputKindChange(input.name, kind as Template.InputKind)}
                 >
-                  <Select.TriggerButton placeholder='Type' classNames='is-full' />
+                  <Select.TriggerButton placeholder='Type' classNames='w-full' />
                   <Select.Portal>
                     <Select.Content>
                       <Select.Viewport>
@@ -115,7 +114,7 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
                     <Input.Root>
                       <Input.TextInput
                         placeholder={t('command placeholder')}
-                        classNames='is-full bg-transparent'
+                        classNames='w-full bg-transparent'
                         value={input.default ?? ''}
                         onChange={(event) => handleInputDefaultChange(input.name, event.target.value)}
                       />

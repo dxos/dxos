@@ -4,9 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
@@ -21,32 +20,20 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       {
         id: Mailbox.Mailbox.typename,
         metadata: {
-          createObject: ((props, { db }) =>
-            Effect.gen(function* () {
-              const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = client.spaces.get(db.spaceId);
-              return Mailbox.make({ ...props, space });
-            })) satisfies CreateObject,
-          addToCollectionOnCreate: true,
+          createObject: ((props) => Effect.sync(() => Mailbox.make(props))) satisfies CreateObject,
         },
       },
       {
         id: Calendar.Calendar.typename,
         metadata: {
-          createObject: ((props, { db }) =>
-            Effect.gen(function* () {
-              const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = client.spaces.get(db.spaceId);
-              return Calendar.make({ ...props, space });
-            })) satisfies CreateObject,
-          addToCollectionOnCreate: true,
+          createObject: ((props) => Effect.sync(() => Calendar.make(props))) satisfies CreateObject,
         },
       },
     ],
   }),
   AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
   AppPlugin.addSchemaModule({
-    schema: [Calendar.Calendar, Event.Event, Mailbox.Mailbox, Message.Message],
+    schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message],
   }),
   Plugin.make,
 );

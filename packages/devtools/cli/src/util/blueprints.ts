@@ -8,10 +8,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { ArtifactId, GenericToolkit } from '@dxos/assistant';
-import { AssistantToolkit, Chat, SystemToolkit, WebSearchToolkit } from '@dxos/assistant-toolkit';
+import { GenericToolkit } from '@dxos/ai';
+import { ArtifactId } from '@dxos/assistant';
+import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
+import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
-import { Tag, type Type } from '@dxos/echo';
+import { Feed, Tag, type Type } from '@dxos/echo';
 import { type FunctionDefinition } from '@dxos/functions';
 import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
@@ -45,6 +47,7 @@ import * as TestToolkit from './test-toolkit';
 export const blueprintRegistry = new Blueprint.Registry([
   // Blueprints available to the chat.
   AssistantBlueprint.make(),
+  DatabaseBlueprint.make(),
   CalendarBlueprint.make(),
   ChessBlueprint.make(),
   InboxBlueprint.make(),
@@ -65,7 +68,7 @@ export const blueprintRegistry = new Blueprint.Registry([
 
 export const functions: FunctionDefinition.Any[] = [
   // NOTE: Functions referenced by blueprints above need to be added here.
-  ...AssistantBlueprint.functions,
+  ...DatabaseBlueprint.functions,
   ...CalendarBlueprint.functions,
   ...ChessBlueprint.functions,
   ...InboxBlueprint.functions,
@@ -90,8 +93,6 @@ const StubDeckToolkit = Toolkit.make(
 
 export const toolkits: GenericToolkit.GenericToolkit[] = [
   // NOTE: Toolkits referenced by blueprints above need to be added here.
-  GenericToolkit.make(AssistantToolkit.AssistantToolkit, AssistantToolkit.layer()),
-  GenericToolkit.make(SystemToolkit.SystemToolkit, SystemToolkit.layer()),
   GenericToolkit.make(WebSearchToolkit, Layer.empty),
 
   // TODO(burdon): Remove?
@@ -106,13 +107,13 @@ export const toolkits: GenericToolkit.GenericToolkit[] = [
   ),
 ];
 
-export const types: Type.Entity.Any[] = [
+export const types: Type.AnyEntity[] = [
   // NOTE: Types referenced by blueprints above need to be added here.
   DataTypes,
   [Chat.Chat],
   [Chess.Game],
   [Markdown.Document],
-  [Mailbox.Mailbox, Calendar.Calendar],
+  [Mailbox.Mailbox, Calendar.Calendar, Feed.Feed],
   [Blueprint.Blueprint],
   [Tag.Tag],
   [Event.Event, Organization.Organization, Person.Person, Pipeline.Pipeline, Task.Task],

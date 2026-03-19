@@ -10,8 +10,8 @@ import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/
 
 // TODO(burdon): Pass in filter.
 // TODO(wittjosiah): Factor out.
-export const useFilteredTypes = (db?: Database.Database): Type.Entity.Any[] => {
-  const [types, setTypes] = useState<Type.Entity.Any[]>([]);
+export const useFilteredTypes = (db?: Database.Database): Type.AnyEntity[] => {
+  const [types, setTypes] = useState<Type.AnyEntity[]>([]);
   useEffect(() => {
     if (!db) {
       return;
@@ -23,7 +23,7 @@ export const useFilteredTypes = (db?: Database.Database): Type.Entity.Any[] => {
           new Set(
             query.results
               .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
-              .filter((schema) => SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))),
+              .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))),
           ),
         );
 

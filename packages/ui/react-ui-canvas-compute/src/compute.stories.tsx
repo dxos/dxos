@@ -11,12 +11,13 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { type ComputeGraphModel, type ComputeNode, type GraphDiagnostic } from '@dxos/conductor';
+import { Feed } from '@dxos/echo';
 import { CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime';
 import { TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Select, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Editor, type EditorController, type EditorRootProps, ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 import { Container, useSelection } from '@dxos/react-ui-canvas-editor/testing';
@@ -122,7 +123,7 @@ const DefaultStory = ({
   }
 
   return (
-    <div className='grid grid-cols-[1fr,360px] is-full bs-full'>
+    <div className='grid grid-cols-[1fr_360px] w-full h-full'>
       <ComputeContext.Provider value={{ controller }}>
         <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
           <Editor.Root<ComputeShape>
@@ -146,10 +147,10 @@ const DefaultStory = ({
       </ComputeContext.Provider>
 
       {sidebar && (
-        <Container id='sidebar' classNames='flex flex-col bs-full overflow-hidden'>
+        <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
           <Toolbar.Root>
             <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
-              <Select.TriggerButton classNames='is-full'>{sidebar}</Select.TriggerButton>
+              <Select.TriggerButton classNames='w-full'>{sidebar}</Select.TriggerButton>
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
@@ -165,7 +166,7 @@ const DefaultStory = ({
             </Select.Root>
           </Toolbar.Root>
 
-          <div className='flex flex-col bs-full overflow-hidden divide-y divider-separator'>
+          <div className='flex flex-col h-full overflow-hidden divide-y divider-separator'>
             {/* TODO(burdon): Provide schema. */}
             {sidebar === 'selected' && selected && (
               <Form.Root<ComputeNode> values={getComputeNode(selected.id) ?? {}}>
@@ -191,6 +192,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withAttention(),
     withClientProvider({ createIdentity: true, createSpace: true }),
     withPluginManager({ capabilities }),
@@ -221,6 +223,7 @@ const ServiceLayer = Layer.empty.pipe(
       TestDatabaseLayer(),
       CredentialsService.configuredLayer([]),
       TracingService.layerNoop,
+      Feed.notAvailable,
     ),
   ),
   Layer.orDie,

@@ -7,12 +7,12 @@ import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
-import { Collection } from '@dxos/schema';
+import { CollectionModel } from '@dxos/schema';
 
 import { Markdown } from '../../types';
 
 export default defineFunction({
-  key: 'dxos.org/function/markdown/create',
+  key: 'org.dxos.function.markdown.create',
   name: 'Create',
   description: 'Creates a new markdown document and adds it to the space.',
   inputSchema: Schema.Struct({
@@ -26,7 +26,7 @@ export default defineFunction({
   }),
   handler: Effect.fn(function* ({ data: { name, content } }) {
     const object = Markdown.make({ name, content });
-    yield* Collection.add({ object });
+    yield* CollectionModel.add({ object });
 
     return {
       id: Obj.getDXN(object).toString(),

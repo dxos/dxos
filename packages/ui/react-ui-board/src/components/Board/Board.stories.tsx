@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 
 import { translations } from '../../translations';
@@ -75,7 +75,7 @@ const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryP
       onMove={handleMove}
       ref={controller}
     >
-      <Board.Toolbar classNames='absolute top-3 left-3 z-10 min-bs-0 !is-auto' />
+      <Board.Toolbar classNames='absolute top-3 left-3 z-10 min-h-0 w-auto!' />
       <Board.Container>
         <Board.Viewport>
           <Board.Backdrop />
@@ -97,7 +97,7 @@ const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: StoryP
 const meta = {
   title: 'ui/react-ui-board/Board',
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations: [...translations, ...stackTranslations],
@@ -123,13 +123,13 @@ export const Default: Story = {
     layout: {
       size: { width: 7, height: 5 },
       cells: {
-        '0': { x: 0, y: 0 },
-        '1': { x: -3, y: -2 },
-        '2': { x: 3, y: 2 },
-        '3': { x: -2, y: 0, width: 2, height: 2 },
-        '4': { x: -1, y: -1, width: 3 },
-        '5': { x: 1, y: 0 },
-        '6': { x: 0, y: 1, width: 2 },
+        0: { x: 0, y: 0 },
+        1: { x: -3, y: -2 },
+        2: { x: 3, y: 2 },
+        3: { x: -2, y: 0, width: 2, height: 2 },
+        4: { x: -1, y: -1, width: 3 },
+        5: { x: 1, y: 0 },
+        6: { x: 0, y: 1, width: 2 },
       },
     },
   },

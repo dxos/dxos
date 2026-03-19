@@ -25,10 +25,10 @@ const createRange = (n: number): Range =>
 const range = createRange(5);
 
 const sizes: Record<number, { range: Range; classNames: string; h: string }> = {
-  3: { range, classNames: 'is-3 bs-3 gap-[1px]', h: 'is-[1px] bs-[12px]' },
-  4: { range, classNames: 'is-4 bs-4 gap-[1px]', h: 'is-[1.5px] bs-[14px]' },
-  5: { range, classNames: 'is-5 bs-5 gap-[2px]', h: 'is-[1.5px] bs-[20px]' },
-  6: { range, classNames: 'is-6 bs-6 gap-[2px]', h: 'is-[2px] bs-[22px]' },
+  3: { range, classNames: 'w-3 h-3 gap-[1px]', h: 'w-[1px] h-[12px]' },
+  4: { range, classNames: 'w-4 h-4 gap-[1px]', h: 'w-[1.5px] h-[14px]' },
+  5: { range, classNames: 'w-5 h-5 gap-[2px]', h: 'w-[1.5px] h-[20px]' },
+  6: { range, classNames: 'w-6 h-6 gap-[2px]', h: 'w-[2px] h-[22px]' },
 };
 
 export type WaveformProps = ThemedClassName<{
@@ -36,14 +36,14 @@ export type WaveformProps = ThemedClassName<{
   size?: number;
 }>;
 
-export const Waveform = ({ classNames, active, size: _size = 4 }: WaveformProps) => {
-  const size = Math.max(3, Math.min(6, _size));
+export const Waveform = ({ classNames, active, size: sizeProp = 4 }: WaveformProps) => {
+  const size = Math.max(3, Math.min(6, sizeProp));
   const { range, classNames: waveClassNames, h } = sizes[size];
 
   return (
     <AnimatePresence>
-      <div className={mx('flex p-1 bg-neutral-200 dark:bg-neutral-800 rounded', classNames)}>
-        <div className={mx('flex is-full bs-full items-center justify-center', waveClassNames)}>
+      <div className={mx('flex p-1 bg-neutral-200 dark:bg-neutral-800 rounded-sm', classNames)}>
+        <div className={mx('flex w-full h-full items-center justify-center', waveClassNames)}>
           {range.map(({ duration, scaleY }, i) => {
             return (
               <motion.div

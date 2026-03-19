@@ -5,10 +5,9 @@
 import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type SchemaRegistry } from '@dxos/echo';
+import { type SchemaRegistry, type View } from '@dxos/echo';
 import { Popover } from '@dxos/react-ui';
 import { FieldEditor } from '@dxos/react-ui-form';
-import { type FieldType } from '@dxos/schema';
 
 import { type ModalController, type TableModel } from '../../model';
 
@@ -20,7 +19,7 @@ type ColumnSettingsProps = {
 };
 
 export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnSettingsProps) => {
-  const [newField, setNewField] = useState<FieldType>();
+  const [newField, setNewField] = useState<View.FieldType>();
   const state = useAtomValue(modals.state);
 
   useEffect(() => {
@@ -64,7 +63,7 @@ export const ColumnSettings = ({ registry, model, modals, onNewColumn }: ColumnS
     <Popover.Root modal={false} open={state?.type === 'columnSettings'}>
       <Popover.VirtualTrigger virtualRef={modals.trigger} />
       <Popover.Portal>
-        <Popover.Content classNames='md:is-64'>
+        <Popover.Content classNames='md:w-64'>
           <Popover.Viewport>
             <FieldEditor
               projection={model.projection}

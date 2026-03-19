@@ -31,8 +31,8 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type SlottableClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { type ComposableProps } from '@dxos/react-ui';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { useMosaicContainerContext } from './Container';
 import { type LocationType, type MosaicTileData, getSourceData } from './types';
@@ -58,7 +58,7 @@ const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTi
 // State attribute: data-[mosaic-tile-state=dragging]
 const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type MosaicTileProps<TData = any, TLocation = LocationType> = SlottableClassName<
+type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps<HTMLDivElement> &
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
@@ -68,14 +68,11 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = SlottableClassName
     location: TLocation;
     draggable?: boolean; // TODO(burdon): Not currently implemented.
     debug?: boolean;
-  }>
->;
+  }>;
 
 const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
   (
     {
-      classNames,
-      className,
       children,
       asChild,
       dragHandle,
@@ -84,12 +81,23 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
       id,
       data: dataProp,
       debug: _,
+      ...props
     }: MosaicTileProps,
     forwardedRef,
   ) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const Root = asChild ? Slot : Primitive.div;
+
+    // Sync forwarded ref into rootRef when parent's ref is set by a descendant (e.g. BoardItem's Card.Root).
+    // Then we can read rootRef.current only in the effects below.
+    useLayoutEffect(() => {
+      const el = forwardedRef && 'current' in forwardedRef ? (forwardedRef.current as HTMLDivElement | null) : null;
+      if (el != null) {
+        (rootRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+      }
+    }, [forwardedRef]);
 
     // State.
     const {
@@ -119,7 +127,11 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
     );
 
     useLayoutEffect(() => {
-      const root = rootRef.current;
+      const forwardedEl =
+        forwardedRef != null && 'current' in forwardedRef
+          ? (forwardedRef as React.RefObject<HTMLDivElement | null>).current
+          : null;
+      const root = (rootRef.current ?? forwardedEl) as HTMLDivElement | null;
       if (!root || !containerId || scrolling) {
         return;
       }
@@ -191,32 +203,43 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
           },
         }),
       );
-    }, [rootRef, dragHandle, eventHandler, data, scrolling, allowedEdges, setActiveLocation]);
+    }, [
+      rootRef,
+      forwardedRef,
+      containerId,
+      dragHandle,
+      eventHandler,
+      data,
+      scrolling,
+      allowedEdges,
+      setActiveLocation,
+    ]);
 
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
     return (
       <MosaicTileContextProvider state={state}>
-        <Root
+        <Comp
+          {...rest}
           {...{
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
-          className={mx('relative', className, classNames)}
+          className={mx('relative', className)}
           ref={composedRef}
         >
           {children}
-        </Root>
+        </Comp>
 
         {state.type === 'preview' &&
           createPortal(
-            <Root
+            <Comp
               {...{
                 // NOTE: Use to control appearance while dragging.
                 [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
               }}
               // TODO(burdon): Configure drop animation.
-              className={mx('relative', className, classNames)}
+              className={mx('relative', className)}
               style={
                 {
                   width: `${state.rect.width}px`,
@@ -225,7 +248,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
               }
             >
               {children}
-            </Root>,
+            </Comp>,
             state.container,
           )}
       </MosaicTileContextProvider>

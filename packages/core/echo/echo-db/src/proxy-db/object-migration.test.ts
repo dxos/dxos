@@ -6,11 +6,11 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { getSchemaDXN } from '@dxos/echo/internal';
 import { JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
 import { defineObjectMigration } from './object-migration';
@@ -28,16 +28,16 @@ afterEach(async () => {
 const ContactV1 = Schema.Struct({
   firstName: Schema.String,
   lastName: Schema.String,
-}).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
 
 const ContactV2 = Schema.Struct({
   name: Schema.String,
-}).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.2.0' }));
+}).pipe(Type.object({ typename: 'com.example.type.person', version: '0.2.0' }));
 
 const ContactV3 = Schema.Struct({
   name: Schema.String,
   email: Schema.String,
-}).pipe(Type.object({ typename: 'example.com/type/Person', version: '0.3.0' }));
+}).pipe(Type.object({ typename: 'com.example.type.person', version: '0.3.0' }));
 
 const migrationV2 = defineObjectMigration({
   from: ContactV1,
@@ -62,16 +62,16 @@ test('migrate 1 object', async () => {
   await graph.schemaRegistry.register([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
-  await db.flush({ indexes: true });
+  await db.flush();
   await db.runMigrations([migrationV2]);
 
   const objects = await db.query(Filter.type(ContactV2)).run();
   expect(objects).to.have.length(1);
 
   expect(getSchemaDXN(Obj.getSchema(objects[0])!)?.toString()).to.eq(
-    DXN.fromTypenameAndVersion('example.com/type/Person', '0.2.0').toString(),
+    DXN.fromTypenameAndVersion('com.example.type.person', '0.2.0').toString(),
   );
-  expect(Obj.getTypename(objects[0])).to.eq('example.com/type/Person');
+  expect(Obj.getTypename(objects[0])).to.eq('com.example.type.person');
   expect(Type.getVersion(Obj.getSchema(objects[0])!)).to.eq('0.2.0');
   expect(objects[0].name).to.eq('John Doe');
 });
@@ -81,7 +81,7 @@ test('incrementally migrates new objects', async () => {
   await graph.schemaRegistry.register([ContactV1, ContactV2]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
-  await db.flush({ indexes: true });
+  await db.flush();
   await db.runMigrations([migrationV2]);
 
   {
@@ -91,7 +91,7 @@ test('incrementally migrates new objects', async () => {
   }
 
   db.add(Obj.make(ContactV1, { firstName: 'Jane', lastName: 'Smith' }));
-  await db.flush({ indexes: true });
+  await db.flush();
   await db.runMigrations([migrationV2]);
 
   {
@@ -116,12 +116,12 @@ test('chained migrations', async () => {
   await graph.schemaRegistry.register([ContactV1, ContactV2, ContactV3]);
 
   db.add(Obj.make(ContactV1, { firstName: 'John', lastName: 'Doe' }));
-  await db.flush({ indexes: true });
+  await db.flush();
   await db.runMigrations([migrationV2, migrationV3]);
 
   const objects = await db.query(Filter.type(ContactV3)).run();
   expect(objects).to.have.length(1);
-  expect(Obj.getTypename(objects[0])).to.eq('example.com/type/Person');
+  expect(Obj.getTypename(objects[0])).to.eq('com.example.type.person');
   expect(Type.getVersion(Obj.getSchema(objects[0])!)).to.eq('0.3.0');
   expect(objects[0].name).to.eq('John Doe');
   expect(objects[0].email).to.eq('john.doe@example.com');
@@ -142,10 +142,10 @@ test('chained migrations', async () => {
 //         { id: '922fd882', path: 'manager' as JsonPath, referencePath: 'name' as JsonPath },
 //       ],
 //       name: 'View',
-//       query: { type: 'example.com/type/b1e66ff8' },
+//       query: { type: 'com.example.type.b1e66ff8' },
 //     }),
 //   );
-//   await db.flush({ indexes: true });
+//   await db.flush();
 //   await db.runMigrations([ViewTypeV1ToV2]);
 
 //   const objects = await db.query(Filter.type(ViewTypeV2)).run();

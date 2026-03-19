@@ -2,32 +2,37 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type * as LanguageModel from '@effect/ai/LanguageModel';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { AiService, type Service, type ServiceMetadata } from './AiService';
-import { type ModelName as ModelName } from './defs';
+import * as AiService from './AiService';
+import { type ModelName as ModelName, type ModelOptions } from './defs';
 import { AiModelNotAvailableError } from './errors';
 
-export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiModelResolver, Service>() {
-  static buildAiService: Layer.Layer<AiService, never, AiModelResolver> = Layer.effect(
-    AiService,
+export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiModelResolver, AiService.Service>() {
+  static buildAiService: Layer.Layer<AiService.AiService, never, AiModelResolver> = Layer.effect(
+    AiService.AiService,
     Effect.gen(function* () {
       const resolver = yield* AiModelResolver;
       return {
         metadata: resolver.metadata,
-        model: (name) => resolver.model(name),
-      } satisfies Context.Tag.Service<AiService>;
+        model: (name, options) => resolver.model(name, options),
+      } satisfies Context.Tag.Service<AiService.AiService>;
     }),
   );
 
   static resolver = <R>(
-    metadata: ServiceMetadata,
+    metadata: AiService.ServiceMetadata,
     impl: Effect.Effect<
-      (model: ModelName) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>,
+      (
+        model: ModelName,
+        options?: ModelOptions,
+      ) => Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>,
       never,
       R
     >,
@@ -39,11 +44,11 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
         const upstream = yield* Effect.serviceOption(AiModelResolver);
         return {
           metadata,
-          model: (modelName) =>
-            getModel(modelName).pipe(
+          model: (modelName, options) =>
+            getModel(modelName, options).pipe(
               Layer.catchAll(() => {
                 if (Option.isSome(upstream)) {
-                  return upstream.value.model(modelName);
+                  return upstream.value.model(modelName, options);
                 } else {
                   return Layer.fail(new AiModelNotAvailableError(modelName));
                 }
@@ -54,7 +59,7 @@ export class AiModelResolver extends Context.Tag('@dxos/ai/AiModelResolver')<AiM
     );
 
   static fromModelMap = <R>(
-    metadata: ServiceMetadata,
+    metadata: AiService.ServiceMetadata,
     models: Effect.Effect<
       Partial<Record<ModelName, Layer.Layer<LanguageModel.LanguageModel, AiModelNotAvailableError, never>>>,
       never,

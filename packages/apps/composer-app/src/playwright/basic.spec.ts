@@ -9,7 +9,6 @@ import { log } from '@dxos/log';
 // import { StackPlugin } from '@dxos/plugin-stack';
 
 import { AppManager, INITIAL_URL } from './app-manager';
-import { INITIAL_OBJECT_COUNT } from './constants';
 import { Markdown, StackPlugin } from './plugins';
 
 if (process.env.DX_PWA !== 'false') {
@@ -42,12 +41,12 @@ test.describe('Basic tests', () => {
 
   test('create document', async () => {
     await host.createSpace();
-    await host.createObject({ type: 'Document', nth: 0 });
+    await host.createObject({ type: 'Document' });
 
     const plank = host.deck.plank();
     const textBox = Markdown.getMarkdownTextboxWithLocator(plank.locator);
 
-    await expect(host.getObjectLinks()).toHaveCount(INITIAL_OBJECT_COUNT + 1);
+    await expect(host.getObjectLinks()).toHaveCount(1);
     await expect(textBox).toBeEditable();
   });
 

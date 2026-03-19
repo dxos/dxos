@@ -5,9 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
-import { render } from '@dxos/storybook-utils';
 
 import { type CanvasBoard, CanvasGraphModel, type Polygon } from '../../types';
 import { Editor } from '../Editor';
@@ -100,11 +99,11 @@ const DefaultStory = (props: GraphCanvasProps) => {
   }, []);
 
   if (!graph) {
-    return null;
+    return <Loading data={{ graph: !!graph }} />;
   }
 
   return (
-    <div className='flex is-full bs-full absolute inset-0'>
+    <div className='flex w-full h-full absolute inset-0'>
       <Editor.Root id='story' graph={graph}>
         <GraphCanvas {...props} />
       </Editor.Root>
@@ -115,7 +114,7 @@ const DefaultStory = (props: GraphCanvasProps) => {
 const meta = {
   title: 'ui/react-ui-canvas-editor/GraphCanvas',
   component: GraphCanvas,
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout()],
 } satisfies Meta<typeof GraphCanvas>;
 

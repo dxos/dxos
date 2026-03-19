@@ -13,7 +13,8 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 
 import { type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { GenericToolkit, ToolExecutionServices } from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/ai';
+import { ToolExecutionServices } from '@dxos/assistant';
 import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
@@ -79,7 +80,7 @@ export const triggerRuntimeLayer = ({
       // Merge database functions with blueprint functions
       const functions = [...dbFunctions, ...blueprintFunctions];
 
-      // Use the same merged toolkit as chat (AssistantToolkit, SystemToolkit, etc.)
+      // Use the same merged toolkit as chat.
       const toolkit = GenericToolkit.merge(...toolkits);
 
       // Use chat layer as the base (with 'edge' provider since we're using Edge AI service)

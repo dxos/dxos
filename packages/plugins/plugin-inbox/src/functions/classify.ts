@@ -21,7 +21,7 @@ import { trim } from '@dxos/util';
 import { renderMarkdown } from '../util';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/email-classify',
+  key: 'org.dxos.function.inbox.email-classify',
   name: 'Classify',
   description:
     'Classifies an email message by selecting and applying an appropriate tag from available tags in the database.',

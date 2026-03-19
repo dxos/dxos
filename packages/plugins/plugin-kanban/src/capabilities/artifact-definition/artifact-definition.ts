@@ -13,14 +13,15 @@ import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/ap
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj, Query } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space/types';
 import { Filter, type Space } from '@dxos/react-client/echo';
-import { Kanban, KanbanView } from '@dxos/react-ui-kanban';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
+import { Kanban } from '../../types';
 
 const QualifiedId = Schema.String.annotations({
   description: 'The fully qualified ID of the kanban `spaceID:objectID`',
@@ -43,7 +44,7 @@ export default Capability.makeModule(() =>
       - When adding items, you must not include the 'id' field -- it is automatically generated
       - BEFORE adding items, always make sure the board has been shown to the user!
     `,
-      schema: KanbanView,
+      schema: Kanban.Kanban,
       tools: [
         createTool(meta.id, {
           name: 'create',
@@ -69,7 +70,7 @@ export default Capability.makeModule(() =>
               return ToolResult.Error(`Schema not found: ${typename}`);
             }
 
-            const { view } = await View.makeFromDatabase({
+            const { view } = await ViewModel.makeFromDatabase({
               db: extensions.space.db,
               typename,
               pivotFieldName: pivotColumn,
@@ -100,7 +101,7 @@ export default Capability.makeModule(() =>
             const boardInfo = await Promise.all(
               objects.map(async (view) => {
                 const kanban = await view.presentation.load();
-                if (!Obj.instanceOf(KanbanView, kanban)) {
+                if (!Obj.instanceOf(Kanban.Kanban, kanban)) {
                   return null;
                 }
 
@@ -129,7 +130,7 @@ export default Capability.makeModule(() =>
               .first()) as View.View;
 
             const kanban = await view.presentation.load();
-            invariant(Obj.instanceOf(KanbanView, kanban));
+            invariant(Obj.instanceOf(Kanban.Kanban, kanban));
 
             const typename = view.query.typename;
             const schema = await space.db.schemaRegistry.query({ typename }).firstOrUndefined();
@@ -137,7 +138,7 @@ export default Capability.makeModule(() =>
 
             return ToolResult.Success({
               schema,
-              columnField: kanban.columnFieldId,
+              columnField: view.projection.pivotFieldId,
               viewFields: view.projection.fields,
             });
           },

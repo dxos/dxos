@@ -16,12 +16,7 @@ export default createConfig({
   node: {
     environment: 'happy-dom',
     setupFiles: ['./src/vitest-setup.ts'],
-    plugins: [
-      ThemePlugin({
-        root: dirname,
-        content: [path.resolve(dirname, './src')],
-      }),
-    ],
+    plugins: [ThemePlugin({})],
   },
   storybook: true,
 });

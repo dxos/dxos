@@ -75,7 +75,7 @@ export const spaceLayer = (
         }
         return { db: space.db };
       }),
-      ({ db }) => Effect.promise(() => db.flush({ indexes: true })),
+      ({ db }) => Effect.promise(() => db.flush()),
     ),
   );
 

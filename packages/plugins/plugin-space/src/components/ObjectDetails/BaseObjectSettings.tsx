@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
-import { DXN, Obj, type Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -18,7 +18,7 @@ import { meta as pluginMeta } from '../../meta';
 
 // TODO(wittjosiah): Would be nice to control order when extending so this isn't always first/last.
 const BaseSchema = Schema.Struct({
-  tags: Schema.Array(Type.Ref(Tag.Tag)).pipe(Schema.optional),
+  tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
 });
 
 export type BaseObjectSettingsProps = ThemedClassName<
@@ -27,7 +27,7 @@ export type BaseObjectSettingsProps = ThemedClassName<
   }>
 >;
 
-// TODO(wittjosiah): Reconcile w/ ObjectDetailsPanel.
+// TODO(wittjosiah): Reconcile w/ ObjectForm.
 export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectSettingsProps) => {
   const db = Obj.getDatabase(object);
 
@@ -35,7 +35,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
     return Function.pipe(
       Obj.getSchema(object),
       Option.fromNullable,
-      Option.map((schema) => BaseSchema.pipe(Schema.extend(schema))),
+      Option.map((schema) => omitId(BaseSchema.pipe(Schema.extend(schema)))),
       Option.getOrUndefined,
     );
   }, [object]);
@@ -50,7 +50,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
     [object, tags],
   );
 
-  const handleCreate = useCallback((schema: Type.Entity.Any, values: any) => {
+  const handleCreate = useCallback((schema: Type.AnyEntity, values: any) => {
     invariant(db);
     invariant(Type.isObjectSchema(schema));
     const newObject = db.add(Obj.make(schema, values));
@@ -87,7 +87,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
         Obj.change(object, () => {
           for (const path of nonTagPaths) {
             const parts = splitJsonPath(path);
-            const value = Obj.getValue(values, parts);
+            const value = Obj.getValue(values as any, parts);
             Obj.setValue(object, parts, value);
           }
         });
@@ -102,8 +102,8 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
 
   return (
     <Form.Root
-      schema={omitId(formSchema)}
-      values={values}
+      schema={formSchema}
+      defaultValues={values as any}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'

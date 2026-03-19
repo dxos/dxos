@@ -4,7 +4,7 @@
 
 import { type Resource } from '@dxos/react-ui';
 
-export const translationKey = 'dxos.org/i18n/shell';
+export const translationKey = 'org.dxos.i18n.shell';
 
 export const translations = [
   {
@@ -110,18 +110,18 @@ export const translations = [
         'reset in progress label': 'Resetting...',
         'confirm label': 'Confirm',
         'delete label': 'Delete',
-        'reset storage input label':
-          'WARNING: This will delete all data on this device. Type {{confirmationValue}} to continue.',
-        'join new identity input label':
-          'WARNING: To join an existing device all data on this device will be deleted. Type {{confirmationValue}} to continue.',
+        'reset dialog title': 'Reset Device',
+        'reset storage input label': 'Type {{confirmationValue}} to continue. This action cannot be undone.',
+        'join new identity label': 'Join an existing identity',
+        'join new identity input label': 'Type {{confirmationValue}} to continue. This action cannot be undone.',
         'failed to reset identity message': 'Failed to reset identity.',
         'confirmation value': 'RESET',
         'confirmation placeholder': 'Type {{confirmationValue}} to continue.',
-        'sign out chooser title': 'Danger zone',
+        'sign out chooser title': 'WARNING',
         'sign out chooser message': 'Proceeding with the action below will erase all data on this device.',
-        'join new identity label': 'Join an existing identity',
         'reset device label': 'Reset storage',
-        'reset device confirm message': 'Are you sure you want to reset your device? All data will be lost.',
+        'recover reset input label': '', // TODO(burdon): ???
+        'reset device confirm message': 'Are you sure you want to reset your device? All data will be erased.',
         'emoji and color label': 'Emoji and color',
         'clear label': 'Use default',
         'select emoji label': 'Avatar emoji',

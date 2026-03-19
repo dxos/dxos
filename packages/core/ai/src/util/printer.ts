@@ -154,6 +154,9 @@ export class ConsolePrinter {
           case 'reference':
             this.log(`${prefix}🔗 [Reference] ${content.reference.dxn.toString()}`);
             break;
+          case 'summary':
+            this.log(`${prefix}📝 [Summary] ${content.content}`);
+            break;
           default: {
             this.log(`${prefix}[${content._tag}] ${inspect(content, { depth: null, colors: true })}`);
             break;

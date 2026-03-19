@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN, type Database, type Query } from '@dxos/echo';
+import { DXN, type Database, Entity, Feed, Obj, type Query } from '@dxos/echo';
 import { Function, Script, Trigger } from '@dxos/functions';
 import { Filter, Ref, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -43,13 +43,29 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
     readonlySpec,
   });
 
+  const handleValuesChanged = useCallback(
+    (newValues: Partial<TriggerFormSchema>) => {
+      Obj.change(trigger, (t) => {
+        Object.assign(t, newValues);
+      });
+    },
+    [trigger],
+  );
+
+  const triggerSchema = useMemo(() => omitId(Trigger.Trigger), []);
+  const defaultValues = useMemo(() => {
+    const { id: _, ...values } = trigger;
+    return values;
+  }, [trigger]);
+
   return (
     <Form.Root<TriggerFormSchema>
       {...formProps}
-      schema={omitId(Trigger.Trigger)}
-      values={trigger}
       db={db}
+      schema={triggerSchema}
+      defaultValues={defaultValues}
       fieldMap={fieldMap}
+      onValuesChanged={handleValuesChanged}
     >
       <Form.Viewport>
         <Form.Content>
@@ -70,6 +86,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
   const functions = useQuery(db, Filter.type(Function.Function));
   const workflows = useQuery(db, Filter.type(ComputeGraph));
   const scripts = useQuery(db, Filter.type(Script.Script));
+  const feeds = useQuery(db, Filter.type(Feed.Feed));
 
   return useMemo(
     (): FormFieldMap => ({
@@ -105,11 +122,14 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
       },
 
       // Spec selector.
-      ['spec.kind' as const]: (props) => <SpecSelector {...props} readonly={readonlySpec} />,
+      'spec.kind': (props) => <SpecSelector {...props} readonly={readonlySpec} />,
+
+      // Queue feed selector with parent labels.
+      'spec.queue': (props) => <SelectField {...props} options={getFeedQueueOptions(feeds)} />,
 
       // TODO(wittjosiah): Copied from ViewEditor.
       // Query input editor.
-      ['spec.query' as const]: (props) => {
+      'spec.query': (props) => {
         const handleChange = useCallback(
           (query: Query.Any) => props.onValueChange(props.type, { ast: query.ast }),
           [props.type, props.onValueChange],
@@ -124,9 +144,9 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
       },
 
       // Function input editor.
-      ['input' as const]: (props) => <FunctionInputEditor {...props} functions={functions} db={db} />,
+      input: (props) => <FunctionInputEditor {...props} functions={functions} db={db} />,
     }),
-    [workflows, scripts, functions, readonlySpec],
+    [workflows, scripts, functions, feeds, readonlySpec],
   );
 };
 
@@ -137,4 +157,16 @@ const getWorkflowOptions = (graphs: ComputeGraph[]) => {
 const getFunctionOptions = (scripts: Script.Script[], functions: Function.Function[]) => {
   const getLabel = (fn: Function.Function) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
   return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
+};
+
+const getFeedQueueOptions = (feeds: Feed.Feed[]) => {
+  return feeds.flatMap((feed) => {
+    const queueDxn = Feed.getQueueDxn(feed);
+    if (!queueDxn) {
+      return [];
+    }
+    const parent = Obj.getParent(feed);
+    const label = parent ? Entity.getLabel(parent) : Entity.getLabel(feed);
+    return [{ label: label ?? feed.id, value: queueDxn.toString() }];
+  });
 };

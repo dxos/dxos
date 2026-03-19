@@ -9,6 +9,6 @@ import { meta } from '../meta';
 
 export namespace MarkdownEvents {
   export const SetupExtensions: ActivationEvent.ActivationEvent = AppActivationEvents.createStateEvent(
-    `${meta.id}/event/setup-extensions`,
+    `${meta.id}.event.setup-extensions`,
   );
 }

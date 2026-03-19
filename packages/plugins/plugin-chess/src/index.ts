@@ -4,7 +4,7 @@
 
 export * from './blueprints';
 export * from './capabilities';
-export * from './components';
+export * from './components/Chessboard';
 export * from './meta';
 export * from './types';
 

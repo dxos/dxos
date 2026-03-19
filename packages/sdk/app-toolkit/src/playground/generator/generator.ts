@@ -10,15 +10,15 @@ import { Operation, OperationResolver } from '@dxos/operation';
 
 import { AppPlugin } from '../../plugin';
 
-export const Number = Capability.make<number>('dxos.org/test/generator/number');
+export const Number = Capability.make<number>('org.dxos.test.generator.number');
 
-export const CountEvent = ActivationEvent.make('dxos.org/test/generator/count');
+export const CountEvent = ActivationEvent.make('org.dxos.test.generator.count');
 
-export const createPluginId = (id: string) => `dxos.org/test/generator/${id}`;
+export const createPluginId = (id: string) => `org.dxos.test.generator.${id}`;
 
 export const createAlertOperation = (id: string) =>
   Operation.make({
-    meta: { key: `${createPluginId(id)}/operation/alert`, name: 'Alert' },
+    meta: { key: `${createPluginId(id)}.operation.alert`, name: 'Alert' },
     schema: { input: Schema.Void, output: Schema.Void },
   });
 

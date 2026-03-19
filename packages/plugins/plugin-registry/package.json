@@ -14,15 +14,15 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "browser": "./dist/lib/browser/index.mjs",
       "node": "./dist/lib/node-esm/index.mjs",
-      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts"
     },
     "./cli": {
+      "source": "./src/cli/index.ts",
       "browser": "./dist/lib/browser/cli/index.mjs",
       "node": "./dist/lib/node-esm/cli/index.mjs",
-      "source": "./src/cli/index.ts",
       "types": "./dist/types/src/cli/index.d.ts"
     }
   },
@@ -50,7 +50,8 @@
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "@effect/cli": "catalog:"
+    "@effect/cli": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

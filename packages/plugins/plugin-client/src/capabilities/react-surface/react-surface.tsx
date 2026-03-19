@@ -9,6 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
+import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../../constants';
 import {
   DevicesContainer,
   JoinDialog,
@@ -18,8 +19,7 @@ import {
   RecoveryCredentialsContainer,
   ResetDialog,
   type ResetDialogProps,
-} from '../../components';
-import { JOIN_DIALOG, RECOVERY_CODE_DIALOG, RESET_DIALOG } from '../../constants';
+} from '../../containers';
 import { Account, type ClientPluginOptions } from '../../types';
 
 type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
@@ -27,8 +27,7 @@ type ReactSurfaceOptions = Pick<ClientPluginOptions, 'onReset'> & {
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (props?: ReactSurfaceOptions) {
-    const { createInvitationUrl, onReset } = props!;
+  Effect.fnUntraced(function* ({ createInvitationUrl, onReset }: ReactSurfaceOptions) {
     const capabilityManager = yield* Capability.Service;
 
     return Capability.contributes(Capabilities.ReactSurface, [

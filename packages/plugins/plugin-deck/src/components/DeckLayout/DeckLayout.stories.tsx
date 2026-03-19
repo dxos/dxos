@@ -9,7 +9,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { DeckState, LayoutOperationResolver } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
@@ -30,11 +30,12 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
 );
 
 const meta = {
-  title: 'plugins/plugin-deck/DeckLayout',
+  title: 'plugins/plugin-deck/components/DeckLayout',
   component: DeckLayout,
   render: (args) => <DeckLayout {...args} />,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
     }),

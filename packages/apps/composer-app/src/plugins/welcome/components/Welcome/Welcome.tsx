@@ -18,7 +18,7 @@ import { type WelcomeScreenProps, WelcomeState, validEmail } from './types';
 
 const supportsPasskeys = navigator.credentials && 'create' in navigator.credentials;
 
-export const OVERLAY_CLASSES = 'dark !bg-neutral-950 bg-no-repeat bg-center';
+export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };
 
 export const Welcome = ({
@@ -97,14 +97,14 @@ export const Welcome = ({
   return (
     <div
       className={mx(
-        'relative grid grid-cols-1 md:w-[40rem] max-is-[40rem] bs-full md:h-[675px] overflow-hidden',
+        'relative grid grid-cols-1 md:w-[40rem] max-w-[40rem] h-full md:h-[675px] overflow-hidden',
         'rounded-xl shadow-md lg:translate-x-[-40%]',
       )}
       style={{
-        backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--dx-neutral-950))',
+        backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50%, #2d6fff80, var(--color-neutral-950))',
       }}
     >
-      <div className='z-10 flex flex-col gap-8 p-8 md:pli-16'>
+      <div className='z-10 flex flex-col gap-8 p-8 md:px-16'>
         <h1 className="font-['Poiret One'] text-[80px]" style={{ fontFamily: 'Poiret One' }}>
           composer
         </h1>
@@ -118,29 +118,29 @@ export const Welcome = ({
             {Object.keys(actions).length > 0 && (
               <>
                 <div className='flex flex-col gap-2'>
-                  <BifurcatedAction actions={actions} classNames='bg-neutral-775' />
+                  <BifurcatedAction actions={actions} classNames='bg-neutral-800' />
                 </div>
-                <div className='flex items-center is-full my-4'>
-                  <div className='flex-grow bs-px bg-subdued'></div>
-                  <span className='pli-4 text-sm text-subdued'>or</span>
-                  <div className='flex-grow bs-px bg-subdued'></div>
+                <div className='flex items-center w-full my-4'>
+                  <div className='flex-grow h-px bg-subdued'></div>
+                  <span className='px-4 text-sm text-subdued'>or</span>
+                  <div className='flex-grow h-px bg-subdued'></div>
                 </div>
               </>
             )}
             <div role='none' className='flex gap-2'>
               <Input.Root>
-                <div className='flex flex-col is-full'>
+                <div className='flex flex-col w-full'>
                   <Input.TextInput
                     autoFocus
                     ref={emailRef}
-                    classNames='!bg-black'
+                    classNames='bg-black!'
                     placeholder={t('email input placeholder')}
                     value={email}
                     onChange={handleEmailChange}
                     onKeyDown={handleEmailKeyDown}
                   />
                   <Input.DescriptionAndValidation>
-                    <Input.Validation classNames='flex bs-4 pli-2 plb-1 text-rose-550'>
+                    <Input.Validation classNames='flex h-4 px-2 py-1 text-rose-500'>
                       {error && t('email error')}
                     </Input.Validation>
                   </Input.DescriptionAndValidation>
@@ -149,7 +149,7 @@ export const Welcome = ({
               <div>
                 <Button
                   variant='primary'
-                  classNames='disabled:bg-neutral-775'
+                  classNames='disabled:bg-neutral-800'
                   disabled={!validEmail(email) || pending}
                   onClick={handleSignup}
                   data-testid='welcome.login'
@@ -168,7 +168,7 @@ export const Welcome = ({
               <p className='text-subdued'>{t('space invitation description')}</p>
             </div>
             <CompoundButton
-              slots={{ root: { className: 'is-full' } }}
+              slots={{ root: { className: 'w-full' } }}
               after={<Icon icon='ph--caret-right--bold' />}
               before={<Icon icon='ph--planet--regular' />}
               onClick={onSpaceInvitation}
@@ -180,7 +180,7 @@ export const Welcome = ({
               <p className='text-subdued'>{t('go to login description')}</p>
             </div>
             <CompoundButton
-              slots={{ root: { className: 'is-full' } }}
+              slots={{ root: { className: 'w-full' } }}
               after={<Icon icon='ph--caret-right--bold' />}
               before={<Icon icon='ph--user--regular' />}
               onClick={onGoToLogin}
@@ -203,11 +203,11 @@ export const Welcome = ({
           </div>
         )}
 
-        <div className='z-[11] flex flex-col bs-full justify-end'>
+        <div className='z-[11] flex flex-col h-full justify-end'>
           <a href='https://dxos.org' target='_blank' rel='noreferrer'>
             <div className='flex justify-center items-center text-sm gap-1 pr-3 pb-1 opacity-70'>
               <span className='text-subdued'>Powered by</span>
-              <DXOSHorizontalType className='fill-white is-[80px]' />
+              <DXOSHorizontalType className='fill-white w-[80px]' />
             </div>
           </a>
         </div>

@@ -17,12 +17,12 @@ on:
       - published
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-npm-${{ github.event.inputs.publish_npm || 'false' }}
   cancel-in-progress: true
 
 permissions:
   contents: read
-  id-token: write  # Required for npm trusted publisher OIDC
+  id-token: write # Required for npm trusted publisher OIDC
 
 jobs:
   publish:

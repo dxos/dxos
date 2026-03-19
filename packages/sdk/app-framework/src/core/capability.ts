@@ -133,10 +133,10 @@ export const contributes = <I extends InterfaceDef<any>>(
 };
 
 type LoadCapability<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
-  default: (props?: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | never>;
+  default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | never>;
 }>;
 type LoadCapabilities<Props, Capabilities extends ModuleReturn = ModuleReturn> = () => Promise<{
-  default: (props?: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | never>;
+  default: (props: Props) => Effect.Effect<Capabilities, Error, Service | Plugin.Service | never>;
 }>;
 
 type NormalizeReturn<R> = R extends readonly (infer A)[]
@@ -148,7 +148,7 @@ type NormalizeReturn<R> = R extends readonly (infer A)[]
       : Any[];
 
 export type LazyCapability<Props = void, Capabilities extends ModuleReturn = ModuleReturn, E extends Error = Error> = (
-  props?: Props,
+  props: Props,
 ) => Effect.Effect<NormalizeReturn<Capabilities>, E, Service | Plugin.Service | never>;
 
 /**
@@ -162,7 +162,7 @@ export const lazy = <T = void, R extends ModuleReturn = ModuleReturn>(
   name: string,
   c: LoadCapability<T, R> | LoadCapabilities<T, R>,
 ): LazyCapability<T, R> => {
-  const lazyFn: LazyCapability<T, R> = (props?: T) =>
+  const lazyFn: LazyCapability<T, R> = (props: T) =>
     Effect.gen(function* () {
       const { default: getCapability } = yield* Effect.tryPromise(() => c());
       const result = yield* getCapability(props);
@@ -217,9 +217,9 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  *   })
  * );
  *
- * // Module with additional options (context accessed via layer)
+ * // Module with required options (context accessed via layer)
  * export default Capability.makeModule(
- *   Effect.fnUntraced(function* ({ observability }: { observability?: boolean }) {
+ *   Effect.fnUntraced(function* (props: { observability: boolean }) {
  *     const invoker = yield* Capability.get(Capabilities.OperationInvoker);
  *     return contributes(Capabilities.IntentResolver, ...);
  *   })
@@ -232,5 +232,5 @@ export const makeModule = <
   E extends Error = Error,
   R extends Service | Plugin.Service | never = Service,
 >(
-  fn: (props?: TProps) => Effect.Effect<TReturn, E, R>,
-): ((props?: TProps) => Effect.Effect<TReturn, E, R>) => fn;
+  fn: (props: TProps) => Effect.Effect<TReturn, E, R>,
+): ((props: TProps) => Effect.Effect<TReturn, E, R>) => fn;

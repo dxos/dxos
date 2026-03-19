@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { ClientEvents } from '@dxos/plugin-client/types';
-import { Collection, DataTypes } from '@dxos/schema';
+import { DataTypes } from '@dxos/schema';
 import {
   AnchoredTo,
   Employer,
@@ -40,7 +41,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       id: Collection.Collection.typename,
       metadata: {
         createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
-        addToCollectionOnCreate: true,
       },
     },
   }),

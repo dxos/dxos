@@ -56,16 +56,12 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
   });
 
   return (
-    <TemplateEditor
-      classNames='bg-baseSurface is-full max-is-proseMaxWidth'
-      id={blueprint.id}
-      template={blueprint.instructions}
-    />
+    <TemplateEditor classNames='dx-document bg-base-surface' id={blueprint.id} template={blueprint.instructions} />
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/TemplateEditor',
+  title: 'plugins/plugin-assistant/components/TemplateEditor',
   component: TemplateEditor as any,
   render: DefaultStory,
   decorators: [

@@ -14,7 +14,9 @@ const preventDefault = (event: Event) => event.preventDefault();
 // TODO(burdon): Factor out.
 const Endcap = ({ children }: PropsWithChildren) => {
   return (
-    <div className='grid is-[var(--rail-action)] bs-[var(--rail-action)] items-center justify-center'>{children}</div>
+    <div className='grid w-[var(--dx-rail-action)] h-[var(--dx-rail-action)] items-center justify-center'>
+      {children}
+    </div>
   );
 };
 
@@ -71,10 +73,10 @@ const ChatDialogRoot = ({
       <Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
         <div role='none' className='dx-dialog__overlay bg-transparent pointer-events-none' data-block-align='end'>
           <Dialog.Content
+            size='md'
             inOverlayLayout
             classNames={[
-              'grid grid-rows-[var(--rail-action)_1fr_min-content] p-0 overflow-hidden',
-              'box-content md:is-[35rem] md:max-is-none pointer-events-auto',
+              'grid grid-rows-[var(--dx-rail-action)_1fr_min-content] p-0 overflow-hidden box-content pointer-events-auto',
             ]}
             onEscapeKeyDown={onEscape}
             onInteractOutside={preventDefault}
@@ -103,14 +105,16 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
   const { expanded, setExpanded } = useChatDialogContext(CHAT_DIALOG_HEADER_NAME);
 
   return (
-    <div className={mx('grid grid-cols-[var(--rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}>
+    <div
+      className={mx('grid grid-cols-[var(--dx-rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}
+    >
       <Endcap>
         <Dialog.Close>
           <Icon icon='ph--x--regular' />
         </Dialog.Close>
       </Endcap>
       <Dialog.Title
-        classNames='flex is-full justify-center text-sm text-subdued select-none cursor-pointer'
+        classNames='flex w-full justify-center text-sm text-subdued select-none cursor-pointer'
         onClick={() => setExpanded((expanded) => !expanded)}
       >
         {title}
@@ -120,7 +124,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
           variant='ghost'
           icon='ph--caret-up--regular'
           iconOnly
-          classNames={mx('!p-1 [&>svg]:transition [&>svg]:duration-200', expanded && '[&>svg]:rotate-180')}
+          classNames={mx('p-1! [&>svg]:transition [&>svg]:duration-200', expanded && '[&>svg]:rotate-180')}
           label={expanded ? 'Close' : 'Open'}
           onClick={() => setExpanded((expanded) => !expanded)}
         />
@@ -148,8 +152,8 @@ const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => 
   return (
     <div
       className={mx(
-        'border-bs border-be border-subduedSeparator',
-        'transition-[block-size] ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
+        'border-t border-b border-subdued-separator',
+        'transition ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
         classNames,
       )}
       style={{

@@ -35,11 +35,13 @@ import {
   gridSeparatorInlineEnd,
 } from '@dxos/react-ui-grid';
 import { DxEditRequest } from '@dxos/react-ui-grid';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
+import { type ComposableProps } from '@dxos/ui-types';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { tableButtons, tableControls } from '../../util';
 import { type OnCreateHandler, type TableCellEditorProps, TableValueEditor } from '../TableCellEditor';
+import { TableToolbar } from '../TableToolbar';
 
 import { ColumnActionsMenu } from './ColumnActionsMenu';
 import { ColumnSettings } from './ColumnSettings';
@@ -53,51 +55,37 @@ const emptyColumnMeta = Atom.make<DxGridAxisMeta>({ grid: {} });
 // Table.Root
 //
 
-export type TableRootProps = PropsWithChildren<{ role?: string }>;
+export type TableRootProps = PropsWithChildren;
 
-const TableRoot = ({ children, role = 'article' }: TableRootProps) => {
-  return (
-    <div
-      role='none'
-      className={mx(
-        'relative !border-separator [&_.dx-grid]:max-is-[--dx-grid-content-inline-size] [&_.dx-grid]:max-bs-[--dx-grid-content-block-size]',
-        role === 'card--popover' && 'popover-card-height',
-        role === 'section' && 'attention-surface',
-        role === 'card--intrinsic' && '[&_.dx-grid]:bs-[--dx-grid-content-block-size]',
-        ['card--popover', 'section', 'card--extrinsic'].includes(role) && 'overflow-hidden',
-        ['article', 'slide'].includes(role) && 'flex flex-col [&_.dx-grid]:grow [&_.dx-grid]:bs-0',
-      )}
-    >
-      {children}
-    </div>
-  );
+const TableRoot = ({ children }: TableRootProps) => {
+  return <>{children}</>;
 };
 
 //
 // Table.Main
 //
 
+const emptyRowsAtom = Atom.make<unknown[]>([]);
+const emptyCellUpdateAtom = Atom.make<number>(0);
+
 export type TableController = {
   update?: (cell?: DxGridPosition) => void;
   handleInsertRowResult?: (insertRowResult?: InsertRowResult) => void;
 };
 
-export type TableMainProps<T extends Type.Entity.Any = Type.Entity.Any> = {
+export type TableMainProps<T extends Type.AnyEntity = Type.AnyEntity> = ComposableProps<HTMLDivElement> & {
   schema?: T;
   model?: TableModel;
   presentation?: TablePresentation;
-  // TODO(burdon): Rename since attention isn't a useful concept here? Standardize across other components. Pass property into useAttention.
+  // TODO(burdon): Factor out attention.
   ignoreAttention?: boolean;
   onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
   testId?: string;
 };
 
-const emptyRowsAtom = Atom.make<unknown[]>([]);
-const emptyCellUpdateAtom = Atom.make<number>(0);
-
-const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
-  { schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId }: TableMainProps<T>,
+const TableMainInner = <T extends Type.AnyEntity = Type.AnyEntity>(
+  { schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId, ...props }: TableMainProps<T>,
   forwardedRef: Ref<TableController>,
 ) => {
   const registry = useContext(RegistryContext);
@@ -424,47 +412,54 @@ const TableMainInner = <T extends Type.Entity.Any = Type.Entity.Any>(
   }, [dxGrid, model, presentation]);
 
   if (!model || !modals) {
-    return <span role='none' className='attention-surface' />;
+    return <span role='none' className='dx-attention-surface' />;
   }
 
   return (
-    <Grid.Root id={model.id ?? 'table-grid'}>
-      <TableValueEditor<T>
-        model={model}
-        modals={modals}
-        schema={schema}
-        onFocus={handleFocus}
-        onSave={handleSave}
-        onCreate={onCreate}
-      />
-      <Grid.Content
-        className={mx('[--dx-grid-base:var(--baseSurface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
-        frozen={frozen}
-        columns={columnMeta}
-        columnDefault={columnDefault}
-        rowDefault={rowDefault}
-        limitRows={rows.length}
-        limitColumns={columnCount}
-        overscroll='trap'
-        onAxisResize={handleAxisResize}
-        onClick={handleGridClick}
-        onKeyDownCapture={handleKeyDown}
-        onWheelCapture={handleWheel}
-        {...(testId && { 'data-testid': testId })}
-        ref={setDxGrid}
-      />
-      <RowActionsMenu model={model} modals={modals} />
-      <ColumnActionsMenu model={model} modals={modals} />
-      <ColumnSettings model={model} modals={modals} onNewColumn={handleNewColumn} />
-    </Grid.Root>
+    <div {...composableProps(props, { role: 'none', className: 'dx-container relative' })}>
+      <Grid.Root id={model.id ?? 'table-grid'}>
+        <TableValueEditor<T>
+          model={model}
+          modals={modals}
+          schema={schema}
+          onFocus={handleFocus}
+          onSave={handleSave}
+          onCreate={onCreate}
+        />
+        <Grid.Content
+          className={mx('[--dx-grid-base:var(--base-surface)]', gridSeparatorInlineEnd, gridSeparatorBlockEnd)}
+          frozen={frozen}
+          columns={columnMeta}
+          columnDefault={columnDefault}
+          rowDefault={rowDefault}
+          limitRows={rows.length}
+          limitColumns={columnCount}
+          overscroll='trap'
+          onAxisResize={handleAxisResize}
+          onClick={handleGridClick}
+          onKeyDownCapture={handleKeyDown}
+          onWheelCapture={handleWheel}
+          {...(testId && { 'data-testid': testId })}
+          ref={setDxGrid}
+        />
+        <RowActionsMenu model={model} modals={modals} />
+        <ColumnActionsMenu model={model} modals={modals} />
+        <ColumnSettings model={model} modals={modals} onNewColumn={handleNewColumn} />
+      </Grid.Root>
+    </div>
   );
 };
 
-const TableMain = forwardRef(TableMainInner) as <T extends Type.Entity.Any = Type.Entity.Any>(
+const TableMain = forwardRef(TableMainInner) as <T extends Type.AnyEntity = Type.AnyEntity>(
   props: TableMainProps<T> & { ref?: Ref<TableController> },
 ) => JSX.Element;
+
+//
+// Table
+//
 
 export const Table = {
   Root: TableRoot,
   Main: TableMain,
+  Toolbar: TableToolbar,
 };

@@ -13,7 +13,8 @@ import * as Schema from 'effect/Schema';
 import * as String from 'effect/String';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';
-import { AiSession, GenerationObserver, GenericToolkit, ToolExecutionServices, createToolkit } from '@dxos/assistant';
+import { GenericToolkit } from '@dxos/ai';
+import { AiSession, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { type DXN, Entity, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
@@ -31,7 +32,7 @@ import PROMPT from './research-instructions.tpl?raw';
  * Exec external service and return the results as a Subgraph.
  */
 export default defineFunction({
-  key: 'dxos.org/function/research',
+  key: 'org.dxos.function.research',
   name: 'Research',
   description: trim`
     Search the web to research information about the given subject.
@@ -94,7 +95,7 @@ export default defineFunction({
         };
       }
 
-      yield* Database.flush({ indexes: true });
+      yield* Database.flush();
       yield* TracingService.emitStatus({ message: 'Starting research...' });
 
       const NativeWebSearch = Toolkit.make(AnthropicTool.WebSearch_20250305({}));
@@ -162,7 +163,7 @@ const extractLastTextBlock = (result: Message.Message[]) => {
       Function.flow(
         (_: Message.Message) => _.blocks,
         Array.reverse,
-        Array.dropWhile((_: any) => _._tag === 'summary'),
+        Array.dropWhile((_: any) => _._tag === 'stats'),
         Array.takeWhile((_: any) => _._tag === 'text'),
         Array.reverse,
         Array.map((_: any) => _.text),

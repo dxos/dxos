@@ -3,7 +3,7 @@
 //
 
 // Based upon the useIsFocused hook which is part of the `rci` project:
-/// https://github.com/leonardodino/rci/blob/main/packages/use-is-focused
+/// https://github.com/leonardodino/rci/blob/main/packages/use-w-focused
 
 import { type RefObject, useEffect, useRef, useState } from 'react';
 

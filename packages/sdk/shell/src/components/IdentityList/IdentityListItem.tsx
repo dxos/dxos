@@ -26,7 +26,7 @@ export const IdentityListItem = forwardRef<
   return (
     <ListItem.Root
       {...props}
-      classNames={['flex gap-2 pis-3 pie-1 items-center', onClick && 'cursor-pointer', classNames]}
+      classNames={['flex gap-2 ps-3 pe-1 items-center', onClick && 'cursor-pointer', classNames]}
       onClick={() => onClick?.()}
       data-testid='identity-list-item'
       labelId={labelId}
@@ -39,7 +39,7 @@ export const IdentityListItem = forwardRef<
           fallback={identity.profile?.data?.emoji || fallbackValue.emoji}
           classNames='place-self-center'
         />
-        <Avatar.Label classNames='text-sm truncate pli-2'>{displayName}</Avatar.Label>
+        <Avatar.Label classNames='text-sm truncate px-2'>{displayName}</Avatar.Label>
       </Avatar.Root>
     </ListItem.Root>
   );

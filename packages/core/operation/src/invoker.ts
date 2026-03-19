@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -10,6 +11,7 @@ import * as PubSub from 'effect/PubSub';
 
 import type { Key } from '@dxos/echo';
 import { DynamicRuntime, causeToError, runAndForwardErrors } from '@dxos/effect';
+import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { byPosition } from '@dxos/util';
 
@@ -294,7 +296,18 @@ class OperationInvokerImpl implements OperationInvokerInternal {
 
       log('invocation completed', { key: op.meta.key, output });
       return output;
-    });
+    }).pipe(
+      Performance.addTrackEntry((exit) => ({
+        name: op.meta.key,
+        devtools: {
+          dataType: 'track-entry',
+          track: 'Operations',
+          trackGroup: 'Composer',
+          color: Exit.isSuccess(exit) ? 'tertiary-dark' : 'error-dark',
+          properties: Exit.isFailure(exit) ? [['error', Cause.pretty(exit.cause)]] : undefined,
+        },
+      })),
+    );
   };
 }
 

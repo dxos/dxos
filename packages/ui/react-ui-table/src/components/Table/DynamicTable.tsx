@@ -19,7 +19,7 @@ import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from '.
 
 import { Table, type TableController } from './Table';
 
-export type DynamicTableProps<T extends Type.Entity.Any = Type.Entity.Any> = ThemedClassName<{
+export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = ThemedClassName<{
   schema?: T;
   name?: string; // TODO(burdon): Remove?
   rows: any[];
@@ -36,13 +36,13 @@ export type DynamicTableProps<T extends Type.Entity.Any = Type.Entity.Any> = The
  */
 // TODO(burdon): Instead of creating component variants, create helpers/hooks that normalize the props.
 // TODO(burdon): Warning: Cannot update a component (`DynamicTable`) while rendering a different component (`DynamicTable`).
-export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
+export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   classNames,
   schema,
-  name = 'example.com/dynamic-table', // Rmove default or make random; this will lead to type collisions.
+  name = 'com.example.dynamic-table', // Remove default or make random; this will lead to type collisions.
   rows,
   properties,
-  jsonSchema: _jsonSchema,
+  jsonSchema: jsonSchemaProp,
   rowActions,
   onRowClick,
   onRowAction,
@@ -53,8 +53,8 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
 
   // TODO(burdon): Remove variance from the props (should be normalized externally; possibly via hooks).
   const { jsonSchema } = useMemo(
-    () => getBaseSchema({ typename: name, properties, jsonSchema: _jsonSchema, schema }),
-    [name, properties, _jsonSchema, schema],
+    () => getBaseSchema({ typename: name, properties, jsonSchema: jsonSchemaProp, schema }),
+    [name, properties, jsonSchemaProp, schema],
   );
 
   useEffect(() => {
@@ -98,8 +98,8 @@ export const DynamicTable = <T extends Type.Entity.Any = Type.Entity.Any>({
 
   // TODO(burdon): Do we need the outer divs?
   return (
-    <div role='none' className={mx('is-full bs-full grow grid', classNames)}>
-      <div role='none' className='grid min-bs-0 overflow-hidden'>
+    <div role='none' className={mx('w-full h-full grow grid', classNames)}>
+      <div role='none' className='grid min-h-0 overflow-hidden'>
         <Table.Root>
           <Table.Main
             ref={tableRef}

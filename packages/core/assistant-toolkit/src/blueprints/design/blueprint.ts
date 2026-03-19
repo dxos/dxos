@@ -11,7 +11,7 @@ import { trim } from '@dxos/util';
 
 import { MarkdownFunctions } from '../markdown';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/design';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.design';
 
 // TODO(burdon): Should this expose the functions directly or just reference them? How do we manage cross blueprint function dependencies?
 const functions = Object.values(MarkdownFunctions);

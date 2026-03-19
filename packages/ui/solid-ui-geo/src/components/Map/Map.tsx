@@ -55,6 +55,7 @@ const useMapContext = (displayName: string) => {
   if (!context) {
     throw new Error(`${displayName} must be used within Map.Root`);
   }
+
   return context;
 };
 
@@ -277,7 +278,7 @@ const CustomControl = (props: { children: JSX.Element; position: ControlPosition
 
     const Control = L.Control.extend({
       onAdd: () => {
-        const container = L.DomUtil.create('div', `${controlPositions[props.position]} !m-0`);
+        const container = L.DomUtil.create('div', `${controlPositions[props.position]} m-0!`);
         L.DomEvent.disableClickPropagation(container);
         L.DomEvent.disableScrollPropagation(container);
 

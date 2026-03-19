@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
-import { Flex, Input, Layout, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
+import { Flex, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout';
@@ -54,20 +54,24 @@ const WithKeyboard = ({ children }: PropsWithChildren) => {
   return <div className='h-screen relative'>{children}</div>;
 };
 
-const Panel = ({ children, label }: PropsWithChildren<{ label: string }>) => {
+const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) => {
   return (
-    <Layout.Main toolbar>
-      <Toolbar.Root>
-        {label}
-        <Toolbar.Separator variant='gap' />
-        {children}
-      </Toolbar.Root>
-      <Flex column classNames='p-1'>
-        <Input.Root>
-          <Input.TextInput />
-        </Input.Root>
-      </Flex>
-    </Layout.Main>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          {label}
+          <Toolbar.Separator />
+          {children}
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content asChild>
+        <Flex column classNames='p-1'>
+          <Input.Root>
+            <Input.TextInput />
+          </Input.Root>
+        </Flex>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
@@ -85,21 +89,21 @@ const DefaultStory = () => {
         <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'upper' }}>
           <Splitter.Root mode={splitterMode} ratio={0.5}>
             <Splitter.Panel position='upper'>
-              <Panel label='Main'>
+              <StoryPanel label='Main'>
                 {splitterMode === 'upper' && (
                   <Toolbar.IconButton icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('both')} />
                 )}
-              </Panel>
+              </StoryPanel>
             </Splitter.Panel>
             <Splitter.Panel position='lower'>
-              <Panel label='Drawer'>
+              <StoryPanel label='Drawer'>
                 <Toolbar.IconButton
                   icon={splitterMode === 'lower' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
                   label={splitterMode === 'lower' ? 'Collapse' : 'Expand'}
                   onClick={() => setSplitterMode((splitterMode) => (splitterMode === 'both' ? 'lower' : 'both'))}
                 />
                 <Toolbar.IconButton icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('upper')} />
-              </Panel>
+              </StoryPanel>
             </Splitter.Panel>
           </Splitter.Root>
         </MobileLayout.Panel>
@@ -109,7 +113,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta<MobileLayoutRootProps> = {
-  title: 'plugins/plugin-simple-layout/MobileLayout',
+  title: 'plugins/plugin-simple-layout/components/MobileLayout',
   component: MobileLayout.Root,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'relative' })],

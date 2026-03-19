@@ -4,52 +4,60 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Space } from '@dxos/client/echo';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
-import { Queue } from '@dxos/echo-db';
-import { QueueAnnotation } from '@dxos/schema';
+import { FeedAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
+/** Calendar object schema. */
 export const Calendar = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
-  queue: Type.Ref(Queue).pipe(FormInputAnnotation.set(false)),
+  feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   // Track the last synced update timestamp to handle out-of-order event updates.
   lastSyncedUpdate: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   accessToken: Schema.optional(
-    Type.Ref(AccessToken.AccessToken).annotations({
+    Ref.Ref(AccessToken.AccessToken).annotations({
       title: 'Account',
       description: 'Google account credentials for syncing this calendar.',
     }),
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Calendar',
+    typename: 'org.dxos.type.calendar',
     version: '0.1.0',
   }),
-  QueueAnnotation.set(true),
+  FeedAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--calendar--regular',
+    hue: 'rose',
+  }),
 );
 
 export interface Calendar extends Schema.Schema.Type<typeof Calendar> {}
 
+/** Checks if a value is a Calendar object. */
+export const instanceOf = (value: unknown): value is Calendar => Obj.instanceOf(Calendar, value);
+
 export const CreateCalendarSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
   accessToken: Schema.optional(
-    Type.Ref(AccessToken.AccessToken).annotations({
+    Ref.Ref(AccessToken.AccessToken).annotations({
       title: 'Account',
       description: 'Google account credentials for syncing this calendar.',
     }),
   ),
 });
 
-type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'queue' | 'lastSyncedUpdate'> & {
-  space: Space;
-};
+type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'feed' | 'lastSyncedUpdate'>;
 
-export const make = ({ space, ...props }: CalendarProps) => {
-  const queue = space.queues.create();
-  return Obj.make(Calendar, {
-    queue: Ref.fromDXN(queue.dxn),
+/** Creates a calendar object with a backing feed. */
+export const make = (props: CalendarProps = {}) => {
+  const feed = Feed.make();
+  const calendar = Obj.make(Calendar, {
+    feed: Ref.make(feed),
     ...props,
   });
+  // TODO(wittjosiah): Parent should be declarative in the schema.
+  Obj.setParent(feed, calendar);
+  return calendar;
 };

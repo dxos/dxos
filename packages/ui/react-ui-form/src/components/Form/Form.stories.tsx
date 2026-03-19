@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Annotation, Format, Obj, Tag, Type } from '@dxos/echo';
+import { Annotation, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -23,7 +23,7 @@ const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Organization', // TODO(burdon): Change all types to /schema
+    typename: 'com.example.type.organization',
     version: '0.1.0',
   }),
 );
@@ -46,8 +46,8 @@ const Person = Schema.Struct({
       zip: Schema.Number,
     }).annotations({ title: 'Address' }),
   ),
-  employer: Schema.optional(Type.Ref(Organization).annotations({ title: 'Employer' })),
-  tags: Schema.optional(Schema.Array(Type.Ref(Tag.Tag)).annotations({ title: 'Tags' })),
+  employer: Schema.optional(Ref.Ref(Organization).annotations({ title: 'Employer' })),
+  tags: Schema.optional(Schema.Array(Ref.Ref(Tag.Tag)).annotations({ title: 'Tags' })),
   status: Schema.optional(Schema.Literal('active', 'inactive').annotations({ title: 'Status' })),
   notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
@@ -65,7 +65,7 @@ const Person = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Person', // TODO(burdon): Change all types to /schema
+    typename: 'org.dxos.type.person', // TODO(burdon): Change all types to /schema
     version: '0.1.0',
   }),
 );
@@ -128,9 +128,7 @@ const meta = {
 
   decorators: [
     withTheme(),
-    withLayout({
-      layout: 'fullscreen',
-    }),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

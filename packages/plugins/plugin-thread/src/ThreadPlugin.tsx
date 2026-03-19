@@ -3,12 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Ref, Type } from '@dxos/echo';
+import { Annotation, Ref, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
+import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
@@ -23,7 +24,6 @@ import {
   OperationResolver,
   ReactRoot,
   ReactSurface,
-  Repair,
   ThreadState,
 } from './capabilities';
 import { THREAD_ITEM, meta } from './meta';
@@ -43,8 +43,8 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
       {
         id: Type.getTypename(Channel.Channel),
         metadata: {
-          icon: 'ph--hash--regular',
-          iconHue: 'rose',
+          icon: Annotation.IconAnnotation.get(Channel.Channel).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Channel.Channel).pipe(Option.getOrThrow).hue ?? 'white',
           createObject: ((props) => Effect.sync(() => Channel.make(props))) satisfies CreateObject,
         },
       },
@@ -53,13 +53,6 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
         metadata: {
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (thread: Thread.Thread) => await Ref.Array.loadAll(thread.messages ?? []),
-        },
-      },
-      {
-        id: Message.Message.typename,
-        metadata: {
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: () => [], // loadObjectReferences(message, (message) => [...message.parts, message.context]),
         },
       },
       {
@@ -82,7 +75,7 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
-    schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Message.MessageV1, Thread.Thread],
+    schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Thread.Thread],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
@@ -106,11 +99,6 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
     activate: ThreadState,
   }),
   Plugin.addModule({
-    id: 'migration',
-    activatesOn: ClientEvents.SetupMigration,
-    activate: () => Effect.succeed(Capability.contributes(ClientCapabilities.Migration, [Message.MessageV1ToV2])),
-  }),
-  Plugin.addModule({
     id: 'on-space-created',
     activatesOn: SpaceEvents.SpaceCreated,
     activate: () =>
@@ -119,11 +107,6 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
           Operation.invoke(ThreadOperation.OnCreateSpace, params),
         ),
       ),
-  }),
-  Plugin.addModule({
-    id: 'repair',
-    activatesOn: ClientEvents.SpacesReady,
-    activate: Repair,
   }),
   Plugin.addModule({
     id: 'markdown',

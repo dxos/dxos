@@ -44,7 +44,13 @@ export class OtelTraces {
     log('trace processor registered');
 
     registerInstrumentations({
-      instrumentations: [getWebAutoInstrumentations()],
+      instrumentations: [
+        getWebAutoInstrumentations({
+          '@opentelemetry/instrumentation-fetch': {
+            ignoreUrls: [/api\.ipdata\.co/],
+          },
+        }),
+      ],
     });
 
     TRACE_PROCESSOR.remoteTracing.registerProcessor({

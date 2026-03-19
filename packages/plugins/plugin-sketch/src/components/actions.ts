@@ -7,13 +7,13 @@ import { isShape } from '@tldraw/tlschema';
 
 import { createDocAccessor } from '@dxos/echo-db';
 
-import type { Diagram } from '../types';
+import type { Sketch } from '../types';
 import { getDeep } from '../util';
 
 /**
  * Snap to grid.
  */
-export const handleSnap = async (sketch: Diagram.Diagram) => {
+export const handleSnap = async (sketch: Sketch.Sketch) => {
   const snap = (value: number, tolerance = 40) => {
     return Math.round(value / tolerance) * tolerance;
   };

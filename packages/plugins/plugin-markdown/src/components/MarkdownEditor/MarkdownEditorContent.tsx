@@ -37,6 +37,7 @@ import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
 
 export type MarkdownEditorContentProps = ThemedClassName<{
   id: string;
+  attendableId?: string;
   role?: string;
   viewMode?: EditorViewMode;
   scrollPastEnd?: boolean;
@@ -45,7 +46,6 @@ export type MarkdownEditorContentProps = ThemedClassName<{
   toolbarState?: Atom.Writable<EditorToolbarState>;
   onLinkQuery?: (query?: string) => Promise<EditorMenuGroup[]>;
 }> &
-  // prettier-ignore
   Pick<UseTextEditorProps, 'initialValue' | 'extensions'> &
   Pick<MarkdownEditorToolbarProps, 'onFileUpload'> &
   Pick<ThemeExtensionsOptions, 'slots'>;
@@ -55,6 +55,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     {
       classNames,
       id,
+      attendableId,
       role,
       viewMode,
       initialValue,
@@ -133,18 +134,18 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
 
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
 
-    useSelectCurrentThread(editorView, id);
+    useSelectCurrentThread(editorView, id, attendableId ?? id);
 
     useTest(editorView);
 
     return (
       <div
-        role='none'
-        ref={parentRef}
-        data-testid='composer.markdownRoot'
-        className={mx(stackItemContentEditorClassNames(role), classNames)}
-        data-popover-collision-boundary={true}
         {...focusAttributes}
+        role='none'
+        data-testid='composer.markdownRoot'
+        data-popover-collision-boundary={true}
+        className={mx(stackItemContentEditorClassNames(role), classNames)}
+        ref={parentRef}
       />
     );
   },

@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useEffect, useRef, useState } from 'reac
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -21,7 +21,7 @@ type DragState = 'idle' | 'dragging';
 
 const BOARD_CELL_NAME = 'Board.Cell';
 
-export type BoardCellProps<T extends Type.Obj.Any = any> = ThemedClassName<
+export type BoardCellProps<T extends Type.AnyObj = any> = ThemedClassName<
   PropsWithChildren<{
     item: T;
     layout: CellLayout;
@@ -87,7 +87,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
           />
         )}
       </Card.Toolbar>
-      <div role='none' {...{ inert: true }} className='pointer-events-none min-bs-0 min-is-0'>
+      <div role='none' {...{ inert: true }} className='pointer-events-none min-h-0 min-w-0'>
         {children}
       </div>
     </Card.Root>

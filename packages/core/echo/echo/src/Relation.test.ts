@@ -25,6 +25,12 @@ describe('Relation', () => {
       expect(snapshot[SnapshotKindId]).toBe(Entity.Kind.Relation);
       expect((snapshot as any)[Entity.KindId]).toBeUndefined();
 
+      expect(Relation.isSnapshot(snapshot)).toBe(true);
+      expect(Obj.isSnapshot(snapshot)).toBe(false);
+
+      expect(Relation.getSource(snapshot)).toEqual(obj1);
+      expect(Relation.getTarget(snapshot)).toEqual(obj2);
+
       // Snapshot has same id.
       expect(snapshot.id).toBe(rel.id);
     });
@@ -59,8 +65,8 @@ describe('Relation', () => {
       expect(Relation.getDXN(snapshot)).toBeDefined();
 
       // getTypename - works with both.
-      expect(Relation.getTypename(rel)).toBe('example.com/type/HasManager');
-      expect(Relation.getTypename(snapshot)).toBe('example.com/type/HasManager');
+      expect(Relation.getTypename(rel)).toBe('com.example.type.has-manager');
+      expect(Relation.getTypename(snapshot)).toBe('com.example.type.has-manager');
 
       // getMeta - works with both.
       expect(Relation.getMeta(rel)).toBeDefined();

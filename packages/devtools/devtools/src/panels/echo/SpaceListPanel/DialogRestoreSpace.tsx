@@ -11,31 +11,34 @@ export const DialogRestoreSpace = ({ handleFile }: { handleFile: (backupFile: Fi
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
-    <div className='flex shrink-0 m-2'>
-      <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => setDialogOpen(nextOpen)}>
-        <Dialog.Trigger asChild>
-          <Button>Import space</Button>
-        </Dialog.Trigger>
-
-        <Dialog.Overlay>
-          <Dialog.Content>
+    <Dialog.Root open={dialogOpen} onOpenChange={(nextOpen) => setDialogOpen(nextOpen)}>
+      <Dialog.Trigger asChild>
+        <Button>Import space</Button>
+      </Dialog.Trigger>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Header>
             <Dialog.Title>{'Import space'}</Dialog.Title>
-            <p className='mlb-4'>{'Importing from a backup will create new space from.'}</p>
+          </Dialog.Header>
+          <Dialog.Body>
+            <p className='my-4'>{'Importing from a backup will create new space from.'}</p>
             <FileUploader
               types={['json', 'tar']}
-              classes='block mlb-4 p-8 border-2 border-dashed border-neutral-500/50 rounded flex items-center justify-center gap-2 cursor-pointer'
+              classes='block my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm flex items-center justify-center gap-2 cursor-pointer'
               dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
               handleChange={(backupFile: File) => handleFile(backupFile).finally(() => setDialogOpen(false))}
             >
               <Icon icon='ph--file-plus--duotone' size={8} />
               <span>{'Drag file here or click to browse'}</span>
             </FileUploader>
+          </Dialog.Body>
+          <Dialog.ActionBar>
             <Dialog.Close asChild>
               <Button variant='primary'>{'Cancel'}</Button>
             </Dialog.Close>
-          </Dialog.Content>
-        </Dialog.Overlay>
-      </Dialog.Root>
-    </div>
+          </Dialog.ActionBar>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
   );
 };

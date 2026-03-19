@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { DXN, Filter, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { DXN, Filter, Key, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -137,16 +137,29 @@ const typenameFromFilter = (filter: QueryAST.Filter): Option.Option<string> =>
     Match.orElse(() => Option.none()),
   );
 
-// TODO(wittjosiah): Currently assumes options is at the top-level of the ast.
+// TODO(wittjosiah): Currently assumes from scope is at the top-level of the ast.
 export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
   return Match.value(query).pipe(
-    Match.when({ type: 'options' }, ({ options }) => {
-      return Option.fromNullable(options.queues).pipe(
+    Match.when({ type: 'from' }, ({ from }) => {
+      if (from._tag !== 'scope') {
+        return space?.db;
+      }
+      const result = Option.fromNullable(from.scope.queues).pipe(
         Option.flatMap((queues) => Array.head(queues)),
-        Option.flatMap((queueDxn) => Option.fromNullable(DXN.tryParse(queueDxn))),
-        Option.flatMap((queueDxn) => Option.fromNullable(space?.queues.get(queueDxn))),
-        Option.getOrElse(() => space?.db),
+        Option.flatMap((queueDxn) => Option.fromNullable(DXN.tryParse(String(queueDxn)))),
+        Option.flatMap((parsed) => {
+          const q = parsed.asQueueDXN();
+          if (!q || !Key.ObjectId.isValid(q.queueId)) return Option.none();
+          return Option.fromNullable(space?.queues.get(parsed));
+        }),
       );
+      // Skip query when a requested queue is not found (structurally invalid DXN or valid DXN
+      // referencing a queue not present in space.queues, e.g. not yet synced) to avoid 400 errors.
+      // TODO(wittjosiah): Can we handle this upstream?
+      if (from.scope.queues?.length && Option.isNone(result)) {
+        return undefined;
+      }
+      return Option.getOrElse(result, () => space?.db);
     }),
     Match.orElse(() => space?.db),
   );

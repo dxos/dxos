@@ -12,12 +12,12 @@ import { type Density, type Elevation } from '@dxos/ui-types';
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-interface ButtonProps extends ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> {
+type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> & {
   variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'destructive';
   density?: Density;
   elevation?: Elevation;
   asChild?: boolean;
-}
+};
 
 type ButtonGroupContextValue = { inGroup?: boolean };
 
@@ -46,9 +46,9 @@ const Button = memo(
       const { tx } = useThemeContext();
       const elevation = useElevationContext(propsElevation);
       const density = useDensityContext(propsDensity);
-      const Root = asChild ? Slot : Primitive.button;
+      const Comp = asChild ? Slot : Primitive.button;
       return (
-        <Root
+        <Comp
           ref={ref}
           {...props}
           data-variant={variant}
@@ -68,7 +68,7 @@ const Button = memo(
           {...(props.disabled && { disabled: true })}
         >
           {children}
-        </Root>
+        </Comp>
       );
     },
   ),
@@ -85,11 +85,11 @@ const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
   ({ children, elevation: propsElevation, classNames, asChild, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const elevation = useElevationContext(propsElevation);
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Root role='none' {...props} className={tx('button.group', { elevation }, classNames)} ref={forwardedRef}>
+      <Comp role='none' {...props} className={tx('button.group', { elevation }, classNames)} ref={forwardedRef}>
         <ButtonGroupProvider inGroup>{children}</ButtonGroupProvider>
-      </Root>
+      </Comp>
     );
   },
 );

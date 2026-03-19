@@ -1,0 +1,24 @@
+/**
+ * Scrolling 
+ * Pseudo-classes are not supported by Tailwind.
+ */
+
+@layer dx-components {
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-scrollbar-thumb-hover!;
+  }
+  ::-webkit-scrollbar-thumb:active {
+    @apply bg-scrollbar-thumb-active!;
+  }
+
+  .dx-scrollbar-thin::-webkit-scrollbar {
+    @apply w-[4px];
+  }
+  .dx-scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-transparent;
+    transition: background 0.15s;
+  }
+  .dx-scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    @apply bg-scrollbar-thumb;
+  }
+}

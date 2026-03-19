@@ -3,12 +3,22 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
+import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Popover, type PopoverContentInteractOutsideEvent, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Surface } from '@dxos/app-framework/ui';
+import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { Annotation, Obj } from '@dxos/echo';
+import {
+  Card,
+  Popover,
+  type PopoverContentInteractOutsideEvent,
+  toLocalizedString,
+  Toolbar,
+  useTranslation,
+} from '@dxos/react-ui';
+import { Menu } from '@dxos/react-ui-menu';
 
 import { useDeckState } from '../../hooks';
 import { meta } from '../../meta';
@@ -60,7 +70,19 @@ export const PopoverContent = () => {
   const { t } = useTranslation(meta.id);
   const { state, updateEphemeral } = useDeckState();
   const { setOpen } = useDeckPopoverContext('PopoverContent');
-  const { invokeSync } = useOperationInvoker();
+  const popoverSubject = state.popoverContent?.subject;
+  const isObjectPopover = Obj.isObject(popoverSubject);
+  const objectMenuItems = useObjectMenuItems(popoverSubject);
+  const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
+  const icon = isObjectPopover
+    ? Function.pipe(
+        Obj.getSchema(popoverSubject),
+        Option.fromNullable,
+        Option.flatMap(Annotation.IconAnnotation.get),
+        Option.map(({ icon }) => icon),
+        Option.getOrElse(() => 'ph--placeholder--regular'),
+      )
+    : undefined;
 
   const handleClose = useCallback(() => {
     setOpen(false);
@@ -101,28 +123,27 @@ export const PopoverContent = () => {
           {/* TODO(burdon): Set/disable column context. */}
           {state.popoverKind === 'base' && <Surface.Surface role='popover' data={state.popoverContent} limit={1} />}
           {state.popoverKind === 'card' && (
-            <Card.Root border={false} classNames='popover-card-max-width'>
-              <Card.Toolbar>
-                {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
-                {state.popoverContentRef ? (
-                  <Card.ToolbarIconButton
-                    icon='ph--arrow-square-out--regular'
-                    iconOnly
-                    label={t('open item label')}
-                    onClick={() => {
-                      invokeSync(LayoutOperation.Open, {
-                        subject: [state.popoverContentRef!],
-                      });
-                    }}
-                  />
-                ) : (
-                  <div />
-                )}
-                {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
-                <Card.Close onClick={handleClose} />
-              </Card.Toolbar>
-              <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
-            </Card.Root>
+            <Menu.Root>
+              <Card.Root border={false} classNames='dx-card-popover'>
+                <Card.Toolbar>
+                  <Card.IconBlock padding>{icon && <Card.Icon icon={icon} />}</Card.IconBlock>
+                  <Card.Title>{title}</Card.Title>
+                  {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+                  <Card.IconBlock padding>
+                    <Menu.Trigger asChild disabled={!objectMenuItems.length}>
+                      <Toolbar.IconButton
+                        variant='ghost'
+                        icon='ph--dots-three-vertical--regular'
+                        iconOnly
+                        label='Actions'
+                      />
+                    </Menu.Trigger>
+                    <Menu.Content items={objectMenuItems} />
+                  </Card.IconBlock>
+                </Card.Toolbar>
+                <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
+              </Card.Root>
+            </Menu.Root>
           )}
         </Popover.Viewport>
         <Popover.Arrow />

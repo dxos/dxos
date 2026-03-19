@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Entity, Obj, Type } from '@dxos/echo';
+import type { Entity } from '@dxos/echo';
 import { getSchemaDXN } from '@dxos/echo/internal';
 import { type DXN } from '@dxos/keys';
 
@@ -36,7 +36,7 @@ type ObjectMigrationContext = {};
 
 type OnMigrateProps<From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext> = {
   before: Schema.Schema.Type<From>;
-  object: Obj.Obj<Schema.Schema.Type<To>>;
+  object: Schema.Schema.Type<To>;
   db: EchoDatabase;
 };
 

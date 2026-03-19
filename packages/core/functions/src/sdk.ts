@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type AiService } from '@dxos/ai';
-import { Obj, Type } from '@dxos/echo';
+import { type Feed, JsonSchema, Obj, type Type } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
@@ -39,7 +39,9 @@ export type FunctionServices =
   | AiService.AiService
   | CredentialsService
   | Database.Service
+  // TODO(wittjosiah): Remove QueueService — use Feed.Service instead.
   | QueueService
+  | Feed.Service
   | FunctionInvocationService;
 
 /**
@@ -84,7 +86,7 @@ export type FunctionDefinition<TInput = any, TOutput = any, S extends FunctionSe
    * List of types the function uses.
    * This is used to ensure that the types are available when the function is executed.
    */
-  types: readonly Type.Entity.Any[];
+  types: readonly Type.AnyEntity[];
 
   /**
    * Keys of the required services.
@@ -125,7 +127,7 @@ export type FunctionProps<T, O> = {
    * List of types the function uses.
    * This is used to ensure that the types are available when the function is executed.
    */
-  types?: readonly Type.Entity.Any[];
+  types?: readonly Type.AnyEntity[];
 
   // TODO(dmaretskyi): This currently doesn't cause a compile-time error if the handler requests a service that is not specified
   services?: readonly Context.Tag<any, any>[];
@@ -265,8 +267,8 @@ export const serializeFunction = (functionDef: FunctionDefinition.Any): Function
     name: functionDef.name,
     version: '0.1.0',
     description: functionDef.description,
-    inputSchema: Type.toJsonSchema(functionDef.inputSchema),
-    outputSchema: !functionDef.outputSchema ? undefined : Type.toJsonSchema(functionDef.outputSchema),
+    inputSchema: JsonSchema.toJsonSchema(functionDef.inputSchema),
+    outputSchema: !functionDef.outputSchema ? undefined : JsonSchema.toJsonSchema(functionDef.outputSchema),
     services: functionDef.services,
   });
   if (functionDef.meta?.deployedFunctionId) {
@@ -282,8 +284,8 @@ export const deserializeFunction = (functionObj: Function.Function): FunctionDef
     key: functionObj.key ?? functionObj.name,
     name: functionObj.name,
     description: functionObj.description,
-    inputSchema: !functionObj.inputSchema ? Schema.Unknown : Type.toEffectSchema(functionObj.inputSchema),
-    outputSchema: !functionObj.outputSchema ? undefined : Type.toEffectSchema(functionObj.outputSchema),
+    inputSchema: !functionObj.inputSchema ? Schema.Unknown : JsonSchema.toEffectSchema(functionObj.inputSchema),
+    outputSchema: !functionObj.outputSchema ? undefined : JsonSchema.toEffectSchema(functionObj.outputSchema),
     // TODO(dmaretskyi): This should throw error.
     handler: () => {},
     services: functionObj.services ?? [],

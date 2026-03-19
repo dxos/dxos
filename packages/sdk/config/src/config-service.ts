@@ -11,8 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Yaml from 'yaml';
 
-import { DX_CONFIG, DX_DATA } from '@dxos/client-protocol';
-import { getProfilePath } from '@dxos/client-protocol';
+import { DX_CONFIG, DX_DATA, getProfileConfigPath, getProfilePath } from '@dxos/client-protocol';
 import { invariant } from '@dxos/invariant';
 
 import { Config } from './config';
@@ -69,7 +68,7 @@ export class ConfigService extends Context.Tag('ConfigService')<ConfigService, C
   static fromConfig = (config: Config) => Layer.succeed(ConfigService, config);
 
   static load = (args: { config: Option.Option<string>; profile: string }) => {
-    const defaultConfigPath = `${getProfilePath(DX_CONFIG, args.profile)}.yml`;
+    const defaultConfigPath = getProfileConfigPath(DX_CONFIG, args.profile);
     return Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const configPath = Option.getOrElse(args.config, () => defaultConfigPath);
@@ -82,9 +81,9 @@ export class ConfigService extends Context.Tag('ConfigService')<ConfigService, C
         Effect.gen(function* () {
           const configValues = defaultConfig.values;
           const fs = yield* FileSystem.FileSystem;
-          yield* fs.makeDirectory(dirname(defaultConfigPath), { recursive: true });
-          yield* fs.writeFileString(defaultConfigPath, Yaml.stringify(configValues));
-
+          const pathToCreate = Option.getOrElse(args.config, () => defaultConfigPath);
+          yield* fs.makeDirectory(dirname(pathToCreate), { recursive: true });
+          yield* fs.writeFileString(pathToCreate, Yaml.stringify(configValues));
           return ConfigService.of(new Config(configValues));
         }),
       ),

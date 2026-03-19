@@ -20,7 +20,7 @@ export const ContentEmpty = () => {
   return (
     <div
       role='none'
-      className='grid place-items-center p-8 relative bg-deckSurface'
+      className='grid place-items-center p-8 relative bg-deck-surface'
       data-testid='layoutPlugin.firstRunMessage'
     >
       <Surface.Surface role='keyshortcuts' />

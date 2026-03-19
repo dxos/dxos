@@ -171,13 +171,21 @@ export const FormField = (props: FormFieldProps) => {
 
   const options = getOptions(type);
   if (options) {
+    // Resolve labels from projection metadata when available.
+    const fieldProjections = projection?.getFieldProjections();
+    const fieldProjection = fieldProjections?.find((fp) => fp.field.path === name);
+    const selectOptions = fieldProjection?.props.options;
+
     return (
       <SelectField
         {...fieldProps}
-        options={options.map((option) => ({
-          value: option,
-          label: option.toString(),
-        }))}
+        options={options.map((option) => {
+          const selectOption = selectOptions?.find((so) => so.id === globalThis.String(option));
+          return {
+            value: option,
+            label: selectOption?.title ?? option.toString(),
+          };
+        })}
       />
     );
   }

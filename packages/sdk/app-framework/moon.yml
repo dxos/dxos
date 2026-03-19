@@ -4,6 +4,7 @@ tags:
   - pack
   - ts-build
   - ts-test
+  - ts-test-storybook
   - typedoc
   - storybook
 tasks:
@@ -19,7 +20,3 @@ tasks:
       - '--entryPoint=src/common/activation-events.ts'
       - '--entryPoint=src/ui/index.ts'
       - '--entryPoint=src/testing/index.ts'
-  test:
-    inputs:
-      - .storybook/*
-      - /tools/storybook-react/.storybook/main.ts

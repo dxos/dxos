@@ -5,33 +5,18 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { SpaceSchema } from '@dxos/client/echo';
 import { Operation } from '@dxos/operation';
 import { Channel } from '@dxos/plugin-thread/types';
-import { Collection } from '@dxos/schema';
 
 import { meta } from '../meta';
 
 import { Meeting } from './Meeting';
 
-const MEETING_OPERATION = `${meta.id}/operation`;
+const MEETING_OPERATION = `${meta.id}.operation`;
 
 export namespace MeetingOperation {
-  export const OnCreateSpace = Operation.make({
-    meta: { key: `${MEETING_OPERATION}/on-create-space`, name: 'On Create Space' },
-    services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-        rootCollection: Collection.Collection,
-        isDefault: Schema.optional(Schema.Boolean),
-      }),
-      output: Schema.Void,
-    },
-  });
-
   export const Create = Operation.make({
-    meta: { key: `${MEETING_OPERATION}/create`, name: 'Create Meeting' },
+    meta: { key: `${MEETING_OPERATION}.create`, name: 'Create Meeting' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -45,7 +30,7 @@ export namespace MeetingOperation {
   });
 
   export const SetActive = Operation.make({
-    meta: { key: `${MEETING_OPERATION}/set-active`, name: 'Set Active Meeting' },
+    meta: { key: `${MEETING_OPERATION}.set-active`, name: 'Set Active Meeting' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -58,7 +43,7 @@ export namespace MeetingOperation {
   });
 
   export const HandlePayload = Operation.make({
-    meta: { key: `${MEETING_OPERATION}/handle-payload`, name: 'Handle Meeting Payload' },
+    meta: { key: `${MEETING_OPERATION}.handle-payload`, name: 'Handle Meeting Payload' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -71,7 +56,7 @@ export namespace MeetingOperation {
   });
 
   export const Summarize = Operation.make({
-    meta: { key: `${MEETING_OPERATION}/summarize`, name: 'Summarize Meeting' },
+    meta: { key: `${MEETING_OPERATION}.summarize`, name: 'Summarize Meeting' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({

@@ -212,9 +212,6 @@
       "path": "../../plugins/plugin-theme"
     },
     {
-      "path": "../../plugins/plugin-theme-editor"
-    },
-    {
       "path": "../../plugins/plugin-thread"
     },
     {
@@ -224,7 +221,13 @@
       "path": "../../plugins/plugin-transcription"
     },
     {
+      "path": "../../plugins/plugin-voxel"
+    },
+    {
       "path": "../../plugins/plugin-wnfs"
+    },
+    {
+      "path": "../../plugins/plugin-zen"
     },
     {
       "path": "../../sdk/app-framework"
@@ -273,9 +276,6 @@
     },
     {
       "path": "../../ui/react-ui-editor"
-    },
-    {
-      "path": "../../ui/react-ui-kanban"
     },
     {
       "path": "../../ui/react-ui-stack"

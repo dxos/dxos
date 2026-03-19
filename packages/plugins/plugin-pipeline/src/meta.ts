@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/pipeline',
+  id: 'org.dxos.plugin.pipeline',
   name: 'Pipelines',
   description: trim`
     Pipelines for organizing tasks, milestones, and deliverables.

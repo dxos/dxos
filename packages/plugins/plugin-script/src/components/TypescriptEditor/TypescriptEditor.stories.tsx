@@ -7,8 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { createDocAccessor } from '@dxos/echo-db';
 import { createObject } from '@dxos/react-client/echo';
-import { Toolbar } from '@dxos/react-ui';
-import { Layout } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { createDataExtensions } from '@dxos/ui-editor';
@@ -66,24 +65,27 @@ const DefaultStory = (props: TypescriptEditorProps) => {
   }, [object]);
 
   return (
-    <Layout.Main toolbar>
-      {/* <ScriptToolbar script={script} state={{}} /> */}
-      <Toolbar.Root>
-        <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
-      </Toolbar.Root>
-      <div role='none' className='grid grid-rows-[1fr_min-content] bs-full overflow-hidden text-sm'>
-        <TypescriptEditor {...props} initialValue={object.content} extensions={extensions} />
-        <Json data={result} classNames='shrink-0 p-2 border-bs border-subduedSeparator' />
-      </div>
-    </Layout.Main>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={handleRun}>Run</Toolbar.Button>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <div role='none' className='grid grid-rows-[1fr_min-content] h-full overflow-hidden text-sm'>
+          <TypescriptEditor {...props} initialValue={object.content} extensions={extensions} />
+          <Json data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
+        </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-script/TypescriptEditor',
+  title: 'plugins/plugin-script/components/TypescriptEditor',
   component: TypescriptEditor,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'is-proseMaxWidth' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-document-max-width' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

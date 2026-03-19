@@ -12,7 +12,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 // TODO(wittjosiah): Remove or restore graph caching.
 // import { meta } from './meta';
 
-// const KEY = `${meta.id}/app-graph`;
+// const KEY = `${meta.id}.app-graph`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -37,7 +37,7 @@ export default Capability.makeModule(
     );
 
     // await builder.initialize();
-    void Graph.expand(builder.graph, Node.RootId);
+    void Graph.expand(builder.graph, Node.RootId, 'child');
 
     setupDevtools(builder.graph);
 

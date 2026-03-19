@@ -11,10 +11,10 @@ import { BoardManager } from './board-manager';
 const PORT = 9008;
 const STORY_URL = storybookUrl('ui-react-ui-mosaic-board--spec', PORT);
 
-let page: Page;
-let board: BoardManager;
-
 test.describe('Board', () => {
+  let page: Page;
+  let board: BoardManager;
+
   test.beforeEach(async ({ browser }) => {
     ({ page } = await setupPage(browser, { url: STORY_URL }));
     await page.getByTestId('board-column').first().waitFor({ state: 'visible' });

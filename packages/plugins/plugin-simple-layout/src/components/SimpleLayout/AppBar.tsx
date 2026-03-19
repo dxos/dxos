@@ -6,13 +6,7 @@ import { type Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { Fragment } from 'react';
 
 import { IconButton, Popover, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
-import {
-  type ActionExecutor,
-  type ActionGraphProps,
-  DropdownMenu,
-  MenuProvider,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -62,7 +56,11 @@ export const AppBar = ({
   return (
     <Toolbar.Root
       role='banner'
-      classNames={mx('grid grid-cols-[var(--rail-size)_1fr_var(--rail-size)] items-center', 'density-fine', classNames)}
+      classNames={mx(
+        'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center',
+        'dx-density-fine',
+        classNames,
+      )}
     >
       {keyboardOpen ? (
         <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('done label')} />
@@ -74,18 +72,17 @@ export const AppBar = ({
       <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
       {hasActions ? (
         <AnchorRoot>
-          <MenuProvider {...menu} onAction={onAction}>
-            <DropdownMenu.Root caller={meta.id}>
-              <DropdownMenu.Trigger asChild>
-                <IconButton
-                  variant='ghost'
-                  icon='ph--dots-three-vertical--regular'
-                  iconOnly
-                  label={t('actions menu label')}
-                />
-              </DropdownMenu.Trigger>
-            </DropdownMenu.Root>
-          </MenuProvider>
+          <Menu.Root {...menu} caller={meta.id} onAction={onAction}>
+            <Menu.Trigger asChild>
+              <IconButton
+                variant='ghost'
+                icon='ph--dots-three-vertical--regular'
+                iconOnly
+                label={t('actions menu label')}
+              />
+            </Menu.Trigger>
+            <Menu.Content />
+          </Menu.Root>
         </AnchorRoot>
       ) : (
         <span />

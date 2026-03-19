@@ -5,17 +5,18 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
-import { AgentFunctions, Chat } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt } from '@dxos/blueprints';
+import { AgentFunctions, Chat, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
+import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
+import { Blueprint } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { TracingService, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Collection } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { AssistantBlueprint } from '../../blueprints';
@@ -27,14 +28,7 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.OperationResolver, [
       OperationResolver.make({
         operation: AssistantOperation.OnCreateSpace,
-        handler: Effect.fnUntraced(function* ({ space, rootCollection }) {
-          const chatCollection = Collection.makeManaged({ key: Chat.Chat.typename });
-          const blueprintCollection = Collection.makeManaged({ key: Blueprint.Blueprint.typename });
-          const promptCollection = Collection.makeManaged({ key: Type.getTypename(Prompt.Prompt) });
-          Obj.change(rootCollection, (c) => {
-            c.objects.push(Ref.make(chatCollection), Ref.make(blueprintCollection), Ref.make(promptCollection));
-          });
-
+        handler: Effect.fnUntraced(function* ({ space }) {
           // TODO(wittjosiah): Remove once function registry is avaiable.
           space.db.add(serializeFunction(AgentFunctions.Prompt));
 
@@ -51,7 +45,7 @@ export default Capability.makeModule(
           const space = client.spaces.get(db.spaceId);
           invariant(space, 'Space not found');
           const queue = space.queues.create();
-          const chat = Chat.make({ name, queue: Ref.fromDXN(queue.dxn) });
+          const chat = Chat.make({ name, queue: db.makeRef<any>(queue.dxn) });
           if (addToSpace) {
             space.db.add(chat);
           }
@@ -59,14 +53,32 @@ export default Capability.makeModule(
           // TODO(wittjosiah): This should be a space-level setting.
           // TODO(burdon): Clone when activated. Copy-on-write for template.
           const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
-          let defaultBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.key);
-          if (!defaultBlueprint) {
-            defaultBlueprint = db.add(AssistantBlueprint.make());
+          let defaultAssistantBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.key);
+          if (!defaultAssistantBlueprint) {
+            defaultAssistantBlueprint = db.add(AssistantBlueprint.make());
+          }
+          let defaultDatabaseBlueprint = blueprints.find((blueprint) => blueprint.key === DatabaseBlueprint.key);
+          if (!defaultDatabaseBlueprint) {
+            defaultDatabaseBlueprint = db.add(DatabaseBlueprint.make());
+          }
+          let defaultProjectWizardBlueprint = blueprints.find(
+            (blueprint) => blueprint.key === ProjectWizardBlueprint.key,
+          );
+          if (!defaultProjectWizardBlueprint) {
+            defaultProjectWizardBlueprint = db.add(ProjectWizardBlueprint.make());
           }
 
           const binder = new AiContextBinder({ queue, registry });
           yield* Effect.promise(() =>
-            binder.use((b: AiContextBinder) => b.bind({ blueprints: [Ref.make(defaultBlueprint!)] })),
+            binder.use((b: AiContextBinder) =>
+              b.bind({
+                blueprints: [
+                  Ref.make(defaultAssistantBlueprint!),
+                  Ref.make(defaultDatabaseBlueprint!),
+                  Ref.make(defaultProjectWizardBlueprint!),
+                ],
+              }),
+            ),
           );
 
           return { object: chat };
@@ -105,6 +117,19 @@ export default Capability.makeModule(
             ...current,
             currentChat: { ...current.currentChat, [companionToId]: chatId },
           }));
+        }),
+      }),
+      OperationResolver.make({
+        operation: AssistantOperation.RunPromptInNewChat,
+        handler: Effect.fnUntraced(function* ({ db, prompt }) {
+          const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
+          const chatPath = getObjectPathFromObject(chat);
+          yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({
+            ...current,
+            pendingPrompts: { ...current.pendingPrompts, [chatPath]: prompt },
+          }));
+          yield* Operation.invoke(LayoutOperation.Open, { subject: [chatPath] });
+          return { object: chat };
         }),
       }),
     ]);

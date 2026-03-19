@@ -16,6 +16,7 @@ export const translations = [
         'typename label_one': 'Game',
         'typename label_other': 'Games',
         'object name placeholder': 'New game',
+        'add object label': 'Add game',
         'rename object label': 'Rename game',
         'delete object label': 'Delete game',
         'object deleted label': 'Game deleted',

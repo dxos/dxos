@@ -3,9 +3,9 @@
 //
 
 import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
-import type * as SqlClient from '@effect/sql/SqlClient';
+import * as SqlClient from '@effect/sql/SqlClient';
 
-import { DeferredTask, sleep } from '@dxos/async';
+import { asyncTimeout, DeferredTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -40,7 +40,7 @@ import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueryServiceImpl } from './query-service';
 import { QueueDataSource } from './queue-data-source';
 import { SpaceStateManager } from './space-state-manager';
-import { QueueServiceStub } from './stub';
+import * as Effect from 'effect/Effect';
 
 export type EchoHostProps = {
   kv: LevelDB;
@@ -48,12 +48,6 @@ export type EchoHostProps = {
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
-
-  /**
-   * Use SQLite-backed local-first durable queues.
-   * Otherwise defaults to in-memory impl.
-   */
-  localQueues?: boolean;
 
   /**
    * This peer is allowed to assign positions (global-order) to items appended to the queue.
@@ -83,8 +77,8 @@ export class EchoHost extends Resource {
   private readonly _automergeDataSource: AutomergeDataSource;
   private readonly _indexEngine: IndexEngine;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
-  private readonly _feedStore?: FeedStore;
-  private readonly _queueDataSource?: QueueDataSource;
+  private readonly _feedStore: FeedStore;
+  private readonly _queueDataSource: QueueDataSource;
 
   private _updateIndexes!: DeferredTask;
 
@@ -94,7 +88,6 @@ export class EchoHost extends Resource {
 
   constructor({
     kv,
-    localQueues,
     peerIdProvider,
     getSpaceKeyByRootDocumentId,
     runtime,
@@ -114,17 +107,13 @@ export class EchoHost extends Resource {
     this._runtime = runtime;
     this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
 
-    if (localQueues) {
-      this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
-      this._queueDataSource = new QueueDataSource({
-        feedStore: this._feedStore,
-        runtime: this._runtime,
-        getSpaceIds: () => this._spaceStateManager.spaceIds,
-      });
-      this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore, syncQueue);
-    } else {
-      this._queuesService = new QueueServiceStub();
-    }
+    this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
+    this._queueDataSource = new QueueDataSource({
+      feedStore: this._feedStore,
+      runtime: this._runtime,
+      getSpaceIds: () => this._spaceStateManager.spaceIds,
+    });
+    this._queuesService = new LocalQueueServiceImpl(runtime, this._feedStore, syncQueue);
 
     // SQLite-based index engine for all queries.
     this._indexEngine = new IndexEngine();
@@ -207,7 +196,7 @@ export class EchoHost extends Resource {
     return this._spaceStateManager.roots;
   }
 
-  get feedStore(): FeedStore | undefined {
+  get feedStore(): FeedStore {
     return this._feedStore;
   }
 
@@ -219,20 +208,37 @@ export class EchoHost extends Resource {
   }
 
   protected override async _open(ctx: Context): Promise<void> {
+    log('echo-host: opening automerge host...');
     await this._automergeHost.open();
+    log('echo-host: automerge host opened');
+
+    log('echo-host: opening query service...');
     await this._queryService.open(ctx);
+    log('echo-host: query service opened');
+
+    log('echo-host: opening space state manager...');
     await this._spaceStateManager.open(ctx);
+    log('echo-host: space state manager opened');
 
-    if (this._feedStore) {
-      await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
-      this._feedStore.onNewBlocks.on(this._ctx, () => {
-        this._queryService.invalidateQueries();
-        this._updateIndexes.schedule();
-      });
-    }
+    // Timeout needs to be outside effect runtime to catch the layer hanging on startup.
+    await asyncTimeout(
+      RuntimeProvider.runPromise(this._runtime)(testSqlite()),
+      15_000,
+      new Error('SQLite quick check timed out'),
+    );
 
+    log('echo-host: running index engine migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
+    log('echo-host: index engine migration done');
     this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
+
+    log('echo-host: running feed store migration...');
+    await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
+    log('echo-host: feed store migration done');
+    this._feedStore.onNewBlocks.on(this._ctx, () => {
+      this._queryService.invalidateQueries();
+      this._updateIndexes.schedule();
+    });
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       if (e.previousRootId) {
@@ -248,6 +254,7 @@ export class EchoHost extends Resource {
       this._updateIndexes.schedule();
     });
     this._updateIndexes.schedule();
+    log('echo-host: open complete');
   }
 
   protected override async _close(ctx: Context): Promise<void> {
@@ -378,7 +385,7 @@ export class EchoHost extends Resource {
       });
     }
 
-    if (this._queueDataSource) {
+    {
       performance.mark('indexEngine.update.queue:start');
       const { updated, done } = await this._indexEngine
         .update(this._queueDataSource, { spaceId: null, limit: 50 })
@@ -421,3 +428,18 @@ export type EchoStatsDiagnostic = {
   loadedDocsCount: number;
   dataStats: EchoDataStats;
 };
+
+/**
+ * Sqlite health check on startup.
+ */
+const testSqlite = () =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const databases = yield* sql<{ seq: number; name: string; file: string }>`PRAGMA database_list`;
+    log('SQLite databases', { databases });
+    const [result] = yield* sql<{ quick_check: string }>`PRAGMA quick_check`;
+    if (result.quick_check !== 'ok') {
+      throw new Error('SQLite quick check failed');
+    }
+    log('SQLite quick check passed');
+  });

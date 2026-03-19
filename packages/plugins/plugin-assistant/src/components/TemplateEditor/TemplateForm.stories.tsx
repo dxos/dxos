@@ -47,14 +47,14 @@ const DefaultStory = () => {
   );
 
   return (
-    <div role='none' className='flex is-[40rem] border border-separator overflow-hidden'>
+    <div role='none' className='flex w-[40rem] border border-separator overflow-hidden'>
       <TemplateForm id={blueprint.id} template={blueprint.instructions} onChange={handleChange} />
     </div>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-assistant/TemplateForm',
+  title: 'plugins/plugin-assistant/components/TemplateForm',
   component: TemplateForm,
   render: DefaultStory,
   decorators: [

@@ -6,15 +6,22 @@ import { invariant } from '@dxos/invariant';
 import type { MenuActionProperties, MenuItemGroupProperties } from '@dxos/ui-types';
 
 import type { ActionGraphProps } from './hooks';
+import { MenuSeparatorType } from './types';
 import { createMenuAction, createMenuItemGroup } from './util';
 
 export interface ActionGroupBuilder {
+  /** Add an action node as a child of the current group. */
   action<P extends {} = {}>(id: string, props: P & MenuActionProperties, invoke: () => void): this;
+  /** Add a nested action group. */
   group<P extends {} = {}>(
     id: string,
     props: P & MenuItemGroupProperties,
     cb: (builder: ActionGroupBuilder) => void,
   ): this;
+  /** Merge pre-built nodes and edges into this builder. */
+  subgraph(subgraph: ActionGraphProps): this;
+  /** Add a separator. */
+  separator(id?: string, variant?: 'gap' | 'line'): this;
 }
 
 export interface MenuBuilder extends ActionGroupBuilder {
@@ -22,11 +29,9 @@ export interface MenuBuilder extends ActionGroupBuilder {
   build(): ActionGraphProps;
 }
 
-export const MenuBuilder = Object.freeze({
-  make: (): MenuBuilder => new MenuBuilderImpl({ nodes: [], edges: [] }, 'root'),
-});
-
 class MenuBuilderImpl implements MenuBuilder {
+  private _separatorCount = 0;
+
   constructor(
     private readonly _data: ActionGraphProps,
     private readonly _rootId: string,
@@ -39,9 +44,13 @@ class MenuBuilderImpl implements MenuBuilder {
     return this;
   }
 
+  build(): ActionGraphProps {
+    return this._data;
+  }
+
   action<P extends {} = {}>(id: string, props: P & MenuActionProperties, invoke: () => void): this {
     this._data.nodes.push(createMenuAction(id, invoke, props));
-    this._data.edges.push({ source: this._rootId, target: id });
+    this._data.edges.push({ source: this._rootId, target: id, relation: 'child' });
     return this;
   }
 
@@ -51,12 +60,30 @@ class MenuBuilderImpl implements MenuBuilder {
     cb: (builder: ActionGroupBuilder) => void,
   ): this {
     this._data.nodes.push(createMenuItemGroup(id, props));
-    this._data.edges.push({ source: this._rootId, target: id });
+    this._data.edges.push({ source: this._rootId, target: id, relation: 'child' });
     cb(new MenuBuilderImpl(this._data, id));
     return this;
   }
 
-  build(): ActionGraphProps {
-    return this._data;
+  subgraph(subgraph: ActionGraphProps): this {
+    this._data.nodes.push(...subgraph.nodes);
+    this._data.edges.push(...subgraph.edges);
+    return this;
+  }
+
+  separator(id?: string, variant: 'gap' | 'line' = 'gap'): this {
+    id ??= `separator-${++this._separatorCount}`;
+    this._data.nodes.push({
+      id,
+      type: MenuSeparatorType,
+      properties: { variant },
+      data: undefined as never,
+    });
+    this._data.edges.push({ source: this._rootId, target: id, relation: 'child' });
+    return this;
   }
 }
+
+export const MenuBuilder = Object.freeze({
+  make: (): MenuBuilder => new MenuBuilderImpl({ nodes: [], edges: [] }, 'root'),
+});

@@ -9,15 +9,15 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
+import * as SchemaAST from 'effect/SchemaAST';
 
 import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { GenericToolkit } from '@dxos/ai';
 import { todo } from '@dxos/debug';
-import { Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
-import { GenericToolkit } from '../session';
 import { RefFromLLM } from '../types';
 
 /**
@@ -172,11 +172,33 @@ const createStructFieldsFromSchema = (schema: Schema.Schema<any, any>): Record<s
  * The picked schema type decodes to the original schema type.
  */
 const mapSchemaTypeForLLM = (ast: SchemaAST.AST): SchemaAST.AST => {
-  if (Type.Ref.isRefSchemaAST(ast)) {
+  if (Ref.isRefType(ast)) {
     const description = ast.annotations.description
       ? ast.annotations.description + '\n' + RefFromLLM.ast.annotations.description
       : (RefFromLLM.ast.annotations.description as string);
     return RefFromLLM.annotations({ description }).ast;
+  } else if (SchemaAST.isTupleType(ast)) {
+    return new SchemaAST.TupleType(
+      ast.elements.map((t) => new SchemaAST.OptionalType(mapSchemaTypeForLLM(t.type), t.isOptional, t.annotations)),
+      ast.rest.map((t) => new SchemaAST.Type(mapSchemaTypeForLLM(t.type), t.annotations)),
+      ast.isReadonly,
+      ast.annotations,
+    );
+  } else if (SchemaAST.isTypeLiteral(ast)) {
+    return new SchemaAST.TypeLiteral(
+      ast.propertySignatures.map(
+        (p) =>
+          new SchemaAST.PropertySignature(
+            p.name,
+            mapSchemaTypeForLLM(p.type),
+            p.isOptional,
+            p.isReadonly,
+            p.annotations,
+          ),
+      ),
+      ast.indexSignatures,
+      ast.annotations,
+    );
   }
 
   return ast;

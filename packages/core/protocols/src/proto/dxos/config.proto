@@ -59,7 +59,7 @@ message Module {
   optional string id = 8;   // TODO(burdon): Ensured FQ (e.g., 'dxos.app.xxx')
   optional string name = 1; // TODO(burdon): Replace with id (or key?)
   optional string type = 2; // TODO(burdon): Define namespace (e.g.,
-                            // 'dxos.org/type/frame' vs. 'dxos.type.frame')
+                            // 'org.dxos.type.frame')
 
   // TODO(burdon): Developer info message.
 
@@ -155,8 +155,6 @@ message Runtime {
     optional bool enable_vector_indexing = 12;
 
     optional EdgeFeatures edge_features = 11;
-
-    optional bool enable_local_queues = 13;
   }
 
   message App {

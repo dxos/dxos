@@ -66,7 +66,7 @@ const MosaicRoot = forwardRef<HTMLDivElement, MosaicRootProps>(
   ({ classNames, children, asChild, debug }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
 
     const [handlers, setHandlers] = useState<Record<string, MosaicEventHandler>>({});
     const [dragging, setDragging] = useState<MosaicDraggingState | undefined>();
@@ -271,7 +271,7 @@ const MosaicRoot = forwardRef<HTMLDivElement, MosaicRootProps>(
         }
         dragging={dragging}
       >
-        <Root
+        <Comp
           className={mx('group', classNames)}
           {...{
             [`data-${MOSAIC_ROOT_DEBUG_ATTR}`]: debug,
@@ -279,7 +279,7 @@ const MosaicRoot = forwardRef<HTMLDivElement, MosaicRootProps>(
           ref={composedRef}
         >
           {children}
-        </Root>
+        </Comp>
       </MosaicRootContextProvider>
     );
   },

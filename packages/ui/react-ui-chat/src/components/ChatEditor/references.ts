@@ -130,7 +130,7 @@ export const references = ({ provider, triggerCharacter = '@', debug = false }: 
     }),
 
     autocompletion({
-      tooltipClass: () => 'shadow rounded',
+      tooltipClass: () => 'shadow rounded-sm',
       activateOnTyping: true,
       aboveCursor: true,
       closeOnBlur: !debug,

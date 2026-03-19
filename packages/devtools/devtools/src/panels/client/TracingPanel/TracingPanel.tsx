@@ -123,15 +123,11 @@ export const TracingPanel = () => {
 
   const features: Partial<TableFeatures> = useMemo(() => ({ selection: { enabled: true, mode: 'single' } }), []);
 
-  // TODO(ZaymonFC): Do we need these visual specializations from the old table?
-  //  - 'name' column: Special ResourceName component
-  //  - 'info' column: font-mono + text-green-500 styling for JSON
-
   return (
     <PanelContainer classNames='grid grid-rows-[1fr_1fr] divide-y divide-separator'>
       <DynamicTable rows={rows} properties={resourceProperties} features={features} onRowClick={handleRowClicked} />
       <Tabs.Root defaultValue='details' className='flex flex-col grow overflow-hidden'>
-        <Tabs.List className='flex divide-x divide-separator border-be border-separator'>
+        <Tabs.List className='flex divide-x divide-separator border-b border-separator'>
           <Tabs.Trigger className='flex-1' value='details'>
             Details
           </Tabs.Trigger>

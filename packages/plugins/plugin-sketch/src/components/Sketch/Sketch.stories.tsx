@@ -7,31 +7,31 @@ import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-db';
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { migrateCanvas } from '../../migrations';
 import { data } from '../../testing';
-import { Diagram } from '../../types';
+import { Sketch as SketchNs } from '../../types';
 
 import { Sketch } from './Sketch';
 
 const DefaultStory = () => {
-  const [sketch, setSketch] = useState(createObject(Diagram.make({ canvas: { content: data.v2 } })));
+  const [sketch, setSketch] = useState(createObject(SketchNs.make({ canvas: { content: data.v2 } })));
 
   const handleClear = () => {
-    const sketch = createObject(Diagram.make());
+    const sketch = createObject(SketchNs.make());
     setSketch(sketch);
   };
 
   const handleCreate = () => {
-    const sketch = createObject(Diagram.make({ canvas: { content: data.v2 } }));
+    const sketch = createObject(SketchNs.make({ canvas: { content: data.v2 } }));
     console.log(JSON.stringify(sketch, undefined, 2));
     setSketch(sketch);
   };
 
   const handleMigrate = async () => {
     const content = await migrateCanvas(data.v1);
-    setSketch(createObject(Diagram.make({ canvas: { content } })));
+    setSketch(createObject(SketchNs.make({ canvas: { content } })));
   };
 
   return (
@@ -55,10 +55,10 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-sketch/Sketch',
+  title: 'plugins/plugin-sketch/components/Sketch',
   component: Sketch as any,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

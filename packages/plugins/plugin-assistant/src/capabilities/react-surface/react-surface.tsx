@@ -8,13 +8,13 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Chat, Initiative } from '@dxos/assistant-toolkit';
+import { Chat, Project } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
-import { Layout } from '@dxos/react-ui';
+import { Panel } from '@dxos/react-ui';
 
 import {
   AssistantSettings,
@@ -22,10 +22,12 @@ import {
   ChatCompanion,
   ChatContainer,
   ChatDialog,
-  InitiativeContainer,
+  ProjectArticle,
+  ProjectSettings,
   PromptArticle,
+  TracePanel,
   TriggerStatus,
-} from '../../components';
+} from '../../containers';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
 import { type Assistant } from '../../types';
 
@@ -33,7 +35,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/plugin-settings`,
+        id: `${meta.id}.plugin-settings`,
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
@@ -43,30 +45,42 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/chat`,
+        id: `${meta.id}.chat`,
         role: 'article',
-        filter: (data): data is { subject: Chat.Chat; variant: undefined } =>
-          Obj.instanceOf(Chat.Chat, data.subject) && data.variant !== 'assistant-chat',
-        component: ({ data, role, ref }) => <ChatContainer role={role} subject={data.subject} ref={ref} />,
+        filter: (data): data is { attendableId: string; subject: Chat.Chat; variant: undefined } =>
+          typeof data.attendableId === 'string' &&
+          Obj.instanceOf(Chat.Chat, data.subject) &&
+          data.variant !== 'assistant-chat',
+        component: ({ data, role, ref }) => (
+          <ChatContainer role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />
+        ),
       }),
       Surface.create({
-        id: `${meta.id}/initiative`,
+        id: `${meta.id}.project`,
         role: 'article',
-        filter: (data): data is { subject: Initiative.Initiative } =>
-          Obj.instanceOf(Initiative.Initiative, data.subject),
-        component: ({ data, role }) => <InitiativeContainer role={role} subject={data.subject} />,
+        filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
+        component: ({ data, role }) => <ProjectArticle role={role} subject={data.subject} />,
+      }),
+      Surface.create({
+        id: `${meta.id}.project.companion.settings`,
+        role: 'object-settings',
+        filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
+        component: ({ data }) => <ProjectSettings subject={data.subject} />,
       }),
       // TODO(wittjosiah): This is flashing when chat changes.
       Surface.create({
-        id: `${meta.id}/companion-chat`,
+        id: `${meta.id}.companion-chat`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
+        filter: (
+          data,
+        ): data is { attendableId: string; companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
+          typeof data.attendableId === 'string' &&
           Obj.isObject(data.companionTo) &&
           (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === 'assistant-chat'),
         component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
       }),
       Surface.create({
-        id: `${meta.id}/companion-invocations`,
+        id: `${meta.id}.companion-invocations`,
         role: 'article',
         filter: (data): data is { companionTo: Sequence } =>
           (Obj.instanceOf(Sequence, data.companionTo) || Obj.instanceOf(Prompt.Prompt, data.companionTo)) &&
@@ -77,20 +91,22 @@ export default Capability.makeModule(() =>
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
           return (
-            <Layout.Main role={role}>
-              <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
-            </Layout.Main>
+            <Panel.Root role={role} className='dx-document'>
+              <Panel.Content asChild>
+                <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
+              </Panel.Content>
+            </Panel.Root>
           );
         },
       }),
       Surface.create({
-        id: `${meta.id}/blueprint`,
+        id: `${meta.id}.blueprint`,
         role: 'article',
         filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
         component: ({ data }) => <BlueprintArticle subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/prompt`,
+        id: `${meta.id}.prompt`,
         role: 'article',
         filter: (data): data is { subject: Prompt.Prompt } => Obj.instanceOf(Prompt.Prompt, data.subject),
         component: ({ data }) => <PromptArticle subject={data.subject} />,
@@ -102,8 +118,14 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <ChatDialog {...data.props} />,
       }),
       Surface.create({
-        id: `${meta.id}/status`,
-        role: 'status',
+        id: `${meta.id}.trace`,
+        role: 'deck-companion--trace',
+        filter: (data): data is { subject: 'trace' } => data.subject === 'trace',
+        component: () => <TracePanel />,
+      }),
+      Surface.create({
+        id: `${meta.id}.status`,
+        role: 'status-indicator',
         component: () => <TriggerStatus />,
       }),
     ]),

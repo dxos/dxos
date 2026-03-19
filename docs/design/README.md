@@ -24,11 +24,10 @@ Additionally, the DXOS network incorporates other decentralized systems and tech
 | [`DNS`]()       | Network address discovery.                 |
 | [`Avalanche`]() | Scalable proof-of-stake blockchains.       |
 
-> *   TODO(burdon): Diagram of KUBE services.
+> - TODO(burdon): Diagram of KUBE services.
 
 ![KUBE](./diagrams/KUBE.svg)
 
 ## 2. Reference
 
-See this [guide](https://github.com/dxos/eng/wiki/Guides-\~-Writing-Documentation) to writing documentation.
-
+See this [guide](https://github.com/dxos/eng/wiki/Guides-~-Writing-Documentation) to writing documentation.

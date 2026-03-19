@@ -8,6 +8,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import {
   Format,
   type JsonPath,
@@ -22,9 +23,9 @@ import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { invariant } from '@dxos/invariant';
 
 import { TestSchema } from '../testing';
-import { View } from '../types';
+import { ViewModel } from '../types';
 
-import { createFieldId } from './field';
+const createFieldId = View.createFieldId;
 import { ProjectionModel, createDirectChangeCallback, createEchoChangeCallback } from './projection';
 
 const getFieldId = (projection: View.Projection, path: string): string => {
@@ -56,13 +57,13 @@ describe('ProjectionModel', () => {
       salary: Format.Currency({ code: 'usd', decimals: 2 }),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
     const [mutable] = await registry.register([schema]);
 
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
@@ -144,7 +145,7 @@ describe('ProjectionModel', () => {
     const registry = new RuntimeSchemaRegistry();
     await registry.register([TestSchema.Organization]);
 
-    const typename = 'example.com/type/Person';
+    const typename = 'com.example.type.person';
     const schema = Schema.Struct({
       name: Schema.String.annotations({ title: 'Name' }),
       email: Format.Email,
@@ -153,7 +154,7 @@ describe('ProjectionModel', () => {
     }).pipe(Type.object({ typename, version: '0.1.0' }));
     const jsonSchema = toJsonSchema(schema);
 
-    const view = await View.makeWithReferences({
+    const view = await ViewModel.makeWithReferences({
       query: Query.select(Filter.type(schema)),
       jsonSchema,
       registry,
@@ -177,7 +178,7 @@ describe('ProjectionModel', () => {
       property: 'organization',
       type: TypeEnum.Ref,
       format: Format.TypeFormat.Ref,
-      referenceSchema: 'example.com/type/Organization',
+      referenceSchema: 'com.example.type.organization',
       referencePath: 'name',
     });
 
@@ -187,7 +188,7 @@ describe('ProjectionModel', () => {
       $ref: '/schemas/echo/ref',
       reference: {
         schema: {
-          $ref: 'dxn:type:example.com/type/Organization',
+          $ref: 'dxn:type:com.example.type.organization',
         },
         schemaVersion: '0.1.0',
       },
@@ -203,13 +204,13 @@ describe('ProjectionModel', () => {
       email: Format.Email,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
 
     const [mutable] = await registry.register([schema]);
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
@@ -242,13 +243,13 @@ describe('ProjectionModel', () => {
       description: Schema.optional(Schema.String),
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
 
     const [mutable] = await registry.register([schema]);
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
@@ -295,13 +296,13 @@ describe('ProjectionModel', () => {
       email: Format.Email,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
 
     const [mutable] = await registry.register([schema]);
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
@@ -350,13 +351,13 @@ describe('ProjectionModel', () => {
       age: Schema.Number,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
 
     const [mutable] = await registry.register([schema]);
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
@@ -410,13 +411,13 @@ describe('ProjectionModel', () => {
       status: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Task',
+        typename: 'com.example.type.task',
         version: '0.1.0',
       }),
     );
 
     const [mutable] = await registry.register([schema]);
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
@@ -524,13 +525,13 @@ describe('ProjectionModel', () => {
       tags: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Task',
+        typename: 'com.example.type.task',
         version: '0.1.0',
       }),
     );
 
     const [mutable] = await registry.register([schema]);
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
@@ -663,7 +664,7 @@ describe('ProjectionModel', () => {
       createdAt: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
@@ -671,7 +672,7 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
 
     // Create view with only name and email fields.
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       fields: [
@@ -771,7 +772,7 @@ describe('ProjectionModel', () => {
       status: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Task',
+        typename: 'com.example.type.task',
         version: '0.1.0',
       }),
     );
@@ -779,7 +780,7 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([schema]);
 
     // Create view with no explicit fields.
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       fields: [], // No fields specified.
@@ -814,7 +815,7 @@ describe('ProjectionModel', () => {
       title: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Task',
+        typename: 'com.example.type.task',
         version: '0.1.0',
       }),
     );
@@ -822,7 +823,7 @@ describe('ProjectionModel', () => {
     const [mutable] = await registry.register([initialSchema]);
 
     // Create empty view (no fields).
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
       fields: [],
@@ -867,13 +868,13 @@ describe('ProjectionModel', () => {
       phone: Schema.String,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
       }),
     );
 
     const [mutable] = await registry.register([schema]);
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
@@ -921,7 +922,7 @@ describe('ProjectionModel', () => {
     const schema = TestSchema.Organization;
     const jsonSchema = toJsonSchema(schema);
 
-    const view = View.make({ query: Query.select(Filter.type(schema)), jsonSchema });
+    const view = ViewModel.make({ query: Query.select(Filter.type(schema)), jsonSchema });
     const projection = new ProjectionModel({
       registry: atomRegistry,
       view,
@@ -984,14 +985,14 @@ describe('ProjectionModel', () => {
       ),
     }).pipe(
       Type.object({
-        typename: 'dxos.org/type/ContactWithArrayOfEmails',
+        typename: 'org.dxos.type.contact-with-array-of-emails',
         version: '0.1.0',
       }),
     );
 
     const [mutable] = await registry.register([ContactWithArrayOfEmails]);
 
-    const view = View.make({
+    const view = ViewModel.make({
       query: Query.select(Filter.type(mutable)),
       jsonSchema: mutable.jsonSchema,
     });
@@ -1032,13 +1033,13 @@ describe('ProjectionModel', () => {
         [fieldName]: schemaType,
       }).pipe(
         Type.object({
-          typename: 'example.com/type/TestObject',
+          typename: 'com.example.type.test-object',
           version: '0.1.0',
         }),
       );
 
       const [mutable] = await registry.register([schema]);
-      const view = View.make({
+      const view = ViewModel.make({
         query: Query.select(Filter.type(mutable)),
         jsonSchema: mutable.jsonSchema,
       });
@@ -1087,7 +1088,7 @@ describe('ProjectionModel', () => {
       email: Format.Email,
     }).pipe(
       Type.object({
-        typename: 'example.com/type/EmailTest',
+        typename: 'com.example.type.email-test',
         version: '0.1.0',
       }),
     );

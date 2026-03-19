@@ -32,8 +32,8 @@ export const Sidebar = () => {
       label={label}
       classNames={[
         'grid',
-        topbar && 'block-start-[calc(env(safe-area-inset-top)+var(--rail-size))]',
-        hoistStatusbar && 'block-end-[--statusbar-size]',
+        topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]',
+        hoistStatusbar && 'bottom-(--dx-statusbar-size)',
       ]}
     >
       <Surface.Surface role='navigation' data={navigationData} limit={1} />

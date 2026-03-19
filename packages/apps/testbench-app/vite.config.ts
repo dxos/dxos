@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-// import { sentryVitePlugin } from '@sentry/vite-plugin';
 import ReactPlugin from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -13,7 +12,6 @@ import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import { UserConfig } from 'vitest/config';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
@@ -128,10 +126,7 @@ export default defineConfig(
           root: dirname,
           env: ['DX_VAULT'],
         }),
-        ThemePlugin({
-          root: dirname,
-          content: [path.resolve(dirname, './index.html'), path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}')],
-        }),
+        ThemePlugin({}),
         WasmPlugin(),
         ReactPlugin({
           tsDecorators: true,
@@ -177,17 +172,6 @@ export default defineConfig(
             ],
           ],
         }),
-        // https://docs.sentry.io/platforms/javascript/sourcemaps/uploading/vite
-        // https://www.npmjs.com/package/@sentry/vite-plugin
-        // sentryVitePlugin({
-        //   org: 'dxos',
-        //   project: 'testbench-app',
-        //   sourcemaps: {
-        //     assets: './packages/apps/testbench-app/out/testbench-app/**',
-        //   },
-        //   authToken: process.env.SENTRY_RELEASE_AUTH_TOKEN,
-        //   disable: process.env.DX_ENVIRONMENT !== 'production',
-        // }),
         // https://www.bundle-buddy.com/rollup
         {
           name: 'bundle-buddy',

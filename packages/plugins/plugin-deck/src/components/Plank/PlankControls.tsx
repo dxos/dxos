@@ -5,7 +5,6 @@
 import React, { forwardRef, useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { invariant } from '@dxos/invariant';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
@@ -35,7 +34,7 @@ const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> &
   return <IconButton label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
 };
 
-const plankControlSpacing = 'pli-2';
+const plankControlSpacing = 'px-2';
 
 type PlankComplimentControlsProps = {
   primary?: string;
@@ -46,11 +45,10 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompliment
     const { t } = useTranslation(meta.id);
     const { invokePromise } = useOperationInvoker();
     const handleCloseCompanion = useCallback(() => {
-      invariant(primary);
-      return invokePromise(DeckOperation.ChangeCompanion, { primary, companion: null });
-    }, [invokePromise, primary]);
+      return invokePromise(DeckOperation.ChangeCompanion, { companion: null });
+    }, [invokePromise]);
     return (
-      <div ref={forwardedRef} className='contents app-no-drag'>
+      <div ref={forwardedRef} className='contents dx-app-no-drag'>
         <PlankControl
           label={t('close companion label')}
           variant='ghost'
@@ -78,7 +76,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
     const layoutIsAnySolo = !!layoutMode?.startsWith('solo');
 
     return (
-      <ButtonGroup {...props} classNames={['app-no-drag !opacity-100', classNames]} ref={forwardedRef}>
+      <ButtonGroup {...props} classNames={['dx-app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
         {capabilities.deck ? (
           <>
             {capabilities.solo && (

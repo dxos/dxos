@@ -10,7 +10,7 @@ import { IconButton, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { type SerializationModel } from '../../model';
-import { TranscriptView } from '../Transcript';
+import { Transcription } from '../Transcription';
 
 export const TranscriptionStory: FC<{
   model: SerializationModel<Message.Message>;
@@ -20,7 +20,7 @@ export const TranscriptionStory: FC<{
   audioRef?: RefObject<HTMLAudioElement | null>;
 }> = ({ model, running, onRunningChange, audioRef, disabled }) => {
   return (
-    <div className='flex flex-col is-[30rem]'>
+    <div className='flex flex-col w-[30rem]'>
       {audioRef && <audio ref={audioRef} autoPlay />}
       <Toolbar.Root>
         <IconButton
@@ -33,7 +33,7 @@ export const TranscriptionStory: FC<{
       </Toolbar.Root>
       <ScrollContainer.Root pin>
         <ScrollContainer.Viewport>
-          <TranscriptView model={model} />
+          <Transcription model={model} />
         </ScrollContainer.Viewport>
       </ScrollContainer.Root>
     </div>

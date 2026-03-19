@@ -7,7 +7,7 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability, UndoOperation } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getCompanionVariant, isPinnedWorkspace } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -18,7 +18,7 @@ import { Graph, Node } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability/types';
 import { byPosition, isNonNullable } from '@dxos/util';
 
-import { closeEntry, createEntryId, incrementPlank, openEntry } from '../../layout';
+import { closeEntry, incrementPlank, openEntry } from '../../layout';
 import { meta } from '../../meta';
 import {
   DeckCapabilities,
@@ -105,7 +105,12 @@ export default Capability.makeModule(
             dialogBlockAlign: input.blockAlign ?? 'center',
             dialogOverlayClasses: input.overlayClasses,
             dialogOverlayStyle: input.overlayStyle,
-            dialogContent: input.subject ? { component: input.subject, props: input.props } : null,
+            dialogContent: input.subject
+              ? {
+                  component: input.subject,
+                  props: input.props,
+                }
+              : null,
           }));
         }),
       }),
@@ -267,7 +272,7 @@ export default Capability.makeModule(
             const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
             // TODO(wittjosiah): This is a hack to prevent the previous deck from being set for pinned items.
             //   Ideally this should be worked into the data model in a generic way.
-            const shouldUpdatePrevious = !state.activeDeck.startsWith('!');
+            const shouldUpdatePrevious = !isPinnedWorkspace(state.activeDeck);
 
             yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => {
               const newDecks = state.decks[input.subject]
@@ -291,7 +296,7 @@ export default Capability.makeModule(
             if (first) {
               yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: first });
             } else {
-              const [item] = Graph.getConnections(graph, input.subject).filter(
+              const [item] = Graph.getConnections(graph, input.subject, 'child').filter(
                 (node) => !Node.isActionLike(node) && !node.properties.disposition,
               );
               if (item) {
@@ -335,14 +340,13 @@ export default Capability.makeModule(
             const deck = yield* DeckCapabilities.getDeck();
             previouslyOpenIds = new Set<string>(deck.solo ? [deck.solo] : deck.active);
             const next = deck.solo
-              ? input.subject.map((id) => createEntryId(id, input.variant))
+              ? [...input.subject]
               : input.subject.reduce(
                   (acc, entryId) =>
                     openEntry(acc, entryId, {
                       key: input.key,
                       positioning: input.positioning ?? settings?.newPlankPositioning,
                       pivotId: input.pivotId,
-                      variant: input.variant,
                     }),
                   deck.active,
                 );
@@ -459,7 +463,7 @@ export default Capability.makeModule(
             const companion = Function.pipe(
               Graph.getNode(graph, input.id),
               Option.map((node) =>
-                Graph.getConnections(graph, node.id)
+                Graph.getConnections(graph, node.id, 'child')
                   .filter((n) => n.type === PLANK_COMPANION_TYPE)
                   .toSorted((a, b) => byPosition(a.properties, b.properties)),
               ),
@@ -467,11 +471,7 @@ export default Capability.makeModule(
             );
 
             if (Option.isSome(companion)) {
-              // TODO(wittjosiah): This should remember the previously selected companion.
-              yield* Operation.invoke(DeckOperation.ChangeCompanion, {
-                primary: input.id,
-                companion: companion.value.id,
-              });
+              yield* Operation.invoke(DeckOperation.ChangeCompanion, { companion: companion.value.id });
             }
           }
         }),
@@ -483,21 +483,16 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: DeckOperation.ChangeCompanion,
         handler: Effect.fnUntraced(function* (input) {
-          const deck = yield* DeckCapabilities.getDeck();
           if (input.companion === null) {
-            const { [input.primary]: _, ...nextActiveCompanions } = deck.activeCompanions ?? {};
             yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-              updateActiveDeck(state, { activeCompanions: nextActiveCompanions }),
+              updateActiveDeck(state, { companionOpen: false }),
             );
           } else {
-            const companion = input.companion;
-            invariant(companion !== input.primary);
+            const variant = getCompanionVariant(input.companion);
             yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
               updateActiveDeck(state, {
-                activeCompanions: {
-                  ...deck.activeCompanions,
-                  [input.primary]: companion,
-                },
+                companionOpen: true,
+                companionVariant: variant,
               }),
             );
           }
@@ -517,13 +512,6 @@ export default Capability.makeModule(
           const next = input.subject.reduce((acc, id) => closeEntry(acc, id), active);
           const { deckUpdates, toAttend } = computeActiveUpdates({ next, deck, attention });
           yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
-
-          // Clear companions for closed entries.
-          for (const id of input.subject) {
-            if (deck.activeCompanions && id in deck.activeCompanions) {
-              yield* Operation.invoke(DeckOperation.ChangeCompanion, { primary: id, companion: null });
-            }
-          }
 
           if (toAttend) {
             yield* Operation.schedule(LayoutOperation.ScrollIntoView, { subject: toAttend });

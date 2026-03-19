@@ -19,6 +19,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
+const isFastBundle = isTrue(process.env.DX_FASTBUNDLE);
 
 const baseDir = resolve(__dirname, '../');
 const rootDir = resolve(baseDir, '../../');
@@ -114,6 +115,9 @@ export const createConfig = ({
             'node-fetch': 'isomorphic-fetch',
             'tiktoken/lite': resolve(__dirname, './stub.mjs'),
             'node:util': '@dxos/node-std/util',
+            util: '@dxos/node-std/util',
+            'node:crypto': '@dxos/node-std/crypto',
+            crypto: '@dxos/node-std/crypto',
             // Storybook builds from source; ensure worker entrypoints resolve without `dist/` artifacts.
             '@dxos/client/opfs-worker': resolve(rootDir, 'packages/sdk/client/src/worker/opfs-worker.ts'),
           },
@@ -140,6 +144,76 @@ export const createConfig = ({
         },
         optimizeDeps: {
           exclude: ['@dxos/wa-sqlite'],
+          ...(isFastBundle && {
+            include: [
+              // React.
+              'react',
+              'react-dom',
+              'react/jsx-runtime',
+              // Effect (with subpath imports).
+              'effect',
+              'effect/Effect',
+              'effect/Array',
+              'effect/Ref',
+              'effect/Option',
+              'effect/Cause',
+              'effect/Exit',
+              'effect/Layer',
+              'effect/Runtime',
+              'effect/Fiber',
+              'effect/Deferred',
+              'effect/Function',
+              'effect/HashSet',
+              'effect/PubSub',
+              'effect/Schema',
+              'effect/Context',
+              'effect/Stream',
+              'effect/Console',
+              '@effect/platform',
+              '@effect/platform-browser',
+              // Effect AI (with submodule exports).
+              '@effect/ai',
+              '@effect/ai/AiError',
+              '@effect/ai/Chat',
+              '@effect/ai/LanguageModel',
+              '@effect/ai/Prompt',
+              '@effect/ai/Response',
+              '@effect/ai/Tool',
+              '@effect/ai/Toolkit',
+              '@effect/ai-anthropic',
+              '@effect/ai-anthropic/AnthropicClient',
+              '@effect/ai-anthropic/AnthropicLanguageModel',
+              '@effect/ai-anthropic/AnthropicTool',
+              '@effect/ai-openai',
+              '@effect/ai-openai/OpenAiClient',
+              '@effect/ai-openai/OpenAiLanguageModel',
+              // Automerge.
+              '@automerge/automerge',
+              '@automerge/automerge-repo',
+              // CodeMirror (many files in HAR).
+              'codemirror',
+              '@codemirror/state',
+              '@codemirror/view',
+              '@codemirror/language',
+              '@codemirror/commands',
+              '@codemirror/autocomplete',
+              '@codemirror/lang-javascript',
+              '@codemirror/lang-json',
+              '@codemirror/lang-markdown',
+              '@codemirror/theme-one-dark',
+              // Radix (many requests in HAR).
+              '@radix-ui/react-dialog',
+              '@radix-ui/react-dropdown-menu',
+              '@radix-ui/react-tooltip',
+              '@radix-ui/react-scroll-area',
+              '@radix-ui/react-popover',
+              '@radix-ui/react-slot',
+              '@radix-ui/react-context-menu',
+              // Atlaskit drag-and-drop.
+              '@atlaskit/pragmatic-drag-and-drop',
+              '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
+            ],
+          }),
         },
         worker: {
           format: 'es',
@@ -150,19 +224,20 @@ export const createConfig = ({
           // NOTE: Order matters.
           //
 
-          importSource({
-            exclude: [
-              '@dxos/random-access-storage',
-              '@dxos/lock-file',
-              '@dxos/network-manager',
-              '@dxos/teleport',
-              '@dxos/config',
-              '@dxos/client-services',
-              '@dxos/observability',
-              // TODO(dmaretskyi): Decorators break in lit.
-              '@dxos/lit-*',
-            ],
-          }),
+          !isFastBundle &&
+            importSource({
+              exclude: [
+                '@dxos/random-access-storage',
+                '@dxos/lock-file',
+                '@dxos/network-manager',
+                '@dxos/teleport',
+                '@dxos/config',
+                '@dxos/client-services',
+                '@dxos/observability',
+                // TODO(dmaretskyi): Decorators break in lit.
+                '@dxos/lit-*',
+              ],
+            }),
 
           // https://www.npmjs.com/package/vite-plugin-wasm
           wasm(),
@@ -191,10 +266,7 @@ export const createConfig = ({
             symbolPattern: 'ph--([a-z]+[a-z-]*)--(bold|duotone|fill|light|regular|thin)',
           }),
 
-          ThemePlugin({
-            root: __dirname,
-            content,
-          }),
+          ThemePlugin({}),
         ],
       },
     ) as InlineConfig;

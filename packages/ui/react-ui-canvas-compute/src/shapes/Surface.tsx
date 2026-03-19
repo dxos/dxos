@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { DEFAULT_INPUT } from '@dxos/conductor';
+import { Card } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { createAnchorMap } from '@dxos/react-ui-canvas-editor';
 
@@ -44,9 +45,10 @@ export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) =
     }
   };
 
+  // TODO(burdon): Subject property?
   return (
     <Box shape={shape} onAction={handleAction}>
-      {value !== null && <Surface.Surface role='card--extrinsic' data={{ value }} limit={1} />}
+      <Card.Root>{value !== null && <Surface.Surface role='card--content' data={{ value }} limit={1} />}</Card.Root>
     </Box>
   );
 };

@@ -3,19 +3,18 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Type } from '@dxos/echo';
+import { Annotation, Type } from '@dxos/echo';
 import { type CreateObject } from '@dxos/plugin-space/types';
-import { translations as kanbanTranslations } from '@dxos/react-ui-kanban';
-import { Kanban } from '@dxos/react-ui-kanban/types';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 
 import { BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CreateKanbanSchema } from './types';
+import { CreateKanbanSchema, Kanban } from './types';
 
 export const KanbanPlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
@@ -23,12 +22,12 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Type.getTypename(Kanban.Kanban),
       metadata: {
-        icon: 'ph--kanban--regular',
-        iconHue: 'green',
+        icon: Annotation.IconAnnotation.get(Kanban.Kanban).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Kanban.Kanban).pipe(Option.getOrThrow).hue ?? 'white',
         inputSchema: CreateKanbanSchema,
         createObject: ((props, { db }) =>
           Effect.promise(async () => {
-            const { view } = await View.makeFromDatabase({
+            const { view } = await ViewModel.makeFromDatabase({
               db,
               typename: props.typename,
               pivotFieldName: props.initialPivotColumn,
@@ -41,6 +40,6 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
   AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
   AppPlugin.addSchemaModule({ schema: [Kanban.Kanban] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
-  AppPlugin.addTranslationsModule({ translations: [...translations, ...kanbanTranslations] }),
+  AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );

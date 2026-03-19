@@ -19,6 +19,7 @@ export default Capability.makeModule(() =>
       schema: AssistantCapabilities.StateSchema,
       defaultValue: () => ({
         currentChat: {},
+        pendingPrompts: {},
       }),
     });
 

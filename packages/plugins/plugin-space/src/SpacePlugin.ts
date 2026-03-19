@@ -3,17 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Ref, Tag, Type } from '@dxos/echo';
+import { Annotation, Ref, Tag, Type } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { translations as componentsTranslations } from '@dxos/react-ui-components';
 import { translations as formTranslations } from '@dxos/react-ui-form';
-import { Collection, DataTypes, createDefaultSchema } from '@dxos/schema';
+import { DataTypes, createDefaultSchema } from '@dxos/schema';
 import { translations as shellTranslations } from '@dxos/shell/react';
 import {
   AnchoredTo,
@@ -51,62 +53,54 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       {
         id: Collection.Collection.typename,
         metadata: {
-          icon: 'ph--cards-three--regular',
-          iconHue: 'neutral',
+          icon: Annotation.IconAnnotation.get(Collection.Collection).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Collection.Collection).pipe(Option.getOrThrow).hue ?? 'white',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
           inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
           createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
       {
         id: Type.getTypename(Type.PersistentType),
         metadata: {
-          icon: 'ph--database--regular',
-          iconHue: 'green',
+          icon: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: SpaceOperation.StoredSchemaForm,
           createObject: ((props, { db }) =>
             Effect.gen(function* () {
-              if (props.typename) {
-                const result = yield* Operation.invoke(SpaceOperation.UseStaticSchema, {
-                  db,
-                  typename: props.typename,
-                });
-                return result as any;
-              } else {
-                const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
-                  db,
-                  name: props.name,
-                  schema: createDefaultSchema(),
-                });
-                return result.object;
-              }
+              const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
+                db,
+                name: props.name,
+                schema: createDefaultSchema(),
+              });
+              return result.object;
             })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Event.Event.typename,
-        metadata: {
-          icon: 'ph--calendar-dot--regular',
         },
       },
       {
         id: Organization.Organization.typename,
         metadata: {
-          icon: 'ph--building-office--regular',
+          icon: Annotation.IconAnnotation.get(Organization.Organization).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Organization.Organization).pipe(Option.getOrThrow).hue ?? 'white',
+          createObject: ((props) => Effect.sync(() => Organization.make(props))) satisfies CreateObject,
         },
       },
       {
         id: Person.Person.typename,
         metadata: {
-          icon: 'ph--user--regular',
+          icon: Annotation.IconAnnotation.get(Person.Person).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Person.Person).pipe(Option.getOrThrow).hue ?? 'white',
+          createObject: ((props) => Effect.sync(() => Person.make(props))) satisfies CreateObject,
         },
       },
       {
         id: Task.Task.typename,
         metadata: {
-          icon: 'ph--check-circle--regular',
+          icon: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).hue ?? 'white',
+          inputSchema: Task.Task,
+          createObject: ((props) => Effect.sync(() => Task.make(props))) satisfies CreateObject,
         },
       },
     ],
@@ -163,7 +157,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   ),
   Plugin.addModule(
     ({ shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost' }) => ({
-      id: Capability.getModuleTag(AppGraphBuilder()) ?? 'space-app-graph-builder',
+      id: Capability.getModuleTag(AppGraphBuilder),
       activatesOn: AppActivationEvents.SetupAppGraph,
       activate: () => AppGraphBuilder({ shareableLinkOrigin }),
     }),

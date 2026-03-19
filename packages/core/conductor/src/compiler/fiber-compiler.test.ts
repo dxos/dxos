@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { describe } from 'vitest';
 
 import { TestAiService } from '@dxos/ai/testing';
-import { Ref } from '@dxos/echo';
+import { Feed, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { logCustomEvent } from '@dxos/functions';
 import { CredentialsService, TracingService } from '@dxos/functions';
@@ -36,6 +36,7 @@ const TestLayer = Layer.empty.pipe(
       TestAiService(),
       TestDatabaseLayer(),
       CredentialsService.configuredLayer([]),
+      Feed.notAvailable,
       TracingService.layerNoop,
     ),
   ),

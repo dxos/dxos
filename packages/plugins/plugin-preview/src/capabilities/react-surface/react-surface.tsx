@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
-import { Card } from '@dxos/react-ui-mosaic';
+import { Card } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
@@ -24,26 +24,36 @@ export default Capability.makeModule(() =>
       //
 
       Surface.create<{ subject: Person.Person }>({
-        id: `${meta.id}/schema-popover--contact`,
+        id: `${meta.id}.schema-popover--contact`,
         role: 'card--content',
         position: 'hoist',
         filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
         component: ({ data, role }) => {
-          return <PersonCard role={role} subject={data.subject} />;
+          return (
+            <>
+              <PersonCard role={role} subject={data.subject} />
+              <Surface.Surface role='related' data={data} limit={1} />
+            </>
+          );
         },
       }),
       Surface.create({
-        id: `${meta.id}/schema-popover--organization`,
+        id: `${meta.id}.schema-popover--organization`,
         role: 'card--content',
         position: 'hoist',
         filter: (data): data is { subject: Organization.Organization } =>
           Obj.instanceOf(Organization.Organization, data.subject),
         component: ({ data, role }) => {
-          return <OrganizationCard role={role} subject={data.subject} />;
+          return (
+            <>
+              <OrganizationCard role={role} subject={data.subject} />
+              <Surface.Surface role='related' data={data} limit={1} />
+            </>
+          );
         },
       }),
       Surface.create({
-        id: `${meta.id}/schema-popover--project`,
+        id: `${meta.id}.schema-popover--project`,
         role: 'card--content',
         position: 'hoist',
         filter: (data): data is { subject: Pipeline.Pipeline } => Obj.instanceOf(Pipeline.Pipeline, data.subject),
@@ -52,7 +62,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/schema-popover--task`,
+        id: `${meta.id}.schema-popover--task`,
         role: 'card--content',
         position: 'hoist',
         filter: (data): data is { subject: Task.Task } => Obj.instanceOf(Task.Task, data.subject),
@@ -66,7 +76,7 @@ export default Capability.makeModule(() =>
       //
 
       Surface.create({
-        id: `${meta.id}/fallback-popover`,
+        id: `${meta.id}.fallback-popover`,
         role: 'card--content',
         position: 'fallback',
         filter: (data): data is { subject: Obj.Unknown; projection?: ProjectionModel } => Obj.isObject(data.subject),
@@ -76,14 +86,14 @@ export default Capability.makeModule(() =>
       }),
 
       Surface.create({
-        id: `${meta.id}/section`,
+        id: `${meta.id}.section`,
         role: ['section'],
         position: 'fallback',
         filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
         component: ({ data }) => {
           return (
-            <div role='none' className='flex is-full justify-center'>
-              <div role='none' className='pbs-2 pbe-2 card-min-width card-max-width'>
+            <div role='none' className='flex w-full justify-center'>
+              <div role='none' className='pt-2 pb-2 dx-card-min-width dx-card-max-width'>
                 <Card.Root>
                   <Surface.Surface role='card--content' data={data} limit={1} />
                 </Card.Root>

@@ -9,6 +9,8 @@ import { QueryAST } from '@dxos/echo-protocol';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
+import * as Dataset from './Dataset';
+import * as Feed from './Feed';
 import * as Filter from './Filter';
 import * as Obj from './Obj';
 import * as Order from './Order';
@@ -96,7 +98,7 @@ describe('query api', () => {
       expect(ObjectsReferencingFred.ast).toMatchObject({
         type: 'incoming-references',
         property: null,
-        typename: 'dxn:type:example.com/type/Task:0.1.0',
+        typename: 'dxn:type:com.example.type.task:0.1.0',
       });
     });
 
@@ -133,6 +135,72 @@ describe('query api', () => {
       log('query', { ast: PeopleOrOrganizations.ast });
       Schema.validateSync(QueryAST.Query)(PeopleOrOrganizations.ast);
       log('PeopleOrOrganizations', { ast: PeopleOrOrganizations.ast });
+    });
+
+    test('Filter.query(Dataset.Dataset) (union of schemas)', () => {
+      const AllDatasets = Query.select(Filter.type(Dataset.Dataset));
+
+      log('query', { ast: AllDatasets.ast });
+      Schema.validateSync(QueryAST.Query)(AllDatasets.ast);
+      log('AllDatasets', { ast: AllDatasets.ast });
+      expect(AllDatasets.ast).toMatchInlineSnapshot(`
+        {
+          "filter": {
+            "filters": [
+              {
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:org.dxos.type.feed:0.1.0",
+              },
+              {
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:org.dxos.type.collection:0.1.0",
+              },
+              {
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:org.dxos.type.view:0.1.0",
+              },
+            ],
+            "type": "or",
+          },
+          "type": "select",
+        }
+      `);
+    });
+
+    test('Query.type(Dataset.Dataset) (union of schemas)', () => {
+      const AllDatasets = Query.type(Dataset.Dataset);
+
+      log('query', { ast: AllDatasets.ast });
+      Schema.validateSync(QueryAST.Query)(AllDatasets.ast);
+      log('AllDatasets', { ast: AllDatasets.ast });
+      expect(AllDatasets.ast).toMatchInlineSnapshot(`
+        {
+          "filter": {
+            "filters": [
+              {
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:org.dxos.type.feed:0.1.0",
+              },
+              {
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:org.dxos.type.collection:0.1.0",
+              },
+              {
+                "props": {},
+                "type": "object",
+                "typename": "dxn:type:org.dxos.type.view:0.1.0",
+              },
+            ],
+            "type": "or",
+          },
+          "type": "select",
+        }
+      `);
     });
 
     test('get all people not in orgs', () => {
@@ -190,7 +258,7 @@ describe('query api', () => {
             "id": undefined,
             "props": {},
             "type": "object",
-            "typename": "dxn:type:example.com/type/Person:0.1.0",
+            "typename": "dxn:type:com.example.type.person:0.1.0",
           },
           "type": "select",
         },
@@ -213,7 +281,7 @@ describe('query api', () => {
           },
         },
         type: 'object',
-        typename: 'dxn:type:example.com/type/Task:0.1.0',
+        typename: 'dxn:type:com.example.type.task:0.1.0',
       });
       log('tasksByFred', { ast: tasksByFred.ast });
     });
@@ -232,13 +300,13 @@ describe('query api', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:example.com/type/Organization:0.1.0",
+              "typename": "dxn:type:com.example.type.organization:0.1.0",
             },
             {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:example.com/type/Person:0.1.0",
+              "typename": "dxn:type:com.example.type.person:0.1.0",
             },
           ],
           "type": "or",
@@ -263,13 +331,13 @@ describe('query api', () => {
                 "id": undefined,
                 "props": {},
                 "type": "object",
-                "typename": "dxn:type:example.com/type/Organization:0.1.0",
+                "typename": "dxn:type:com.example.type.organization:0.1.0",
               },
               {
                 "id": undefined,
                 "props": {},
                 "type": "object",
-                "typename": "dxn:type:example.com/type/Person:0.1.0",
+                "typename": "dxn:type:com.example.type.person:0.1.0",
               },
             ],
             "type": "or",
@@ -297,7 +365,7 @@ describe('query api', () => {
             "id": undefined,
             "props": {},
             "type": "object",
-            "typename": "dxn:type:example.com/type/Task:0.1.0",
+            "typename": "dxn:type:com.example.type.task:0.1.0",
           },
           "type": "select",
         },
@@ -320,7 +388,7 @@ describe('query api', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:example.com/type/Task:0.1.0",
+              "typename": "dxn:type:com.example.type.task:0.1.0",
             },
             "type": "select",
           },
@@ -340,7 +408,7 @@ describe('query api', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:example.com/type/Task:0.1.0",
+              "typename": "dxn:type:com.example.type.task:0.1.0",
             },
             "type": "select",
           },
@@ -368,7 +436,7 @@ describe('query api', () => {
                 "id": undefined,
                 "props": {},
                 "type": "object",
-                "typename": "dxn:type:example.com/type/Task:0.1.0",
+                "typename": "dxn:type:com.example.type.task:0.1.0",
               },
               "type": "select",
             },
@@ -395,7 +463,7 @@ describe('query api', () => {
                   "id": undefined,
                   "props": {},
                   "type": "object",
-                  "typename": "dxn:type:example.com/type/Person:0.1.0",
+                  "typename": "dxn:type:com.example.type.person:0.1.0",
                 },
                 "type": "select",
               },
@@ -408,7 +476,7 @@ describe('query api', () => {
                   "id": undefined,
                   "props": {},
                   "type": "object",
-                  "typename": "dxn:type:example.com/type/Organization:0.1.0",
+                  "typename": "dxn:type:com.example.type.organization:0.1.0",
                 },
                 "type": "select",
               },
@@ -418,6 +486,105 @@ describe('query api', () => {
           "type": "union",
         }
       `);
+    });
+
+    test('from all accessible spaces', () => {
+      const query = Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces');
+
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchInlineSnapshot(`
+        {
+          "from": {
+            "_tag": "scope",
+            "scope": {},
+          },
+          "query": {
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:com.example.type.person:0.1.0",
+            },
+            "type": "select",
+          },
+          "type": "from",
+        }
+      `);
+    });
+
+    test('from all accessible spaces with feeds', () => {
+      const query = Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces', {
+        includeFeeds: true,
+      });
+
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchInlineSnapshot(`
+        {
+          "from": {
+            "_tag": "scope",
+            "scope": {
+              "allQueuesFromSpaces": true,
+            },
+          },
+          "query": {
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:type:com.example.type.person:0.1.0",
+            },
+            "type": "select",
+          },
+          "type": "from",
+        }
+      `);
+    });
+
+    test('from all accessible spaces with ordering and limit', () => {
+      const query = Query.select(Filter.type(TestSchema.Person))
+        .orderBy(Order.property('name', 'asc'))
+        .limit(10)
+        .from('all-accessible-spaces');
+
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchObject({
+        type: 'from',
+        from: { _tag: 'scope', scope: {} },
+        query: {
+          type: 'limit',
+          limit: 10,
+          query: {
+            type: 'order',
+          },
+        },
+      });
+    });
+
+    test('Query.type(...).from(feed) sets queue scope', () => {
+      const feed = Feed.make({ name: 'test-feed' });
+      const queueDxn = DXN.parse('dxn:echo:test-space:test-queue');
+      Obj.change(feed, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queueDxn.toString() });
+      });
+
+      const query = Query.type(TestSchema.Person).from(feed);
+      Schema.validateSync(QueryAST.Query)(query.ast);
+      expect(query.ast).toMatchObject({
+        type: 'from',
+        from: {
+          _tag: 'scope',
+          scope: {
+            queues: [queueDxn.toString()],
+          },
+        },
+        query: {
+          type: 'select',
+          filter: {
+            type: 'object',
+            typename: 'dxn:type:com.example.type.person:0.1.0',
+          },
+        },
+      });
     });
 
     test.skip('chain', () => {
@@ -457,7 +624,7 @@ describe('query api', () => {
 
   describe('Filter', () => {
     test('Filter.or(Filter.typename(...))', () => {
-      const filter = Filter.or(Filter.typename('example.com/type/Person'));
+      const filter = Filter.or(Filter.typename('com.example.type.person'));
       // TODO(dmaretskyi): Give vitest type-tests a try.
       const _isAssignable: Obj.Unknown = null as any as Filter.Type<typeof filter>;
     });

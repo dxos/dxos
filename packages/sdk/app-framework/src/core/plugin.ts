@@ -46,10 +46,17 @@ export const reset = (event: ActivationEvent.ActivationEvent): Effect.Effect<boo
   Effect.flatMap(Service, (manager) => manager.reset(event));
 
 /**
+ * Shuts down the plugin manager, deactivating all active modules and clearing lifecycle state.
+ * Accesses the PluginManager via the Effect layer system.
+ */
+export const shutdown = (): Effect.Effect<boolean, Error, Service> =>
+  Effect.flatMap(Service, (manager) => manager.shutdown());
+
+/**
  * Computes a module ID from plugin ID and export name.
  */
 const computeModuleId = (pluginId: string, moduleName: string): string => {
-  return `${pluginId}/module/${moduleName}`;
+  return `${pluginId}.module.${moduleName}`;
 };
 
 /**
@@ -128,7 +135,7 @@ export type Meta = {
    *
    * Expected to be in the form of a valid URL.
    *
-   * @example dxos.org/plugin/example
+   * @example org.dxos.plugin.example
    */
   id: string;
 
@@ -190,6 +197,7 @@ export const isPlugin = (value: unknown): value is Plugin => {
  * A collection of modules that are be enabled/disabled as a unit.
  * Plugins provide things such as components, state, actions, etc. to the application.
  */
+// TODO(burdon): Convert to ECHO schema.
 export interface Plugin {
   readonly [PluginTypeId]: PluginTypeId;
   readonly meta: Readonly<Meta>;

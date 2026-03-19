@@ -9,11 +9,12 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import isEqual from 'lodash.isequal';
+import isEqual from 'fast-deep-equal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { type Obj, type Type } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EchoHost } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
@@ -28,7 +29,6 @@ import { range } from '@dxos/util';
 
 import { EchoClient } from '../client';
 import { type EchoDatabase } from '../proxy-db';
-import { Filter, Query } from '../query';
 
 type OpenDatabaseOptions = {
   client?: EchoClient;
@@ -37,7 +37,7 @@ type OpenDatabaseOptions = {
 };
 
 type PeerOptions = {
-  types?: Type.Entity.Any[];
+  types?: Type.AnyEntity[];
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
@@ -81,7 +81,7 @@ export class EchoTestBuilder extends Resource {
 
 export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
-  private readonly _types: Type.Entity.Any[];
+  private readonly _types: Type.AnyEntity[];
   private readonly _assignQueuePositions?: boolean;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;
@@ -139,7 +139,6 @@ export class EchoTestPeer extends Resource {
     this._echoHost = new EchoHost({
       kv: this._kv,
       runtime: this._managedRuntime.runtimeEffect,
-      localQueues: true,
       assignQueuePositions: this._assignQueuePositions,
     });
     this._clients.clear();

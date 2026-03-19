@@ -8,10 +8,10 @@ import React, { useEffect, useState } from 'react';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { getUserMediaTrack } from '../../calls';
-import { ResponsiveContainer } from '../ResponsiveGrid';
+import { ResponsivePanel } from '../ResponsiveGrid';
 
 import { VideoObject, type VideoObjectProps } from './VideoObject';
 
@@ -37,17 +37,17 @@ const DefaultStory = (props: VideoObjectProps) => {
   }, []);
 
   return (
-    <ResponsiveContainer>
+    <ResponsivePanel>
       <VideoObject videoStream={videoStream} flip {...props} />
-    </ResponsiveContainer>
+    </ResponsivePanel>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-thread/VideoObject',
+  title: 'plugins/plugin-thread/components/VideoObject',
   component: VideoObject,
   render: DefaultStory,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

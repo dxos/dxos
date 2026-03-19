@@ -24,9 +24,9 @@ export default defineConfig({
     https:
       process.env.HTTPS === 'true'
         ? {
-          key: '../../../key.pem',
-          cert: '../../../cert.pem',
-        }
+            key: '../../../key.pem',
+            cert: '../../../cert.pem',
+          }
         : false,
     fs: {
       allow: [
@@ -49,13 +49,7 @@ export default defineConfig({
     plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
   },
   plugins: [
-    ThemePlugin({
-      root: dirname,
-      content: [
-        path.resolve(dirname, './index.html'),
-        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
-      ],
-    }),
+    ThemePlugin({}),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269

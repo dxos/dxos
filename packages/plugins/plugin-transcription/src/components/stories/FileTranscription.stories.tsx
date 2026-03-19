@@ -184,7 +184,7 @@ const AudioFile = ({
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/FileTranscription',
+  title: 'plugins/plugin-transcription/components/FileTranscription',
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),

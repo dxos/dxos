@@ -44,17 +44,27 @@ export class ColumnManager {
   }
 
   title(): Locator {
-    return this.header().getByRole('heading');
+    return this.locator.getByTestId('mosaicBoard.columnTitle');
   }
 
   async dragTo(target: Locator, offset = { x: 0, y: 0 }): Promise<void> {
-    const handle = this.header().getByTestId('card-drag-handle');
+    const handle = this.header().getByTestId('mosaicBoard.columnDragHandle');
+    const handleBox = await handle.boundingBox();
+    if (!handleBox) {
+      return;
+    }
+
+    await handle.hover();
+    await this._page.mouse.down();
+    // Small initial movement to trigger the native drag start.
+    await this._page.mouse.move(handleBox.x + handleBox.width / 2 + 1, handleBox.y + handleBox.height / 2, {
+      steps: 1,
+    });
+    // Allow the drag monitor to register and the DOM to settle
+    // (the dragged column is removed from visible items, shifting remaining columns).
+    await this._page.waitForTimeout(200);
     const box = await target.boundingBox();
     if (box) {
-      await handle.hover();
-      await this._page.mouse.down();
-      // Allow the drag monitor to register the grab before moving.
-      await this._page.waitForTimeout(100);
       await this._page.mouse.move(offset.x + box.x + box.width / 2, offset.y + box.y + box.height / 2, { steps: 4 });
       // Allow the drop target to process the hover before releasing.
       await this._page.waitForTimeout(100);
@@ -71,11 +81,11 @@ export class ItemManager {
   }
 
   title(): Locator {
-    return this.locator.getByRole('heading').first();
+    return this.locator.getByTestId('mosaicBoard.cardTitle');
   }
 
   async dragTo(target: Locator, offset = { x: 0, y: 0 }): Promise<void> {
-    const handle = this.locator.getByTestId('card-drag-handle');
+    const handle = this.locator.getByTestId('mosaicBoard.cardDragHandle');
     const box = await target.boundingBox();
     if (box) {
       await handle.hover();
@@ -98,7 +108,7 @@ export class ItemManager {
    * @param dropOffset - Offset from the drop target center.
    */
   async dragToEndWithAutoScroll(holdTarget: Locator, dropTarget: Locator, dropOffset = { x: 0, y: 0 }): Promise<void> {
-    const handle = this.locator.getByTestId('card-drag-handle');
+    const handle = this.locator.getByTestId('mosaicBoard.cardDragHandle');
     const holdBox = await holdTarget.boundingBox();
     if (!holdBox) {
       return;
@@ -125,14 +135,19 @@ export class ItemManager {
 
       const dropBox = await dropTarget.boundingBox();
       if (dropBox && dropBox.y + dropBox.height < holdY) {
-        // Drop target has scrolled into view, move to it and drop.
-        await this._page.mouse.move(
-          dropOffset.x + dropBox.x + dropBox.width / 2,
-          dropOffset.y + dropBox.y + dropBox.height / 2,
-          { steps: 4 },
-        );
-        // Allow the drop target to process the hover before releasing.
-        await this._page.waitForTimeout(100);
+        // Drop target has scrolled into view. Re-read box so we use current position (scroll may have moved it).
+        const finalBox = await dropTarget.boundingBox();
+        if (!finalBox) {
+          await this._page.mouse.up();
+          return;
+        }
+
+        const dropX = dropOffset.x + finalBox.x + finalBox.width / 2;
+        const dropY = dropOffset.y + finalBox.y + finalBox.height / 2;
+        await this._page.mouse.move(dropX, dropY, { steps: 8 });
+        // Let drop target receive dragOver and settle (headless is faster; needs a moment to register).
+        await dropTarget.waitFor({ state: 'visible' });
+        await this._page.waitForTimeout(200);
         await this._page.mouse.up();
         return;
       }

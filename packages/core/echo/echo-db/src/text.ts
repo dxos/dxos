@@ -7,7 +7,7 @@ import { next as A } from '@automerge/automerge';
 import { type Obj } from '@dxos/echo';
 import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { get } from '@dxos/util';
+import { getDeep } from '@dxos/util';
 
 import { type DocAccessor, type KeyPath, isValidKeyPath } from './core-db';
 import { createDocAccessor } from './echo-handler';
@@ -19,7 +19,7 @@ export const toCursor = (accessor: DocAccessor, pos: number, assoc = 0): A.Curso
     return '';
   }
 
-  const value = get(doc, accessor.path);
+  const value = getDeep(doc, accessor.path);
   if (typeof value === 'string' && value.length <= pos) {
     return 'end';
   }
@@ -43,7 +43,7 @@ export const fromCursor = (accessor: DocAccessor, cursor: A.Cursor): number => {
   }
 
   if (cursor === 'end') {
-    const value = get(doc, accessor.path);
+    const value = getDeep(doc, accessor.path);
     if (typeof value === 'string') {
       return value.length;
     } else {
@@ -60,7 +60,7 @@ export const fromCursor = (accessor: DocAccessor, cursor: A.Cursor): number => {
  */
 export const getTextInRange = (accessor: DocAccessor, start: string, end: string): string | undefined => {
   const doc = accessor.handle.doc();
-  const value = get(doc, accessor.path);
+  const value = getDeep(doc, accessor.path);
   if (typeof value === 'string') {
     const beginIdx = fromCursor(accessor, start);
     const endIdx = fromCursor(accessor, end);

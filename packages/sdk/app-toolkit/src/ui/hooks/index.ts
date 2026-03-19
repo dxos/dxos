@@ -4,3 +4,4 @@
 
 export * from './useAppGraph';
 export * from './useLayout';
+export * from './useObjectMenuItems';

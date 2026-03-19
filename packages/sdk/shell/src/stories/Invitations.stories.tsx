@@ -15,11 +15,12 @@ import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
 import { ButtonGroup, Clipboard, IconButton, List } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { activeSurface } from '@dxos/ui-theme';
 
-import { IdentityListItem, SpaceListItem } from '../components';
+import { IdentityListItem } from '../components';
 import { IdentityPanel, JoinPanel, SpacePanel } from '../panels';
 import { translations } from '../translations';
+
+import { SpaceListItem } from './SpaceListItem';
 
 export type PanelType = Space | 'identity' | 'devices' | 'join';
 
@@ -64,11 +65,10 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
     default: {
       // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
       const controls = (
-        <ButtonGroup classNames='mbe-4'>
+        <ButtonGroup classNames='mb-4'>
           {/* <Tooltip content='Create Space'> */}
           <IconButton
             icon='ph--plus-circle--regular'
-            size={6}
             label='Create Space'
             iconOnly
             onClick={() => client.spaces.create({ name: faker.commerce.productName() })}
@@ -78,7 +78,6 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
           <Tooltip content='Join Space'> */}
           <IconButton
             icon='ph--sign-in--fill'
-            size={6}
             label='Join Space'
             iconOnly
             onClick={() => setPanel('join')}
@@ -136,11 +135,10 @@ const Invitations = () => {
 
   // TODO(wittjosiah): Tooltips make playwright (webkit) flakier.
   const controls = (
-    <ButtonGroup classNames='mbe-4'>
+    <ButtonGroup classNames='mb-4'>
       {/* <Tooltip content='Create Identity'> */}
       <IconButton
         icon='ph--plus--regular'
-        size={6}
         label='Create Identity'
         iconOnly
         onClick={() => client.halo.createIdentity({ displayName: faker.person.firstName() })}
@@ -151,7 +149,6 @@ const Invitations = () => {
       <Tooltip content='Join Existing Identity'> */}
       <IconButton
         icon='ph--qr-code--fill'
-        size={6}
         label='Join Existing Identity'
         iconOnly
         onClick={() => setPanel('identity')}
@@ -162,7 +159,6 @@ const Invitations = () => {
       <Tooltip content='Devices'> */}
       <IconButton
         icon='ph--laptop--fill'
-        size={6}
         label='Devices'
         iconOnly
         onClick={() => setPanel('devices')}
@@ -173,7 +169,6 @@ const Invitations = () => {
       <Tooltip content='List Spaces'> */}
       <IconButton
         icon='ph--planet--fill'
-        size={6}
         label='List Spaces'
         iconOnly
         onClick={() => setPanel(undefined)}
@@ -184,7 +179,6 @@ const Invitations = () => {
       {/* <ToolTip content='Toggle Network'> */}
       <IconButton
         icon={networkStatus === ConnectionState.ONLINE ? 'ph--wifi-high--fill' : 'ph--wifi-slash--fill'}
-        size={6}
         label='Toggle Network'
         iconOnly
         onClick={() =>
@@ -200,7 +194,7 @@ const Invitations = () => {
 
   return (
     <div className={'flex flex-col m-4 flex-1 min-w-0'} data-testid={`peer-${id}`}>
-      <div className={`${activeSurface} rounded p-2 mbe-2`}>
+      <div className='bg-base-surface rounded-sm p-2 mb-2'>
         <div data-testid='invitations.identity-header'>{controls}</div>
         {identity ? (
           <List>
@@ -211,7 +205,7 @@ const Invitations = () => {
         )}
       </div>
       {identity || panel ? (
-        <div className={`${activeSurface} rounded p-2`}>
+        <div className='bg-base-surface rounded-sm p-2'>
           <Panel id={id} panel={panel} setPanel={setPanel} />
         </div>
       ) : null}

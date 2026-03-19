@@ -12,7 +12,8 @@ import { Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 
-import { FileContainer, FileInput } from '../../components';
+import { FileInput } from '../../components';
+import { FileContainer } from '../../containers';
 import { meta } from '../../meta';
 import { WnfsAction, WnfsFile } from '../../types';
 
@@ -20,13 +21,13 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/article`,
+        id: `${meta.id}.article`,
         role: ['article', 'section', 'slide'],
         filter: (data): data is { subject: WnfsFile.File } => Obj.instanceOf(WnfsFile.File, data.subject),
         component: ({ data, role }) => <FileContainer role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/create-form`,
+        id: `${meta.id}.create-form`,
         role: 'form-input',
         filter: (data): data is { prop: string; schema: Schema.Schema.Any } => {
           const annotation = findAnnotation<boolean>(

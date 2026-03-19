@@ -19,7 +19,7 @@ export const TestSchema = Schema.Struct({
   netWorth: Schema.optional(Schema.Number),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Test',
+    typename: 'com.example.type.test',
     version: '0.1.0',
   }),
 );

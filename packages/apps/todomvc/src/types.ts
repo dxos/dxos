@@ -12,17 +12,17 @@ export const Todo = Schema.Struct({
   completed: Schema.Boolean,
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Todo',
+    typename: 'com.example.type.todo',
     version: '0.1.0',
   }),
 );
 export type Todo = Schema.Schema.Type<typeof Todo>;
 
 export const TodoList = Schema.Struct({
-  todos: Schema.Array(Type.Ref(Todo)),
+  todos: Schema.Array(Ref.Ref(Todo)),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/TodoList',
+    typename: 'com.example.type.todo-list',
     version: '0.1.0',
   }),
 );

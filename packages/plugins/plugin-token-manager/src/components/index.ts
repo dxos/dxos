@@ -2,5 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './TokenManager';
-export * from './TokensContainer';
+import { lazy } from 'react';
+
+export * from './TokensPanel';
+
+export const IntegrationAuthButton = lazy(() => import('./IntegrationAuthButton'));

@@ -2,17 +2,22 @@
 // Copyright 2020 DXOS.org
 //
 
+// Suppress Lit dev mode warning (https://lit.dev/msg/dev-mode).
+(globalThis as any).litIssuedWarnings ??= new Set();
+(globalThis as any).litIssuedWarnings.add('dev-mode');
+
 import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
-import React, { StrictMode } from 'react';
+import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
+import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
-import { LogLevel, log } from '@dxos/log';
+import { LogBuffer, LogLevel, log } from '@dxos/log';
 import { Observability } from '@dxos/observability';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -26,6 +31,16 @@ import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { translations } from './translations';
 import { defaultStorageIsEmpty, isFalse, isTrue } from './util';
+
+declare global {
+  interface ImportMeta {
+    env: ImportMetaEnv;
+  }
+
+  interface ImportMetaEnv {
+    DEV: string;
+  }
+}
 
 const main = async () => {
   const url = new URL(window.location.href);
@@ -41,6 +56,9 @@ const main = async () => {
   }
 
   TRACE_PROCESSOR.setInstanceTag('app');
+
+  const logBuffer = new LogBuffer();
+  log.addProcessor(logBuffer.logProcessor);
 
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
@@ -76,7 +94,7 @@ const main = async () => {
   }
 
   // Intentionally do not await; i.e., don't block app startup for telemetry.
-  const observability = initializeObservability(config, isTauri);
+  const observability = initializeObservability(config, isTauri, logBuffer);
   const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
   const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
 
@@ -152,6 +170,7 @@ const main = async () => {
     config,
     services,
     observability,
+    logBuffer,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
     isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
@@ -167,13 +186,33 @@ const main = async () => {
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
 
-  const Fallback = ({ error }: { error: Error }) => (
-    <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
-      <Tooltip.Provider>
-        <ResetDialog isDev={conf.isDev} error={error} observability={observability} />
-      </Tooltip.Provider>
-    </ThemeProvider>
-  );
+  const Fallback = ({ error }: { error: Error }) => {
+    const {
+      needRefresh: [needRefresh],
+      updateServiceWorker,
+    } = useRegisterSW();
+
+    const handleReset = useCallback(async () => {
+      localStorage.clear();
+      await services.services.SystemService?.reset();
+      window.location.href = window.location.origin;
+    }, [services]);
+
+    return (
+      <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+        <Tooltip.Provider>
+          <ResetDialog
+            error={error}
+            logBuffer={logBuffer}
+            observability={observability}
+            needRefresh={needRefresh}
+            onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
+            onReset={import.meta.env.DEV ? handleReset : undefined}
+          />
+        </Tooltip.Provider>
+      </ThemeProvider>
+    );
+  };
 
   const Main = () => {
     const App = useApp({

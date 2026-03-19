@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { Unit, isTruthy } from '@dxos/util';
 
 export const Base = Schema.Struct({
@@ -133,7 +135,7 @@ export interface ToolResult extends Schema.Schema.Type<typeof ToolResult> {}
 /**
  * GPT Summary
  */
-export const Summary = Schema.TaggedStruct('summary', {
+export const Stats = Schema.TaggedStruct('stats', {
   mimeType: Schema.optional(Schema.String),
   message: Schema.optional(Schema.String),
   model: Schema.optional(Schema.String),
@@ -153,7 +155,7 @@ export const Summary = Schema.TaggedStruct('summary', {
   ...Base.fields,
 });
 
-export interface Summary extends Schema.Schema.Type<typeof Summary> {}
+export interface Stats extends Schema.Schema.Type<typeof Stats> {}
 
 /**
  * Claude-like message
@@ -161,7 +163,7 @@ export interface Summary extends Schema.Schema.Type<typeof Summary> {}
  */
 // TODO(burdon): String builder.
 // TODO(burdon): Move to UI (and use translations).
-export const createSummaryMessage = ({ message, model, usage, toolCalls, duration }: Summary, verbose = false) => {
+export const createStatsMessage = ({ message, model, usage, toolCalls, duration }: Stats, verbose = false) => {
   const paren = (str: string) => `(${str})`;
   const parts = [
     verbose && model,
@@ -243,7 +245,7 @@ export interface File extends Schema.Schema.Type<typeof File> {}
  * Non-text content embedded in the message (e.g., files, polls, etc.).
  */
 export const Reference = Schema.TaggedStruct('reference', {
-  reference: Type.Ref(Type.Obj),
+  reference: Ref.Ref(Obj.Unknown),
 
   ...Base.fields,
 });
@@ -328,8 +330,21 @@ export const Proposal = Schema.TaggedStruct('proposal', {
 export interface Proposal extends Schema.Schema.Type<typeof Proposal> {}
 
 /**
+ * Summary of the conversation prior to this point.
+ * Used to compress context.
+ */
+export const Summary = Schema.TaggedStruct('summary', {
+  content: Schema.String,
+
+  ...Base.fields,
+});
+
+export interface Summary extends Schema.Schema.Type<typeof Summary> {}
+
+/**
  * Model printing info about the list of available tools.
  */
+// TODO(dmaretskyi): Deprecate. Allow injecting html for rendering UI components.
 export const Toolkit = Schema.TaggedStruct('toolkit', {
   ...Base.fields,
 });
@@ -360,8 +375,9 @@ export const Any = Schema.Union(
   Select,
   Status,
   Suggestion,
-  Summary,
+  Stats,
   Text,
+  Summary,
   Toolkit,
   ToolCall,
   ToolResult,
@@ -369,3 +385,9 @@ export const Any = Schema.Union(
 );
 
 export type Any = Schema.Schema.Type<typeof Any>;
+
+export const is =
+  <T extends Any['_tag']>(tag: T) =>
+  (block: Any): block is Extract<Any, { _tag: T }> => {
+    return block._tag === tag;
+  };

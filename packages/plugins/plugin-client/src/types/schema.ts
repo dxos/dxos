@@ -31,59 +31,59 @@ export namespace ClientAction {
     data: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   });
 
-  export class CreateIdentity extends Schema.TaggedClass<CreateIdentity>()(`${meta.id}/action/create-identity`, {
+  export class CreateIdentity extends Schema.TaggedClass<CreateIdentity>()(`${meta.id}.action.create-identity`, {
     input: ProfileSchema,
     output: IdentitySchema,
   }) {}
 
-  export class JoinIdentity extends Schema.TaggedClass<JoinIdentity>()(`${meta.id}/action/join-identity`, {
+  export class JoinIdentity extends Schema.TaggedClass<JoinIdentity>()(`${meta.id}.action.join-identity`, {
     input: Schema.Struct({
       invitationCode: Schema.optional(Schema.String),
     }),
     output: Schema.Void,
   }) {}
 
-  export class ShareIdentity extends Schema.TaggedClass<ShareIdentity>()(`${meta.id}/action/share-identity`, {
+  export class ShareIdentity extends Schema.TaggedClass<ShareIdentity>()(`${meta.id}.action.share-identity`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
 
-  export class RecoverIdentity extends Schema.TaggedClass<RecoverIdentity>()(`${meta.id}/action/recover-identity`, {
+  export class RecoverIdentity extends Schema.TaggedClass<RecoverIdentity>()(`${meta.id}.action.recover-identity`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
 
-  export class ResetStorage extends Schema.TaggedClass<ResetStorage>()(`${meta.id}/action/reset-storage`, {
+  export class ResetStorage extends Schema.TaggedClass<ResetStorage>()(`${meta.id}.action.reset-storage`, {
     input: Schema.Struct({
       mode: Schema.optional(Schema.String),
     }),
     output: Schema.Void,
   }) {}
 
-  export class CreateAgent extends Schema.TaggedClass<CreateAgent>()(`${meta.id}/action/create-agent`, {
+  export class CreateAgent extends Schema.TaggedClass<CreateAgent>()(`${meta.id}.action.create-agent`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
 
   export class CreateRecoveryCode extends Schema.TaggedClass<CreateRecoveryCode>()(
-    `${meta.id}/action/create-recovery-code`,
+    `${meta.id}.action.create-recovery-code`,
     {
       input: Schema.Void,
       output: Schema.Void,
     },
   ) {}
 
-  export class CreatePasskey extends Schema.TaggedClass<CreatePasskey>()(`${meta.id}/action/create-passkey`, {
+  export class CreatePasskey extends Schema.TaggedClass<CreatePasskey>()(`${meta.id}.action.create-passkey`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
 
-  export class RedeemPasskey extends Schema.TaggedClass<RedeemPasskey>()(`${meta.id}/action/redeem-passkey`, {
+  export class RedeemPasskey extends Schema.TaggedClass<RedeemPasskey>()(`${meta.id}.action.redeem-passkey`, {
     input: Schema.Void,
     output: Schema.Void,
   }) {}
 
-  export class RedeemToken extends Schema.TaggedClass<RedeemToken>()(`${meta.id}/action/redeem-token`, {
+  export class RedeemToken extends Schema.TaggedClass<RedeemToken>()(`${meta.id}.action.redeem-token`, {
     input: Schema.Struct({
       token: Schema.String,
     }),
@@ -91,7 +91,7 @@ export namespace ClientAction {
   }) {}
 }
 
-const CLIENT_OPERATION = `${meta.id}/operation`;
+const CLIENT_OPERATION = `${meta.id}.operation`;
 
 /**
  * Operations for the Client plugin.
@@ -104,7 +104,7 @@ export namespace ClientOperation {
   });
 
   export const CreateIdentity = Operation.make({
-    meta: { key: `${CLIENT_OPERATION}/create-identity`, name: 'Create Identity' },
+    meta: { key: `${CLIENT_OPERATION}.create-identity`, name: 'Create Identity' },
     services: [Capability.Service],
     schema: {
       input: ProfileSchema,
@@ -113,7 +113,7 @@ export namespace ClientOperation {
   });
 
   export const JoinIdentity = Operation.make({
-    meta: { key: `${CLIENT_OPERATION}/join-identity`, name: 'Join Identity' },
+    meta: { key: `${CLIENT_OPERATION}.join-identity`, name: 'Join Identity' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -124,7 +124,7 @@ export namespace ClientOperation {
   });
 
   export const ShareIdentity = Operation.make({
-    meta: { key: `${CLIENT_OPERATION}/share-identity`, name: 'Share Identity' },
+    meta: { key: `${CLIENT_OPERATION}.share-identity`, name: 'Share Identity' },
     services: [Capability.Service],
     schema: {
       input: Schema.Void,
@@ -133,7 +133,7 @@ export namespace ClientOperation {
   });
 
   export const RecoverIdentity = Operation.make({
-    meta: { key: `${CLIENT_OPERATION}/recover-identity`, name: 'Recover Identity' },
+    meta: { key: `${CLIENT_OPERATION}.recover-identity`, name: 'Recover Identity' },
     services: [Capability.Service],
     schema: {
       input: Schema.Void,
@@ -142,7 +142,7 @@ export namespace ClientOperation {
   });
 
   export const ResetStorage = Operation.make({
-    meta: { key: `${CLIENT_OPERATION}/reset-storage`, name: 'Reset Storage' },
+    meta: { key: `${CLIENT_OPERATION}.reset-storage`, name: 'Reset Storage' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -153,7 +153,7 @@ export namespace ClientOperation {
   });
 
   export const CreateAgent = Operation.make({
-    meta: { key: `${CLIENT_OPERATION}/create-agent`, name: 'Create Agent' },
+    meta: { key: `${CLIENT_OPERATION}.create-agent`, name: 'Create Agent' },
     services: [Capability.Service],
     schema: {
       input: Schema.Void,
@@ -162,7 +162,7 @@ export namespace ClientOperation {
   });
 
   export const CreateRecoveryCode = Operation.make({
-    meta: { key: `${CLIENT_OPERATION}/create-recovery-code`, name: 'Create Recovery Code' },
+    meta: { key: `${CLIENT_OPERATION}.create-recovery-code`, name: 'Create Recovery Code' },
     services: [Capability.Service],
     schema: {
       input: Schema.Void,
@@ -171,7 +171,7 @@ export namespace ClientOperation {
   });
 
   export const CreatePasskey = Operation.make({
-    meta: { key: `${CLIENT_OPERATION}/create-passkey`, name: 'Create Passkey' },
+    meta: { key: `${CLIENT_OPERATION}.create-passkey`, name: 'Create Passkey' },
     services: [Capability.Service],
     schema: {
       input: Schema.Void,
@@ -180,7 +180,7 @@ export namespace ClientOperation {
   });
 
   export const RedeemPasskey = Operation.make({
-    meta: { key: `${CLIENT_OPERATION}/redeem-passkey`, name: 'Redeem Passkey' },
+    meta: { key: `${CLIENT_OPERATION}.redeem-passkey`, name: 'Redeem Passkey' },
     services: [Capability.Service],
     schema: {
       input: Schema.Void,
@@ -189,7 +189,7 @@ export namespace ClientOperation {
   });
 
   export const RedeemToken = Operation.make({
-    meta: { key: `${CLIENT_OPERATION}/redeem-token`, name: 'Redeem Token' },
+    meta: { key: `${CLIENT_OPERATION}.redeem-token`, name: 'Redeem Token' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -202,9 +202,14 @@ export namespace ClientOperation {
 
 export type ClientPluginOptions = ClientOptions & {
   /**
-   * Base URL for the invitation link.
+   * Base origin for the invitation link.
    */
-  invitationUrl?: string;
+  shareableLinkOrigin?: string;
+
+  /**
+   * Path for the invitation link.
+   */
+  invitationPath?: string;
 
   /**
    * Query parameter for the invitation code.

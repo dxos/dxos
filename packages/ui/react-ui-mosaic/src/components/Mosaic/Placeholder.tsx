@@ -4,8 +4,8 @@
 
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import {
-  DropIndicator as NativeDropIndicator,
-  type DropIndicatorProps as NativeDropIndicatorProps,
+  DropIndicator as NaturalDropIndicator,
+  type DropIndicatorProps as NaturalDropIndicatorProps,
 } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
@@ -46,7 +46,7 @@ const MosaicPlaceholder = <Location extends LocationType = LocationType>({
   location,
 }: MosaicPlaceholderProps<Location>) => {
   const rootRef = useRef<HTMLDivElement>(null);
-  const Root = asChild ? Slot : Primitive.div;
+  const Comp = asChild ? Slot : Primitive.div;
   const {
     id: containerId,
     eventHandler,
@@ -90,7 +90,7 @@ const MosaicPlaceholder = <Location extends LocationType = LocationType>({
   }, [rootRef, data, scrolling, setActiveLocation]);
 
   return (
-    <Root
+    <Comp
       {...{
         [`data-${MOSAIC_PLACEHOLDER_ORIENTATION_ATTR}`]: orientation,
         [`data-${MOSAIC_PLACEHOLDER_STATE_ATTR}`]: data.location === activeLocation ? 'active' : 'idle',
@@ -100,7 +100,7 @@ const MosaicPlaceholder = <Location extends LocationType = LocationType>({
       ref={rootRef}
     >
       {children}
-    </Root>
+    </Comp>
   );
 };
 
@@ -113,12 +113,12 @@ MosaicPlaceholder.displayName = MOSAIC_PLACEHOLDER_NAME;
 
 const DROP_INDICATOR_NAME = 'Mosaic.DropIndicator';
 
-type MosaicDropIndicatorProps = Omit<NativeDropIndicatorProps, 'edge'>;
+type MosaicDropIndicatorProps = Omit<NaturalDropIndicatorProps, 'edge'>;
 
 const MosaicDropIndicator = (props: MosaicDropIndicatorProps) => {
   const { state } = useMosaicTileContext(DROP_INDICATOR_NAME);
   return state.type === 'target' && state.closestEdge ? (
-    <NativeDropIndicator {...props} edge={state.closestEdge} />
+    <NaturalDropIndicator {...props} edge={state.closestEdge} />
   ) : null;
 };
 

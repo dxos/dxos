@@ -5,7 +5,7 @@
 import { isAfter, isBefore, isEqual } from 'date-fns';
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
@@ -14,11 +14,11 @@ import { getDateString, parseDateString } from './util';
 export const JournalEntry = Schema.Struct({
   id: Schema.String,
   date: Schema.String,
-  content: Type.Ref(Text.Text),
+  content: Ref.Ref(Text.Text),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/JournalEntry',
-    version: '0.2.0',
+    typename: 'org.dxos.type.journal-entry',
+    version: '0.1.0',
   }),
   SystemTypeAnnotation.set(true),
 );
@@ -29,11 +29,15 @@ export const Journal = Schema.Struct({
   id: Schema.String,
   name: Schema.optional(Schema.String),
   // TODO(burdon): Convert map of references indexed by sortable ISO date.
-  entries: Schema.Record({ key: Schema.String, value: Type.Ref(JournalEntry) }),
+  entries: Schema.Record({ key: Schema.String, value: Ref.Ref(JournalEntry) }),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Journal',
-    version: '0.3.0',
+    typename: 'org.dxos.type.journal',
+    version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--calendar-check--regular',
+    hue: 'indigo',
   }),
 );
 

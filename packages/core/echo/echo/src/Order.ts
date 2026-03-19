@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import { type QueryAST } from '@dxos/echo-protocol';
 
 export interface Order<T> {
@@ -14,7 +16,7 @@ export interface Order<T> {
 export type Any = Order<any>;
 
 class OrderClass implements Order<any> {
-  private static variance: Order<any>['~Order'] = {} as Order<any>['~Order'];
+  private static 'variance': Order<any>['~Order'] = {} as Order<any>['~Order'];
 
   static is(value: unknown): value is Order<any> {
     return typeof value === 'object' && value !== null && '~Order' in value;

@@ -11,7 +11,7 @@ import { trim } from '@dxos/util';
 
 import { LinearFunctions } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/linear';
+const BLUEPRINT_KEY = 'org.dxos.blueprint.linear';
 
 const functions = Object.values(LinearFunctions);
 

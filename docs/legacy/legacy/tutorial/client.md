@@ -37,7 +37,6 @@ This `ClientInitializer` is a React component that facilitates the process of in
 
 It creates a new `Client` from `@dxos/client` and uses [React Context](https://reactjs.org/docs/context.html) to make the instance accessible anywhere in the app.
 
-
 ## Retrieve the Client Instance
 
 Once we have our client built, we will be able to access the instance through the `useClient` hook provided by the `@dxos/react-client` package.

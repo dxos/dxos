@@ -55,7 +55,6 @@ import {
   SpaceState,
   type UpdateMemberRoleRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import {
@@ -128,7 +127,7 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private _databaseOpen = false;
   private _error: Error | undefined = undefined;
-  private _properties?: Obj.Obj<SpaceProperties> = undefined;
+  private _properties?: Obj.OfShape<SpaceProperties> = undefined;
 
   /**
    * When true, the space is waiting for the backend to finish re-initializing after a reconnect.
@@ -217,7 +216,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.info({ depth: 2 })
-  get properties(): Obj.Obj<SpaceProperties> {
+  get properties(): Obj.OfShape<SpaceProperties> {
     this._throwIfNotInitialized();
     invariant(this._properties, 'Properties not available');
     return this._properties;
@@ -416,23 +415,19 @@ export class SpaceProxy implements Space, CustomInspectable {
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const unsubscribe = this._db
-        .query(Filter.type(SpaceProperties), {
-          dataLocation: QueryOptions.DataLocation.LOCAL,
-        })
-        .subscribe(
-          (query) => {
-            if (query.results.length === 1) {
-              this._properties = query.results[0];
-              propertiesAvailable.wake();
-              this._stateUpdate.emit(this._currentState);
-              scheduleMicroTask(this._ctx, () => {
-                unsubscribe();
-              });
-            }
-          },
-          { fire: true },
-        );
+      const unsubscribe = this._db.query(Filter.type(SpaceProperties)).subscribe(
+        (query) => {
+          if (query.results.length === 1) {
+            this._properties = query.results[0];
+            propertiesAvailable.wake();
+            this._stateUpdate.emit(this._currentState);
+            scheduleMicroTask(this._ctx, () => {
+              unsubscribe();
+            });
+          }
+        },
+        { fire: true },
+      );
     }
     await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),

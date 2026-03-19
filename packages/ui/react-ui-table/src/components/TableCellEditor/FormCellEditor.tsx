@@ -20,9 +20,9 @@ import { narrowSchema } from '../../util';
 
 const createOptionLabel: Label = ['create new object label', { ns: translationKey }];
 
-export type OnCreateHandler = (schema: Type.Entity.Any, values: any) => Parameters<typeof Ref.make>[0];
+export type OnCreateHandler = (schema: Type.AnyEntity, values: any) => Parameters<typeof Ref.make>[0];
 
-export type FormCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = {
+export type FormCellEditorProps<T extends Type.AnyEntity = Type.AnyEntity> = {
   __gridScope: any;
   schema?: T;
   model?: TableModel;
@@ -32,7 +32,7 @@ export type FormCellEditorProps<T extends Type.Entity.Any = Type.Entity.Any> = {
   onCreate?: OnCreateHandler;
 } & Omit<FormRootProps<any>, 'values' | 'schema' | 'onCreate'>;
 
-export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
+export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
   __gridScope,
   schema,
   model,
@@ -85,8 +85,12 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
 
   // NOTE: Important to get a mutable deep clone to eject from the echo object.
   // TODO(wittjosiah): Consider using something like Obj.clone for this use case.
-  const formValues = useMemo(() => (originalRow ? JSON.parse(JSON.stringify(originalRow)) : {}), [originalRow]);
+  const initialFormValues = useMemo(() => (originalRow ? JSON.parse(JSON.stringify(originalRow)) : {}), [originalRow]);
+  const [formValues, setFormValues] = useState<any>(initialFormValues);
 
+  const handleValuesChanged = useCallback<NonNullable<FormRootProps<any>['onValuesChanged']>>((values) => {
+    setFormValues(values);
+  }, []);
   const handleOpenChange = useCallback((nextOpen: boolean) => {
     if (nextOpen === false) {
       setEditing(null);
@@ -162,7 +166,7 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
     <Popover.Root open={editing} onOpenChange={handleOpenChange}>
       <Popover.VirtualTrigger virtualRef={anchorRef} />
       <Popover.Portal>
-        <Popover.Content tabIndex={-1} classNames='popover-card-width density-fine'>
+        <Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-fine'>
           <Popover.Arrow />
           <Popover.Viewport>
             <Form.Root
@@ -170,6 +174,8 @@ export const FormCellEditor = <T extends Type.Entity.Any = Type.Entity.Any>({
               autoFocus
               schema={narrowedSchema}
               values={formValues}
+              onValuesChanged={handleValuesChanged}
+              projection={model?.projection}
               createInitialValuePath={fieldProjection.field.referencePath}
               createOptionIcon='ph--plus--regular'
               createOptionLabel={createOptionLabel}

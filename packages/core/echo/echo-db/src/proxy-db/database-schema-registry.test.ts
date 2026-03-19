@@ -5,10 +5,11 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { sleep } from '@dxos/async';
 import { JsonSchema, Obj, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo/internal';
 
-import { Filter } from '../query';
 import { EchoTestBuilder } from '../testing';
 
 const Organization = Schema.Struct({
@@ -16,7 +17,7 @@ const Organization = Schema.Struct({
   address: Schema.String,
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Organization',
+    typename: 'com.example.type.organization',
     version: '0.1.0',
   }),
 );
@@ -25,7 +26,7 @@ const Contact = Schema.Struct({
   name: Schema.String,
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Person',
+    typename: 'com.example.type.person',
     version: '0.1.0',
   }),
 );
@@ -57,7 +58,7 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([
       {
-        typename: 'example.com/type/Person',
+        typename: 'com.example.type.person',
         version: '0.1.0',
         jsonSchema: {
           type: 'object',
@@ -71,7 +72,7 @@ describe('schema registry', () => {
     ]);
     expect(registry.hasSchema(echoSchema)).to.be.true;
     expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
-    expect(echoSchema.typename).toEqual('example.com/type/Person');
+    expect(echoSchema.typename).toEqual('com.example.type.person');
     expect(echoSchema.version).toEqual('0.1.0');
     expect(echoSchema.jsonSchema.properties).toEqual({
       name: expect.any(Object),
@@ -81,7 +82,7 @@ describe('schema registry', () => {
   test('database schema work with echo APIs', async () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
-    expect(Type.getTypename(echoSchema)).toEqual('example.com/type/Person');
+    expect(Type.getTypename(echoSchema)).toEqual('com.example.type.person');
     expect(Type.getVersion(echoSchema)).toEqual('0.1.0');
   });
 
@@ -134,9 +135,9 @@ describe('schema registry', () => {
     const retrieved = await registry.query({ location: ['database', 'runtime'] }).run();
     // Note: Expando is registered by default in test builder.
     expect(retrieved.map(Type.getTypename)).toEqual([
-      'example.com/type/Expando',
-      'example.com/type/Organization',
-      'example.com/type/Person',
+      'com.example.type.expando',
+      'com.example.type.organization',
+      'com.example.type.person',
     ]);
   });
 
@@ -147,7 +148,7 @@ describe('schema registry', () => {
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['runtime'] }).run();
     // Note: Expando is registered by default in test builder.
-    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Expando', 'example.com/type/Organization']);
+    expect(retrieved.map(Type.getTypename)).toEqual(['com.example.type.expando', 'com.example.type.organization']);
   });
 
   test('query only database schemas', async () => {
@@ -156,13 +157,37 @@ describe('schema registry', () => {
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['database'] }).run();
-    expect(retrieved.map(Type.getTypename)).toEqual(['example.com/type/Person']);
+    expect(retrieved.map(Type.getTypename)).toEqual(['com.example.type.person']);
+  });
+
+  test('reactive query updates when runtime schemas are registered', async () => {
+    const { registry, db } = await setupTest();
+
+    const queryResult = registry.query({ location: ['database', 'runtime'] });
+
+    let updateCount = 0;
+    let latestResults: Type.AnyEntity[] = [];
+    const unsubscribe = queryResult.subscribe(() => {
+      updateCount++;
+      latestResults = queryResult.results;
+    });
+
+    // Allow the reactive query to start (deferred via queueMicrotask).
+    await sleep(10);
+
+    // Register a runtime schema after the query is already subscribed.
+    await db.graph.schemaRegistry.register([Organization]);
+
+    expect(updateCount).toBeGreaterThan(0);
+    expect(latestResults.map(Type.getTypename)).toContain('com.example.type.organization');
+
+    unsubscribe();
   });
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
     const schemaToStore = Obj.make(Type.PersistentType, {
-      typename: 'example.com/type/Test',
+      typename: 'com.example.type.test',
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
     });
@@ -185,7 +210,7 @@ describe('schema registry', () => {
     {
       await using db = await peer.createDatabase();
       await db.schemaRegistry.register([Contact]);
-      await db.flush({ indexes: true });
+      await db.flush();
     }
 
     await peer.reload();
@@ -209,4 +234,51 @@ describe('schema registry', () => {
       expect(Type.getTypename(schema)).toEqual(Type.getTypename(Contact));
     }
   });
+
+  test('can make an object with a dynamic schema', async () => {
+    const { db } = await setupTest();
+    const TestSchema = makeTestSchema();
+    const [schema] = await db.schemaRegistry.register([TestSchema]);
+    const object = db.add(Obj.make(schema, { name: 'Test' }));
+    expect(object.name).toEqual('Test');
+  });
+
+  test('can change an object with a dynamic schema', async () => {
+    const { db } = await setupTest();
+    const TestSchema = makeTestSchema();
+    const [schema] = await db.schemaRegistry.register([TestSchema]);
+    const object = db.add(Obj.make(schema, { name: 'Test' }));
+    Obj.change(object, (object) => {
+      object.name = 'Test2';
+    });
+    expect(object.name).toEqual('Test2');
+  });
+
+  test('can add new fields and change them', async () => {
+    const { db } = await setupTest();
+    const TestSchema = makeTestSchema();
+    const [schema] = await db.schemaRegistry.register([TestSchema]);
+    const object = db.add(
+      Obj.make(schema, {
+        name: 'Test',
+      }),
+    );
+
+    schema.addFields({ newField: Schema.String });
+    Obj.change(object, (object) => {
+      object.newField = 'Test3';
+    });
+    expect(object.newField).toEqual('Test3');
+  });
 });
+
+// Separate test schema instance to avoid cross-test pollution.
+const makeTestSchema = () =>
+  Schema.Struct({
+    name: Schema.String,
+  }).pipe(
+    Type.object({
+      typename: 'com.example.type.test',
+      version: '0.1.0',
+    }),
+  );

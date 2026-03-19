@@ -10,9 +10,8 @@ import {
   type ActionGraphEdges,
   type ActionGraphNodes,
   type ActionGraphProps,
+  Menu,
   type MenuAction,
-  MenuProvider,
-  ToolbarMenu,
   createGapSeparator,
   createMenuAction,
   useMenuActions,
@@ -75,7 +74,7 @@ const createTableToolbarActions = ({
     }
     const gap = createGapSeparator();
     nodes.push(...gap.nodes);
-    const edges: ActionGraphEdges = nodes.map(({ id: target }) => ({ source: 'root', target }));
+    const edges: ActionGraphEdges = nodes.map(({ id: target }) => ({ source: 'root', target, relation: 'child' }));
     if (customActions) {
       const custom = get(customActions);
       nodes.push(...custom.nodes);
@@ -95,6 +94,7 @@ export const TableToolbar = ({
   onAdd,
   onSave,
   customActions,
+  ...props
 }: TableToolbarProps) => {
   const registry = useContext(RegistryContext);
   const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);
@@ -108,11 +108,11 @@ export const TableToolbar = ({
     () => createTableToolbarActions({ stateAtom, onAdd, onSave, customActions }),
     [stateAtom, onAdd, onSave, customActions],
   );
-  const menu = useMenuActions(actionsCreator);
+  const actions = useMenuActions(actionsCreator);
 
   return (
-    <MenuProvider {...menu} attendableId={attendableId}>
-      <ToolbarMenu classNames={classNames} />
-    </MenuProvider>
+    <Menu.Root {...actions} attendableId={attendableId}>
+      <Menu.Toolbar {...props} classNames={classNames} />
+    </Menu.Root>
   );
 };

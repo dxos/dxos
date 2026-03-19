@@ -12,10 +12,9 @@ import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { ScrollArea } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { QueryEditor, type QueryEditorProps, useQueryBuilder } from '@dxos/react-ui-components';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
-import { render } from '@dxos/storybook-utils';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 // TODO(burdon): Move.
@@ -31,15 +30,15 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
   const model = useGraphModel(space, filter);
 
   return (
-    <div role='none' className='grid grid-cols-2 grow divide-x divide-subduedSeparator overflow-hidden'>
+    <div role='none' className='grid grid-cols-2 grow divide-x divide-subdued-separator overflow-hidden'>
       <div className='flex flex-col overflow-hidden'>
-        <QueryEditor classNames='p-2 is-full border-be border-subduedSeparator' db={space?.db} onChange={setQuery} />
+        <QueryEditor classNames='p-2 w-full border-b border-subdued-separator' db={space?.db} onChange={setQuery} />
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             {objects.map((object) => (
               <div
                 key={object.id}
-                className='grid grid-cols-3 gap-2 p-2 border-be border-subduedSeparator overflow-hidden'
+                className='grid grid-cols-3 gap-2 p-2 border-b border-subdued-separator overflow-hidden'
               >
                 <span className='truncate text-sm font-mono'>{object.id}</span>
                 <span className='truncate text-sm font-mono'>{Obj.getTypename(object)}</span>
@@ -48,7 +47,7 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
             ))}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-        <div className='p-2 text-right text-infoText text-xs'>{objects.length}</div>
+        <div className='p-2 text-right text-info-text text-xs'>{objects.length}</div>
       </div>
       <D3ForceGraph model={model} />
     </div>
@@ -56,17 +55,18 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
 };
 
 const tags: Tag.Map = {
-  ['tag_1' as const]: Tag.make({ label: 'Red' }),
-  ['tag_2' as const]: Tag.make({ label: 'Green' }),
-  ['tag_3' as const]: Tag.make({ label: 'Blue' }),
+  tag_1: Tag.make({ label: 'Red' }),
+  tag_2: Tag.make({ label: 'Green' }),
+  tag_3: Tag.make({ label: 'Blue' }),
 };
 
 const meta: Meta<typeof QueryEditor> = {
   title: 'stories/stories-assistant/QueryEditor',
   component: QueryEditor,
-  render: render(DefaultStory),
+  render: DefaultStory,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
       createIdentity: true,
@@ -98,6 +98,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    value: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization)',
+    value: '(type:org.dxos.type.person OR type:org.dxos.type.organization)',
   },
 };

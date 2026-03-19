@@ -3,8 +3,11 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
+import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
 import React, { type HTMLAttributes, forwardRef } from 'react';
 
+import { composableProps } from '@dxos/ui-theme';
 import { type AllowedAxis, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -38,7 +41,7 @@ const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaConte
 
 const SCROLLAREA_ROOT_NAME = 'ScrollArea.Root';
 
-type ScrollAreaRootProps = SlottableProps<HTMLDivElement> & Partial<ScrollAreaContextType>;
+type ScrollAreaRootProps = SlottableProps<HTMLDivElement, Partial<ScrollAreaContextType>>;
 
 /**
  * ScrollArea provides native scrollbars with custom styling.
@@ -46,12 +49,11 @@ type ScrollAreaRootProps = SlottableProps<HTMLDivElement> & Partial<ScrollAreaCo
 const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
   (
     {
-      classNames,
-      className,
       children,
+      asChild,
       orientation = 'vertical',
       autoHide = true,
-      margin = true, // TODO(burdon): Is this the right default?
+      margin = false,
       padding = false,
       thin = false,
       snap = false,
@@ -59,14 +61,16 @@ const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
     },
     forwardedRef,
   ) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     const options = { orientation, autoHide, margin, padding, thin, snap };
 
     return (
       <ScrollAreaProvider {...options}>
-        <div {...props} className={tx('scrollArea.root', options, [className, classNames])} ref={forwardedRef}>
+        <Comp {...rest} className={tx('scrollArea.root', options, className)} ref={forwardedRef}>
           {children}
-        </div>
+        </Comp>
       </ScrollAreaProvider>
     );
   },

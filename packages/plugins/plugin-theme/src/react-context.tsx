@@ -50,7 +50,7 @@ export default Capability.makeModule(
           return (
             <ThemeProvider {...{ tx: propsTx, themeMode, resourceExtensions: resources, ...rest }}>
               <Toast.Provider>
-                <Tooltip.Provider delayDuration={2_000} skipDelayDuration={100} disableHoverableContent>
+                <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
                   {children}
                 </Tooltip.Provider>
                 <Toast.Viewport />

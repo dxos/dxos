@@ -7,11 +7,15 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { useLayout } from '@dxos/app-toolkit/ui';
-import { parseId, useDatabase } from '@dxos/react-client/echo';
+import { useActiveSpace } from '@dxos/plugin-space';
 
-import { TokensContainer } from '../../components';
+import { TokensContainer } from '../../containers';
+
+import { OAUTH_PRESETS } from '../../defs';
 import { meta } from '../../meta';
+import { IntegrationAuthButton } from '../../components';
+
+const oauthSources = new Set(OAUTH_PRESETS.map((p) => p.source));
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -19,17 +23,27 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: 'article',
-        filter: (data): data is { subject: string } => data.subject === `${meta.id}/space-settings`,
+        filter: (data): data is { subject: string } => data.subject === `${meta.id}.space-settings`,
         component: () => {
-          const layout = useLayout();
-          const { spaceId } = parseId(layout.workspace);
-          const db = useDatabase(spaceId);
-
-          if (!db) {
+          const space = useActiveSpace();
+          if (!space) {
             return null;
           }
 
-          return <TokensContainer db={db} />;
+          return <TokensContainer db={space.db} />;
+        },
+      }),
+      Surface.create({
+        id: `${meta.id}.integration-auth`,
+        role: 'integration--auth',
+        filter: (data): data is { source: string } => typeof data.source === 'string' && oauthSources.has(data.source),
+        component: ({ data }) => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <IntegrationAuthButton source={data.source} db={space.db} />;
         },
       }),
     ]),

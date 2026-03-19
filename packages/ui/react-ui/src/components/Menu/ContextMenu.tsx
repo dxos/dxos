@@ -52,11 +52,11 @@ type ContextMenuViewportProps = ThemedClassName<ComponentPropsWithRef<typeof Pri
 const ContextMenuViewport = forwardRef<HTMLDivElement, ContextMenuViewportProps>(
   ({ classNames, asChild, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : Primitive.div;
+    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Root {...props} className={tx('menu.viewport', {}, classNames)} ref={forwardedRef}>
+      <Comp {...props} className={tx('menu.viewport', {}, classNames)} ref={forwardedRef}>
         {children}
-      </Root>
+      </Comp>
     );
   },
 );

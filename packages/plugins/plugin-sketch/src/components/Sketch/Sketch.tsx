@@ -17,7 +17,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
-import { type Diagram, type SketchGridType, type SketchSettingsProps } from '../../types';
+import { type Sketch as SketchNs, type SketchGridType, type SketchSettingsProps } from '../../types';
 import { handleSnap } from '../actions';
 import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom';
 
@@ -31,7 +31,7 @@ const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
 };
 
 export type SketchProps = ThemedClassName<{
-  sketch: Diagram.Diagram;
+  sketch: SketchNs.Sketch;
   readonly?: boolean;
   autoZoom?: boolean;
   maxZoom?: number;
@@ -217,14 +217,14 @@ export const Sketch = ({
       role='none'
       ref={containerRef}
       style={{ visibility: ready ? 'visible' : 'hidden' }}
-      className={mx('is-full bs-full', classNames)}
+      className={mx('w-full h-full', classNames)}
     >
       <Tldraw
         key={Obj.getDXN(sketch).toString()}
         store={adapter.store}
         hideUi={hideUi}
         inferDarkMode
-        className='!outline-none'
+        className='outline-hidden!'
         maxAssetSize={1024 * 1024}
         assetUrls={assetUrls}
         overrides={overrides}

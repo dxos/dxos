@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, JsonSchema, Obj, Type } from '@dxos/echo';
+import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 
 import { Script } from './Script';
@@ -36,7 +36,7 @@ export const Function = Schema.Struct({
 
   // Reference to a source script if it exists within ECHO.
   // TODO(burdon): Don't ref ScriptType directly (core).
-  source: Schema.optional(Type.Ref(Script)),
+  source: Schema.optional(Ref.Ref(Script)),
 
   inputSchema: Schema.optional(JsonSchema.JsonSchema),
   outputSchema: Schema.optional(JsonSchema.JsonSchema),
@@ -51,10 +51,11 @@ export const Function = Schema.Struct({
   binding: Schema.optional(Schema.String),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Function',
+    typename: 'org.dxos.type.function',
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
   SystemTypeAnnotation.set(true),
 );
 

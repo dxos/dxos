@@ -19,6 +19,7 @@ import {
   useEditorMenu,
   useEditorToolbar,
 } from '@dxos/react-ui-editor';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
@@ -45,6 +46,7 @@ import {
 
 type MarkdownEditorContextValue = {
   id: string;
+  attendableId?: string;
   setEditorView: (view: EditorView) => void;
   extensions: Extension[];
   previewBlocks: PreviewBlock[];
@@ -64,14 +66,18 @@ type MarkdownEditorRootProps = PropsWithChildren<
   {
     object?: DocumentType;
     extensions?: Extension[];
-  } & Pick<MarkdownEditorContextValue, 'id' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
+  } & Pick<
+    MarkdownEditorContextValue,
+    'id' | 'attendableId' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'
+  > &
     Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
-    Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings'>
+    Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>
 >;
 
 const MarkdownEditorRoot = ({
   children,
   id,
+  attendableId,
   object,
   editorStateStore,
   selectionManager,
@@ -80,6 +86,7 @@ const MarkdownEditorRoot = ({
   extensions: extensionsProp,
   slashCommandGroups,
   onLinkQuery,
+  onSelectObject,
   ...props
 }: MarkdownEditorRootProps) => {
   const [editorView, setEditorView] = useState<EditorView>();
@@ -118,6 +125,7 @@ const MarkdownEditorRoot = ({
     selectionManager,
     settings,
     viewMode,
+    onSelectObject,
   });
 
   const extensions = useMemo(
@@ -128,6 +136,7 @@ const MarkdownEditorRoot = ({
   return (
     <MarkdownEditorContextProvider
       id={id}
+      attendableId={attendableId}
       editorView={editorView}
       setEditorView={setEditorView}
       extensions={extensions}
@@ -155,6 +164,7 @@ type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' |
 const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   const {
     id,
+    attendableId,
     editorView,
     setEditorView,
     viewMode,
@@ -168,6 +178,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
       <NaturalMarkdownEditorContent
         {...props}
         id={id}
+        attendableId={attendableId}
         viewMode={viewMode}
         toolbarState={toolbarState}
         extensions={extensions}
@@ -185,15 +196,25 @@ MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
 const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
 
-type MarkdownEditorToolbarProps = Omit<
-  NaturalMarkdownToolbarProps,
-  'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
+type MarkdownEditorToolbarProps = ThemedClassName<
+  Omit<NaturalMarkdownToolbarProps, 'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'>
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
-  const { toolbarState, ...rootProps } = useMarkdownEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
+  const { id, attendableId, editorView, toolbarState, onAction, onFileUpload, onViewModeChange } =
+    useMarkdownEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
 
-  return <NaturalMarkdownToolbar {...props} {...rootProps} state={toolbarState} />;
+  return (
+    <NaturalMarkdownToolbar
+      {...props}
+      id={attendableId ?? id}
+      editorView={editorView}
+      state={toolbarState}
+      onAction={onAction}
+      onFileUpload={onFileUpload}
+      onViewModeChange={onViewModeChange}
+    />
+  );
 };
 
 MarkdownEditorToolbar.displayName = MARKDOWN_EDITOR_TOOLBAR_NAME;
@@ -226,7 +247,7 @@ const PreviewBlock = ({ el, link }: PreviewBlock) => {
   const subject = client.graph.makeRef(dxn).target;
   const data = useMemo(() => ({ subject }), [subject]);
 
-  return createPortal(<Surface.Surface role='card--transclusion' data={data} limit={1} />, el);
+  return createPortal(<Surface.Surface role='card--content' data={data} limit={1} />, el);
 };
 
 //

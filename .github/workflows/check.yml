@@ -68,6 +68,9 @@ jobs:
       - name: Check for import cycles
         run: pnpm run check-cycles
 
+      - name: Check formatting
+        run: pnpm run format-check
+
       - name: Check Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
         run: moon run :lint :build --affected remote
@@ -126,11 +129,11 @@ jobs:
 
       - name: Test Affected
         if: ${{ steps.extract_branch.outputs.branch != 'main' }}
-        run: moon run :test --affected remote -- --no-file-parallelism
+        run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
-        run: moon run :test -- --no-file-parallelism
+        run: moon run :test :test-browser :test-storybook -- --no-file-parallelism
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'

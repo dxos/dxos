@@ -9,14 +9,14 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type CompleteCellRange } from '@dxos/compute';
 import {
   type ActionGraphProps,
-  MenuProvider,
-  ToolbarMenu,
+  Menu,
+  type MenuRootProps,
   createGapSeparator,
   useMenuActions,
 } from '@dxos/react-ui-menu';
 
 import { type SheetModel } from '../../model';
-import { useSheetContext } from '../SheetContext';
+import { useSheetContext } from '../SheetRoot';
 
 import { createAlign, useAlignState } from './align';
 import { createStyle, useStyleState } from './style';
@@ -59,9 +59,9 @@ const createToolbarActions = ({
   });
 };
 
-export type SheetToolbarProps = PropsWithChildren<{ id: string }>;
+export type SheetToolbarProps = PropsWithChildren<{ id: string } & Partial<MenuRootProps>>;
 
-export const SheetToolbar = ({ id }: SheetToolbarProps) => {
+export const SheetToolbar = ({ id, ...props }: SheetToolbarProps) => {
   const { model, cursorFallbackRange } = useSheetContext();
   const stateAtom = useToolbarState({});
   const registry = useContext(RegistryContext);
@@ -75,7 +75,7 @@ export const SheetToolbar = ({ id }: SheetToolbarProps) => {
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
       return {
         nodes,
-        edges: nodes.map((node) => ({ source: 'root', target: node.id })),
+        edges: nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
       };
     });
   }, [graph, id]);
@@ -84,11 +84,11 @@ export const SheetToolbar = ({ id }: SheetToolbarProps) => {
     () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange, customActions }),
     [model, stateAtom, registry, cursorFallbackRange, customActions],
   );
-  const menu = useMenuActions(actionsCreator);
+  const actions = useMenuActions(actionsCreator);
 
   return (
-    <MenuProvider {...menu} attendableId={id}>
-      <ToolbarMenu />
-    </MenuProvider>
+    <Menu.Root {...actions} attendableId={id}>
+      <Menu.Toolbar {...props} />
+    </Menu.Root>
   );
 };

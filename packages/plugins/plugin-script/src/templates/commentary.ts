@@ -14,22 +14,23 @@ import * as Schema from 'effect/Schema';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
-import { Database, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { TracingService, defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Chess } from '@dxos/plugin-chess/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
-import { Collection, Text } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 export default defineFunction({
-  key: 'dxos.org/function/chess/commentary',
+  key: 'org.dxos.function.chess.commentary',
   name: 'Commentary',
   description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
   inputSchema: Schema.Struct({
-    game: Type.Ref(Chess.Game).annotations({
+    game: Ref.Ref(Chess.Game).annotations({
       description: 'The chess game to comment on.',
     }),
   }),
@@ -149,7 +150,7 @@ export default defineFunction({
       let document: Markdown.Document;
       if (docs.length === 0) {
         // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
-        const [properties] = yield* Database.runQuery(Filter.typename('dxos.org/type/Properties'));
+        const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.space-properties'));
         const rootCollection = yield* Database.load<Collection.Collection>(properties[Collection.Collection.typename]);
 
         log.info('rootCollection', { rootCollection });

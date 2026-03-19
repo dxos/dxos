@@ -35,7 +35,7 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
     }
 
     try {
-      const response = await client.edge.createSpace({ agentKey });
+      const response = await client.edge.http.createSpace({ agentKey });
       log.info('space created', { response });
       const space = await waitForCondition({
         condition: () => client.spaces.get(response.spaceId as SpaceId),
@@ -73,7 +73,7 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
       }
     >
       <IconButton icon='ph--code--regular' label='Open Script Plugin' onClick={handleScriptPluginOpen} />
-      <div className='border-bs border-separator'>{space && <SyncStateInfo space={space} />}</div>
+      <div className='border-t border-separator'>{space && <SyncStateInfo space={space} />}</div>
     </PanelContainer>
   );
 };

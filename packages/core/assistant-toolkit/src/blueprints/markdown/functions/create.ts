@@ -10,7 +10,7 @@ import { defineFunction } from '@dxos/functions';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 export default defineFunction({
-  key: 'dxos.org/function/markdown/create',
+  key: 'org.dxos.function.markdown.create',
   name: 'Create markdown document',
   description: 'Creates a new markdown document.',
   inputSchema: Schema.Struct({

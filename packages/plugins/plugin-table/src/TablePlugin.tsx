@@ -4,16 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Option from 'effect/Option';
+
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Type } from '@dxos/echo';
+import { Annotation, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { Table } from '@dxos/react-ui-table/types';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 
 import { BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -26,13 +28,13 @@ export const TablePlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Type.getTypename(Table.Table),
       metadata: {
-        icon: 'ph--table--regular',
-        iconHue: 'green',
+        icon: Annotation.IconAnnotation.get(Table.Table).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Table.Table).pipe(Option.getOrThrow).hue ?? 'white',
         comments: 'unanchored',
         inputSchema: CreateTableSchema,
         createObject: ((props, { db }) =>
           Effect.promise(async () => {
-            const { view, jsonSchema } = await View.makeFromDatabase({ db, typename: props.typename });
+            const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db, typename: props.typename });
             return Table.make({ name: props.name, view, jsonSchema });
           })) satisfies CreateObject,
       },

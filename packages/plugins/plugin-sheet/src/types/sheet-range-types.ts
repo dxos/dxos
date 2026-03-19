@@ -34,14 +34,14 @@ export const cellClassNameForRange = ({ key, value }: Sheet.Sheet['ranges'][numb
       }
 
     case commentKey:
-      return 'bg-gridComment';
+      return 'bg-grid-comment';
 
     case styleKey:
       switch (value) {
         case 'highlight':
-          return '!bg-gridHighlight';
+          return 'bg-grid-highlight!';
         case 'softwrap':
-          return '!whitespace-normal';
+          return 'whitespace-normal!';
         default:
           return undefined;
       }

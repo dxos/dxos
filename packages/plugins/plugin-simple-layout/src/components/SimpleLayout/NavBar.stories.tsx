@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { type Mock, expect, fn, screen, userEvent, within } from 'storybook/test';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ActionGraphProps, createGapSeparator, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -39,7 +39,7 @@ const buildCompanionOnlyActions = (): ActionGraphProps => {
     }),
   ];
   result.nodes.push(...companions);
-  result.edges.push(...companions.map((c) => ({ source: 'root', target: c.id })));
+  result.edges.push(...companions.map((c) => ({ source: 'root', target: c.id, relation: 'child' })));
   return result;
 };
 
@@ -81,18 +81,18 @@ const buildDefaultActions = (): ActionGraphProps => {
   ];
   result.nodes.push(...companions, ...gapSeparator.nodes, mainMenuGroup, ...menuActions);
   result.edges.push(
-    ...companions.map((c) => ({ source: 'root', target: c.id })),
+    ...companions.map((c) => ({ source: 'root', target: c.id, relation: 'child' })),
     ...gapSeparator.edges,
-    { source: 'root', target: mainMenuGroup.id },
-    ...menuActions.map((action) => ({ source: MAIN_MENU_GROUP_ID, target: action.id })),
+    { source: 'root', target: mainMenuGroup.id, relation: 'child' },
+    ...menuActions.map((action) => ({ source: MAIN_MENU_GROUP_ID, target: action.id, relation: 'child' })),
   );
   return result;
 };
 
 const meta = {
-  title: 'plugins/plugin-simple-layout/NavBar',
+  title: 'plugins/plugin-simple-layout/components/NavBar',
   component: NavBar,
-  decorators: [withTheme(), withRegistry],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withRegistry],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -106,7 +106,7 @@ type Story = StoryObj<typeof meta>;
 const DefaultStory = ({ onAction }: { onAction: (action: { id: string }) => void }) => {
   const actions = useMemo(() => Atom.make(buildDefaultActions()).pipe(Atom.keepAlive), []);
 
-  return <NavBar classNames='border-bs border-separator' actions={actions} onAction={onAction} />;
+  return <NavBar classNames='border-y border-separator' actions={actions} onAction={onAction} />;
 };
 
 export const Default: Story = {

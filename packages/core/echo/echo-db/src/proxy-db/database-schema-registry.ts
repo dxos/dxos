@@ -8,7 +8,8 @@ import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { JsonSchema, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
+import { JsonSchema, Obj, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import {
   PersistentSchema,
   TypeAnnotationId,
@@ -24,13 +25,12 @@ import { log } from '@dxos/log';
 import { coerceArray } from '@dxos/util';
 
 import { getObjectCore } from '../echo-handler';
-import { Filter } from '../query';
 
 import { type EchoDatabase } from './database';
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
 
 // TODO(wittjosiah): Use Annotation.SystemTypeAnnotation.
-const SYSTEM_SCHEMA = ['dxos.org/type/Schema'];
+const SYSTEM_SCHEMA = ['org.dxos.type.schema'];
 
 type SchemaSubscriptionCallback = (schema: Type.RuntimeType[]) => void;
 
@@ -98,7 +98,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // Nothing to do.
   }
 
-  public hasSchema(schema: Type.Entity.Any): boolean {
+  public hasSchema(schema: Type.AnyEntity): boolean {
     const schemaId = schema instanceof Type.RuntimeType ? schema.id : getObjectIdFromSchema(schema);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
@@ -114,7 +114,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     type Entry =
       | {
           source: 'runtime';
-          schema: Type.Entity.Any;
+          schema: Type.AnyEntity;
         }
       | {
           source: 'database';
@@ -251,9 +251,16 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         if (unsubscribe) {
           return;
         }
-        unsubscribe = self._subscribe(() => {
+        const unsubscribeDatabase = self._subscribe(() => {
           changes.emit();
         });
+        const unsubscribeRuntime = self._db.graph.schemaRegistry.schemaChanges.on(() => {
+          changes.emit();
+        });
+        unsubscribe = () => {
+          unsubscribeDatabase();
+          unsubscribeRuntime();
+        };
       },
       async stop() {
         unsubscribe?.();
@@ -272,7 +279,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         results.push(this._addSchema(input));
       } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
         const schema = this._addSchema(
-          Type.toEffectSchema({
+          JsonSchema.toEffectSchema({
             ...input.jsonSchema,
             typename: input.typename,
             version: input.version,
@@ -280,7 +287,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         );
         results.push(schema);
         if (input.name) {
-          schema.persistentSchema.name = input.name;
+          Obj.change(schema.persistentSchema, (persistentSchema) => {
+            persistentSchema.name = input.name;
+          });
         }
       } else {
         throw new TypeError('Invalid schema');

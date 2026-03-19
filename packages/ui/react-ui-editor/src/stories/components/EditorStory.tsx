@@ -20,7 +20,6 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   debugTree,
-  decorateMarkdown,
   editorSlots,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -39,7 +38,7 @@ export type StoryProps = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'selection
     debug?: DebugMode;
     debugCustom?: (view: EditorView) => ReactNode;
     text?: string;
-    object?: Obj.Obj<TestSchema.Expando>;
+    object?: Obj.OfShape<TestSchema.Expando>;
     readOnly?: boolean;
     placeholder?: string;
     lineNumbers?: boolean;
@@ -63,12 +62,12 @@ export const EditorStory = forwardRef<EditorController, StoryProps>(
 
     const view = controllerRef.current?.view;
     return (
-      <div className={mx('is-full bs-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
+      <div className={mx('w-full h-full grid overflow-hidden', debug && 'grid-cols-2 lg:grid-cols-[1fr_600px]')}>
         <EditorComponent ref={mergedRef} object={object} text={text} extensions={extensions} {...props} />
 
         {debug && (
           <div
-            className='grid bs-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'
+            className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator overflow-hidden'
             {...attentionAttrs}
           >
             {view && debugCustom?.(view)}
@@ -119,7 +118,6 @@ const EditorComponent = forwardRef<EditorController, StoryProps>(
           createBasicExtensions({ readOnly, placeholder, lineNumbers, scrollPastEnd: true, search: true }),
           createThemeExtensions({ monospace, themeMode, syntaxHighlighting: true, slots }),
           createMarkdownExtensions(),
-          decorateMarkdown(),
           extensions || [],
         ],
       }),

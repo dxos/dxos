@@ -1,0 +1,30 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+
+import { withTheme } from '@dxos/react-ui/testing';
+
+import { Voice } from './Voice';
+
+const meta = {
+  title: 'plugins/plugin-transformer/components/Voice',
+  component: Voice,
+  decorators: [withTheme()],
+  parameters: {
+    layout: 'centered',
+  },
+} satisfies Meta<typeof Voice>;
+
+export default meta;
+
+type Story = StoryObj<typeof Voice>;
+
+export const Default: Story = {
+  args: {
+    debug: true,
+    active: true,
+    model: 'Xenova/whisper-tiny',
+  },
+};

@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { errorText, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-type State = 'pending' | 'responding';
+type State = 'pending';
 
 /**
  * Request or response.
@@ -24,16 +24,15 @@ type Message = {
 };
 
 export type TestPanelProps = ThemedClassName<{
-  functionUrl?: string;
+  onInvoke?: (input: unknown) => Promise<unknown>;
 }>;
 
-// TODO(burdon): Need persistent history (currently lost when switching tabs)..
-export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
+// TODO(burdon): Need persistent history (currently lost when switching tabs).
+export const TestPanel = ({ classNames, onInvoke }: TestPanelProps) => {
   const { t } = useTranslation(meta.id);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [input, setInput] = useState('');
-  const [result, setResult] = useState('');
   const [state, setState] = useState<State | null>(null);
 
   // TODO(burdon): Persistent history (thread).
@@ -46,22 +45,8 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
     }
   };
 
-  const controller = useRef<AbortController>(null);
-  useEffect(() => {
-    return () => {
-      handleStop();
-    };
-  }, []);
-
-  const handleStop = () => {
-    controller.current?.abort('stop');
-    controller.current = null;
-  };
-
   const handleClear = () => {
-    handleStop();
     setInput('');
-    setResult('');
     setHistory([]);
     inputRef.current?.focus();
   };
@@ -75,108 +60,54 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
     data?: any;
     error?: Error;
   } = {}) => {
-    controller.current = null;
     setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
-    setResult('');
     setState(null);
     handleScroll();
   };
 
   const handleRequest = async (input: string) => {
-    // Returns a promise that resolves when a value has been received.
+    if (!onInvoke) {
+      handleResponse({ error: new Error('Function not deployed') });
+      return;
+    }
+
+    let data: unknown = input;
+    let displayText = input;
+    if (input.charAt(0) === '{') {
+      try {
+        const validJsonString = input.replace(/'/g, '"').replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
+        data = JSON.parse(validJsonString);
+        displayText = JSON.stringify(data, null, 2);
+      } catch (err) {
+        handleResponse({ error: new Error('Invalid JSON input') });
+        return;
+      }
+    }
+
     try {
       setState('pending');
-
-      let data = null;
-      // Detect JSON input.
-      if (input.charAt(0) === '{') {
-        try {
-          const validJsonString = input.replace(/'/g, '"').replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
-          data = JSON.parse(validJsonString);
-          input = JSON.stringify(data, null, 2);
-        } catch (err) {
-          inputRef.current?.focus();
-          return;
-        }
-      }
-
       setInput('');
-      setResult('');
-      setHistory((history) => [...history, { type: 'request', text: input }]);
-      setTimeout(() => {
-        handleScroll();
-      });
+      setHistory((history) => [...history, { type: 'request', text: displayText }]);
+      setTimeout(handleScroll);
 
-      // Throws DOMException when aborted.
-      controller.current = new AbortController();
-      const response = await fetch(functionUrl!, {
-        signal: controller.current.signal,
-        method: 'POST',
-        body: input,
-        headers: {
-          'Content-Type': data ? 'application/json' : 'text/plain',
-        },
-      });
+      const result = await onInvoke(data);
 
-      // Check for error.
-      if (!response.ok) {
-        const text = await response.text();
-        handleResponse({
-          error: new Error(text || response.statusText || String(response.status)),
-        });
-        return;
-      }
-
-      // Check for JSON.
-      const contentType = response.headers.get('content-type');
-      if (contentType === 'application/json') {
-        const data = await response.json();
-        handleResponse({ data });
-        return;
-      }
-
-      // Text (including streaming).
-      setState('responding');
-      let text = '';
-      const reader = response.body!.getReader();
-      const pump = async ({ done, value }: ReadableStreamReadResult<Uint8Array>): Promise<void> => {
-        text = text + new TextDecoder().decode(value);
-        if (!controller.current || done) {
-          handleResponse({ text });
-          return;
-        }
-
-        setResult(text);
-        setTimeout(() => {
-          handleScroll();
-        });
-
-        return reader.read().then(pump);
-      };
-
-      void reader
-        .read()
-        .then(pump)
-        .catch((err) => {
-          if (err.name !== 'AbortError') {
-            log.catch(err);
-          }
-        });
-    } catch (err: any) {
-      if (err !== 'stop') {
-        const error = err instanceof Error ? err : new Error(err);
-        handleResponse({ error });
-        log.catch(err);
+      if (typeof result === 'string') {
+        handleResponse({ text: result });
       } else {
-        handleResponse();
+        handleResponse({ data: result });
       }
+    } catch (err: any) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      handleResponse({ error });
+      log.catch(err);
     }
   };
 
   return (
-    <div className={mx('flex flex-col bs-full overflow-hidden', classNames)}>
+    <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
       {/* TODO(burdon): Replace with Thread. */}
-      <MessageThread ref={scrollerRef} state={state} result={result} history={history} />
+      <MessageThread ref={scrollerRef} state={state} history={history} />
       {/* TODO(burdon): Replace with Form based on the function's input schema. */}
       <Toolbar.Root>
         <Input.Root>
@@ -189,20 +120,8 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
         </Input.Root>
-        <Toolbar.IconButton
-          icon='ph--play--regular'
-          size={4}
-          label='Execute'
-          iconOnly
-          onClick={() => handleRequest(input)}
-        />
-        <Toolbar.IconButton
-          icon={state ? 'ph--stop--regular' : 'ph--trash--regular'}
-          size={4}
-          label={state ? 'Stop' : 'Clear'}
-          iconOnly
-          onClick={() => (state ? handleStop() : handleClear())}
-        />
+        <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
+        <Toolbar.IconButton icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
       </Toolbar.Root>
     </div>
   );
@@ -213,13 +132,12 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
 type MessageThreadProps = {
   state: State | null;
   history: Message[];
-  result: string;
 };
 
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
-  ({ state, history, result }: MessageThreadProps, forwardedRef) => {
+  ({ state, history }: MessageThreadProps, forwardedRef) => {
     return (
-      <ScrollArea.Root orientation='vertical' classNames='bs-full' ref={forwardedRef}>
+      <ScrollArea.Root orientation='vertical' classNames='h-full' ref={forwardedRef}>
         <ScrollArea.Viewport classNames='gap-6 p-2'>
           {history.map((message, i) => (
             <div key={i} className='grid grid-cols-[2rem_1fr_2rem]'>
@@ -230,15 +148,10 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
             </div>
           ))}
 
-          {result?.length > 0 && (
+          {state === 'pending' && (
             <div className='grid grid-cols-[2rem_1fr_2rem]'>
               <div className='p-1'>
-                {(state === 'pending' && <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />) || (
-                  <Icon icon='ph--robot--regular' size={6} classNames='animate-[pulse_1s_ease-in-out_infinite]' />
-                )}
-              </div>
-              <div className='overflow-auto'>
-                <MessageItem message={{ type: 'response', text: result }} />
+                <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />
               </div>
             </div>
           )}
@@ -250,13 +163,13 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
 
 const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
   const { type, text, data, error } = message;
-  const wrapper = 'p-1 pli-2 rounded-md bg-hoverSurface overflow-auto';
+  const wrapper = 'p-1 px-2 rounded-md bg-hover-surface overflow-auto';
   return (
     <div className={mx('flex', type === 'request' ? 'ml-[1rem] justify-end' : 'mr-[1rem]', classNames)}>
-      {error && <div className={mx(wrapper, 'whitespace-pre', errorText)}>{String(error)}</div>}
+      {error && <div className={mx(wrapper, 'whitespace-pre text-error-text')}>{String(error)}</div>}
 
       {text !== undefined && (
-        <div className={mx(wrapper, type === 'request' && 'bg-primary-400 dark:bg-primary-600')}>
+        <div className={mx(wrapper, type === 'request' && 'bg-primary-500 dark:bg-primary-600')}>
           {text || '\u00D8'}
         </div>
       )}

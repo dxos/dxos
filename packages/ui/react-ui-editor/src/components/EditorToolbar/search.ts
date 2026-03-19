@@ -23,8 +23,8 @@ export const createSearch = (
   getView: () => EditorView,
 ): {
   nodes: Node.NodeArg<any>[];
-  edges: Array<{ source: string; target: string }>;
+  edges: Array<{ source: string; target: string; relation: 'child' }>;
 } => ({
   nodes: [createSearchAction(getView)],
-  edges: [{ source: 'root', target: 'search' }],
+  edges: [{ source: 'root', target: 'search', relation: 'child' }],
 });

@@ -3,9 +3,11 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { expandAttendableId } from '@dxos/react-ui-attention';
 import { log } from '@dxos/log';
 import { OperationResolver } from '@dxos/operation';
 import { Graph } from '@dxos/plugin-graph';
@@ -20,21 +22,22 @@ export default Capability.makeModule(
         handler: Effect.fnUntraced(function* ({ subject }) {
           const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
           const { getItem, setItem } = yield* Capability.get(NavTreeCapabilities.State);
-          yield* Effect.tryPromise(() => Graph.waitForPath(graph, { target: subject }, { timeout: 1_000 })).pipe(
-            Effect.andThen((path) => {
-              [...Array(path.length)].forEach((_, index) => {
-                const subpath = path.slice(0, index);
-                const value = getItem(subpath);
-                if (!value.open) {
-                  setItem(subpath, 'open', true);
-                }
-              });
-            }),
-            Effect.catchAll(() => {
-              log('Path to node not found', { subject });
-              return Effect.void;
-            }),
-          );
+
+          const prefixes = expandAttendableId(subject);
+
+          for (const qualifiedId of prefixes) {
+            Graph.expand(graph, qualifiedId, 'child');
+
+            const treePath = prefixes.slice(0, prefixes.indexOf(qualifiedId) + 1);
+            const state = getItem(treePath);
+            if (!state.open) {
+              setItem(treePath, 'open', true);
+            }
+          }
+
+          if (Option.isNone(Graph.getNode(graph, subject))) {
+            log('Node not found after expansion', { subject });
+          }
         }),
       }),
     ]);

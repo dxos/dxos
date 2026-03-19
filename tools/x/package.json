@@ -36,7 +36,6 @@
     "ink-text-input": "catalog:",
     "js-yaml": "catalog:",
     "lodash.defaultsdeep": "catalog:",
-    "lodash.pick": "catalog:",
     "log-update": "catalog:",
     "node-notifier": "catalog:",
     "react": "catalog:",
@@ -48,7 +47,6 @@
     "@types/color-hash": "catalog:",
     "@types/columnify": "catalog:",
     "@types/lodash.defaultsdeep": "catalog:",
-    "@types/lodash.pick": "catalog:",
     "@types/minimatch": "catalog:",
     "@types/react": "catalog:",
     "@types/yargs": "catalog:"

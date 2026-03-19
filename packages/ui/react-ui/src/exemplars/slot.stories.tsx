@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Slot } from '@radix-ui/react-slot';
+import { Primitive } from '@radix-ui/react-primitive';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type PropsWithChildren, forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 
-import { mx } from '@dxos/ui-theme';
-import { type SlottableClassName, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
+import { composableProps } from '@dxos/ui-theme';
+import { type ComposableProps, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { withTheme } from '../testing';
+import { Slot } from '@radix-ui/react-slot';
 
 /**
  * Composition
@@ -19,52 +20,49 @@ import { withTheme } from '../testing';
  * https://www.radix-ui.com/primitives/docs/guides/composition
  */
 
-// Outer primitive (like Tooltip.Trigger or Focus.Group).
 const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
-  ({ children, className, classNames, asChild, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
+  ({ children, asChild, ...props }, forwardedRef) => {
+    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Root {...props} className={mx(className, classNames)} data-outer='true' ref={forwardedRef}>
+      <Comp {...composableProps<HTMLDivElement>(props, { role: 'none' })} ref={forwardedRef}>
         {children}
-      </Root>
+      </Comp>
     );
   },
 );
 
-// Middle primitive (like Dialog.Trigger or Mosaic.Cell).
 const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
-  ({ children, className, classNames, asChild, ...props }, forwardedRef) => {
-    const Root = asChild ? Slot : 'div';
+  ({ children, asChild, ...props }, forwardedRef) => {
+    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Root {...props} className={mx(className, classNames)} data-middle='true' ref={forwardedRef}>
+      <Comp {...composableProps<HTMLDivElement>(props, { role: 'none' })} ref={forwardedRef}>
         {children}
-      </Root>
+      </Comp>
     );
   },
 );
 
-// Leaf component (like Card.Root).
-const Leaf = forwardRef<HTMLButtonElement, SlottableClassName<PropsWithChildren>>(
-  ({ className, classNames, children, ...props }, forwardedRef) => {
+const Leaf = forwardRef<HTMLButtonElement, ComposableProps<HTMLButtonElement>>(
+  ({ children, ...props }, forwardedRef) => {
     return (
-      <button {...props} className={mx('p-2 outline-none border rounded', className, classNames)} ref={forwardedRef}>
+      <button {...composableProps<HTMLButtonElement>(props, { role: 'none' })} ref={forwardedRef}>
         {children}
       </button>
     );
   },
 );
 
-// Test 1: Single asChild.
-const TestSingle = ({ classNames, ...props }: ThemedClassName<{ role?: string }>) => (
-  <Outer asChild {...props} className={mx('p-2', classNames)}>
-    <Leaf>Single asChild</Leaf>
-  </Outer>
-);
-
-// Test 2: Nested asChild.
-const TestNested = ({ classNames, ...props }: ThemedClassName<{ role?: string }>) => {
+const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
   return (
-    <Outer asChild {...props} className={mx('p-2', classNames)}>
+    <Outer asChild {...composableProps<HTMLDivElement>(props, { role: 'none' })}>
+      <Leaf>Single asChild (non-compliant — see console)</Leaf>
+    </Outer>
+  );
+};
+
+const TestNested = (props: ThemedClassName<{ role?: string }>) => {
+  return (
+    <Outer asChild {...composableProps<HTMLDivElement>(props, { role: 'none' })}>
       <Middle asChild>
         <Leaf>Nested asChild</Leaf>
       </Middle>
@@ -72,16 +70,17 @@ const TestNested = ({ classNames, ...props }: ThemedClassName<{ role?: string }>
   );
 };
 
-// Test 3: Complex.
-const TestInner = ({ classNames, ...props }: ThemedClassName<{ role?: string }>) => (
-  <Outer asChild {...props} className={mx('p-2', classNames)}>
-    <Middle asChild>
-      <Leaf>
-        <div role='none'>Leaf</div>
-      </Leaf>
-    </Middle>
-  </Outer>
-);
+const TestInner = (props: ThemedClassName<{ role?: string }>) => {
+  return (
+    <Outer asChild {...composableProps<HTMLDivElement>(props, { role: 'none' })}>
+      <Middle asChild>
+        <Leaf>
+          <div role='none'>Leaf</div>
+        </Leaf>
+      </Middle>
+    </Outer>
+  );
+};
 
 const meta = {
   title: 'ui/react-ui-core/exemplars/slot',

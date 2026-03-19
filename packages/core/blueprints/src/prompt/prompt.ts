@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, JsonSchema, Obj, type Ref, Type } from '@dxos/echo';
+import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 
 import { Blueprint } from '../blueprint';
 import * as Template from '../template';
@@ -44,7 +44,7 @@ export const Prompt = Schema.Struct({
   /**
    * Blueprints that the prompt may utilize.
    */
-  blueprints: Schema.Array(Type.Ref(Blueprint)),
+  blueprints: Schema.Array(Ref.Ref(Blueprint)),
 
   /**
    * Additional context that the prompt may utilize.
@@ -52,8 +52,12 @@ export const Prompt = Schema.Struct({
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Prompt',
+    typename: 'org.dxos.type.prompt',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--scroll--regular',
+    hue: 'sky',
   }),
 );
 

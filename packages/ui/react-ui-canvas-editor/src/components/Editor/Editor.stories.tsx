@@ -63,7 +63,7 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
   const [selection, selected] = useSelection(graph);
 
   return (
-    <div className='grid grid-cols-[1fr,360px] is-full bs-full'>
+    <div className='grid grid-cols-[1fr_360px] w-full h-full'>
       <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
         <Editor.Root ref={editorRef} id={id} graph={graph} selection={selection} autoZoom {...props}>
           <Editor.Canvas>{children}</Editor.Canvas>
@@ -80,8 +80,8 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
               values={selected}
               fieldMap={{
                 // TODO(burdon): Replace by type.
-                ['center' as const]: (props) => <TupleField {...props} binding={['x', 'y']} />,
-                ['size' as const]: (props) => <TupleField {...props} binding={['width', 'height']} />,
+                center: (props) => <TupleField {...props} binding={['x', 'y']} />,
+                size: (props) => <TupleField {...props} binding={['width', 'height']} />,
               }}
             >
               <Form.Viewport>
@@ -117,7 +117,7 @@ const meta = {
             // Replace all schema in the spec with the registered schema.
             const registeredSchema = await space.db.schemaRegistry.register([
               ...new Set(spec.map((schema: any) => schema.type)),
-            ] as Type.Entity.Any[]);
+            ] as Type.AnyEntity[]);
 
             spec = spec.map((schema: any) => ({
               ...schema,

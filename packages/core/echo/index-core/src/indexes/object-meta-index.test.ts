@@ -14,13 +14,13 @@ import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import type { IndexerObject } from './interface';
 import { ObjectMetaIndex } from './object-meta-index';
 
-const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
-const TYPE_PERSON_VERSIONLESS = DXN.parse('dxn:type:example.com/type/Person').toString();
-const TYPE_RELATION = DXN.parse('dxn:type:example.com/type/Relation:0.1.0').toString();
-const TYPE_RELATION_UPDATED = DXN.parse('dxn:type:example.com/type/RelationUpdated:0.1.0').toString();
-const TYPE_WITH_UNDERSCORE = DXN.parse('dxn:type:example.com/type/Person_Extra:0.1.0').toString();
-const TYPE_WITH_UNDERSCORE_VERSIONLESS = DXN.parse('dxn:type:example.com/type/Person_Extra').toString();
-const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.parse('dxn:type:example.com/type/PersonAExtra:0.1.0').toString();
+const TYPE_PERSON = DXN.parse('dxn:type:com.example.type.person:0.1.0').toString();
+const TYPE_PERSON_VERSIONLESS = DXN.parse('dxn:type:com.example.type.person').toString();
+const TYPE_RELATION = DXN.parse('dxn:type:com.example.type.relation:0.1.0').toString();
+const TYPE_RELATION_UPDATED = DXN.parse('dxn:type:com.example.type.relation-updated:0.1.0').toString();
+const TYPE_WITH_UNDERSCORE = DXN.parse('dxn:type:com.example.type.person-extra:0.1.0').toString();
+const TYPE_WITH_UNDERSCORE_VERSIONLESS = DXN.parse('dxn:type:com.example.type.person-extra').toString();
+const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.parse('dxn:type:com.example.type.person-a-extra:0.1.0').toString();
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({
@@ -57,7 +57,7 @@ describe('ObjectMetaIndex', () => {
 
       const otherTypeResults = yield* index.query({
         spaceId,
-        typeDxn: DXN.parse('dxn:type:example.com/type/Other').toString(),
+        typeDxn: DXN.parse('dxn:type:com.example.type.other').toString(),
       });
       expect(otherTypeResults).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),
@@ -105,6 +105,7 @@ describe('ObjectMetaIndex', () => {
       const queryTypesResults = yield* index.queryTypes({
         spaceIds: [spaceId],
         typeDxns: [TYPE_WITH_UNDERSCORE_VERSIONLESS],
+        includeAllQueues: true,
       });
       expect(queryTypesResults.map((_) => _.objectId)).toEqual([objectIdMatch]);
     }).pipe(Effect.provide(TestLayer)),
@@ -251,35 +252,58 @@ describe('ObjectMetaIndex', () => {
 
       yield* index.update([item1, item2, relation]);
 
-      const all = yield* index.queryAll({ spaceIds: [spaceId] });
+      const all = yield* index.queryAll({ spaceIds: [spaceId], includeAllQueues: true });
       expect(all.map((_) => _.objectId).sort()).toEqual([objectId1, objectId2, relationId].sort());
 
-      const types = yield* index.queryTypes({ spaceIds: [spaceId], typeDxns: [TYPE_PERSON, TYPE_RELATION] });
+      const allNoQueues = yield* index.queryAll({ spaceIds: [spaceId] });
+      expect(allNoQueues).toEqual([]);
+
+      const types = yield* index.queryTypes({
+        spaceIds: [spaceId],
+        typeDxns: [TYPE_PERSON, TYPE_RELATION],
+        includeAllQueues: true,
+      });
       expect(types.map((_) => _.objectId).sort()).toEqual([objectId1, objectId2, relationId].sort());
 
-      const onlyPerson = yield* index.queryTypes({ spaceIds: [spaceId], typeDxns: [TYPE_PERSON] });
+      const onlyPerson = yield* index.queryTypes({
+        spaceIds: [spaceId],
+        typeDxns: [TYPE_PERSON],
+        includeAllQueues: true,
+      });
       expect(onlyPerson.map((_) => _.objectId)).toEqual([objectId1]);
 
       const onlyPersonVersionless = yield* index.queryTypes({
         spaceIds: [spaceId],
         typeDxns: [TYPE_PERSON_VERSIONLESS],
+        includeAllQueues: true,
       });
       expect(onlyPersonVersionless.map((_) => _.objectId)).toEqual([objectId1]);
 
-      const notPerson = yield* index.queryTypes({ spaceIds: [spaceId], typeDxns: [TYPE_PERSON], inverted: true });
+      const notPerson = yield* index.queryTypes({
+        spaceIds: [spaceId],
+        typeDxns: [TYPE_PERSON],
+        inverted: true,
+        includeAllQueues: true,
+      });
       expect(notPerson.map((_) => _.objectId).sort()).toEqual([objectId2, relationId].sort());
 
       const notPersonVersionless = yield* index.queryTypes({
         spaceIds: [spaceId],
         typeDxns: [TYPE_PERSON_VERSIONLESS],
         inverted: true,
+        includeAllQueues: true,
       });
       expect(notPersonVersionless.map((_) => _.objectId).sort()).toEqual([objectId2, relationId].sort());
 
       const emptyTypes = yield* index.queryTypes({ spaceIds: [spaceId], typeDxns: [] });
       expect(emptyTypes).toEqual([]);
 
-      const notEmptyTypes = yield* index.queryTypes({ spaceIds: [spaceId], typeDxns: [], inverted: true });
+      const notEmptyTypes = yield* index.queryTypes({
+        spaceIds: [spaceId],
+        typeDxns: [],
+        inverted: true,
+        includeAllQueues: true,
+      });
       expect(notEmptyTypes.map((_) => _.objectId).sort()).toEqual([objectId1, objectId2, relationId].sort());
 
       const bySource = yield* index.queryRelations({

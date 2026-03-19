@@ -60,16 +60,16 @@ export default defineConfig({
     },
     ConfigPlugin({
       root: dirname,
-      env: ['DX_ENVIRONMENT', 'DX_IPDATA_API_KEY', 'DX_POSTHOG_API_KEY', 'DX_POSTHOG_API_HOST', 'DX_POSTHOG_FEEDBACK_SURVEY_ID', 'PACKAGE_VERSION'],
-    }),
-    ThemePlugin({
-      root: dirname,
-      content: [
-        path.resolve(dirname, './index.html'),
-        path.resolve(dirname, './src/**/*.{js,ts,jsx,tsx}'),
-        path.resolve(dirname, '../plugins/*/src/**/*.{js,ts,jsx,tsx}'),
+      env: [
+        'DX_ENVIRONMENT',
+        'DX_IPDATA_API_KEY',
+        'DX_POSTHOG_API_KEY',
+        'DX_POSTHOG_API_HOST',
+        'DX_POSTHOG_FEEDBACK_SURVEY_ID',
+        'PACKAGE_VERSION',
       ],
     }),
+    ThemePlugin({}),
     TopLevelAwaitPlugin(),
     WasmPlugin(),
     react({ tsDecorators: true }),

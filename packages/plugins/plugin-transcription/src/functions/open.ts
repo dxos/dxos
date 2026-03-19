@@ -5,18 +5,18 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Type } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { QueueService, defineFunction } from '@dxos/functions';
 import { Message, Transcript } from '@dxos/types';
 
 import { renderByline } from '../util';
 
 export default defineFunction({
-  key: 'dxos.org/function/transcription/open',
+  key: 'org.dxos.function.transcription.open',
   name: 'Open',
   description: 'Opens and reads the contents of a transcription object.',
   inputSchema: Schema.Struct({
-    transcript: Type.Ref(Transcript.Transcript).annotations({
+    transcript: Ref.Ref(Transcript.Transcript).annotations({
       description: 'The ID of the transcription object.',
     }),
   }),

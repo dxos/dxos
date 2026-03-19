@@ -18,9 +18,9 @@ import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
 // Create tags at render time to avoid Storybook serialization issues with ECHO objects.
 const createTags = (): Tag.Map => ({
-  ['tag_1' as const]: Tag.make({ label: 'Important' }),
-  ['tag_2' as const]: Tag.make({ label: 'Investor' }),
-  ['tag_3' as const]: Tag.make({ label: 'New' }),
+  tag_1: Tag.make({ label: 'Important' }),
+  tag_2: Tag.make({ label: 'Investor' }),
+  tag_3: Tag.make({ label: 'New' }),
 });
 
 const meta = {
@@ -43,7 +43,7 @@ const meta = {
       <div role='none' className='flex flex-col gap-2'>
         <QueryEditor
           {...args}
-          classNames='p-2 border border-subduedSeparator rounded-sm'
+          classNames='p-2 border border-subdued-separator rounded-xs'
           db={space?.db}
           onChange={handleChange}
         />
@@ -74,20 +74,20 @@ export const Default: Story = {};
 export const Complex: Story = {
   args: {
     autoFocus: true,
-    value: '#important OR type:dxos.org/type/Person AND { title: "DXOS", value: true }',
+    value: '#important OR type:org.dxos.type.person AND { title: "DXOS", value: true }',
   },
 };
 
 export const Relation: Story = {
   args: {
     autoFocus: true,
-    value: '(type:dxos.org/type/Person -> type:dxos.org/type/Organization)',
+    value: '(type:org.dxos.type.person -> type:org.dxos.type.organization)',
   },
 };
 
 export const Tags: Story = {
   args: {
     autoFocus: true,
-    value: 'type:dxos.org/type/Person #investor #new',
+    value: 'type:org.dxos.type.person #investor #new',
   },
 };

@@ -7,7 +7,8 @@ import { inspect } from 'node:util';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Database, type Entity, Obj, type QueryAST, Ref } from '@dxos/echo';
+import { Database, type Entity, Obj, QueryAST, Ref } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -28,7 +29,6 @@ import {
   isEchoObject,
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
-import { Filter, Query } from '../query';
 
 import { DatabaseSchemaRegistry } from './database-schema-registry';
 import { type ObjectMigration } from './object-migration';
@@ -227,12 +227,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     this.prototype.query = this.prototype._query;
   }
 
-  private _query(query: Query.Any | Filter.Any, options?: Database.QueryOptions & QueryAST.QueryOptions) {
+  private _query(query: Query.Any | Filter.Any) {
     query = Filter.is(query) ? Query.select(query) : query;
-    return this._coreDatabase.graph.query(query, {
-      ...options,
-      spaceIds: [this.spaceId],
-    });
+
+    if (!isQueryScoped(query.ast)) {
+      query = query.from({ spaceIds: [this.spaceId] });
+    }
+
+    return this._coreDatabase.graph.query(query);
   }
 
   /**
@@ -291,7 +293,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {
     for (const migration of migrations) {
-      const objects = await this._coreDatabase.graph.query(Query.select(Filter.typeDXN(migration.fromType))).run();
+      const objects = await this._coreDatabase.graph
+        .query(Query.select(Filter.typeDXN(migration.fromType)).from(this))
+        .run();
       log.verbose('migrate', {
         from: migration.fromType,
         to: migration.toType,
@@ -377,4 +381,14 @@ const createSchemaNotRegisteredError = (schema?: any) => {
   }
 
   return new Error(message);
+};
+
+const isQueryScoped = (query: QueryAST.Query): boolean => {
+  let scoped = false;
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'from') {
+      scoped = true;
+    }
+  });
+  return scoped;
 };

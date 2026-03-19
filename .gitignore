@@ -1,3 +1,6 @@
+.worktrees/
+.claude/worktrees/
+
 # Logs
 logs/
 npm-debug.log*
@@ -172,6 +175,9 @@ typedoc
 
 # aider assistant temp files
 .aider*
+
+# playwright MCP temp files
+.playwright-mcp/
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*

@@ -24,7 +24,7 @@ import {
   useForwardedRef,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { ghostSelectedContainerMd, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 type TabsActivePart = 'list' | 'panel';
 
@@ -50,6 +50,7 @@ type TabsRootProps = ThemedClassName<TabsPrimitive.TabsProps> &
     defaultActivePart: TabsActivePart;
   }>;
 
+// TODO(burdon): Reconcile padding with Toolbar.
 const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
   (
     {
@@ -147,8 +148,8 @@ const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => 
       className={mx(
         orientation === 'vertical' &&
           verticalVariant === 'stateful' && [
-            'grid is-[200%] grid-cols-2 data-[active=panel]:mis-[-100%]',
-            '@md:is-auto @md:data-[active=panel]:mis-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
+            'grid w-[200%] grid-cols-2 data-[active=panel]:ms-[-100%]',
+            '@md:w-auto @md:data-[active=panel]:ms-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
           ],
         classNames,
       )}
@@ -160,6 +161,7 @@ const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => 
 
 type TabsTablistProps = ThemedClassName<TabsPrimitive.TabsListProps>;
 
+// TODO(burdon): Should have same geometry as Toolbar.
 const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
   const { orientation, verticalVariant } = useTabsContext('TabsTablist');
   return (
@@ -167,7 +169,7 @@ const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
       {...props}
       data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
       className={mx(
-        'max-bs-full is-full',
+        'max-h-full w-full',
         // NOTE: Padding should be common to Toolbar.
         orientation === 'vertical' ? 'overflow-y-auto' : 'flex items-stretch justify-start overflow-x-auto p-1 gap-1',
         orientation === 'vertical' && verticalVariant === 'stateful' && 'place-self-start p-1',
@@ -189,14 +191,14 @@ const TabsBackButton = ({ onClick, classNames, ...props }: ButtonProps) => {
     [onClick, setActivePart],
   );
 
-  return <Button {...props} classNames={['is-full text-start @md:hidden mbe-2', classNames]} onClick={handleClick} />;
+  return <Button {...props} classNames={['w-full text-start @md:hidden mb-2', classNames]} onClick={handleClick} />;
 };
 
 type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;
 
 const TabsTabGroupHeading = ({ children, classNames, ...props }: ThemedClassName<TabsTabGroupHeadingProps>) => {
   return (
-    <h2 {...props} className={mx('mlb-1 pli-2 text-sm text-unAccent', classNames)}>
+    <h2 {...props} className={mx('my-1 px-2 text-sm text-un-accent', classNames)}>
       {children}
     </h2>
   );
@@ -227,8 +229,8 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
         {...props}
         onClick={handleClick}
         classNames={[
-          orientation === 'vertical' && 'block justify-start text-start is-full',
-          orientation === 'vertical' && ghostSelectedContainerMd,
+          orientation === 'vertical' && 'block justify-start text-start w-full',
+          orientation === 'vertical' && 'dx-selected',
           classNames,
         ]}
       >
@@ -263,8 +265,8 @@ const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps)
         {...props}
         onClick={handleClick}
         classNames={[
-          orientation === 'vertical' && 'justify-start text-start is-full',
-          orientation === 'vertical' && ghostSelectedContainerMd,
+          orientation === 'vertical' && 'justify-start text-start w-full',
+          orientation === 'vertical' && 'dx-selected',
           classNames,
         ]}
       />

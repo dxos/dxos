@@ -6,7 +6,7 @@ import type * as Tool from '@effect/ai/Tool';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { NumericTabs, TextCrawl, ToggleContainer, type ToggleContainerRootProps } from '@dxos/react-ui-components';
+import { NumericTabs, TextCrawl, TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetProps } from '@dxos/ui-editor';
@@ -25,12 +25,12 @@ export type ToolBlockProps = XmlWidgetProps<{
 export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
   const { t } = useTranslation(meta.id);
 
-  const items = useMemo<ToolContainerProps['items']>(() => {
+  const items = useMemo<ToolPanelProps['items']>(() => {
     let lastToolCall: { tool: Tool.Any | undefined; block: ContentBlock.ToolCall } | undefined;
     // TODO(burdon): Get from context?
     const tools: Tool.Any[] = []; //processor.conversation.toolkit?.tools ?? [];
     return blocks
-      .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'summary')
+      .filter((block) => block._tag === 'toolCall' || block._tag === 'toolResult' || block._tag === 'stats')
       .map((block) => {
         switch (block._tag) {
           case 'toolCall': {
@@ -70,13 +70,13 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
             };
           }
 
-          case 'summary': {
+          case 'stats': {
             if (!lastToolCall) {
               return null;
             }
 
             return {
-              title: t('summary label'),
+              title: t('stats label'),
               content: block,
             };
           }
@@ -96,16 +96,16 @@ export const ToolBlock = ({ view, blocks = [] }: ToolBlockProps) => {
     return null;
   }
 
-  return <ToolContainer items={items} onChangeOpen={handleChangeOpen} />;
+  return <ToolPanel items={items} onChangeOpen={handleChangeOpen} />;
 };
 
 ToolBlock.displayName = 'ToolBlock';
 
-type ToolContainerProps = {
+type ToolPanelProps = {
   items: { title: string; content: any }[];
-} & Pick<ToggleContainerRootProps, 'onChangeOpen'>;
+} & Pick<TogglePanelRootProps, 'onChangeOpen'>;
 
-export const ToolContainer = ({ items, onChangeOpen }: ToolContainerProps) => {
+export const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(0);
   const [open, setOpen] = useState(false);
@@ -122,11 +122,11 @@ export const ToolContainer = ({ items, onChangeOpen }: ToolContainerProps) => {
   }, []);
 
   return (
-    <ToggleContainer.Root classNames='mbs-2 is-full rounded-sm' open={open} onChangeOpen={setOpen}>
-      <ToggleContainer.Header classNames='text-sm text-placeholder'>
+    <TogglePanel.Root classNames='mt-2 w-full rounded-xs' open={open} onChangeOpen={setOpen}>
+      <TogglePanel.Header classNames='text-sm text-placeholder'>
         <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
-      </ToggleContainer.Header>
-      <ToggleContainer.Content classNames='grid grid-cols-[32px_1fr]'>
+      </TogglePanel.Header>
+      <TogglePanel.Content classNames='grid grid-cols-[32px_1fr]'>
         <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
         <Json
           data={items[selected]?.content}
@@ -137,7 +137,7 @@ export const ToolContainer = ({ items, onChangeOpen }: ToolContainerProps) => {
             maxStringLen: 128,
           }}
         />
-      </ToggleContainer.Content>
-    </ToggleContainer.Root>
+      </TogglePanel.Content>
+    </TogglePanel.Root>
   );
 };

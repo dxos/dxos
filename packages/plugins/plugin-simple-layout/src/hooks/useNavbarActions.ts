@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import { useMemo } from 'react';
 
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, useActionRunner } from '@dxos/plugin-graph';
 import { useTranslation } from '@dxos/react-ui';
@@ -20,6 +20,7 @@ import { meta } from '../meta';
 import { SimpleLayoutState } from '../types';
 
 import { createCompanionActions } from './actions';
+import { useSimpleLayoutState } from './useSimpleLayoutState';
 
 const MAIN_MENU_GROUP_ID = 'navbar-main-menu';
 
@@ -38,8 +39,8 @@ export const useNavbarActions = (): NavbarActions => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
-  const { invokeSync } = useOperationInvoker();
   const stateAtom = useCapability(SimpleLayoutState);
+  const { updateState } = useSimpleLayoutState();
 
   // Create a computed atom that derives everything from graph connections and state.
   const actionsAtom = useMemo(
@@ -48,7 +49,7 @@ export const useNavbarActions = (): NavbarActions => {
         // Add companion actions.
         const { nodes, edges } = createCompanionActions(graph, stateAtom, get, {
           idPrefix: 'navbar',
-          invokeSync,
+          updateState,
         });
 
         // Add gap separator.
@@ -65,21 +66,21 @@ export const useNavbarActions = (): NavbarActions => {
           testId: 'simpleLayoutPlugin.addSpace',
         });
         nodes.push(mainMenuGroup);
-        edges.push({ source: 'root', target: mainMenuGroup.id });
+        edges.push({ source: 'root', target: mainMenuGroup.id, relation: 'child' });
 
-        // Get menu actions from root connections.
-        const rootConnections = get(graph.connections(Node.RootId));
-        const menuActions = rootConnections.filter((node) => node.properties.disposition === 'menu');
+        // Get menu actions from root actions (on 'action' edge relation).
+        const rootActions = get(graph.actions(Node.RootId));
+        const menuActions = rootActions.filter((node) => node.properties.disposition === 'menu');
 
         // Add menu actions as children of the dropdown group.
         menuActions.forEach((menuAction) => {
           nodes.push(menuAction as ActionGraphProps['nodes'][number]);
-          edges.push({ source: MAIN_MENU_GROUP_ID, target: menuAction.id });
+          edges.push({ source: MAIN_MENU_GROUP_ID, target: menuAction.id, relation: 'child' });
         });
 
         return { nodes, edges };
       }),
-    [graph, stateAtom, invokeSync, t],
+    [graph, stateAtom, updateState, t],
   );
 
   return { actions: actionsAtom, onAction: runAction };

@@ -4,16 +4,16 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createSlide } from '../../testing';
 
 import { Slide } from './Slide';
 
 const meta = {
-  title: 'plugins/plugin-presenter/Slide',
+  title: 'plugins/plugin-presenter/components/Slide',
   component: Slide,
-  decorators: [withTheme()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },

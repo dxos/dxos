@@ -17,7 +17,7 @@ import {
 import { meta } from '../../meta';
 import { type SheetModel } from '../../model';
 import { type StyleKey, type StyleValue, rangeFromIndex, rangeToIndex } from '../../types';
-import { useSheetContext } from '../SheetContext';
+import { useSheetContext } from '../SheetRoot';
 
 import { type ToolbarState, type ToolbarStateAtom } from './useToolbarState';
 
@@ -131,8 +131,8 @@ export const createStyle = (context: StyleActionsContext): ActionGraphProps => {
   return {
     nodes: [styleGroupAction, ...styleActions],
     edges: [
-      { source: 'root', target: 'style' },
-      ...styleActions.map(({ id }) => ({ source: styleGroupAction.id, target: id })),
+      { source: 'root', target: 'style', relation: 'child' },
+      ...styleActions.map(({ id }) => ({ source: styleGroupAction.id, target: id, relation: 'child' })),
     ],
   };
 };

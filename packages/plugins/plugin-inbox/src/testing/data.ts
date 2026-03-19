@@ -3,8 +3,11 @@
 //
 
 import { addMinutes, roundToNearestMinutes } from 'date-fns';
+import * as Effect from 'effect/Effect';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer } from '@dxos/echo-db';
+import { runAndForwardErrors } from '@dxos/effect';
 import { IdentityDid, ObjectId } from '@dxos/keys';
 import { faker } from '@dxos/random';
 import { type Space } from '@dxos/react-client/echo';
@@ -119,9 +122,12 @@ export const createMessage = (space?: Space, options: CreateOptions = { paragrap
  * Initializes a mailbox with messages in the given space.
  */
 export const initializeMailbox = async (space: Space, count = 30) => {
-  const mailbox = Mailbox.make({ space });
-  const queue = space.queues.get<Message.Message>(mailbox.queue.dxn);
-  await queue.append(createMessages(count, space));
-  space.db.add(mailbox);
+  const mailbox = space.db.add(Mailbox.make());
+  const feed = await mailbox.feed?.tryLoad();
+  if (!feed) {
+    throw new Error('Mailbox missing backing feed');
+  }
+  const messages = createMessages(count, space);
+  await runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(createFeedServiceLayer(space.queues))));
   return mailbox;
 };

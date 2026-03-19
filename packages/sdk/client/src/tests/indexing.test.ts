@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import isEqual from 'lodash.isequal';
+import isEqual from 'fast-deep-equal';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, TriggerState, asyncTimeout } from '@dxos/async';
@@ -72,7 +72,7 @@ describe('Index queries', () => {
     return client;
   };
 
-  const addObjects = async <T extends {}>(space: Space, objects: Obj.Obj<T>[]) => {
+  const addObjects = async <T extends {}>(space: Space, objects: Obj.OfShape<T>[]) => {
     await space.waitUntilReady();
     const objectsInDataBase = objects.map((object) => {
       return space.db.add(object);

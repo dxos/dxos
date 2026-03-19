@@ -3,9 +3,9 @@
 //
 
 import { Order } from '@dxos/echo';
-import { type QueryAST } from '@dxos/echo-protocol';
+import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import type { DXN, SpaceId } from '@dxos/keys';
+import type { DXN } from '@dxos/keys';
 
 import { QueryError } from './errors';
 import { QueryPlan } from './plan';
@@ -33,6 +33,7 @@ export class QueryPlanner {
   }
 
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
+    this._validateQueryScoped(query);
     let plan = this._generate(query, { ...DEFAULT_CONTEXT, originalQuery: query });
     plan = this._optimizeEmptyFilters(plan);
     plan = this._optimizeSoloUnions(plan);
@@ -67,6 +68,8 @@ export class QueryPlanner {
         return this._generateOrderClause(query, context);
       case 'limit':
         return this._generateLimitClause(query, context);
+      case 'from':
+        return this._generateFromClause(query, context);
       default:
         throw new QueryError({
           message: `Unsupported query type: ${(query as any).type}`,
@@ -79,19 +82,23 @@ export class QueryPlanner {
     const newContext = {
       ...context,
     };
-    if (query.options.spaceIds) {
-      newContext.selectionSpaces = query.options.spaceIds as readonly SpaceId[];
-    }
-    if (query.options.allQueuesFromSpaces !== undefined) {
-      newContext.selectionAllQueuesFromSpaces = query.options.allQueuesFromSpaces;
-    }
-    if (query.options.queues) {
-      newContext.selectionQueues = query.options.queues as readonly DXN.String[];
-    }
     if (query.options.deleted) {
       newContext.deletedHandling = query.options.deleted;
     }
     return this._generate(query.query, newContext);
+  }
+
+  private _generateFromClause(query: QueryAST.QueryFromClause, context: GenerationContext): QueryPlan.Plan {
+    if (query.from._tag === 'scope') {
+      return this._generate(query.query, { ...context, scope: query.from.scope });
+    }
+
+    // Subquery from: flatten by rewriting the outer query's leaf select into a filter on the subquery.
+    const subquery = query.from.query;
+    const rewritten = QueryAST.map(query.query, (node) =>
+      node.type === 'select' ? { type: 'filter', selection: subquery, filter: node.filter } : node,
+    );
+    return this._generate(rewritten, context);
   }
 
   private _generateSelectClause(query: QueryAST.QuerySelectClause, context: GenerationContext): QueryPlan.Plan {
@@ -131,9 +138,7 @@ export class QueryPlanner {
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
-              spaces: context.selectionSpaces,
-              allQueuesFromSpaces: context.selectionAllQueuesFromSpaces,
-              queues: context.selectionQueues,
+              scope: context.scope,
               selector: {
                 _tag: 'IdSelector',
                 objectIds: filter.id,
@@ -149,9 +154,7 @@ export class QueryPlanner {
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
-              spaces: context.selectionSpaces,
-              allQueuesFromSpaces: context.selectionAllQueuesFromSpaces,
-              queues: context.selectionQueues,
+              scope: context.scope,
               selector: {
                 _tag: 'TypeSelector',
                 typename: [filter.typename as DXN.String],
@@ -169,9 +172,7 @@ export class QueryPlanner {
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
-              spaces: context.selectionSpaces,
-              allQueuesFromSpaces: context.selectionAllQueuesFromSpaces,
-              queues: context.selectionQueues,
+              scope: context.scope,
               selector: {
                 _tag: 'WildcardSelector',
               },
@@ -190,9 +191,7 @@ export class QueryPlanner {
         return QueryPlan.Plan.make([
           {
             _tag: 'SelectStep',
-            spaces: context.selectionSpaces,
-            allQueuesFromSpaces: context.selectionAllQueuesFromSpaces,
-            queues: context.selectionQueues,
+            scope: context.scope,
             selector: {
               _tag: 'WildcardSelector',
             },
@@ -210,9 +209,7 @@ export class QueryPlanner {
         return QueryPlan.Plan.make([
           {
             _tag: 'SelectStep',
-            spaces: context.selectionSpaces,
-            allQueuesFromSpaces: context.selectionAllQueuesFromSpaces,
-            queues: context.selectionQueues,
+            scope: context.scope,
             selector: {
               _tag: 'TextSelector',
               text: filter.text,
@@ -251,9 +248,7 @@ export class QueryPlanner {
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
-              spaces: context.selectionSpaces,
-              allQueuesFromSpaces: context.selectionAllQueuesFromSpaces,
-              queues: context.selectionQueues,
+              scope: context.scope,
               selector: {
                 _tag: 'TypeSelector',
                 typename: typenames as DXN.String[],
@@ -473,6 +468,21 @@ export class QueryPlanner {
     ]);
   }
 
+  private _validateQueryScoped(query: QueryAST.Query): void {
+    let hasScope = false;
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'from') {
+        hasScope = true;
+      }
+    });
+    if (!hasScope) {
+      throw new QueryError({
+        message: 'Query must be scoped with a from() clause',
+        context: { query },
+      });
+    }
+  }
+
   /**
    * Removes filter steps that have no predicates.
    */
@@ -688,19 +698,9 @@ type GenerationContext = {
   originalQuery: QueryAST.Query | null;
 
   /**
-   * Which spaces to select from.
+   * The scope to select from (space IDs, queues, etc.).
    */
-  selectionSpaces: readonly SpaceId[];
-
-  /**
-   * Whether to select from all queues in the spaces specified by selectionSpaces.
-   */
-  selectionAllQueuesFromSpaces: boolean;
-
-  /**
-   * Which queues to select from.
-   */
-  selectionQueues: readonly DXN.String[];
+  scope: QueryAST.Scope;
 
   /**
    * How to handle deleted objects.
@@ -715,9 +715,7 @@ type GenerationContext = {
 
 const DEFAULT_CONTEXT: GenerationContext = {
   originalQuery: null,
-  selectionSpaces: [],
-  selectionAllQueuesFromSpaces: false,
-  selectionQueues: [],
+  scope: {},
   deletedHandling: 'exclude',
   selectionInverted: false,
 };

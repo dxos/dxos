@@ -16,17 +16,20 @@ import { IndexQuerySource } from './index-query-source-provider';
 const mockGraph = {} as Hypergraph.Hypergraph;
 
 const makeQuery = (): QueryAST.Query => ({
-  type: 'options',
+  type: 'from',
   query: {
     type: 'select',
     filter: {
       type: 'object',
-      typename: 'dxn:type:dxos.org/type/Person:0.1.0',
+      typename: 'dxn:type:org.dxos.type.person:0.1.0',
       props: {},
     },
   },
-  options: {
-    spaceIds: [SpaceId.random()],
+  from: {
+    _tag: 'scope',
+    scope: {
+      spaceIds: [SpaceId.random()],
+    },
   },
 });
 

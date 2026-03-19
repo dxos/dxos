@@ -1,67 +1,30 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Input } from '../../components';
-import { withTheme } from '../../testing';
+import { withLayout, withTheme } from '../../testing';
 
-import { Container, type ContainerRootProps } from './Container';
+import { Container } from './Container';
 
-const DefaultStory = (props: ContainerRootProps) => {
-  return (
-    <div className='plb-2 is-[20rem] border border-separator rounded-sm'>
-      <Container.Root {...props}>
-        <Container.Column>
-          <Input.Root>
-            <Input.Label>Label</Input.Label>
-            <Input.TextInput />
-          </Input.Root>
-        </Container.Column>
-      </Container.Root>
-    </div>
-  );
-};
+const DefaultStory = () => (
+  <Container asChild>
+    <div className='grid place-items-center border border-red-500'>Hello</div>
+  </Container>
+);
 
-const meta: Meta<typeof Container.Root> = {
+const meta: Meta = {
   title: 'ui/react-ui-core/primitives/Container',
-  component: Container.Root,
+  component: Container,
   render: DefaultStory,
-  decorators: [withTheme()],
-  parameters: {
-    layout: 'centered',
-  },
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  parameters: { layout: 'fullscreen' },
 };
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// TODO(burdon): Requires container.
-export const Default = () => {
-  return (
-    <Container.Root>
-      <Container.Column>Column</Container.Column>
-    </Container.Root>
-  );
-};
-
-export const SM: Story = {
-  args: {
-    variant: 'sm',
-  },
-};
-
-export const MD: Story = {
-  args: {
-    variant: 'md',
-  },
-};
-
-export const LG: Story = {
-  args: {
-    variant: 'lg',
-  },
-};
+export const Default: Story = {};

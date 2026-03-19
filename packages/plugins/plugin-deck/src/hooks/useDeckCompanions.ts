@@ -8,12 +8,7 @@ import { useConnections } from '@dxos/plugin-graph';
 import { type Label } from '@dxos/ui-types';
 import { type Position, byPosition } from '@dxos/util';
 
-import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE } from '../types';
-
-export const getCompanionId = (id: string) => {
-  const [_, companionId] = id.split(ATTENDABLE_PATH_SEPARATOR);
-  return companionId ?? 'never';
-};
+import { DECK_COMPANION_TYPE } from '../types';
 
 export type DeckCompanion = NodeType.Node<
   any,
@@ -29,7 +24,7 @@ export type DeckCompanion = NodeType.Node<
 
 export const useDeckCompanions = (): DeckCompanion[] => {
   const { graph } = useAppGraph();
-  const connections = useConnections(graph, Node.RootId);
+  const connections = useConnections(graph, Node.RootId, 'child');
   const companions = connections.filter((node) => node.type === DECK_COMPANION_TYPE) as DeckCompanion[];
   return companions.toSorted((a, b) => byPosition(a.properties, b.properties));
 };

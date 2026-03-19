@@ -6,14 +6,14 @@ import { type CleanupFn, Event, Mutex } from '@dxos/async';
 import { type QueryResult, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-const resultToEntry = <T extends Type.Entity.Any>(result: T): QueryResult.Entry<T> => ({
+const resultToEntry = <T extends Type.AnyEntity>(result: T): QueryResult.Entry<T> => ({
   id: Type.getTypename(result),
   result,
 });
 
 // TODO(wittjosiah): Simplify this interface.
 export interface SchemaRegistryQueryResolver<T> {
-  // TODO(wittjosiah): This looks unused, remove?
+  /** Emitted by the resolver when underlying data changes. */
   changes: Event<void>;
 
   /**
@@ -33,12 +33,13 @@ export interface SchemaRegistryQueryResolver<T> {
 /**
  * API for the schema queries.
  */
-export class SchemaRegistryPreparedQueryImpl<T extends Type.Entity.Any> implements QueryResult.QueryResult<T> {
+export class SchemaRegistryPreparedQueryImpl<T extends Type.AnyEntity> implements QueryResult.QueryResult<T> {
   private readonly _mutex = new Mutex();
   private readonly _changes = new Event<this>();
   private _isReactiveQueryRunning = false;
   private _subscriberCount = 0;
   private _isFiring = false;
+  private _changesSubscription?: CleanupFn;
 
   constructor(private readonly _resolver: SchemaRegistryQueryResolver<T>) {}
 
@@ -134,6 +135,9 @@ export class SchemaRegistryPreparedQueryImpl<T extends Type.Entity.Any> implemen
 
       try {
         await this._resolver.start();
+        this._changesSubscription = this._resolver.changes.on(() => {
+          this._changes.emit(this);
+        });
         this._isReactiveQueryRunning = true;
       } catch (err) {
         log.catch(err);
@@ -152,6 +156,8 @@ export class SchemaRegistryPreparedQueryImpl<T extends Type.Entity.Any> implemen
       }
 
       try {
+        this._changesSubscription?.();
+        this._changesSubscription = undefined;
         await this._resolver.stop();
         this._isReactiveQueryRunning = false;
       } catch (err) {

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, type Ref } from '@dxos/echo';
@@ -68,18 +68,20 @@ export const Toolbox = ({ classNames, functions, services, blueprints, activeBlu
   );
 };
 
-const Section: FC<{
+type SectionProps = {
   title: string;
   items: { name: string; description?: string; subitems?: { name: string; description?: string }[] }[];
   striped?: boolean;
-}> = ({ title, items, striped }) => {
+};
+
+const Section = ({ title, items, striped }: SectionProps) => {
   const stripeClassNames = 'odd:bg-neutral-50 dark:odd:bg-neutral-800';
   const gridClassNames = 'grid grid-cols-[8rem_1fr]';
-  const subGridClassNames = mx('col-span-full grid grid-cols-subgrid text-xs pli-2', striped && stripeClassNames);
+  const subGridClassNames = mx('col-span-full grid grid-cols-subgrid text-xs px-2', striped && stripeClassNames);
 
   return (
     <div>
-      <h1 className='pli-2 text-sm'>{title}</h1>
+      <h1 className='px-2 text-sm'>{title}</h1>
       <div className={gridClassNames}>
         {items.map(({ name, description, subitems }, i) => (
           <Fragment key={i}>
@@ -102,12 +104,12 @@ const Section: FC<{
   );
 };
 
-export type ToolboxContainerProps = ThemedClassName<{
+export type ToolboxPanelProps = ThemedClassName<{
   db?: Database.Database;
   processor?: AiChatProcessor;
 }>;
 
-export const ToolboxContainer = ({ classNames, db, processor }: ToolboxContainerProps) => {
+export const ToolboxPanel = ({ classNames, db, processor }: ToolboxPanelProps) => {
   // Registered services.
   const services = useQuery(db, Filter.type(ServiceType));
   const [serviceTools, setServiceTools] = useState<{ service: ServiceType }[]>([]);

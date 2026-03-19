@@ -3,6 +3,7 @@
 //
 
 // This is based upon `@radix-ui/react-tooltip` fetched 17 March 2025 at https://github.com/radix-ui/primitives at commit 6e75e11.
+// TODO(burdon): Replace with https://ui.shadcn.com/docs/components/radix/tooltip
 
 import { composeEventHandlers } from '@radix-ui/primitive';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
@@ -21,9 +22,8 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import * as VisuallyHiddenPrimitive from '@radix-ui/react-visually-hidden';
 import React, {
   type ComponentPropsWithoutRef,
-  type ElementRef,
+  type ComponentRef,
   type FC,
-  type MutableRefObject,
   type ReactNode,
   type RefObject,
   type SyntheticEvent,
@@ -60,13 +60,13 @@ type TooltipContextValue = {
   onOpen(): void;
   onClose(): void;
   onPointerInTransitChange(inTransit: boolean): void;
-  isPointerInTransitRef: MutableRefObject<boolean>;
+  isPointerInTransitRef: RefObject<boolean>;
   disableHoverableContent: boolean;
 };
 
 const [TooltipContextProvider, useTooltipContext] = createTooltipContext<TooltipContextValue>(TOOLTIP_NAME);
 
-interface TooltipProviderProps {
+type TooltipProviderProps = {
   children?: ReactNode;
   open?: boolean;
   defaultOpen?: boolean;
@@ -87,7 +87,7 @@ interface TooltipProviderProps {
    * @defaultValue 300
    */
   skipDelayDuration?: number;
-}
+};
 
 const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<TooltipProviderProps>) => {
   const {
@@ -246,7 +246,7 @@ const TooltipVirtualTrigger = ({
 
 const TRIGGER_NAME = 'TooltipTrigger';
 
-type TooltipTriggerElement = ElementRef<typeof Primitive.button>;
+type TooltipTriggerElement = ComponentRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
 type TooltipTriggerProps = PrimitiveButtonProps &
   Pick<TooltipProps, 'delayDuration'> & {
@@ -334,7 +334,7 @@ const [PortalProvider, usePortalContext] = createTooltipContext<PortalContextVal
 });
 
 type PortalProps = ComponentPropsWithoutRef<typeof PortalPrimitive>;
-interface TooltipPortalProps {
+type TooltipPortalProps = {
   children?: ReactNode;
   /**
    * Specify a container element to portal the content into.
@@ -345,7 +345,7 @@ interface TooltipPortalProps {
    * controlling animation with React animation libraries.
    */
   forceMount?: true;
-}
+};
 
 const TooltipPortal: FC<TooltipPortalProps> = (props: TooltipScopedProps<TooltipPortalProps>) => {
   const { __scopeTooltip, forceMount, children, container } = props;
@@ -370,13 +370,13 @@ TooltipPortal.displayName = PORTAL_NAME;
 const CONTENT_NAME = 'TooltipContent';
 
 type TooltipContentElement = TooltipContentImplElement;
-interface TooltipContentProps extends TooltipContentImplProps {
+type TooltipContentProps = TooltipContentImplProps & {
   /**
    * Used to force mounting when more control is needed. Useful when
    * controlling animation with React animation libraries.
    */
   forceMount?: true;
-}
+};
 
 const TooltipContent = forwardRef<TooltipContentElement, TooltipContentProps>(
   (props: TooltipScopedProps<TooltipContentProps>, forwardedRef) => {
@@ -400,7 +400,7 @@ type Point = { x: number; y: number };
 type Polygon = Point[];
 
 type TooltipContentHoverableElement = TooltipContentImplElement;
-interface TooltipContentHoverableProps extends TooltipContentImplProps {}
+type TooltipContentHoverableProps = TooltipContentImplProps;
 
 const TooltipContentHoverable = forwardRef<TooltipContentHoverableElement, TooltipContentHoverableProps>(
   (props: TooltipScopedProps<TooltipContentHoverableProps>, forwardedRef) => {
@@ -479,10 +479,10 @@ const [VisuallyHiddenContentContextProvider, useVisuallyHiddenContentContext] = 
   isInside: false,
 });
 
-type TooltipContentImplElement = ElementRef<typeof PopperPrimitive.Content>;
+type TooltipContentImplElement = ComponentRef<typeof PopperPrimitive.Content>;
 type DismissableLayerProps = ComponentPropsWithoutRef<typeof DismissableLayer>;
 type PopperContentProps = ComponentPropsWithoutRef<typeof PopperPrimitive.Content>;
-interface TooltipContentImplProps extends Omit<PopperContentProps, 'onPlaced'> {
+type TooltipContentImplProps = Omit<PopperContentProps, 'onPlaced'> & {
   /**
    * A more descriptive label for accessibility purpose
    */
@@ -498,7 +498,7 @@ interface TooltipContentImplProps extends Omit<PopperContentProps, 'onPlaced'> {
    * Can be prevented.
    */
   onPointerDownOutside?: DismissableLayerProps['onPointerDownOutside'];
-}
+};
 
 const TooltipContentImpl = forwardRef<TooltipContentImplElement, TooltipContentImplProps>(
   (props: TooltipScopedProps<TooltipContentImplProps>, forwardedRef) => {
@@ -580,9 +580,9 @@ TooltipContent.displayName = CONTENT_NAME;
 
 const ARROW_NAME = 'TooltipArrow';
 
-type TooltipArrowElement = ElementRef<typeof PopperPrimitive.Arrow>;
+type TooltipArrowElement = ComponentRef<typeof PopperPrimitive.Arrow>;
 type PopperArrowProps = ComponentPropsWithoutRef<typeof PopperPrimitive.Arrow>;
-interface TooltipArrowProps extends PopperArrowProps {}
+type TooltipArrowProps = PopperArrowProps;
 
 const TooltipArrow = forwardRef<TooltipArrowElement, TooltipArrowProps>(
   (props: TooltipScopedProps<TooltipArrowProps>, forwardedRef) => {

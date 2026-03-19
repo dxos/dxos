@@ -205,6 +205,9 @@
       "path": "packages/core/halo/keyring/tsconfig.json"
     },
     {
+      "path": "packages/core/mcp-client/tsconfig.json"
+    },
+    {
       "path": "packages/core/mesh/edge-client/tsconfig.json"
     },
     {
@@ -409,9 +412,6 @@
       "path": "packages/plugins/plugin-theme/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-theme-editor/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-thread/tsconfig.json"
     },
     {
@@ -424,10 +424,13 @@
       "path": "packages/plugins/plugin-transformer/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-voxel/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-wnfs/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-youtube/tsconfig.json"
+      "path": "packages/plugins/plugin-zen/tsconfig.json"
     },
     {
       "path": "packages/sdk/app-framework/tsconfig.json"
@@ -490,10 +493,10 @@
       "path": "packages/ui/lit-grid/tsconfig.json"
     },
     {
-      "path": "packages/ui/lit-theme-editor/tsconfig.json"
+      "path": "packages/ui/lit-ui/tsconfig.json"
     },
     {
-      "path": "packages/ui/lit-ui/tsconfig.json"
+      "path": "packages/ui/react-primitives/react-error-boundary/tsconfig.json"
     },
     {
       "path": "packages/ui/react-primitives/react-hooks/tsconfig.json"
@@ -551,9 +554,6 @@
     },
     {
       "path": "packages/ui/react-ui-grid/tsconfig.json"
-    },
-    {
-      "path": "packages/ui/react-ui-kanban/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-list/tsconfig.json"
@@ -668,7 +668,5 @@
     }
   ],
   "include": [],
-  "exclude": [
-    "**/node_modules"
-  ]
+  "exclude": ["**/node_modules"]
 }

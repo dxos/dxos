@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { CommandConfig, print } from '@dxos/cli-util';
-import { DX_CONFIG, getProfilePath } from '@dxos/client-protocol';
+import { DX_CONFIG, getProfileConfigPath } from '@dxos/client-protocol';
 
 import { printProfileDeleted } from './util';
 
@@ -23,7 +23,10 @@ export const del = Command.make(
     const { json } = yield* CommandConfig;
     const fs = yield* FileSystem.FileSystem;
     const profileName = name.pipe(Option.getOrElse(() => 'default'));
-    yield* fs.remove(`${getProfilePath(DX_CONFIG, profileName)}.yml`);
+    const configPath = getProfileConfigPath(DX_CONFIG, profileName);
+    const pluginsPath = `${DX_CONFIG}/plugins/${profileName}.yml`;
+    yield* fs.remove(configPath).pipe(Effect.ignore);
+    yield* fs.remove(pluginsPath).pipe(Effect.ignore);
     if (json) {
       yield* Console.log(JSON.stringify({ name: profileName, deleted: true }, null, 2));
     } else {

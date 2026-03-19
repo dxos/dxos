@@ -14,8 +14,8 @@ import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Database, Obj, Type } from '@dxos/echo';
-import { CredentialsService, QueueService, defineFunction } from '@dxos/functions';
+import { Database, Ref as EchoRef, Feed, Obj } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type Event } from '@dxos/types';
 
@@ -28,13 +28,13 @@ import { GoogleCredentials } from '../../services/google-credentials';
 import { mapEvent } from './mapper';
 
 export default defineFunction({
-  key: 'dxos.org/function/inbox/google-calendar-sync',
+  key: 'org.dxos.function.inbox.google-calendar-sync',
   name: 'Sync Google Calendar',
   description:
     'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
   inputSchema: Schema.Struct({
-    calendar: Type.Ref(Calendar.Calendar).annotations({
-      description: 'The ID of the calendar object.',
+    calendar: EchoRef.Ref(Calendar.Calendar).annotations({
+      description: 'Reference to the calendar object.',
     }),
     googleCalendarId: Schema.optional(Schema.String),
     syncBackDays: Schema.optional(Schema.Number),
@@ -44,6 +44,8 @@ export default defineFunction({
   outputSchema: Schema.Struct({
     newEvents: Schema.Number,
   }),
+  types: [Feed.Feed, Calendar.Calendar],
+  services: [Database.Service, Feed.Service],
   handler: ({
     // TODO(wittjosiah): Schema-based defaults are not yet supported.
     data: {
@@ -56,7 +58,7 @@ export default defineFunction({
   }) =>
     Effect.gen(function* () {
       log('syncing google calendar', {
-        calendar: calendarRef,
+        calendar: calendarRef.dxn.toString(),
         googleCalendarId,
         syncBackDays,
         syncForwardDays,
@@ -64,7 +66,7 @@ export default defineFunction({
       });
 
       const calendar = yield* Database.load(calendarRef);
-      const queue = yield* QueueService.getQueue<Event.Event>(calendar.queue.dxn);
+      const feed = yield* Database.load(calendar.feed);
 
       // State management for sync process.
       const newEvents = yield* Ref.make<Event.Event[]>([]);
@@ -97,20 +99,20 @@ export default defineFunction({
       // Update the calendar's last synced update timestamp.
       const lastUpdate = yield* Ref.get(latestUpdate);
       if (lastUpdate) {
-        Obj.change(calendar, (c) => {
-          c.lastSyncedUpdate = lastUpdate;
+        Obj.change(calendar, (calendar) => {
+          calendar.lastSyncedUpdate = lastUpdate;
         });
         log('updated lastSyncedUpdate', { lastUpdate });
       }
 
-      // Append to queue.
+      // Append to feed.
       const queueEvents = yield* Ref.get(newEvents);
       if (queueEvents.length > 0) {
         yield* Function.pipe(
           queueEvents,
           Stream.fromIterable,
           Stream.grouped(10),
-          Stream.flatMap((batch) => Effect.tryPromise(() => queue.append(Chunk.toArray(batch)))),
+          Stream.mapEffect((batch) => Feed.append(feed, Chunk.toArray(batch))),
           Stream.runDrain,
         );
       }
@@ -121,31 +123,7 @@ export default defineFunction({
       };
     }).pipe(
       Effect.provide(
-        Layer.mergeAll(
-          FetchHttpClient.layer,
-          InboxResolver.Live,
-          Layer.effect(
-            GoogleCredentials,
-            Effect.gen(function* () {
-              const calendarObj = yield* Database.load(calendarRef);
-              // Pre-load token at effect creation time.
-              let cachedToken: string | undefined;
-              if (calendarObj.accessToken) {
-                const accessToken = yield* Database.load(calendarObj.accessToken);
-                if (accessToken?.token) {
-                  log('using calendar-specific access token', { note: accessToken.note });
-                  cachedToken = accessToken.token;
-                }
-              }
-              return {
-                get: () =>
-                  cachedToken
-                    ? Effect.succeed(cachedToken)
-                    : Effect.map(CredentialsService.getCredential({ service: 'google.com' }), (c) => c.apiKey!),
-              };
-            }),
-          ),
-        ),
+        Layer.mergeAll(FetchHttpClient.layer, InboxResolver.Live, GoogleCredentials.fromCalendar(calendarRef)),
       ),
     ),
 });

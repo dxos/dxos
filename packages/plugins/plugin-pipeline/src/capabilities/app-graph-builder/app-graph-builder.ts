@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Pipeline } from '@dxos/types';
 
@@ -16,13 +16,12 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}/triggers`,
+        id: `${meta.id}.triggers`,
         type: Pipeline.Pipeline,
-        connector: (pipeline) => {
-          const nodeId = pipeline.id;
-          return Effect.succeed([
+        connector: () =>
+          Effect.succeed([
             {
-              id: [nodeId, 'invocations'].join(ATTENDABLE_PATH_SEPARATOR),
+              id: 'invocations',
               type: PLANK_COMPANION_TYPE,
               data: 'invocations',
               properties: {
@@ -32,7 +31,7 @@ export default Capability.makeModule(
               },
             },
             {
-              id: [nodeId, 'automation'].join(ATTENDABLE_PATH_SEPARATOR),
+              id: 'automation',
               type: PLANK_COMPANION_TYPE,
               data: 'automation',
               properties: {
@@ -41,8 +40,7 @@ export default Capability.makeModule(
                 disposition: 'hidden',
               },
             },
-          ]);
-        },
+          ]),
       }),
     ]);
 

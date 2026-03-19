@@ -357,7 +357,7 @@ describe('AtomObj.makeWithReactive', () => {
           tasks: [Ref.make(task)],
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const ref = person.tasks![0];
       const registry = Registry.make();
@@ -381,7 +381,7 @@ describe('AtomObj.makeWithReactive', () => {
           tasks: [Ref.make(task)],
         }),
       );
-      await db.flush({ indexes: true });
+      await db.flush();
 
       const ref = person.tasks![0];
       const registry = Registry.make();
@@ -390,7 +390,7 @@ describe('AtomObj.makeWithReactive', () => {
       expect(registry.get(atom)).toBe(task);
 
       db.remove(task);
-      await db.flush({ indexes: true });
+      await db.flush();
 
       expect(registry.get(atom)).toBeUndefined();
     });

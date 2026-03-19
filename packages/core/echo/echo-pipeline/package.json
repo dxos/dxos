@@ -85,12 +85,11 @@
     "@effect/sql-sqlite-node": "catalog:",
     "crc-32": "catalog:",
     "effect": "catalog:",
-    "level-transcoder": "catalog:",
-    "lodash.isequal": "catalog:"
+    "fast-deep-equal": "catalog:",
+    "level-transcoder": "catalog:"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
-    "@types/lodash.isequal": "catalog:",
     "fast-check": "catalog:",
     "get-port-please": "catalog:"
   },

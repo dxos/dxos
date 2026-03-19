@@ -11,7 +11,7 @@ import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { configPreset } from '@dxos/config';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
@@ -42,13 +42,13 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
   });
 
   test('deploy function', { timeout: 120_000 }, async () => {
-    const { space, mailbox: _mailbox, functionsServiceClient } = await setup();
+    const { space, feed: _feed, functionsServiceClient } = await setup();
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     console.log(func);
   });
 
   test('inbox sync function (invoke)', { timeout: 120_000 }, async () => {
-    const { space, mailbox, functionsServiceClient } = await setup();
+    const { space, mailbox, feed, functionsServiceClient } = await setup();
     await sync(space);
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     const result = await functionsServiceClient.invoke(
@@ -62,11 +62,11 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       },
     );
     console.log(result);
-    await checkEmails(mailbox);
+    await checkEmails(feed, space);
   });
 
   test('deployes inbox sync function (force-trigger)', { timeout: 120_000 }, async () => {
-    const { space, mailbox, functionsServiceClient } = await setup();
+    const { space, mailbox, feed, functionsServiceClient } = await setup();
     await sync(space);
 
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
@@ -79,7 +79,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       }),
     );
     await sync(space);
-    await space.db.flush({ indexes: true });
+    await space.db.flush();
     await space.internal.syncToEdge({
       onProgress: (state) => console.log('sync', state ?? 'no connection to edge'),
     });
@@ -88,11 +88,11 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
     if (result._kind === 'error') {
       throw ErrorCodec.decode(result.error);
     }
-    await checkEmails(mailbox);
+    await checkEmails(feed, space);
   });
 
   test('deployes inbox sync function (wait for trigger)', { timeout: 120_000 }, async ({ expect }) => {
-    const { space, mailbox, functionsServiceClient } = await setup();
+    const { space, mailbox, feed, functionsServiceClient } = await setup();
     await sync(space);
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     space.db.add(
@@ -104,19 +104,19 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
       }),
     );
     await sync(space);
-    await space.db.flush({ indexes: true });
+    await space.db.flush();
     await space.internal.syncToEdge({
       onProgress: (state) => console.log('sync', state ?? 'no connection to edge'),
     });
     log.info('waiting for trigger to fire');
     await expect.poll(async () => {
       log.info('poll');
-      await checkEmails(mailbox);
+      await checkEmails(feed, space);
     });
   });
 
   test('deployes inbox sync function (wait for trigger)', { timeout: 0 }, async ({ expect }) => {
-    const { client: _client, space, mailbox, functionsServiceClient } = await setup();
+    const { client: _client, space, mailbox, feed, functionsServiceClient } = await setup();
     const func = await deployFunction(space, functionsServiceClient, new URL('./sync.ts', import.meta.url).pathname);
     space.db.add(
       Obj.make(Trigger.Trigger, {
@@ -132,7 +132,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
 
     await expect.poll(async () => {
       log.info('poll');
-      await checkEmails(mailbox);
+      await checkEmails(feed, space);
     });
   });
 });
@@ -140,7 +140,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions d
 const setup = async () => {
   const client = await new Client({
     config,
-    types: [Mailbox.Mailbox, AccessToken.AccessToken, Function.Function, Trigger.Trigger],
+    types: [Feed.Feed, Mailbox.Mailbox, AccessToken.AccessToken, Function.Function, Trigger.Trigger],
   }).initialize();
   await client.halo.createIdentity();
 
@@ -148,7 +148,11 @@ const setup = async () => {
   await space.waitUntilReady();
   await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
-  const mailbox = space.db.add(Mailbox.make({ name: 'test', space }));
+  const mailbox = space.db.add(Mailbox.make({ name: 'test' }));
+  const feed = await mailbox.feed?.tryLoad();
+  if (!feed) {
+    throw new Error('Mailbox missing backing feed');
+  }
   space.db.add(
     Obj.make(AccessToken.AccessToken, {
       note: 'Email read access.',
@@ -158,11 +162,11 @@ const setup = async () => {
   );
 
   const functionsServiceClient = FunctionsServiceClient.fromClient(client);
-  return { client, space, mailbox, functionsServiceClient };
+  return { client, space, mailbox, feed, functionsServiceClient };
 };
 
 const sync = async (space: Space) => {
-  await space.db.flush({ indexes: true });
+  await space.db.flush();
   await space.internal.syncToEdge({
     onProgress: (state) =>
       console.log(state ? `${state.unsyncedDocumentCount} documents syncing...` : 'connecting to edge...'),
@@ -186,8 +190,14 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
   return func;
 };
 
-const checkEmails = async (mailbox: Mailbox.Mailbox) => {
-  const messages = await mailbox.queue.target!.query(Query.type(Message.Message)).run();
+const checkEmails = async (feed: Feed.Feed, space: Space) => {
+  const queueDxn = Feed.getQueueDxn(feed);
+  if (!queueDxn) {
+    console.log('No feed found for mailbox');
+    return [];
+  }
+  const queue = space.queues.get<Message.Message>(queueDxn);
+  const messages = await queue.query(Query.type(Message.Message)).run();
   console.log(`Messages in mailbox: ${messages.length}`);
   return messages;
 };

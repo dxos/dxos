@@ -8,6 +8,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import '@dxos/lit-ui/dx-tag-picker.pcss';
@@ -16,7 +17,7 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form';
-import { View } from '@dxos/schema';
+import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Organization, Person } from '@dxos/types';
@@ -35,7 +36,7 @@ const generator: ValueGenerator = faker as any;
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
-const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
+const useTestModel = <S extends Type.AnyObj>(schema: S, count: number) => {
   const registry = useContext(RegistryContext);
   const { space } = useClientStory();
   const [object, setObject] = useState<Table.Table>();
@@ -50,7 +51,7 @@ const useTestModel = <S extends Type.Obj.Any>(schema: S, count: number) => {
       return;
     }
 
-    const { view, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: Type.getTypename(schema) });
+    const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: Type.getTypename(schema) });
     const object = Table.make({ view, jsonSchema });
     setObject(object);
     space.db.add(object);
@@ -87,7 +88,7 @@ const DefaultStory = () => {
   const { space } = useClientStory();
 
   const handleCreate = useCallback(
-    (schema: Type.Entity.Any, values: any) => {
+    (schema: Type.AnyEntity, values: any) => {
       invariant(Type.isObjectSchema(schema));
       invariant(space);
       return space.db.add(Obj.make(schema, values));
@@ -96,7 +97,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <div className='is-full bs-full grid grid-cols-2 divide-x divide-separator'>
+    <div className='w-full h-full grid grid-cols-2 divide-x divide-separator'>
       <TableComponent.Root>
         <TableComponent.Main
           model={orgModel}
@@ -195,8 +196,9 @@ export const Default: Story = {
     const saveButton = await body.findByTestId('save-button');
     await userEvent.click(saveButton);
 
-    // Verify the relation was set (cell should now contain the org name)
-    await expect(targetCell).toHaveTextContent(orgName.substring(0, 4));
+    // Verify the relation was set (cell should now contain the org name).
+    const updatedCell = within(secondGrid).getByTestId('grid.4.0');
+    await expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
 
     // Test object creation (new relations) - equivalent to "new relations work as expected" test
     // Find a different cell to test object creation (second row, relations column)
@@ -231,7 +233,8 @@ export const Default: Story = {
     const saveObjectButton = await within(createReferencedObjectForm).findByTestId('save-button');
     await userEvent.click(saveObjectButton);
 
-    // Verify the new object was created and relation was set
-    await expect(newTargetCell).toHaveTextContent(newOrgName);
+    // Verify the new object was created and relation was set.
+    const updatedNewCell = within(secondGrid).getByTestId('grid.4.1');
+    await expect(updatedNewCell).toHaveTextContent(newOrgName);
   },
 } as any;

@@ -49,10 +49,14 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
           ['list-item', 'list-item-primary', 'heading-list-item'].includes(action.properties.disposition),
         );
         const nodes: ActionGraphProps['nodes'] = filtered as ActionGraphProps['nodes'];
-        const edges: ActionGraphProps['edges'] = filtered.map((action) => ({ source: 'root', target: action.id }));
+        const edges: ActionGraphProps['edges'] = filtered.map((action) => ({
+          source: 'root',
+          target: action.id,
+          relation: 'child',
+        }));
 
         // Add alternate-tree action (e.g. Settings) from the workspace node.
-        const workspaceConnections = state.workspace ? get(graph.connections(state.workspace)) : [];
+        const workspaceConnections = state.workspace ? get(graph.connections(state.workspace, 'child')) : [];
         const alternateTreeNode = workspaceConnections.find(
           (node: Node.Node) => node.properties.disposition === 'alternate-tree',
         );
@@ -67,7 +71,7 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
             },
           };
           nodes.push(settingsAction);
-          edges.push({ source: 'root', target: settingsAction.id });
+          edges.push({ source: 'root', target: settingsAction.id, relation: 'child' });
         }
 
         return { nodes, edges };
@@ -98,8 +102,7 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
   }, [graph, invokeSync, state.active, state.history.length]);
 
   // Compute popover anchor ID.
-  const popoverAnchorId =
-    node && state.popoverAnchorId === `dxos.org/ui/${meta.id}/${node.id}` ? state.popoverAnchorId : undefined;
+  const popoverAnchorId = node && state.popoverAnchorId === `${meta.id}:${node.id}` ? state.popoverAnchorId : undefined;
 
   return {
     title,

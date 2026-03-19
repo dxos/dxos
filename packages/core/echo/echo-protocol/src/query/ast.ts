@@ -166,7 +166,7 @@ export const Filter = Schema.Union(
   FilterNot,
   FilterAnd,
   FilterOr,
-).annotations({ identifier: 'dxos.org/schema/Filter' });
+).annotations({ identifier: 'org.dxos.schema.filter' });
 
 export type Filter = Schema.Schema.Type<typeof Filter>;
 
@@ -355,6 +355,21 @@ const QueryLimitClause_ = Schema.Struct({
 export interface QueryLimitClause extends Schema.Schema.Type<typeof QueryLimitClause_> {}
 export const QueryLimitClause: Schema.Schema<QueryLimitClause> = QueryLimitClause_;
 
+export const QueryFromClause_ = Schema.Struct({
+  type: Schema.Literal('from'),
+  query: Schema.suspend(() => Query),
+  from: Schema.Union(
+    Schema.TaggedStruct('scope', {
+      scope: Schema.suspend(() => Scope),
+    }),
+    Schema.TaggedStruct('query', {
+      query: Schema.suspend(() => Query),
+    }),
+  ),
+});
+export interface QueryFromClause extends Schema.Schema.Type<typeof QueryFromClause_> {}
+export const QueryFromClause: Schema.Schema<QueryFromClause> = QueryFromClause_;
+
 const Query_ = Schema.Union(
   QuerySelectClause,
   QueryFilterClause,
@@ -368,12 +383,25 @@ const Query_ = Schema.Union(
   QueryOrderClause,
   QueryOptionsClause,
   QueryLimitClause,
-).annotations({ identifier: 'dxos.org/schema/Query' });
+  QueryFromClause,
+).annotations({ identifier: 'org.dxos.schema.query' });
 
 export type Query = Schema.Schema.Type<typeof Query_>;
 export const Query: Schema.Schema<Query> = Query_;
 
 export const QueryOptions = Schema.Struct({
+  /**
+   * Nested select statements will use this option to filter deleted objects.
+   */
+  deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
+});
+
+export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
+
+/**
+ * Specifies the scope of the data to query from.
+ */
+export const Scope = Schema.Struct({
   /**
    * The nested select statemets will select from the given spaces.
    *
@@ -392,14 +420,8 @@ export const QueryOptions = Schema.Struct({
    * NOTE: Spaces and queues are unioned together if both are specified.
    */
   queues: Schema.optional(Schema.Array(DXN.Schema)),
-
-  /**
-   * Nested select statements will use this option to filter deleted objects.
-   */
-  deleted: Schema.optional(Schema.Literal('include', 'exclude', 'only')),
 });
-
-export interface QueryOptions extends Schema.Schema.Type<typeof QueryOptions> {}
+export interface Scope extends Schema.Schema.Type<typeof Scope> {}
 
 export const visit = (query: Query, visitor: (node: Query) => void) => {
   visitor(query);
@@ -419,9 +441,47 @@ export const visit = (query: Query, visitor: (node: Query) => void) => {
     }),
     Match.when({ type: 'order' }, ({ query }) => visit(query, visitor)),
     Match.when({ type: 'limit' }, ({ query }) => visit(query, visitor)),
+    Match.when({ type: 'from' }, (node) => {
+      visit(node.query, visitor);
+      if (node.from._tag === 'query') {
+        visit(node.from.query, visitor);
+      }
+    }),
     Match.when({ type: 'select' }, () => {}),
     Match.exhaustive,
   );
+};
+
+/**
+ * Recursively transforms a query tree bottom-up.
+ * The mapper receives each node with its children already transformed.
+ */
+export const map = (query: Query, mapper: (node: Query) => Query): Query => {
+  const mapped: Query = Match.value(query).pipe(
+    Match.when({ type: 'filter' }, (node) => ({ ...node, selection: map(node.selection, mapper) })),
+    Match.when({ type: 'reference-traversal' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
+    Match.when({ type: 'incoming-references' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
+    Match.when({ type: 'relation' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
+    Match.when({ type: 'relation-traversal' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
+    Match.when({ type: 'hierarchy-traversal' }, (node) => ({ ...node, anchor: map(node.anchor, mapper) })),
+    Match.when({ type: 'options' }, (node) => ({ ...node, query: map(node.query, mapper) })),
+    Match.when({ type: 'order' }, (node) => ({ ...node, query: map(node.query, mapper) })),
+    Match.when({ type: 'limit' }, (node) => ({ ...node, query: map(node.query, mapper) })),
+    Match.when({ type: 'from' }, (node) => ({
+      ...node,
+      query: map(node.query, mapper),
+      ...(node.from._tag === 'query' ? { from: { _tag: 'query' as const, query: map(node.from.query, mapper) } } : {}),
+    })),
+    Match.when({ type: 'union' }, (node) => ({ ...node, queries: node.queries.map((q) => map(q, mapper)) })),
+    Match.when({ type: 'set-difference' }, (node) => ({
+      ...node,
+      source: map(node.source, mapper),
+      exclude: map(node.exclude, mapper),
+    })),
+    Match.when({ type: 'select' }, (node) => node),
+    Match.exhaustive,
+  );
+  return mapper(mapped);
 };
 
 export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
@@ -440,6 +500,13 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
     ),
     Match.when({ type: 'order' }, ({ query }) => fold(query, reducer)),
     Match.when({ type: 'limit' }, ({ query }) => fold(query, reducer)),
+    Match.when({ type: 'from' }, (node) => {
+      const results = fold(node.query, reducer);
+      if (node.from._tag === 'query') {
+        return results.concat(fold(node.from.query, reducer));
+      }
+      return results;
+    }),
     Match.when({ type: 'select' }, () => []),
     Match.exhaustive,
   );

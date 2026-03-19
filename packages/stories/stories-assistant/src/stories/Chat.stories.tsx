@@ -2,16 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React, { type FC, useCallback } from 'react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { ToolId } from '@dxos/ai';
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Capabilities } from '@dxos/app-framework';
-import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { AiContextBinder } from '@dxos/assistant';
 import {
   AgentFunctions,
   LinearBlueprint,
@@ -22,39 +17,20 @@ import {
   WebSearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
-import { Filter, Obj, Query, Ref, Tag, Type } from '@dxos/echo';
+import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
+import { View } from '@dxos/echo';
 import { ExampleFunctions, Script, Trigger, serializeFunction } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
-import { AssistantBlueprint, translations, useContextBinder } from '@dxos/plugin-assistant';
-import { Assistant } from '@dxos/plugin-assistant/types';
-import { Board, BoardPlugin } from '@dxos/plugin-board';
-import { Chess, ChessPlugin } from '@dxos/plugin-chess';
+import { AssistantBlueprint, translations } from '@dxos/plugin-assistant';
 import { ChessBlueprint, ChessFunctions } from '@dxos/plugin-chess/blueprints';
-import { InboxPlugin } from '@dxos/plugin-inbox';
 import { CalendarBlueprint, InboxBlueprint } from '@dxos/plugin-inbox/blueprints';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
-import { Map, MapPlugin } from '@dxos/plugin-map';
 import { MapBlueprint } from '@dxos/plugin-map/blueprints';
-import { createLocationSchema } from '@dxos/plugin-map/testing';
-import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
-import { PipelinePlugin } from '@dxos/plugin-pipeline';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { ScriptPlugin, getAccessCredential } from '@dxos/plugin-script';
-import { templates } from '@dxos/plugin-script/templates';
-import { TablePlugin } from '@dxos/plugin-table';
-import { ThreadPlugin } from '@dxos/plugin-thread';
+import { Markdown } from '@dxos/plugin-markdown/types';
 import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
-import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
-import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
-import { Stack, StackItem } from '@dxos/react-ui-stack';
-import { Table } from '@dxos/react-ui-table/types';
-import { Text, View } from '@dxos/schema';
-import { render } from '@dxos/storybook-utils';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Text, ViewModel } from '@dxos/schema';
 import {
   AccessToken,
   Employer,
@@ -68,14 +44,13 @@ import {
   Task,
   Transcript,
 } from '@dxos/types';
-import { isNonNullable, trim } from '@dxos/util';
+import { trim } from '@dxos/util';
 
 import {
   BlueprintModule,
   ChatModule,
   ChessModule,
   CommentsModule,
-  type ComponentProps,
   ExecutionGraphModule,
   GraphModule,
   InboxModule,
@@ -90,6 +65,7 @@ import {
   TriggersModule,
 } from '../components';
 import {
+  ModuleContainer,
   ResearchInputQueue,
   accessTokensFromEnv,
   addTestData,
@@ -101,112 +77,10 @@ import {
   testTypes,
 } from '../testing';
 
-const panelClassNames = 'bg-baseSurface rounded-sm border border-separator overflow-hidden';
-
-type StoryProps = {
-  modules: FC<ComponentProps>[][];
-  showContext?: boolean;
-  blueprints?: string[];
-};
-
-const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
-  const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
-  const atomRegistry = useCapability(Capabilities.AtomRegistry);
-
-  const space = useSpace();
-  useAsyncEffect(async () => {
-    if (!space) {
-      return;
-    }
-
-    const chats = await space.db.query(Filter.type(Assistant.Chat)).run();
-    const chat = chats[0];
-    if (!chat) {
-      return;
-    }
-
-    // Add blueprints to context.
-    const blueprintRegistry = new Blueprint.Registry(blueprintsDefinitions.map((blueprint) => blueprint.make()));
-    const blueprintObjects = blueprints
-      .map((key) => {
-        const blueprint = blueprintRegistry.getByKey(key);
-        if (blueprint) {
-          return space.db.add(Obj.clone(blueprint));
-        }
-      })
-      .filter(isNonNullable);
-
-    const binder = new AiContextBinder({ queue: await chat.queue.load(), registry: atomRegistry });
-    await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
-  }, [space, blueprints, blueprintsDefinitions]);
-
-  const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
-    log.info('event', { event });
-  }, []);
-
-  const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
-  const binder = useContextBinder(chats.at(-1)?.queue.target);
-  const objects = binder?.getObjects() ?? [];
-
-  if (!space) {
-    return null;
-  }
-
-  return (
-    <Stack
-      orientation='horizontal'
-      size='split'
-      rail={false}
-      itemsCount={modules.length + (showContext ? 1 : 0)}
-      classNames='absolute inset-0 gap-[--stack-gap]'
-    >
-      {modules.map((Components, i) => {
-        return (
-          <StackItem.Root key={i} item={{ id: `${i}` }}>
-            <Stack
-              orientation='vertical'
-              classNames='gap-[--stack-gap]'
-              size={i > 0 ? 'contain' : 'split'}
-              itemsCount={Components.length}
-              rail={false}
-            >
-              {Components.map((Component, i) => (
-                <StackItem.Root key={i} item={{ id: `${i}` }} classNames={panelClassNames}>
-                  <Component space={space} onEvent={handleEvent} />
-                </StackItem.Root>
-              ))}
-            </Stack>
-          </StackItem.Root>
-        );
-      })}
-
-      {showContext && <StackContainer objects={objects} />}
-    </Stack>
-  );
-};
-
-const StackContainer = ({ objects }: { objects: Obj.Unknown[] }) => {
-  return (
-    <Stack
-      orientation='vertical'
-      classNames='gap-[--stack-gap]'
-      size='contain'
-      rail={false}
-      itemsCount={objects.length}
-    >
-      {objects.map((object) => (
-        <StackItem.Root key={object.id} item={object} classNames={panelClassNames}>
-          <Surface.Surface role='section' limit={1} data={{ subject: object }} />
-        </StackItem.Root>
-      ))}
-    </Stack>
-  );
-};
-
-const storybook: Meta<typeof DefaultStory> = {
+const storybook: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Chat',
-  render: render(DefaultStory),
-  decorators: [withTheme()],
+  render: ModuleContainer,
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -270,7 +144,10 @@ const addSpellingMistakes = (text: string, n: number): string => {
 
 export const Default: Story = {
   decorators: getDecorators({
-    plugins: [MarkdownPlugin()],
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown');
+      return { plugins: [MarkdownPlugin()] };
+    },
     config: config.remote,
   }),
   args: {
@@ -280,7 +157,10 @@ export const Default: Story = {
 
 export const WithWebSearch: Story = {
   decorators: getDecorators({
-    plugins: [MarkdownPlugin()],
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown');
+      return { plugins: [MarkdownPlugin()] };
+    },
     config: config.remote,
   }),
   args: {
@@ -292,7 +172,13 @@ export const WithWebSearch: Story = {
 // Test with prompt: Propose changes to my document based on the style guide.
 export const WithDocument: Story = {
   decorators: getDecorators({
-    plugins: [MarkdownPlugin(), ThreadPlugin()],
+    lazyPlugins: async () => {
+      const [{ MarkdownPlugin }, { ThreadPlugin }] = await Promise.all([
+        import('@dxos/plugin-markdown'),
+        import('@dxos/plugin-thread'),
+      ]);
+      return { plugins: [MarkdownPlugin(), ThreadPlugin()] };
+    },
     config: config.remote, // TODO(burdon): Issue making persistent.
     onInit: async ({ space }) => {
       space.db.add(
@@ -322,7 +208,14 @@ export const WithDocument: Story = {
 
 export const WithBlueprints: Story = {
   decorators: getDecorators({
-    plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()],
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { MarkdownPlugin }, { TablePlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox'),
+        import('@dxos/plugin-markdown'),
+        import('@dxos/plugin-table'),
+      ]);
+      return { plugins: [InboxPlugin(), MarkdownPlugin(), TablePlugin()] };
+    },
     config: config.remote,
     onInit: async ({ space }) => {
       space.db.add(Markdown.make({ name: 'Tasks' }));
@@ -339,10 +232,13 @@ export const WithBlueprints: Story = {
 
 export const WithChess: Story = {
   decorators: getDecorators({
-    plugins: [ChessPlugin()],
+    lazyPlugins: async () => {
+      const { Chess, ChessPlugin } = await import('@dxos/plugin-chess');
+      return { plugins: [ChessPlugin()], types: [Chess.Game] };
+    },
     config: config.remote,
-    types: [Chess.Game],
     onInit: async ({ space }) => {
+      const { Chess } = await import('@dxos/plugin-chess');
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
         Chess.make({
@@ -367,6 +263,7 @@ export const WithChess: Story = {
       );
     },
     onChatCreated: async ({ space, binder }) => {
+      const { Chess } = await import('@dxos/plugin-chess');
       const objects = await space.db.query(Filter.type(Chess.Game)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
@@ -381,18 +278,33 @@ export const WithChess: Story = {
 // Test with prompt: Summarize my mailbox and write the summary in a new document.
 export const WithMail: Story = {
   decorators: getDecorators({
-    plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()],
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { MarkdownPlugin }, { ThreadPlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox'),
+        import('@dxos/plugin-markdown'),
+        import('@dxos/plugin-thread'),
+      ]);
+      return { plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()] };
+    },
     config: config.remote,
-    types: [Mailbox.Mailbox],
+    types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
-      const queue = space.queues.get<Message.Message>(mailbox.queue.dxn);
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const feed = await mailbox.feed?.tryLoad();
+      invariant(feed);
+      const queue = space.queues.create<Message.Message>();
+      Obj.change(feed, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      });
       const messages = createTestMailbox();
       await queue.append(messages);
     },
     onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
-      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const mailbox = mailboxes[0];
+      if (mailbox) {
+        await binder.bind({ objects: [Ref.make(mailbox)] });
+      }
     },
   }),
   args: {
@@ -405,20 +317,29 @@ export const WithMail: Story = {
 // Test with prompt: Sync my email.
 export const WithGmail: Story = {
   decorators: getDecorators({
-    plugins: [InboxPlugin(), TokenManagerPlugin()],
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { TokenManagerPlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox'),
+        import('@dxos/plugin-token-manager'),
+      ]);
+      return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
+    },
     config: config.persistent,
-    types: [Mailbox.Mailbox],
+    types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      space.db.add(Mailbox.make({ name: 'Mailbox', space }));
+      space.db.add(Mailbox.make({ name: 'Mailbox' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
-      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+      const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+      const mailbox = mailboxes[0];
+      if (mailbox) {
+        await binder.bind({ objects: [Ref.make(mailbox)] });
+      }
     },
   }),
   args: {
     showContext: true,
-    modules: [[ChatModule], [InboxModule], [TokenManagerModule]],
+    modules: [[ChatModule], [InboxModule, TokenManagerModule]],
     blueprints: [AssistantBlueprint.key, InboxBlueprint.key],
   },
 };
@@ -426,15 +347,24 @@ export const WithGmail: Story = {
 // Test with prompt: Sync my calendar.
 export const WithCalendar: Story = {
   decorators: getDecorators({
-    plugins: [InboxPlugin(), TokenManagerPlugin()],
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { TokenManagerPlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox'),
+        import('@dxos/plugin-token-manager'),
+      ]);
+      return { plugins: [InboxPlugin(), TokenManagerPlugin()] };
+    },
     config: config.remote,
-    types: [Calendar.Calendar, Event.Event],
+    types: [Feed.Feed, Calendar.Calendar, Event.Event],
     onInit: async ({ space }) => {
-      space.db.add(Calendar.make({ name: 'Calendar', space }));
+      space.db.add(Calendar.make({ name: 'Calendar' }));
     },
     onChatCreated: async ({ space, binder }) => {
-      const objects = await space.db.query(Filter.type(Calendar.Calendar)).run();
-      await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
+      const calendars = await space.db.query(Filter.type(Calendar.Calendar)).run();
+      const calendar = calendars[0];
+      if (calendar) {
+        await binder.bind({ objects: [Ref.make(calendar)] });
+      }
     },
   }),
   args: {
@@ -447,14 +377,29 @@ export const WithCalendar: Story = {
 // Test with prompt: Create 10 locations.
 export const WithMap: Story = {
   decorators: getDecorators({
-    plugins: [MapPlugin(), TablePlugin()],
+    lazyPlugins: async () => {
+      const [{ Map, MapPlugin }, { TablePlugin }, { Table }, { createLocationSchema: _ }] = await Promise.all([
+        import('@dxos/plugin-map'),
+        import('@dxos/plugin-table'),
+        import('@dxos/react-ui-table/types'),
+        import('@dxos/plugin-map/testing'),
+      ]);
+      return { plugins: [MapPlugin(), TablePlugin()], types: [View.View, Map.Map, Table.Table] };
+    },
     config: config.remote,
-    types: [View.View, Map.Map, Table.Table],
     onInit: async ({ space }) => {
+      const [{ Map, MapPlugin: _ }, { Table }, { createLocationSchema }] = await Promise.all([
+        import('@dxos/plugin-map'),
+        import('@dxos/react-ui-table/types'),
+        import('@dxos/plugin-map/testing'),
+      ]);
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
-      const { view: tableView, jsonSchema } = await View.makeFromDatabase({ db: space.db, typename: schema.typename });
+      const { view: tableView, jsonSchema } = await ViewModel.makeFromDatabase({
+        db: space.db,
+        typename: schema.typename,
+      });
       const table = Table.make({ name: 'Table', view: tableView, jsonSchema });
-      const { view: mapView } = await View.makeFromDatabase({
+      const { view: mapView } = await ViewModel.makeFromDatabase({
         db: space.db,
         typename: schema.typename,
         pivotFieldName: 'location',
@@ -477,10 +422,16 @@ export const WithMap: Story = {
 
 export const WithTrip: Story = {
   decorators: getDecorators({
-    plugins: [MarkdownPlugin(), MapPlugin()],
+    lazyPlugins: async () => {
+      const [{ MarkdownPlugin }, { Map, MapPlugin }] = await Promise.all([
+        import('@dxos/plugin-markdown'),
+        import('@dxos/plugin-map'),
+      ]);
+      return { plugins: [MarkdownPlugin(), MapPlugin()], types: [Map.Map] };
+    },
     config: config.remote,
-    types: [Map.Map],
     onInit: async ({ space }) => {
+      const { Map } = await import('@dxos/plugin-map');
       // TODO(burdon): Table.
       const map = Map.make({ name: 'Trip' });
       space.db.add(map);
@@ -516,6 +467,7 @@ export const WithTrip: Story = {
       );
     },
     onChatCreated: async ({ space, binder }) => {
+      const { Map } = await import('@dxos/plugin-map');
       const objects = await space.db.query(Filter.or(Filter.type(Map.Map), Filter.type(Markdown.Document))).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
@@ -528,13 +480,17 @@ export const WithTrip: Story = {
 
 export const WithBoard: Story = {
   decorators: getDecorators({
-    plugins: [BoardPlugin()],
+    lazyPlugins: async () => {
+      const { Board, BoardPlugin } = await import('@dxos/plugin-board');
+      return { plugins: [BoardPlugin()], types: [Board.Board] };
+    },
     config: config.remote,
-    types: [Board.Board],
     onInit: async ({ space }) => {
+      const { Board } = await import('@dxos/plugin-board');
       space.db.add(Board.makeBoard());
     },
     onChatCreated: async ({ space, binder }) => {
+      const { Board } = await import('@dxos/plugin-board');
       const objects = await space.db.query(Filter.type(Board.Board)).run();
       await binder.bind({ objects: objects.map((object) => Ref.make(object)) });
     },
@@ -550,7 +506,14 @@ export const WithBoard: Story = {
  */
 export const WithResearch: Story = {
   decorators: getDecorators({
-    plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()],
+    lazyPlugins: async () => {
+      const [{ MarkdownPlugin }, { TablePlugin }, { ThreadPlugin }] = await Promise.all([
+        import('@dxos/plugin-markdown'),
+        import('@dxos/plugin-table'),
+        import('@dxos/plugin-thread'),
+      ]);
+      return { plugins: [MarkdownPlugin(), TablePlugin(), ThreadPlugin()] };
+    },
     config: config.remote,
     types: [...ResearchDataTypes, ResearchGraph.ResearchGraph],
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
@@ -590,7 +553,13 @@ export const WithSearch: Story = {
 
 export const WithTranscription: Story = {
   decorators: getDecorators({
-    plugins: [TranscriptionPlugin(), PreviewPlugin()],
+    lazyPlugins: async () => {
+      const [{ TranscriptionPlugin }, { PreviewPlugin }] = await Promise.all([
+        import('@dxos/plugin-transcription'),
+        import('@dxos/plugin-preview'),
+      ]);
+      return { plugins: [TranscriptionPlugin(), PreviewPlugin()] };
+    },
     config: config.remote,
     types: [Transcript.Transcript],
     onInit: async ({ space }) => {
@@ -654,10 +623,13 @@ export const WithTriggers: Story = {
 
 export const WithChessTrigger: Story = {
   decorators: getDecorators({
-    plugins: [ChessPlugin()],
+    lazyPlugins: async () => {
+      const { Chess, ChessPlugin } = await import('@dxos/plugin-chess');
+      return { plugins: [ChessPlugin()], types: [Chess.Game] };
+    },
     config: config.remote,
-    types: [Chess.Game],
     onInit: async ({ space }) => {
+      const { Chess } = await import('@dxos/plugin-chess');
       // TODO(burdon): Add player DID (for user and assistant).
       space.db.add(
         Chess.make({
@@ -760,7 +732,14 @@ export const WithResearchQueue: Story = {
 
 export const WithProject: Story = {
   decorators: getDecorators({
-    plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()],
+    lazyPlugins: async () => {
+      const [{ InboxPlugin }, { MarkdownPlugin }, { PipelinePlugin }] = await Promise.all([
+        import('@dxos/plugin-inbox'),
+        import('@dxos/plugin-markdown'),
+        import('@dxos/plugin-pipeline'),
+      ]);
+      return { plugins: [InboxPlugin(), MarkdownPlugin(), PipelinePlugin()] };
+    },
     config: config.remote,
     accessTokens: [Obj.make(AccessToken.AccessToken, { source: 'exa.ai', token: EXA_API_KEY })],
     types: [
@@ -773,7 +752,7 @@ export const WithProject: Story = {
       Person.Person,
       Pipeline.Pipeline,
       View.View,
-      Mailbox.Mailbox,
+      Feed.Feed,
     ],
     onInit: async ({ space }) => {
       await addTestData(space);
@@ -788,8 +767,11 @@ export const WithProject: Story = {
         });
       });
 
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox', space }));
-      const queue = space.queues.get<Message.Message>(mailbox.queue.dxn);
+      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const queue = space.queues.create<Message.Message>();
+      Obj.change(mailbox, (mutable) => {
+        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      });
       const messages = createTestMailbox(people);
       await queue.append(messages);
 
@@ -875,25 +857,21 @@ export const WithProject: Story = {
       });
       space.db.add(researchTrigger);
 
-      const mailboxView = View.make({
-        query: Query.select(Filter.type(Message.Message))
-          .select(Filter.tag(tagDxn))
-          .options({
-            queues: [mailbox.queue.dxn.toString()],
-          }),
-        jsonSchema: Type.toJsonSchema(Message.Message),
+      const mailboxView = ViewModel.make({
+        query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagDxn)).from(mailbox),
+        jsonSchema: JsonSchema.toJsonSchema(Message.Message),
       });
-      const contactsView = View.make({
+      const contactsView = ViewModel.make({
         query: contactsQuery,
-        jsonSchema: Type.toJsonSchema(Person.Person),
+        jsonSchema: JsonSchema.toJsonSchema(Person.Person),
       });
-      const organizationsView = View.make({
+      const organizationsView = ViewModel.make({
         query: organizationsQuery,
-        jsonSchema: Type.toJsonSchema(Organization.Organization),
+        jsonSchema: JsonSchema.toJsonSchema(Organization.Organization),
       });
-      const notesView = View.make({
+      const notesView = ViewModel.make({
         query: notesQuery,
-        jsonSchema: Type.toJsonSchema(Markdown.Document),
+        jsonSchema: JsonSchema.toJsonSchema(Markdown.Document),
       });
 
       space.db.add(
@@ -933,14 +911,24 @@ export const WithProject: Story = {
 
 export const WithScript: Story = {
   decorators: getDecorators({
-    plugins: [MarkdownPlugin(), ScriptPlugin()],
+    lazyPlugins: async () => {
+      const [{ MarkdownPlugin }, { ScriptPlugin }] = await Promise.all([
+        import('@dxos/plugin-markdown'),
+        import('@dxos/plugin-script'),
+      ]);
+      return { plugins: [MarkdownPlugin(), ScriptPlugin()] };
+    },
     config: config.local,
     types: [Script.Script, Text.Text],
     onInit: async ({ client, space }) => {
+      const [{ getAccessCredential }, { templates }] = await Promise.all([
+        import('@dxos/plugin-script'),
+        import('@dxos/plugin-script/templates'),
+      ]);
       const { identityKey } = client.halo.identity.get()!;
       await client.halo.writeCredentials([getAccessCredential(identityKey)]);
 
-      const template = templates.find((template) => template.id === 'dxos.org/script/forex-effect');
+      const template = templates.find((template) => template.id === 'org.dxos.script.forex-effect');
       invariant(template, 'Template not found');
       invariant(template.name, 'Template name not found');
 
@@ -956,14 +944,14 @@ export const WithScript: Story = {
 
       space.db.add(
         Blueprint.make({
-          key: 'dxos.org/blueprint/forex',
+          key: 'org.dxos.blueprint.forex',
           name: 'Forex',
           instructions: Template.make({
             source: trim`
               You can get the exchange rate between two currencies.
             `,
           }),
-          tools: [ToolId.make('dxos.org/script/forex-effect')],
+          tools: [ToolId.make('org.dxos.script.forex-effect')],
         }),
       );
 
@@ -981,7 +969,10 @@ export const WithScript: Story = {
 
 export const WithPrompt: Story = {
   decorators: getDecorators({
-    plugins: [MarkdownPlugin()],
+    lazyPlugins: async () => {
+      const { MarkdownPlugin } = await import('@dxos/plugin-markdown');
+      return { plugins: [MarkdownPlugin()] };
+    },
     config: config.remote,
     types: [Text.Text],
     onInit: async ({ space }) => {

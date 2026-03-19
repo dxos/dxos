@@ -7,23 +7,23 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { Graph, Node } from '@dxos/plugin-graph';
 import { Path } from '@dxos/react-ui-list';
 
 import { meta } from '../../meta';
 import { type NavTreeCapabilities as NC, NavTreeCapabilities } from '../../types';
 
-const KEY = `${meta.id}/state/v1`;
+const KEY = `${meta.id}.state.v1`;
 
 /** Default item state for new entries. */
 const defaultItemState: NC.NavTreeItemState = { open: false, current: false, alternateTree: false };
 
+/** L0 (top-level workspace) paths are direct children of root — not part of the expandable tree model. */
+const isTopLevelPath = (path: string[]): boolean => path.length === 2 && path[0] === Node.RootId;
+
 /** Default state entries for initial tree structure. */
 // TODO(thure): Initialize these dynamically.
-const defaultStateEntries: [string, NC.NavTreeItemState][] = [
-  ['root', { open: true, current: false }],
-  ['root~dxos.org/plugin/space-spaces', { open: true, current: false }],
-  ['root~dxos.org/plugin/files', { open: true, current: false }],
-];
+const defaultStateEntries: [string, NC.NavTreeItemState][] = [['root', { open: true, current: false }]];
 
 const getInitialState = (): Map<string, NC.NavTreeItemState> => {
   const stringified = localStorage.getItem(KEY);
@@ -56,6 +56,9 @@ export default Capability.makeModule(
 
     const getItemAtom = (path: string[]): Atom.Atom<NC.NavTreeItemState> => {
       const pathString = Path.create(...path);
+      if (!backingState.has(pathString)) {
+        backingState.set(pathString, { ...defaultItemState });
+      }
       return itemAtomFamily(pathString);
     };
 
@@ -69,12 +72,12 @@ export default Capability.makeModule(
       const currentValue = registry.get(atom);
       const newValue = { ...currentValue, [key]: next };
 
-      // Update the atom.
       registry.set(atom, newValue);
 
-      // Update backing state and persist to localStorage.
-      backingState.set(pathString, newValue);
-      localStorage.setItem(KEY, JSON.stringify(Array.from(backingState.entries())));
+      if (!(key === 'open' && isTopLevelPath(path))) {
+        backingState.set(pathString, newValue);
+        localStorage.setItem(KEY, JSON.stringify(Array.from(backingState.entries())));
+      }
     };
 
     // Subscribe to layout changes to update current state.
@@ -108,6 +111,30 @@ export default Capability.makeModule(
       handleUpdate();
       return () => clearTimeout(timeout);
     });
+
+    // Once graph is ready, expand every node marked open in state so the graph has children loaded for rendering.
+    yield* Effect.gen(function* () {
+      const { graph } = yield* Capability.waitFor(AppCapabilities.AppGraph);
+
+      // Always expand the active workspace so its subtree is initialized.
+      const layout = registry.get(layoutAtom);
+      if (layout.workspace) {
+        Graph.expand(graph, layout.workspace, 'child');
+      }
+
+      // Expand persisted open nodes, skipping inactive workspace tabs.
+      const openPaths = Array.from(backingState.entries())
+        .filter(([, state]) => state.open)
+        .map(([pathString]) => Path.parts(pathString))
+        .filter((path) => !isTopLevelPath(path));
+      for (const path of openPaths) {
+        const nodeId = path[path.length - 1];
+        if (!nodeId) {
+          continue;
+        }
+        Graph.expand(graph, nodeId, 'child');
+      }
+    }).pipe(Effect.forkDaemon);
 
     return Capability.contributes(
       NavTreeCapabilities.State,

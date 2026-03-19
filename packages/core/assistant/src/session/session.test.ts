@@ -4,7 +4,7 @@
 
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
-import { describe, it } from '@effect/vitest';
+import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
+import { Message } from '@dxos/types';
 
 import { AssistantTestLayer } from '../testing';
 
@@ -25,7 +26,7 @@ const CalendarEventSchema = Schema.Struct({
   description: Schema.String,
 }).pipe(
   Type.object({
-    typename: 'example.com/type/CalendarEvent',
+    typename: 'com.example.type.calendar-event',
     version: '0.1.0',
   }),
 );
@@ -77,7 +78,7 @@ describe('AiSession', () => {
     'no tools',
     Effect.fnUntraced(
       function* (_) {
-        const session = new AiSession({ operationModel: 'configured' });
+        const session = new AiSession();
         const response = yield* session.run({
           prompt: 'Hello world!',
           history: [],
@@ -93,7 +94,7 @@ describe('AiSession', () => {
     'calculator',
     Effect.fnUntraced(
       function* (_) {
-        const session = new AiSession({ operationModel: 'configured' });
+        const session = new AiSession();
         const toolkit = yield* TestToolkit;
         const response = yield* session.run({
           toolkit,
@@ -111,7 +112,7 @@ describe('AiSession', () => {
     'tool schema error',
     Effect.fnUntraced(
       function* (_) {
-        const session = new AiSession({ operationModel: 'configured' });
+        const session = new AiSession();
         const toolkit = yield* TestToolkit;
         const response = yield* session.run({
           toolkit,
@@ -120,6 +121,33 @@ describe('AiSession', () => {
           history: [],
         });
         log.info('response', { response });
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'summarization',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = new AiSession({ summarizationThreshold: 0 }); // Force summarization.
+        const response = yield* session.run({
+          prompt: 'What did we talk about?',
+          history: [
+            Obj.make(Message.Message, {
+              created: '2024-01-01T10:00:00Z',
+              sender: { role: 'user' },
+              blocks: [{ _tag: 'text', text: 'How many apples are in the basket?' }],
+            }),
+            Obj.make(Message.Message, {
+              created: '2024-01-01T11:00:00Z',
+              sender: { role: 'assistant' },
+              blocks: [{ _tag: 'text', text: 'There are 10 apples in the basket.' }],
+            }),
+          ],
+        });
+        expect(response).toBeDefined();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

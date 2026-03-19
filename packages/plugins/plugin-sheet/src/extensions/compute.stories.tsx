@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useThemeContext } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -22,10 +22,10 @@ import {
 } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
-import { GridSheet, SheetProvider, useComputeGraph } from '../components';
+import { Sheet, useComputeGraph } from '../components';
 import { useSheetModel } from '../model';
 import { useTestSheet, withComputeGraphDecorator } from '../testing';
-import { Sheet } from '../types';
+import { Sheet as SheetType } from '../types';
 
 import { compute, computeGraphFacet } from './compute';
 
@@ -63,7 +63,7 @@ const DefaultStory = ({ text }: EditorProps) => {
     [computeGraph, themeMode],
   );
 
-  return <div className='is-[40rem] overflow-hidden' ref={parentRef} {...focusAttributes} />;
+  return <div className='w-[40rem] overflow-hidden' ref={parentRef} {...focusAttributes} />;
 };
 
 const Grid = () => {
@@ -87,10 +87,10 @@ const Grid = () => {
   }
 
   return (
-    <div className='flex is-[40rem] overflow-hidden'>
-      <SheetProvider graph={graph} sheet={sheet}>
-        <GridSheet />
-      </SheetProvider>
+    <div className='flex w-[40rem] overflow-hidden'>
+      <Sheet.Root graph={graph} sheet={sheet} attendableId='test'>
+        <Sheet.Content />
+      </Sheet.Root>
     </div>
   );
 };
@@ -105,11 +105,12 @@ const GraphStory = (props: EditorProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-sheet/extensions',
+  title: 'plugins/plugin-sheet/extensions/compute',
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
-      types: [Sheet.Sheet],
+      types: [SheetType.Sheet],
       createIdentity: true,
       createSpace: true,
     }),

@@ -6,8 +6,8 @@ import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-vi
 import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type Axis, type SlottableClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { type Axis, type ComposableProps } from '@dxos/react-ui';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
 
@@ -42,15 +42,13 @@ const MOSAIC_STACK_NAME = 'MosaicStack';
 
 type MosaicStackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
-type MosaicStackProps<TData = any> = SlottableClassName<
-  {
-    Tile: MosaicStackTileComponent<TData>;
-    getId: GetId<TData>;
-    role?: string;
-    orientation?: Axis;
-    items?: readonly TData[];
-  } & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>
->;
+type MosaicStackProps<TData = any> = Omit<ComposableProps<HTMLDivElement>, 'onChange'> & {
+  Tile: MosaicStackTileComponent<TData>;
+  getId: GetId<TData>;
+  role?: string;
+  orientation?: Axis;
+  items?: readonly TData[];
+} & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>;
 
 /**
  * Linear layout of Mosaic tiles.
@@ -58,20 +56,10 @@ type MosaicStackProps<TData = any> = SlottableClassName<
  */
 const MosaicStackInner = forwardRef<HTMLDivElement, MosaicStackProps>(
   (
-    {
-      classNames,
-      className,
-      role = 'list',
-      orientation: orientationProp = 'vertical',
-      draggable = true,
-      items,
-      getId,
-      Tile,
-      debug,
-      ...props
-    },
+    { role = 'list', orientation: orientationProp = 'vertical', draggable = true, items, getId, Tile, debug, ...props },
     forwardedRef,
   ) => {
+    const { className, ...rest } = composableProps(props);
     invariant(Tile);
     const { id, orientation = orientationProp, dragging } = useMosaicContainerContext(MOSAIC_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
@@ -79,13 +67,12 @@ const MosaicStackInner = forwardRef<HTMLDivElement, MosaicStackProps>(
 
     return (
       <div
-        {...props}
+        {...rest}
         role={role}
         className={mx(
           'flex',
-          orientation === 'horizontal' && 'bs-full [&>*]:shrink-0',
+          orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
           orientation === 'vertical' && 'flex-col',
-          classNames,
           className,
         )}
         ref={forwardedRef}
@@ -123,8 +110,6 @@ type MosaicVirtualStackProps<TData = any> = MosaicStackProps<TData> &
 const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackProps>(
   (
     {
-      classNames,
-      className,
       role = 'list',
       orientation = 'vertical',
       items,
@@ -139,6 +124,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     },
     forwardedRef,
   ) => {
+    const { className, ...rest } = composableProps(props);
     invariant(Tile);
     const { id, dragging } = useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
@@ -154,13 +140,12 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
 
     return (
       <div
-        {...props}
+        {...rest}
         role={role}
         className={mx(
           'flex',
-          orientation === 'horizontal' && 'bs-full [&>*]:shrink-0',
+          orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
           orientation === 'vertical' && 'flex-col',
-          classNames,
           className,
         )}
         style={{
@@ -227,7 +212,7 @@ const InternalPlaceholder = (props: MosaicPlaceholderProps<number>) => {
     <MosaicPlaceholder {...props} classNames={styles.placeholder.root}>
       <div
         className={mx(
-          'flex bs-full bg-baseSurface border border-dashed border-separator rounded-sm',
+          'flex h-full bg-base-surface border border-dashed border-separator rounded-xs',
           styles.placeholder.content,
         )}
       />

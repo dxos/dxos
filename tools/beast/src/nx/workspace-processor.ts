@@ -3,7 +3,7 @@
 //
 
 import fs from 'fs';
-import minimatch, { Minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import path from 'path';
 
 import { log } from '@dxos/log';

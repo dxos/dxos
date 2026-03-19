@@ -33,11 +33,11 @@ export const HelpContext: Context<HelpContextType> = createContext<HelpContextTy
   stop: () => {},
 });
 
-const HELP_OPERATION = `${meta.id}/operation`;
+const HELP_OPERATION = `${meta.id}.operation`;
 
 export namespace HelpOperation {
   export const Start = Operation.make({
-    meta: { key: `${HELP_OPERATION}/start`, name: 'Start Help' },
+    meta: { key: `${HELP_OPERATION}.start`, name: 'Start Help' },
     services: [Capability.Service],
     schema: { input: Schema.Void, output: Schema.Void },
   });

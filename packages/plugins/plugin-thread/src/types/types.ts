@@ -5,17 +5,17 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { Key, Type } from '@dxos/echo';
+import { Key, Obj } from '@dxos/echo';
+import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceSchema } from '@dxos/react-client/echo';
-import { Collection } from '@dxos/schema';
 import { Actor, AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { meta } from '../meta';
 
 import * as Channel from './Channel';
 
-const THREAD_OPERATION = `${meta.id}/operation`;
+const THREAD_OPERATION = `${meta.id}.operation`;
 
 /**
  * Operations for the Thread plugin.
@@ -23,7 +23,7 @@ const THREAD_OPERATION = `${meta.id}/operation`;
  */
 export namespace ThreadOperation {
   export const OnCreateSpace = Operation.make({
-    meta: { key: `${THREAD_OPERATION}/on-create-space`, name: 'On Create Space' },
+    meta: { key: `${THREAD_OPERATION}.on-create-space`, name: 'On Create Space' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -36,7 +36,7 @@ export namespace ThreadOperation {
   });
 
   export const CreateChannel = Operation.make({
-    meta: { key: `${THREAD_OPERATION}/create-channel`, name: 'Create Channel' },
+    meta: { key: `${THREAD_OPERATION}.create-channel`, name: 'Create Channel' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -50,7 +50,7 @@ export namespace ThreadOperation {
   });
 
   export const CreateChannelThread = Operation.make({
-    meta: { key: `${THREAD_OPERATION}/create-channel-thread`, name: 'Create Channel Thread' },
+    meta: { key: `${THREAD_OPERATION}.create-channel-thread`, name: 'Create Channel Thread' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -63,13 +63,13 @@ export namespace ThreadOperation {
   });
 
   export const Create = Operation.make({
-    meta: { key: `${THREAD_OPERATION}/create`, name: 'Create Thread' },
+    meta: { key: `${THREAD_OPERATION}.create`, name: 'Create Thread' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         name: Schema.optional(Schema.String),
         anchor: Schema.optional(Schema.String),
-        subject: Type.Obj,
+        subject: Obj.Unknown,
       }),
       output: Schema.Void,
     },
@@ -83,12 +83,12 @@ export namespace ThreadOperation {
   export type DeleteOutput = Schema.Schema.Type<typeof DeleteOutput>;
 
   export const Delete = Operation.make({
-    meta: { key: `${THREAD_OPERATION}/delete`, name: 'Delete Thread' },
+    meta: { key: `${THREAD_OPERATION}.delete`, name: 'Delete Thread' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         anchor: AnchoredTo.AnchoredTo,
-        subject: Type.Obj,
+        subject: Obj.Unknown,
         thread: Schema.optional(Thread.Thread),
       }),
       output: DeleteOutput,
@@ -96,7 +96,7 @@ export namespace ThreadOperation {
   });
 
   export const Select = Operation.make({
-    meta: { key: `${THREAD_OPERATION}/select`, name: 'Select Thread' },
+    meta: { key: `${THREAD_OPERATION}.select`, name: 'Select Thread' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -107,7 +107,7 @@ export namespace ThreadOperation {
   });
 
   export const ToggleResolved = Operation.make({
-    meta: { key: `${THREAD_OPERATION}/toggle-resolved`, name: 'Toggle Resolved' },
+    meta: { key: `${THREAD_OPERATION}.toggle-resolved`, name: 'Toggle Resolved' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -118,11 +118,11 @@ export namespace ThreadOperation {
   });
 
   export const AddMessage = Operation.make({
-    meta: { key: `${THREAD_OPERATION}/add-message`, name: 'Add Message' },
+    meta: { key: `${THREAD_OPERATION}.add-message`, name: 'Add Message' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
-        subject: Type.Obj,
+        subject: Obj.Unknown,
         anchor: AnchoredTo.AnchoredTo,
         sender: Actor.Actor,
         text: Schema.String,
@@ -141,12 +141,12 @@ export namespace ThreadOperation {
   export type DeleteMessageOutput = Schema.Schema.Type<typeof DeleteMessageOutput>;
 
   export const DeleteMessage = Operation.make({
-    meta: { key: `${THREAD_OPERATION}/delete-message`, name: 'Delete Message' },
+    meta: { key: `${THREAD_OPERATION}.delete-message`, name: 'Delete Message' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
         anchor: AnchoredTo.AnchoredTo,
-        subject: Type.Obj,
+        subject: Obj.Unknown,
         messageId: Schema.String,
       }),
       output: DeleteMessageOutput,
@@ -157,7 +157,7 @@ export namespace ThreadOperation {
    * Restore a deleted thread (inverse of Delete).
    */
   export const Restore = Operation.make({
-    meta: { key: `${THREAD_OPERATION}/restore`, name: 'Restore Thread' },
+    meta: { key: `${THREAD_OPERATION}.restore`, name: 'Restore Thread' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({
@@ -172,7 +172,7 @@ export namespace ThreadOperation {
    * Restore a deleted message (inverse of DeleteMessage).
    */
   export const RestoreMessage = Operation.make({
-    meta: { key: `${THREAD_OPERATION}/restore-message`, name: 'Restore Message' },
+    meta: { key: `${THREAD_OPERATION}.restore-message`, name: 'Restore Message' },
     services: [Capability.Service],
     schema: {
       input: Schema.Struct({

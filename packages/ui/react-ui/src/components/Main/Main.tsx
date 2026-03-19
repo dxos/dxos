@@ -25,7 +25,7 @@ import React, {
 import { addEventListener } from '@dxos/async';
 import { log } from '@dxos/log';
 import { useForwardedRef, useMediaQuery } from '@dxos/react-hooks';
-import { type MainStyleProps } from '@dxos/ui-theme';
+import { type MainStyleProps, osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
@@ -40,7 +40,7 @@ const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
 const COMPLEMENTARY_SIDEBAR_NAME = 'ComplementarySidebar';
 
 const handleOpenAutoFocus = (event: Event) => {
-  !document.body.hasAttribute('data-is-keyboard') && event.preventDefault();
+  !document.body.hasAttribute('data-w-keyboard') && event.preventDefault();
 };
 
 //
@@ -270,7 +270,7 @@ type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof DialogConte
   state?: SidebarState;
   resizing?: boolean;
   onStateChange?: (nextState: SidebarState) => void;
-  side: 'inline-start' | 'inline-end';
+  side: 'w-start' | 'w-end';
   label: Label;
 };
 
@@ -281,7 +281,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   ) => {
     const [isLg] = useMediaQuery('lg');
     const { tx } = useThemeContext();
-    const { t } = useTranslation();
+    const { t } = useTranslation(osTranslations);
     const ref = useForwardedRef(forwardedRef);
     const noopRef = useRef(null);
 
@@ -313,7 +313,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
           {...(!isLg && { forceMount: true, tabIndex: -1, onOpenAutoFocus: onOpenAutoFocus ?? handleOpenAutoFocus })}
           {...(state === 'closed' && { inert: true })}
           {...props}
-          data-side={side === 'inline-end' ? 'ie' : 'is'}
+          data-side={side === 'w-end' ? 'ie' : 'is'}
           data-state={state}
           data-resizing={resizing ? 'true' : 'false'}
           className={tx('main.sidebar', {}, classNames)}
@@ -344,7 +344,7 @@ const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarPr
       state={navigationSidebarState}
       onStateChange={setNavigationSidebarState}
       resizing={resizing}
-      side='inline-start'
+      side='w-start'
       ref={forwardedRef}
     />
   );
@@ -370,7 +370,7 @@ const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySid
       state={complementarySidebarState}
       onStateChange={setComplementarySidebarState}
       resizing={resizing}
-      side='inline-end'
+      side='w-end'
       ref={forwardedRef}
     />
   );
@@ -393,22 +393,22 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
   ({ asChild, classNames, bounce, handlesFocus, children, role, ...props }: MainContentProps, forwardedRef) => {
     const { navigationSidebarState, complementarySidebarState } = useMainContext(MAIN_NAME);
     const { tx } = useThemeContext();
-    const Root = asChild ? Slot : role ? 'div' : 'main';
+    const Comp = asChild ? Slot : role ? Primitive.div : 'main';
     const mover = useLandmarkMover(props.onKeyDown, '1');
 
     return (
-      <Root
-        role={role}
+      <Comp
         {...(handlesFocus && { ...mover })}
         {...props}
-        data-sidebar-inline-start-state={navigationSidebarState}
-        data-sidebar-inline-end-state={complementarySidebarState}
+        role={role}
+        data-sidebar-left-state={navigationSidebarState}
+        data-sidebar-right-state={complementarySidebarState}
         data-handles-focus={handlesFocus}
         className={tx('main.content', { bounce, handlesFocus }, classNames)}
         ref={forwardedRef}
       >
         {children}
-      </Root>
+      </Comp>
     );
   },
 );

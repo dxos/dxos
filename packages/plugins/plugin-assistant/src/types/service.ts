@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ComputeGraph } from '@dxos/conductor';
-import { Type } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { Function } from '@dxos/functions';
 
 // TODO(burdon): Factor out and reconcile with https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-token-manager/src/defs/presets.ts#L7
@@ -37,12 +37,12 @@ export type ApiAuthorization = Schema.Schema.Type<typeof ApiAuthorization>;
 
 const ServiceInterfaceFunction = Schema.Struct({
   kind: Schema.Literal('function'),
-  fn: Type.Ref(Function.Function),
+  fn: Ref.Ref(Function.Function),
 });
 
 const ServiceInterfaceWorkflow = Schema.Struct({
   kind: Schema.Literal('workflow'),
-  workflow: Type.Ref(ComputeGraph),
+  workflow: Ref.Ref(ComputeGraph),
 });
 
 const ServiceInterfaceApi = Schema.Struct({
@@ -86,7 +86,7 @@ export const ServiceType = Schema.Struct({
   interfaces: Schema.optional(Schema.Array(ServiceInterface)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/ServiceType',
+    typename: 'org.dxos.type.service',
     version: '0.1.0',
   }),
 );

@@ -23,7 +23,7 @@ const Item = ({
 
   return (
     <ListItem.Root key={id} id={id}>
-      <ListItem.Heading classNames='grow pbs-2'>{id}</ListItem.Heading>
+      <ListItem.Heading classNames='grow pt-2'>{id}</ListItem.Heading>
       <ListItem.Endcap>
         <IconButton
           iconOnly
@@ -69,7 +69,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(
       Capabilities.ReactSurface,
       Surface.create({
-        id: 'dxos.org/test/generator/main',
+        id: 'org.dxos.test.generator.main',
         role: 'primary',
         component: Main,
       }),

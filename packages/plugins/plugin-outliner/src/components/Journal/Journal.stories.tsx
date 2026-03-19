@@ -8,7 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text as TextType } from '@dxos/schema';
 
 import { translations } from '../../translations';
@@ -16,7 +16,6 @@ import { Journal, Outline, getDateString } from '../../types';
 
 import { Journal as JournalComponent } from './Journal';
 
-// TODO(wittjosiah): ECHO objects don't work when passed via Storybook args.
 const DefaultJournalStory = () => {
   const space = useSpace();
   const journal = useMemo(() => {
@@ -56,9 +55,10 @@ const JournalsStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-outliner/Journal',
+  title: 'plugins/plugin-outliner/components/Journal',
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,
@@ -106,7 +106,7 @@ const FocusContainer = ({ id }: { id: string }) => {
 export const Test: StoryObj = {
   render: () => {
     return (
-      <div className='flex flex-col is-full justify-center items-center gap-2 m-4'>
+      <div className='flex flex-col w-full justify-center items-center gap-2 m-4'>
         <FocusContainer id='test-1' />
         <FocusContainer id='test-2' />
       </div>

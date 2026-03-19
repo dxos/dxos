@@ -11,7 +11,7 @@ import { Operation } from '@dxos/operation';
 import { meta } from '../meta';
 import { templates } from '../templates';
 
-const SCRIPT_OPERATION = `${meta.id}/operation`;
+const SCRIPT_OPERATION = `${meta.id}.operation`;
 
 export namespace ScriptOperation {
   export const ScriptProps = Schema.Struct({
@@ -29,7 +29,7 @@ export namespace ScriptOperation {
   });
 
   export const CreateScript = Operation.make({
-    meta: { key: `${SCRIPT_OPERATION}/create-script`, name: 'Create Script' },
+    meta: { key: `${SCRIPT_OPERATION}.create-script`, name: 'Create Script' },
     schema: {
       input: Schema.extend(
         ScriptProps,

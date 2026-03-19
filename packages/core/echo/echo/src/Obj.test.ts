@@ -8,6 +8,7 @@ import * as Entity from './Entity';
 import { SnapshotKindId } from './internal';
 import * as Obj from './Obj';
 import * as Ref from './Ref';
+import * as Relation from './Relation';
 import { TestSchema } from './testing';
 
 describe('Obj', () => {
@@ -19,6 +20,10 @@ describe('Obj', () => {
       // Snapshot has SnapshotKindId, not KindId.
       expect(snapshot[SnapshotKindId]).toBe(Entity.Kind.Object);
       expect((snapshot as any)[Entity.KindId]).toBeUndefined();
+      expect(Obj.isSnapshot(snapshot)).toBe(true);
+      expect(Relation.isSnapshot(snapshot)).toBe(false);
+      expect(Entity.isEntity(snapshot)).toBe(false);
+      expect(Entity.isSnapshot(snapshot)).toBe(true);
 
       // Snapshot has same id and properties.
       expect(snapshot.id).toBe(obj.id);
@@ -41,8 +46,8 @@ describe('Obj', () => {
       expect(Obj.getDXN(snapshot)).toBeDefined();
 
       // getTypename - works with both.
-      expect(Obj.getTypename(obj)).toBe('example.com/type/Person');
-      expect(Obj.getTypename(snapshot)).toBe('example.com/type/Person');
+      expect(Obj.getTypename(obj)).toBe('com.example.type.person');
+      expect(Obj.getTypename(snapshot)).toBe('com.example.type.person');
 
       // getMeta - works with both.
       expect(Obj.getMeta(obj)).toBeDefined();

@@ -4,55 +4,24 @@
 
 import { EditorView, ViewPlugin } from '@codemirror/view';
 
-import { addEventListener, combine } from '@dxos/async';
+import { addEventListener, combine, throttle } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 
-import { scrollToLineEffect } from './smooth-scroll';
+import { scrollerCrawlEffect, scrollerLineEffect } from './scroller';
 
-export type AutoScrollOptions = {
-  /** Initial pinned state. */
-  pinned?: boolean;
-  /** Threshold in px to trigger scroll from bottom. */
-  threshold?: number;
-  /** Throttle time in ms. */
-  throttleDelay?: number;
-  /** Callback when auto-scrolling. */
-  onAutoScroll?: (props: { view: EditorView; distanceFromBottom: number }) => boolean | void;
-};
+export type AutoScrollToProps = {};
 
 /**
  * Extension that supports pinning the scroll position and automatically scrolls to the bottom when content is added.
  */
-export const autoScroll = ({
-  pinned = true,
-  threshold = 100,
-  throttleDelay = 500,
-  onAutoScroll,
-}: Partial<AutoScrollOptions> = {}) => {
+export const autoScroll = (_: AutoScrollToProps = {}) => {
   let buttonContainer: HTMLDivElement | undefined;
-  let isPinned = pinned;
+  let isPinned = true;
 
   const setPinned = (pinned: boolean) => {
     buttonContainer?.classList.toggle('opacity-0', pinned);
     isPinned = pinned;
   };
-
-  const scrollToBottom = (view: EditorView, behavior?: ScrollBehavior) => {
-    setPinned(true);
-    view.dispatch({
-      effects: scrollToLineEffect.of({
-        line: -1,
-        options: { position: 'end', behavior },
-      }),
-    });
-  };
-
-  // Throttled scroll to bottom with interval.
-  const triggerUpdate = intervalUntilQuiet((view: EditorView) => {
-    if (isPinned) {
-      scrollToBottom(view);
-    }
-  }, throttleDelay);
 
   return [
     // Update listener for logging when scrolling is needed.
@@ -61,19 +30,19 @@ export const autoScroll = ({
       // NOTE: Geometry changed is triggered when widgets change height (e.g., toggle tool block).
       if (heightChanged) {
         if (isPinned) {
-          const coords = view.coordsAtPos(view.state.doc.length);
-          const scrollerRect = view.scrollDOM.getBoundingClientRect();
-          const distanceFromBottom = coords ? scrollerRect.bottom - coords.bottom : 0;
-          if (distanceFromBottom < threshold) {
-            const shouldScroll = onAutoScroll?.({ view, distanceFromBottom }) ?? true;
-            if (shouldScroll) {
-              triggerUpdate(view);
-            }
-          } else if (distanceFromBottom < 0) {
+          // NOTE: Use scroll geometry instead of coordsAtPos to avoid forced layout/scroll side-effects.
+          const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
+          const delta = scrollHeight - scrollTop - clientHeight;
+          if (delta > 0 && scrollTop > 0) {
+            setPinned(true);
+            view.dispatch({
+              effects: scrollerCrawlEffect.of(true),
+            });
+          } else if (delta < 0) {
             setPinned(false);
           }
         } else {
-          // TODO(burdon): Pin if shrinks.
+          // TODO(burdon): Should re-pin if content shrinks.
           if (state.doc.length === 0) {
             setPinned(true);
           }
@@ -86,13 +55,20 @@ export const autoScroll = ({
       class {
         private readonly cleanup: () => void;
         constructor(view: EditorView) {
-          this.cleanup = createUserScrollDetector(view.scrollDOM, () => {
-            requestAnimationFrame(() => {
-              const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
-              const atBottom = scrollHeight - scrollTop - clientHeight < threshold;
-              setPinned(atBottom);
-            });
-          });
+          this.cleanup = createUserScrollDetector(
+            view.scrollDOM,
+            throttle(() => {
+              requestAnimationFrame(() => {
+                const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
+                const delta = scrollHeight - scrollTop - clientHeight;
+                const pinned = delta === 0;
+                setPinned(pinned);
+                if (!pinned) {
+                  view.dispatch({ effects: scrollerCrawlEffect.of(false) });
+                }
+              });
+            }, 500),
+          );
         }
         destroy() {
           this.cleanup();
@@ -106,11 +82,14 @@ export const autoScroll = ({
         constructor(view: EditorView) {
           const icon = Domino.of('dx-icon' as any).attributes({ icon: 'ph--arrow-down--regular' });
           const button = Domino.of('button')
-            .classNames('dx-button bg-accentSurface')
+            .classNames('dx-button bg-accent-surface')
             .attributes({ 'data-density': 'fine' })
             .children(icon)
             .on('click', () => {
-              scrollToBottom(view);
+              setPinned(true);
+              view.dispatch({
+                effects: scrollerLineEffect.of({ line: -1, position: 'end', behavior: 'smooth' }),
+              });
             });
 
           buttonContainer = Domino.of('div')
@@ -121,31 +100,6 @@ export const autoScroll = ({
         }
       },
     ),
-
-    // Styles.
-    EditorView.theme({
-      '.cm-content': {
-        paddingBottom: `${threshold}px`,
-      },
-      '.cm-scroller': {
-        paddingBottom: '0',
-      },
-      '.cm-scroller.cm-hide-scrollbar::-webkit-scrollbar': {
-        display: 'none',
-      },
-      '.cm-scroller::-webkit-scrollbar-thumb': {
-        background: 'transparent',
-        transition: 'background 0.15s',
-      },
-      '&:hover .cm-scroller::-webkit-scrollbar-thumb': {
-        background: 'var(--dx-scrollbarThumb)',
-      },
-      '.cm-scroll-button': {
-        position: 'absolute',
-        bottom: '0.5rem',
-        right: '1rem',
-      },
-    }),
   ];
 };
 
@@ -157,6 +111,8 @@ export const autoScroll = ({
  *     the element's clientWidth (the content area, excluding the scrollbar).
  * Returns a cleanup function that removes the listeners.
  */
+// TODO(burdon): Still jumps when widgets are rendered.
+// - Track position of specific element/line in document and scroll relative to that.
 function createUserScrollDetector(element: HTMLElement, onUserScroll: () => void): () => void {
   return combine(
     addEventListener(element, 'wheel', () => onUserScroll(), { passive: true }),
@@ -167,39 +123,4 @@ function createUserScrollDetector(element: HTMLElement, onUserScroll: () => void
       }
     }),
   );
-}
-
-/**
- * Invokes the function at most once per interval.
- * The function is called immediately on the first call (throttle),
- * prevents calls during the throttle window,
- * and ensures a final call happens after activity stops (debounce).
- */
-function intervalUntilQuiet<T extends (...args: any[]) => void>(fn: T, interval: number): T {
-  let timer: ReturnType<typeof setInterval> | null = null;
-  let quietTimer: ReturnType<typeof setTimeout> | null = null;
-  let latestArgs: Parameters<T>;
-
-  return ((...args: Parameters<T>) => {
-    // Always track the latest arguments so the interval fires with fresh values.
-    latestArgs = args;
-
-    // Reset the quiet timer on every call.
-    if (quietTimer) {
-      clearTimeout(quietTimer);
-    }
-    quietTimer = setTimeout(() => {
-      if (timer) {
-        clearInterval(timer);
-        timer = null;
-      }
-      quietTimer = null;
-    }, interval);
-
-    // Start the interval on the leading edge if not already running.
-    if (!timer) {
-      fn(...latestArgs);
-      timer = setInterval(() => fn(...latestArgs), interval);
-    }
-  }) as unknown as T;
 }

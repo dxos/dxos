@@ -9,7 +9,7 @@ import { faker } from '@dxos/random';
 import { ScrollArea } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { ToggleContainer } from '../ToggleContainer';
+import { TogglePanel } from '../TogglePanel';
 
 import { NumericTabs } from './NumericTabs';
 
@@ -35,20 +35,20 @@ export const Default: Story = {
   render: () => {
     const [selected, setSelected] = useState(0);
     return (
-      <div className='flex flex-col is-[30rem] p-2 bg-attention rounded-lg'>
-        <ToggleContainer.Root classNames='grid grid-rows-[max-content_1fr]' open>
-          <ToggleContainer.Header>
-            <div className='pis-2'>{content[selected].title}</div>
-          </ToggleContainer.Header>
-          <ToggleContainer.Content classNames='grid grid-cols-[max-content_1fr]'>
-            <div className='pli-1'>
+      <div className='flex flex-col w-[30rem] p-2 bg-attention-surface rounded-lg'>
+        <TogglePanel.Root classNames='grid grid-rows-[max-content_1fr]' open>
+          <TogglePanel.Header>
+            <div className='ps-2'>{content[selected].title}</div>
+          </TogglePanel.Header>
+          <TogglePanel.Content classNames='grid grid-cols-[max-content_1fr]'>
+            <div className='px-1'>
               <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />
             </div>
             <ScrollArea.Root orientation='vertical' thin padding>
               <ScrollArea.Viewport>{content[selected].content}</ScrollArea.Viewport>
             </ScrollArea.Root>
-          </ToggleContainer.Content>
-        </ToggleContainer.Root>
+          </TogglePanel.Content>
+        </TogglePanel.Root>
       </div>
     );
   },
