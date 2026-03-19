@@ -302,10 +302,7 @@ export default defineFunction({
 
       // Get the feed and query for existing videos.
       const feed = yield* Database.load(channel.feed as Ref.Ref<Feed.Feed>);
-      const existingVideos = yield* Feed.runQuery(
-        feed,
-        Filter.schema(Schema.Struct({ videoId: Schema.String })),
-      );
+      const existingVideos = yield* Feed.runQuery(feed, Filter.schema(Schema.Struct({ videoId: Schema.String })));
       const existingVideoIds = new Set(existingVideos.map((video) => video.videoId));
       log('existing videos', { count: existingVideoIds.size });
 

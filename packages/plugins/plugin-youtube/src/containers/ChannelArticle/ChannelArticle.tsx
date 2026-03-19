@@ -21,7 +21,10 @@ export const ChannelArticle = ({ subject: channel }: ChannelArticleProps) => {
   const videos = useQuery(feed, Filter.type(Video.YouTubeVideo)) as Video.YouTubeVideo[];
 
   const sortedVideos = useMemo(
-    () => [...videos].sort((videoA, videoB) => new Date(videoB.publishedAt).getTime() - new Date(videoA.publishedAt).getTime()),
+    () =>
+      [...videos].sort(
+        (videoA, videoB) => new Date(videoB.publishedAt).getTime() - new Date(videoA.publishedAt).getTime(),
+      ),
     [videos],
   );
 
@@ -63,17 +66,8 @@ export const ChannelArticle = ({ subject: channel }: ChannelArticleProps) => {
             {sortedVideos.map((video) => (
               <div key={video.videoId} className='flex flex-col gap-2 p-2 rounded hover:bg-surface-hover'>
                 {video.thumbnailUrl ? (
-                  <a
-                    href={video.url}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='relative aspect-video group'
-                  >
-                    <img
-                      src={video.thumbnailUrl}
-                      alt={video.title}
-                      className='w-full h-full object-cover rounded'
-                    />
+                  <a href={video.url} target='_blank' rel='noopener noreferrer' className='relative aspect-video group'>
+                    <img src={video.thumbnailUrl} alt={video.title} className='w-full h-full object-cover rounded' />
                     <div className='absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 rounded transition-colors'>
                       <div className='opacity-0 group-hover:opacity-100 bg-red-600 text-white rounded-full p-2 transition-opacity'>
                         <Icon icon='ph--play--fill' size={4} />
