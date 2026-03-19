@@ -9,16 +9,11 @@ import { Operation } from '@dxos/operation';
 
 import { QueryBlueprints } from './definitions';
 
-// TODO(dmaretskyi): Remove this with proper function typing.
-const fixEffectType = <A, E, R>(
-  eff: Effect.Effect<A, E, R>,
-): Effect.Effect<A, E, Exclude<R, Blueprint.RegistryService>> => eff as any;
-
 export default QueryBlueprints.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const registry = yield* Blueprint.RegistryService;
       return registry.query();
-    }, fixEffectType),
+    }),
   ),
 );

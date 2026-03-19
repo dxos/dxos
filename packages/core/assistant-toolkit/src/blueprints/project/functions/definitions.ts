@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService } from '@dxos/ai';
+import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiContextService } from '@dxos/assistant';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { TriggerEvent } from '@dxos/functions';
+import { FunctionInvocationService, TracingService, TriggerEvent } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
 import { Project } from '../../../types';
@@ -24,7 +24,17 @@ export const Agent = Operation.make({
     event: Schema.optional(TriggerEvent.TriggerEvent),
   }),
   output: Schema.Void,
-  services: [AiContextService, AiService.AiService, Database.Service],
+  services: [
+    AiContextService,
+    AiService.AiService,
+    Database.Service,
+    FunctionInvocationService,
+    // TODO(dmaretskyi): Consider making TracingService a default to all operations.
+    TracingService,
+    // TODO(dmaretskyi): Handle those within session/conversation context.
+    ToolExecutionService,
+    ToolResolverService,
+  ],
 });
 
 export const Qualifier = Operation.make({

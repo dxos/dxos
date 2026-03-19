@@ -13,11 +13,6 @@ import { CreateProject } from './definitions';
 import { Project } from '../../../types';
 import { ProjectBlueprint, syncProjectTriggers } from '../../project';
 
-// TODO(dmaretskyi): Remove this with proper function typing.
-const fixEffectType = <A, E, R>(
-  eff: Effect.Effect<A, E, R>,
-): Effect.Effect<A, E, Exclude<R, Blueprint.RegistryService | Database.Service | QueueService>> => eff as any;
-
 export default CreateProject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, spec, blueprints, subscriptions }) {
@@ -34,6 +29,6 @@ export default CreateProject.pipe(
       );
       yield* syncProjectTriggers(project);
       return project;
-    }, fixEffectType),
+    }),
   ),
 );

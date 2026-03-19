@@ -58,7 +58,6 @@ export default Agent.pipe(
       },
       Effect.scoped,
       Effect.provide(AiService.model('@anthropic/claude-sonnet-4-5')),
-      AiContextService.fixFunctionHandlerType,
-    ) as any,
+    ),
   ),
 );
