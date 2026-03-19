@@ -337,10 +337,7 @@ export const L0Menu = ({
       {/* Space list. */}
       <ScrollArea.Root thin orientation='vertical'>
         <ScrollArea.Viewport>
-          <div
-            role='none'
-            className='flex flex-col gap-2 pt-1'
-          >
+          <div role='none' className='flex flex-col gap-2 pt-1'>
             {topLevelItems.map((item) => (
               <L0Item
                 key={item.id}

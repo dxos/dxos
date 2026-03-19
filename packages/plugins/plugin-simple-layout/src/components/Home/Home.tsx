@@ -42,7 +42,6 @@ export const Home = (_: HomeProps) => {
 
   const autoFocus = !isTauri() || getHostPlatform() !== 'ios';
 
-
   return (
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root>
