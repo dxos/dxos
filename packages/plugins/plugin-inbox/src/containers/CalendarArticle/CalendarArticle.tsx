@@ -67,36 +67,35 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
   );
 
   return (
-    <Panel.Root role={role} classNames='@container'>
-      <Panel.Content asChild>
-        <div role='none' className='grid @2xl:grid-cols-[min-content_1fr] overflow-hidden'>
-          <div role='none' className='invisible @2xl:visible'>
-            <NaturalCalendar.Root>
-              <Panel.Toolbar asChild>
-                <NaturalCalendar.Toolbar />
-              </Panel.Toolbar>
-              <Panel.Content asChild>
-                <NaturalCalendar.Grid />
-              </Panel.Content>
-            </NaturalCalendar.Root>
-          </div>
+    <div role={role} className='@container dx-container grid grid-cols-[min-content_1fr] overflow-hidden'>
+      {/* <div role='none' className='grid _@2xl: grid-cols-[min-content_1fr] overflow-hidden'> */}
+      <Panel.Root>
+        {/* <div role='none' className='_invisible _@2xl:visible'> */}
+        <NaturalCalendar.Root>
+          <Panel.Toolbar asChild>
+            <NaturalCalendar.Toolbar />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <NaturalCalendar.Grid />
+          </Panel.Content>
+        </NaturalCalendar.Root>
+      </Panel.Root>
 
-          <Panel.Root>
-            <Panel.Toolbar asChild>
-              <Toolbar.Root>
-                <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
-              </Toolbar.Root>
-            </Panel.Toolbar>
-            <Panel.Content>
-              {objects.length > 0 ? (
-                <EventList events={objects} selected={selected} onSelect={handleSelect} />
-              ) : (
-                <CalendarEmpty calendar={calendar} />
-              )}
-            </Panel.Content>
-          </Panel.Root>
-        </div>
-      </Panel.Content>
-    </Panel.Root>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content>
+          {objects.length > 0 ? (
+            <EventList events={objects} selected={selected} onSelect={handleSelect} />
+          ) : (
+            <CalendarEmpty calendar={calendar} />
+          )}
+        </Panel.Content>
+      </Panel.Root>
+      {/* </div> */}
+    </div>
   );
 };

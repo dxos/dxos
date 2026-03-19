@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import { Capabilities } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/ui';
 import { Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -27,19 +28,17 @@ const DefaultStory = () => {
   const db = useDatabase();
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
   const calendar = calendars[0];
+  const operationInvokers = useCapabilities(Capabilities.OperationInvoker);
 
-  if (!db || !calendar) {
-    return <Loading data={{ db: !!db, calendar: !!calendar }} />;
+  if (!db || !calendar || operationInvokers.length === 0) {
+    return <Loading data={{ db: !!db, calendar: !!calendar, operationInvoker: operationInvokers.length > 0 }} />;
   }
 
-  // Render via Surface so CalendarArticle mounts only after InboxPlugin has activated
-  // and the OperationInvoker capability has been contributed.
-  return <Surface.Surface role='article' data={{ subject: calendar }} />;
+  return <CalendarArticle subject={calendar} />;
 };
 
 const meta = {
   title: 'plugins/plugin-inbox/containers/CalendarArticle',
-  component: CalendarArticle as any,
   render: DefaultStory,
   decorators: [
     withTheme(),
