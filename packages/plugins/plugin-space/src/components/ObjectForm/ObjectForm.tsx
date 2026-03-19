@@ -23,9 +23,11 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
 
   const formSchema = useMemo(
     () =>
-      Schema.Struct({
-        tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
-      }).pipe(Schema.extend(omitId(schema))),
+      omitId(
+        Schema.Struct({
+          tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
+        }).pipe(Schema.extend(schema)),
+      ),
     [schema],
   );
 
@@ -78,7 +80,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
 
   return (
     <Form.Root
-      schema={omitId(formSchema)}
+      schema={formSchema}
       defaultValues={values}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}

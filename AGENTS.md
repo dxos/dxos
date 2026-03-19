@@ -24,12 +24,18 @@
 - Check package tasks: see `moon.yml` in package directory.
 - **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Filter out warnings from your output.
 
-## Important
+## Planning
 
-- Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
+- **IMPORTANT**: Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
+
+## DXOS
+
+- **IMPORTANT**: Follow DXOS-specific rules in `.agents/sdk/*`.
+- Update these documents when you learn better patterns; or when the user asks you to correct your implementation.
 
 ## Code Style
 
+- Follow the DXOS SDK guide.
 - Use TypeScript with single quotes for strings.
 - Prefer functional programming and arrow functions.
 - Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
@@ -40,6 +46,7 @@
 - Remember to remove/update TODOs as you go.
 - Avoid single letter variable names.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
+- Use barrel imports whenever possible.
 
 ## Workflow
 
@@ -81,7 +88,7 @@ Examples:
 
 ### Toolchain
 
-This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.3. All are managed by **proto** (see `.prototools`). In the cloud VM, proto is installed at `~/.proto` and must be on PATH (`export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"`). Do **not** use nvm; proto shims must take precedence.
+This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4. All are managed by **proto** (see `.prototools`). In the cloud VM, proto is installed at `~/.proto` and must be on PATH (`export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"`). Do **not** use nvm; proto shims must take precedence.
 
 ### Running services
 

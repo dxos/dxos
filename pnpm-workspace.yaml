@@ -58,6 +58,8 @@ catalog:
   '@dnd-kit/modifiers': ^6.0.0
   '@dnd-kit/sortable': ^7.0.1
   '@dnd-kit/utilities': ^3.2.0
+  '@dxos/keys': ^0.8.3
+  '@dxos/react-ui-list': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.1
   '@effect-atom/atom-react': ^0.5.0
@@ -105,7 +107,7 @@ catalog:
   '@lezer/xml': ^1.0.6
   '@lit/react': ^1.0.8
   '@modelcontextprotocol/sdk': ^1.27.1
-  '@moonrepo/cli': 2.0.3
+  '@moonrepo/cli': 2.0.4
   '@ngneat/falso': ^7.1.1
   '@observablehq/plot': ^0.6.11
   '@obsidize/tar-browserify': ^5.2.0

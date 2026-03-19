@@ -340,7 +340,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
                       {field.path}
                     </List.ItemTitle>
-                    <List.ItemButton
+                    <List.ItemIconButton
                       label={t(hidden ? 'show field label' : 'hide field label')}
                       data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                       icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
@@ -357,7 +357,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                           onClick={() => handleDelete(field.id)}
                           data-testid='field.delete'
                         />
-                        <IconButton
+                        <List.ItemIconButton
                           iconOnly
                           variant='ghost'
                           label={t('toggle expand label', { ns: osTranslations })}

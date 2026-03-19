@@ -47,6 +47,16 @@
   --color-focus-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-neutral-focus-indicator: light-dark(var(--color-neutral-400), var(--color-neutral-600));
 
+  /* Highlight and Selected */
+
+  --color-highlight-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-highlight-surface-hover: light-dark(var(--color-neutral-250), var(--color-neutral-750));
+  --color-highlight-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+
+  --color-selected-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-selected-surface-hover: light-dark(var(--color-neutral-250), var(--color-neutral-750));
+  --color-selected-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+
   /* Accent */
 
   --color-accent-surface: light-dark(var(--color-blue-600), var(--color-blue-600));

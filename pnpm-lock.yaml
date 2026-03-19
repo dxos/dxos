@@ -138,6 +138,9 @@ catalogs:
     '@dnd-kit/utilities':
       specifier: ^3.2.0
       version: 3.2.0
+    '@dxos/keys':
+      specifier: ^0.8.3
+      version: 0.8.3
     '@dxos/wa-sqlite':
       specifier: ^0.2.1
       version: 0.2.1
@@ -274,8 +277,8 @@ catalogs:
       specifier: ^1.0.8
       version: 1.0.8
     '@moonrepo/cli':
-      specifier: 2.0.3
-      version: 2.0.3
+      specifier: 2.0.4
+      version: 2.0.4
     '@ngneat/falso':
       specifier: ^7.1.1
       version: 7.1.1
@@ -1958,7 +1961,7 @@ importers:
         version: 0.27.0(effect@3.19.16)(vitest@3.2.4)
       '@moonrepo/cli':
         specifier: 'catalog:'
-        version: 2.0.3
+        version: 2.0.4
       '@octokit/rest':
         specifier: 'catalog:'
         version: 22.0.1
@@ -2482,6 +2485,9 @@ importers:
       '@dxos/plugin-wnfs':
         specifier: workspace:*
         version: link:../../plugins/plugin-wnfs
+      '@dxos/plugin-zen':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-zen
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -13323,6 +13329,70 @@ importers:
         specifier: '>=7.1.11'
         version: 7.3.1(@types/node@22.10.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/plugins/plugin-zen:
+    dependencies:
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/keys':
+        specifier: 'catalog:'
+        version: 0.8.3
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
+      '@dxos/react-ui-sfx':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-sfx
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 3.19.16
+        version: 3.19.16
+    devDependencies:
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.7)
+      react:
+        specifier: ~19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ~19.2.3
+        version: 19.2.3(react@19.2.3)
+      vite:
+        specifier: '>=7.1.11'
+        version: 7.3.1(@types/node@22.10.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/sdk/app-framework:
     dependencies:
       '@dxos/async':
@@ -17062,6 +17132,9 @@ importers:
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
+      '@radix-ui/react-slot':
+        specifier: 'catalog:'
+        version: 1.1.2(@types/react@19.2.7)(react@19.2.3)
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -20508,6 +20581,18 @@ packages:
     peerDependencies:
       react: ~19.2.3
 
+  '@dxos/debug@0.8.3':
+    resolution: {integrity: sha512-sDsOvwejoVKdLPpBK3yd4RAX8/sZf3C4ZtmmSJm9rmb8kv6NcyJgiPYZZFOJIArEL6Xm4Z9aHfDhOjrK8p4YtQ==}
+
+  '@dxos/invariant@0.8.3':
+    resolution: {integrity: sha512-PWu7u8LxPwGwOedstv4SfB6q4ZtZpclercV5xERai3HNAf+cl1ExA1KOLjgeKQVZsI7Ip3K5dM4mymhA98+KQg==}
+
+  '@dxos/keys@0.8.3':
+    resolution: {integrity: sha512-+ht+usY5oFawxnZaojtACBRQMj8lLzmh+P0QrJ6MAw8UpCqD+NkTC3IdWnHncUJZyAd597k21Kr1NCn8ukFsAg==}
+
+  '@dxos/node-std@0.8.3':
+    resolution: {integrity: sha512-aR4HR7nd7/xbvl//3XKxUTXtAPywHrW/n0UI1vuutKodRNgmmnnz+doNkCkUQlkVPe6zf/ITAtty9JJdqjQIEA==}
+
   '@dxos/wa-sqlite@0.2.1':
     resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
 
@@ -21758,37 +21843,37 @@ packages:
     peerDependencies:
       three: '>= 0.159.0'
 
-  '@moonrepo/cli@2.0.3':
-    resolution: {integrity: sha512-Q9lZUy+hORaJjM7gEW2SZVGe62qdGsYR2To7gx1zMOJdR9/H/TCPBVJDmZK6vjYikdrdQkSLo1ypX5Z8TBmRFQ==}
+  '@moonrepo/cli@2.0.4':
+    resolution: {integrity: sha512-cP62Fa7hzToEi0I2i3Gx7zhPPdimVCeW8WqbSlE5y6fhjH38g1N77vZg4A6rcauDEUl/cpA5+vWQyxm4KCsqUA==}
     hasBin: true
 
-  '@moonrepo/core-linux-arm64-gnu@2.0.3':
-    resolution: {integrity: sha512-4QvLPfOUEkrtdoPc2IAgi8W6ZdaYDBPYFO/YSavhMTiVMM0LnYoDeoao5UGGlV0P6tk1gZJzv2AVz6TC6flXxA==}
+  '@moonrepo/core-linux-arm64-gnu@2.0.4':
+    resolution: {integrity: sha512-pvMgTfYUN8ARvhOgVumR1j1XQY0V+59qz+Bi9BBmgOJsaB/QosGGWkCfdV2dChpzfE9AELnjIBgrazUGcOX9KA==}
     cpu: [arm64]
     os: [linux]
 
-  '@moonrepo/core-linux-arm64-musl@2.0.3':
-    resolution: {integrity: sha512-sFL8zHKfpV6wjNslMINUJzqA+9hvXAREdLZkqpIdcKreAcOCgbHxL4QKkFZ0LaLeHWxij8d+gp3U6o4Uc3pM0w==}
+  '@moonrepo/core-linux-arm64-musl@2.0.4':
+    resolution: {integrity: sha512-lF+KuN8ymTR+kynI7OU+CN//V6hSGL9eq8+7VUVFY3cRobyzjEulB7xkPgVYH2C81E8TUK2tp1R79Y8nOgEHaA==}
     cpu: [arm64]
     os: [linux]
 
-  '@moonrepo/core-linux-x64-gnu@2.0.3':
-    resolution: {integrity: sha512-XSRDk+yLLQB8BMueseBcMt3ayzZF6HQR2Cv/dZQD/m8F1bGQw3E3XnH7C6m1kY0o5ou8A37ujrMyb0GgG09nLg==}
+  '@moonrepo/core-linux-x64-gnu@2.0.4':
+    resolution: {integrity: sha512-0auEy/jyMm5vjIZy/dLdrIoOJ0hnoxcEk+veBGwZatS65dSKEvXdUYrYSGWTRvykbsXDBTAaXFUtj1enGzIXmg==}
     cpu: [x64]
     os: [linux]
 
-  '@moonrepo/core-linux-x64-musl@2.0.3':
-    resolution: {integrity: sha512-ShIjhOUhfYy3k5sjHBfjLmzq6n1+vIHSAfUWcGVzbMdlnGp5g4UxXGOHZxOopPtcaXJbGNv9IxR10HiTJtErcQ==}
+  '@moonrepo/core-linux-x64-musl@2.0.4':
+    resolution: {integrity: sha512-h7b7uw8GdhTyZg2R7rHA04mqBIvYvcHtgtVBUXwwZQlh6jprFFtxuvehAdK32PN8sxygwRa+AdTfgq3vZHXFmw==}
     cpu: [x64]
     os: [linux]
 
-  '@moonrepo/core-macos-arm64@2.0.3':
-    resolution: {integrity: sha512-MgdCNoUVYYeohUaIsSWWK63hIOie9/bjTeVLDhFvoooNNJrL6i5uBXij9XTtir3iSy9CCXO9COwnvkCuopcNEA==}
+  '@moonrepo/core-macos-arm64@2.0.4':
+    resolution: {integrity: sha512-gz2FO0xRHUOXQjzBAz97S4pShL0YbTeNWLdCuRyjX8SNU1l82TX+l20e6OKfyt6jThWvCZeSiolx7W02xDT+iA==}
     cpu: [arm64]
     os: [darwin]
 
-  '@moonrepo/core-windows-x64-msvc@2.0.3':
-    resolution: {integrity: sha512-zetuREncxv0X7WzL3tr5QGEdNz9/KtT5arbHqtCwrxJ3g1uEjay4bhsllzpph6X9gn5godhT26XZOmnYTZi5CA==}
+  '@moonrepo/core-windows-x64-msvc@2.0.4':
+    resolution: {integrity: sha512-LjwpvjWTeusQjpqLNK7N7tVr/IQSd0W8v0L7fUIKBXNGmuONhDCHwgDqSs3yVzwcQMluiHM2qwu9YSKIEVfTIw==}
     cpu: [x64]
     os: [win32]
 
@@ -39410,6 +39495,28 @@ snapshots:
       react: 19.2.3
       tslib: 2.8.1
 
+  '@dxos/debug@0.8.3':
+    dependencies:
+      '@dxos/node-std': 0.8.3
+
+  '@dxos/invariant@0.8.3': {}
+
+  '@dxos/keys@0.8.3':
+    dependencies:
+      '@dxos/debug': 0.8.3
+      '@dxos/invariant': 0.8.3
+      '@dxos/node-std': 0.8.3
+      effect: 3.19.16
+      ulidx: 2.3.0
+
+  '@dxos/node-std@0.8.3':
+    dependencies:
+      assert: 2.0.0
+      events: 3.3.0
+      path-browserify: 1.0.1
+      readable-stream: 3.6.2
+      util: 0.12.5
+
   '@dxos/wa-sqlite@0.2.1': {}
 
   '@effect-atom/atom-react@0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.19.16))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.19.16))(effect@3.19.16))(effect@3.19.16)(react@19.2.3)(scheduler@0.27.0)':
@@ -40735,33 +40842,33 @@ snapshots:
       promise-worker-transferable: 1.0.4
       three: 0.178.0
 
-  '@moonrepo/cli@2.0.3':
+  '@moonrepo/cli@2.0.4':
     dependencies:
       detect-libc: 2.1.2
     optionalDependencies:
-      '@moonrepo/core-linux-arm64-gnu': 2.0.3
-      '@moonrepo/core-linux-arm64-musl': 2.0.3
-      '@moonrepo/core-linux-x64-gnu': 2.0.3
-      '@moonrepo/core-linux-x64-musl': 2.0.3
-      '@moonrepo/core-macos-arm64': 2.0.3
-      '@moonrepo/core-windows-x64-msvc': 2.0.3
+      '@moonrepo/core-linux-arm64-gnu': 2.0.4
+      '@moonrepo/core-linux-arm64-musl': 2.0.4
+      '@moonrepo/core-linux-x64-gnu': 2.0.4
+      '@moonrepo/core-linux-x64-musl': 2.0.4
+      '@moonrepo/core-macos-arm64': 2.0.4
+      '@moonrepo/core-windows-x64-msvc': 2.0.4
 
-  '@moonrepo/core-linux-arm64-gnu@2.0.3':
+  '@moonrepo/core-linux-arm64-gnu@2.0.4':
     optional: true
 
-  '@moonrepo/core-linux-arm64-musl@2.0.3':
+  '@moonrepo/core-linux-arm64-musl@2.0.4':
     optional: true
 
-  '@moonrepo/core-linux-x64-gnu@2.0.3':
+  '@moonrepo/core-linux-x64-gnu@2.0.4':
     optional: true
 
-  '@moonrepo/core-linux-x64-musl@2.0.3':
+  '@moonrepo/core-linux-x64-musl@2.0.4':
     optional: true
 
-  '@moonrepo/core-macos-arm64@2.0.3':
+  '@moonrepo/core-macos-arm64@2.0.4':
     optional: true
 
-  '@moonrepo/core-windows-x64-msvc@2.0.3':
+  '@moonrepo/core-windows-x64-msvc@2.0.4':
     optional: true
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.3':

@@ -4,7 +4,7 @@
 
 import {
   ListItem,
-  ListItemButton,
+  ListItemIconButton,
   ListItemDeleteButton,
   ListItemDragHandle,
   ListItemDragPreview,
@@ -33,8 +33,8 @@ export const List = {
   ItemDragPreview: ListItemDragPreview,
   ItemWrapper: ListItemWrapper,
   ItemDragHandle: ListItemDragHandle,
+  ItemIconButton: ListItemIconButton,
   ItemDeleteButton: ListItemDeleteButton,
-  ItemButton: ListItemButton,
   ItemTitle: ListItemTitle,
 };
 

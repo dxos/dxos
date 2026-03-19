@@ -11,6 +11,7 @@ import {
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { createContext } from '@radix-ui/react-context';
+import { Slot } from '@radix-ui/react-slot';
 import React, {
   type ComponentProps,
   type HTMLAttributes,
@@ -80,6 +81,8 @@ export type ListItemProps<T extends ListItemRecord> = ThemedClassName<
   PropsWithChildren<
     {
       item: T;
+      asChild?: boolean;
+      selected?: boolean;
     } & HTMLAttributes<HTMLDivElement>
   >
 >;
@@ -87,7 +90,15 @@ export type ListItemProps<T extends ListItemRecord> = ThemedClassName<
 /**
  * Draggable list item.
  */
-export const ListItem = <T extends ListItemRecord>({ children, classNames, item, ...props }: ListItemProps<T>) => {
+export const ListItem = <T extends ListItemRecord>({
+  children,
+  classNames,
+  item,
+  asChild,
+  selected,
+  ...props
+}: ListItemProps<T>) => {
+  const Comp = asChild ? Slot : 'div';
   const { isItem, readonly, dragPreview, setState: setRootState } = useListContext(LIST_ITEM_NAME);
   const ref = useRef<HTMLDivElement | null>(null);
   const dragHandleRef = useRef<HTMLElement | null>(null);
@@ -170,12 +181,18 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
 
   return (
     <ListItemProvider item={item} dragHandleRef={dragHandleRef}>
-      <div ref={ref} role='listitem' className={mx('flex relative', classNames, stateStyles[state.type])} {...props}>
+      <Comp
+        ref={ref}
+        role='listitem'
+        aria-selected={selected}
+        className={mx('relative dx-selected', classNames, stateStyles[state.type])}
+        {...props}
+      >
         {children}
-        {state.type === 'w-dragging-over' && state.closestEdge && (
-          <NaturalListItem.DropIndicator edge={state.closestEdge} />
-        )}
-      </div>
+      </Comp>
+      {state.type === 'w-dragging-over' && state.closestEdge && (
+        <NaturalListItem.DropIndicator edge={state.closestEdge} />
+      )}
     </ListItemProvider>
   );
 };
@@ -184,6 +201,28 @@ export const ListItem = <T extends ListItemRecord>({ children, classNames, item,
 // List item components
 //
 
+export const ListItemIconButton = ({
+  autoHide = true,
+  iconOnly = true,
+  variant = 'ghost',
+  classNames,
+  disabled,
+  ...props
+}: IconButtonProps & { autoHide?: boolean }) => {
+  const { state } = useListContext('ITEM_BUTTON');
+  const isDisabled = state.type !== 'idle' || disabled;
+  return (
+    <IconButton
+      {...props}
+      disabled={isDisabled}
+      iconOnly={iconOnly}
+      variant={variant}
+      classNames={[classNames, autoHide && disabled && 'hidden']}
+    />
+  );
+};
+
+// TODO(burdon): Generalize to action button.
 export const ListItemDeleteButton = ({
   autoHide = true,
   classNames,
@@ -204,27 +243,6 @@ export const ListItemDeleteButton = ({
       icon={icon}
       disabled={isDisabled}
       label={label ?? t('delete label')}
-      classNames={[classNames, autoHide && disabled && 'hidden']}
-    />
-  );
-};
-
-export const ListItemButton = ({
-  autoHide = true,
-  iconOnly = true,
-  variant = 'ghost',
-  classNames,
-  disabled,
-  ...props
-}: IconButtonProps & { autoHide?: boolean }) => {
-  const { state } = useListContext('ITEM_BUTTON');
-  const isDisabled = state.type !== 'idle' || disabled;
-  return (
-    <IconButton
-      {...props}
-      disabled={isDisabled}
-      iconOnly={iconOnly}
-      variant={variant}
       classNames={[classNames, autoHide && disabled && 'hidden']}
     />
   );
