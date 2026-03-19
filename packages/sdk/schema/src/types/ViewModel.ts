@@ -11,17 +11,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 import type * as Types from 'effect/Types';
 
-import {
-  type Database,
-  Filter,
-  Format,
-  JsonSchema,
-  Obj,
-  Query,
-  Ref,
-  type SchemaRegistry,
-  Type,
-} from '@dxos/echo';
+import { type Database, Filter, Format, JsonSchema, Obj, Query, Ref, type SchemaRegistry, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import {
   type JsonSchemaType,

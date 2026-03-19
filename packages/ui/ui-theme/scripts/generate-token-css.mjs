@@ -21,7 +21,6 @@
 // Copyright 2026 DXOS.org
 //
 
-
 console.error('This script needs to be updated to work with the new build system.');
 console.error('The generated-tokens.css file has already been created and is checked into source control.');
 console.error('It only needs to be regenerated when the tokenSet configuration changes.');

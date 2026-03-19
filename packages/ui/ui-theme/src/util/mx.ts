@@ -5,7 +5,6 @@
 import { type HTMLAttributes } from 'react';
 import { extendTailwindMerge, validators } from 'tailwind-merge';
 
-
 import { type ComposableProps } from '@dxos/ui-types';
 
 type AdditionalClassGroups = 'density' | 'dx-focus-ring';
