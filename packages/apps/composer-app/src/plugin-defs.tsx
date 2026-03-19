@@ -19,7 +19,6 @@ import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
-import { FilesPlugin } from '@dxos/plugin-files';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -31,6 +30,7 @@ import { MasonryPlugin } from '@dxos/plugin-masonry';
 import { MeetingPlugin } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { NativePlugin } from '@dxos/plugin-native';
+import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem';
 import { NavTreePlugin } from '@dxos/plugin-navtree';
 import { ObservabilityPlugin } from '@dxos/plugin-observability';
 import { OutlinerPlugin } from '@dxos/plugin-outliner';
@@ -88,10 +88,10 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
     useSimpleLayout ? SimpleLayoutPlugin.meta.id : DeckPlugin.meta.id,
-    FilesPlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
     isTauri && !isMobile && NativePlugin.meta.id,
+    isTauri && !isMobile && NativeFilesystemPlugin.meta.id,
     OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
@@ -182,7 +182,6 @@ export const getPlugins = ({
     useSimpleLayout ? SimpleLayoutPlugin({ isPopover }) : DeckPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
-    isLabs && FilesPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
@@ -195,6 +194,7 @@ export const getPlugins = ({
     MeetingPlugin(),
     MermaidPlugin(),
     isTauri && !isMobile && NativePlugin(),
+    isTauri && !isMobile && NativeFilesystemPlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,
