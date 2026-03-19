@@ -9,7 +9,7 @@ import React, { useContext, useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
-import { ghostHover, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { List, type ListRootProps } from './List';

@@ -21,8 +21,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { writeFile } from 'node:fs/promises';
-import { renderTokenSet } from '@ch-ui/tokens';
 
 console.error('This script needs to be updated to work with the new build system.');
 console.error('The generated-tokens.css file has already been created and is checked into source control.');

@@ -5,8 +5,6 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, {
-  CSSProperties,
-  type HTMLAttributes,
   type PropsWithChildren,
   createContext,
   forwardRef,

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A, type Doc } from '@automerge/automerge';
+import { next as A } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, stringifyAutomergeUrl } from '@automerge/automerge-repo';
 import { EventEmitter } from 'eventemitter3';
 

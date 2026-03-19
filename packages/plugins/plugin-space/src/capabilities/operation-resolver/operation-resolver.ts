@@ -11,11 +11,10 @@ import {
   LayoutOperation,
   getCollectionsPath,
   getObjectPath,
-  getObjectPathFromObject,
   getTypePath,
 } from '@dxos/app-toolkit';
 import { SpaceState, getSpace } from '@dxos/client/echo';
-import { Database, Obj, Query, Ref, Relation, Type, View } from '@dxos/echo';
+import { Database, Obj, Query, Ref, Relation, View } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';

@@ -7,7 +7,6 @@
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 import type * as Types from 'effect/Types';
@@ -19,14 +18,12 @@ import {
   JsonSchema,
   Obj,
   Query,
-  QueryAST,
   Ref,
   type SchemaRegistry,
   Type,
 } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import {
-  FormInputAnnotation,
   type JsonSchemaType,
   LabelAnnotation,
   type Mutable,

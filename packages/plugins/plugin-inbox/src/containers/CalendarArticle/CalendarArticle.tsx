@@ -12,7 +12,7 @@ import { AttentionOperation } from '@dxos/plugin-attention/types';
 import { DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
+import { useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 

@@ -9,7 +9,7 @@ import { useActiveSpace } from '@dxos/plugin-space';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { ConnectionState } from '@dxos/protocols/proto/dxos/client/services';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Icon, IconButton } from '@dxos/react-ui';
+import { IconButton } from '@dxos/react-ui';
 
 const styles = {
   success: 'text-sky-300 dark:text-green-700',

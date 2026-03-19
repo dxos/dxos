@@ -6,12 +6,10 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { COMPANION_PREFIX, LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
+import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { AttentionOperation } from '@dxos/plugin-attention/types';
-import { DeckOperation } from '@dxos/plugin-deck/types';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';

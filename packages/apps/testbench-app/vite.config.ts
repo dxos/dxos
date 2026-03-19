@@ -12,7 +12,6 @@ import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
-import tsconfigPaths from 'vite-tsconfig-paths';
 import { UserConfig } from 'vitest/config';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';

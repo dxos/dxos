@@ -6,7 +6,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import type { ToggleGroupItemProps as ToggleGroupItemPrimitiveProps } from '@radix-ui/react-toggle-group';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
-import React, { Fragment, forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { composableProps, type ToolbarStyleProps } from '@dxos/ui-theme';
