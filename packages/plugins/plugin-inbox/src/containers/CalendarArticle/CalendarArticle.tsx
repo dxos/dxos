@@ -38,7 +38,6 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
   // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
   useObject(calendar);
   const feed = calendar.feed?.target as Feed.Feed | undefined;
-
   const objects = useQuery(
     db,
     feed ? Query.select(Filter.type(Event.Event)).from(feed) : Query.select(Filter.nothing()),
@@ -67,10 +66,8 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
   );
 
   return (
-    <div role={role} className='@container dx-container grid grid-cols-[min-content_1fr] overflow-hidden'>
-      {/* <div role='none' className='grid _@2xl: grid-cols-[min-content_1fr] overflow-hidden'> */}
-      <Panel.Root>
-        {/* <div role='none' className='_invisible _@2xl:visible'> */}
+    <div role={role} className='@container dx-container flex overflow-hidden'>
+      <Panel.Root className='hidden @2xl:block w-min shrink-0'>
         <NaturalCalendar.Root>
           <Panel.Toolbar asChild>
             <NaturalCalendar.Toolbar />
@@ -81,7 +78,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
         </NaturalCalendar.Root>
       </Panel.Root>
 
-      <Panel.Root>
+      <Panel.Root className='grow'>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
@@ -95,7 +92,6 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
           )}
         </Panel.Content>
       </Panel.Root>
-      {/* </div> */}
     </div>
   );
 };
