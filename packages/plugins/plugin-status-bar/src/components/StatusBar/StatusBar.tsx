@@ -12,20 +12,10 @@ import { mx } from '@dxos/ui-theme';
 // Item
 //
 
-type StatusBarItemProps = ThemedClassName<PropsWithChildren<{ label?: string }>>;
+type StatusBarItemProps = ThemedClassName<PropsWithChildren>;
 
 const StatusBarItem = forwardRef<HTMLDivElement, StatusBarItemProps>(
-  ({ classNames, children, label, ...props }, forwardedRef) => {
-    // if (label) {
-    //   return (
-    //     <Tooltip.Provider>
-    //       <Tooltip.Trigger asChild content={label} side='left'>
-    //         <IconButton icon='ph--circle--regular' iconOnly label='xx' />
-    //       </Tooltip.Trigger>
-    //     </Tooltip.Provider>
-    //   );
-    // }
-
+  ({ classNames, children, ...props }, forwardedRef) => {
     return (
       <div {...props} role='status' className={mx('grid place-items-center', classNames)} ref={forwardedRef}>
         {children}
