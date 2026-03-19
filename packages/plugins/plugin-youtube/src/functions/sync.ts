@@ -12,13 +12,12 @@ import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Database, Filter, Obj, Query, Type } from '@dxos/echo';
-import type { Queue } from '@dxos/echo-db';
-import { QueueService, defineFunction } from '@dxos/functions';
+import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { defineFunction } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 import * as Channel from '../types/Channel';
-import type { YouTubeVideo } from '../types/Video';
+import * as Video from '../types/Video';
 
 import { YouTube } from './apis';
 import { GoogleCredentials } from './services/google-credentials';
@@ -31,8 +30,8 @@ const STREAMING_CONFIG = {
   transcriptFetchConcurrency: 3,
   /** In-flight video buffer. */
   bufferSize: 10,
-  /** Videos per queue append. */
-  queueBatchSize: 10,
+  /** Videos per feed append. */
+  feedBatchSize: 10,
   /** Max videos in restricted mode. */
   restrictedMax: 20,
 } as const;
@@ -155,7 +154,10 @@ const fetchPlaylistVideos = (uploadsPlaylistId: string, maxVideos?: number) => {
 /**
  * Maps YouTube API video item to YouTubeVideo type.
  */
-const mapVideo = (item: YouTube.VideoItem, transcript?: { segments: unknown[]; fullText: string }): YouTubeVideo => ({
+const mapVideo = (
+  item: YouTube.VideoItem,
+  transcript?: { segments: unknown[]; fullText: string },
+): Video.YouTubeVideo => ({
   title: item.snippet?.title ?? 'Untitled',
   videoId: item.id,
   description: item.snippet?.description,
@@ -170,17 +172,16 @@ const mapVideo = (item: YouTube.VideoItem, transcript?: { segments: unknown[]; f
   viewCount: item.statistics?.viewCount ? parseInt(item.statistics.viewCount, 10) : undefined,
   likeCount: item.statistics?.likeCount ? parseInt(item.statistics.likeCount, 10) : undefined,
   transcript: transcript?.fullText,
-  transcriptSegments: transcript?.segments as YouTubeVideo['transcriptSegments'],
+  transcriptSegments: transcript?.segments as Video.YouTubeVideo['transcriptSegments'],
   transcriptFetched: true,
 });
 
 /**
- * Stream videos with transcripts into a DXOS queue.
+ * Stream videos with transcripts into a DXOS feed.
  */
-const streamVideosToQueue = Effect.fn(function* (
+const streamVideosToFeed = Effect.fn(function* (
   uploadsPlaylistId: string,
-  channelTitle: string,
-  queue: Queue<YouTubeVideo>,
+  feed: Feed.Feed,
   existingVideoIds: Set<string>,
   restricted: boolean,
   includeTranscripts: boolean,
@@ -231,12 +232,13 @@ const streamVideosToQueue = Effect.fn(function* (
       },
     ),
     Stream.filter(Predicate.isNotNullable),
-    Stream.grouped(STREAMING_CONFIG.queueBatchSize),
+    Stream.grouped(STREAMING_CONFIG.feedBatchSize),
     Stream.mapEffect((batch) =>
       Effect.gen(function* () {
         const videos = Chunk.toArray(batch);
-        log('appending batch to queue', { count: videos.length });
-        yield* Effect.tryPromise(() => queue.append(videos));
+        log('appending batch to feed', { count: videos.length });
+        const videoObjects = videos.map((video) => Obj.make(Video.YouTubeVideo, video));
+        yield* Feed.append(feed, videoObjects);
         return videos.length;
       }),
     ),
@@ -249,7 +251,7 @@ const streamVideosToQueue = Effect.fn(function* (
 export default defineFunction({
   key: 'dxos.org/function/youtube/sync',
   name: 'Sync YouTube Channel',
-  description: 'Sync videos from a YouTube channel to the queue.',
+  description: 'Sync videos from a YouTube channel to the feed.',
   inputSchema: Schema.Struct({
     channel: Type.Ref(Channel.YouTubeChannel).annotations({
       description: 'Reference to the YouTube channel to sync videos from.',
@@ -271,10 +273,10 @@ export default defineFunction({
   }),
   outputSchema: Schema.Struct({
     newVideos: Schema.Number,
-    channelTitle: Schema.optional(Schema.String),
+    channelTitle: Schema.String.pipe(Schema.optional),
   }),
-  types: [Channel.YouTubeChannel],
-  services: [Database.Service, QueueService],
+  types: [Channel.YouTubeChannel, Video.YouTubeVideo],
+  services: [Database.Service, Feed.Service],
   handler: ({ data: { channel: channelRef, restrictedMode = false, includeTranscripts = true } }) =>
     Effect.gen(function* () {
       log('syncing youtube channel', { channel: channelRef.dxn.toString(), restrictedMode, includeTranscripts });
@@ -298,18 +300,18 @@ export default defineFunction({
         }
       });
 
-      const queue = yield* QueueService.getQueue<YouTubeVideo>(channel.queue.dxn);
-
-      const existingVideos = yield* Effect.tryPromise(() =>
-        queue.query(Query.select(Filter.schema(Schema.Struct({ videoId: Schema.String })))).run(),
+      // Get the feed and query for existing videos.
+      const feed = yield* Database.load(channel.feed as Ref.Ref<Feed.Feed>);
+      const existingVideos = yield* Feed.runQuery(
+        feed,
+        Filter.schema(Schema.Struct({ videoId: Schema.String })),
       );
       const existingVideoIds = new Set(existingVideos.map((video) => video.videoId));
       log('existing videos', { count: existingVideoIds.size });
 
-      const newVideosCount = yield* streamVideosToQueue(
+      const newVideosCount = yield* streamVideosToFeed(
         uploadsPlaylistId,
-        channelTitle,
-        queue,
+        feed,
         existingVideoIds,
         restrictedMode,
         includeTranscripts,

@@ -18,7 +18,7 @@ import { type SelectionManager } from '@dxos/react-ui-attention';
 
 import { YouTubeFunctions } from '../../functions';
 import { meta } from '../../meta';
-import { Channel, type Video } from '../../types';
+import { Channel, Video } from '../../types';
 
 /**
  * Atom family to derive the selected item ID from selection state.
@@ -38,21 +38,19 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createTypeExtension({
+      GraphBuilder.createExtension({
         id: `${meta.id}/channel-video`,
-        type: Channel.YouTubeChannel,
-        connector: (channel, get) => {
-          const queue = get(AtomRef.make(channel.queue));
-          if (!queue) {
+        match: (node) => Channel.instanceOf(node.data),
+        connector: (channel: Channel.YouTubeChannel, get) => {
+          const feed = get(AtomRef.make(channel.feed));
+          if (!feed) {
             return Effect.succeed([]);
           }
 
           const selectionManager = capabilities.get(AttentionCapabilities.Selection);
           const nodeId = Obj.getDXN(channel).toString();
           const videoId = get(selectedIdFamily(selectionManager)(nodeId));
-          const video = get(
-            AtomQuery.make<Video.YouTubeVideo>(queue, videoId ? Filter.id(videoId) : Filter.nothing()),
-          )[0];
+          const video = get(AtomQuery.make<Video.YouTubeVideo>(feed, videoId ? Filter.id(videoId) : Filter.nothing()))[0];
           return Effect.succeed([
             {
               id: `${nodeId}${ATTENDABLE_PATH_SEPARATOR}video`,
@@ -67,10 +65,10 @@ export default Capability.makeModule(
           ]);
         },
       }),
-      GraphBuilder.createTypeExtension({
+      GraphBuilder.createExtension({
         id: `${meta.id}/sync-channel`,
-        type: Channel.YouTubeChannel,
-        actions: (channel) =>
+        match: (node) => Channel.instanceOf(node.data),
+        actions: (channel: Channel.YouTubeChannel) =>
           Effect.succeed([
             {
               id: `${Obj.getDXN(channel).toString()}-sync`,

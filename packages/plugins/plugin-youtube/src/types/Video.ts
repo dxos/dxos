@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 
 /**
  * Transcript segment from a YouTube video.
@@ -29,32 +29,39 @@ export const YouTubeVideo = Schema.Struct({
   /** YouTube video ID. */
   videoId: Schema.String,
   /** Video description. */
-  description: Schema.optional(Schema.String),
+  description: Schema.String.pipe(Schema.optional),
   /** Video URL. */
   url: Schema.String,
   /** Thumbnail URL. */
-  thumbnailUrl: Schema.optional(Schema.String),
+  thumbnailUrl: Schema.String.pipe(Schema.optional),
   /** Channel name. */
-  channelTitle: Schema.optional(Schema.String),
+  channelTitle: Schema.String.pipe(Schema.optional),
   /** Published date as ISO string. */
   publishedAt: Schema.String,
   /** Video duration in ISO 8601 format (e.g., PT1H30M15S). */
-  duration: Schema.optional(Schema.String),
+  duration: Schema.String.pipe(Schema.optional),
   /** View count. */
-  viewCount: Schema.optional(Schema.Number),
+  viewCount: Schema.Number.pipe(Schema.optional),
   /** Like count. */
-  likeCount: Schema.optional(Schema.Number),
+  likeCount: Schema.Number.pipe(Schema.optional),
   /** Full transcript text. */
-  transcript: Schema.optional(Schema.String),
+  transcript: Schema.String.pipe(Schema.optional),
   /** Transcript segments with timestamps. */
-  transcriptSegments: Schema.optional(Schema.Array(TranscriptSegment)),
+  transcriptSegments: Schema.Array(TranscriptSegment).pipe(Schema.optional),
   /** Whether transcript fetching was attempted. */
-  transcriptFetched: Schema.optional(Schema.Boolean),
+  transcriptFetched: Schema.Boolean.pipe(Schema.optional),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/YouTubeVideo',
+    typename: 'org.dxos.type.youtube-video',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--play--regular',
+    hue: 'red',
   }),
 );
 
 export interface YouTubeVideo extends Schema.Schema.Type<typeof YouTubeVideo> {}
+
+/** Checks if a value is a YouTubeVideo object. */
+export const instanceOf = (value: unknown): value is YouTubeVideo => Obj.instanceOf(YouTubeVideo, value);
