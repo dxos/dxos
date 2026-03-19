@@ -83,7 +83,11 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
   };
 
   const handleRequest = async (input: string) => {
-    // Returns a promise that resolves when a value has been received.
+    if (!functionUrl) {
+      handleResponse({ error: new Error('Function Url is not present') });
+      return;
+    }
+
     try {
       setState('pending');
 
