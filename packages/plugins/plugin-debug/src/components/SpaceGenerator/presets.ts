@@ -9,7 +9,6 @@ import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { GmailSync } from '@dxos/plugin-inbox';
