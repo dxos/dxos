@@ -43,9 +43,11 @@ const TracePanelMain = ({ space }: { space: Space }) => {
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Input.Root>
-            <Input.Switch checked={isRunning} onCheckedChange={isRunning ? stop : start} />
+            <div className='flex items-center gap-2'>
+              <Input.Switch checked={isRunning} onCheckedChange={isRunning ? stop : start} />
+              <Input.Label>{t('trigger runtime label')}</Input.Label>
+            </div>
           </Input.Root>
-          <span className='text-sm'>{t('trigger runtime label')}</span>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>

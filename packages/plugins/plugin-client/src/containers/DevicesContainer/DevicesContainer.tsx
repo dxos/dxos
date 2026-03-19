@@ -176,6 +176,7 @@ const InvitationSection = ({
         : state >= Invitation.State.READY_FOR_AUTHENTICATION && authCode
           ? 'auth-code'
           : 'qr-code';
+
   return activeView === 'init' ? (
     <>
       <p className='text-description mb-2'>{t('add device description')}</p>

@@ -98,11 +98,7 @@ const MessageTitle = forwardRef<HTMLHeadingElement, MessageTitleProps>(
     const icon = iconProp ?? messageIcons[valence];
     return (
       <Comp {...props} className={tx('message.header', {}, classNames)} id={titleId} ref={forwardedRef}>
-        {!icon && valence === 'neutral' ? (
-          <div />
-        ) : (
-          <Icon size={5} icon={icon} classNames={tx('message.icon', { valence })} />
-        )}
+        {!icon && valence === 'neutral' ? <div /> : <Icon icon={icon} classNames={tx('message.icon', { valence })} />}
         <span className={tx('message.title', {}, classNames)}>{children}</span>
       </Comp>
     );

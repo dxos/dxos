@@ -189,16 +189,9 @@ export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
         </Input.Root>
-        <Toolbar.IconButton
-          icon='ph--play--regular'
-          size={4}
-          label='Execute'
-          iconOnly
-          onClick={() => handleRequest(input)}
-        />
+        <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
         <Toolbar.IconButton
           icon={state ? 'ph--stop--regular' : 'ph--trash--regular'}
-          size={4}
           label={state ? 'Stop' : 'Clear'}
           iconOnly
           onClick={() => (state ? handleStop() : handleClear())}

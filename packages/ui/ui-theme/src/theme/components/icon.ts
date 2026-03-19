@@ -17,7 +17,9 @@ export type IconStyleProps = {
 export const iconRoot: ComponentFunction<IconStyleProps> = ({ size }, etc) =>
   mx(
     'shrink-0 text-[var(--icons-color,currentColor)]',
-    size ? getSize(size) : '[width:var(--icon-size,1em)] [height:var(--icon-size,1em)]',
+    size
+      ? getSize(size)
+      : '[width:var(--icon-size,var(--dx-default-icons-size))] [height:var(--icon-size,var(--dx-default-icons-size))]',
     etc,
   );
 

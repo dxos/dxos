@@ -90,8 +90,8 @@ export const MessageToolbar = ({ classNames, ...props }: MessageToolbarProps) =>
   const actions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
 
   return (
-    <Menu.Root {...props} {...actions} attendableId={attendableId}>
-      <Menu.Toolbar classNames={classNames} />
+    <Menu.Root {...actions} attendableId={attendableId}>
+      <Menu.Toolbar {...props} classNames={classNames} />
     </Menu.Root>
   );
 };

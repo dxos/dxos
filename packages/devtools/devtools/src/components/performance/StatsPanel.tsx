@@ -118,7 +118,7 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
             value='ghost'
             onClick={handleToggleLive}
           >
-            <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} size={4} />
+            <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} />
           </Toggle>
         }
       />

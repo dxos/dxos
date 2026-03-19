@@ -13,7 +13,7 @@ import React, {
   useContext,
 } from 'react';
 
-import { composableProps, largeIconSize, mx } from '@dxos/ui-theme';
+import { composableProps, iconSize, mx } from '@dxos/ui-theme';
 import { type Density, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -86,7 +86,7 @@ const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(({ children, cl
   const { tx } = useThemeContext();
 
   return (
-    <Toolbar.Root {...props} style={largeIconSize} classNames={[tx('card.toolbar', {}), classNames]} ref={forwardedRef}>
+    <Toolbar.Root {...props} style={iconSize(5)} classNames={[tx('card.toolbar', {}), classNames]} ref={forwardedRef}>
       {children}
     </Toolbar.Root>
   );
@@ -100,7 +100,7 @@ type CardDragHandleProps = ToolbarDragHandleProps;
 
 const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((props, forwardedRef) => {
   return (
-    <CardIconBlock>
+    <CardIconBlock padding>
       <Toolbar.DragHandle {...props} testId='card-drag-handle' ref={forwardedRef} />
     </CardIconBlock>
   );
@@ -114,7 +114,7 @@ type CloseIconButtonProps = ToolbarCloseIconButtonProps;
 
 const CloseIconButton = forwardRef<HTMLButtonElement, CloseIconButtonProps>((props, forwardedRef) => {
   return (
-    <CardIconBlock>
+    <CardIconBlock padding>
       <Toolbar.CloseIconButton {...props} ref={forwardedRef} />
     </CardIconBlock>
   );
@@ -133,7 +133,7 @@ const CardMenu = <T extends any | void = void>({ context, items, ...props }: Car
   const combinedItems = [...(items ?? []), ...((menuItems as CardMenuItem<T>[]) ?? [])];
 
   return (
-    <CardIconBlock>
+    <CardIconBlock padding>
       <Toolbar.Menu {...props} context={context} items={combinedItems} />
     </CardIconBlock>
   );
@@ -155,11 +155,11 @@ const CardIcon = (props: IconProps) => {
 // IconBlock
 //
 
-const CardIconBlock = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildren>>(
-  ({ classNames, children, ...props }, forwardedRef) => {
+const CardIconBlock = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildren<{ padding?: boolean }>>>(
+  ({ classNames, children, padding, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <div {...props} role='none' className={tx('card.icon-block', {}, classNames)} ref={forwardedRef}>
+      <div {...props} role='none' className={tx('card.icon-block', { padding }, classNames)} ref={forwardedRef}>
         {children}
       </div>
     );
