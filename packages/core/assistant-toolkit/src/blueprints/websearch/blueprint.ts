@@ -6,11 +6,10 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
-import { WebSearchFunctions } from './functions';
+
+import { Fetch, WebSearchHandlers } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.web-search';
-
-const functions: AppCapabilities.BlueprintDefinition['functions'] = Object.values(WebSearchFunctions);
 
 const make = () =>
   Blueprint.make({
@@ -20,12 +19,12 @@ const make = () =>
     instructions: {
       source: Ref.make(Text.make()),
     },
-    tools: Blueprint.toolDefinitions({ functions, tools: ['AnthropicWebSearch'] }),
+    tools: Blueprint.toolDefinitions({ operations: [Fetch], tools: ['AnthropicWebSearch'] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
+  operations: WebSearchHandlers,
   make,
 };
 

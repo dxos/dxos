@@ -9,7 +9,8 @@ import { type DependencyList, useCallback } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type Key } from '@dxos/echo';
-import { type FunctionDefinition, FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { type Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 
 import { AutomationCapabilities } from '../types';
@@ -36,7 +37,7 @@ export const useComputeRuntimeCallback = <T>(
 };
 
 // TODO(wittjosiah): Function invoking should automatically be traced (DX-647).
-export const invokeFunctionWithTracing = <I, O>(functionDef: FunctionDefinition<I, O>, inputData: I) =>
+export const invokeFunctionWithTracing = <I, O>(functionDef: Operation.Definition<I, O, any>, inputData: I) =>
   Effect.gen(function* () {
     const tracer = yield* TracingService;
     const trace = yield* tracer.traceInvocationStart({

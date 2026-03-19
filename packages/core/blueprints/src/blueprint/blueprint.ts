@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { type FunctionDefinition } from '@dxos/functions';
+import { type Operation } from '@dxos/operation';
 
 import * as Template from '../template';
 
@@ -110,8 +110,8 @@ export const make = ({ tools = [], instructions = Template.make(), ...props }: M
  */
 export const toolDefinitions = ({
   tools = [],
-  functions = [],
+  operations = [],
 }: {
   tools?: string[];
-  functions?: FunctionDefinition[];
-}) => [...functions.map((fn) => ToolId.make(fn.key)), ...tools.map((tool) => ToolId.make(tool))];
+  operations?: Operation.Definition.Any[];
+}) => [...operations.map((op) => ToolId.make(op.meta.key)), ...tools.map((tool) => ToolId.make(tool))];

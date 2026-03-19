@@ -27,7 +27,7 @@ import { trim } from '@dxos/util';
 import { type TestStep, runSteps } from '../testing';
 
 import PlanningOldBlueprint from './blueprint';
-import { TaskFunctions } from './functions';
+import { TaskHandlers } from './functions';
 
 describe('Planning Blueprint', { timeout: 120_000 }, () => {
   const blueprint = PlanningOldBlueprint.make();
@@ -106,11 +106,11 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
           AiService.model('@anthropic/claude-3-5-sonnet-20241022'),
         ).pipe(
           Layer.provideMerge(
-            FunctionInvocationServiceLayerTestMocked({ functions: Object.values(TaskFunctions) }).pipe(
+            FunctionInvocationServiceLayerTestMocked({ functions: TaskHandlers }).pipe(
               Layer.provideMerge(TracingService.layerNoop),
             ),
           ),
-          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: Object.values(TaskFunctions) })),
+          Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: TaskHandlers })),
           Layer.provideMerge(TestDatabaseLayer({ types: [Text.Text, Markdown.Document, Blueprint.Blueprint] })),
           Layer.provideMerge(Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct'))),
         ),

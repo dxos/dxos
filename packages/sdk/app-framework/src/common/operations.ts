@@ -28,11 +28,9 @@ export namespace UndoOperation {
     },
     executionMode: 'sync',
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        message: Schema.optional(Label.annotations({ description: 'The message to display in the undo toast.' })),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      message: Schema.optional(Label.annotations({ description: 'The message to display in the undo toast.' })),
+    }),
+    output: Schema.Void,
   });
 }

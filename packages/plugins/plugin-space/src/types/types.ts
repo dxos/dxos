@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type * as Effect from 'effect/Effect';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability, Plugin } from '@dxos/app-framework';
@@ -119,16 +119,26 @@ export interface TypedObjectSerializer<T extends Obj.Unknown = Obj.Unknown> {
 }
 
 /**
- * Factory function that creates an object directly using Type.make().
- * Returns an Effect that resolves to the created object.
- *
- * Options include:
- * - `db`: The database to use for object creation.
+ * Result of creating and adding an object.
+ */
+export type CreateObjectResult = {
+  id: string;
+  subject: readonly string[];
+  object: Obj.Unknown;
+};
+
+/**
+ * Factory function that creates an object and adds it to a target (database or collection).
+ * Returns an Effect that resolves to the created object result with navigation subject.
  */
 export type CreateObject = (
   props: any,
-  options: { db: Database.Database },
-) => Effect.Effect<Obj.Unknown, Error, Capability.Service | Operation.Service>;
+  options: {
+    db: Database.Database;
+    target: Database.Database | Collection.Collection;
+    targetNodeId?: string;
+  },
+) => Effect.Effect<CreateObjectResult, Error, Capability.Service | Operation.Service>;
 
 // TODO(burdon): Move to FormatEnum or SDK.
 export const IconAnnotationId = Symbol.for('@dxos/plugin-space/annotation/Icon');
@@ -148,14 +158,12 @@ export namespace CollectionOperation {
   export const Create = Operation.make({
     meta: { key: `${COLLECTION_OPERATION}.create`, name: 'Create Collection' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        name: Schema.optional(Schema.String),
-      }),
-      output: Schema.Struct({
-        object: Collection.Collection,
-      }),
-    },
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
+    }),
+    output: Schema.Struct({
+      object: Collection.Collection,
+    }),
   });
 }
 
@@ -172,14 +180,12 @@ export namespace SpaceOperation {
       description: 'Create a new space.',
     },
     services: [Capability.Service, Plugin.Service],
-    schema: {
-      input: SpaceForm,
-      output: Schema.Struct({
-        id: Schema.String,
-        subject: Schema.Array(Schema.String),
-        space: SpaceSchema,
-      }),
-    },
+    input: SpaceForm,
+    output: Schema.Struct({
+      id: Schema.String,
+      subject: Schema.Array(Schema.String),
+      space: SpaceSchema,
+    }),
   });
 
   export const Join = Operation.make({
@@ -189,13 +195,11 @@ export namespace SpaceOperation {
       description: 'Join a space via invitation.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        invitationCode: Schema.optional(Schema.String),
-        onDone: Schema.optional(Schema.Any),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      invitationCode: Schema.optional(Schema.String),
+      onDone: Schema.optional(Schema.Any),
+    }),
+    output: Schema.Void,
   });
 
   export const Open = Operation.make({
@@ -205,12 +209,10 @@ export namespace SpaceOperation {
       description: 'Open a space.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      space: SpaceSchema,
+    }),
+    output: Schema.Void,
   });
 
   export const Close = Operation.make({
@@ -220,12 +222,10 @@ export namespace SpaceOperation {
       description: 'Close a space.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      space: SpaceSchema,
+    }),
+    output: Schema.Void,
   });
 
   export const Share = Operation.make({
@@ -235,16 +235,14 @@ export namespace SpaceOperation {
       description: 'Share a space.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-        type: Schema.Enums(Invitation.Type),
-        authMethod: Schema.Enums(Invitation.AuthMethod),
-        multiUse: Schema.Boolean,
-        target: Schema.optional(Schema.String),
-      }),
-      output: Schema.instanceOf(CancellableInvitationObservable),
-    },
+    input: Schema.Struct({
+      space: SpaceSchema,
+      type: Schema.Enums(Invitation.Type),
+      authMethod: Schema.Enums(Invitation.AuthMethod),
+      multiUse: Schema.Boolean,
+      target: Schema.optional(Schema.String),
+    }),
+    output: Schema.instanceOf(CancellableInvitationObservable),
   });
 
   // TODO(wittjosiah): This appears to be unused.
@@ -255,12 +253,10 @@ export namespace SpaceOperation {
       description: 'Lock a space to prevent modifications.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      space: SpaceSchema,
+    }),
+    output: Schema.Void,
   });
 
   // TODO(wittjosiah): This appears to be unused.
@@ -271,12 +267,10 @@ export namespace SpaceOperation {
       description: 'Unlock a space to allow modifications.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      space: SpaceSchema,
+    }),
+    output: Schema.Void,
   });
 
   export const OpenSettings = Operation.make({
@@ -286,12 +280,10 @@ export namespace SpaceOperation {
       description: 'Open space settings.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      space: SpaceSchema,
+    }),
+    output: Schema.Void,
   });
 
   export const WaitForObject = Operation.make({
@@ -301,12 +293,10 @@ export namespace SpaceOperation {
       description: 'Wait for an object to be available.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        id: Schema.optional(Schema.String),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      id: Schema.optional(Schema.String),
+    }),
+    output: Schema.Void,
   });
 
   export const AddObject = Operation.make({
@@ -316,23 +306,21 @@ export namespace SpaceOperation {
       description: 'Add an object to a space.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        object: Obj.Unknown.annotations({ description: 'The object to add.' }),
-        target: Schema.Union(Database.Database, Collection.Collection).annotations({
-          description: 'The database or collection to add to.',
-        }),
-        hidden: Schema.optional(Schema.Boolean),
-        targetNodeId: Schema.optional(
-          Schema.String.annotations({ description: 'Qualified graph node ID of the target collection.' }),
-        ),
+    input: Schema.Struct({
+      object: Obj.Unknown.annotations({ description: 'The object to add.' }),
+      target: Schema.Union(Database.Database, Collection.Collection).annotations({
+        description: 'The database or collection to add to.',
       }),
-      output: Schema.Struct({
-        id: Schema.String,
-        subject: Schema.Array(Schema.String),
-        object: Obj.Unknown,
-      }),
-    },
+      hidden: Schema.optional(Schema.Boolean),
+      targetNodeId: Schema.optional(
+        Schema.String.annotations({ description: 'Qualified graph node ID of the target collection.' }),
+      ),
+    }),
+    output: Schema.Struct({
+      id: Schema.String,
+      subject: Schema.Array(Schema.String),
+      object: Obj.Unknown,
+    }),
   });
 
   export const RemoveObjectsOutput = Schema.Struct({
@@ -356,13 +344,11 @@ export namespace SpaceOperation {
       description: 'Remove objects from a space.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to remove.' }),
-        target: Schema.optional(Collection.Collection).annotations({ description: 'The collection to remove from.' }),
-      }),
-      output: RemoveObjectsOutput,
-    },
+    input: Schema.Struct({
+      objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to remove.' }),
+      target: Schema.optional(Collection.Collection).annotations({ description: 'The collection to remove from.' }),
+    }),
+    output: RemoveObjectsOutput,
   });
 
   export const DeleteFieldOutput = Schema.Struct({
@@ -381,13 +367,11 @@ export namespace SpaceOperation {
       description: 'Delete a field from a view.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        view: View.View.annotations({ description: 'The view to delete the field from.' }),
-        fieldId: Schema.String,
-      }),
-      output: DeleteFieldOutput,
-    },
+    input: Schema.Struct({
+      view: View.View.annotations({ description: 'The view to delete the field from.' }),
+      fieldId: Schema.String,
+    }),
+    output: DeleteFieldOutput,
   });
 
   export const OpenCreateObject = Operation.make({
@@ -397,23 +381,21 @@ export namespace SpaceOperation {
       description: 'Open the create object dialog.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        target: Schema.Union(Database.Database, Collection.Collection).annotations({
-          description: 'The database or collection to create in.',
-        }),
-        views: Schema.optional(Schema.Boolean),
-        typename: Schema.optional(Schema.String),
-        initialFormValues: Schema.optional(Schema.Any),
-        navigable: Schema.optional(Schema.Boolean),
-        targetNodeId: Schema.optional(
-          Schema.String.annotations({ description: 'Qualified graph node ID of the target collection.' }),
-        ),
-        // TODO(wittjosiah): This is a function, is there a better way to handle this?
-        onCreateObject: Schema.optional(Schema.Any),
+    input: Schema.Struct({
+      target: Schema.Union(Database.Database, Collection.Collection).annotations({
+        description: 'The database or collection to create in.',
       }),
-      output: Schema.Void,
-    },
+      views: Schema.optional(Schema.Boolean),
+      typename: Schema.optional(Schema.String),
+      initialFormValues: Schema.optional(Schema.Any),
+      navigable: Schema.optional(Schema.Boolean),
+      targetNodeId: Schema.optional(
+        Schema.String.annotations({ description: 'Qualified graph node ID of the target collection.' }),
+      ),
+      // TODO(wittjosiah): This is a function, is there a better way to handle this?
+      onCreateObject: Schema.optional(Schema.Any),
+    }),
+    output: Schema.Void,
   });
 
   export const OpenCreateSpace = Operation.make({
@@ -423,10 +405,8 @@ export namespace SpaceOperation {
       description: 'Open the create space dialog.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Void,
-      output: Schema.Void,
-    },
+    input: Schema.Void,
+    output: Schema.Void,
   });
 
   export const Migrate = Operation.make({
@@ -436,13 +416,11 @@ export namespace SpaceOperation {
       description: 'Migrate a space to a new version.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-        version: Schema.optional(Schema.String),
-      }),
-      output: Schema.Boolean,
-    },
+    input: Schema.Struct({
+      space: SpaceSchema,
+      version: Schema.optional(Schema.String),
+    }),
+    output: Schema.Boolean,
   });
 
   export const Snapshot = Operation.make({
@@ -452,15 +430,13 @@ export namespace SpaceOperation {
       description: 'Create a snapshot of the space.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        db: Database.Database,
-        query: QueryAST.Query.pipe(Schema.optional),
-      }),
-      output: Schema.Struct({
-        snapshot: Schema.instanceOf(Blob),
-      }),
-    },
+    input: Schema.Struct({
+      db: Database.Database,
+      query: QueryAST.Query.pipe(Schema.optional),
+    }),
+    output: Schema.Struct({
+      snapshot: Schema.instanceOf(Blob),
+    }),
   });
 
   export const Rename = Operation.make({
@@ -470,13 +446,11 @@ export namespace SpaceOperation {
       description: 'Rename a space.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-        caller: Schema.optional(Schema.String),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      space: SpaceSchema,
+      caller: Schema.optional(Schema.String),
+    }),
+    output: Schema.Void,
   });
 
   export const RenameObject = Operation.make({
@@ -486,13 +460,11 @@ export namespace SpaceOperation {
       description: 'Rename an object.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        object: Obj.Unknown,
-        caller: Schema.optional(Schema.String),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      object: Obj.Unknown,
+      caller: Schema.optional(Schema.String),
+    }),
+    output: Schema.Void,
   });
 
   export const OpenMembers = Operation.make({
@@ -502,12 +474,10 @@ export namespace SpaceOperation {
       description: 'Open the members panel for a space.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      space: SpaceSchema,
+    }),
+    output: Schema.Void,
   });
 
   export const GetShareLink = Operation.make({
@@ -517,14 +487,12 @@ export namespace SpaceOperation {
       description: 'Get a shareable link for a space.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-        target: Schema.optional(Schema.String),
-        copyToClipboard: Schema.optional(Schema.Boolean),
-      }),
-      output: Schema.String,
-    },
+    input: Schema.Struct({
+      space: SpaceSchema,
+      target: Schema.optional(Schema.String),
+      copyToClipboard: Schema.optional(Schema.Boolean),
+    }),
+    output: Schema.String,
   });
 
   export const StoredSchemaForm = Schema.Struct({
@@ -538,22 +506,20 @@ export namespace SpaceOperation {
       description: 'Add a schema to the space.',
     },
     services: [Capability.Service, Plugin.Service],
-    schema: {
-      input: Schema.Struct({
-        db: Database.Database,
-        name: Schema.optional(Schema.String),
-        typename: Schema.optional(Schema.String),
-        version: Schema.optional(Schema.String),
-        // TODO(wittjosiah): Schema for schema?
-        schema: Schema.Any,
-        show: Schema.optional(Schema.Boolean),
-      }),
-      output: Schema.Struct({
-        id: Schema.String,
-        object: Type.PersistentType,
-        schema: Schema.instanceOf(Type.RuntimeType),
-      }),
-    },
+    input: Schema.Struct({
+      db: Database.Database,
+      name: Schema.optional(Schema.String),
+      typename: Schema.optional(Schema.String),
+      version: Schema.optional(Schema.String),
+      // TODO(wittjosiah): Schema for schema?
+      schema: Schema.Any,
+      show: Schema.optional(Schema.Boolean),
+    }),
+    output: Schema.Struct({
+      id: Schema.String,
+      object: Type.PersistentType,
+      schema: Schema.instanceOf(Type.RuntimeType),
+    }),
   });
 
   export const AddRelation = Operation.make({
@@ -563,20 +529,18 @@ export namespace SpaceOperation {
       description: 'Add a relation between objects.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        db: Database.Database,
-        // TODO(wittjosiah): Relation schema.
-        schema: Schema.Any,
-        source: Obj.Unknown,
-        target: Obj.Unknown,
-        // TODO(wittjosiah): Type based on relation schema.
-        fields: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-      }),
-      output: Schema.Struct({
-        relation: Schema.Any,
-      }),
-    },
+    input: Schema.Struct({
+      db: Database.Database,
+      // TODO(wittjosiah): Relation schema.
+      schema: Schema.Any,
+      source: Obj.Unknown,
+      target: Obj.Unknown,
+      // TODO(wittjosiah): Type based on relation schema.
+      fields: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+    }),
+    output: Schema.Struct({
+      relation: Schema.Any,
+    }),
   });
 
   // TODO(wittjosiah): This appears to be unused.
@@ -587,13 +551,11 @@ export namespace SpaceOperation {
       description: 'Duplicate an object.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        object: Obj.Unknown,
-        target: Schema.Union(Database.Database, Collection.Collection),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      object: Obj.Unknown,
+      target: Schema.Union(Database.Database, Collection.Collection),
+    }),
+    output: Schema.Void,
   });
 
   /**
@@ -606,16 +568,14 @@ export namespace SpaceOperation {
       description: 'Restore a deleted field to a view.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        view: View.View.annotations({ description: 'The view to restore the field to.' }),
-        field: View.FieldSchema.annotations({ description: 'The field schema to restore.' }),
-        // TODO(wittjosiah): This creates a type error with PropertySchema.
-        props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
-        index: Schema.Number.annotations({ description: 'The index to restore the field at.' }),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      view: View.View.annotations({ description: 'The view to restore the field to.' }),
+      field: View.FieldSchema.annotations({ description: 'The field schema to restore.' }),
+      // TODO(wittjosiah): This creates a type error with PropertySchema.
+      props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
+      index: Schema.Number.annotations({ description: 'The index to restore the field at.' }),
+    }),
+    output: Schema.Void,
   });
 
   /**
@@ -628,19 +588,17 @@ export namespace SpaceOperation {
       description: 'Restore deleted objects to a space.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to restore.' }),
-        parentCollection: Collection.Collection.annotations({ description: 'The collection to restore to.' }),
-        indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
-        nestedObjectsList: Schema.Array(Schema.Array(Obj.Unknown)).annotations({
-          description: 'Nested objects to restore.',
-        }),
-        wasActive: Schema.Array(Schema.String).annotations({
-          description: 'IDs of objects that were active before deletion.',
-        }),
+    input: Schema.Struct({
+      objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to restore.' }),
+      parentCollection: Collection.Collection.annotations({ description: 'The collection to restore to.' }),
+      indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
+      nestedObjectsList: Schema.Array(Schema.Array(Obj.Unknown)).annotations({
+        description: 'Nested objects to restore.',
       }),
-      output: Schema.Void,
-    },
+      wasActive: Schema.Array(Schema.String).annotations({
+        description: 'IDs of objects that were active before deletion.',
+      }),
+    }),
+    output: Schema.Void,
   });
 }

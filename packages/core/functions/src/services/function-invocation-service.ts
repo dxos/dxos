@@ -6,17 +6,18 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import type { FunctionNotFoundError } from '../errors';
-import { type FunctionDefinition, type InvocationServices } from '../sdk';
+import { type InvocationServices } from '../sdk';
+import { Operation } from '@dxos/operation';
 
 export class FunctionInvocationService extends Context.Tag('@dxos/functions/FunctionInvocationService')<
   FunctionInvocationService,
   {
     invokeFunction<I, O>(
-      functionDef: FunctionDefinition<I, O, any>,
+      functionDef: Operation.Definition<I, O, any>,
       input: I,
     ): Effect.Effect<O, never, InvocationServices>;
 
-    resolveFunction(key: string): Effect.Effect<FunctionDefinition.Any, FunctionNotFoundError>;
+    resolveFunction(key: string): Effect.Effect<Operation.Definition.Any, FunctionNotFoundError>;
   }
 >() {
   static layerNotAvailable = Layer.succeed(FunctionInvocationService, {
@@ -25,13 +26,13 @@ export class FunctionInvocationService extends Context.Tag('@dxos/functions/Func
   });
 
   static invokeFunction = <I, O>(
-    functionDef: FunctionDefinition<I, O, any>,
+    functionDef: Operation.Definition<I, O, any>,
     input: I,
   ): Effect.Effect<O, never, FunctionInvocationService | InvocationServices> =>
     Effect.serviceFunctionEffect(FunctionInvocationService, (service) => service.invokeFunction)(functionDef, input);
 
   static resolveFunction = (
     key: string,
-  ): Effect.Effect<FunctionDefinition.Any, FunctionNotFoundError, FunctionInvocationService> =>
+  ): Effect.Effect<Operation.Definition.Any, FunctionNotFoundError, FunctionInvocationService> =>
     Effect.serviceFunctionEffect(FunctionInvocationService, (service) => service.resolveFunction)(key);
 }

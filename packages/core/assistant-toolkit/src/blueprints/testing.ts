@@ -15,7 +15,7 @@ import {
 } from '@dxos/assistant';
 import type { Blueprint } from '@dxos/blueprints';
 import { Database, Ref } from '@dxos/echo';
-import { type FunctionDefinition } from '@dxos/functions';
+import { type OperationHandlerSet } from '@dxos/operation';
 import { log } from '@dxos/log';
 
 export type TestStep = Pick<AiConversationRunProps, 'prompt' | 'system'> & {
@@ -28,7 +28,7 @@ export type TestStep = Pick<AiConversationRunProps, 'prompt' | 'system'> & {
  */
 export interface BlueprintDefinition {
   key: string;
-  functions: FunctionDefinition.Any[];
+  operations: OperationHandlerSet.OperationHandlerSet;
   make: () => Blueprint.Blueprint;
 }
 

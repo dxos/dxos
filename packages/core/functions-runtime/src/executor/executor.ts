@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { runAndForwardErrors } from '@dxos/effect';
-import { type FunctionContext, type FunctionDefinition } from '@dxos/functions';
+import { type Operation } from '@dxos/operation';
 
 import type { RuntimeServices, ServiceContainer } from '../services';
 
@@ -19,17 +19,15 @@ export class FunctionExecutor {
   /**
    * Invoke function.
    */
-  // TODO(dmaretskyi): Invocation context: queue, space, etc...
-  async invoke<F extends FunctionDefinition.Any>(
+  async invoke<F extends Operation.WithHandler<Operation.Definition.Any>>(
     functionDef: F,
-    input: F extends FunctionDefinition<infer I, infer _O> ? I : never,
-  ): Promise<F extends FunctionDefinition<infer _I, infer O> ? O : never> {
-    // Assert input matches schema
-    const assertInput = functionDef.inputSchema.pipe(Schema.asserts);
+    input: Operation.Definition.Input<F>,
+  ): Promise<Operation.Definition.Output<F>> {
+    // Assert input matches schema.
+    const assertInput = functionDef.input.pipe(Schema.asserts);
     (assertInput as any)(input);
 
-    const context: FunctionContext = {};
-    const result = functionDef.handler({ context, data: input });
+    const result = functionDef.handler(input);
 
     let data: unknown;
     if (Effect.isEffect(result)) {
@@ -41,8 +39,8 @@ export class FunctionExecutor {
       data = await result;
     }
 
-    // Assert output matches schema
-    const assertOutput = functionDef.outputSchema?.pipe(Schema.asserts);
+    // Assert output matches schema.
+    const assertOutput = functionDef.output?.pipe(Schema.asserts);
     (assertOutput as any)(data);
 
     return data as any;

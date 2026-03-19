@@ -120,6 +120,7 @@ export type ModuleReturn = void | Any | Any[] | readonly Any[] | [Any, ...Any[]]
 /**
  * Helper to define the implementation of a capability.
  */
+// TODO(dmaretskyi): Make the return type non-generic so capabilities are non-discernable.
 export const contributes = <I extends InterfaceDef<any>>(
   interfaceDef: I,
   implementation: Capability<InterfaceDef.Implementation<I>>['implementation'],

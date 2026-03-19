@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
-import { AgentFunctions, Chat, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
+import { AgentPrompt, Chat, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { TracingService, serializeFunction } from '@dxos/functions';
+import { TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
@@ -30,7 +30,7 @@ export default Capability.makeModule(
         operation: AssistantOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ space }) {
           // TODO(wittjosiah): Remove once function registry is avaiable.
-          space.db.add(serializeFunction(AgentFunctions.Prompt));
+          space.db.add(Operation.serialize(AgentPrompt));
 
           // Create default chat.
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db: space.db });
