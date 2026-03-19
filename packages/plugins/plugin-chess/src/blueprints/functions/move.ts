@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
-import { Chess } from '../../types';
+import { type Chess } from '../../types';
 
 import { Move } from './definitions';
 
@@ -25,8 +25,9 @@ export default Move.pipe(
 
       chess.move(move, { strict: false });
       const pgn = chess.pgn();
-      Obj.change(obj, (o: Chess.Game) => {
-        o.pgn = pgn;
+      Obj.change(obj, (game) => {
+        const mutableGame = game as Obj.Mutable<typeof game>;
+        mutableGame.pgn = pgn;
       });
       return { pgn };
     }),
