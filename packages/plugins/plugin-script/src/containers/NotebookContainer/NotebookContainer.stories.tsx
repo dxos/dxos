@@ -14,6 +14,7 @@ import { Function, serializeFunction } from '@dxos/functions';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -53,14 +54,11 @@ const meta: Meta<typeof NotebookContainer> = {
           types: [...DataTypes, Notebook.Notebook, Function.Function, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              yield* Effect.promise(() => client.spaces.waitUntilReady());
-              const space = client.spaces.default;
-              yield* Effect.promise(() => space.waitUntilReady());
+              const { defaultSpace } = yield* initializeIdentity(client);
 
-              space.db.add(createNotebook());
-              space.db.add(Markdown.make({ content: '# Hello World' }));
-              space.db.add(serializeFunction(AgentFunctions.Prompt));
+              defaultSpace.db.add(createNotebook());
+              defaultSpace.db.add(Markdown.make({ content: '# Hello World' }));
+              defaultSpace.db.add(serializeFunction(AgentFunctions.Prompt));
             }),
         }),
         AssistantPlugin(),

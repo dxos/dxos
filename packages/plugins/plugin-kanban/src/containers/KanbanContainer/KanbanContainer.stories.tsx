@@ -15,6 +15,7 @@ import { View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -63,7 +64,7 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
         types: [...types, View.View, Kanban.Kanban],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            yield* Effect.promise(() => client.halo.createIdentity());
+            yield* initializeIdentity(client);
             const space = yield* Effect.promise(() => client.spaces.create());
             yield* Effect.promise(() => space.waitUntilReady());
             yield* Effect.promise(() => onSpaceCreated?.(space) ?? Promise.resolve());
