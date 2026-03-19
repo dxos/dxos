@@ -25,15 +25,14 @@ All components and compound component exports that have `<ScrollArea.Root>` as t
 | `react-ui-searchlist`         | `SearchList.tsx`        | `SearchList.Viewport`  | Compound | -          |
 | `react-ui-syntax-highlighter` | `SyntaxHighlighter.tsx` | `SyntaxHighlighter`    | Direct   | -          |
 
-**Summary:**
+## Phase 2
 
-- **Total verified exports:** 16
-- **Direct components:** 9
-- **Compound components:** 7
-- **With ComposableProps:** 1 (Event.Viewport)
-- **Without ComposableProps:** 15
+- [ ] Ensure all radix-style composite components that include Viewports (Phase 1) are Composable.
+  - Follow the exemplar: `Event.Viewport` in `plugin-inbox`
+- [ ] Re-run audit (Phase 1).
+- [ ] Add any implementaiton notes or observations in this document.
 
-## Phase 2: Remaining Files to Audit
+## Phase 3: Remaining Files to Audit
 
 The following ~34 files contain `<ScrollArea.Root>` but root element status needs verification:
 
@@ -53,13 +52,6 @@ The following ~34 files contain `<ScrollArea.Root>` but root element status need
 - shell: SpaceManager.tsx
 - stories-assistant: QueryEditor.stories.tsx
 - react-ui story files: ScrollArea.stories.tsx, Splitter.stories.tsx, tabster.stories.tsx, Column.stories.tsx, Panel.stories.tsx, Stack.stories.tsx, Table.stories.tsx, NumericTabs.stories.tsx, virtualizer.stories.tsx
-
-## Phase 3
-
-- [ ] Ensure all radix-style composite components that include Viewports (Phase 1) are Composable.
-  - Follow the exemplar: `Event.Viewport` in `plugin-inbox`
-- [ ] Re-run audit (Phase 1).
-- [ ] Add any implementaiton notes or observations in this document.
 
 ## Phase 4
 
