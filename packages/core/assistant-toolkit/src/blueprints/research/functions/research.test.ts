@@ -27,7 +27,6 @@ import ResearchBlueprint from '../blueprint';
 import { ResearchHandlers } from '../functions';
 import { ResearchDataTypes, ResearchGraph } from '../types';
 
-import { default as createDocument } from './document-create';
 import { default as research } from './research';
 
 ObjectId.dangerouslyDisableRandomness();

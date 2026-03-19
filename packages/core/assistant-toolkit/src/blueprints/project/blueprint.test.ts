@@ -32,7 +32,6 @@ import { PlanningBlueprint } from '../planning';
 
 import ProjectBlueprintDef from './blueprint';
 import { Agent, ProjectHandlers } from './functions';
-import { default as agentHandler } from './functions/agent';
 
 ObjectId.dangerouslyDisableRandomness();
 

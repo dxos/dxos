@@ -8,7 +8,7 @@ import { AiService } from '@dxos/ai';
 import { Database, Obj } from '@dxos/echo';
 import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
-import { type Actor, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 export const EntityExtraction = Operation.make({
   meta: {

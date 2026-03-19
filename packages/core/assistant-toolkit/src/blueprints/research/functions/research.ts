@@ -9,7 +9,6 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
 import * as String from 'effect/String';
 
 import { AiService, ConsolePrinter } from '@dxos/ai';

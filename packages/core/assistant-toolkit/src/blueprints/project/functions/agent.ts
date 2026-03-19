@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { AiService } from '@dxos/ai';
-import { AiContextService, AiConversation, type ContextBinding } from '@dxos/assistant';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { AiConversation, type ContextBinding } from '@dxos/assistant';
+import { Database, Obj } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
