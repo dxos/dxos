@@ -2,18 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ToolId } from '@dxos/ai';
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { TaskFunctions } from './functions';
+import { ReadTasks, UpdateTasks, TaskHandlers } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.planning';
-
-const functions = Object.values(TaskFunctions);
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
@@ -98,12 +95,12 @@ const make = () =>
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
-    tools: functions.map((fn) => ToolId.make(fn.key)),
+    tools: Blueprint.toolDefinitions({ operations: [ReadTasks, UpdateTasks] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
+  operations: TaskHandlers,
   make,
 };
 

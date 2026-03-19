@@ -33,15 +33,13 @@ const Axis = Schema.Union(Schema.Literal('row'), Schema.Literal('col'));
 export namespace SheetOperation {
   export const InsertAxis = Operation.make({
     meta: { key: `${SHEET_OPERATION}.axis-insert`, name: 'Insert Axis' },
-    schema: {
-      input: Schema.Struct({
-        model: Schema.Any,
-        axis: Axis,
-        index: Schema.Number,
-        count: Schema.optional(Schema.Number),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      model: Schema.Any,
+      axis: Axis,
+      index: Schema.Number,
+      count: Schema.optional(Schema.Number),
+    }),
+    output: Schema.Void,
   });
 
   export const DropAxisOutput = Schema.Struct({
@@ -56,14 +54,12 @@ export namespace SheetOperation {
 
   export const DropAxis = Operation.make({
     meta: { key: `${SHEET_OPERATION}.axis-drop`, name: 'Drop Axis' },
-    schema: {
-      input: Schema.Struct({
-        model: Schema.Any,
-        axis: Axis,
-        axisIndex: Schema.String,
-      }),
-      output: DropAxisOutput,
-    },
+    input: Schema.Struct({
+      model: Schema.Any,
+      axis: Axis,
+      axisIndex: Schema.String,
+    }),
+    output: DropAxisOutput,
   });
 
   /**
@@ -71,16 +67,14 @@ export namespace SheetOperation {
    */
   export const RestoreAxis = Operation.make({
     meta: { key: `${SHEET_OPERATION}.restore-axis`, name: 'Restore Axis' },
-    schema: {
-      input: Schema.Struct({
-        model: Schema.Any.annotations({ description: 'The sheet model.' }),
-        axis: Axis.annotations({ description: 'The axis type (row or col).' }),
-        axisIndex: Schema.String.annotations({ description: 'The axis index to restore.' }),
-        index: Schema.Number.annotations({ description: 'The position to restore at.' }),
-        axisMeta: Schema.Any.annotations({ description: 'The row/column metadata.' }),
-        values: Schema.Array(Schema.Any).annotations({ description: 'The cell values to restore.' }),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      model: Schema.Any.annotations({ description: 'The sheet model.' }),
+      axis: Axis.annotations({ description: 'The axis type (row or col).' }),
+      axisIndex: Schema.String.annotations({ description: 'The axis index to restore.' }),
+      index: Schema.Number.annotations({ description: 'The position to restore at.' }),
+      axisMeta: Schema.Any.annotations({ description: 'The row/column metadata.' }),
+      values: Schema.Array(Schema.Any).annotations({ description: 'The cell values to restore.' }),
+    }),
+    output: Schema.Void,
   });
 }

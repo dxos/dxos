@@ -3,46 +3,27 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { Database, Ref } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
+import { Database } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 
 import { Voxel } from '../../types';
 
-export default defineFunction({
-  key: 'dxos.org/function/voxel/query-world',
-  name: 'Query world',
-  description: 'Returns the current state of the voxel world including all voxels, grid dimensions, and block size.',
-  inputSchema: Schema.Struct({
-    world: Ref.Ref(Voxel.World).annotations({
-      description: 'The voxel world to query.',
+import { QueryWorld } from './definitions';
+
+export default QueryWorld.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ world }) {
+      const worldObj = (yield* Database.load(world)) as Voxel.World;
+      const { gridX, gridY, blockSize } = Voxel.getGridDimensions(worldObj);
+      const voxels = Voxel.toVoxelArray(worldObj.voxels);
+      return {
+        gridX,
+        gridY,
+        blockSize,
+        voxelCount: voxels.length,
+        voxels,
+      };
     }),
-  }),
-  outputSchema: Schema.Struct({
-    gridX: Schema.Number,
-    gridY: Schema.Number,
-    blockSize: Schema.Number,
-    voxelCount: Schema.Number,
-    voxels: Schema.Array(
-      Schema.Struct({
-        x: Schema.Number,
-        y: Schema.Number,
-        z: Schema.Number,
-        hue: Schema.String,
-      }),
-    ),
-  }),
-  handler: Effect.fn(function* ({ data: { world } }) {
-    const loaded = yield* Database.load(world);
-    const { gridX, gridY, blockSize } = Voxel.getGridDimensions(loaded);
-    const voxels = Voxel.toVoxelArray(loaded.voxels);
-    return {
-      gridX,
-      gridY,
-      blockSize,
-      voxelCount: voxels.length,
-      voxels,
-    };
-  }),
-});
+  ),
+);

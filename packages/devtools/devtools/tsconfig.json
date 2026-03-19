@@ -100,6 +100,9 @@
       "path": "../../core/mesh/rpc"
     },
     {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../core/protocols"
     },
     {

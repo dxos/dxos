@@ -14,43 +14,35 @@ import * as TestClock from 'effect/TestClock';
 import { describe, expect, test } from 'vitest';
 
 import { NoHandlerError } from './errors';
-import * as OperationInvoker from './invoker';
-import * as Operation from './operation';
-import * as OperationResolver from './resolver';
+import * as OperationInvoker from './OperationInvoker';
+import * as Operation from './Operation';
+import * as OperationResolver from './OperationResolver';
 
 //
 // Test Operations
 //
 
 const Compute = Operation.make({
-  schema: {
-    input: Schema.Struct({ value: Schema.Number }),
-    output: Schema.Struct({ value: Schema.Number }),
-  },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ value: Schema.Number }),
   meta: { key: 'test.compute' },
 });
 
 const ToString = Operation.make({
-  schema: {
-    input: Schema.Struct({ value: Schema.Number }),
-    output: Schema.Struct({ string: Schema.String }),
-  },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ string: Schema.String }),
   meta: { key: 'test.to-string' },
 });
 
 const Add = Operation.make({
-  schema: {
-    input: Schema.Tuple(Schema.Number, Schema.Number),
-    output: Schema.Number,
-  },
+  input: Schema.Tuple(Schema.Number, Schema.Number),
+  output: Schema.Number,
   meta: { key: 'test.add' },
 });
 
 const SideEffect = Operation.make({
-  schema: {
-    input: Schema.Void,
-    output: Schema.Void,
-  },
+  input: Schema.Void,
+  output: Schema.Void,
   meta: { key: 'test.side-effect' },
 });
 
@@ -332,10 +324,8 @@ describe('OperationInvoker.invokeSync with services', () => {
 
   // Operation that declares TestService and is marked as sync.
   const SyncOpWithService = Operation.make({
-    schema: {
-      input: Schema.Struct({ multiplier: Schema.Number }),
-      output: Schema.Struct({ result: Schema.Number }),
-    },
+    input: Schema.Struct({ multiplier: Schema.Number }),
+    output: Schema.Struct({ result: Schema.Number }),
     meta: { key: 'test.sync-with-service' },
     executionMode: 'sync',
     services: [TestService],
@@ -411,10 +401,8 @@ describe('OperationResolver.make type safety', () => {
     >() {}
 
     const opWithDeclaredService = Operation.make({
-      schema: {
-        input: Schema.Void,
-        output: Schema.Void,
-      },
+      input: Schema.Void,
+      output: Schema.Void,
       meta: { key: 'test.declared-service' },
       services: [DeclaredService],
     });

@@ -62,13 +62,11 @@ export namespace KanbanOperation {
   export const DeleteCardField = Operation.make({
     meta: { key: `${KANBAN_OPERATION}.delete-card-field`, name: 'Delete Card Field' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        view: View.View,
-        fieldId: Schema.String,
-      }),
-      output: DeleteCardFieldOutput,
-    },
+    input: Schema.Struct({
+      view: View.View,
+      fieldId: Schema.String,
+    }),
+    output: DeleteCardFieldOutput,
   });
 
   export const DeleteCardOutput = Schema.Struct({
@@ -79,12 +77,10 @@ export namespace KanbanOperation {
 
   export const DeleteCard = Operation.make({
     meta: { key: `${KANBAN_OPERATION}.delete-card`, name: 'Delete Card' },
-    schema: {
-      input: Schema.Struct({
-        card: Schema.Any,
-      }),
-      output: DeleteCardOutput,
-    },
+    input: Schema.Struct({
+      card: Schema.Any,
+    }),
+    output: DeleteCardOutput,
   });
 
   /**
@@ -93,15 +89,13 @@ export namespace KanbanOperation {
   export const RestoreCardField = Operation.make({
     meta: { key: `${KANBAN_OPERATION}.restore-card-field`, name: 'Restore Card Field' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        view: View.View.annotations({ description: 'The view to restore the field to.' }),
-        field: View.FieldSchema.annotations({ description: 'The field schema to restore.' }),
-        props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
-        index: Schema.Number.annotations({ description: 'The index to restore the field at.' }),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      view: View.View.annotations({ description: 'The view to restore the field to.' }),
+      field: View.FieldSchema.annotations({ description: 'The field schema to restore.' }),
+      props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
+      index: Schema.Number.annotations({ description: 'The index to restore the field at.' }),
+    }),
+    output: Schema.Void,
   });
 
   /**
@@ -109,11 +103,9 @@ export namespace KanbanOperation {
    */
   export const RestoreCard = Operation.make({
     meta: { key: `${KANBAN_OPERATION}.restore-card`, name: 'Restore Card' },
-    schema: {
-      input: Schema.Struct({
-        card: Schema.Any.annotations({ description: 'The card to restore.' }),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      card: Schema.Any.annotations({ description: 'The card to restore.' }),
+    }),
+    output: Schema.Void,
   });
 }

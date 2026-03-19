@@ -5,7 +5,8 @@
 import { useEffect, useMemo } from 'react';
 
 import { Obj, Query, Ref } from '@dxos/echo';
-import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, getSpace, useQuery } from '@dxos/react-client/echo';
@@ -30,7 +31,7 @@ import { type ScriptToolbarStateStore } from './useToolbarState';
 export type CreateDeployOptions = {
   state: ScriptToolbarStateStore;
   script: Script.Script;
-  fn: Function.Function;
+  fn: Operation.PersistentOperation;
   space?: Space;
   existingFunctionId?: string;
   client: Client;
@@ -126,7 +127,7 @@ export const useDeployState = ({ state, script }: { state: ScriptToolbarStateSto
 export const useDeployDeps = ({ script }: { script: Script.Script }) => {
   const client = useClient();
   const space = getSpace(script);
-  const [fn] = useQuery(space?.db, Query.type(Function.Function, { source: Ref.make(script) }));
+  const [fn] = useQuery(space?.db, Query.type(Operation.PersistentOperation, { source: Ref.make(script) }));
   const existingFunctionId = useMemo(() => fn && getUserFunctionIdInMetadata(Obj.getMeta(fn)), [fn]);
   return { client, space, fn, existingFunctionId };
 };

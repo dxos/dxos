@@ -8,8 +8,9 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { AiService } from '@dxos/ai';
 import { type SpaceId } from '@dxos/client/echo';
 import { Database, Feed } from '@dxos/echo';
-import { CredentialsService, type FunctionDefinition, QueueService } from '@dxos/functions';
+import { CredentialsService, QueueService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
+import { OperationHandlerSet } from '@dxos/operation';
 
 import { type FunctionsRuntimeProvider } from '../compute-graph-registry';
 
@@ -19,7 +20,7 @@ import { type FunctionsRuntimeProvider } from '../compute-graph-registry';
  */
 export const createMockedComputeRuntimeProvider = ({
   functions,
-}: { functions?: FunctionDefinition.Any[] } = {}): FunctionsRuntimeProvider => {
+}: { functions?: OperationHandlerSet.OperationHandlerSet } = {}): FunctionsRuntimeProvider => {
   return {
     getRuntime: (_spaceId: SpaceId) =>
       ManagedRuntime.make(

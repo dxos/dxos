@@ -21,64 +21,54 @@ export namespace InboxOperation {
   export const OnCreateSpace = Operation.make({
     meta: { key: `${INBOX_OPERATION}.on-create-space`, name: 'On Create Space' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        space: SpaceSchema,
-        rootCollection: Collection.Collection,
-        isDefault: Schema.optional(Schema.Boolean),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      space: SpaceSchema,
+      rootCollection: Collection.Collection,
+      isDefault: Schema.optional(Schema.Boolean),
+    }),
+    output: Schema.Void,
   });
 
   export const ExtractContact = Operation.make({
     meta: { key: `${INBOX_OPERATION}.extract-contact`, name: 'Extract Contact' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        db: Database.Database,
-        actor: Actor.Actor,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      db: Database.Database,
+      actor: Actor.Actor,
+    }),
+    output: Schema.Void,
   });
 
   export const CreateDraft = Operation.make({
     meta: { key: `${INBOX_OPERATION}.create-draft`, name: 'Create Draft' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        db: Database.Database,
-        mode: Schema.optional(Schema.Literal('compose', 'reply', 'reply-all', 'forward')),
-        replyToMessage: Schema.optional(Schema.Any),
-        subject: Schema.optional(Schema.String),
-        body: Schema.optional(Schema.String),
-        // TODO(wittjosiah): Should be Mailbox.Mailbox.
-        mailbox: Schema.optional(Schema.Any),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      db: Database.Database,
+      mode: Schema.optional(Schema.Literal('compose', 'reply', 'reply-all', 'forward')),
+      replyToMessage: Schema.optional(Schema.Any),
+      subject: Schema.optional(Schema.String),
+      body: Schema.optional(Schema.String),
+      // TODO(wittjosiah): Should be Mailbox.Mailbox.
+      mailbox: Schema.optional(Schema.Any),
+    }),
+    output: Schema.Void,
   });
 
   export const SyncMailbox = Operation.make({
     meta: { key: `${INBOX_OPERATION}.sync-mailbox`, name: 'Sync Mailbox' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        mailbox: Mailbox.Mailbox,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      mailbox: Mailbox.Mailbox,
+    }),
+    output: Schema.Void,
   });
 
   export const SyncCalendar = Operation.make({
     meta: { key: `${INBOX_OPERATION}.sync-calendar`, name: 'Sync Calendar' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        calendar: Calendar.Calendar,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      calendar: Calendar.Calendar,
+    }),
+    output: Schema.Void,
   });
 }

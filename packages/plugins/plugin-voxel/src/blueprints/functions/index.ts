@@ -2,16 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import AddVoxels from './add-voxels';
-import GenerateShape from './generate-shape';
-import QueryWorld from './query-world';
-import RemoveVoxels from './remove-voxels';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export { AddVoxels, GenerateShape, QueryWorld, RemoveVoxels };
+const Handlers = OperationHandlerSet.lazy(
+  () => import('./add-voxels'),
+  () => import('./generate-shape'),
+  () => import('./query-world'),
+  () => import('./remove-voxels'),
+);
 
-export const VoxelFunctions = {
-  AddVoxels,
-  GenerateShape,
-  QueryWorld,
-  RemoveVoxels,
-};
+export { AddVoxels, GenerateShape, QueryWorld, RemoveVoxels } from './definitions';
+
+export const VoxelHandlers = Handlers;

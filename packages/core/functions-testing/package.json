@@ -46,6 +46,7 @@
     "@dxos/functions-runtime-cloudflare": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/protocols": "workspace:*",
     "@effect/platform": "catalog:"
   },

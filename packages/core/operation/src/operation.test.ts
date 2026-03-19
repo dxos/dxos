@@ -11,16 +11,14 @@ import { describe, expect, test } from 'vitest';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import * as Operation from './operation';
+import * as Operation from './Operation';
 
 describe('Operation', () => {
   describe('make', () => {
     test('creates an operation definition with required fields', () => {
       const op = Operation.make({
-        schema: {
-          input: Schema.Struct({ value: Schema.Number }),
-          output: Schema.Struct({ result: Schema.String }),
-        },
+        input: Schema.Struct({ value: Schema.Number }),
+        output: Schema.Struct({ result: Schema.String }),
         meta: {
           key: 'test.operation',
           name: 'Test Operation',
@@ -31,16 +29,14 @@ describe('Operation', () => {
       expect(op.meta.key).toBe('test.operation');
       expect(op.meta.name).toBe('Test Operation');
       expect(op.meta.description).toBe('A test operation');
-      expect(Schema.isSchema(op.schema.input)).toBe(true);
-      expect(Schema.isSchema(op.schema.output)).toBe(true);
+      expect(Schema.isSchema(op.input)).toBe(true);
+      expect(Schema.isSchema(op.output)).toBe(true);
     });
 
     test('creates an operation with optional executionMode', () => {
       const syncOp = Operation.make({
-        schema: {
-          input: Schema.Void,
-          output: Schema.Void,
-        },
+        input: Schema.Void,
+        output: Schema.Void,
         meta: {
           key: 'test.sync',
         },
@@ -50,10 +46,8 @@ describe('Operation', () => {
       expect(syncOp.executionMode).toBe('sync');
 
       const asyncOp = Operation.make({
-        schema: {
-          input: Schema.Void,
-          output: Schema.Void,
-        },
+        input: Schema.Void,
+        output: Schema.Void,
         meta: {
           key: 'test.async',
         },
@@ -65,10 +59,8 @@ describe('Operation', () => {
 
     test('defaults executionMode to async when not specified', () => {
       const op = Operation.make({
-        schema: {
-          input: Schema.Void,
-          output: Schema.Void,
-        },
+        input: Schema.Void,
+        output: Schema.Void,
         meta: {
           key: 'test.default',
         },
@@ -79,10 +71,8 @@ describe('Operation', () => {
 
     test('supports deployedId in meta', () => {
       const op = Operation.make({
-        schema: {
-          input: Schema.Void,
-          output: Schema.Void,
-        },
+        input: Schema.Void,
+        output: Schema.Void,
         meta: {
           key: 'test.deployed',
           deployedId: 'edge-func-123',
@@ -94,10 +84,8 @@ describe('Operation', () => {
 
     test('supports types array', () => {
       const op = Operation.make({
-        schema: {
-          input: Schema.Void,
-          output: Schema.Void,
-        },
+        input: Schema.Void,
+        output: Schema.Void,
         meta: {
           key: 'test.types',
         },
@@ -117,10 +105,8 @@ describe('Operation', () => {
 
       // Create operation with declared services.
       const op = Operation.make({
-        schema: {
-          input: Schema.Struct({ query: Schema.String }),
-          output: Schema.Struct({ results: Schema.Array(Schema.String), summary: Schema.String }),
-        },
+        input: Schema.Struct({ query: Schema.String }),
+        output: Schema.Struct({ results: Schema.Array(Schema.String), summary: Schema.String }),
         meta: {
           key: 'test.services',
         },
@@ -128,17 +114,10 @@ describe('Operation', () => {
       });
 
       expect(op.services).toHaveLength(2);
-      expect(op.services?.[0].key).toBe('@dxos/DatabaseService');
-      expect(op.services?.[1].key).toBe('@dxos/AiService');
+      expect(op.services[0].key).toBe('@dxos/DatabaseService');
+      expect(op.services[1].key).toBe('@dxos/AiService');
 
-      // Handler that requires the declared services.
-      // The R type parameter captures the service requirements.
-      const handler: Operation.Handler<
-        { query: string },
-        { results: string[]; summary: string },
-        Error,
-        DatabaseService | AiService
-      > = (input) =>
+      const opWithHandler = Operation.withHandler(op, (input) =>
         Effect.gen(function* () {
           const db = yield* DatabaseService;
           const ai = yield* AiService;
@@ -147,9 +126,8 @@ describe('Operation', () => {
           const summary = ai.prompt(`Summarize: ${results.join(', ')}`);
 
           return { results, summary };
-        });
-
-      const opWithHandler = Operation.withHandler(op, handler);
+        }),
+      );
 
       // Run the handler with services provided (simulating what the invoker would do).
       const result = await opWithHandler.handler({ query: 'SELECT * FROM users' }).pipe(
@@ -169,10 +147,8 @@ describe('Operation', () => {
 
     test('operation is pipeable', () => {
       const op = Operation.make({
-        schema: {
-          input: Schema.Void,
-          output: Schema.Void,
-        },
+        input: Schema.Void,
+        output: Schema.Void,
         meta: {
           key: 'test.pipeable',
         },
@@ -185,10 +161,8 @@ describe('Operation', () => {
   describe('withHandler', () => {
     test('attaches a handler to an operation (direct call)', () => {
       const op = Operation.make({
-        schema: {
-          input: Schema.Struct({ value: Schema.Number }),
-          output: Schema.Struct({ doubled: Schema.Number }),
-        },
+        input: Schema.Struct({ value: Schema.Number }),
+        output: Schema.Struct({ doubled: Schema.Number }),
         meta: {
           key: 'test.double',
         },
@@ -201,10 +175,8 @@ describe('Operation', () => {
 
     test('attaches a handler to an operation (piped call)', () => {
       const op = Operation.make({
-        schema: {
-          input: Schema.Struct({ value: Schema.Number }),
-          output: Schema.Struct({ doubled: Schema.Number }),
-        },
+        input: Schema.Struct({ value: Schema.Number }),
+        output: Schema.Struct({ doubled: Schema.Number }),
         meta: {
           key: 'test.double',
         },
@@ -220,10 +192,8 @@ describe('Operation', () => {
 
     test('handler can be async', async () => {
       const op = Operation.make({
-        schema: {
-          input: Schema.Struct({ delay: Schema.Number }),
-          output: Schema.Struct({ done: Schema.Boolean }),
-        },
+        input: Schema.Struct({ delay: Schema.Number }),
+        output: Schema.Struct({ done: Schema.Boolean }),
         meta: {
           key: 'test.async',
         },
@@ -250,10 +220,8 @@ describe('Operation', () => {
 
       // Create operation with declared services.
       const op = Operation.make({
-        schema: {
-          input: Schema.Struct({ query: Schema.String }),
-          output: Schema.Struct({ results: Schema.Array(Schema.String) }),
-        },
+        input: Schema.Struct({ query: Schema.String }),
+        output: Schema.Struct({ results: Schema.Array(Schema.String) }),
         meta: { key: 'test.with-services' },
         services: [DatabaseService],
       });
@@ -285,10 +253,8 @@ describe('Operation', () => {
       >() {}
 
       const op = Operation.make({
-        schema: {
-          input: Schema.Void,
-          output: Schema.Void,
-        },
+        input: Schema.Void,
+        output: Schema.Void,
         meta: { key: 'test.type-error' },
         services: [DeclaredService],
       });
