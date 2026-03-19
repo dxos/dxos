@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import UpdateTasks from './update-tasks';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const PlanningFunctions = {
-  UpdateTasks,
-};
+export * from './definitions';
+
+export const PlanningHandlers = OperationHandlerSet.lazy(
+  () => import('./update-tasks'),
+);

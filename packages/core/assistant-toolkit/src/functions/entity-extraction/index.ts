@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import Extract from './entity-extraction';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const EntityExtractionFunctions = {
-  Extract,
-};
+export * from './definitions';
+
+export const EntityExtractionHandlers = OperationHandlerSet.lazy(
+  () => import('./entity-extraction'),
+);

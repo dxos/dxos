@@ -66,7 +66,7 @@ export const blueprintRegistry = new Blueprint.Registry([
 //  Providing functions and toolkits are essential to the blueprint operation,
 //  since blueprints referencing tools and functions that are not included here will produce a "tool not found" error.
 
-export const functions: FunctionDefinition.Any[] = [
+export const functions: Operation.Definition.Any[] = [
   // NOTE: Functions referenced by blueprints above need to be added here.
   ...DatabaseBlueprint.functions,
   ...CalendarBlueprint.functions,

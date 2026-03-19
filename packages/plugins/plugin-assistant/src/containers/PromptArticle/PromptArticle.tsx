@@ -8,7 +8,7 @@ import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { AgentFunctions } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { type FunctionDefinition } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { invokeFunctionWithTracing, useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';

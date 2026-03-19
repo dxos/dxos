@@ -20,8 +20,9 @@ import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
 import { Database, Query } from '@dxos/echo';
 import { type Key } from '@dxos/echo';
-import { Function, FunctionDefinition, TracingService } from '@dxos/functions';
+import { TracingService } from '@dxos/functions';
 import { FunctionImplementationResolver, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { functions as blueprintFunctions, toolkits } from './blueprints';
 import { type AiChatServices, chatLayer } from './runtime';
@@ -74,11 +75,11 @@ export const triggerRuntimeLayer = ({
   return Layer.unwrapEffect(
     Effect.gen(function* () {
       // Load functions from the database
-      const functionObjects = yield* Database.runQuery(Query.type(Function.Function));
-      const dbFunctions = functionObjects.map((fn) => FunctionDefinition.deserialize(fn));
+      const functionObjects = yield* Database.runQuery(Query.type(Operation.PersistentOperation));
+      const dbFunctions = functionObjects.map((fn) => Operation.deserialize(fn));
 
       // Merge database functions with blueprint functions
-      const functions = [...dbFunctions, ...blueprintFunctions];
+      const functions = OperationHandlerSet.merge(...dbFunctions.map((fn) => OperationHandlerSet.make(fn)), blueprintFunctions);
 
       // Use the same merged toolkit as chat.
       const toolkit = GenericToolkit.merge(...toolkits);

@@ -6,11 +6,9 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { ProjectWizardFunctions } from './functions';
+import { QueryBlueprints, ProjectRules, CreateProject, ProjectWizardHandlers } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.project-wizard';
-
-const functions = Object.values(ProjectWizardFunctions);
 
 /**
  * Creates the Project blueprint. This is a function to avoid circular dependency issues.
@@ -33,12 +31,12 @@ const make = () =>
         IMPORTANT: Before attempting to create a project call the [project-rules] tool to get the rules for creating a project.
       `,
     }),
-    tools: Blueprint.toolDefinitions({ operations: functions }),
+    tools: Blueprint.toolDefinitions({ operations: [QueryBlueprints, ProjectRules, CreateProject] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
+  operations: ProjectWizardHandlers,
   make,
 };
 

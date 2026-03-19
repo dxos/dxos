@@ -5,7 +5,8 @@
 import { describe, expect, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { Function } from '@dxos/functions';
+import { Obj } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 
 // Part 2.
 // TODO(burdon): Cannot test outside of browser.
@@ -22,7 +23,7 @@ import { Function } from '@dxos/functions';
 describe('test', () => {
   test('test', async () => {
     const client = new Client();
-    await client.addTypes([Function.Function]);
+    await client.addTypes([Operation.PersistentOperation]);
     await client.initialize();
     await client.halo.createIdentity();
 
@@ -33,7 +34,7 @@ describe('test', () => {
     //  - ERROR "process.nextTick is not a function"
     //  - ERROR "Identifier 'Buffer' has already been declared" if { nodeExternal: true }
     const space = await client.spaces.create();
-    const fn = space.db.add(Function.make({ name: 'test', version: '0.0.1', binding: 'HELLO' }));
+    const fn = space.db.add(Obj.make(Operation.PersistentOperation, { name: 'test', version: '0.0.1', binding: 'HELLO' }));
     expect(fn).to.exist;
   });
 });

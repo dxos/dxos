@@ -7,7 +7,8 @@ import { createEffect, createSignal, onCleanup } from 'solid-js';
 
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { type Queue, type QueueAPI } from '@dxos/echo-db';
-import { Function, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import {
   InvocationOutcome,
   type InvocationSpan,
@@ -32,7 +33,7 @@ export const Trace = (props: TraceProps) => {
   const [invocations, setInvocations] = createSignal<InvocationSpan[]>([]);
   const [selectedInvocation, setSelectedInvocation] = createSignal<InvocationSpan | undefined>();
   const [traceQueue, setTraceQueue] = createSignal<Queue<InvocationTraceEvent> | undefined>();
-  const [functions, setFunctions] = createSignal<Function.Function[]>([]);
+  const [functions, setFunctions] = createSignal<Operation.PersistentOperation[]>([]);
 
   // Set up effects.
   useFunctionQuery(props.db, setFunctions);
@@ -162,11 +163,11 @@ const formatStatus = (outcome?: InvocationOutcome): string => {
 };
 
 // Effect: Query for Function objects to resolve target names.
-const useFunctionQuery = (db: Database.Database, setFunctions: (functions: Function.Function[]) => void) => {
+const useFunctionQuery = (db: Database.Database, setFunctions: (functions: Operation.PersistentOperation[]) => void) => {
   createEffect(() => {
-    const functionsQuery = db.query(Filter.type(Function.Function));
+    const functionsQuery = db.query(Filter.type(Operation.PersistentOperation));
     const update = () => {
-      setFunctions(functionsQuery.results as Function.Function[]);
+      setFunctions(functionsQuery.results as Operation.PersistentOperation[]);
     };
     const unsubscribe = functionsQuery.subscribe(update, { fire: true });
     onCleanup(() => unsubscribe());

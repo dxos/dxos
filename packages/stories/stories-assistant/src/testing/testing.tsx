@@ -122,7 +122,7 @@ const buildPluginManagerOptions = ({
         AccessToken.AccessToken,
         Assistant.Chat,
         Blueprint.Blueprint,
-        Function.Function,
+        Operation.PersistentOperation,
         Markdown.Document,
         Prompt.Prompt,
         Trigger.Trigger,

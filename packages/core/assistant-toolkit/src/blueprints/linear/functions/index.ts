@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { default as Sync } from './sync-issues';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const LinearFunctions = {
-  Sync,
-};
+export * from './definitions';
+
+export const LinearHandlers = OperationHandlerSet.lazy(
+  () => import('./sync-issues'),
+);

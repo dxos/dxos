@@ -2,19 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ToolId } from '@dxos/ai';
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { MarkdownFunctions } from '../markdown';
+import { MarkdownCreate, MarkdownRead, MarkdownUpdate, MarkdownHandlers } from '../markdown';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.design';
-
-// TODO(burdon): Should this expose the functions directly or just reference them? How do we manage cross blueprint function dependencies?
-const functions = Object.values(MarkdownFunctions);
 
 const instructions = trim`
   You manage a design spec based on the conversation.
@@ -34,12 +30,12 @@ const make = () =>
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
-    tools: functions.map((fn) => ToolId.make(fn.key)),
+    tools: Blueprint.toolDefinitions({ operations: [MarkdownCreate, MarkdownRead, MarkdownUpdate] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
+  operations: MarkdownHandlers,
   make,
 };
 

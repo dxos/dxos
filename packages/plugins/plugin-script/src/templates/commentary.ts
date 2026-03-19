@@ -17,24 +17,27 @@ import { ArtifactId } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { TracingService, defineFunction } from '@dxos/functions';
+import { FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { Chess } from '@dxos/plugin-chess/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-export default defineFunction({
-  key: 'org.dxos.function.chess.commentary',
-  name: 'Commentary',
-  description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
-  inputSchema: Schema.Struct({
+const Commentary = Operation.make({
+  meta: {
+    key: 'org.dxos.function.chess.commentary',
+    name: 'Commentary',
+    description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
+  },
+  input: Schema.Struct({
     game: Ref.Ref(Chess.Game).annotations({
       description: 'The chess game to comment on.',
     }),
   }),
-  outputSchema: Schema.Union(
+  output: Schema.Union(
     Schema.Struct({
       documentId: ArtifactId.annotations({
         description: 'The ID of the markdown document that was updated or created.',
@@ -49,164 +52,170 @@ export default defineFunction({
   ),
   types: [Chess.Game, Markdown.Document, Text.Text, HasSubject.HasSubject, Collection.Collection],
   services: [AiService.AiService, Database.Service],
-  handler: Effect.fnUntraced(
-    function* ({ data: { game: gameRef } }) {
-      // Load the chess game
-      log.info('load game', { gameRef });
-      const chessGame = yield* Database.load(gameRef);
+});
 
-      // Load the chess position from PGN or FEN
-      const chess = new ChessJS();
-      if (chessGame.pgn) {
-        chess.loadPgn(chessGame.pgn);
-      } else if (chessGame.fen) {
-        chess.load(chessGame.fen);
-      } else {
-        log.info('Early return: no pgn or fen');
-        return;
-      }
+export default Commentary.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(
+      function* ({ game: gameRef }) {
+        // Load the chess game
+        log.info('load game', { gameRef });
+        const chessGame = yield* Database.load(gameRef);
 
-      // Get the most recent move
-      const history = chess.history({ verbose: true });
-      if (history.length === 0) {
-        throw new Error('No moves have been played yet');
-      }
-      const lastMove = history[history.length - 1];
-      const moveNumber = Math.ceil(history.length / 2);
-      const isWhiteMove = history.length % 2 === 1;
-      const player = isWhiteMove ? 'White' : 'Black';
-      const moveNotation = lastMove.san;
+        // Load the chess position from PGN or FEN
+        const chess = new ChessJS();
+        if (chessGame.pgn) {
+          chess.loadPgn(chessGame.pgn);
+        } else if (chessGame.fen) {
+          chess.load(chessGame.fen);
+        } else {
+          log.info('Early return: no pgn or fen');
+          return;
+        }
 
-      // Generate AI commentary about the move
-      const result = yield* new AiSession().run({
-        prompt:
-          `Comment on this chess move as if you're commentating a live match for an audience:\n\n` +
-          `Move ${moveNumber}: ${player} plays ${moveNotation} (${lastMove.from} to ${lastMove.to})${lastMove.captured ? `, capturing ${lastMove.captured}` : ''}\n` +
-          `Current position: ${chess.fen()}\n` +
-          `${chess.isCheck() ? 'The king is in check! ' : ''}` +
-          `${chess.isCheckmate() ? 'CHECKMATE! ' : ''}` +
-          `${chess.isStalemate() ? 'STALEMATE! ' : ''}` +
-          `\nGame so far:\n${chess.pgn()}`,
-        system: COMMENTARY_SYSTEM_PROMPT,
-        history: [],
-        observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'chess-commentary' })),
-      });
+        // Get the most recent move
+        const history = chess.history({ verbose: true });
+        if (history.length === 0) {
+          throw new Error('No moves have been played yet');
+        }
+        const lastMove = history[history.length - 1];
+        const moveNumber = Math.ceil(history.length / 2);
+        const isWhiteMove = history.length % 2 === 1;
+        const player = isWhiteMove ? 'White' : 'Black';
+        const moveNotation = lastMove.san;
 
-      const commentaryText = Function.pipe(
-        result,
-        Array.findLast((msg) => msg.sender.role === 'assistant' && msg.blocks.some((block) => block._tag === 'text')),
-        Option.flatMap((msg) =>
-          Function.pipe(
-            msg.blocks,
-            Array.findLast((block) => block._tag === 'text'),
-            Option.map((block) => block.text),
+        // Generate AI commentary about the move
+        const result = yield* new AiSession().run({
+          prompt:
+            `Comment on this chess move as if you're commentating a live match for an audience:\n\n` +
+            `Move ${moveNumber}: ${player} plays ${moveNotation} (${lastMove.from} to ${lastMove.to})${lastMove.captured ? `, capturing ${lastMove.captured}` : ''}\n` +
+            `Current position: ${chess.fen()}\n` +
+            `${chess.isCheck() ? 'The king is in check! ' : ''}` +
+            `${chess.isCheckmate() ? 'CHECKMATE! ' : ''}` +
+            `${chess.isStalemate() ? 'STALEMATE! ' : ''}` +
+            `\nGame so far:\n${chess.pgn()}`,
+          system: COMMENTARY_SYSTEM_PROMPT,
+          history: [],
+          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'chess-commentary' })),
+        });
+
+        const commentaryText = Function.pipe(
+          result,
+          Array.findLast((msg) => msg.sender.role === 'assistant' && msg.blocks.some((block) => block._tag === 'text')),
+          Option.flatMap((msg) =>
+            Function.pipe(
+              msg.blocks,
+              Array.findLast((block) => block._tag === 'text'),
+              Option.map((block) => block.text),
+            ),
           ),
-        ),
-        Option.getOrThrowWith(() => new Error('No commentary generated')),
-      );
+          Option.getOrThrowWith(() => new Error('No commentary generated')),
+        );
 
-      const commentary = `## Move ${moveNumber}: ${player} plays ${moveNotation}\n\n${commentaryText}\n\n`;
-      log.info('commentary', { commentary });
+        const commentary = `## Move ${moveNumber}: ${player} plays ${moveNotation}\n\n${commentaryText}\n\n`;
+        log.info('commentary', { commentary });
 
-      // TODO(wittjosiah): Functions currently don't support traversals.
-      // const docs = yield* Database.runQuery(
-      //   Query.select(Filter.id(chessGame.id)).targetOf(HasSubject.HasSubject).source(),
-      // ).pipe(Effect.map((objects) => objects.filter((object) => Obj.instanceOf(Markdown.Document, object))));
-      const docs = yield* Database.runQuery(Filter.type(HasSubject.HasSubject)).pipe(
-        Effect.map((relations) =>
-          relations.filter((relation) => {
-            // TODO(wittjosiah): This is a workaround for getTarget not handling deleted objects.
-            try {
-              log.info('relation', {
-                source: Obj.getDXN(Relation.getTarget(relation)).toString(),
-                game: Obj.getDXN(chessGame).toString(),
-              });
-              return Obj.getDXN(Relation.getTarget(relation)).toString() === Obj.getDXN(chessGame).toString();
-            } catch {
-              return false;
-            }
-          }),
-        ),
-        Effect.map((relations) =>
-          relations
-            .map((relation) => {
-              // TODO(wittjosiah): This is a workaround for getSource not handling deleted objects.
+        // TODO(wittjosiah): Functions currently don't support traversals.
+        // const docs = yield* Database.runQuery(
+        //   Query.select(Filter.id(chessGame.id)).targetOf(HasSubject.HasSubject).source(),
+        // ).pipe(Effect.map((objects) => objects.filter((object) => Obj.instanceOf(Markdown.Document, object))));
+        const docs = yield* Database.runQuery(Filter.type(HasSubject.HasSubject)).pipe(
+          Effect.map((relations) =>
+            relations.filter((relation) => {
+              // TODO(wittjosiah): This is a workaround for getTarget not handling deleted objects.
               try {
-                return Relation.getSource(relation);
+                log.info('relation', {
+                  source: Obj.getDXN(Relation.getTarget(relation)).toString(),
+                  game: Obj.getDXN(chessGame).toString(),
+                });
+                return Obj.getDXN(Relation.getTarget(relation)).toString() === Obj.getDXN(chessGame).toString();
               } catch {
-                return undefined;
+                return false;
               }
-            })
-            .filter((source) => source !== undefined),
+            }),
+          ),
+          Effect.map((relations) =>
+            relations
+              .map((relation) => {
+                // TODO(wittjosiah): This is a workaround for getSource not handling deleted objects.
+                try {
+                  return Relation.getSource(relation);
+                } catch {
+                  return undefined;
+                }
+              })
+              .filter((source) => source !== undefined),
+          ),
+          Effect.map((sources) => {
+            const docs = sources.filter((source) => Obj.instanceOf(Markdown.Document, source));
+            log.info('docs', { sources, docs });
+            return docs;
+          }),
+        );
+        log.info('docs', { count: docs.length });
+
+        let document: Markdown.Document;
+        if (docs.length === 0) {
+          // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
+          const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.space-properties'));
+          const rootCollection = yield* Database.load<Collection.Collection>(properties[Collection.Collection.typename]);
+
+          log.info('rootCollection', { rootCollection });
+
+          // Create a new markdown document
+          const gameName = chessGame.name || 'Chess Game';
+          document = yield* Database.add(
+            Markdown.make({
+              name: `${gameName} Commentary`,
+              content: `# ${gameName} Commentary\n\n${commentary}`,
+            }),
+          );
+
+          const documentRef = Ref.make(document);
+          Obj.change(rootCollection, (c) => {
+            c.objects.push(documentRef);
+          });
+
+          // Create the HasSubject relation
+          yield* Database.add(
+            Relation.make(HasSubject.HasSubject, {
+              [Relation.Source]: document,
+              [Relation.Target]: chessGame,
+              completedAt: new Date().toISOString(),
+            }),
+          );
+        } else {
+          document = docs[0];
+
+          // Load the text content and append the commentary
+          const text = yield* Database.load(document.content);
+          const accessor = createDocAccessor(text, ['content']);
+          accessor.handle.change((doc: A.Doc<Text.Text>) => {
+            A.splice(doc, accessor.path.slice(), text.content.length, 0, commentary);
+          });
+        }
+
+        log.info('result', { documentId: Obj.getDXN(document).toString(), commentary });
+
+        yield* Database.flush();
+
+        return {
+          documentId: Obj.getDXN(document).toString(),
+          commentary,
+        };
+      },
+      Effect.provide(
+        Layer.mergeAll(
+          AiService.model('@anthropic/claude-haiku-4-5'),
+          ToolResolverService.layerEmpty,
+          ToolExecutionService.layerEmpty,
+          TracingService.layerNoop,
+          FunctionInvocationService.layerNotAvailable,
         ),
-        Effect.map((sources) => {
-          const docs = sources.filter((source) => Obj.instanceOf(Markdown.Document, source));
-          log.info('docs', { sources, docs });
-          return docs;
-        }),
-      );
-      log.info('docs', { count: docs.length });
-
-      let document: Markdown.Document;
-      if (docs.length === 0) {
-        // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
-        const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.space-properties'));
-        const rootCollection = yield* Database.load<Collection.Collection>(properties[Collection.Collection.typename]);
-
-        log.info('rootCollection', { rootCollection });
-
-        // Create a new markdown document
-        const gameName = chessGame.name || 'Chess Game';
-        document = yield* Database.add(
-          Markdown.make({
-            name: `${gameName} Commentary`,
-            content: `# ${gameName} Commentary\n\n${commentary}`,
-          }),
-        );
-
-        const documentRef = Ref.make(document);
-        Obj.change(rootCollection, (c) => {
-          c.objects.push(documentRef);
-        });
-
-        // Create the HasSubject relation
-        yield* Database.add(
-          Relation.make(HasSubject.HasSubject, {
-            [Relation.Source]: document,
-            [Relation.Target]: chessGame,
-            completedAt: new Date().toISOString(),
-          }),
-        );
-      } else {
-        document = docs[0];
-
-        // Load the text content and append the commentary
-        const text = yield* Database.load(document.content);
-        const accessor = createDocAccessor(text, ['content']);
-        accessor.handle.change((doc: A.Doc<Text.Text>) => {
-          A.splice(doc, accessor.path.slice(), text.content.length, 0, commentary);
-        });
-      }
-
-      log.info('result', { documentId: Obj.getDXN(document).toString(), commentary });
-
-      yield* Database.flush();
-
-      return {
-        documentId: Obj.getDXN(document).toString(),
-        commentary,
-      };
-    },
-    Effect.provide(
-      Layer.mergeAll(
-        AiService.model('@anthropic/claude-haiku-4-5'),
-        ToolResolverService.layerEmpty,
-        ToolExecutionService.layerEmpty,
-        TracingService.layerNoop,
       ),
     ),
   ),
-});
+);
 
 const COMMENTARY_SYSTEM_PROMPT = trim`
   You are a professional chess commentator providing live commentary for a chess match.

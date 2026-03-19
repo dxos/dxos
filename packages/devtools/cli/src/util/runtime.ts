@@ -44,7 +44,7 @@ export type Provider = Schema.Schema.Type<typeof Provider>;
 export type LayerOptions = {
   provider: Provider;
   spaceId: Option.Option<Key.SpaceId>;
-  functions: FunctionDefinition.Any[];
+  functions: Operation.Definition.Any[];
 };
 
 // TODO(wittjosiah): Factor out.

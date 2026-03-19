@@ -33,7 +33,7 @@ import { type AiChatServices, blueprintRegistry } from '../../util';
 export type ChatProcessorOptions = {
   runtime: Runtime.Runtime<AiChatServices>;
   toolkit: GenericToolkit.GenericToolkit;
-  functions: FunctionDefinition.Any[];
+  functions: Operation.Definition.Any[];
   metadata?: AiService.ServiceMetadata;
   registry?: Registry.Registry;
 };
@@ -42,7 +42,7 @@ export type ChatProcessorOptions = {
 export class ChatProcessor {
   private readonly _runtime: Runtime.Runtime<AiChatServices>;
   private readonly _toolkit: GenericToolkit.GenericToolkit;
-  private readonly _functions: FunctionDefinition.Any[];
+  private readonly _functions: Operation.Definition.Any[];
   private readonly _metadata?: AiService.ServiceMetadata;
   private readonly _registry?: Registry.Registry;
 

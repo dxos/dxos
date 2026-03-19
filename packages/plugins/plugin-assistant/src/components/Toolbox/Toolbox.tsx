@@ -6,7 +6,7 @@ import React, { type FC, Fragment, useEffect, useState } from 'react';
 
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, type Ref } from '@dxos/echo';
-import { Function } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
@@ -17,7 +17,7 @@ import { ServiceType } from '../../types';
 
 export type ToolboxProps = ThemedClassName<{
   services?: { service: ServiceType }[];
-  functions?: Function.Function[];
+  functions?: Operation.PersistentOperation[];
   // TODO(burdon): Combine into single array.
   blueprints?: readonly Blueprint.Blueprint[];
   activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
@@ -125,7 +125,7 @@ export const ToolboxPanel = ({ classNames, db, processor }: ToolboxPanelProps) =
   }, [services]);
 
   // Deployed functions.
-  const functions = useQuery(db, Filter.type(Function.Function));
+  const functions = useQuery(db, Filter.type(Operation.PersistentOperation));
 
   return (
     <Toolbox

@@ -2,32 +2,44 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { Function, FunctionDefinition } from '@dxos/functions';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { ComputeGraphRegistry, defaultPlugins } from './compute-graph-registry';
 import { TestBuilder, createMockedComputeRuntimeProvider } from './testing';
 
-describe('ComputeGraphRegistry', () => {
-  const add = FunctionDefinition.make({
+const AddDefinition = Operation.make({
+  meta: {
     key: 'add',
     name: 'add',
     description: 'Adds two numbers',
-    inputSchema: Schema.Struct({ a: Schema.Number, b: Schema.Number }),
-    outputSchema: Schema.Number,
-    handler: ({ data }) => data.a + data.b,
-  });
+  },
+  input: Schema.Struct({ a: Schema.Number, b: Schema.Number }),
+  output: Schema.Number,
+  services: [],
+});
+
+const add = AddDefinition.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ a, b }) {
+      return a + b;
+    }),
+  ),
+);
+
+describe('ComputeGraphRegistry', () => {
 
   test('invokes user function through compute graph', async () => {
     const computeRuntime = createMockedComputeRuntimeProvider({
-      functions: [add],
+      functions: OperationHandlerSet.make(add),
     });
     const testBuilder = new TestBuilder({
-      types: [Function.Function],
+      types: [Operation.PersistentOperation],
       computeRuntime,
     });
     await testBuilder.open();
@@ -53,8 +65,7 @@ describe('ComputeGraphRegistry', () => {
       await graph.close();
     });
 
-    // Create a function object in ECHO with binding that maps to DX calls.
-    const functionObj = FunctionDefinition.serialize(add);
+    const functionObj = Operation.serialize(add);
     Obj.change(functionObj, (f) => {
       f.binding = 'ADD';
     });
@@ -84,10 +95,10 @@ describe('ComputeGraphRegistry', () => {
 
   test('adding a function binding updates autocomplete and enables execution', async () => {
     const computeRuntime = createMockedComputeRuntimeProvider({
-      functions: [add],
+      functions: OperationHandlerSet.make(add),
     });
     const testBuilder = new TestBuilder({
-      types: [Function.Function],
+      types: [Operation.PersistentOperation],
       computeRuntime,
     });
     await testBuilder.open();
@@ -124,8 +135,7 @@ describe('ComputeGraphRegistry', () => {
     });
     onTestFinished(unsubscribe);
 
-    // Add a bound function to the space; graph should pick it up.
-    const functionObj = FunctionDefinition.serialize(add);
+    const functionObj = Operation.serialize(add);
     Obj.change(functionObj, (f) => {
       f.binding = 'ADD';
     });

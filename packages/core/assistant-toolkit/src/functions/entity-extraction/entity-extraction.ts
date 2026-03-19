@@ -5,103 +5,83 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
-import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTest } from '@dxos/functions-runtime/testing';
+import { FunctionInvocationService } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Actor, LegacyOrganization, Message, Organization, Person } from '@dxos/types';
+import { Operation } from '@dxos/operation';
+import { type Actor, LegacyOrganization, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { EntityExtraction } from './definitions';
 import { ResearchGraph } from '../../blueprints';
 import { makeGraphWriterHandler, makeGraphWriterToolkit } from '../../crud';
 
-export default defineFunction({
-  key: 'org.dxos.functions.entity-extraction',
-  name: 'Entity Extraction',
-  description: 'Extracts entities from emails and transcripts.',
-  inputSchema: Schema.Struct({
-    source: Message.Message.annotations({
-      description: 'Email or transcript to extract entities from.',
-    }),
+export default EntityExtraction.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(
+      function* ({ source: message, instructions }) {
+        const tags = Obj.getMeta(message)?.tags;
+        const contact = yield* extractContact(message.sender, tags);
+        let organization: Organization.Organization | null = null;
 
-    // TODO(dmaretskyi): Consider making this an array of blueprints instead.
-    instructions: Schema.optional(Schema.String).annotations({
-      description: 'Instructions extraction process.',
-    }),
-  }),
-  outputSchema: Schema.Struct({
-    entities: Schema.optional(
-      Schema.Array(Obj.Unknown).annotations({
-        description: 'Extracted entities.',
-      }),
-    ),
-  }),
-  handler: Effect.fnUntraced(
-    function* ({ data: { source: message, instructions } }) {
-      const tags = Obj.getMeta(message)?.tags;
-      const contact = yield* extractContact(message.sender, tags);
-      let organization: Organization.Organization | null = null;
-
-      if (contact && !contact.organization) {
-        const created: DXN[] = [];
-        const GraphWriterToolkit = makeGraphWriterToolkit({
-          schema: [LegacyOrganization],
-        }).pipe();
-        const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
-          onAppend: (dxns) => created.push(...dxns),
-        });
-        const toolkit = yield* GraphWriterToolkit.pipe(
-          Effect.provide(GraphWriterHandler.pipe(Layer.provide(ResearchGraph.contextQueueLayer))),
-        );
-
-        yield* new AiSession().run({
-          system: trim`
-            Extract the sender's organization from the email. If you are not sure, do nothing.
-            The extracted organization URL must match the sender's email domain.
-            ${instructions ? '<user_intructions>' + instructions + '</user_intructions>' : ''},
-          `,
-          prompt: JSON.stringify({ source: message, contact }),
-          toolkit,
-        });
-
-        if (created.length > 1) {
-          throw new Error('Multiple organizations created');
-        } else if (created.length === 1) {
-          organization = yield* Database.resolve(created[0], Organization.Organization);
-          Obj.change(organization, (org) => {
-            const meta = Obj.getMeta(org);
-            meta.tags ??= [];
-            meta.tags.push(...(tags ?? []));
+        if (contact && !contact.organization) {
+          const created: DXN[] = [];
+          const GraphWriterToolkit = makeGraphWriterToolkit({
+            schema: [LegacyOrganization],
+          }).pipe();
+          const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
+            onAppend: (dxns) => created.push(...dxns),
           });
-          Obj.change(contact, (c) => {
-            c.organization = Ref.make(organization!);
+          const toolkit = yield* GraphWriterToolkit.pipe(
+            Effect.provide(GraphWriterHandler.pipe(Layer.provide(ResearchGraph.contextQueueLayer))),
+          );
+
+          yield* new AiSession().run({
+            system: trim`
+              Extract the sender's organization from the email. If you are not sure, do nothing.
+              The extracted organization URL must match the sender's email domain.
+              ${instructions ? '<user_intructions>' + instructions + '</user_intructions>' : ''},
+            `,
+            prompt: JSON.stringify({ source: message, contact }),
+            toolkit,
           });
+
+          if (created.length > 1) {
+            throw new Error('Multiple organizations created');
+          } else if (created.length === 1) {
+            organization = yield* Database.resolve(created[0], Organization.Organization);
+            Obj.change(organization, (org) => {
+              const meta = Obj.getMeta(org);
+              meta.tags ??= [];
+              meta.tags.push(...(tags ?? []));
+            });
+            Obj.change(contact, (c) => {
+              c.organization = Ref.make(organization!);
+            });
+          }
         }
-      }
 
-      return {
-        entities: [contact, organization].filter(Predicate.isNotNullable),
-      };
-    },
-    Effect.provide(
-      Layer.mergeAll(
-        AiService.model('@anthropic/claude-sonnet-4-0'), // TODO(dmaretskyi): Extract.
-        ToolExecutionServices,
-      ).pipe(
-        Layer.provide(
-          // TODO(dmaretskyi): This should be provided by environment.
-          Layer.mergeAll(GenericToolkit.providerEmpty, FunctionInvocationServiceLayerTest()),
+        return {
+          entities: [contact, organization].filter(Predicate.isNotNullable),
+        };
+      },
+      Effect.provide(
+        Layer.mergeAll(
+          AiService.model('@anthropic/claude-sonnet-4-0'), // TODO(dmaretskyi): Extract.
+          ToolExecutionServices,
+          FunctionInvocationService.layerNotAvailable,
+        ).pipe(
+          Layer.provide(GenericToolkit.providerEmpty),
         ),
       ),
     ),
   ),
-});
+);
 
 const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor, tags?: readonly string[]) {
   const name = actor.name;
@@ -113,7 +93,6 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
 
   const existingContacts = yield* Database.runQuery(Filter.type(Person.Person));
 
-  // Check for existing contact
   // TODO(dmaretskyi): Query filter DSL - https://linear.app/dxos/issue/DX-541/filtercontains-should-work-with-partial-objects
   const existingContact = existingContacts.find((contact) =>
     contact.emails?.some((contactEmail) => contactEmail.value === email),

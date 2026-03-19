@@ -18,11 +18,13 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService, QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { OperationHandlerSet } from '@dxos/operation';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject, type Message, Organization } from '@dxos/types';
 
 import ResearchBlueprint from '../blueprint';
+import { ResearchHandlers } from '../functions';
 import { ResearchDataTypes, ResearchGraph } from '../types';
 
 import { default as createDocument } from './document-create';
@@ -31,7 +33,7 @@ import { default as research } from './research';
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [research, createDocument, ...MarkdownBlueprint.functions],
+  operationHandlers: OperationHandlerSet.merge(ResearchHandlers, MarkdownBlueprint.operations),
   types: [
     ...ResearchDataTypes,
     ResearchGraph.ResearchGraph,

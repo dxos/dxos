@@ -12,8 +12,8 @@ import * as Option from 'effect/Option';
 import { CommandConfig, Common, flushAndSync, printList, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Database, Filter, Obj } from '@dxos/echo';
-import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
+import { Operation } from '@dxos/operation';
 
 import { getFunctionStatus, printFunction, selectDeployedFunction } from './util';
 
@@ -29,7 +29,7 @@ export const importCommand = Command.make(
       const client = yield* ClientService;
 
       // TODO(dmaretskyi): Extract.
-      yield* Effect.promise(() => client.addTypes([Function.Function]));
+      yield* Effect.promise(() => client.addTypes([Operation.PersistentOperation]));
 
       // Produce normalized in-memory FunctionType objects for display.
       const fns = yield* Effect.promise(() => getDeployedFunctions(client, true));
@@ -51,13 +51,13 @@ export const importCommand = Command.make(
       }
 
       // Query database for existing functions with the same key
-      const existingFunctions = yield* Database.runQuery(Filter.type(Function.Function, { key: selectedKey }));
+      const existingFunctions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation, { key: selectedKey }));
 
-      let updatedFunctions: Function.Function[];
+      let updatedFunctions: Operation.PersistentOperation[];
       if (existingFunctions.length > 0) {
         // Update all existing functions with the same key
         for (const existingFunction of existingFunctions) {
-          Function.setFrom(existingFunction, fn);
+          Operation.setFrom(existingFunction, fn);
         }
         updatedFunctions = existingFunctions;
       } else {
@@ -68,7 +68,7 @@ export const importCommand = Command.make(
 
       // Get status for display (after update/add, function should be up-to-date)
       // Re-query to get the updated state
-      const updatedDbFunctions = yield* Database.runQuery(Filter.type(Function.Function));
+      const updatedDbFunctions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
       const status = getFunctionStatus(fn, updatedDbFunctions);
 
       if (json) {

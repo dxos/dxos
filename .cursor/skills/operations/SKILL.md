@@ -309,27 +309,29 @@ Operation handlers receive the input directly, not wrapped in `{ data }`:
 
 ```ts
 // Old (FunctionDefinition) — input wrapped in { data, context }:
-handler: ({ data: { a, b } }) => a + b
+handler: ({ data: { a, b } }) => a + b;
 
 // New (Operation) — input passed directly:
-Operation.withHandler(Effect.fn(function* ({ a, b }) {
-  return a + b;
-}))
+Operation.withHandler(
+  Effect.fn(function* ({ a, b }) {
+    return a + b;
+  }),
+);
 ```
 
 ### Key differences
 
-| Aspect               | `FunctionDefinition`                         | `Operation`                                                                       |
-| -------------------- | -------------------------------------------- | --------------------------------------------------------------------------------- |
-| Import               | `@dxos/functions`                            | `@dxos/operation`                                                                 |
-| Create definition    | `defineFunction({ ... })`                    | `Operation.make({ ... })`                                                         |
-| Schema fields        | `inputSchema` / `outputSchema`               | `input` / `output`                                                                |
-| Metadata             | Top-level `key`, `name`, `description`       | Nested under `meta: { key, name, description }`                                   |
-| Handler              | Inline `handler` property                    | Separate: `Operation.withHandler(handler)`                                        |
-| Handler input        | `({ context, data }) => ...`                 | `Effect.fn(function* (input) { ... })`                                            |
-| Handler return       | Plain value, Promise, or Effect              | Always `Effect`                                                                   |
-| Services             | `string[]` keys                              | `Context.Tag[]` references                                                        |
-| File structure       | Single file with definition + handler        | Split: `definitions.ts` + per-handler files                                       |
-| Type                 | `FunctionDefinition<I, O>`                   | `Operation.Definition<I, O>` or `Operation.WithHandler<Operation.Definition.Any>` |
-| Persistent ECHO type | `Function.Function` (from `@dxos/functions`) | `Operation.PersistentOperation` (from `@dxos/operation`)                          |
-| Handler set          | N/A                                          | `OperationHandlerSet.lazy(...)`                                                   |
+| Aspect               | `FunctionDefinition`                                     | `Operation`                                                                       |
+| -------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| Import               | `@dxos/functions`                                        | `@dxos/operation`                                                                 |
+| Create definition    | `defineFunction({ ... })`                                | `Operation.make({ ... })`                                                         |
+| Schema fields        | `inputSchema` / `outputSchema`                           | `input` / `output`                                                                |
+| Metadata             | Top-level `key`, `name`, `description`                   | Nested under `meta: { key, name, description }`                                   |
+| Handler              | Inline `handler` property                                | Separate: `Operation.withHandler(handler)`                                        |
+| Handler input        | `({ context, data }) => ...`                             | `Effect.fn(function* (input) { ... })`                                            |
+| Handler return       | Plain value, Promise, or Effect                          | Always `Effect`                                                                   |
+| Services             | `string[]` keys                                          | `Context.Tag[]` references                                                        |
+| File structure       | Single file with definition + handler                    | Split: `definitions.ts` + per-handler files                                       |
+| Type                 | `FunctionDefinition<I, O>`                               | `Operation.Definition<I, O>` or `Operation.WithHandler<Operation.Definition.Any>` |
+| Persistent ECHO type | `Operation.PersistentOperation` (from `@dxos/functions`) | `Operation.PersistentOperation` (from `@dxos/operation`)                          |
+| Handler set          | N/A                                                      | `OperationHandlerSet.lazy(...)`                                                   |
