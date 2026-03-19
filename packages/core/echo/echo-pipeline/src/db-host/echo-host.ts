@@ -40,7 +40,6 @@ import { LocalQueueServiceImpl } from './local-queue-service';
 import { QueryServiceImpl } from './query-service';
 import { QueueDataSource } from './queue-data-source';
 import { SpaceStateManager } from './space-state-manager';
-import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
 export type EchoHostProps = {

@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';

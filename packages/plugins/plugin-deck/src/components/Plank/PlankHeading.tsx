@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { CSSProperties, Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
+import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';

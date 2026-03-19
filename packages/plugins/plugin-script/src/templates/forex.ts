@@ -16,12 +16,20 @@ export default defineFunction({
     to: Schema.String.annotations({ description: 'The target currency' }),
   }),
 
-  handler: async ({ data: { from, to } }) => {
+  handler: async ({ data: { from: rawFrom, to: rawTo } }) => {
+    const from = rawFrom.toUpperCase();
+    const to = rawTo.toUpperCase();
     const res = await fetch(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`);
-    const {
-      data: { rates },
-    } = await res.json();
+    if (!res.ok) {
+      throw new Error(`Rates API returned ${res.status}: ${res.statusText}`);
+    }
 
-    return rates[to].toString();
+    const json = await res.json();
+    const rate = json?.data?.rates?.[to];
+    if (rate == null) {
+      throw new Error(`No rate found for ${from} -> ${to}`);
+    }
+
+    return rate.toString();
   },
 });

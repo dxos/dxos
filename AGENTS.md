@@ -48,6 +48,10 @@
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 - Use barrel imports whenever possible.
 
+## New Packages
+
+- **IMPORTANT**: Any new package created in this repo MUST have `"private": true` in its `package.json`. The `private` flag can only be removed manually once a trusted publisher has been configured for the package.
+
 ## Workflow
 
 - Never work on main; create a new git worktree for the branch you are working on.

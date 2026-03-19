@@ -73,7 +73,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'bg-deck-surface' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 };
 
 export const FullScreen: Story = {

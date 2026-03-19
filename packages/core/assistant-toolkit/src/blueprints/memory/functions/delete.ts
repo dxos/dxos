@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { defineFunction } from '@dxos/functions';
 
 import { Memory } from '../../../types/Memory';

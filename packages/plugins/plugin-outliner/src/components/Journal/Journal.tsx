@@ -15,8 +15,6 @@ import { Outline, type OutlineController, type OutlineProps } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
-// TODO(burdon): Convert to Radix format.
-
 export type JournalProps = ThemedClassName<
   {
     journal: JournalType.Journal;

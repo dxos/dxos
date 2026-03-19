@@ -14,20 +14,15 @@ import {
 import {
   coarseBlockSize,
   coarseDimensions,
-  computeSize,
   fineBlockSize,
   fineDimensions,
   focusRing,
-  getSize,
-  getHeight,
-  getWidth,
-  sizeValue,
   staticDisabled,
   staticFocusRing,
   subduedFocus,
-  textValence,
 } from '../../fragments';
-import { mx } from '../../util';
+import { computeSize, sizeValue, textValence } from '../../util';
+import { getSize, getHeight, getWidth, mx } from '../../util';
 
 export type InputStyleProps = Partial<{
   variant: 'default' | 'subdued' | 'static';

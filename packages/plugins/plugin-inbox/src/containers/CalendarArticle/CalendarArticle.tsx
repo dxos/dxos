@@ -12,7 +12,7 @@ import { AttentionOperation } from '@dxos/plugin-attention/types';
 import { DeckOperation } from '@dxos/plugin-deck/types';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useSelected, useSelectionActions } from '@dxos/react-ui-attention';
+import { useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
@@ -38,7 +38,6 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
   // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
   useObject(calendar);
   const feed = calendar.feed?.target as Feed.Feed | undefined;
-
   const objects = useQuery(
     db,
     feed ? Query.select(Filter.type(Event.Event)).from(feed) : Query.select(Filter.nothing()),
@@ -67,36 +66,32 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
   );
 
   return (
-    <Panel.Root role={role} classNames='@container'>
-      <Panel.Content asChild>
-        <div role='none' className='grid @2xl:grid-cols-[min-content_1fr] overflow-hidden'>
-          <div role='none' className='invisible @2xl:visible'>
-            <NaturalCalendar.Root>
-              <Panel.Toolbar asChild>
-                <NaturalCalendar.Toolbar />
-              </Panel.Toolbar>
-              <Panel.Content asChild>
-                <NaturalCalendar.Grid />
-              </Panel.Content>
-            </NaturalCalendar.Root>
-          </div>
+    <div role={role} className='@container dx-container flex overflow-hidden'>
+      <Panel.Root className='hidden @2xl:block w-min shrink-0'>
+        <NaturalCalendar.Root>
+          <Panel.Toolbar asChild>
+            <NaturalCalendar.Toolbar />
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <NaturalCalendar.Grid />
+          </Panel.Content>
+        </NaturalCalendar.Root>
+      </Panel.Root>
 
-          <Panel.Root>
-            <Panel.Toolbar asChild>
-              <Toolbar.Root>
-                <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
-              </Toolbar.Root>
-            </Panel.Toolbar>
-            <Panel.Content>
-              {objects.length > 0 ? (
-                <EventList events={objects} selected={selected} onSelect={handleSelect} />
-              ) : (
-                <CalendarEmpty calendar={calendar} />
-              )}
-            </Panel.Content>
-          </Panel.Root>
-        </div>
-      </Panel.Content>
-    </Panel.Root>
+      <Panel.Root className='grow'>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content>
+          {objects.length > 0 ? (
+            <EventList events={objects} selected={selected} onSelect={handleSelect} />
+          ) : (
+            <CalendarEmpty calendar={calendar} />
+          )}
+        </Panel.Content>
+      </Panel.Root>
+    </div>
   );
 };

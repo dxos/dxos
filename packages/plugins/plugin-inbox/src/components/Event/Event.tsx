@@ -6,10 +6,10 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type ComponentPropsWithoutRef, type PropsWithChildren } from 'react';
 
 import { type Database } from '@dxos/react-client/echo';
-import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { ComposableProps, Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { DateComponent } from '../DateComponent';
@@ -69,13 +69,13 @@ EventToolbar.displayName = EVENT_TOOLBAR_NAME;
 
 const EVENT_VIEWPORT_NAME = 'Event.Viewport';
 
-type EventViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
+type EventViewportProps = ComposableProps;
 
-const EventViewport = ({ classNames, children, ...props }: EventViewportProps) => {
+const EventViewport = ({ children, ...props }: EventViewportProps) => {
   return (
-    <div {...props} className={mx(classNames)}>
-      {children}
-    </div>
+    <ScrollArea.Root {...composableProps(props, { role: 'none' })} thin>
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 
