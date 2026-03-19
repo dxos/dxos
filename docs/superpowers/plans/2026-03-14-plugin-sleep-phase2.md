@@ -579,7 +579,7 @@ export const MixerLayer = ({ sequence, onChange, onDelete }: MixerLayerProps) =>
         className='grid grid-cols-[min-content_min-content_1fr_min-content_min-content] items-center min-h-10'}
       >
         <List.ItemDragHandle />
-        <Icon icon={sourceIcon[sequence.sourceType] ?? 'ph--question--regular'} size={4} classNames='mx-1' />
+        <Icon icon={sourceIcon[sequence.sourceType] ?? 'ph--question--regular'} classNames='mx-1' />
         <List.ItemTitle onClick={() => setExpanded(!expanded)}>
           {sequence.name ?? sequence.sourceType}
         </List.ItemTitle>

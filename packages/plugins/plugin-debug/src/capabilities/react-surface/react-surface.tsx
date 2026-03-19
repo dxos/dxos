@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 
 import {
@@ -181,7 +181,8 @@ export default Capability.makeModule(
 
       Surface.create({
         id: `${meta.id}.status`,
-        role: 'status',
+        role: 'status-indicator',
+        position: 'hoist',
         component: () => <DebugStatus />,
       }),
       //

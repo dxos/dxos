@@ -7,7 +7,6 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/types';

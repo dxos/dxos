@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { CSSProperties, Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
+import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
@@ -11,7 +11,7 @@ import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
-import { hoverableControls, hoverableFocusedWithinControls, largeIconSize } from '@dxos/ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dxos/ui-theme';
 
 import { useBreakpoints } from '../../hooks';
 import { meta } from '../../meta';
@@ -148,7 +148,7 @@ export const PlankHeading = memo(
     return (
       <StackItem.Heading
         data-plank-heading
-        style={largeIconSize}
+        style={iconSize(5)}
         classNames={[
           'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-coarse',
           part === 'solo' ? soloInlinePadding : 'px-1',

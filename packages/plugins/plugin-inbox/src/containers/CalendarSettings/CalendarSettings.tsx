@@ -8,9 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
 
 import { useSyncTrigger } from '../../hooks';
 import { meta } from '../../meta';

@@ -7,7 +7,6 @@
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { DXN, ObjectId } from '@dxos/keys';
 
-import * as entityInternal from './internal/Entity';
 import * as internal from './internal';
 import type * as Relation from './Relation';
 

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type FC, Fragment, useEffect, useState } from 'react';
+import React, { Fragment, useEffect, useState } from 'react';
 
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, type Ref } from '@dxos/echo';

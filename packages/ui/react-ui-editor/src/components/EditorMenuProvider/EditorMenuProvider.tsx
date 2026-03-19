@@ -221,7 +221,7 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
 
   return (
     <li ref={listRef} className={tx('menu.item', {}, [current && 'bg-hover-surface'])} onClick={handleSelect}>
-      {item.icon && <Icon icon={item.icon} size={5} />}
+      {item.icon && <Icon icon={item.icon} />}
       <span className='grow truncate'>{toLocalizedString(item.label, t)}</span>
     </li>
   );

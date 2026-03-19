@@ -4,8 +4,7 @@
 
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
-import { surfaceShadow, surfaceZIndex } from '../../fragments';
-import { mx } from '../../util';
+import { mx, surfaceShadow, surfaceZIndex } from '../../util';
 
 export type SelectStyleProps = Partial<{
   elevation: Elevation;

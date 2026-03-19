@@ -57,7 +57,8 @@
     "src"
   ],
   "scripts": {
-    "publish-runtime": "node ./scripts/build-modules.mjs && node ./scripts/upload-modules.mjs --env dev"
+    "publish-runtime": "pnpm run secrets && node ./scripts/build-modules.mjs && node --env-file=.env ./scripts/upload-modules.mjs --env dev",
+    "secrets": "node ./scripts/secrets.mjs"
   },
   "dependencies": {
     "@dxos/ai": "workspace:*",

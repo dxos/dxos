@@ -26,8 +26,10 @@ const ForexEffect = Operation.make({
 
 export default ForexEffect.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ from, to }) {
-      const res = yield* HttpClientRequest.get(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`).pipe(
+    Effect.fnUntraced(function* ( { from: rawFrom, to: rawTo }) {
+      const from = rawFrom.toUpperCase();
+      const to = rawTo.toUpperCase();
+      const json: any = yield* HttpClientRequest.get(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`).pipe(
         HttpClient.execute,
         Effect.flatMap((response) => response.json),
         Effect.timeout('5 seconds'),
@@ -35,7 +37,12 @@ export default ForexEffect.pipe(
         Effect.scoped,
       );
 
-      return (res as any).data.rates[to].toString();
+      const rate = json?.data?.rates?.[to];
+      if (rate == null) {
+        return yield* Effect.fail(new Error(`No rate found for ${from} -> ${to}`));
+      }
+
+      return rate.toString();
     }, Effect.provide(FetchHttpClient.layer)),
   ),
 );

@@ -9,7 +9,6 @@ import { rangeToA1Notation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { ghostHover } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { rangeFromIndex } from '../../types';

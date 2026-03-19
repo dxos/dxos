@@ -2,10 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type ElementType, type HTMLAttributes } from 'react';
-import { type ClassNameValue, extendTailwindMerge, validators } from 'tailwind-merge';
-
-import { Slot } from '@radix-ui/react-slot';
+import { type HTMLAttributes } from 'react';
+import { extendTailwindMerge, validators } from 'tailwind-merge';
 
 import { type ComposableProps } from '@dxos/ui-types';
 

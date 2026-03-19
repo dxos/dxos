@@ -18,7 +18,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
-import { type ComposableProps, DropdownMenu, Icon, SlottableProps, useTranslation } from '@dxos/react-ui';
+import { type ComposableProps, DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
@@ -358,7 +358,6 @@ export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props
               data-testid={`grid.${contextMenuAxis}.insert-before`}
             >
               <Icon
-                size={5}
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-left--regular' : 'ph--rows-plus-top--regular'}
               />
               <span>{t(`add ${contextMenuAxis} before label`)}</span>
@@ -368,7 +367,6 @@ export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props
               data-testid={`grid.${contextMenuAxis}.insert-after`}
             >
               <Icon
-                size={5}
                 icon={contextMenuAxis === 'col' ? 'ph--columns-plus-right--regular' : 'ph--rows-plus-bottom--regular'}
               />
               <span>{t(`add ${contextMenuAxis} after label`)}</span>
@@ -377,7 +375,7 @@ export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props
               onClick={() => handleAxisMenuAction('drop')}
               data-testid={`grid.${contextMenuAxis}.drop`}
             >
-              <Icon size={5} icon='ph--backspace--regular' />
+              <Icon icon='ph--backspace--regular' />
               <span>{t(`delete ${contextMenuAxis} label`)}</span>
             </DropdownMenu.Item>
           </DropdownMenu.Viewport>

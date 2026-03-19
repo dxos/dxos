@@ -9,7 +9,6 @@ import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
-import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';

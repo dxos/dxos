@@ -385,7 +385,7 @@ type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
 const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
   ({ classNames, children }, forwardedRef) => {
     return (
-      <ScrollArea.Root role='listbox' classNames={mx(classNames)} ref={forwardedRef} thin>
+      <ScrollArea.Root role='listbox' classNames={mx(classNames)} thin ref={forwardedRef}>
         <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
       </ScrollArea.Root>
     );
@@ -471,10 +471,10 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         )}
         onClick={handleClick}
       >
-        {icon && <Icon icon={icon} size={5} classNames={iconClassNames} />}
+        {icon && <Icon icon={icon} classNames={iconClassNames} />}
         <span className='w-0 grow truncate'>{label}</span>
         {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
-        {checked && <Icon icon='ph--check--regular' size={5} />}
+        {checked && <Icon icon='ph--check--regular' />}
       </div>
     );
   },

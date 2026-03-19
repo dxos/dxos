@@ -14,20 +14,15 @@ import {
 import {
   coarseBlockSize,
   coarseDimensions,
-  computeSize,
   fineBlockSize,
   fineDimensions,
   focusRing,
-  getSize,
-  getSizeHeight,
-  getSizeWidth,
-  sizeValue,
   staticDisabled,
   staticFocusRing,
   subduedFocus,
-  textValence,
 } from '../../fragments';
-import { mx } from '../../util';
+import { computeSize, sizeValue, textValence } from '../../util';
+import { getSize, getHeight, getWidth, mx } from '../../util';
 
 export type InputStyleProps = Partial<{
   variant: 'default' | 'subdued' | 'static';
@@ -121,8 +116,8 @@ const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5, 
 
 const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
   mx(
-    getSizeHeight(size),
-    getSizeWidth(computeSize(sizeValue(size) * 1.75, 9)),
+    getHeight(size),
+    getWidth(computeSize(sizeValue(size) * 1.75, 9)),
     booleanInputSurface,
     !disabled && booleanInputSurfaceHover,
     // TODO(burdon): Added m-1 margin to make 40px width to align with 40px icon button.

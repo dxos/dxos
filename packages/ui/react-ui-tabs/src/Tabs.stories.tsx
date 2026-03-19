@@ -33,7 +33,7 @@ export const DefaultStory = () => {
                 return (
                   <NaturalTabs.Tabpanel key={id} value={id} classNames='m-1'>
                     <NaturalTabs.BackButton density='fine'>
-                      <Icon icon='ph--arrow-left--bold' size={4} />
+                      <Icon icon='ph--arrow-left--bold' />
                       <span>Back to tab list</span>
                     </NaturalTabs.BackButton>
                     <p className='px-1'>{panel}</p>
