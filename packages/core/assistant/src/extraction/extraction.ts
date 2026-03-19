@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { asyncTimeout } from '@dxos/async';
 import { Obj } from '@dxos/echo';
 import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { Message } from '@dxos/types';
 import { Operation } from '@dxos/operation';
+import { Message } from '@dxos/types';
 
 export const ExtractionInput = Schema.Struct({
   message: Message.Message,
@@ -50,6 +50,34 @@ export type ProcessTranscriptMessageProps = {
 };
 
 export type ExtractionFunction = Operation.Definition<ExtractionInput, ExtractionOutput>;
+
+/**
+ * Placeholder for Anthropic-based entity extraction.
+ * Implementation is currently disabled pending restoration of extraction logic.
+ */
+export const extractionAnthropicFunction = Operation.make({
+  meta: {
+    key: 'org.dxos.function.extraction.anthropic',
+    name: 'Entity Extraction (Anthropic)',
+    description: 'Extract entities from transcript using Anthropic LLM.',
+  },
+  input: ExtractionInput,
+  output: ExtractionOutput,
+});
+
+/**
+ * Placeholder for NER-based entity extraction.
+ * Implementation is currently disabled pending restoration of extraction logic.
+ */
+export const extractionNerFunction = Operation.make({
+  meta: {
+    key: 'org.dxos.function.extraction.ner',
+    name: 'Entity Extraction (NER)',
+    description: 'Extract entities from transcript using Named Entity Recognition.',
+  },
+  input: ExtractionInput,
+  output: ExtractionOutput,
+});
 
 /**
  * Extract entities from the transcript message and add them to the message.
