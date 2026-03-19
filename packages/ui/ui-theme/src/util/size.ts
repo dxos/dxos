@@ -76,12 +76,12 @@ export const iconSize = (size: Size | null): CSSProperties =>
  * @param defaultSize - Fallback `Size` token used when no series produces a valid match.
  * @returns The nearest valid `Size` token.
  */
-export const computeSize = (value: number, defaultSize: Size) => {
+export const snapSize = (value: number, defaultSize: Size): Size => {
   if (SIZE_VALUES.includes(value as Size)) {
     return value as Size;
   } else if (value <= 0) {
     return 0;
-  } else if (value === 1) {
+  } else if (value < 0.5) {
     return 'px';
   } else {
     const wholeSeries = Math.floor(value);
