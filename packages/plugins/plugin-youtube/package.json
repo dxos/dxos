@@ -80,8 +80,7 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "effect": "catalog:",
-    "youtube-transcript": "catalog:"
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",

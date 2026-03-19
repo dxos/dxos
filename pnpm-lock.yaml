@@ -1803,9 +1803,6 @@ catalogs:
     yargs:
       specifier: ~16.2.0
       version: 16.2.0
-    youtube-transcript:
-      specifier: ^1.2.1
-      version: 1.3.0
     zen-observable:
       specifier: ^0.10.0
       version: 0.10.0
@@ -13430,9 +13427,6 @@ importers:
       effect:
         specifier: 3.19.16
         version: 3.19.16
-      youtube-transcript:
-        specifier: 'catalog:'
-        version: 1.3.0
     devDependencies:
       '@dxos/config':
         specifier: workspace:*
@@ -37240,10 +37234,6 @@ packages:
   youch@4.1.0-beta.10:
     resolution: {integrity: sha512-rLfVLB4FgQneDr0dv1oddCVZmKjcJ6yX6mS4pU82Mq/Dt9a3cLZQ62pDBL4AUO+uVrCvtWz3ZFUL2HFAFJ/BXQ==}
 
-  youtube-transcript@1.3.0:
-    resolution: {integrity: sha512-laWv9RcKIWh6rZUH3hVnOngEvtKAhFMV5UepUO6AgevPYqe2zv8KW/uCkZJDSnPwf5/AdVu0Q66/1RDblKsp6Q==}
-    engines: {node: '>=18.0.0'}
-
   zen-observable@0.10.0:
     resolution: {integrity: sha512-iI3lT0iojZhKwT5DaFy2Ce42n3yFcLdFyOh01G7H0flMY60P8MJuVFEoJoNwXlmAyQ45GrjL6AcZmmlv8A5rbw==}
 
@@ -59517,8 +59507,6 @@ snapshots:
       '@speed-highlight/core': 1.2.7
       cookie: 1.0.2
       youch-core: 0.3.3
-
-  youtube-transcript@1.3.0: {}
 
   zen-observable@0.10.0: {}
 
