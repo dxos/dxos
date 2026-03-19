@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
-import { Function, Script, Trigger } from '@dxos/functions';
+import { Script, Trigger } from '@dxos/functions';
 import { type DXN } from '@dxos/keys';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/types';
@@ -32,7 +32,7 @@ export default Capability.makeModule(
             const [script] = scripts;
             if (script) {
               const functions = yield* Effect.promise(() =>
-                db.query(Filter.type(Function.Function, { source: Ref.make(script) })).run(),
+                db.query(Filter.type(Operation.PersistentOperation, { source: Ref.make(script) })).run(),
               );
               const [fn] = functions;
               if (fn) {

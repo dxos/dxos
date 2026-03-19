@@ -18,27 +18,23 @@ export namespace MarkdownOperation {
   export const Create = Operation.make({
     meta: { key: `${MARKDOWN_OPERATION}.create`, name: 'Create Markdown Document' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        name: Schema.optional(Schema.String),
-        content: Schema.optional(Schema.String),
-      }),
-      output: Schema.Struct({
-        object: Document,
-      }),
-    },
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
+      content: Schema.optional(Schema.String),
+    }),
+    output: Schema.Struct({
+      object: Document,
+    }),
   });
 
   // TODO(wittjosiah): This appears to be unused.
   export const SetViewMode = Operation.make({
     meta: { key: `${MARKDOWN_OPERATION}.set-view-mode`, name: 'Set View Mode' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        id: Schema.String,
-        viewMode: EditorViewMode,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      id: Schema.String,
+      viewMode: EditorViewMode,
+    }),
+    output: Schema.Void,
   });
 }

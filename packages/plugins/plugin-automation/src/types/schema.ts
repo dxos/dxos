@@ -38,15 +38,13 @@ export namespace AutomationOperation {
   export const CreateTriggerFromTemplate = Operation.make({
     meta: { key: `${AUTOMATION_OPERATION}.create-trigger-from-template`, name: 'Create Trigger From Template' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        db: Database.Database,
-        template: TriggerTemplate,
-        enabled: Schema.optional(Schema.Boolean),
-        scriptName: Schema.optional(Schema.String),
-        input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      db: Database.Database,
+      template: TriggerTemplate,
+      enabled: Schema.optional(Schema.Boolean),
+      scriptName: Schema.optional(Schema.String),
+      input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+    }),
+    output: Schema.Void,
   });
 }

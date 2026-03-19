@@ -5,7 +5,8 @@
 import { type Client } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { FUNCTIONS_META_KEY, Function, FunctionError } from '@dxos/functions';
+import { FUNCTIONS_META_KEY, FunctionError } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -86,7 +87,7 @@ export class FunctionsServiceClient {
   /**
    * Deploys a function to the EDGE service.
    */
-  async deploy(request: FunctionDeployOptions): Promise<Function.Function> {
+  async deploy(request: FunctionDeployOptions): Promise<Operation.PersistentOperation> {
     try {
       invariant(
         Object.keys(request.assets).every((path) => !path.startsWith('/')),
@@ -106,7 +107,7 @@ export class FunctionsServiceClient {
       );
       log.verbose('deploy result', { ...response });
 
-      return Function.make({
+      return Obj.make(Operation.PersistentOperation, {
         [Obj.Meta]: {
           keys: [{ source: FUNCTIONS_META_KEY, id: response.functionId }],
         },
@@ -126,7 +127,7 @@ export class FunctionsServiceClient {
    * Queries the EDGE service for deployed functions.
    */
   // TODO(dmaretskyi): Add query filters.
-  async query(): Promise<Function.Function[]> {
+  async query(): Promise<Operation.PersistentOperation[]> {
     try {
       const response = await this.#edgeClient.listFunctions();
       return response.uploadedFunctions.map((record: any) => {
@@ -136,7 +137,7 @@ export class FunctionsServiceClient {
         if (!versionMeta) {
           return [];
         }
-        const fn = Function.make({
+        const fn = Obj.make(Operation.PersistentOperation, {
           [Obj.Meta]: {
             keys: [{ source: FUNCTIONS_META_KEY, id: response.functionId }],
           },
@@ -155,7 +156,7 @@ export class FunctionsServiceClient {
     }
   }
 
-  async invoke(func: Function.Function, input: unknown, options?: FunctionInvokeOptions) {
+  async invoke(func: Operation.PersistentOperation, input: unknown, options?: FunctionInvokeOptions) {
     const functionId = Obj.getMeta(func).keys.find((key) => key.source === FUNCTIONS_META_KEY)?.id;
     if (!functionId) {
       throw new FunctionServiceError({ message: 'No identifier for the function at the EDGE service' });

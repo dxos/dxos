@@ -24,12 +24,12 @@ import { trim } from '@dxos/util';
 import { WithProperties } from '../../testing';
 import MarkdownBlueprint from '../markdown-blueprint';
 
-import update from './update';
+import { Update } from './definitions';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [...MarkdownBlueprint.functions],
+  operationHandlers: MarkdownBlueprint.operations,
   types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
   tracing: 'pretty',
 });
@@ -45,7 +45,7 @@ describe('update', () => {
         });
         yield* Database.add(doc);
 
-        yield* FunctionInvocationService.invokeFunction(update, {
+        yield* FunctionInvocationService.invokeFunction(Update, {
           doc: Ref.make(doc),
           edits: [{ oldString: 'Founders', newString: '# Founders' }],
         });

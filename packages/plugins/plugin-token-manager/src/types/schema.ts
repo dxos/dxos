@@ -14,9 +14,7 @@ const TOKEN_MANAGER_OPERATION = `${meta.id}.operation`;
 export namespace TokenManagerOperation {
   export const AccessTokenCreated = Operation.make({
     meta: { key: `${TOKEN_MANAGER_OPERATION}.access-token-created`, name: 'Access Token Created' },
-    schema: {
-      input: Schema.Struct({ accessToken: AccessToken.AccessToken }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({ accessToken: AccessToken.AccessToken }),
+    output: Schema.Void,
   });
 }

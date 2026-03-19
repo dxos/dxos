@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { describe, expect } from 'vitest';
 
-import * as OperationInvoker from './invoker';
-import * as Operation from './operation';
+import * as OperationInvoker from './OperationInvoker';
+import * as Operation from './Operation';
 import * as Scheduler from './scheduler';
 
 //
@@ -17,26 +17,20 @@ import * as Scheduler from './scheduler';
 //
 
 const CountOp = Operation.make({
-  schema: {
-    input: Schema.Struct({ id: Schema.String }),
-    output: Schema.Void,
-  },
+  input: Schema.Struct({ id: Schema.String }),
+  output: Schema.Void,
   meta: { key: 'test.count' },
 });
 
 const SideEffect = Operation.make({
-  schema: {
-    input: Schema.Void,
-    output: Schema.Void,
-  },
+  input: Schema.Void,
+  output: Schema.Void,
   meta: { key: 'test.side-effect' },
 });
 
 const TriggerWithFollowup = Operation.make({
-  schema: {
-    input: Schema.Struct({ id: Schema.String }),
-    output: Schema.Struct({ triggered: Schema.Boolean }),
-  },
+  input: Schema.Struct({ id: Schema.String }),
+  output: Schema.Struct({ triggered: Schema.Boolean }),
   meta: { key: 'test.trigger-with-followup' },
 });
 

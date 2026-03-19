@@ -7,8 +7,10 @@ import type * as Schema from 'effect/Schema';
 
 import type { Position } from '@dxos/util';
 
-import type { Definition, Handler } from './operation';
+import type * as Operation from './Operation';
 import type { Service as OperationService } from './service';
+
+// @import-as-namespace
 
 /**
  * Base requirements provided to all operation handlers.
@@ -19,15 +21,17 @@ export type HandlerContext = OperationService;
 /**
  * Allowed services for a handler: services declared on the operation plus Operation.Service.
  */
-type AllowedServices<Def extends Definition<any, any>> = Definition.Services<Def> | OperationService;
+type AllowedServices<Def extends Operation.Definition<any, any>> =
+  | Operation.Definition.Services<Def>
+  | OperationService;
 
 /**
  * Operation resolver - maps an operation definition to a handler with optional filter.
  * Handlers are provided with HandlerContext (Operation.Service) by the invoker.
  */
 export interface OperationResolver<I = any, O = any, E extends Error = Error, R = HandlerContext> {
-  operation: Definition<I, O>;
-  handler: Handler<I, O, E, R>;
+  operation: Operation.Definition<I, O>;
+  handler: Operation.Handler<I, O, E, R>;
   position?: Position;
   filter?: (input: I) => boolean;
 }
@@ -36,13 +40,13 @@ export interface OperationResolver<I = any, O = any, E extends Error = Error, R 
  * Props for creating an operation resolver.
  * Handler can only use services declared on the operation, plus Operation.Service.
  */
-export type OperationResolverProps<Def extends Definition<any, any>, E extends Error = never> = {
+export type OperationResolverProps<Def extends Operation.Definition<any, any>, E extends Error = never> = {
   operation: Def;
   handler: (
-    input: Schema.Schema.Type<Def['schema']['input']>,
-  ) => Effect.Effect<Schema.Schema.Type<Def['schema']['output']>, E, AllowedServices<Def>>;
+    input: Schema.Schema.Type<Def['input']>,
+  ) => Effect.Effect<Schema.Schema.Type<Def['output']>, E, AllowedServices<Def>>;
   position?: Position;
-  filter?: (input: Schema.Schema.Type<Def['schema']['input']>) => boolean;
+  filter?: (input: Schema.Schema.Type<Def['input']>) => boolean;
 };
 
 /**
@@ -54,7 +58,8 @@ export type OperationResolverProps<Def extends Definition<any, any>, E extends E
  * ```ts
  * // Operation with Database.Service requirement
  * const MyOp = Operation.make({
- *   schema: { input: Schema.Struct({}), output: Schema.Struct({ result: Schema.String }) },
+ *   input: Schema.Struct({}),
+ *   output: Schema.Struct({ result: Schema.String }),
  *   meta: { key: 'my-op' },
  *   services: [Database.Service],
  * });
@@ -69,17 +74,12 @@ export type OperationResolverProps<Def extends Definition<any, any>, E extends E
  * })
  * ```
  */
-export const make = <Def extends Definition<any, any>, E extends Error = never>(
+export const make = <Def extends Operation.Definition<any, any>, E extends Error = never>(
   props: OperationResolverProps<Def, E>,
-): OperationResolver<
-  Schema.Schema.Type<Def['schema']['input']>,
-  Schema.Schema.Type<Def['schema']['output']>,
-  E,
-  AllowedServices<Def>
-> => {
+): OperationResolver<Schema.Schema.Type<Def['input']>, Schema.Schema.Type<Def['output']>, E, AllowedServices<Def>> => {
   return props as OperationResolver<
-    Schema.Schema.Type<Def['schema']['input']>,
-    Schema.Schema.Type<Def['schema']['output']>,
+    Schema.Schema.Type<Def['input']>,
+    Schema.Schema.Type<Def['output']>,
     E,
     AllowedServices<Def>
   >;

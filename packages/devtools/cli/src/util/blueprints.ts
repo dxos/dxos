@@ -13,8 +13,8 @@ import { ArtifactId } from '@dxos/assistant';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
+import { OperationHandlerSet } from '@dxos/operation';
 import { Feed, Tag, type Type } from '@dxos/echo';
-import { type FunctionDefinition } from '@dxos/functions';
 import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
 import { Chess } from '@dxos/plugin-chess/types';
@@ -66,21 +66,21 @@ export const blueprintRegistry = new Blueprint.Registry([
 //  Providing functions and toolkits are essential to the blueprint operation,
 //  since blueprints referencing tools and functions that are not included here will produce a "tool not found" error.
 
-export const functions: FunctionDefinition.Any[] = [
-  // NOTE: Functions referenced by blueprints above need to be added here.
-  ...DatabaseBlueprint.functions,
-  ...CalendarBlueprint.functions,
-  ...ChessBlueprint.functions,
-  ...InboxBlueprint.functions,
-  ...InboxSendBlueprint.functions,
-  ...KanbanBlueprint.functions,
-  ...MapBlueprint.functions,
-  ...MarkdownBlueprint.functions,
-  ...ScriptBlueprint.functions,
-  ...TableBlueprint.functions,
-  ...ThreadBlueprint.functions,
-  ...TranscriptionBlueprint.functions,
-];
+export const operationHandlers = OperationHandlerSet.merge(
+  // NOTE: Operation handlers referenced by blueprints above need to be added here.
+  DatabaseBlueprint.operations,
+  CalendarBlueprint.operations,
+  ChessBlueprint.operations,
+  InboxBlueprint.operations,
+  InboxSendBlueprint.operations,
+  KanbanBlueprint.operations,
+  MapBlueprint.operations,
+  MarkdownBlueprint.operations,
+  ScriptBlueprint.operations,
+  TableBlueprint.operations,
+  ThreadBlueprint.operations,
+  TranscriptionBlueprint.operations,
+);
 
 const StubDeckToolkit = Toolkit.make(
   Tool.make('open-item', {

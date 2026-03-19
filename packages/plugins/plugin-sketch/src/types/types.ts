@@ -16,16 +16,14 @@ const SKETCH_OPERATION = `${meta.id}.operation`;
 export namespace SketchOperation {
   export const Create = Operation.make({
     meta: { key: `${SKETCH_OPERATION}.create`, name: 'Create Sketch' },
-    schema: {
-      input: Schema.Struct({
-        name: Schema.optional(Schema.String),
-        schema: Schema.optional(Schema.String),
-        content: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-      }),
-      output: Schema.Struct({
-        object: Sketch.Sketch,
-      }),
-    },
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
+      schema: Schema.optional(Schema.String),
+      content: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
+    }),
+    output: Schema.Struct({
+      object: Sketch.Sketch,
+    }),
   });
 }
 

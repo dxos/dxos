@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { MemoryFunctions } from './functions';
+import { QueryMemories, SaveMemory, DeleteMemory, MemoryHandlers } from './functions';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/memory';
 
@@ -22,8 +22,6 @@ const instructions = trim`
   You can also delete outdated or incorrect memories.
 `;
 
-const functions = Object.values(MemoryFunctions);
-
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
@@ -32,12 +30,12 @@ const make = () =>
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
-    tools: Blueprint.toolDefinitions({ functions }),
+    tools: Blueprint.toolDefinitions({ operations: [SaveMemory, QueryMemories, DeleteMemory] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
+  operations: MemoryHandlers,
   make,
 };
 
