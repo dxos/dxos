@@ -14,14 +14,15 @@ export type IconStyleProps = {
 /**
  * Size can be specified directly, or inherited from a container (e.g., toolbar).
  */
-export const iconRoot: ComponentFunction<IconStyleProps> = ({ size }, etc) =>
-  mx(
+export const iconRoot: ComponentFunction<IconStyleProps> = ({ size }, etc) => {
+  return mx(
     'shrink-0 text-[var(--icons-color,currentColor)]',
     size
       ? getSize(size)
       : '[width:var(--icon-size,var(--dx-default-icons-size))] [height:var(--icon-size,var(--dx-default-icons-size))]',
     etc,
   );
+};
 
 export const iconTheme: Theme<IconStyleProps> = {
   root: iconRoot,
