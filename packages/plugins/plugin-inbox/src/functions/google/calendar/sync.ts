@@ -18,7 +18,6 @@ import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 import { type Event } from '@dxos/types';
 
-import * as Calendar from '../../../types/Calendar';
 import { GoogleCalendar } from '../../apis';
 import * as InboxResolver from '../../inbox-resolver';
 import { GoogleCredentials } from '../../services/google-credentials';

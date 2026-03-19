@@ -10,7 +10,6 @@ import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
-import * as Mailbox from '../types/Mailbox';
 import { renderMarkdown } from '../util';
 
 import { Open } from './definitions';

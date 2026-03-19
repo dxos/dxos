@@ -24,7 +24,6 @@ import { Operation } from '@dxos/operation';
 import { Message, Organization, Person, Pipeline } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as Mailbox from '../types/Mailbox';
 import { renderMarkdown } from '../util';
 
 import { Summarize } from './definitions';

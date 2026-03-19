@@ -7,9 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
-import { Message } from '@dxos/types';
 
-import * as Mailbox from '../../../types/Mailbox';
 import { GoogleMail } from '../../apis';
 import { GoogleCredentials } from '../../services/google-credentials';
 

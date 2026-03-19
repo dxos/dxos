@@ -10,7 +10,6 @@ import { computeDiffsWithCursors } from '@dxos/assistant';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { Operation } from '@dxos/operation';
-import { Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { CreateProposals } from './definitions';

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { Voxel } from '../../types';
