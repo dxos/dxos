@@ -30,7 +30,7 @@ const make = () =>
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
-    tools: Blueprint.toolDefinitions({ operations: [QueryMemories, SaveMemory, DeleteMemory] }),
+    tools: Blueprint.toolDefinitions({ operations: [SaveMemory, QueryMemories, DeleteMemory] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {

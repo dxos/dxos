@@ -50,7 +50,7 @@ const make = () =>
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
-    tools: Blueprint.toolDefinitions({ operations: [Research, DocumentCreate] }),
+    tools: Blueprint.toolDefinitions({ operations: [DocumentCreate, Research] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
