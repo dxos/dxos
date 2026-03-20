@@ -65,6 +65,10 @@ export namespace AssistantOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       db: Database.Database,
+      /** Context objects to bind to the new chat. */
+      objects: Schema.optional(Schema.Array(Obj.Unknown)),
+      /** Blueprint keys to look up and bind to the new chat. */
+      blueprints: Schema.optional(Schema.Array(Schema.String)),
       prompt: Schema.String,
     }),
     output: Schema.Struct({

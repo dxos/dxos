@@ -51,7 +51,7 @@ const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
 type EventToolbarProps = ThemedClassName<UseEventToolbarActionsProps & ComponentPropsWithoutRef<typeof Menu.Root>>;
 
 const EventToolbar = forwardRef<HTMLDivElement, EventToolbarProps>(
-  ({ classNames, onNoteCreate, ...props }, forwardRef) => {
+  ({ classNames, onNoteCreate, attendableId: _attendableId, ...props }, forwardRef) => {
     const { attendableId } = useEventContext(EVENT_TOOLBAR_NAME);
     const menuActions = useEventToolbarActions({ onNoteCreate });
 

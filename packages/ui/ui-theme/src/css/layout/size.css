@@ -6,6 +6,7 @@
   /** 
    * Registers the element as a size query container. 
    * Children can use @container queries to apply styles based on the container's dimensions (both width and height).
+   * Also enables children to use cqi units (e.g., max-w-[100cqi])
    */
   .dx-size-container {
     container-type: size;
