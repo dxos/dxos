@@ -261,6 +261,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
 
       // Build the effect with Operation.Service provided.
       let handlerEffect = handler(input).pipe(
+        Effect.withSpan(op.meta.key),
         Effect.provideService(Operation.Service, {
           invoke: this.invoke,
           schedule: this._followupScheduler.schedule,
