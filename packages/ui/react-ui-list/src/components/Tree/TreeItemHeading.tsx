@@ -56,7 +56,6 @@ export const TreeItemHeading = memo(
           <Button
             data-testid='treeItem.heading'
             variant='ghost'
-            density='fine'
             classNames={[
               'grow gap-2 ps-0.5 hover:bg-transparent dark:hover:bg-transparent',
               'disabled:cursor-default disabled:opacity-100',

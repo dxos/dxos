@@ -64,7 +64,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
       <div className='flex justify-between items-center'>
         <Dialog.Title>{t('deployment dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <IconButton icon='ph--x--regular' size={4} label='Close' iconOnly density='fine' variant='ghost' />
+          <IconButton icon='ph--x--regular' size={4} label='Close' iconOnly variant='ghost' />
         </Dialog.Close>
       </div>
       <div role='none' className='py-4'>

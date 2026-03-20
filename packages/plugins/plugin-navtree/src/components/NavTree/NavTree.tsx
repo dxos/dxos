@@ -30,7 +30,7 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
     //  it uses RovingFocus and doesn't support moving focus to an item that is not a tab. Assess whether this situation
     //  should change including whether it should motivate a change in the design/taxonomy, or if this means this should
     //  not use `react-ui-tabs` at all.
-    <Tabs.Root value={tab} orientation='vertical' verticalVariant='stateless' classNames='relative' ref={forwardedRef}>
+    <Tabs.Root value={tab} orientation='vertical' classNames='relative' ref={forwardedRef}>
       <L0Menu
         menuActions={topLevelActions}
         topLevelItems={l0Items}

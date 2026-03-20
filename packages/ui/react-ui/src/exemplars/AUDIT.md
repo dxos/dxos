@@ -93,7 +93,5 @@ The following ~34 files contain `<ScrollArea.Root>` but root element status need
 
 ## Misc
 
-- List
-- SearchList (wrt ViewPort)
-- TabsList/Toolbar same geometry
-- Rename vars: `Obj.change(journal, (obj) => {})`
+- List / SearchList (wrt ViewPort)
+- TabsList / Toolbar same geometry
