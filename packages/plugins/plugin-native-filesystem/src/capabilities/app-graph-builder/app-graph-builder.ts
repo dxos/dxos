@@ -27,7 +27,6 @@ import {
   type FilesystemWorkspace,
   type NativeFilesystemState,
 } from '../../types';
-import { isTauriAvailable } from '../../util';
 
 const FILESYSTEM_TYPE = `${meta.id}.workspace`;
 
@@ -45,27 +44,23 @@ export default Capability.makeModule(
         position: 'hoist',
         match: NodeMatcher.whenRoot,
         actions: () =>
-          Effect.succeed(
-            isTauriAvailable()
-              ? [
-                  {
-                    id: NativeFilesystemOperation.OpenDirectory.meta.key,
-                    data: Effect.fnUntraced(function* () {
-                      const result = yield* Operation.invoke(NativeFilesystemOperation.OpenDirectory);
-                      if (result?.subject) {
-                        yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
-                      }
-                    }),
-                    properties: {
-                      label: ['open directory label', { ns: meta.id }],
-                      icon: 'ph--folder-open--regular',
-                      testId: 'nativeFilesystem.openDirectory',
-                      disposition: 'menu',
-                    },
-                  },
-                ]
-              : [],
-          ),
+          Effect.succeed([
+            {
+              id: NativeFilesystemOperation.OpenDirectory.meta.key,
+              data: Effect.fnUntraced(function* () {
+                const result = yield* Operation.invoke(NativeFilesystemOperation.OpenDirectory);
+                if (result?.subject) {
+                  yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
+                }
+              }),
+              properties: {
+                label: ['open directory label', { ns: meta.id }],
+                icon: 'ph--folder-open--regular',
+                testId: 'nativeFilesystem.openDirectory',
+                disposition: 'menu',
+              },
+            },
+          ]),
       }),
 
       GraphBuilder.createExtension({
