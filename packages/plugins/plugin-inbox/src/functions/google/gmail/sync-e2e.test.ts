@@ -187,7 +187,7 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
 };
 
 const checkEmails = async (feed: Feed.Feed, space: Space) => {
-  const queueDxn = Feed.getDxn(feed);
+  const queueDxn = Feed.getQueueDxn(feed);
   if (!queueDxn) {
     console.log('No feed found for mailbox');
     return [];

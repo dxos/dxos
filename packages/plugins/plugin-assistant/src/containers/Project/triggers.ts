@@ -60,7 +60,7 @@ export const syncTriggers = async (project: Project.Project) => {
 
     const queueDxn = Option.some(target).pipe(
       Option.filter(Obj.instanceOf(Feed.Feed)),
-      Option.map(Feed.getDxn),
+      Option.map(Feed.getQueueDxn),
       Option.getOrUndefined,
     );
     if (!queueDxn) {

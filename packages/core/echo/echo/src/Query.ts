@@ -391,7 +391,7 @@ class QueryClass implements Any {
 
     const feeds = items as Feed.Feed[];
     const queueDxns = feeds.flatMap((feed) => {
-      const dxn = Feed.getDxn(feed);
+      const dxn = Feed.getQueueDxn(feed);
       return dxn ? [dxn.toString()] : [];
     });
     return new QueryClass({

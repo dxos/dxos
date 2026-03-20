@@ -452,23 +452,23 @@ Reference types and operations.
 
 Feed (queue) types and operations.
 
-| Export                          | Kind       | Description                                          |
-| ------------------------------- | ---------- | ---------------------------------------------------- |
-| `Feed.Feed`                     | const/type | Schema and instance type for a feed object.          |
-| `Feed.Cursor<T>`                | type       | Opaque cursor for iterating feed items.              |
-| `Feed.RetentionOptions`         | type       | Retention policy options.                            |
-| `Feed.Service`                  | class      | Effect service tag for feed operations.              |
-| `Feed.notAvailable`             | const      | Layer providing a Feed.Service that throws.          |
-| `Feed.make(props)`              | fn         | Creates a new feed object.                           |
-| `Feed.getDxn(feed)`             | fn         | Derives the queue DXN from the feed object's DXN.    |
-| `Feed.append(feed, items)`      | fn         | Effect: appends items to a feed.                     |
-| `Feed.remove(feed, items)`      | fn         | Effect: removes items from a feed by ID.             |
-| `Feed.query(feed, query)`       | fn         | Effect: creates a reactive query over feed items.    |
-| `Feed.runQuery(feed, query)`    | fn         | Effect: executes a feed query once, returns results. |
-| `Feed.cursor(feed)`             | fn         | Effect: creates a cursor (stubbed).                  |
-| `Feed.next(cursor)`             | fn         | Effect: returns the next item (stubbed).             |
-| `Feed.nextOption(cursor)`       | fn         | Effect: returns the next item as Option (stubbed).   |
-| `Feed.setRetention(feed, opts)` | fn         | Effect: sets retention policy (stubbed).             |
+| Export                          | Kind       | Description                                                     |
+| ------------------------------- | ---------- | --------------------------------------------------------------- |
+| `Feed.Feed`                     | const/type | Schema and instance type for a feed object.                     |
+| `Feed.Cursor<T>`                | type       | Opaque cursor for iterating feed items.                         |
+| `Feed.RetentionOptions`         | type       | Retention policy options.                                       |
+| `Feed.Service`                  | class      | Effect service tag for feed operations.                         |
+| `Feed.notAvailable`             | const      | Layer providing a Feed.Service that throws.                     |
+| `Feed.make(props)`              | fn         | Creates a new feed object.                                      |
+| `Feed.getQueueDxn(feed)`        | fn         | Derives the queue DXN from the feed object's DXN. Internal API. |
+| `Feed.append(feed, items)`      | fn         | Effect: appends items to a feed.                                |
+| `Feed.remove(feed, items)`      | fn         | Effect: removes items from a feed by ID.                        |
+| `Feed.query(feed, query)`       | fn         | Effect: creates a reactive query over feed items.               |
+| `Feed.runQuery(feed, query)`    | fn         | Effect: executes a feed query once, returns results.            |
+| `Feed.cursor(feed)`             | fn         | Effect: creates a cursor (stubbed).                             |
+| `Feed.next(cursor)`             | fn         | Effect: returns the next item (stubbed).                        |
+| `Feed.nextOption(cursor)`       | fn         | Effect: returns the next item as Option (stubbed).              |
+| `Feed.setRetention(feed, opts)` | fn         | Effect: sets retention policy (stubbed).                        |
 
 ### `Filter` module
 

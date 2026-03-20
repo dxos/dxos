@@ -402,7 +402,7 @@ export const WithMail: Story = {
     types: [Feed.Feed],
     onInit: async ({ space }) => {
       const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const feedDxn = Feed.getDxn(feed)!;
+      const feedDxn = Feed.getQueueDxn(feed)!;
       const queue = space.queues.get<Message.Message>(feedDxn);
       const messages = createTestMailbox();
       await queue.append(messages);
@@ -877,7 +877,7 @@ export const WithProject: Story = {
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const mailboxDxn = Feed.getDxn(mailbox)!;
+      const mailboxDxn = Feed.getQueueDxn(mailbox)!;
       const queue = space.queues.get<Message.Message>(mailboxDxn);
       const messages = createTestMailbox(people);
       await queue.append(messages);

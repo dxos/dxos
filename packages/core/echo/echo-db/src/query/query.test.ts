@@ -564,7 +564,7 @@ describe('Query', () => {
 
       // Create a feed object - its queue DXN is derived from the feed's own DXN.
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDxn = Feed.getDxn(feed)!;
+      const feedDxn = Feed.getQueueDxn(feed)!;
       const queue = queues.get(feedDxn);
 
       // Add items to the queue and a separate item to the space.
@@ -587,7 +587,7 @@ describe('Query', () => {
       const queues = peer.client.constructQueueFactory(db.spaceId);
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDxn = Feed.getDxn(feed)!;
+      const feedDxn = Feed.getQueueDxn(feed)!;
       const queue = queues.get(feedDxn);
 
       const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
@@ -611,7 +611,7 @@ describe('Query', () => {
       const queues = peer.client.constructQueueFactory(db.spaceId);
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDxn = Feed.getDxn(feed)!;
+      const feedDxn = Feed.getQueueDxn(feed)!;
       const queue = queues.get(feedDxn);
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
