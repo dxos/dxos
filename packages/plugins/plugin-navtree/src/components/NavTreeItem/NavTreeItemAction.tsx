@@ -114,6 +114,7 @@ export const NavTreeItemMonolithicAction = (
 export const NavTreeItemAction = ({
   monolithic,
   menuActions,
+  menuType,
   parent: node,
   path,
   ...props
