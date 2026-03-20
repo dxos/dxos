@@ -19,8 +19,6 @@ export const ChannelSettings: LazyExoticComponent<ComponentType<ChannelSettingsP
   () => import('./ChannelSettings'),
 );
 
-export const VideoArticle: LazyExoticComponent<ComponentType<VideoArticleProps>> = lazy(
-  () => import('./VideoArticle'),
-);
+export const VideoArticle: LazyExoticComponent<ComponentType<VideoArticleProps>> = lazy(() => import('./VideoArticle'));
 
 export const VideoCard: LazyExoticComponent<ComponentType<VideoCardProps>> = lazy(() => import('./VideoCard'));

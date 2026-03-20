@@ -84,7 +84,6 @@ const makeYouTubeApiRequest = Effect.fn('makeYouTubeApiRequest')(function* (url:
   return response;
 });
 
-
 /**
  * Get channel details by channel ID.
  * https://developers.google.com/youtube/v3/docs/channels/list
@@ -148,5 +147,3 @@ export const getVideoDetails = Effect.fn(function* (videoIds: string[]) {
   }).toString();
   return yield* makeYouTubeApiRequest(url).pipe(Effect.flatMap(decodeAndHandleErrors(VideosResponse)));
 });
-
-  

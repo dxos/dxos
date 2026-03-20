@@ -17,10 +17,7 @@ export type TranscriptResult = {
  * Fetches captions for a YouTube video using youtube-caption-extractor.
  * Works in both browser and Node/edge environments.
  */
-export const fetchTranscript = (
-  videoId: string,
-  lang?: string,
-): Effect.Effect<TranscriptResult | undefined> =>
+export const fetchTranscript = (videoId: string, lang?: string): Effect.Effect<TranscriptResult | undefined> =>
   Effect.tryPromise({
     try: async () => {
       const { getSubtitles } = await import('youtube-caption-extractor');

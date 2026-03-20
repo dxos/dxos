@@ -198,7 +198,7 @@ export const OpB = Operation.make({
 Put `export default OpA.pipe(Operation.withHandler(...))` right after imports. If you add helpers, place them below the default export and do not export them.
 
 ```ts
-import *as Effect from 'effect/Effect';
+import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/operation';
 import { OpA } from './definitions';
 
