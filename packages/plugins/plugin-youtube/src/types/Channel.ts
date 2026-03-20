@@ -9,6 +9,8 @@ import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
+// @import-as-namespace
+
 /**
  * YouTubeChannel schema representing a YouTube channel to sync videos from.
  */
@@ -62,6 +64,7 @@ export const CreateYouTubeChannelSchema = Schema.Struct({
     }),
   ),
 });
+export interface CreateYouTubeChannelSchema extends Schema.Schema.Type<typeof CreateYouTubeChannelSchema> {}
 
 type YouTubeChannelProps = Omit<Obj.MakeProps<typeof YouTubeChannel>, 'feed' | 'lastSyncedAt'>;
 

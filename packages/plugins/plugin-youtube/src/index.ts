@@ -5,4 +5,4 @@
 export * from './meta';
 export * from './functions';
 
-export * from './YouTubePlugin';
+export * as YouTubePlugin from './YouTubePlugin';

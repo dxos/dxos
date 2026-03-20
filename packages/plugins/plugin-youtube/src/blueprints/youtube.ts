@@ -6,17 +6,15 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { YouTubeFunctions } from '../functions';
+import { Sync, YouTubeHandlers } from '../functions';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/youtube';
-
-const functions = [YouTubeFunctions.Sync];
 
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'YouTube',
-    tools: Blueprint.toolDefinitions({ functions, tools: [] }),
+    tools: Blueprint.toolDefinitions({ operations: [Sync], tools: [] }),
     instructions: Template.make({
       source: trim`
         You manage YouTube channel subscriptions and video content.
@@ -48,7 +46,7 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
+  operations: YouTubeHandlers,
   make,
 };
 

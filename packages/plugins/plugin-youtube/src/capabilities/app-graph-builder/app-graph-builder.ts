@@ -17,7 +17,7 @@ import { COMPANION_PREFIX } from '@dxos/app-toolkit';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder } from '@dxos/plugin-graph';
 
-import { YouTubeFunctions } from '../../functions';
+import { Sync } from '../../functions';
 import { meta } from '../../meta';
 import { Channel, Video } from '../../types';
 
@@ -83,7 +83,7 @@ export default Capability.makeModule(
                 const runtime = computeRuntime.getRuntime(db.spaceId);
                 yield* Effect.tryPromise(() =>
                   runtime.runPromise(
-                    invokeFunctionWithTracing(YouTubeFunctions.Sync, {
+                    invokeFunctionWithTracing(Sync, {
                       channel: Ref.make(channel),
                     }),
                   ),

@@ -9,19 +9,76 @@ import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
-import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Database, Feed, Filter, Obj, Ref as EchoRef } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 
 import * as Channel from '../types/Channel';
 import * as Video from '../types/Video';
 
 import { YouTube } from './apis';
+import { Sync } from './definitions';
 import { GoogleCredentials } from './services/google-credentials';
 import { fetchTranscript } from './transcript';
+
+export default Sync.pipe(
+  Operation.withHandler(
+    ({
+      channel: channelRef,
+      restrictedMode = false,
+      includeTranscripts = true,
+    }) =>
+      Effect.gen(function* () {
+        log('syncing youtube channel', { channel: channelRef.dxn.toString(), restrictedMode, includeTranscripts });
+        const channel = yield* Database.load(channelRef);
+
+        const channelUrl =
+          (channel as Channel.YouTubeChannel).channelUrl ?? (channel as Channel.YouTubeChannel).channelId;
+        if (!channelUrl) {
+          return yield* Effect.fail(new Error('No channel URL or ID configured'));
+        }
+
+        const channelInfo = extractChannelInfo(channelUrl);
+        log('extracted channel info', channelInfo);
+
+        const { channelId, channelTitle, uploadsPlaylistId } = yield* getUploadsPlaylistId(channelInfo);
+        log('found channel', { channelId, channelTitle, uploadsPlaylistId });
+
+        Obj.change(channel as Channel.YouTubeChannel, (channelObj) => {
+          channelObj.channelId = channelId;
+          if (!channelObj.name) {
+            channelObj.name = channelTitle;
+          }
+        });
+
+        // Get the feed and query for existing videos.
+        const feed = yield* Database.load((channel as Channel.YouTubeChannel).feed as Ref.Ref<Feed.Feed>);
+        const existingVideos = yield* Feed.runQuery(feed, Filter.type(Video.YouTubeVideo));
+        const existingVideoIds = new Set(existingVideos.map((video: Video.YouTubeVideo) => video.videoId));
+        log('existing videos', { count: existingVideoIds.size });
+
+        const newVideosCount = yield* streamVideosToFeed(
+          uploadsPlaylistId,
+          feed,
+          existingVideoIds,
+          restrictedMode,
+          includeTranscripts,
+        );
+
+        Obj.change(channel as Channel.YouTubeChannel, (channelObj) => {
+          channelObj.lastSyncedAt = new Date().toISOString();
+        });
+
+        log('sync complete', { newVideos: newVideosCount, channelTitle });
+        return {
+          newVideos: newVideosCount,
+          channelTitle,
+        };
+      }).pipe(Effect.provide(Layer.mergeAll(FetchHttpClient.layer, GoogleCredentials.fromChannelRef(channelRef)))),
+  ),
+);
 
 const STREAMING_CONFIG = {
   /** Videos per page from YouTube API. */
@@ -249,83 +306,4 @@ const streamVideosToFeed = Effect.fn(function* (
   );
 
   return count;
-});
-
-export default defineFunction({
-  key: 'dxos.org/function/youtube/sync',
-  name: 'Sync YouTube Channel',
-  description: 'Sync videos from a YouTube channel to the feed.',
-  inputSchema: Schema.Struct({
-    channel: EchoRef.Ref(Channel.YouTubeChannel).annotations({
-      description: 'Reference to the YouTube channel to sync videos from.',
-    }),
-    restrictedMode: Schema.Boolean.pipe(
-      Schema.annotations({
-        description:
-          'Use restricted mode to limit to max 20 videos. Reduces API calls. Useful for testing or quick syncs.',
-      }),
-      Schema.optional,
-    ),
-    includeTranscripts: Schema.Boolean.pipe(
-      Schema.annotations({
-        description:
-          'Whether to fetch video transcripts. Transcripts are fetched using public YouTube transcript API and do not require authentication.',
-      }),
-      Schema.optional,
-    ),
-  }),
-  outputSchema: Schema.Struct({
-    newVideos: Schema.Number,
-    channelTitle: Schema.String.pipe(Schema.optional),
-  }),
-  types: [Channel.YouTubeChannel, Video.YouTubeVideo],
-  services: [Database.Service, Feed.Service],
-  handler: ({ data: { channel: channelRef, restrictedMode = false, includeTranscripts = true } }) =>
-    Effect.gen(function* () {
-      log('syncing youtube channel', { channel: channelRef.dxn.toString(), restrictedMode, includeTranscripts });
-      const channel = yield* Database.load(channelRef);
-
-      const channelUrl =
-        (channel as Channel.YouTubeChannel).channelUrl ?? (channel as Channel.YouTubeChannel).channelId;
-      if (!channelUrl) {
-        return yield* Effect.fail(new Error('No channel URL or ID configured'));
-      }
-
-      const channelInfo = extractChannelInfo(channelUrl);
-      log('extracted channel info', channelInfo);
-
-      const { channelId, channelTitle, uploadsPlaylistId } = yield* getUploadsPlaylistId(channelInfo);
-      log('found channel', { channelId, channelTitle, uploadsPlaylistId });
-
-      Obj.change(channel as Channel.YouTubeChannel, (channelObj) => {
-        channelObj.channelId = channelId;
-        if (!channelObj.name) {
-          channelObj.name = channelTitle;
-        }
-      });
-
-      // Get the feed and query for existing videos.
-      const feed = yield* Database.load((channel as Channel.YouTubeChannel).feed as EchoRef.Ref<Feed.Feed>);
-      const existingVideos = yield* Feed.runQuery(feed, Filter.type(Video.YouTubeVideo));
-      const existingVideoIds = new Set(existingVideos.map((video: Video.YouTubeVideo) => video.videoId));
-      log('existing videos', { count: existingVideoIds.size });
-
-      const newVideosCount = yield* streamVideosToFeed(
-        uploadsPlaylistId,
-        feed,
-        existingVideoIds,
-        restrictedMode,
-        includeTranscripts,
-      );
-
-      Obj.change(channel as Channel.YouTubeChannel, (channelObj) => {
-        channelObj.lastSyncedAt = new Date().toISOString();
-      });
-
-      log('sync complete', { newVideos: newVideosCount, channelTitle });
-      return {
-        newVideos: newVideosCount,
-        channelTitle,
-      };
-    }).pipe(Effect.provide(Layer.mergeAll(FetchHttpClient.layer, GoogleCredentials.fromChannelRef(channelRef)))),
 });

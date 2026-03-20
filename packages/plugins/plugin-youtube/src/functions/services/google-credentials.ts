@@ -43,6 +43,7 @@ const loadAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken> | unde
  * Service for accessing Google API credentials.
  * Provides the Google API token either from an object's access token or falls back to database credentials.
  */
+// TODO(dmaretskyi): Remove this service.
 export class GoogleCredentials extends Context.Tag('GoogleCredentials')<
   GoogleCredentials,
   {

@@ -9,10 +9,12 @@ import { Card, Icon } from '@dxos/react-ui';
 
 import * as Video from '../../types/Video';
 
+export type VideoCardProps = SurfaceComponentProps<Video.YouTubeVideo>;
+
 /**
  * YouTube video card with embedded player.
  */
-export const VideoCard = ({ subject: video }: SurfaceComponentProps<Video.YouTubeVideo>) => {
+export const VideoCard = ({ subject: video }: VideoCardProps) => {
   const [showPlayer, setShowPlayer] = useState(false);
   const publishedDate = new Date(video.publishedAt).toLocaleDateString();
   const hasTranscript = Boolean(video.transcript);

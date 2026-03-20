@@ -2,10 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
-import Sync from './sync';
+import { OperationHandlerSet } from '@dxos/operation';
 
 export { YouTube } from './apis';
+export * from './definitions';
 
-export const YouTubeFunctions = {
-  Sync,
-};
+export const YouTubeHandlers = OperationHandlerSet.lazy(() => import('./sync'));
