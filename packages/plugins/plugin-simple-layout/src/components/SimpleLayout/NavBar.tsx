@@ -29,7 +29,7 @@ export const NavBar = forwardRef<HTMLDivElement, NavBarProps>(({ actions, onActi
 
   return (
     <Menu.Root {...menuActions} alwaysActive onAction={onAction}>
-      <Menu.Toolbar {...composableProps(props)} density='coarse' ref={forwardedRef} />
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
     </Menu.Root>
   );
 });

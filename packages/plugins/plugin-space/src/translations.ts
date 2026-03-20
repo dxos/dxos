@@ -207,6 +207,7 @@ export const translations = [
         'foreign keys': 'Foreign Keys',
         'add key': 'Add Key',
         'open space settings label': 'Open settings',
+        'related actions label': 'Related Actions',
         'related objects label': 'Related Objects',
 
         'row details no selection label': 'No objects selected',

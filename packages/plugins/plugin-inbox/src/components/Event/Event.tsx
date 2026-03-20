@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { forwardRef, type ComponentPropsWithoutRef, type PropsWithChildren } from 'react';
+import React, { forwardRef, type PropsWithChildren } from 'react';
 
 import { type Database } from '@dxos/react-client/echo';
 import { ComposableProps, Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -48,20 +48,18 @@ EventRoot.displayName = EVENT_ROOT_NAME;
 
 const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
 
-type EventToolbarProps = ThemedClassName<UseEventToolbarActionsProps & ComponentPropsWithoutRef<typeof Menu.Root>>;
+type EventToolbarProps = ComposableProps<HTMLDivElement, ThemedClassName<UseEventToolbarActionsProps>>;
 
-const EventToolbar = forwardRef<HTMLDivElement, EventToolbarProps>(
-  ({ classNames, onNoteCreate, ...props }, forwardRef) => {
-    const { attendableId } = useEventContext(EVENT_TOOLBAR_NAME);
-    const menuActions = useEventToolbarActions({ onNoteCreate });
+const EventToolbar = forwardRef<HTMLDivElement, EventToolbarProps>(({ onNoteCreate, ...props }, forwardedRef) => {
+  const { attendableId } = useEventContext(EVENT_TOOLBAR_NAME);
+  const menuActions = useEventToolbarActions({ onNoteCreate });
 
-    return (
-      <Menu.Root {...menuActions} attendableId={attendableId}>
-        <Menu.Toolbar {...props} classNames={classNames} ref={forwardRef} />
-      </Menu.Root>
-    );
-  },
-);
+  return (
+    <Menu.Root {...menuActions} attendableId={attendableId}>
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+    </Menu.Root>
+  );
+});
 
 EventToolbar.displayName = EVENT_TOOLBAR_NAME;
 

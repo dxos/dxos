@@ -36,6 +36,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   const rootRef = useRef<HTMLDivElement | null>(null);
   const { message, labels, currentMessageId, onAction } = data;
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), true);
+
   // TODO(wittjosiah): Show selection state in the UI.
   const _isCurrent = currentMessageId === message.id;
 
@@ -99,7 +100,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
                 hue={hue}
                 hueVariant='surface'
                 variant='square'
-                size={7}
+                size={6}
                 fallback={from}
                 onClick={handleAvatarClick}
               />
@@ -111,7 +112,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
             <Card.Menu />
           </Card.Toolbar>
           <Card.Content>
-            <Card.Row>
+            <Card.Row icon='ph--user--regular'>
               <Card.Text>{from}</Card.Text>
             </Card.Row>
             {snippet && (

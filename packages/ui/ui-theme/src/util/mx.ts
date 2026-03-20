@@ -56,6 +56,7 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
  * - `classNames` is the consumer-facing prop for theming overrides.
  * Use `composableProps` to reconcile both into a single `className`.
  */
+// TODO(burdon): Move to react-ui.
 export const composableProps = <P extends HTMLElement = HTMLElement>(
   { className, classNames, ...props }: ComposableProps,
   { className: defaultClassNames, ...defaults }: Partial<HTMLAttributes<P>> | undefined = {},

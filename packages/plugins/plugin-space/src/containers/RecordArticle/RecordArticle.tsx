@@ -28,7 +28,7 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
   const singleColumn = related.length === 1;
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root />
       </Panel.Toolbar>
@@ -36,8 +36,14 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 gap-4'>
             <ObjectCard data={subject} classNames='dx-card-max-width' />
+
+            <div role='none' className='flex flex-col gap-2'>
+              <label className='mt-2 text-sm text-description'>{t('related actions label')}</label>
+              <Surface.Surface role='magic' data={{ subject }} limit={1} />
+            </div>
+
             {related.length > 0 && (
-              <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'dx-card-max-width' : 'w-full')}>
+              <div role='none' className={mx('flex flex-col gap-2', singleColumn ? 'dx-card-max-width' : 'w-full')}>
                 <label className='mt-2 text-sm text-description'>{t('related objects label')}</label>
                 <Masonry.Root<Entity.Unknown>
                   items={related}
@@ -137,6 +143,10 @@ const useRelatedObjects = (
       related.push(...targetObjects, ...sourceObjects);
     }
 
-    return Array.from(new Set(related));
+    return (
+      Array.from(new Set(related))
+        // TODO(burdon): Hack to filter out chat objects.
+        .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.assistant.chat')
+    );
   }, [record, objects]);
 };

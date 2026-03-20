@@ -34,7 +34,6 @@ type TabsContextValue = {
   activePart: TabsActivePart;
   setActivePart: (nextActivePart: TabsActivePart) => void;
   attendableId?: string;
-  verticalVariant?: 'stateful' | 'stateless';
 } & Pick<TabsPrimitive.TabsProps, 'orientation' | 'value'>;
 
 const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TABS_NAME, {
@@ -45,7 +44,7 @@ const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TA
 
 type TabsRootProps = ThemedClassName<TabsPrimitive.TabsProps> &
   Partial<
-    Pick<TabsContextValue, 'activePart' | 'verticalVariant' | 'attendableId'> & {
+    Pick<TabsContextValue, 'activePart' | 'attendableId'> & {
       onActivePartChange: (nextActivePart: TabsActivePart) => void;
       defaultActivePart: TabsActivePart;
     }
@@ -64,7 +63,6 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
       defaultValue,
       orientation = 'vertical',
       activationMode = 'manual',
-      verticalVariant = 'stateful',
       attendableId,
       ...props
     },
@@ -111,17 +109,10 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
         setActivePart={setActivePart}
         value={value}
         attendableId={attendableId}
-        verticalVariant={verticalVariant}
       >
         <TabsPrimitive.Root
           {...props}
-          className={mx(
-            'overflow-hidden',
-            orientation === 'vertical' &&
-              verticalVariant === 'stateful' &&
-              '[&[data-active=list]_[role=tabpanel]]:invisible @md:[&[data-active=list]_[role=tabpanel]]:visible',
-            classNames,
-          )}
+          className={mx('overflow-hidden', classNames)}
           orientation={orientation}
           activationMode={activationMode}
           data-active={activePart}
@@ -139,21 +130,9 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
 type TabsViewportProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => {
-  const { orientation, activePart, verticalVariant } = useTabsContext('TabsViewport');
+  const { activePart } = useTabsContext('TabsViewport');
   return (
-    <div
-      role='none'
-      {...props}
-      data-active={activePart}
-      className={mx(
-        orientation === 'vertical' &&
-          verticalVariant === 'stateful' && [
-            'grid w-[200%] grid-cols-2 data-[active=panel]:ms-[-100%]',
-            '@md:w-auto @md:data-[active=panel]:ms-0 @md:grid-cols-[minmax(min-content,1fr)_3fr] @md:gap-1',
-          ],
-        classNames,
-      )}
-    >
+    <div role='none' {...props} data-active={activePart} className={mx(classNames)}>
       {children}
     </div>
   );
@@ -161,18 +140,16 @@ const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => 
 
 type TabsTablistProps = ThemedClassName<TabsPrimitive.TabsListProps>;
 
-// TODO(burdon): Should have same geometry as Toolbar.
 const TabsTablist = ({ children, classNames, ...props }: TabsTablistProps) => {
-  const { orientation, verticalVariant } = useTabsContext('TabsTablist');
+  const { orientation } = useTabsContext('TabsTablist');
   return (
     <TabsPrimitive.List
       {...props}
       data-arrow-keys={orientation === 'vertical' ? 'up down' : 'left right'}
       className={mx(
         'max-h-full w-full',
-        // NOTE: Padding should be common to Toolbar.
-        orientation === 'vertical' ? 'overflow-y-auto' : 'flex items-stretch justify-start overflow-x-auto p-1 gap-1',
-        orientation === 'vertical' && verticalVariant === 'stateful' && 'place-self-start p-1',
+        // TODO(burdon): Should be embeddable inside Toolbar (if horizontal).
+        orientation === 'vertical' ? 'overflow-y-auto' : 'flex p-1 gap-1 items-stretch justify-start overflow-x-auto',
         classNames,
       )}
     >
@@ -188,10 +165,10 @@ const TabsBackButton = ({ onClick, classNames, ...props }: ButtonProps) => {
       setActivePart('list');
       return onClick?.(event);
     },
-    [onClick, setActivePart],
+    [setActivePart, onClick],
   );
 
-  return <Button {...props} classNames={['w-full text-start @md:hidden mb-2', classNames]} onClick={handleClick} />;
+  return <Button {...props} classNames={['@md:hidden text-start', classNames]} onClick={handleClick} />;
 };
 
 type TabsTabGroupHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'h2'>>;
@@ -222,17 +199,16 @@ const TabsTab = ({ value, classNames, children, onClick, ...props }: TabsTabProp
   return (
     <TabsPrimitive.Trigger value={value} asChild>
       <Button
-        density='fine'
+        {...props}
         variant={
           orientation === 'horizontal' && contextValue === value ? (hasAttention ? 'primary' : 'default') : 'ghost'
         }
-        {...props}
-        onClick={handleClick}
         classNames={[
           orientation === 'vertical' && 'block justify-start text-start w-full',
           orientation === 'vertical' && 'dx-selected',
           classNames,
         ]}
+        onClick={handleClick}
       >
         {children}
       </Button>
@@ -258,17 +234,16 @@ const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps)
   return (
     <TabsPrimitive.Trigger value={value} asChild>
       <IconButton
-        density='fine'
+        {...props}
         variant={
           orientation === 'horizontal' && contextValue === value ? (hasAttention ? 'primary' : 'default') : 'ghost'
         }
-        {...props}
-        onClick={handleClick}
         classNames={[
           orientation === 'vertical' && 'justify-start text-start w-full',
           orientation === 'vertical' && 'dx-selected',
           classNames,
         ]}
+        onClick={handleClick}
       />
     </TabsPrimitive.Trigger>
   );

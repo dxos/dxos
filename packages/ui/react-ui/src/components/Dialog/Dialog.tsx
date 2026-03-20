@@ -151,7 +151,6 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
         icon='ph--x--regular'
         iconOnly
         size={4}
-        density='fine'
         variant='ghost'
         ref={forwardedRef}
       />

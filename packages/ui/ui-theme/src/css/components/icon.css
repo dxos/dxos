@@ -3,7 +3,7 @@
  */
 
 @layer dx-components {
-  dx-icon-inline {
+  .dx-icon-inline {
     @apply inline-block align-[-0.125em];
   }
 }

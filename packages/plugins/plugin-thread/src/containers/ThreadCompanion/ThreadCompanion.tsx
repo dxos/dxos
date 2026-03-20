@@ -185,19 +185,18 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
 
   return (
     <Tabs.Root
-      value={showResolvedThreads ? 'all' : 'unresolved'}
       orientation='horizontal'
+      value={showResolvedThreads ? 'all' : 'unresolved'}
       onValueChange={onChangeViewState}
     >
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            {/* TODO(burdon): TabsList should have the same geometry as Toolbar. */}
-            <Tabs.Tablist classNames='py-0 px-1'>
-              <Tabs.Tab value='unresolved' classNames='text-sm'>
+            <Tabs.Tablist classNames='p-0'>
+              <Tabs.Tab classNames='text-sm' value='unresolved'>
                 {t('show unresolved label')}
               </Tabs.Tab>
-              <Tabs.Tab value='all' classNames='text-sm'>
+              <Tabs.Tab classNames='text-sm' value='all'>
                 {t('show all label')}
               </Tabs.Tab>
             </Tabs.Tablist>

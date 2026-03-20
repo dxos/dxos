@@ -15,15 +15,15 @@ import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { ComposableProps, ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
-import { Menu, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
+import { Menu, MenuRootProps, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
+import { composableProps } from '@dxos/ui-theme';
 
 import { Call } from '../../components';
 import { meta } from '../../meta';
 import { ThreadCapabilities } from '../../types';
 import { type Channel } from '../../types';
 import { ChatContainer } from '../ChatContainer';
-import { composableProps } from '@dxos/ui-theme';
 
 export type ChannelContainerProps = SurfaceComponentProps<
   Channel.Channel | undefined,
@@ -205,21 +205,20 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
 
 type ChannelToolbarProps = ComposableProps<
   HTMLDivElement,
-  {
-    attendableId?: string;
+  Pick<MenuRootProps, 'attendableId'> & {
     role?: string;
     onJoinCall?: () => void;
   }
 >;
 
 const ChannelToolbar = forwardRef<HTMLDivElement, ChannelToolbarProps>(
-  ({ attendableId, role, onJoinCall, ...props }, forwardRef) => {
+  ({ attendableId, role, onJoinCall, ...props }, forwardedRef) => {
     const menuActions = useChannelToolbarActions(onJoinCall);
 
     return (
       <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
         <Menu.Root {...menuActions} attendableId={attendableId}>
-          <Menu.Toolbar {...composableProps(props)} ref={forwardRef} />
+          <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
         </Menu.Root>
       </ElevationProvider>
     );
