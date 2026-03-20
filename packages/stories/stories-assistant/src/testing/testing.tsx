@@ -346,7 +346,6 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
         }),
         OperationResolver.make({
           operation: AssistantOperation.CreateChat,
-          position: 'hoist',
           handler: ({ db, name }) =>
             Effect.gen(function* () {
               const registry = yield* Capability.get(Capabilities.AtomRegistry);

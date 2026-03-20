@@ -7,8 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
 import { OperationResolver } from '@dxos/operation';
 
+import { parseThreadAnchorAsCellRange } from '../../integrations/thread-ranges';
 import { meta } from '../../meta';
-import { SheetOperation } from '../../types';
+import { SheetCapabilities, SheetOperation } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed([
@@ -49,6 +50,22 @@ export default Capability.makeModule(() =>
               values: undoData.values,
             };
           }),
+      }),
+
+      OperationResolver.make({
+        operation: SheetOperation.ScrollToAnchor,
+        handler: Effect.fnUntraced(function* ({ subject, cursor, ref }) {
+          const gridInstances = yield* Capability.get(SheetCapabilities.GridInstances);
+          const entry = gridInstances.get(subject);
+          if (!entry) {
+            return;
+          }
+          entry.setActiveRefs(ref);
+          const range = parseThreadAnchorAsCellRange(cursor);
+          if (range) {
+            entry.grid.setFocus({ ...range.to, plane: 'grid' }, true);
+          }
+        }),
       }),
 
       //

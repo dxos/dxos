@@ -40,9 +40,7 @@ export default Capability.makeModule(
         }),
       }),
       OperationResolver.make({
-        operation: SpaceOperation.AddObject,
-        position: 'hoist',
-        filter: (input) => Mailbox.instanceOf(input.object) && Database.isDatabase(input.target),
+        operation: InboxOperation.AddMailbox,
         handler: Effect.fnUntraced(function* (input) {
           const target = input.target as any;
           const object = input.object as Obj.Unknown;
@@ -52,7 +50,7 @@ export default Capability.makeModule(
           yield* CollectionModel.add({
             object,
             target: Database.isDatabase(target) ? undefined : target,
-            hidden: input.hidden,
+            hidden: true,
           }).pipe(Effect.provide(Database.layer(db)));
 
           yield* Operation.schedule(ObservabilityOperation.SendEvent, {
