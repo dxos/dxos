@@ -10,7 +10,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { SettingsOperation } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -38,7 +39,7 @@ export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => {
 const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(object);
-  const [fn] = useQuery(db, Filter.type(Function.Function, { source: Ref.make(object) }));
+  const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
   const blueprints = useQuery(db, Filter.type(Blueprint.Blueprint));
 
   const [creating, setCreating] = useState(false);
@@ -131,7 +132,7 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const db = Obj.getDatabase(object);
-  const [fn] = useQuery(db, Filter.type(Function.Function, { source: Ref.make(object) }));
+  const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
 
   const functionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
   const functionUrl =

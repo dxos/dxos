@@ -7,14 +7,15 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import * as Schema from 'effect/Schema';
 
 import { Filter, Obj, Query, Ref, type Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { CredentialsService, defineFunction, withAuthorization } from '@dxos/functions';
+import { CredentialsService, withAuthorization } from '@dxos/functions';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { Person, Pipeline, Task } from '@dxos/types';
 
+import { SyncIssues } from './definitions';
 import { syncObjects } from '../../../sync';
 import { graphqlRequestBody } from '../../../util';
 
@@ -75,43 +76,34 @@ export const LINEAR_ID_KEY = 'linear.app/id';
 export const LINEAR_TEAM_ID_KEY = 'linear.app/teamId';
 export const LINEAR_UPDATED_AT_KEY = 'linear.app/updatedAt';
 
-export default defineFunction({
-  key: 'org.dxos.function.linear.sync-issues',
-  name: 'Linear',
-  description: 'Sync issues from Linear.',
-  inputSchema: Schema.Struct({
-    team: Schema.String.annotations({
-      description: 'Linear team id.',
-    }),
-  }),
-  handler: Effect.fnUntraced(function* ({ data }) {
-    const credential = yield* CredentialsService.getCredential({ service: 'linear.app' });
-    const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(credential.apiKey!)));
+export default SyncIssues.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ team }) {
+      const credential = yield* CredentialsService.getCredential({ service: 'linear.app' });
+      const client = yield* HttpClient.HttpClient.pipe(Effect.map(withAuthorization(credential.apiKey!)));
 
-    // Get the timestamp that was previosly synced.
-    const after = yield* getLatestUpdateTimestamp(data.team, Task.Task);
-    log.info('will fetch', { after });
+      const after = yield* getLatestUpdateTimestamp(team, Task.Task);
+      log.info('will fetch', { after });
 
-    // Fetch the issues that have changed since the last sync.
-    const response = yield* client.post('https://api.linear.app/graphql', {
-      body: yield* graphqlRequestBody(queryIssues, {
-        teamId: data.team,
-        after,
-      }),
-    });
-    const json: any = yield* response.json;
-    const tasks = (json.data.team.issues.edges as any[]).map((edge: any) =>
-      mapLinearIssue(edge.node as LinearIssue, { teamId: data.team }),
-    );
-    log.info('Fetched tasks', { count: tasks.length });
+      const response = yield* client.post('https://api.linear.app/graphql', {
+        body: yield* graphqlRequestBody(queryIssues, {
+          teamId: team,
+          after,
+        }),
+      });
+      const json: any = yield* response.json;
+      const tasks = (json.data.team.issues.edges as any[]).map((edge: any) =>
+        mapLinearIssue(edge.node as LinearIssue, { teamId: team }),
+      );
+      log.info('Fetched tasks', { count: tasks.length });
 
-    // Synchronize new objects with ECHO.
-    return {
-      objects: yield* syncObjects(tasks, { foreignKeyId: LINEAR_ID_KEY }),
-      syncComplete: tasks.length < 150,
-    };
-  }, Effect.provide(FetchHttpClient.layer)),
-});
+      return {
+        objects: yield* syncObjects(tasks, { foreignKeyId: LINEAR_ID_KEY }),
+        syncComplete: tasks.length < 150,
+      };
+    }, Effect.provide(FetchHttpClient.layer)),
+  ),
+);
 
 const getLatestUpdateTimestamp: (
   teamId: string,

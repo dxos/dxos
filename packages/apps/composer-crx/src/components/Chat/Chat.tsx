@@ -154,7 +154,7 @@ export const Chat = ({ classNames, host, url }: ChatProps) => {
       {/* TODO(burdon): Replace with ChatThread. */}
       {filteredMessages.length > 0 && (
         <ScrollContainer.Root pin classNames='max-h-[480px] p-3'>
-          <ScrollContainer.Viewport classNames='scrollbar-none'>
+          <ScrollContainer.Viewport>
             {filteredMessages.map((message, i) => (
               <div key={i} className={mx('flex', 'text-base', message.role === 'user' && 'justify-end my-3')}>
                 <p className={mx(message.role === 'user' ? 'bg-sky-500 px-2 py-1 rounded-sm' : 'text-description')}>

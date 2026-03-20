@@ -11,7 +11,7 @@ import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 
 import { Blockstore, FileUploader, Markdown, OperationResolver, ReactSurface } from './capabilities';
 import { meta } from './meta';
@@ -27,10 +27,15 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
         icon: Annotation.IconAnnotation.get(WnfsFile.File).pipe(Option.getOrThrow).icon,
         iconHue: Annotation.IconAnnotation.get(WnfsFile.File).pipe(Option.getOrThrow).hue ?? 'white',
         inputSchema: WnfsAction.UploadFileSchema,
-        createObject: ((props, { db }) =>
+        createObject: ((props, options) =>
           Effect.gen(function* () {
-            const { object } = yield* Operation.invoke(WnfsOperation.CreateFile, { ...props, db });
-            return object;
+            const { object } = yield* Operation.invoke(WnfsOperation.CreateFile, { ...props, db: options.db });
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
           })) satisfies CreateObject,
       },
     },

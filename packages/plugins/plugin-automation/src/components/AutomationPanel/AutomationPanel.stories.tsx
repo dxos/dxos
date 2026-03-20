@@ -5,7 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Function, Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
+import { Obj } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -35,10 +37,10 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Function.Function, Trigger.Trigger],
+      types: [Operation.PersistentOperation, Trigger.Trigger],
       onCreateSpace: ({ space }) => {
         for (const fn of functions) {
-          space.db.add(Function.make(fn));
+          space.db.add(Obj.make(Operation.PersistentOperation, { ...fn, version: fn.version ?? '0.1.0' }));
         }
       },
     }),

@@ -12,11 +12,17 @@ import { withLayout, withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Toolbar } from '../Toolbar';
 
-import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
+import {
+  ScrollContainer,
+  type ScrollContainerRootProps,
+  type ScrollContainerViewportProps,
+  type ScrollController,
+} from './ScrollContainer';
 
-type StoryProps = ScrollContainerRootProps & { running?: boolean; initialLines?: number };
+type StoryProps = ScrollContainerRootProps &
+  Pick<ScrollContainerViewportProps, 'fade'> & { running?: boolean; initialLines?: number };
 
-const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: StoryProps) => {
+const DefaultStory = ({ initialLines = 0, running: runningProp, fade, ...props }: StoryProps) => {
   const [lines, setLines] = useState<string[]>([]);
   const [running, setRunning] = useState(runningProp);
   const scroller = useRef<ScrollController>(null);
@@ -47,7 +53,7 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Stor
       </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollContainer.Root {...props} ref={scroller}>
-          <ScrollContainer.Viewport>
+          <ScrollContainer.Viewport fade={fade}>
             {lines.map((line, index) => (
               <div key={index} className='p-2 text-description'>
                 {line}

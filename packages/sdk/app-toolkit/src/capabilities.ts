@@ -12,8 +12,8 @@ import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { Blueprint } from '@dxos/blueprints';
 import type { Database, Type } from '@dxos/echo';
-import type { FunctionDefinition } from '@dxos/functions';
 import type { AnchoredTo } from '@dxos/types';
+import { OperationHandlerSet } from '@dxos/operation';
 
 import type { FileInfo } from './file';
 import type { NodeSerializer } from './graph';
@@ -128,7 +128,7 @@ export namespace AppCapabilities {
   // TODO(burdon): Move type upstream (into blueprint package).
   export type BlueprintDefinition = {
     key: string;
-    functions: FunctionDefinition.Any[];
+    operations: OperationHandlerSet.OperationHandlerSet;
     make: () => Blueprint.Blueprint;
   };
 
@@ -154,7 +154,10 @@ export namespace AppCapabilities {
   /**
    * @category Capability
    */
-  export const Functions = Capability$.make<FunctionDefinition.Any[]>('org.dxos.app-framework.capability.functions');
+  // TODO(dmaretskyi): Reconcile with Operation resolvers.
+  export const Functions = Capability$.make<OperationHandlerSet.OperationHandlerSet>(
+    'org.dxos.app-framework.capability.functions',
+  );
 
   export type FileUploader = (db: Database.Database, file: File) => Promise<FileInfo | undefined>;
 

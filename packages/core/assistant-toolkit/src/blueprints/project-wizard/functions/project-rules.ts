@@ -3,76 +3,74 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { defineFunction } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
-export default defineFunction({
-  key: 'org.dxos.function.project-wizard.project-rules',
-  name: 'Project rules',
-  description: 'Gets the rules for creating a project.',
-  inputSchema: Schema.Struct({}),
-  outputSchema: Schema.String,
-  handler: Effect.fnUntraced(function* ({ data }) {
-    return trim`
-      You can ask the user for qualifying questions about the projects.
-      If projects should actively read incoming emails, query for mailboxes and add a subscription to them.
-      Use [query-blueprints] function to query for available blueprints.
-      Use [create-project] function to create a new project.
-      After creating a project, explicitly remind the user to enable local triggers so the project can be driven autonomously.
+import { ProjectRules } from './definitions';
 
-      Notable blueprints (query to get their keys):
+export default ProjectRules.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* () {
+      return trim`
+        You can ask the user for qualifying questions about the projects.
+        If projects should actively read incoming emails, query for mailboxes and add a subscription to them.
+        Use [query-blueprints] function to query for available blueprints.
+        Use [create-project] function to create a new project.
+        After creating a project, explicitly remind the user to enable local triggers so the project can be driven autonomously.
 
-      - Database -- CRUD on objects in the ECHO database.
-      - Markdown -- Create and edit markdown documents.
-      - Websearch -- Search the web for information.
-      - Browser -- Virtual browser via playwright when simple WebSearch is not enough.
-      - Memory -- Memory to store and retrieve information.
+        Notable blueprints (query to get their keys):
 
-      Experimental blueprints that are discoraged:
+        - Database -- CRUD on objects in the ECHO database.
+        - Markdown -- Create and edit markdown documents.
+        - Websearch -- Search the web for information.
+        - Browser -- Virtual browser via playwright when simple WebSearch is not enough.
+        - Memory -- Memory to store and retrieve information.
 
-      - Research
-      - Design
-      - Project (not wizard) -- those are project internals, they are auto-added to every new project.
+        Experimental blueprints that are discoraged:
 
-      <example_project>
-        ## CRM from your inbox
+        - Research
+        - Design
+        - Project (not wizard) -- those are project internals, they are auto-added to every new project.
 
-        Blueprints: database, websearch, browser
+        <example_project>
+          ## CRM from your inbox
 
-        Subscribe to your inboxes.
-        Spec says that on every email we should extract People and Organizations and save them to the database, but first query the database for existing people and organizations to avoid duplicates.
-        Also run a quick research on the web to find more information about the person or organization and save it to the database.
-      </example_project>
+          Blueprints: database, websearch, browser
 
-      <example_project>
-        ## Parcel tracking
+          Subscribe to your inboxes.
+          Spec says that on every email we should extract People and Organizations and save them to the database, but first query the database for existing people and organizations to avoid duplicates.
+          Also run a quick research on the web to find more information about the person or organization and save it to the database.
+        </example_project>
 
-        Blueprints: database
+        <example_project>
+          ## Parcel tracking
 
-        Based on emails from vendors (amazon, fedex, etc.) track the status of the parcels ordered online and keep a table of orders.
+          Blueprints: database
 
-        Before creating a project, use the Database blueprint to create an Order schema:
-          - seller
-          - name
-          - price
-          - status (enum of: pending, shipped, waiting for pickup, delivered, cancelled, returned)
-          - tracking numbers/notes
-          - date of delivery
-          - shipping address
-      </example_project>
+          Based on emails from vendors (amazon, fedex, etc.) track the status of the parcels ordered online and keep a table of orders.
 
-      <example_project>
-        ## Comms assistant
+          Before creating a project, use the Database blueprint to create an Order schema:
+            - seller
+            - name
+            - price
+            - status (enum of: pending, shipped, waiting for pickup, delivered, cancelled, returned)
+            - tracking numbers/notes
+            - date of delivery
+            - shipping address
+        </example_project>
 
-        Blueprints: database, markdown, inbox
+        <example_project>
+          ## Comms assistant
 
-        Helps user maintain comms with external parites via email.
-        Ask user specifically who they want to communicate with and on what topic.
-        Project should keep a markdown document in artifacts outlining the current state of the comms.
-        Project should propose drafts to follow up on the comms. Only propose sensible drafts, do not propose drafts that are not relevant or actionable.
-      </example_project>
-    `;
-  }),
-});
+          Blueprints: database, markdown, inbox
+
+          Helps user maintain comms with external parites via email.
+          Ask user specifically who they want to communicate with and on what topic.
+          Project should keep a markdown document in artifacts outlining the current state of the comms.
+          Project should propose drafts to follow up on the comms. Only propose sensible drafts, do not propose drafts that are not relevant or actionable.
+        </example_project>
+      `;
+    }),
+  ),
+);

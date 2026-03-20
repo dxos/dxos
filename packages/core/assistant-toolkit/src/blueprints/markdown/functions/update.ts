@@ -3,30 +3,20 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Ref } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Database, Obj } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 
-export default defineFunction({
-  key: 'org.dxos.function.markdown.update',
-  name: 'Update markdown',
-  description: 'Updates the entire contents of the markdown document.',
-  inputSchema: Schema.Struct({
-    doc: Ref.Ref(Markdown.Document).annotations({
-      description: 'The ID of the document to write.',
+import { Update } from './definitions';
+
+export default Update.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ doc, content }) {
+      const document = yield* Database.load(doc);
+      const text = yield* Database.load(document.content);
+      Obj.change(text, (t) => {
+        t.content = content;
+      });
     }),
-    content: Schema.String.annotations({
-      description: 'New content to write to the document.',
-    }),
-  }),
-  outputSchema: Schema.Void,
-  handler: Effect.fn(function* ({ data: { doc, content } }) {
-    const document = yield* Database.load(doc);
-    const text = yield* Database.load(document.content);
-    Obj.change(text, (t) => {
-      t.content = content;
-    });
-  }),
-});
+  ),
+);

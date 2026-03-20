@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiConversationService } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
+import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { addBlueprints } from '@dxos/assistant-toolkit/testing';
 import { Blueprint } from '@dxos/blueprints';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -20,7 +20,7 @@ import AssistantBlueprint from './blueprint';
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [...Object.values(DatabaseBlueprint.functions)],
+  operationHandlers: DatabaseHandlers,
   types: [Organization.Organization, Blueprint.Blueprint],
   tracing: 'pretty',
 });

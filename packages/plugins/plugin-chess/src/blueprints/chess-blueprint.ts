@@ -6,17 +6,17 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { ChessFunctions } from './functions';
+import { ChessHandlers, Create, Move, Play, Print } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
 
-const functions = Object.values(ChessFunctions);
+const operations = [Create, Move, Play, Print];
 
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Chess',
-    tools: Blueprint.toolDefinitions({ functions }),
+    tools: Blueprint.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
         You are an expert chess player.
@@ -29,7 +29,7 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
+  operations: ChessHandlers,
   make,
 };
 

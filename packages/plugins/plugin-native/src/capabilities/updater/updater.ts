@@ -51,8 +51,8 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Skip updates if not supported or in dev mode.
     const platform = type();
-    if (!SUPPORTS_OTA.includes(platform) || window.location.hostname === 'localhost') {
-      log.info('skipping updater', { platform, hostname: window.location.hostname });
+    if (!SUPPORTS_OTA.includes(platform) || window.location.protocol === 'http:') {
+      log.info('skipping updater', { platform, protocol: window.location.protocol });
       return;
     }
 

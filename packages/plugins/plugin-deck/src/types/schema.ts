@@ -179,13 +179,11 @@ export namespace DeckOperation {
       description: 'Adjust the layout of a plank.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        id: Schema.String.annotations({ description: 'The id of the plank to adjust.' }),
-        type: PartAdjustmentSchema.annotations({ description: 'The type of adjustment to make.' }),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      id: Schema.String.annotations({ description: 'The id of the plank to adjust.' }),
+      type: PartAdjustmentSchema.annotations({ description: 'The type of adjustment to make.' }),
+    }),
+    output: Schema.Void,
   });
 
   export const UpdatePlankSize = Operation.make({
@@ -195,13 +193,11 @@ export namespace DeckOperation {
       description: 'Update the size of a plank.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        id: Schema.String.annotations({ description: 'The id of the plank to resize.' }),
-        size: Schema.Number.annotations({ description: 'The new size of the plank.' }),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      id: Schema.String.annotations({ description: 'The id of the plank to resize.' }),
+      size: Schema.Number.annotations({ description: 'The new size of the plank.' }),
+    }),
+    output: Schema.Void,
   });
 
   export const ChangeCompanion = Operation.make({
@@ -211,11 +207,9 @@ export namespace DeckOperation {
       description: 'Change the companion plank for a primary plank.',
     },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        companion: Schema.Union(Schema.String, Schema.Null),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      companion: Schema.Union(Schema.String, Schema.Null),
+    }),
+    output: Schema.Void,
   });
 }

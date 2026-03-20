@@ -2,17 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import Classify from './classify';
-import Create from './create';
-import Open from './open';
-import Summarize from './summarize';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export { CalendarFunctions } from './google/calendar';
-export { GmailFunctions } from './google/gmail';
+export * from './definitions';
 
-export const InboxFunctions = {
-  Classify,
-  Create,
-  Open,
-  Summarize,
-};
+export const InboxHandlers = OperationHandlerSet.lazy(
+  () => import('./classify'),
+  () => import('./create'),
+  () => import('./open'),
+  () => import('./summarize'),
+);
+
+export { CalendarFunctions, CalendarHandlers } from './google/calendar';
+export { GmailFunctions, GmailHandlers } from './google/gmail';
