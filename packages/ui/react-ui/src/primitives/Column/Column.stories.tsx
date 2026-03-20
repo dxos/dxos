@@ -16,9 +16,9 @@ const List = () => {
     <ScrollArea.Root margin role='list'>
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
-          <div key={i} role='listitem' className='p-1 hover:bg-hover-surface'>
-            Item {i}
-          </div>
+          <Input.Root key={i}>
+            <Input.TextInput value={`Item ${i}`} />
+          </Input.Root>
         ))}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
@@ -27,7 +27,7 @@ const List = () => {
 
 const DefaultStory = () => {
   return (
-    <Column.Root className='h-full overflow-hidden' gutter='md'>
+    <Column.Root classNames='h-full overflow-hidden' gutter='md'>
       <Column.Segment asChild>
         <h1 className='p-1 bg-blue-500 text-black'>Header</h1>
       </Column.Segment>

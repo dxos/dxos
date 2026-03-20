@@ -20,6 +20,7 @@ import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
+import { ScrollArea } from '../ScrollArea';
 
 //
 // Root
@@ -107,10 +108,19 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         // NOTE: Radix warning unless set to undefined.
         // https://www.radix-ui.com/primitives/docs/components/dialog#description
         aria-describedby={undefined}
-        className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
+        className={tx(
+          'dialog.content',
+          {
+            size,
+            inOverlayLayout: propsInOverlayLayout || inOverlayLayout,
+          },
+          classNames,
+        )}
         ref={forwardedRef}
       >
-        <Column.Root gutter='md'>{children}</Column.Root>
+        <Column.Root classNames='dx-expander' gutter='md'>
+          {children}
+        </Column.Root>
       </DialogPrimitive.Content>
     );
   },
@@ -165,14 +175,14 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
 type DialogBodyProps = PropsWithChildren;
 
 const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDivElement, DialogBodyProps>(
-  ({ children, ...props }, forwardedRef) => {
+  ({ children }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <Column.Segment asChild>
-        <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
-          {children}
-        </div>
-      </Column.Segment>
+      // <Column.Row asChild>
+      <ScrollArea.Root thin margin classNames={tx('dialog.body', {}, '__col-span-full')} ref={forwardedRef}>
+        <ScrollArea.Viewport>xxx{children}</ScrollArea.Viewport>
+      </ScrollArea.Root>
+      // </Column.Row>
     );
   },
 );

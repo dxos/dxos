@@ -7,7 +7,7 @@ import { Slot } from '@radix-ui/react-slot';
 import React, { type CSSProperties, forwardRef } from 'react';
 
 import { composableProps } from '@dxos/ui-theme';
-import { type SlottableProps } from '@dxos/ui-types';
+import { ThemedClassName, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 
@@ -25,7 +25,7 @@ const gutterSizes: Record<GutterSize, string> = {
   lg: 'var(--dx-gutter-lg)',
 };
 
-type ColumnRootProps = SlottableProps<HTMLDivElement, { gutter?: GutterSize }>;
+type ColumnRootProps = ThemedClassName<SlottableProps<HTMLDivElement, { gutter?: GutterSize }>>;
 
 /**
  * Creates a vertical channel with left/right gutter columns.
@@ -104,6 +104,7 @@ type ColumnSegmentProps = SlottableProps<HTMLDivElement>;
  * Use `asChild` to merge grid positioning onto the child element, eliminating the wrapper div.
  * NOTE: Must not use overflow-hidden here since it will clip input focus rings.
  */
+// TODO(burdon): Replace with props on Row.
 const Segment = forwardRef<HTMLDivElement, ColumnSegmentProps>(
   ({ children, asChild, role, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 
 import { faker } from '@dxos/random';
 
@@ -13,16 +13,18 @@ import { Input } from '../Input';
 
 import { Dialog, type DialogContentProps } from './Dialog';
 
-type StoryProps = Pick<DialogContentProps, 'size'> &
-  Partial<{
-    title: string;
-    description: string;
-    openTrigger: string;
-    closeTrigger: string;
-    blockAlign: 'start' | 'center';
-  }>;
+type StoryProps = PropsWithChildren<
+  Pick<DialogContentProps, 'size'> &
+    Partial<{
+      title: string;
+      description: string;
+      openTrigger: string;
+      closeTrigger: string;
+      blockAlign: 'start' | 'center';
+    }>
+>;
 
-const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryProps) => {
+const DefaultStory = ({ children, size, title, description, openTrigger, closeTrigger, blockAlign }: StoryProps) => {
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
@@ -44,6 +46,7 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
               <Input.Label>Value</Input.Label>
               <Input.TextInput placeholder='Enter value' />
             </Input.Root>
+            {children}
           </Dialog.Body>
           <Dialog.ActionBar>
             <Dialog.Close asChild>
@@ -118,5 +121,16 @@ export const ExtraLarge: Story = {
     closeTrigger: 'Close',
     blockAlign: 'center',
     size: 'xl',
+  },
+};
+
+export const Overflow: Story = {
+  args: {
+    title: 'Dialog title',
+    description: faker.lorem.paragraphs(30),
+    openTrigger: 'Open Dialog',
+    closeTrigger: 'Close',
+    blockAlign: 'center',
+    size: 'lg',
   },
 };
