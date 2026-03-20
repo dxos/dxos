@@ -12,6 +12,7 @@ import {
   type ActionGraphProps,
   Menu,
   type MenuAction,
+  MenuRootProps,
   createGapSeparator,
   createMenuAction,
   useMenuActions,
@@ -29,16 +30,6 @@ export type TableToolbarActionType = 'add-row' | 'comment' | 'save-view';
 type TableToolbarState = Partial<{ viewDirty: boolean }>;
 
 // TODO(burdon): Radix style layout.
-
-export type TableToolbarProps = ComposableProps<
-  HTMLDivElement,
-  TableToolbarState & {
-    onAdd?: () => void;
-    onSave?: () => void;
-    attendableId?: string;
-    customActions?: Atom.Atom<ActionGraphProps>;
-  }
->;
 
 const createTableToolbarActions = ({
   stateAtom,
@@ -89,8 +80,18 @@ const createTableToolbarActions = ({
     };
   });
 
+export type TableToolbarProps = ComposableProps<
+  HTMLDivElement,
+  Pick<MenuRootProps, 'attendableId'> &
+    TableToolbarState & {
+      onAdd?: () => void;
+      onSave?: () => void;
+      customActions?: Atom.Atom<ActionGraphProps>;
+    }
+>;
+
 export const TableToolbar = forwardRef<HTMLDivElement, TableToolbarProps>(
-  ({ viewDirty, attendableId, onAdd, onSave, customActions, ...props }, forwardedRef) => {
+  ({ attendableId, viewDirty, onAdd, onSave, customActions, ...props }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);
 

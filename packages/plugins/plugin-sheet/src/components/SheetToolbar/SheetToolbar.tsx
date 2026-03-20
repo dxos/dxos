@@ -55,10 +55,10 @@ const createToolbarActions = ({
   });
 };
 
-export type SheetToolbarProps = ComposableProps<HTMLDivElement, { id: string }>;
+export type SheetToolbarProps = ComposableProps<HTMLDivElement>;
 
-export const SheetToolbar = forwardRef<HTMLDivElement, SheetToolbarProps>(({ id, ...props }, forwardedRef) => {
-  const { model, cursorFallbackRange } = useSheetContext();
+export const SheetToolbar = forwardRef<HTMLDivElement, SheetToolbarProps>((props, forwardedRef) => {
+  const { attendableId, model, cursorFallbackRange } = useSheetContext();
   const stateAtom = useToolbarState({});
   const registry = useContext(RegistryContext);
   useAlignState(stateAtom);
@@ -67,14 +67,14 @@ export const SheetToolbar = forwardRef<HTMLDivElement, SheetToolbarProps>(({ id,
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
     return Atom.make((get) => {
-      const actions = get(graph.actions(id));
+      const actions = get(graph.actions(attendableId));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
       return {
         nodes,
         edges: nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
       };
     });
-  }, [graph, id]);
+  }, [graph, attendableId]);
 
   const actionsCreator = useMemo(
     () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange, customActions }),
@@ -83,7 +83,7 @@ export const SheetToolbar = forwardRef<HTMLDivElement, SheetToolbarProps>(({ id,
   const menuActions = useMenuActions(actionsCreator);
 
   return (
-    <Menu.Root {...menuActions} attendableId={id}>
+    <Menu.Root {...menuActions} attendableId={attendableId}>
       <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
     </Menu.Root>
   );

@@ -82,7 +82,7 @@ MessageRoot.displayName = 'Message.Root';
 
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
-type MessageToolbarProps = ComposableProps<HTMLDivElement, {}>;
+type MessageToolbarProps = ComposableProps<HTMLDivElement>;
 
 const MessageToolbar = forwardRef<HTMLDivElement, MessageToolbarProps>((props, forwardedRef) => {
   const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } =

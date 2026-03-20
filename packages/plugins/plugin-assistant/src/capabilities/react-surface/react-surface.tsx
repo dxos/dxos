@@ -6,15 +6,15 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Chat, DatabaseBlueprint, MarkdownBlueprint, Project, WebSearchBlueprint } from '@dxos/assistant-toolkit';
-import { Blueprint, Prompt, Template } from '@dxos/blueprints';
+import { Chat, Project } from '@dxos/assistant-toolkit';
+import { Blueprint, Prompt } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
-import { Filter, Obj } from '@dxos/echo';
-import { IconButton, Panel } from '@dxos/react-ui';
+import { Obj } from '@dxos/echo';
+import { Panel } from '@dxos/react-ui';
 
 import {
   AssistantSettings,
@@ -25,13 +25,12 @@ import {
   ProjectArticle,
   ProjectSettings,
   PromptArticle,
+  PromptList,
   TracePanel,
   TriggerStatus,
 } from '../../containers';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
-import { AssistantOperation, type Assistant } from '../../types';
-import { trim } from '@dxos/util';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Assistant } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -130,60 +129,12 @@ export default Capability.makeModule(() =>
         role: 'status-indicator',
         component: () => <TriggerStatus />,
       }),
-      // TODO(burdon): Factor out.
       Surface.create({
         id: `${meta.id}.magic`,
         role: 'magic',
         filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
-        component: ({ data }) => {
-          const { invokePromise } = useOperationInvoker();
-          const db = Obj.getDatabase(data.subject);
-          const prompts = useQuery(db, Filter.type(Prompt.Prompt));
-          if (!db) {
-            return null;
-          }
-
-          return (
-            <div className='flex gap-2'>
-              {prompts.map((prompt, i) => (
-                <div key={i}>
-                  <IconButton
-                    icon='ph--magic-wand--regular'
-                    label={Obj.getLabel(prompt) ?? Obj.getDXN(prompt).toString()}
-                    onClick={async () => {
-                      const { content } = await prompt.instructions.source.load();
-                      void invokePromise(AssistantOperation.RunPromptInNewChat, {
-                        db,
-                        prompt: Template.process(content),
-                        objects: [data.subject],
-                        blueprints: [DatabaseBlueprint.key, WebSearchBlueprint.key, MarkdownBlueprint.key],
-                      });
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          );
-        },
+        component: ({ data }) => <PromptList subject={data.subject} />,
       }),
     ]),
   ),
 );
-
-const prompts: { label: string; prompt: string; blueprints: string[] }[] = [
-  {
-    label: 'Explain',
-    prompt: trim`
-      What is this?
-    `,
-    blueprints: [DatabaseBlueprint.key, WebSearchBlueprint.key, MarkdownBlueprint.key],
-  },
-  {
-    label: 'Research',
-    prompt: trim`
-      Research and create a summary markdown document for this object and then create a relation to this object. 
-      Do not include; do not include "<cite>" tags.
-    `,
-    blueprints: [DatabaseBlueprint.key, WebSearchBlueprint.key, MarkdownBlueprint.key],
-  },
-];

@@ -69,8 +69,8 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   return (
     <ChatComponent.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
       <Panel.Root role={role} classNames='dx-document' ref={forwardedRef}>
-        <Panel.Toolbar>
-          <ChatComponent.Toolbar attendableId={parentId} companionTo={companionTo} />
+        <Panel.Toolbar className='bg-toolbar-surface'>
+          <ChatComponent.Toolbar classNames='dx-document' attendableId={parentId} companionTo={companionTo} />
         </Panel.Toolbar>
         <Panel.Content>
           <ChatComponent.Viewport>
