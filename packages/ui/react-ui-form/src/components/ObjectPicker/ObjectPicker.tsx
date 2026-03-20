@@ -28,32 +28,6 @@ export type ObjectPickerContentProps = ThemedClassName<{
   onSelect: (id: string) => void;
 }>;
 
-const CreateItem = ({
-  createOptionLabel,
-  createOptionIcon,
-  onCreateItemSelect,
-}: {
-  createOptionLabel: [string, { ns: string }];
-  createOptionIcon: string;
-  onCreateItemSelect: (query: string) => void;
-}) => {
-  const { t } = useTranslation(translationKey);
-  const { query } = useSearchListInput();
-
-  return (
-    <Combobox.Item
-      value='__create__'
-      label={t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })}
-      icon={createOptionIcon}
-      classNames='flex items-center gap-2'
-      closeOnSelect={false}
-      onSelect={() => {
-        onCreateItemSelect(query);
-      }}
-    />
-  );
-};
-
 const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>(
   (
     {
@@ -67,7 +41,7 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
       onCreate,
       ...props
     },
-    ref,
+    forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
     const [showForm, setShowForm] = useState(false);
@@ -112,9 +86,9 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
       [createSchema],
     );
 
-    return (
-      <Combobox.Content {...props} ref={ref} onSearch={handleSearch} onKeyDownCapture={handleKeyDown}>
-        {showForm && createSchema ? (
+    if (showForm && createSchema) {
+      return (
+        <Combobox.Content {...props} onSearch={handleSearch} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
           <Popover.Viewport>
             <Form.Root
               testId='create-referenced-object-form'
@@ -131,40 +105,69 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
               </Form.Viewport>
             </Form.Root>
           </Popover.Viewport>
-        ) : (
-          <>
-            <Combobox.Input placeholder={t('ref field combobox input placeholder')} autoFocus />
-            <Combobox.List>
-              {results.map((option) => (
-                <Combobox.Item
-                  key={option.id}
-                  value={option.id}
-                  label={option.label}
-                  checked={selectedIds?.includes(option.id)}
-                  onSelect={() => onSelect(option.id)}
-                  classNames='flex items-center gap-2'
-                />
-              ))}
-              {createOptionLabel && createOptionIcon && createSchema && onCreate && (
-                <CreateItem
-                  createOptionLabel={createOptionLabel}
-                  createOptionIcon={createOptionIcon}
-                  onCreateItemSelect={(query: string) => {
-                    setFormInitialValue(query);
-                    setShowForm(true);
-                  }}
-                />
-              )}
-            </Combobox.List>
-          </>
-        )}
+          <Combobox.Arrow />
+        </Combobox.Content>
+      );
+    }
+
+    return (
+      <Combobox.Content {...props} onSearch={handleSearch} onKeyDownCapture={handleKeyDown} ref={forwardedRef}>
+        <Combobox.Input placeholder={t('ref field combobox input placeholder')} autoFocus />
+        <Combobox.List>
+          {results.map((option) => (
+            <Combobox.Item
+              key={option.id}
+              value={option.id}
+              label={option.label}
+              checked={selectedIds?.includes(option.id)}
+              onSelect={() => onSelect(option.id)}
+              classNames='flex items-center gap-2'
+            />
+          ))}
+          {createOptionLabel && createOptionIcon && createSchema && onCreate && (
+            <CreateItem
+              createOptionLabel={createOptionLabel}
+              createOptionIcon={createOptionIcon}
+              onCreateItemSelect={(query: string) => {
+                setFormInitialValue(query);
+                setShowForm(true);
+              }}
+            />
+          )}
+        </Combobox.List>
         <Combobox.Arrow />
       </Combobox.Content>
     );
   },
 );
 
-ObjectPickerContent.displayName = 'ObjectPickerContent';
+const CreateItem = ({
+  createOptionLabel,
+  createOptionIcon,
+  onCreateItemSelect,
+}: {
+  createOptionLabel: [string, { ns: string }];
+  createOptionIcon: string;
+  onCreateItemSelect: (query: string) => void;
+}) => {
+  const { t } = useTranslation(translationKey);
+  const { query } = useSearchListInput();
+
+  return (
+    <Combobox.Item
+      value='__create__'
+      label={t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })}
+      icon={createOptionIcon}
+      classNames='flex items-center gap-2'
+      closeOnSelect={false}
+      onSelect={() => {
+        onCreateItemSelect(query);
+      }}
+    />
+  );
+};
+
+ObjectPickerContent.displayName = 'ObjectPicker.Content';
 
 export const ObjectPicker = {
   Root: Combobox.Root,

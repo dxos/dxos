@@ -9,12 +9,13 @@ import React, {
   type MouseEvent,
   type WheelEvent,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
@@ -36,9 +37,9 @@ import {
 import { composableProps } from '@dxos/ui-theme';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
-import { useSelectThreadOnCellFocus, useUpdateFocusedCellOnThreadSelection } from '../../integrations';
+import { useSelectThreadOnCellFocus } from '../../integrations';
 import { meta } from '../../meta';
-import { DEFAULT_COLS, DEFAULT_ROWS, SheetOperation } from '../../types';
+import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities, SheetOperation } from '../../types';
 import { useSheetContext } from '../SheetRoot';
 
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
@@ -71,12 +72,23 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
-export type SheetContentProps = ComposableProps;
+export type SheetContentProps = ComposableProps<HTMLDivElement>;
 
 export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
   const { t } = useTranslation(meta.id);
-  const { id, model, editing, setCursor, setRange, cursor, cursorFallbackRange, activeRefs, ignoreAttention } =
-    useSheetContext();
+  const {
+    id,
+    attendableId,
+    model,
+    editing,
+    setCursor,
+    setRange,
+    cursor,
+    cursorFallbackRange,
+    activeRefs,
+    setActiveRefs,
+    ignoreAttention,
+  } = useSheetContext();
 
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
@@ -318,7 +330,14 @@ export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props
     [model],
   );
 
-  useUpdateFocusedCellOnThreadSelection(dxGrid);
+  const [gridInstances] = useCapabilities(SheetCapabilities.GridInstances);
+  useEffect(() => {
+    if (dxGrid && gridInstances) {
+      gridInstances.register(attendableId, dxGrid, setActiveRefs);
+      return () => gridInstances.unregister(attendableId);
+    }
+  }, [dxGrid, gridInstances, attendableId, setActiveRefs]);
+
   useSelectThreadOnCellFocus();
 
   return (

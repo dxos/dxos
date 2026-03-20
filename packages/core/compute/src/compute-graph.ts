@@ -8,7 +8,8 @@ import { Event } from '@dxos/async';
 import { Filter, type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { Function, type FunctionInvocationService } from '@dxos/functions';
+import { type FunctionInvocationService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -59,7 +60,7 @@ export class ComputeGraph extends Resource {
   private readonly _nodes = new Map<number, ComputeNode>();
 
   // Cached function objects.
-  private _remoteFunctions: Function.Function[] = [];
+  private _remoteFunctions: Operation.PersistentOperation[] = [];
 
   public readonly update = new Event<{ type: ComputeGraphEvent }>();
 
@@ -244,7 +245,7 @@ export class ComputeGraph extends Resource {
   protected override async _open(): Promise<void> {
     if (this._space) {
       // Subscribe to remote function definitions.
-      const query = this._space.db.query(Filter.type(Function.Function));
+      const query = this._space.db.query(Filter.type(Operation.PersistentOperation));
       const unsubscribe = query.subscribe(() => {
         this._remoteFunctions = query.results.filter((fn) => fn.binding);
         this.update.emit({ type: 'functionsUpdated' });

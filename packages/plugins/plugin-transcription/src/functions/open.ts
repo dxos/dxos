@@ -3,35 +3,27 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Ref } from '@dxos/echo';
-import { QueueService, defineFunction } from '@dxos/functions';
-import { Message, Transcript } from '@dxos/types';
+import { Database, Obj } from '@dxos/echo';
+import { QueueService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
+import { Message } from '@dxos/types';
 
+import { Open } from './definitions';
 import { renderByline } from '../util';
 
-export default defineFunction({
-  key: 'org.dxos.function.transcription.open',
-  name: 'Open',
-  description: 'Opens and reads the contents of a transcription object.',
-  inputSchema: Schema.Struct({
-    transcript: Ref.Ref(Transcript.Transcript).annotations({
-      description: 'The ID of the transcription object.',
+export default Open.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ transcript }) {
+      const transcriptObj = yield* Database.load(transcript);
+      const { dxn } = yield* Effect.promise(() => transcriptObj.queue.load());
+      const queue = yield* QueueService.getQueue(dxn);
+      yield* Effect.promise(() => queue?.queryObjects());
+      const content = queue?.objects
+        .filter((message: unknown) => Obj.instanceOf(Message.Message, message))
+        .flatMap((message: Message.Message, index: number) => renderByline([])(message, index))
+        .join('\n\n');
+      return { content };
     }),
-  }),
-  outputSchema: Schema.Struct({
-    content: Schema.String,
-  }),
-  handler: Effect.fn(function* ({ data: { transcript } }) {
-    const transcriptObj = yield* Database.load(transcript);
-    const { dxn } = yield* Effect.promise(() => transcriptObj.queue.load());
-    const queue = yield* QueueService.getQueue(dxn);
-    yield* Effect.promise(() => queue?.queryObjects());
-    const content = queue?.objects
-      .filter((message) => Obj.instanceOf(Message.Message, message))
-      .flatMap((message, index) => renderByline([])(message, index))
-      .join('\n\n');
-    return { content };
-  }),
-});
+  ),
+);

@@ -13,12 +13,12 @@ import type { Key } from '@dxos/echo';
 import { DynamicRuntime, causeToError, runAndForwardErrors } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { byPosition } from '@dxos/util';
-
 import { NoHandlerError } from './errors';
-import * as Operation from './operation';
-import type * as OperationResolver from './resolver';
+import * as Operation from './Operation';
+import type * as OperationResolver from './OperationResolver';
 import * as Scheduler from './scheduler';
+
+// @import-as-namespace
 
 /**
  * Invocation event emitted after each operation.
@@ -227,13 +227,10 @@ class OperationInvokerImpl implements OperationInvokerInternal {
 
   private _resolveHandler(
     operation: Operation.Definition<any, any>,
-    input: any,
   ): Effect.Effect<Operation.Handler<any, any, Error, Operation.Service> | undefined, Error> {
     return Effect.gen(this, function* () {
       const candidates = yield* this._getHandlers().pipe(
         Effect.map((handlers) => handlers.filter((reg) => reg.operation.meta.key === operation.meta.key)),
-        Effect.map((handlers) => handlers.filter((reg) => !reg.filter || reg.filter(input))),
-        Effect.map((handlers) => handlers.toSorted(byPosition)),
       );
 
       if (candidates.length === 0) {
@@ -254,7 +251,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     options?: Operation.InvokeOptions,
   ): Effect.Effect<O, Error> => {
     return Effect.gen(this, function* () {
-      const handler = yield* this._resolveHandler(op, input);
+      const handler = yield* this._resolveHandler(op);
       if (!handler) {
         return yield* Effect.fail(new NoHandlerError(op.meta.key));
       }

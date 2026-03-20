@@ -4,18 +4,16 @@
 
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { defineFunction } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
-export default defineFunction({
-  key: 'example.org/function/reply',
-  name: 'Reply',
-  description: 'Function that echoes the input',
-  inputSchema: Schema.Any,
-  outputSchema: Schema.Any,
-  handler: Effect.fn(function* ({ data }) {
-    yield* Console.log('reply', { data });
-    return data;
-  }),
-});
+import { Reply } from './definitions';
+
+export default Reply.pipe(
+  Operation.withHandler(
+    Effect.fn(function* (data) {
+      yield* Console.log('reply', { data });
+      return data;
+    }),
+  ),
+);

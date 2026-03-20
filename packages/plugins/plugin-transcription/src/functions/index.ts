@@ -2,10 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import Open from './open';
-import Summarize from './summarize';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const TranscriptionFunctions = {
-  Open,
-  Summarize,
-};
+export * from './definitions';
+
+export const TranscriptionHandlers = OperationHandlerSet.lazy(
+  () => import('./open'),
+  () => import('./summarize'),
+);

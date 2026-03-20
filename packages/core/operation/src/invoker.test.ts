@@ -14,43 +14,35 @@ import * as TestClock from 'effect/TestClock';
 import { describe, expect, test } from 'vitest';
 
 import { NoHandlerError } from './errors';
-import * as OperationInvoker from './invoker';
-import * as Operation from './operation';
-import * as OperationResolver from './resolver';
+import * as OperationInvoker from './OperationInvoker';
+import * as Operation from './Operation';
+import * as OperationResolver from './OperationResolver';
 
 //
 // Test Operations
 //
 
 const Compute = Operation.make({
-  schema: {
-    input: Schema.Struct({ value: Schema.Number }),
-    output: Schema.Struct({ value: Schema.Number }),
-  },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ value: Schema.Number }),
   meta: { key: 'test.compute' },
 });
 
 const ToString = Operation.make({
-  schema: {
-    input: Schema.Struct({ value: Schema.Number }),
-    output: Schema.Struct({ string: Schema.String }),
-  },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ string: Schema.String }),
   meta: { key: 'test.to-string' },
 });
 
 const Add = Operation.make({
-  schema: {
-    input: Schema.Tuple(Schema.Number, Schema.Number),
-    output: Schema.Number,
-  },
+  input: Schema.Tuple(Schema.Number, Schema.Number),
+  output: Schema.Number,
   meta: { key: 'test.add' },
 });
 
 const SideEffect = Operation.make({
-  schema: {
-    input: Schema.Void,
-    output: Schema.Void,
-  },
+  input: Schema.Void,
+  output: Schema.Void,
   meta: { key: 'test.side-effect' },
 });
 
@@ -211,63 +203,6 @@ describe('OperationInvoker', () => {
     }),
   );
 
-  it.effect('filter handlers by predicate', () =>
-    Effect.gen(function* () {
-      const conditionalHandler: OperationResolver.OperationResolver = {
-        operation: Compute,
-        filter: (data: { value: number }) => data?.value > 1,
-        handler: (data: { value: number }) => Effect.succeed({ value: data.value * 3 }),
-      };
-      const invoker = OperationInvoker.make(() => Effect.succeed([conditionalHandler, computeHandler]));
-
-      // value=1 should use computeHandler (multiplies by 2, has sleep).
-      const fiberA = yield* Effect.fork(invoker.invoke(Compute, { value: 1 }));
-      yield* TestClock.adjust('10 millis');
-      const a = yield* Fiber.join(fiberA);
-      expect(a.value).toBe(2);
-
-      // value=2 should use conditionalHandler (multiplies by 3, no sleep).
-      const b = yield* invoker.invoke(Compute, { value: 2 });
-      expect(b.value).toBe(6);
-    }),
-  );
-
-  it.effect('hoist handlers', () =>
-    Effect.gen(function* () {
-      const hoistedHandler: OperationResolver.OperationResolver = {
-        operation: Compute,
-        position: 'hoist',
-        handler: (data: { value: number }) => Effect.succeed({ value: data.value * 3 }),
-      };
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, hoistedHandler]));
-      const result = yield* invoker.invoke(Compute, { value: 1 });
-
-      expect(result.value).toBe(3);
-    }),
-  );
-
-  it.effect('fallback handlers', () =>
-    Effect.gen(function* () {
-      const conditionalHandler: OperationResolver.OperationResolver = {
-        operation: Compute,
-        filter: (data: { value: number }) => data?.value === 1,
-        handler: (data: { value: number }) => Effect.succeed({ value: data.value * 2 }),
-      };
-      const fallbackHandler: OperationResolver.OperationResolver = {
-        operation: Compute,
-        position: 'fallback',
-        handler: (data: { value: number }) => Effect.succeed({ value: data.value * 3 }),
-      };
-      const invoker = OperationInvoker.make(() => Effect.succeed([conditionalHandler, fallbackHandler]));
-
-      const a = yield* invoker.invoke(Compute, { value: 1 });
-      expect(a.value).toBe(2);
-
-      const b = yield* invoker.invoke(Compute, { value: 2 });
-      expect(b.value).toBe(6);
-    }),
-  );
-
   it.effect('non-struct inputs & outputs', () =>
     Effect.gen(function* () {
       const invoker = OperationInvoker.make(() => Effect.succeed([addHandler]));
@@ -332,10 +267,8 @@ describe('OperationInvoker.invokeSync with services', () => {
 
   // Operation that declares TestService and is marked as sync.
   const SyncOpWithService = Operation.make({
-    schema: {
-      input: Schema.Struct({ multiplier: Schema.Number }),
-      output: Schema.Struct({ result: Schema.Number }),
-    },
+    input: Schema.Struct({ multiplier: Schema.Number }),
+    output: Schema.Struct({ result: Schema.Number }),
     meta: { key: 'test.sync-with-service' },
     executionMode: 'sync',
     services: [TestService],
@@ -411,10 +344,8 @@ describe('OperationResolver.make type safety', () => {
     >() {}
 
     const opWithDeclaredService = Operation.make({
-      schema: {
-        input: Schema.Void,
-        output: Schema.Void,
-      },
+      input: Schema.Void,
+      output: Schema.Void,
       meta: { key: 'test.declared-service' },
       services: [DeclaredService],
     });

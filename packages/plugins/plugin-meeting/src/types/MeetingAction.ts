@@ -18,51 +18,43 @@ export namespace MeetingOperation {
   export const Create = Operation.make({
     meta: { key: `${MEETING_OPERATION}.create`, name: 'Create Meeting' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        name: Schema.optional(Schema.String),
-        channel: Channel.Channel,
-      }),
-      output: Schema.Struct({
-        object: Meeting,
-      }),
-    },
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
+      channel: Channel.Channel,
+    }),
+    output: Schema.Struct({
+      object: Meeting,
+    }),
   });
 
   export const SetActive = Operation.make({
     meta: { key: `${MEETING_OPERATION}.set-active`, name: 'Set Active Meeting' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        object: Schema.optional(Meeting),
-      }),
-      output: Schema.Struct({
-        object: Schema.optional(Meeting),
-      }),
-    },
+    input: Schema.Struct({
+      object: Schema.optional(Meeting),
+    }),
+    output: Schema.Struct({
+      object: Schema.optional(Meeting),
+    }),
   });
 
   export const HandlePayload = Operation.make({
     meta: { key: `${MEETING_OPERATION}.handle-payload`, name: 'Handle Meeting Payload' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        meetingId: Schema.optional(Schema.String),
-        transcriptDxn: Schema.optional(Schema.String),
-        transcriptionEnabled: Schema.optional(Schema.Boolean),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      meetingId: Schema.optional(Schema.String),
+      transcriptDxn: Schema.optional(Schema.String),
+      transcriptionEnabled: Schema.optional(Schema.Boolean),
+    }),
+    output: Schema.Void,
   });
 
   export const Summarize = Operation.make({
     meta: { key: `${MEETING_OPERATION}.summarize`, name: 'Summarize Meeting' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        meeting: Meeting,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      meeting: Meeting,
+    }),
+    output: Schema.Void,
   });
 }

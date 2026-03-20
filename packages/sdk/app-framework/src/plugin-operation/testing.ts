@@ -16,42 +16,32 @@ import { Operation, type OperationInvoker, OperationResolver } from '@dxos/opera
 //
 
 export const Compute = Operation.make({
-  schema: {
-    input: Schema.Struct({ value: Schema.Number }),
-    output: Schema.Struct({ value: Schema.Number }),
-  },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ value: Schema.Number }),
   meta: { key: 'test.compute' },
 });
 
 export const HalveCompute = Operation.make({
-  schema: {
-    input: Schema.Struct({ value: Schema.Number }),
-    output: Schema.Struct({ value: Schema.Number }),
-  },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ value: Schema.Number }),
   meta: { key: 'test.halve-compute' },
 });
 
 export const ToString = Operation.make({
-  schema: {
-    input: Schema.Struct({ value: Schema.Number }),
-    output: Schema.Struct({ string: Schema.String }),
-  },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ string: Schema.String }),
   meta: { key: 'test.to-string' },
 });
 
 export const Add = Operation.make({
-  schema: {
-    input: Schema.Tuple(Schema.Number, Schema.Number),
-    output: Schema.Number,
-  },
+  input: Schema.Tuple(Schema.Number, Schema.Number),
+  output: Schema.Number,
   meta: { key: 'test.add' },
 });
 
 export const SideEffect = Operation.make({
-  schema: {
-    input: Schema.Void,
-    output: Schema.Void,
-  },
+  input: Schema.Void,
+  output: Schema.Void,
   meta: { key: 'test.side-effect' },
 });
 

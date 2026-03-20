@@ -15,13 +15,11 @@ const OUTLINER_OPERATION = `${meta.id}.operation`;
 export namespace OutlineOperation {
   export const CreateOutline = Operation.make({
     meta: { key: `${OUTLINER_OPERATION}.create-outline`, name: 'Create Outline' },
-    schema: {
-      input: Schema.Struct({
-        name: Schema.optional(Schema.String),
-      }),
-      output: Schema.Struct({
-        object: Outline.Outline,
-      }),
-    },
+    input: Schema.Struct({
+      name: Schema.optional(Schema.String),
+    }),
+    output: Schema.Struct({
+      object: Outline.Outline,
+    }),
   });
 }

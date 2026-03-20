@@ -6,17 +6,15 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { ThreadFunctions } from '../functions';
+import { CreateProposals, ThreadHandlers } from '../functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.thread';
-
-const functions = Object.values(ThreadFunctions);
 
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Thread',
-    tools: Blueprint.toolDefinitions({ functions }),
+    tools: Blueprint.toolDefinitions({ operations: [CreateProposals] }),
     instructions: Template.make({
       // TODO(wittjosiah): Move example to function input schema annotation.
       source: trim`
@@ -33,7 +31,7 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
+  operations: ThreadHandlers,
   make,
 };
 

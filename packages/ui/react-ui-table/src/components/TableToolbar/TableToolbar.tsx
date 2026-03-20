@@ -3,19 +3,21 @@
 //
 
 import { Atom, RegistryContext } from '@effect-atom/atom-react';
-import React, { useContext, useEffect, useMemo } from 'react';
+import React, { forwardRef, useContext, useEffect, useMemo } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { ComposableProps } from '@dxos/react-ui';
 import {
   type ActionGraphEdges,
   type ActionGraphNodes,
   type ActionGraphProps,
   Menu,
   type MenuAction,
+  MenuRootProps,
   createGapSeparator,
   createMenuAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
+import { composableProps } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -28,15 +30,6 @@ export type TableToolbarActionType = 'add-row' | 'comment' | 'save-view';
 type TableToolbarState = Partial<{ viewDirty: boolean }>;
 
 // TODO(burdon): Radix style layout.
-
-export type TableToolbarProps = ThemedClassName<
-  TableToolbarState & {
-    onAdd?: () => void;
-    onSave?: () => void;
-    attendableId?: string;
-    customActions?: Atom.Atom<ActionGraphProps>;
-  }
->;
 
 const createTableToolbarActions = ({
   stateAtom,
@@ -87,32 +80,38 @@ const createTableToolbarActions = ({
     };
   });
 
-export const TableToolbar = ({
-  classNames,
-  viewDirty,
-  attendableId,
-  onAdd,
-  onSave,
-  customActions,
-  ...props
-}: TableToolbarProps) => {
-  const registry = useContext(RegistryContext);
-  const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);
+export type TableToolbarProps = ComposableProps<
+  HTMLDivElement,
+  Pick<MenuRootProps, 'attendableId'> &
+    TableToolbarState & {
+      onAdd?: () => void;
+      onSave?: () => void;
+      customActions?: Atom.Atom<ActionGraphProps>;
+    }
+>;
 
-  // Update state.viewDirty when the prop changes.
-  useEffect(() => {
-    registry.set(stateAtom, { viewDirty });
-  }, [registry, stateAtom, viewDirty]);
+export const TableToolbar = forwardRef<HTMLDivElement, TableToolbarProps>(
+  ({ attendableId, viewDirty, onAdd, onSave, customActions, ...props }, forwardedRef) => {
+    const registry = useContext(RegistryContext);
+    const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);
 
-  const actionsCreator = useMemo(
-    () => createTableToolbarActions({ stateAtom, onAdd, onSave, customActions }),
-    [stateAtom, onAdd, onSave, customActions],
-  );
-  const actions = useMenuActions(actionsCreator);
+    // Update state.viewDirty when the prop changes.
+    useEffect(() => {
+      registry.set(stateAtom, { viewDirty });
+    }, [registry, stateAtom, viewDirty]);
 
-  return (
-    <Menu.Root {...actions} attendableId={attendableId}>
-      <Menu.Toolbar {...props} classNames={classNames} />
-    </Menu.Root>
-  );
-};
+    const actionsCreator = useMemo(
+      () => createTableToolbarActions({ stateAtom, onAdd, onSave, customActions }),
+      [stateAtom, onAdd, onSave, customActions],
+    );
+    const menuActions = useMenuActions(actionsCreator);
+
+    return (
+      <Menu.Root {...menuActions} attendableId={attendableId}>
+        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      </Menu.Root>
+    );
+  },
+);
+
+TableToolbar.displayName = 'TableToolbar';

@@ -28,6 +28,7 @@
   "dependencies": {
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*"

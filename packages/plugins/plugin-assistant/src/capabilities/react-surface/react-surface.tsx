@@ -25,6 +25,7 @@ import {
   ProjectArticle,
   ProjectSettings,
   PromptArticle,
+  PromptList,
   TracePanel,
   TriggerStatus,
 } from '../../containers';
@@ -127,6 +128,12 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.status`,
         role: 'status-indicator',
         component: () => <TriggerStatus />,
+      }),
+      Surface.create({
+        id: `${meta.id}.magic`,
+        role: 'magic',
+        filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
+        component: ({ data }) => <PromptList subject={data.subject} />,
       }),
     ]),
   ),

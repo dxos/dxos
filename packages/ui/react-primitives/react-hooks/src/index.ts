@@ -2,6 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+export { useComposedRefs } from '@radix-ui/react-compose-refs';
+export { useSize, useScroller } from 'mini-virtual-list';
+
 export * from './useAsyncEffect';
 export * from './useAsyncState';
 export * from './useControlledState';
@@ -19,5 +22,3 @@ export * from './useRefCallback';
 export * from './useViewportResize';
 export * from './useTimeout';
 export * from './useTransitions';
-
-export { useSize, useScroller } from 'mini-virtual-list';

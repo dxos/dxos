@@ -13,6 +13,7 @@ import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/ui-theme';
+import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { useExpandPath } from '../hooks';
@@ -48,13 +49,15 @@ export const NavBranch = ({ id }: NavBranchProps) => {
     extract: (child) => toLocalizedString(child.properties.label, t),
   });
 
+  const autoFocus = !isTauri() || getHostPlatform() !== 'ios';
+
   return (
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             {/* TODO(wittjosiah): Search should be pluggable. Must support searching via ECHO query inside a space. */}
-            <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+            <SearchList.Input placeholder={t('search placeholder')} autoFocus={autoFocus} />
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>

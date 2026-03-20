@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
-import { AgentFunctions, Chat, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
+import { AgentPrompt, Chat, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
 import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { TracingService, serializeFunction } from '@dxos/functions';
+import { TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Operation, OperationResolver } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
@@ -30,7 +30,7 @@ export default Capability.makeModule(
         operation: AssistantOperation.OnCreateSpace,
         handler: Effect.fnUntraced(function* ({ space }) {
           // TODO(wittjosiah): Remove once function registry is avaiable.
-          space.db.add(serializeFunction(AgentFunctions.Prompt));
+          space.db.add(Operation.serialize(AgentPrompt));
 
           // Create default chat.
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db: space.db });
@@ -121,9 +121,37 @@ export default Capability.makeModule(
       }),
       OperationResolver.make({
         operation: AssistantOperation.RunPromptInNewChat,
-        handler: Effect.fnUntraced(function* ({ db, prompt }) {
+        handler: Effect.fnUntraced(function* ({ db, prompt, objects, blueprints }) {
+          const registry = yield* Capability.get(Capabilities.AtomRegistry);
           const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
           const chatPath = getObjectPathFromObject(chat);
+
+          if ((objects && objects.length > 0) || (blueprints && blueprints.length > 0)) {
+            const queue = chat.queue.target as Queue<Message.Message>;
+            const binder = new AiContextBinder({ queue, registry });
+            yield* Effect.promise(() =>
+              binder.use(async (b: AiContextBinder) => {
+                const bindingProps: Parameters<AiContextBinder['bind']>[0] = {};
+
+                if (objects && objects.length > 0) {
+                  bindingProps.objects = objects.map((obj) => Ref.make(obj));
+                }
+
+                if (blueprints && blueprints.length > 0) {
+                  const allBlueprints = await db.query(Filter.type(Blueprint.Blueprint)).run();
+                  const matchedBlueprints = allBlueprints.filter(
+                    (blueprint) => blueprint.key && blueprints.includes(blueprint.key),
+                  );
+                  if (matchedBlueprints.length > 0) {
+                    bindingProps.blueprints = matchedBlueprints.map((blueprint) => Ref.make(blueprint));
+                  }
+                }
+
+                await b.bind(bindingProps);
+              }),
+            );
+          }
+
           yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({
             ...current,
             pendingPrompts: { ...current.pendingPrompts, [chatPath]: prompt },

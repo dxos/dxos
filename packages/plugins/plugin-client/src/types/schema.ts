@@ -106,97 +106,77 @@ export namespace ClientOperation {
   export const CreateIdentity = Operation.make({
     meta: { key: `${CLIENT_OPERATION}.create-identity`, name: 'Create Identity' },
     services: [Capability.Service],
-    schema: {
-      input: ProfileSchema,
-      output: IdentitySchema,
-    },
+    input: ProfileSchema,
+    output: IdentitySchema,
   });
 
   export const JoinIdentity = Operation.make({
     meta: { key: `${CLIENT_OPERATION}.join-identity`, name: 'Join Identity' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        invitationCode: Schema.optional(Schema.String),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      invitationCode: Schema.optional(Schema.String),
+    }),
+    output: Schema.Void,
   });
 
   export const ShareIdentity = Operation.make({
     meta: { key: `${CLIENT_OPERATION}.share-identity`, name: 'Share Identity' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Void,
-      output: Schema.Void,
-    },
+    input: Schema.Void,
+    output: Schema.Void,
   });
 
   export const RecoverIdentity = Operation.make({
     meta: { key: `${CLIENT_OPERATION}.recover-identity`, name: 'Recover Identity' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Void,
-      output: Schema.Void,
-    },
+    input: Schema.Void,
+    output: Schema.Void,
   });
 
   export const ResetStorage = Operation.make({
     meta: { key: `${CLIENT_OPERATION}.reset-storage`, name: 'Reset Storage' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        mode: Schema.optional(Schema.String),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      mode: Schema.optional(Schema.String),
+    }),
+    output: Schema.Void,
   });
 
   export const CreateAgent = Operation.make({
     meta: { key: `${CLIENT_OPERATION}.create-agent`, name: 'Create Agent' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Void,
-      output: Schema.Void,
-    },
+    input: Schema.Void,
+    output: Schema.Void,
   });
 
   export const CreateRecoveryCode = Operation.make({
     meta: { key: `${CLIENT_OPERATION}.create-recovery-code`, name: 'Create Recovery Code' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Void,
-      output: Schema.Void,
-    },
+    input: Schema.Void,
+    output: Schema.Void,
   });
 
   export const CreatePasskey = Operation.make({
     meta: { key: `${CLIENT_OPERATION}.create-passkey`, name: 'Create Passkey' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Void,
-      output: Schema.Void,
-    },
+    input: Schema.Void,
+    output: Schema.Void,
   });
 
   export const RedeemPasskey = Operation.make({
     meta: { key: `${CLIENT_OPERATION}.redeem-passkey`, name: 'Redeem Passkey' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Void,
-      output: Schema.Void,
-    },
+    input: Schema.Void,
+    output: Schema.Void,
   });
 
   export const RedeemToken = Operation.make({
     meta: { key: `${CLIENT_OPERATION}.redeem-token`, name: 'Redeem Token' },
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        token: Schema.String,
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      token: Schema.String,
+    }),
+    output: Schema.Void,
   });
 }
 

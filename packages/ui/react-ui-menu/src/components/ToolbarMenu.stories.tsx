@@ -33,18 +33,19 @@ type Story = StoryObj<typeof meta>;
 
 export const DropdownMenu: Story = {
   render: () => {
-    const actionsAtom = useMemo(() => {
+    const actions = useMemo(() => {
       const actions = createActions();
       return Atom.make<ActionGraphProps>({
         nodes: actions,
         edges: actions.map((action) => ({ source: 'root', target: action.id, relation: 'child' })),
       }).pipe(Atom.keepAlive);
     }, []);
-    useMutateActions(actionsAtom);
-    const menu = useMenuActions(actionsAtom);
+
+    useMutateActions(actions);
+    const menuActions = useMenuActions(actions);
 
     return (
-      <Menu.Root {...menu}>
+      <Menu.Root {...menuActions}>
         <Menu.Trigger asChild>
           <IconButton icon='ph--list-checks--regular' label='Options' />
         </Menu.Trigger>
@@ -70,10 +71,10 @@ export const Toolbar: Story = {
 export const UseMenuActionsToolbar: Story = {
   render: () => {
     useMutateActions(createNestedActions);
-    const menu = useMenuActions(createNestedActions);
+    const menuActions = useMenuActions(createNestedActions);
 
     return (
-      <Menu.Root {...menu}>
+      <Menu.Root {...menuActions}>
         <Menu.Toolbar />
       </Menu.Root>
     );

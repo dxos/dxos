@@ -36,9 +36,7 @@ export type EditorMenuProviderProps = PropsWithChildren<{
 }>;
 
 /**
- * Implements the Popover and listens for the `dx-anchor-activate` event from the
- * `popover` extension's decoration.
- *
+ * Implements the Popover and listens for the `dx-anchor-activate` event from the `popover` extension's decoration.
  * NOTE: We don't use DropdownMenu because the command menu needs to manage focus explicitly.
  * I.e., focus must remain in the editor while displaying the menu (for type-ahead).
  */

@@ -8,6 +8,7 @@ import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Tag } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client/types';
 import { DataTypes } from '@dxos/schema';
 import {
@@ -27,7 +28,7 @@ import { IdentityCreated } from '../capabilities/identity-created';
 import { OperationResolver } from '../capabilities/operation-resolver';
 import { meta } from '../meta';
 import { SpaceEvents } from '../types';
-import { type CreateObject, type SpacePluginOptions } from '../types';
+import { type CreateObject, SpaceOperation, type SpacePluginOptions } from '../types';
 
 import { database, queue, space } from './commands';
 
@@ -40,7 +41,16 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     metadata: {
       id: Collection.Collection.typename,
       metadata: {
-        createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = Collection.make(props);
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
+          })) satisfies CreateObject,
       },
     },
   }),

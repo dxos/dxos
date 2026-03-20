@@ -43,7 +43,7 @@ const SheetContainerInner = ({
     <Sheet.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
       <Panel.Root classNames={role === 'section' && 'aspect-aquare'}>
         <Panel.Toolbar asChild>
-          <Sheet.Toolbar id={attendableId!} />
+          <Sheet.Toolbar />
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Sheet.Content />

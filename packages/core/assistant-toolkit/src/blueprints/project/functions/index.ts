@@ -2,14 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import { default as AddArtifact } from './add-artifact';
-import { default as Agent } from './agent';
-import { default as GetContext } from './get-context';
-import { default as Qualifier } from './qualifier';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const ProjectFunctions = {
-  AddArtifact,
-  Agent,
-  GetContext,
-  Qualifier,
-};
+export * from './definitions';
+
+export const ProjectHandlers = OperationHandlerSet.lazy(
+  () => import('./add-artifact'),
+  () => import('./agent'),
+  () => import('./get-context'),
+  () => import('./qualifier'),
+);

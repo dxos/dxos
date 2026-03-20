@@ -2,16 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-import Create from './create';
-import Move from './move';
-import Play from './play';
-import Print from './print';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export { Create, Move, Play, Print };
+const Handlers = OperationHandlerSet.lazy(
+  () => import('./create'),
+  () => import('./move'),
+  () => import('./play'),
+  () => import('./print'),
+);
 
-export const ChessFunctions = {
-  Create,
-  Move,
-  Play,
-  Print,
-};
+export { Create, Move, Play, Print } from './definitions';
+
+export const ChessHandlers = Handlers;

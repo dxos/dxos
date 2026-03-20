@@ -4,20 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 
-import { OperationPlugin, type Plugin } from '@dxos/app-framework';
+import { type Plugin } from '@dxos/app-framework';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { GraphPlugin } from '@dxos/plugin-graph';
-import { SettingsPlugin } from '@dxos/plugin-settings';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { ThemePlugin } from '@dxos/plugin-theme';
 import { Config } from '@dxos/react-client';
-import { defaultTx } from '@dxos/ui-theme';
+import { corePlugins } from '@dxos/plugin-testing';
 
 import { ThreadPlugin } from '../ThreadPlugin';
 import { Channel } from '../types';
 
 export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
-  ThemePlugin({ tx: defaultTx }),
+  ...corePlugins(),
   ClientPlugin({
     onClientInitialized: ({ client }) =>
       Effect.gen(function* () {
@@ -49,8 +46,5 @@ export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
     }),
   }),
   SpacePlugin({}),
-  OperationPlugin(),
-  SettingsPlugin(),
-  GraphPlugin(),
   ThreadPlugin(),
 ];

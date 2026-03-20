@@ -15,17 +15,17 @@ import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '
 import { GenericToolkit } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Ref } from '@dxos/echo';
-import { type FunctionDefinition, FunctionInvocationService } from '@dxos/functions';
+import { FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { Operation } from '@dxos/operation';
 
 import { RefFromLLM } from '../types';
 
 /**
  * Constructs a `ToolResolverService` whose `resolve(id)` looks up tools in the following order:
  *  1. Toolkit: return an existing tool from the provided `toolkit` if one is present under `id`.
- *  2. Functions in DB: query `FunctionType` by `key=id`; if found, deserialize and project to a tool
- *     (propagating any `deployedFunctionId` discovered in the object's metadata).
- *  3. Functions passed in: fall back to a matching `FunctionDefinition` from the `functions` array.
+ *  2. Operations in DB: query by `key=id`; if found, deserialize and project to a tool.
+ *  3. Registered operations: fall back to a matching `Operation.Definition` from the handler set.
  *
  * If none of the above yield a match, the effect fails with `AiToolNotFoundError`.
  *
@@ -114,31 +114,23 @@ export const ToolExecutionServices = Layer.mergeAll(
 
 class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAnnotation')<
   FunctionToolAnnotation,
-  { definition: FunctionDefinition.Any }
+  { definition: Operation.Definition.Any }
 >() {}
 
-const toolCache = new WeakMap<FunctionDefinition.Any, Tool.Any>();
+const toolCache = new WeakMap<Operation.Definition.Any, Tool.Any>();
 
 /**
- * Projects a `FunctionDefinition` into an `AiTool`.
- *
- * @param fn The function definition to project into a tool.
- * @param meta Optional projection metadata.
- * @param meta.deployedFunctionId Backend deployment ID used for remote invocation when present.
- *    This is the EDGE service's function deployment identifier (not the ECHO object ID/DXN and not `FunctionDefinition.key`).
+ * Projects an `Operation.Definition` into an `AiTool`.
  */
-const projectFunctionToTool = (fn: FunctionDefinition.Any): Tool.Any => {
+const projectFunctionToTool = (fn: Operation.Definition.Any): Tool.Any => {
   if (toolCache.has(fn)) {
     return toolCache.get(fn)!;
   }
 
-  // TODO(burdon): Use and map function.key?
-  // TODO(dmaretskyi): Use function key instead.
-  const tool = Tool.make(makeToolName(fn.name), {
-    description: fn.description,
-    parameters: createStructFieldsFromSchema(fn.inputSchema),
-    // TODO(dmaretskyi): Include output schema.
-    failure: Schema.Any, // TODO(dmaretskyi): Better type for the failure?
+  const tool = Tool.make(makeToolName(fn.meta.name ?? fn.meta.key), {
+    description: fn.meta.description,
+    parameters: createStructFieldsFromSchema(fn.input),
+    failure: Schema.Any,
   }).annotate(FunctionToolAnnotation, { definition: fn });
   toolCache.set(fn, tool);
   return tool;
