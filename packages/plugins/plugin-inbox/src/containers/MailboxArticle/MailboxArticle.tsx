@@ -117,6 +117,15 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     });
   }, [sortedMessages, messageTagsMap]);
 
+  // Delay showing empty state to prevent flicker as messages are loaded.
+  const [isEmpty, setEmpty] = useState<boolean>(false);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setEmpty(messagesWithTags.length === 0);
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [messagesWithTags]);
+
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
       switch (action.type) {
@@ -223,16 +232,16 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       </Panel.Toolbar>
 
       <Panel.Content>
-        {messagesWithTags && messagesWithTags.length > 0 ? (
+        {isEmpty ? (
+          <MailboxEmpty mailbox={mailbox} />
+        ) : (
           <MailboxComponent
             id={id}
+            currentMessageId={currentMessageId}
             messages={messagesWithTags}
             labels={mergedLabels}
-            currentMessageId={currentMessageId}
             onAction={handleAction}
           />
-        ) : (
-          <MailboxEmpty mailbox={mailbox} />
         )}
       </Panel.Content>
     </Panel.Root>
