@@ -176,11 +176,12 @@ type DialogBodyProps = PropsWithChildren;
 
 const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDivElement, DialogBodyProps>(
   ({ children }, forwardedRef) => {
+    // TODO(burdon): Integrate with Column. See ScrollArea stories (clipped).
     const { tx } = useThemeContext();
     return (
       // <Column.Row asChild>
       <ScrollArea.Root thin margin classNames={tx('dialog.body', {}, '__col-span-full')} ref={forwardedRef}>
-        <ScrollArea.Viewport>xxx{children}</ScrollArea.Viewport>
+        <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
       </ScrollArea.Root>
       // </Column.Row>
     );
