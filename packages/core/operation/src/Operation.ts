@@ -315,6 +315,8 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
  * Deserialize a persistent operation record to an operation definition.
  */
 export const deserialize = (record: PersistentOperation): Definition.Any => {
+  // Extract deployed function ID from ECHO meta keys (matches FUNCTIONS_META_KEY in @dxos/functions).
+  const deployedId = Obj.getMeta(record).keys.find((key) => key.source === 'org.dxos.service.function')?.id;
   return make({
     input: record.inputSchema ? JsonSchema.toEffectSchema(record.inputSchema) : Schema$.Unknown,
     output: record.outputSchema ? JsonSchema.toEffectSchema(record.outputSchema) : Schema$.Unknown,
@@ -326,6 +328,7 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
       name: record.name,
       version: record.version,
       description: record.description,
+      deployedId,
     },
   });
 };
