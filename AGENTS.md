@@ -79,6 +79,7 @@ Examples:
 
 - When the user asks you to submit a PR:
   - Use `gh` CLI to create and manage PRs
+  - Merge `origin/main` in to current branch and resolve conflicts
   - Check `moon run :lint -- --fix` succeeds
   - Check `moon run :test` succeeds
   - Commit and push any pending changes
