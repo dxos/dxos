@@ -9,8 +9,10 @@ export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.native-filesystem',
   name: 'Native Filesystem',
   description: trim`
-    Native filesystem access for Tauri desktop builds.
+    Native filesystem access for desktop builds.
     Open local directories as workspaces, similar to Obsidian vaults.
+    Requires the Composer desktop app.
   `,
   icon: 'ph--folder-open--regular',
+  tags: ['labs'],
 };

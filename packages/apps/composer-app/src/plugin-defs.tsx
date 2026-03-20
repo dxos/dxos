@@ -91,7 +91,6 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
     isTauri && !isMobile && NativePlugin.meta.id,
-    isTauri && !isMobile && NativeFilesystemPlugin.meta.id,
     OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
@@ -194,7 +193,7 @@ export const getPlugins = ({
     MeetingPlugin(),
     MermaidPlugin(),
     isTauri && !isMobile && NativePlugin(),
-    isTauri && !isMobile && NativeFilesystemPlugin(),
+    NativeFilesystemPlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,

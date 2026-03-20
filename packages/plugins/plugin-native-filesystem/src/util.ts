@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { open } from '@tauri-apps/plugin-dialog';
-import { readDir, readTextFile, writeTextFile, type DirEntry } from '@tauri-apps/plugin-fs';
-
 import { log } from '@dxos/log';
+import { isTauri } from '@dxos/util';
 
 import type { FilesystemEntry, FilesystemFile, FilesystemDirectory, FilesystemWorkspace } from './types';
+
+type DirEntry = { name: string; isDirectory: boolean; isFile: boolean; isSymlink: boolean };
 
 const SUPPORTED_EXTENSIONS = ['.md', '.markdown'];
 const SUPPORTED_IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg'];
@@ -44,8 +44,19 @@ const createFileId = (path: string): string => {
   return `fs:${path.replace(/[^a-zA-Z0-9]/g, '-')}`;
 };
 
+/** Check if Tauri filesystem APIs are available. */
+export const isTauriAvailable = (): boolean => {
+  return isTauri();
+};
+
 export const openDirectoryPicker = async (): Promise<string | null> => {
+  if (!isTauriAvailable()) {
+    log.warn('Tauri APIs not available');
+    return null;
+  }
+
   try {
+    const { open } = await import('@tauri-apps/plugin-dialog');
     const selected = await open({
       directory: true,
       multiple: false,
@@ -58,7 +69,12 @@ export const openDirectoryPicker = async (): Promise<string | null> => {
 };
 
 const readFileContent = async (path: string): Promise<string | undefined> => {
+  if (!isTauriAvailable()) {
+    return undefined;
+  }
+
   try {
+    const { readTextFile } = await import('@tauri-apps/plugin-fs');
     return await readTextFile(path);
   } catch (error) {
     log.warn('Failed to read file', { path, error });
@@ -67,12 +83,32 @@ const readFileContent = async (path: string): Promise<string | undefined> => {
 };
 
 export const writeFileContent = async (path: string, content: string): Promise<boolean> => {
+  if (!isTauriAvailable()) {
+    log.warn('Tauri APIs not available');
+    return false;
+  }
+
   try {
+    const { writeTextFile } = await import('@tauri-apps/plugin-fs');
     await writeTextFile(path, content);
     return true;
   } catch (error) {
     log.warn('Failed to write file', { path, error });
     return false;
+  }
+};
+
+const readDir = async (path: string): Promise<DirEntry[]> => {
+  if (!isTauriAvailable()) {
+    return [];
+  }
+
+  try {
+    const fs = await import('@tauri-apps/plugin-fs');
+    return (await fs.readDir(path)) as DirEntry[];
+  } catch (error) {
+    log.warn('Failed to read directory', { path, error });
+    return [];
   }
 };
 
@@ -150,6 +186,11 @@ const readDirectoryContents = async (path: string): Promise<FilesystemEntry[]> =
 };
 
 export const loadWorkspace = async (path: string): Promise<FilesystemWorkspace | null> => {
+  if (!isTauriAvailable()) {
+    log.warn('Tauri APIs not available');
+    return null;
+  }
+
   try {
     const name = getFileName(path);
     const children = await readDirectoryContents(path);
