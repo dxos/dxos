@@ -3,7 +3,7 @@
 //
 
 export { useComposedRefs } from '@radix-ui/react-compose-refs';
-export { useId } from '@radix-ui/react-id';
+export { useSize, useScroller } from 'mini-virtual-list';
 
 export * from './useAsyncEffect';
 export * from './useAsyncState';
@@ -22,5 +22,3 @@ export * from './useRefCallback';
 export * from './useViewportResize';
 export * from './useTimeout';
 export * from './useTransitions';
-
-export { useSize, useScroller } from 'mini-virtual-list';
