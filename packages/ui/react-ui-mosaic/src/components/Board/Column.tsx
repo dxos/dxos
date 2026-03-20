@@ -189,14 +189,7 @@ const BoardColumnBody = forwardRef<HTMLDivElement, BoardColumnBodyProps>(
         eventHandler={eventHandler}
         debug={debug}
       >
-        <ScrollArea.Root
-          {...composableProps(props)}
-          orientation='vertical'
-          thin
-          margin
-          padding
-          ref={forwardedRef}
-        >
+        <ScrollArea.Root {...composableProps(props)} orientation='vertical' thin margin padding ref={forwardedRef}>
           <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
             <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
           </ScrollArea.Viewport>

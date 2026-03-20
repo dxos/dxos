@@ -181,14 +181,7 @@ type FormViewportProps = ComposableProps<HTMLDivElement>;
 
 const FormViewport = forwardRef<HTMLDivElement, FormViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root
-      {...composableProps(props)}
-      orientation='vertical'
-      margin
-      padding
-      thin
-      ref={forwardedRef}
-    >
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' margin padding thin ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );

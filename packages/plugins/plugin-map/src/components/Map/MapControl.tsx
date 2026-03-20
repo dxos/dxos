@@ -23,14 +23,17 @@ export const MapControl = forwardRef<HTMLDivElement, MapControlProps>(
     const [controller, setController] = useState<MapController | null>(null);
     const handleZoomAction = useMapZoomHandler(controller);
 
-    const handleAction = useCallback<NonNullable<ControlProps['onAction']>>((action) => {
-      switch (action) {
-        case 'toggle': {
-          onToggle?.();
-          break;
+    const handleAction = useCallback<NonNullable<ControlProps['onAction']>>(
+      (action) => {
+        switch (action) {
+          case 'toggle': {
+            onToggle?.();
+            break;
+          }
         }
-      }
-    }, [onToggle]);
+      },
+      [onToggle],
+    );
 
     return (
       <Map.Root {...props} onChange={onChange} ref={forwardedRef}>

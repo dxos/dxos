@@ -8,12 +8,7 @@ import React, { forwardRef, useContext, useMemo } from 'react';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type CompleteCellRange } from '@dxos/compute';
 import { ComposableProps } from '@dxos/react-ui';
-import {
-  type ActionGraphProps,
-  Menu,
-  createGapSeparator,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { type ActionGraphProps, Menu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 import { composableProps } from '@dxos/ui-theme';
 
 import { type SheetModel } from '../../model';

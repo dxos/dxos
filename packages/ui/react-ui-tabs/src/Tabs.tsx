@@ -38,19 +38,19 @@ type TabsContextValue = {
 } & Pick<TabsPrimitive.TabsProps, 'orientation' | 'value'>;
 
 const [TabsContextProvider, useTabsContext] = createContext<TabsContextValue>(TABS_NAME, {
+  orientation: 'vertical',
   activePart: 'list',
   setActivePart: () => {},
-  orientation: 'vertical',
 });
 
 type TabsRootProps = ThemedClassName<TabsPrimitive.TabsProps> &
-  Partial<Pick<TabsContextValue, 'activePart' | 'verticalVariant' | 'attendableId'>> &
-  Partial<{
-    onActivePartChange: (nextActivePart: TabsActivePart) => void;
-    defaultActivePart: TabsActivePart;
-  }>;
+  Partial<
+    Pick<TabsContextValue, 'activePart' | 'verticalVariant' | 'attendableId'> & {
+      onActivePartChange: (nextActivePart: TabsActivePart) => void;
+      defaultActivePart: TabsActivePart;
+    }
+  >;
 
-// TODO(burdon): Reconcile padding with Toolbar.
 const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
   (
     {
@@ -114,12 +114,7 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
         verticalVariant={verticalVariant}
       >
         <TabsPrimitive.Root
-          activationMode={activationMode}
-          data-active={activePart}
-          orientation={orientation}
           {...props}
-          value={value}
-          onValueChange={handleValueChange}
           className={mx(
             'overflow-hidden',
             orientation === 'vertical' &&
@@ -127,6 +122,11 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
               '[&[data-active=list]_[role=tabpanel]]:invisible @md:[&[data-active=list]_[role=tabpanel]]:visible',
             classNames,
           )}
+          orientation={orientation}
+          activationMode={activationMode}
+          data-active={activePart}
+          value={value}
+          onValueChange={handleValueChange}
           ref={tabsRoot}
         >
           {children}

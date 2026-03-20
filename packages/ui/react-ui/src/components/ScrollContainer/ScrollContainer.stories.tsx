@@ -19,7 +19,8 @@ import {
   type ScrollController,
 } from './ScrollContainer';
 
-type StoryProps = ScrollContainerRootProps & Pick<ScrollContainerViewportProps, 'fade'> & { running?: boolean; initialLines?: number };
+type StoryProps = ScrollContainerRootProps &
+  Pick<ScrollContainerViewportProps, 'fade'> & { running?: boolean; initialLines?: number };
 
 const DefaultStory = ({ initialLines = 0, running: runningProp, fade, ...props }: StoryProps) => {
   const [lines, setLines] = useState<string[]>([]);

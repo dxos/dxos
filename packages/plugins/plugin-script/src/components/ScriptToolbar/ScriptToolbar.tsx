@@ -35,7 +35,10 @@ export type ScriptToolbarProps = Partial<MenuRootProps> & {
 export const ScriptToolbar = ({ script, role, state, ...props }: ScriptToolbarProps) => {
   const { t } = useTranslation(meta.id);
   const options = useDeployDeps({ script });
-  const menuCreator = useMemo(() => createToolbarActions({ state, script, t, ...options }), [state, script, options, t]);
+  const menuCreator = useMemo(
+    () => createToolbarActions({ state, script, t, ...options }),
+    [state, script, options, t],
+  );
   const menuActions = useMenuActions(menuCreator);
 
   return (
