@@ -365,6 +365,14 @@ export class DataSpace {
     }
   }
 
+  /**
+   * Get all feeds and their blocks for this space.
+   * Used for space archive export.
+   */
+  async getAllFeeds() {
+    return this._echoHost.getAllFeedsForSpace(this.id);
+  }
+
   private async _enterReadyState(): Promise<void> {
     await this._callbacks.beforeReady?.();
 

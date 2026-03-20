@@ -283,6 +283,20 @@ export class SpacesServiceImpl implements SpacesService {
       await writer.writeDocument(documentId, data);
     }
 
+    const feeds = await space.getAllFeeds();
+    for (const feed of feeds) {
+      const archiveBlocks = feed.blocks.map((block) => ({
+        actorId: block.actorId,
+        sequence: block.sequence,
+        prevActorId: block.prevActorId,
+        prevSequence: block.prevSequence,
+        position: block.position,
+        timestamp: block.timestamp,
+        data: Buffer.from(block.data).toString('base64'),
+      }));
+      await writer.writeFeed(feed.feedId, feed.feedNamespace, archiveBlocks);
+    }
+
     const archive = await writer.finish();
     return { archive };
   }

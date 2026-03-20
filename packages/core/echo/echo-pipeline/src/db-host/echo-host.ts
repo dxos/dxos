@@ -360,6 +360,16 @@ export class EchoHost extends Resource {
     this._automergeHost.refreshCollection(deriveCollectionIdFromSpaceId(spaceId, root.documentId));
   }
 
+  /**
+   * Get all feeds and their blocks for a space.
+   * Used for space archive export.
+   */
+  async getAllFeedsForSpace(
+    spaceId: SpaceId,
+  ): Promise<Array<{ feedId: string; feedNamespace: string; blocks: FeedProtocol.Block[] }>> {
+    return RuntimeProvider.runPromise(this._runtime)(this._feedStore.getAllFeedsForSpace({ spaceId }));
+  }
+
   private _runUpdateIndexes = async (): Promise<void> => {
     let totalUpdated = 0;
     let totalDone = true;
