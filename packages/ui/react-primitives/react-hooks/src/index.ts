@@ -2,6 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+export { useComposedRefs } from '@radix-ui/react-compose-refs';
+export { useId } from '@radix-ui/react-id';
+
 export * from './useAsyncEffect';
 export * from './useAsyncState';
 export * from './useControlledState';

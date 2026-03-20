@@ -2,33 +2,45 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { forwardRef, useCallback, useState } from 'react';
 
-import { type ControlProps, Map, type MapController, type MapRootProps, useMapZoomHandler } from '@dxos/react-ui-geo';
+import { ComposableProps } from '@dxos/react-ui';
+import {
+  type ControlProps,
+  Map,
+  type MapContentProps,
+  type MapController,
+  type MapRootProps,
+  useMapZoomHandler,
+} from '@dxos/react-ui-geo';
 
 import { type GeoControlProps } from '../types';
 
-export type MapControlProps = GeoControlProps & MapRootProps;
+export type MapControlProps = ComposableProps<HTMLDivElement, GeoControlProps & MapContentProps & MapRootProps>;
 
-export const MapControl = ({ classNames, center, zoom, markers, selected, onToggle, onChange }: MapControlProps) => {
-  const [controller, setController] = useState<MapController | null>(null);
-  const handleZoomAction = useMapZoomHandler(controller);
+export const MapControl = forwardRef<HTMLDivElement, MapControlProps>(
+  ({ center, zoom, markers, selected, onToggle, onChange, ...props }, forwardedRef) => {
+    const [controller, setController] = useState<MapController | null>(null);
+    const handleZoomAction = useMapZoomHandler(controller);
 
-  const handleAction: ControlProps['onAction'] = (action) => {
-    switch (action) {
-      case 'toggle': {
-        onToggle?.();
-        break;
+    const handleAction = useCallback<NonNullable<ControlProps['onAction']>>((action) => {
+      switch (action) {
+        case 'toggle': {
+          onToggle?.();
+          break;
+        }
       }
-    }
-  };
+    }, []);
 
-  return (
-    <Map.Root ref={setController} classNames={classNames} center={center} zoom={zoom} onChange={onChange}>
-      <Map.Tiles />
-      <Map.Markers markers={markers} selected={selected} />
-      {onToggle && <Map.Action onAction={handleAction} />}
-      <Map.Zoom onAction={handleZoomAction} />
-    </Map.Root>
-  );
-};
+    return (
+      <Map.Root {...props} onChange={onChange} ref={forwardedRef}>
+        <Map.Content ref={setController} center={center} zoom={zoom}>
+          <Map.Tiles />
+          <Map.Markers markers={markers} selected={selected} />
+          {onToggle && <Map.Action onAction={handleAction} />}
+          <Map.Zoom onAction={handleZoomAction} />
+        </Map.Content>
+      </Map.Root>
+    );
+  },
+);

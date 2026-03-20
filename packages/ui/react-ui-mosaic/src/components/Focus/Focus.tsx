@@ -12,7 +12,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type PropsWithChildren, createContext, forwardRef, useContext, useRef, useState } from 'react';
 
-import { ComposableProps, type Axis, type ThemedClassName } from '@dxos/react-ui';
+import { ComposableProps, type Axis } from '@dxos/react-ui';
 import { composableProps, mx } from '@dxos/ui-theme';
 
 //

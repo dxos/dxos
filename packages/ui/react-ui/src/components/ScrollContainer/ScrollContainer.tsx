@@ -4,7 +4,6 @@
 
 import { createContext } from '@radix-ui/react-context';
 import React, {
-  type HTMLAttributes,
   type PropsWithChildren,
   forwardRef,
   useCallback,

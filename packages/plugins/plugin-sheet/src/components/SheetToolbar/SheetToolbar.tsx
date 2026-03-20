@@ -3,7 +3,7 @@
 //
 
 import { Atom, type Registry, RegistryContext } from '@effect-atom/atom-react';
-import React, { forwardRef, type PropsWithChildren, useContext, useMemo } from 'react';
+import React, { forwardRef, useContext, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type CompleteCellRange } from '@dxos/compute';

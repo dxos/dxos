@@ -6,12 +6,12 @@ import 'leaflet/dist/leaflet.css';
 
 import { createContext } from '@radix-ui/react-context';
 import L, { Control, type ControlPosition, DomEvent, DomUtil, type LatLngLiteral, latLngBounds } from 'leaflet';
-import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { type PropsWithChildren, forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MapContainer, type MapContainerProps, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
-import { ThemeProvider, type ThemedClassName, Tooltip } from '@dxos/react-ui';
-import { defaultTx, mx } from '@dxos/ui-theme';
+import { ComposableProps, ThemeProvider, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import { composableProps, defaultTx, mx } from '@dxos/ui-theme';
 
 import { type GeoMarker } from '../../types';
 import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
@@ -49,17 +49,51 @@ const [MapContextProvier, useMapContext] = createContext<MapContextValue>('Map')
 // Root
 //
 
-type MapRootProps = ThemedClassName<MapContainerProps & Pick<MapContextValue, 'onChange'>>;
+type MapRootProps = ComposableProps<
+  HTMLDivElement,
+  ThemedClassName<PropsWithChildren<Pick<MapContextValue, 'onChange'>>>
+>;
+
+/**
+ * Context provider for the map. Must wrap Map.Content.
+ */
+const MapRoot = forwardRef<HTMLDivElement, MapRootProps>(({ children, onChange, ...props }, forwardedRef) => {
+  // TODO(burdon): Use attention: const [attention, setAttention] = useState(false);
+  const attention = false;
+  return (
+    <MapContextProvier attention={attention} onChange={onChange}>
+      <div
+        {...composableProps(props, {
+          role: 'none',
+          className: 'dx-container grid dx-focus-ring-inset',
+        })}
+        ref={forwardedRef}
+      >
+        {children}
+      </div>
+    </MapContextProvier>
+  );
+});
+
+MapRoot.displayName = 'Map.Root';
+
+//
+// Content
+//
+
+type MapContentProps = ThemedClassName<Omit<MapContainerProps, 'children'> & PropsWithChildren>;
 
 /**
  * https://react-leaflet.js.org/docs/api-map
  */
-const MapRoot = forwardRef<MapController, MapRootProps>(
+const MAP_CONTENT_NAME = 'Map.Content';
+
+const MapContent = forwardRef<MapController, MapContentProps>(
   (
-    { classNames, scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, onChange, ...props },
+    { classNames, scrollWheelZoom = true, doubleClickZoom = true, touchZoom = true, center, zoom, children, ...props },
     forwardedRef,
   ) => {
-    const [attention, setAttention] = useState(false);
+    const { attention } = useMapContext(MAP_CONTENT_NAME);
     const mapRef = useRef<L.Map>(null);
     const map = mapRef.current;
 
@@ -92,26 +126,26 @@ const MapRoot = forwardRef<MapController, MapRootProps>(
     }, [map, attention]);
 
     return (
-      <MapContextProvier attention={attention} onChange={onChange}>
-        <MapContainer
-          {...props}
-          ref={mapRef}
-          className={mx('group relative grid h-full w-full !bg-base-surface dx-focus-ring-inset', classNames)}
-          attributionControl={false}
-          zoomControl={false}
-          scrollWheelZoom={scrollWheelZoom}
-          doubleClickZoom={doubleClickZoom}
-          touchZoom={touchZoom}
-          center={center ?? defaults.center}
-          zoom={zoom ?? defaults.zoom}
-          // whenReady={() => {}}
-        />
-      </MapContextProvier>
+      <MapContainer
+        {...props}
+        className={mx('group relative grid bg-base-surface!', classNames)}
+        attributionControl={false}
+        zoomControl={false}
+        scrollWheelZoom={scrollWheelZoom}
+        doubleClickZoom={doubleClickZoom}
+        touchZoom={touchZoom}
+        center={center ?? defaults.center}
+        zoom={zoom ?? defaults.zoom}
+        whenReady={() => {}}
+        ref={mapRef}
+      >
+        {children}
+      </MapContainer>
     );
   },
 );
 
-MapRoot.displayName = 'Map.Root';
+MapContent.displayName = 'Map.Content';
 
 //
 // Tiles
@@ -292,10 +326,18 @@ const MapAction = ({ onAction, position = 'bottomright', ...props }: MapControlP
 
 export const Map = {
   Root: MapRoot,
+  Content: MapContent,
   Tiles: MapTiles,
   Markers: MapMarkers,
   Zoom: MapZoom,
   Action: MapAction,
 };
 
-export { type MapController, type MapRootProps, type MapTilesProps, type MapMarkersProps, type MapControlProps };
+export {
+  type MapController,
+  type MapRootProps,
+  type MapContentProps,
+  type MapTilesProps,
+  type MapMarkersProps,
+  type MapControlProps,
+};

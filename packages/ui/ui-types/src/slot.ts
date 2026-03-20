@@ -54,7 +54,7 @@ export type SlottableProps<E extends HTMLElement, P extends Record<string, unkno
 // TODO(burdon): P as Void
 export type ComposableProps<E extends HTMLElement = HTMLElement, P extends Record<string, unknown> = {}> = Omit<
   HTMLAttributes<E>,
-  'dir'
+  'dir' // TODO(burdon): Explain.
 > &
   P & {
     classNames?: ClassNameValue;

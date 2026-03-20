@@ -33,6 +33,13 @@
    */
 
   /**
+   * Fills the available space.
+   */
+  .dx-expander {
+    @apply flex-1 min-h-0 min-w-0 h-full w-full;
+  }
+
+  /**
    * Container that fills the available space.
    */
   .dx-container {
