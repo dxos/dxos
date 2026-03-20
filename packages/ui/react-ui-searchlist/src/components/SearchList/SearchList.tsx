@@ -233,17 +233,15 @@ SearchListRoot.displayName = 'SearchList.Root';
 // Content
 //
 
-type SearchListContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+type SearchListContentProps = ComposableProps<HTMLDivElement, ThemedClassName<ComponentPropsWithoutRef<'div'>>>;
 
-const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
-    return (
-      <div role='none' {...props} className={mx('dx-expander flex flex-col gap-3', classNames)} ref={forwardedRef}>
-        {children}
-      </div>
-    );
-  },
-);
+const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(({ children, ...props }, forwardedRef) => {
+  return (
+    <div {...composableProps(props, { role: 'none', className: 'dx-expander flex flex-col gap-3' })} ref={forwardedRef}>
+      {children}
+    </div>
+  );
+});
 
 SearchListContent.displayName = 'SearchList.Content';
 
