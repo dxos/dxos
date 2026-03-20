@@ -29,11 +29,13 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
 
   return (
     <Panel.Root role={role} className='dx-document'>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root />
+      </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 gap-4'>
             <ObjectCard data={subject} classNames='dx-card-max-width' />
-
             {related.length > 0 && (
               <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'dx-card-max-width' : 'w-full')}>
                 <label className='mt-2 text-sm text-description'>{t('related objects label')}</label>

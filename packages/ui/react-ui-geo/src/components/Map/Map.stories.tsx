@@ -17,11 +17,13 @@ const DefaultStory = ({ markers = [] }: { markers?: GeoMarker[] }) => {
   const handleZoomAction = useMapZoomHandler(controller);
 
   return (
-    <Map.Root ref={setController}>
-      <Map.Tiles />
-      <Map.Markers markers={markers} />
-      <Map.Zoom position='bottomleft' onAction={handleZoomAction} />
-      <Map.Action position='bottomright' />
+    <Map.Root>
+      <Map.Content ref={setController}>
+        <Map.Tiles />
+        <Map.Markers markers={markers} />
+        <Map.Zoom position='bottomleft' onAction={handleZoomAction} />
+        <Map.Action position='bottomright' />
+      </Map.Content>
     </Map.Root>
   );
 };

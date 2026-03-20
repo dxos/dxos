@@ -42,7 +42,7 @@ export const AppBar = ({
   onBack,
 }: AppBarProps) => {
   const { t } = useTranslation(meta.id);
-  const menu = useMenuActions(actions);
+  const menuActions = useMenuActions(actions);
   const actionsValue = useAtomValue(actions);
   const hasActions = actionsValue.nodes.length > 0;
   const { keyboardOpen } = useMobileLayout(APP_BAR_NAME);
@@ -72,7 +72,7 @@ export const AppBar = ({
       <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
       {hasActions ? (
         <AnchorRoot>
-          <Menu.Root {...menu} caller={meta.id} onAction={onAction}>
+          <Menu.Root {...menuActions} caller={meta.id} onAction={onAction}>
             <Menu.Trigger asChild>
               <IconButton
                 variant='ghost'

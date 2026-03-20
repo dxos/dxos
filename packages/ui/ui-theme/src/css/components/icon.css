@@ -1,0 +1,9 @@
+/**
+ * Icons
+ */
+
+@layer dx-components {
+  dx-icon-inline {
+    @apply inline-block align-[-0.125em];
+  }
+}

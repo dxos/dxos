@@ -3,17 +3,13 @@
 //
 
 import { Atom, type Registry, RegistryContext } from '@effect-atom/atom-react';
-import React, { type PropsWithChildren, useContext, useMemo } from 'react';
+import React, { forwardRef, useContext, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type CompleteCellRange } from '@dxos/compute';
-import {
-  type ActionGraphProps,
-  Menu,
-  type MenuRootProps,
-  createGapSeparator,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { ComposableProps } from '@dxos/react-ui';
+import { type ActionGraphProps, Menu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import { composableProps } from '@dxos/ui-theme';
 
 import { type SheetModel } from '../../model';
 import { useSheetContext } from '../SheetRoot';
@@ -59,9 +55,9 @@ const createToolbarActions = ({
   });
 };
 
-export type SheetToolbarProps = PropsWithChildren<{ id: string } & Partial<MenuRootProps>>;
+export type SheetToolbarProps = ComposableProps<HTMLDivElement, { id: string }>;
 
-export const SheetToolbar = ({ id, ...props }: SheetToolbarProps) => {
+export const SheetToolbar = forwardRef<HTMLDivElement, SheetToolbarProps>(({ id, ...props }, forwardedRef) => {
   const { model, cursorFallbackRange } = useSheetContext();
   const stateAtom = useToolbarState({});
   const registry = useContext(RegistryContext);
@@ -84,11 +80,13 @@ export const SheetToolbar = ({ id, ...props }: SheetToolbarProps) => {
     () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange, customActions }),
     [model, stateAtom, registry, cursorFallbackRange, customActions],
   );
-  const actions = useMenuActions(actionsCreator);
+  const menuActions = useMenuActions(actionsCreator);
 
   return (
-    <Menu.Root {...actions} attendableId={id}>
-      <Menu.Toolbar {...props} />
+    <Menu.Root {...menuActions} attendableId={id}>
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
     </Menu.Root>
   );
-};
+});
+
+SheetToolbar.displayName = 'SheetToolbar';

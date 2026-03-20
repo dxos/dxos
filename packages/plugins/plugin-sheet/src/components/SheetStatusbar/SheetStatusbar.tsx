@@ -11,7 +11,7 @@ import { mapFormulaIndicesToRefs } from '../../types';
 import { useSheetContext } from '../SheetRoot';
 import { composableProps, mx } from '@dxos/ui-theme';
 
-export type SheetStatusbarProps = ComposableProps;
+export type SheetStatusbarProps = ComposableProps<HTMLDivElement>;
 
 export const SheetStatusbar = forwardRef<HTMLDivElement, SheetStatusbarProps>((props, forwardedRef) => {
   const { className, ...rest } = composableProps(props);

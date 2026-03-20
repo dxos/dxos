@@ -5,11 +5,11 @@
 import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { ScrollArea } from '@dxos/react-ui';
+import { ComposableProps, ScrollArea } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
-import { getHashStyles } from '@dxos/ui-theme';
+import { composableProps, getHashStyles } from '@dxos/ui-theme';
 
 import { GoogleMail } from '../../functions/apis';
 import { type Mailbox as MailboxType } from '../../types';
@@ -22,15 +22,6 @@ export type MailboxAction =
   | { type: 'save'; filter: string };
 
 export type MailboxActionHandler = (action: MailboxAction) => void;
-
-export type MailboxProps = {
-  id: string;
-  messages: Message.Message[];
-  labels?: MailboxType.Labels;
-  currentMessageId?: string;
-  ignoreAttention?: boolean;
-  onAction?: MailboxActionHandler;
-};
 
 type MessageTileData = {
   message: Message.Message;
@@ -155,36 +146,50 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
 MessageTile.displayName = 'MessageTile';
 
+export type MailboxProps = ComposableProps<
+  HTMLDivElement,
+  {
+    id: string;
+    messages: Message.Message[];
+    labels?: MailboxType.Labels;
+    currentMessageId?: string;
+    ignoreAttention?: boolean;
+    onAction?: MailboxActionHandler;
+  }
+>;
+
 /**
  * Card-based mailbox component using mosaic layout.
  */
-export const Mailbox = ({ messages, labels, currentMessageId, onAction }: MailboxProps) => {
-  const [viewport, setViewport] = useState<HTMLElement | null>(null);
+export const Mailbox = forwardRef<HTMLDivElement, MailboxProps>(
+  ({ messages, labels, currentMessageId, onAction, ...props }, forwardedRef) => {
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
-  // Transform messages into tile data.
-  const items = useMemo(
-    () =>
-      messages.map((message) => ({
-        message,
-        labels,
-        currentMessageId,
-        onAction,
-      })),
-    [messages, labels, currentMessageId, onAction],
-  );
+    // Transform messages into tile data.
+    const items = useMemo(
+      () =>
+        messages.map((message) => ({
+          message,
+          labels,
+          currentMessageId,
+          onAction,
+        })),
+      [messages, labels, currentMessageId, onAction],
+    );
 
-  // TODO(wittjosiah): This needs Selction.Group in addition to Focus.Group.
-  return (
-    <Focus.Group asChild>
-      <Mosaic.Container asChild withFocus autoScroll={viewport}>
-        <ScrollArea.Root orientation='vertical' margin>
-          <ScrollArea.Viewport ref={setViewport}>
-            <Mosaic.Stack items={items} getId={(item) => item.message.id} draggable={false} Tile={MessageTile} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Mosaic.Container>
-    </Focus.Group>
-  );
-};
+    // TODO(wittjosiah): This needs Selction.Group in addition to Focus.Group.
+    return (
+      <Focus.Group asChild {...composableProps(props)} ref={forwardedRef}>
+        <Mosaic.Container asChild withFocus autoScroll={viewport}>
+          <ScrollArea.Root orientation='vertical' margin>
+            <ScrollArea.Viewport ref={setViewport}>
+              <Mosaic.Stack items={items} getId={(item) => item.message.id} draggable={false} Tile={MessageTile} />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Mosaic.Container>
+      </Focus.Group>
+    );
+  },
+);
 
 Mailbox.displayName = 'Mailbox';

@@ -19,10 +19,18 @@ import { AnchoredTo, Thread } from '@dxos/types';
 import { CommentsPanel, type CommentsPanelProps } from '../../components';
 import { meta } from '../../meta';
 import { ThreadCapabilities, ThreadOperation, type ViewState } from '../../types';
+import { SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 
-export const ThreadCompanion = ({ attendableId, subject }: { attendableId?: string; subject: any }) => {
+export type ThreadCompanionProps = SurfaceComponentProps<
+  Thread.Thread,
+  {
+    attendableId?: string;
+  }
+>;
+
+export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps) => {
   const { t } = useTranslation(meta.id);
   const manager = usePluginManager();
   const { invokePromise } = useOperationInvoker();
@@ -184,7 +192,7 @@ export const ThreadCompanion = ({ attendableId, subject }: { attendableId?: stri
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            {/* TODO(burdon): TabeList should have the same geometry as Toolbar. */}
+            {/* TODO(burdon): TabsList should have the same geometry as Toolbar. */}
             <Tabs.Tablist classNames='py-0 px-1'>
               <Tabs.Tab value='unresolved' classNames='text-sm'>
                 {t('show unresolved label')}
