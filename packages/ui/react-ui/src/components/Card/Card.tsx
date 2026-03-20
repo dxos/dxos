@@ -205,7 +205,6 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(({ children, role, icon
     <Column.Row {...rest} role={role ?? 'none'} classNames={className} ref={forwardedRef}>
       {(icon && <CardIcon classNames='text-subdued' icon={icon} size={4} />) || <div />}
       {children}
-      <div />
     </Column.Row>
   );
 });

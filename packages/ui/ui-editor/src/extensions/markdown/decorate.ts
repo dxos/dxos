@@ -528,8 +528,12 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
   }
 
   const atomicDeco = new RangeSetBuilder<Decoration>();
-  for (const { from, to, deco: d } of atomicDecoRanges) {
-    atomicDeco.add(from, to, d);
+  for (const { from, to, deco } of atomicDecoRanges) {
+    // Skip replace decorations that span line breaks (not allowed by CodeMirror plugins).
+    if (from < to && state.doc.lineAt(from).number !== state.doc.lineAt(to).number) {
+      continue;
+    }
+    atomicDeco.add(from, to, deco);
   }
 
   return {
