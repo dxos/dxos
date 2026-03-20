@@ -363,7 +363,7 @@ catalog:
   diff: ^8.0.3
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
-  effect: 3.19.16
+  effect: 3.20.0
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
   error-stack-parser: ^2.1.4
