@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type { DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { SpaceId } from '@dxos/keys';
@@ -36,8 +37,8 @@ describe('SpaceArchive', () => {
         expect(extracted.metadata.version).toBe(SpaceArchiveVersion.V1);
         expect(extracted.metadata.originalSpaceId).toBe(spaceId);
         expect(extracted.metadata.echo?.currentRootUrl).toBe('automerge:test123');
-        expect(extracted.documents['doc1']).toEqual(new Uint8Array([1, 2, 3]));
-        expect(extracted.documents['doc2']).toEqual(new Uint8Array([4, 5, 6]));
+        expect(extracted.documents['doc1' as DocumentId]).toEqual(new Uint8Array([1, 2, 3]));
+        expect(extracted.documents['doc2' as DocumentId]).toEqual(new Uint8Array([4, 5, 6]));
       } finally {
         await writer.close();
       }
@@ -262,7 +263,7 @@ describe('SpaceArchive', () => {
 
         expect(Object.keys(extracted.documents)).toHaveLength(1);
         expect(Object.keys(extracted.feeds)).toHaveLength(1);
-        expect(extracted.documents['doc1']).toEqual(new Uint8Array([1, 2, 3]));
+        expect(extracted.documents['doc1' as DocumentId]).toEqual(new Uint8Array([1, 2, 3]));
         expect(extracted.feeds['feed1'].blocks).toHaveLength(1);
       } finally {
         await writer.close();
