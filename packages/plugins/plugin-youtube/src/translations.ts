@@ -38,6 +38,8 @@ export const translations = [
         'video label': 'Video',
         'sync channel label': 'Sync channel',
         'sync channel error title': 'Failed to sync channel',
+        'clear synced videos label': 'Clear synced videos',
+        'clear synced videos error title': 'Failed to clear synced videos',
         'close label': 'Close',
         'new channel label': 'New YouTube Channel',
         'empty channel message': 'No videos synced yet',

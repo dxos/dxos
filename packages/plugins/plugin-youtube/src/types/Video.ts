@@ -48,7 +48,7 @@ export const YouTubeVideo = Schema.Struct({
   transcript: Schema.String.pipe(Schema.optional),
   /** Transcript segments with timestamps. */
   transcriptSegments: Schema.Array(TranscriptSegment).pipe(Schema.optional),
-  /** Whether transcript fetching was attempted. */
+  /** True when transcript text was successfully loaded; false when disabled or none available. */
   transcriptFetched: Schema.Boolean.pipe(Schema.optional),
 }).pipe(
   Type.object({

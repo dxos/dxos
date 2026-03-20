@@ -1803,6 +1803,9 @@ catalogs:
     yargs:
       specifier: ~16.2.0
       version: 16.2.0
+    youtube-caption-extractor:
+      specifier: ^1.9.1
+      version: 1.9.1
     zen-observable:
       specifier: ^0.10.0
       version: 0.10.0
@@ -13466,6 +13469,9 @@ importers:
       effect:
         specifier: 3.19.16
         version: 3.19.16
+      youtube-caption-extractor:
+        specifier: 'catalog:'
+        version: 1.9.1
     devDependencies:
       '@dxos/config':
         specifier: workspace:*
@@ -35481,6 +35487,9 @@ packages:
   strip-literal@3.0.0:
     resolution: {integrity: sha512-TcccoMhJOM3OebGhSBEmp3UZ2SfDMZUEBdRA/9ynfLi8yYajyWX3JiXArcJt4Umh4vISpspkQIY8ZZoCqjbviA==}
 
+  striptags@3.2.0:
+    resolution: {integrity: sha512-g45ZOGzHDMe2bdYMdIvdAfCQkCTDMGBazSw1ypMowwGIee7ZQ5dU0rBJ8Jqgl+jAKIv4dbeE1jscZq9wid1Tkw==}
+
   strnum@2.1.2:
     resolution: {integrity: sha512-l63NF9y/cLROq/yqKXSLtcMeeyOfnSQlfMSlzFt/K73oIaD8DGaQWd7Z34X9GPiKqP5rbSh84Hl4bOlLcjiSrQ==}
 
@@ -37290,6 +37299,10 @@ packages:
 
   youch@4.1.0-beta.10:
     resolution: {integrity: sha512-rLfVLB4FgQneDr0dv1oddCVZmKjcJ6yX6mS4pU82Mq/Dt9a3cLZQ62pDBL4AUO+uVrCvtWz3ZFUL2HFAFJ/BXQ==}
+
+  youtube-caption-extractor@1.9.1:
+    resolution: {integrity: sha512-KK1OparV3kpIIRkMgLRsQPE73Tu0hYy0CDKcWkF8O3eikyib0IqVjoDNDiGt0KhGbg0/jhh+VUOCcWn/G6nvAw==}
+    engines: {node: '>=14.0.0'}
 
   zen-observable@0.10.0:
     resolution: {integrity: sha512-iI3lT0iojZhKwT5DaFy2Ce42n3yFcLdFyOh01G7H0flMY60P8MJuVFEoJoNwXlmAyQ45GrjL6AcZmmlv8A5rbw==}
@@ -57517,6 +57530,8 @@ snapshots:
     dependencies:
       js-tokens: 9.0.1
 
+  striptags@3.2.0: {}
+
   strnum@2.1.2: {}
 
   strtok3@6.3.0:
@@ -59564,6 +59579,11 @@ snapshots:
       '@speed-highlight/core': 1.2.7
       cookie: 1.0.2
       youch-core: 0.3.3
+
+  youtube-caption-extractor@1.9.1:
+    dependencies:
+      he: 1.2.0
+      striptags: 3.2.0
 
   zen-observable@0.10.0: {}
 

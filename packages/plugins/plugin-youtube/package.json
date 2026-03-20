@@ -80,7 +80,8 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",
     "@radix-ui/react-context": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "youtube-caption-extractor": "catalog:"
   },
   "devDependencies": {
     "@dxos/config": "workspace:*",

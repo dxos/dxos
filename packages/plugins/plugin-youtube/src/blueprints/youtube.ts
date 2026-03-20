@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { Sync, YouTubeHandlers } from '../functions';
+import { ClearSyncedVideos, Sync, YouTubeHandlers } from '../functions';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/youtube';
 
@@ -14,7 +14,7 @@ const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'YouTube',
-    tools: Blueprint.toolDefinitions({ operations: [Sync], tools: [] }),
+    tools: Blueprint.toolDefinitions({ operations: [Sync, ClearSyncedVideos], tools: [] }),
     instructions: Template.make({
       source: trim`
         You manage YouTube channel subscriptions and video content.

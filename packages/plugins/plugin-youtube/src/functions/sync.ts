@@ -215,25 +215,29 @@ type TranscriptData = { segments: Video.TranscriptSegment[]; fullText: string };
  */
 const mapVideoData = (
   item: YouTube.VideoItem,
-  transcript?: TranscriptData,
-): Omit<Video.YouTubeVideo, 'id' | '~@dxos/echo/Kind'> => ({
-  title: item.snippet?.title ?? 'Untitled',
-  videoId: item.id,
-  description: item.snippet?.description,
-  url: `https://www.youtube.com/watch?v=${item.id}`,
-  thumbnailUrl:
-    item.snippet?.thumbnails?.high?.url ??
-    item.snippet?.thumbnails?.medium?.url ??
-    item.snippet?.thumbnails?.default?.url,
-  channelTitle: item.snippet?.channelTitle,
-  publishedAt: item.snippet?.publishedAt ?? new Date().toISOString(),
-  duration: item.contentDetails?.duration,
-  viewCount: item.statistics?.viewCount ? parseInt(item.statistics.viewCount, 10) : undefined,
-  likeCount: item.statistics?.likeCount ? parseInt(item.statistics.likeCount, 10) : undefined,
-  transcript: transcript?.fullText,
-  transcriptSegments: transcript?.segments,
-  transcriptFetched: true,
-});
+  transcript: TranscriptData | undefined,
+  includeTranscripts: boolean,
+): Omit<Video.YouTubeVideo, 'id' | '~@dxos/echo/Kind'> => {
+  const hasTranscript = Boolean(transcript?.fullText?.trim());
+  return {
+    title: item.snippet?.title ?? 'Untitled',
+    videoId: item.id,
+    description: item.snippet?.description,
+    url: `https://www.youtube.com/watch?v=${item.id}`,
+    thumbnailUrl:
+      item.snippet?.thumbnails?.high?.url ??
+      item.snippet?.thumbnails?.medium?.url ??
+      item.snippet?.thumbnails?.default?.url,
+    channelTitle: item.snippet?.channelTitle,
+    publishedAt: item.snippet?.publishedAt ?? new Date().toISOString(),
+    duration: item.contentDetails?.duration,
+    viewCount: item.statistics?.viewCount ? parseInt(item.statistics.viewCount, 10) : undefined,
+    likeCount: item.statistics?.likeCount ? parseInt(item.statistics.likeCount, 10) : undefined,
+    transcript: transcript && hasTranscript ? transcript.fullText : undefined,
+    transcriptSegments: transcript && hasTranscript ? transcript.segments : undefined,
+    transcriptFetched: includeTranscripts ? hasTranscript : false,
+  };
+};
 
 /**
  * Stream videos with transcripts into a DXOS feed.
@@ -284,7 +288,7 @@ const streamVideosToFeed = Effect.fn(function* (
             }
           }
 
-          return mapVideoData(item, transcript);
+          return mapVideoData(item, transcript, includeTranscripts);
         }),
       {
         concurrency: STREAMING_CONFIG.transcriptFetchConcurrency,

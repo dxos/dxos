@@ -31,7 +31,7 @@ export const Sync = Operation.make({
     includeTranscripts: Schema.Boolean.pipe(
       Schema.annotations({
         description:
-          'Whether to fetch video transcripts. Transcripts are fetched using public YouTube transcript API and do not require authentication.',
+          'Whether to fetch transcripts: Data API when your account can manage the video, otherwise watch-page captions (browser uses a public CORS proxy for YouTube fetches).',
       }),
       Schema.optional,
     ),
@@ -42,4 +42,22 @@ export const Sync = Operation.make({
   }),
   types: [Channel.YouTubeChannel, Video.YouTubeVideo],
   services: [Database.Service, Feed.Service, CredentialsService],
+});
+
+export const ClearSyncedVideos = Operation.make({
+  meta: {
+    key: 'dxos.org/function/youtube/clear-synced-videos',
+    name: 'Clear Synced YouTube Videos',
+    description: 'Remove all synced videos from the channel by replacing its feed with a new empty feed.',
+  },
+  input: Schema.Struct({
+    channel: Ref.Ref(Channel.YouTubeChannel).annotations({
+      description: 'Reference to the YouTube channel whose synced videos should be cleared.',
+    }),
+  }),
+  output: Schema.Struct({
+    removedVideos: Schema.Number,
+  }),
+  types: [Channel.YouTubeChannel, Video.YouTubeVideo],
+  services: [Database.Service, Feed.Service],
 });

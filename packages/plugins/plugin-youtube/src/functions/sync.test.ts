@@ -85,8 +85,7 @@ describe.runIf(process.env.GOOGLE_ACCESS_TOKEN)('YouTube API', { timeout: 30_000
 });
 
 /**
- * Transcript fetching does not require Google API authentication.
- * It uses the youtube-transcript package which scrapes transcripts from YouTube.
+ * Transcripts: uses youtube-caption-extractor to scrape captions from the watch page.
  */
 describe('YouTube Transcript', { timeout: 30_000 }, () => {
   it.effect(

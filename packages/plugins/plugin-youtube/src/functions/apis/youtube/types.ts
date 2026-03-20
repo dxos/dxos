@@ -226,3 +226,29 @@ export const SearchResponse = Schema.Struct({
 });
 
 export type SearchResponse = Schema.Schema.Type<typeof SearchResponse>;
+
+/**
+ * Caption track from captions.list.
+ */
+export const CaptionResource = Schema.Struct({
+  id: Schema.String,
+  snippet: Schema.optional(
+    Schema.Struct({
+      videoId: Schema.optional(Schema.String),
+      language: Schema.optional(Schema.String),
+      name: Schema.optional(Schema.String),
+      trackKind: Schema.optional(Schema.String),
+    }),
+  ),
+});
+
+/**
+ * YouTube captions.list response.
+ */
+export const CaptionsListResponse = Schema.Struct({
+  kind: Schema.String,
+  etag: Schema.String,
+  items: Schema.optional(Schema.Array(CaptionResource)),
+});
+
+export type CaptionsListResponse = Schema.Schema.Type<typeof CaptionsListResponse>;

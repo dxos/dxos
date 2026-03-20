@@ -7,4 +7,4 @@ import { OperationHandlerSet } from '@dxos/operation';
 export { YouTube } from './apis';
 export * from './definitions';
 
-export const YouTubeHandlers = OperationHandlerSet.lazy(() => import('./sync'));
+export const YouTubeHandlers = OperationHandlerSet.lazy(() => import('./sync'), () => import('./clear-synced-videos'));

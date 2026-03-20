@@ -18,14 +18,12 @@ import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder } from '@dxos/plugin-graph';
 
-import { Sync } from '../../functions';
+import { ClearSyncedVideos, Sync } from '../../functions';
 import { meta } from '../../meta';
 import { Channel, Video } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-
     const selectionManager = yield* Capability.get(AttentionCapabilities.Selection);
     const selectedId = Atom.family((nodeId: string) =>
       Atom.make((get) => {
@@ -104,6 +102,38 @@ export default Capability.makeModule(
               properties: {
                 label: ['sync channel label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',
+                disposition: 'list-item',
+              },
+            },
+            {
+              id: 'clear-synced-videos',
+              data: Effect.fnUntraced(function* () {
+                const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
+                const db = Obj.getDatabase(channel);
+                invariant(db);
+                const runtime = computeRuntime.getRuntime(db.spaceId);
+                yield* Effect.tryPromise(() =>
+                  runtime.runPromise(
+                    invokeFunctionWithTracing(ClearSyncedVideos, {
+                      channel: Ref.make(channel),
+                    }),
+                  ),
+                ).pipe(
+                  Effect.catchAll((error) => {
+                    log.catch(error);
+                    return Operation.invoke(LayoutOperation.AddToast, {
+                      id: `${meta.id}.clear-synced-videos-error`,
+                      icon: 'ph--warning--regular',
+                      duration: 5_000,
+                      title: ['clear synced videos error title', { ns: meta.id }],
+                      closeLabel: ['close label', { ns: meta.id }],
+                    });
+                  }),
+                );
+              }),
+              properties: {
+                label: ['clear synced videos label', { ns: meta.id }],
+                icon: 'ph--trash--regular',
                 disposition: 'list-item',
               },
             },
