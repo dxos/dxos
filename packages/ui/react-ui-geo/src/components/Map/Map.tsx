@@ -43,7 +43,7 @@ type MapContextValue = {
   onChange?: (ev: { center: LatLngLiteral; zoom: number }) => void;
 };
 
-const [MapContextProvier, useMapContext] = createContext<MapContextValue>('Map');
+const [MapContextProvider, useMapContext] = createContext<MapContextValue>('Map');
 
 //
 // Root
@@ -61,7 +61,7 @@ const MapRoot = forwardRef<HTMLDivElement, MapRootProps>(({ children, onChange, 
   // TODO(burdon): Use attention: const [attention, setAttention] = useState(false);
   const attention = false;
   return (
-    <MapContextProvier attention={attention} onChange={onChange}>
+    <MapContextProvider attention={attention} onChange={onChange}>
       <div
         {...composableProps(props, {
           role: 'none',
@@ -71,7 +71,7 @@ const MapRoot = forwardRef<HTMLDivElement, MapRootProps>(({ children, onChange, 
       >
         {children}
       </div>
-    </MapContextProvier>
+    </MapContextProvider>
   );
 });
 
