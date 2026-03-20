@@ -82,6 +82,56 @@ describe('annotations', () => {
       expect(getLabelWithSchema(TestObject, obj)).toBeUndefined();
     });
 
+    test('should skip empty string and fallback to next path', ({ expect }) => {
+      const obj: TestObject = {
+        name: '',
+        fallbackName: 'Fallback Name',
+        other: 'Other',
+      };
+
+      expect(getLabelWithSchema(TestObject, obj)).toEqual('Fallback Name');
+    });
+
+    test('should skip whitespace-only string and fallback to next path', ({ expect }) => {
+      const obj: TestObject = {
+        name: '   ',
+        fallbackName: 'Fallback Name',
+        other: 'Other',
+      };
+
+      expect(getLabelWithSchema(TestObject, obj)).toEqual('Fallback Name');
+    });
+
+    test('should return undefined if all paths are empty strings', ({ expect }) => {
+      const obj: TestObject = {
+        name: '',
+        fallbackName: '',
+        other: 'Other',
+      };
+
+      expect(getLabelWithSchema(TestObject, obj)).toBeUndefined();
+    });
+
+    test('should return undefined if all paths are whitespace-only', ({ expect }) => {
+      const obj: TestObject = {
+        name: '  ',
+        fallbackName: '\t\n',
+        other: 'Other',
+      };
+
+      expect(getLabelWithSchema(TestObject, obj)).toBeUndefined();
+    });
+
+    test('should preserve original string with leading/trailing whitespace when valid', ({ expect }) => {
+      const obj: TestObject = {
+        name: '  Valid Name  ',
+        fallbackName: 'Fallback Name',
+        other: 'Other',
+      };
+
+      expect(getLabelWithSchema(TestObject, obj)).toEqual('  Valid Name  ');
+    });
+
     test('should return label from echo object', ({ expect }) => {
       const obj: TestEchoSchema = {
         id: 'test',
