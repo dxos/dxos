@@ -28,8 +28,8 @@ export type MarkdownContainerProps = SurfaceComponentProps<
     settings: Markdown.Settings;
     selectionManager?: SelectionManager;
   } & Pick<MarkdownPluginState, 'extensionProviders'> &
-    Pick<MarkdownEditorRootProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
-    Pick<MarkdownEditorContentProps, 'editorStateStore'>
+  Pick<MarkdownEditorRootProps, 'viewMode' | 'onSelectObject' | 'onViewModeChange'> &
+  Pick<MarkdownEditorContentProps, 'editorStateStore'>
 >;
 
 export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerProps>(
