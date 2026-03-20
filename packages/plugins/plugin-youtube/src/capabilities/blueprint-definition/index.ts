@@ -2,4 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-export { default as BlueprintDefinition } from './blueprint-definition';
+import { Capability } from '@dxos/app-framework';
+
+export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));

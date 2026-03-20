@@ -6,6 +6,7 @@ import { Operation } from '@dxos/operation';
 import * as Schema from 'effect/Schema';
 
 import { Database, Feed, Ref } from '@dxos/echo';
+import { CredentialsService } from '@dxos/functions';
 
 import * as Channel from '../types/Channel';
 import * as Video from '../types/Video';
@@ -40,5 +41,5 @@ export const Sync = Operation.make({
     channelTitle: Schema.String.pipe(Schema.optional),
   }),
   types: [Channel.YouTubeChannel, Video.YouTubeVideo],
-  services: [Database.Service, Feed.Service],
+  services: [Database.Service, Feed.Service, CredentialsService],
 });

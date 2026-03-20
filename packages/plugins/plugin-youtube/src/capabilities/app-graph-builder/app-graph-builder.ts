@@ -7,13 +7,14 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, COMPANION_PREFIX, LayoutOperation } from '@dxos/app-toolkit';
 import { type Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder } from '@dxos/plugin-graph';
 
@@ -36,7 +37,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}/channel-video`,
+        id: `${meta.id}.channel-video`,
         match: (node) =>
           Channel.instanceOf(node.data) ? Option.some({ channel: node.data, nodeId: node.id }) : Option.none(),
         connector: (matched, get) => {
@@ -56,7 +57,7 @@ export default Capability.makeModule(
           )[0];
           return Effect.succeed([
             {
-              id: `${matched.nodeId}${COMPANION_PREFIX}video`,
+              id: `${COMPANION_PREFIX}video`,
               type: PLANK_COMPANION_TYPE,
               data: video ?? 'video',
               properties: {
@@ -70,7 +71,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}/sync-channel`,
+        id: `${meta.id}.sync-channel`,
         match: (node) => (Channel.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
         actions: (channel: Channel.YouTubeChannel) =>
           Effect.succeed([
@@ -87,6 +88,17 @@ export default Capability.makeModule(
                       channel: Ref.make(channel),
                     }),
                   ),
+                ).pipe(
+                  Effect.catchAll((error) => {
+                    log.catch(error);
+                    return Operation.invoke(LayoutOperation.AddToast, {
+                      id: `${meta.id}.sync-channel-error`,
+                      icon: 'ph--warning--regular',
+                      duration: 5_000,
+                      title: ['sync channel error title', { ns: meta.id }],
+                      closeLabel: ['close label', { ns: meta.id }],
+                    });
+                  }),
                 );
               }),
               properties: {

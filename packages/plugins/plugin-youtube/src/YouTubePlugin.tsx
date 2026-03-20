@@ -2,15 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
-// @import-as-namespace
-
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
+import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 
 import { YouTubeBlueprint } from './blueprints';
 import { AppGraphBuilder, BlueprintDefinition, ReactSurface } from './capabilities';
@@ -29,17 +29,27 @@ export const YouTubePlugin = Plugin.define(meta).pipe(
       {
         id: Channel.YouTubeChannel.typename,
         metadata: {
+          label: (object: Channel.YouTubeChannel) => object.name ?? object.channelUrl ?? object.channelId ?? 'YouTube',
           icon: Annotation.IconAnnotation.get(Channel.YouTubeChannel).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Channel.YouTubeChannel).pipe(Option.getOrThrow).hue ?? 'white',
           blueprints: [YouTubeBlueprint.key],
           inputSchema: Channel.CreateYouTubeChannelSchema,
-          createObject: (props: Channel.CreateYouTubeChannelSchema) => Effect.sync(() => Channel.make(props)),
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Channel.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
         id: Video.YouTubeVideo.typename,
-        // TODO(dmaretskyi): plugin-framework: Read those from schema so this could be removed
         metadata: {
+          label: (object: Video.YouTubeVideo) => object.title,
           icon: Annotation.IconAnnotation.get(Video.YouTubeVideo).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Video.YouTubeVideo).pipe(Option.getOrThrow).hue ?? 'white',
         },

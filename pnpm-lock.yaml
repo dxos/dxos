@@ -2470,6 +2470,9 @@ importers:
       '@dxos/plugin-wnfs':
         specifier: workspace:*
         version: link:../../plugins/plugin-wnfs
+      '@dxos/plugin-youtube':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-youtube
       '@dxos/plugin-zen':
         specifier: workspace:*
         version: link:../../plugins/plugin-zen
