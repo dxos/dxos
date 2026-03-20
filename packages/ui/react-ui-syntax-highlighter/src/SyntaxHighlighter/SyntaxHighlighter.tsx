@@ -28,11 +28,11 @@ export type SyntaxHighlighterProps = ComposableProps<
  */
 // TODO(burdon): Replace with react-ui-editor (and reuse styles).
 export const SyntaxHighlighter = forwardRef<HTMLDivElement, SyntaxHighlighterProps>(
-  ({ children, language = 'text', fallback = zeroWidthSpace, ...props }, forwardedRef) => {
+  ({ children, language = 'text', fallback = zeroWidthSpace, classNames, className, ...nativeProps }, forwardedRef) => {
     const { themeMode } = useThemeContext();
 
     return (
-      <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
+      <ScrollArea.Root {...composableProps({ classNames, className })} thin ref={forwardedRef}>
         <ScrollArea.Viewport>
           <div role='none'>
             <NativeSyntaxHighlighter
@@ -45,6 +45,7 @@ export const SyntaxHighlighter = forwardRef<HTMLDivElement, SyntaxHighlighterPro
                 padding: 0,
                 margin: 0,
               }}
+              {...nativeProps}
             >
               {/* Non-empty fallback prevents collapse. */}
               {children || fallback}

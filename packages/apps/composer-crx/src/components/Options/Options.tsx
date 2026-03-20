@@ -22,7 +22,7 @@ const styles = {
 
 export type OptionsProps = ComposableProps<HTMLDivElement>;
 
-export const Options = forwardRef<HTMLDivElement, OptionsProps>(({ children, ...props }, forwardedRef) => {
+export const Options = forwardRef<HTMLDivElement, OptionsProps>((props, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const [developerMode, setDeveloperMode] = useState(false);
   const [spaceMode, setSpaceMode] = useState(false);

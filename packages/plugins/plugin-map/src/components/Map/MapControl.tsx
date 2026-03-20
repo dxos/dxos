@@ -30,7 +30,7 @@ export const MapControl = forwardRef<HTMLDivElement, MapControlProps>(
           break;
         }
       }
-    }, []);
+    }, [onToggle]);
 
     return (
       <Map.Root {...props} onChange={onChange} ref={forwardedRef}>

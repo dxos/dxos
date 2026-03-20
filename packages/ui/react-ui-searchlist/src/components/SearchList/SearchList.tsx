@@ -386,7 +386,7 @@ type SearchListViewportProps = ComposableProps<HTMLDivElement>;
 const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
   ({ children, ...props }, forwardedRef) => {
     return (
-      <ScrollArea.Root {...composableProps(props, { role: 'listbox' })} thin ref={forwardedRef}>
+      <ScrollArea.Root {...composableProps(props)} role='listbox' thin ref={forwardedRef}>
         <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
       </ScrollArea.Root>
     );

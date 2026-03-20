@@ -22,7 +22,7 @@ export type ItemListProps<T> = ComposableProps<
 >;
 
 export const ItemList = forwardRef<HTMLDivElement, ItemListProps<Obj.Any>>(
-  ({ objects, debug, ...props }, forwardedRef) => {
+  ({ objects, debug, onDelete, ...props }, forwardedRef) => {
     return (
       <ScrollArea.Root {...composableProps(props)} padding ref={forwardedRef}>
         <ScrollArea.Viewport>
@@ -30,8 +30,8 @@ export const ItemList = forwardRef<HTMLDivElement, ItemListProps<Obj.Any>>(
             .slice(0, MAX_RENDERED_COUNT)
             .map(
               (object) =>
-                (debug && <DebugItem key={object.id} object={object} {...props} />) || (
-                  <Item key={object.id} object={object} {...props} />
+                (debug && <DebugItem key={object.id} object={object} onDelete={onDelete} />) || (
+                  <Item key={object.id} object={object} onDelete={onDelete} />
                 ),
             )}
           {objects.length > MAX_RENDERED_COUNT && (
