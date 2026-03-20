@@ -7,16 +7,17 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
-import { AgentPrompt, Chat, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
-import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
-import { Blueprint } from '@dxos/blueprints';
+import { AgentPrompt, Chat, DatabaseBlueprint, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
+import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 import { Operation, OperationResolver } from '@dxos/operation';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { Text } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { AssistantBlueprint } from '../../blueprints';
@@ -121,44 +122,84 @@ export default Capability.makeModule(
       }),
       OperationResolver.make({
         operation: AssistantOperation.RunPromptInNewChat,
-        handler: Effect.fnUntraced(function* ({ db, prompt, objects, blueprints }) {
-          const registry = yield* Capability.get(Capabilities.AtomRegistry);
-          const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
-          const chatPath = getObjectPathFromObject(chat);
+        handler: Effect.fnUntraced(
+          function* ({ db, prompt, objects, blueprints, background }) {
+            const registry = yield* Capability.get(Capabilities.AtomRegistry);
+            const { object: chat } = yield* Operation.invoke(AssistantOperation.CreateChat, { db });
 
-          if ((objects && objects.length > 0) || (blueprints && blueprints.length > 0)) {
-            const queue = chat.queue.target as Queue<Message.Message>;
-            const binder = new AiContextBinder({ queue, registry });
-            yield* Effect.promise(() =>
-              binder.use(async (b: AiContextBinder) => {
-                const bindingProps: Parameters<AiContextBinder['bind']>[0] = {};
+            if ((objects && objects.length > 0) || (blueprints && blueprints.length > 0)) {
+              const queue = chat.queue.target as Queue<Message.Message>;
+              const binder = new AiContextBinder({ queue, registry });
+              yield* Effect.promise(() =>
+                binder.use(async (b: AiContextBinder) => {
+                  const bindingProps: Parameters<AiContextBinder['bind']>[0] = {};
 
-                if (objects && objects.length > 0) {
-                  bindingProps.objects = objects.map((obj) => Ref.make(obj));
-                }
-
-                if (blueprints && blueprints.length > 0) {
-                  const allBlueprints = await db.query(Filter.type(Blueprint.Blueprint)).run();
-                  const matchedBlueprints = allBlueprints.filter(
-                    (blueprint) => blueprint.key && blueprints.includes(blueprint.key),
-                  );
-                  if (matchedBlueprints.length > 0) {
-                    bindingProps.blueprints = matchedBlueprints.map((blueprint) => Ref.make(blueprint));
+                  if (objects && objects.length > 0) {
+                    bindingProps.objects = objects.map((obj) => Ref.make(obj));
                   }
-                }
 
-                await b.bind(bindingProps);
-              }),
-            );
-          }
+                  if (blueprints && blueprints.length > 0) {
+                    const allBlueprints = await db.query(Filter.type(Blueprint.Blueprint)).run();
+                    const matchedBlueprints = allBlueprints.filter(
+                      (blueprint) => blueprint.key && blueprints.includes(blueprint.key),
+                    );
+                    if (matchedBlueprints.length > 0) {
+                      bindingProps.blueprints = matchedBlueprints.map((blueprint) => Ref.make(blueprint));
+                    }
+                  }
 
-          yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({
-            ...current,
-            pendingPrompts: { ...current.pendingPrompts, [chatPath]: prompt },
-          }));
-          yield* Operation.invoke(LayoutOperation.Open, { subject: [chatPath] });
-          return { object: chat };
-        }),
+                  await b.bind(bindingProps);
+                }),
+              );
+            }
+
+            if (background) {
+              const promptRef =
+                typeof prompt === 'string'
+                  ? Ref.make(
+                      Prompt.make({
+                        instructions: prompt,
+                        blueprints: [],
+                        context: [],
+                      }),
+                    )
+                  : prompt;
+              yield* Database.flush();
+              const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
+              const runtime = yield* computeRuntime.getRuntime(db.spaceId).runtimeEffect;
+              yield* invokeFunctionWithTracing(AgentPrompt, {
+                prompt: promptRef,
+                input: {},
+                chat: Ref.make(chat),
+              }).pipe(
+                Effect.provide(runtime),
+                Effect.catchAll((error) => {
+                  log.catch(error);
+                  return Effect.void;
+                }),
+              );
+              return { object: chat };
+            }
+
+            const chatPath = getObjectPathFromObject(chat);
+            const pendingPromptText =
+              typeof prompt === 'string'
+                ? prompt
+                : yield* Effect.gen(function* () {
+                    const promptObj = yield* Effect.promise(() => prompt.load());
+                    const source = yield* Effect.promise(() => promptObj.instructions.source.load());
+                    invariant(Obj.instanceOf(Text.Text, source), 'Prompt template source must be Text.');
+                    return Template.process(source.content ?? '');
+                  });
+            yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({
+              ...current,
+              pendingPrompts: { ...current.pendingPrompts, [chatPath]: pendingPromptText },
+            }));
+            yield* Operation.invoke(LayoutOperation.Open, { subject: [chatPath] });
+            return { object: chat };
+          },
+          (effect, { db }) => effect.pipe(Effect.provide(Database.layer(db))),
+        ),
       }),
     ]);
   }),

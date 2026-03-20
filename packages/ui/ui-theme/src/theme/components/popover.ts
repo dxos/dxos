@@ -29,9 +29,9 @@ export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrai
     // Ensures it respects available height from Radix (or 100dvh).
     // NOTE: Both h and max-h are required: h gives a definite height so that h-full in children (e.g. ScrollArea) can
     // resolve to a concrete pixel value; max-h then caps it so it can never exceed the viewport.
-    constrainBlock && 'max-h-(--radix-popover-content-available-height)',
+    constrainBlock && 'h-(--radix-popover-content-available-height)',
     constrainBlock &&
-      'max-h-[min(var(--radix-popover-content-available-height),calc(100dvh-var(--spacing-screen-border)*2))]',
+    'max-h-[min(var(--radix-popover-content-available-height),calc(100dvh-var(--spacing-screen-border)*2))]',
     constrainInline && 'max-w-(--radix-popover-content-available-width)',
     ...etc,
   );
