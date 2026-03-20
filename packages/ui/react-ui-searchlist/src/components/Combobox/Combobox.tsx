@@ -9,6 +9,7 @@ import React, { type PropsWithChildren, forwardRef, useCallback } from 'react';
 import {
   Button,
   type ButtonProps,
+  ComposableProps,
   Icon,
   Popover,
   type PopoverArrowProps,
@@ -16,7 +17,7 @@ import {
   type PopoverVirtualTriggerProps,
 } from '@dxos/react-ui';
 import { useId } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import {
   SearchList,
@@ -101,71 +102,19 @@ const ComboboxRoot = ({
 // ContentProps
 //
 
-type ComboboxContentProps = SearchListRootProps & PopoverContentProps & { label?: string };
+type ComboboxContentProps = ComposableProps<HTMLDivElement, SearchListRootProps & PopoverContentProps>;
 
 const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
-  (
-    {
-      side = 'bottom',
-      collisionPadding = 48,
-      sideOffset,
-      align,
-      alignOffset,
-      avoidCollisions,
-      collisionBoundary,
-      arrowPadding,
-      sticky,
-      hideWhenDetached,
-      onOpenAutoFocus,
-      onCloseAutoFocus,
-      onEscapeKeyDown,
-      onPointerDownOutside,
-      onFocusOutside,
-      onInteractOutside,
-      forceMount,
-      children,
-      classNames,
-      onSearch,
-      value,
-      defaultValue,
-      debounceMs,
-      label,
-    },
-    forwardedRef,
-  ) => {
+  ({ children, value, defaultValue, debounceMs, onSearch, ...props }, forwardedRef) => {
     const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
 
     return (
-      <Popover.Content
-        {...{
-          side,
-          sideOffset,
-          align,
-          alignOffset,
-          avoidCollisions,
-          collisionBoundary,
-          collisionPadding,
-          arrowPadding,
-          sticky,
-          hideWhenDetached,
-          onOpenAutoFocus,
-          onCloseAutoFocus,
-          onEscapeKeyDown,
-          onPointerDownOutside,
-          onFocusOutside,
-          onInteractOutside,
-          forceMount,
-        }}
-        classNames={[
-          'w-(--radix-popover-trigger-width) max-h-(--radix-popover-content-available-height) grid grid-rows-[min-content_1fr]',
-          classNames,
-        ]}
-        id={modalId}
-        ref={forwardedRef}
-      >
-        <SearchList.Root onSearch={onSearch} value={value} defaultValue={defaultValue} debounceMs={debounceMs}>
-          <SearchList.Content>{children}</SearchList.Content>
-        </SearchList.Root>
+      <Popover.Content {...composableProps(props, { id: modalId })} ref={forwardedRef}>
+        <Popover.Viewport classNames='w-(--radix-popover-trigger-width)'>
+          <SearchList.Root value={value} defaultValue={defaultValue} debounceMs={debounceMs} onSearch={onSearch}>
+            <SearchList.Content>{children}</SearchList.Content>
+          </SearchList.Root>
+        </Popover.Viewport>
       </Popover.Content>
     );
   },
