@@ -14,12 +14,12 @@ For **Effect** patterns (Layer, `Effect.gen`, services), read [.cursor/skills/ef
 
 ## Packages (where code lives)
 
-| Package | Role |
-| ------- | ---- |
-| [`@dxos/echo`](../../../packages/core/echo/echo/) | Types, `Database` interface, Effect `Database.Service`, Query/Filter/Ref/Type/Obj, schema registry surface |
-| [`@dxos/echo-db`](../../../packages/core/echo/echo-db/) | `EchoClient`, `EchoHost`, `EchoDatabaseImpl`, hypergraph, migrations, sync helpers |
-| [`@dxos/echo-react`](../../../packages/core/echo/echo-react/) | `useQuery`, `useObject`, `useSchema` |
-| [`@dxos/echo-pipeline`](../../../packages/core/echo/echo-pipeline/) | Host-side pipeline (`EchoHost`, indexes, services) |
+| Package                                                             | Role                                                                                                       |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| [`@dxos/echo`](../../../packages/core/echo/echo/)                   | Types, `Database` interface, Effect `Database.Service`, Query/Filter/Ref/Type/Obj, schema registry surface |
+| [`@dxos/echo-db`](../../../packages/core/echo/echo-db/)             | `EchoClient`, `EchoHost`, `EchoDatabaseImpl`, hypergraph, migrations, sync helpers                         |
+| [`@dxos/echo-react`](../../../packages/core/echo/echo-react/)       | `useQuery`, `useObject`, `useSchema`                                                                       |
+| [`@dxos/echo-pipeline`](../../../packages/core/echo/echo-pipeline/) | Host-side pipeline (`EchoHost`, indexes, services)                                                         |
 
 ## Obtaining a `Database`
 
@@ -33,13 +33,13 @@ For **Effect** patterns (Layer, `Effect.gen`, services), read [.cursor/skills/ef
 
 Use the object from `echo-db` / space. Primary entry: [`Database` interface](../../../packages/core/echo/echo/src/Database.ts) (`add`, `remove`, `query`, `getObjectById`, `makeRef`, `flush`, `graph`, `schemaRegistry`).
 
-| Area | Notes |
-| ---- | ----- |
-| **Mutations** | `db.add(obj)`, `db.remove(obj)`; mutate proxies in place for field updates. |
-| **Query** | `db.query(filterOrQuery)` → `QueryResult` with `.subscribe` / `.run()`. |
-| **Lookup** | `db.getObjectById(id)`, `db.makeRef(dxn)`. |
-| **Schema** | `db.schemaRegistry.query(...)`, registration via graph/registry APIs used in your stack. |
-| **Refs** | [`Ref`](../../../packages/core/echo/echo/src/Ref.ts), [`DXN`](../../../packages/core/echo/echo/src/index.ts) export from `@dxos/echo`. |
+| Area          | Notes                                                                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Mutations** | `db.add(obj)`, `db.remove(obj)`; mutate proxies in place for field updates.                                                            |
+| **Query**     | `db.query(filterOrQuery)` → `QueryResult` with `.subscribe` / `.run()`.                                                                |
+| **Lookup**    | `db.getObjectById(id)`, `db.makeRef(dxn)`.                                                                                             |
+| **Schema**    | `db.schemaRegistry.query(...)`, registration via graph/registry APIs used in your stack.                                               |
+| **Refs**      | [`Ref`](../../../packages/core/echo/echo/src/Ref.ts), [`DXN`](../../../packages/core/echo/echo/src/index.ts) export from `@dxos/echo`. |
 
 [`EchoDatabase`](../../../packages/core/echo/echo-db/src/proxy-db/database.ts) extends this with sync/migrations (`getSyncState`, `runMigrations`, events).
 
@@ -47,15 +47,15 @@ Use the object from `echo-db` / space. Primary entry: [`Database` interface](../
 
 The same logical operations are exposed as **Effects** that require **`Database.Service`** in context.
 
-| Export | Purpose |
-| ------ | ------- |
-| [`Service`](../../../packages/core/echo/echo/src/Database.ts) | `Context.Tag` — `yield* Database.Service` → `{ db }`. |
-| [`layer(db)`](../../../packages/core/echo/echo/src/Database.ts) / [`notAvailable`](../../../packages/core/echo/echo/src/Database.ts) | `Layer` for providing or stubbing DB. |
-| [`query`](../../../packages/core/echo/echo/src/Database.ts) / [`runQuery`](../../../packages/core/echo/echo/src/Database.ts) | Query with service. |
-| [`schemaQuery`](../../../packages/core/echo/echo/src/Database.ts) / [`runSchemaQuery`](../../../packages/core/echo/echo/src/Database.ts) | Schema registry queries. |
-| [`add`](../../../packages/core/echo/echo/src/Database.ts) / [`remove`](../../../packages/core/echo/echo/src/Database.ts) / [`flush`](../../../packages/core/echo/echo/src/Database.ts) | Mutations / persistence. |
-| [`resolve`](../../../packages/core/echo/echo/src/Database.ts) | Resolve `DXN` or `Ref` via graph. |
-| [`load`](../../../packages/core/echo/echo/src/Database.ts) / [`loadOption`](../../../packages/core/echo/echo/src/Database.ts) | Load `Ref`; `load` / `loadOption` do not require `Database.Service` (see signatures in source). |
+| Export                                                                                                                                                                                 | Purpose                                                                                         |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [`Service`](../../../packages/core/echo/echo/src/Database.ts)                                                                                                                          | `Context.Tag` — `yield* Database.Service` → `{ db }`.                                           |
+| [`layer(db)`](../../../packages/core/echo/echo/src/Database.ts) / [`notAvailable`](../../../packages/core/echo/echo/src/Database.ts)                                                   | `Layer` for providing or stubbing DB.                                                           |
+| [`query`](../../../packages/core/echo/echo/src/Database.ts) / [`runQuery`](../../../packages/core/echo/echo/src/Database.ts)                                                           | Query with service.                                                                             |
+| [`schemaQuery`](../../../packages/core/echo/echo/src/Database.ts) / [`runSchemaQuery`](../../../packages/core/echo/echo/src/Database.ts)                                               | Schema registry queries.                                                                        |
+| [`add`](../../../packages/core/echo/echo/src/Database.ts) / [`remove`](../../../packages/core/echo/echo/src/Database.ts) / [`flush`](../../../packages/core/echo/echo/src/Database.ts) | Mutations / persistence.                                                                        |
+| [`resolve`](../../../packages/core/echo/echo/src/Database.ts)                                                                                                                          | Resolve `DXN` or `Ref` via graph.                                                               |
+| [`load`](../../../packages/core/echo/echo/src/Database.ts) / [`loadOption`](../../../packages/core/echo/echo/src/Database.ts)                                                          | Load `Ref`; `load` / `loadOption` do not require `Database.Service` (see signatures in source). |
 
 **Wire-up pattern** (operations, agents, composable code):
 

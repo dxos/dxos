@@ -25,15 +25,15 @@ Use **`AssistantTestLayerWithTriggers`** when the scenario uses scheduled trigge
 
 ### Important options
 
-| Option | Role |
-|--------|------|
-| `operationHandlers` | `OperationHandlerSet` (or merged sets) so `FunctionInvocationService.invokeFunction` resolves your operations. |
-| `types` | Every ECHO entity type the test creates or queries (`Blueprint.Blueprint`, plugin types, `Message.Message`, etc.). Missing types break DB/schema expectations. |
-| `blueprints` | Optional registry seed when code reads blueprints from `Blueprint.RegistryService` instead of only binding at runtime. |
-| `toolkits` | Extra toolkits (e.g. `GenericToolkit.make(WebSearchToolkit, Layer.empty)`). |
-| `aiServicePreset` | `'direct'` \| `'edge-local'` \| `'edge-remote'` — where real LLM calls go when generation is allowed. |
-| `tracing: 'pretty'` | Useful locally to see tool traces. |
-| `disableLlmMemoization: true` | Skips memo wrapper; use only when you fully stub `AiService` / `LanguageModel` and do not need recorded conversations. |
+| Option                        | Role                                                                                                                                                           |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `operationHandlers`           | `OperationHandlerSet` (or merged sets) so `FunctionInvocationService.invokeFunction` resolves your operations.                                                 |
+| `types`                       | Every ECHO entity type the test creates or queries (`Blueprint.Blueprint`, plugin types, `Message.Message`, etc.). Missing types break DB/schema expectations. |
+| `blueprints`                  | Optional registry seed when code reads blueprints from `Blueprint.RegistryService` instead of only binding at runtime.                                         |
+| `toolkits`                    | Extra toolkits (e.g. `GenericToolkit.make(WebSearchToolkit, Layer.empty)`).                                                                                    |
+| `aiServicePreset`             | `'direct'` \| `'edge-local'` \| `'edge-remote'` — where real LLM calls go when generation is allowed.                                                          |
+| `tracing: 'pretty'`           | Useful locally to see tool traces.                                                                                                                             |
+| `disableLlmMemoization: true` | Skips memo wrapper; use only when you fully stub `AiService` / `LanguageModel` and do not need recorded conversations.                                         |
 
 Implementation reference: `packages/core/assistant/src/testing/layer.ts`.
 
@@ -50,7 +50,6 @@ CI stays deterministic because it uses committed fixtures, not live LLM calls.
 ### Requirements for regeneration
 
 1. **Credentials** — API keys must be in the environment. In this repo, load 1Password-injected env from the workspace root:
-
    - **fish:** `eval (pnpm -ws 1p-credentials)`
    - **bash/zsh:** `eval "$(pnpm -ws 1p-credentials)"`
 
