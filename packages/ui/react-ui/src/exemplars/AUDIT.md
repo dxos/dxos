@@ -85,13 +85,11 @@ The following ~34 files contain `<ScrollArea.Root>` but root element status need
 
 ## Phase 4
 
-- [ ] Restructure ScrollContainer to move ScrollArea to Viewport.
+- [ ] Make all Root elements headless.
+- [ ] List / SearchList (wrt ViewPort)
+- [ ] TabsList / Toolbar same geometry
+- [x] Restructure ScrollContainer to move ScrollArea to Viewport.
 - [ ] Adapt `react-ui-list` `List to` include `List.Viewport`.
 - [ ] Reconcile with `react-primitives/react-list` and `react-ui` `List`.
 - [ ] Port usages of `react-ui-list`.
 - [ ] Factor out styles (hover, selected, etc.)
-
-## Misc
-
-- List / SearchList (wrt ViewPort)
-- TabsList / Toolbar same geometry

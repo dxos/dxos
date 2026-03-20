@@ -6,9 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
+import { Prompt } from '@dxos/blueprints';
 import { SpaceSchema } from '@dxos/client/echo';
-import { Database, Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Database, Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
@@ -69,7 +69,12 @@ export namespace AssistantOperation {
       objects: Schema.optional(Schema.Array(Obj.Unknown)),
       /** Blueprint keys to look up and bind to the new chat. */
       blueprints: Schema.optional(Schema.Array(Schema.String)),
-      prompt: Schema.String,
+      /** Raw instructions or an existing Prompt object reference (e.g. from the prompts surface). */
+      prompt: Schema.Union(Schema.String, Ref.Ref(Prompt.Prompt)),
+      /**
+       * When true, skips opening the chat: runs the Agent prompt operation against the new chat via the compute runtime (traced).
+       */
+      background: Schema.optional(Schema.Boolean),
     }),
     output: Schema.Struct({
       object: Chat.Chat,

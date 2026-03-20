@@ -6,8 +6,8 @@ import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { DatabaseBlueprint, MarkdownBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
-import { Prompt, Template } from '@dxos/blueprints';
-import { Filter, Obj } from '@dxos/echo';
+import { Prompt } from '@dxos/blueprints';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { IconButton } from '@dxos/react-ui';
 import { useQuery } from '@dxos/react-client/echo';
 import { SurfaceComponentProps } from '@dxos/app-toolkit/ui';
@@ -31,13 +31,13 @@ export const PromptList = ({ subject }: PromptListProps) => {
           <IconButton
             icon='ph--magic-wand--regular'
             label={Obj.getLabel(prompt) ?? Obj.getDXN(prompt).toString()}
-            onClick={async () => {
-              const { content } = await prompt.instructions.source.load();
+            onClick={() => {
               void invokePromise(AssistantOperation.RunPromptInNewChat, {
                 db,
-                prompt: Template.process(content),
+                prompt: Ref.make(prompt),
                 objects: [subject],
                 blueprints: [DatabaseBlueprint.key, WebSearchBlueprint.key, MarkdownBlueprint.key],
+                background: true,
               });
             }}
           />
