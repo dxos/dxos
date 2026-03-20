@@ -61,7 +61,12 @@ export const composableProps = <P extends HTMLElement = HTMLElement>(
   { className, classNames, ...props }: ComposableProps,
   { className: defaultClassNames, ...defaults }: Partial<HTMLAttributes<P>> | undefined = {},
 ) => ({
+  // Default props.
   ...(defaults as object),
+
+  // Spread supplied props.
   ...props,
+
+  // Compose classnames.
   className: mx(defaultClassNames, className, classNames),
 });
