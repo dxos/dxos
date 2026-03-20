@@ -113,20 +113,20 @@ export const useExtensions = ({
         // TODO(burdon): Pass this in?
         // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
         target &&
-        createDataExtensions({
-          id,
-          text: createDocAccessor(target, ['content']),
-          messenger: space,
-          identity,
-        }),
+          createDataExtensions({
+            id,
+            text: createDocAccessor(target, ['content']),
+            messenger: space,
+            identity,
+          }),
 
         // TODO(burdon): Reconcile with effect in parent.
         Obj.instanceOf(Markdown.Document, object) &&
-        listener({
-          onChange: ({ text }) => {
-            setFallbackName(object as Markdown.Document, text);
-          },
-        }),
+          listener({
+            onChange: ({ text }) => {
+              setFallbackName(object as Markdown.Document, text);
+            },
+          }),
 
         baseExtensions,
         selectionState(editorStateStore),
@@ -207,37 +207,37 @@ const selectionChange = (selectionManager: SelectionManager) => {
 
 const createRenderLink =
   (onSelectObject: (id: string) => void): RenderCallback<{ url: string }> =>
-    (el, { url }) => {
-      // TODO(burdon): Formalize/document internal link format.
-      const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
-      const qualifiedId = isInternal ? fromUrlPath(new URL(url, window.location.origin).pathname) : undefined;
-      const icon = Domino.of('span')
-        .classNames('dx-link ms-1 inline-block align-[-0.125em]')
-        .children(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
+  (el, { url }) => {
+    // TODO(burdon): Formalize/document internal link format.
+    const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
+    const qualifiedId = isInternal ? fromUrlPath(new URL(url, window.location.origin).pathname) : undefined;
+    const icon = Domino.of('span')
+      .classNames('dx-link ms-1 inline-block align-[-0.125em]')
+      .children(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
 
-      if (isInternal) {
-        invariant(qualifiedId, 'Invalid link format.');
-        icon
-          .attributes({ role: 'button', tabindex: '0' })
-          .on('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onSelectObject(qualifiedId);
-          })
-          .on('keydown', (event) => {
-            const keyboardEvent = event as KeyboardEvent;
-            if (keyboardEvent.key !== 'Enter' && keyboardEvent.key !== ' ') {
-              return;
-            }
+    if (isInternal) {
+      invariant(qualifiedId, 'Invalid link format.');
+      icon
+        .attributes({ role: 'button', tabindex: '0' })
+        .on('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onSelectObject(qualifiedId);
+        })
+        .on('keydown', (event) => {
+          const keyboardEvent = event as KeyboardEvent;
+          if (keyboardEvent.key !== 'Enter' && keyboardEvent.key !== ' ') {
+            return;
+          }
 
-            keyboardEvent.preventDefault();
-            keyboardEvent.stopPropagation();
-            onSelectObject(qualifiedId);
-          });
-      }
+          keyboardEvent.preventDefault();
+          keyboardEvent.stopPropagation();
+          onSelectObject(qualifiedId);
+        });
+    }
 
-      el.appendChild(icon.root);
-    };
+    el.appendChild(icon.root);
+  };
 
 const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(
