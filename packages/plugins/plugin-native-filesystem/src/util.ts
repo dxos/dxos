@@ -171,10 +171,7 @@ export const refreshWorkspace = async (workspace: FilesystemWorkspace): Promise<
   return loadWorkspace(workspace.path);
 };
 
-export const findFileInWorkspace = (
-  workspace: FilesystemWorkspace,
-  fileId: string,
-): FilesystemFile | undefined => {
+export const findFileInWorkspace = (workspace: FilesystemWorkspace, fileId: string): FilesystemFile | undefined => {
   const searchEntries = (entries: FilesystemEntry[]): FilesystemFile | undefined => {
     for (const entry of entries) {
       if ('children' in entry) {

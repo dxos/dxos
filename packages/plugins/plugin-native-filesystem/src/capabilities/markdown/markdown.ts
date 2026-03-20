@@ -85,9 +85,7 @@ export default Capability.makeModule(
             registry.update(stateAtom, (current: NativeFilesystemState) => ({
               ...current,
               workspaces: current.workspaces.map((ws: FilesystemWorkspace) =>
-                ws.id === workspace.id
-                  ? updateFileInWorkspace(ws, id, { text: textContent, modified: true })
-                  : ws,
+                ws.id === workspace.id ? updateFileInWorkspace(ws, id, { text: textContent, modified: true }) : ws,
               ),
               currentFile:
                 current.currentFile?.id === id

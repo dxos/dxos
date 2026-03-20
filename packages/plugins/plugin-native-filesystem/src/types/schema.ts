@@ -16,10 +16,7 @@ export namespace NativeFilesystemOperation {
     meta: { key: `${FILESYSTEM_OPERATION}.open-directory`, name: 'Open Folder' },
     services: [Capability.Service],
     input: Schema.Void,
-    output: Schema.Union(
-      Schema.Void,
-      Schema.Struct({ id: Schema.String, subject: Schema.Array(Schema.String) }),
-    ),
+    output: Schema.Union(Schema.Void, Schema.Struct({ id: Schema.String, subject: Schema.Array(Schema.String) })),
   });
 
   export const CloseDirectory = Operation.make({

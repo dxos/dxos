@@ -78,7 +78,9 @@ export default Capability.makeModule(
           let spacesOrder: Obj.Any | undefined;
           let orderMap = new Map<string, number>();
           try {
-            const [order] = get(AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })));
+            const [order] = get(
+              AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })),
+            );
             if (order) {
               const snapshot = get(AtomObj.make(order)) as { order?: string[] } | undefined;
               const orderArray: string[] = snapshot?.order ?? [];
@@ -140,7 +142,8 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: `${meta.id}.workspace-entries`,
-        match: (node) => (isFilesystemWorkspace(node.data) ? Option.some(node.data as FilesystemWorkspace) : Option.none()),
+        match: (node) =>
+          isFilesystemWorkspace(node.data) ? Option.some(node.data as FilesystemWorkspace) : Option.none(),
         actions: (workspace: FilesystemWorkspace) =>
           Effect.succeed([
             {
@@ -161,9 +164,7 @@ export default Capability.makeModule(
             },
           ]),
         connector: (workspace: FilesystemWorkspace) =>
-          Effect.succeed(
-            workspace.children.map((entry: FilesystemEntry) => constructEntryNode(entry)),
-          ),
+          Effect.succeed(workspace.children.map((entry: FilesystemEntry) => constructEntryNode(entry))),
       }),
 
       GraphBuilder.createExtension({
@@ -173,9 +174,7 @@ export default Capability.makeModule(
             ? Option.some(node.data as FilesystemDirectory)
             : Option.none(),
         connector: (directory: FilesystemDirectory) =>
-          Effect.succeed(
-            directory.children.map((entry: FilesystemEntry) => constructEntryNode(entry)),
-          ),
+          Effect.succeed(directory.children.map((entry: FilesystemEntry) => constructEntryNode(entry))),
       }),
 
       GraphBuilder.createExtension({
