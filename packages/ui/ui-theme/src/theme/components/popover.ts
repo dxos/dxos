@@ -31,7 +31,7 @@ export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrai
     // resolve to a concrete pixel value; max-h then caps it so it can never exceed the viewport.
     constrainBlock && 'h-(--radix-popover-content-available-height)',
     constrainBlock &&
-    'max-h-[min(var(--radix-popover-content-available-height),calc(100dvh-var(--spacing-screen-border)*2))]',
+      'max-h-[min(var(--radix-popover-content-available-height),calc(100dvh-var(--spacing-screen-border)*2))]',
     constrainInline && 'max-w-(--radix-popover-content-available-width)',
     ...etc,
   );
