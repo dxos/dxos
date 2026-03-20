@@ -65,9 +65,7 @@ export const extractSpaceArchive = async (archive: SpaceArchive): Promise<Extrac
       const feedMetadata = JSON.parse(entry.getContentAsText()) as FeedArchiveMetadata;
       feedMetadataByFeedId.set(feedId, feedMetadata);
     } else if (fileName.startsWith(SpaceArchiveFileStructure.feedBlocksPrefix) && fileName.endsWith('.json')) {
-      const chunkIndexStr = fileName
-        .slice(SpaceArchiveFileStructure.feedBlocksPrefix.length)
-        .replace(/\.json$/, '');
+      const chunkIndexStr = fileName.slice(SpaceArchiveFileStructure.feedBlocksPrefix.length).replace(/\.json$/, '');
       const chunkIndex = parseInt(chunkIndexStr, 10);
       invariant(!isNaN(chunkIndex), `Invalid chunk index: ${chunkIndexStr}`);
 
