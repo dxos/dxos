@@ -6,11 +6,12 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
+import { useEdgeClient } from '@dxos/react-edge-client';
 import { useFileDownload } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { createFilename } from '@dxos/util';
@@ -34,10 +35,12 @@ const rowActions = [
   { id: 'toggleOpen', label: 'Toggle space open closed' },
   { id: 'snapshot', label: 'Download space snapshot' },
   { id: 'archive', label: 'Download space archive' },
+  { id: 'deleteOnEdge', label: 'Delete on EDGE' },
 ];
 
 export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | undefined) => void }) => {
   const client = useClient();
+  const edgeClient = useEdgeClient();
   const spaces = useSpaces({ all: true });
   const setState = useDevtoolsDispatch();
   const download = useFileDownload();
@@ -100,6 +103,21 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       download(new Blob([archive.contents as Uint8Array<ArrayBuffer>]), archive.filename);
     },
     [download, spaces],
+  );
+
+  const handleDeleteOnEdge = useCallback(
+    async (spaceId: string) => {
+      if (!window.confirm(`Delete space ${spaceId} on EDGE? This cannot be undone.`)) {
+        return;
+      }
+      try {
+        const response = await edgeClient.deleteSpace(spaceId as SpaceId);
+        log.info('space deletion queued on EDGE', { response });
+      } catch (err) {
+        log.catch(err);
+      }
+    },
+    [edgeClient],
   );
 
   const handleImport = useCallback(
@@ -167,6 +185,8 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       void handleSnapshot(spaceId);
     } else if (actionId === 'archive') {
       void handleArchive(spaceId);
+    } else if (actionId === 'deleteOnEdge') {
+      void handleDeleteOnEdge(spaceId);
     }
   };
 

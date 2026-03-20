@@ -5,13 +5,16 @@
 import React, { type FC, useMemo, useState } from 'react';
 
 import { MulticastObservable } from '@dxos/async';
+import { log } from '@dxos/log';
+import { type SpaceInspectionResponse } from '@dxos/protocols';
 import { SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type Space } from '@dxos/react-client/echo';
+import { useEdgeClient } from '@dxos/react-edge-client';
 import { useMulticastObservable } from '@dxos/react-hooks';
 import { Toolbar } from '@dxos/react-ui';
 
-import { PanelContainer } from '../../../components';
+import { JsonView, PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
 import { useDevtoolsState, useSpacesInfo } from '../../../hooks';
 
@@ -28,6 +31,8 @@ export type SpaceInfoPanelProps = {
 
 export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
   const [, forceUpdate] = useState({});
+  const [edgeInfo, setEdgeInfo] = useState<SpaceInspectionResponse | null>(null);
+  const edgeClient = useEdgeClient();
   const state = useDevtoolsState();
   const space = props.space ?? state.space;
 
@@ -42,6 +47,18 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
       await space!.open();
     } else {
       await space!.close();
+    }
+  };
+
+  const handleInspectOnEdge = async () => {
+    if (!space) {
+      return;
+    }
+    try {
+      const result = await edgeClient.inspectSpace(space.id);
+      setEdgeInfo(result);
+    } catch (err) {
+      log.catch(err);
     }
   };
 
@@ -73,6 +90,7 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
             ? 'Disable backup to EDGE'
             : 'Enable backup to EDGE'}
         </Toolbar.Button>
+        <Toolbar.Button onClick={handleInspectOnEdge}>Inspect on EDGE</Toolbar.Button>
       </Toolbar.Root>
     ),
     [props.space, space?.state, space?.internal.data.edgeReplication],
@@ -92,6 +110,11 @@ export const SpaceInfoPanel: FC<SpaceInfoPanelProps> = (props) => {
           <div className='border-t border-separator'>
             <SyncStateInfo space={space} />
           </div>
+          {edgeInfo && (
+            <div className='border-t border-separator'>
+              <JsonView data={edgeInfo} />
+            </div>
+          )}
         </div>
       )}
     </PanelContainer>
