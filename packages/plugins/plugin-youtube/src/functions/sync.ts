@@ -24,59 +24,54 @@ import { GoogleCredentials } from './services/google-credentials';
 import { fetchTranscript } from './transcript';
 
 export default Sync.pipe(
-  Operation.withHandler(
-    ({
-      channel: channelRef,
-      restrictedMode = false,
-      includeTranscripts = true,
-    }) =>
-      Effect.gen(function* () {
-        log('syncing youtube channel', { channel: channelRef.dxn.toString(), restrictedMode, includeTranscripts });
-        const channel = yield* Database.load(channelRef);
+  Operation.withHandler(({ channel: channelRef, restrictedMode = false, includeTranscripts = true }) =>
+    Effect.gen(function* () {
+      log('syncing youtube channel', { channel: channelRef.dxn.toString(), restrictedMode, includeTranscripts });
+      const channel = yield* Database.load(channelRef);
 
-        const channelUrl =
-          (channel as Channel.YouTubeChannel).channelUrl ?? (channel as Channel.YouTubeChannel).channelId;
-        if (!channelUrl) {
-          return yield* Effect.fail(new Error('No channel URL or ID configured'));
+      const channelUrl =
+        (channel as Channel.YouTubeChannel).channelUrl ?? (channel as Channel.YouTubeChannel).channelId;
+      if (!channelUrl) {
+        return yield* Effect.fail(new Error('No channel URL or ID configured'));
+      }
+
+      const channelInfo = extractChannelInfo(channelUrl);
+      log('extracted channel info', channelInfo);
+
+      const { channelId, channelTitle, uploadsPlaylistId } = yield* getUploadsPlaylistId(channelInfo);
+      log('found channel', { channelId, channelTitle, uploadsPlaylistId });
+
+      Obj.change(channel as Channel.YouTubeChannel, (channelObj) => {
+        channelObj.channelId = channelId;
+        if (!channelObj.name) {
+          channelObj.name = channelTitle;
         }
+      });
 
-        const channelInfo = extractChannelInfo(channelUrl);
-        log('extracted channel info', channelInfo);
+      // Get the feed and query for existing videos.
+      const feed = yield* Database.load((channel as Channel.YouTubeChannel).feed as Ref.Ref<Feed.Feed>);
+      const existingVideos = yield* Feed.runQuery(feed, Filter.type(Video.YouTubeVideo));
+      const existingVideoIds = new Set(existingVideos.map((video: Video.YouTubeVideo) => video.videoId));
+      log('existing videos', { count: existingVideoIds.size });
 
-        const { channelId, channelTitle, uploadsPlaylistId } = yield* getUploadsPlaylistId(channelInfo);
-        log('found channel', { channelId, channelTitle, uploadsPlaylistId });
+      const newVideosCount = yield* streamVideosToFeed(
+        uploadsPlaylistId,
+        feed,
+        existingVideoIds,
+        restrictedMode,
+        includeTranscripts,
+      );
 
-        Obj.change(channel as Channel.YouTubeChannel, (channelObj) => {
-          channelObj.channelId = channelId;
-          if (!channelObj.name) {
-            channelObj.name = channelTitle;
-          }
-        });
+      Obj.change(channel as Channel.YouTubeChannel, (channelObj) => {
+        channelObj.lastSyncedAt = new Date().toISOString();
+      });
 
-        // Get the feed and query for existing videos.
-        const feed = yield* Database.load((channel as Channel.YouTubeChannel).feed as Ref.Ref<Feed.Feed>);
-        const existingVideos = yield* Feed.runQuery(feed, Filter.type(Video.YouTubeVideo));
-        const existingVideoIds = new Set(existingVideos.map((video: Video.YouTubeVideo) => video.videoId));
-        log('existing videos', { count: existingVideoIds.size });
-
-        const newVideosCount = yield* streamVideosToFeed(
-          uploadsPlaylistId,
-          feed,
-          existingVideoIds,
-          restrictedMode,
-          includeTranscripts,
-        );
-
-        Obj.change(channel as Channel.YouTubeChannel, (channelObj) => {
-          channelObj.lastSyncedAt = new Date().toISOString();
-        });
-
-        log('sync complete', { newVideos: newVideosCount, channelTitle });
-        return {
-          newVideos: newVideosCount,
-          channelTitle,
-        };
-      }).pipe(Effect.provide(Layer.mergeAll(FetchHttpClient.layer, GoogleCredentials.fromChannelRef(channelRef)))),
+      log('sync complete', { newVideos: newVideosCount, channelTitle });
+      return {
+        newVideos: newVideosCount,
+        channelTitle,
+      };
+    }).pipe(Effect.provide(Layer.mergeAll(FetchHttpClient.layer, GoogleCredentials.fromChannelRef(channelRef)))),
   ),
 );
 
