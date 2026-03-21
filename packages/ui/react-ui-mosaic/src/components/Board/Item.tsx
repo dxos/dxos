@@ -17,10 +17,6 @@ import { Mosaic, type MosaicTileProps } from '../Mosaic';
 import { useBoard } from './Board';
 import { useBoardColumn } from './Column';
 
-//
-// Item
-//
-
 const BOARD_ITEM_NAME = 'Board.Item';
 
 type BoardItemProps<TItem extends Obj.Unknown = any> = Pick<
@@ -91,7 +87,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
               </Card.Toolbar>
               {/* TODO(burdon): Replace with surface. */}
               <Card.Row icon='ph--note--regular' classNames='text-description'>
-                {description}
+                <Card.Text>{description}</Card.Text>
               </Card.Row>
               <Card.Row icon='ph--tag--regular'>
                 {label && (
@@ -110,6 +106,9 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
 
 BoardItemInner.displayName = BOARD_ITEM_NAME;
 
+/**
+ * Default board tile.
+ */
 const BoardItem = BoardItemInner as <TItem extends Obj.Unknown = any>(
   props: BoardItemProps<TItem> & { ref?: ReactRef<HTMLDivElement> },
 ) => ReactElement;

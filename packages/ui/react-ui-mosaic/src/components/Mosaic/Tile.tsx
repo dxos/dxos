@@ -23,6 +23,7 @@ import { Slot } from '@radix-ui/react-slot';
 import React, {
   type CSSProperties,
   type PropsWithChildren,
+  RefObject,
   forwardRef,
   useLayoutEffect,
   useMemo,
@@ -90,12 +91,12 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
 
-    // Sync forwarded ref into rootRef when parent's ref is set by a descendant (e.g. BoardItem's Card.Root).
+    // Sync forwarded ref into rootRef when parent's ref is set by a descendant (e.g., BoardItem's Card.Root).
     // Then we can read rootRef.current only in the effects below.
     useLayoutEffect(() => {
       const el = forwardedRef && 'current' in forwardedRef ? (forwardedRef.current as HTMLDivElement | null) : null;
       if (el != null) {
-        (rootRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        (rootRef as RefObject<HTMLDivElement | null>).current = el;
       }
     }, [forwardedRef]);
 
