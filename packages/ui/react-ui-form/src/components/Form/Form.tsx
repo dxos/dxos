@@ -188,7 +188,7 @@ const FormContent = ({ classNames, children }: FormContentProps) => {
   useKeyHandler(ref.current, form);
 
   return (
-    <div ref={ref} role='form' className={mx('w-full flex flex-col gap-form-padding', classNames)} data-testid={testId}>
+    <div ref={ref} role='form' className={mx('flex flex-col w-full', classNames)} data-testid={testId}>
       {children}
     </div>
   );

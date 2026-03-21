@@ -74,11 +74,21 @@ export default Capability.makeModule(() =>
         role: 'article',
         filter: (
           data,
-        ): data is { attendableId: string; companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
+        ): data is { subject: Chat.Chat | 'assistant-chat'; attendableId: string; companionTo: Obj.Unknown } =>
           typeof data.attendableId === 'string' &&
           Obj.isObject(data.companionTo) &&
           (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === 'assistant-chat'),
-        component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
+        component: ({ data, role, ref }) => (
+          <ChatCompanion
+            role={role}
+            data={data}
+            // TODO(burdon): See comment in ChatCompanion.tsx
+            // data={data.subject}
+            // companionTo={data.companionTo}
+            // attendableId={data.attendableId}
+            ref={ref}
+          />
+        ),
       }),
       Surface.create({
         id: `${meta.id}.companion-invocations`,

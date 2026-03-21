@@ -45,7 +45,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.script.article`,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Script.Script } => Obj.instanceOf(Script.Script, data.subject),
+        filter: (data): data is { subject: Script.Script; attendableId: string } =>
+          Obj.instanceOf(Script.Script, data.subject),
         component: ({ data, role }) => {
           const compiler = useCompiler();
           const settings = useAtomCapability(ScriptCapabilities.Settings);
@@ -54,13 +55,21 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          return <ScriptContainer role={role} subject={data.subject} settings={settings} env={compiler?.environment} />;
+          return (
+            <ScriptContainer
+              role={role}
+              subject={data.subject}
+              attendableId={data.attendableId}
+              settings={settings}
+              env={compiler?.environment}
+            />
+          );
         },
       }),
       Surface.create({
         id: `${meta.id}.notebook.article`,
         role: 'article',
-        filter: (data): data is { attendableId: string; subject: Notebook.Notebook } =>
+        filter: (data): data is { subject: Notebook.Notebook; attendableId: string } =>
           typeof data.attendableId === 'string' && Obj.instanceOf(Notebook.Notebook, data.subject),
         component: ({ data, role }) => {
           const compiler = useCompiler();

@@ -6,10 +6,11 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type CSSProperties, forwardRef } from 'react';
 
-import { composableProps } from '@dxos/ui-theme';
-import { type SlottableProps } from '@dxos/ui-types';
+import { ColumnStyleProps, composableProps } from '@dxos/ui-theme';
+import { ThemedClassName, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
+import { ScrollArea, ScrollAreaRootProps } from '../../components';
 
 //
 // Root
@@ -25,20 +26,20 @@ const gutterSizes: Record<GutterSize, string> = {
   lg: 'var(--dx-gutter-lg)',
 };
 
-type ColumnRootProps = SlottableProps<HTMLDivElement, { gutter?: GutterSize }>;
+type ColumnRootProps = ThemedClassName<SlottableProps<HTMLDivElement, { gutter?: GutterSize }>>;
 
 /**
  * Creates a vertical channel with left/right gutter columns.
  * The `--gutter` CSS variable is set for nested components (Dialog, ScrollArea, Form.Viewport, etc.).
  * Use `gutter='sm'` for compact layouts; `gutter='md'` (default) for whitespace layouts (Dialog); `gutter='lg'` for wider spacing.
- * Direct children must use Column.Row (spans all 3 cols) or Column.Segment (center col only).
+ * Direct children must use Column.Row (spans all 3 cols) or Column.Viewport (center col only).
  *
  * NOTE: The theme applies a `dx-column` marker class to this element.
  * ScrollArea.Root detects this via `[.dx-column_&]:col-span-full` to span all 3 grid columns,
  * ensuring scroll content extends under the gutters rather than being confined to the center column.
  * The `--gutter` CSS variable is also consumed by ScrollArea's `margin` option to align scrollbar spacing.
  */
-const Root = forwardRef<HTMLDivElement, ColumnRootProps>(
+const ColumnRoot = forwardRef<HTMLDivElement, ColumnRootProps>(
   ({ children, asChild, role, gutter = 'md', ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
@@ -63,7 +64,7 @@ const Root = forwardRef<HTMLDivElement, ColumnRootProps>(
   },
 );
 
-Root.displayName = COLUMN_ROOT_NAME;
+ColumnRoot.displayName = COLUMN_ROOT_NAME;
 
 //
 // Row
@@ -71,63 +72,64 @@ Root.displayName = COLUMN_ROOT_NAME;
 
 const COLUMN_ROW_NAME = 'Column.Row';
 
-type ColumnRowProps = SlottableProps<HTMLDivElement>;
+type ColumnRowProps = SlottableProps<HTMLDivElement, ColumnStyleProps>;
 
 /**
  * Spans all 3 columns of the parent Column.Root and uses CSS subgrid to inherit their sizing.
  * Children map to: [col-1: icon/slot] [col-2: content] [col-3: icon/action].
  * Must be a direct child of Column.Root.
  */
-const Row = forwardRef<HTMLDivElement, ColumnRowProps>(({ children, asChild, role, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-  const { tx } = useThemeContext();
-  return (
-    <Comp {...rest} role={role ?? 'none'} className={tx('column.row', {}, className)} ref={forwardedRef}>
-      {children}
-    </Comp>
-  );
-});
-
-Row.displayName = COLUMN_ROW_NAME;
-
-//
-// Segment
-//
-
-const COLUMN_SEGMENT_NAME = 'Column.Segment';
-
-type ColumnSegmentProps = SlottableProps<HTMLDivElement>;
-
-/**
- * Occupies only the center column (col-2) of the parent Column.Root grid.
- * Use `asChild` to merge grid positioning onto the child element, eliminating the wrapper div.
- * NOTE: Must not use overflow-hidden here since it will clip input focus rings.
- */
-const Segment = forwardRef<HTMLDivElement, ColumnSegmentProps>(
-  ({ children, asChild, role, ...props }, forwardedRef) => {
+const ColumnRow = forwardRef<HTMLDivElement, ColumnRowProps>(
+  ({ children, asChild, role, center, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
-    // With asChild, merge col-start-2 directly onto the child — no contents wrapper needed.
     return (
-      <Comp {...rest} role={role ?? 'none'} className={tx('column.segment', {}, className)} ref={forwardedRef}>
-        {asChild ? children : <div className='contents'>{children}</div>}
+      <Comp {...rest} role={role ?? 'none'} className={tx('column.row', { center }, className)} ref={forwardedRef}>
+        {children}
       </Comp>
     );
   },
 );
 
-Segment.displayName = COLUMN_SEGMENT_NAME;
+ColumnRow.displayName = COLUMN_ROW_NAME;
+
+//
+// Viewport
+//
+
+const COLUMN_VIEWPORT_NAME = 'Column.Viewport';
+
+type ColumnViewportProps = SlottableProps<HTMLDivElement, Pick<ScrollAreaRootProps, 'thin'>>;
+
+const ColumnViewport = forwardRef<HTMLDivElement, ColumnViewportProps>(
+  ({ children, asChild, role, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const { className, ...rest } = composableProps(props);
+    return (
+      <ScrollArea.Root
+        {...rest}
+        className={tx('column.viewport', {}, className)}
+        orientation='vertical'
+        padding
+        ref={forwardedRef}
+      >
+        <ScrollArea.Viewport classNames='py-2'>{children}</ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
+
+ColumnViewport.displayName = COLUMN_VIEWPORT_NAME;
 
 //
 // Column
 //
 
 export const Column = {
-  Root,
-  Row,
-  Segment,
+  Root: ColumnRoot,
+  Row: ColumnRow,
+  Viewport: ColumnViewport,
 };
 
-export type { ColumnRootProps, ColumnRowProps, ColumnSegmentProps };
+export type { ColumnRootProps, ColumnRowProps, ColumnViewportProps };
