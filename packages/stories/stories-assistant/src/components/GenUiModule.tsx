@@ -253,13 +253,9 @@ const eventAttrToReactProp = (attrName: string): string => {
   return 'on' + eventName.charAt(0).toUpperCase() + eventName.slice(1);
 };
 
-const dashToCamel = (name: string): string =>
-  name.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+const dashToCamel = (name: string): string => name.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
 
-const htmlAttributesToReactProps = (
-  element: Element,
-  invoker: InvokerFn | null,
-): Record<string, unknown> => {
+const htmlAttributesToReactProps = (element: Element, invoker: InvokerFn | null): Record<string, unknown> => {
   const props: Record<string, unknown> = {};
   for (const attr of element.attributes) {
     const lower = attr.name.toLowerCase();
@@ -306,8 +302,20 @@ const htmlAttributesToReactProps = (
 };
 
 const VOID_ELEMENTS = new Set([
-  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
-  'link', 'meta', 'param', 'source', 'track', 'wbr',
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
 ]);
 
 const convertMarkupNode = (node: Node, key: number, invoker: InvokerFn | null): React.ReactNode => {
@@ -363,10 +371,7 @@ export const GenUiModule = ({ space }: ComponentProps) => {
   const [generating, setGenerating] = useState(false);
   const { invokePromise } = useOperationInvoker();
 
-  const invokerFn: InvokerFn = useCallback(
-    (op, args) => void invokePromise(op, args),
-    [invokePromise],
-  );
+  const invokerFn: InvokerFn = useCallback((op, args) => void invokePromise(op, args), [invokePromise]);
 
   const handleGenerate = useComputeRuntimeCallback(
     space.id,

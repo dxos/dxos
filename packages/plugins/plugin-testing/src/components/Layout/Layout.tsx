@@ -28,13 +28,7 @@ import { LayoutState, type LayoutStateProps } from '../../types';
 
 const debounce_delay = 100;
 
-const StoryToast = ({
-  toast,
-  onDismiss,
-}: {
-  toast: LayoutOperation.Toast;
-  onDismiss: (id: string) => void;
-}) => {
+const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDismiss: (id: string) => void }) => {
   const { t } = useTranslation(meta.id);
   return (
     <Toast.Root
@@ -52,9 +46,7 @@ const StoryToast = ({
           {toast.icon && <Icon icon={toast.icon} classNames='inline mr-1' />}
           {toast.title && <span>{toLocalizedString(toast.title, t)}</span>}
         </Toast.Title>
-        {toast.description && (
-          <Toast.Description>{toLocalizedString(toast.description, t)}</Toast.Description>
-        )}
+        {toast.description && <Toast.Description>{toLocalizedString(toast.description, t)}</Toast.Description>}
       </Toast.Body>
       <Toast.Actions>
         {toast.onAction && toast.actionAlt && toast.actionLabel && (
