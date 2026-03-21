@@ -14,6 +14,7 @@ import type * as Exit from 'effect/Exit';
 import * as Context from 'effect/Context';
 import type * as Types from 'effect/Types';
 
+import type { ObjectId } from '@dxos/keys';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import type { ServiceNotAvailableError } from '../errors';
@@ -288,8 +289,28 @@ export namespace Handle {
   export type Any = Handle<any, any>;
 }
 
+/**
+ * Tracing metadata attached to a process spawn.
+ */
+export interface TracingOptions {
+  /** Parent message ObjectId for trace context. */
+  readonly message?: ObjectId;
+  /** Tool call ID for trace context. */
+  readonly toolCallId?: string;
+}
+
+/**
+ * Options for spawning a process.
+ */
+export interface SpawnOptions {
+  /** Parent process ID — child inherits the parent's trace context. */
+  readonly parentProcessId?: ID;
+  /** Tracing metadata for this invocation. */
+  readonly tracing?: TracingOptions;
+}
+
 export interface Manager {
-  spawn<I, O>(factory: Executable<I, O>): Effect.Effect<Handle<I, O>, ServiceNotAvailableError>;
+  spawn<I, O>(factory: Executable<I, O>, options?: SpawnOptions): Effect.Effect<Handle<I, O>, ServiceNotAvailableError>;
   attach<I, O>(id: ID): Effect.Effect<Handle<I, O>>;
   list(): Effect.Effect<readonly Handle.Any[]>;
 }

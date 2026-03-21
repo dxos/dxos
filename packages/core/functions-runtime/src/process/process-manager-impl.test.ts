@@ -14,6 +14,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
+import { TracingService } from '@dxos/functions';
+import { ObjectId } from '@dxos/keys';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { ServiceNotAvailableError } from '../errors';
@@ -215,10 +217,20 @@ const makeKvStore = () => {
   return { store, kvStore };
 };
 
-const makeManager = (serviceResolver?: ServiceResolver.ServiceResolver) => {
+const makeManager = (opts?: {
+  serviceResolver?: ServiceResolver.ServiceResolver;
+  tracingService?: Context.Tag.Service<TracingService>;
+  handlerSet?: OperationHandlerSet.OperationHandlerSet;
+}) => {
   const { store, kvStore } = makeKvStore();
   const registry = Registry.make();
-  const manager = new ProcessManagerImpl({ registry, kvStore, serviceResolver });
+  const manager = new ProcessManagerImpl({
+    registry,
+    kvStore,
+    serviceResolver: opts?.serviceResolver,
+    tracingService: opts?.tracingService,
+    handlerSet: opts?.handlerSet,
+  });
   return { registry, kvStore, store, manager };
 };
 
@@ -742,7 +754,7 @@ describe('ProcessManagerImpl', () => {
         const resolver = ServiceResolver.fromContext(
           Context.make(DatabaseService, dbService),
         );
-        const { manager } = makeManager(resolver);
+        const { manager } = makeManager({ serviceResolver: resolver });
         const { insertRow } = makeDbOperationExecutables();
 
         const handle = yield* manager.spawn(insertRow as Process.Executable<string, string>);
@@ -764,7 +776,7 @@ describe('ProcessManagerImpl', () => {
         const resolver = ServiceResolver.fromContext(
           Context.make(DatabaseService, dbService),
         );
-        const { manager } = makeManager(resolver);
+        const { manager } = makeManager({ serviceResolver: resolver });
         const { queryRows } = makeDbOperationExecutables();
 
         const handle = yield* manager.spawn(queryRows as Process.Executable<string, readonly string[]>);
@@ -794,8 +806,8 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'fails when resolver does not provide a required service',
       Effect.fn(function* ({ expect }) {
-        const resolver = ServiceResolver.fromContext(Context.empty());
-        const { manager } = makeManager(resolver);
+        const resolver = ServiceResolver.fromContext(Context.empty() as Context.Context<any>);
+        const { manager } = makeManager({ serviceResolver: resolver });
         const { insertRow } = makeDbOperationExecutables();
 
         const result = yield* manager.spawn(insertRow as Process.Executable<string, string>).pipe(
@@ -816,7 +828,7 @@ describe('ProcessManagerImpl', () => {
         );
 
         const combined = ServiceResolver.compose(dbResolver);
-        const { manager } = makeManager(combined);
+        const { manager } = makeManager({ serviceResolver: combined });
         const { insertRow } = makeDbOperationExecutables();
 
         const handle = yield* manager.spawn(insertRow as Process.Executable<string, string>);
@@ -832,8 +844,8 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'processes without service requirements work with any resolver',
       Effect.fn(function* ({ expect }) {
-        const resolver = ServiceResolver.fromContext(Context.empty());
-        const { manager } = makeManager(resolver);
+        const resolver = ServiceResolver.fromContext(Context.empty() as Context.Context<any>);
+        const { manager } = makeManager({ serviceResolver: resolver });
         const executable = makeSimpleExecutable();
 
         const handle = yield* manager.spawn(executable);
@@ -842,6 +854,172 @@ describe('ProcessManagerImpl', () => {
         yield* handle.submitInput({ value: 42 });
         const outputs = yield* Fiber.join(outputFiber);
         expect(Chunk.toReadonlyArray(outputs)).toEqual([84]);
+      }),
+    );
+  });
+
+  describe('tracing', () => {
+    it.effect(
+      'calls traceInvocationStart for root process',
+      Effect.fn(function* ({ expect }) {
+        const invocationStarts: TracingService.FunctionInvocationPayload[] = [];
+        const tracingService: Context.Tag.Service<TracingService> = {
+          ...TracingService.noop,
+          traceInvocationStart: Effect.fn(function* ({ payload }) {
+            invocationStarts.push(payload);
+            return { invocationId: ObjectId.random(), invocationTraceQueue: undefined };
+          }),
+        };
+
+        const { manager } = makeManager({ tracingService });
+        const executable = makeSimpleExecutable();
+
+        const handle = yield* manager.spawn(executable);
+        expect(invocationStarts).toHaveLength(1);
+
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+        yield* handle.submitInput({ value: 5 });
+        yield* Fiber.join(outputFiber);
+      }),
+    );
+
+    it.effect(
+      'does not call traceInvocationStart for child process',
+      Effect.fn(function* ({ expect }) {
+        const invocationStarts: TracingService.FunctionInvocationPayload[] = [];
+        const tracingService: Context.Tag.Service<TracingService> = {
+          ...TracingService.noop,
+          traceInvocationStart: Effect.fn(function* ({ payload }) {
+            invocationStarts.push(payload);
+            return { invocationId: ObjectId.random(), invocationTraceQueue: undefined };
+          }),
+        };
+
+        const { manager } = makeManager({ tracingService });
+        const executable = makeSimpleExecutable();
+
+        const parentHandle = yield* manager.spawn(executable);
+        expect(invocationStarts).toHaveLength(1);
+
+        const childHandle = yield* manager.spawn(executable, { parentProcessId: parentHandle.id });
+        expect(invocationStarts).toHaveLength(1);
+
+        const outputFiber = yield* Stream.runCollect(childHandle.subscribeOutputs()).pipe(Effect.fork);
+        yield* childHandle.submitInput({ value: 3 });
+        yield* Fiber.join(outputFiber);
+      }),
+    );
+
+    it.effect(
+      'child process inherits parent trace context',
+      Effect.fn(function* ({ expect }) {
+        const messageId = ObjectId.random();
+        const tracingService: Context.Tag.Service<TracingService> = {
+          ...TracingService.noop,
+          traceInvocationStart: Effect.fn(function* () {
+            return { invocationId: ObjectId.random(), invocationTraceQueue: undefined };
+          }),
+        };
+
+        const { manager } = makeManager({ tracingService });
+        const executable = makeSimpleExecutable();
+
+        const parentHandle = yield* manager.spawn(executable, {
+          tracing: { message: messageId, toolCallId: 'tc-root' },
+        });
+
+        const childHandle = yield* manager.spawn(executable, {
+          parentProcessId: parentHandle.id,
+          tracing: { toolCallId: 'tc-child' },
+        });
+
+        const childContext = manager.getTraceContext(childHandle.id);
+        expect(childContext).toBeDefined();
+        expect(childContext!.parentMessage).toEqual(messageId);
+        expect(childContext!.toolCallId).toEqual('tc-child');
+
+        const outputFiber = yield* Stream.runCollect(parentHandle.subscribeOutputs()).pipe(Effect.fork);
+        yield* parentHandle.submitInput({ value: 1 });
+        yield* Fiber.join(outputFiber);
+
+        const childOutputFiber = yield* Stream.runCollect(childHandle.subscribeOutputs()).pipe(Effect.fork);
+        yield* childHandle.submitInput({ value: 2 });
+        yield* Fiber.join(childOutputFiber);
+      }),
+    );
+
+    it.effect(
+      'cleans up trace context on process completion',
+      Effect.fn(function* ({ expect }) {
+        const tracingService: Context.Tag.Service<TracingService> = {
+          ...TracingService.noop,
+          traceInvocationStart: Effect.fn(function* () {
+            return { invocationId: ObjectId.random(), invocationTraceQueue: undefined };
+          }),
+        };
+
+        const { manager } = makeManager({ tracingService });
+        const executable = makeSimpleExecutable();
+
+        const handle = yield* manager.spawn(executable);
+        expect(manager.getTraceContext(handle.id)).toBeDefined();
+
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+        yield* handle.submitInput({ value: 1 });
+        yield* Fiber.join(outputFiber);
+
+        expect(manager.getTraceContext(handle.id)).toBeUndefined();
+      }),
+    );
+
+    it.effect(
+      'provides TracingService to process with correct context',
+      Effect.fn(function* ({ expect }) {
+        const capturedContexts: TracingService.TraceContext[] = [];
+        const messageId = ObjectId.random();
+
+        const tracingService: Context.Tag.Service<TracingService> = {
+          ...TracingService.noop,
+          traceInvocationStart: Effect.fn(function* () {
+            return { invocationId: ObjectId.random(), invocationTraceQueue: undefined };
+          }),
+        };
+
+        const tracingExecutable = Process.makeExecutable(
+          {
+            input: Schema.Void,
+            output: Schema.String,
+            services: [TracingService],
+          },
+          (ctx) =>
+            Effect.gen(function* () {
+              const tracing = yield* TracingService;
+
+              return {
+                handleInput: (_input: void) =>
+                  Effect.sync(() => {
+                    capturedContexts.push(tracing.getTraceContext());
+                    ctx.submitOutput('done');
+                    return Process.OutcomeDone as Process.Outcome;
+                  }),
+                tick: () => Effect.succeed(Process.OutcomeSuspend as Process.Outcome),
+              };
+            }),
+        ) as Process.Executable<void, string>;
+
+        const { manager } = makeManager({ tracingService });
+
+        const handle = yield* manager.spawn(tracingExecutable, {
+          tracing: { message: messageId, toolCallId: 'tc-42' },
+        });
+
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+        yield* handle.submitInput(undefined);
+        yield* Fiber.join(outputFiber);
+
+        expect(capturedContexts).toHaveLength(1);
+        expect(capturedContexts[0].parentMessage).toEqual(messageId);
+        expect(capturedContexts[0].toolCallId).toEqual('tc-42');
       }),
     );
   });

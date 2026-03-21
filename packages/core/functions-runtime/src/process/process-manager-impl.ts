@@ -15,9 +15,14 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
+import { TracingService } from '@dxos/functions';
+
+import { type OperationHandlerSet, Operation } from '@dxos/operation';
+
 import type { ServiceNotAvailableError } from '../errors';
 
 import * as Process from './Process';
+import * as ProcessOperationInvoker from './ProcessOperationInvoker';
 import * as ServiceResolver from './ServiceResolver';
 import * as StorageService from './StorageService';
 
@@ -40,6 +45,8 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
   readonly #storage: Context.Tag.Service<typeof StorageService.StorageService>;
 
+  readonly #onCleanup: (() => void) | undefined;
+
   constructor(
     readonly id: Process.ID,
     process: Process.Process<I, O>,
@@ -47,12 +54,14 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
     registry: Registry.Registry,
     outputQueue: Queue.Queue<OutputItem<O>>,
     storage: Context.Tag.Service<typeof StorageService.StorageService>,
+    onCleanup?: () => void,
   ) {
     this.#process = process;
     this.#scope = scope;
     this.#registry = registry;
     this.#outputQueue = outputQueue;
     this.#storage = storage;
+    this.#onCleanup = onCleanup;
 
     this.#currentStatus = {
       state: Process.State.RUNNING,
@@ -148,6 +157,7 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
       Queue.unsafeOffer(this.#outputQueue, Option.none());
       yield* this.#storage.clear();
       yield* Scope.close(this.#scope, Exit.void);
+      this.#onCleanup?.();
     });
   }
 
@@ -168,21 +178,31 @@ export interface ProcessManagerImplOpts {
   registry: Registry.Registry;
   kvStore: KeyValueStore.KeyValueStore;
   serviceResolver?: ServiceResolver.ServiceResolver;
+  tracingService?: Context.Tag.Service<TracingService>;
+  handlerSet?: OperationHandlerSet.OperationHandlerSet;
 }
 
 export class ProcessManagerImpl implements Process.Manager {
   readonly #handles = new Map<Process.ID, ProcessHandleImpl<any, any>>();
+  readonly #traceContexts = new Map<Process.ID, TracingService.TraceContext>();
   readonly #registry: Registry.Registry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
+  readonly #tracingService: Context.Tag.Service<TracingService>;
+  readonly #handlerSet: OperationHandlerSet.OperationHandlerSet | undefined;
 
   constructor(opts: ProcessManagerImplOpts) {
     this.#registry = opts.registry;
     this.#kvStore = opts.kvStore;
     this.#serviceResolver = opts.serviceResolver ?? ServiceResolver.empty;
+    this.#tracingService = opts.tracingService ?? TracingService.noop;
+    this.#handlerSet = opts.handlerSet;
   }
 
-  spawn<I, O>(executable: Process.Executable<I, O>): Effect.Effect<Process.Handle<I, O>, ServiceNotAvailableError> {
+  spawn<I, O>(
+    executable: Process.Executable<I, O>,
+    options?: Process.SpawnOptions,
+  ): Effect.Effect<Process.Handle<I, O>, ServiceNotAvailableError> {
     return Effect.gen(this, function* () {
       const id = Schema.decodeSync(Process.ID)(crypto.randomUUID());
       const scope = yield* Scope.make();
@@ -197,14 +217,46 @@ export class ProcessManagerImpl implements Process.Manager {
         },
       };
 
-      const builtinCtx = Context.empty().pipe(
+      // Build tracing context for this process.
+      const traceContext = yield* this.#buildTraceContext(id, options);
+      this.#traceContexts.set(id, traceContext);
+
+      // Create TracingService scoped to this process's trace context.
+      const processTracingService: Context.Tag.Service<TracingService> = {
+        getTraceContext: () => traceContext,
+        write: (event, ctx) => this.#tracingService.write(event, ctx),
+        traceInvocationStart: (opts) => this.#tracingService.traceInvocationStart(opts),
+        traceInvocationEnd: (opts) => this.#tracingService.traceInvocationEnd(opts),
+      };
+
+      let builtinCtx = Context.empty().pipe(
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
+        Context.add(TracingService, processTracingService),
       );
 
-      const externalServices = executable.services.filter(
-        (tag) => tag.key !== StorageService.StorageService.key && tag.key !== Scope.Scope.key,
-      );
+      // Provide Operation.Service that spawns child processes with parentProcessId set.
+      if (this.#handlerSet) {
+        const childInvoker = ProcessOperationInvoker.make({
+          manager: this,
+          handlerSet: this.#handlerSet,
+          parentProcessId: id,
+        });
+        builtinCtx = Context.add(builtinCtx, Operation.Service, {
+          invoke: childInvoker.invoke,
+          schedule: childInvoker.schedule,
+          invokePromise: childInvoker.invokePromise,
+          invokeSync: childInvoker.invokeSync,
+        });
+      }
+
+      const builtinTagKeys = new Set([
+        StorageService.StorageService.key,
+        Scope.Scope.key,
+        TracingService.key,
+        Operation.Service.key,
+      ]);
+      const externalServices = executable.services.filter((tag) => !builtinTagKeys.has(tag.key));
 
       let serviceCtx: Context.Context<never> = Context.empty() as Context.Context<never>;
       if (externalServices.length > 0) {
@@ -217,13 +269,60 @@ export class ProcessManagerImpl implements Process.Manager {
         Effect.provide(fullCtx as Context.Context<any>),
       );
 
-      const handle = new ProcessHandleImpl<I, O>(id, process, scope, this.#registry, outputQueue, storage);
+      const handle = new ProcessHandleImpl<I, O>(id, process, scope, this.#registry, outputQueue, storage, () => {
+        this.#traceContexts.delete(id);
+      });
       this.#handles.set(id, handle);
+
+      // Trace invocation start for root processes (no parent).
+      if (!options?.parentProcessId) {
+        const trace = yield* this.#tracingService.traceInvocationStart({
+          payload: { data: { processId: id } },
+        });
+        this.#traceContexts.set(
+          id,
+          { ...traceContext, currentInvocation: trace },
+        );
+      }
 
       yield* handle.runTick();
 
       return handle;
     });
+  }
+
+  /**
+   * Build trace context for a process, inheriting from parent if specified.
+   */
+  #buildTraceContext(
+    _id: Process.ID,
+    options?: Process.SpawnOptions,
+  ): Effect.Effect<TracingService.TraceContext> {
+    return Effect.sync(() => {
+      let baseContext: TracingService.TraceContext = {};
+
+      if (options?.parentProcessId) {
+        const parentContext = this.#traceContexts.get(options.parentProcessId);
+        if (parentContext) {
+          baseContext = { ...parentContext };
+        }
+      }
+
+      if (options?.tracing) {
+        if (options.tracing.message !== undefined) {
+          baseContext = { ...baseContext, parentMessage: options.tracing.message };
+        }
+        if (options.tracing.toolCallId !== undefined) {
+          baseContext = { ...baseContext, toolCallId: options.tracing.toolCallId };
+        }
+      }
+
+      return baseContext;
+    });
+  }
+
+  getTraceContext(processId: Process.ID): TracingService.TraceContext | undefined {
+    return this.#traceContexts.get(processId);
   }
 
   attach<I, O>(id: Process.ID): Effect.Effect<Process.Handle<I, O>> {
@@ -247,6 +346,8 @@ export class ProcessManagerImpl implements Process.Manager {
  */
 export const ProcessManagerLayer = (opts?: {
   serviceResolver?: ServiceResolver.ServiceResolver;
+  tracingService?: Context.Tag.Service<TracingService>;
+  handlerSet?: OperationHandlerSet.OperationHandlerSet;
 }): Layer.Layer<Process.ProcessManager, never, KeyValueStore.KeyValueStore> =>
   Layer.effect(
     Process.ProcessManager,
@@ -257,6 +358,8 @@ export const ProcessManagerLayer = (opts?: {
         registry,
         kvStore,
         serviceResolver: opts?.serviceResolver,
+        tracingService: opts?.tracingService,
+        handlerSet: opts?.handlerSet,
       });
     }),
   );

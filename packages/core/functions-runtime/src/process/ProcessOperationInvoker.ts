@@ -17,10 +17,13 @@ import * as Process from './Process';
 /**
  * Creates an OperationInvoker that executes each operation by spawning a process via the ProcessManager.
  * Service resolution, storage, and lifecycle are handled by the process manager.
+ *
+ * When `parentProcessId` is set, spawned processes inherit the parent's trace context.
  */
 export const make = (opts: {
   manager: Process.Manager;
   handlerSet: OperationHandlerSet.OperationHandlerSet;
+  parentProcessId?: Process.ID;
 }): OperationInvoker.OperationInvoker => {
   const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
   const pendingCount = Effect.runSync(Ref.make(0));
@@ -29,10 +32,17 @@ export const make = (opts: {
   const invokeCore = <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
+    tracingOptions?: Process.TracingOptions,
   ): Effect.Effect<O, Error> =>
     Effect.gen(function* () {
       const executable = Process.makeOperationExecutable(op, opts.handlerSet) as Process.Executable<I, O>;
-      const handle = yield* opts.manager.spawn(executable).pipe(
+
+      const spawnOptions: Process.SpawnOptions = {
+        parentProcessId: opts.parentProcessId,
+        tracing: tracingOptions,
+      };
+
+      const handle = yield* opts.manager.spawn(executable, spawnOptions).pipe(
         Effect.mapError((err) => new Error(err.message, { cause: err })),
       );
 
@@ -57,8 +67,9 @@ export const make = (opts: {
     ...args: any[]
   ): Effect.Effect<O, Error> => {
     const input = args[0] as I;
+    const options = args[1] as (Operation.InvokeOptions & { tracing?: Process.TracingOptions }) | undefined;
     return Effect.gen(function* () {
-      const output = yield* invokeCore(op, input);
+      const output = yield* invokeCore(op, input, options?.tracing);
 
       yield* PubSub.publish(pubsub, {
         operation: op,

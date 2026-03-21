@@ -12,6 +12,8 @@ import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
 
+import { TracingService } from '@dxos/functions';
+import { ObjectId } from '@dxos/keys';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
@@ -105,20 +107,23 @@ const makeKvStore = () => {
 const makeInvoker = (opts?: {
   serviceResolver?: ServiceResolver.ServiceResolver;
   extraHandlers?: Operation.WithHandler<Operation.Definition.Any>[];
+  tracingService?: Context.Tag.Service<TracingService>;
 }) => {
   const { kvStore } = makeKvStore();
   const registry = Registry.make();
-  const manager = new ProcessManagerImpl({
-    registry,
-    kvStore,
-    serviceResolver: opts?.serviceResolver,
-  });
   const handlerSet = OperationHandlerSet.make(
     DoubleHandler,
     EchoHandler,
     InsertRowHandler,
     ...(opts?.extraHandlers ?? []),
   );
+  const manager = new ProcessManagerImpl({
+    registry,
+    kvStore,
+    serviceResolver: opts?.serviceResolver,
+    tracingService: opts?.tracingService,
+    handlerSet,
+  });
   const invoker = ProcessOperationInvoker.make({ manager, handlerSet });
   return { manager, invoker };
 };
@@ -205,4 +210,75 @@ describe('ProcessOperationInvoker', () => {
       expect(result3).toEqual('echo: world');
     }),
   );
+
+  describe('tracing', () => {
+    it.effect(
+      'calls traceInvocationStart for root processes',
+      Effect.fn(function* ({ expect }) {
+        const invocationStarts: TracingService.FunctionInvocationPayload[] = [];
+        const tracingService: Context.Tag.Service<TracingService> = {
+          ...TracingService.noop,
+          traceInvocationStart: Effect.fn(function* ({ payload }) {
+            invocationStarts.push(payload);
+            return { invocationId: ObjectId.random(), invocationTraceQueue: undefined };
+          }),
+          traceInvocationEnd: () => Effect.void,
+        };
+
+        const { invoker } = makeInvoker({ tracingService });
+        yield* invoker.invoke(Double, { value: 5 });
+
+        expect(invocationStarts).toHaveLength(1);
+        expect(invocationStarts[0].data).toBeDefined();
+      }),
+    );
+
+    it.effect(
+      'provides TracingService to process functions with trace context',
+      Effect.fn(function* ({ expect }) {
+        const capturedContexts: TracingService.TraceContext[] = [];
+
+        const TracingCapture = Operation.make({
+          meta: { key: 'test/tracing-capture', name: 'TracingCapture' },
+          input: Schema.Void,
+          output: Schema.String,
+          services: [TracingService],
+        });
+
+        const TracingCaptureHandler = Operation.withHandler(
+          TracingCapture,
+          Effect.fn(function* () {
+            const tracing = yield* TracingService;
+            capturedContexts.push(tracing.getTraceContext());
+            return 'captured';
+          }),
+        );
+
+        const messageId = ObjectId.random();
+        const tracingService: Context.Tag.Service<TracingService> = {
+          ...TracingService.noop,
+          traceInvocationStart: Effect.fn(function* () {
+            return { invocationId: ObjectId.random(), invocationTraceQueue: undefined };
+          }),
+        };
+
+        const { kvStore } = makeKvStore();
+        const registry = Registry.make();
+        const handlerSet = OperationHandlerSet.make(TracingCaptureHandler);
+        const manager = new ProcessManagerImpl({
+          registry,
+          kvStore,
+          tracingService,
+          handlerSet,
+        });
+
+        const invoker = ProcessOperationInvoker.make({ manager, handlerSet });
+        yield* invoker.invoke(TracingCapture, undefined, { tracing: { message: messageId, toolCallId: 'tc-1' } } as any);
+
+        expect(capturedContexts).toHaveLength(1);
+        expect(capturedContexts[0].parentMessage).toEqual(messageId);
+        expect(capturedContexts[0].toolCallId).toEqual('tc-1');
+      }),
+    );
+  });
 });
