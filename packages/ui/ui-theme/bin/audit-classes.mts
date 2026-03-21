@@ -46,7 +46,7 @@ const minimatch = _req('minimatch') as (path: string, pattern: string, opts?: ob
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim();
-const THEME_CSS_PATH = path.resolve(__dirname, '../src/theme.css');
+const THEME_CSS_PATH = path.resolve(__dirname, '../src/main.css');
 const STYLES_DIR = path.resolve(__dirname, '../src/config');
 const TWIGNORE_PATH = path.join(ROOT, '.twignore');
 
