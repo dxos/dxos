@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-
 import { Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Thread } from '@dxos/types';

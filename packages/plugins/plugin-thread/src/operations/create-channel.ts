@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-
 import { Operation } from '@dxos/operation';
 
 import { CreateChannel } from './definitions';
