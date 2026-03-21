@@ -14,6 +14,7 @@ const defaultState: LayoutStateProps = {
   sidebarState: 'closed',
   complementarySidebarState: 'closed',
   dialogOpen: false,
+  toasts: [],
   workspace: 'default',
 };
 

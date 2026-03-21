@@ -89,10 +89,34 @@ export default Capability.makeModule(
         }),
       }),
       OperationResolver.make({
+        operation: LayoutOperation.AddToast,
+        handler: Effect.fnUntraced(function* (input) {
+          updateState((state) => ({
+            toasts: [...state.toasts, input as LayoutOperation.Toast],
+          }));
+        }),
+      }),
+      OperationResolver.make({
         operation: LayoutOperation.SwitchWorkspace,
         handler: Effect.fnUntraced(function* ({ subject }) {
           updateState(() => ({ workspace: subject }));
         }),
+      }),
+      OperationResolver.make({
+        operation: LayoutOperation.SetLayoutMode,
+        handler: () => Effect.void,
+      }),
+      OperationResolver.make({
+        operation: LayoutOperation.Open,
+        handler: () => Effect.void,
+      }),
+      OperationResolver.make({
+        operation: LayoutOperation.Close,
+        handler: () => Effect.void,
+      }),
+      OperationResolver.make({
+        operation: LayoutOperation.ScrollIntoView,
+        handler: () => Effect.void,
       }),
     ]);
   }),
