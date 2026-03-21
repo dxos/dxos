@@ -43,8 +43,8 @@ export const updateName = async (
       const message = messages.find((message) => message.sender.role === 'assistant');
       const title = message?.blocks.find((block) => block._tag === 'text')?.text;
       if (title) {
-        Obj.change(chat, (c) => {
-          c.name = title;
+        Obj.change(chat, (chat) => {
+          chat.name = title;
         });
       }
     }),

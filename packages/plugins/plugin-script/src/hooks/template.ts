@@ -15,9 +15,9 @@ const createTemplateSelectActions = (script: Script.Script) => {
     return createMenuAction<TemplateActionProperties>(
       `template--${template.id}`,
       () => {
-        Obj.change(script, (s) => {
-          s.name = template.name;
-          const meta = Obj.getMeta(s);
+        Obj.change(script, (script) => {
+          script.name = template.name;
+          const meta = Obj.getMeta(script);
           const oldPresetIndex = meta.keys.findIndex((key) => key.source === FUNCTIONS_PRESET_META_KEY);
           if (oldPresetIndex >= 0) {
             meta.keys.splice(oldPresetIndex, 1);

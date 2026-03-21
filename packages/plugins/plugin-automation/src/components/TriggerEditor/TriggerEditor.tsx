@@ -46,8 +46,8 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
 
   const handleValuesChanged = useCallback(
     (newValues: Partial<TriggerFormSchema>) => {
-      Obj.change(trigger, (t) => {
-        Object.assign(t, newValues);
+      Obj.change(trigger, (trigger) => {
+        Object.assign(trigger, newValues);
       });
     },
     [trigger],

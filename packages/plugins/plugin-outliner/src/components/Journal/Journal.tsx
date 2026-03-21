@@ -42,8 +42,8 @@ export const Journal = forwardRef<HTMLDivElement, JournalProps>(({ journal, onSe
     }
 
     const entry = JournalType.makeEntry();
-    Obj.change(journal, (obj) => {
-      obj.entries[getDateString(date)] = Ref.make(entry);
+    Obj.change(journal, (journal) => {
+      journal.entries[getDateString(date)] = Ref.make(entry);
     });
     setShowAddEntry(false);
   }, [journal, date]);

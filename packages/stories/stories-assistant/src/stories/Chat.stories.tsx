@@ -294,8 +294,8 @@ export const WithMail: Story = {
       const feed = await mailbox.feed?.tryLoad();
       invariant(feed);
       const queue = space.queues.create<Message.Message>();
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      Obj.change(feed, (feed) => {
+        Obj.getMeta(feed).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
       });
       const messages = createTestMailbox();
       await queue.append(messages);
@@ -763,15 +763,15 @@ export const WithProject: Story = {
       const tagDxn = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
-        Obj.change(person, (p) => {
-          Obj.getMeta(p).tags = [tagDxn];
+        Obj.change(person, (person) => {
+          Obj.getMeta(person).tags = [tagDxn];
         });
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
       const queue = space.queues.create<Message.Message>();
-      Obj.change(mailbox, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      Obj.change(mailbox, (mailbox) => {
+        Obj.getMeta(mailbox).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
       });
       const messages = createTestMailbox(people);
       await queue.append(messages);
@@ -789,16 +789,16 @@ export const WithProject: Story = {
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
-        Obj.change(research, (r) => {
-          Obj.getMeta(r).tags = [tagDxn];
+        Obj.change(research, (research) => {
+          Obj.getMeta(research).tags = [tagDxn];
         });
       });
 
       const dxos = organizations.find((org) => org.name === 'DXOS')!;
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
-        Obj.change(organization, (org) => {
-          Obj.getMeta(org).tags = [tagDxn];
+        Obj.change(organization, (organization) => {
+          Obj.getMeta(organization).tags = [tagDxn];
         });
       });
       // TODO(wittjosiah): Support relations.

@@ -328,8 +328,8 @@ describe('Spaces', () => {
     await waitForObject(guestSpace, hostDocument);
 
     const text = Obj.make(TestSchema.TextV0Type, { content: 'Hello, world!' });
-    Obj.change(hostDocument, (d) => {
-      d.content = Ref.make(text);
+    Obj.change(hostDocument, (hostDocument) => {
+      hostDocument.content = Ref.make(text);
     });
 
     await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -423,8 +423,8 @@ describe('Spaces', () => {
       const text = Obj.make(TestSchema.TextV0Type, {
         content: 'Hello, world!',
       });
-      Obj.change(hostDocument, (d) => {
-        d.content = Ref.make(text);
+      Obj.change(hostDocument, (hostDocument) => {
+        hostDocument.content = Ref.make(text);
       });
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -440,8 +440,8 @@ describe('Spaces', () => {
       const text = Obj.make(TestSchema.TextV0Type, {
         content: 'Hello, world!',
       });
-      Obj.change(hostDocument, (d) => {
-        d.content = Ref.make(text);
+      Obj.change(hostDocument, (hostDocument) => {
+        hostDocument.content = Ref.make(text);
       });
 
       await expect.poll(() => getDocumentText(guestSpace, hostDocument.id)).toEqual('Hello, world!');
@@ -520,8 +520,8 @@ describe('Spaces', () => {
 
       onTestFinished(() => unsub());
 
-      Obj.change(hostRoot, (r) => {
-        r.entries.push(Ref.make(createObject({ name: 'second' })));
+      Obj.change(hostRoot, (hostRoot) => {
+        hostRoot.entries.push(Ref.make(createObject({ name: 'second' })));
       });
       await done.wait({ timeout: 1_000 });
     }

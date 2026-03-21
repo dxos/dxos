@@ -88,7 +88,7 @@ const PipelineColumns = ({ pipeline }: PipelineColumnsProps) => {
     get: (data) => data as unknown as Obj.Unknown,
     make: (object) => object as unknown as Pipeline.Column,
     canDrop: ({ source }) => model.isColumn(source.data),
-    onChange: (mutate) => Obj.change(pipeline, (p) => mutate(p.columns)),
+    onChange: (mutate) => Obj.change(pipeline, (pipeline) => mutate(pipeline.columns)),
   });
 
   return <Board.Content id='pipeline' eventHandler={eventHandler} Tile={PipelineColumn} />;

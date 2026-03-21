@@ -17,10 +17,10 @@ export const importSpace = async (db: EchoDatabase, data: SerializedSpace) => {
       const typename = typeDXN?.asTypeDXN()?.type;
       // Handle Space Properties.
       if (properties && typename === Type.getTypename(SpaceProperties)) {
-        Obj.change(properties, (props: any) => {
+        Obj.change(properties, (properties: any) => {
           Object.entries(data).forEach(([name, value]) => {
             if (!name.startsWith('@')) {
-              props[name] = value;
+              properties[name] = value;
             }
           });
         });

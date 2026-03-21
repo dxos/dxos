@@ -84,17 +84,17 @@ export const make = ({ name, cells = {}, ...size }: SheetProps = {}) => {
   const sheet = Obj.make(Sheet, { name, cells: {}, rows: [], columns: [], rowMeta: {}, columnMeta: {}, ranges: [] });
 
   // Initialize and set cells within Obj.change to satisfy change context requirements.
-  Obj.change(sheet, (s) => {
-    initialize(s, size);
+  Obj.change(sheet, (sheet) => {
+    initialize(sheet, size);
 
     if (cells) {
       Object.entries(cells).forEach(([key, { value }]) => {
-        const idx = addressToIndex(s, addressFromA1Notation(key));
+        const idx = addressToIndex(sheet, addressFromA1Notation(key));
         if (isFormula(value)) {
-          value = mapFormulaRefsToIndices(s, value);
+          value = mapFormulaRefsToIndices(sheet, value);
         }
 
-        s.cells[idx] = { value };
+        sheet.cells[idx] = { value };
       });
     }
   });

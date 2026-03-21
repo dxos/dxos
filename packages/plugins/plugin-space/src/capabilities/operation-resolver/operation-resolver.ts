@@ -189,8 +189,8 @@ export default Capability.makeModule(
               // Remove from parent collection.
               const index = parentCollection.objects.findIndex((ref) => ref.target === obj);
               if (index !== -1) {
-                Obj.change(parentCollection, (c) => {
-                  c.objects.splice(index, 1);
+                Obj.change(parentCollection, (parentCollection) => {
+                  parentCollection.objects.splice(index, 1);
                 });
               }
 
@@ -714,10 +714,10 @@ export default Capability.makeModule(
             });
 
             // Restore objects to the parent collection at their original indices.
-            Obj.change(parentCollection, (c) => {
+            Obj.change(parentCollection, (parentCollection) => {
               indices.forEach((index: number, i: number) => {
                 if (index !== -1) {
-                  c.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Unknown));
+                  parentCollection.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Unknown));
                 }
               });
             });

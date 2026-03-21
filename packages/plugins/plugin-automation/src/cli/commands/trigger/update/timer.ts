@@ -93,8 +93,8 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
     if (!foundFn || !Obj.instanceOf(Operation.PersistentOperation, foundFn)) {
       return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
     }
-    Obj.change(trigger, (mutableTrigger) => {
-      mutableTrigger.function = Ref.make(foundFn);
+    Obj.change(trigger, (trigger) => {
+      trigger.function = Ref.make(foundFn);
     });
     currentFn = foundFn;
   }
@@ -129,9 +129,9 @@ const updateCron = Effect.fn(function* (trigger: Trigger.Trigger, cronOption: Op
         }).pipe(Prompt.run),
       onSome: (value) => Effect.succeed(value),
     });
-    Obj.change(trigger, (mutableTrigger) => {
-      if (mutableTrigger.spec?.kind === 'timer') {
-        mutableTrigger.spec.cron = cron;
+    Obj.change(trigger, (trigger) => {
+      if (trigger.spec?.kind === 'timer') {
+        trigger.spec.cron = cron;
       }
     });
   }
@@ -165,8 +165,8 @@ const updateInput = Effect.fn(function* (
         promptForSchemaInput(fn.inputSchema ? JsonSchema.toEffectSchema(fn.inputSchema) : undefined, currentInput),
       onSome: (value) => Effect.succeed(value as Record<string, any>),
     });
-    Obj.change(trigger, (mutableTrigger) => {
-      mutableTrigger.input = inputObj;
+    Obj.change(trigger, (trigger) => {
+      trigger.input = inputObj;
     });
   }
 });
@@ -188,7 +188,7 @@ const updateEnabled = Effect.fn(function* (
       }).pipe(Prompt.run),
     onSome: () => Effect.succeed(enabled),
   });
-  Obj.change(trigger, (mutableTrigger) => {
-    mutableTrigger.enabled = enabledValue;
+  Obj.change(trigger, (trigger) => {
+    trigger.enabled = enabledValue;
   });
 });

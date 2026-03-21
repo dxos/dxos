@@ -54,8 +54,8 @@ const seedData = async (client: Client) => {
         name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
       }),
     );
-    Obj.change(expando, (e) => {
-      e.value.push(Ref.make(todo));
+    Obj.change(expando, (expando) => {
+      expando.value.push(Ref.make(todo));
     });
     await space.db.flush();
   }
@@ -78,9 +78,9 @@ const seedData = async (client: Client) => {
     const object2 = space.db.add(Obj.make(dynamicSchema, { testField: 'Test' }));
 
     dynamicSchema.addFields({ name: Schema.String, todo: Ref.Ref(Todo) });
-    Obj.change(object2, (object) => {
-      object.name = 'Test';
-      object.todo = Ref.make(Obj.make(Todo, { name: 'Test todo' }));
+    Obj.change(object2, (object2) => {
+      object2.name = 'Test';
+      object2.todo = Ref.make(Obj.make(Todo, { name: 'Test todo' }));
     });
     await space.db.flush();
   }

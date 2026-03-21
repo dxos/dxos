@@ -276,7 +276,7 @@ describe('Database Blueprint', () => {
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Untagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'obsolete' }));
         const tagDxn = Obj.getDXN(tag).toString();
-        Entity.change(org, (obj) => Entity.addTag(obj, tagDxn));
+        Entity.change(org, (org) => Entity.addTag(org, tagDxn));
         expect(Obj.getMeta(org).tags ?? []).toContain(tagDxn);
         yield* AiConversationService.run({
           prompt: `Remove tag "obsolete" from the organization "Untagged Corp".`,

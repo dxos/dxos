@@ -18,8 +18,8 @@ const resolveDxn = (feed: Feed.Feed, queues: QueueFactory): DXN => {
     return existing;
   }
   const queue = queues.create();
-  Obj.change(feed, (mutable) => {
-    Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+  Obj.change(feed, (feed) => {
+    Obj.getMeta(feed).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
   });
   return queue.dxn;
 };

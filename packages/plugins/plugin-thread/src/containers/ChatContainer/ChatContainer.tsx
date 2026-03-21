@@ -86,8 +86,8 @@ export const ChatContainer = ({
       return false;
     }
 
-    Obj.change(thread, (obj) => {
-      obj.messages.push(
+    Obj.change(thread, (thread) => {
+      thread.messages.push(
         Ref.make(
           Obj.make(Message.Message, {
             created: new Date().toISOString(),

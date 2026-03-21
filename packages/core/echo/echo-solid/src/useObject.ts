@@ -160,20 +160,20 @@ export function useObject<T extends Obj.Unknown, K extends keyof T>(
       return;
     }
 
-    Obj.change(obj, (o: any) => {
+    Obj.change(obj, (obj: any) => {
       if (typeof updateOrValue === 'function') {
-        const returnValue = (updateOrValue as (obj: unknown) => unknown)(property !== undefined ? o[property] : o);
+        const returnValue = (updateOrValue as (obj: unknown) => unknown)(property !== undefined ? obj[property] : obj);
         if (returnValue !== undefined) {
           if (property === undefined) {
             throw new Error('Cannot re-assign the entire object');
           }
-          o[property] = returnValue;
+          obj[property] = returnValue;
         }
       } else {
         if (property === undefined) {
           throw new Error('Cannot re-assign the entire object');
         }
-        o[property] = updateOrValue;
+        obj[property] = updateOrValue;
       }
     });
   };

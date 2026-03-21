@@ -103,11 +103,11 @@ export default Capability.makeModule(
           handler: Effect.fnUntraced(function* (input) {
             const thread = input.thread;
 
-            Obj.change(thread, (t) => {
-              if (t.status === 'active' || t.status === undefined) {
-                t.status = 'resolved';
-              } else if (t.status === 'resolved') {
-                t.status = 'active';
+            Obj.change(thread, (thread) => {
+              if (thread.status === 'active' || thread.status === undefined) {
+                thread.status = 'resolved';
+              } else if (thread.status === 'resolved') {
+                thread.status = 'active';
               }
             });
 
@@ -246,16 +246,16 @@ export default Capability.makeModule(
               sender,
               blocks: [{ _tag: 'text', text }],
             });
-            Obj.change(thread, (t) => {
-              t.messages.push(Ref.make(message));
+            Obj.change(thread, (thread) => {
+              thread.messages.push(Ref.make(message));
             });
 
             const state = registry.get(stateAtom);
             const draft = state.drafts[subjectId]?.find((a: { id: string }) => a.id === anchor.id);
             if (draft) {
               // Move draft to document.
-              Obj.change(thread, (t) => {
-                t.status = 'active';
+              Obj.change(thread, (thread) => {
+                thread.status = 'active';
               });
               registry.set(stateAtom, {
                 ...state,
@@ -316,8 +316,8 @@ export default Capability.makeModule(
               return { messageIndex: -1 };
             }
 
-            Obj.change(thread, (t) => {
-              t.messages.splice(msgIndex, 1);
+            Obj.change(thread, (thread) => {
+              thread.messages.splice(msgIndex, 1);
             });
 
             yield* Operation.schedule(ObservabilityOperation.SendEvent, {
@@ -372,8 +372,8 @@ export default Capability.makeModule(
             const db = Obj.getDatabase(thread);
             invariant(db, 'Database not found');
 
-            Obj.change(thread, (t) => {
-              t.messages.splice(messageIndex, 0, Ref.make(message));
+            Obj.change(thread, (thread) => {
+              thread.messages.splice(messageIndex, 0, Ref.make(message));
             });
 
             yield* Operation.schedule(ObservabilityOperation.SendEvent, {

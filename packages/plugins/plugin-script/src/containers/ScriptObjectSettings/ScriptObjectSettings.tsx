@@ -64,14 +64,14 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        Obj.change(text, (t) => {
-          t.content = instructions;
+        Obj.change(text, (text) => {
+          text.content = instructions;
         });
         if (fn?.key) {
           const toolId = ToolId.make(fn.key);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            Obj.change(existingBlueprint, (b) => {
-              b.tools = [...(b.tools ?? []), toolId];
+            Obj.change(existingBlueprint, (existingBlueprint) => {
+              existingBlueprint.tools = [...(existingBlueprint.tools ?? []), toolId];
             });
           }
         }
@@ -151,8 +151,8 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
 
   const handleBindingBlur = useCallback(() => {
     if (fn) {
-      Obj.change(fn, (f) => {
-        f.binding = binding;
+      Obj.change(fn, (fn) => {
+        fn.binding = binding;
       });
     }
   }, [fn, binding]);
@@ -173,8 +173,8 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
                 disabled
                 value={functionUrl}
                 onChange={(event) => {
-                  Obj.change(fn, (f) => {
-                    f.name = event.target.value;
+                  Obj.change(fn, (fn) => {
+                    fn.name = event.target.value;
                   });
                 }}
               />
@@ -260,8 +260,8 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
         });
         const gistId = response.data.id;
         if (gistId) {
-          Obj.change(object, (obj) => {
-            Obj.getMeta(obj).keys.push({ source: 'github.com', id: gistId });
+          Obj.change(object, (object) => {
+            Obj.getMeta(object).keys.push({ source: 'github.com', id: gistId });
           });
         }
       }
