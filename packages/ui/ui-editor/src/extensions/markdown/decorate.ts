@@ -439,11 +439,11 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
 
           decoRanges.push({
             from: marks[0].to,
-            to: marks[1].from,
+            to: !editing && options.renderLinkButton ? node.to : marks[1].from,
             deco: Decoration.mark({
               tagName: 'a',
               attributes: {
-                class: 'cm-link',
+                class: options.renderLinkButton ? 'cm-link cm-link-with-button' : 'cm-link',
                 href: url,
                 rel: 'noreferrer',
                 target: '_blank',

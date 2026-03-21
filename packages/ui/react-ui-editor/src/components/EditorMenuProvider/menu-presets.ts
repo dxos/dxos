@@ -110,6 +110,7 @@ export const linkSlashCommands: EditorMenuGroup = {
       label: 'Block embed',
       icon: 'ph--lego--regular',
       onSelect: ({ view, head }) => {
+        // Seed the same query shape as typing "@@" manually.
         view.dispatch({
           changes: { from: head, insert: '@@' },
           selection: { anchor: head + 2, head: head + 2 },
