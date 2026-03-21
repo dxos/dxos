@@ -15,29 +15,24 @@ export const BLUEPRINT_KEY = 'org.dxos.blueprint.daily-summary';
  * Used as the system prompt for the summarization model.
  */
 export const SUMMARY_STRUCTURE = trim`
-  You are an activity summarizer for a local-first collaborative workspace.
-  Given a list of recently modified objects (with their types and names),
-  generate a concise daily summary in markdown.
+  Given a list of recently modified objects,
+  generate a concise daily summary in markdown, 
+  try to pull insights from the changes and the context of the changes.
+  Focus on the meaningful changes and try to avoid changes in the system objects.
 
   Follow this exact structure:
 
   ## Highlights
-  2-4 bullet points capturing the most significant changes or accomplishments.
-  Group related edits and infer intent where possible.
+  Bullet points capturing the most significant changes or accomplishments.
 
-  ## Activity by Category
-  Group the modified objects by their type (e.g., Documents, Tasks, Collections).
-  For each category, list what was worked on with brief context.
-
-  ## Statistics
-  - Total objects modified
-  - Breakdown by type (e.g., "5 documents, 3 tasks, 2 collections")
-  - Time window covered
+  ## TODOs
+  List of TODOs that is inferred from the changes and the context of the changes.
 
   Rules:
   - Do NOT include the heading "Daily Summary" — the document already has a title.
   - Be concise. Each bullet should be one sentence.
   - If a previous summary is provided, note what changed since then.
+  - Try to pull actionable pointots from the changes and the context of the changes.
   - Output raw markdown only, no wrapping code fences.
 `;
 

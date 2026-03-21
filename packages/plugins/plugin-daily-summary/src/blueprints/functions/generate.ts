@@ -43,9 +43,7 @@ export default GenerateSummary.pipe(
         const dateLabel = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
         const docName = `${SUMMARY_TITLE_PREFIX} ${dateLabel}`;
 
-        const recentObjects = yield* Database.runQuery(
-          Query.type(Obj.Unknown).select(Filter.updated({ after: cutoff })),
-        );
+        const recentObjects = yield* Database.runQuery(Filter.updated({ after: cutoff }));
 
         const objectDescriptions = recentObjects.map((obj) => {
           const name = (obj as any).name ?? (obj as any).title ?? Obj.getDXN(obj).toString();
@@ -132,11 +130,15 @@ const updateDocContent = Effect.fn(function* (doc: any, newContent: string) {
   if (textRef && Ref.isRef(textRef)) {
     const text: any = yield* Effect.promise(() => textRef.load());
     if (text) {
-      text.content = newContent;
+      Obj.change(text, (t: any) => {
+        t.content = newContent;
+      });
       return;
     }
   }
-  doc.content = Ref.make(Text.make(newContent));
+  Obj.change(doc, (d: any) => {
+    d.content = Ref.make(Text.make(newContent));
+  });
 });
 
 const findOrCreateSummariesCollection = Effect.fn(function* () {
