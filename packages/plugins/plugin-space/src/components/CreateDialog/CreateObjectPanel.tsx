@@ -102,13 +102,13 @@ export const CreateObjectPanel = ({
   if (metadata.inputSchema) {
     return (
       <Form.Root
-        testId='create-object-form'
         autoFocus
         schema={inputSchema}
         defaultValues={initialFormValues}
-        db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
         fieldProvider={inputSurfaceLookup}
+        db={Obj.isObject(target) ? Obj.getDatabase(target) : target}
         onSave={handleCreateObject}
+        testId='create-object-form'
       >
         <Form.Content>
           <Form.FieldSet />
