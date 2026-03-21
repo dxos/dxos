@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 
 import { DeckCapabilities } from '../types';
 
-export default LayoutOperation.UpdateSidebar.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.UpdateSidebar> = LayoutOperation.UpdateSidebar.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
@@ -24,3 +24,5 @@ export default LayoutOperation.UpdateSidebar.pipe(
     }),
   ),
 );
+
+export default handler;

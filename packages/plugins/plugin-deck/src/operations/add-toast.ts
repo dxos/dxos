@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 
 import { DeckCapabilities } from '../types';
 
-export default LayoutOperation.AddToast.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.AddToast> = LayoutOperation.AddToast.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
@@ -20,3 +20,5 @@ export default LayoutOperation.AddToast.pipe(
     }),
   ),
 );
+
+export default handler;

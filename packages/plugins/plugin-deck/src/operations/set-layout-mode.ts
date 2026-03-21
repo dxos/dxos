@@ -13,7 +13,7 @@ import { isNonNullable } from '@dxos/util';
 import { updateActiveDeck } from './helpers';
 import { DeckCapabilities, type DeckState, type LayoutMode, getMode, isLayoutMode } from '../types';
 
-export default LayoutOperation.SetLayoutMode.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.SetLayoutMode> = LayoutOperation.SetLayoutMode.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       if ('mode' in input && !isLayoutMode(input.mode)) {
@@ -71,3 +71,5 @@ export default LayoutOperation.SetLayoutMode.pipe(
     }),
   ),
 );
+
+export default handler;

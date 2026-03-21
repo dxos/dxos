@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 
 import { DeckCapabilities } from '../types';
 
-export default LayoutOperation.ScrollIntoView.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.ScrollIntoView> = LayoutOperation.ScrollIntoView.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
@@ -20,3 +20,5 @@ export default LayoutOperation.ScrollIntoView.pipe(
     }),
   ),
 );
+
+export default handler;

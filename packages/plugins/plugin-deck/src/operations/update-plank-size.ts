@@ -11,7 +11,7 @@ import { UpdatePlankSize } from './definitions';
 import { updateActiveDeck } from './helpers';
 import { DeckCapabilities } from '../types';
 
-export default UpdatePlankSize.pipe(
+const handler: Operation.WithHandler<typeof UpdatePlankSize> = UpdatePlankSize.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
@@ -25,3 +25,5 @@ export default UpdatePlankSize.pipe(
     }),
   ),
 );
+
+export default handler;

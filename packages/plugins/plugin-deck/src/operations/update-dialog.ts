@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 
 import { DeckCapabilities } from '../types';
 
-export default LayoutOperation.UpdateDialog.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.UpdateDialog> = LayoutOperation.UpdateDialog.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Capabilities.updateAtomValue(DeckCapabilities.EphemeralState, (state) => ({
@@ -30,3 +30,5 @@ export default LayoutOperation.UpdateDialog.pipe(
     }),
   ),
 );
+
+export default handler;

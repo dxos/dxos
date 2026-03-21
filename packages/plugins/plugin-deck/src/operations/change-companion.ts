@@ -12,7 +12,7 @@ import { ChangeCompanion } from './definitions';
 import { updateActiveDeck } from './helpers';
 import { DeckCapabilities } from '../types';
 
-export default ChangeCompanion.pipe(
+const handler: Operation.WithHandler<typeof ChangeCompanion> = ChangeCompanion.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       if (input.companion === null) {
@@ -31,3 +31,5 @@ export default ChangeCompanion.pipe(
     }),
   ),
 );
+
+export default handler;

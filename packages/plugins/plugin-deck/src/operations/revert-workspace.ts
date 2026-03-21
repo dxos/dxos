@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 
 import { DeckCapabilities } from '../types';
 
-export default LayoutOperation.RevertWorkspace.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.RevertWorkspace> = LayoutOperation.RevertWorkspace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
@@ -18,3 +18,5 @@ export default LayoutOperation.RevertWorkspace.pipe(
     }),
   ),
 );
+
+export default handler;

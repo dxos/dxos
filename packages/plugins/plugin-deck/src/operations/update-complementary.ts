@@ -10,7 +10,8 @@ import { Operation } from '@dxos/operation';
 
 import { DeckCapabilities } from '../types';
 
-export default LayoutOperation.UpdateComplementary.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.UpdateComplementary> =
+  LayoutOperation.UpdateComplementary.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
@@ -27,4 +28,6 @@ export default LayoutOperation.UpdateComplementary.pipe(
       }
     }),
   ),
-);
+  );
+
+export default handler;
