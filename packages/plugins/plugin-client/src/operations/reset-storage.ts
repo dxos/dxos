@@ -5,17 +5,16 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { type Operation } from '@dxos/operation';
-import * as Operation$ from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 
 import { ResetStorage } from './definitions';
 
 import { RESET_DIALOG } from '../constants';
 
 const handler: Operation.WithHandler<typeof ResetStorage> = ResetStorage.pipe(
-  Operation$.withHandler(
+  Operation.withHandler(
     Effect.fnUntraced(function* (data) {
-      yield* Operation$.invoke(LayoutOperation.UpdateDialog, {
+      yield* Operation.invoke(LayoutOperation.UpdateDialog, {
         subject: RESET_DIALOG,
         blockAlign: 'start',
         props: {
