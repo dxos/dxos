@@ -120,8 +120,10 @@ export const PopoverContent = () => {
         onEscapeKeyDown={handleInteractOutside}
       >
         <Popover.Viewport>
-          {/* TODO(burdon): Set/disable column context. */}
+          {/* Base popover */}
           {state.popoverKind === 'base' && <Surface.Surface role='popover' data={state.popoverContent} limit={1} />}
+
+          {/* Card popover */}
           {state.popoverKind === 'card' && (
             <Menu.Root>
               <Card.Root border={false} classNames='dx-card-popover'>
@@ -141,6 +143,7 @@ export const PopoverContent = () => {
                     <Menu.Content items={objectMenuItems} />
                   </Card.IconBlock>
                 </Card.Toolbar>
+
                 <Surface.Surface role='card--content' data={state.popoverContent} limit={1} />
               </Card.Root>
             </Menu.Root>

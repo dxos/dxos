@@ -15,7 +15,7 @@ export type OAuthPreset = {
 export const OAUTH_PRESETS: OAuthPreset[] = [
   {
     label: 'Google',
-    note: 'Email & calendar read/write access.',
+    note: 'Email, calendar, YouTube (metadata + captions on your own videos), and Gmail send.',
     source: 'google.com',
     provider: OAuthProvider.GOOGLE,
     scopes: [
@@ -23,6 +23,8 @@ export const OAUTH_PRESETS: OAuthPreset[] = [
       'https://www.googleapis.com/auth/gmail.readonly',
       'https://www.googleapis.com/auth/calendar.readonly',
       'https://www.googleapis.com/auth/gmail.send',
+      'https://www.googleapis.com/auth/youtube.readonly',
+      'https://www.googleapis.com/auth/youtube.force-ssl',
     ],
   },
 ];

@@ -20,7 +20,7 @@ export const PersonCard = ({ subject }: SurfaceComponentProps<Person.Person>) =>
             <Avatar.Content
               imgSrc={image}
               icon='ph--user--regular'
-              size={16}
+              size={20}
               classNames={!image && 'opacity-50'}
               hue='neutral'
               variant='square'
