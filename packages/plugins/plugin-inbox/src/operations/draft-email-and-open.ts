@@ -8,7 +8,7 @@ import type { Capability } from '@dxos/app-framework';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Message } from '@dxos/types';
 
 import { buildDraftMessageProps } from '../util';

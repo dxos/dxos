@@ -30,7 +30,7 @@ export const OnCreateSpace = Operation.make({
 
 export const AddMailbox = Operation.make({
   meta: { key: `${INBOX_OPERATION}.add-mailbox`, name: 'Add Mailbox' },
-  services: [Capability.Service, Operation.Service],
+  services: [Capability.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
     target: Schema.Union(Database.Database, Collection.Collection),
@@ -71,7 +71,7 @@ export const DraftEmail = Operation.make({
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({
   meta: { key: `${INBOX_OPERATION}.draft-email-and-open`, name: 'Draft email and open' },
-  services: [Capability.Service, Operation.Service],
+  services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
     mode: Schema.optional(Schema.Literal('compose', 'reply', 'reply-all', 'forward')),
@@ -146,7 +146,7 @@ export const SyncMailbox = Operation.make({
     name: 'Sync Mailbox',
     description: 'Runs Google Mail sync and notifies of failures.',
   },
-  services: [Capability.Service, Operation.Service],
+  services: [Capability.Service],
   input: Schema.Struct({
     mailbox: Mailbox.Mailbox,
   }),
@@ -182,7 +182,7 @@ export const SyncCalendar = Operation.make({
     name: 'Sync Calendar',
     description: 'Runs Google Calendar sync and notifies of failures.',
   },
-  services: [Capability.Service, Operation.Service],
+  services: [Capability.Service],
   input: Schema.Struct({
     calendar: Calendar.Calendar,
   }),
@@ -277,7 +277,7 @@ export const ClassifyEmail = Operation.make({
 
 export const ExtractContact = Operation.make({
   meta: { key: `${INBOX_OPERATION}.extract-contact`, name: 'Extract Contact' },
-  services: [Capability.Service, Operation.Service],
+  services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
     actor: Actor.Actor,

@@ -12,20 +12,23 @@ import { Operation } from '@dxos/operation';
 import { AutomationEvents } from '@dxos/plugin-automation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 
 import {
   AnchorSort,
   ComputeGraphRegistry,
   Markdown,
-  OperationResolver,
+  OperationHandler,
+  UndoMappings,
   ReactSurface,
   SheetState,
 } from './capabilities';
 import { meta } from './meta';
 import { serializer } from './serializer';
 import { translations } from './translations';
-import { Sheet, SheetOperation } from './types';
+import { Sheet } from './types';
+import { SheetOperation } from './operations';
 
 export const SheetPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
@@ -51,7 +54,8 @@ export const SheetPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({ id: 'undo-mappings', activate: UndoMappings }),
   AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

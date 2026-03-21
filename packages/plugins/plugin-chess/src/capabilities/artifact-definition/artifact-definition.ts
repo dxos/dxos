@@ -15,7 +15,7 @@ import { ArtifactId, VersionPin, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Filter, type Space } from '@dxos/react-client/echo';
 import { trim } from '@dxos/util';
 

@@ -11,23 +11,32 @@ import * as Schema from 'effect/Schema';
 import { GenericToolkit } from '@dxos/ai';
 import { ArtifactId } from '@dxos/assistant';
 import { Chat, WebSearchToolkit } from '@dxos/assistant-toolkit';
-import { DatabaseBlueprint } from '@dxos/assistant-toolkit';
+import { DatabaseBlueprint, DatabaseHandlers } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { OperationHandlerSet } from '@dxos/operation';
 import { Feed, Tag, type Type } from '@dxos/echo';
 import { AssistantBlueprint } from '@dxos/plugin-assistant/blueprints';
 import { ChessBlueprint } from '@dxos/plugin-chess/blueprints';
+import { ChessHandlers } from '@dxos/plugin-chess/operations';
 import { Chess } from '@dxos/plugin-chess/types';
 import { CalendarBlueprint, InboxBlueprint, InboxSendBlueprint } from '@dxos/plugin-inbox/blueprints';
+import { InboxOperationHandlerSet } from '@dxos/plugin-inbox/operations';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox/types';
 import { KanbanBlueprint } from '@dxos/plugin-kanban/blueprints';
+import { KanbanOperationHandlerSet } from '@dxos/plugin-kanban/operations';
 import { MapBlueprint } from '@dxos/plugin-map/blueprints';
+import { MapOperationHandlerSet } from '@dxos/plugin-map/operations';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
+import { MarkdownOperationHandlerSet } from '@dxos/plugin-markdown/operations';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { ScriptBlueprint } from '@dxos/plugin-script/blueprints';
+import { ScriptOperationHandlerSet } from '@dxos/plugin-script/operations';
 import { TableBlueprint } from '@dxos/plugin-table/blueprints';
+import { TableOperationHandlerSet } from '@dxos/plugin-table/operations';
 import { ThreadBlueprint } from '@dxos/plugin-thread/blueprints';
+import { ThreadOperationHandlerSet } from '@dxos/plugin-thread/operations';
 import { TranscriptionBlueprint } from '@dxos/plugin-transcription/blueprints';
+import { TranscriptionOperationHandlerSet } from '@dxos/plugin-transcription/operations';
 import { DataTypes } from '@dxos/schema';
 import {
   AnchoredTo,
@@ -68,18 +77,16 @@ export const blueprintRegistry = new Blueprint.Registry([
 
 export const operationHandlers = OperationHandlerSet.merge(
   // NOTE: Operation handlers referenced by blueprints above need to be added here.
-  // DatabaseBlueprint.operations,
-  // CalendarBlueprint.operations,
-  // ChessBlueprint.operations,
-  // InboxBlueprint.operations,
-  // InboxSendBlueprint.operations,
-  // KanbanBlueprint.operations,
-  // MapBlueprint.operations,
-  // MarkdownBlueprint.operations,
-  // ScriptBlueprint.operations,
-  // TableBlueprint.operations,
-  // ThreadBlueprint.operations,
-  // TranscriptionBlueprint.operations,
+  DatabaseHandlers,
+  ChessHandlers,
+  InboxOperationHandlerSet,
+  KanbanOperationHandlerSet,
+  MapOperationHandlerSet,
+  MarkdownOperationHandlerSet,
+  ScriptOperationHandlerSet,
+  TableOperationHandlerSet,
+  ThreadOperationHandlerSet,
+  TranscriptionOperationHandlerSet,
 );
 
 const StubDeckToolkit = Toolkit.make(

@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { Create, Move, Play, Print } from './functions';
+import { Create, Move, Play, Print } from '../operations';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.chess';
 

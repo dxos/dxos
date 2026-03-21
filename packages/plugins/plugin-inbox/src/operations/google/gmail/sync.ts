@@ -17,7 +17,7 @@ import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import * as Mailbox from '../../../types/Mailbox';
+import { Mailbox } from '../../../types';
 import { GoogleMail } from '../../../apis';
 import { InboxResolver, GoogleCredentials } from '../../../services';
 

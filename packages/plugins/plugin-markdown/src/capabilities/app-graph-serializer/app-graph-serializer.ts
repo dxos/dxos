@@ -8,11 +8,12 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { isSpace } from '@dxos/react-client/echo';
 
 import { translations } from '../../translations';
-import { Markdown, MarkdownOperation } from '../../types';
+import { Markdown } from '../../types';
+import { MarkdownOperation } from '../../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -46,7 +47,10 @@ export default Capability.makeModule(
           }
 
           const { invokePromise } = capabilities.get(Capabilities.OperationInvoker);
-          const createResult = await invokePromise(MarkdownOperation.Create, { name: data.name, content: data.data });
+          const createResult = await invokePromise(MarkdownOperation.CreateMarkdown, {
+            name: data.name,
+            content: data.data,
+          });
           if (!createResult.data?.object) {
             return undefined;
           }

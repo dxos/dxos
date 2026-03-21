@@ -1,0 +1,23 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import type { Capability } from '@dxos/app-framework';
+import { AgentPrompt } from '@dxos/assistant-toolkit';
+import { Operation } from '@dxos/operation';
+
+import { CreateChat, OnCreateSpace } from './definitions';
+
+export default OnCreateSpace.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ space }) {
+      // TODO(wittjosiah): Remove once function registry is avaiable.
+      space.db.add(Operation.serialize(AgentPrompt));
+
+      const { object: chat } = yield* Operation.invoke(CreateChat, { db: space.db });
+      space.db.add(chat);
+    }),
+  ),
+);

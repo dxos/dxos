@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { ClearSyncedVideos, Sync } from '../functions';
+import { ClearSyncedVideos, Sync } from '../operations';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/youtube';
 

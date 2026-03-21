@@ -9,15 +9,16 @@ import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-fr
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Collection } from '@dxos/echo';
-import { ClientOperation, ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientOperation } from '@dxos/plugin-client/operations';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as searchTranslation } from '@dxos/react-ui-searchlist';
 
-import { OperationResolver, type SimpleLayoutStateOptions, State } from '../../capabilities';
+import { OperationHandler, type SimpleLayoutStateOptions, State } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
 import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
 import { translations } from '../../translations';
@@ -25,7 +26,7 @@ import { translations } from '../../translations';
 import { SimpleLayout } from './SimpleLayout';
 
 const TestPlugin = Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule(({ isPopover = false }) => ({
     id: Capability.getModuleTag(State),
     activatesOn: ActivationEvents.Startup,

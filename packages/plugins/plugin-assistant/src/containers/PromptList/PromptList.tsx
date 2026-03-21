@@ -12,7 +12,7 @@ import { IconButton } from '@dxos/react-ui';
 import { useQuery } from '@dxos/react-client/echo';
 import { SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 
-import { AssistantOperation } from '../../types';
+import { AssistantOperation } from '../../operations';
 
 export type PromptListProps = SurfaceComponentProps<Obj.Unknown>;
 

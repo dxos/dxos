@@ -11,7 +11,6 @@ import type { FC, PropsWithChildren } from 'react';
 
 import type {
   OperationInvoker as OperationInvoker$,
-  OperationResolver as OperationResolver$,
   OperationHandlerSet,
 } from '@dxos/operation';
 
@@ -91,16 +90,6 @@ export const ManagedRuntime = Capability$.make<ManagedRuntime>('org.dxos.app-fra
 //
 // Operation System Capabilities
 //
-
-export type OperationResolver = OperationResolver$.OperationResolver<any, any, any, any>;
-
-/**
- * Handler registration for operations - contributed by plugins.
- * @category Capability
- */
-export const OperationResolver = Capability$.make<OperationResolver[]>(
-  'org.dxos.app-framework.capability.operation-resolver',
-);
 
 export const OperationHandler = Capability$.make<OperationHandlerSet.OperationHandlerSet>(
   'org.dxos.app-framework.capability.operation-handler',

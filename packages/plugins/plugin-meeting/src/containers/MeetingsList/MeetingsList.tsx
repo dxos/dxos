@@ -9,7 +9,7 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type Channel } from '@dxos/plugin-thread/types';
 import { Query, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
@@ -17,7 +17,8 @@ import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
-import { Meeting, MeetingOperation } from '../../types';
+import { Meeting } from '../../types';
+import { MeetingOperation } from '../../operations';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?
 
