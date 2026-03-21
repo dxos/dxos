@@ -110,12 +110,10 @@ export const CreateObjectPanel = ({
         fieldProvider={inputSurfaceLookup}
         onSave={handleCreateObject}
       >
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-            <Form.Submit />
-          </Form.Content>
-        </Form.Viewport>
+        <Form.Content>
+          <Form.FieldSet />
+          <Form.Submit />
+        </Form.Content>
       </Form.Root>
     );
   }

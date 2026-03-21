@@ -80,7 +80,7 @@ export const ArrayField = ({
       <div role='none' className='flex flex-col gap-2'>
         {values?.map((_, index) => {
           return (
-            <div role='none' key={index} className='grid grid-cols-[1fr_min-content] gap-2 last:mb-3'>
+            <div role='none' key={index} className='grid grid-cols-[1fr_2fr] gap-2 last:mb-3'>
               <FormField
                 autoFocus={index === values.length - 1}
                 type={elementType}

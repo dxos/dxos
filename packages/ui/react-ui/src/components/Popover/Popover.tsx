@@ -232,7 +232,7 @@ type PopoverPortalProps = {
   forceMount?: true;
 };
 
-const PopoverPortal: FC<PopoverPortalProps> = (props: ScopedProps<PopoverPortalProps>) => {
+const PopoverPortal = (props: ScopedProps<PopoverPortalProps>) => {
   const { __scopePopover, forceMount, children, container } = props;
   const context = usePopoverContext(PORTAL_NAME, __scopePopover);
   return (
