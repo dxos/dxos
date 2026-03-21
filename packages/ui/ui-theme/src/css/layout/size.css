@@ -23,6 +23,10 @@
    * Card
    */
 
+  .dx-card {
+    @apply flex flex-col w-full;
+  }
+
   .dx-card-square {
     inline-size: min(
       min(var(--radix-popper-available-width), var(--spacing-card-max-width)),

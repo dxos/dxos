@@ -7,10 +7,11 @@ import React, { useEffect, useState } from 'react';
 
 import { TestObjectGenerator } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
 import { TokenManager, type TokenManagerProps } from './TokenManager';
+import { translations } from '../../translations';
 
 faker.seed(1);
 
@@ -32,9 +33,11 @@ const TokenManagerStory = (props: Omit<TokenManagerProps, 'tokens'>) => {
       setTokens(generated as AccessToken.AccessToken[]),
     );
   }, []);
+
   if (tokens.length === 0) {
-    return <div>Loading tokens...</div>;
+    return <Loading data={{ tokens: tokens.length }} />;
   }
+
   return <TokenManager tokens={tokens} {...props} />;
 };
 
@@ -42,6 +45,9 @@ const meta = {
   title: 'plugins/plugin-token-manager/components/TokenManager',
   decorators: [withTheme()],
   component: TokenManagerStory,
+  parameters: {
+    translations,
+  },
   args: {
     onDelete: console.log,
   },

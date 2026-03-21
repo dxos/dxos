@@ -27,6 +27,7 @@
 
   /** Minimal trim to allow for ring/outline. */
   --spacing-form-chrome: var(--spacing-trim-xs);
+  --spacing-form-gap: var(--spacing-trim-sm);
 
   /**
    * Density: fine
