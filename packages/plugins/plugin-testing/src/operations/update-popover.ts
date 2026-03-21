@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 import { type LayoutStateProps } from '../types';
 import { updateState } from './update-state';
 
-export default LayoutOperation.UpdatePopover.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.UpdatePopover> = LayoutOperation.UpdatePopover.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const { subject, state, side, kind, props } = input;
@@ -33,3 +33,5 @@ export default LayoutOperation.UpdatePopover.pipe(
     }),
   ),
 );
+
+export default handler;

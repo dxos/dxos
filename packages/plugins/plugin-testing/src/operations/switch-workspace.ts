@@ -9,10 +9,12 @@ import { Operation } from '@dxos/operation';
 
 import { updateState } from './update-state';
 
-export default LayoutOperation.SwitchWorkspace.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject }) {
       yield* updateState(() => ({ workspace: subject }));
     }),
   ),
 );
+
+export default handler;

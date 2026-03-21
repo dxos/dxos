@@ -9,7 +9,7 @@ import { Operation } from '@dxos/operation';
 
 import { updateState } from './update-state';
 
-export default LayoutOperation.UpdateSidebar.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.UpdateSidebar> = LayoutOperation.UpdateSidebar.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ state }) {
       yield* updateState((layout) => {
@@ -22,3 +22,5 @@ export default LayoutOperation.UpdateSidebar.pipe(
     }),
   ),
 );
+
+export default handler;

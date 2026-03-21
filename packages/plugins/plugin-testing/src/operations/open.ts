@@ -7,4 +7,8 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 
-export default LayoutOperation.Open.pipe(Operation.withHandler(() => Effect.void));
+const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
+  Operation.withHandler(() => Effect.void),
+);
+
+export default handler;

@@ -9,7 +9,7 @@ import { Operation } from '@dxos/operation';
 
 import { updateState } from './update-state';
 
-export default LayoutOperation.UpdateDialog.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.UpdateDialog> = LayoutOperation.UpdateDialog.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, state, type, blockAlign, overlayClasses, overlayStyle, props }) {
       yield* updateState(() => ({
@@ -23,3 +23,5 @@ export default LayoutOperation.UpdateDialog.pipe(
     }),
   ),
 );
+
+export default handler;

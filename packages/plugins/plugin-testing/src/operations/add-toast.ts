@@ -9,7 +9,7 @@ import { Operation } from '@dxos/operation';
 
 import { updateState } from './update-state';
 
-export default LayoutOperation.AddToast.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.AddToast> = LayoutOperation.AddToast.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* updateState((state) => ({
@@ -18,3 +18,5 @@ export default LayoutOperation.AddToast.pipe(
     }),
   ),
 );
+
+export default handler;

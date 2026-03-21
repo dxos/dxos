@@ -9,7 +9,7 @@ import { Operation } from '@dxos/operation';
 
 import { updateState } from './update-state';
 
-export default LayoutOperation.UpdateComplementary.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.UpdateComplementary> = LayoutOperation.UpdateComplementary.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ state }) {
       yield* updateState((layout) => {
@@ -22,3 +22,5 @@ export default LayoutOperation.UpdateComplementary.pipe(
     }),
   ),
 );
+
+export default handler;
