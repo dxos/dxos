@@ -10,6 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
@@ -45,23 +46,20 @@ const meta = {
           types: [Feed.Feed, Calendar.Calendar],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              yield* Effect.promise(() => client.spaces.waitUntilReady());
-              const space = client.spaces.default;
-              yield* Effect.promise(() => space.waitUntilReady());
+              const { defaultSpace } = yield* initializeIdentity(client);
 
               // Create calendar with backing feed.
-              const calendar = space.db.add(Calendar.make({ name: 'My Calendar' }));
-              yield* Effect.promise(() => space.db.flush({ indexes: true }));
+              const calendar = defaultSpace.db.add(Calendar.make({ name: 'My Calendar' }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
               // Populate the calendar's feed with events.
               const feed = yield* Effect.tryPromise(() => calendar.feed!.tryLoad());
               if (feed) {
                 const events = createEvents(10);
-                yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(space.queues)));
+                yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(defaultSpace.queues)));
               }
 
-              yield* Effect.promise(() => space.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
 

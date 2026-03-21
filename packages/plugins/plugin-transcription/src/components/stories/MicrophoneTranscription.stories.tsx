@@ -22,6 +22,7 @@ import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { IndexKind, useSpace } from '@dxos/react-client/echo';
@@ -203,9 +204,7 @@ const meta = {
           types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              yield* Effect.promise(() => client.spaces.waitUntilReady());
-              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              const { defaultSpace } = yield* initializeIdentity(client);
               // TODO(mykola): Make API easier to use.
               // TODO(mykola): Delete after enabling vector indexing by default.
               // Enable vector indexing.
@@ -221,7 +220,7 @@ const meta = {
                 }),
               );
               yield* Effect.promise(() => client.services.services.QueryService!.reindex());
-              yield* Effect.promise(() => seedTestData(client.spaces.default));
+              yield* Effect.promise(() => seedTestData(defaultSpace));
             }),
         }),
 
