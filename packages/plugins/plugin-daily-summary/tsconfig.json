@@ -63,6 +63,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/client-protocol"
     },
     {
@@ -76,6 +79,9 @@
     },
     {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
     },
     {
       "path": "../plugin-space"

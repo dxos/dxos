@@ -8,15 +8,16 @@ import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 /**
- * Generates a daily summary of recently modified objects.
+ * Generates a daily summary of recently modified objects using AI.
  * Queries the database for objects updated within a time window,
- * creates a Markdown document with the summary, and adds it to a "Summaries" collection.
+ * sends them to an LLM for summarization, and creates/updates
+ * a Markdown document in a "Summaries" collection.
  */
 export const GenerateSummary = Operation.make({
   meta: {
     key: 'org.dxos.function.daily-summary.generate',
     name: 'Generate Daily Summary',
-    description: 'Queries objects modified in the last day and generates a markdown document summarizing activity.',
+    description: 'Queries objects modified in the last day and generates an AI-summarized markdown document.',
   },
   input: Schema.Struct({
     previousSummary: Schema.optional(Schema.String).annotations({
@@ -28,13 +29,13 @@ export const GenerateSummary = Operation.make({
   }),
   output: Schema.Struct({
     id: Schema.String.annotations({
-      description: 'DXN of the created markdown document.',
+      description: 'DXN of the created or updated markdown document.',
     }),
     objectCount: Schema.Number.annotations({
       description: 'Number of objects included in the summary.',
     }),
     date: Schema.String.annotations({
-      description: 'ISO date string for the summary.',
+      description: 'Date label for the summary (e.g., "March 20").',
     }),
   }),
   services: [Database.Service],

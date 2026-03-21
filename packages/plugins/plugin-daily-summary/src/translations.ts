@@ -11,6 +11,7 @@ export const translations = [
     'en-US': {
       [meta.id]: {
         'plugin name': 'Daily Summary',
+        'generate summary label': 'Generate summary now',
         'summary time label': 'Summary generation time',
         'summary time description': 'Time of day to generate the daily summary (24h format).',
       },
