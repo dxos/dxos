@@ -142,6 +142,12 @@ export interface Database extends Queryable {
    * Optionaly waits for changes to be propagated to indexes and event handlers.
    */
   flush(opts?: FlushOptions): Promise<void>;
+
+  /**
+   * Returns locally-cached timestamps for an object.
+   * Populated when objects are created or mutated through this database instance.
+   */
+  getTimestamps(objectId: string): { createdAt?: Date; updatedAt?: Date };
 }
 
 export const isDatabase = (obj: unknown): obj is Database => {

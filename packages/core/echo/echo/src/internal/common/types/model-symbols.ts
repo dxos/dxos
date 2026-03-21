@@ -67,3 +67,8 @@ export const RelationTargetId: unique symbol = Symbol.for('@dxos/echo/RelationTa
  * Used to access relation target DXN on live ECHO objects.
  */
 export const RelationTargetDXNId: unique symbol = Symbol.for('@dxos/echo/RelationTargetDXN');
+
+/**
+ * Object timestamps accessor symbol (createdAt / updatedAt from index).
+ */
+export const ObjectTimestampsId: unique symbol = Symbol.for('@dxos/echo/Timestamps');

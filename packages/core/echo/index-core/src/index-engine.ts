@@ -132,6 +132,18 @@ export class IndexEngine {
   }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryTypes(query);
   }
+  queryByTimeRange(query: {
+    spaceIds: readonly string[];
+    updatedAfter?: number;
+    updatedBefore?: number;
+    createdAfter?: number;
+    createdBefore?: number;
+    includeAllQueues?: boolean;
+    queueIds?: readonly string[] | null;
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryByTimeRange(query);
+  }
+
   queryRelations(query: {
     endpoint: 'source' | 'target';
     anchorDxns: readonly string[];

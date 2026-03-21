@@ -1,3 +1,5 @@
 {
-  "setup-worktree": ["pnpm install"]
+  "setup-worktree": [
+    "pnpm install"
+  ]
 }

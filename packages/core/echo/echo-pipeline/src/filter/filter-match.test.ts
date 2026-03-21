@@ -90,6 +90,16 @@ describe('filterMatch', () => {
     expect(filterMatchObject(filter.ast, OBJECT_2)).to.be.false;
     expect(filterMatchObject(filter.ast, OBJECT_3)).to.be.true;
   });
+
+  test('timestamp filter passes through (handled at index level)', () => {
+    expect(filterMatchObject(Filter.updatedAfter(Date.now() - 1000).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchObject(Filter.createdBefore(Date.now() + 1000).ast, OBJECT_1)).to.be.true;
+  });
+
+  test('and(type, timestamp) passes through timestamp part', () => {
+    const filter = Filter.and(Filter.type(TestSchema.Expando), Filter.updatedAfter(Date.now() - 1000));
+    expect(filterMatchObject(filter.ast, OBJECT_1)).to.be.true;
+  });
 });
 
 const OBJECT_1: MatchedObject = {

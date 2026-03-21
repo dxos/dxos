@@ -310,6 +310,43 @@ export const between = <T>(from: T, to: T): Filter<unknown> => {
   });
 };
 
+const _toUnixMs = (date: Date | number): number => (typeof date === 'number' ? date : date.getTime());
+
+/**
+ * Filter objects updated at or after the given time.
+ */
+export const updatedAfter = (date: Date | number): Any => {
+  return new FilterClass({ type: 'timestamp', field: 'updatedAt', operator: 'gte', value: _toUnixMs(date) });
+};
+
+/**
+ * Filter objects updated at or before the given time.
+ */
+export const updatedBefore = (date: Date | number): Any => {
+  return new FilterClass({ type: 'timestamp', field: 'updatedAt', operator: 'lte', value: _toUnixMs(date) });
+};
+
+/**
+ * Filter objects created at or after the given time.
+ */
+export const createdAfter = (date: Date | number): Any => {
+  return new FilterClass({ type: 'timestamp', field: 'createdAt', operator: 'gte', value: _toUnixMs(date) });
+};
+
+/**
+ * Filter objects created at or before the given time.
+ */
+export const createdBefore = (date: Date | number): Any => {
+  return new FilterClass({ type: 'timestamp', field: 'createdAt', operator: 'lte', value: _toUnixMs(date) });
+};
+
+/**
+ * Filter objects updated within the given time range (inclusive).
+ */
+export const updatedBetween = (from: Date | number, to: Date | number): Any => {
+  return and(updatedAfter(from), updatedBefore(to));
+};
+
 /**
  * Negate the filter.
  */

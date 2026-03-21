@@ -481,6 +481,38 @@ export class QueryExecutor extends Resource {
         break;
       }
 
+      case 'TimestampSelector': {
+        const beginIndexQuery = performance.now();
+        const queueIds = extractQueueIds(queues);
+        const metas = await this._runInRuntime(
+          this._indexEngine.queryByTimeRange({
+            spaceIds: spaces,
+            updatedAfter: step.selector.updatedAfter,
+            updatedBefore: step.selector.updatedBefore,
+            createdAfter: step.selector.createdAfter,
+            createdBefore: step.selector.createdBefore,
+            includeAllQueues: allQueuesFromSpaces,
+            queueIds,
+          }),
+        );
+        trace.indexHits = metas.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+        if (this._ctx.disposed) {
+          return { workingSet, trace };
+        }
+
+        const documentLoadStart = performance.now();
+        const results = await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += results.length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        workingSet.push(...results.filter(isNonNullable));
+        trace.objectCount = workingSet.length;
+
+        break;
+      }
+
       case 'TextSelector': {
         // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index.
         // TODO(dmaretskyi): nice to have matched text snippets/highlighting.
@@ -1376,6 +1408,8 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return filter.searchKind
         ? `Filter.textSearch(${JSON.stringify(filter.text)}, ${JSON.stringify(filter.searchKind)})`
         : `Filter.textSearch(${JSON.stringify(filter.text)})`;
+    case 'timestamp':
+      return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
     case 'not':
       return `Filter.not(${prettyFilter(filter.filter)})`;
     case 'and':

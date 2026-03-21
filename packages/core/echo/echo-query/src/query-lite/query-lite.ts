@@ -243,6 +243,46 @@ class FilterClass implements Filter$.Any {
     });
   }
 
+  static updatedAfter(date: Date | number): Filter$.Any {
+    return new FilterClass({
+      type: 'timestamp',
+      field: 'updatedAt',
+      operator: 'gte',
+      value: typeof date === 'number' ? date : date.getTime(),
+    });
+  }
+
+  static updatedBefore(date: Date | number): Filter$.Any {
+    return new FilterClass({
+      type: 'timestamp',
+      field: 'updatedAt',
+      operator: 'lte',
+      value: typeof date === 'number' ? date : date.getTime(),
+    });
+  }
+
+  static createdAfter(date: Date | number): Filter$.Any {
+    return new FilterClass({
+      type: 'timestamp',
+      field: 'createdAt',
+      operator: 'gte',
+      value: typeof date === 'number' ? date : date.getTime(),
+    });
+  }
+
+  static createdBefore(date: Date | number): Filter$.Any {
+    return new FilterClass({
+      type: 'timestamp',
+      field: 'createdAt',
+      operator: 'lte',
+      value: typeof date === 'number' ? date : date.getTime(),
+    });
+  }
+
+  static updatedBetween(from: Date | number, to: Date | number): Filter$.Any {
+    return FilterClass.and(FilterClass.updatedAfter(from), FilterClass.updatedBefore(to));
+  }
+
   static not<F extends Filter$.Any>(filter: F): Filter$.Filter<Filter$.Type<F>> {
     return new FilterClass({
       type: 'not',

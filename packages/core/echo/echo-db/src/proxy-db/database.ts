@@ -276,6 +276,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     EchoReactiveHandler.instance.setDatabase(target, this);
     EchoReactiveHandler.instance.saveRefs(target);
     this._coreDatabase.addCore(getObjectCore(obj), opts);
+    this._touchTimestamp(getObjectCore(obj).id);
     return obj;
   }
 
@@ -289,6 +290,23 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._coreDatabase.flush(opts);
+  }
+
+  private readonly _timestampCache = new Map<string, { createdAt?: Date; updatedAt?: Date }>();
+
+  getTimestamps(objectId: string): { createdAt?: Date; updatedAt?: Date } {
+    return this._timestampCache.get(objectId) ?? {};
+  }
+
+  /** @internal */
+  _touchTimestamp(objectId: string): void {
+    const now = new Date();
+    const existing = this._timestampCache.get(objectId);
+    if (existing) {
+      existing.updatedAt = now;
+    } else {
+      this._timestampCache.set(objectId, { createdAt: now, updatedAt: now });
+    }
   }
 
   async runMigrations(migrations: ObjectMigration[]): Promise<void> {

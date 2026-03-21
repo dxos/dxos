@@ -24,6 +24,7 @@ import {
   ObjectDatabaseId,
   ObjectDeletedId,
   type ObjectMeta,
+  ObjectTimestampsId,
   ObjectVersionId,
   type ParentId,
   RelationSourceDXNId,
@@ -36,7 +37,15 @@ import {
   type Version,
 } from '../common/types';
 
-export { ATTR_DELETED, ATTR_SELF_DXN, ObjectDatabaseId, ObjectDeletedId, ObjectVersionId, SelfDXNId };
+export {
+  ATTR_DELETED,
+  ATTR_SELF_DXN,
+  ObjectDatabaseId,
+  ObjectDeletedId,
+  ObjectTimestampsId,
+  ObjectVersionId,
+  SelfDXNId,
+};
 
 /**
  * Internal runtime representation of an object.

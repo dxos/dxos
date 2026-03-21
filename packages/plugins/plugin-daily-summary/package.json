@@ -1,0 +1,71 @@
+{
+  "name": "@dxos/plugin-daily-summary",
+  "version": "0.8.3",
+  "description": "Daily activity summary plugin",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "MIT",
+  "author": "DXOS.org",
+  "sideEffects": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/ai": "workspace:*",
+    "@dxos/app-framework": "workspace:*",
+    "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant": "workspace:*",
+    "@dxos/blueprints": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
+    "@dxos/echo": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/functions": "workspace:*",
+    "@dxos/functions-runtime": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/operation": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
+    "@dxos/util": "workspace:*",
+    "@effect-atom/atom": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/echo-db": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
+    "@dxos/storybook-utils": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@dxos/react-ui": "workspace:*",
+    "@effect-atom/atom-react": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -72,6 +72,11 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
       return false;
     }
 
+    case 'timestamp': {
+      // Timestamp filtering is handled at the index level; pass-through here.
+      return true;
+    }
+
     case 'not': {
       return !filterMatchObject(filter.filter, obj);
     }
@@ -148,6 +153,10 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
     // TODO: Implement text search.
     case 'text-search': {
       return false;
+    }
+
+    case 'timestamp': {
+      return true;
     }
 
     case 'not': {
