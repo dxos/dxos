@@ -88,11 +88,11 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
   ) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
-    const rootRef = useRef<HTMLDivElement>(null);
-    const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
 
     // Sync forwarded ref into rootRef when parent's ref is set by a descendant (e.g., BoardItem's Card.Root).
     // Then we can read rootRef.current only in the effects below.
+    const rootRef = useRef<HTMLDivElement>(null);
+    const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
     useLayoutEffect(() => {
       const el = forwardedRef && 'current' in forwardedRef ? (forwardedRef.current as HTMLDivElement | null) : null;
       if (el != null) {
