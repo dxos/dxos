@@ -31,21 +31,13 @@ const [ButtonGroupProvider, useButtonGroupContext] = createContext<ButtonGroupCo
 const Button = memo(
   forwardRef<HTMLButtonElement, ButtonProps>(
     (
-      {
-        classNames,
-        children,
-        density: propsDensity,
-        elevation: propsElevation,
-        variant = 'default',
-        asChild,
-        ...props
-      },
+      { classNames, children, density: densityProp, elevation: elevationProp, variant = 'default', asChild, ...props },
       ref,
     ) => {
       const { inGroup } = useButtonGroupContext(BUTTON_NAME);
       const { tx } = useThemeContext();
-      const elevation = useElevationContext(propsElevation);
-      const density = useDensityContext(propsDensity);
+      const elevation = useElevationContext(elevationProp);
+      const density = useDensityContext(densityProp);
       const Comp = asChild ? Slot : Primitive.button;
       return (
         <Comp

@@ -9,14 +9,17 @@ import * as Match from 'effect/Match';
 
 import { FormBuilder } from '@dxos/cli-util';
 import { Database, Filter } from '@dxos/echo';
-import { Function } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
 export type FunctionStatus = 'not imported' | 'up-to-date' | 'update available';
 
 /**
  * Determines the status of a deployed function relative to the space database.
  */
-export const getFunctionStatus = (fn: Function.Function, functions: Function.Function[]): FunctionStatus => {
+export const getFunctionStatus = (
+  fn: Operation.PersistentOperation,
+  functions: Operation.PersistentOperation[],
+): FunctionStatus => {
   const dbFunction = functions.find((f) => f.key === fn.key);
   if (!dbFunction) {
     return 'not imported';
@@ -31,7 +34,7 @@ export const getFunctionStatus = (fn: Function.Function, functions: Function.Fun
 /**
  * Pretty prints a function with ANSI colors.
  */
-export const printFunction = (fn: Function.Function, status?: FunctionStatus) => {
+export const printFunction = (fn: Operation.PersistentOperation, status?: FunctionStatus) => {
   return FormBuilder.make({ title: fn.id }).pipe(
     FormBuilder.set('key', fn.key),
     FormBuilder.set('name', fn.name),
@@ -85,9 +88,9 @@ export const printInvokeResult = (result: unknown) => {
  * Omits functions that are already up-to-date in the database.
  * Indicates whether a function will be imported (new) or updated (existing).
  */
-export const selectDeployedFunction = Effect.fn(function* (fns: Function.Function[]) {
+export const selectDeployedFunction = Effect.fn(function* (fns: Operation.PersistentOperation[]) {
   // Query database for existing functions to determine status
-  const dbFunctions = yield* Database.runQuery(Filter.type(Function.Function));
+  const dbFunctions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
 
   // Filter out functions that are already up-to-date
   const importableFunctions = fns.filter((fn) => {

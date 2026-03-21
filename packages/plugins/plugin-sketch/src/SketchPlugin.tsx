@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { Operation } from '@dxos/operation';
+import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 import { RefArray } from '@dxos/react-client/echo';
 
 import { AppGraphSerializer, OperationResolver, ReactSurface, SketchSettings } from './capabilities';
@@ -26,7 +27,16 @@ export const SketchPlugin = Plugin.define(meta).pipe(
         loadReferences: async (sketch: Sketch.Sketch) => await RefArray.loadAll([sketch.canvas]),
         serializer,
         comments: 'unanchored',
-        createObject: ((props) => Effect.sync(() => Sketch.make(props))) satisfies CreateObject,
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = Sketch.make(props);
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
+          })) satisfies CreateObject,
       },
     },
   }),

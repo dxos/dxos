@@ -14,7 +14,8 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Database, Filter, JsonSchema, Ref } from '@dxos/echo';
-import { Function, Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
 import { Cron, Enabled, Input } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction } from '../util';
@@ -37,7 +38,7 @@ export const timer = Command.make(
         onNone: () => selectFunction(),
         onSome: (id) => Effect.succeed(id),
       });
-      const functions = yield* Database.runQuery(Filter.type(Function.Function));
+      const functions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
       const fn = functions.find((fn) => fn.id === functionId);
       if (!fn) {
         return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
@@ -89,5 +90,5 @@ export const timer = Command.make(
 ).pipe(
   Command.withDescription('Create a timer trigger.'),
   Command.provide(({ spaceId }) => spaceLayer(spaceId, true)),
-  Command.provideEffectDiscard(() => withTypes(Function.Function, Trigger.Trigger)),
+  Command.provideEffectDiscard(() => withTypes(Operation.PersistentOperation, Trigger.Trigger)),
 );

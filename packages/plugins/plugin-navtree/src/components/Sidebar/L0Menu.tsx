@@ -102,36 +102,34 @@ const l0Breakpoints: Record<string, string> = {
   lg: 'hidden lg:grid',
 };
 
-const l0ItemRoot =
-  'group/l0item flex w-full justify-center items-center relative data[type!="collection"]:cursor-pointer dx-app-no-drag dx-focus-ring-group';
-
-const l0ItemContent = 'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm';
-
 const L0ItemRoot = memo(
-  forwardRef<HTMLElement, PropsWithChildren<L0ItemRootProps>>(
+  forwardRef<HTMLButtonElement, PropsWithChildren<L0ItemRootProps>>(
     ({ item, parent, path, onMouseEnter, children }, forwardedRef) => {
+      const { t } = useTranslation(meta.id);
       const { model } = useNavTreeContext();
       const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
       const { id, testId } = useAtomValue(model.itemProps(itemPath));
-      const type = l0ItemType(item);
-
-      const { t } = useTranslation(meta.id);
       const localizedString = toLocalizedString(item.properties.label, t);
 
+      const type = l0ItemType(item);
       const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
-      const rootProps =
-        type === 'tab'
-          ? { value: item.id, tabIndex: 0, onClick: handleClick, 'data-testid': testId, 'data-object-id': id }
-          : { onClick: handleClick, 'data-testid': testId, 'data-object-id': id };
 
       return (
         <Tooltip.Trigger asChild delayDuration={0} side='right' content={localizedString}>
           <Tabs.TabPrimitive
-            {...(rootProps as any)}
+            className={mx(
+              'group/l0item flex w-full justify-center items-center relative',
+              'dx-app-no-drag dx-focus-ring-group data[type!="collection"]:cursor-pointer',
+              l0Breakpoints[item.properties.l0Breakpoint],
+            )}
+            tabIndex={type === 'tab' ? 0 : undefined}
             data-type={type}
-            className={mx(l0ItemRoot, l0Breakpoints[item.properties.l0Breakpoint])}
-            ref={forwardedRef}
+            data-testid={testId}
+            data-object-id={id}
+            value={item.id}
+            onClick={handleClick}
             onMouseEnter={onMouseEnter}
+            ref={forwardedRef}
           >
             {children}
           </Tabs.TabPrimitive>
@@ -145,7 +143,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) =>
   <div
     role='none'
     className={mx(
-      'hidden group-aria-selected/l0item:block absolute start-0 inset-y-2 w-1 bg-accent-surface rounded-ie',
+      'hidden group-aria-selected/l0item:block absolute start-0 h-6 w-1.5 bg-accent-surface rounded-sm',
       classNames,
     )}
   />
@@ -154,13 +152,12 @@ export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) =>
 // TODO(burdon): Factor out pinned (non-draggable) items.
 const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L0ItemProps) => {
   const { t } = useTranslation(meta.id);
-  const itemElement = useRef<HTMLElement | null>(null);
+  const itemElement = useRef<HTMLButtonElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const localizedString = toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
 
   useLayoutEffect(() => {
-    // NOTE(thure): This is copied from StackItem, perhaps this should be DRYed out.
     if (!itemElement.current || !onRearrange) {
       return;
     }
@@ -224,7 +221,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
         data-frame={true}
         {...(hue && { style: { background: `var(--color-${hue}-surface)` } })}
         className={mx(
-          l0ItemContent,
+          'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm',
           pinned
             ? 'p-2 group-hover/l0item:bg-active-surface'
             : 'w-(--dx-l0-avatar-size) h-(--dx-l0-avatar-size) bg-active-surface',
@@ -243,13 +240,15 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const { t } = useTranslation(meta.id);
-  const type = l0ItemType(item);
+
+  // Actions.
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
     const hueFgStyle = hue && { style: { color: `var(--color-${hue}-surface-text)` } };
     return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
   }
 
+  const type = l0ItemType(item);
   if (type === 'tab' && item.properties.disposition !== 'pin-end') {
     const hue = item.properties.hue ?? null;
     const localizedString = toLocalizedString(item.properties.label, t);
@@ -319,7 +318,9 @@ export const L0Menu = ({
       classNames={[
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
         'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
-        '!w-(--dx-l0-size) bg-toolbar-surface border-e border-subdued-separator dx-app-drag pb-[env(safe-area-inset-bottom)]',
+        'w-(--dx-l0-size) bg-toolbar-surface dx-app-drag pb-[env(safe-area-inset-bottom)]',
+        '[body[data-platform="macos"]_&]:pt-[30px]',
+        '[body[data-platform="ios"]_&]:pt-[max(env(safe-area-inset-top),0.25rem)]',
       ]}
     >
       {/* TODO(wittjosiah): Use L0Item trigger. */}
@@ -333,27 +334,18 @@ export const L0Menu = ({
       </Menu.Root>
 
       {/* Space list. */}
-      <ScrollArea.Root thin orientation='vertical'>
-        <ScrollArea.Viewport>
-          <div
-            role='none'
-            className={mx([
-              'flex flex-col gap-2 pt-1',
-              '[body[data-platform="macos"]_&]:py-[30px]',
-              '[body[data-platform="ios"]_&]:py-[max(env(safe-area-inset-top),0.25rem)]',
-            ])}
-          >
-            {topLevelItems.map((item) => (
-              <L0Item
-                key={item.id}
-                item={item}
-                parent={parent}
-                path={path}
-                onItemHover={onItemHover}
-                {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
-              />
-            ))}
-          </div>
+      <ScrollArea.Root margin thin orientation='vertical'>
+        <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
+          {topLevelItems.map((item) => (
+            <L0Item
+              key={item.id}
+              item={item}
+              parent={parent}
+              path={path}
+              onItemHover={onItemHover}
+              {...(hasRearrangeableItems && { onRearrange: handleRearrange })}
+            />
+          ))}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
 

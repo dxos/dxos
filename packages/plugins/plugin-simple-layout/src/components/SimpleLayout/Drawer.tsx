@@ -49,12 +49,12 @@ export const Drawer = () => {
 
   // Get drawer actions (tabs + toolbar buttons).
   const { actions, onAction } = useDrawerActions(DRAWER_NAME);
-  const menu = useMenuActions(actions);
+  const menuActions = useMenuActions(actions);
 
   return (
     <Panel.Root>
       <Panel.Toolbar>
-        <Menu.Root {...menu} alwaysActive onAction={onAction}>
+        <Menu.Root {...menuActions} alwaysActive onAction={onAction}>
           <Menu.Toolbar />
         </Menu.Root>
       </Panel.Toolbar>

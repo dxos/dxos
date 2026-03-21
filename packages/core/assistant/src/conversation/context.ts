@@ -318,13 +318,4 @@ export class AiContextService extends Context.Tag('@dxos/assistant/AiContextServ
       return binder.getObjects().filter(Obj.instanceOf(type));
     });
   };
-
-  /**
-   * Glorified type cast until we figure out function service typing.
-   * For context, the AiContextService is provided to functions called from tool calls, but it's not implemented in types yet.
-   * @deprecated
-   */
-  static fixFunctionHandlerType = <A, E, R>(
-    eff: Effect.Effect<A, E, R>,
-  ): Effect.Effect<A, E, Exclude<R, AiContextService>> => eff as any;
 }

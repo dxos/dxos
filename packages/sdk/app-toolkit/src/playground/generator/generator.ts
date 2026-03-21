@@ -19,7 +19,8 @@ export const createPluginId = (id: string) => `org.dxos.test.generator.${id}`;
 export const createAlertOperation = (id: string) =>
   Operation.make({
     meta: { key: `${createPluginId(id)}.operation.alert`, name: 'Alert' },
-    schema: { input: Schema.Void, output: Schema.Void },
+    input: Schema.Void,
+    output: Schema.Void,
   });
 
 export const createNumberPlugin = (id: string) => {

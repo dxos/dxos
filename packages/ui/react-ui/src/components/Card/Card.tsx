@@ -203,9 +203,8 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(({ children, role, icon
   const { className, ...rest } = composableProps(props);
   return (
     <Column.Row {...rest} role={role ?? 'none'} classNames={className} ref={forwardedRef}>
-      {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
+      {(icon && <CardIcon classNames='text-subdued' icon={icon} size={4} />) || <div />}
       {children}
-      <div />
     </Column.Row>
   );
 });
@@ -318,9 +317,9 @@ const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onCl
   const { tx } = useThemeContext();
   return (
     <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
-      {icon ? <CardIcon classNames='text-subdued' icon={icon} /> : <div />}
+      {icon ? <CardIcon classNames='text-subdued' icon={icon} size={4} /> : <div />}
       <span className={tx('card.action-label', {}, !actionIcon ? 'col-span-2' : undefined)}>{label}</span>
-      {actionIcon && <CardIcon icon={actionIcon} />}
+      {actionIcon && <CardIcon icon={actionIcon} size={4} />}
     </Button>
   );
 };

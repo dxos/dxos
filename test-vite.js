@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { renderToStaticMarkup } from 'react-dom/server';
-import React from 'react';
 import { mx } from '@dxos/ui-theme';
 const attentionGlyphStyles = mx(
   'inline-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors',

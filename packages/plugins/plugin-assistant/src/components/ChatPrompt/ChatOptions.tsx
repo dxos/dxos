@@ -84,7 +84,7 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
                   <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset px-0!'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                   </Tabs.Tabpanel>
-                  <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-form-chrome border-y border-subdued-separator order-last'>
+                  <Tabs.Tablist classNames='justify-center p-form-chrome border-y border-subdued-separator order-last'>
                     <Tabs.IconTab
                       value='blueprints'
                       icon='ph--blueprint--regular'
@@ -231,7 +231,7 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
 
       <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 px-form-chrome mb-form-chrome'>
         <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
-          <Select.TriggerButton density='fine' placeholder={t('type filter placeholder')} />
+          <Select.TriggerButton placeholder={t('type filter placeholder')} />
           <Select.Portal>
             <Select.Content>
               <Select.ScrollUpButton />

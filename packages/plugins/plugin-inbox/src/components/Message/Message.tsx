@@ -3,10 +3,10 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useMemo, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef, type PropsWithChildren, useMemo, useState } from 'react';
 
 import { type DXN } from '@dxos/echo';
-import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { ComposableProps, Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
@@ -17,7 +17,7 @@ import {
   decorateMarkdown,
   preview,
 } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
@@ -82,19 +82,19 @@ MessageRoot.displayName = 'Message.Root';
 
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
-type MessageToolbarProps = ThemedClassName<ComponentPropsWithoutRef<typeof Menu.Root>>;
+type MessageToolbarProps = ComposableProps<HTMLDivElement>;
 
-export const MessageToolbar = ({ classNames, ...props }: MessageToolbarProps) => {
+const MessageToolbar = forwardRef<HTMLDivElement, MessageToolbarProps>((props, forwardedRef) => {
   const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
-  const actions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
+  const menuActions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
 
   return (
-    <Menu.Root {...actions} attendableId={attendableId}>
-      <Menu.Toolbar {...props} classNames={classNames} />
+    <Menu.Root {...menuActions} attendableId={attendableId}>
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
     </Menu.Root>
   );
-};
+});
 
 MessageToolbar.displayName = MESSAGE_TOOLBAR_NAME;
 

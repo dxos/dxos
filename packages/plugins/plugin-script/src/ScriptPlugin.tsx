@@ -10,7 +10,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 
 import {
   AppGraphBuilder,
@@ -38,10 +38,15 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (script: Script.Script) => await Ref.Array.loadAll([script.source]),
           inputSchema: ScriptOperation.ScriptProps,
-          createObject: ((props) =>
+          createObject: ((props, options) =>
             Effect.gen(function* () {
               const { object } = yield* Operation.invoke(ScriptOperation.CreateScript, props);
-              return object;
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
             })) satisfies CreateObject,
         },
       },
@@ -51,7 +56,16 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
           icon: Annotation.IconAnnotation.get(Notebook.Notebook).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Notebook.Notebook).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: ScriptOperation.NotebookProps,
-          createObject: ((props) => Effect.sync(() => Notebook.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Notebook.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
     ],

@@ -124,7 +124,6 @@ const ObjectsTreeRow = ({
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <IconButton
-                  density='coarse'
                   classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'

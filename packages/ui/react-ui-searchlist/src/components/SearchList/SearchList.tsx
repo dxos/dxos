@@ -19,6 +19,7 @@ import React, {
 } from 'react';
 
 import {
+  ComposableProps,
   type Density,
   type Elevation,
   Icon,
@@ -29,7 +30,7 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -232,17 +233,15 @@ SearchListRoot.displayName = 'SearchList.Root';
 // Content
 //
 
-type SearchListContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+type SearchListContentProps = ComposableProps<HTMLDivElement, ThemedClassName<ComponentPropsWithoutRef<'div'>>>;
 
-const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
-    return (
-      <div role='none' {...props} className={mx('dx-container flex flex-col gap-3', classNames)} ref={forwardedRef}>
-        {children}
-      </div>
-    );
-  },
-);
+const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(({ children, ...props }, forwardedRef) => {
+  return (
+    <div {...composableProps(props, { role: 'none', className: 'dx-expander flex flex-col gap-3' })} ref={forwardedRef}>
+      {children}
+    </div>
+  );
+});
 
 SearchListContent.displayName = 'SearchList.Content';
 
@@ -380,12 +379,12 @@ SearchListInput.displayName = 'SearchList.Input';
 // Viewport
 //
 
-type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
+type SearchListViewportProps = ComposableProps<HTMLDivElement>;
 
 const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
-  ({ classNames, children }, forwardedRef) => {
+  ({ children, ...props }, forwardedRef) => {
     return (
-      <ScrollArea.Root role='listbox' classNames={mx(classNames)} thin ref={forwardedRef}>
+      <ScrollArea.Root {...composableProps(props)} role='listbox' thin ref={forwardedRef}>
         <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
       </ScrollArea.Root>
     );

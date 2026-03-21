@@ -3,7 +3,8 @@
 //
 
 import { Obj } from '@dxos/echo';
-import { type Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Operation } from '@dxos/operation';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -35,7 +36,7 @@ export const getFunctionUrl = ({
 
 export const updateFunctionMetadata = (
   script: Script.Script,
-  storedFunction: Function.Function,
+  storedFunction: Operation.PersistentOperation,
   meta: any,
   functionId: string,
 ) => {

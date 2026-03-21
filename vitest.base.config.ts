@@ -5,10 +5,9 @@
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react-swc';
 import path, { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
-import { defineConfig, defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/config';
+import { defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/config';
 import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
 

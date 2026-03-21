@@ -25,7 +25,6 @@ import {
   type Metadata,
 } from '../../components';
 import { meta } from '../../meta';
-import { SpaceOperation } from '../../types';
 
 export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
 
@@ -105,23 +104,19 @@ export const CreateObjectDialog = ({
 
         const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
         invariant(db, 'Missing database');
-        const object = yield* metadata.createObject(data, { db });
-        if (Obj.isObject(object) && !Obj.instanceOf(Type.PersistentType, object)) {
-          const { subject } = yield* operationInvoker.invoke(SpaceOperation.AddObject, {
-            target,
-            object,
-            hidden: !Obj.instanceOf(Collection.Collection, object),
-            targetNodeId,
+        const result = yield* metadata.createObject(data, {
+          db,
+          target,
+          targetNodeId,
+        });
+        const shouldNavigate = _shouldNavigate ?? (() => true);
+        if (result.subject.length > 0 && shouldNavigate(result.object)) {
+          yield* operationInvoker.invoke(LayoutOperation.Open, {
+            subject: [...result.subject],
           });
-          const shouldNavigate = _shouldNavigate ?? (() => true);
-          if (shouldNavigate(object)) {
-            yield* operationInvoker.invoke(LayoutOperation.Open, {
-              subject,
-            });
-          }
-
-          onCreateObject?.(object);
         }
+
+        onCreateObject?.(result.object);
       }).pipe(
         Effect.provideService(Capability.Service, manager.capabilities),
         Effect.provideService(Operation.Service, operationInvoker),

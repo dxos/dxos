@@ -192,13 +192,10 @@ export default Capability.makeModule(
       //
       OperationResolver.make({
         operation: LayoutOperation.SetLayoutMode,
-        filter: (input) => {
-          if ('mode' in input) {
-            return isLayoutMode(input.mode);
-          }
-          return true;
-        },
         handler: Effect.fnUntraced(function* (input) {
+          if ('mode' in input && !isLayoutMode(input.mode)) {
+            return;
+          }
           const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
           const deck = yield* DeckCapabilities.getDeck();
 
