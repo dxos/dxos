@@ -3,3 +3,5 @@
 //
 
 export * as Process from './Process';
+export { ProcessManagerImpl } from './process-manager-impl';
+export { StorageService } from './StorageService';

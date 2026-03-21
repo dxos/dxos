@@ -12,21 +12,116 @@ import * as Schema from 'effect/Schema';
 import type * as Option from 'effect/Option';
 import type * as Exit from 'effect/Exit';
 import type * as Context from 'effect/Context';
-import type { NoExcessProperties } from 'effect/Types';
-import * as Deferred from 'effect/Deferred';
+import type * as Types from 'effect/Types';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
+
 /**
- * Running process.
+ * A running process.
+ *
+ * `handleInput` is called for every input submitted to the process.
+ * `tick` is called initially on freshly spawned process, and to continue suspended execution.
+ * `handleInput` and `tick` can be called concurrently.
+ *
+ * Outcomes:
+ * - Done - process has completed execution.
+ * - Resume - process execution should be resumed as soon as possible. Useful for splitting long-running operations in serverless environments.
+ * - Suspend - process should be suspended until the next input is submitted.
+ *
+ * In case of conflicting outcomes: Resume takes precedence over Suspend, and Suspend takes precedence over Done.
+ *
+ * Resume outcome signals to the runtime that the process should be resumed by calling the `tick` method.
+ * `tick` method can run in indefinite loop, by returning a Resume outcome.
+ *
+ * Example execution flow:
+ *
+ * ```
+ * spawn -> tick -> handleInput -> handleInput -> tick -> tick -> done
+ * ```
  */
 export interface Process<I, O> {
-  handleInput(input: I): Effect.Effect<void>;
+  /**
+   * Called when there's input available to process.
+   *
+   * The function can be called in parallel.
+   *
+   * @returns A signal indicating to the runtime whether the process is finished, or should be resumed later.
+   * @throws Throwing in the handler will terminate the process with an error.
+   *
+   * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
+   */
+  handleInput(input: I): Effect.Effect<Outcome>;
 
-  readonly outputs: Stream.Stream<O>;
+  /**
+   * Called when the process is spawned or resumed from a previosly suspended state.
+   *
+   * @returns A signal indicating to the runtime whether the process is finished, or should be resumed later.
+   * @throws Throwing in the handler will terminate the process with an error.
+   *
+   * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
+   */
+  tick(): Effect.Effect<Outcome>;
 }
 
-export interface ProcessContext {
+export interface ProcessContext<I, O> {
   readonly id: ID;
+
+  submitOutput(output: O): void;
 }
+
+const OutcomeTypeId = '~@dxos/functions-runtime/Outcome' as const;
+export type OutcomeTypeId = typeof OutcomeTypeId;
+
+/**
+ * Process is done.
+ */
+export type OutcomeDone = {
+  readonly [OutcomeTypeId]: OutcomeTypeId;
+  readonly _tag: 'done';
+};
+
+export const OutcomeDone: OutcomeDone = {
+  [OutcomeTypeId]: OutcomeTypeId,
+  _tag: 'done',
+};
+
+export const isOutcomeDone = (result: Outcome): result is OutcomeDone =>
+  result[OutcomeTypeId] === OutcomeTypeId && result._tag === 'done';
+
+/**
+ * Process should be suspended until the next input is submitted.
+ */
+export type OutcomeSuspend = {
+  readonly [OutcomeTypeId]: OutcomeTypeId;
+  readonly _tag: 'suspend';
+};
+
+export const OutcomeSuspend: OutcomeSuspend = {
+  [OutcomeTypeId]: OutcomeTypeId,
+  _tag: 'suspend',
+};
+
+export const isOutcomeSuspend = (result: Outcome): result is OutcomeSuspend =>
+  result[OutcomeTypeId] === OutcomeTypeId && result._tag === 'suspend';
+
+/**
+ * Process execution should be resumed as soon as possible.
+ */
+export type OutcomeResume = {
+  readonly [OutcomeTypeId]: OutcomeTypeId;
+  readonly _tag: 'resume';
+};
+
+export const OutcomeResume: OutcomeResume = {
+  [OutcomeTypeId]: OutcomeTypeId,
+  _tag: 'resume',
+};
+
+export const isOutcomeResume = (result: Outcome): result is OutcomeResume =>
+  result[OutcomeTypeId] === OutcomeTypeId && result._tag === 'resume';
+
+export type Outcome = OutcomeDone | OutcomeSuspend | OutcomeResume;
+
+export const isOutcome = (result: Outcome): result is Outcome => result[OutcomeTypeId] === OutcomeTypeId;
 
 export const ExecutableTypeId = '~@dxos/functions-runtime/Executable' as const;
 export type ExecutableTypeId = typeof ExecutableTypeId;
@@ -43,7 +138,7 @@ export interface Executable<I, O, R = never> {
   /**
    * Create new process of this executable.
    */
-  run(ctx: ProcessContext): Effect.Effect<Process<I, O>, never, Scope.Scope | R>;
+  run(ctx: ProcessContext<I, O>): Effect.Effect<Process<I, O>, never, Scope.Scope | R>;
 }
 
 export interface MakeProcessFactoryOpts {
@@ -52,10 +147,10 @@ export interface MakeProcessFactoryOpts {
   readonly services: readonly Context.Tag<any, any>[];
 }
 
-export const makeExecutable = <const Opts extends NoExcessProperties<MakeProcessFactoryOpts, Opts>>(
+export const makeExecutable = <const Opts extends Types.NoExcessProperties<MakeProcessFactoryOpts, Opts>>(
   opts: Opts,
   run: (
-    ctx: ProcessContext,
+    ctx: ProcessContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
   ) => Effect.Effect<
     Process<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
     never,
@@ -85,29 +180,25 @@ export const makeOperationExecutable = <const Op extends Operation.Definition.An
     },
     (ctx) =>
       Effect.gen(function* () {
-        const latch = yield* Deferred.make<Operation.Definition.Input<Op>>();
-
         const runtime = yield* Effect.runtime<Operation.Definition.Services<Op>>();
 
-        const outputs = Stream.fromEffect<Operation.Definition.Output<Op>, never, never>(
-          Effect.gen(function* () {
-            const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
-
-            const input = yield* latch;
-
-            const output = yield* opHandler.handler(input).pipe(Effect.orDie, Effect.provide(runtime)) as Effect.Effect<
-              Operation.Definition.Output<Op>,
-              never,
-              never
-            >;
-
-            return output;
-          }),
-        );
-
         return {
-          handleInput: Deferred.complete(latch),
-          outputs,
+          handleInput: (input: Operation.Definition.Input<Op>) =>
+            Effect.gen(function* () {
+              const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
+              const output = yield* opHandler
+                .handler(input)
+                .pipe(Effect.orDie, Effect.provide(runtime)) as Effect.Effect<
+                Operation.Definition.Output<Op>,
+                never,
+                never
+              >;
+
+              ctx.submitOutput(output);
+              return OutcomeDone as Outcome;
+            }),
+
+          tick: () => Effect.succeed(OutcomeSuspend as Outcome),
         };
       }),
   );
@@ -115,8 +206,6 @@ export const makeOperationExecutable = <const Op extends Operation.Definition.An
 export namespace Executable {
   export type Any = Executable<any, any>;
 }
-
-///////
 
 export enum State {
   RUNNING = 'running',
