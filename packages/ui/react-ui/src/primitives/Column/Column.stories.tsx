@@ -17,7 +17,7 @@ const List = () => {
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
           <Input.Root key={i}>
-            <Input.TextInput value={`Item ${i}`} />
+            <Input.TextInput value={`Item ${i}`} readOnly />
           </Input.Root>
         ))}
       </ScrollArea.Viewport>
@@ -50,7 +50,7 @@ const DefaultStory = () => {
         <div className='flex flex-col gap-2'>
           {Array.from({ length: 100 }).map((_, i) => (
             <Input.Root key={i}>
-              <Input.TextInput value={`Item ${i}`} />
+              <Input.TextInput value={`Item ${i}`} readOnly />
             </Input.Root>
           ))}
         </div>
@@ -89,7 +89,7 @@ const InputList = ({ items = 50 }: { items?: number }) => (
   <div className='flex flex-col gap-2'>
     {Array.from({ length: items }).map((_, index) => (
       <Input.Root key={index}>
-        <Input.TextInput value={`Item ${index + 1}`} />
+        <Input.TextInput value={`Item ${index + 1}`} readOnly />
       </Input.Root>
     ))}
   </div>
