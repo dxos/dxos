@@ -11,9 +11,12 @@ import type { Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
 import type * as Option from 'effect/Option';
 import type * as Exit from 'effect/Exit';
-import type * as Context from 'effect/Context';
+import * as Context from 'effect/Context';
 import type * as Types from 'effect/Types';
+
 import { Operation, OperationHandlerSet } from '@dxos/operation';
+
+import type { ServiceNotAvailableError } from '../errors';
 
 /**
  * A running process.
@@ -123,6 +126,15 @@ export type Outcome = OutcomeDone | OutcomeSuspend | OutcomeResume;
 
 export const isOutcome = (result: Outcome): result is Outcome => result[OutcomeTypeId] === OutcomeTypeId;
 
+/**
+ * Merge two outcomes using precedence: resume > suspend > done.
+ */
+export const mergeOutcomes = (left: Outcome, right: Outcome): Outcome => {
+  if (isOutcomeResume(left) || isOutcomeResume(right)) return OutcomeResume;
+  if (isOutcomeSuspend(left) || isOutcomeSuspend(right)) return OutcomeSuspend;
+  return OutcomeDone;
+};
+
 export const ExecutableTypeId = '~@dxos/functions-runtime/Executable' as const;
 export type ExecutableTypeId = typeof ExecutableTypeId;
 
@@ -203,6 +215,41 @@ export const makeOperationExecutable = <const Op extends Operation.Definition.An
       }),
   );
 
+/**
+ * Create an executable that folds inputs into an accumulator, similar to `Array.reduce` but with Effect.
+ *
+ * The reducer receives the current accumulator and each input, returning the new accumulator and an Outcome.
+ * When the reducer returns `OutcomeDone`, `finalize` converts the accumulator to the final output.
+ */
+export const makeAggregationExecutable = <Acc, I, O>(opts: {
+  readonly input: Schema.Schema.AnyNoContext;
+  readonly output: Schema.Schema.AnyNoContext;
+  readonly initial: Acc;
+  readonly reducer: (accumulator: Acc, input: I) => Effect.Effect<readonly [Acc, Outcome]>;
+  readonly finalize: (accumulator: Acc) => O;
+}): Executable<I, O> =>
+  makeExecutable(
+    { input: opts.input, output: opts.output, services: [] as const },
+    (ctx) =>
+      Effect.sync(() => {
+        let accumulator = opts.initial;
+
+        return {
+          handleInput: (input: I) =>
+            Effect.gen(function* () {
+              const [newAcc, outcome] = yield* opts.reducer(accumulator, input);
+              accumulator = newAcc;
+              if (isOutcomeDone(outcome)) {
+                ctx.submitOutput(opts.finalize(accumulator));
+              }
+              return outcome;
+            }),
+
+          tick: () => Effect.succeed(OutcomeSuspend as Outcome),
+        };
+      }),
+  );
+
 export namespace Executable {
   export type Any = Executable<any, any>;
 }
@@ -242,7 +289,15 @@ export namespace Handle {
 }
 
 export interface Manager {
-  spawn<I, O>(factory: Executable<I, O>): Effect.Effect<Handle<I, O>>;
+  spawn<I, O>(factory: Executable<I, O>): Effect.Effect<Handle<I, O>, ServiceNotAvailableError>;
   attach<I, O>(id: ID): Effect.Effect<Handle<I, O>>;
   list(): Effect.Effect<readonly Handle.Any[]>;
 }
+
+/**
+ * Tag for the ProcessManager service.
+ */
+export class ProcessManager extends Context.Tag('@dxos/functions-runtime/ProcessManager')<
+  ProcessManager,
+  Manager
+>() {}

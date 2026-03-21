@@ -27,12 +27,16 @@ export class StorageService extends Context.Tag('@dxos/functions-runtime/Storage
 
     /** List all keys, optionally filtered by prefix. */
     list(prefix?: string): Effect.Effect<readonly string[]>;
+
+    /** Remove all keys managed by this scoped store. */
+    clear(): Effect.Effect<void>;
   }
 >() {
   static get = Effect.serviceFunctionEffect(StorageService, (_) => _.get);
   static set = Effect.serviceFunctionEffect(StorageService, (_) => _.set);
   static delete = Effect.serviceFunctionEffect(StorageService, (_) => _.delete);
   static list = Effect.serviceFunctionEffect(StorageService, (_) => _.list);
+  static clear = Effect.serviceFunctionEffect(StorageService, (_) => _.clear);
 
   /**
    * Create a StorageService scoped under `prefix` in the given backing store.
@@ -65,6 +69,13 @@ export class StorageService extends Context.Tag('@dxos/functions-runtime/Storage
           }
           return keys.filter((key) => key.startsWith(keyPrefix));
         }),
+
+      clear: () =>
+        Effect.forEach([...knownKeys], (key) => prefixed.remove(key)).pipe(
+          Effect.tap(() => Effect.sync(() => knownKeys.clear())),
+          Effect.asVoid,
+          Effect.orDie,
+        ),
     };
   }
 }

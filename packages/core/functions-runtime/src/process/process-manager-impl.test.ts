@@ -6,6 +6,8 @@ import { Registry } from '@effect-atom/atom';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
+import * as Context from 'effect/Context';
+import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
@@ -14,9 +16,76 @@ import * as Stream from 'effect/Stream';
 
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
+import { ServiceNotAvailableError } from '../errors';
 import * as Process from './Process';
 import { ProcessManagerImpl } from './process-manager-impl';
+import * as ServiceResolver from './ServiceResolver';
 import * as StorageService from './StorageService';
+
+//
+// Test services
+//
+
+class DatabaseService extends Context.Tag('@test/DatabaseService')<
+  DatabaseService,
+  {
+    query(sql: string): Effect.Effect<readonly string[]>;
+    execute(sql: string): Effect.Effect<void>;
+  }
+>() {}
+
+const makeInMemoryDatabase = () => {
+  const rows: string[] = [];
+  return {
+    service: {
+      query: (sql: string) => Effect.sync(() => rows.filter((row) => row.includes(sql))),
+      execute: (sql: string) =>
+        Effect.sync(() => {
+          rows.push(sql);
+        }),
+    } satisfies Context.Tag.Service<DatabaseService>,
+    rows,
+  };
+};
+
+//
+// Operations that require DatabaseService
+//
+
+const InsertRow = Operation.make({
+  meta: { key: 'test/insert-row', name: 'InsertRow' },
+  input: Schema.String,
+  output: Schema.String,
+  services: [DatabaseService],
+});
+
+const InsertRowHandler = Operation.withHandler(
+  InsertRow,
+  Effect.fn(function* (input) {
+    const db = yield* DatabaseService;
+    yield* db.execute(input);
+    return `inserted: ${input}`;
+  }),
+);
+
+const QueryRows = Operation.make({
+  meta: { key: 'test/query-rows', name: 'QueryRows' },
+  input: Schema.String,
+  output: Schema.Array(Schema.String),
+  services: [DatabaseService],
+});
+
+const QueryRowsHandler = Operation.withHandler(
+  QueryRows,
+  Effect.fn(function* (input) {
+    const db = yield* DatabaseService;
+    return yield* db.query(input);
+  }),
+);
+
+//
+// Basic operations (no extra services)
+//
 
 const Double = Operation.make({
   meta: { key: 'test/double', name: 'Double' },
@@ -49,6 +118,14 @@ const makeOperationExecutables = () => {
   return {
     double: Process.makeOperationExecutable(Double, handlerSet),
     echo: Process.makeOperationExecutable(Echo, handlerSet),
+  };
+};
+
+const makeDbOperationExecutables = () => {
+  const handlerSet = OperationHandlerSet.make(InsertRowHandler, QueryRowsHandler);
+  return {
+    insertRow: Process.makeOperationExecutable(InsertRow, handlerSet),
+    queryRows: Process.makeOperationExecutable(QueryRows, handlerSet),
   };
 };
 
@@ -94,9 +171,32 @@ const makeStorageExecutable = () =>
       }),
   );
 
-const makeManager = () => {
+interface Gate {
+  readonly latch: Deferred.Deferred<Process.Outcome>;
+  readonly inputReceived: Deferred.Deferred<void>;
+}
+
+const makeControllableExecutable = (gates: Gate[]) => {
+  let gateIndex = 0;
+  return Process.makeExecutable(
+    { input: Schema.String, output: Schema.String, services: [] },
+    (ctx) =>
+      Effect.succeed({
+        handleInput: (input: string) =>
+          Effect.gen(function* () {
+            const gate = gates[gateIndex++];
+            yield* Deferred.succeed(gate.inputReceived, undefined);
+            const outcome = yield* gate.latch;
+            ctx.submitOutput(`processed: ${input}`);
+            return outcome;
+          }),
+        tick: () => Effect.succeed(Process.OutcomeSuspend as Process.Outcome),
+      }),
+  );
+};
+
+const makeKvStore = () => {
   const store = new Map<string, string>();
-  const registry = Registry.make();
   const kvStore = KeyValueStore.make({
     get: (key: string) => Effect.succeed(Option.fromNullable(store.get(key))),
     getUint8Array: (key: string) =>
@@ -112,8 +212,21 @@ const makeManager = () => {
     clear: Effect.sync(() => store.clear()),
     size: Effect.sync(() => store.size),
   });
-  const manager = new ProcessManagerImpl({ registry, kvStore });
+  return { store, kvStore };
+};
+
+const makeManager = (serviceResolver?: ServiceResolver.ServiceResolver) => {
+  const { store, kvStore } = makeKvStore();
+  const registry = Registry.make();
+  const manager = new ProcessManagerImpl({ registry, kvStore, serviceResolver });
   return { registry, kvStore, store, manager };
+};
+
+const makeGate = function* () {
+  return {
+    latch: yield* Deferred.make<Process.Outcome>(),
+    inputReceived: yield* Deferred.make<void>(),
+  } satisfies Gate;
 };
 
 describe('ProcessManagerImpl', () => {
@@ -273,47 +386,463 @@ describe('ProcessManagerImpl', () => {
     }),
   );
 
-  it.effect(
-    'provides scoped storage to processes',
-    Effect.fn(function* ({ expect }) {
-      const { store, manager } = makeManager();
-      const executable = makeStorageExecutable() as Process.Executable<{ key: string; value: string }, string>;
+  describe('storage', () => {
+    it.effect(
+      'provides scoped storage to processes',
+      Effect.fn(function* ({ expect }) {
+        const { store, manager } = makeManager();
+        const executable = makeStorageExecutable() as Process.Executable<{ key: string; value: string }, string>;
 
-      const handle = yield* manager.spawn(executable);
+        const handle = yield* manager.spawn(executable);
 
-      const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
-      yield* handle.submitInput({ key: 'greeting', value: 'hello' });
-      const outputs = yield* Fiber.join(outputFiber);
-      expect(Chunk.toReadonlyArray(outputs)).toEqual(['hello']);
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+        yield* handle.submitInput({ key: 'greeting', value: 'hello' });
+        const outputs = yield* Fiber.join(outputFiber);
+        expect(Chunk.toReadonlyArray(outputs)).toEqual(['hello']);
 
-      const rawKeys = [...store.keys()];
-      expect(rawKeys).toHaveLength(1);
-      expect(rawKeys[0]).toContain(`process/${handle.id}/greeting`);
-    }),
-  );
+        expect([...store.keys()]).toHaveLength(0);
+      }),
+    );
 
-  it.effect(
-    'isolates storage between processes',
-    Effect.fn(function* ({ expect }) {
-      const { store, manager } = makeManager();
-      const executable = makeStorageExecutable() as Process.Executable<{ key: string; value: string }, string>;
+    it.effect(
+      'isolates storage between processes',
+      Effect.fn(function* ({ expect }) {
+        const { store, manager } = makeManager();
+        const executable = makeStorageExecutable() as Process.Executable<{ key: string; value: string }, string>;
 
-      const handle1 = yield* manager.spawn(executable);
-      const handle2 = yield* manager.spawn(executable);
+        const handle1 = yield* manager.spawn(executable);
+        const handle2 = yield* manager.spawn(executable);
 
-      const fiber1 = yield* Stream.runCollect(handle1.subscribeOutputs()).pipe(Effect.fork);
-      const fiber2 = yield* Stream.runCollect(handle2.subscribeOutputs()).pipe(Effect.fork);
+        const fiber1 = yield* Stream.runCollect(handle1.subscribeOutputs()).pipe(Effect.fork);
+        const fiber2 = yield* Stream.runCollect(handle2.subscribeOutputs()).pipe(Effect.fork);
 
-      yield* handle1.submitInput({ key: 'data', value: 'from-1' });
-      yield* handle2.submitInput({ key: 'data', value: 'from-2' });
+        yield* handle1.submitInput({ key: 'data', value: 'from-1' });
+        yield* handle2.submitInput({ key: 'data', value: 'from-2' });
 
-      yield* Fiber.join(fiber1);
-      yield* Fiber.join(fiber2);
+        yield* Fiber.join(fiber1);
+        yield* Fiber.join(fiber2);
 
-      const rawKeys = [...store.keys()];
-      expect(rawKeys).toHaveLength(2);
-      expect(store.get(`process/${handle1.id}/data`)).toEqual('from-1');
-      expect(store.get(`process/${handle2.id}/data`)).toEqual('from-2');
-    }),
-  );
+        expect([...store.keys()]).toHaveLength(0);
+      }),
+    );
+
+    it.effect(
+      'cleans up storage on process completion',
+      Effect.fn(function* ({ expect }) {
+        const { store, manager } = makeManager();
+        const executable = makeStorageExecutable() as Process.Executable<{ key: string; value: string }, string>;
+
+        const handle = yield* manager.spawn(executable);
+
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+        yield* handle.submitInput({ key: 'temp', value: 'data' });
+        yield* Fiber.join(outputFiber);
+
+        const status = yield* handle.status();
+        expect(status.state).toEqual(Process.State.COMPLETED);
+        expect([...store.keys()]).toHaveLength(0);
+      }),
+    );
+
+    it.effect(
+      'cleans up storage on process termination',
+      Effect.fn(function* ({ expect }) {
+        const { store, manager } = makeManager();
+        const storageWriter = Process.makeExecutable(
+          {
+            input: Schema.Struct({ key: Schema.String, value: Schema.String }),
+            output: Schema.String,
+            services: [StorageService.StorageService],
+          },
+          (_ctx) =>
+            Effect.gen(function* () {
+              const storage = yield* StorageService.StorageService;
+
+              return {
+                handleInput: (input: { key: string; value: string }) =>
+                  Effect.gen(function* () {
+                    yield* storage.set(input.key, input.value);
+                    return Process.OutcomeSuspend as Process.Outcome;
+                  }),
+                tick: () => Effect.succeed(Process.OutcomeSuspend as Process.Outcome),
+              };
+            }),
+        ) as Process.Executable<{ key: string; value: string }, string>;
+
+        const handle = yield* manager.spawn(storageWriter);
+        yield* handle.submitInput({ key: 'persist', value: 'value1' });
+
+        expect([...store.keys()]).toHaveLength(1);
+
+        yield* handle.terminate();
+
+        expect([...store.keys()]).toHaveLength(0);
+        const status = yield* handle.status();
+        expect(status.state).toEqual(Process.State.TERMINATED);
+      }),
+    );
+  });
+
+  describe('concurrent submitInput', () => {
+    it.effect(
+      'handles multiple concurrent inputs',
+      Effect.fn(function* ({ expect }) {
+        const { manager } = makeManager();
+        const gates: Gate[] = [];
+
+        const gate1 = yield* makeGate();
+        const gate2 = yield* makeGate();
+        gates.push(gate1, gate2);
+
+        const executable = makeControllableExecutable(gates);
+        const handle = yield* manager.spawn(executable);
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+
+        const submit1 = yield* handle.submitInput('a').pipe(Effect.fork);
+        const submit2 = yield* handle.submitInput('b').pipe(Effect.fork);
+
+        yield* gate1.inputReceived;
+        yield* gate2.inputReceived;
+
+        yield* Deferred.succeed(gate1.latch, Process.OutcomeDone);
+        yield* Fiber.join(submit1);
+
+        yield* Deferred.succeed(gate2.latch, Process.OutcomeDone);
+        yield* Fiber.join(submit2);
+
+        const outputs = yield* Fiber.join(outputFiber);
+        expect(Chunk.toReadonlyArray(outputs)).toHaveLength(2);
+
+        const status = yield* handle.status();
+        expect(status.state).toEqual(Process.State.COMPLETED);
+      }),
+    );
+  });
+
+  describe('outcome reconciliation', () => {
+    it.effect(
+      'mergeOutcomes: resume > suspend > done',
+      Effect.fn(function* ({ expect }) {
+        expect(Process.mergeOutcomes(Process.OutcomeDone, Process.OutcomeDone)).toEqual(Process.OutcomeDone);
+        expect(Process.mergeOutcomes(Process.OutcomeDone, Process.OutcomeSuspend)).toEqual(Process.OutcomeSuspend);
+        expect(Process.mergeOutcomes(Process.OutcomeSuspend, Process.OutcomeDone)).toEqual(Process.OutcomeSuspend);
+        expect(Process.mergeOutcomes(Process.OutcomeDone, Process.OutcomeResume)).toEqual(Process.OutcomeResume);
+        expect(Process.mergeOutcomes(Process.OutcomeResume, Process.OutcomeDone)).toEqual(Process.OutcomeResume);
+        expect(Process.mergeOutcomes(Process.OutcomeSuspend, Process.OutcomeResume)).toEqual(Process.OutcomeResume);
+        expect(Process.mergeOutcomes(Process.OutcomeResume, Process.OutcomeSuspend)).toEqual(Process.OutcomeResume);
+        expect(Process.mergeOutcomes(Process.OutcomeSuspend, Process.OutcomeSuspend)).toEqual(Process.OutcomeSuspend);
+        expect(Process.mergeOutcomes(Process.OutcomeResume, Process.OutcomeResume)).toEqual(Process.OutcomeResume);
+      }),
+    );
+
+    it.effect(
+      'suspend overrides done when handlers complete concurrently',
+      Effect.fn(function* ({ expect }) {
+        const { manager } = makeManager();
+        const gates: Gate[] = [];
+        const gate1 = yield* makeGate();
+        const gate2 = yield* makeGate();
+        gates.push(gate1, gate2);
+
+        const executable = makeControllableExecutable(gates);
+        const handle = yield* manager.spawn(executable);
+
+        const submit1 = yield* handle.submitInput('first').pipe(Effect.fork);
+        const submit2 = yield* handle.submitInput('second').pipe(Effect.fork);
+
+        yield* gate1.inputReceived;
+        yield* gate2.inputReceived;
+
+        yield* Deferred.succeed(gate1.latch, Process.OutcomeDone);
+        yield* Fiber.join(submit1);
+
+        const midStatus = yield* handle.status();
+        expect(midStatus.state).toEqual(Process.State.RUNNING);
+
+        yield* Deferred.succeed(gate2.latch, Process.OutcomeSuspend);
+        yield* Fiber.join(submit2);
+
+        const finalStatus = yield* handle.status();
+        expect(finalStatus.state).toEqual(Process.State.RUNNING);
+      }),
+    );
+
+    it.effect(
+      'resume overrides suspend and triggers tick',
+      Effect.fn(function* ({ expect }) {
+        const { manager } = makeManager();
+        const tickCount = { value: 0 };
+        const gates: Gate[] = [];
+        const gate1 = yield* makeGate();
+        const gate2 = yield* makeGate();
+        gates.push(gate1, gate2);
+
+        let gateIndex = 0;
+        const executable: Process.Executable<string, string> = Process.makeExecutable(
+          { input: Schema.String, output: Schema.String, services: [] },
+          (ctx) =>
+            Effect.succeed({
+              handleInput: (input: string) =>
+                Effect.gen(function* () {
+                  const gate = gates[gateIndex++];
+                  yield* Deferred.succeed(gate.inputReceived, undefined);
+                  const outcome = yield* gate.latch;
+                  ctx.submitOutput(`processed: ${input}`);
+                  return outcome;
+                }),
+              tick: () =>
+                Effect.sync(() => {
+                  tickCount.value++;
+                  if (tickCount.value <= 1) {
+                    return Process.OutcomeSuspend as Process.Outcome;
+                  }
+                  ctx.submitOutput('tick-complete');
+                  return Process.OutcomeDone as Process.Outcome;
+                }),
+            }),
+        );
+
+        const handle = yield* manager.spawn(executable);
+        expect(tickCount.value).toEqual(1);
+
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+
+        const submit1 = yield* handle.submitInput('a').pipe(Effect.fork);
+        const submit2 = yield* handle.submitInput('b').pipe(Effect.fork);
+
+        yield* gate1.inputReceived;
+        yield* gate2.inputReceived;
+
+        yield* Deferred.succeed(gate1.latch, Process.OutcomeSuspend);
+        yield* Fiber.join(submit1);
+
+        const midStatus = yield* handle.status();
+        expect(midStatus.state).toEqual(Process.State.RUNNING);
+
+        yield* Deferred.succeed(gate2.latch, Process.OutcomeResume);
+        yield* Fiber.join(submit2);
+
+        const outputs = yield* Fiber.join(outputFiber);
+        const outputArray = Chunk.toReadonlyArray(outputs);
+        expect(outputArray).toContain('tick-complete');
+        expect(tickCount.value).toEqual(2);
+
+        const finalStatus = yield* handle.status();
+        expect(finalStatus.state).toEqual(Process.State.COMPLETED);
+      }),
+    );
+
+    it.effect(
+      'done only applies when all concurrent handlers return done',
+      Effect.fn(function* ({ expect }) {
+        const { manager } = makeManager();
+        const gates: Gate[] = [];
+        const gate1 = yield* makeGate();
+        const gate2 = yield* makeGate();
+        gates.push(gate1, gate2);
+
+        const executable = makeControllableExecutable(gates);
+        const handle = yield* manager.spawn(executable);
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+
+        const submit1 = yield* handle.submitInput('x').pipe(Effect.fork);
+        const submit2 = yield* handle.submitInput('y').pipe(Effect.fork);
+
+        yield* gate1.inputReceived;
+        yield* gate2.inputReceived;
+
+        yield* Deferred.succeed(gate1.latch, Process.OutcomeDone);
+        yield* Fiber.join(submit1);
+
+        const midStatus = yield* handle.status();
+        expect(midStatus.state).toEqual(Process.State.RUNNING);
+
+        yield* Deferred.succeed(gate2.latch, Process.OutcomeDone);
+        yield* Fiber.join(submit2);
+
+        const outputs = yield* Fiber.join(outputFiber);
+        expect(Chunk.toReadonlyArray(outputs)).toHaveLength(2);
+
+        const finalStatus = yield* handle.status();
+        expect(finalStatus.state).toEqual(Process.State.COMPLETED);
+      }),
+    );
+  });
+
+  describe('aggregation executable', () => {
+    it.effect(
+      'folds inputs and finalizes on done',
+      Effect.fn(function* ({ expect }) {
+        const { manager } = makeManager();
+        const sumExecutable = Process.makeAggregationExecutable({
+          input: Schema.Number,
+          output: Schema.Number,
+          initial: 0,
+          reducer: (acc, input: number) =>
+            Effect.succeed([acc + input, input < 0 ? Process.OutcomeDone : Process.OutcomeSuspend] as const),
+          finalize: (acc) => acc,
+        });
+
+        const handle = yield* manager.spawn(sumExecutable);
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+
+        yield* handle.submitInput(10);
+        yield* handle.submitInput(20);
+        yield* handle.submitInput(5);
+
+        const midStatus = yield* handle.status();
+        expect(midStatus.state).toEqual(Process.State.RUNNING);
+
+        yield* handle.submitInput(-1);
+
+        const outputs = yield* Fiber.join(outputFiber);
+        expect(Chunk.toReadonlyArray(outputs)).toEqual([34]);
+
+        const finalStatus = yield* handle.status();
+        expect(finalStatus.state).toEqual(Process.State.COMPLETED);
+      }),
+    );
+
+    it.effect(
+      'supports effect-ful reducer',
+      Effect.fn(function* ({ expect }) {
+        const { manager } = makeManager();
+        const concatExecutable = Process.makeAggregationExecutable({
+          input: Schema.String,
+          output: Schema.String,
+          initial: [] as string[],
+          reducer: (acc, input: string) =>
+            Effect.gen(function* () {
+              yield* Effect.yieldNow();
+              const next = [...acc, input];
+              const outcome = input === 'END' ? Process.OutcomeDone : Process.OutcomeSuspend;
+              return [next, outcome] as const;
+            }),
+          finalize: (acc) => acc.join(', '),
+        });
+
+        const handle = yield* manager.spawn(concatExecutable);
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+
+        yield* handle.submitInput('hello');
+        yield* handle.submitInput('world');
+        yield* handle.submitInput('END');
+
+        const outputs = yield* Fiber.join(outputFiber);
+        expect(Chunk.toReadonlyArray(outputs)).toEqual(['hello, world, END']);
+      }),
+    );
+  });
+
+  describe('service resolver', () => {
+    it.effect(
+      'resolves database service for operation executable',
+      Effect.fn(function* ({ expect }) {
+        const { service: dbService, rows } = makeInMemoryDatabase();
+        const resolver = ServiceResolver.fromContext(
+          Context.make(DatabaseService, dbService),
+        );
+        const { manager } = makeManager(resolver);
+        const { insertRow } = makeDbOperationExecutables();
+
+        const handle = yield* manager.spawn(insertRow as Process.Executable<string, string>);
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+
+        yield* handle.submitInput('row-1');
+        const outputs = yield* Fiber.join(outputFiber);
+        expect(Chunk.toReadonlyArray(outputs)).toEqual(['inserted: row-1']);
+        expect(rows).toEqual(['row-1']);
+      }),
+    );
+
+    it.effect(
+      'resolves database service for query operation',
+      Effect.fn(function* ({ expect }) {
+        const { service: dbService, rows } = makeInMemoryDatabase();
+        rows.push('alice', 'bob', 'alice-2');
+
+        const resolver = ServiceResolver.fromContext(
+          Context.make(DatabaseService, dbService),
+        );
+        const { manager } = makeManager(resolver);
+        const { queryRows } = makeDbOperationExecutables();
+
+        const handle = yield* manager.spawn(queryRows as Process.Executable<string, readonly string[]>);
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+
+        yield* handle.submitInput('alice');
+        const outputs = yield* Fiber.join(outputFiber);
+        expect(Chunk.toReadonlyArray(outputs)).toEqual([['alice', 'alice-2']]);
+      }),
+    );
+
+    it.effect(
+      'fails with ServiceNotAvailableError when required service is missing',
+      Effect.fn(function* ({ expect }) {
+        const { manager } = makeManager();
+        const { insertRow } = makeDbOperationExecutables();
+
+        const result = yield* manager.spawn(insertRow as Process.Executable<string, string>).pipe(
+          Effect.flip,
+        );
+
+        expect(result).toBeInstanceOf(ServiceNotAvailableError);
+        expect(result.message).toContain('@test/DatabaseService');
+      }),
+    );
+
+    it.effect(
+      'fails when resolver does not provide a required service',
+      Effect.fn(function* ({ expect }) {
+        const resolver = ServiceResolver.fromContext(Context.empty());
+        const { manager } = makeManager(resolver);
+        const { insertRow } = makeDbOperationExecutables();
+
+        const result = yield* manager.spawn(insertRow as Process.Executable<string, string>).pipe(
+          Effect.flip,
+        );
+
+        expect(result).toBeInstanceOf(ServiceNotAvailableError);
+      }),
+    );
+
+    it.effect(
+      'compose resolver merges multiple service sources',
+      Effect.fn(function* ({ expect }) {
+        const { service: dbService, rows } = makeInMemoryDatabase();
+
+        const dbResolver = ServiceResolver.fromContext(
+          Context.make(DatabaseService, dbService),
+        );
+
+        const combined = ServiceResolver.compose(dbResolver);
+        const { manager } = makeManager(combined);
+        const { insertRow } = makeDbOperationExecutables();
+
+        const handle = yield* manager.spawn(insertRow as Process.Executable<string, string>);
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+
+        yield* handle.submitInput('composed-row');
+        const outputs = yield* Fiber.join(outputFiber);
+        expect(Chunk.toReadonlyArray(outputs)).toEqual(['inserted: composed-row']);
+        expect(rows).toEqual(['composed-row']);
+      }),
+    );
+
+    it.effect(
+      'processes without service requirements work with any resolver',
+      Effect.fn(function* ({ expect }) {
+        const resolver = ServiceResolver.fromContext(Context.empty());
+        const { manager } = makeManager(resolver);
+        const executable = makeSimpleExecutable();
+
+        const handle = yield* manager.spawn(executable);
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+
+        yield* handle.submitInput({ value: 42 });
+        const outputs = yield* Fiber.join(outputFiber);
+        expect(Chunk.toReadonlyArray(outputs)).toEqual([84]);
+      }),
+    );
+  });
 });
