@@ -70,48 +70,33 @@ export const COMPONENT_REGISTRY = {
 
 type RegistryKey = keyof typeof COMPONENT_REGISTRY;
 
-const pascalSegmentToKebab = (segment: string): string =>
-  segment
-    .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-    .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
-    .toLowerCase();
-
-/** HTML custom tag for a registry key (e.g. Panel.Root → dxui-panel-root). */
-export const componentRegistryKeyToTagName = (key: string): string => {
-  if (key.includes('.')) {
-    return 'dxui-' + key.split('.').map(pascalSegmentToKebab).join('-');
-  }
-  return 'dxui-' + pascalSegmentToKebab(key);
-};
-
+/** Reverse lookup from uppercase tagName (as returned by `element.tagName` in HTML mode) to registry key. */
 const TAG_NAME_TO_REGISTRY_KEY: Record<string, RegistryKey> = Object.fromEntries(
-  (Object.keys(COMPONENT_REGISTRY) as RegistryKey[]).map((registryKey) => [
-    componentRegistryKeyToTagName(registryKey),
-    registryKey,
-  ]),
+  (Object.keys(COMPONENT_REGISTRY) as RegistryKey[]).map((key) => [key.toUpperCase(), key]),
 ) as Record<string, RegistryKey>;
 
 const buildGenUiSystemPrompt = (): string => {
   const catalog = (Object.keys(COMPONENT_REGISTRY) as RegistryKey[])
     .sort()
-    .map((key) => `  - <${componentRegistryKeyToTagName(key)}> — react-ui ${key}`)
+    .map((key) => `  - <${key}>`)
     .join('\n');
 
   return trim`
-    You generate HTML fragments that describe DXOS react-ui layouts using custom elements.
-    The preview maps each custom tag to the matching @dxos/react-ui component.
+    You generate HTML fragments that describe DXOS react-ui layouts.
+    The preview renderer maps each tag to the matching @dxos/react-ui component.
 
-    Tag naming: every component is a hyphenated custom element with the prefix dxui-, derived from
-    the registry key by splitting on "." and converting each segment from PascalCase to kebab-case
-    (e.g. Panel.Root → dxui-panel-root, Toolbar.IconButton → dxui-toolbar-icon-button, IconButton → dxui-icon-button).
+    Tag naming: use the exact component name as the HTML element name.
+    Compound components use dot notation (e.g. <Panel.Root>, <Toolbar.IconButton>).
+    Top-level components use bare PascalCase (e.g. <Button>, <Grid>).
+    HTML parsers handle dots in tag names — this is intentional.
 
     Rules:
     - Prefer semantic nesting that matches React usage: wrap Input.TextInput and Input.Label in Input.Root.
     - Use standard HTML attributes; they become React props (class → className). Use kebab-case for multi-word HTML attributes where needed (e.g. icon-only for Toolbar.IconButton iconOnly).
-    - Icon and Toolbar.IconButton require icon="…" using DXOS icon ids (e.g. ph--user--regular, ph--play--regular).
+    - Icon and Toolbar.IconButton require icon="…" using Phosphor icon ids (e.g. ph--user--regular, ph--play--regular).
     - Button and Toolbar.Button accept variant="default" | "primary" | "outline" | "ghost" | "destructive".
     - Grid accepts cols="2" (number as string) for column count.
-    - Output a single HTML fragment only (no markdown fences unless the user asked for markdown). No script tags.
+    - Output a single HTML fragment only (no markdown fences). No script tags.
 
     Supported tags:
 ${catalog}
@@ -119,53 +104,53 @@ ${catalog}
     Examples:
 
     1) Panel shell with toolbar and body:
-    <dxui-panel-root>
-      <dxui-panel-toolbar>
-        <dxui-toolbar-root>
-          <dxui-toolbar-text>Settings</dxui-toolbar-text>
-          <dxui-toolbar-icon-button icon="ph--x--regular" label="Close" icon-only></dxui-toolbar-icon-button>
-        </dxui-toolbar-root>
-      </dxui-panel-toolbar>
-      <dxui-panel-content>
-        <p>Main content.</p>
-      </dxui-panel-content>
-    </dxui-panel-root>
+    <Panel.Root>
+      <Panel.Toolbar>
+        <Toolbar.Root>
+          <Toolbar.Text>Settings</Toolbar.Text>
+          <Toolbar.IconButton icon="ph--x--regular" label="Close" icon-only></Toolbar.IconButton>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
+        <p>Main content goes here.</p>
+      </Panel.Content>
+    </Panel.Root>
 
     2) Card with heading and text:
-    <dxui-card-root>
-      <dxui-card-toolbar>
-        <dxui-toolbar-root>
-          <dxui-toolbar-text>Notes</dxui-toolbar-text>
-        </dxui-toolbar-root>
-      </dxui-card-toolbar>
-      <dxui-card-content>
-        <dxui-card-heading>Today</dxui-card-heading>
-        <dxui-card-text>Remember to sync your space.</dxui-card-text>
-      </dxui-card-content>
-    </dxui-card-root>
+    <Card.Root>
+      <Card.Toolbar>
+        <Toolbar.Root>
+          <Toolbar.Text>Notes</Toolbar.Text>
+        </Toolbar.Root>
+      </Card.Toolbar>
+      <Card.Content>
+        <Card.Heading>Today</Card.Heading>
+        <Card.Text>Remember to sync your space.</Card.Text>
+      </Card.Content>
+    </Card.Root>
 
-    3) Form row with labeled input (Input.Root wraps field parts):
-    <dxui-input-root>
-      <dxui-input-label for="email-field">Email</dxui-input-label>
-      <dxui-input-text-input id="email-field" placeholder="you@example.com" type="email"></dxui-input-text-input>
-      <dxui-input-description>We never share your email.</dxui-input-description>
-    </dxui-input-root>
+    3) Form row with labeled input:
+    <Input.Root>
+      <Input.Label>Email</Input.Label>
+      <Input.TextInput placeholder="you@example.com" type="email"></Input.TextInput>
+      <Input.Description>We never share your email.</Input.Description>
+    </Input.Root>
 
     4) Toolbar actions with separator:
-    <dxui-toolbar-root>
-      <dxui-toolbar-button variant="primary">Save</dxui-toolbar-button>
-      <dxui-toolbar-separator></dxui-toolbar-separator>
-      <dxui-toolbar-icon-button icon="ph--trash--regular" label="Delete" variant="ghost"></dxui-toolbar-icon-button>
-    </dxui-toolbar-root>
+    <Toolbar.Root>
+      <Toolbar.Button variant="primary">Save</Toolbar.Button>
+      <Toolbar.Separator></Toolbar.Separator>
+      <Toolbar.IconButton icon="ph--trash--regular" label="Delete" variant="ghost"></Toolbar.IconButton>
+    </Toolbar.Root>
 
     5) Grid layout with icon and plain text:
-    <dxui-grid cols="2">
-      <dxui-flex class="items-center gap-2">
-        <dxui-icon icon="ph--info--regular"></dxui-icon>
+    <Grid cols="2">
+      <Flex class="items-center gap-2">
+        <Icon icon="ph--info--regular"></Icon>
         <span>Left column</span>
-      </dxui-flex>
-      <dxui-flex><span>Right column</span></dxui-flex>
-    </dxui-grid>
+      </Flex>
+      <Flex><span>Right column</span></Flex>
+    </Grid>
   `;
 };
 
@@ -212,8 +197,7 @@ const convertMarkupNode = (node: Node, key: number): React.ReactNode => {
   }
 
   const element = node as Element;
-  const tag = element.tagName.toLowerCase();
-  const registryKey = TAG_NAME_TO_REGISTRY_KEY[tag];
+  const registryKey = TAG_NAME_TO_REGISTRY_KEY[element.tagName];
   const children = [...element.childNodes].map((child, index) => convertMarkupNode(child, index)).filter(Boolean);
 
   if (registryKey) {
@@ -221,7 +205,7 @@ const convertMarkupNode = (node: Node, key: number): React.ReactNode => {
     return React.createElement(Component, { key, ...htmlAttributesToReactProps(element) }, ...children);
   }
 
-  return React.createElement(tag, { key, ...htmlAttributesToReactProps(element) }, ...children);
+  return React.createElement(element.tagName.toLowerCase(), { key, ...htmlAttributesToReactProps(element) }, ...children);
 };
 
 const GenUiMarkupPreview = ({ markup }: { markup: string }) => {
@@ -302,7 +286,7 @@ const generateMarkup = (input: string) =>
         content: [
           Prompt.makePart('text', {
             text: trim`
-              Generate an HTML fragment for this request. Use only dxui-* custom elements from the catalog and normal HTML where needed.
+              Generate an HTML fragment for this request. Use only the component tags from the catalog and normal HTML where needed.
 
               Request: ${input}
             `,
