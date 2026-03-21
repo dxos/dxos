@@ -729,15 +729,3 @@ export const decodeVersion = internal.decodeVersion;
  * Accepts both reactive objects and snapshots.
  */
 export const version = (entity: Unknown | Snapshot): Version => internal.version(entity);
-
-//
-// Timestamps
-//
-
-export type Timestamps = internal.EntityTimestamps;
-
-/**
- * Returns the timestamps (createdAt / updatedAt) of the object from the index.
- * Returns empty object if the object has not been indexed yet.
- */
-export const getTimestamps = (entity: Unknown): Timestamps => internal.getTimestamps(entity);

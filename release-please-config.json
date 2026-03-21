@@ -525,6 +525,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-daily-summary/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-debug/package.json",
           "jsonpath": "$.version"
         },

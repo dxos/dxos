@@ -24,7 +24,6 @@ import {
   ObjectDatabaseId,
   ObjectDeletedId,
   type ObjectMeta,
-  ObjectTimestampsId,
   ObjectVersionId,
   type ParentId,
   RelationSourceDXNId,
@@ -42,7 +41,6 @@ export {
   ATTR_SELF_DXN,
   ObjectDatabaseId,
   ObjectDeletedId,
-  ObjectTimestampsId,
   ObjectVersionId,
   SelfDXNId,
 };

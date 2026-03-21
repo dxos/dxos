@@ -28,7 +28,6 @@ import {
   type ObjectMeta,
   type ObjectMetaJSON,
   ObjectMetaSchema,
-  ObjectTimestampsId,
   ObjectVersionId,
   ParentId,
   PersistentSchema,
@@ -171,7 +170,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case MetaId:
         case ObjectDeletedId:
         case ObjectVersionId:
-        case ObjectTimestampsId:
         case ObjectDatabaseId:
           return true;
       }
@@ -239,8 +237,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return this.isDeleted(target);
         case ObjectVersionId:
           return this._getVersion(target);
-        case ObjectTimestampsId:
-          return this._getTimestamps(target);
         case ObjectDatabaseId:
           return target[symbolInternals].database;
       }
@@ -923,15 +919,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       versioned: true,
       automergeHeads: heads,
     };
-  }
-
-  private _getTimestamps(target: ProxyTarget): Obj.Timestamps {
-    const database = target[symbolInternals].database;
-    if (!database) {
-      return {};
-    }
-    const objectId = target[symbolInternals].core.id;
-    return database.getTimestamps(objectId);
   }
 
   // TODO(dmaretskyi): Re-use existing json serializer.

@@ -8,5 +8,4 @@ export * from './model'; // TODO(burdon): Rename.
 export * from './object';
 export * from './relation';
 export * from './util';
-export * from './timestamps';
 export * from './version';

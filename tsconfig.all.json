@@ -301,6 +301,9 @@
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-daily-summary/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-debug/tsconfig.json"
     },
     {
@@ -671,5 +674,7 @@
     }
   ],
   "include": [],
-  "exclude": ["**/node_modules"]
+  "exclude": [
+    "**/node_modules"
+  ]
 }
