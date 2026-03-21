@@ -5,17 +5,18 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { type Operation } from '@dxos/operation';
+import * as Operation$ from '@dxos/operation';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
 import { RecoverIdentity } from './definitions';
 
 import { JOIN_DIALOG } from '../constants';
 
-export default RecoverIdentity.pipe(
-  Operation.withHandler(
+const handler: Operation.WithHandler<typeof RecoverIdentity> = RecoverIdentity.pipe(
+  Operation$.withHandler(
     Effect.fnUntraced(function* () {
-      yield* Operation.invoke(LayoutOperation.UpdateDialog, {
+      yield* Operation$.invoke(LayoutOperation.UpdateDialog, {
         subject: JOIN_DIALOG,
         blockAlign: 'start',
         props: {
@@ -25,3 +26,5 @@ export default RecoverIdentity.pipe(
     }),
   ),
 );
+
+export default handler;

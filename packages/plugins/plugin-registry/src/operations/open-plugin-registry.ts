@@ -5,14 +5,18 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation, SettingsOperation, getSpacePath } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { type Operation } from '@dxos/operation';
+import * as Operation$ from '@dxos/operation';
 
 import { REGISTRY_ID } from '../meta';
 
-export default SettingsOperation.OpenPluginRegistry.pipe(
-  Operation.withHandler(
-    Effect.fnUntraced(function* () {
-      yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(REGISTRY_ID) });
-    }),
-  ),
-);
+const handler: Operation.WithHandler<typeof SettingsOperation.OpenPluginRegistry> =
+  SettingsOperation.OpenPluginRegistry.pipe(
+    Operation$.withHandler(
+      Effect.fnUntraced(function* () {
+        yield* Operation$.invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(REGISTRY_ID) });
+      }),
+    ),
+  );
+
+export default handler;
