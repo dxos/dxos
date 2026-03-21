@@ -124,9 +124,9 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
 
   const handleDismissToast = useCallback(
     (id: string) => {
-      updateState((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) }));
+      updateState({ toasts: layout.toasts.filter((toast) => toast.id !== id) });
     },
-    [updateState],
+    [updateState, layout.toasts],
   );
 
   const DialogRoot = layout.dialogType === 'alert' ? AlertDialog.Root : Dialog.Root;
