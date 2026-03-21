@@ -32,7 +32,7 @@ export const TupleField = ({
   return (
     <Input.Root validationValence={status}>
       <FormFieldLabel error={error} readonly={readonly} label={label} />
-      <div className={mx('grid gap-2', gridCols[binding.length - 1])}>
+      <div className={mx('grid gap-form-gap', gridCols[binding.length - 1])}>
         {binding.map((prop) => (
           <Input.TextInput
             key={prop}

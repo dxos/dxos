@@ -103,7 +103,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         <Form.Root
           debug={debug}
           schema={schema}
-          values={values}
+          defaultValues={values}
           db={space.db}
           onSave={handleSave}
           onCancel={handleCancel}

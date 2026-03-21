@@ -4,7 +4,7 @@
 // Based on https://reactbits.dev/animations/splash-cursor
 //
 
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import React, { CSSProperties, forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
@@ -77,7 +77,7 @@ export const Ghost = forwardRef<GhostController, Partial<GhostProps>>(
       [ghost],
     );
 
-    const frameStyle: React.CSSProperties | undefined = frame
+    const frameStyle: CSSProperties | undefined = frame
       ? {
           // Layer 1 (source) = center hole, layer 2 (backdrop) = full canvas.
           // Standard `exclude` (XOR): shows pixels covered by exactly one layer = border ring.
