@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Database } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
@@ -87,7 +88,7 @@ const SelectSpaceStory = () => {
 
 const meta = {
   title: 'plugins/plugin-space/containers/CreateObjectDialog',
-  decorators: [withTheme()],
+  decorators: [withTheme(), withPluginManager()],
   parameters: {
     layout: 'centered',
     translations,
