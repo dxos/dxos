@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AiService } from '@dxos/ai';
 import { Database } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
@@ -38,5 +39,5 @@ export const GenerateSummary = Operation.make({
       description: 'Date label for the summary (e.g., "March 20").',
     }),
   }),
-  services: [Database.Service],
+  services: [Database.Service, AiService.AiService],
 });

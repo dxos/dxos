@@ -2,51 +2,47 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 
-import { useClient } from '@dxos/react-client';
+import type { Space } from '@dxos/client/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
 
-import { generateSummaryInSpace } from '../../blueprints/functions/generate-imperative';
+import { GenerateSummary } from '../../blueprints/functions/definitions';
 import { meta } from '../../meta';
-import { type DailySummarySettingsProps } from '../../types';
 
-export type DailySummarySettingsComponentProps = {
-  settings: DailySummarySettingsProps;
-  onSettingsChange: (fn: (current: DailySummarySettingsProps) => DailySummarySettingsProps) => void;
+export type DailySummarySettingsProps = {
+  space: Space;
 };
 
-export const DailySummarySettings = ({ settings, onSettingsChange }: DailySummarySettingsComponentProps) => {
+export const DailySummarySettings = ({ space }: DailySummarySettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
-  const [generating, setGenerating] = useState(false);
 
-  const handleGenerate = useCallback(async () => {
-    setGenerating(true);
-    try {
-      await generateSummaryInSpace(client.spaces.default);
-    } finally {
-      setGenerating(false);
-    }
-  }, [client]);
+  const handleCreateTrigger = useCallback(() => {
+    const trigger = Trigger.make({
+      enabled: true,
+      spec: {
+        kind: 'timer',
+        cron: '0 21 * * *',
+      },
+      function: Ref.make(Operation.serialize(GenerateSummary)),
+    });
+    space.db.add(trigger);
+  }, [space]);
 
   return (
-    <Settings.Root>
-      <Settings.Section title={t('plugin name', { ns: meta.id })}>
-        <Settings.Group>
-          <Settings.ItemInput title={t('generate summary label')}>
-            <IconButton
-              classNames='ms-2'
-              icon={generating ? 'ph--spinner--regular' : 'ph--play--regular'}
-              iconOnly
-              disabled={generating}
-              label={t('generate summary label')}
-              onClick={handleGenerate}
-            />
-          </Settings.ItemInput>
-        </Settings.Group>
-      </Settings.Section>
-    </Settings.Root>
+    <div className='flex flex-col gap-4 p-4'>
+      <h2 className='text-lg font-medium'>{t('plugin name')}</h2>
+      <p className='text-sm text-description'>{t('create trigger description')}</p>
+      <div>
+        <IconButton
+          icon='ph--plus--regular'
+          label={t('create trigger label')}
+          onClick={handleCreateTrigger}
+        />
+      </div>
+    </div>
   );
 };

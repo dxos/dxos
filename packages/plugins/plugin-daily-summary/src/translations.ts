@@ -11,9 +11,9 @@ export const translations = [
     'en-US': {
       [meta.id]: {
         'plugin name': 'Daily Summary',
-        'generate summary label': 'Generate summary now',
-        'summary time label': 'Summary generation time',
-        'summary time description': 'Time of day to generate the daily summary (24h format).',
+        'create trigger label': 'Create daily summary trigger',
+        'create trigger description':
+          'Create a timer trigger that generates an AI-powered daily summary. After creation, edit the schedule in the Automation panel.',
       },
     },
   },

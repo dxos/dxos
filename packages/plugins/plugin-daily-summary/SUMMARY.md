@@ -2,12 +2,14 @@
 
 ## What Was Built
 
-A Composer plugin that generates daily activity summaries as Markdown documents by querying
-recently modified ECHO objects and placing the results in a "Summaries" collection.
+A Composer plugin that generates AI-powered daily activity summaries as Markdown documents.
+It queries recently modified ECHO objects, sends them to an LLM for summarization, and
+places the resulting document in a "Summaries" collection. If a summary for the current day
+already exists, it updates the existing document instead of creating a duplicate.
 
 Two layers of work:
-1. **ECHO timestamp APIs** — new infrastructure for querying objects by creation/modification time
-2. **Plugin** — operation, blueprint, and plugin wiring that uses those APIs
+1. **ECHO timestamp APIs** — infrastructure for querying objects by creation/modification time
+2. **Plugin** — AI-powered operation, blueprint with predefined structure, settings UI, and plugin wiring
 
 ---
 
@@ -21,15 +23,9 @@ ECHO query system.
 
 ### Changes
 
-**`packages/core/echo/echo/src/internal/Entity/timestamps.ts`** (new)
-- `EntityTimestamps` interface with `createdAt` and `updatedAt` as optional `Date` values.
-- `getTimestamps(entity)` reads timestamps from the object meta index via an internal symbol.
-
 **`packages/core/echo/echo/src/Filter.ts`**
-- Added five timestamp filter builders:
-  - `Filter.updatedAfter(date)` / `Filter.updatedBefore(date)`
-  - `Filter.createdAfter(date)` / `Filter.createdBefore(date)`
-  - `Filter.updatedBetween(from, to)` — composes `updatedAfter` + `updatedBefore` via `and()`
+- `Filter.updated({ after?, before? })` — timestamp filter for last-modified time
+- `Filter.created({ after?, before? })` — timestamp filter for creation time
 - Accept `Date | number` (epoch ms). Produce `{ type: 'timestamp', field, operator, value }` AST nodes.
 
 **`packages/core/echo/echo-protocol/src/query/ast.ts`**
@@ -39,36 +35,25 @@ ECHO query system.
   ```
 
 **`packages/core/echo/echo-pipeline/src/query/query-planner.ts`**
-- Timestamp filters are extracted during query planning and forwarded to the index engine
-  as a time-range constraint.
+- Timestamp filters extracted during query planning and forwarded to the index engine.
+- Throws clear errors for unsupported compositions (`not(timestamp)`, `or(timestamp, ...)`).
 
 **`packages/core/echo/echo-pipeline/src/query/query-executor.ts`**
-- Applies timestamp post-filtering when the index doesn't handle it natively.
+- Routes timestamp filtering through the SQL index via `indexEngine.queryByTimeRange()`.
+- Defensive check: throws if unsupported timestamp compositions reach the filter step.
 
-**`packages/core/echo/echo-pipeline/src/filter/filter-match.ts`**
-- Runtime matching for `FilterTimestamp` nodes against object metadata.
+**`packages/core/echo/echo-pipeline/src/db-host/automerge-data-source.ts`**
+- Uses `A.diff` to only emit genuinely changed objects, preventing spurious `updatedAt` bumps.
 
 **`packages/core/echo/index-core/src/indexes/object-meta-index.ts`**
 - Extended `ObjectMetaIndex` to support time-range queries via `updatedAfter`/`updatedBefore`
   constraints, using the SQLite-backed index for efficient lookups.
 
-**`packages/core/echo/echo-db/src/echo-handler/echo-handler.ts`**
-- Wires the `ObjectTimestampsId` symbol onto reactive proxy objects so `getTimestamps()` works.
-
-**`packages/core/echo/echo-db/src/proxy-db/database.ts`**
-- `Database.getObjectTimestamps()` method for programmatic access.
-
-**`packages/core/echo/echo-query/src/query-lite/query-lite.ts`**
-- Mirrored timestamp filter statics on `FilterClass` for type compatibility with the
-  query-lite subsystem.
-
 ### Tests
 
-- `packages/core/echo/echo/src/Filter.test.ts` — 10 tests for timestamp filter AST generation,
-  Date/number input, composition with `and()`.
-- `packages/core/echo/index-core/src/indexes/object-meta-index.test.ts` — extended with
-  time-range query tests.
-- `packages/core/echo/echo-pipeline/src/filter/filter-match.test.ts` — timestamp match tests.
+- `packages/core/echo/echo/src/Filter.test.ts` — timestamp filter AST generation, Date/number input, composition.
+- `packages/core/echo/echo-db/src/query/query.test.ts` — end-to-end timestamp query tests including error cases.
+- `packages/core/echo/echo-pipeline/src/filter/filter-match.test.ts` — timestamp pass-through behavior.
 
 ---
 
@@ -78,55 +63,114 @@ ECHO query system.
 
 ```
 packages/plugins/plugin-daily-summary/
+├── SUMMARY.md
 ├── moon.yml
 ├── package.json
 ├── tsconfig.json
 └── src/
-    ├── index.ts                         # Public exports: meta + DailySummaryPlugin
-    ├── DailySummaryPlugin.tsx            # Plugin definition
-    ├── meta.ts                          # Plugin metadata
-    ├── translations.ts                  # i18n strings
-    ├── TRIGGERS.md                      # Docs on wiring a cron trigger
+    ├── index.ts                                    # Public exports: meta + DailySummaryPlugin
+    ├── DailySummaryPlugin.tsx                       # Plugin definition (capabilities wiring)
+    ├── meta.ts                                      # Plugin metadata (id, name, icon)
+    ├── translations.ts                              # i18n strings
+    ├── TRIGGERS.md                                   # Docs on wiring a cron trigger
+    │
     ├── blueprints/
-    │   ├── daily-summary-blueprint.ts   # Blueprint definition (key, operations, instructions)
+    │   ├── daily-summary-blueprint.ts               # Blueprint definition + SUMMARY_STRUCTURE prompt
+    │   ├── daily-summary-blueprint.test.ts
     │   └── functions/
-    │       ├── definitions.ts           # GenerateSummary operation schema
-    │       └── generate.ts              # Handler: query → build markdown → create doc → add to collection
+    │       ├── index.ts                             # Lazy OperationHandlerSet export
+    │       ├── definitions.ts                       # GenerateSummary operation schema
+    │       ├── definitions.test.ts
+    │       ├── generate.ts                          # Effect handler: AI summarization + upsert
+    │       ├── generate.test.ts
+    │       └── generate-imperative.ts               # Imperative handler for settings UI button
+    │
     ├── capabilities/
-    │   ├── blueprint-definition-module.ts  # Contributes blueprint to AppCapabilities
+    │   ├── index.ts                                 # Barrel exports for all capabilities
+    │   ├── blueprint-definition/
+    │   │   ├── index.ts                             # Lazy export
+    │   │   └── blueprint-definition.ts              # Contributes blueprint to AppCapabilities
+    │   ├── react-surface/
+    │   │   ├── index.ts                             # Lazy export
+    │   │   └── react-surface.tsx                    # Settings surface (article role)
     │   └── settings/
-    │       └── settings.ts              # KVS-backed settings (summaryHour, summaryMinute)
+    │       ├── index.ts
+    │       └── settings.ts                          # KVS-backed settings (summaryHour, summaryMinute)
+    │
+    ├── containers/
+    │   ├── index.ts                                 # Barrel export
+    │   └── DailySummarySettings/
+    │       ├── index.ts
+    │       └── DailySummarySettings.tsx              # Settings UI with "Generate Now" button
+    │
     └── types/
-        ├── schema.ts                    # DailySummarySettingsSchema (Effect Schema)
-        └── capabilities.ts              # DailySummarySettings type capability
+        ├── index.ts
+        ├── schema.ts                                # DailySummarySettingsSchema (Effect Schema)
+        ├── schema.test.ts
+        └── capabilities.ts                          # Settings capability definition
 ```
 
 ### How It Works
 
-**`GenerateSummary` operation** (`generate.ts`):
+#### AI-Powered Summarization (`generate.ts`)
+
+The Effect handler invoked through the blueprint:
+
 1. Computes a cutoff timestamp from `lookbackHours` (default 24).
-2. Queries `Database.runQuery(Query.type(Obj.Unknown).select(Filter.updatedAfter(cutoff)))`.
-3. Builds a markdown string listing each modified object by type and name.
-4. Creates a `org.dxos.type.document` (Markdown document) using a local schema definition
-   matching plugin-markdown's `Markdown.Document`. This avoids importing `@dxos/plugin-markdown/types`
-   which transitively pulls in browser-only `@dxos/ui-editor` dependencies.
-5. Finds or creates a collection named "Summaries" via `CollectionModel.add()`.
-6. Adds the document to the collection.
-7. Returns `{ id: DXN, objectCount, date }`.
+2. Queries `Database.runQuery(Query.type(Obj.Unknown).select(Filter.updated({ after: cutoff })))`.
+3. Builds a list of object descriptions (type + name).
+4. Sends descriptions to `LanguageModel.generateText` with the `SUMMARY_STRUCTURE` system prompt.
+   - Uses `claude-haiku-4-5` for fast, cheap summarization.
+   - AI layers provided locally via `Effect.provide(Layer.mergeAll(AiService.model(...), ...))`.
+5. **Upsert**: queries for an existing `org.dxos.type.document` with `name === "Daily Summary — {date}"`.
+   - If found → updates the existing document's text content in place.
+   - If not found → creates a new document and adds it to the "Summaries" collection.
+6. Returns `{ id: DXN, objectCount, date }`.
 
-**Blueprint** (`daily-summary-blueprint.ts`):
+#### Predefined Summary Structure (`SUMMARY_STRUCTURE`)
+
+Defined in `daily-summary-blueprint.ts` and used as the LLM system prompt:
+
+- **Highlights** — 2-4 bullet points of significant changes
+- **Activity by Category** — objects grouped by type with brief context
+- **Statistics** — total count, breakdown by type, time window
+
+#### Document Naming
+
+Documents are named `Daily Summary — {Month} {Day}` (e.g., "Daily Summary — March 20").
+This enables the upsert logic: running the generator multiple times on the same day
+updates the existing document rather than creating duplicates.
+
+#### Settings UI (`DailySummarySettings.tsx`)
+
+A container component rendered in Composer's plugin settings panel via `react-surface`:
+
+- **"Generate summary now"** button — triggers immediate summary generation.
+- Uses `useClient()` to get the default space, then calls `generateSummaryInSpace()`.
+- The imperative generator (`generate-imperative.ts`) uses template-based formatting
+  (no AI) for instant results. Same upsert behavior as the Effect handler.
+
+#### Blueprint (`daily-summary-blueprint.ts`)
+
 - Key: `org.dxos.blueprint.daily-summary`
-- Exposes `GenerateSummary` as an AI tool with instructions for the agent.
+- Exposes `GenerateSummary` as an AI tool.
+- Instructions tell the agent to use the generate tool for summarization.
 
-**Plugin** (`DailySummaryPlugin.tsx`):
-- Registers: blueprint definition, settings module, translations.
-- No custom types, no custom surfaces — documents render via plugin-markdown.
+#### Plugin (`DailySummaryPlugin.tsx`)
+
+Registers four capabilities:
+- `AppPlugin.addBlueprintDefinitionModule` — blueprint with AI tool
+- `AppPlugin.addSettingsModule` — KVS-backed settings (summaryHour, summaryMinute)
+- `AppPlugin.addSurfaceModule` — settings UI with generate button
+- `AppPlugin.addTranslationsModule` — i18n strings
+
+No custom ECHO types — documents render via plugin-markdown.
 
 ### Composer Integration
 
 `packages/apps/composer-app/src/plugin-defs.tsx` — imports and registers `DailySummaryPlugin`.
 
-### Tests (17 passing)
+### Tests
 
 | File | Tests | What |
 |------|-------|------|
@@ -144,8 +188,9 @@ packages/plugins/plugin-daily-summary/
 ### No Automatic Scheduling
 
 The plugin does **not** create a `Trigger.Trigger` object for cron-based scheduling.
-The `GenerateSummary` operation can only be invoked:
-- Manually by an AI agent via the blueprint
+The `GenerateSummary` operation can be invoked:
+- Via the **"Generate now" button** in plugin settings (imperative, no AI)
+- By an **AI agent** via the blueprint tool (AI-powered)
 - Programmatically via `FunctionInvocationService.invokeFunction()`
 
 To add automatic daily invocation, a module needs to:
@@ -162,10 +207,3 @@ See `TRIGGERS.md` for the trigger shape.
 Each invocation is standalone. To chain summaries (passing yesterday's summary as
 `previousSummary` input), the trigger input template would need to query the most
 recent summary document from the Summaries collection.
-
-### No AI-Enhanced Summaries
-
-The current handler builds summaries mechanically (list of type+name). The blueprint
-instructions tell the agent to structure highlights/details/statistics, but the handler
-itself doesn't call an LLM. A future version could use the AI service to generate
-natural-language summaries from the raw object list.
