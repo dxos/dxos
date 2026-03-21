@@ -140,7 +140,7 @@ type ViewportProps = ComposableProps<
   }
 >;
 
-const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ classNames, children, fade, ...props }, forwardedRef) => {
+const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ children, fade, ...props }, forwardedRef) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [overflow, setOverflow] = useState(false);
   const { pinned, controller, setViewport, setPinned } = useScrollContainerContext(VIEWPORT_NAME);
@@ -190,7 +190,7 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ classNames, childr
           )}
         />
       )}
-      <ScrollArea.Root thin margin classNames={mx(classNames)}>
+      <ScrollArea.Root thin margin>
         <ScrollArea.Viewport ref={scrollerRef}>{children}</ScrollArea.Viewport>
       </ScrollArea.Root>
     </div>

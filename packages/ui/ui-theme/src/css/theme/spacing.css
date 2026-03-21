@@ -59,7 +59,7 @@
     --dx-lacuna-6: 0.75rem;
 
     --dx-gutter-xs: 0.125rem; /* Input rings */
-    --dx-gutter-sm: 0.5rem;
+    --dx-gutter-sm: 1rem;
     --dx-gutter-md: 2rem; /* 32px (fine card) */
     --dx-gutter-lg: 2.5rem; /* 40px (dialog, coarse card) */
   }
@@ -105,6 +105,7 @@
     --dx-toolbar-size: var(--dx-rail-action);
     --dx-statusbar-size: var(--dx-rail-action);
 
+    /** NOTE: On MBP, should have nav sidebare open with 4 column mosaic board. */
     --dx-nav-sidebar-size: 22rem;
     --dx-complementary-sidebar-size: 25rem;
     --dx-drawer-size: 50dvh;

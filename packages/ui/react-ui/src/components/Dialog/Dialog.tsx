@@ -16,11 +16,10 @@ import { useTranslation } from 'react-i18next';
 import { type DialogSize, osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
-import { Column } from '../../primitives';
+import { Column, ColumnViewportProps } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
-import { ScrollArea } from '../ScrollArea';
 
 //
 // Root
@@ -118,7 +117,7 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         )}
         ref={forwardedRef}
       >
-        <Column.Root classNames='dx-expander' gutter='md'>
+        <Column.Root classNames='dx-expander' gutter='sm'>
           {children}
         </Column.Root>
       </DialogPrimitive.Content>
@@ -132,15 +131,15 @@ DialogContent.displayName = DIALOG_CONTENT_NAME;
 // Header
 //
 
-type DialogHeaderProps = ThemedClassName<PropsWithChildren> & { srOnly?: boolean };
+type DialogHeaderProps = PropsWithChildren;
 
-const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
-  ({ classNames, srOnly, ...props }, forwardedRef) => {
+const DialogHeader: ForwardRefExoticComponent<DialogHeaderProps> = forwardRef<HTMLHeadingElement, DialogHeaderProps>(
+  ({ children }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <Column.Segment asChild>
-        <div role='heading' {...props} className={tx('dialog.header', { srOnly }, [classNames])} ref={forwardedRef} />
-      </Column.Segment>
+      <Column.Row className={tx('dialog.header')} center ref={forwardedRef}>
+        {children}
+      </Column.Row>
     );
   },
 );
@@ -172,18 +171,15 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
 // Body
 //
 
-type DialogBodyProps = PropsWithChildren;
+type DialogBodyProps = PropsWithChildren<Pick<ColumnViewportProps, 'thin'>>;
 
 const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDivElement, DialogBodyProps>(
-  ({ children }, forwardedRef) => {
-    // TODO(burdon): Integrate with Column. See ScrollArea stories (clipped).
+  ({ children, thin = true }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      // <Column.Row asChild>
-      <ScrollArea.Root thin margin classNames={tx('dialog.body', {}, '__col-span-full')} ref={forwardedRef}>
-        <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-      </ScrollArea.Root>
-      // </Column.Row>
+      <Column.Viewport classNames={tx('dialog.body')} thin={thin} ref={forwardedRef}>
+        {children}
+      </Column.Viewport>
     );
   },
 );
@@ -235,11 +231,11 @@ const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forward
 >(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <Column.Segment asChild>
+    <Column.Row asChild center>
       <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
         {children}
       </div>
-    </Column.Segment>
+    </Column.Row>
   );
 });
 
