@@ -228,8 +228,8 @@ const constructSpaceNode = ({
           nextOrder.map(({ id }) => id),
         );
 
-        Obj.change(spacesOrder, (mutableOrder: any) => {
-          mutableOrder.order = nextOrder.map(({ id }) => id);
+        Obj.change(spacesOrder, (spacesOrder: any) => {
+          spacesOrder.order = nextOrder.map(({ id }) => id);
         });
       };
       spaceRearrangeCache.set(space.id, onRearrange);

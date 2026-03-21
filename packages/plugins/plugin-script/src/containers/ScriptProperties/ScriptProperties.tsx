@@ -23,8 +23,8 @@ export const ScriptProperties = ({ object }: ScriptPropertiesProps) => {
         placeholder={t('description placeholder')}
         value={object.description ?? ''}
         onChange={(event) => {
-          Obj.change(object, (o) => {
-            o.description = event.target.value;
+          Obj.change(object, (object) => {
+            object.description = event.target.value;
           });
         }}
       />

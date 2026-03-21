@@ -36,8 +36,8 @@ export default Capability.makeModule(
               );
               const [fn] = functions;
               if (fn) {
-                Obj.change(trigger, (t) => {
-                  t.function = Ref.make(fn);
+                Obj.change(trigger, (trigger) => {
+                  trigger.function = Ref.make(fn);
                 });
               }
             }
@@ -45,14 +45,14 @@ export default Capability.makeModule(
 
           switch (template.type) {
             case 'timer': {
-              Obj.change(trigger, (t) => {
-                t.spec = { kind: 'timer', cron: template.cron };
+              Obj.change(trigger, (trigger) => {
+                trigger.spec = { kind: 'timer', cron: template.cron };
               });
               break;
             }
             case 'queue': {
-              Obj.change(trigger, (t) => {
-                t.spec = {
+              Obj.change(trigger, (trigger) => {
+                trigger.spec = {
                   kind: 'queue',
                   queue: (template.queueDXN as DXN).toString(),
                 };

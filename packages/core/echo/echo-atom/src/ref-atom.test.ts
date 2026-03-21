@@ -60,8 +60,8 @@ describe('AtomRef - Basic Functionality', () => {
     expect(updateCount).toBe(1);
 
     // Mutate target - ref atom does NOT react to this.
-    Obj.change(targetObj, (o) => {
-      o.name = 'Updated';
+    Obj.change(targetObj, (targetObj) => {
+      targetObj.name = 'Updated';
     });
 
     // Update count should still be 1 - ref atom doesn't subscribe to target changes.

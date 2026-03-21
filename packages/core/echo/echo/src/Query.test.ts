@@ -563,8 +563,8 @@ describe('query api', () => {
     test('Query.type(...).from(feed) sets queue scope', () => {
       const feed = Feed.make({ name: 'test-feed' });
       const queueDxn = DXN.parse('dxn:echo:test-space:test-queue');
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queueDxn.toString() });
+      Obj.change(feed, (feed) => {
+        Obj.getMeta(feed).keys.push({ source: Feed.DXN_KEY, id: queueDxn.toString() });
       });
 
       const query = Query.type(TestSchema.Person).from(feed);

@@ -25,8 +25,8 @@ export default Move.pipe(
 
       chess.move(move, { strict: false });
       const pgn = chess.pgn();
-      Obj.change(obj, (game) => {
-        const mutableGame = game as Obj.Mutable<typeof game>;
+      Obj.change(obj, (obj) => {
+        const mutableGame = obj as Obj.Mutable<typeof obj>;
         mutableGame.pgn = pgn;
       });
       return { pgn };

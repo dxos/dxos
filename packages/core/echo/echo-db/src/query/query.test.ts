@@ -565,8 +565,8 @@ describe('Query', () => {
 
       // Create a feed object and bind it to the queue.
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      Obj.change(feed, (feed) => {
+        Obj.getMeta(feed).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
       });
 
       // Add items to the queue and a separate item to the space.
@@ -590,8 +590,8 @@ describe('Query', () => {
       const queue = queues.create();
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      Obj.change(feed, (feed) => {
+        Obj.getMeta(feed).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
       });
 
       const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
@@ -639,8 +639,8 @@ describe('Query', () => {
       const queue = queues.create();
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
+      Obj.change(feed, (feed) => {
+        Obj.getMeta(feed).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
       });
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
@@ -1490,8 +1490,8 @@ describe('Query', () => {
       }
 
       // Update the object.
-      Obj.change(obj, (o) => {
-        o.title = 'Updated Title';
+      Obj.change(obj, (obj) => {
+        obj.title = 'Updated Title';
       });
       await db.flush();
 
@@ -2050,8 +2050,8 @@ describe('Query', () => {
       });
       onTestFinished(() => unsub());
 
-      Obj.change(contact, (c) => {
-        c.name = name;
+      Obj.change(contact, (contact) => {
+        contact.name = name;
       });
       db.add(Obj.make(TestSchema.Person, {}));
 

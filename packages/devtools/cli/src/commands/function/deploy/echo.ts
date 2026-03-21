@@ -77,15 +77,17 @@ export const upsertFunctionObject: (opts: {
     });
     space.db.add(functionObject);
   }
-  Obj.change(functionObject, (f) => {
-    f.key = uploadResult.meta.key ?? f.key;
-    f.name = name ?? uploadResult.meta.name ?? f.name;
-    f.version = uploadResult.version;
-    f.description = uploadResult.meta.description;
-    f.inputSchema = uploadResult.meta.inputSchema;
-    f.outputSchema = uploadResult.meta.outputSchema;
+  Obj.change(functionObject, (functionObject) => {
+    functionObject.key = uploadResult.meta.key ?? functionObject.key;
+    functionObject.name = name ?? uploadResult.meta.name ?? functionObject.name;
+    functionObject.version = uploadResult.version;
+    functionObject.description = uploadResult.meta.description;
+    functionObject.inputSchema = uploadResult.meta.inputSchema;
+    functionObject.outputSchema = uploadResult.meta.outputSchema;
   });
-  Obj.change(functionObject, (fn) => setUserFunctionIdInMetadata(Obj.getMeta(fn), uploadResult.functionId));
+  Obj.change(functionObject, (functionObject) =>
+    setUserFunctionIdInMetadata(Obj.getMeta(functionObject), uploadResult.functionId),
+  );
   if (verbose) {
     yield* Console.log('Upserted function object', functionObject.id);
   }
@@ -97,8 +99,8 @@ const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Ob
   if (collectionRef) {
     const collection = yield* Database.load(collectionRef);
     if (collection) {
-      Obj.change(collection, (c) => {
-        c.objects.push(Ref.make(obj));
+      Obj.change(collection, (collection) => {
+        collection.objects.push(Ref.make(obj));
       });
     }
   }
@@ -125,16 +127,16 @@ export const upsertComposerScript = Effect.fn(function* ({
       () => functionObject.source!.load() as Promise<Script.Script>,
     )) as Script.Script;
     const source = (yield* Effect.tryPromise(() => script.source!.load())) as Text.Text;
-    Obj.change(source, (s: Obj.Mutable<Text.Text>) => {
-      s.content = scriptFileContent;
+    Obj.change(source, (source: Obj.Mutable<Text.Text>) => {
+      source.content = scriptFileContent;
     });
     if (verbose) {
       yield* Console.log('Updated composer script', script.id);
     }
   } else {
     const obj = yield* Database.add(Script.make({ name: scriptFileName, source: scriptFileContent }));
-    Obj.change(functionObject, (f) => {
-      f.source = Ref.make(obj);
+    Obj.change(functionObject, (functionObject) => {
+      functionObject.source = Ref.make(obj);
     });
     yield* makeObjectNavigableInComposer(space, obj);
     if (verbose) {

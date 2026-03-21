@@ -40,29 +40,29 @@ export const updateFunctionMetadata = (
   meta: any,
   functionId: string,
 ) => {
-  Obj.change(storedFunction, (f) => {
+  Obj.change(storedFunction, (storedFunction) => {
     if (script.description !== undefined && script.description.trim() !== '') {
-      f.description = script.description;
+      storedFunction.description = script.description;
     } else if (meta.description) {
-      f.description = meta.description;
+      storedFunction.description = meta.description;
     } else {
       log.verbose('no description in function metadata', { functionId });
     }
 
     if (meta.inputSchema) {
-      f.inputSchema = meta.inputSchema;
+      storedFunction.inputSchema = meta.inputSchema;
     } else {
       log.verbose('no input schema in function metadata', { functionId });
     }
 
     if (meta.outputSchema) {
-      f.outputSchema = meta.outputSchema;
+      storedFunction.outputSchema = meta.outputSchema;
     } else {
       log.verbose('no output schema in function metadata', { functionId });
     }
 
     if (meta.key) {
-      f.key = meta.key;
+      storedFunction.key = meta.key;
     } else {
       log.verbose('no key in function metadata', { functionId });
     }

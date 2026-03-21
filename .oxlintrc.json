@@ -7,6 +7,7 @@
     "denyWarnings": true
   },
   "rules": {
+    "@dxos/eslint-plugin-rules/consistent-change-param": "warn",
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/import-as-namespace": "warn",

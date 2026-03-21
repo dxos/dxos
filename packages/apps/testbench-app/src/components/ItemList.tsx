@@ -66,7 +66,8 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
 
   // TODO(burdon): [API]: Type check?
   const getValue = (object: Obj.Any, prop: string) => object[prop];
-  const setValue = (object: Obj.Any, prop: string, value: any) => Obj.change(object, (obj) => (obj[prop] = value));
+  const setValue = (object: Obj.Any, prop: string, value: any) =>
+    Obj.change(object, (object) => (object[prop] = value));
 
   return (
     <div className={mx('flex m-1 p-2 border', subtleHover)}>

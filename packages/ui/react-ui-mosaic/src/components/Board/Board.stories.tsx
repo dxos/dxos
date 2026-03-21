@@ -126,13 +126,13 @@ const useTestBoardModel = (): TestBoardModelResult => {
         return item;
       },
       onItemDelete: (column: TestColumn, current: TestItem) => {
-        Obj.change(column, (mutableColumn) => {
-          if (!mutableColumn.items) {
+        Obj.change(column, (column) => {
+          if (!column.items) {
             return;
           }
-          const idx = mutableColumn.items.findIndex((ref: Ref.Ref<TestItem>) => ref.target?.id === current?.id);
+          const idx = column.items.findIndex((ref: Ref.Ref<TestItem>) => ref.target?.id === current?.id);
           if (idx !== -1) {
-            mutableColumn.items.splice(idx, 1);
+            column.items.splice(idx, 1);
           }
         });
       },

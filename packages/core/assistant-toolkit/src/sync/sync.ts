@@ -63,7 +63,7 @@ export const syncObjects: (
 });
 
 const copyObjectData = (existing: Obj.Unknown, newObj: Obj.Unknown) => {
-  Obj.change(existing, (obj) => {
+  Obj.change(existing, (existing) => {
     // Copy properties from newObj to existing.
     for (const key of Object.keys(newObj)) {
       if (typeof key !== 'string' || key === 'id') continue;
@@ -74,22 +74,22 @@ const copyObjectData = (existing: Obj.Unknown, newObj: Obj.Unknown) => {
         !Ref.isRef((newObj as any)[key])
       )
         continue;
-      (obj as any)[key] = (newObj as any)[key];
+      (existing as any)[key] = (newObj as any)[key];
     }
 
     // Delete properties that don't exist in newObj.
-    for (const key of Object.keys(obj)) {
+    for (const key of Object.keys(existing)) {
       if (typeof key !== 'string' || key === 'id') continue;
       if (!(key in newObj)) {
-        delete (obj as any)[key];
+        delete (existing as any)[key];
       }
     }
 
     // Update foreign keys.
     for (const foreignKey of Obj.getMeta(newObj).keys) {
-      Obj.deleteKeys(obj, foreignKey.source);
+      Obj.deleteKeys(existing, foreignKey.source);
       // TODO(dmaretskyi): Doesn't work: `Obj.getMeta(existing).keys.push(foreignKey);`
-      Obj.getMeta(obj).keys.push({ ...foreignKey });
+      Obj.getMeta(existing).keys.push({ ...foreignKey });
     }
   });
 };

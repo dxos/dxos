@@ -98,8 +98,8 @@ export default Capability.makeModule(
             emails: [{ value: email }],
           });
           if (name) {
-            Obj.change(newContact, (c) => {
-              c.fullName = name;
+            Obj.change(newContact, (newContact) => {
+              newContact.fullName = name;
             });
           }
 
@@ -147,8 +147,8 @@ export default Capability.makeModule(
             log.info('found matching organization', {
               organization: matchingOrg,
             });
-            Obj.change(newContact, (c) => {
-              c.organization = Ref.make(matchingOrg);
+            Obj.change(newContact, (newContact) => {
+              newContact.organization = Ref.make(matchingOrg);
             });
           }
 

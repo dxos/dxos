@@ -59,8 +59,8 @@ describe('Obj.change enforcement', () => {
     test('getMeta returns mutable ObjectMeta inside change callback', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
-      Obj.change(obj, (mutableObj) => {
-        const meta = Obj.getMeta(mutableObj);
+      Obj.change(obj, (obj) => {
+        const meta = Obj.getMeta(obj);
 
         // These should compile without errors because meta is ObjectMeta (mutable).
         meta.keys = [];
@@ -76,9 +76,9 @@ describe('Obj.change enforcement', () => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
       // These should compile without errors inside change callback.
-      Obj.change(obj, (mutableObj) => {
-        Obj.addTag(mutableObj, 'my-tag');
-        Obj.setValue(mutableObj, ['name'], 'Updated');
+      Obj.change(obj, (obj) => {
+        Obj.addTag(obj, 'my-tag');
+        Obj.setValue(obj, ['name'], 'Updated');
       });
 
       expect(obj.name).toBe('Updated');
@@ -122,8 +122,8 @@ describe('Obj.change enforcement', () => {
       // Person schema uses 'name' as label field.
       expect(Obj.getLabel(obj)).toBe('John');
 
-      Obj.change(obj, (o) => {
-        Obj.setLabel(o, 'Jane');
+      Obj.change(obj, (obj) => {
+        Obj.setLabel(obj, 'Jane');
       });
 
       // setLabel updates the name field.
@@ -140,8 +140,8 @@ describe('Obj.change enforcement', () => {
 
       // setDescription only works if schema has description annotation.
       // For schemas without it, this is a no-op.
-      Obj.change(obj, (o) => {
-        Obj.setDescription(o, 'My Description');
+      Obj.change(obj, (obj) => {
+        Obj.setDescription(obj, 'My Description');
       });
 
       // Verify setDescription doesn't throw.
@@ -153,15 +153,15 @@ describe('Obj.change enforcement', () => {
 
       expect(Obj.getMeta(obj).tags).toBeUndefined();
 
-      Obj.change(obj, (o) => {
-        Obj.addTag(o, 'tag-1');
-        Obj.addTag(o, 'tag-2');
+      Obj.change(obj, (obj) => {
+        Obj.addTag(obj, 'tag-1');
+        Obj.addTag(obj, 'tag-2');
       });
 
       expect(Obj.getMeta(obj).tags).toEqual(['tag-1', 'tag-2']);
 
-      Obj.change(obj, (o) => {
-        Obj.removeTag(o, 'tag-1');
+      Obj.change(obj, (obj) => {
+        Obj.removeTag(obj, 'tag-1');
       });
 
       expect(Obj.getMeta(obj).tags).toEqual(['tag-2']);
@@ -170,8 +170,8 @@ describe('Obj.change enforcement', () => {
     test('deleteKeys removes foreign keys by source', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
-      Obj.change(obj, (o) => {
-        const meta = Obj.getMeta(o);
+      Obj.change(obj, (obj) => {
+        const meta = Obj.getMeta(obj);
         meta.keys.push({ source: 'source-a', id: '1' });
         meta.keys.push({ source: 'source-a', id: '2' });
         meta.keys.push({ source: 'source-b', id: '3' });
@@ -179,8 +179,8 @@ describe('Obj.change enforcement', () => {
 
       expect(Obj.getMeta(obj).keys).toHaveLength(3);
 
-      Obj.change(obj, (o) => {
-        Obj.deleteKeys(o, 'source-a');
+      Obj.change(obj, (obj) => {
+        Obj.deleteKeys(obj, 'source-a');
       });
 
       expect(Obj.getMeta(obj).keys).toHaveLength(1);
@@ -190,8 +190,8 @@ describe('Obj.change enforcement', () => {
     test('setValue sets nested properties', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
-      Obj.change(obj, (o) => {
-        Obj.setValue(o, ['name'], 'Updated Name');
+      Obj.change(obj, (obj) => {
+        Obj.setValue(obj, ['name'], 'Updated Name');
       });
 
       expect(obj.name).toBe('Updated Name');
@@ -200,8 +200,8 @@ describe('Obj.change enforcement', () => {
     test('getMeta is mutable inside change and changes persist', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
-      Obj.change(obj, (o) => {
-        const meta = Obj.getMeta(o);
+      Obj.change(obj, (obj) => {
+        const meta = Obj.getMeta(obj);
         meta.tags = ['tag-1', 'tag-2'];
         meta.keys.push({ source: 'external', id: '123' });
       });
@@ -214,12 +214,12 @@ describe('Obj.change enforcement', () => {
     test('multiple mutations in single change all persist', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
 
-      Obj.change(obj, (o) => {
-        o.name = 'Name 1';
-        o.name = 'Name 2';
-        o.name = 'Name 3';
-        Obj.addTag(o, 'tag-1');
-        Obj.addTag(o, 'tag-2');
+      Obj.change(obj, (obj) => {
+        obj.name = 'Name 1';
+        obj.name = 'Name 2';
+        obj.name = 'Name 3';
+        Obj.addTag(obj, 'tag-1');
+        Obj.addTag(obj, 'tag-2');
       });
 
       // All mutations should persist.
@@ -237,9 +237,9 @@ describe('Obj.change enforcement', () => {
         notificationCount++;
       });
 
-      Obj.change(obj, (p) => {
-        p.name = 'Jane';
-        p.age = 30;
+      Obj.change(obj, (obj) => {
+        obj.name = 'Jane';
+        obj.age = 30;
       });
 
       // Should only fire one notification for all changes.
@@ -256,8 +256,8 @@ describe('Obj.change enforcement', () => {
         address: { city: 'NYC', coordinates: {} },
       });
 
-      Obj.change(obj, (p) => {
-        p.address!.state = 'NY';
+      Obj.change(obj, (obj) => {
+        obj.address!.state = 'NY';
       });
 
       expect(obj.address?.state).toBe('NY');
@@ -270,9 +270,9 @@ describe('Obj.change enforcement', () => {
         address: { city: 'NYC', coordinates: { lat: 40.7128, lng: -74.006 } },
       });
 
-      Obj.change(obj, (p) => {
-        p.address!.coordinates!.lat = 51.5074;
-        p.address!.coordinates!.lng = -0.1278;
+      Obj.change(obj, (obj) => {
+        obj.address!.coordinates!.lat = 51.5074;
+        obj.address!.coordinates!.lng = -0.1278;
       });
 
       expect(obj.address?.coordinates?.lat).toBe(51.5074);
@@ -306,12 +306,12 @@ describe('Obj.change enforcement', () => {
     test('nested Obj.change calls work correctly', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'John' });
 
-      Obj.change(obj, (p) => {
-        p.name = 'Jane';
+      Obj.change(obj, (obj) => {
+        obj.name = 'Jane';
 
         // Nested change should work (already in change context).
-        Obj.change(obj, (p2) => {
-          p2.age = 30;
+        Obj.change(obj, (obj) => {
+          obj.age = 30;
         });
       });
 
@@ -323,8 +323,8 @@ describe('Obj.change enforcement', () => {
       const obj = Obj.make(TestSchema.Person, { name: 'John' });
 
       expect(() => {
-        Obj.change(obj, (p) => {
-          p.name = 'Jane';
+        Obj.change(obj, (obj) => {
+          obj.name = 'Jane';
           throw new Error('Test error');
         });
       }).toThrow('Test error');
@@ -344,8 +344,8 @@ describe('Obj.change enforcement', () => {
         fields: [{ label: 'tag1', value: 'val1' }],
       });
 
-      Obj.change(obj, (p) => {
-        p.fields!.push({ label: 'tag2', value: 'val2' });
+      Obj.change(obj, (obj) => {
+        obj.fields!.push({ label: 'tag2', value: 'val2' });
       });
 
       expect(obj.fields).toHaveLength(2);
@@ -362,8 +362,8 @@ describe('Obj.change enforcement', () => {
       });
 
       let popped: any;
-      Obj.change(obj, (p) => {
-        popped = p.fields!.pop();
+      Obj.change(obj, (obj) => {
+        popped = obj.fields!.pop();
       });
 
       expect(popped.label).toBe('b');
@@ -380,8 +380,8 @@ describe('Obj.change enforcement', () => {
         ],
       });
 
-      Obj.change(obj, (p) => {
-        p.fields!.splice(1, 1, { label: 'x', value: 'x' });
+      Obj.change(obj, (obj) => {
+        obj.fields!.splice(1, 1, { label: 'x', value: 'x' });
       });
 
       expect(obj.fields).toHaveLength(3);
@@ -429,8 +429,8 @@ describe('Obj.change enforcement', () => {
     test('delete property within Obj.change', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'John', age: 25 });
 
-      Obj.change(obj, (p) => {
-        delete p.age;
+      Obj.change(obj, (obj) => {
+        delete obj.age;
       });
 
       expect(obj.age).toBeUndefined();
@@ -455,8 +455,8 @@ describe('Obj.change enforcement', () => {
         [Relation.Target]: target,
       });
 
-      Relation.change(rel, (r) => {
-        const meta = Relation.getMeta(r);
+      Relation.change(rel, (rel) => {
+        const meta = Relation.getMeta(rel);
         meta.tags = ['rel-tag'];
         meta.keys.push({ source: 'rel-source', id: 'rel-key' });
       });
@@ -473,14 +473,14 @@ describe('Obj.change enforcement', () => {
         [Relation.Target]: target,
       });
 
-      Relation.change(rel, (r) => {
-        Relation.addTag(r, 'important');
+      Relation.change(rel, (rel) => {
+        Relation.addTag(rel, 'important');
       });
 
       expect(Relation.getMeta(rel).tags).toContain('important');
 
-      Relation.change(rel, (r) => {
-        Relation.removeTag(r, 'important');
+      Relation.change(rel, (rel) => {
+        Relation.removeTag(rel, 'important');
       });
 
       expect(Relation.getMeta(rel).tags).not.toContain('important');
@@ -494,8 +494,8 @@ describe('Obj.change enforcement', () => {
 
       // Direct assignment of root ECHO objects (created with Obj.make) is not allowed.
       expect(() => {
-        Obj.change(obj, (o) => {
-          o.other = other;
+        Obj.change(obj, (obj) => {
+          obj.other = other;
         });
       }).toThrow(/Object references must be wrapped with `Ref\.make`/);
     });
@@ -504,14 +504,14 @@ describe('Obj.change enforcement', () => {
       const obj = Obj.make(TestSchema.Expando, {});
 
       // Assign a plain object (not created with Obj.make).
-      Obj.change(obj, (o) => {
-        o.nested = { value: 'initial' };
+      Obj.change(obj, (obj) => {
+        obj.nested = { value: 'initial' };
       });
       expect(obj.nested.value).toBe('initial');
 
       // Modify plain nested object through parent's change context.
-      Obj.change(obj, (o) => {
-        o.nested.value = 'modified';
+      Obj.change(obj, (obj) => {
+        obj.nested.value = 'modified';
       });
       expect(obj.nested.value).toBe('modified');
     });

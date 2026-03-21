@@ -55,13 +55,13 @@ export default EntityExtraction.pipe(
             throw new Error('Multiple organizations created');
           } else if (created.length === 1) {
             organization = yield* Database.resolve(created[0], Organization.Organization);
-            Obj.change(organization, (org) => {
-              const meta = Obj.getMeta(org);
+            Obj.change(organization, (organization) => {
+              const meta = Obj.getMeta(organization);
               meta.tags ??= [];
               meta.tags.push(...(tags ?? []));
             });
-            Obj.change(contact, (c) => {
-              c.organization = Ref.make(organization!);
+            Obj.change(contact, (contact) => {
+              contact.organization = Ref.make(organization!);
             });
           }
         }
@@ -108,8 +108,8 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
   yield* Database.add(newContact);
 
   if (name) {
-    Obj.change(newContact, (c) => {
-      c.fullName = name;
+    Obj.change(newContact, (newContact) => {
+      newContact.fullName = name;
     });
   }
 
@@ -149,8 +149,8 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
 
   if (matchingOrg) {
     log.info('found matching organization', { organization: matchingOrg });
-    Obj.change(newContact, (c) => {
-      c.organization = Ref.make(matchingOrg);
+    Obj.change(newContact, (newContact) => {
+      newContact.organization = Ref.make(matchingOrg);
     });
   }
 

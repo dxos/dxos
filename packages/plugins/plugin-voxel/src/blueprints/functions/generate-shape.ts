@@ -18,11 +18,11 @@ export default GenerateShape.pipe(
       const loaded = (yield* Database.load(world)) as Voxel.World;
       const voxels = generateModel(shape, origin, hue);
       let added = 0;
-      Obj.change(loaded, (obj) => {
-        if (!obj.voxels) {
-          obj.voxels = {};
+      Obj.change(loaded, (loaded) => {
+        if (!loaded.voxels) {
+          loaded.voxels = {};
         }
-        const voxelMap = obj.voxels as Obj.Mutable<typeof obj.voxels>;
+        const voxelMap = loaded.voxels as Obj.Mutable<typeof loaded.voxels>;
         for (const voxel of voxels) {
           const key = Voxel.voxelKey(voxel.x, voxel.y, voxel.z);
           voxelMap[key] = { hue: voxel.hue };

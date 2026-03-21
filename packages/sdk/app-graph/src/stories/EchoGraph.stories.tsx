@@ -176,8 +176,8 @@ const runAction = async (client: Client, action: Action) => {
       if (space) {
         const objects = await space.db.query(Filter.type(TestSchema.Expando, { type: 'test' })).run();
         const object = objects[Math.floor(Math.random() * objects.length)];
-        Obj.change(object, (o) => {
-          o.name = faker.commerce.productName();
+        Obj.change(object, (object) => {
+          object.name = faker.commerce.productName();
         });
       }
       break;
