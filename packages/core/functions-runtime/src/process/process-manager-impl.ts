@@ -45,7 +45,7 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
   readonly #storage: Context.Tag.Service<typeof StorageService.StorageService>;
 
-  readonly #onCleanup: (() => void) | undefined;
+  readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
 
   constructor(
     readonly id: Process.ID,
@@ -54,14 +54,14 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
     registry: Registry.Registry,
     outputQueue: Queue.Queue<OutputItem<O>>,
     storage: Context.Tag.Service<typeof StorageService.StorageService>,
-    onCleanup?: () => void,
+    onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
   ) {
     this.#process = process;
     this.#scope = scope;
     this.#registry = registry;
     this.#outputQueue = outputQueue;
     this.#storage = storage;
-    this.#onCleanup = onCleanup;
+    this.#onFinished = onFinished;
 
     this.#currentStatus = {
       state: Process.State.RUNNING,
@@ -136,6 +136,7 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
       this.#finished = true;
       return this.#cleanup().pipe(
         Effect.tap(() => this.#setStatus(Process.State.COMPLETED, Exit.void)),
+        Effect.tap(() => this.#onFinished?.(Process.State.COMPLETED) ?? Effect.void),
       );
     }
     if (Process.isOutcomeResume(outcome)) {
@@ -149,6 +150,7 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
     this.#activeHandlers--;
     return this.#cleanup().pipe(
       Effect.tap(() => this.#setStatus(Process.State.FAILED, Exit.failCause(cause))),
+      Effect.tap(() => this.#onFinished?.(Process.State.FAILED, cause) ?? Effect.void),
     );
   }
 
@@ -157,7 +159,6 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
       Queue.unsafeOffer(this.#outputQueue, Option.none());
       yield* this.#storage.clear();
       yield* Scope.close(this.#scope, Exit.void);
-      this.#onCleanup?.();
     });
   }
 
@@ -269,21 +270,29 @@ export class ProcessManagerImpl implements Process.Manager {
         Effect.provide(fullCtx as Context.Context<any>),
       );
 
-      const handle = new ProcessHandleImpl<I, O>(id, process, scope, this.#registry, outputQueue, storage, () => {
-        this.#traceContexts.delete(id);
-      });
-      this.#handles.set(id, handle);
+      const isRoot = !options?.parentProcessId;
 
       // Trace invocation start for root processes (no parent).
-      if (!options?.parentProcessId) {
-        const trace = yield* this.#tracingService.traceInvocationStart({
+      let invocationTrace: TracingService.InvocationTraceData | undefined;
+      if (isRoot) {
+        invocationTrace = yield* this.#tracingService.traceInvocationStart({
           payload: { data: { processId: id } },
         });
-        this.#traceContexts.set(
-          id,
-          { ...traceContext, currentInvocation: trace },
-        );
+        this.#traceContexts.set(id, { ...traceContext, currentInvocation: invocationTrace });
       }
+
+      const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
+        Effect.gen(this, function* () {
+          // Call traceInvocationEnd for root processes.
+          if (isRoot && invocationTrace) {
+            const exception = state === Process.State.FAILED && cause ? cause : undefined;
+            yield* this.#tracingService.traceInvocationEnd({ trace: invocationTrace, exception });
+          }
+          this.#traceContexts.delete(id);
+        });
+
+      const handle = new ProcessHandleImpl<I, O>(id, process, scope, this.#registry, outputQueue, storage, onFinished);
+      this.#handles.set(id, handle);
 
       yield* handle.runTick();
 

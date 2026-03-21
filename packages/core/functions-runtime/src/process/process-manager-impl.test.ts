@@ -1022,5 +1022,105 @@ describe('ProcessManagerImpl', () => {
         expect(capturedContexts[0].toolCallId).toEqual('tc-42');
       }),
     );
+
+    it.effect(
+      'calls traceInvocationEnd on successful completion',
+      Effect.fn(function* ({ expect }) {
+        const invocationEnds: { trace: TracingService.InvocationTraceData; exception?: any }[] = [];
+        const tracingService: Context.Tag.Service<TracingService> = {
+          ...TracingService.noop,
+          traceInvocationStart: Effect.fn(function* () {
+            return { invocationId: ObjectId.random(), invocationTraceQueue: undefined };
+          }),
+          traceInvocationEnd: Effect.fn(function* (data) {
+            invocationEnds.push(data);
+          }),
+        };
+
+        const { manager } = makeManager({ tracingService });
+        const executable = makeSimpleExecutable();
+
+        const handle = yield* manager.spawn(executable);
+        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+        yield* handle.submitInput({ value: 5 });
+        yield* Fiber.join(outputFiber);
+
+        expect(invocationEnds).toHaveLength(1);
+        expect(invocationEnds[0].trace.invocationId).toBeDefined();
+        expect(invocationEnds[0].exception).toBeUndefined();
+      }),
+    );
+
+    it.effect(
+      'calls traceInvocationEnd with exception on error',
+      Effect.fn(function* ({ expect }) {
+        const invocationEnds: { trace: TracingService.InvocationTraceData; exception?: any }[] = [];
+        const tracingService: Context.Tag.Service<TracingService> = {
+          ...TracingService.noop,
+          traceInvocationStart: Effect.fn(function* () {
+            return { invocationId: ObjectId.random(), invocationTraceQueue: undefined };
+          }),
+          traceInvocationEnd: Effect.fn(function* (data) {
+            invocationEnds.push(data);
+          }),
+        };
+
+        const failingExecutable = Process.makeExecutable(
+          { input: Schema.Void, output: Schema.Void, services: [] },
+          (_ctx) =>
+            Effect.succeed({
+              handleInput: (_input: void) => Effect.die(new Error('boom')),
+              tick: () => Effect.succeed(Process.OutcomeSuspend as Process.Outcome),
+            }),
+        ) as Process.Executable<void, void>;
+
+        const { manager } = makeManager({ tracingService });
+        const handle = yield* manager.spawn(failingExecutable);
+        yield* handle.submitInput(undefined);
+
+        const status = yield* handle.status();
+        expect(status.state).toEqual(Process.State.FAILED);
+
+        expect(invocationEnds).toHaveLength(1);
+        expect(invocationEnds[0].trace.invocationId).toBeDefined();
+        expect(invocationEnds[0].exception).toBeDefined();
+      }),
+    );
+
+    it.effect(
+      'does not call traceInvocationEnd for child process',
+      Effect.fn(function* ({ expect }) {
+        const invocationEnds: { trace: TracingService.InvocationTraceData; exception?: any }[] = [];
+        const tracingService: Context.Tag.Service<TracingService> = {
+          ...TracingService.noop,
+          traceInvocationStart: Effect.fn(function* () {
+            return { invocationId: ObjectId.random(), invocationTraceQueue: undefined };
+          }),
+          traceInvocationEnd: Effect.fn(function* (data) {
+            invocationEnds.push(data);
+          }),
+        };
+
+        const { manager } = makeManager({ tracingService });
+        const executable = makeSimpleExecutable();
+
+        const parentHandle = yield* manager.spawn(executable);
+        const childHandle = yield* manager.spawn(executable, { parentProcessId: parentHandle.id });
+
+        const childOutputFiber = yield* Stream.runCollect(childHandle.subscribeOutputs()).pipe(Effect.fork);
+        yield* childHandle.submitInput({ value: 3 });
+        yield* Fiber.join(childOutputFiber);
+
+        const childStatus = yield* childHandle.status();
+        expect(childStatus.state).toEqual(Process.State.COMPLETED);
+        expect(invocationEnds).toHaveLength(0);
+
+        const parentOutputFiber = yield* Stream.runCollect(parentHandle.subscribeOutputs()).pipe(Effect.fork);
+        yield* parentHandle.submitInput({ value: 1 });
+        yield* Fiber.join(parentOutputFiber);
+
+        expect(invocationEnds).toHaveLength(1);
+      }),
+    );
   });
 });
