@@ -9,6 +9,8 @@ import * as Effect from 'effect/Effect';
 import { ClientService } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 
+import { formatEdgeError } from '../util';
+
 export const handler = Effect.fn(function* () {
   const client = yield* ClientService;
   const identity = client.halo.identity.get();
@@ -19,10 +21,13 @@ export const handler = Effect.fn(function* () {
 
   const edgeIdentity = createEdgeIdentity(client);
   client.edge.http.setIdentity(edgeIdentity);
-  const result = yield* Effect.tryPromise(() => client.edge.http.inspectIdentity(identity.identityKey.toHex()));
+  const result = yield* Effect.tryPromise({
+    try: () => client.edge.http.inspectIdentity(identity.identityKey.toHex()),
+    catch: (error) => new Error(formatEdgeError(error)),
+  });
   yield* Console.log(JSON.stringify(result, null, 2));
 });
 
-export const inspectIdentity = Command.make('inspect-identity', {}, handler).pipe(
+export const inspect = Command.make('inspect', {}, handler).pipe(
   Command.withDescription('Inspect the current identity on EDGE.'),
 );

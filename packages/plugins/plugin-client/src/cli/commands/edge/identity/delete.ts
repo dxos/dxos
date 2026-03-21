@@ -10,6 +10,8 @@ import * as Effect from 'effect/Effect';
 import { ClientService } from '@dxos/client';
 import { createEdgeIdentity } from '@dxos/client/edge';
 
+import { formatEdgeError } from '../util';
+
 export const handler = Effect.fn(function* ({ force }: { force: boolean }) {
   if (!force) {
     yield* Console.error('This action is irreversible and will delete all owned spaces. Pass --force to confirm.');
@@ -25,12 +27,15 @@ export const handler = Effect.fn(function* ({ force }: { force: boolean }) {
 
   const edgeIdentity = createEdgeIdentity(client);
   client.edge.http.setIdentity(edgeIdentity);
-  const result = yield* Effect.tryPromise(() => client.edge.http.deleteIdentity(identity.identityKey.toHex()));
+  const result = yield* Effect.tryPromise({
+    try: () => client.edge.http.deleteIdentity(identity.identityKey.toHex()),
+    catch: (error) => new Error(formatEdgeError(error)),
+  });
   yield* Console.log(JSON.stringify(result, null, 2));
 });
 
-export const deleteIdentity = Command.make(
-  'delete-identity',
+export const del = Command.make(
+  'delete',
   {
     force: Options.boolean('force').pipe(
       Options.withDescription('Confirm irreversible deletion.'),
