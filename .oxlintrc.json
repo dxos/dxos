@@ -4,7 +4,7 @@
   "categories": {},
   "options": {
     "typeAware": true,
-    "denyWarnings": true
+    "denyWarnings": true,
   },
   "rules": {
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
@@ -68,19 +68,43 @@
     "unicorn/no-useless-spread": "off",
     "unicorn/prefer-string-starts-ends-with": "off",
     "vitest/warn-todo": "off",
-    "unused-imports/no-unused-imports": "warn"
+    "unused-imports/no-unused-imports": "warn",
+    "import-x-js/order": [
+      "warn",
+      {
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true,
+        },
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+        "pathGroups": [
+          {
+            "pattern": "#**",
+            "group": "parent",
+            "position": "before",
+          },
+          {
+            "pattern": "@dxos/**",
+            "group": "internal",
+            "position": "after",
+          },
+        ],
+        "pathGroupsExcludedImportTypes": ["builtin"],
+        "newlines-between": "always",
+      },
+    ],
   },
   "settings": {
     "jsx-a11y": {
       "polymorphicPropName": null,
       "components": {},
-      "attributes": {}
+      "attributes": {},
     },
     "react": {
       "formComponents": [],
       "linkComponents": [],
       "version": null,
-      "componentWrapperFunctions": []
+      "componentWrapperFunctions": [],
     },
     "jsdoc": {
       "ignorePrivate": false,
@@ -90,14 +114,14 @@
       "augmentsExtendsReplacesDocs": false,
       "implementsReplacesDocs": false,
       "exemptDestructuredRootsFromChecks": false,
-      "tagNamePreference": {}
+      "tagNamePreference": {},
     },
     "vitest": {
-      "typecheck": false
-    }
+      "typecheck": false,
+    },
   },
   "env": {
-    "builtin": true
+    "builtin": true,
   },
   "globals": {},
   "ignorePatterns": [
@@ -113,7 +137,11 @@
     "scripts/**",
     "docs/legacy/**",
     "tools/swc-log-plugin/tests/__swc_snapshots__/**",
-    "tools/swc-log-plugin/test-rig/**"
+    "tools/swc-log-plugin/test-rig/**",
   ],
-  "jsPlugins": ["@dxos/eslint-plugin-rules", "eslint-plugin-unused-imports"]
+  "jsPlugins": [
+    "@dxos/eslint-plugin-rules",
+    "eslint-plugin-unused-imports",
+    { "name": "import-x-js", "specifier": "eslint-plugin-import-x" },
+  ],
 }
