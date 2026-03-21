@@ -38,7 +38,7 @@ export default GenerateSummary.pipe(
       const today = new Date().toISOString().slice(0, 10);
 
       const recentObjects = yield* Database.runQuery(
-        Query.type(Obj.Unknown).select(Filter.updatedAfter(cutoff)),
+        Query.type(Obj.Unknown).select(Filter.updated({ after: cutoff })),
       );
 
       const objectDescriptions = recentObjects.map((obj) => {

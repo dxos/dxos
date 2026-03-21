@@ -92,12 +92,12 @@ describe('filterMatch', () => {
   });
 
   test('timestamp filter passes through (handled at index level)', () => {
-    expect(filterMatchObject(Filter.updatedAfter(Date.now() - 1000).ast, OBJECT_1)).to.be.true;
-    expect(filterMatchObject(Filter.createdBefore(Date.now() + 1000).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchObject(Filter.updated({ after: Date.now() - 1000 }).ast, OBJECT_1)).to.be.true;
+    expect(filterMatchObject(Filter.created({ before: Date.now() + 1000 }).ast, OBJECT_1)).to.be.true;
   });
 
   test('and(type, timestamp) passes through timestamp part', () => {
-    const filter = Filter.and(Filter.type(TestSchema.Expando), Filter.updatedAfter(Date.now() - 1000));
+    const filter = Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: Date.now() - 1000 }));
     expect(filterMatchObject(filter.ast, OBJECT_1)).to.be.true;
   });
 });

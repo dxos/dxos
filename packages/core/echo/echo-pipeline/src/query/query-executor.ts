@@ -627,6 +627,11 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execFilterStep(step: QueryPlan.FilterStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+    const timestampParams = extractTimestampParams(step.filter);
+    if (timestampParams !== null) {
+      return this._execTimestampFilterStep(step, workingSet, timestampParams);
+    }
+
     const result = workingSet.filter((item) => {
       if (item.doc) {
         return filterMatchObject(step.filter, {
@@ -647,6 +652,33 @@ export class QueryExecutor extends Resource {
         ...ExecutionTrace.makeEmpty(),
         name: 'Filter',
         details: JSON.stringify(step.filter),
+        objectCount: result.length,
+      },
+    };
+  }
+
+  private async _execTimestampFilterStep(
+    step: QueryPlan.FilterStep,
+    workingSet: QueryItem[],
+    params: { updatedAfter?: number; updatedBefore?: number; createdAfter?: number; createdBefore?: number },
+  ): Promise<StepExecutionResult> {
+    const spaces = [...new Set(workingSet.map((item) => item.spaceId).filter(isNonNullable))];
+    const metas = await this._runInRuntime(
+      this._indexEngine.queryByTimeRange({
+        spaceIds: spaces,
+        ...params,
+        includeAllQueues: false,
+        queueIds: [],
+      }),
+    );
+    const matchingIds = new Set(metas.map((m) => m.objectId));
+    const result = workingSet.filter((item) => matchingIds.has(item.objectId));
+    return {
+      workingSet: result,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'Filter(timestamp)',
+        details: JSON.stringify(params),
         objectCount: result.length,
       },
     };
@@ -1500,4 +1532,41 @@ const extractQueueIds = (queues: readonly DXN.String[]): ObjectId[] | null => {
     return null;
   }
   return queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[];
+};
+
+/**
+ * Extract timestamp parameters from a filter AST node.
+ * Returns null if the filter doesn't contain timestamp nodes.
+ */
+const extractTimestampParams = (
+  filter: QueryAST.Filter,
+): { updatedAfter?: number; updatedBefore?: number; createdAfter?: number; createdBefore?: number } | null => {
+  const collect = (f: QueryAST.Filter): QueryAST.FilterTimestamp[] => {
+    if (f.type === 'timestamp') {
+      return [f];
+    }
+    if (f.type === 'and') {
+      return f.filters.flatMap(collect);
+    }
+    return [];
+  };
+
+  const timestamps = collect(filter);
+  if (timestamps.length === 0) {
+    return null;
+  }
+
+  const params: { updatedAfter?: number; updatedBefore?: number; createdAfter?: number; createdBefore?: number } = {};
+  for (const ts of timestamps) {
+    if (ts.field === 'updatedAt' && (ts.operator === 'gt' || ts.operator === 'gte')) {
+      params.updatedAfter = ts.value;
+    } else if (ts.field === 'updatedAt' && (ts.operator === 'lt' || ts.operator === 'lte')) {
+      params.updatedBefore = ts.value;
+    } else if (ts.field === 'createdAt' && (ts.operator === 'gt' || ts.operator === 'gte')) {
+      params.createdAfter = ts.value;
+    } else if (ts.field === 'createdAt' && (ts.operator === 'lt' || ts.operator === 'lte')) {
+      params.createdBefore = ts.value;
+    }
+  }
+  return params;
 };

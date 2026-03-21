@@ -310,42 +310,33 @@ export const between = <T>(from: T, to: T): Filter<unknown> => {
   });
 };
 
+type TimeRange = { after?: Date | number; before?: Date | number };
+
 const _toUnixMs = (date: Date | number): number => (typeof date === 'number' ? date : date.getTime());
 
-/**
- * Filter objects updated at or after the given time.
- */
-export const updatedAfter = (date: Date | number): Any => {
-  return new FilterClass({ type: 'timestamp', field: 'updatedAt', operator: 'gte', value: _toUnixMs(date) });
+const _timeRangeFilter = (field: 'updatedAt' | 'createdAt', range: TimeRange): Any => {
+  const filters: Any[] = [];
+  if (range.after != null) {
+    filters.push(new FilterClass({ type: 'timestamp', field, operator: 'gte', value: _toUnixMs(range.after) }));
+  }
+  if (range.before != null) {
+    filters.push(new FilterClass({ type: 'timestamp', field, operator: 'lte', value: _toUnixMs(range.before) }));
+  }
+  if (filters.length === 0) {
+    return everything();
+  }
+  return filters.length === 1 ? filters[0] : and(...filters);
 };
 
 /**
- * Filter objects updated at or before the given time.
+ * Filter objects by updatedAt timestamp.
  */
-export const updatedBefore = (date: Date | number): Any => {
-  return new FilterClass({ type: 'timestamp', field: 'updatedAt', operator: 'lte', value: _toUnixMs(date) });
-};
+export const updated = (range: TimeRange): Any => _timeRangeFilter('updatedAt', range);
 
 /**
- * Filter objects created at or after the given time.
+ * Filter objects by createdAt timestamp.
  */
-export const createdAfter = (date: Date | number): Any => {
-  return new FilterClass({ type: 'timestamp', field: 'createdAt', operator: 'gte', value: _toUnixMs(date) });
-};
-
-/**
- * Filter objects created at or before the given time.
- */
-export const createdBefore = (date: Date | number): Any => {
-  return new FilterClass({ type: 'timestamp', field: 'createdAt', operator: 'lte', value: _toUnixMs(date) });
-};
-
-/**
- * Filter objects updated within the given time range (inclusive).
- */
-export const updatedBetween = (from: Date | number, to: Date | number): Any => {
-  return and(updatedAfter(from), updatedBefore(to));
-};
+export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', range);
 
 /**
  * Negate the filter.

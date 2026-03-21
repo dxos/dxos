@@ -7,46 +7,46 @@ import { describe, expect, test } from 'vitest';
 import * as Filter from './Filter';
 
 describe('Filter timestamp builders', () => {
-  test('updatedAfter produces correct AST', () => {
+  test('updated({ after }) produces correct AST', () => {
     const ts = 1700000000000;
-    const f = Filter.updatedAfter(ts);
+    const f = Filter.updated({ after: ts });
     expect(f.ast).toEqual({ type: 'timestamp', field: 'updatedAt', operator: 'gte', value: ts });
   });
 
-  test('updatedBefore produces correct AST', () => {
+  test('updated({ before }) produces correct AST', () => {
     const ts = 1700000000000;
-    const f = Filter.updatedBefore(ts);
+    const f = Filter.updated({ before: ts });
     expect(f.ast).toEqual({ type: 'timestamp', field: 'updatedAt', operator: 'lte', value: ts });
   });
 
-  test('createdAfter produces correct AST', () => {
+  test('created({ after }) produces correct AST', () => {
     const ts = 1700000000000;
-    const f = Filter.createdAfter(ts);
+    const f = Filter.created({ after: ts });
     expect(f.ast).toEqual({ type: 'timestamp', field: 'createdAt', operator: 'gte', value: ts });
   });
 
-  test('createdBefore produces correct AST', () => {
+  test('created({ before }) produces correct AST', () => {
     const ts = 1700000000000;
-    const f = Filter.createdBefore(ts);
+    const f = Filter.created({ before: ts });
     expect(f.ast).toEqual({ type: 'timestamp', field: 'createdAt', operator: 'lte', value: ts });
   });
 
-  test('updatedAfter accepts Date objects', () => {
+  test('updated() accepts Date objects', () => {
     const date = new Date('2026-03-20T21:00:00Z');
-    const f = Filter.updatedAfter(date);
+    const f = Filter.updated({ after: date });
     expect(f.ast).toEqual({ type: 'timestamp', field: 'updatedAt', operator: 'gte', value: date.getTime() });
   });
 
-  test('createdBefore accepts Date objects', () => {
+  test('created() accepts Date objects', () => {
     const date = new Date('2026-03-20T09:00:00Z');
-    const f = Filter.createdBefore(date);
+    const f = Filter.created({ before: date });
     expect(f.ast).toEqual({ type: 'timestamp', field: 'createdAt', operator: 'lte', value: date.getTime() });
   });
 
-  test('updatedBetween produces AND of updatedAfter and updatedBefore', () => {
+  test('updated({ after, before }) produces AND of two timestamp nodes', () => {
     const from = 1700000000000;
     const to = 1700086400000;
-    const f = Filter.updatedBetween(from, to);
+    const f = Filter.updated({ after: from, before: to });
     expect(f.ast).toEqual({
       type: 'and',
       filters: [
@@ -56,10 +56,10 @@ describe('Filter timestamp builders', () => {
     });
   });
 
-  test('updatedBetween accepts Date objects', () => {
+  test('updated({ after, before }) accepts Date objects', () => {
     const from = new Date('2026-03-19T00:00:00Z');
     const to = new Date('2026-03-20T00:00:00Z');
-    const f = Filter.updatedBetween(from, to);
+    const f = Filter.updated({ after: from, before: to });
     expect(f.ast).toEqual({
       type: 'and',
       filters: [
@@ -71,7 +71,7 @@ describe('Filter timestamp builders', () => {
 
   test('timestamp filters compose with and()', () => {
     const typeFilter = Filter.everything();
-    const timeFilter = Filter.updatedAfter(1700000000000);
+    const timeFilter = Filter.updated({ after: 1700000000000 });
     const combined = Filter.and(typeFilter, timeFilter);
     expect(combined.ast.type).toBe('and');
     expect((combined.ast as any).filters).toHaveLength(2);
@@ -84,7 +84,7 @@ describe('Filter timestamp builders', () => {
   });
 
   test('timestamp filters pass the is() check', () => {
-    const f = Filter.updatedAfter(Date.now());
+    const f = Filter.updated({ after: Date.now() });
     expect(Filter.is(f)).toBe(true);
   });
 });

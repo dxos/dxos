@@ -267,6 +267,174 @@ describe('Query', () => {
     });
   });
 
+  describe('Timestamp queries', () => {
+    test('updated({ after }) excludes objects created before cutoff', async () => {
+      const { db } = await builder.createDatabase();
+      const early = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await sleep(20);
+      const cutoff = Date.now();
+      await sleep(20);
+
+      const recent = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: cutoff }))))
+        .run();
+      const ids = objects.map((o) => o.id);
+      expect(ids).toContain(recent.id);
+      expect(ids).not.toContain(early.id);
+    });
+
+    test('created({ before }) excludes objects created after cutoff', async () => {
+      const { db } = await builder.createDatabase();
+      const early = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await sleep(20);
+      const cutoff = Date.now();
+      await sleep(20);
+
+      const late = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.created({ before: cutoff }))))
+        .run();
+      const ids = objects.map((o) => o.id);
+      expect(ids).toContain(early.id);
+      expect(ids).not.toContain(late.id);
+    });
+
+    test('updated({ after, before }) returns only objects in range', async () => {
+      const { db } = await builder.createDatabase();
+      const before = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await sleep(20);
+      const rangeStart = Date.now();
+      await sleep(20);
+
+      const middle = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      await sleep(20);
+      const rangeEnd = Date.now();
+      await sleep(20);
+
+      const after = db.add(createTestObject({ value: 3 }));
+      await db.flush();
+
+      const objects = await db
+        .query(
+          Query.select(
+            Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: rangeStart, before: rangeEnd })),
+          ),
+        )
+        .run();
+      const ids = objects.map((o) => o.id);
+      expect(ids).toContain(middle.id);
+      expect(ids).not.toContain(before.id);
+      expect(ids).not.toContain(after.id);
+    });
+
+    test('timestamp filter combined with type and property filter', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(createTestObject({ value: 100 }));
+      await db.flush();
+
+      await sleep(20);
+      const cutoff = Date.now();
+      await sleep(20);
+
+      const recent = db.add(createTestObject({ value: 200 }));
+      await db.flush();
+
+      const objects = await db
+        .query(
+          Query.select(Filter.and(Filter.type(TestSchema.Expando, { value: 200 }), Filter.updated({ after: cutoff }))),
+        )
+        .run();
+      expect(objects).toHaveLength(1);
+      expect(objects[0].id).toBe(recent.id);
+    });
+
+    test('updated({ after }) with future cutoff returns empty', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      const futureCutoff = Date.now() + 60_000;
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: futureCutoff }))))
+        .run();
+      expect(objects).toHaveLength(0);
+    });
+
+    test('updated({ after }) accepts Date objects', async () => {
+      const { db } = await builder.createDatabase();
+      const early = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await sleep(20);
+      const cutoff = new Date();
+      await sleep(20);
+
+      const recent = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: cutoff }))))
+        .run();
+      const ids = objects.map((o) => o.id);
+      expect(ids).toContain(recent.id);
+      expect(ids).not.toContain(early.id);
+    });
+
+    test('updated({ after }) picks up modified objects', async () => {
+      const { db } = await builder.createDatabase();
+      const obj = db.add(createTestObject({ value: 1 }));
+      const other = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      await sleep(20);
+      const cutoff = Date.now();
+      await sleep(20);
+
+      Obj.change(obj, (o: any) => {
+        o.value = 999;
+      });
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: cutoff }))))
+        .run();
+      const ids = objects.map((o) => o.id);
+      expect(ids).toContain(obj.id);
+      expect(ids).not.toContain(other.id);
+    });
+
+    test('standalone updated({ after }) without type filter', async () => {
+      const { db } = await builder.createDatabase();
+      const early = db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await sleep(20);
+      const cutoff = Date.now();
+      await sleep(20);
+
+      const recent = db.add(createTestObject({ value: 2 }));
+      await db.flush();
+
+      const objects = await db.query(Query.select(Filter.updated({ after: cutoff }))).run();
+      const ids = objects.map((o) => o.id);
+      expect(ids).toContain(recent.id);
+      expect(ids).not.toContain(early.id);
+    });
+  });
+
   describe('Queue queries', () => {
     test('typeDXN: versionless matches any version', async () => {
       const ContactV1 = Schema.Struct({

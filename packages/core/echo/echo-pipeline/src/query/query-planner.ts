@@ -251,8 +251,9 @@ export class QueryPlanner {
           selectionInverted: !context.selectionInverted,
         });
       case 'and': {
-        const timestampFilters = filter.filters.filter((f): f is QueryAST.FilterTimestamp => f.type === 'timestamp');
-        const nonTimestampFilters = filter.filters.filter((f) => f.type !== 'timestamp');
+        const flatFilters = _flattenAnd(filter.filters);
+        const timestampFilters = flatFilters.filter((f): f is QueryAST.FilterTimestamp => f.type === 'timestamp');
+        const nonTimestampFilters = flatFilters.filter((f) => f.type !== 'timestamp');
 
         if (timestampFilters.length > 0 && nonTimestampFilters.length <= 1) {
           const selector = _mergeTimestampSelectors(timestampFilters.map(_timestampFilterToSelector));
@@ -788,6 +789,21 @@ const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['dir
     direction,
   },
 });
+
+/**
+ * Recursively flattens nested `and` filters into a single list.
+ */
+const _flattenAnd = (filters: readonly QueryAST.Filter[]): QueryAST.Filter[] => {
+  const result: QueryAST.Filter[] = [];
+  for (const f of filters) {
+    if (f.type === 'and') {
+      result.push(..._flattenAnd(f.filters));
+    } else {
+      result.push(f);
+    }
+  }
+  return result;
+};
 
 const _timestampFilterToSelector = (filter: QueryAST.FilterTimestamp): QueryPlan.TimestampSelector => {
   const selector: QueryPlan.TimestampSelector = { _tag: 'TimestampSelector' };
