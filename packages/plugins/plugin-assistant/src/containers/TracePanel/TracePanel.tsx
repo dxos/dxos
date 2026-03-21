@@ -8,7 +8,6 @@ import React, { useMemo } from 'react';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { InvocationOutcome, InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
-import { useActiveSpace } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
 import { Input, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
@@ -22,16 +21,7 @@ import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import { meta } from '../../meta';
 
-export const TracePanel = () => {
-  const space = useActiveSpace();
-  if (!space) {
-    return null;
-  }
-
-  return <TracePanelMain space={space} />;
-};
-
-const TracePanelMain = ({ space }: { space: Space }) => {
+export const TracePanel = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   const { state, start, stop } = useTriggerRuntimeControls(space.db);
   const isRunning = state?.enabled ?? false;
