@@ -152,6 +152,9 @@
       "path": "../../plugins/plugin-native"
     },
     {
+      "path": "../../plugins/plugin-native-filesystem"
+    },
+    {
       "path": "../../plugins/plugin-navtree"
     },
     {
