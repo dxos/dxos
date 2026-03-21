@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { PropsWithChildren, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Database } from '@dxos/echo';
@@ -36,7 +36,7 @@ const mockResolve = (_typename: string): Metadata | undefined => undefined;
 // Wrapper that places the panel inside a Dialog (matching production usage).
 //
 
-const DialogWrapper = ({ children }: { children: React.ReactNode }) => (
+const DialogWrapper = ({ children }: PropsWithChildren) => (
   <Dialog.Root open>
     <Dialog.Content>
       <Dialog.Header>

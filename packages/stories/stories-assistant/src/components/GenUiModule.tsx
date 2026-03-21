@@ -2,7 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentType, createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, {
+  ReactNode,
+  type ComponentType,
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  createElement,
+} from 'react';
 
 import * as Effect from 'effect/Effect';
 import * as LanguageModel from '@effect/ai/LanguageModel';
@@ -318,7 +327,7 @@ const VOID_ELEMENTS = new Set([
   'wbr',
 ]);
 
-const convertMarkupNode = (node: Node, key: number, invoker: InvokerFn | null): React.ReactNode => {
+const convertMarkupNode = (node: Node, key: number, invoker: InvokerFn | null): ReactNode => {
   if (node.nodeType === Node.TEXT_NODE) {
     const text = node.textContent ?? '';
     return text === '' ? null : text;
@@ -336,15 +345,15 @@ const convertMarkupNode = (node: Node, key: number, invoker: InvokerFn | null): 
 
   if (registryKey) {
     const Component = COMPONENT_REGISTRY[registryKey] as ComponentType<any>;
-    return React.createElement(Component, props, ...children);
+    return createElement(Component, props, ...children);
   }
 
   const tag = element.tagName.toLowerCase();
   if (VOID_ELEMENTS.has(tag)) {
-    return React.createElement(tag, props);
+    return createElement(tag, props);
   }
 
-  return React.createElement(tag, props, ...children);
+  return createElement(tag, props, ...children);
 };
 
 const GenUiMarkupPreview = ({ markup }: { markup: string }) => {

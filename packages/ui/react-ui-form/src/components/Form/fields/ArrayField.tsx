@@ -81,6 +81,7 @@ export const ArrayField = ({
         {values?.map((_, index) => {
           return (
             // TODO(burdon): Depends on RHS (e.g., Array button vs. Array field x input).
+
             <div role='none' key={index} className='grid grid-cols-[1fr_2fr] gap-2 last:mb-3'>
               <FormField
                 autoFocus={index === values.length - 1}

@@ -130,7 +130,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
     useLayoutEffect(() => {
       const forwardedEl =
         forwardedRef != null && 'current' in forwardedRef
-          ? (forwardedRef as React.RefObject<HTMLDivElement | null>).current
+          ? (forwardedRef as RefObject<HTMLDivElement | null>).current
           : null;
       const root = (rootRef.current ?? forwardedEl) as HTMLDivElement | null;
       if (!root || !containerId || scrolling) {
@@ -232,6 +232,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
           {children}
         </Comp>
 
+        {/* Dragging preview. */}
         {state.type === 'preview' &&
           createPortal(
             <Comp

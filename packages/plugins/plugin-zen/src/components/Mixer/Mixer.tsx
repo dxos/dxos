@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { k, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -233,7 +233,7 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
         }}
       />
       <List.ItemDeleteButton
-        onClick={(event: React.MouseEvent) => {
+        onClick={(event: MouseEvent) => {
           event.stopPropagation();
           onLayerDelete(item.id);
         }}
