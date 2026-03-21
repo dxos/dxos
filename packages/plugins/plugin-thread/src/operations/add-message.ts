@@ -16,7 +16,7 @@ import { AddMessage } from './definitions';
 
 import { ThreadCapabilities } from '../types';
 
-export default AddMessage.pipe(
+const handler: Operation.WithHandler<typeof AddMessage> = AddMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ anchor, subject, sender, text }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -78,3 +78,5 @@ export default AddMessage.pipe(
     }),
   ),
 );
+
+export default handler;

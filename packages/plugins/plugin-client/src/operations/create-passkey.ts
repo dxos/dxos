@@ -13,7 +13,7 @@ import { CreatePasskey } from './definitions';
 
 import { ClientCapabilities } from '../types';
 
-export default CreatePasskey.pipe(
+const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -60,3 +60,5 @@ export default CreatePasskey.pipe(
     }),
   ),
 );
+
+export default handler;

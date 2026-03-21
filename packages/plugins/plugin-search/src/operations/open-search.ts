@@ -9,10 +9,12 @@ import { Operation } from '@dxos/operation';
 
 import { OpenSearch } from './definitions';
 
-export default OpenSearch.pipe(
+const handler: Operation.WithHandler<typeof OpenSearch> = OpenSearch.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       yield* Operation.invoke(LayoutOperation.UpdateComplementary, { subject: 'search' });
     }),
   ),
 );
+
+export default handler;

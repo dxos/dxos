@@ -12,7 +12,7 @@ import { Channel, Video } from '../types';
 
 import { ClearSyncedVideos } from './definitions';
 
-export default ClearSyncedVideos.pipe(
+const handler: Operation.WithHandler<typeof ClearSyncedVideos> = ClearSyncedVideos.pipe(
   Operation.withHandler(({ channel: channelRef }) =>
     Effect.gen(function* () {
       log('clearing youtube channel synced videos', { channel: channelRef.dxn.toString() });
@@ -46,3 +46,5 @@ export default ClearSyncedVideos.pipe(
     }),
   ),
 );
+
+export default handler;

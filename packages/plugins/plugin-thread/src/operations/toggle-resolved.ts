@@ -11,7 +11,7 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
 import { ToggleResolved } from './definitions';
 
-export default ToggleResolved.pipe(
+const handler: Operation.WithHandler<typeof ToggleResolved> = ToggleResolved.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const thread = input.thread;
@@ -37,3 +37,5 @@ export default ToggleResolved.pipe(
     }),
   ),
 );
+
+export default handler;

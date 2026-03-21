@@ -12,7 +12,7 @@ import { OpenDirectory } from './definitions';
 import { FileCapabilities } from '../types';
 import { handleToLocalDirectory } from '../util';
 
-export default OpenDirectory.pipe(
+const handler: Operation.WithHandler<typeof OpenDirectory> = OpenDirectory.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const handle = yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'readwrite' }));
@@ -25,3 +25,5 @@ export default OpenDirectory.pipe(
     }),
   ),
 );
+
+export default handler;

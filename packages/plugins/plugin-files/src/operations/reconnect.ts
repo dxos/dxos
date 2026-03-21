@@ -12,7 +12,7 @@ import { Reconnect } from './definitions';
 import { FileCapabilities } from '../types';
 import { getDirectoryChildren } from '../util';
 
-export default Reconnect.pipe(
+const handler: Operation.WithHandler<typeof Reconnect> = Reconnect.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id }) {
       const state = yield* Capabilities.getAtomValue(FileCapabilities.State);
@@ -49,3 +49,5 @@ export default Reconnect.pipe(
     }),
   ),
 );
+
+export default handler;

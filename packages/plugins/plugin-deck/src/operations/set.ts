@@ -13,7 +13,7 @@ import { updateActiveDeck } from './helpers';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
 
-export default LayoutOperation.Set.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.Set> = LayoutOperation.Set.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const deck = yield* DeckCapabilities.getDeck();
@@ -32,3 +32,5 @@ export default LayoutOperation.Set.pipe(
     }),
   ),
 );
+
+export default handler;

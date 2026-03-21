@@ -11,7 +11,7 @@ import { SetViewMode } from './definitions';
 
 import { MarkdownCapabilities } from '../types';
 
-export default SetViewMode.pipe(
+const handler: Operation.WithHandler<typeof SetViewMode> = SetViewMode.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id, viewMode }) {
       yield* Capabilities.updateAtomValue(MarkdownCapabilities.State, (current) => ({
@@ -21,3 +21,5 @@ export default SetViewMode.pipe(
     }),
   ),
 );
+
+export default handler;

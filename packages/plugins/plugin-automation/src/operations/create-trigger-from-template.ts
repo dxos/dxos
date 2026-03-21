@@ -15,7 +15,7 @@ import { Filter } from '@dxos/react-client/echo';
 import { meta } from '../meta';
 import { CreateTriggerFromTemplate } from './definitions';
 
-export default CreateTriggerFromTemplate.pipe(
+const handler: Operation.WithHandler<typeof CreateTriggerFromTemplate> = CreateTriggerFromTemplate.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, template, enabled = false, scriptName, input }) {
       const trigger = Trigger.make({ enabled, input });
@@ -70,3 +70,5 @@ export default CreateTriggerFromTemplate.pipe(
     }),
   ),
 );
+
+export default handler;

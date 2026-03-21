@@ -12,7 +12,7 @@ import { Graph, Node } from '@dxos/plugin-graph';
 
 import { DeckCapabilities, defaultDeck } from '../types';
 
-export default LayoutOperation.SwitchWorkspace.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
@@ -56,3 +56,5 @@ export default LayoutOperation.SwitchWorkspace.pipe(
     }),
   ),
 );
+
+export default handler;

@@ -14,7 +14,7 @@ import { closeEntry } from '../layout';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
 
-export default LayoutOperation.Close.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOperation.Close.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const deck = yield* DeckCapabilities.getDeck();
@@ -31,3 +31,5 @@ export default LayoutOperation.Close.pipe(
     }),
   ),
 );
+
+export default handler;

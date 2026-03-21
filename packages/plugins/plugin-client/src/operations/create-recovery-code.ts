@@ -14,7 +14,7 @@ import { CreateRecoveryCode } from './definitions';
 import { RECOVERY_CODE_DIALOG } from '../constants';
 import { ClientCapabilities } from '../types';
 
-export default CreateRecoveryCode.pipe(
+const handler: Operation.WithHandler<typeof CreateRecoveryCode> = CreateRecoveryCode.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -31,3 +31,5 @@ export default CreateRecoveryCode.pipe(
     }),
   ),
 );
+
+export default handler;

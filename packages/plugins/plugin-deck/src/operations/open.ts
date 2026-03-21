@@ -18,7 +18,7 @@ import { openEntry } from '../layout';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
 
-export default LayoutOperation.Open.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
@@ -84,3 +84,5 @@ export default LayoutOperation.Open.pipe(
     }),
   ),
 );
+
+export default handler;

@@ -11,7 +11,7 @@ import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from 
 
 import { DeleteCardField } from './definitions';
 
-export default DeleteCardField.pipe(
+const handler: Operation.WithHandler<typeof DeleteCardField> = DeleteCardField.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ view, fieldId }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -43,3 +43,5 @@ export default DeleteCardField.pipe(
     }),
   ),
 );
+
+export default handler;

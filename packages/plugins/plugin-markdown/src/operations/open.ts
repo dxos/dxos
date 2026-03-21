@@ -9,7 +9,7 @@ import { Operation } from '@dxos/operation';
 
 import { Open } from './definitions';
 
-export default Open.pipe(
+const handler: Operation.WithHandler<typeof Open> = Open.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ doc }) {
       const { content } = yield* doc.pipe(
@@ -21,3 +21,5 @@ export default Open.pipe(
     }),
   ),
 );
+
+export default handler;

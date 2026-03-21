@@ -11,7 +11,7 @@ import { Voxel } from '../types';
 
 import { QueryWorld } from './definitions';
 
-export default QueryWorld.pipe(
+const handler: Operation.WithHandler<typeof QueryWorld> = QueryWorld.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ world }) {
       const worldObj = (yield* Database.load(world)) as Voxel.World;
@@ -27,3 +27,5 @@ export default QueryWorld.pipe(
     }),
   ),
 );
+
+export default handler;

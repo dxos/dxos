@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 
 import { SETTINGS_ID, SETTINGS_KEY } from '../actions';
 
-export default SettingsOperation.Open.pipe(
+const handler: Operation.WithHandler<typeof SettingsOperation.Open> = SettingsOperation.Open.pipe(
   Operation.withHandler((input) =>
     Effect.gen(function* () {
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
@@ -25,3 +25,5 @@ export default SettingsOperation.Open.pipe(
     }),
   ),
 );
+
+export default handler;

@@ -19,7 +19,7 @@ import { incrementPlank } from '../layout';
 import { DeckCapabilities, PLANK_COMPANION_TYPE } from '../types';
 import { computeActiveUpdates } from '../util';
 
-export default Adjust.pipe(
+const handler: Operation.WithHandler<typeof Adjust> = Adjust.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const _state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
@@ -79,3 +79,5 @@ export default Adjust.pipe(
     }),
   ),
 );
+
+export default handler;

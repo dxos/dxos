@@ -21,7 +21,7 @@ import { type Message } from '@dxos/types';
 import { AssistantCapabilities } from '../types';
 import { CreateChat, RunPromptInNewChat } from './definitions';
 
-export default RunPromptInNewChat.pipe(
+const handler: Operation.WithHandler<typeof RunPromptInNewChat> = RunPromptInNewChat.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ db, prompt, objects, blueprints, background }) {
@@ -103,3 +103,5 @@ export default RunPromptInNewChat.pipe(
     ),
   ),
 );
+
+export default handler;

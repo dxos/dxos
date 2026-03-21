@@ -17,7 +17,7 @@ import { meta } from '../meta';
 import { SyncCalendar } from './definitions';
 import { CalendarFunctions } from './google/calendar';
 
-export default SyncCalendar.pipe(
+const handler: Operation.WithHandler<typeof SyncCalendar> = SyncCalendar.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ calendar }) {
       const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
@@ -45,3 +45,5 @@ export default SyncCalendar.pipe(
     }),
   ),
 );
+
+export default handler;

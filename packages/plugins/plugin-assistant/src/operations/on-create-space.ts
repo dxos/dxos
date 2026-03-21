@@ -9,7 +9,7 @@ import { Operation } from '@dxos/operation';
 
 import { CreateChat, OnCreateSpace } from './definitions';
 
-export default OnCreateSpace.pipe(
+const handler: Operation.WithHandler<typeof OnCreateSpace> = OnCreateSpace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ space }) {
       // TODO(wittjosiah): Remove once function registry is avaiable.
@@ -20,3 +20,5 @@ export default OnCreateSpace.pipe(
     }),
   ),
 );
+
+export default handler;

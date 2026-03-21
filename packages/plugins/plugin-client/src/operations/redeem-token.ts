@@ -12,7 +12,7 @@ import { RedeemToken } from './definitions';
 
 import { ClientCapabilities } from '../types';
 
-export default RedeemToken.pipe(
+const handler: Operation.WithHandler<typeof RedeemToken> = RedeemToken.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (data) {
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -26,5 +26,7 @@ export default RedeemToken.pipe(
     }),
   ),
 );
+
+export default handler;
 
 const RECOVER_IDENTITY_RPC_TIMEOUT = 20_000;

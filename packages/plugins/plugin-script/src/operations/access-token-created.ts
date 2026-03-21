@@ -13,7 +13,7 @@ import { DEPLOYMENT_DIALOG } from '../constants';
 import { defaultScriptsForIntegration } from '../meta';
 import { templates } from '../templates';
 
-export default TokenManagerOperation.AccessTokenCreated.pipe(
+const handler: Operation.WithHandler<typeof TokenManagerOperation.AccessTokenCreated> = TokenManagerOperation.AccessTokenCreated.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ accessToken }) {
       const scriptTemplates = (defaultScriptsForIntegration[accessToken.source] ?? [])
@@ -31,3 +31,5 @@ export default TokenManagerOperation.AccessTokenCreated.pipe(
     }),
   ),
 );
+
+export default handler;

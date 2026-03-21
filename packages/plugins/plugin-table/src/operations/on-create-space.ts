@@ -7,7 +7,7 @@ import { Task } from '@dxos/types';
 
 import { OnCreateSpace, Create } from './definitions';
 
-export default OnCreateSpace.pipe(
+const handler: Operation.WithHandler<typeof OnCreateSpace> = OnCreateSpace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ space }) {
       const { object } = yield* Operation.invoke(Create, {
@@ -18,3 +18,5 @@ export default OnCreateSpace.pipe(
     }),
   ),
 );
+
+export default handler;

@@ -10,10 +10,12 @@ import { Operation } from '@dxos/operation';
 import { HelpCapabilities } from '../types';
 import { Start } from './definitions';
 
-export default Start.pipe(
+const handler: Operation.WithHandler<typeof Start> = Start.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       yield* Capabilities.updateAtomValue(HelpCapabilities.State, (state) => ({ ...state, running: true }));
     }),
   ),
 );
+
+export default handler;

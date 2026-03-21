@@ -10,7 +10,7 @@ import { WnfsFile } from '../types';
 
 import { Create } from './definitions';
 
-export default Create.pipe(
+const handler: Operation.WithHandler<typeof Create> = Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, type, cid }) {
       return {
@@ -19,3 +19,5 @@ export default Create.pipe(
     }),
   ),
 );
+
+export default handler;

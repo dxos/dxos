@@ -16,7 +16,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { AssistantBlueprint } from '../blueprints';
 import { CreateChat } from './definitions';
 
-export default CreateChat.pipe(
+const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, name, addToSpace = true }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -62,3 +62,5 @@ export default CreateChat.pipe(
     }),
   ),
 );
+
+export default handler;

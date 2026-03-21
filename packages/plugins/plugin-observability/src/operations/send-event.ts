@@ -11,7 +11,7 @@ import { ObservabilityCapabilities } from '../types';
 
 import { SendEvent } from './definitions';
 
-export default SendEvent.pipe(
+const handler: Operation.WithHandler<typeof SendEvent> = SendEvent.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       // NOTE: This is to ensure that events fired before observability is ready are still sent.
@@ -21,3 +21,5 @@ export default SendEvent.pipe(
     }),
   ),
 );
+
+export default handler;

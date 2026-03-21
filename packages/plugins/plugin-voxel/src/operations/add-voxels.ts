@@ -11,7 +11,7 @@ import { Voxel } from '../types';
 
 import { AddVoxels } from './definitions';
 
-export default AddVoxels.pipe(
+const handler: Operation.WithHandler<typeof AddVoxels> = AddVoxels.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ world, voxels }) {
       const loaded = (yield* Database.load(world)) as Voxel.World;
@@ -33,3 +33,5 @@ export default AddVoxels.pipe(
     }),
   ),
 );
+
+export default handler;

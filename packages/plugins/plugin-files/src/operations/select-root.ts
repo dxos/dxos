@@ -11,7 +11,7 @@ import { SelectRoot } from './definitions';
 
 import { FileCapabilities } from '../types';
 
-export default SelectRoot.pipe(
+const handler: Operation.WithHandler<typeof SelectRoot> = SelectRoot.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const rootDir = yield* Effect.promise(async () => (window as any).showDirectoryPicker({ mode: 'readwrite' }));
@@ -24,3 +24,5 @@ export default SelectRoot.pipe(
     }),
   ),
 );
+
+export default handler;

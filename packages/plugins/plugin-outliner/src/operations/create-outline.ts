@@ -10,10 +10,12 @@ import { Outline } from '../types';
 
 import { CreateOutline } from './definitions';
 
-export default CreateOutline.pipe(
+const handler: Operation.WithHandler<typeof CreateOutline> = CreateOutline.pipe(
   Operation.withHandler(({ name }) =>
     Effect.succeed({
       object: Outline.make({ name }),
     }),
   ),
 );
+
+export default handler;

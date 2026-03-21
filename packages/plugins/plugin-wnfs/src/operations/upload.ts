@@ -14,7 +14,7 @@ import { WnfsCapabilities } from '../types';
 
 import { Upload } from './definitions';
 
-export default Upload.pipe(
+const handler: Operation.WithHandler<typeof Upload> = Upload.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ file, db }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -26,3 +26,5 @@ export default Upload.pipe(
     }),
   ),
 );
+
+export default handler;

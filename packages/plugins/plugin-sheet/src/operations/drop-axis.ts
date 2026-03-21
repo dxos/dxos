@@ -8,7 +8,7 @@ import { Operation } from '@dxos/operation';
 
 import { DropAxis } from './definitions';
 
-export default DropAxis.pipe(
+const handler: Operation.WithHandler<typeof DropAxis> = DropAxis.pipe(
   Operation.withHandler(({ model, axis, axisIndex }) =>
     Effect.sync(() => {
       const undoData = model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
@@ -22,3 +22,5 @@ export default DropAxis.pipe(
     }),
   ),
 );
+
+export default handler;

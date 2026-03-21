@@ -13,7 +13,7 @@ import { ScrollToAnchor } from './definitions';
 
 import { MarkdownCapabilities } from '../types';
 
-export default ScrollToAnchor.pipe(
+const handler: Operation.WithHandler<typeof ScrollToAnchor> = ScrollToAnchor.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, cursor }) {
       const editorViews = yield* Capability.get(MarkdownCapabilities.EditorViews);
@@ -36,3 +36,5 @@ export default ScrollToAnchor.pipe(
     }),
   ),
 );
+
+export default handler;

@@ -12,7 +12,7 @@ import { type MaybePromise, byPosition } from '@dxos/util';
 
 import { Import } from './definitions';
 
-export default Import.pipe(
+const handler: Operation.WithHandler<typeof Import> = Import.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ rootDir: rootDirInput }) {
       const rootDir =
@@ -55,6 +55,8 @@ export default Import.pipe(
     }),
   ),
 );
+
+export default handler;
 
 const getFileType = (extension: string) => {
   switch (extension) {

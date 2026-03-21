@@ -14,7 +14,7 @@ import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { CreateProposals } from './definitions';
 
-export default CreateProposals.pipe(
+const handler: Operation.WithHandler<typeof CreateProposals> = CreateProposals.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ doc, diffs }) {
       const object = yield* Database.load(doc);
@@ -45,3 +45,5 @@ export default CreateProposals.pipe(
     }),
   ),
 );
+
+export default handler;

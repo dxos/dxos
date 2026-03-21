@@ -22,7 +22,7 @@ import { Sync } from './definitions';
 import { GoogleCredentials } from './services/google-credentials';
 import { fetchTranscript } from './transcript';
 
-export default Sync.pipe(
+const handler: Operation.WithHandler<typeof Sync> = Sync.pipe(
   Operation.withHandler(({ channel: channelRef, restrictedMode = false, includeTranscripts = true }) =>
     Effect.gen(function* () {
       log('syncing youtube channel', { channel: channelRef.dxn.toString(), restrictedMode, includeTranscripts });
@@ -305,3 +305,5 @@ const streamVideosToFeed = Effect.fn(function* (
 
   return count;
 });
+
+export default handler;

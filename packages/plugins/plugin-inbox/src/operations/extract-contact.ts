@@ -15,7 +15,7 @@ import { Organization, Person } from '@dxos/types';
 
 import { ExtractContact } from './definitions';
 
-export default ExtractContact.pipe(
+const handler: Operation.WithHandler<typeof ExtractContact> = ExtractContact.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, actor }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -104,3 +104,5 @@ export default ExtractContact.pipe(
     }),
   ),
 );
+
+export default handler;

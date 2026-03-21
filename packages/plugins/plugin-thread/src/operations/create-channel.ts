@@ -10,10 +10,12 @@ import { CreateChannel } from './definitions';
 
 import { Channel } from '../types';
 
-export default CreateChannel.pipe(
+const handler: Operation.WithHandler<typeof CreateChannel> = CreateChannel.pipe(
   Operation.withHandler((input) =>
     Effect.sync(() => ({
       object: Channel.make({ name: input.name }),
     })),
   ),
 );
+
+export default handler;

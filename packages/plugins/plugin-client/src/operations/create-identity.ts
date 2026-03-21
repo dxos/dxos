@@ -14,7 +14,7 @@ import { CreateIdentity } from './definitions';
 import { ClientEvents } from '../types';
 import { ClientCapabilities } from '../types';
 
-export default CreateIdentity.pipe(
+const handler: Operation.WithHandler<typeof CreateIdentity> = CreateIdentity.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (profile) {
       const manager = yield* Capability.get(Capabilities.PluginManager);
@@ -26,3 +26,5 @@ export default CreateIdentity.pipe(
     }),
   ),
 );
+
+export default handler;

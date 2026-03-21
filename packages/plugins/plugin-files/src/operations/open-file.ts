@@ -13,7 +13,7 @@ import { OpenFile } from './definitions';
 import { FileCapabilities } from '../types';
 import { handleToLocalFile, legacyFileToLocalFile } from '../util';
 
-export default OpenFile.pipe(
+const handler: Operation.WithHandler<typeof OpenFile> = OpenFile.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       if ('showOpenFilePicker' in window) {
@@ -51,3 +51,5 @@ export default OpenFile.pipe(
     }),
   ),
 );
+
+export default handler;

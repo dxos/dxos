@@ -11,7 +11,7 @@ import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from 
 
 import { RestoreCardField } from './definitions';
 
-export default RestoreCardField.pipe(
+const handler: Operation.WithHandler<typeof RestoreCardField> = RestoreCardField.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ view, field, props, index }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -37,3 +37,5 @@ export default RestoreCardField.pipe(
     }),
   ),
 );
+
+export default handler;

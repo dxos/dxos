@@ -10,7 +10,7 @@ import { Thread } from '@dxos/types';
 
 import { CreateChannelThread } from './definitions';
 
-export default CreateChannelThread.pipe(
+const handler: Operation.WithHandler<typeof CreateChannelThread> = CreateChannelThread.pipe(
   Operation.withHandler((input) =>
     Effect.sync(() => {
       const thread = Thread.make({ status: 'active' });
@@ -22,3 +22,5 @@ export default CreateChannelThread.pipe(
     }),
   ),
 );
+
+export default handler;

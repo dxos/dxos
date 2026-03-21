@@ -8,10 +8,12 @@ import { Operation } from '@dxos/operation';
 
 import { InsertAxis } from './definitions';
 
-export default InsertAxis.pipe(
+const handler: Operation.WithHandler<typeof InsertAxis> = InsertAxis.pipe(
   Operation.withHandler(({ model, axis, index, count }) =>
     Effect.sync(() => {
       model[axis === 'col' ? 'insertColumns' : 'insertRows'](index, count);
     }),
   ),
 );
+
+export default handler;

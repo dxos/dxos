@@ -12,7 +12,7 @@ import { Save } from './definitions';
 import { FileCapabilities } from '../types';
 import { findFile, handleSave } from '../util';
 
-export default Save.pipe(
+const handler: Operation.WithHandler<typeof Save> = Save.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id }) {
       const state = yield* Capabilities.getAtomValue(FileCapabilities.State);
@@ -23,3 +23,5 @@ export default Save.pipe(
     }),
   ),
 );
+
+export default handler;

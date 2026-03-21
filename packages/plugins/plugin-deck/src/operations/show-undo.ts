@@ -11,7 +11,7 @@ import { Operation } from '@dxos/operation';
 import { meta } from '../meta';
 import { DeckCapabilities } from '../types';
 
-export default UndoOperation.ShowUndo.pipe(
+const handler: Operation.WithHandler<typeof UndoOperation.ShowUndo> = UndoOperation.ShowUndo.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const historyTracker = yield* Capability.get(Capabilities.HistoryTracker);
@@ -42,3 +42,5 @@ export default UndoOperation.ShowUndo.pipe(
     }),
   ),
 );
+
+export default handler;

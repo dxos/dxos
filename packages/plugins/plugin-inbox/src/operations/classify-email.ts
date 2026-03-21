@@ -22,7 +22,7 @@ import { renderMarkdown } from '../util';
 
 import { ClassifyEmail } from './definitions';
 
-export default ClassifyEmail.pipe(
+const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ message }) {
@@ -119,6 +119,8 @@ export default ClassifyEmail.pipe(
     ),
   ),
 );
+
+export default handler;
 
 const CLASSIFY_SYSTEM_PROMPT = trim`
   You are a helpful assistant that classifies email messages by selecting the most appropriate tag.

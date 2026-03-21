@@ -11,10 +11,12 @@ import { Chess } from '../types';
 
 import { Create } from './definitions';
 
-export default Create.pipe(
+const handler: Operation.WithHandler<typeof Create> = Create.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ name, pgn, fen }) {
       return yield* Database.add(Chess.make({ name, pgn, fen }));
     }),
   ),
 );
+
+export default handler;

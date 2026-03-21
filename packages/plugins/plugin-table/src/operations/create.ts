@@ -8,7 +8,7 @@ import { ViewModel } from '@dxos/schema';
 
 import { Create } from './definitions';
 
-export default Create.pipe(
+const handler: Operation.WithHandler<typeof Create> = Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, name, typename }) {
       const { view, jsonSchema } = yield* Effect.promise(() => ViewModel.makeFromDatabase({ db, typename }));
@@ -17,3 +17,5 @@ export default Create.pipe(
     }),
   ),
 );
+
+export default handler;

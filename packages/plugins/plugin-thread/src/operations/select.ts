@@ -11,7 +11,7 @@ import { Select } from './definitions';
 
 import { ThreadCapabilities } from '../types';
 
-export default Select.pipe(
+const handler: Operation.WithHandler<typeof Select> = Select.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -21,3 +21,5 @@ export default Select.pipe(
     }),
   ),
 );
+
+export default handler;

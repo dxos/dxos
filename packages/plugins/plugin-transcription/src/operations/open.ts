@@ -12,7 +12,7 @@ import { Message } from '@dxos/types';
 import { Open } from './definitions';
 import { renderByline } from '../util';
 
-export default Open.pipe(
+const handler: Operation.WithHandler<typeof Open> = Open.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ transcript }) {
       const transcriptObj = yield* Database.load(transcript);
@@ -27,3 +27,5 @@ export default Open.pipe(
     }),
   ),
 );
+
+export default handler;

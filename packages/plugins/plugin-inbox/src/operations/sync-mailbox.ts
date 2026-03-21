@@ -17,7 +17,7 @@ import { meta } from '../meta';
 import { SyncMailbox } from './definitions';
 import { GmailFunctions } from './google/gmail';
 
-export default SyncMailbox.pipe(
+const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ mailbox }) {
       const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
@@ -45,3 +45,5 @@ export default SyncMailbox.pipe(
     }),
   ),
 );
+
+export default handler;

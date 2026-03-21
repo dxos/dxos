@@ -9,7 +9,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 
 import { OnSchemaAdded, Create } from './definitions';
 
-export default OnSchemaAdded.pipe(
+const handler: Operation.WithHandler<typeof OnSchemaAdded> = OnSchemaAdded.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, schema }) {
       const { object } = yield* Operation.invoke(Create, {
@@ -21,3 +21,5 @@ export default OnSchemaAdded.pipe(
     }),
   ),
 );
+
+export default handler;

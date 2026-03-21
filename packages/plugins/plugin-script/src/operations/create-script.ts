@@ -11,7 +11,7 @@ import { Operation } from '@dxos/operation';
 import { templates } from '../templates';
 import { CreateScript } from './definitions';
 
-export default CreateScript.pipe(
+const handler: Operation.WithHandler<typeof CreateScript> = CreateScript.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, gistUrl, initialTemplateId }) {
       let source = templates[0].source;
@@ -43,3 +43,5 @@ export default CreateScript.pipe(
     }),
   ),
 );
+
+export default handler;

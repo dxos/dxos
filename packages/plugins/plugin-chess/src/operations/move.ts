@@ -12,7 +12,7 @@ import { type Chess } from '../types';
 
 import { Move } from './definitions';
 
-export default Move.pipe(
+const handler: Operation.WithHandler<typeof Move> = Move.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ game, move }) {
       const obj = (yield* Database.load(game)) as Chess.Game;
@@ -33,3 +33,5 @@ export default Move.pipe(
     }),
   ),
 );
+
+export default handler;

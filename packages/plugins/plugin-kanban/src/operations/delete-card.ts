@@ -8,7 +8,7 @@ import { Operation } from '@dxos/operation';
 
 import { DeleteCard } from './definitions';
 
-export default DeleteCard.pipe(
+const handler: Operation.WithHandler<typeof DeleteCard> = DeleteCard.pipe(
   Operation.withHandler(({ card }) =>
     Effect.sync(() => {
       const db = Obj.getDatabase(card);
@@ -19,3 +19,5 @@ export default DeleteCard.pipe(
     }),
   ),
 );
+
+export default handler;

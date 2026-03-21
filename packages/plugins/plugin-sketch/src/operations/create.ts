@@ -10,10 +10,12 @@ import { Sketch } from '../types';
 
 import { Create } from './definitions';
 
-export default Create.pipe(
+const handler: Operation.WithHandler<typeof Create> = Create.pipe(
   Operation.withHandler(({ name, schema = Sketch.TLDRAW_SCHEMA, content = {} }) =>
     Effect.succeed({
       object: Sketch.make({ name, canvas: { schema, content } }),
     }),
   ),
 );
+
+export default handler;

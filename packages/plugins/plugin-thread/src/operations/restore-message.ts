@@ -12,7 +12,7 @@ import { Thread } from '@dxos/types';
 
 import { RestoreMessage } from './definitions';
 
-export default RestoreMessage.pipe(
+const handler: Operation.WithHandler<typeof RestoreMessage> = RestoreMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ anchor, message, messageIndex }) {
       const thread = Relation.getSource(anchor) as Thread.Thread;
@@ -34,3 +34,5 @@ export default RestoreMessage.pipe(
     }),
   ),
 );
+
+export default handler;

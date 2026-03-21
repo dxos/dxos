@@ -19,7 +19,7 @@ import { Summarize } from './definitions';
 /**
  * Summarize a transcript of a meeting.
  */
-export default Summarize.pipe(
+const handler: Operation.WithHandler<typeof Summarize> = Summarize.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ transcript, notes }) {
@@ -57,6 +57,8 @@ export default Summarize.pipe(
     ),
   ),
 );
+
+export default handler;
 
 const systemPrompt = trim`
   You are a helpful assistant that summarizes transcripts of meetings.

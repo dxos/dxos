@@ -10,7 +10,7 @@ import { Message } from '@dxos/types';
 
 import { DraftEmail } from './definitions';
 
-export default DraftEmail.pipe(
+const handler: Operation.WithHandler<typeof DraftEmail> = DraftEmail.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ subject, to, body, replyTo }) {
       const replyToMessage = !replyTo ? undefined : yield* Database.load(replyTo);
@@ -36,3 +36,5 @@ export default DraftEmail.pipe(
     }),
   ),
 );
+
+export default handler;

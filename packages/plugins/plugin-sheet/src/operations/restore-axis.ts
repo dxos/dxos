@@ -8,10 +8,12 @@ import { Operation } from '@dxos/operation';
 
 import { RestoreAxis } from './definitions';
 
-export default RestoreAxis.pipe(
+const handler: Operation.WithHandler<typeof RestoreAxis> = RestoreAxis.pipe(
   Operation.withHandler(({ model, axis, ...restoreData }) =>
     Effect.sync(() => {
       model[axis === 'col' ? 'restoreColumn' : 'restoreRow'](restoreData);
     }),
   ),
 );
+
+export default handler;

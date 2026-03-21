@@ -16,7 +16,7 @@ import { type Message } from '@dxos/types';
 import { type AiChatServices, updateName } from '../processor';
 import { UpdateChatName } from './definitions';
 
-export default UpdateChatName.pipe(
+const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ chat }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -39,3 +39,5 @@ export default UpdateChatName.pipe(
     }),
   ),
 );
+
+export default handler;

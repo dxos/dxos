@@ -13,7 +13,7 @@ import { CollectionModel } from '@dxos/schema';
 
 import { AddMailbox } from './definitions';
 
-export default AddMailbox.pipe(
+const handler: Operation.WithHandler<typeof AddMailbox> = AddMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const target = input.target as any;
@@ -44,3 +44,5 @@ export default AddMailbox.pipe(
     }),
   ),
 );
+
+export default handler;

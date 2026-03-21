@@ -11,7 +11,7 @@ import { ObservabilityCapabilities } from '../types';
 
 import { CaptureUserFeedback } from './definitions';
 
-export default CaptureUserFeedback.pipe(
+const handler: Operation.WithHandler<typeof CaptureUserFeedback> = CaptureUserFeedback.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const observability = yield* Capability.get(ObservabilityCapabilities.Observability);
@@ -19,3 +19,5 @@ export default CaptureUserFeedback.pipe(
     }),
   ),
 );
+
+export default handler;

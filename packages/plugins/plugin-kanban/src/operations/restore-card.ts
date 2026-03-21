@@ -8,7 +8,7 @@ import { Operation } from '@dxos/operation';
 
 import { RestoreCard } from './definitions';
 
-export default RestoreCard.pipe(
+const handler: Operation.WithHandler<typeof RestoreCard> = RestoreCard.pipe(
   Operation.withHandler(({ card }) =>
     Effect.sync(() => {
       const db = Obj.getDatabase(card);
@@ -17,3 +17,5 @@ export default RestoreCard.pipe(
     }),
   ),
 );
+
+export default handler;

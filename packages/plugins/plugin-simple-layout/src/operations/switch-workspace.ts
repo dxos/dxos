@@ -7,7 +7,7 @@ import { Operation } from '@dxos/operation';
 
 import { layoutStateAccess } from './state-access';
 
-export default LayoutOperation.SwitchWorkspace.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = LayoutOperation.SwitchWorkspace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const { updateState } = yield* layoutStateAccess;
@@ -22,3 +22,5 @@ export default LayoutOperation.SwitchWorkspace.pipe(
     }),
   ),
 );
+
+export default handler;

@@ -8,7 +8,7 @@ import { Operation } from '@dxos/operation';
 
 import { CreateChannel, OnCreateSpace } from './definitions';
 
-export default OnCreateSpace.pipe(
+const handler: Operation.WithHandler<typeof OnCreateSpace> = OnCreateSpace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ space, isDefault }) {
       if (isDefault) {
@@ -23,3 +23,5 @@ export default OnCreateSpace.pipe(
     }),
   ),
 );
+
+export default handler;

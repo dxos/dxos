@@ -12,7 +12,7 @@ import { Voxel } from '../types';
 
 import { GenerateShape } from './definitions';
 
-export default GenerateShape.pipe(
+const handler: Operation.WithHandler<typeof GenerateShape> = GenerateShape.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ world, shape, origin, hue }) {
       const loaded = (yield* Database.load(world)) as Voxel.World;
@@ -33,3 +33,5 @@ export default GenerateShape.pipe(
     }),
   ),
 );
+
+export default handler;

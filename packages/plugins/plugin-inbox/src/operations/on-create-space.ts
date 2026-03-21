@@ -10,7 +10,7 @@ import { Calendar, Mailbox } from '../types';
 
 import { OnCreateSpace } from './definitions';
 
-export default OnCreateSpace.pipe(
+const handler: Operation.WithHandler<typeof OnCreateSpace> = OnCreateSpace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ space, isDefault }) {
       if (!isDefault) {
@@ -25,3 +25,5 @@ export default OnCreateSpace.pipe(
     }),
   ),
 );
+
+export default handler;

@@ -11,7 +11,7 @@ import { SetActive } from './definitions';
 
 import { Meeting, MeetingCapabilities } from '../types';
 
-export default SetActive.pipe(
+const handler: Operation.WithHandler<typeof SetActive> = SetActive.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ object }) {
       const store = yield* Capability.get(MeetingCapabilities.State);
@@ -24,3 +24,5 @@ export default SetActive.pipe(
     }),
   ),
 );
+
+export default handler;

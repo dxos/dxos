@@ -14,7 +14,7 @@ import { Create } from './definitions';
 
 import { Meeting } from '../types';
 
-export default Create.pipe(
+const handler: Operation.WithHandler<typeof Create> = Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, channel }) {
       const space = getSpace(channel);
@@ -35,3 +35,5 @@ export default Create.pipe(
     }),
   ),
 );
+
+export default handler;

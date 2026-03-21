@@ -14,7 +14,7 @@ import { WnfsCapabilities, WnfsFile } from '../types';
 
 import { CreateFile } from './definitions';
 
-export default CreateFile.pipe(
+const handler: Operation.WithHandler<typeof CreateFile> = CreateFile.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ file, db }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -28,3 +28,5 @@ export default CreateFile.pipe(
     }),
   ),
 );
+
+export default handler;

@@ -7,7 +7,7 @@ import { Operation } from '@dxos/operation';
 
 import { layoutStateAccess } from './state-access';
 
-export default LayoutOperation.Open.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const { updateState } = yield* layoutStateAccess;
@@ -26,5 +26,7 @@ export default LayoutOperation.Open.pipe(
     }),
   ),
 );
+
+export default handler;
 
 const MAX_HISTORY_LENGTH = 50;

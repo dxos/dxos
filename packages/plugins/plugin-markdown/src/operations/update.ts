@@ -11,7 +11,7 @@ import { Operation } from '@dxos/operation';
 
 import { Update } from './definitions';
 
-export default Update.pipe(
+const handler: Operation.WithHandler<typeof Update> = Update.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ doc, edits }) {
       const content = yield* doc.pipe(
@@ -47,3 +47,5 @@ export default Update.pipe(
     }),
   ),
 );
+
+export default handler;

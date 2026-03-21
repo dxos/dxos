@@ -12,7 +12,7 @@ import { Thread } from '@dxos/types';
 
 import { Delete, DeleteMessage } from './definitions';
 
-export default DeleteMessage.pipe(
+const handler: Operation.WithHandler<typeof DeleteMessage> = DeleteMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, anchor, messageId }) {
       const thread = Relation.getSource(anchor) as Thread.Thread;
@@ -49,3 +49,5 @@ export default DeleteMessage.pipe(
     }),
   ),
 );
+
+export default handler;

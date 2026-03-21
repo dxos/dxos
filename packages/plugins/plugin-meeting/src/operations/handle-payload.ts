@@ -13,7 +13,7 @@ import { HandlePayload } from './definitions';
 
 import { Meeting, MeetingCapabilities } from '../types';
 
-export default HandlePayload.pipe(
+const handler: Operation.WithHandler<typeof HandlePayload> = HandlePayload.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ meetingId, transcriptDxn, transcriptionEnabled }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -42,3 +42,5 @@ export default HandlePayload.pipe(
     }),
   ),
 );
+
+export default handler;

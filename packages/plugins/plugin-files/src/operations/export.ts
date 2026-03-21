@@ -16,7 +16,7 @@ import { Export } from './definitions';
 import { meta } from '../meta';
 import { FileCapabilities, type FilesState } from '../types';
 
-export default Export.pipe(
+const handler: Operation.WithHandler<typeof Export> = Export.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const { explore } = yield* Capability.get(AppCapabilities.AppGraph);
@@ -53,6 +53,8 @@ export default Export.pipe(
     }),
   ),
 );
+
+export default handler;
 
 const directoryHandles: Record<string, FileSystemDirectoryHandle> = {};
 const directoryNameCounter: Record<string, Record<string, number>> = {};

@@ -7,7 +7,7 @@ import { Operation } from '@dxos/operation';
 
 import { layoutStateAccess } from './state-access';
 
-export default LayoutOperation.UpdatePopover.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.UpdatePopover> = LayoutOperation.UpdatePopover.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const { updateState } = yield* layoutStateAccess;
@@ -31,3 +31,5 @@ export default LayoutOperation.UpdatePopover.pipe(
     }),
   ),
 );
+
+export default handler;

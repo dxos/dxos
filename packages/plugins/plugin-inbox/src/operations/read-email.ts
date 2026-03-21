@@ -14,7 +14,7 @@ import { renderMarkdown } from '../util';
 
 import { ReadEmail } from './definitions';
 
-export default ReadEmail.pipe(
+const handler: Operation.WithHandler<typeof ReadEmail> = ReadEmail.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ mailbox: mailboxRef, skip = 0, limit = 20 }) {
       const mailbox = yield* Database.load(mailboxRef);
@@ -33,3 +33,5 @@ export default ReadEmail.pipe(
     }),
   ),
 );
+
+export default handler;

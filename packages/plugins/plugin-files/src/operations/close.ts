@@ -11,7 +11,7 @@ import { Close } from './definitions';
 
 import { FileCapabilities } from '../types';
 
-export default Close.pipe(
+const handler: Operation.WithHandler<typeof Close> = Close.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id }) {
       yield* Capabilities.updateAtomValue(FileCapabilities.State, (current) => ({
@@ -21,3 +21,5 @@ export default Close.pipe(
     }),
   ),
 );
+
+export default handler;

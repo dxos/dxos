@@ -12,7 +12,7 @@ import { CreateAgent } from './definitions';
 
 import { ClientCapabilities } from '../types';
 
-export default CreateAgent.pipe(
+const handler: Operation.WithHandler<typeof CreateAgent> = CreateAgent.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -23,3 +23,5 @@ export default CreateAgent.pipe(
     }),
   ),
 );
+
+export default handler;

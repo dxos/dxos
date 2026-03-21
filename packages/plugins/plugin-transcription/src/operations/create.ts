@@ -9,7 +9,7 @@ import { Transcript } from '@dxos/types';
 
 import { Create } from './definitions';
 
-export default Create.pipe(
+const handler: Operation.WithHandler<typeof Create> = Create.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ space }) {
       return {
@@ -18,3 +18,5 @@ export default Create.pipe(
     }),
   ),
 );
+
+export default handler;

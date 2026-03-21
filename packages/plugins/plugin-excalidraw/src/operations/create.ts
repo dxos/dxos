@@ -10,10 +10,12 @@ import { Sketch } from '@dxos/plugin-sketch/types';
 import { EXCALIDRAW_SCHEMA } from '../types';
 import { Create } from './definitions';
 
-export default Create.pipe(
+const handler: Operation.WithHandler<typeof Create> = Create.pipe(
   Operation.withHandler(({ name, schema = EXCALIDRAW_SCHEMA, content = {} }) =>
     Effect.succeed({
       object: Sketch.make({ name, canvas: { schema, content } }),
     }),
   ),
 );
+
+export default handler;

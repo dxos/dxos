@@ -7,7 +7,7 @@ import { Operation } from '@dxos/operation';
 
 import { layoutStateAccess } from './state-access';
 
-export default LayoutOperation.RevertWorkspace.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.RevertWorkspace> = LayoutOperation.RevertWorkspace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const { getState } = yield* layoutStateAccess;
@@ -18,3 +18,5 @@ export default LayoutOperation.RevertWorkspace.pipe(
     }),
   ),
 );
+
+export default handler;

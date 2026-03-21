@@ -10,7 +10,7 @@ import { getTypenameFromQuery } from '@dxos/schema';
 
 import { AddRow } from './definitions';
 
-export default AddRow.pipe(
+const handler: Operation.WithHandler<typeof AddRow> = AddRow.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ view, data }) {
       const db = Obj.getDatabase(view);
@@ -24,3 +24,5 @@ export default AddRow.pipe(
     }),
   ),
 );
+
+export default handler;

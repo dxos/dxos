@@ -11,7 +11,7 @@ import { Operation } from '@dxos/operation';
 import { AssistantCapabilities } from '../types';
 import { SetCurrentChat } from './definitions';
 
-export default SetCurrentChat.pipe(
+const handler: Operation.WithHandler<typeof SetCurrentChat> = SetCurrentChat.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ companionTo, chat }) {
       const companionToId = Obj.getDXN(companionTo).toString();
@@ -23,3 +23,5 @@ export default SetCurrentChat.pipe(
     }),
   ),
 );
+
+export default handler;

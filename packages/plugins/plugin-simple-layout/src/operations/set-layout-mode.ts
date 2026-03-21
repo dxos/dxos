@@ -5,4 +5,8 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 
-export default LayoutOperation.SetLayoutMode.pipe(Operation.withHandler(Effect.fnUntraced(function* () {})));
+const handler: Operation.WithHandler<typeof LayoutOperation.SetLayoutMode> = LayoutOperation.SetLayoutMode.pipe(
+  Operation.withHandler(Effect.fnUntraced(function* () {})),
+);
+
+export default handler;

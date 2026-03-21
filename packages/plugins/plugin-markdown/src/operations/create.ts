@@ -11,7 +11,7 @@ import { CollectionModel } from '@dxos/schema';
 import { Create } from './definitions';
 import { Markdown } from '../types';
 
-export default Create.pipe(
+const handler: Operation.WithHandler<typeof Create> = Create.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ name, content }) {
       const object = Markdown.make({ name, content });
@@ -23,3 +23,5 @@ export default Create.pipe(
     }),
   ),
 );
+
+export default handler;

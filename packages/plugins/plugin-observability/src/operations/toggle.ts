@@ -15,7 +15,7 @@ import { ObservabilityCapabilities } from '../types';
 
 import { Toggle } from './definitions';
 
-export default Toggle.pipe(
+const handler: Operation.WithHandler<typeof Toggle> = Toggle.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const namespace = yield* Capability.get(ObservabilityCapabilities.Namespace);
@@ -44,3 +44,5 @@ export default Toggle.pipe(
     }),
   ),
 );
+
+export default handler;

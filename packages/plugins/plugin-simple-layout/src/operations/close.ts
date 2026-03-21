@@ -7,7 +7,7 @@ import { Operation } from '@dxos/operation';
 
 import { layoutStateAccess } from './state-access';
 
-export default LayoutOperation.Close.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOperation.Close.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const { updateState } = yield* layoutStateAccess;
@@ -30,3 +30,5 @@ export default LayoutOperation.Close.pipe(
     }),
   ),
 );
+
+export default handler;

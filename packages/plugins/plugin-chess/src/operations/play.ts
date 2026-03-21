@@ -12,7 +12,7 @@ import { type Chess } from '../types';
 
 import { Play } from './definitions';
 
-export default Play.pipe(
+const handler: Operation.WithHandler<typeof Play> = Play.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ game, side = 'any' }) {
       const object = (yield* Database.load(game)) as Chess.Game;
@@ -42,3 +42,5 @@ export default Play.pipe(
     }),
   ),
 );
+
+export default handler;

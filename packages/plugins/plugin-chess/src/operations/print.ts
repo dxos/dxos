@@ -9,7 +9,7 @@ import { Operation } from '@dxos/operation';
 
 import { Print } from './definitions';
 
-export default Print.pipe(
+const handler: Operation.WithHandler<typeof Print> = Print.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ pgn, fen }) {
       try {
@@ -24,3 +24,5 @@ export default Print.pipe(
     }),
   ),
 );
+
+export default handler;

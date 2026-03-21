@@ -11,7 +11,7 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
 import { Restore } from './definitions';
 
-export default Restore.pipe(
+const handler: Operation.WithHandler<typeof Restore> = Restore.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ thread, anchor }) {
       const db = Obj.getDatabase(thread);
@@ -34,3 +34,5 @@ export default Restore.pipe(
     }),
   ),
 );
+
+export default handler;

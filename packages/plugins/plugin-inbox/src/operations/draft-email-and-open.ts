@@ -14,7 +14,7 @@ import { buildDraftMessageProps } from '../util';
 
 import { DraftEmailAndOpen } from './definitions';
 
-export default DraftEmailAndOpen.pipe(
+const handler: Operation.WithHandler<typeof DraftEmailAndOpen> = DraftEmailAndOpen.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, mode, replyToMessage, subject, body, mailbox }) {
       const props = buildDraftMessageProps({
@@ -34,3 +34,5 @@ export default DraftEmailAndOpen.pipe(
     }),
   ),
 );
+
+export default handler;

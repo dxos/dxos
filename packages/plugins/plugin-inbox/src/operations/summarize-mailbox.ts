@@ -31,7 +31,7 @@ import { SummarizeMailbox } from './definitions';
 /**
  * Summarize a mailbox.
  */
-export default SummarizeMailbox.pipe(
+const handler: Operation.WithHandler<typeof SummarizeMailbox> = SummarizeMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ mailbox: mailboxRef, skip = 0, limit = 20 }) {
@@ -98,6 +98,8 @@ export default SummarizeMailbox.pipe(
     ),
   ),
 );
+
+export default handler;
 
 const systemPrompt = trim`
   You are a helpful assistant that summarizes mailboxes.

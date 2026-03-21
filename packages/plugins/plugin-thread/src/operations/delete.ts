@@ -15,7 +15,7 @@ import { Delete } from './definitions';
 
 import { ThreadCapabilities } from '../types';
 
-export default Delete.pipe(
+const handler: Operation.WithHandler<typeof Delete> = Delete.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, anchor, thread: _thread }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -60,3 +60,5 @@ export default Delete.pipe(
     }),
   ),
 );
+
+export default handler;

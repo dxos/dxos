@@ -11,7 +11,7 @@ import { MapCapabilities } from '../types';
 
 import { Toggle } from './definitions';
 
-export default Toggle.pipe(
+const handler: Operation.WithHandler<typeof Toggle> = Toggle.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       yield* Capabilities.updateAtomValue(MapCapabilities.State, (state) => ({
@@ -21,3 +21,5 @@ export default Toggle.pipe(
     }),
   ),
 );
+
+export default handler;

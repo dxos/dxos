@@ -14,7 +14,7 @@ import { expandAttendableId } from '@dxos/react-ui-attention';
 
 import { NavTreeCapabilities } from '../types';
 
-export default LayoutOperation.Expose.pipe(
+const handler: Operation.WithHandler<typeof LayoutOperation.Expose> = LayoutOperation.Expose.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject }) {
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
@@ -38,3 +38,5 @@ export default LayoutOperation.Expose.pipe(
     }),
   ),
 );
+
+export default handler;

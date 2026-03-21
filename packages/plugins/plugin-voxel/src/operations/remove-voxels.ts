@@ -11,7 +11,7 @@ import { Voxel } from '../types';
 
 import { RemoveVoxels } from './definitions';
 
-export default RemoveVoxels.pipe(
+const handler: Operation.WithHandler<typeof RemoveVoxels> = RemoveVoxels.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ world, positions }) {
       const loaded = (yield* Database.load(world)) as Voxel.World;
@@ -32,3 +32,5 @@ export default RemoveVoxels.pipe(
     }),
   ),
 );
+
+export default handler;

@@ -11,7 +11,7 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '../types';
 import { Select } from './definitions';
 
-export default Select.pipe(
+const handler: Operation.WithHandler<typeof Select> = Select.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const selection = yield* Capability.get(AttentionCapabilities.Selection);
@@ -39,3 +39,5 @@ export default Select.pipe(
     }),
   ),
 );
+
+export default handler;

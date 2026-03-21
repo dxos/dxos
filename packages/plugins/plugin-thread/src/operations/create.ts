@@ -15,7 +15,7 @@ import { Create, Select } from './definitions';
 
 import { ThreadCapabilities } from '../types';
 
-export default Create.pipe(
+const handler: Operation.WithHandler<typeof Create> = Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, anchor: _anchor, subject }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -45,3 +45,5 @@ export default Create.pipe(
     }),
   ),
 );
+
+export default handler;
