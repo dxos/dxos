@@ -30,6 +30,7 @@ import type { AutomergeHost } from '../automerge';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject, filterMatchObjectJSON } from '../filter';
 
+import { QueryError } from './errors';
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 
@@ -630,6 +631,13 @@ export class QueryExecutor extends Resource {
     const timestampParams = extractTimestampParams(step.filter);
     if (timestampParams !== null) {
       return this._execTimestampFilterStep(step, workingSet, timestampParams);
+    }
+
+    if (filterContainsTimestamp(step.filter)) {
+      throw new QueryError({
+        message: 'Timestamp filter in unsupported composition (not, or). Use Filter.updated/Filter.created with explicit range instead.',
+        context: {},
+      });
     }
 
     const result = workingSet.filter((item) => {
@@ -1570,3 +1578,16 @@ const extractTimestampParams = (
   }
   return params;
 };
+
+function filterContainsTimestamp(filter: QueryAST.Filter): boolean {
+  if (filter.type === 'timestamp') {
+    return true;
+  }
+  if (filter.type === 'and' || filter.type === 'or') {
+    return filter.filters.some(filterContainsTimestamp);
+  }
+  if (filter.type === 'not') {
+    return filterContainsTimestamp(filter.filter);
+  }
+  return false;
+}

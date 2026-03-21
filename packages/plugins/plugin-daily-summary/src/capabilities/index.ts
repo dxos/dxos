@@ -2,4 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export { default as DailySummarySettings } from './settings';
+export * from './blueprint-definition';
+export * from './settings';

@@ -224,7 +224,10 @@ export class QueryPlanner {
       // Timestamp
       case 'timestamp': {
         if (context.selectionInverted) {
-          throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+          throw new QueryError({
+            message: 'Negated timestamp filters are not supported. Use Filter.updated/Filter.created with the inverted range instead.',
+            context: { query: context.originalQuery },
+          });
         }
         return QueryPlan.Plan.make([
           {
@@ -254,6 +257,14 @@ export class QueryPlanner {
         const flatFilters = _flattenAnd(filter.filters);
         const timestampFilters = flatFilters.filter((f): f is QueryAST.FilterTimestamp => f.type === 'timestamp');
         const nonTimestampFilters = flatFilters.filter((f) => f.type !== 'timestamp');
+
+        if (timestampFilters.length > 0 && context.selectionInverted) {
+          throw new QueryError({
+            message:
+              'Negated timestamp filters are not supported. Use Filter.updated/Filter.created with the inverted range instead.',
+            context: { query: context.originalQuery },
+          });
+        }
 
         if (timestampFilters.length > 0 && nonTimestampFilters.length <= 1) {
           const selector = _mergeTimestampSelectors(timestampFilters.map(_timestampFilterToSelector));

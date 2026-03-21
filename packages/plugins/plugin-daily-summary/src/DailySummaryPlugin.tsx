@@ -5,16 +5,12 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { DailySummarySettings } from './capabilities';
-import { DailySummaryBlueprint } from './blueprints';
+import { BlueprintDefinition, DailySummarySettings } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
 export const DailySummaryPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addBlueprintDefinitionModule({
-    activate: () =>
-      import('./capabilities/blueprint-definition-module').then((m) => m.default),
-  }),
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addSettingsModule({ activate: DailySummarySettings }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,

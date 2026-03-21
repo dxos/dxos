@@ -433,6 +433,44 @@ describe('Query', () => {
       expect(ids).toContain(recent.id);
       expect(ids).not.toContain(early.id);
     });
+
+    test('not(updated) throws clear error', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await expect(
+        db.query(Query.select(Filter.not(Filter.updated({ after: Date.now() })))).run(),
+      ).rejects.toThrow(/[Nn]egated timestamp/);
+    });
+
+    test('not(and(type, updated)) throws clear error', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await expect(
+        db
+          .query(
+            Query.select(
+              Filter.not(Filter.and(Filter.type(TestSchema.Expando), Filter.updated({ after: Date.now() }))),
+            ),
+          )
+          .run(),
+      ).rejects.toThrow(/[Nn]egated timestamp/);
+    });
+
+    test('or(updated, type) throws clear error', async () => {
+      const { db } = await builder.createDatabase();
+      db.add(createTestObject({ value: 1 }));
+      await db.flush();
+
+      await expect(
+        db
+          .query(Query.select(Filter.or(Filter.updated({ after: Date.now() }), Filter.type(TestSchema.Expando))))
+          .run(),
+      ).rejects.toThrow(/too complex/);
+    });
   });
 
   describe('Queue queries', () => {
