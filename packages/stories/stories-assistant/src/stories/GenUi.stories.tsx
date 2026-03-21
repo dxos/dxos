@@ -31,6 +31,7 @@ type Story = StoryObj<typeof storybook>;
 export const Default: Story = {
   decorators: getDecorators({
     config: config.remote,
+    plugins: [],
   }),
   args: {
     modules: [[GenUiModule]],
