@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { CreateProposals, ThreadHandlers } from '../functions';
+import { CreateProposals } from '../functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.thread';
 
@@ -31,7 +31,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: ThreadHandlers,
   make,
 };
 

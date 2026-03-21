@@ -68,18 +68,18 @@ export const blueprintRegistry = new Blueprint.Registry([
 
 export const operationHandlers = OperationHandlerSet.merge(
   // NOTE: Operation handlers referenced by blueprints above need to be added here.
-  DatabaseBlueprint.operations,
-  CalendarBlueprint.operations,
-  ChessBlueprint.operations,
-  InboxBlueprint.operations,
-  InboxSendBlueprint.operations,
-  KanbanBlueprint.operations,
-  MapBlueprint.operations,
-  MarkdownBlueprint.operations,
-  ScriptBlueprint.operations,
-  TableBlueprint.operations,
-  ThreadBlueprint.operations,
-  TranscriptionBlueprint.operations,
+  // DatabaseBlueprint.operations,
+  // CalendarBlueprint.operations,
+  // ChessBlueprint.operations,
+  // InboxBlueprint.operations,
+  // InboxSendBlueprint.operations,
+  // KanbanBlueprint.operations,
+  // MapBlueprint.operations,
+  // MarkdownBlueprint.operations,
+  // ScriptBlueprint.operations,
+  // TableBlueprint.operations,
+  // ThreadBlueprint.operations,
+  // TranscriptionBlueprint.operations,
 );
 
 const StubDeckToolkit = Toolkit.make(

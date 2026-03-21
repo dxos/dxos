@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 
-import { GoogleMail } from '../../apis';
-import { GoogleCredentials } from '../../services/google-credentials';
+import { GoogleMail } from '../../../apis';
+import { GoogleCredentials } from '../../../services/google-credentials';
 
 import { GmailSend } from '../../definitions';
 

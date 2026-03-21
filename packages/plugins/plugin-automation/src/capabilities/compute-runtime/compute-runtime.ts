@@ -77,7 +77,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         // TODO(dmaretskyi): Make these reactive.
         const operationHandlers = OperationHandlerSet.merge(
           ...this.#capabilities.getAll(AppCapabilities.Functions),
-          ...this.#capabilities.getAll(AppCapabilities.BlueprintDefinition).map((blueprint) => blueprint.operations),
+          // ...this.#capabilities.getAll(AppCapabilities.BlueprintDefinition).map((blueprint) => blueprint.operations),
         );
 
         const genericToolkitProvider = Layer.succeed(GenericToolkit.Provider, {

@@ -25,11 +25,12 @@ import { WithProperties } from '../../testing';
 import MarkdownBlueprint from '../markdown-blueprint';
 
 import { Update } from './definitions';
+import { MarkdownHandlers } from './index';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: MarkdownBlueprint.operations,
+  operationHandlers: MarkdownHandlers,
   types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject],
   tracing: 'pretty',
 });

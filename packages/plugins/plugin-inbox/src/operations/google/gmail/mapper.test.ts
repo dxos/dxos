@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import { Entity } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { type GoogleMail } from '../../apis';
-import * as InboxResolver from '../../inbox-resolver';
+import { type GoogleMail } from '../../../apis';
+import { InboxResolver } from '../../../services';
 
 import { mapMessage } from './mapper';
 

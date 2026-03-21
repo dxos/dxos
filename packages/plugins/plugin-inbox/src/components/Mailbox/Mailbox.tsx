@@ -11,7 +11,7 @@ import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
 import { composableProps, getHashStyles } from '@dxos/ui-theme';
 
-import { GoogleMail } from '../../functions/apis';
+import { GoogleMail } from '../../apis';
 import { type Mailbox as MailboxType } from '../../types';
 import { getMessageProps } from '../../util';
 

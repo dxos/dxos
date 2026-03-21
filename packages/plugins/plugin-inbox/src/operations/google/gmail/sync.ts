@@ -18,12 +18,11 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import * as Mailbox from '../../../types/Mailbox';
-import { GoogleMail } from '../../apis';
-import * as InboxResolver from '../../inbox-resolver';
-import { GoogleCredentials } from '../../services/google-credentials';
+import { GoogleMail } from '../../../apis';
+import { InboxResolver, GoogleCredentials } from '../../../services';
 
 import { mapMessage } from './mapper';
-import { GmailSync } from '../../definitions';
+import { GoogleMailSync } from '../../definitions';
 
 type DateChunk = {
   readonly start: Date;
@@ -45,7 +44,7 @@ const STREAMING_CONFIG = {
   restrictedMax: 20,
 } as const;
 
-export default GmailSync.pipe(
+export default GoogleMailSync.pipe(
   Operation.withHandler(
     ({
       mailbox: mailboxRef,

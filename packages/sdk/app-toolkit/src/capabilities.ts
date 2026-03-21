@@ -128,7 +128,6 @@ export namespace AppCapabilities {
   // TODO(burdon): Move type upstream (into blueprint package).
   export type BlueprintDefinition = {
     key: string;
-    operations: OperationHandlerSet.OperationHandlerSet;
     make: () => Blueprint.Blueprint;
   };
 

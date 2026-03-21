@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { MarkdownCreate, MarkdownRead, MarkdownUpdate, MarkdownHandlers } from '../markdown';
+import { MarkdownCreate, MarkdownRead, MarkdownUpdate } from '../markdown';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.design';
 
@@ -35,7 +35,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: MarkdownHandlers,
   make,
 };
 

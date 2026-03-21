@@ -11,8 +11,8 @@ import { CredentialsService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type AccessToken } from '@dxos/types';
 
-import type * as Calendar from '../../types/Calendar';
-import type * as Mailbox from '../../types/Mailbox';
+import type * as Calendar from '../types/Calendar';
+import type * as Mailbox from '../types/Mailbox';
 
 /**
  * Creates the service interface from a cached token.

@@ -12,9 +12,9 @@ import { Message } from '@dxos/types';
 
 import { renderMarkdown } from '../util';
 
-import { Open } from './definitions';
+import { ReadEmail } from './definitions';
 
-export default Open.pipe(
+export default ReadEmail.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ mailbox: mailboxRef, skip = 0, limit = 20 }) {
       const mailbox = yield* Database.load(mailboxRef);

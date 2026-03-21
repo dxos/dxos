@@ -18,12 +18,11 @@ import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 import { type Event } from '@dxos/types';
 
-import { GoogleCalendar } from '../../apis';
-import * as InboxResolver from '../../inbox-resolver';
-import { GoogleCredentials } from '../../services/google-credentials';
+import { GoogleCalendar } from '../../../apis';
+import { InboxResolver, GoogleCredentials } from '../../../services';
 
 import { mapEvent } from './mapper';
-import { CalendarSync } from '../../definitions';
+import { GoogleCalendarSync } from '../../definitions';
 
 type BaseSyncProps<T = unknown> = {
   googleCalendarId: string;
@@ -33,7 +32,7 @@ type BaseSyncProps<T = unknown> = {
   latestUpdate: Ref.Ref<string | undefined>;
 } & T;
 
-export default CalendarSync.pipe(
+export default GoogleCalendarSync.pipe(
   Operation.withHandler(
     ({
       calendar: calendarRef,

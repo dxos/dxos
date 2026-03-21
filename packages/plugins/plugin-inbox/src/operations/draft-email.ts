@@ -8,9 +8,9 @@ import { Database, Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
-import { Create } from './definitions';
+import { DraftEmail } from './definitions';
 
-export default Create.pipe(
+export default DraftEmail.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ subject, to, body, replyTo }) {
       const replyToMessage = !replyTo ? undefined : yield* Database.load(replyTo);

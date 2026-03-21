@@ -26,12 +26,12 @@ import { trim } from '@dxos/util';
 
 import { renderMarkdown } from '../util';
 
-import { Summarize } from './definitions';
+import { SummarizeMailbox } from './definitions';
 
 /**
  * Summarize a mailbox.
  */
-export default Summarize.pipe(
+export default SummarizeMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ mailbox: mailboxRef, skip = 0, limit = 20 }) {

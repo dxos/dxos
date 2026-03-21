@@ -20,9 +20,9 @@ import { trim } from '@dxos/util';
 
 import { renderMarkdown } from '../util';
 
-import { Classify } from './definitions';
+import { ClassifyEmail } from './definitions';
 
-export default Classify.pipe(
+export default ClassifyEmail.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ message }) {

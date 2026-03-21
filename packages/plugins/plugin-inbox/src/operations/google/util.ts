@@ -5,15 +5,10 @@
 import { parseHTML } from 'linkedom';
 import TurndownService from 'turndown';
 
-import { type GoogleMail } from './apis';
-
-export const getPart = (message: GoogleMail.Message, part: string) =>
-  message.payload.parts?.find(({ mimeType }) => mimeType === part)?.body.data;
-
 /**
  * https://www.npmjs.com/package/turndown
  */
-export const turndown = new TurndownService({
+const turndown = new TurndownService({
   bulletListMarker: '-',
 })
   .remove('script')
@@ -35,14 +30,21 @@ export const turndown = new TurndownService({
     },
   });
 
-export const isHTML = (str: string): boolean => {
+const isHTML = (str: string): boolean => {
   return /<(\/?(p|div|span|ul|ol|li|a|strong|em|br|table|tr|td|h[1-6]))\b[^>]*>/i.test(str);
 };
 
-export const toMarkdown = (html: string): string =>
+const preprocessHtml = (html: string): string => {
+  // Ensure HTML has proper structure for linkedom parsing.
+  // If the HTML is a fragment without html/body tags, wrap it.
+  const wrappedHtml = html.trim().startsWith('<html') ? html : `<html><body>${html}</body></html>`;
+  return wrappedHtml;
+};
+
+const toMarkdown = (html: string): string =>
   turndown.turndown(parseHTML(preprocessHtml(html), {}).document.body);
 
-export const stripWhitespace = (str: string): string => {
+const stripWhitespace = (str: string): string => {
   const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;
   return (
     str
@@ -91,11 +93,4 @@ export const parseFromHeader = (value: string): { name?: string; email: string }
       email: email.trim(),
     };
   }
-};
-
-const preprocessHtml = (html: string): string => {
-  // Ensure HTML has proper structure for linkedom parsing.
-  // If the HTML is a fragment without html/body tags, wrap it.
-  const wrappedHtml = html.trim().startsWith('<html') ? html : `<html><body>${html}</body></html>`;
-  return wrappedHtml;
 };

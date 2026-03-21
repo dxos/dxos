@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
 import { Event, Message } from '@dxos/types';
 
-import { OperationResolver } from '../capabilities/operation-resolver';
+import { OperationHandler } from '../capabilities/operation-handler';
 import { meta } from '../meta';
 import { Calendar, Mailbox } from '../types';
 
@@ -50,7 +50,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationResolverModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message],
   }),

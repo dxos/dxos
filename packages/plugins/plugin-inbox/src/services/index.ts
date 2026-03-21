@@ -3,3 +3,4 @@
 //
 
 export * from './google-credentials';
+export * as InboxResolver from './inbox-resolver';

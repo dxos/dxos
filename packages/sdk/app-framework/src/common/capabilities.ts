@@ -9,7 +9,11 @@ import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import type { FC, PropsWithChildren } from 'react';
 
-import type { OperationInvoker as OperationInvoker$, OperationResolver as OperationResolver$ } from '@dxos/operation';
+import type {
+  OperationInvoker as OperationInvoker$,
+  OperationResolver as OperationResolver$,
+  OperationHandlerSet,
+} from '@dxos/operation';
 
 import { Capability as Capability$, type PluginManager as PluginManager$ } from '../core';
 import type {
@@ -96,6 +100,10 @@ export type OperationResolver = OperationResolver$.OperationResolver<any, any, a
  */
 export const OperationResolver = Capability$.make<OperationResolver[]>(
   'org.dxos.app-framework.capability.operation-resolver',
+);
+
+export const OperationHandler = Capability$.make<OperationHandlerSet.OperationHandlerSet>(
+  'org.dxos.app-framework.capability.operation-handler',
 );
 
 export type UndoMapping = UndoMapping$.UndoMapping;

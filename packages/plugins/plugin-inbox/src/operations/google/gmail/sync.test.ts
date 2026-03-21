@@ -13,9 +13,8 @@ import * as Layer from 'effect/Layer';
 import { CredentialsService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 
-import { GoogleMail } from '../../apis';
-import * as InboxResolver from '../../inbox-resolver';
-import { GoogleCredentials } from '../../services/google-credentials';
+import { GoogleMail } from '../../../apis';
+import { InboxResolver, GoogleCredentials } from '../../../services';
 
 import { mapMessage } from './mapper';
 

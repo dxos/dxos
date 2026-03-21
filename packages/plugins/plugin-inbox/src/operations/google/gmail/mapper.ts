@@ -7,9 +7,12 @@ import * as Effect from 'effect/Effect';
 import { Obj, Ref } from '@dxos/echo';
 import { Message, Person } from '@dxos/types';
 
-import { type GoogleMail } from '../../apis';
-import * as Resolver from '../../resolver';
-import { getPart, normalizeText, parseFromHeader } from '../../util';
+import { type GoogleMail } from '../../../apis';
+import * as Resolver from '../../../services/resolver';
+import { normalizeText, parseFromHeader } from '../util';
+
+const getPart = (message: GoogleMail.Message, part: string) =>
+  message.payload.parts?.find(({ mimeType }) => mimeType === part)?.body.data;
 
 /**
  * Maps Gmail message to ECHO message object.

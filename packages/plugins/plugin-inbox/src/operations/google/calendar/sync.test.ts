@@ -10,9 +10,8 @@ import * as Layer from 'effect/Layer';
 
 import { CredentialsService } from '@dxos/functions';
 
-import { GoogleCalendar } from '../../apis';
-import * as InboxResolver from '../../inbox-resolver';
-import { GoogleCredentials } from '../../services/google-credentials';
+import { GoogleCalendar } from '../../../apis';
+import { GoogleCredentials, InboxResolver } from '../../../services';
 
 import { mapEvent } from './mapper';
 
