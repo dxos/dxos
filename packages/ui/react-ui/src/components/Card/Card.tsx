@@ -94,7 +94,7 @@ type CardDragHandleProps = ToolbarDragHandleProps;
 const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((props, forwardedRef) => {
   return (
     <CardIconBlock padding>
-      <Toolbar.DragHandle {...props} testId='card-drag-handle' ref={forwardedRef} />
+      <Toolbar.DragHandle {...props} ref={forwardedRef} />
     </CardIconBlock>
   );
 });

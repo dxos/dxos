@@ -60,8 +60,8 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
         <Focus.Group asChild>
           <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Toolbar>
-              <Card.DragHandle ref={dragHandleRef} />
-              <Card.Title>{Obj.getLabel(data)}</Card.Title>
+              <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
+              <Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
               <Menu.Trigger asChild disabled={!menuItems?.length}>
                 <Toolbar.IconButton
