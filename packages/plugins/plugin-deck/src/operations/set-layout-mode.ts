@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import type { Capability } from '@dxos/app-framework';
 import { Capabilities } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
@@ -25,14 +24,12 @@ export default LayoutOperation.SetLayoutMode.pipe(
 
       const computeModeUpdate = (mode: LayoutMode, subject?: string): Partial<DeckState> => {
         const current = deck.solo ? [deck.solo] : deck.active;
-        const next = (
-          mode !== 'deck' ? [subject ?? deck.solo ?? deck.active[0]] : [...deck.active, deck.solo]
-        ).filter(isNonNullable);
+        const next = (mode !== 'deck' ? [subject ?? deck.solo ?? deck.active[0]] : [...deck.active, deck.solo]).filter(
+          isNonNullable,
+        );
 
         const removed = current.filter((id: string) => !next.includes(id));
-        const closed = Array.from(
-          new Set([...deck.inactive.filter((id: string) => !next.includes(id)), ...removed]),
-        );
+        const closed = Array.from(new Set([...deck.inactive.filter((id: string) => !next.includes(id)), ...removed]));
 
         const soloUpdate =
           mode !== 'deck' && next[0]
@@ -52,10 +49,7 @@ export default LayoutOperation.SetLayoutMode.pipe(
 
       if ('mode' in input) {
         const currentMode = getMode(deck);
-        const deckUpdates = computeModeUpdate(
-          input.mode as LayoutMode,
-          'subject' in input ? input.subject : undefined,
-        );
+        const deckUpdates = computeModeUpdate(input.mode as LayoutMode, 'subject' in input ? input.subject : undefined);
 
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => {
           const newPreviousMode =
@@ -70,9 +64,7 @@ export default LayoutOperation.SetLayoutMode.pipe(
       } else if ('revert' in input) {
         const last = state.previousMode[state.activeDeck];
         const deckUpdates = computeModeUpdate(last ?? 'solo');
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, deckUpdates),
-        );
+        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
       } else {
         log.warn('Invalid layout mode', input);
       }

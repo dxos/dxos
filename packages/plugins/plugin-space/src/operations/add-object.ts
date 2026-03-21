@@ -3,7 +3,6 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import type { Capability } from '@dxos/app-framework';
 import { getCollectionsPath, getObjectPath, getTypePath } from '@dxos/app-toolkit';
 import { Database, Obj, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

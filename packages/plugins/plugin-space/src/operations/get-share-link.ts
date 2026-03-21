@@ -11,9 +11,7 @@ import { SpaceOperationConfig } from './helpers';
 export default SpaceOperation.GetShareLink.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
-      const { Invitation, InvitationEncoder } = yield* Effect.promise(
-        () => import('@dxos/react-client/invitations'),
-      );
+      const { Invitation, InvitationEncoder } = yield* Effect.promise(() => import('@dxos/react-client/invitations'));
 
       const invitation = yield* Operation.invoke(SpaceOperation.Share, {
         space: input.space,

@@ -33,15 +33,17 @@ export default Capability.makeModule<OperationHandlerSet$.OperationHandlerSet>(
             }
           }),
         ),
-        Operation.withHandler(LayoutOperation.UpdateDialog, ({ subject, state, type, blockAlign, overlayClasses, overlayStyle, props }) =>
-          Effect.sync(() => {
-            layout.dialogOpen = state ?? Boolean(subject);
-            layout.dialogType = type ?? 'default';
-            layout.dialogBlockAlign = blockAlign ?? 'center';
-            layout.dialogOverlayClasses = overlayClasses;
-            layout.dialogOverlayStyle = overlayStyle;
-            layout.dialogContent = subject ? { component: subject, props } : null;
-          }),
+        Operation.withHandler(
+          LayoutOperation.UpdateDialog,
+          ({ subject, state, type, blockAlign, overlayClasses, overlayStyle, props }) =>
+            Effect.sync(() => {
+              layout.dialogOpen = state ?? Boolean(subject);
+              layout.dialogType = type ?? 'default';
+              layout.dialogBlockAlign = blockAlign ?? 'center';
+              layout.dialogOverlayClasses = overlayClasses;
+              layout.dialogOverlayStyle = overlayStyle;
+              layout.dialogContent = subject ? { component: subject, props } : null;
+            }),
         ),
         Operation.withHandler(LayoutOperation.UpdatePopover, (input) =>
           Effect.sync(() => {

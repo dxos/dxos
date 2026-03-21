@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import type { Capability } from '@dxos/app-framework';
 
 import { sleep } from '@dxos/async';
 import { Obj } from '@dxos/echo';

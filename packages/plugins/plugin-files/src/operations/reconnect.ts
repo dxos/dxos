@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import type { Capability } from '@dxos/app-framework';
 import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
@@ -27,14 +26,10 @@ export default Reconnect.pipe(
           (entity.handle as any).requestPermission({ mode: 'readwrite' }),
         );
         if (permission === 'granted') {
-          const children = yield* Effect.promise(async () =>
-            getDirectoryChildren(entity.handle, entity.handle.name),
-          );
+          const children = yield* Effect.promise(async () => getDirectoryChildren(entity.handle, entity.handle.name));
           yield* Capabilities.updateAtomValue(FileCapabilities.State, (current) => ({
             ...current,
-            files: current.files.map((f) =>
-              f.id === id ? { ...f, children, permission } : f,
-            ) as typeof current.files,
+            files: current.files.map((f) => (f.id === id ? { ...f, children, permission } : f)) as typeof current.files,
           }));
         }
       } else {

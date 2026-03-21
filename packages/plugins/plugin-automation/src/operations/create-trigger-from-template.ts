@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import type { Capability } from '@dxos/app-framework';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { Script, Trigger } from '@dxos/functions';
@@ -23,9 +22,7 @@ export default CreateTriggerFromTemplate.pipe(
 
       // TODO(wittjosiah): Factor out function lookup by script name?
       if (scriptName) {
-        const scripts = yield* Effect.promise(() =>
-          db.query(Filter.type(Script.Script, { name: scriptName })).run(),
-        );
+        const scripts = yield* Effect.promise(() => db.query(Filter.type(Script.Script, { name: scriptName })).run());
         const [script] = scripts;
         if (script) {
           const functions = yield* Effect.promise(() =>

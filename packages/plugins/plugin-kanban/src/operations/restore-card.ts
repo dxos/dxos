@@ -9,12 +9,11 @@ import { Operation } from '@dxos/operation';
 import { RestoreCard } from './definitions';
 
 export default RestoreCard.pipe(
-  Operation.withHandler(
-    ({ card }) =>
-      Effect.sync(() => {
-        const db = Obj.getDatabase(card);
-        invariant(db);
-        db.add(card);
-      }),
+  Operation.withHandler(({ card }) =>
+    Effect.sync(() => {
+      const db = Obj.getDatabase(card);
+      invariant(db);
+      db.add(card);
+    }),
   ),
 );

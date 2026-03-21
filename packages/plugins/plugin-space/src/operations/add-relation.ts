@@ -2,7 +2,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import type { Capability } from '@dxos/app-framework';
 import { Database, Relation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 

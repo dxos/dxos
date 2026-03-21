@@ -35,9 +35,7 @@ export default Adjust.pipe(
       if (input.type === 'increment-end' || input.type === 'increment-start') {
         const next = incrementPlank(deck.active, input);
         const { deckUpdates } = computeActiveUpdates({ next, deck, attention });
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, deckUpdates),
-        );
+        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
       }
 
       if (input.type.startsWith('solo')) {

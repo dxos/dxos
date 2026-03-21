@@ -15,7 +15,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
 import { MapOperation } from '../../operations';
-import { Map, MapAction } from '../../types';
+import { Map } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

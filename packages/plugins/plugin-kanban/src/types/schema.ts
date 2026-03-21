@@ -42,4 +42,3 @@ export const CreateKanbanSchema = Schema.Struct({
     }),
   ),
 });
-

@@ -2,7 +2,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, type Capability } from '@dxos/app-framework';
+import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
 import { SpaceCapabilities } from '../types';

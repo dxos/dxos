@@ -2,7 +2,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import type { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Collection, Obj, Ref, Relation } from '@dxos/echo';

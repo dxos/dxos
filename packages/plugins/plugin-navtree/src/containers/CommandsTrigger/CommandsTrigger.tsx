@@ -17,7 +17,9 @@ export const CommandsTrigger = () => {
   return (
     <Button
       classNames='m-1 px-1 lg:px-2'
-      onClick={() => void invokePromise(LayoutOperation.UpdateDialog, { subject: COMMANDS_DIALOG, blockAlign: 'start' })}
+      onClick={() =>
+        void invokePromise(LayoutOperation.UpdateDialog, { subject: COMMANDS_DIALOG, blockAlign: 'start' })
+      }
     >
       <span className='text-description font-normal grow text-start'>{t('command list input placeholder')}</span>
       <Icon icon='ph--magnifying-glass--regular' />

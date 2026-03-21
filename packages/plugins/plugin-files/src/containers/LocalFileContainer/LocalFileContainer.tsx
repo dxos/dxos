@@ -44,9 +44,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const node = Graph.getNode(graph, entity.id).pipe(Option.getOrNull);
   const action =
     node &&
-    Graph.getActions(graph, node.id).find(
-      (action) => action.id === `${FilesOperation.Reconnect.meta.key}:${node.id}`,
-    );
+    Graph.getActions(graph, node.id).find((action) => action.id === `${FilesOperation.Reconnect.meta.key}:${node.id}`);
 
   return (
     <Panel.Root>

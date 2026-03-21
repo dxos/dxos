@@ -40,9 +40,7 @@ export default CreateChat.pipe(
       if (!defaultDatabaseBlueprint) {
         defaultDatabaseBlueprint = db.add(DatabaseBlueprint.make());
       }
-      let defaultProjectWizardBlueprint = blueprints.find(
-        (blueprint) => blueprint.key === ProjectWizardBlueprint.key,
-      );
+      let defaultProjectWizardBlueprint = blueprints.find((blueprint) => blueprint.key === ProjectWizardBlueprint.key);
       if (!defaultProjectWizardBlueprint) {
         defaultProjectWizardBlueprint = db.add(ProjectWizardBlueprint.make());
       }

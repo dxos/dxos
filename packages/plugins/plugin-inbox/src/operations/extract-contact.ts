@@ -61,9 +61,7 @@ export default ExtractContact.pipe(
       }
 
       log.info('extracted email domain', { emailDomain });
-      const existingOrganisations = yield* Effect.promise(() =>
-        db.query(Filter.type(Organization.Organization)).run(),
-      );
+      const existingOrganisations = yield* Effect.promise(() => db.query(Filter.type(Organization.Organization)).run());
       const matchingOrg = existingOrganisations.find((org) => {
         if (org.website) {
           try {

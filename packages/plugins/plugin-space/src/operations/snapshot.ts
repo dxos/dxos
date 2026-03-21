@@ -2,10 +2,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import type { Capability } from '@dxos/app-framework';
 import { Query } from '@dxos/echo';
 import { EchoDatabaseImpl, Serializer } from '@dxos/echo-db';
-import type { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 

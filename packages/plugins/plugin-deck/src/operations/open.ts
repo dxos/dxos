@@ -49,9 +49,7 @@ export default LayoutOperation.Open.pipe(
             );
 
         const { deckUpdates, toAttend: _toAttend } = computeActiveUpdates({ next, deck, attention });
-        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) =>
-          updateActiveDeck(state, deckUpdates),
-        );
+        yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
       }
 
       {

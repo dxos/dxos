@@ -3,7 +3,6 @@
 import * as Effect from 'effect/Effect';
 
 import { Obj } from '@dxos/echo';
-import type { View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';

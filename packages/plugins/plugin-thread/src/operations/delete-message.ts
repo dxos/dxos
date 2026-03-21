@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import type { Capability } from '@dxos/app-framework';
 
 import { Obj, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

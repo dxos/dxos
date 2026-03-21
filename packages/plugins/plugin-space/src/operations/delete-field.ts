@@ -3,7 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Obj, type View } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';

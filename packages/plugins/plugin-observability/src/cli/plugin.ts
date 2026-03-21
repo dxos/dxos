@@ -20,9 +20,7 @@ export const ObservabilityPlugin = Plugin.define(meta).pipe(
           Effect.fnUntraced(function* () {
             return Capability.contributes(
               Capabilities.OperationHandler,
-              OperationHandlerSet.make(
-                Operation.withHandler(ObservabilityOperation.SendEvent, () => Effect.void),
-              ),
+              OperationHandlerSet.make(Operation.withHandler(ObservabilityOperation.SendEvent, () => Effect.void)),
             );
           }),
         ),

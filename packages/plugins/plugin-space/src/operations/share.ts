@@ -2,7 +2,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import type { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 

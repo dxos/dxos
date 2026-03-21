@@ -6,6 +6,4 @@ import { OperationHandlerSet } from '@dxos/operation';
 
 export * as SketchOperation from './definitions';
 
-export const ExcalidrawOperationHandlerSet = OperationHandlerSet.lazy(
-  () => import('./create'),
-);
+export const ExcalidrawOperationHandlerSet = OperationHandlerSet.lazy(() => import('./create'));

@@ -41,8 +41,7 @@ const preprocessHtml = (html: string): string => {
   return wrappedHtml;
 };
 
-const toMarkdown = (html: string): string =>
-  turndown.turndown(parseHTML(preprocessHtml(html), {}).document.body);
+const toMarkdown = (html: string): string => turndown.turndown(parseHTML(preprocessHtml(html), {}).document.body);
 
 const stripWhitespace = (str: string): string => {
   const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;

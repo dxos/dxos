@@ -9,14 +9,13 @@ import { Operation } from '@dxos/operation';
 import { DeleteCard } from './definitions';
 
 export default DeleteCard.pipe(
-  Operation.withHandler(
-    ({ card }) =>
-      Effect.sync(() => {
-        const db = Obj.getDatabase(card);
-        invariant(db);
-        db.remove(card);
+  Operation.withHandler(({ card }) =>
+    Effect.sync(() => {
+      const db = Obj.getDatabase(card);
+      invariant(db);
+      db.remove(card);
 
-        return { card };
-      }),
+      return { card };
+    }),
   ),
 );

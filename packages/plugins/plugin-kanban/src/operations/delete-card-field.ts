@@ -4,7 +4,6 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { JsonSchema, Obj } from '@dxos/echo';
-import type { View } from '@dxos/echo';
 import { type EchoSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
