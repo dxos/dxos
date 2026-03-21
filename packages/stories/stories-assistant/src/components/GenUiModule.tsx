@@ -305,6 +305,11 @@ const htmlAttributesToReactProps = (
   return props;
 };
 
+const VOID_ELEMENTS = new Set([
+  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+  'link', 'meta', 'param', 'source', 'track', 'wbr',
+]);
+
 const convertMarkupNode = (node: Node, key: number, invoker: InvokerFn | null): React.ReactNode => {
   if (node.nodeType === Node.TEXT_NODE) {
     const text = node.textContent ?? '';
@@ -319,17 +324,19 @@ const convertMarkupNode = (node: Node, key: number, invoker: InvokerFn | null): 
   const children = [...element.childNodes]
     .map((child, index) => convertMarkupNode(child, index, invoker))
     .filter(Boolean);
+  const props = { key, ...htmlAttributesToReactProps(element, invoker) };
 
   if (registryKey) {
     const Component = COMPONENT_REGISTRY[registryKey] as ComponentType<any>;
-    return React.createElement(Component, { key, ...htmlAttributesToReactProps(element, invoker) }, ...children);
+    return React.createElement(Component, props, ...children);
   }
 
-  return React.createElement(
-    element.tagName.toLowerCase(),
-    { key, ...htmlAttributesToReactProps(element, invoker) },
-    ...children,
-  );
+  const tag = element.tagName.toLowerCase();
+  if (VOID_ELEMENTS.has(tag)) {
+    return React.createElement(tag, props);
+  }
+
+  return React.createElement(tag, props, ...children);
 };
 
 const GenUiMarkupPreview = ({ markup }: { markup: string }) => {
