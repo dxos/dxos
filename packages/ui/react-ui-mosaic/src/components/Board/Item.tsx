@@ -54,17 +54,17 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
     const description = Obj.getDescription(data);
 
     return (
-      <Mosaic.Tile
-        ref={rootRef}
-        asChild
-        dragHandle={dragHandleRef.current}
-        id={data.id}
-        data={data}
-        location={location}
-        debug={debug}
-      >
-        <Focus.Group asChild>
-          <Menu.Root>
+      <Menu.Root>
+        <Mosaic.Tile
+          ref={rootRef}
+          asChild
+          dragHandle={dragHandleRef.current}
+          id={data.id}
+          data={data}
+          location={location}
+          debug={debug}
+        >
+          <Focus.Group asChild>
             <Card.Root
               classNames={classNames}
               data-testid='board-item'
@@ -97,9 +97,9 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
                 )}
               </Card.Row>
             </Card.Root>
-          </Menu.Root>
-        </Focus.Group>
-      </Mosaic.Tile>
+          </Focus.Group>
+        </Mosaic.Tile>
+      </Menu.Root>
     );
   },
 );

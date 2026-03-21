@@ -65,9 +65,11 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
                 <Menu.Content items={menuItems} />
               </Card.Toolbar>
               <Card.Content>
-                <Card.Row>
-                  <pre className='text-xs text-description whitespace-pre-wrap'>{JSON.stringify(data)}</pre>
-                </Card.Row>
+                <Card.Section>
+                  <pre className='p-2 text-xs text-description whitespace-pre-wrap'>
+                    {JSON.stringify(data, null, 2)}
+                  </pre>
+                </Card.Section>
               </Card.Content>
             </Card.Root>
           </Focus.Group>
