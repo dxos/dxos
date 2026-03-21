@@ -9,18 +9,19 @@ import { Operation } from '@dxos/operation';
 
 import { updateState } from './update-state';
 
-const handler: Operation.WithHandler<typeof LayoutOperation.UpdateComplementary> = LayoutOperation.UpdateComplementary.pipe(
-  Operation.withHandler(
-    Effect.fnUntraced(function* ({ state }) {
-      yield* updateState((layout) => {
-        const next = state ?? layout.complementarySidebarState;
-        if (next !== layout.complementarySidebarState) {
-          return { complementarySidebarState: next };
-        }
-        return {};
-      });
-    }),
-  ),
-);
+const handler: Operation.WithHandler<typeof LayoutOperation.UpdateComplementary> =
+  LayoutOperation.UpdateComplementary.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ state }) {
+        yield* updateState((layout) => {
+          const next = state ?? layout.complementarySidebarState;
+          if (next !== layout.complementarySidebarState) {
+            return { complementarySidebarState: next };
+          }
+          return {};
+        });
+      }),
+    ),
+  );
 
 export default handler;
