@@ -14,7 +14,7 @@ describe('translations', () => {
     const pluginTranslations = enUS[meta.id];
     expect(pluginTranslations).toBeDefined();
     expect(pluginTranslations['plugin name']).toBe('Daily Summary');
-    expect(pluginTranslations['summary time label']).toBeTruthy();
-    expect(pluginTranslations['summary time description']).toBeTruthy();
+    expect(pluginTranslations['create trigger label']).toBeTruthy();
+    expect(pluginTranslations['create trigger description']).toBeTruthy();
   });
 });

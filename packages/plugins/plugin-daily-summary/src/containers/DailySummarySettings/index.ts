@@ -2,4 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export { DailySummarySettings } from './DailySummarySettings';
+import { DailySummarySettings } from './DailySummarySettings';
+
+export default DailySummarySettings;

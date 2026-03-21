@@ -2,4 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export { DailySummarySettings } from './DailySummarySettings';
+import { type ComponentType, lazy } from 'react';
+
+export const DailySummarySettings: ComponentType<any> = lazy(() => import('./DailySummarySettings'));
