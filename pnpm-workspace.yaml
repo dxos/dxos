@@ -21,7 +21,7 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@automerge/automerge': 3.2.3
-  '@automerge/automerge-repo': 2.5.1
+  '@automerge/automerge-repo': 2.6.0-subduction.4
   '@automerge/automerge-repo-network-broadcastchannel': 2.5.1
   '@automerge/automerge-repo-network-websocket': 2.5.1
   '@automerge/automerge-repo-storage-indexeddb': 2.5.1
@@ -630,7 +630,7 @@ catalog:
   workbox-window: ^7.3.0
   workerize-loader: ^2.0.2
   wrangler: ^4.59.1
-  ws: ^8.17.1
+  ws: ^8.18.3
   wtfnode: ^0.10.0
   xstate: ^4.37.0
   yaml: ^2.7.0
