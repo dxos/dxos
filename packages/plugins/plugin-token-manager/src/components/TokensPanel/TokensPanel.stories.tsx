@@ -7,10 +7,11 @@ import React, { useEffect, useState } from 'react';
 
 import { TestObjectGenerator } from '@dxos/echo-generator';
 import { faker } from '@dxos/random';
-import { withTheme } from '@dxos/react-ui/testing';
+import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { AccessToken } from '@dxos/types';
 
 import { TokensPanel, type TokensPanelProps } from './TokensPanel';
+import { translations } from '../../translations';
 
 faker.seed(1);
 
@@ -25,23 +26,28 @@ const generator = new TestObjectGenerator(
   },
 );
 
-const TokensPanelStory = (props: Omit<TokensPanelProps, 'tokens' | 'spaceId'>) => {
+const DefaultStory = (props: Omit<TokensPanelProps, 'tokens' | 'spaceId'>) => {
   const [tokens, setTokens] = useState<AccessToken.AccessToken[]>([]);
   useEffect(() => {
     void Promise.all([...Array(5)].map(() => generator.createObject())).then((generated) =>
       setTokens(generated as AccessToken.AccessToken[]),
     );
   }, []);
+
   if (tokens.length === 0) {
-    return <div>Loading tokens...</div>;
+    return <Loading data={{ tokens: tokens.length }} />;
   }
+
   return <TokensPanel tokens={tokens} spaceId={'space:test' as any} {...props} />;
 };
 
 const meta = {
   title: 'plugins/plugin-token-manager/components/TokensPanel',
   decorators: [withTheme()],
-  component: TokensPanelStory,
+  component: DefaultStory,
+  parameters: {
+    translations,
+  },
   args: {
     adding: false,
     onNew: () => console.log('onNew'),
@@ -50,7 +56,7 @@ const meta = {
     onDelete: (token: any) => console.log('onDelete', token),
     onAddAccessToken: (token: any) => console.log('onAddAccessToken', token),
   },
-} satisfies Meta<typeof TokensPanelStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -58,5 +64,8 @@ type Story = StoryObj<typeof meta>;
 
 // Show form view by default (list view requires client context for NewTokenSelector).
 export const Default: Story = {
-  args: { adding: true },
+  args: {
+    // TODO(burdon): Need to mock OAuth to support NewTokenSelector.
+    adding: true,
+  },
 };

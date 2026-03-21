@@ -36,6 +36,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
 
   const handleLinkQuery = useCallback(
     async (query?: string): Promise<EditorMenuGroup[]> => {
+      // A second "@" switches the link query into block-embed mode, so "@@foo" searches for "foo".
       const name = query?.startsWith('@') ? query.slice(1).toLowerCase() : (query?.toLowerCase() ?? '');
       const results = await db?.query(Query.select(filter)).run();
 
@@ -65,6 +66,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
               icon: metadata.icon,
               onSelect: ({ view, head }) => {
                 const link = `[${label}](${Obj.getDXN(object)})`;
+                // "@@" inserts a block embed on its own line instead of an inline link.
                 if (query?.startsWith('@')) {
                   insertAtLineStart(view, head, `!${link}\n`);
                 } else {

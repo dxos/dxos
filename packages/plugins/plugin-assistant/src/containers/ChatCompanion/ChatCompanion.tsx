@@ -23,11 +23,14 @@ import { Assistant, AssistantCapabilities } from '../../types';
 import { AssistantOperation } from '../../operations';
 import ChatContainer from '../ChatContainer';
 
+// TODO(burdon): Use definition.
+// export type ChatCompanionProps = SurfaceComponentProps<Chat.Chat>;
+
 export type ChatCompanionProps = {
   role?: string;
   data: {
-    attendableId: string;
     subject: Chat.Chat | 'assistant-chat';
+    attendableId: string;
     companionTo: Obj.Unknown;
   };
 };
@@ -36,8 +39,8 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role, data }: ChatCompanionProps, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
     const blueprintRegistry = useBlueprintRegistry();
-    const companionTo = data.companionTo;
 
+    const companionTo = data.companionTo;
     const space = getSpace(companionTo);
     const [chat, setChat] = useState(data.subject === 'assistant-chat' ? undefined : data.subject);
 

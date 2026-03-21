@@ -4,7 +4,7 @@
 
 import { Atom, type Registry, useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import React, { useMemo } from 'react';
+import React, { ReactNode, useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/ui';
@@ -39,7 +39,7 @@ export default Capability.makeModule(
       Capabilities.ReactContext,
       {
         id: meta.id,
-        context: ({ children }: { children?: React.ReactNode }) => {
+        context: ({ children }: { children?: ReactNode }) => {
           const _resources = useCapabilities(AppCapabilities.Translations);
           const { themeMode } = useAtomValue(themeAtom);
           const resources = useMemo(

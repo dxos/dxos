@@ -14,7 +14,7 @@ import React, {
 import { type DialogSize } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
-import { Column } from '../../primitives';
+import { Column, ColumnViewportProps } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
@@ -182,19 +182,17 @@ AlertDialogContent.displayName = ALERT_DIALOG_CONTENT_NAME;
 // Body
 //
 
-type AlertDialogBodyProps = PropsWithChildren;
+type AlertDialogBodyProps = PropsWithChildren<Pick<ColumnViewportProps, 'thin'>>;
 
 const AlertDialogBody: ForwardRefExoticComponent<AlertDialogBodyProps> = forwardRef<
   HTMLDivElement,
   AlertDialogBodyProps
->(({ children, ...props }, forwardedRef) => {
+>(({ children, thin = true }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <Column.Segment asChild>
-      <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
-        {children}
-      </div>
-    </Column.Segment>
+    <Column.Viewport classNames={tx('dialog.body')} thin={thin} ref={forwardedRef}>
+      {children}
+    </Column.Viewport>
   );
 });
 
@@ -212,11 +210,11 @@ const AlertDialogActionBar: ForwardRefExoticComponent<AlertDialogActionBarProps>
 >(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
-    <Column.Segment asChild>
+    <Column.Row asChild center>
       <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
         {children}
       </div>
-    </Column.Segment>
+    </Column.Row>
   );
 });
 

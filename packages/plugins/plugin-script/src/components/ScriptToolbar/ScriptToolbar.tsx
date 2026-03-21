@@ -5,11 +5,10 @@
 import { Atom } from '@effect-atom/atom-react';
 import React, { forwardRef, useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { type Script } from '@dxos/functions';
 import { ComposableProps, ElevationProvider, useTranslation } from '@dxos/react-ui';
 import { composableProps } from '@dxos/ui-theme';
-import { type ActionGraphProps, Menu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, Menu, MenuRootProps, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 
 import {
   type CreateDeployOptions,
@@ -23,15 +22,15 @@ import { meta } from '../../meta';
 
 export type ScriptToolbarProps = ComposableProps<
   HTMLDivElement,
-  {
-    role?: string;
+  Pick<MenuRootProps, 'attendableId'> & {
     script: Script.Script;
+    role?: string;
     state: ScriptToolbarStateStore;
   }
 >;
 
 export const ScriptToolbar = forwardRef<HTMLDivElement, ScriptToolbarProps>(
-  ({ script, role, state, ...props }, forwardedRef) => {
+  ({ script, attendableId, role, state, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const options = useDeployDeps({ script });
     const menuCreator = useMemo(
@@ -42,7 +41,7 @@ export const ScriptToolbar = forwardRef<HTMLDivElement, ScriptToolbarProps>(
 
     return (
       <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-        <Menu.Root {...menuActions} attendableId={Obj.getDXN(script).toString()}>
+        <Menu.Root {...menuActions} attendableId={attendableId}>
           <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
         </Menu.Root>
       </ElevationProvider>

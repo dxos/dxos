@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useRef } from 'react';
+import React, { FC, forwardRef, RefObject, useRef } from 'react';
 
 import type { Obj } from '@dxos/echo';
 import { Board, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
@@ -49,12 +49,12 @@ export const KanbanColumn = forwardRef<HTMLDivElement, KanbanColumnProps>(
             <span className='font-medium'>{title}</span>
           </div>
         ) : (
-          <Board.Column.Header label={title} dragHandleRef={dragHandleRef as React.RefObject<HTMLButtonElement>} />
+          <Board.Column.Header label={title} dragHandleRef={dragHandleRef as RefObject<HTMLButtonElement>} />
         )}
         <Board.Column.Body
           data={column}
           eventHandler={eventHandler}
-          Tile={itemTile as React.FC<MosaicTileProps<Obj.Unknown>>}
+          Tile={itemTile as FC<MosaicTileProps<Obj.Unknown>>}
         />
         {onCardAdd && (
           <Board.Column.Footer

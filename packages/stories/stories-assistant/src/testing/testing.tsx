@@ -187,11 +187,15 @@ const buildPluginManagerOptions = ({
  * Inner component that creates the plugin manager and renders the app.
  * Separated to respect React hooks rules (hooks must be called unconditionally).
  */
-const PluginManagerHost: React.FC<{
+const PluginManagerHost = ({
+  options,
+  children,
+  contextId,
+}: {
   options: WithPluginManagerOptions;
   children: React.ReactNode;
   contextId: string;
-}> = ({ options, children, contextId }) => {
+}) => {
   const manager = useMemo(() => {
     const pluginManager = PluginManager.make({
       pluginLoader: () => Effect.die(new Error('Not implemented')),

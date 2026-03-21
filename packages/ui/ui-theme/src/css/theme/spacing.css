@@ -4,7 +4,9 @@
 
 @theme {
   /** Minimum inset from the viewport edge for floating surfaces. */
-  --spacing-screen-border: 1rem;
+  --spacing-screen-border: 2rem;
+
+  --spacing-text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
 
   --spacing-document-max-width: 50rem;
 
@@ -22,10 +24,10 @@
   --spacing-trim-lg: 1.5rem;
 
   --spacing-tag-padding-block: 0.125rem;
-  --spacing-text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
 
   /** Minimal trim to allow for ring/outline. */
   --spacing-form-chrome: var(--spacing-trim-xs);
+  --spacing-form-gap: var(--spacing-trim-sm);
 
   /**
    * Density: fine
@@ -58,7 +60,7 @@
     --dx-lacuna-6: 0.75rem;
 
     --dx-gutter-xs: 0.125rem; /* Input rings */
-    --dx-gutter-sm: 0.5rem;
+    --dx-gutter-sm: 1rem;
     --dx-gutter-md: 2rem; /* 32px (fine card) */
     --dx-gutter-lg: 2.5rem; /* 40px (dialog, coarse card) */
   }
@@ -104,7 +106,8 @@
     --dx-toolbar-size: var(--dx-rail-action);
     --dx-statusbar-size: var(--dx-rail-action);
 
-    --dx-nav-sidebar-size: 23rem;
+    /** NOTE: On MBP, should have nav sidebare open with 4 column mosaic board. */
+    --dx-nav-sidebar-size: 22rem;
     --dx-complementary-sidebar-size: 25rem;
     --dx-drawer-size: 50dvh;
 
