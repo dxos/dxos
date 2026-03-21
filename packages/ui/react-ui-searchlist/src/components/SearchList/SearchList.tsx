@@ -237,7 +237,7 @@ type SearchListContentProps = ComposableProps<HTMLDivElement, ThemedClassName<Co
 
 const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { role: 'none', className: 'dx-expander flex flex-col gap-3' })} ref={forwardedRef}>
+    <div {...composableProps(props, { role: 'none', className: 'flex flex-col overflow-hidden' })} ref={forwardedRef}>
       {children}
     </div>
   );
