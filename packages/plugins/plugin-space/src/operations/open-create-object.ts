@@ -12,7 +12,7 @@ import { SpaceCapabilities } from '../types';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.OpenCreateObject.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.OpenCreateObject> = SpaceOperation.OpenCreateObject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const ephemeralState = yield* Capabilities.getAtomValue(SpaceCapabilities.EphemeralState);
@@ -38,3 +38,4 @@ export default SpaceOperation.OpenCreateObject.pipe(
     }),
   ),
 );
+export default handler;

@@ -12,7 +12,7 @@ import { cloneObject } from '../util';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.DuplicateObject.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.DuplicateObject> = SpaceOperation.DuplicateObject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const capabilityManager = yield* Capability.Service;
@@ -28,3 +28,4 @@ export default SpaceOperation.DuplicateObject.pipe(
     }),
   ),
 );
+export default handler;

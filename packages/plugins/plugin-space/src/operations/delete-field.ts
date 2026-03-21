@@ -10,7 +10,7 @@ import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from 
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.DeleteField.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.DeleteField> = SpaceOperation.DeleteField.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -39,3 +39,4 @@ export default SpaceOperation.DeleteField.pipe(
     }),
   ),
 );
+export default handler;

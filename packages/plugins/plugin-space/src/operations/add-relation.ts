@@ -7,7 +7,7 @@ import { Operation } from '@dxos/operation';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.AddRelation.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.AddRelation> = SpaceOperation.AddRelation.pipe(
   Operation.withHandler((input) =>
     Effect.sync(() => {
       const db = input.db as Database.Database;
@@ -22,3 +22,4 @@ export default SpaceOperation.AddRelation.pipe(
     }),
   ),
 );
+export default handler;

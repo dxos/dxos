@@ -6,10 +6,11 @@ import { Operation } from '@dxos/operation';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.Open.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.Open> = SpaceOperation.Open.pipe(
   Operation.withHandler((input) =>
     Effect.promise(async () => {
       await input.space.open();
     }),
   ),
 );
+export default handler;

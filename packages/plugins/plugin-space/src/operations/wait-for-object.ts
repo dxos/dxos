@@ -9,7 +9,7 @@ import { SpaceCapabilities } from '../types';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.WaitForObject.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.WaitForObject> = SpaceOperation.WaitForObject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Capabilities.updateAtomValue(SpaceCapabilities.EphemeralState, (current) => ({
@@ -19,3 +19,4 @@ export default SpaceOperation.WaitForObject.pipe(
     }),
   ),
 );
+export default handler;

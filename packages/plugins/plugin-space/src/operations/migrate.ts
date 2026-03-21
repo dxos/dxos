@@ -12,7 +12,7 @@ import { SpaceCapabilities } from '../types';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.Migrate.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.Migrate> = SpaceOperation.Migrate.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const { space, version: targetVersion } = input;
@@ -43,3 +43,4 @@ export default SpaceOperation.Migrate.pipe(
     }),
   ),
 );
+export default handler;

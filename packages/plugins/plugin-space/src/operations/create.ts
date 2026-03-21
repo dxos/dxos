@@ -17,7 +17,7 @@ import { SpaceEvents, SpaceCapabilities } from '../types';
 import { SpaceOperation } from './definitions';
 import { SpaceOperationConfig } from './helpers';
 
-export default SpaceOperation.Create.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperation.Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, hue: hue_, icon: icon_, edgeReplication }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -57,3 +57,4 @@ export default SpaceOperation.Create.pipe(
     }),
   ),
 );
+export default handler;

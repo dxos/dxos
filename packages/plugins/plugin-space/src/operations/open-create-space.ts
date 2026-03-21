@@ -9,7 +9,7 @@ import { CREATE_SPACE_DIALOG } from '../constants';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.OpenCreateSpace.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.OpenCreateSpace> = SpaceOperation.OpenCreateSpace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       yield* Operation.invoke(LayoutOperation.UpdateDialog, {
@@ -19,3 +19,4 @@ export default SpaceOperation.OpenCreateSpace.pipe(
     }),
   ),
 );
+export default handler;

@@ -12,7 +12,7 @@ import { COMPOSER_SPACE_LOCK } from '../util';
 import { SpaceOperation } from './definitions';
 import { SpaceOperationConfig } from './helpers';
 
-export default SpaceOperation.Unlock.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.Unlock> = SpaceOperation.Unlock.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ space }) {
       Obj.change(space.properties, (p) => {
@@ -29,3 +29,4 @@ export default SpaceOperation.Unlock.pipe(
     }),
   ),
 );
+export default handler;

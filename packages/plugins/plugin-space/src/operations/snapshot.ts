@@ -9,7 +9,7 @@ import { Operation } from '@dxos/operation';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.Snapshot.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.Snapshot> = SpaceOperation.Snapshot.pipe(
   Operation.withHandler((input) =>
     Effect.promise(async () => {
       const db = input.db as any;
@@ -21,3 +21,4 @@ export default SpaceOperation.Snapshot.pipe(
     }),
   ),
 );
+export default handler;

@@ -10,7 +10,7 @@ import { OBJECT_RENAME_POPOVER } from '../constants';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.RenameObject.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.RenameObject> = SpaceOperation.RenameObject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const object = input.object as Obj.Unknown;
@@ -22,3 +22,4 @@ export default SpaceOperation.RenameObject.pipe(
     }),
   ),
 );
+export default handler;

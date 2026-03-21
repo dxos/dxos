@@ -7,7 +7,7 @@ import { Operation } from '@dxos/operation';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.OpenSettings.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.OpenSettings> = SpaceOperation.OpenSettings.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Operation.invoke(LayoutOperation.Open, {
@@ -17,3 +17,4 @@ export default SpaceOperation.OpenSettings.pipe(
     }),
   ),
 );
+export default handler;

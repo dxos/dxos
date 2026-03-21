@@ -10,7 +10,7 @@ import { type JoinDialogProps } from '../containers/JoinDialog';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.Join.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.Join> = SpaceOperation.Join.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Operation.invoke(LayoutOperation.UpdateDialog, {
@@ -24,3 +24,4 @@ export default SpaceOperation.Join.pipe(
     }),
   ),
 );
+export default handler;

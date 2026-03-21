@@ -7,7 +7,7 @@ import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.Share.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.Share> = SpaceOperation.Share.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const { space, type, authMethod, multiUse, target } = input;
@@ -24,3 +24,4 @@ export default SpaceOperation.Share.pipe(
     }),
   ),
 );
+export default handler;

@@ -11,7 +11,7 @@ import { SpaceEvents, SpaceCapabilities } from '../types';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.AddSchema.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOperation.AddSchema.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const db = input.db;
@@ -49,3 +49,4 @@ export default SpaceOperation.AddSchema.pipe(
     }),
   ),
 );
+export default handler;

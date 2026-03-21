@@ -9,7 +9,7 @@ import { SPACE_RENAME_POPOVER } from '../constants';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.Rename.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.Rename> = SpaceOperation.Rename.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       yield* Operation.invoke(LayoutOperation.UpdatePopover, {
@@ -20,3 +20,4 @@ export default SpaceOperation.Rename.pipe(
     }),
   ),
 );
+export default handler;

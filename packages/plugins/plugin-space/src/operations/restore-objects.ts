@@ -10,7 +10,7 @@ import { Operation } from '@dxos/operation';
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.RestoreObjects.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.RestoreObjects> = SpaceOperation.RestoreObjects.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const objects = input.objects as Obj.Unknown[];
@@ -46,3 +46,4 @@ export default SpaceOperation.RestoreObjects.pipe(
     }),
   ),
 );
+export default handler;

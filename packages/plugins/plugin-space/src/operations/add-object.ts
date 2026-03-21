@@ -13,7 +13,7 @@ import { CollectionModel, ViewAnnotation, getTypenameFromQuery } from '@dxos/sch
 
 import { SpaceOperation } from './definitions';
 
-export default SpaceOperation.AddObject.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOperation.AddObject.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const target = input.target as any;
@@ -59,6 +59,7 @@ export default SpaceOperation.AddObject.pipe(
     }),
   ),
 );
+export default handler;
 
 const getSubjectPathForNewObject = (props: {
   spaceId: string;

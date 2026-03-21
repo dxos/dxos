@@ -8,7 +8,7 @@ import { Operation } from '@dxos/operation';
 import { SpaceOperation } from './definitions';
 import { SpaceOperationConfig } from './helpers';
 
-export default SpaceOperation.GetShareLink.pipe(
+const handler: Operation.WithHandler<typeof SpaceOperation.GetShareLink> = SpaceOperation.GetShareLink.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const { Invitation, InvitationEncoder } = yield* Effect.promise(() => import('@dxos/react-client/invitations'));
@@ -40,3 +40,4 @@ export default SpaceOperation.GetShareLink.pipe(
     }),
   ),
 );
+export default handler;
