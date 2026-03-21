@@ -84,6 +84,7 @@
     "@dxos/plugin-transcription": "workspace:*",
     "@dxos/plugin-voxel": "workspace:*",
     "@dxos/plugin-wnfs": "workspace:*",
+    "@dxos/plugin-youtube": "workspace:*",
     "@dxos/plugin-zen": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

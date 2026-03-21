@@ -3,9 +3,11 @@
 //
 
 import { syntaxTree } from '@codemirror/language';
-import { type EditorState, type Extension, RangeSetBuilder, StateField } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
+import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
+
+import { type Database, DXN, Entity } from '@dxos/echo';
 
 export type PreviewBlock = {
   link: PreviewLinkRef;
@@ -26,22 +28,28 @@ export type PreviewLinkTarget = {
 };
 
 export type PreviewOptions = {
+  db?: Database.Database;
   addBlockContainer?: (block: PreviewBlock) => void;
   removeBlockContainer?: (block: PreviewBlock) => void;
 };
+
+const labelResolvedEffect = StateEffect.define<void>();
 
 /**
  * Create preview decorations.
  */
 export const preview = (options: PreviewOptions = {}): Extension => {
+  // Mutable ref so the StateField's onLoad callback can dispatch into the view.
+  const viewRef: { current: EditorView | undefined } = { current: undefined };
+
   return [
     // NOTE: Atomic block decorations must be created from a state field, now a widget, otherwise it results in the following error:
     // "Block decorations may not be specified via plugins".
     StateField.define<DecorationSet>({
-      create: (state) => buildDecorations(state, options),
+      create: (state) => buildDecorations(state, options, viewRef),
       update: (decorations, tr) => {
-        if (tr.docChanged) {
-          return buildDecorations(tr.state, options);
+        if (tr.docChanged || tr.effects.some((effect) => effect.is(labelResolvedEffect))) {
+          return buildDecorations(tr.state, options, viewRef);
         }
 
         return decorations.map(tr.changes);
@@ -51,14 +59,51 @@ export const preview = (options: PreviewOptions = {}): Extension => {
         EditorView.atomicRanges.of((view) => view.state.field(field)),
       ],
     }),
+    ViewPlugin.define((view) => {
+      viewRef.current = view;
+      return {
+        destroy() {
+          viewRef.current = undefined;
+        },
+      };
+    }),
   ];
+};
+
+/**
+ * Resolve a DXN to a display label using the database.
+ */
+const resolveLabel = (
+  db: Database.Database,
+  dxnStr: string,
+  viewRef: { current: EditorView | undefined },
+): string | undefined => {
+  const dxn = DXN.tryParse(dxnStr);
+  if (!dxn) {
+    return;
+  }
+
+  const ref = db.makeRef(dxn);
+  const target = ref.target;
+  if (target) {
+    return Entity.getLabel(target);
+  }
+
+  // Object not loaded yet — schedule a decoration rebuild when it resolves.
+  void ref.tryLoad().then(() => {
+    viewRef.current?.dispatch({ effects: labelResolvedEffect.of(undefined) });
+  });
 };
 
 /**
  * Echo references are represented as markdown reference links.
  * https://www.markdownguide.org/basic-syntax/#reference-style-links
  */
-const buildDecorations = (state: EditorState, options: PreviewOptions): DecorationSet => {
+const buildDecorations = (
+  state: EditorState,
+  options: PreviewOptions,
+  viewRef: { current: EditorView | undefined },
+): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
 
   syntaxTree(state).iterate({
@@ -71,11 +116,13 @@ const buildDecorations = (state: EditorState, options: PreviewOptions): Decorati
         case 'Link': {
           const link = getLinkRef(state, node.node);
           if (link) {
+            const resolved = options.db ? resolveLabel(options.db, link.dxn, viewRef) : undefined;
+            const displayLink = resolved ? { ...link, label: resolved } : link;
             builder.add(
               node.from,
               node.to,
               Decoration.replace({
-                widget: new PreviewInlineWidget(options, link),
+                widget: new PreviewInlineWidget(options, displayLink),
                 side: 1,
               }),
             );
