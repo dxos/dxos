@@ -91,6 +91,7 @@ export const CreateObjectPanel = ({
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
   // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
+
   if (!metadata) {
     return <SelectType options={sortedOptions} onChange={handleSelectOption} />;
   }
@@ -200,7 +201,7 @@ const SelectType = ({ options, onChange }: { options: CreateObjectOption[]; onCh
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content>
+      <SearchList.Content classNames='gap-form-gap'>
         <SearchList.Input
           autoFocus
           data-testid='create-object-form.schema-input'
@@ -213,7 +214,7 @@ const SelectType = ({ options, onChange }: { options: CreateObjectOption[]; onCh
               value={option.id}
               label={option.label}
               icon={option.icon ?? 'ph--placeholder--regular'}
-              classNames='flex items-center gap-2'
+              classNames='flex items-center gap-form-gap'
               onSelect={() => onChange(option.id)}
             />
           ))}
