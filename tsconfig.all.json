@@ -415,6 +415,9 @@
       "path": "packages/plugins/plugin-thread/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-tictactoe/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-token-manager/tsconfig.json"
     },
     {
@@ -671,5 +674,7 @@
     }
   ],
   "include": [],
-  "exclude": ["**/node_modules"]
+  "exclude": [
+    "**/node_modules"
+  ]
 }

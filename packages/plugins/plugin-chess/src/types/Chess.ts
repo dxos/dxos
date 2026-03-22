@@ -55,7 +55,7 @@ export const make = ({ name, pgn, fen }: { name?: string; pgn?: string; fen?: st
 
   return Obj.make(Game, {
     name,
-    pgn,
+    pgn: pgn ?? '',
     fen,
     players: {},
   });
