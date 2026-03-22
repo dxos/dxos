@@ -79,7 +79,7 @@ const DefaultStory = ({
   const registry = useContext(RegistryContext);
 
   // Models.
-  const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => {
+  const [model, setModel] = useState<GraphModel.ReactiveGraphModel | undefined>(() => {
     const graph = _graph?.();
     return graph ? new TestGraphModel(registry, graph) : undefined;
   });
@@ -287,7 +287,7 @@ const Debug = ({
   onDelete,
   onPing,
 }: {
-  model?: GraphModel.GraphModel;
+  model?: GraphModel.ReactiveGraphModel;
   selection: SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;
