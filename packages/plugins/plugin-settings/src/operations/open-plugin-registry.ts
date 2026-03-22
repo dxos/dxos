@@ -10,18 +10,19 @@ import { Operation } from '@dxos/operation';
 
 import { SETTINGS_ID, SETTINGS_KEY } from '../actions';
 
-const handler: Operation.WithHandler<typeof SettingsOperation.OpenPluginRegistry> = SettingsOperation.OpenPluginRegistry.pipe(
-  Operation.withHandler(() =>
-    Effect.gen(function* () {
-      const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
-      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(SETTINGS_ID) });
-      yield* Effect.fork(
-        invoke(LayoutOperation.Open, {
-          subject: [`${getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:plugins`],
-        }),
-      );
-    }),
-  ),
-);
+const handler: Operation.WithHandler<typeof SettingsOperation.OpenPluginRegistry> =
+  SettingsOperation.OpenPluginRegistry.pipe(
+    Operation.withHandler(() =>
+      Effect.gen(function* () {
+        const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
+        yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(SETTINGS_ID) });
+        yield* Effect.fork(
+          invoke(LayoutOperation.Open, {
+            subject: [`${getSpacePath(SETTINGS_ID)}/${SETTINGS_KEY}:plugins`],
+          }),
+        );
+      }),
+    ),
+  );
 
 export default handler;
