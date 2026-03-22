@@ -58,9 +58,11 @@ catalog:
   '@dnd-kit/sortable': ^7.0.1
   '@dnd-kit/utilities': ^3.2.0
   '@dxos/operation': ^0.0.0
+  '@dxos/plugin-preview': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.1
   '@effect-atom/atom-react': ^0.5.0
+  '@effect-rx/rx-react': ^0.42.4
   '@effect/ai': 0.33.2
   '@effect/ai-anthropic': 0.23.0
   '@effect/ai-openai': 0.37.2
@@ -285,6 +287,7 @@ catalog:
   '@uiw/codemirror-theme-vscode': ^4.25.2
   '@valtown/codemirror-continue': ^2.3.1
   '@valtown/codemirror-ts': ^2.3.1
+  '@virtuoso.dev/masonry': ^1.4.2
   '@vitejs/plugin-react': ^5.0.0
   '@vitejs/plugin-react-swc': ^4.0.0
   '@vitest/browser': ^3.2.4
@@ -462,7 +465,6 @@ catalog:
   madge: 8.0.0
   main-thread-scheduling: ^14.1.1
   marked: ^12.0.2
-  masonic: ^4.1.0
   mathjs: ^14.2.1
   md5-hex: 5.0.0
   mermaid: ^10.9.4

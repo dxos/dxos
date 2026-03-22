@@ -85,7 +85,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
   const DialogOverlay = layout.dialogType === 'alert' ? AlertDialog.Overlay : Dialog.Overlay;
 
   return (
-    <div role='none' className='fixed inset-0 flex overflow-hidden'>
+    <div role='none' className='fixed inset-0 grid overflow-hidden'>
       <Mosaic.Root>
         <Popover.Root open={open}>
           <Main.Root

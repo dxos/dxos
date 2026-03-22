@@ -6,62 +6,66 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { View } from '@dxos/echo';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
-import { Filter, useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { ViewModel } from '@dxos/schema';
+import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { createObjectFactory } from '@dxos/schema/testing';
-import { Organization } from '@dxos/types';
+import { Organization, Person } from '@dxos/types';
 
-import { Masonry } from '../../types';
+import { translations } from '../../translations';
 
-import { MasonryContainer } from './MasonryContainer';
+import { RecordArticle } from './RecordArticle';
 
 faker.seed(0);
 
-const StorybookMasonry = () => {
+const PERSON_COUNT = 100;
+
+const StorybookRecordArticle = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const masonries = useQuery(space?.db, Filter.type(Masonry.Masonry));
-  const [masonry] = useObject(masonries.at(0));
+  const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
+  const org = organizations[0];
 
-  return masonry ? <MasonryContainer view={masonry.view} role='story' /> : null;
+  if (!org) {
+    return null;
+  }
+
+  return <RecordArticle role='article' subject={org} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-masonry/containers/Masonry',
-  component: StorybookMasonry,
-  render: () => <StorybookMasonry />,
+  title: 'plugins/plugin-space/containers/RecordArticle',
+  component: StorybookRecordArticle,
+  render: () => <StorybookRecordArticle />,
   decorators: [
     withPluginManager({
+      capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),
+        PreviewPlugin(),
         ClientPlugin({
-          types: [Organization.Organization, View.View, Masonry.Masonry],
+          types: [Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* Effect.promise(() => client.halo.createIdentity());
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
-              const { view } = yield* Effect.promise(() =>
-                ViewModel.makeFromDatabase({
-                  db: space.db,
-                  typename: Organization.Organization.typename,
-                }),
-              );
-              const masonry = Masonry.make({ view });
-              space.db.add(masonry);
+
               const factory = createObjectFactory(space.db, faker as any);
-              yield* Effect.promise(() => factory([{ type: Organization.Organization, count: 64 }]));
+              yield* Effect.promise(() =>
+                factory([
+                  { type: Organization.Organization, count: 1 },
+                  { type: Person.Person, count: PERSON_COUNT },
+                ]),
+              );
             }),
         }),
-
-        PreviewPlugin(),
       ],
     }),
   ],

@@ -13,7 +13,6 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -43,15 +42,10 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
             </div>
 
             {related.length > 0 && (
-              <div role='none' className={mx('flex flex-col gap-2', singleColumn ? 'dx-card-max-width' : 'w-full')}>
-                <label className='mt-2 text-sm text-description'>{t('related objects label')}</label>
-                <Masonry.Root<Entity.Unknown>
-                  items={related}
-                  render={ObjectCard}
-                  columnCount={singleColumn ? 1 : undefined}
-                  intrinsicHeight
-                />
-              </div>
+              <Masonry.Root Tile={ObjectCard} columnCount={singleColumn ? 1 : undefined}>
+                <label className='mt-2 shrink-0 text-sm text-description'>{t('related objects label')}</label>
+                <Masonry.Content items={related} />
+              </Masonry.Root>
             )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
