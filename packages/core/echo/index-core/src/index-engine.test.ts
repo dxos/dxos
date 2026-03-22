@@ -247,4 +247,42 @@ describe('IndexEngine', () => {
       expect(ftsResults).toHaveLength(2);
     }, Effect.provide(TestLayer)),
   );
+
+  it.effect(
+    'done is true only when all sub-indexes have no remaining work',
+    Effect.fnUntraced(function* () {
+      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
+
+      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const dataSource = new MockIndexDataSource();
+      const spaceId = SpaceId.random();
+
+      // First update with no data — both sub-indexes report done immediately.
+      const { updated: updated0, done: done0 } = yield* engine.update(dataSource, { spaceId: null });
+      expect(updated0).toBe(0);
+      expect(done0).toBe(true);
+
+      // Push an object so sub-indexes have work to do.
+      dataSource.push([
+        {
+          spaceId,
+          queueId: null,
+          documentId: 'doc-done-test',
+          recordId: null,
+          updatedAt: Date.now(),
+          data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Done test' },
+        },
+      ]);
+
+      // Update with pending data — sub-indexes process objects, done is false.
+      const { updated: updated1, done: done1 } = yield* engine.update(dataSource, { spaceId: null });
+      expect(updated1).toBeGreaterThan(0);
+      expect(done1).toBe(false);
+
+      // Second update with no new data — all sub-indexes caught up, done is true.
+      const { updated: updated2, done: done2 } = yield* engine.update(dataSource, { spaceId: null });
+      expect(updated2).toBe(0);
+      expect(done2).toBe(true);
+    }, Effect.provide(TestLayer)),
+  );
 });
