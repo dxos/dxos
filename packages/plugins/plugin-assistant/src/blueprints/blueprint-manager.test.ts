@@ -33,7 +33,12 @@ const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   operationHandlers: OperationHandlerSet.merge(BlueprintManagerHandlers, MarkdownHandlers),
   types: [Blueprint.Blueprint, Markdown.Document],
-  blueprints: [BlueprintManagerBlueprint.make(), DatabaseBlueprint.make(), MarkdownBlueprint.make(), ResearchBlueprint.make()],
+  blueprints: [
+    BlueprintManagerBlueprint.make(),
+    DatabaseBlueprint.make(),
+    MarkdownBlueprint.make(),
+    ResearchBlueprint.make(),
+  ],
   tracing: 'pretty',
 });
 

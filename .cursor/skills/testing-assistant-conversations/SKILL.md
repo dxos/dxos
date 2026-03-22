@@ -25,15 +25,15 @@ Use **`AssistantTestLayerWithTriggers`** when the scenario uses scheduled trigge
 
 ### Important options
 
-| Option                        | Role                                                                                                                                                           |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `operationHandlers`           | `OperationHandlerSet` (or merged sets) so `FunctionInvocationService.invokeFunction` resolves your operations.                                                 |
-| `types`                       | Every ECHO entity type the test creates or queries (`Blueprint.Blueprint`, plugin types, `Message.Message`, etc.). Missing types break DB/schema expectations. |
-| `blueprints`                  | Optional registry seed when code reads blueprints from `Blueprint.RegistryService` instead of only binding at runtime.                                         |
-| `toolkits`                    | Extra toolkits (e.g. `GenericToolkit.make(WebSearchToolkit, Layer.empty)`).                                                                                    |
+| Option                        | Role                                                                                                                                                                                                                    |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `operationHandlers`           | `OperationHandlerSet` (or merged sets) so `FunctionInvocationService.invokeFunction` resolves your operations.                                                                                                          |
+| `types`                       | Every ECHO entity type the test creates or queries (`Blueprint.Blueprint`, plugin types, `Message.Message`, etc.). Missing types break DB/schema expectations.                                                          |
+| `blueprints`                  | Optional registry seed when code reads blueprints from `Blueprint.RegistryService` instead of only binding at runtime.                                                                                                  |
+| `toolkits`                    | Extra toolkits (e.g. `GenericToolkit.make(WebSearchToolkit, Layer.empty)`).                                                                                                                                             |
 | `aiServicePreset`             | `'direct'` \| `'edge-local'` \| `'edge-remote'` — where real LLM calls go when generation is allowed. Use `'edge-remote'` to route LLM calls through the DXOS Edge service so no Anthropic API key is required locally. |
-| `tracing: 'pretty'`           | Useful locally to see tool traces.                                                                                                                             |
-| `disableLlmMemoization: true` | Skips memo wrapper; use only when you fully stub `AiService` / `LanguageModel` and do not need recorded conversations.                                         |
+| `tracing: 'pretty'`           | Useful locally to see tool traces.                                                                                                                                                                                      |
+| `disableLlmMemoization: true` | Skips memo wrapper; use only when you fully stub `AiService` / `LanguageModel` and do not need recorded conversations.                                                                                                  |
 
 Implementation reference: `packages/core/assistant/src/testing/layer.ts`.
 
