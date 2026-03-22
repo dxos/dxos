@@ -8,16 +8,16 @@ import { normalizeText } from './util';
 
 describe('util', () => {
   test('stripNewlines', ({ expect }) => {
-    const text = 'aaa\n \n \n \n\n \nbbb';
+    const text = '<p>aaa</p><p><br></p><p><br></p><p>bbb</p>';
     expect(normalizeText(text)).to.equal('aaa\n\nbbb');
   });
 
   test('markdown', ({ expect }) => {
     const text =
-      'Another quick reminder to kindly complete this short questionnaire <https://blueyard.typeform.com/to/OLmO8o4k> to indicate your preferred Day.';
+      '<p>Another quick reminder to kindly complete this short questionnaire <a href="https://blueyard.typeform.com/to/OLmO8o4k">link</a> to indicate your preferred Day.</p>';
     const markdown = normalizeText(text);
     expect(markdown).to.equal(
-      'Another quick reminder to kindly complete this short questionnaire to indicate your preferred Day.',
+      'Another quick reminder to kindly complete this short questionnaire [link](https://blueyard.typeform.com/to/OLmO8o4k) to indicate your preferred Day.',
     );
   });
 
