@@ -247,29 +247,33 @@ const useToggle = (initial = false) => {
 export const Oblique: Story = {
   render: () => {
     const [visible, setVisible] = useToggle(true);
-    const size = 512;
+    const size = 256;
 
     return (
       <div className='absolute inset-0 grid place-items-center'>
         <div className='absolute top-4 left-4'>
           <IconButton icon='ph--square--duotone' label='Visibility' onClick={() => setVisible()} />
         </div>
+
+        {false && (
+          <div className='absolute grid place-items-center'>
+            <AltComposerLogo
+              size={size}
+              classNames={mx(
+                'opacity-0 scale-10 transition-all rotate-[540deg] __translate-x-[980px] duration-500 delay-0 ease-in',
+                visible && 'delay-200 opacity-10 scale-100 rotate-[180deg] translate-x-[8]',
+              )}
+            />
+          </div>
+        )}
+
         <div className='absolute grid place-items-center'>
           <AltComposerLogo
             size={size}
             classNames={mx(
-              'opacity-0 scale-10 transition-all rotate-[540deg] __translate-x-[980px] duration-500 delay-0 ease-in',
-              visible && 'delay-200 opacity-10 scale-100 rotate-[180deg] translate-x-[8]',
-            )}
-          />
-        </div>
-        <div className='absolute grid place-items-center'>
-          <AltComposerLogo
-            size={size}
-            classNames={mx(
-              'opacity-0 blur-xs scale-10 rotate-360 __translate-y-[-100px]',
+              'opacity-0 blur-xs scale-400 rotate-90',
               'transition-[opacity,filter,scale,rotate] duration-[500ms,500ms,500ms,750ms] ease-in-out',
-              visible && 'opacity-100 blur-none scale-100 rotate-0 translate-y-0',
+              visible && 'opacity-100 blur-none scale-100 rotate-0',
             )}
           />
         </div>
