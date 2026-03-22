@@ -46,9 +46,7 @@ export default GenerateSummary.pipe(
         const recentObjects = yield* Database.runQuery(Filter.updated({ after: cutoff }));
 
         const objectDescriptions = recentObjects.map((obj) => {
-          const name = (obj as any).name ?? (obj as any).title ?? Obj.getDXN(obj).toString();
-          const typeName = Obj.getTypename(obj) ?? 'unknown';
-          return `- [${typeName}] ${name}`;
+          return JSON.stringify(Obj.toJSON(obj));
         });
 
         const content = yield* summarizeWithAi({
