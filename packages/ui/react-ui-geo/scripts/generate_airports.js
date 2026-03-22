@@ -4,9 +4,9 @@
 // Copyright 2019 DXOS.org
 //
 
-const JSONStream = require('JSONStream');
 const fs = require('fs');
 const path = require('path');
+const JSONStream = require('JSONStream');
 
 // https://github.com/algolia/datasets/tree/master/airports
 const source = path.join(__dirname, '../data/raw/airports.json');
