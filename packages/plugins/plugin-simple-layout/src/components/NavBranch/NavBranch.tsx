@@ -79,7 +79,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
   const data = props.data;
   const { t } = useTranslation(meta.id);
-  const { invokeSync } = useOperationInvoker();
+  const { invokePromise } = useOperationInvoker();
   const ref = useRef<HTMLDivElement>(null);
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const isSelected = selectedValue === data.id;
@@ -87,8 +87,8 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
   const name = toLocalizedString(data.properties.label, t);
 
   const handleSelect = useCallback(
-    () => invokeSync(LayoutOperation.Open, { subject: [data.id] }),
-    [invokeSync, data.id],
+    () => void invokePromise(LayoutOperation.Open, { subject: [data.id] }),
+    [invokePromise, data.id],
   );
 
   // Register this item with the search context.

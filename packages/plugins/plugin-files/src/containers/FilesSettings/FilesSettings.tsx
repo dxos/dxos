@@ -9,7 +9,8 @@ import { IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { type FilesSettingsProps, type FilesState, LocalFilesOperation } from '../../types';
+import { FilesOperation } from '../../operations';
+import { type FilesSettingsProps, type FilesState } from '../../types';
 
 export type FilesSettingsComponentProps = {
   settings: FilesSettingsProps;
@@ -37,7 +38,7 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
               icon='ph--folder--regular'
               iconOnly
               label={t('save files to directory label')}
-              onClick={() => invokePromise(LocalFilesOperation.SelectRoot)}
+              onClick={() => invokePromise(FilesOperation.SelectRoot)}
             />
           </Settings.ItemInput>
           <Settings.ItemInput title={t('trigger export label')}>
@@ -46,7 +47,7 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
               icon='ph--floppy-disk--regular'
               iconOnly
               label={t('trigger export label')}
-              onClick={() => invokePromise(LocalFilesOperation.Export)}
+              onClick={() => invokePromise(FilesOperation.Export)}
             />
           </Settings.ItemInput>
           <Settings.ItemInput title={t('trigger import label')}>
@@ -55,7 +56,7 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
               icon='ph--folder-open--regular'
               iconOnly
               label={t('trigger import label')}
-              onClick={() => invokePromise(LocalFilesOperation.Import, {})}
+              onClick={() => invokePromise(FilesOperation.Import, {})}
             />
           </Settings.ItemInput>
           <Settings.ItemInput title={t('auto export label')}>

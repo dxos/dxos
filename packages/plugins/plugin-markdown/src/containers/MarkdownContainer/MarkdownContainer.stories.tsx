@@ -12,6 +12,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppActivationEvents, LayoutOperation } from '@dxos/app-toolkit';
 import { Obj, Query } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
@@ -78,20 +79,17 @@ const meta = {
           types: [Markdown.Document, Text.Text, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              yield* Effect.promise(() => client.spaces.waitUntilReady());
-              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              const { defaultSpace } = yield* initializeIdentity(client);
 
-              const space = client.spaces.default;
-              const createObjects = createObjectFactory(space.db, generator);
+              const createObjects = createObjectFactory(defaultSpace.db, generator);
               yield* Effect.promise(() => createObjects([{ type: Organization.Organization, count: 10 }]));
 
-              const queue = space.queues.create();
+              const queue = defaultSpace.queues.create();
               const kai = Obj.make(Person.Person, { fullName: 'Kai' });
               const dxos = Obj.make(Organization.Organization, { name: 'DXOS' });
               yield* Effect.promise(() => queue.append([kai, dxos]));
 
-              space.db.add(
+              defaultSpace.db.add(
                 Markdown.make({
                   name: context.args.title ?? 'Testing',
                   content: [
@@ -108,7 +106,7 @@ const meta = {
                 }),
               );
 
-              yield* Effect.promise(() => space.db.flush({ indexes: true }));
+              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
 

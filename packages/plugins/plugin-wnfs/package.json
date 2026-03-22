@@ -17,6 +17,11 @@
       "browser": "./dist/lib/browser/index.mjs",
       "types": "./dist/types/src/index.d.ts"
     },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "browser": "./dist/lib/browser/operations/index.mjs",
+      "types": "./dist/types/src/operations/index.d.ts"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "browser": "./dist/lib/browser/types/index.mjs",
@@ -28,6 +33,9 @@
     "*": {
       "types": [
         "dist/types/src/types/index.d.ts"
+      ],
+      "operations": [
+        "dist/types/src/operations/index.d.ts"
       ]
     }
   },

@@ -12,7 +12,8 @@ import { Collection } from '@dxos/echo';
 
 import { meta } from '../../meta';
 import { translations } from '../../translations';
-import { SPACE_TYPE, SpaceOperation } from '../../types';
+import { SPACE_TYPE } from '../../types';
+import { SpaceOperation } from '../../operations';
 import { SPACES } from '../../util';
 
 const COLLECTION_TYPE = Collection.Collection.typename;

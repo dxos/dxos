@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, test, vi } from 'vitest';
 
 import { type PluginManager, PluginManagerContext } from '@dxos/app-framework';
-import { Operation, OperationResolver } from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 import { ContextProtocolProvider } from '@dxos/web-context-solid';
 
 import { useOperationResolver } from './useOperationResolver';
@@ -20,7 +20,7 @@ const TestOperation = Operation.make({
 });
 
 describe('useOperationResolver', () => {
-  test('registers and unregisters operation resolver', () => {
+  test('registers and unregisters operation handler', () => {
     const contributeMock = vi.fn();
     const removeMock = vi.fn();
 
@@ -31,13 +31,10 @@ describe('useOperationResolver', () => {
       },
     } as unknown as PluginManager.PluginManager;
 
-    const resolver = OperationResolver.make({
-      operation: TestOperation,
-      handler: ({ value }) => Effect.succeed({ result: value }),
-    });
+    const handler = Operation.withHandler(TestOperation, ({ value }) => Effect.succeed({ result: value }));
 
     const TestComponent = () => {
-      useOperationResolver('test-module', resolver);
+      useOperationResolver('test-module', handler);
       return <div />;
     };
 
@@ -50,7 +47,6 @@ describe('useOperationResolver', () => {
     expect(contributeMock).toHaveBeenCalledWith(
       expect.objectContaining({
         module: 'test-module',
-        implementation: [resolver],
       }),
     );
 

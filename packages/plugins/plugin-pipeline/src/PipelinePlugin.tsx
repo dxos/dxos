@@ -9,10 +9,11 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Pipeline } from '@dxos/types';
 
-import { AppGraphBuilder, OperationResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -37,7 +38,7 @@ export const PipelinePlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+
   AppPlugin.addSchemaModule({ schema: [Pipeline.Pipeline] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

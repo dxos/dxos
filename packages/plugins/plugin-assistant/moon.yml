@@ -13,5 +13,6 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/blueprints/index.ts'
       - '--entryPoint=src/types/index.ts'
+      - '--entryPoint=src/operations/index.ts'
       - '--platform=browser'
       - '--platform=node'

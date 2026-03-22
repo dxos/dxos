@@ -11,7 +11,8 @@ import { IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
 import { meta } from '../../meta';
-import { type Meeting, MeetingOperation } from '../../types';
+import { type Meeting } from '../../types';
+import { MeetingOperation } from '../../operations';
 
 export type MeetingContainerProps = SurfaceComponentProps<Meeting.Meeting>;
 

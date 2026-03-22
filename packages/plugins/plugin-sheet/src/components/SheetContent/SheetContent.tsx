@@ -39,7 +39,8 @@ import { composableProps } from '@dxos/ui-theme';
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus } from '../../integrations';
 import { meta } from '../../meta';
-import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities, SheetOperation } from '../../types';
+import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities } from '../../types';
+import { SheetOperation } from '../../operations';
 import { useSheetContext } from '../SheetRoot';
 
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';

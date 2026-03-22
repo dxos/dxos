@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Research, DocumentCreate, ResearchHandlers } from './functions';
+import { Research, DocumentCreate } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.research';
 
@@ -55,7 +55,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: ResearchHandlers,
   make,
 };
 

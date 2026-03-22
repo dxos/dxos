@@ -12,7 +12,8 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '../../meta';
-import { InboxOperation, type Mailbox } from '../../types';
+import { InboxOperation } from '../../operations';
+import { type Mailbox } from '../../types';
 
 export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
   const db = Obj.getDatabase(mailbox);

@@ -3,6 +3,7 @@
 //
 
 import { join } from 'node:path';
+
 import * as pb from 'protobufjs';
 import { describe, expect, test } from 'vitest';
 

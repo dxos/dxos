@@ -6,12 +6,16 @@ import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { type LayoutOperation } from '@dxos/app-toolkit';
 import {
   AlertDialog,
+  Button,
   Dialog,
+  Icon,
   Main,
   Popover,
   type PopoverContentInteractOutsideEvent,
+  Toast,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
@@ -24,7 +28,44 @@ import { LayoutState, type LayoutStateProps } from '../../types';
 
 const debounce_delay = 100;
 
-// TODO(wittjosiah): Support dialogs, tooltips, maybe toast.
+const StoryToast = ({ toast, onDismiss }: { toast: LayoutOperation.Toast; onDismiss: (id: string) => void }) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <Toast.Root
+      data-testid={toast.id}
+      defaultOpen
+      duration={toast.duration}
+      onOpenChange={(open) => {
+        if (!open) {
+          onDismiss(toast.id);
+        }
+      }}
+    >
+      <Toast.Body>
+        <Toast.Title classNames='items-center'>
+          {toast.icon && <Icon icon={toast.icon} classNames='inline mr-1' />}
+          {toast.title && <span>{toLocalizedString(toast.title, t)}</span>}
+        </Toast.Title>
+        {toast.description && <Toast.Description>{toLocalizedString(toast.description, t)}</Toast.Description>}
+      </Toast.Body>
+      <Toast.Actions>
+        {toast.onAction && toast.actionAlt && toast.actionLabel && (
+          <Toast.Action altText={toLocalizedString(toast.actionAlt, t)} asChild>
+            <Button variant='primary' onClick={() => toast.onAction?.()}>
+              {toLocalizedString(toast.actionLabel, t)}
+            </Button>
+          </Toast.Action>
+        )}
+        {toast.closeLabel && (
+          <Toast.Close asChild>
+            <Button>{toLocalizedString(toast.closeLabel, t)}</Button>
+          </Toast.Close>
+        )}
+      </Toast.Actions>
+    </Toast.Root>
+  );
+};
+
 export const Layout = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation(meta.id);
   const trigger = useRef<HTMLButtonElement | null>(null);
@@ -81,81 +122,94 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
     [handleClose],
   );
 
+  const handleDismissToast = useCallback(
+    (id: string) => {
+      updateState({ toasts: layout.toasts.filter((toast) => toast.id !== id) });
+    },
+    [updateState, layout.toasts],
+  );
+
   const DialogRoot = layout.dialogType === 'alert' ? AlertDialog.Root : Dialog.Root;
   const DialogOverlay = layout.dialogType === 'alert' ? AlertDialog.Overlay : Dialog.Overlay;
 
   return (
-    <div role='none' className='fixed inset-0 grid overflow-hidden'>
-      <Mosaic.Root>
-        <Popover.Root open={open}>
-          <Main.Root
-            navigationSidebarState={layout.sidebarState}
-            complementarySidebarState={layout.complementarySidebarState}
-            onNavigationSidebarStateChange={(next) => updateState({ sidebarState: next })}
-            onComplementarySidebarStateChange={(next) => updateState({ complementarySidebarState: next })}
-          >
-            {children}
-          </Main.Root>
-
-          <DialogRoot
-            modal={layout.dialogBlockAlign !== 'end'}
-            open={layout.dialogOpen}
-            onOpenChange={(nextOpen) => updateState({ dialogOpen: nextOpen })}
-          >
-            {layout.dialogBlockAlign === 'end' ? (
-              <Surface.Surface
-                role='dialog'
-                data={layout.dialogContent}
-                limit={1}
-                fallback={ErrorFallback}
-                placeholder={<div />}
-              />
-            ) : (
-              <DialogOverlay
-                blockAlign={layout.dialogBlockAlign}
-                classNames={layout.dialogOverlayClasses}
-                style={layout.dialogOverlayStyle}
-              >
-                <Surface.Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ErrorFallback} />
-              </DialogOverlay>
-            )}
-          </DialogRoot>
-
-          <Popover.VirtualTrigger key={iter} virtualRef={trigger} />
-          <Popover.Portal>
-            <Popover.Content
-              side={layout.popoverSide}
-              onInteractOutside={handleInteractOutside}
-              onEscapeKeyDown={handleInteractOutside}
-              sticky='always'
-              hideWhenDetached
+    <Toast.Provider>
+      <div role='none' className='fixed inset-0 flex overflow-hidden'>
+        <Mosaic.Root>
+          <Popover.Root open={open}>
+            <Main.Root
+              navigationSidebarState={layout.sidebarState}
+              complementarySidebarState={layout.complementarySidebarState}
+              onNavigationSidebarStateChange={(next) => updateState({ sidebarState: next })}
+              onComplementarySidebarStateChange={(next) => updateState({ complementarySidebarState: next })}
             >
-              <Popover.Viewport>
-                {layout.popoverKind === 'card' && (
-                  <Card.Root>
-                    <Card.Toolbar>
-                      {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
-                      <span />
-                      {layout.popoverTitle ? (
-                        <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>
-                      ) : (
+              {children}
+            </Main.Root>
+
+            <DialogRoot
+              modal={layout.dialogBlockAlign !== 'end'}
+              open={layout.dialogOpen}
+              onOpenChange={(nextOpen) => updateState({ dialogOpen: nextOpen })}
+            >
+              {layout.dialogBlockAlign === 'end' ? (
+                <Surface.Surface
+                  role='dialog'
+                  data={layout.dialogContent}
+                  limit={1}
+                  fallback={ErrorFallback}
+                  placeholder={<div />}
+                />
+              ) : (
+                <DialogOverlay
+                  blockAlign={layout.dialogBlockAlign}
+                  classNames={layout.dialogOverlayClasses}
+                  style={layout.dialogOverlayStyle}
+                >
+                  <Surface.Surface role='dialog' data={layout.dialogContent} limit={1} fallback={ErrorFallback} />
+                </DialogOverlay>
+              )}
+            </DialogRoot>
+
+            <Popover.VirtualTrigger key={iter} virtualRef={trigger} />
+            <Popover.Portal>
+              <Popover.Content
+                side={layout.popoverSide}
+                onInteractOutside={handleInteractOutside}
+                onEscapeKeyDown={handleInteractOutside}
+                sticky='always'
+                hideWhenDetached
+              >
+                <Popover.Viewport>
+                  {layout.popoverKind === 'card' && (
+                    <Card.Root>
+                      <Card.Toolbar>
+                        {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                         <span />
-                      )}
-                      <Card.CloseIconButton onClick={handleClose} />
-                    </Card.Toolbar>
-                    <Surface.Surface role='card--content' data={layout.popoverContent} limit={1} />
-                  </Card.Root>
-                )}
-                {layout.popoverKind === 'base' && (
-                  <Surface.Surface role='popover' data={layout.popoverContent} limit={1} />
-                )}
-              </Popover.Viewport>
-              <Popover.Arrow />
-            </Popover.Content>
-          </Popover.Portal>
-        </Popover.Root>
-      </Mosaic.Root>
-    </div>
+                        {layout.popoverTitle ? (
+                          <Card.Title>{toLocalizedString(layout.popoverTitle, t)}</Card.Title>
+                        ) : (
+                          <span />
+                        )}
+                        <Card.CloseIconButton onClick={handleClose} />
+                      </Card.Toolbar>
+                      <Surface.Surface role='card--content' data={layout.popoverContent} limit={1} />
+                    </Card.Root>
+                  )}
+                  {layout.popoverKind === 'base' && (
+                    <Surface.Surface role='popover' data={layout.popoverContent} limit={1} />
+                  )}
+                </Popover.Viewport>
+                <Popover.Arrow />
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
+        </Mosaic.Root>
+        {layout.toasts.map((toast) => (
+          <StoryToast key={toast.id} toast={toast} onDismiss={handleDismissToast} />
+        ))}
+        <Toast.Viewport />
+      </div>
+    </Toast.Provider>
   );
 };
 

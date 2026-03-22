@@ -16,7 +16,8 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
 
 import { meta } from '../../meta';
-import { Channel, ThreadCapabilities, ThreadOperation, type ThreadState } from '../../types';
+import { Channel, ThreadCapabilities, type ThreadState } from '../../types';
+import { ThreadOperation } from '../../operations';
 import { getAnchor } from '../../util';
 
 type CommentDisabledParams = {

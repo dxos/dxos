@@ -4,4 +4,4 @@
 
 import { Capability } from '@dxos/app-framework';
 
-export const OperationResolver = Capability.lazy('OperationResolver', () => import('./operation-handler'));
+export const OperationHandler = Capability.lazy('OperationHandler', () => import('./operation-handler'));

@@ -11,7 +11,8 @@ import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } 
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { SpaceOperation, type SpaceSettingsProps } from '../../types';
+import { type SpaceSettingsProps } from '../../types';
+import { SpaceOperation } from '../../operations';
 import { getSpaceDisplayName } from '../../util';
 
 export type SpacePluginSettingsComponentProps = {
