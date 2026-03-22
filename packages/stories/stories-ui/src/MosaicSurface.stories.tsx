@@ -9,6 +9,7 @@ import React, { useContext, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Database, Obj, Ref } from '@dxos/echo';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ClientPlugin, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -112,12 +113,9 @@ const meta = {
           types: [TestColumn, TestItem, Organization.Organization, Person.Person, Pipeline.Pipeline],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              yield* Effect.promise(() => client.spaces.waitUntilReady());
-              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
-              const space = client.spaces.default;
+              const { defaultSpace } = yield* initializeIdentity(client);
 
-              const factory = createObjectFactory(space.db, generator);
+              const factory = createObjectFactory(defaultSpace.db, generator);
               yield* Effect.promise(() =>
                 factory([
                   { type: Organization.Organization, count: 20 },

@@ -13,6 +13,7 @@ import { Database, Feed, JsonSchema, Obj, Query, Tag } from '@dxos/echo';
 import { Collection, View } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { InboxPlugin } from '@dxos/plugin-inbox';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -71,10 +72,7 @@ const meta = {
             Message.Message,
           ],
           onClientInitialized: Effect.fnUntraced(function* ({ client }) {
-            yield* Effect.promise(() => client.halo.createIdentity());
-            yield* Effect.promise(() => client.spaces.waitUntilReady());
-            const space = client.spaces.default;
-            yield* Effect.promise(() => space.waitUntilReady());
+            const { defaultSpace } = yield* initializeIdentity(client);
 
             yield* Effect.gen(function* () {
               const tag = yield* Database.add(Tag.make({ label: 'important', hue: 'green' }));
@@ -196,7 +194,7 @@ const meta = {
               }
 
               // Generate sample Contacts.
-              const factory = createObjectFactory(space.db, faker as any);
+              const factory = createObjectFactory(defaultSpace.db, faker as any);
               yield* Effect.promise(() => factory([{ type: Person.Person, count: 12 }]));
 
               // Generate sample Projects.
@@ -208,7 +206,9 @@ const meta = {
                   }),
                 );
               }
-            }).pipe(Effect.provide(Layer.merge(Database.layer(space.db), createFeedServiceLayer(space.queues))));
+            }).pipe(
+              Effect.provide(Layer.merge(Database.layer(defaultSpace.db), createFeedServiceLayer(defaultSpace.queues))),
+            );
           }),
         }),
         InboxPlugin(),
