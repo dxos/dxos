@@ -11,6 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { faker } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -75,7 +76,7 @@ const meta = {
           types: [Message.Message, Thread.Thread, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* initializeIdentity(client);
             }),
         }),
       ],

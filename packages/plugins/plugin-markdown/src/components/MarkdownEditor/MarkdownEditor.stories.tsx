@@ -9,6 +9,7 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -62,11 +63,8 @@ const meta: Meta<typeof DefaultStory> = {
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              yield* Effect.promise(() => client.spaces.waitUntilReady());
-              const space = client.spaces.default;
-              yield* Effect.promise(() => space.waitUntilReady());
-              space.db.add(
+              const { defaultSpace } = yield* initializeIdentity(client);
+              defaultSpace.db.add(
                 Markdown.make({ content: Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n') }),
               );
             }),

@@ -16,6 +16,7 @@ import { MemoryQueue } from '@dxos/echo-db';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -196,10 +197,8 @@ const meta = {
           types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              yield* Effect.promise(() => client.spaces.waitUntilReady());
-              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
-              yield* Effect.promise(() => seedTestData(client.spaces.default));
+              const { defaultSpace } = yield* initializeIdentity(client);
+              yield* Effect.promise(() => seedTestData(defaultSpace));
             }),
         }),
 
