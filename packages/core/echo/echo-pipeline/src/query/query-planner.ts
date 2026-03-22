@@ -225,7 +225,8 @@ export class QueryPlanner {
       case 'timestamp': {
         if (context.selectionInverted) {
           throw new QueryError({
-            message: 'Negated timestamp filters are not supported. Use Filter.updated/Filter.created with the inverted range instead.',
+            message:
+              'Negated timestamp filters are not supported. Use Filter.updated/Filter.created with the inverted range instead.',
             context: { query: context.originalQuery },
           });
         }
@@ -267,7 +268,6 @@ export class QueryPlanner {
         }
 
         if (timestampFilters.length > 0 && nonTimestampFilters.length <= 1) {
-          const selector = _mergeTimestampSelectors(timestampFilters.map(_timestampFilterToSelector));
           const innerFilter = nonTimestampFilters[0];
           const innerPlan = innerFilter
             ? this._generateSelectionFromFilter(innerFilter, context)
@@ -282,7 +282,6 @@ export class QueryPlanner {
 
           const selectIdx = innerPlan.steps.findIndex((s) => s._tag === 'SelectStep');
           if (selectIdx !== -1) {
-            const existingSelect = innerPlan.steps[selectIdx] as QueryPlan.SelectStep;
             const newSteps = [...innerPlan.steps];
             newSteps.splice(selectIdx + 1, 0, {
               _tag: 'FilterStep',
@@ -291,6 +290,7 @@ export class QueryPlanner {
             return QueryPlan.Plan.make(newSteps);
           }
 
+          const selector = _mergeTimestampSelectors(timestampFilters.map(_timestampFilterToSelector));
           return QueryPlan.Plan.make([
             {
               _tag: 'SelectStep',
@@ -299,6 +299,14 @@ export class QueryPlanner {
             },
             ...this._generateDeletedHandlingSteps(context),
           ]);
+        }
+
+        if (timestampFilters.length > 0) {
+          throw new QueryError({
+            message:
+              'Timestamp filters can only be combined with a single type or property filter via AND. Split complex filters into a subquery.',
+            context: { query: context.originalQuery },
+          });
         }
 
         throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });

@@ -73,8 +73,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     }
 
     case 'timestamp': {
-      // Timestamp filtering is handled at the index level; pass-through here.
-      return true;
+      throw new Error('Timestamp filters must be handled at the index level, not in-memory matching.');
     }
 
     case 'not': {
@@ -156,7 +155,7 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
     }
 
     case 'timestamp': {
-      return true;
+      throw new Error('Timestamp filters must be handled at the index level, not in-memory matching.');
     }
 
     case 'not': {
