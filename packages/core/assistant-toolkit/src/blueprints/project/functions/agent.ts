@@ -13,8 +13,8 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { type Message } from '@dxos/types';
 
-import { Agent } from './definitions';
 import { Project } from '../../../types';
+import { Agent } from './definitions';
 
 export default Agent.pipe(
   Operation.withHandler(

@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+
 import type * as Operation from './Operation';
 
 export const TypeId = '~@dxos/operation/OperationHandlerSet' as const;

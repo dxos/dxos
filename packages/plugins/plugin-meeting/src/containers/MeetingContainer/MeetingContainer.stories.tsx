@@ -11,6 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Channel } from '@dxos/plugin-thread/types';
@@ -47,17 +48,12 @@ const meta = {
           types: [Meeting.Meeting],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-            }),
-          onSpacesReady: ({ client }) =>
-            Effect.gen(function* () {
-              const space = client.spaces.default;
-              yield* Effect.promise(() => space.waitUntilReady());
-              space.db.add(
+              const { defaultSpace } = yield* initializeIdentity(client);
+              defaultSpace.db.add(
                 Obj.make(Meeting.Meeting, {
                   created: new Date().toISOString(),
                   participants: [],
-                  transcript: Ref.make(Transcript.make(space.queues.create().dxn)),
+                  transcript: Ref.make(Transcript.make(defaultSpace.queues.create().dxn)),
                   notes: Ref.make(Text.make('Notes')),
                   summary: Ref.make(Text.make()),
                   thread: Ref.make(Thread.make()),

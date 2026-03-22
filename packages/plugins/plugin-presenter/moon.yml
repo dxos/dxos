@@ -10,4 +10,5 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/operations/index.ts'
       - '--platform=browser'

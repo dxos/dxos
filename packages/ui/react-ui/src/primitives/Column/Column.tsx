@@ -80,12 +80,17 @@ type ColumnRowProps = SlottableProps<HTMLDivElement, ColumnStyleProps>;
  * Must be a direct child of Column.Root.
  */
 const ColumnRow = forwardRef<HTMLDivElement, ColumnRowProps>(
-  ({ children, asChild, role, center, ...props }, forwardedRef) => {
+  ({ children, asChild, role, fullWidth, center, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     return (
-      <Comp {...rest} role={role ?? 'none'} className={tx('column.row', { center }, className)} ref={forwardedRef}>
+      <Comp
+        {...rest}
+        role={role ?? 'none'}
+        className={tx('column.row', { fullWidth, center }, className)}
+        ref={forwardedRef}
+      >
         {children}
       </Comp>
     );

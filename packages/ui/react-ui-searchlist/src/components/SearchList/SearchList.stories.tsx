@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -123,16 +123,16 @@ type CustomItemProps = {
 
 const CustomItem = ({ value, label, description, onSelect }: CustomItemProps) => {
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
-  const ref = React.useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const isSelected = selectedValue === value;
 
-  React.useEffect(() => {
+  useEffect(() => {
     registerItem(value, ref.current, onSelect);
     return () => unregisterItem(value);
   }, [value, onSelect, registerItem, unregisterItem]);
 
   // Scroll into view when selected.
-  React.useEffect(() => {
+  useEffect(() => {
     if (isSelected && ref.current) {
       ref.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
@@ -279,7 +279,7 @@ const CustomInput = () => {
   const { query, onQueryChange, selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
     useSearchListInput();
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     const values = getItemValues();
     if (values.length === 0) {
       if (event.key === 'Escape') {

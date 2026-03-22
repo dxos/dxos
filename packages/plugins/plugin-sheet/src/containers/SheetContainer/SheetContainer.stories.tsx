@@ -9,7 +9,7 @@ import React, { useContext } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
-import { OperationResolver } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -19,7 +19,8 @@ import { AttendableContainer } from '@dxos/react-ui-attention';
 import { ComputeGraphContext, useComputeGraph } from '../../components';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '../../testing';
 import { translations } from '../../translations';
-import { Sheet, SheetOperation } from '../../types';
+import { Sheet } from '../../types';
+import { SheetOperation } from '../../operations';
 import RangeList from '../RangeList';
 
 import { SheetContainer } from './SheetContainer';
@@ -35,16 +36,17 @@ const meta = {
     withPluginManager({
       plugins: [...corePlugins()],
       capabilities: [
-        Capability.contributes(Capabilities.OperationResolver, [
-          OperationResolver.make({
-            operation: SheetOperation.DropAxis,
-            handler: ({ model, axis, axisIndex }) =>
+        Capability.contributes(
+          Capabilities.OperationHandler,
+          OperationHandlerSet.make(
+            Operation.withHandler(SheetOperation.DropAxis, ({ model, axis, axisIndex }) =>
               Effect.sync(() => {
                 model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);
                 return { axis, axisIndex, index: 0, axisMeta: null, values: [] };
               }),
-          }),
-        ]),
+            ),
+          ),
+        ),
       ],
     }),
   ],

@@ -10,9 +10,9 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { AttentionOperation } from '@dxos/plugin-attention/types';
+import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { COMPANION_PREFIX } from '@dxos/app-toolkit';
-import { DeckOperation } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
@@ -24,7 +24,8 @@ import { HasSubject, Message } from '@dxos/types';
 import { type MailboxActionHandler, Mailbox as MailboxComponent, MailboxEmpty } from '../../components';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
-import { InboxOperation, type Mailbox } from '../../types';
+import { InboxOperation } from '../../operations';
+import { type Mailbox } from '../../types';
 import { sortByCreated } from '../../util';
 
 export type MailboxArticleProps = SurfaceComponentProps<
@@ -353,7 +354,7 @@ const useMailboxActions = ({
               icon: 'ph--paper-plane-right--regular',
               label: ['compose email label', { ns: meta.id }],
             },
-            () => db && invokePromise(InboxOperation.CreateDraft, { db }),
+            () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db }),
           )
           .build();
 

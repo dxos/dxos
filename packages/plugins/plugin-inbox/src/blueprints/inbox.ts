@@ -4,11 +4,9 @@
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { OperationHandlerSet } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
-import { Classify, Create, GmailSync, InboxHandlers, Open, Summarize } from '../functions';
-import { GmailHandlers } from '../functions/google/gmail';
+import { InboxOperation } from '../operations';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.inbox';
 
@@ -16,7 +14,16 @@ const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Inbox',
-    tools: Blueprint.toolDefinitions({ operations: [Classify, Create, Open, Summarize, GmailSync], tools: [] }),
+    tools: Blueprint.toolDefinitions({
+      operations: [
+        InboxOperation.ClassifyEmail,
+        InboxOperation.DraftEmail,
+        InboxOperation.ReadEmail,
+        InboxOperation.SummarizeMailbox,
+        InboxOperation.GoogleMailSync,
+      ],
+      tools: [],
+    }),
     instructions: Template.make({
       source: trim`
         You manage my email inbox.
@@ -51,7 +58,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: OperationHandlerSet.merge(InboxHandlers, GmailHandlers),
   make,
 };
 

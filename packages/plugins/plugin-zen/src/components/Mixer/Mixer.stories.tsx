@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { useSpaces } from '@dxos/react-client/echo';
@@ -19,9 +19,9 @@ const DefaultStory = () => {
   const { engine, playing, outputNode } = useMixerEngine();
   const spaces = useSpaces();
   const space = spaces[0];
-  const [dream, setDream] = React.useState<Dream.Dream | undefined>();
+  const [dream, setDream] = useState<Dream.Dream | undefined>();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (space && !dream) {
       setDream(
         space.db.add(

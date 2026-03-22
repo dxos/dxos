@@ -1,0 +1,66 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Effect from 'effect/Effect';
+
+import { Capabilities, Capability } from '@dxos/app-framework';
+import { AiContextBinder } from '@dxos/assistant';
+import { Chat, DatabaseBlueprint, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
+import { Blueprint } from '@dxos/blueprints';
+import { Filter, Ref } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
+import { Operation } from '@dxos/operation';
+import { ClientCapabilities } from '@dxos/plugin-client';
+
+import { AssistantBlueprint } from '../blueprints';
+import { CreateChat } from './definitions';
+
+const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ db, name, addToSpace = true }) {
+      const registry = yield* Capability.get(Capabilities.AtomRegistry);
+      const client = yield* Capability.get(ClientCapabilities.Client);
+      const space = client.spaces.get(db.spaceId);
+      invariant(space, 'Space not found');
+      const queue = space.queues.create();
+      const chat = Chat.make({ name, queue: db.makeRef<any>(queue.dxn) });
+      if (addToSpace) {
+        space.db.add(chat);
+      }
+
+      // TODO(wittjosiah): This should be a space-level setting.
+      // TODO(burdon): Clone when activated. Copy-on-write for template.
+      const blueprints = yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run());
+      let defaultAssistantBlueprint = blueprints.find((blueprint) => blueprint.key === AssistantBlueprint.key);
+      if (!defaultAssistantBlueprint) {
+        defaultAssistantBlueprint = db.add(AssistantBlueprint.make());
+      }
+      let defaultDatabaseBlueprint = blueprints.find((blueprint) => blueprint.key === DatabaseBlueprint.key);
+      if (!defaultDatabaseBlueprint) {
+        defaultDatabaseBlueprint = db.add(DatabaseBlueprint.make());
+      }
+      let defaultProjectWizardBlueprint = blueprints.find((blueprint) => blueprint.key === ProjectWizardBlueprint.key);
+      if (!defaultProjectWizardBlueprint) {
+        defaultProjectWizardBlueprint = db.add(ProjectWizardBlueprint.make());
+      }
+
+      const binder = new AiContextBinder({ queue, registry });
+      yield* Effect.promise(() =>
+        binder.use((b: AiContextBinder) =>
+          b.bind({
+            blueprints: [
+              Ref.make(defaultAssistantBlueprint!),
+              Ref.make(defaultDatabaseBlueprint!),
+              Ref.make(defaultProjectWizardBlueprint!),
+            ],
+          }),
+        ),
+      );
+
+      return { object: chat };
+    }),
+  ),
+);
+
+export default handler;

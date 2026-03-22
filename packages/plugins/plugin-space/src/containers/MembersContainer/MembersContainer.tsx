@@ -28,7 +28,7 @@ import {
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { SpaceOperation } from '../../types';
+import { SpaceOperation } from '../../operations';
 import { COMPOSER_SPACE_LOCK } from '../../util';
 
 // TODO(wittjosiah): Copied from Shell.

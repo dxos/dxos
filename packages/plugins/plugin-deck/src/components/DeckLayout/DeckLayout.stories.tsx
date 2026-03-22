@@ -11,7 +11,7 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { DeckState, LayoutOperationResolver } from '../../capabilities';
+import { DeckState, OperationHandler } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
@@ -23,8 +23,8 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: () => DeckState(),
   }),
-  AppPlugin.addOperationResolverModule({
-    activate: LayoutOperationResolver,
+  AppPlugin.addOperationHandlerModule({
+    activate: OperationHandler,
   }),
   Plugin.make,
 );

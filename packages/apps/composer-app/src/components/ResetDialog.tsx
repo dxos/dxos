@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { type LogBuffer } from '@dxos/log';
 import { type Observability } from '@dxos/observability';
 import { FeedbackForm } from '@dxos/plugin-observability';
-import { type UserFeedback } from '@dxos/plugin-observability/types';
+import { type UserFeedback } from '@dxos/plugin-observability/operations';
 import {
   AlertDialog,
   type AlertDialogRootProps,

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { OperationInvoker } from '@dxos/operation';
+import { OperationHandlerSet, OperationInvoker } from '@dxos/operation';
 
 import { ActivationEvents, Capabilities } from '../common';
 import { Capability, Plugin } from '../core';
@@ -20,17 +20,19 @@ export default Capability.makeModule(
     const pluginManager = yield* Plugin.Service;
 
     // Get the ManagedRuntime capability (should be available since we activate after ManagedRuntimeReady).
-    const managedRuntimes = yield* Capability.getAll(Capabilities.ManagedRuntime);
-    const managedRuntime = managedRuntimes.length > 0 ? managedRuntimes[0] : undefined;
+    const managedRuntime = yield* Capability.get(Capabilities.ManagedRuntime);
 
     const invoker = OperationInvoker.make(
       () =>
         Effect.gen(function* () {
-          yield* Plugin.activate(ActivationEvents.SetupOperationResolver);
-          return (yield* Capability.getAll(Capabilities.OperationResolver)).flat();
+          yield* Plugin.activate(ActivationEvents.SetupOperationHandler);
+          const sets = yield* Capability.getAll(Capabilities.OperationHandler);
+          const merged = OperationHandlerSet.merge(...sets);
+          return yield* merged.handlers;
         }).pipe(
           Effect.provideService(Capability.Service, capabilityManager),
           Effect.provideService(Plugin.Service, pluginManager),
+          Effect.orDie,
         ),
       managedRuntime,
     );

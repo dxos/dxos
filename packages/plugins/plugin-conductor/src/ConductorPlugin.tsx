@@ -10,7 +10,8 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { ComputeGraph } from '@dxos/conductor';
 import { Operation } from '@dxos/operation';
-import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
 import { ReactSurface } from './capabilities';

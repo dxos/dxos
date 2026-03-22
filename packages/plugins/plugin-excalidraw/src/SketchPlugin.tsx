@@ -10,9 +10,10 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Sketch } from '@dxos/plugin-sketch/types';
 import { Operation } from '@dxos/operation';
-import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { ExcalidrawSettings, OperationResolver, ReactSurface } from './capabilities';
+import { ExcalidrawSettings, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -36,7 +37,7 @@ export const ExcalidrawPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Sketch.Canvas, Sketch.Sketch] }),
   AppPlugin.addSettingsModule({ id: 'settings', activate: ExcalidrawSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

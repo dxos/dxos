@@ -10,6 +10,7 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Key } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
@@ -183,7 +184,7 @@ const meta = {
           types: [TestItem, TestSchema.DocumentType, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* initializeIdentity(client);
             }),
         }),
 

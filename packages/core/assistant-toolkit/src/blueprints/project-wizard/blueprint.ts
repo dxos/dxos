@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { QueryBlueprints, ProjectRules, CreateProject, ProjectWizardHandlers } from './functions';
+import { QueryBlueprints, ProjectRules, CreateProject } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.project-wizard';
 
@@ -36,7 +36,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: ProjectWizardHandlers,
   make,
 };
 

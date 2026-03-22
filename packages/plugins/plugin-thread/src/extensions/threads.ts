@@ -13,7 +13,8 @@ import { type Markdown } from '@dxos/plugin-markdown/types';
 import { AnchoredTo, Thread } from '@dxos/types';
 import { comments, createExternalCommentSync } from '@dxos/ui-editor';
 
-import { ThreadOperation, type ThreadState } from '../types';
+import { type ThreadState } from '../types';
+import { ThreadOperation } from '../operations';
 
 // TODO(burdon): Factor out.
 const getName = (doc: Markdown.Document, anchor: string): string | undefined => {

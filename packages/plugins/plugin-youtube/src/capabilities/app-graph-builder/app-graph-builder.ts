@@ -18,7 +18,7 @@ import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder } from '@dxos/plugin-graph';
 
-import { ClearSyncedVideos, Sync } from '../../functions';
+import { ClearSyncedVideos, Sync } from '../../operations';
 import { meta } from '../../meta';
 import { Channel, Video } from '../../types';
 

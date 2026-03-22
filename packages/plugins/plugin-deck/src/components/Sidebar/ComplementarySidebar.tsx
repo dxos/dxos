@@ -34,7 +34,7 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { t } = useTranslation(meta.id);
-  const { invokeSync } = useOperationInvoker();
+  const { invokePromise } = useOperationInvoker();
   const { state, deck, updateState } = useDeckState();
   const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();
@@ -61,10 +61,10 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       } else {
         setInternalValue(nextValue);
         updateState((state) => ({ ...state, complementarySidebarState: 'expanded' }));
-        invokeSync(LayoutOperation.UpdateComplementary, { subject: nextValue });
+        void invokePromise(LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
     },
-    [state.complementarySidebarState, activeId, invokeSync, updateState],
+    [state.complementarySidebarState, activeId, invokePromise, updateState],
   );
 
   const data = useMemo(
@@ -78,9 +78,9 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 
   useEffect(() => {
     if (!activeId) {
-      invokeSync(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+      void invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
     }
-  }, [activeId, invokeSync]);
+  }, [activeId, invokePromise]);
 
   return (
     <Main.ComplementarySidebar

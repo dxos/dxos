@@ -4,7 +4,7 @@
 
 import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { type PropsWithChildren, forwardRef, useCallback } from 'react';
+import React, { ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, useCallback } from 'react';
 
 import {
   Button,
@@ -261,7 +261,7 @@ const ComboboxEmpty = SearchList.Empty;
 // Portal
 //
 
-type ComboboxPortalProps = React.ComponentPropsWithoutRef<typeof Popover.Portal>;
+type ComboboxPortalProps = ComponentPropsWithoutRef<typeof Popover.Portal>;
 
 const ComboboxPortal = Popover.Portal;
 
