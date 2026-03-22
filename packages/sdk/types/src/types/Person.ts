@@ -32,7 +32,11 @@ const PersonSchema = Schema.Struct({
   preferredName: Schema.String.pipe(Schema.annotations({ title: 'Preferred Name' }), Schema.optional),
   nickname: Schema.String.pipe(Schema.annotations({ title: 'Nickname' }), Schema.optional),
   // TODO(wittjosiah): Format.URL. Support ref?
-  image: Schema.String.pipe(Schema.annotations({ title: 'Image' }), GeneratorAnnotation.set('image.url'), Schema.optional),
+  image: Schema.String.pipe(
+    Schema.annotations({ title: 'Image' }),
+    GeneratorAnnotation.set('image.url'),
+    Schema.optional,
+  ),
   // TODO(burdon): Use reference links.
   organization: Ref.Ref(Organization.Organization).pipe(
     PropertyMeta('referenceProperty', 'name'),

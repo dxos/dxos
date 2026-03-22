@@ -62,7 +62,8 @@ export const MasonryContainer = ({
   const objects = useQuery(db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
 
   const sortedObjects = useMemo(
-    () => objects.filter(isNonNullable).toSorted((a, b) => (Obj.getLabel(a) ?? '').localeCompare(Obj.getLabel(b) ?? '')),
+    () =>
+      objects.filter(isNonNullable).toSorted((a, b) => (Obj.getLabel(a) ?? '').localeCompare(Obj.getLabel(b) ?? '')),
     [objects],
   );
 
