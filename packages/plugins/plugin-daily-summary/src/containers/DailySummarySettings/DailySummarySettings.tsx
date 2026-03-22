@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import type { Space } from '@dxos/client/echo';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { useQuery } from '@dxos/react-client/echo';
