@@ -6,6 +6,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { ServiceNotAvailableError } from '../errors';
@@ -22,6 +23,11 @@ export interface ServiceResolver {
    */
   resolve(tags: readonly Context.Tag<any, any>[]): Effect.Effect<Context.Context<never>, ServiceNotAvailableError>;
 }
+
+/**
+ * Tag for the ServiceResolver service.
+ */
+export const ServiceResolver = Context.GenericTag<ServiceResolver>('@dxos/functions-runtime/ServiceResolver');
 
 /**
  * Create a ServiceResolver from a custom resolution function.
@@ -82,6 +88,16 @@ export const fromRequirements = <const Tags extends readonly Context.Tag<any, an
       }).pipe(Effect.flatten),
     );
   });
+
+/**
+ * Like {@link fromRequirements} but returns a Layer that provides ServiceResolver.
+ */
+export const layerRequirements = <const Tags extends readonly Context.Tag<any, any>[]>(
+  ...tags: Tags
+): Layer.Layer<ServiceResolver, never, Context.Tag.Identifier<Tags[number]>> =>
+  Layer.effect(ServiceResolver, fromRequirements(...tags));
+
+
 
 /**
  * Compose multiple resolvers left to right. Earlier resolvers take precedence:

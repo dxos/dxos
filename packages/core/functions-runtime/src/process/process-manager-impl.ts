@@ -17,7 +17,7 @@ import * as Stream from 'effect/Stream';
 
 import { TracingService } from '@dxos/functions';
 
-import { type OperationHandlerSet, Operation } from '@dxos/operation';
+import { OperationHandlerSet, Operation } from '@dxos/operation';
 
 import type { ServiceNotAvailableError } from '../errors';
 
@@ -351,24 +351,29 @@ export class ProcessManagerImpl implements Process.Manager {
 
 /**
  * Layer that provides ProcessManager backed by ProcessManagerImpl.
- * Requires KeyValueStore from the environment; creates its own Registry internally.
+ * Requires KeyValueStore, ServiceResolver, TracingService, and OperationHandlerSet.Provider from the environment.
  */
-export const ProcessManagerLayer = (opts?: {
-  serviceResolver?: ServiceResolver.ServiceResolver;
-  tracingService?: Context.Tag.Service<TracingService>;
-  handlerSet?: OperationHandlerSet.OperationHandlerSet;
-}): Layer.Layer<Process.ProcessManager, never, KeyValueStore.KeyValueStore> =>
-  Layer.effect(
-    Process.ProcessManager,
-    Effect.gen(function* () {
-      const kvStore = yield* KeyValueStore.KeyValueStore;
-      const registry = Registry.make();
-      return new ProcessManagerImpl({
-        registry,
-        kvStore,
-        serviceResolver: opts?.serviceResolver,
-        tracingService: opts?.tracingService,
-        handlerSet: opts?.handlerSet,
-      });
-    }),
-  );
+export const ProcessManagerLayer: Layer.Layer<
+  Process.ProcessManager,
+  never,
+  | KeyValueStore.KeyValueStore
+  | ServiceResolver.ServiceResolver
+  | TracingService
+  | OperationHandlerSet.Provider
+> = Layer.effect(
+  Process.ProcessManager,
+  Effect.gen(function* () {
+    const kvStore = yield* KeyValueStore.KeyValueStore;
+    const serviceResolver = yield* ServiceResolver.ServiceResolver;
+    const tracingService = yield* TracingService;
+    const handlerSet = yield* OperationHandlerSet.Provider;
+    const registry = Registry.make();
+    return new ProcessManagerImpl({
+      registry,
+      kvStore,
+      serviceResolver,
+      tracingService,
+      handlerSet,
+    });
+  }),
+);

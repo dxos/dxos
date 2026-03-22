@@ -2,7 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
 import type * as Operation from './Operation';
 import { NoHandlerError } from './errors';
 
@@ -88,3 +91,11 @@ export const getHandler = <const Op extends Operation.Definition.Any>(
     }
     return handler as any;
   });
+
+export class Provider extends Context.Tag('@dxos/operation/OperationHandlerSetProvider')<
+  Provider,
+  OperationHandlerSet
+>() {
+  static layer = (handlers: OperationHandlerSet): Layer.Layer<Provider, never, never> =>
+    Layer.succeed(Provider, handlers);
+}

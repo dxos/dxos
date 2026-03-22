@@ -197,42 +197,23 @@ const makeControllableExecutable = (gates: Gate[]) => {
   );
 };
 
-const makeKvStore = () => {
-  const store = new Map<string, string>();
-  const kvStore = KeyValueStore.make({
-    get: (key: string) => Effect.succeed(Option.fromNullable(store.get(key))),
-    getUint8Array: (key: string) =>
-      Effect.succeed(Option.map(Option.fromNullable(store.get(key)), (value) => new TextEncoder().encode(value))),
-    set: (key: string, value: string | Uint8Array) =>
-      Effect.sync(() => {
-        store.set(key, typeof value === 'string' ? value : new TextDecoder().decode(value));
-      }),
-    remove: (key: string) =>
-      Effect.sync(() => {
-        store.delete(key);
-      }),
-    clear: Effect.sync(() => store.clear()),
-    size: Effect.sync(() => store.size),
-  });
-  return { store, kvStore };
-};
-
 const makeManager = (opts?: {
   serviceResolver?: ServiceResolver.ServiceResolver;
   tracingService?: Context.Tag.Service<TracingService>;
   handlerSet?: OperationHandlerSet.OperationHandlerSet;
-}) => {
-  const { store, kvStore } = makeKvStore();
-  const registry = Registry.make();
-  const manager = new ProcessManagerImpl({
-    registry,
-    kvStore,
-    serviceResolver: opts?.serviceResolver,
-    tracingService: opts?.tracingService,
-    handlerSet: opts?.handlerSet,
-  });
-  return { registry, kvStore, store, manager };
-};
+}) =>
+  Effect.gen(function* () {
+    const kvStore = yield* KeyValueStore.KeyValueStore;
+    const registry = Registry.make();
+    const manager = new ProcessManagerImpl({
+      registry,
+      kvStore,
+      serviceResolver: opts?.serviceResolver,
+      tracingService: opts?.tracingService,
+      handlerSet: opts?.handlerSet,
+    });
+    return { registry, kvStore, manager };
+  }).pipe(Effect.provide(KeyValueStore.layerMemory));
 
 const makeGate = function* () {
   return {
@@ -245,7 +226,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'spawns a process and produces output',
     Effect.fn(function* ({ expect }) {
-      const { manager } = makeManager();
+      const { manager } = yield* makeManager();
       const executable = makeSimpleExecutable();
 
       const handle = yield* manager.spawn(executable);
@@ -263,7 +244,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'tracks status through lifecycle',
     Effect.fn(function* ({ expect }) {
-      const { manager } = makeManager();
+      const { manager } = yield* makeManager();
       const executable = makeSimpleExecutable();
 
       const handle = yield* manager.spawn(executable);
@@ -287,7 +268,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'terminates a running process',
     Effect.fn(function* ({ expect }) {
-      const { manager } = makeManager();
+      const { manager } = yield* makeManager();
       const executable = makeSimpleExecutable();
 
       const handle = yield* manager.spawn(executable);
@@ -307,7 +288,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'lists spawned processes',
     Effect.fn(function* ({ expect }) {
-      const { manager } = makeManager();
+      const { manager } = yield* makeManager();
       const executable = makeSimpleExecutable();
 
       const handle1 = yield* manager.spawn(executable);
@@ -323,7 +304,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'attaches to an existing process',
     Effect.fn(function* ({ expect }) {
-      const { manager } = makeManager();
+      const { manager } = yield* makeManager();
       const executable = makeSimpleExecutable();
 
       const handle = yield* manager.spawn(executable);
@@ -340,7 +321,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'updates status atom on registry',
     Effect.fn(function* ({ expect }) {
-      const { registry, manager } = makeManager();
+      const { registry, manager } = yield* makeManager();
       const executable = makeSimpleExecutable();
 
       const handle = yield* manager.spawn(executable);
@@ -360,7 +341,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'works with operation executable',
     Effect.fn(function* ({ expect }) {
-      const { manager } = makeManager();
+      const { manager } = yield* makeManager();
       const { double } = makeOperationExecutables();
 
       const handle = yield* manager.spawn(double);
@@ -378,7 +359,7 @@ describe('ProcessManagerImpl', () => {
   it.effect(
     'spawns multiple independent processes',
     Effect.fn(function* ({ expect }) {
-      const { manager } = makeManager();
+      const { manager } = yield* makeManager();
       const { double, echo } = makeOperationExecutables();
 
       const doubleHandle = yield* manager.spawn(double);
@@ -402,7 +383,7 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'provides scoped storage to processes',
       Effect.fn(function* ({ expect }) {
-        const { store, manager } = makeManager();
+        const { kvStore, manager } = yield* makeManager();
         const executable = makeStorageExecutable() as Process.Executable<{ key: string; value: string }, string>;
 
         const handle = yield* manager.spawn(executable);
@@ -412,14 +393,14 @@ describe('ProcessManagerImpl', () => {
         const outputs = yield* Fiber.join(outputFiber);
         expect(Chunk.toReadonlyArray(outputs)).toEqual(['hello']);
 
-        expect([...store.keys()]).toHaveLength(0);
+        expect(yield* kvStore.size).toEqual(0);
       }),
     );
 
     it.effect(
       'isolates storage between processes',
       Effect.fn(function* ({ expect }) {
-        const { store, manager } = makeManager();
+        const { kvStore, manager } = yield* makeManager();
         const executable = makeStorageExecutable() as Process.Executable<{ key: string; value: string }, string>;
 
         const handle1 = yield* manager.spawn(executable);
@@ -434,14 +415,14 @@ describe('ProcessManagerImpl', () => {
         yield* Fiber.join(fiber1);
         yield* Fiber.join(fiber2);
 
-        expect([...store.keys()]).toHaveLength(0);
+        expect(yield* kvStore.size).toEqual(0);
       }),
     );
 
     it.effect(
       'cleans up storage on process completion',
       Effect.fn(function* ({ expect }) {
-        const { store, manager } = makeManager();
+        const { kvStore, manager } = yield* makeManager();
         const executable = makeStorageExecutable() as Process.Executable<{ key: string; value: string }, string>;
 
         const handle = yield* manager.spawn(executable);
@@ -452,14 +433,14 @@ describe('ProcessManagerImpl', () => {
 
         const status = yield* handle.status();
         expect(status.state).toEqual(Process.State.COMPLETED);
-        expect([...store.keys()]).toHaveLength(0);
+        expect(yield* kvStore.size).toEqual(0);
       }),
     );
 
     it.effect(
       'cleans up storage on process termination',
       Effect.fn(function* ({ expect }) {
-        const { store, manager } = makeManager();
+        const { kvStore, manager } = yield* makeManager();
         const storageWriter = Process.makeExecutable(
           {
             input: Schema.Struct({ key: Schema.String, value: Schema.String }),
@@ -484,11 +465,11 @@ describe('ProcessManagerImpl', () => {
         const handle = yield* manager.spawn(storageWriter);
         yield* handle.submitInput({ key: 'persist', value: 'value1' });
 
-        expect([...store.keys()]).toHaveLength(1);
+        expect(yield* kvStore.size).toEqual(1);
 
         yield* handle.terminate();
 
-        expect([...store.keys()]).toHaveLength(0);
+        expect(yield* kvStore.size).toEqual(0);
         const status = yield* handle.status();
         expect(status.state).toEqual(Process.State.TERMINATED);
       }),
@@ -499,7 +480,7 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'handles multiple concurrent inputs',
       Effect.fn(function* ({ expect }) {
-        const { manager } = makeManager();
+        const { manager } = yield* makeManager();
         const gates: Gate[] = [];
 
         const gate1 = yield* makeGate();
@@ -550,7 +531,7 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'suspend overrides done when handlers complete concurrently',
       Effect.fn(function* ({ expect }) {
-        const { manager } = makeManager();
+        const { manager } = yield* makeManager();
         const gates: Gate[] = [];
         const gate1 = yield* makeGate();
         const gate2 = yield* makeGate();
@@ -582,7 +563,7 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'resume overrides suspend and triggers tick',
       Effect.fn(function* ({ expect }) {
-        const { manager } = makeManager();
+        const { manager } = yield* makeManager();
         const tickCount = { value: 0 };
         const gates: Gate[] = [];
         const gate1 = yield* makeGate();
@@ -647,7 +628,7 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'done only applies when all concurrent handlers return done',
       Effect.fn(function* ({ expect }) {
-        const { manager } = makeManager();
+        const { manager } = yield* makeManager();
         const gates: Gate[] = [];
         const gate1 = yield* makeGate();
         const gate2 = yield* makeGate();
@@ -685,7 +666,7 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'folds inputs and finalizes on done',
       Effect.fn(function* ({ expect }) {
-        const { manager } = makeManager();
+        const { manager } = yield* makeManager();
         const sumExecutable = Process.makeAggregationExecutable({
           input: Schema.Number,
           output: Schema.Number,
@@ -718,7 +699,7 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'supports effect-ful reducer',
       Effect.fn(function* ({ expect }) {
-        const { manager } = makeManager();
+        const { manager } = yield* makeManager();
         const concatExecutable = Process.makeAggregationExecutable({
           input: Schema.String,
           output: Schema.String,
@@ -754,7 +735,7 @@ describe('ProcessManagerImpl', () => {
         const resolver = ServiceResolver.fromContext(
           Context.make(DatabaseService, dbService),
         );
-        const { manager } = makeManager({ serviceResolver: resolver });
+        const { manager } = yield* makeManager({ serviceResolver: resolver });
         const { insertRow } = makeDbOperationExecutables();
 
         const handle = yield* manager.spawn(insertRow as Process.Executable<string, string>);
@@ -776,7 +757,7 @@ describe('ProcessManagerImpl', () => {
         const resolver = ServiceResolver.fromContext(
           Context.make(DatabaseService, dbService),
         );
-        const { manager } = makeManager({ serviceResolver: resolver });
+        const { manager } = yield* makeManager({ serviceResolver: resolver });
         const { queryRows } = makeDbOperationExecutables();
 
         const handle = yield* manager.spawn(queryRows as Process.Executable<string, readonly string[]>);
@@ -791,7 +772,7 @@ describe('ProcessManagerImpl', () => {
     it.effect(
       'fails with ServiceNotAvailableError when required service is missing',
       Effect.fn(function* ({ expect }) {
-        const { manager } = makeManager();
+        const { manager } = yield* makeManager();
         const { insertRow } = makeDbOperationExecutables();
 
         const result = yield* manager.spawn(insertRow as Process.Executable<string, string>).pipe(
@@ -807,7 +788,7 @@ describe('ProcessManagerImpl', () => {
       'fails when resolver does not provide a required service',
       Effect.fn(function* ({ expect }) {
         const resolver = ServiceResolver.fromContext(Context.empty() as Context.Context<any>);
-        const { manager } = makeManager({ serviceResolver: resolver });
+        const { manager } = yield* makeManager({ serviceResolver: resolver });
         const { insertRow } = makeDbOperationExecutables();
 
         const result = yield* manager.spawn(insertRow as Process.Executable<string, string>).pipe(
@@ -828,7 +809,7 @@ describe('ProcessManagerImpl', () => {
         );
 
         const combined = ServiceResolver.compose(dbResolver);
-        const { manager } = makeManager({ serviceResolver: combined });
+        const { manager } = yield* makeManager({ serviceResolver: combined });
         const { insertRow } = makeDbOperationExecutables();
 
         const handle = yield* manager.spawn(insertRow as Process.Executable<string, string>);
@@ -845,7 +826,7 @@ describe('ProcessManagerImpl', () => {
       'processes without service requirements work with any resolver',
       Effect.fn(function* ({ expect }) {
         const resolver = ServiceResolver.fromContext(Context.empty() as Context.Context<any>);
-        const { manager } = makeManager({ serviceResolver: resolver });
+        const { manager } = yield* makeManager({ serviceResolver: resolver });
         const executable = makeSimpleExecutable();
 
         const handle = yield* manager.spawn(executable);
@@ -871,7 +852,7 @@ describe('ProcessManagerImpl', () => {
           }),
         };
 
-        const { manager } = makeManager({ tracingService });
+        const { manager } = yield* makeManager({ tracingService });
         const executable = makeSimpleExecutable();
 
         const handle = yield* manager.spawn(executable);
@@ -895,7 +876,7 @@ describe('ProcessManagerImpl', () => {
           }),
         };
 
-        const { manager } = makeManager({ tracingService });
+        const { manager } = yield* makeManager({ tracingService });
         const executable = makeSimpleExecutable();
 
         const parentHandle = yield* manager.spawn(executable);
@@ -921,7 +902,7 @@ describe('ProcessManagerImpl', () => {
           }),
         };
 
-        const { manager } = makeManager({ tracingService });
+        const { manager } = yield* makeManager({ tracingService });
         const executable = makeSimpleExecutable();
 
         const parentHandle = yield* manager.spawn(executable, {
@@ -958,7 +939,7 @@ describe('ProcessManagerImpl', () => {
           }),
         };
 
-        const { manager } = makeManager({ tracingService });
+        const { manager } = yield* makeManager({ tracingService });
         const executable = makeSimpleExecutable();
 
         const handle = yield* manager.spawn(executable);
@@ -1007,7 +988,7 @@ describe('ProcessManagerImpl', () => {
             }),
         ) as Process.Executable<void, string>;
 
-        const { manager } = makeManager({ tracingService });
+        const { manager } = yield* makeManager({ tracingService });
 
         const handle = yield* manager.spawn(tracingExecutable, {
           tracing: { message: messageId, toolCallId: 'tc-42' },
@@ -1037,7 +1018,7 @@ describe('ProcessManagerImpl', () => {
           }),
         };
 
-        const { manager } = makeManager({ tracingService });
+        const { manager } = yield* makeManager({ tracingService });
         const executable = makeSimpleExecutable();
 
         const handle = yield* manager.spawn(executable);
@@ -1074,7 +1055,7 @@ describe('ProcessManagerImpl', () => {
             }),
         ) as Process.Executable<void, void>;
 
-        const { manager } = makeManager({ tracingService });
+        const { manager } = yield* makeManager({ tracingService });
         const handle = yield* manager.spawn(failingExecutable);
         yield* handle.submitInput(undefined);
 
@@ -1101,7 +1082,7 @@ describe('ProcessManagerImpl', () => {
           }),
         };
 
-        const { manager } = makeManager({ tracingService });
+        const { manager } = yield* makeManager({ tracingService });
         const executable = makeSimpleExecutable();
 
         const parentHandle = yield* manager.spawn(executable);

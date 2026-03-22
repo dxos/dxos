@@ -7,7 +7,6 @@ import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 import * as PubSub from 'effect/PubSub';
 import * as Queue from 'effect/Queue';
 import * as Schema from 'effect/Schema';
@@ -84,55 +83,36 @@ const InsertRowHandler = Operation.withHandler(
   }),
 );
 
-const makeKvStore = () => {
-  const store = new Map<string, string>();
-  const kvStore = KeyValueStore.make({
-    get: (key: string) => Effect.succeed(Option.fromNullable(store.get(key))),
-    getUint8Array: (key: string) =>
-      Effect.succeed(Option.map(Option.fromNullable(store.get(key)), (value) => new TextEncoder().encode(value))),
-    set: (key: string, value: string | Uint8Array) =>
-      Effect.sync(() => {
-        store.set(key, typeof value === 'string' ? value : new TextDecoder().decode(value));
-      }),
-    remove: (key: string) =>
-      Effect.sync(() => {
-        store.delete(key);
-      }),
-    clear: Effect.sync(() => store.clear()),
-    size: Effect.sync(() => store.size),
-  });
-  return { store, kvStore };
-};
-
 const makeInvoker = (opts?: {
   serviceResolver?: ServiceResolver.ServiceResolver;
   extraHandlers?: Operation.WithHandler<Operation.Definition.Any>[];
   tracingService?: Context.Tag.Service<TracingService>;
-}) => {
-  const { kvStore } = makeKvStore();
-  const registry = Registry.make();
-  const handlerSet = OperationHandlerSet.make(
-    DoubleHandler,
-    EchoHandler,
-    InsertRowHandler,
-    ...(opts?.extraHandlers ?? []),
-  );
-  const manager = new ProcessManagerImpl({
-    registry,
-    kvStore,
-    serviceResolver: opts?.serviceResolver,
-    tracingService: opts?.tracingService,
-    handlerSet,
-  });
-  const invoker = ProcessOperationInvoker.make({ manager, handlerSet });
-  return { manager, invoker };
-};
+}) =>
+  Effect.gen(function* () {
+    const kvStore = yield* KeyValueStore.KeyValueStore;
+    const registry = Registry.make();
+    const handlerSet = OperationHandlerSet.make(
+      DoubleHandler,
+      EchoHandler,
+      InsertRowHandler,
+      ...(opts?.extraHandlers ?? []),
+    );
+    const manager = new ProcessManagerImpl({
+      registry,
+      kvStore,
+      serviceResolver: opts?.serviceResolver,
+      tracingService: opts?.tracingService,
+      handlerSet,
+    });
+    const invoker = ProcessOperationInvoker.make({ manager, handlerSet });
+    return { manager, invoker };
+  }).pipe(Effect.provide(KeyValueStore.layerMemory));
 
 describe('ProcessOperationInvoker', () => {
   it.effect(
     'invokes a simple operation',
     Effect.fn(function* ({ expect }) {
-      const { invoker } = makeInvoker();
+      const { invoker } = yield* makeInvoker();
       const result = yield* invoker.invoke(Double, { value: 21 });
       expect(result).toEqual(42);
     }),
@@ -141,7 +121,7 @@ describe('ProcessOperationInvoker', () => {
   it.effect(
     'invokes a string operation',
     Effect.fn(function* ({ expect }) {
-      const { invoker } = makeInvoker();
+      const { invoker } = yield* makeInvoker();
       const result = yield* invoker.invoke(Echo, 'hello');
       expect(result).toEqual('echo: hello');
     }),
@@ -150,7 +130,7 @@ describe('ProcessOperationInvoker', () => {
   it.scoped(
     'publishes invocation events',
     Effect.fn(function* ({ expect }) {
-      const { invoker } = makeInvoker();
+      const { invoker } = yield* makeInvoker();
 
       const queue = yield* PubSub.subscribe(invoker.invocations);
       yield* invoker.invoke(Double, { value: 5 });
@@ -167,7 +147,7 @@ describe('ProcessOperationInvoker', () => {
     Effect.fn(function* ({ expect }) {
       const { service: dbService, rows } = makeInMemoryDatabase();
       const resolver = ServiceResolver.fromContext(Context.make(DatabaseService, dbService));
-      const { invoker } = makeInvoker({ serviceResolver: resolver });
+      const { invoker } = yield* makeInvoker({ serviceResolver: resolver });
 
       const result = yield* invoker.invoke(InsertRow, 'test-row');
       expect(result).toEqual('inserted: test-row');
@@ -178,7 +158,7 @@ describe('ProcessOperationInvoker', () => {
   it.effect(
     'fails when required service is not available',
     Effect.fn(function* ({ expect }) {
-      const { invoker } = makeInvoker();
+      const { invoker } = yield* makeInvoker();
       const result = yield* invoker.invoke(InsertRow, 'test-row').pipe(Effect.flip);
       expect(result).toBeInstanceOf(Error);
       expect(result.message).toContain('@test/DatabaseService');
@@ -188,7 +168,7 @@ describe('ProcessOperationInvoker', () => {
   it.effect(
     'schedules a followup and tracks pending count',
     Effect.fn(function* ({ expect }) {
-      const { invoker } = makeInvoker();
+      const { invoker } = yield* makeInvoker();
       yield* invoker.schedule(Double, { value: 7 });
       yield* invoker.awaitFollowups;
       const pending = yield* invoker.pendingFollowups;
@@ -199,7 +179,7 @@ describe('ProcessOperationInvoker', () => {
   it.effect(
     'handles multiple sequential invocations',
     Effect.fn(function* ({ expect }) {
-      const { invoker } = makeInvoker();
+      const { invoker } = yield* makeInvoker();
 
       const result1 = yield* invoker.invoke(Double, { value: 1 });
       const result2 = yield* invoker.invoke(Double, { value: 2 });
@@ -225,7 +205,7 @@ describe('ProcessOperationInvoker', () => {
           traceInvocationEnd: () => Effect.void,
         };
 
-        const { invoker } = makeInvoker({ tracingService });
+        const { invoker } = yield* makeInvoker({ tracingService });
         yield* invoker.invoke(Double, { value: 5 });
 
         expect(invocationStarts).toHaveLength(1);
@@ -262,17 +242,7 @@ describe('ProcessOperationInvoker', () => {
           }),
         };
 
-        const { kvStore } = makeKvStore();
-        const registry = Registry.make();
-        const handlerSet = OperationHandlerSet.make(TracingCaptureHandler);
-        const manager = new ProcessManagerImpl({
-          registry,
-          kvStore,
-          tracingService,
-          handlerSet,
-        });
-
-        const invoker = ProcessOperationInvoker.make({ manager, handlerSet });
+        const { invoker } = yield* makeInvoker({ tracingService, extraHandlers: [TracingCaptureHandler] });
         yield* invoker.invoke(TracingCapture, undefined, { tracing: { message: messageId, toolCallId: 'tc-1' } } as any);
 
         expect(capturedContexts).toHaveLength(1);
