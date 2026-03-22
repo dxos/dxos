@@ -172,7 +172,7 @@ export class IndexEngine {
   > {
     return Effect.gen(this, function* () {
       let updated = 0;
-      let done = false;
+      let done = true;
 
       const { updated: updatedFtsIndex, done: doneFtsIndex } = yield* this.#update(this.#ftsIndex, dataSource, {
         indexName: 'fts5',

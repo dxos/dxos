@@ -165,28 +165,24 @@ const inspectDocChanges = (
     return { changedObjectIds: null, updatedAt: Date.now() };
   }
 
-  try {
-    const oldHeads = headsCodec.decode(existingCursor);
+  const oldHeads = headsCodec.decode(existingCursor);
 
-    const patches = A.diff(doc, oldHeads, A.getHeads(doc));
-    const changedObjectIds = new Set<string>();
-    for (const patch of patches) {
-      if (patch.path.length >= 2 && patch.path[0] === 'objects') {
-        changedObjectIds.add(String(patch.path[1]));
-      }
+  const patches = A.diff(doc, oldHeads, A.getHeads(doc));
+  const changedObjectIds = new Set<string>();
+  for (const patch of patches) {
+    if (patch.path.length >= 2 && patch.path[0] === 'objects') {
+      changedObjectIds.add(String(patch.path[1]));
     }
-
-    const changes = A.getChangesMetaSince(doc, oldHeads);
-    let maxTime = 0;
-    for (const change of changes) {
-      if (change.time > maxTime) {
-        maxTime = change.time;
-      }
-    }
-    const updatedAt = maxTime > 0 ? maxTime * 1000 : Date.now();
-
-    return { changedObjectIds, updatedAt };
-  } catch {
-    return { changedObjectIds: null, updatedAt: Date.now() };
   }
+
+  const changes = A.getChangesMetaSince(doc, oldHeads);
+  let maxTime = 0;
+  for (const change of changes) {
+    if (change.time > maxTime) {
+      maxTime = change.time;
+    }
+  }
+  const updatedAt = maxTime > 0 ? maxTime * 1000 : Date.now();
+
+  return { changedObjectIds, updatedAt };
 };
