@@ -18,15 +18,17 @@ export const SpaceDialog = (spacePanelProps: SpaceDialogProps) => {
       <Dialog.Portal>
         <Dialog.Overlay>
           <Dialog.Content aria-labelledby={titleId}>
-            <Clipboard.Provider>
-              <SpacePanel
-                {...{
-                  ...spacePanelProps,
-                  titleId,
-                  doneActionParent: <Dialog.Close asChild />,
-                }}
-              />
-            </Clipboard.Provider>
+            <Dialog.Body>
+              <Clipboard.Provider>
+                <SpacePanel
+                  {...{
+                    ...spacePanelProps,
+                    titleId,
+                    doneActionParent: <Dialog.Close asChild />,
+                  }}
+                />
+              </Clipboard.Provider>
+            </Dialog.Body>
           </Dialog.Content>
         </Dialog.Overlay>
       </Dialog.Portal>

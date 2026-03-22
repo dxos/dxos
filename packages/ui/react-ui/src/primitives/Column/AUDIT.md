@@ -348,57 +348,30 @@ Dialog and AlertDialog re-export these, adding only their unique parts:
 - Dialog: Close, CloseIconButton
 - AlertDialog: Cancel, Action
 
-#### Step 5: Migrate consumers
+#### Step 5: Migrate consumers ✅
 
-Update dialogs that skip Dialog.Body to use the standard structure.
-Priority order (by impact):
+Updated dialogs to use the standard `Dialog.Content > Dialog.Header > Dialog.Body` structure:
 
-1. **CreateSpaceDialog** — wrap Form in Dialog.Body (has Header, just missing Body)
-2. **SearchDialog** — add Header and Body (SearchList.Viewport handles scroll)
-3. **ShortcutsDialogContent** — add Header and Body
-4. **DeploymentDialog** — restructure to use Header, Body, ActionBar
-5. **Shell panel dialogs** (SpaceDialog, IdentityDialog, JoinDialog) — these delegate to
-   Panel components; consider whether panels should use Column.Content internally
-   or whether the dialog wrapper should provide Dialog.Body around them
+1. **CreateSpaceDialog** — wrapped Form.Root in Dialog.Body ✅
+2. **SearchDialog** — added Header (with CloseIconButton) and Body; removed standalone Close button ✅
+3. **ShortcutsDialogContent** — replaced custom flex layout with Header and Body ✅
+4. **DeploymentDialog** — restructured to use Header, Body, ActionBar ✅
+5. **Shell panel dialogs**:
+   - SpaceDialog — wrapped SpacePanel in Dialog.Body ✅
+   - IdentityDialog — wrapped IdentityPanel in Dialog.Body ✅
+   - JoinDialog (plugin-space) — wrapped JoinPanel in Dialog.Body ✅
+   - JoinDialog (plugin-client) — wrapped JoinPanel in Dialog.Body ✅
+6. **plugin-client ResetDialog** — already correct (ConfirmReset uses Dialog.Body internally) ✅
 
-### Phase 1b: Standardize Dialog in current branch
+### Phase 1b: Standardize Dialog in current branch ✅
 
-Cleanup and documentation to ship alongside the `Column.Content` + `--gutter-offset` changes.
+Completed alongside the `Column.Content` + `--gutter-offset` changes.
 
-#### Step 1: Remove `Dialog.Viewport`
-
-No consumers remain. Remove the deprecated alias from `Dialog.tsx` entirely.
-
-#### Step 2: Update Dialog stories
-
-The current Default story uses `Dialog.Body asChild` wrapping a raw `ScrollArea.Root`.
-Replace with two clear patterns:
-
-- **Simple**: non-scrolling content in `Dialog.Body` (demonstrates gutter padding).
-- **Scrolling**: a child component with its own Viewport inside `Dialog.Body`
-  (demonstrates the `--gutter-offset` breakout — ScrollArea breaks out of Body padding,
-  applies its own asymmetric padding).
-
-#### Step 3: Update Column stories
-
-Add stories for `Column.Content` showing:
-- Non-scrolling content with gutter padding.
-- Nested ScrollArea that breaks out via `--gutter-offset`.
-- Column.Row alongside Column.Content for visual comparison.
-
-#### Step 4: Update Column.Root JSDoc
-
-Current doc says "Direct children must use Column.Row or Column.Viewport."
-Update to list all three child types:
-
-- **Column.Row** — 3-col subgrid row (icons + content + actions).
-- **Column.Content** — full-width content area with gutter padding.
-- **Column.Viewport** — full-width scrollable area (delegates gutters to ScrollArea).
-
-#### Step 5: Verify exports
-
-Ensure `ColumnContentProps` is accessible from the `@dxos/react-ui` package barrel
-for consumers that build their own Body-like wrappers.
+1. **Remove `Dialog.Viewport`** — removed, no consumers remain ✅
+2. **Update Dialog stories** — DefaultStory (non-scrolling) and ScrollingStory (with ScrollArea breakout) ✅
+3. **Update Column stories** — WithContent and ContentWithScrollArea stories added ✅
+4. **Update Column.Root JSDoc** — documents three child types (Row, Content, Viewport) ✅
+5. **Verify exports** — `ColumnContentProps` accessible from `@dxos/react-ui` ✅
 
 ### Phase 2: Unify Dialog and AlertDialog internals
 
