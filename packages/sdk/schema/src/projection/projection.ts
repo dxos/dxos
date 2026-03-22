@@ -67,7 +67,7 @@ export const createEchoChangeCallback = (
   schema?: EchoSchema | Types.DeepMutable<JsonSchemaType>,
 ): ProjectionChangeCallback => ({
   // Inside Obj.change, v is Mutable<View.View>, so v.projection is already mutable.
-  projection: (mutate) => Obj.change(view, (v) => mutate(v.projection as Mutable<View.Projection>)),
+  projection: (mutate) => Obj.change(view, (obj) => mutate(obj.projection as Mutable<View.Projection>)),
   schema:
     schema instanceof EchoSchema
       ? (mutate) => Obj.change(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema))

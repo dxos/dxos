@@ -97,8 +97,8 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
-    Obj.change(trigger, (t) => {
-      Obj.deleteKeys(t, KEY_QUEUE_CURSOR);
+    Obj.change(trigger, (obj) => {
+      Obj.deleteKeys(obj, KEY_QUEUE_CURSOR);
     });
     await space.db.flush({ indexes: true });
   };
