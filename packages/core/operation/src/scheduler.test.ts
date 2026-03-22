@@ -10,8 +10,8 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Schema from 'effect/Schema';
 import { describe, expect } from 'vitest';
 
-import * as OperationInvoker from './OperationInvoker';
 import * as Operation from './Operation';
+import * as OperationInvoker from './OperationInvoker';
 import * as Scheduler from './scheduler';
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;

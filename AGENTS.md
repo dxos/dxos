@@ -79,11 +79,12 @@ Examples:
 ## Submitting PRs
 
 - When the user asks you to submit a PR:
-  - Use `gh` CLI to create and manage PRs
-  - Merge `origin/main` in to current branch and resolve conflicts
-  - Check `moon run :lint -- --fix` succeeds
-  - Check `moon run :test` succeeds
-  - Commit and push any pending changes
+  - Use `gh` CLI to create and manage PRs.
+  - Merge `origin/main` in to current branch and resolve conflicts.
+  - Format code with `pnpm format`
+  - Check `moon run :lint -- --fix` succeeds.
+  - Check `moon run :test` succeeds.
+  - Commit and push any pending changes.
   - Monitor CI: `pnpm -w gh-action --verify --watch`
   - **IMPORTANT**: Address all PR review comments (fix or explain why not) and post a reply to all comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.

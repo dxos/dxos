@@ -4,4 +4,6 @@
 
 import { TracePanel } from './TracePanel';
 
+export * from './TracePanel';
+
 export default TracePanel;

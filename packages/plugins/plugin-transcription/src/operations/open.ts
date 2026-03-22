@@ -9,8 +9,8 @@ import { QueueService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
-import { Open } from './definitions';
 import { renderByline } from '../util';
+import { Open } from './definitions';
 
 const handler: Operation.WithHandler<typeof Open> = Open.pipe(
   Operation.withHandler(

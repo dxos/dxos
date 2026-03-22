@@ -6,9 +6,9 @@ import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
 import * as Pipeable from 'effect/Pipeable';
 import * as Schema$ from 'effect/Schema';
+import type * as Types from 'effect/Types';
 
 import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
-import type * as Types from 'effect/Types';
 
 import type { Service } from './service';
 
