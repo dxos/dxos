@@ -74,8 +74,8 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.change(doc, (d) => {
-            Obj.getMeta(d).tags = [tagDxn];
+          Obj.change(doc, (obj) => {
+            Obj.getMeta(obj).tags = [tagDxn];
           });
 
           // space.db.add(
@@ -815,9 +815,9 @@ const setupQueue = (
 const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  Obj.change(functionTrigger, (t) => {
-    t.function = Ref.make(computeModel.root);
-    t.inputNodeId = inputNode.id;
+  Obj.change(functionTrigger, (obj) => {
+    obj.function = Ref.make(computeModel.root);
+    obj.inputNodeId = inputNode.id;
   });
 };
 

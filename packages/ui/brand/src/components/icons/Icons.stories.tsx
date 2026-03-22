@@ -47,9 +47,9 @@ export const Default: Story = {
           <MESH className={mx(size, 'fill-green-700')} />
         </>
         <>
-          <DXNS className={mx(size, 'fill-neutral-700')} />
-          <DXOS className={mx(size, 'fill-neutral-700')} />
-          <KUBE className={mx(size, 'fill-neutral-700')} />
+          <DXNS className={mx(size, 'scale-75 fill-neutral-700')} />
+          <DXOS className={mx(size, 'scale-75 fill-neutral-700')} />
+          <KUBE className={mx(size, 'scale-75 fill-neutral-700')} />
         </>
       </div>
     );

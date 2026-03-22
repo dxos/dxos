@@ -53,8 +53,8 @@ export default Capability.makeModule(
 
     // Initialize space sharing lock in default space.
     if (typeof defaultSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
-      Obj.change(defaultSpace.properties, (p) => {
-        p[COMPOSER_SPACE_LOCK] = true;
+      Obj.change(defaultSpace.properties, (obj) => {
+        obj[COMPOSER_SPACE_LOCK] = true;
       });
     }
 

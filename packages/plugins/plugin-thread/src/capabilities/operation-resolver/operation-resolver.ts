@@ -75,8 +75,8 @@ export default Capability.makeModule(
             Effect.sync(() => {
               const thread = Thread.make({ status: 'active' });
               const threadRef = Ref.make(thread);
-              Obj.change(input.channel, (c) => {
-                c.threads.push(threadRef);
+              Obj.change(input.channel, (obj) => {
+                obj.threads.push(threadRef);
               });
               return { object: thread };
             }),
@@ -103,11 +103,11 @@ export default Capability.makeModule(
           handler: Effect.fnUntraced(function* (input) {
             const thread = input.thread;
 
-            Obj.change(thread, (t) => {
-              if (t.status === 'active' || t.status === undefined) {
-                t.status = 'resolved';
-              } else if (t.status === 'resolved') {
-                t.status = 'active';
+            Obj.change(thread, (obj) => {
+              if (obj.status === 'active' || obj.status === undefined) {
+                obj.status = 'resolved';
+              } else if (obj.status === 'resolved') {
+                obj.status = 'active';
               }
             });
 
@@ -246,16 +246,16 @@ export default Capability.makeModule(
               sender,
               blocks: [{ _tag: 'text', text }],
             });
-            Obj.change(thread, (t) => {
-              t.messages.push(Ref.make(message));
+            Obj.change(thread, (obj) => {
+              obj.messages.push(Ref.make(message));
             });
 
             const state = registry.get(stateAtom);
             const draft = state.drafts[subjectId]?.find((a: { id: string }) => a.id === anchor.id);
             if (draft) {
               // Move draft to document.
-              Obj.change(thread, (t) => {
-                t.status = 'active';
+              Obj.change(thread, (obj) => {
+                obj.status = 'active';
               });
               registry.set(stateAtom, {
                 ...state,
@@ -316,8 +316,8 @@ export default Capability.makeModule(
               return { messageIndex: -1 };
             }
 
-            Obj.change(thread, (t) => {
-              t.messages.splice(msgIndex, 1);
+            Obj.change(thread, (obj) => {
+              obj.messages.splice(msgIndex, 1);
             });
 
             yield* Operation.schedule(ObservabilityOperation.SendEvent, {
@@ -372,8 +372,8 @@ export default Capability.makeModule(
             const db = Obj.getDatabase(thread);
             invariant(db, 'Database not found');
 
-            Obj.change(thread, (t) => {
-              t.messages.splice(messageIndex, 0, Ref.make(message));
+            Obj.change(thread, (obj) => {
+              obj.messages.splice(messageIndex, 0, Ref.make(message));
             });
 
             yield* Operation.schedule(ObservabilityOperation.SendEvent, {

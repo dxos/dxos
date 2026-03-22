@@ -47,8 +47,8 @@ const ClientSpace = ({ spaceId }: ClientRepeatedComponentProps) => {
           placeholder='Name'
           value={space.properties.name}
           onChange={(event) =>
-            Obj.change(space.properties, (p) => {
-              p.name = event.target.value;
+            Obj.change(space.properties, (obj) => {
+              obj.name = event.target.value;
             })
           }
         />

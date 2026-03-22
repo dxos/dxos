@@ -189,8 +189,8 @@ export default Capability.makeModule(
               // Remove from parent collection.
               const index = parentCollection.objects.findIndex((ref) => ref.target === obj);
               if (index !== -1) {
-                Obj.change(parentCollection, (c) => {
-                  c.objects.splice(index, 1);
+                Obj.change(parentCollection, (obj) => {
+                  obj.objects.splice(index, 1);
                 });
               }
 
@@ -363,8 +363,8 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.Lock,
           handler: Effect.fnUntraced(function* ({ space }) {
-            Obj.change(space.properties, (p) => {
-              p[COMPOSER_SPACE_LOCK] = true;
+            Obj.change(space.properties, (obj) => {
+              obj[COMPOSER_SPACE_LOCK] = true;
             });
 
             if (observability) {
@@ -383,8 +383,8 @@ export default Capability.makeModule(
         OperationResolver.make({
           operation: SpaceOperation.Unlock,
           handler: Effect.fnUntraced(function* ({ space }) {
-            Obj.change(space.properties, (p) => {
-              p[COMPOSER_SPACE_LOCK] = false;
+            Obj.change(space.properties, (obj) => {
+              obj[COMPOSER_SPACE_LOCK] = false;
             });
 
             if (observability) {
@@ -426,11 +426,11 @@ export default Capability.makeModule(
 
             // Create root collection.
             const collection = Obj.make(Collection.Collection, { objects: [] });
-            Obj.change(space.properties, (p) => {
-              p[Collection.Collection.typename] = Ref.make(collection);
+            Obj.change(space.properties, (obj) => {
+              obj[Collection.Collection.typename] = Ref.make(collection);
               // Set current migration version.
               if (Migrations.versionProperty) {
-                p[Migrations.versionProperty] = Migrations.targetVersion;
+                obj[Migrations.versionProperty] = Migrations.targetVersion;
               }
             });
 
@@ -592,15 +592,15 @@ export default Capability.makeModule(
             const db = input.db;
             const schemas = yield* Effect.promise(() => db.schemaRegistry.register([input.schema]));
             const schema = schemas[0];
-            Obj.change(schema.persistentSchema, (s) => {
+            Obj.change(schema.persistentSchema, (obj) => {
               if (input.name) {
-                s.name = input.name;
+                obj.name = input.name;
               }
               if (input.typename) {
-                s.typename = input.typename;
+                obj.typename = input.typename;
               }
               if (input.version) {
-                s.version = input.version;
+                obj.version = input.version;
               }
             });
 
@@ -714,10 +714,10 @@ export default Capability.makeModule(
             });
 
             // Restore objects to the parent collection at their original indices.
-            Obj.change(parentCollection, (c) => {
+            Obj.change(parentCollection, (obj) => {
               indices.forEach((index: number, i: number) => {
                 if (index !== -1) {
-                  c.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Unknown));
+                  obj.objects.splice(index, 0, Ref.make(restoredObjects[i] as Obj.Unknown));
                 }
               });
             });
