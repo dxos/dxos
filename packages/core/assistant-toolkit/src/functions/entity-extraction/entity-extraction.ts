@@ -60,8 +60,8 @@ export default EntityExtraction.pipe(
               meta.tags ??= [];
               meta.tags.push(...(tags ?? []));
             });
-            Obj.change(contact, (c) => {
-              c.organization = Ref.make(organization!);
+            Obj.change(contact, (obj) => {
+              obj.organization = Ref.make(organization!);
             });
           }
         }
@@ -108,8 +108,8 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
   yield* Database.add(newContact);
 
   if (name) {
-    Obj.change(newContact, (c) => {
-      c.fullName = name;
+    Obj.change(newContact, (obj) => {
+      obj.fullName = name;
     });
   }
 
@@ -149,8 +149,8 @@ const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor
 
   if (matchingOrg) {
     log.info('found matching organization', { organization: matchingOrg });
-    Obj.change(newContact, (c) => {
-      c.organization = Ref.make(matchingOrg);
+    Obj.change(newContact, (obj) => {
+      obj.organization = Ref.make(matchingOrg);
     });
   }
 

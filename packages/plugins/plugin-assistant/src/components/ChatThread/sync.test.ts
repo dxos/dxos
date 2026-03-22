@@ -58,8 +58,8 @@ describe('reducers', () => {
       syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', ''].join('\n'));
 
-      Obj.change(messages[1], (m) => {
-        m.blocks.push({ _tag: 'text', text: 'How can I help?' });
+      Obj.change(messages[1], (obj) => {
+        obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!', 'How can I help?', ''].join('\n'));
@@ -80,15 +80,15 @@ describe('reducers', () => {
       syncer.append(messages);
       expect(doc.content).toEqual(['<prompt>Hello</prompt>', 'Hi there!'].join('\n'));
 
-      Obj.change(messages[1], (m) => {
-        const block = m.blocks[0] as Mutable<ContentBlock.Text>;
+      Obj.change(messages[1], (obj) => {
+        const block = obj.blocks[0] as Mutable<ContentBlock.Text>;
         block.text = 'Hi there! How are you?';
         block.pending = false;
       });
       syncer.append(messages);
 
-      Obj.change(messages[1], (m) => {
-        m.blocks.push({ _tag: 'text', text: 'How can I help?' });
+      Obj.change(messages[1], (obj) => {
+        obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.append(messages);
       expect(doc.content).toEqual(
