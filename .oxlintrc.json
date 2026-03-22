@@ -69,30 +69,7 @@
     "unicorn/prefer-string-starts-ends-with": "off",
     "vitest/warn-todo": "off",
     "unused-imports/no-unused-imports": "warn",
-    "import-x-js/order": [
-      "warn",
-      {
-        "alphabetize": {
-          "order": "asc",
-          "caseInsensitive": true
-        },
-        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
-        "pathGroups": [
-          {
-            "pattern": "#**",
-            "group": "parent",
-            "position": "before"
-          },
-          {
-            "pattern": "@dxos/**",
-            "group": "internal",
-            "position": "after"
-          }
-        ],
-        "pathGroupsExcludedImportTypes": ["builtin"],
-        "newlines-between": "always"
-      }
-    ]
+    "import-x-js/order": "off"
   },
   "settings": {
     "jsx-a11y": {
