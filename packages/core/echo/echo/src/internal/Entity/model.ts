@@ -36,14 +36,7 @@ import {
   type Version,
 } from '../common/types';
 
-export {
-  ATTR_DELETED,
-  ATTR_SELF_DXN,
-  ObjectDatabaseId,
-  ObjectDeletedId,
-  ObjectVersionId,
-  SelfDXNId,
-};
+export { ATTR_DELETED, ATTR_SELF_DXN, ObjectDatabaseId, ObjectDeletedId, ObjectVersionId, SelfDXNId };
 
 /**
  * Internal runtime representation of an object.

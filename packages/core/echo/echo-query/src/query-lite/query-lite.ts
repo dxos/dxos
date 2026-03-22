@@ -251,7 +251,10 @@ class FilterClass implements Filter$.Any {
     return FilterClass.#timeRangeFilter('createdAt', range);
   }
 
-  static #timeRangeFilter(field: 'updatedAt' | 'createdAt', range: { after?: Date | number; before?: Date | number }): Filter$.Any {
+  static #timeRangeFilter(
+    field: 'updatedAt' | 'createdAt',
+    range: { after?: Date | number; before?: Date | number },
+  ): Filter$.Any {
     const toMs = (d: Date | number) => (typeof d === 'number' ? d : d.getTime());
     const filters: Filter$.Any[] = [];
     if (range.after != null) {

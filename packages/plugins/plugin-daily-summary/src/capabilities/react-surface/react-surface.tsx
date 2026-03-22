@@ -18,8 +18,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.space-settings-daily-summary`,
         role: 'article',
-        filter: (data): data is { subject: string } =>
-          data.subject === `${meta.id}.space-settings-daily-summary`,
+        filter: (data): data is { subject: string } => data.subject === `${meta.id}.space-settings-daily-summary`,
         component: () => {
           const space = useActiveSpace();
           if (!space) {

@@ -29,7 +29,9 @@ export const DailySummarySettings = ({ space }: DailySummarySettingsProps) => {
           return false;
         }
         const target = trigger.function?.target;
-        return target != null && 'key' in target && (target as Record<string, unknown>).key === GenerateSummary.meta.key;
+        return (
+          target != null && 'key' in target && (target as Record<string, unknown>).key === GenerateSummary.meta.key
+        );
       }),
     [triggers],
   );

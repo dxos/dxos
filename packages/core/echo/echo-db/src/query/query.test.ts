@@ -439,9 +439,9 @@ describe('Query', () => {
       db.add(createTestObject({ value: 1 }));
       await db.flush();
 
-      await expect(
-        db.query(Query.select(Filter.not(Filter.updated({ after: Date.now() })))).run(),
-      ).rejects.toThrow(/[Nn]egated timestamp/);
+      await expect(db.query(Query.select(Filter.not(Filter.updated({ after: Date.now() })))).run()).rejects.toThrow(
+        /[Nn]egated timestamp/,
+      );
     });
 
     test('not(and(type, updated)) throws clear error', async () => {
@@ -466,9 +466,7 @@ describe('Query', () => {
       await db.flush();
 
       await expect(
-        db
-          .query(Query.select(Filter.or(Filter.updated({ after: Date.now() }), Filter.type(TestSchema.Expando))))
-          .run(),
+        db.query(Query.select(Filter.or(Filter.updated({ after: Date.now() }), Filter.type(TestSchema.Expando)))).run(),
       ).rejects.toThrow(/too complex/);
     });
   });

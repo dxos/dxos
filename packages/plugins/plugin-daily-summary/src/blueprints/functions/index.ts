@@ -6,6 +6,4 @@ import { OperationHandlerSet } from '@dxos/operation';
 
 export * from './definitions';
 
-export const DailySummaryHandlers = OperationHandlerSet.lazy(
-  () => import('./generate'),
-);
+export const DailySummaryHandlers = OperationHandlerSet.lazy(() => import('./generate'));

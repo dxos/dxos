@@ -1610,9 +1610,7 @@ describe('QueryPlanner', () => {
   });
 
   test('and(type, timestamp) produces valid plan', () => {
-    const query = Query.select(
-      Filter.and(Filter.type(TestSchema.Person), Filter.updated({ after: Date.now() })),
-    );
+    const query = Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.updated({ after: Date.now() })));
     const plan = planner.createPlan(withSpaceIdOptions(query.ast));
     const hasTimestampFilter = plan.steps.some(
       (step) => step._tag === 'FilterStep' && JSON.stringify(step.filter).includes('timestamp'),

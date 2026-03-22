@@ -635,7 +635,8 @@ export class QueryExecutor extends Resource {
 
     if (filterContainsTimestamp(step.filter)) {
       throw new QueryError({
-        message: 'Timestamp filter in unsupported composition (not, or). Use Filter.updated/Filter.created with explicit range instead.',
+        message:
+          'Timestamp filter in unsupported composition (not, or). Use Filter.updated/Filter.created with explicit range instead.',
         context: {},
       });
     }

@@ -41,13 +41,7 @@ const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: DailySummaryBlueprint.operations,
-  types: [
-    SpaceProperties,
-    Collection.Collection,
-    Blueprint.Blueprint,
-    MarkdownDocument,
-    HasSubject.HasSubject,
-  ],
+  types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, MarkdownDocument, HasSubject.HasSubject],
   tracing: 'pretty',
 });
 
@@ -82,9 +76,7 @@ describe('GenerateSummary', () => {
       function* (_) {
         yield* FunctionInvocationService.invokeFunction(GenerateSummary, {});
 
-        const collections = yield* Database.runQuery(
-          Query.type(Collection.Collection, { name: 'Summaries' }),
-        );
+        const collections = yield* Database.runQuery(Query.type(Collection.Collection, { name: 'Summaries' }));
         expect(collections.length).toBe(1);
         expect(collections[0].objects.length).toBe(1);
       },
@@ -101,9 +93,7 @@ describe('GenerateSummary', () => {
         yield* FunctionInvocationService.invokeFunction(GenerateSummary, {});
         yield* FunctionInvocationService.invokeFunction(GenerateSummary, {});
 
-        const collections = yield* Database.runQuery(
-          Query.type(Collection.Collection, { name: 'Summaries' }),
-        );
+        const collections = yield* Database.runQuery(Query.type(Collection.Collection, { name: 'Summaries' }));
         expect(collections.length).toBe(1);
         expect(collections[0].objects.length).toBe(2);
       },
