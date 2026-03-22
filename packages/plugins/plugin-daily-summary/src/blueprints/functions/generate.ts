@@ -38,7 +38,9 @@ export const SUMMARY_STRUCTURE = trim`
   Bullet points capturing the most significant changes or accomplishments.
 
   ## TODOs
-  List of TODOs that is inferred from the changes and the context of the changes.
+  List of TODOs that is inferred from the changes and the content of the changes.
+  Make it short, do not force it, only strong call to action data should be included.
+  Use - [ ] syntax for the TODOs.
 
   Rules:
   - Do NOT include the heading "Daily Summary" — the document already has a title.

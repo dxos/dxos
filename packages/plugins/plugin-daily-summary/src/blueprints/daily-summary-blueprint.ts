@@ -4,6 +4,7 @@
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
+import { trim } from '@dxos/util';
 
 import { DailySummaryHandlers, GenerateSummary } from './functions';
 
