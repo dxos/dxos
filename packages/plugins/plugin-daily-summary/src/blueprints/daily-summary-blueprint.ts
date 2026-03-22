@@ -10,6 +10,8 @@ import { DailySummaryHandlers, GenerateSummary } from './functions';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.daily-summary';
 
+export { DailySummaryHandlers };
+
 const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
@@ -29,7 +31,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: DailySummaryHandlers,
   make,
 };
 

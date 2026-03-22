@@ -16,7 +16,7 @@ import { ObjectId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
-import DailySummaryBlueprint from '../daily-summary-blueprint';
+import { DailySummaryHandlers } from '../daily-summary-blueprint';
 
 import { GenerateSummary } from './definitions';
 
@@ -40,7 +40,7 @@ const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<
   );
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: DailySummaryBlueprint.operations,
+  operationHandlers: DailySummaryHandlers,
   types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, MarkdownDocument, HasSubject.HasSubject],
   tracing: 'pretty',
 });

@@ -57,6 +57,7 @@ describe('FtsIndex', () => {
           queueId: null,
           documentId: 'doc-1',
           recordId: null,
+          updatedAt: Date.now(),
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -159,6 +160,7 @@ describe('FtsIndex', () => {
           queueId: null,
           documentId: 'doc-100',
           recordId: null,
+          updatedAt: Date.now(),
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -170,6 +172,7 @@ describe('FtsIndex', () => {
           queueId: null,
           documentId: 'doc-200',
           recordId: null,
+          updatedAt: Date.now(),
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -181,6 +184,7 @@ describe('FtsIndex', () => {
           queueId: null,
           documentId: 'doc-1000',
           recordId: null,
+          updatedAt: Date.now(),
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -301,6 +305,7 @@ describe('FtsIndex', () => {
           queueId: null,
           documentId: 'doc-1',
           recordId: null,
+          updatedAt: Date.now(),
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
@@ -313,6 +318,7 @@ describe('FtsIndex', () => {
           queueId: null,
           documentId: 'doc-2',
           recordId: null,
+          updatedAt: Date.now(),
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_PERSON,
