@@ -5,10 +5,14 @@
 import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as TestClock from 'effect/TestClock';
 import { describe, expect } from 'vitest';
 
-import { OperationInvoker, OperationResolver } from '@dxos/operation';
+import { Operation, OperationInvoker } from '@dxos/operation';
+
+const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
 
 import { UndoOperation } from '../../common';
 import {
@@ -35,7 +39,7 @@ describe('HistoryTracker', () => {
         deriveContext: (_input, output) => ({ value: output.value }),
       });
 
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]), testRuntime);
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
       const tracker = HistoryTracker.make(invoker, undoRegistry);
 
@@ -55,7 +59,7 @@ describe('HistoryTracker', () => {
 
   it.effect('does not track operations without undo mapping', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([toStringHandler]), testRuntime);
       const undoRegistry = UndoRegistry.make(() => []);
       const tracker = HistoryTracker.make(invoker, undoRegistry);
       const collector = yield* createEventCollector(invoker);
@@ -81,15 +85,12 @@ describe('HistoryTracker', () => {
       });
 
       let halveWasCalled = false;
-      const trackingHalveHandler = OperationResolver.make({
-        operation: HalveCompute,
-        handler: (data) => {
-          halveWasCalled = true;
-          return Effect.succeed({ value: data.value / 2 });
-        },
+      const trackingHalveHandler = Operation.withHandler(HalveCompute, (data) => {
+        halveWasCalled = true;
+        return Effect.succeed({ value: data.value / 2 });
       });
 
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, trackingHalveHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, trackingHalveHandler]), testRuntime);
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
       const tracker = HistoryTracker.make(invoker, undoRegistry);
 
@@ -117,7 +118,7 @@ describe('HistoryTracker', () => {
         deriveContext: (_input, output) => ({ value: output.value }),
       });
 
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]), testRuntime);
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
       const tracker = HistoryTracker.make(invoker, undoRegistry);
       const collector = yield* createEventCollector(invoker);
@@ -152,15 +153,12 @@ describe('HistoryTracker', () => {
       });
 
       const halveInputs: number[] = [];
-      const trackingHalveHandler = OperationResolver.make({
-        operation: HalveCompute,
-        handler: (data) => {
-          halveInputs.push(data.value);
-          return Effect.succeed({ value: data.value / 2 });
-        },
+      const trackingHalveHandler = Operation.withHandler(HalveCompute, (data) => {
+        halveInputs.push(data.value);
+        return Effect.succeed({ value: data.value / 2 });
       });
 
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, trackingHalveHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, trackingHalveHandler]), testRuntime);
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
       const tracker = HistoryTracker.make(invoker, undoRegistry);
       const collector = yield* createEventCollector(invoker);
@@ -194,7 +192,7 @@ describe('HistoryTracker', () => {
 
   it.effect('undo on empty history returns error', () =>
     Effect.gen(function* () {
-      const invoker = OperationInvoker.make(() => Effect.succeed([]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([]), testRuntime);
       const undoRegistry = UndoRegistry.make(() => []);
       const tracker = HistoryTracker.make(invoker, undoRegistry);
 
@@ -218,17 +216,15 @@ describe('HistoryTracker', () => {
 
       let showUndoWasCalled = false;
       let showUndoMessage: unknown = undefined;
-      const showUndoHandler = OperationResolver.make({
-        operation: UndoOperation.ShowUndo,
-        handler: (input) => {
-          showUndoWasCalled = true;
-          showUndoMessage = input.message;
-          return Effect.succeed(undefined);
-        },
+      const showUndoHandler = Operation.withHandler(UndoOperation.ShowUndo, (input) => {
+        showUndoWasCalled = true;
+        showUndoMessage = input.message;
+        return Effect.succeed(undefined);
       });
 
-      const invoker = OperationInvoker.make(() =>
-        Effect.succeed([computeHandler, halveComputeHandler, showUndoHandler]),
+      const invoker = OperationInvoker.make(
+        () => Effect.succeed([computeHandler, halveComputeHandler, showUndoHandler]),
+        testRuntime,
       );
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
       const tracker = HistoryTracker.make(invoker, undoRegistry);
@@ -266,17 +262,15 @@ describe('HistoryTracker', () => {
 
       let showUndoWasCalled = false;
       let showUndoMessage: unknown = undefined;
-      const showUndoHandler = OperationResolver.make({
-        operation: UndoOperation.ShowUndo,
-        handler: (input) => {
-          showUndoWasCalled = true;
-          showUndoMessage = input.message;
-          return Effect.succeed(undefined);
-        },
+      const showUndoHandler = Operation.withHandler(UndoOperation.ShowUndo, (input) => {
+        showUndoWasCalled = true;
+        showUndoMessage = input.message;
+        return Effect.succeed(undefined);
       });
 
-      const invoker = OperationInvoker.make(() =>
-        Effect.succeed([computeHandler, halveComputeHandler, showUndoHandler]),
+      const invoker = OperationInvoker.make(
+        () => Effect.succeed([computeHandler, halveComputeHandler, showUndoHandler]),
+        testRuntime,
       );
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
       const tracker = HistoryTracker.make(invoker, undoRegistry);
@@ -314,7 +308,7 @@ describe('HistoryTracker', () => {
         },
       });
 
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]), testRuntime);
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
       const tracker = HistoryTracker.make(invoker, undoRegistry);
       const collector = yield* createEventCollector(invoker);
@@ -352,7 +346,7 @@ describe('HistoryTracker', () => {
         },
       });
 
-      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]));
+      const invoker = OperationInvoker.make(() => Effect.succeed([computeHandler, halveComputeHandler]), testRuntime);
       const undoRegistry = UndoRegistry.make(() => [undoMapping]);
       const tracker = HistoryTracker.make(invoker, undoRegistry);
       const collector = yield* createEventCollector(invoker);

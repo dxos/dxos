@@ -13,7 +13,7 @@ import {
   CallExtension,
   MeetingSettings,
   MeetingState,
-  OperationResolver,
+  OperationHandler,
   ReactSurface,
 } from './capabilities';
 import { meta } from './meta';
@@ -35,7 +35,7 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Meeting.Meeting], id: 'schemas' }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

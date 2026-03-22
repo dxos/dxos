@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { AddVoxels, GenerateShape, QueryWorld, RemoveVoxels, VoxelHandlers } from './functions';
+import { AddVoxels, GenerateShape, QueryWorld, RemoveVoxels } from '../operations';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/voxel';
 
@@ -40,7 +40,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: VoxelHandlers,
   make,
 };
 

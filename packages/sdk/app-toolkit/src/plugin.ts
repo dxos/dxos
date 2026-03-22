@@ -161,17 +161,17 @@ export namespace AppPlugin {
     });
   }
 
-  export type OperationResolverModuleOptions = PluginModuleOptions;
+  export type OperationHandlerModuleOptions = PluginModuleOptions;
 
   /**
    * Creates a module that contributes operation handlers.
    */
-  export function addOperationResolverModule<T = void>(
-    options: OperationResolverModuleOptions,
+  export function addOperationHandlerModule<T = void>(
+    options: OperationHandlerModuleOptions,
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
-      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-resolver',
-      activatesOn: options.activatesOn ?? ActivationEvents.SetupOperationResolver,
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-handler',
+      activatesOn: options.activatesOn ?? ActivationEvents.SetupOperationHandler,
       activatesBefore: options.activatesBefore,
       activatesAfter: options.activatesAfter,
       activate: options.activate,

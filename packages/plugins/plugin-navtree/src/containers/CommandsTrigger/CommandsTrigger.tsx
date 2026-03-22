@@ -12,12 +12,14 @@ import { COMMANDS_DIALOG, meta } from '../../meta';
 
 // TODO(thure): Refactor to be handled by a more appropriate plugin.
 export const CommandsTrigger = () => {
-  const { invokeSync } = useOperationInvoker();
+  const { invokePromise } = useOperationInvoker();
   const { t } = useTranslation(meta.id);
   return (
     <Button
       classNames='m-1 px-1 lg:px-2'
-      onClick={() => invokeSync(LayoutOperation.UpdateDialog, { subject: COMMANDS_DIALOG, blockAlign: 'start' })}
+      onClick={() =>
+        void invokePromise(LayoutOperation.UpdateDialog, { subject: COMMANDS_DIALOG, blockAlign: 'start' })
+      }
     >
       <span className='text-description font-normal grow text-start'>{t('command list input placeholder')}</span>
       <Icon icon='ph--magnifying-glass--regular' />

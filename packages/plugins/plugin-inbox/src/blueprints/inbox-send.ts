@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { GmailSend, GmailHandlers } from '../functions';
+import { InboxOperation } from '../operations';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.inbox-send';
 
@@ -14,7 +14,7 @@ const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Inbox (Send)',
-    tools: Blueprint.toolDefinitions({ operations: [GmailSend], tools: [] }),
+    tools: Blueprint.toolDefinitions({ operations: [InboxOperation.GmailSend], tools: [] }),
     instructions: Template.make({
       source: trim`
         You can send emails.
@@ -27,7 +27,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: GmailHandlers,
   make,
 };
 

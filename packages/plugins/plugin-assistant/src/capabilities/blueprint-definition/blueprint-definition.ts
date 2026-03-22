@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
+import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import {
   AgentHandlers,
@@ -43,9 +43,9 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
     Capability.contributes(AppCapabilities.BlueprintDefinition, BlueprintManagerBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, ProjectWizardBlueprint),
 
-    Capability.contributes(AppCapabilities.Functions, AgentHandlers),
-    Capability.contributes(AppCapabilities.Functions, EntityExtractionHandlers),
-    Capability.contributes(AppCapabilities.Functions, ProjectHandlers),
+    Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
+    Capability.contributes(Capabilities.OperationHandler, EntityExtractionHandlers),
+    Capability.contributes(Capabilities.OperationHandler, ProjectHandlers),
   ]),
 );
 

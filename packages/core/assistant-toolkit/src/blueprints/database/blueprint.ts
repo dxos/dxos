@@ -22,7 +22,6 @@ import {
   RelationDelete,
   TagAdd,
   TagRemove,
-  DatabaseHandlers,
 } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.database';
@@ -62,7 +61,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: DatabaseHandlers,
   make,
 };
 

@@ -5,7 +5,6 @@
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
-import { OperationHandlerSet } from '@dxos/operation';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -37,7 +36,6 @@ const make = () =>
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
   make,
-  operations: OperationHandlerSet.empty,
 };
 
 export default blueprint;

@@ -13,7 +13,7 @@ import { DeckCapabilities, type DeckStateProps, defaultDeck } from '../../types'
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokeSync } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(DeckCapabilities.State);
 
@@ -51,15 +51,15 @@ export default Capability.makeModule(
       const qualifiedId = fromUrlPath(pathname);
       const workspace = getWorkspaceFromPath(qualifiedId);
       if (workspace !== Node.RootId && workspace !== state.activeDeck) {
-        invokeSync(LayoutOperation.SwitchWorkspace, { subject: workspace });
+        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: workspace });
       }
 
       const deck = getDeck();
       const activeId = qualifiedId !== workspace ? qualifiedId : undefined;
       if (activeId && activeId !== deck.solo) {
-        invokeSync(LayoutOperation.SetLayoutMode, { subject: activeId, mode: 'solo' });
+        void invokePromise(LayoutOperation.SetLayoutMode, { subject: activeId, mode: 'solo' });
       } else if (!activeId && deck.solo) {
-        invokeSync(LayoutOperation.SetLayoutMode, { mode: 'deck' });
+        void invokePromise(LayoutOperation.SetLayoutMode, { mode: 'deck' });
       }
     };
 

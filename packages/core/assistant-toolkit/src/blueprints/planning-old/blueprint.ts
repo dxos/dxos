@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { ReadTasks, UpdateTasks, TaskHandlers } from './functions';
+import { ReadTasks, UpdateTasks } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.planning';
 
@@ -100,7 +100,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: TaskHandlers,
   make,
 };
 

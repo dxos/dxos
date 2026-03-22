@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { FetchMessages, DiscordHandlers } from './functions';
+import { FetchMessages } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.discord';
 
@@ -36,7 +36,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: DiscordHandlers,
   make,
 };
 

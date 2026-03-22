@@ -8,14 +8,14 @@ import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client/types';
 
-import { AppGraphBuilder, ComputeRuntime, OperationResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, ComputeRuntime, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { AutomationEvents } from './types';
 
 export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Operation.PersistentOperation, Trigger.Trigger] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

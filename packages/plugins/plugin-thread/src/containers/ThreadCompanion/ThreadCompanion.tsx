@@ -18,7 +18,8 @@ import { AnchoredTo, Thread } from '@dxos/types';
 
 import { CommentsPanel, type CommentsPanelProps } from '../../components';
 import { meta } from '../../meta';
-import { ThreadCapabilities, ThreadOperation, type ViewState } from '../../types';
+import { ThreadCapabilities, type ViewState } from '../../types';
+import { ThreadOperation } from '../../operations';
 import { SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 
 const initialViewState: ViewState = { showResolvedThreads: false };

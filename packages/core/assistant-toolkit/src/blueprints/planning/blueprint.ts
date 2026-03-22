@@ -5,7 +5,7 @@
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 
-import { UpdateTasks, PlanningHandlers } from './functions';
+import { UpdateTasks } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.planning';
 
@@ -19,7 +19,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: PlanningHandlers,
   make,
 };
 
