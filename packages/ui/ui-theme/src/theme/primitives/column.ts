@@ -16,6 +16,20 @@ const columnRoot: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
 };
 
 /**
+ * Full-width content area with gutter padding.
+ * Spans all 3 columns of the parent Column.Root and applies `px-[var(--gutter)]` so
+ * non-scrolling content is correctly aligned. ScrollArea.Root children automatically
+ * break out of this padding via `--gutter-offset`.
+ */
+const columnContent: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
+  return mx('col-span-full px-[var(--gutter)] [--gutter-offset:var(--gutter)] flex flex-col', ...etc);
+};
+
+const columnViewport: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
+  return mx(...etc);
+};
+
+/**
  * Three-column icon-slot row: spans all 3 columns of the parent Column.Root grid.
  * Uses CSS subgrid to inherit column sizing from the parent Column.
  * Children map to: [col-1: icon/slot] [col-2: content] [col-3: icon/action].
@@ -25,12 +39,9 @@ const columnRow: ComponentFunction<ColumnStyleProps> = ({ fullWidth, center }, .
   return mx('col-span-3 grid grid-cols-subgrid', fullWidth ? 'col-span-3' : center && 'col-start-2 col-span-1', ...etc);
 };
 
-const columnViewport: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx(...etc);
-};
-
 export const columnTheme = {
   root: columnRoot,
-  row: columnRow,
+  content: columnContent,
   viewport: columnViewport,
+  row: columnRow,
 };

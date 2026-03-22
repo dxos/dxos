@@ -16,10 +16,11 @@ import { useTranslation } from 'react-i18next';
 import { type DialogSize, osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
-import { Column, ColumnViewportProps } from '../../primitives';
+import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
+import { SlottableProps } from '../..';
 
 //
 // Root
@@ -171,18 +172,16 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
 // Body
 //
 
-type DialogBodyProps = PropsWithChildren<Pick<ColumnViewportProps, 'thin'>>;
+type DialogBodyProps = SlottableProps<HTMLDivElement>;
 
-const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDivElement, DialogBodyProps>(
-  ({ children, thin = true }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <Column.Viewport classNames={tx('dialog.body')} thin={thin} ref={forwardedRef}>
-        {children}
-      </Column.Viewport>
-    );
-  },
-);
+const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ children, asChild, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  return (
+    <Column.Content {...props} asChild={asChild} className={tx('dialog.body', {})} ref={forwardedRef}>
+      {children}
+    </Column.Content>
+  );
+});
 
 //
 // Title
@@ -190,7 +189,7 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDi
 
 type DialogTitleProps = ThemedClassName<DialogPrimitive.DialogTitleProps> & { srOnly?: boolean };
 
-const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
+const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
@@ -205,19 +204,18 @@ const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTML
 
 type DialogDescriptionProps = ThemedClassName<DialogPrimitive.DialogDescriptionProps> & { srOnly?: boolean };
 
-const DialogDescription: ForwardRefExoticComponent<DialogDescriptionProps> = forwardRef<
-  HTMLParagraphElement,
-  DialogDescriptionProps
->(({ classNames, srOnly, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <DialogPrimitive.Description
-      {...props}
-      className={tx('dialog.description', { srOnly }, classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
+const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProps>(
+  ({ classNames, srOnly, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <DialogPrimitive.Description
+        {...props}
+        className={tx('dialog.description', { srOnly }, classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 //
 // ActionBar
@@ -225,19 +223,18 @@ const DialogDescription: ForwardRefExoticComponent<DialogDescriptionProps> = for
 
 type DialogActionBarProps = ThemedClassName<PropsWithChildren>;
 
-const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forwardRef<
-  HTMLDivElement,
-  DialogActionBarProps
->(({ children, classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <Column.Row asChild center>
-      <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
-        {children}
-      </div>
-    </Column.Row>
-  );
-});
+const DialogActionBar = forwardRef<HTMLDivElement, DialogActionBarProps>(
+  ({ children, classNames, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <Column.Row asChild center>
+        <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
+          {children}
+        </div>
+      </Column.Row>
+    );
+  },
+);
 
 //
 // Close

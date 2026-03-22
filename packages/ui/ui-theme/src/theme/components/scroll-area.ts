@@ -33,6 +33,9 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
     // Apply col-span-full only when inside a Column.Root grid (detected via dx-column marker).
     '[.dx-column_&]:col-span-full',
 
+    // Break out of Column.Body gutter padding and reset for nested ScrollAreas.
+    'mx-[calc(var(--gutter-offset,0px)*-1)] [--gutter-offset:0px]',
+
     ...etc,
   );
 
