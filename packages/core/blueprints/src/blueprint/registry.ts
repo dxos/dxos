@@ -2,7 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 
@@ -11,6 +10,7 @@ import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import { Blueprint } from './blueprint';
+
 /**
  * Blueprint registry.
  */
