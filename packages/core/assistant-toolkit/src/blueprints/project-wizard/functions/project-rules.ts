@@ -15,7 +15,7 @@ export default ProjectRules.pipe(
       return trim`
         You can ask the user for qualifying questions about the projects.
         If projects should actively read incoming emails, query for mailboxes and add a subscription to them.
-        Use [query-blueprints] function to query for available blueprints.
+        Use [query-blueprints] from the Blueprint Manager to query for available blueprints and their keys.
         Use [create-project] function to create a new project.
         After creating a project, explicitly remind the user to enable local triggers so the project can be driven autonomously.
 

@@ -16,6 +16,7 @@ const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Inbox',
+    agentCanEnable: true,
     tools: Blueprint.toolDefinitions({ operations: [Classify, Create, Open, Summarize, GmailSync], tools: [] }),
     instructions: Template.make({
       source: trim`

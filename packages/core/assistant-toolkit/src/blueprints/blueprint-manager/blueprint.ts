@@ -1,0 +1,48 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type AppCapabilities } from '@dxos/app-toolkit';
+import { Blueprint, Template } from '@dxos/blueprints';
+import { trim } from '@dxos/util';
+
+import { QueryBlueprints, EnableBlueprints, BlueprintManagerHandlers } from './functions';
+
+const BLUEPRINT_KEY = 'org.dxos.blueprint.blueprint-manager';
+
+const make = () =>
+  Blueprint.make({
+    key: BLUEPRINT_KEY,
+    name: 'Blueprint Manager',
+    description: 'Query and enable blueprints in the current conversation.',
+    instructions: Template.make({
+      source: trim`
+        You can query available blueprints and enable them in the current conversation.
+        Use [query-blueprints] to refresh the list of available blueprints.
+        Use [enable-blueprints] to enable blueprints by their keys. Always call [query-blueprints] first.
+        Only blueprints with agentCanEnable=true can be enabled by the agent.
+
+        <available_blueprints>
+        {{#each blueprints}}
+        - {{key}} "{{name}}"{{#if description}} -- {{description}}{{/if}}{{#if agentCanEnable}} [agent-can-enable]{{/if}}
+        {{/each}}
+        </available_blueprints>
+      `,
+      inputs: [
+        {
+          name: 'blueprints',
+          kind: 'function',
+          function: QueryBlueprints.meta.key,
+        },
+      ],
+    }),
+    tools: Blueprint.toolDefinitions({ operations: [QueryBlueprints, EnableBlueprints] }),
+  });
+
+const blueprint: AppCapabilities.BlueprintDefinition = {
+  key: BLUEPRINT_KEY,
+  operations: BlueprintManagerHandlers,
+  make,
+};
+
+export default blueprint;

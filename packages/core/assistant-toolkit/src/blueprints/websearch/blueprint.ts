@@ -16,6 +16,7 @@ const make = () =>
     key: BLUEPRINT_KEY,
     name: 'Web Search',
     description: 'Search the web.',
+    agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make()),
     },

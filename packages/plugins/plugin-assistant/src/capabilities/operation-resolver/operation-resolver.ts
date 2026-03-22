@@ -7,7 +7,13 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContextBinder, AiConversation } from '@dxos/assistant';
-import { AgentPrompt, Chat, DatabaseBlueprint, ProjectWizardBlueprint } from '@dxos/assistant-toolkit';
+import {
+  AgentPrompt,
+  BlueprintManagerBlueprint,
+  Chat,
+  DatabaseBlueprint,
+  ProjectWizardBlueprint,
+} from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { type Queue } from '@dxos/client/echo';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
@@ -68,6 +74,12 @@ export default Capability.makeModule(
           if (!defaultProjectWizardBlueprint) {
             defaultProjectWizardBlueprint = db.add(ProjectWizardBlueprint.make());
           }
+          let defaultBlueprintManagerBlueprint = blueprints.find(
+            (blueprint) => blueprint.key === BlueprintManagerBlueprint.key,
+          );
+          if (!defaultBlueprintManagerBlueprint) {
+            defaultBlueprintManagerBlueprint = db.add(BlueprintManagerBlueprint.make());
+          }
 
           const binder = new AiContextBinder({ queue, registry });
           yield* Effect.promise(() =>
@@ -77,6 +89,7 @@ export default Capability.makeModule(
                   Ref.make(defaultAssistantBlueprint!),
                   Ref.make(defaultDatabaseBlueprint!),
                   Ref.make(defaultProjectWizardBlueprint!),
+                  Ref.make(defaultBlueprintManagerBlueprint!),
                 ],
               }),
             ),
