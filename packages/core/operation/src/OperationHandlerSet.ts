@@ -2,8 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+
 import type * as Operation from './Operation';
+import { NoHandlerError } from './errors';
 
 export const TypeId = '~@dxos/operation/OperationHandlerSet' as const;
 export type TypeId = typeof TypeId;
@@ -71,3 +75,27 @@ export const lazy = (
 ): OperationHandlerSet => {
   return async(() => Promise.all(modules.map((module) => module().then(({ default: handler }) => handler))));
 };
+
+/**
+ * Gets a handler for an operation by key.
+ */
+export const getHandler = <const Op extends Operation.Definition.Any>(
+  set: OperationHandlerSet,
+  definition: Op,
+): Effect.Effect<Operation.WithHandler<Op>, NoHandlerError> =>
+  Effect.gen(function* () {
+    const handlers = yield* set.handlers;
+    const handler = handlers.find((handler) => handler.meta.key === definition.meta.key);
+    if (!handler) {
+      return yield* Effect.fail(new NoHandlerError(definition.meta.key));
+    }
+    return handler as any;
+  });
+
+export class Provider extends Context.Tag('@dxos/operation/OperationHandlerSetProvider')<
+  Provider,
+  OperationHandlerSet
+>() {
+  static layer = (handlers: OperationHandlerSet): Layer.Layer<Provider, never, never> =>
+    Layer.succeed(Provider, handlers);
+}

@@ -48,6 +48,7 @@
 - Avoid single letter variable names.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 - Use barrel imports whenever possible.
+- Prefer ES `#private` fields/methods over TypeScript `private` keyword in new code. Existing `_private` convention is fine to keep.
 
 ## New Packages
 
