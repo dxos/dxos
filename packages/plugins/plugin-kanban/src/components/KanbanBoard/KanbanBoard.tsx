@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
+import { ComposableProps, useTranslation } from '@dxos/react-ui';
 import { Board, useBoard } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
 
@@ -67,7 +67,7 @@ const [KanbanBoardContext, useKanbanBoard] = createContext<KanbanBoardContextVal
 const KANBAN_BOARD_ROOT = 'KanbanBoard.Root';
 
 type KanbanBoardRootProps = PropsWithChildren<
-  Pick<KanbanBoardContextValue, 'change' | 'itemTile'> & {
+  {
     kanban: Kanban.Kanban;
     /** Required when providing context; Root derives columnFieldPath, pivotFieldId, getPivotAttributes from kanban + projection. */
     projection: ProjectionModel;
@@ -75,16 +75,17 @@ type KanbanBoardRootProps = PropsWithChildren<
     items: Atom.Atom<Obj.Unknown[]>;
     onCardAdd?: (columnValue: string | undefined) => string | undefined;
     onCardRemove?: (card: Obj.Unknown) => void;
-  } & ComponentPropsWithoutRef<'div'>
+  } & Pick<KanbanBoardContextValue, 'change' | 'itemTile'> &
+    ComponentPropsWithoutRef<'div'>
 >;
 
 export const KanbanBoardRoot = ({
   children,
-  change,
-  itemTile = KanbanCard,
   kanban,
   projection,
   items,
+  change,
+  itemTile = KanbanCard,
   onCardAdd,
   onCardRemove,
 }: KanbanBoardRootProps) => {
@@ -117,7 +118,7 @@ export const KanbanBoardRoot = ({
 
   if (columns.length === 0) {
     return (
-      <div className='flex flex-1 items-center justify-center p-8 text-center text-description'>
+      <div role='none' className='flex flex-1 items-center justify-center p-8 text-center text-description'>
         {t('select pivot placeholder')}
       </div>
     );
@@ -148,7 +149,7 @@ KanbanBoardRoot.displayName = KANBAN_BOARD_ROOT;
 
 const KANBAN_BOARD_CONTENT = 'KanbanBoard.Content';
 
-type KanbanBoardContentProps = {};
+type KanbanBoardContentProps = ComposableProps;
 
 export const KanbanBoardContent = (props: KanbanBoardContentProps) => {
   const { model } = useBoard(KANBAN_BOARD_CONTENT);
@@ -162,7 +163,7 @@ export const KanbanBoardContent = (props: KanbanBoardContentProps) => {
     change,
   });
 
-  return <Board.Content id={kanbanId} eventHandler={columnEventHandler} Tile={KanbanColumn} />;
+  return <Board.Content {...props} id={kanbanId} eventHandler={columnEventHandler} Tile={KanbanColumn} />;
 };
 
 KanbanBoardContent.displayName = KANBAN_BOARD_CONTENT;

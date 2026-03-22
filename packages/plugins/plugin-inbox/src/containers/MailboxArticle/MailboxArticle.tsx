@@ -23,7 +23,8 @@ import { HasSubject, Message } from '@dxos/types';
 import { type MailboxActionHandler, Mailbox as MailboxComponent, MailboxEmpty } from '../../components';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
-import { InboxOperation, type Mailbox } from '../../types';
+import { InboxOperation } from '../../operations';
+import { type Mailbox } from '../../types';
 import { sortByCreated } from '../../util';
 
 export type MailboxArticleProps = SurfaceComponentProps<
@@ -87,7 +88,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // Merge tags into mailbox labels.
   const mergedLabels = useMemo(() => {
-    const labels = { ...(mailbox.labels ?? {}) };
+    const labels = { ...mailbox.labels };
     for (const [_messageId, messageTags] of Object.entries(messageTagsMap)) {
       for (const tag of messageTags) {
         labels[tag.id] = tag.label;
@@ -115,6 +116,15 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       };
     });
   }, [sortedMessages, messageTagsMap]);
+
+  // Delay showing empty state to prevent flicker as messages are loaded.
+  const [isEmpty, setEmpty] = useState<boolean>(false);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setEmpty(messagesWithTags.length === 0);
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [messagesWithTags]);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
@@ -222,16 +232,16 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
       </Panel.Toolbar>
 
       <Panel.Content>
-        {messagesWithTags && messagesWithTags.length > 0 ? (
+        {isEmpty ? (
+          <MailboxEmpty mailbox={mailbox} />
+        ) : (
           <MailboxComponent
             id={id}
+            currentMessageId={currentMessageId}
             messages={messagesWithTags}
             labels={mergedLabels}
-            currentMessageId={currentMessageId}
             onAction={handleAction}
           />
-        ) : (
-          <MailboxEmpty mailbox={mailbox} />
         )}
       </Panel.Content>
     </Panel.Root>
@@ -343,7 +353,7 @@ const useMailboxActions = ({
               icon: 'ph--paper-plane-right--regular',
               label: ['compose email label', { ns: meta.id }],
             },
-            () => db && invokePromise(InboxOperation.CreateDraft, { db }),
+            () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db }),
           )
           .build();
 

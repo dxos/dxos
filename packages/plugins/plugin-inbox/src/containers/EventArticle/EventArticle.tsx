@@ -14,7 +14,8 @@ import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps } from '../../components';
 import { useShadowObject } from '../../hooks';
-import { type Calendar, InboxOperation } from '../../types';
+import { InboxOperation } from '../../operations';
+import { type Calendar } from '../../types';
 
 export type EventArticleProps = SurfaceComponentProps<
   EventType.Event,

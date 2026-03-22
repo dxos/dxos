@@ -11,12 +11,14 @@ import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { Blockstore, FileUploader, Markdown, OperationResolver, ReactSurface } from './capabilities';
+import { Blockstore, FileUploader, Markdown, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { WnfsAction, WnfsCapabilities, WnfsFile, WnfsOperation } from './types';
+import { WnfsAction, WnfsCapabilities, WnfsFile } from './types';
+import { WnfsOperation } from './operations';
 
 export const WnfsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
@@ -40,7 +42,7 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [WnfsFile.File] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

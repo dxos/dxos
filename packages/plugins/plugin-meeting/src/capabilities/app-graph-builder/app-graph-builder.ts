@@ -12,15 +12,17 @@ import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { DeckOperation, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
-import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
+import { Meeting, MeetingCapabilities } from '../../types';
+import { MeetingOperation } from '../../operations';
 
 /**
  * Atom families to derive meeting state properties.

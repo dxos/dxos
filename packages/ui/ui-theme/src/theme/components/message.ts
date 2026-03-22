@@ -20,7 +20,7 @@ export const messageHeader: ComponentFunction<MessageStyleProps> = (_, etc) => {
 };
 
 export const messageTitle: ComponentFunction<MessageStyleProps> = (_, etc) => {
-  return mx('col-start-2 text-lg gap-trim-sm [&>svg]:inline-block', etc);
+  return mx('col-start-2 gap-trim-sm [&>svg]:inline-block', etc);
 };
 
 export const messageIcon: ComponentFunction<MessageStyleProps> = (_, etc) => {

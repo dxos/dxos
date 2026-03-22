@@ -8,6 +8,7 @@ import { addEventListener, combine, throttle } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 
 import { scrollerCrawlEffect, scrollerLineEffect } from './scroller';
+import { getSize } from '@dxos/ui-theme';
 
 export type AutoScrollToProps = {};
 
@@ -80,7 +81,9 @@ export const autoScroll = (_: AutoScrollToProps = {}) => {
     ViewPlugin.fromClass(
       class {
         constructor(view: EditorView) {
-          const icon = Domino.of('dx-icon' as any).attributes({ icon: 'ph--arrow-down--regular' });
+          const icon = Domino.of('dx-icon' as any)
+            .classNames(getSize(4))
+            .attributes({ icon: 'ph--arrow-down--regular' });
           const button = Domino.of('button')
             .classNames('dx-button bg-accent-surface')
             .attributes({ 'data-density': 'fine' })

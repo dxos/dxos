@@ -11,7 +11,7 @@ import React, { forwardRef, useMemo, useRef, useState } from 'react';
 import { Annotation, JsonSchema, Obj, Query, Type } from '@dxos/echo';
 import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
-import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Toolbar, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
@@ -20,6 +20,7 @@ import { type Pipeline } from '@dxos/types';
 import { meta } from '../../meta';
 
 import { type ItemProps, usePipeline } from './PipelineComponent';
+import { Menu } from '@dxos/react-ui-menu';
 
 //
 // PipelineColumn
@@ -121,16 +122,29 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
         <Focus.Group asChild>
-          <Card.Root classNames={classNames} ref={composedRef}>
-            <Card.Toolbar>
-              <Card.Icon icon={icon} />
-              <Card.Title>{Obj.getLabel(data)}</Card.Title>
-              <Card.Menu />
-            </Card.Toolbar>
-            <Card.Content>
-              <Item {...itemProps} />
-            </Card.Content>
-          </Card.Root>
+          <Menu.Root>
+            <Card.Root classNames={classNames} ref={composedRef}>
+              <Card.Toolbar>
+                <Card.Icon icon={icon} />
+                <Card.Title>{Obj.getLabel(data)}</Card.Title>
+                {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+                <Card.IconBlock padding>
+                  <Menu.Trigger asChild>
+                    <Toolbar.IconButton
+                      iconOnly
+                      variant='ghost'
+                      icon='ph--dots-three-vertical--regular'
+                      label='Actions'
+                    />
+                  </Menu.Trigger>
+                  <Menu.Content />
+                </Card.IconBlock>
+              </Card.Toolbar>
+              <Card.Content>
+                <Item {...itemProps} />
+              </Card.Content>
+            </Card.Root>
+          </Menu.Root>
         </Focus.Group>
       </Mosaic.Tile>
     );

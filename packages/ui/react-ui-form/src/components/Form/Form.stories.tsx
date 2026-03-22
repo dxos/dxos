@@ -103,7 +103,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         <Form.Root
           debug={debug}
           schema={schema}
-          values={values}
+          defaultValues={values}
           db={space.db}
           onSave={handleSave}
           onCancel={handleCancel}
@@ -136,13 +136,8 @@ const meta = {
       onCreateIdentity: ({ client }) => {
         const space = client.spaces.default;
         [
-          Obj.make(Organization, { name: 'DXOS' }),
-          Obj.make(Organization, { name: 'BlueYard' }),
-          Obj.make(Organization, { name: 'Backed' }),
-          Obj.make(Organization, { name: 'BCV' }),
-          Tag.make({ label: 'Tag 1' }),
-          Tag.make({ label: 'Tag 2' }),
-          Tag.make({ label: 'Tag 3' }),
+          ...Array.from({ length: 3 }).map((_, i) => Obj.make(Tag.Tag, { label: `Tag ${i}` })),
+          ...Array.from({ length: 50 }).map((_, i) => Obj.make(Organization, { name: `Organization ${i}` })),
         ].map((obj) => space.db.add(obj));
       },
     }),

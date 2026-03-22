@@ -119,7 +119,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
       >
         <Panel.Root role={role} ref={forwardedRef}>
           {settings.toolbar && (
-            <Panel.Toolbar className='bg-toolbar-surface'>
+            <Panel.Toolbar classNames='bg-toolbar-surface'>
               <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
             </Panel.Toolbar>
           )}

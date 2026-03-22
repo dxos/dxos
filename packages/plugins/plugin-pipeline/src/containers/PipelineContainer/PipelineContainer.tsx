@@ -15,7 +15,7 @@ import {
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
 import { companionSegment } from '@dxos/app-toolkit';
-import { DeckOperation } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { useMenu } from '@dxos/react-ui-menu';

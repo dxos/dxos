@@ -27,7 +27,7 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
   const stateAtom = useCapability(SimpleLayoutStateCapability);
   const state = useAtomValue(stateAtom);
   const { graph } = useAppGraph();
-  const { invokeSync } = useOperationInvoker();
+  const { invokePromise } = useOperationInvoker();
   const runAction = useActionRunner();
 
   // Derive activeId from state.
@@ -64,7 +64,7 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
           const settingsAction = {
             id: `appbar-settings-${alternateTreeNode.id}`,
             type: Node.ActionType,
-            data: () => Effect.sync(() => invokeSync(LayoutOperation.Open, { subject: [alternateTreeNode.id] })),
+            data: () => Effect.promise(() => invokePromise(LayoutOperation.Open, { subject: [alternateTreeNode.id] })),
             properties: {
               label: alternateTreeNode.properties.label ?? alternateTreeNode.id,
               icon: alternateTreeNode.properties.icon ?? 'ph--placeholder--regular',
@@ -91,15 +91,15 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
 
       // If history is empty and this is a workspace, go to home.
       if (state.history.length === 0 && isWorkspace) {
-        invokeSync(LayoutOperation.SwitchWorkspace, { subject: Node.RootId });
+        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: Node.RootId });
       } else {
         // Otherwise, close (which will pop from history or clear active).
-        invokeSync(LayoutOperation.Close, { subject: [state.active] });
+        void invokePromise(LayoutOperation.Close, { subject: [state.active] });
       }
     } else {
-      invokeSync(LayoutOperation.SwitchWorkspace, { subject: Node.RootId });
+      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: Node.RootId });
     }
-  }, [graph, invokeSync, state.active, state.history.length]);
+  }, [graph, invokePromise, state.active, state.history.length]);
 
   // Compute popover anchor ID.
   const popoverAnchorId = node && state.popoverAnchorId === `${meta.id}:${node.id}` ? state.popoverAnchorId : undefined;

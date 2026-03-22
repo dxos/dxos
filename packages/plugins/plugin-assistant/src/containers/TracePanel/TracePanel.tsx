@@ -2,36 +2,26 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom';
+import { useAtomValue } from '@effect-atom/atom-react';
+import * as Array from 'effect/Array';
+import { pipe } from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
 import { Filter, Obj, Query } from '@dxos/echo';
+import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { InvocationOutcome, InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
+import { LogLevel } from '@dxos/log';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
-import { useActiveSpace } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
 import { Input, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 
-import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { LogLevel } from '@dxos/log';
-import { Atom } from '@effect-atom/atom';
-import { useAtomValue } from '@effect-atom/atom-react';
-import * as Array from 'effect/Array';
-import { pipe } from 'effect/Function';
 import { meta } from '../../meta';
 
-export const TracePanel = () => {
-  const space = useActiveSpace();
-  if (!space) {
-    return null;
-  }
-
-  return <TracePanelMain space={space} />;
-};
-
-const TracePanelMain = ({ space }: { space: Space }) => {
+export const TracePanel = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   const { state, start, stop } = useTriggerRuntimeControls(space.db);
   const isRunning = state?.enabled ?? false;
@@ -165,6 +155,7 @@ const getExecutionGraph = (
 
           const branchName = `invocation-${invocation.startEvent.invocationId.slice(0, 8)}`;
 
+          // Collapse completed invocations with no intermediate events.
           if (invocation.endEvent && invocation.subevents.length === 0) {
             commits.push({
               id: invocation.endEvent.id,
@@ -181,6 +172,7 @@ const getExecutionGraph = (
             continue;
           }
 
+          // Start of the invocation.
           commits.push({
             id: invocation.startEvent.id,
             branch: 'invocations',
@@ -191,6 +183,7 @@ const getExecutionGraph = (
             timestamp: new Date(invocation.startEvent.timestamp),
           });
 
+          // Subevents of the invocation.
           for (const subevent of invocation.subevents.slice(-subeventsLimit)) {
             if (Obj.instanceOf(Message.Message, subevent)) {
               for (const block of subevent.blocks) {
@@ -202,7 +195,7 @@ const getExecutionGraph = (
                       parents: [commits.at(-1)!.id],
                       icon: 'ph--robot--regular',
                       level: LogLevel.VERBOSE,
-                      message: block.text.slice(0, 50),
+                      message: block.text.slice(0, 100),
                       timestamp: new Date(subevent.created),
                     });
                     if (!branches.includes(branchName)) {
@@ -228,6 +221,7 @@ const getExecutionGraph = (
             }
           }
 
+          // "Running..." trailing event for invocations that haven't completed.
           if (!invocation.endEvent && invocation.subevents.length > 0) {
             commits.push({
               id: invocation.startEvent.invocationId + 'pending',
@@ -240,6 +234,7 @@ const getExecutionGraph = (
             });
           }
 
+          // End of the invocation, merging back into main. Only if there were subevents.
           if (invocation.endEvent && invocation.subevents.length > 0) {
             commits.push({
               id: invocation.endEvent.id,
@@ -255,6 +250,9 @@ const getExecutionGraph = (
             });
           }
         }
+
+        // Sort in time order.
+        commits.sort((a, b) => (a.timestamp?.getTime() ?? 0) - (b.timestamp?.getTime() ?? 0));
 
         return { branches, commits };
       }),

@@ -3,6 +3,6 @@
 //
 
 export * from './app-graph-serializer';
-export * from './operation-resolver';
+export * from './operation-handler';
 export * from './react-surface';
 export * from './settings';

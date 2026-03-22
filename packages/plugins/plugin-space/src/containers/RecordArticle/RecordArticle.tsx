@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Annotation, type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
-import { Card, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
@@ -28,15 +28,32 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
   const singleColumn = related.length === 1;
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role}>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root />
+      </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 gap-4'>
             <ObjectCard data={subject} classNames='dx-card-max-width' />
 
+            {/* TODO(burdon): Prompts and related should both be surfaces. */}
+
+            <div role='none' className='flex flex-col gap-form-gap'>
+              <Input.Root>
+                <Input.Label>{t('related actions label')}</Input.Label>
+              </Input.Root>
+              <Surface.Surface role='prompts' data={{ subject }} limit={1} />
+            </div>
+
             {related.length > 0 && (
-              <div role='none' className={mx('flex flex-col gap-1', singleColumn ? 'dx-card-max-width' : 'w-full')}>
-                <label className='mt-2 text-sm text-description'>{t('related objects label')}</label>
+              <div
+                role='none'
+                className={mx('flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
+              >
+                <Input.Root>
+                  <Input.Label>{t('related objects label')}</Input.Label>
+                </Input.Root>
                 <Masonry.Root<Entity.Unknown>
                   items={related}
                   render={ObjectCard}
@@ -135,6 +152,10 @@ const useRelatedObjects = (
       related.push(...targetObjects, ...sourceObjects);
     }
 
-    return Array.from(new Set(related));
+    return (
+      Array.from(new Set(related))
+        // TODO(burdon): Hack to filter out chat objects.
+        .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.assistant.chat')
+    );
   }, [record, objects]);
 };

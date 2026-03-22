@@ -14,7 +14,7 @@ import { pathToFileURL } from 'node:url';
 import { __unstable__loadDesignSystem } from 'tailwindcss';
 import { beforeAll, describe, test } from 'vitest';
 
-const THEME_CSS_PATH = path.resolve(__dirname, '../src/theme.css');
+const THEME_CSS_PATH = path.resolve(__dirname, '../src/main.css');
 
 let ds: Awaited<ReturnType<typeof __unstable__loadDesignSystem>>;
 

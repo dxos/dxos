@@ -67,6 +67,19 @@ export const MyOperation = Operation.make({
 
 There are two patterns for attaching handlers, depending on whether the handler needs to be deployable to EDGE.
 
+### Handler module layout (deployable handler files)
+
+For each handler module (e.g. `sync.ts`, `handler-a.ts`):
+
+1. **Imports first** (project import order: builtin → external → `@dxos` → internal).
+2. **`export default` immediately after imports** — `Definition.pipe(Operation.withHandler(...))` so the entry point is obvious when opening the file.
+3. **Everything else below** — private constants, file-local types, and helper functions used by the handler. Handlers run only after the module has finished loading, so closures may reference those bindings safely.
+4. **Only the default export** — do not add named exports from handler modules. Share types and operation definitions from `definitions.ts` (or other modules), not from handler files.
+
+Small handlers with no helpers are just imports + default export.
+
+Reference: `packages/plugins/plugin-youtube/src/functions/sync.ts`
+
 ### Pattern 1: Deployable handlers (one file per handler)
 
 Use this when handlers may be deployed to EDGE. Each handler file default-exports the definition piped through `Operation.withHandler`. The barrel `index.ts` uses `OperationHandlerSet.lazy(...)` to load them on demand.
@@ -80,11 +93,15 @@ import { MyOperation } from './definitions';
 export default MyOperation.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ value }) {
-      return { result: String(value * 2) };
+      return { result: formatResult(value) };
     }),
   ),
 );
+
+const formatResult = (value: number) => String(value * 2);
 ```
+
+When the handler needs helpers, keep the `export default` **at the top** (after imports) and add private helpers **below**, as with `formatResult` here.
 
 ```ts
 // index.ts
@@ -176,7 +193,9 @@ export const OpB = Operation.make({
 });
 ```
 
-### `handler-a.ts` — Single handler, default export
+### `handler-a.ts` — Single handler, default export only
+
+Put `export default OpA.pipe(Operation.withHandler(...))` right after imports. If you add helpers, place them below the default export and do not export them.
 
 ```ts
 import * as Effect from 'effect/Effect';
@@ -186,10 +205,12 @@ import { OpA } from './definitions';
 export default OpA.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ n }) {
-      return { result: String(n) };
+      return { result: formatResult(n) };
     }),
   ),
 );
+
+const formatResult = (n: number) => String(n);
 ```
 
 ### `index.ts` — Barrel with lazy handler set
@@ -297,10 +318,12 @@ import { MyFunc } from './definitions';
 export default MyFunc.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ value }) {
-      return { result: String(value) };
+      return { result: formatResult(value) };
     }),
   ),
 );
+
+const formatResult = (value: number) => String(value);
 ```
 
 ### Handler input

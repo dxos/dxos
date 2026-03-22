@@ -10,20 +10,22 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
-import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 
 import {
   AppGraphBuilder,
   BlueprintDefinition,
   Compiler,
-  OperationResolver,
+  OperationHandler,
   ReactSurface,
   ScriptSettings,
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { ScriptEvents } from './types';
-import { Notebook, ScriptOperation } from './types';
+import { Notebook } from './types';
+import { ScriptOperation } from './operations';
 
 export const ScriptPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -70,7 +72,7 @@ export const ScriptPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Script.Script] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

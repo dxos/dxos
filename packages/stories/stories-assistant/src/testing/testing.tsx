@@ -39,12 +39,13 @@ import { Obj, Ref } from '@dxos/echo';
 import { ExampleHandlers, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation, OperationResolver } from '@dxos/operation';
-import { Assistant, AssistantOperation, AssistantPlugin } from '@dxos/plugin-assistant';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { Assistant, AssistantPlugin } from '@dxos/plugin-assistant';
+import { AssistantOperation } from '@dxos/plugin-assistant/operations';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
-import { DeckOperation } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin } from '@dxos/plugin-testing';
@@ -186,11 +187,15 @@ const buildPluginManagerOptions = ({
  * Inner component that creates the plugin manager and renders the app.
  * Separated to respect React hooks rules (hooks must be called unconditionally).
  */
-const PluginManagerHost: React.FC<{
+const PluginManagerHost = ({
+  options,
+  children,
+  contextId,
+}: {
   options: WithPluginManagerOptions;
   children: React.ReactNode;
   contextId: string;
-}> = ({ options, children, contextId }) => {
+}) => {
   const manager = useMemo(() => {
     const pluginManager = PluginManager.make({
       pluginLoader: () => Effect.die(new Error('Not implemented')),
@@ -300,10 +305,10 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
         Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, DesignBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
-        Capability.contributes(AppCapabilities.Functions, MarkdownHandlers),
-        Capability.contributes(AppCapabilities.Functions, PlanningHandlers),
-        Capability.contributes(AppCapabilities.Functions, AgentHandlers),
-        Capability.contributes(AppCapabilities.Functions, ExampleHandlers),
+        Capability.contributes(Capabilities.OperationHandler, MarkdownHandlers),
+        Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
+        Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
+        Capability.contributes(Capabilities.OperationHandler, ExampleHandlers),
       ]),
   }),
   Plugin.addModule({
@@ -335,18 +340,15 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
     }),
   }),
   Plugin.addModule(({ onChatCreated }) => ({
-    id: 'example.com/plugin/testing/module/operation-resolver',
-    activatesOn: ActivationEvents.SetupOperationResolver,
+    id: 'example.com/plugin/testing/module/operation-handler',
+    activatesOn: ActivationEvents.SetupOperationHandler,
     activate: Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      return Capability.contributes(Capabilities.OperationResolver, [
-        OperationResolver.make({
-          operation: DeckOperation.ChangeCompanion,
-          handler: () => Effect.void,
-        }),
-        OperationResolver.make({
-          operation: AssistantOperation.CreateChat,
-          handler: ({ db, name }) =>
+      return Capability.contributes(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(
+          Operation.withHandler(DeckOperation.ChangeCompanion, () => Effect.void),
+          Operation.withHandler(AssistantOperation.CreateChat, ({ db, name }) =>
             Effect.gen(function* () {
               const registry = yield* Capability.get(Capabilities.AtomRegistry);
               const space = client.spaces.get(db.spaceId);
@@ -375,8 +377,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
                 object: chat,
               };
             }),
-        }),
-      ]);
+          ),
+        ),
+      );
     }),
   })),
   Plugin.make,

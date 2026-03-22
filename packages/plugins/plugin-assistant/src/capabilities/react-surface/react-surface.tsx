@@ -15,6 +15,7 @@ import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
+import { useActiveSpace } from '@dxos/plugin-space';
 
 import {
   AssistantSettings,
@@ -25,6 +26,7 @@ import {
   ProjectArticle,
   ProjectSettings,
   PromptArticle,
+  PromptList,
   TracePanel,
   TriggerStatus,
 } from '../../containers';
@@ -73,11 +75,21 @@ export default Capability.makeModule(() =>
         role: 'article',
         filter: (
           data,
-        ): data is { attendableId: string; companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
+        ): data is { subject: Chat.Chat | 'assistant-chat'; attendableId: string; companionTo: Obj.Unknown } =>
           typeof data.attendableId === 'string' &&
           Obj.isObject(data.companionTo) &&
           (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === 'assistant-chat'),
-        component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
+        component: ({ data, role, ref }) => (
+          <ChatCompanion
+            role={role}
+            data={data}
+            // TODO(burdon): See comment in ChatCompanion.tsx
+            // data={data.subject}
+            // companionTo={data.companionTo}
+            // attendableId={data.attendableId}
+            ref={ref}
+          />
+        ),
       }),
       Surface.create({
         id: `${meta.id}.companion-invocations`,
@@ -121,12 +133,25 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.trace`,
         role: 'deck-companion--trace',
         filter: (data): data is { subject: 'trace' } => data.subject === 'trace',
-        component: () => <TracePanel />,
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <TracePanel space={space} />;
+        },
       }),
       Surface.create({
         id: `${meta.id}.status`,
         role: 'status-indicator',
         component: () => <TriggerStatus />,
+      }),
+      Surface.create({
+        id: `${meta.id}.prompts`,
+        role: 'prompts',
+        filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
+        component: ({ data }) => <PromptList subject={data.subject} />,
       }),
     ]),
   ),

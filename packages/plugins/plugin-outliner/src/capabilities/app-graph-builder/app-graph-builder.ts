@@ -15,7 +15,7 @@ import { GraphBuilder } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 
 import { meta } from '../../meta';
-import { OutlineOperation } from '../../types';
+import { OutlineOperation } from '../../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

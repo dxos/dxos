@@ -17,11 +17,12 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Query } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../../meta';
-import { AssistantCapabilities, AssistantOperation } from '../../types';
+import { AssistantCapabilities } from '../../types';
+import { AssistantOperation } from '../../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

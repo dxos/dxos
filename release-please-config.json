@@ -740,6 +740,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-youtube/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-zen/package.json",
           "jsonpath": "$.version"
         },

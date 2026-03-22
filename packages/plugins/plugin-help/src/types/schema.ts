@@ -2,14 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import { type Context, createContext } from 'react';
 import { type Step as BaseStep } from 'react-joyride';
 
-import { Capability, type CapabilityManager } from '@dxos/app-framework';
-import { Operation } from '@dxos/operation';
-
-import { meta } from '../meta';
+import { type CapabilityManager } from '@dxos/app-framework';
 
 export type Step = BaseStep & {
   before?: (capabilities: CapabilityManager.CapabilityManager) => void;
@@ -32,14 +28,3 @@ export const HelpContext: Context<HelpContextType> = createContext<HelpContextTy
   start: () => {},
   stop: () => {},
 });
-
-const HELP_OPERATION = `${meta.id}.operation`;
-
-export namespace HelpOperation {
-  export const Start = Operation.make({
-    meta: { key: `${HELP_OPERATION}.start`, name: 'Start Help' },
-    services: [Capability.Service],
-    input: Schema.Void,
-    output: Schema.Void,
-  });
-}

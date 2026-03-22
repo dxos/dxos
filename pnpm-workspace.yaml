@@ -363,7 +363,7 @@ catalog:
   diff: ^8.0.3
   discord.js: ^14.14.1
   domain-browser: ^4.22.0
-  effect: 3.19.16
+  effect: 3.20.0
   emoji-mart: ^5.5.2
   enquirer: ^2.3.6
   error-stack-parser: ^2.1.4
@@ -386,7 +386,7 @@ catalog:
   extensionless: ^1.9.9
   fast-check: ^3.19.0
   fast-deep-equal: ^3.1.3
-  fast-xml-parser: ^5.3.8
+  fast-xml-parser: ^5.5.7
   fetch-mock: ^11.0.0
   find-process: ^1.4.7
   flame-chart-js: ^3.3.0
@@ -635,6 +635,8 @@ catalog:
   xstate: ^4.37.0
   yaml: ^2.7.0
   yargs: ~16.2.0
+  youtube-caption-extractor: ^1.9.1
+  youtube-transcript: ^1.2.1
   zen-observable: ^0.10.0
   zen-push: ^0.3.1
   zone.js: ^0.15.0
