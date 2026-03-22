@@ -93,15 +93,15 @@ export class ObjectMetaIndex implements Index {
       target TEXT,
       parent TEXT,
       version INTEGER NOT NULL,
-      createdAt INTEGER DEFAULT 0,
-      updatedAt INTEGER DEFAULT 0
+      createdAt INTEGER,
+      updatedAt INTEGER
     )`;
 
     // Add `parent` column for tables created before it was introduced.
     yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN parent TEXT`, () => Effect.void);
     // Add timestamp columns for tables created before they were introduced.
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN createdAt INTEGER DEFAULT 0`, () => Effect.void);
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN updatedAt INTEGER DEFAULT 0`, () => Effect.void);
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN createdAt INTEGER`, () => Effect.void);
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN updatedAt INTEGER`, () => Effect.void);
 
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDxn ON objectMeta(spaceId, typeDxn)`;
