@@ -12,12 +12,12 @@ import { Button, Icon, IconButton } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { DXOS } from '../icons';
-
-import { type AnimationController, ComposerLogo, ComposerSpinner } from './experimental';
-import { ComposerLogo as AltComposerLogo, brandColors } from './ComposerLogo';
-
 import ident from '../../../assets/sounds/ident-2.mp3';
+
+import { DXOS } from '../icons';
+import { ComposerLogo as AltComposerLogo, brandColors } from './ComposerLogo';
+import { type AnimationController, ComposerLogo, ComposerSpinner } from './experimental';
+
 
 // https://pixabay.com/sound-effects/search/logo/?pagi=2
 

@@ -9,8 +9,8 @@ import { QueueService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
-import { Open } from './definitions';
 import { renderByline } from '../util';
+import { Open } from './definitions';
 
 export default Open.pipe(
   Operation.withHandler(
