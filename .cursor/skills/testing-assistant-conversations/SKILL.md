@@ -39,6 +39,8 @@ Implementation reference: `packages/core/assistant/src/testing/layer.ts`.
 
 ## Model memoization and `ALLOW_LLM_GENERATION`
 
+`AssistantTestLayer` includes memoization internally — you do **not** need to set up `MemoizedAiService` yourself. The layer wraps the AI service with `MemoizedAiService.layerTest` automatically (unless `disableLlmMemoization: true`).
+
 Default test AI goes through **`MemoizedAiService.layerTest`**, which:
 
 - Writes/reads **`<test-file>.conversations.json`** next to the test (path from `TestContextService`).
@@ -69,7 +71,7 @@ Packages that participate are tagged **`memoized-llm`** in their `moon.yml` (e.g
 
 ### Timeouts
 
-Pattern from existing tests: pass a longer timeout when generation is on, e.g. `MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000` as the last argument to `it.effect` / `it.scoped`.
+LLM conversation tests should use a longer timeout to account for generation. Pattern: `{ timeout: 60_000 }` or `MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000`. Note that `MemoizedAiService` is only needed as an import for the timeout helper — the layer already handles memoization internally.
 
 ### `TestHelpers.provideTestContext`
 

@@ -14,22 +14,26 @@ import {
   DatabaseBlueprint,
   EnableBlueprints,
   MarkdownBlueprint,
+  MarkdownHandlers,
   QueryBlueprints,
   ResearchBlueprint,
 } from '@dxos/assistant-toolkit';
 import { addBlueprints } from '@dxos/assistant-toolkit/testing';
 import { Blueprint } from '@dxos/blueprints';
+import { Database, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
+import { Markdown } from '@dxos/plugin-markdown/types';
+import { OperationHandlerSet } from '@dxos/operation';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
-  operationHandlers: BlueprintManagerHandlers,
-  types: [Blueprint.Blueprint],
-  blueprints: [DatabaseBlueprint.make(), MarkdownBlueprint.make(), ResearchBlueprint.make()],
+  operationHandlers: OperationHandlerSet.merge(BlueprintManagerHandlers, MarkdownHandlers),
+  types: [Blueprint.Blueprint, Markdown.Document],
+  blueprints: [BlueprintManagerBlueprint.make(), DatabaseBlueprint.make(), MarkdownBlueprint.make(), ResearchBlueprint.make()],
   tracing: 'pretty',
 });
 
@@ -88,5 +92,26 @@ describe('Blueprint Manager (Composer integration)', () => {
       TestHelpers.provideTestContext,
     ),
     { timeout: 30_000 },
+  );
+
+  it.scoped(
+    'enable and use Markdown blueprint in one prompt',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* addBlueprints([BlueprintManagerBlueprint]);
+        yield* AiConversationService.run({
+          prompt:
+            'Enable the Markdown blueprint and then create a markdown document called "Cookie Recipe" with a simple chocolate chip cookie recipe.',
+        });
+
+        const docs = yield* Database.runQuery(Query.type(Markdown.Document));
+        expect(docs.length).toBeGreaterThanOrEqual(1);
+        const recipe = docs.find((doc) => doc.name?.toLowerCase().includes('cookie'));
+        expect(recipe).toBeDefined();
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 240_000 },
   );
 });
