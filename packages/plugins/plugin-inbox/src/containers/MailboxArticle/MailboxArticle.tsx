@@ -6,12 +6,11 @@ import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
@@ -89,7 +88,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // Merge tags into mailbox labels.
   const mergedLabels = useMemo(() => {
-    const labels = { ...(mailbox.labels ?? {}) };
+    const labels = { ...mailbox.labels };
     for (const [_messageId, messageTags] of Object.entries(messageTagsMap)) {
       for (const tag of messageTags) {
         labels[tag.id] = tag.label;
@@ -137,17 +136,17 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             selection: { mode: 'single', id: message?.id },
           });
 
-          const companionId = `${COMPANION_PREFIX}message`;
+          const companion = companionSegment('message');
           if (layout.mode === 'simple') {
             // Simple layout: open drawer with message companion.
             void invokePromise(LayoutOperation.UpdateComplementary, {
-              subject: companionId,
+              subject: companion,
               state: 'expanded',
             });
           } else {
             // Deck layout: open as companion panel.
             void invokePromise(DeckOperation.ChangeCompanion, {
-              companion: companionId,
+              companion,
             });
           }
           break;
