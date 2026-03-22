@@ -36,6 +36,7 @@ export const PromptList = ({ subject }: PromptListProps) => {
                 db,
                 prompt: Ref.make(prompt),
                 objects: [subject],
+                // TODO(burdon): Concifgure from Prompt object.
                 blueprints: [DatabaseBlueprint.key, WebSearchBlueprint.key, MarkdownBlueprint.key],
                 background: true,
               });

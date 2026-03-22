@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Operation } from '@dxos/operation';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Database, Ref } from '@dxos/echo';
 import { QueueService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { Message, Transcript } from '@dxos/types';
 
 export const MessageWithRangeId = Schema.extend(

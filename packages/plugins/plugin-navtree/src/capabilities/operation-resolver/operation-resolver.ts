@@ -7,10 +7,10 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { expandAttendableId } from '@dxos/react-ui-attention';
 import { log } from '@dxos/log';
 import { OperationResolver } from '@dxos/operation';
 import { Graph } from '@dxos/plugin-graph';
+import { expandAttendableId } from '@dxos/react-ui-attention';
 
 import { NavTreeCapabilities } from '../../types';
 

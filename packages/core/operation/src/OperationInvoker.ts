@@ -13,6 +13,7 @@ import type { Key } from '@dxos/echo';
 import { DynamicRuntime, causeToError, runAndForwardErrors } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
+
 import { NoHandlerError } from './errors';
 import * as Operation from './Operation';
 import type * as OperationResolver from './OperationResolver';
