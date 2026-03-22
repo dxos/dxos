@@ -21,6 +21,7 @@ const make = () =>
     key: BLUEPRINT_KEY,
     name: 'Markdown',
     description: 'Work with markdown documents.',
+    agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },

@@ -132,9 +132,8 @@ export const gptNode = defineComputeNode({
 
     log.info('generating', { systemPrompt, prompt, historyMessages, tools });
 
-    const session = new AiSession();
-
     const tokenPubSub = yield* PubSub.unbounded<Response.StreamPart<any>>();
+    const logger = yield* ComputeEventLogger;
     const observer = GenerationObserver.make({
       onPart: (event) =>
         Effect.gen(function* () {
@@ -143,7 +142,7 @@ export const gptNode = defineComputeNode({
         }),
     });
 
-    const logger = yield* ComputeEventLogger;
+    const session = new AiSession({ observer });
     const fullPrompt = context != null ? `<context>\n${JSON.stringify(context)}\n</context>\n\n${prompt}` : prompt;
 
     // TODO(dmaretskyi): Is there a better way to satisfy deps?
@@ -166,7 +165,6 @@ export const gptNode = defineComputeNode({
           system: systemPrompt,
           prompt: fullPrompt,
           history: [...historyMessages],
-          observer,
         })
         .pipe(Effect.provide(runDeps));
       log.info('messages', { messages });
