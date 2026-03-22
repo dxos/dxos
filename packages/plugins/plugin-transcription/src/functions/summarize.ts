@@ -23,11 +23,12 @@ export default Summarize.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ transcript, notes }) {
-        const result = yield* new AiSession().run({
+        const result = yield* new AiSession({
+          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
+        }).run({
           prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,
           history: [],
           system: systemPrompt,
-          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
         });
 
         const summary = Function.pipe(

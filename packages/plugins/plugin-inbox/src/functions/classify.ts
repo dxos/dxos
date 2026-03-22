@@ -43,7 +43,9 @@ export default Classify.pipe(
         const messageContent = Function.pipe([message], Array.flatMap(renderMarkdown), Array.join('\n\n'));
         const tagList = tags.map((tag) => `- ${tag.label}`).join('\n');
 
-        const result = yield* new AiSession().run({
+        const result = yield* new AiSession({
+          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'classify' })),
+        }).run({
           prompt:
             `Classify the following email message by selecting the most appropriate tag from the available tags:\n\n` +
             `Email Message:\n${messageContent}\n\n` +
@@ -51,7 +53,6 @@ export default Classify.pipe(
             `Select the single most appropriate tag for this message. Return only the tag label.`,
           system: CLASSIFY_SYSTEM_PROMPT,
           history: [],
-          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'classify' })),
         });
 
         const selectedTagLabel = Function.pipe(

@@ -27,6 +27,8 @@ const make = () =>
         - {{key}} "{{name}}"{{#if description}} -- {{description}}{{/if}}{{#if agentCanEnable}} [agent-can-enable]{{/if}}
         {{/each}}
         </available_blueprints>
+
+        NOTE: You must enable the blueprint to use it, only then the tools from that blueprint will appear.
       `,
       inputs: [
         {

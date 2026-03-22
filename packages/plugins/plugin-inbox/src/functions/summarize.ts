@@ -63,12 +63,13 @@ export default Summarize.pipe(
           ),
         );
 
-        const result = yield* new AiSession().run({
+        const result = yield* new AiSession({
+          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
+        }).run({
           prompt: messages,
           history: [],
           system: systemPrompt,
           toolkit,
-          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
         });
 
         const summary = Function.pipe(

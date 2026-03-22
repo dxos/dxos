@@ -39,6 +39,7 @@ const TestLayer = AssistantTestLayer({
 
 const provideTestLayers = Effect.provide(AiConversationService.layerNewQueue().pipe(Layer.provideMerge(TestLayer)));
 
+// TODO(dmaretskyi): Move this file to where blueprint is defined.
 describe('Blueprint Manager (Composer integration)', () => {
   it.effect(
     'query-blueprints: lists blueprints from registry',
