@@ -9,6 +9,9 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 
 import { DailySummaryBlueprint } from '../../blueprints';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(AppCapabilities.BlueprintDefinition, DailySummaryBlueprint)),
-);
+const blueprintDefinition = Capability.makeModule<
+  [],
+  Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
+>(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, DailySummaryBlueprint)]));
+
+export default blueprintDefinition;

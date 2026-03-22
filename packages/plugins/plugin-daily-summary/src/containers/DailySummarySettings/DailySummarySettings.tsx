@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import type { Space } from '@dxos/client/echo';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
+import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { GenerateSummary } from '../../blueprints/functions/definitions';
@@ -20,7 +21,23 @@ export type DailySummarySettingsProps = {
 export const DailySummarySettings = ({ space }: DailySummarySettingsProps) => {
   const { t } = useTranslation(meta.id);
 
+  const triggers = useQuery(space.db, Filter.type(Trigger.Trigger));
+  const existingTrigger = useMemo(
+    () =>
+      triggers.find((trigger) => {
+        if (trigger.spec?.kind !== 'timer') {
+          return false;
+        }
+        const target = trigger.function?.target;
+        return target != null && 'key' in target && (target as Record<string, unknown>).key === GenerateSummary.meta.key;
+      }),
+    [triggers],
+  );
+
   const handleCreateTrigger = useCallback(() => {
+    if (existingTrigger) {
+      return;
+    }
     const trigger = Trigger.make({
       enabled: true,
       spec: {
@@ -30,7 +47,7 @@ export const DailySummarySettings = ({ space }: DailySummarySettingsProps) => {
       function: Ref.make(Operation.serialize(GenerateSummary)),
     });
     space.db.add(trigger);
-  }, [space]);
+  }, [space, existingTrigger]);
 
   return (
     <div className='flex flex-col gap-4 p-4'>
@@ -38,9 +55,10 @@ export const DailySummarySettings = ({ space }: DailySummarySettingsProps) => {
       <p className='text-sm text-description'>{t('create trigger description')}</p>
       <div>
         <IconButton
-          icon='ph--plus--regular'
+          icon={existingTrigger ? 'ph--check--regular' : 'ph--plus--regular'}
           label={t('create trigger label')}
           onClick={handleCreateTrigger}
+          disabled={!!existingTrigger}
         />
       </div>
     </div>

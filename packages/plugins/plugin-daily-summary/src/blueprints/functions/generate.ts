@@ -46,7 +46,7 @@ export const SUMMARY_STRUCTURE = trim`
   - Do NOT include the heading "Daily Summary" — the document already has a title.
   - Be concise. Each bullet should be one sentence.
   - If a previous summary is provided, note what changed since then.
-  - Try to pull actionable pointots from the changes and the context of the changes.
+  - Try to pull actionable points from the changes and the context of the changes.
   - Output raw markdown only, no wrapping code fences.
 `;
 
@@ -54,6 +54,8 @@ const MarkdownDocument = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Ref.Ref(Text.Text),
 }).pipe(Type.object({ typename: 'org.dxos.type.document', version: '0.1.0' }));
+
+type MarkdownDoc = Schema.Schema.Type<typeof MarkdownDocument>;
 
 const makeMarkdownDoc = ({ name, content }: { name: string; content: string }) => {
   const doc = Obj.make(MarkdownDocument, { name, content: Ref.make(Text.make(content)) });
@@ -151,19 +153,19 @@ const findExistingDaySummary = Effect.fn(function* (docName: string) {
   return docs.length > 0 ? docs[0] : null;
 });
 
-const updateDocContent = Effect.fn(function* (doc: any, newContent: string) {
+const updateDocContent = Effect.fn(function* (doc: MarkdownDoc, newContent: string) {
   const textRef = doc.content;
-  if (textRef && Ref.isRef(textRef)) {
-    const text: any = yield* Effect.promise(() => textRef.load());
+  if (Ref.isRef(textRef)) {
+    const text: Text.Text | undefined = yield* Effect.promise(() => textRef.load());
     if (text) {
-      Obj.change(text, (t: any) => {
-        t.content = newContent;
+      Obj.change(text, (mutable) => {
+        mutable.content = newContent;
       });
       return;
     }
   }
-  Obj.change(doc, (d: any) => {
-    d.content = Ref.make(Text.make(newContent));
+  Obj.change(doc, (mutable) => {
+    mutable.content = Ref.make(Text.make(newContent));
   });
 });
 
