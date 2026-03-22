@@ -28,7 +28,7 @@ export type D3ForceGraphProps = ThemedClassName<
     selection?: SelectionModel;
     grid?: boolean;
   } & Pick<GraphProps, 'drag'> &
-  ComponentPropsWithoutRef<'div'>
+    ComponentPropsWithoutRef<'div'>
 >;
 
 const EMPTY_ATOM = Atom.make<{ nodes: SpaceGraphNode[]; edges: SpaceGraphEdge[] }>({ nodes: [], edges: [] });

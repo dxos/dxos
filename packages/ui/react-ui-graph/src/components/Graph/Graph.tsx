@@ -100,12 +100,11 @@ const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge
     projector.updateData(model?.graph);
 
     // Subscribe to model changes if reactive model.
-    const unsubscribeModel =
-      model
-        ? model.subscribe(() => {
+    const unsubscribeModel = model
+      ? model.subscribe(() => {
           projector.updateData(model?.graph);
         })
-        : undefined;
+      : undefined;
 
     return combine(
       unsubscribeModel,
