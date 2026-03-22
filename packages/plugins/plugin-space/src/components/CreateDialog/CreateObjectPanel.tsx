@@ -111,10 +111,12 @@ export const CreateObjectPanel = ({
         onSave={handleCreateObject}
         testId='create-object-form'
       >
-        <Form.Content>
-          <Form.FieldSet />
-          <Form.Submit />
-        </Form.Content>
+        <Form.Viewport>
+          <Form.Content>
+            <Form.FieldSet />
+            <Form.Submit />
+          </Form.Content>
+        </Form.Viewport>
       </Form.Root>
     );
   }
@@ -124,13 +126,51 @@ export const CreateObjectPanel = ({
 
 CreateObjectPanel.displayName = 'CreateObjectPanel';
 
-const SelectSpace = ({
-  spaces,
-  defaultSpaceId,
-  onChange,
-}: { onChange?: (db: Database.Database) => void } & Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'>) => {
+type SelectTypeProps = Pick<CreateObjectPanelProps, 'options'> & {
+  onChange: (id: string) => void;
+};
+
+const SelectType = ({ options, onChange }: SelectTypeProps) => {
   const { t } = useTranslation(meta.id);
 
+  const { results, handleSearch } = useSearchListResults({
+    items: options,
+    extract: (option) => option.label,
+  });
+
+  return (
+    <SearchList.Root onSearch={handleSearch}>
+      <SearchList.Content classNames='gap-form-gap'>
+        <SearchList.Input
+          autoFocus
+          data-testid='create-object-form.schema-input'
+          placeholder={t('schema input placeholder')}
+        />
+        <SearchList.Viewport>
+          {results.map((option) => (
+            <SearchList.Item
+              key={option.id}
+              // classNames='flex items-center gap-form-gap'
+              value={option.id}
+              label={option.label}
+              icon={option.icon ?? 'ph--placeholder--regular'}
+              onSelect={() => onChange(option.id)}
+            />
+          ))}
+        </SearchList.Viewport>
+      </SearchList.Content>
+    </SearchList.Root>
+  );
+};
+
+type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'> & {
+  onChange?: (db: Database.Database) => void;
+};
+
+const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => {
+  const { t } = useTranslation(meta.id);
+
+  // TODO(burdon): ???
   const sortedSpaces = useMemo(
     () =>
       [...spaces].sort((a, b) => {
@@ -151,6 +191,7 @@ const SelectSpace = ({
     [spaces, defaultSpaceId, t],
   );
 
+  // TODO(burdon): Why localized?
   const { results, handleSearch } = useSearchListResults({
     items: sortedSpaces,
     extract: (space) =>
@@ -171,53 +212,18 @@ const SelectSpace = ({
           placeholder={t('space input placeholder')}
         />
         <SearchList.Viewport>
-          {results.map((space) => (
-            <SearchList.Item
-              key={space.id}
-              value={space.id}
-              label={toLocalizedString(
-                getSpaceDisplayName(space, {
-                  personal: space.id === defaultSpaceId,
-                }),
-                t,
-              )}
-              onSelect={() => onChange?.(space.db)}
-              classNames='flex items-center gap-2'
-            />
-          ))}
-        </SearchList.Viewport>
-      </SearchList.Content>
-    </SearchList.Root>
-  );
-};
-
-const SelectType = ({ options, onChange }: { options: CreateObjectOption[]; onChange: (id: string) => void }) => {
-  const { t } = useTranslation(meta.id);
-
-  const { results, handleSearch } = useSearchListResults({
-    items: options,
-    extract: (option) => option.label,
-  });
-
-  return (
-    <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='gap-form-gap'>
-        <SearchList.Input
-          autoFocus
-          data-testid='create-object-form.schema-input'
-          placeholder={t('schema input placeholder')}
-        />
-        <SearchList.Viewport>
-          {results.map((option) => (
-            <SearchList.Item
-              key={option.id}
-              value={option.id}
-              label={option.label}
-              icon={option.icon ?? 'ph--placeholder--regular'}
-              classNames='flex items-center gap-form-gap'
-              onSelect={() => onChange(option.id)}
-            />
-          ))}
+          {results.map((space) => {
+            const displayName = getSpaceDisplayName(space, { personal: space.id === defaultSpaceId });
+            return (
+              <SearchList.Item
+                key={space.id}
+                // classNames='flex items-center gap-2'
+                value={space.id}
+                label={toLocalizedString(displayName, t)} // TODO(burdon): Localized?
+                onSelect={() => onChange?.(space.db)}
+              />
+            );
+          })}
         </SearchList.Viewport>
       </SearchList.Content>
     </SearchList.Root>
