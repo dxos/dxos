@@ -13,10 +13,10 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
+import { mx } from '@dxos/ui-theme';
 
 export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
   const { t } = useTranslation(meta.id);
@@ -54,12 +54,10 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
                 <Input.Root>
                   <Input.Label>{t('related objects label')}</Input.Label>
                 </Input.Root>
-                <Masonry.Root<Entity.Unknown>
-                  items={related}
-                  render={ObjectCard}
-                  columnCount={singleColumn ? 1 : undefined}
-                  intrinsicHeight
-                />
+                <Masonry.Root Tile={ObjectCard} columnCount={singleColumn ? 1 : undefined}>
+                  <label className='mt-2 shrink-0 text-sm text-description'>{t('related objects label')}</label>
+                  <Masonry.Content items={related} />
+                </Masonry.Root>
               </div>
             )}
           </ScrollArea.Viewport>
