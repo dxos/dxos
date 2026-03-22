@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { QueryBlueprints, EnableBlueprints, BlueprintManagerHandlers } from './functions';
+import { QueryBlueprints, EnableBlueprints } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.blueprint-manager';
 
@@ -43,7 +43,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: BlueprintManagerHandlers,
   make,
 };
 

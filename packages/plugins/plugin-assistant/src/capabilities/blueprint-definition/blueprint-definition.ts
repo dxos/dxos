@@ -9,6 +9,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import {
   AgentHandlers,
   BlueprintManagerBlueprint,
+  BlueprintManagerHandlers,
   BrowserBlueprint,
   DatabaseBlueprint,
   DiscordBlueprint,
@@ -44,6 +45,7 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
     Capability.contributes(AppCapabilities.BlueprintDefinition, ProjectWizardBlueprint),
 
     Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
+    Capability.contributes(Capabilities.OperationHandler, BlueprintManagerHandlers),
     Capability.contributes(Capabilities.OperationHandler, EntityExtractionHandlers),
     Capability.contributes(Capabilities.OperationHandler, ProjectHandlers),
   ]),
