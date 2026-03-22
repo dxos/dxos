@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { companionSegment } from '@dxos/app-toolkit';
-import { DeckOperation } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
 
