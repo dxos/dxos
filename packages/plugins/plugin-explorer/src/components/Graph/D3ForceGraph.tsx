@@ -19,6 +19,7 @@ import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '
 import { getHashStyles } from '@dxos/ui-theme';
 
 import '@dxos/react-ui-graph/styles/graph.css';
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
 export type D3ForceGraphProps = ThemedClassName<
   {
@@ -27,10 +28,15 @@ export type D3ForceGraphProps = ThemedClassName<
     selection?: SelectionModel;
     grid?: boolean;
   } & Pick<GraphProps, 'drag'> &
-    ComponentPropsWithoutRef<'div'>
+  ComponentPropsWithoutRef<'div'>
 >;
 
+const EMPTY_ATOM = Atom.make<{ nodes: SpaceGraphNode[]; edges: SpaceGraphEdge[] }>({ nodes: [], edges: [] });
+
 export const D3ForceGraph = ({ classNames, model, selection: _selection, grid, drag, ...props }: D3ForceGraphProps) => {
+  // TODO(wittjosiah): This should go into Graph.tsx but for some reason doesn't work.
+  useAtomValue(model?.graphAtom ?? EMPTY_ATOM);
+
   const context = useRef<SVGContext>(null);
   const projector = useMemo<GraphForceProjector | undefined>(() => {
     if (context.current) {

@@ -5,7 +5,7 @@
 import React, { type JSX, type Ref, forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { combine } from '@dxos/async';
-import { type Graph as Graph$, type GraphModel } from '@dxos/graph';
+import { GraphModel, type Graph as Graph$ } from '@dxos/graph';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -28,7 +28,7 @@ export type GraphController = {
 
 export type GraphProps<Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge.Any = any> = ThemedClassName<
   Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes'> & {
-    model?: GraphModel.GraphModel<Node, Edge>; // TODO(burdon): ReactiveGraphModel
+    model?: GraphModel.ReactiveGraphModel<Node, Edge>;
     projector?: GraphProjector<Node>;
     renderer?: GraphRenderer<Node>;
     drag?: boolean;
@@ -54,6 +54,8 @@ const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge
 ) => {
   const context = useSvgContext();
   const graphRef = useRef<SVGGElement>(null);
+  // TODO(wittjosiah): This doesn't work for some reason.
+  // const graph = useAtomValue(model?.graphAtom ?? EMPTY_ATOM);
 
   const { projector, renderer } = useMemo(() => {
     let projector = projectorProp;
@@ -99,10 +101,10 @@ const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge
 
     // Subscribe to model changes if reactive model.
     const unsubscribeModel =
-      model && 'subscribe' in model
-        ? (model as GraphModel.ReactiveGraphModel).subscribe(() => {
-            projector.updateData(model?.graph);
-          })
+      model
+        ? model.subscribe(() => {
+          projector.updateData(model?.graph);
+        })
         : undefined;
 
     return combine(
