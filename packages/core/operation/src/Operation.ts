@@ -10,6 +10,8 @@ import type * as Types from 'effect/Types';
 
 import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 
+import type { Service } from './service';
+
 // @import-as-namespace
 
 /**
@@ -164,7 +166,7 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
 
 /**
  * Attaches a handler to an Operation definition.
- * The handler's required services (R) must be a subset of the services declared in the operation.
+ * The handler may use any services declared in the operation, plus Operation.Service (always available).
  * Dual API: can be called directly or used in a pipe.
  *
  * @example
@@ -190,15 +192,15 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
  */
 export const withHandler: {
   <Def extends Definition<any, any>, E = never>(
-    handler: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def>>,
+    handler: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
   ): (op: Def) => WithHandler<Def>;
   <Def extends Definition<any, any>, E = never>(
     op: Def,
-    handler: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def>>,
+    handler: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
   ): WithHandler<Def>;
 } = <Def extends Definition<any, any>, E = never>(
-  opOrHandler: Def | Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def>>,
-  handler?: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def>>,
+  opOrHandler: Def | Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
+  handler?: Handler<Definition.Input<Def>, Definition.Output<Def>, E, Definition.Services<Def> | Service>,
 ): WithHandler<Def> => {
   // If called with just handler (piped usage).
   if (handler === undefined) {
@@ -206,7 +208,7 @@ export const withHandler: {
       Definition.Input<Def>,
       Definition.Output<Def>,
       E,
-      Definition.Services<Def>
+      Definition.Services<Def> | Service
     >;
     return ((op: Def) => ({
       ...op,

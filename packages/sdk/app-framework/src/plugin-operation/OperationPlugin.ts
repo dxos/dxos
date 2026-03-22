@@ -13,7 +13,7 @@ const HistoryCapabilities = Capability.lazy('HistoryCapabilities', () => import(
 export const OperationPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvents.ManagedRuntimeReady,
-    activatesBefore: [ActivationEvents.SetupOperationResolver],
+    activatesBefore: [ActivationEvents.SetupOperationHandler],
     activatesAfter: [ActivationEvents.OperationInvokerReady],
     activate: OperationInvoker,
   }),

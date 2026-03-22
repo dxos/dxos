@@ -9,7 +9,8 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { translations as boardTranslations } from '@dxos/react-ui-board';
 
 import { ReactSurface } from './capabilities';

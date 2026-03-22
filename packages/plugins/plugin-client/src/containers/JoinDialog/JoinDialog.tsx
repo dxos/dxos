@@ -6,14 +6,14 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { ObservabilityOperation } from '@dxos/plugin-observability/types';
+import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { type InvitationResult } from '@dxos/react-client/invitations';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
-import { ClientOperation } from '../../types';
+import { ClientOperation } from '../../operations';
 
 export const JoinDialog = (props: JoinPanelProps) => {
   const { invokePromise } = useOperationInvoker();

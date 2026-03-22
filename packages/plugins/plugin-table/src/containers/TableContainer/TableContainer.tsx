@@ -14,7 +14,7 @@ import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@
 
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import {
@@ -32,7 +32,7 @@ import {
 import { getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import { type Table } from '../../types';
+import { type Table } from '../../operations';
 
 export type TableContainerProps = SurfaceComponentProps<Table.Table>;
 

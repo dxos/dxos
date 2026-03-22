@@ -17,7 +17,8 @@ import { Expando } from '@dxos/schema';
 
 import { getActiveSpace } from '../../../hooks';
 import { meta } from '../../../meta';
-import { SPACE_TYPE, SpaceCapabilities, SpaceOperation } from '../../../types';
+import { SPACE_TYPE, SpaceCapabilities } from '../../../types';
+import { SpaceOperation } from '../../../operations';
 import { SHARED, getSpaceDisplayName } from '../../../util';
 
 import {

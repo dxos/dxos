@@ -9,10 +9,11 @@ import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { ViewModel } from '@dxos/schema';
 
-import { AppGraphBuilder, BlueprintDefinition, MapState, OperationResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, BlueprintDefinition, MapState, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Map, MapAction } from './types';
@@ -51,7 +52,7 @@ export const MapPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Map.Map] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

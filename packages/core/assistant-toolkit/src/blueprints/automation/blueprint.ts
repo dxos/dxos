@@ -9,7 +9,7 @@ import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
 import { Trigger } from '@dxos/functions';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { Operation } from '@dxos/operation';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/automation';
 
@@ -103,7 +103,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: OperationHandlerSet.empty,
   make,
 };
 

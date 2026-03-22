@@ -10,7 +10,8 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation, type Obj, Ref } from '@dxos/echo';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 import { Operation } from '@dxos/operation';
-import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
 
@@ -21,12 +22,13 @@ import {
   BlueprintDefinition,
   MarkdownSettings,
   MarkdownState,
-  OperationResolver,
+  OperationHandler,
   ReactSurface,
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Markdown, MarkdownEvents, MarkdownOperation } from './types';
+import { Markdown, MarkdownEvents } from './types';
+import { MarkdownOperation } from './operations';
 import { serializer } from './util';
 
 export const MarkdownPlugin = Plugin.define(meta).pipe(
@@ -69,7 +71,7 @@ export const MarkdownPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Markdown.Document, Text.Text] }),
   AppPlugin.addSurfaceModule({
     activate: ReactSurface,

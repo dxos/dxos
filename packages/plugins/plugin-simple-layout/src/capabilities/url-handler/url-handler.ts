@@ -20,7 +20,7 @@ import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapabilit
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokeSync } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
 
     /**
      * Handle navigation from a pathname.
@@ -32,11 +32,11 @@ export default Capability.makeModule(
       const qualifiedId = fromUrlPath(pathname);
       const workspace = getWorkspaceFromPath(qualifiedId);
 
-      invokeSync(LayoutOperation.SwitchWorkspace, { subject: workspace });
+      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: workspace });
 
       const activeId = qualifiedId !== workspace ? qualifiedId : undefined;
       if (activeId) {
-        invokeSync(LayoutOperation.Open, { subject: [activeId] });
+        void invokePromise(LayoutOperation.Open, { subject: [activeId] });
       }
     };
 

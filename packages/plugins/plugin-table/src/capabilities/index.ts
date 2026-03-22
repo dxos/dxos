@@ -3,5 +3,5 @@
 //
 
 export * from './blueprint-definition';
-export * from './operation-resolver';
+export * from './operation-handler';
 export * from './react-surface';

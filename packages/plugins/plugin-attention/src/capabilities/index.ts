@@ -3,5 +3,5 @@
 //
 
 export * from './keyboard';
-export * from './operation-resolver';
+export * from './operation-handler';
 export * from './react-context';

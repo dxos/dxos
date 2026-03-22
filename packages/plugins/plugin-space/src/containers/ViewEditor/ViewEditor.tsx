@@ -17,7 +17,7 @@ import { ViewModel } from '@dxos/schema';
 
 import { resolveSchemaWithRegistry } from '../../helpers';
 import { useTypeOptions } from '../../hooks';
-import { SpaceOperation } from '../../types';
+import { SpaceOperation } from '../../operations';
 
 export type ViewEditorProps = { view: View.View };
 

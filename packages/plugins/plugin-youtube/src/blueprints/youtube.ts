@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { ClearSyncedVideos, Sync, YouTubeHandlers } from '../functions';
+import { ClearSyncedVideos, Sync } from '../operations';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/youtube';
 
@@ -46,7 +46,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: YouTubeHandlers,
   make,
 };
 

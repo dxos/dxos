@@ -12,4 +12,5 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/types/index.ts'
+      - '--entryPoint=src/operations/index.ts'
       - '--platform=browser'

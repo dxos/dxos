@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { MarkdownHandlers, Create, Open, Update } from './functions';
+import { Create, Open, Update } from '../operations/definitions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
 
@@ -37,7 +37,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: MarkdownHandlers,
   make,
 };
 
