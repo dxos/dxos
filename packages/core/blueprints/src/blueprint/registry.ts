@@ -2,13 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+
+import { Database, Filter, Obj } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import { Blueprint } from './blueprint';
-import * as Context from 'effect/Context';
-import { BaseError } from '@dxos/errors';
-import * as Effect from 'effect/Effect';
-import { Database, Filter, Obj } from '@dxos/echo';
 /**
  * Blueprint registry.
  */

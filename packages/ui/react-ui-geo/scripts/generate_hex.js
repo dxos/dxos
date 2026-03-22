@@ -5,8 +5,8 @@
 //
 
 const fs = require('fs');
-
 const path = require('path');
+
 const h3 = require('geojson2h3');
 
 const resolutions = [3, 4];

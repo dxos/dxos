@@ -6,6 +6,7 @@
 
 const fs = require('fs');
 const path = require('path');
+
 const JSONStream = require('JSONStream');
 
 // https://github.com/algolia/datasets/tree/master/airports
