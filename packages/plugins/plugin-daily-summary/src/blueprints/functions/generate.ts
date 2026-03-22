@@ -14,13 +14,39 @@ import { FunctionInvocationService, TracingService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { Text } from '@dxos/schema';
 import { CollectionModel } from '@dxos/schema';
+import { trim } from '@dxos/util';
 
-import { SUMMARY_STRUCTURE } from '../daily-summary-blueprint';
 import { GenerateSummary } from './definitions';
 
 const DEFAULT_LOOKBACK_HOURS = 24;
 const SUMMARIES_COLLECTION_NAME = 'Summaries';
 const SUMMARY_TITLE_PREFIX = 'Daily Summary —';
+
+/**
+ * Predefined structure for the AI-generated daily summary.
+ * Used as the system prompt for the summarization model.
+ */
+export const SUMMARY_STRUCTURE = trim`
+  Given a list of recently modified objects,
+  generate a concise daily summary in markdown, 
+  try to pull insights from the changes and the context of the changes.
+  Focus on the meaningful changes and try to avoid changes in the system objects.
+
+  Follow this exact structure:
+
+  ## Highlights
+  Bullet points capturing the most significant changes or accomplishments.
+
+  ## TODOs
+  List of TODOs that is inferred from the changes and the context of the changes.
+
+  Rules:
+  - Do NOT include the heading "Daily Summary" — the document already has a title.
+  - Be concise. Each bullet should be one sentence.
+  - If a previous summary is provided, note what changed since then.
+  - Try to pull actionable pointots from the changes and the context of the changes.
+  - Output raw markdown only, no wrapping code fences.
+`;
 
 const MarkdownDocument = Schema.Struct({
   name: Schema.optional(Schema.String),
