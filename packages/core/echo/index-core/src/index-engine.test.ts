@@ -118,6 +118,7 @@ describe('IndexEngine', () => {
         documentId: 'doc-1',
         queueId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: ObjectId.random(),
           [ATTR_TYPE]: TYPE_DEFAULT,
@@ -154,6 +155,7 @@ describe('IndexEngine', () => {
         documentId: obj1.documentId,
         queueId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: { id: obj1.data.id, [ATTR_TYPE]: obj1.data[ATTR_TYPE], title: 'Hello World' },
       };
       dataSource.push([obj1Updated]);
@@ -193,6 +195,7 @@ describe('IndexEngine', () => {
           queueId: null,
           documentId: 'd1',
           recordId: null,
+          updatedAt: Date.now(),
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_A,
@@ -204,6 +207,7 @@ describe('IndexEngine', () => {
           queueId: null,
           documentId: 'd2',
           recordId: null,
+          updatedAt: Date.now(),
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_A,
@@ -215,6 +219,7 @@ describe('IndexEngine', () => {
           queueId: null,
           documentId: 'd3',
           recordId: null,
+          updatedAt: Date.now(),
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_B,

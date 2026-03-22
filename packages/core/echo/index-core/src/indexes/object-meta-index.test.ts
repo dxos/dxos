@@ -43,6 +43,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectId,
           [ATTR_TYPE]: TYPE_PERSON,
@@ -77,6 +78,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectIdMatch,
           [ATTR_TYPE]: TYPE_WITH_UNDERSCORE,
@@ -90,6 +92,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectIdFalsePositive,
           [ATTR_TYPE]: TYPE_UNDERSCORE_FALSE_POSITIVE,
@@ -125,6 +128,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectId1,
           [ATTR_TYPE]: TYPE_PERSON,
@@ -137,6 +141,7 @@ describe('ObjectMetaIndex', () => {
         queueId: null,
         documentId: 'doc-123',
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectId2,
           [ATTR_TYPE]: TYPE_RELATION,
@@ -217,6 +222,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectId1,
           [ATTR_TYPE]: TYPE_PERSON,
@@ -229,6 +235,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectId2,
           [ATTR_TYPE]: TYPE_RELATION,
@@ -241,6 +248,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: relationId,
           [ATTR_TYPE]: TYPE_RELATION,
@@ -320,7 +328,7 @@ describe('ObjectMetaIndex', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  it.effect('should set createdAt and updatedAt on insert and updatedAt on update', () =>
+  it.effect('should set createdAt and updatedAt from source timestamp on insert and updatedAt on update', () =>
     Effect.gen(function* () {
       const index = new ObjectMetaIndex();
       yield* index.migrate();
@@ -329,11 +337,13 @@ describe('ObjectMetaIndex', () => {
       const objectId = ObjectId.random();
       const queueId = ObjectId.random();
 
+      const insertTimestamp = 1700000000000;
       const item: IndexerObject = {
         spaceId,
         queueId,
         documentId: null,
         recordId: null,
+        updatedAt: insertTimestamp,
         data: {
           id: objectId,
           [ATTR_TYPE]: TYPE_PERSON,
@@ -341,31 +351,19 @@ describe('ObjectMetaIndex', () => {
         },
       };
 
-      const beforeInsert = Date.now();
       yield* index.update([item]);
-      const afterInsert = Date.now();
 
       const results = yield* index.query({ spaceId, typeDxn: TYPE_PERSON });
       expect(results.length).toBe(1);
-      expect(results[0].createdAt).toBeGreaterThanOrEqual(beforeInsert);
-      expect(results[0].createdAt).toBeLessThanOrEqual(afterInsert);
-      expect(results[0].updatedAt).toBeGreaterThanOrEqual(beforeInsert);
-      expect(results[0].updatedAt).toBeLessThanOrEqual(afterInsert);
-      expect(results[0].createdAt).toBe(results[0].updatedAt);
+      expect(results[0].createdAt).toBe(insertTimestamp);
+      expect(results[0].updatedAt).toBe(insertTimestamp);
 
-      const createdAt = results[0].createdAt;
-
-      // Small delay to ensure distinct timestamp (use promise-based delay to avoid TestClock issues).
-      yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 15)));
-
-      const beforeUpdate = Date.now();
-      yield* index.update([{ ...item, data: { ...item.data, [ATTR_DELETED]: true } }]);
-      const afterUpdate = Date.now();
+      const updateTimestamp = 1700001000000;
+      yield* index.update([{ ...item, updatedAt: updateTimestamp, data: { ...item.data, [ATTR_DELETED]: true } }]);
 
       const updated = yield* index.query({ spaceId, typeDxn: TYPE_PERSON });
-      expect(updated[0].createdAt).toBe(createdAt);
-      expect(updated[0].updatedAt).toBeGreaterThanOrEqual(beforeUpdate);
-      expect(updated[0].updatedAt).toBeLessThanOrEqual(afterUpdate);
+      expect(updated[0].createdAt).toBe(insertTimestamp);
+      expect(updated[0].updatedAt).toBe(updateTimestamp);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -380,19 +378,20 @@ describe('ObjectMetaIndex', () => {
       const objectId1 = ObjectId.random();
       const objectId2 = ObjectId.random();
 
+      const earlyTimestamp = 1700000000000;
+      const midpoint = 1700000500000;
+      const lateTimestamp = 1700001000000;
+
       yield* index.update([
         {
           spaceId,
           queueId: queueId1,
           documentId: null,
           recordId: null,
+          updatedAt: earlyTimestamp,
           data: { id: objectId1, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
         },
       ]);
-
-      yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 15)));
-      const midpoint = Date.now();
-      yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 15)));
 
       yield* index.update([
         {
@@ -400,6 +399,7 @@ describe('ObjectMetaIndex', () => {
           queueId: queueId2,
           documentId: null,
           recordId: null,
+          updatedAt: lateTimestamp,
           data: { id: objectId2, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
         },
       ]);
@@ -408,7 +408,7 @@ describe('ObjectMetaIndex', () => {
       const all = yield* index.queryByTimeRange({ spaceIds: [spaceId], includeAllQueues: true });
       expect(all.map((_) => _.objectId).sort()).toEqual([objectId1, objectId2].sort());
 
-      // Query only objects updated after midpoint (object2 was inserted after the gap).
+      // Query only objects updated after midpoint (object2 has lateTimestamp).
       const afterMid = yield* index.queryByTimeRange({
         spaceIds: [spaceId],
         updatedAfter: midpoint,
@@ -416,7 +416,7 @@ describe('ObjectMetaIndex', () => {
       });
       expect(afterMid.map((_) => _.objectId)).toEqual([objectId2]);
 
-      // Query only objects created before midpoint (object1 was inserted before the gap).
+      // Query only objects created before midpoint (object1 has earlyTimestamp).
       const beforeMid = yield* index.queryByTimeRange({
         spaceIds: [spaceId],
         createdBefore: midpoint,

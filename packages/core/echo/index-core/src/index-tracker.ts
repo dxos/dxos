@@ -35,6 +35,11 @@ export const IndexCursor = Schema.Struct({
 });
 export interface IndexCursor extends Schema.Schema.Type<typeof IndexCursor> {}
 
+/**
+ * Deprecated index names that are no longer used. Will be cleaned up on migration.
+ */
+const DEPRECATED_INDEX_NAMES = ['fts'];
+
 export class IndexTracker {
   migrate = Effect.fn('IndexTracker.migrate')(function* () {
     const sql = yield* SqlClient.SqlClient;
@@ -49,6 +54,10 @@ export class IndexTracker {
       cursor,
       PRIMARY KEY (indexName, spaceId, sourceName, resourceId)
     )`;
+
+    yield* Effect.forEach(DEPRECATED_INDEX_NAMES, (indexName) => {
+      return sql`DELETE FROM indexCursor WHERE indexName = ${indexName}`;
+    });
   });
 
   queryCursors = Effect.fn('IndexTracker.queryCursors')(

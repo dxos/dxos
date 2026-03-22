@@ -101,6 +101,7 @@ describe('FtsIndex', () => {
         queueId: null,
         documentId: 'doc-1',
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectId,
           [ATTR_TYPE]: DXN.parse('dxn:type:com.example.type.person:0.1.0').toString(),
@@ -120,6 +121,7 @@ describe('FtsIndex', () => {
         queueId: null,
         documentId: 'doc-1',
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectId,
           [ATTR_TYPE]: TYPE_DEFAULT,
@@ -227,6 +229,7 @@ describe('FtsIndex', () => {
         queueId: null,
         documentId: 'doc-s1',
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: ObjectId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
@@ -239,6 +242,7 @@ describe('FtsIndex', () => {
         queueId: null,
         documentId: 'doc-s2',
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: ObjectId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
@@ -378,6 +382,7 @@ describe('FtsIndex', () => {
         queueId: null,
         documentId: 'doc-space',
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: ObjectId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
@@ -390,6 +395,7 @@ describe('FtsIndex', () => {
         queueId: queue1,
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: ObjectId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
@@ -402,6 +408,7 @@ describe('FtsIndex', () => {
         queueId: queue2,
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: ObjectId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
@@ -450,6 +457,7 @@ describe('FtsIndex', () => {
         queueId: null,
         documentId: 'doc-space',
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: ObjectId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
@@ -462,6 +470,7 @@ describe('FtsIndex', () => {
         queueId,
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: ObjectId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
@@ -511,6 +520,7 @@ describe('FtsIndex', () => {
         queueId: null,
         documentId: 'doc-s1',
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: ObjectId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
@@ -523,6 +533,7 @@ describe('FtsIndex', () => {
         queueId: null,
         documentId: 'doc-s2',
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: ObjectId.random(),
           [ATTR_TYPE]: TYPE_PERSON,
@@ -535,6 +546,7 @@ describe('FtsIndex', () => {
         queueId: queueInSpace2,
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: ObjectId.random(),
           [ATTR_TYPE]: TYPE_PERSON,

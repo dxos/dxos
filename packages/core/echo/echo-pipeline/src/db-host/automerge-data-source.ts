@@ -116,11 +116,9 @@ export class AutomergeDataSource implements IndexDataSource {
           const spaceKey = PublicKey.fromHex(spaceKeyHex);
           const spaceId = yield* Effect.promise(() => createIdFromSpaceKey(spaceKey));
 
-          // Determine which objects actually changed by diffing Automerge patches.
           const existingCursor = cursorMap.get(documentId);
-          const changedObjectIds = getChangedObjectIds(doc, existingCursor, docHeads);
+          const { changedObjectIds, updatedAt } = inspectDocChanges(doc, existingCursor);
 
-          // Extract only changed objects (or all if this is a new document).
           const docObjects = doc.objects ?? {};
           for (const [objectId, structure] of Object.entries(docObjects)) {
             if (changedObjectIds && !changedObjectIds.has(objectId)) {
@@ -132,6 +130,7 @@ export class AutomergeDataSource implements IndexDataSource {
               queueId: null,
               recordId: null,
               data: objectStructureToJson(objectId, structure),
+              updatedAt,
             });
           }
 
@@ -152,33 +151,42 @@ export class AutomergeDataSource implements IndexDataSource {
 }
 
 /**
- * Inspects Automerge patches to determine which object IDs were modified.
- * Returns null when all objects should be indexed (new document with no previous cursor).
+ * Determines which ECHO objects changed and the document-level max change timestamp.
+ *
+ * Uses `A.diff` to extract changed objectIds from patch paths (`["objects", objectId, ...]`),
+ * and `A.getChangesMetaSince` for the max timestamp.
+ * Returns `changedObjectIds: null` when all objects should be indexed (new document or error).
  */
-const getChangedObjectIds = (
+const inspectDocChanges = (
   doc: DatabaseDirectory,
   existingCursor: string | undefined,
-  newHeads: Heads,
-): Set<string> | null => {
+): { changedObjectIds: Set<string> | null; updatedAt: number } => {
   if (!existingCursor) {
-    return null; // New document — index everything.
-  }
-
-  const oldHeads = headsCodec.decode(existingCursor) as unknown as Heads;
-  if (oldHeads.length === 0) {
-    return null;
+    return { changedObjectIds: null, updatedAt: Date.now() };
   }
 
   try {
-    const patches = A.diff(doc, oldHeads, newHeads);
-    const changedIds = new Set<string>();
+    const oldHeads = headsCodec.decode(existingCursor);
+
+    const patches = A.diff(doc, oldHeads, A.getHeads(doc));
+    const changedObjectIds = new Set<string>();
     for (const patch of patches) {
       if (patch.path.length >= 2 && patch.path[0] === 'objects') {
-        changedIds.add(String(patch.path[1]));
+        changedObjectIds.add(String(patch.path[1]));
       }
     }
-    return changedIds;
+
+    const changes = A.getChangesMetaSince(doc, oldHeads);
+    let maxTime = 0;
+    for (const change of changes) {
+      if (change.time > maxTime) {
+        maxTime = change.time;
+      }
+    }
+    const updatedAt = maxTime > 0 ? maxTime * 1000 : Date.now();
+
+    return { changedObjectIds, updatedAt };
   } catch {
-    return null; // On any diff failure, fall back to indexing all objects.
+    return { changedObjectIds: null, updatedAt: Date.now() };
   }
 };

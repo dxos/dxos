@@ -133,6 +133,7 @@ export class QueueDataSource implements IndexDataSource {
                 documentId: null,
                 recordId: null,
                 data,
+                updatedAt: block.timestamp,
               });
             } catch (err) {
               log.warn('Failed to parse block data for indexing', { spaceId: cursor.spaceId, err });

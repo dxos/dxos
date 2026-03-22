@@ -92,15 +92,16 @@ export class ObjectMetaIndex implements Index {
       source TEXT,
       target TEXT,
       parent TEXT,
-      version INTEGER NOT NULL
+      version INTEGER NOT NULL,
+      createdAt INTEGER DEFAULT 0,
+      updatedAt INTEGER DEFAULT 0
     )`;
 
     // Add `parent` column for tables created before it was introduced.
     yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN parent TEXT`, () => Effect.void);
-
     // Add timestamp columns for tables created before they were introduced.
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN createdAt INTEGER`, () => Effect.void);
-    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN updatedAt INTEGER`, () => Effect.void);
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN createdAt INTEGER DEFAULT 0`, () => Effect.void);
+    yield* Effect.catchAll(sql`ALTER TABLE objectMeta ADD COLUMN updatedAt INTEGER DEFAULT 0`, () => Effect.void);
 
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDxn ON objectMeta(spaceId, typeDxn)`;
@@ -281,7 +282,7 @@ export class ObjectMetaIndex implements Index {
               // Parent (nullable).
               const parent = castData[ATTR_PARENT] ?? null;
 
-              const now = Date.now();
+              const sourceTimestamp = object.updatedAt;
 
               if (existing.length > 0) {
                 yield* sql`
@@ -293,7 +294,7 @@ export class ObjectMetaIndex implements Index {
                     source = ${source},
                     target = ${target},
                     parent = ${parent},
-                    updatedAt = ${now}
+                    updatedAt = ${sourceTimestamp}
                   WHERE recordId = ${existing[0].recordId}
                 `;
               } else {
@@ -306,7 +307,7 @@ export class ObjectMetaIndex implements Index {
                     ${objectId}, ${queueId ?? ''}, ${spaceId}, ${documentId ?? ''}, 
                     ${entityKind}, ${typeDxn}, ${deleted}, 
                     ${source}, ${target}, ${parent}, ${version},
-                    ${now}, ${now}
+                    ${sourceTimestamp}, ${sourceTimestamp}
                   )
                 `;
               }
