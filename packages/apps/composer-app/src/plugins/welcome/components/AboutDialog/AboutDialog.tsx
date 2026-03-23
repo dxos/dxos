@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { formatDistance } from 'date-fns/formatDistance';
+import { formatDistance } from 'date-fns';
 import React from 'react';
 
 import { Button, Column, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
