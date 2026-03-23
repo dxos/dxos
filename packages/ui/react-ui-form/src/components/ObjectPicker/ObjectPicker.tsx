@@ -10,6 +10,7 @@ import { Combobox, useSearchListInput, useSearchListResults } from '@dxos/react-
 
 import { translationKey } from '../../translations';
 import { Form } from '../Form';
+import { type FormFieldMap } from '../Form/FormFieldComponent';
 
 export type RefOption = {
   id: string;
@@ -24,6 +25,7 @@ export type ObjectPickerContentProps = ThemedClassName<{
   createOptionIcon?: string;
   createSchema?: Schema.Schema.AnyNoContext;
   createInitialValuePath?: string;
+  createFieldMap?: FormFieldMap;
   onCreate?: (values: any) => void;
   onSelect: (id: string) => void;
 }>;
@@ -37,6 +39,7 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
       createOptionLabel,
       createOptionIcon,
       createInitialValuePath,
+      createFieldMap,
       onSelect,
       onCreate,
       ...props
@@ -93,7 +96,8 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
             <Form.Root
               testId='create-referenced-object-form'
               schema={createSchema}
-              values={createInitialValuePath ? { [createInitialValuePath]: formInitialValue } : {}}
+              defaultValues={createInitialValuePath ? { [createInitialValuePath]: formInitialValue } : {}}
+              fieldMap={createFieldMap}
               onSave={handleFormSave}
               onCancel={handleFormCancel}
             >
@@ -124,10 +128,10 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
               classNames='flex items-center gap-2'
             />
           ))}
-          {createOptionLabel && createOptionIcon && createSchema && onCreate && (
+          {createSchema && onCreate && (
             <CreateItem
               createOptionLabel={createOptionLabel}
-              createOptionIcon={createOptionIcon}
+              createOptionIcon={createOptionIcon ?? 'ph--plus--regular'}
               onCreateItemSelect={(query: string) => {
                 setFormInitialValue(query);
                 setShowForm(true);
@@ -146,17 +150,21 @@ const CreateItem = ({
   createOptionIcon,
   onCreateItemSelect,
 }: {
-  createOptionLabel: [string, { ns: string }];
+  createOptionLabel?: [string, { ns: string }];
   createOptionIcon: string;
   onCreateItemSelect: (query: string) => void;
 }) => {
   const { t } = useTranslation(translationKey);
   const { query } = useSearchListInput();
 
+  const label = createOptionLabel
+    ? t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })
+    : t('create option label');
+
   return (
     <Combobox.Item
       value='__create__'
-      label={t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })}
+      label={label}
       icon={createOptionIcon}
       classNames='flex items-center gap-2'
       closeOnSelect={false}
