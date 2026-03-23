@@ -237,7 +237,14 @@ type SearchListContentProps = ComposableProps<HTMLDivElement, ThemedClassName<Co
 
 const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { role: 'none', className: 'flex flex-col' })} ref={forwardedRef}>
+    <div
+      {...composableProps(props, {
+        role: 'none',
+        className:
+          'flex flex-col min-h-0 [.dx-column_&]:col-span-full [.dx-column_&]:grid [.dx-column_&]:grid-cols-subgrid [.dx-column_&]:[&>:not(.dx-container)]:col-start-2',
+      })}
+      ref={forwardedRef}
+    >
       {children}
     </div>
   );
@@ -384,7 +391,7 @@ type SearchListViewportProps = ComposableProps<HTMLDivElement>;
 const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
   ({ children, ...props }, forwardedRef) => {
     return (
-      <ScrollArea.Root {...composableProps(props)} role='listbox' thin ref={forwardedRef}>
+      <ScrollArea.Root {...composableProps(props)} role='listbox' thin padding ref={forwardedRef}>
         <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
       </ScrollArea.Root>
     );

@@ -275,4 +275,5 @@ export type {
   DialogDescriptionProps,
   DialogActionBarProps,
   DialogCloseProps,
+  DialogCloseIconButtonProps,
 };

@@ -16,13 +16,13 @@ const columnRoot: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
 };
 
 /**
- * Full-width content area with gutter padding.
- * Spans all 3 columns of the parent Column.Root and applies `px-[var(--gutter)]` so
- * non-scrolling content is correctly aligned. ScrollArea.Root children automatically
- * break out of this padding via `--gutter-offset`.
+ * Full-width content area that inherits the parent Column.Root's 3-column grid via subgrid.
+ * Non-scrolling children default to column 2 (center, between gutters).
+ * ScrollArea children span all 3 columns via the existing `[.dx-column_&]:col-span-full` selector.
+ * This avoids padding/overflow conflicts — gutters come from the grid, not padding.
  */
 const columnContent: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
-  return mx('col-span-full px-[var(--gutter)] [--gutter-offset:var(--gutter)] flex flex-col', ...etc);
+  return mx('col-span-full grid grid-cols-subgrid min-h-0 [&>:not(.dx-container)]:col-start-2', ...etc);
 };
 
 const columnViewport: ComponentFunction<ColumnStyleProps> = (_, ...etc) => {
