@@ -34,10 +34,10 @@ export const serializer: TypedObjectSerializer<Sketch.Sketch> = {
 };
 
 const setCanvasContent = (object: Sketch.Canvas, content: any) => {
-  Obj.change(object, (o) => {
-    o.content = {};
+  Obj.change(object, (obj) => {
+    obj.content = {};
     Object.entries(content).forEach(([key, value]) => {
-      o.content[key] = value;
+      obj.content[key] = value;
     });
   });
 };

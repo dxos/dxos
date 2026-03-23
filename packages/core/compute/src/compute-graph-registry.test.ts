@@ -65,8 +65,8 @@ describe('ComputeGraphRegistry', () => {
     });
 
     const functionObj = Operation.serialize(add);
-    Obj.change(functionObj, (f) => {
-      f.binding = 'ADD';
+    Obj.change(functionObj, (obj) => {
+      obj.binding = 'ADD';
     });
     space.db.add(functionObj);
 
@@ -135,8 +135,8 @@ describe('ComputeGraphRegistry', () => {
     onTestFinished(unsubscribe);
 
     const functionObj = Operation.serialize(add);
-    Obj.change(functionObj, (f) => {
-      f.binding = 'ADD';
+    Obj.change(functionObj, (obj) => {
+      obj.binding = 'ADD';
     });
     space.db.add(functionObj);
 

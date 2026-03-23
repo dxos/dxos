@@ -18,7 +18,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Text } from '@dxos/schema';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -67,7 +67,6 @@ const meta = {
   title: 'plugins/plugin-markdown/containers/MarkdownContainer',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager<{ title?: string; content?: string }>((context) => ({
       setupEvents: [AppActivationEvents.SetupSettings, MarkdownEvents.SetupExtensions],

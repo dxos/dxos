@@ -87,8 +87,8 @@ describe('useObject', () => {
     expect(getByTestId('value').textContent).toBe('Test');
 
     // Update the property via Obj.change.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
 
     // Wait for reactivity to update.
@@ -119,8 +119,8 @@ describe('useObject', () => {
     expect(getByTestId('name').textContent).toBe('Test');
 
     // Update a property via Obj.change.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
 
     // Wait for reactivity to update.
@@ -150,8 +150,8 @@ describe('useObject', () => {
     expect(result).toBe('Test');
 
     // Update a different property via Obj.change.
-    Obj.change(obj, (o) => {
-      o.email = 'newemail@example.com';
+    Obj.change(obj, (obj) => {
+      obj.email = 'newemail@example.com';
     });
 
     // Name should still be 'Test'.

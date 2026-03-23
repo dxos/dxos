@@ -24,7 +24,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
-import { getDeep, isNonNullable } from '@dxos/util';
+import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
 import type { SpaceStateManager } from '../db-host';
@@ -877,7 +877,7 @@ export class QueryExecutor extends Resource {
     for (const resultSet of resultSets) {
       for (const item of resultSet.workingSet) {
         // Could be duplicate object ids in different spaces or in different epochs of the same space.
-        results.set(`${item.spaceId}:${item.documentId}:${item.objectId}`, item);
+        results.set(compositeKey(item.spaceId, String(item.documentId), item.objectId), item);
       }
       trace.children.push(resultSet.trace);
     }

@@ -17,4 +17,7 @@ export const isLabel = (o: any): o is Label =>
     'ns' in o[1] &&
     typeof o[1].ns === 'string');
 
+/**
+ * Convert a label to a localized string.
+ */
 export const toLocalizedString = (label: Label, t: TFunction) => (Array.isArray(label) ? t(...label) : label);

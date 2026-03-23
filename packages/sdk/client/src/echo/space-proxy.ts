@@ -65,6 +65,7 @@ import {
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
+import { compositeKey } from '@dxos/util';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
@@ -715,4 +716,4 @@ const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[
 };
 
 const isEdgePeerId = (spaceId: SpaceId, peerId: string) =>
-  peerId.startsWith(`${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`);
+  peerId.startsWith(compositeKey(EdgeService.AUTOMERGE_REPLICATOR, spaceId));

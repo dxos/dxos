@@ -73,8 +73,8 @@ export const threads = (
             const name = getName(doc, anchor.anchor);
             const thread = Relation.getSource(anchor) as Thread.Thread;
             if (name && name !== thread.name) {
-              Obj.change(thread, (t) => {
-                t.name = name;
+              Obj.change(thread, (obj) => {
+                obj.name = name;
               });
             }
           }
@@ -130,8 +130,8 @@ export const threads = (
 
         const thread = query.results.find((object) => Relation.getSource(object).id === id);
         if (thread) {
-          Relation.change(thread, (t) => {
-            t.anchor = undefined;
+          Relation.change(thread, (obj) => {
+            obj.anchor = undefined;
           });
         }
       },
@@ -139,11 +139,11 @@ export const threads = (
         const draft = registry.get(stateAtom).drafts[objectId]?.find((d) => Relation.getDXN(d).toString() === id);
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
-          Obj.change(thread, (t) => {
-            t.name = getName(doc, cursor);
+          Obj.change(thread, (obj) => {
+            obj.name = getName(doc, cursor);
           });
-          Relation.change(draft, (d) => {
-            d.anchor = cursor;
+          Relation.change(draft, (obj) => {
+            obj.anchor = cursor;
           });
         }
 
@@ -151,11 +151,11 @@ export const threads = (
         if (relation) {
           const thread = Relation.getSource(relation);
           if (Obj.instanceOf(Thread.Thread, thread)) {
-            Obj.change(thread, (t) => {
-              t.name = getName(doc, cursor);
+            Obj.change(thread, (obj) => {
+              obj.name = getName(doc, cursor);
             });
-            Relation.change(relation, (r) => {
-              r.anchor = cursor;
+            Relation.change(relation, (obj) => {
+              obj.anchor = cursor;
             });
           }
         }

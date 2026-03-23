@@ -6,8 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
@@ -178,7 +177,7 @@ export default Capability.makeModule(
                 if (!transcriptionEnabled) {
                   log.warn('transcription disabled');
                 } else {
-                  const companion = `${COMPANION_PREFIX}transcript`;
+                  const companion = companionSegment('transcript');
                   yield* Operation.invoke(DeckOperation.ChangeCompanion, { companion });
                 }
               }),
