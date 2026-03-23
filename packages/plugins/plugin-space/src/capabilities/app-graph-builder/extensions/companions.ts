@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { companionSegment } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
@@ -30,7 +30,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
       connector: (node) =>
         Effect.succeed([
           {
-            id: `${COMPANION_PREFIX}settings`,
+            id: companionSegment('settings'),
             type: PLANK_COMPANION_TYPE,
             data: 'settings',
             properties: {
@@ -65,7 +65,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
       connector: (node) =>
         Effect.succeed([
           {
-            id: `${COMPANION_PREFIX}selected-objects`,
+            id: companionSegment('selected-objects'),
             type: PLANK_COMPANION_TYPE,
             data: 'selected-objects',
             properties: {

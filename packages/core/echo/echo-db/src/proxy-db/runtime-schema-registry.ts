@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import { type DXN, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { coerceArray, defaultMap } from '@dxos/util';
+import { coerceArray, compositeKey, defaultMap } from '@dxos/util';
 
 import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-query';
 
@@ -124,7 +124,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
 }
 
 const getSortKey = (schema: Type.AnyEntity) =>
-  Type.getTypename(schema) + ':' + Type.getVersion(schema) + ':' + Type.getDXN(schema);
+  compositeKey(Type.getTypename(schema), Type.getVersion(schema), String(Type.getDXN(schema)));
 
 const filterOrderResults = (schemas: Type.AnyEntity[], query: SchemaRegistry.Query) => {
   const filtered = schemas
