@@ -131,112 +131,105 @@ But path D would have no gutter padding because Dialog.Body doesn't provide it.
 
 ### Design principles
 
-1. **Column.Content owns gutter compensation.** `Column.Root` sets `--gutter` and establishes the grid. `Column.Content` sets `--gutter-offset` and applies gutter padding. The offset signal lives on Column.Content (not Column.Root) because only Column.Content applies the padding that ScrollArea needs to compensate for. This ensures ScrollAreas directly inside Column.Root (without a Column.Content wrapper) are unaffected.
+1. **Column.Content provides gutters via subgrid.** `Column.Root` sets `--gutter` and establishes the 3-column grid. `Column.Content` inherits this grid via CSS subgrid, placing non-scrolling children in the center column and allowing ScrollArea children to span full width.
 2. **Leaves own scrolling.** Components that need to scroll (Form, SearchList) provide their own Viewport. Components that don't need to scroll do nothing.
-3. **No double padding.** When a child Viewport exists inside a guttered container, it must break out of the container's padding and apply its own (asymmetric, to account for scrollbar width).
-4. **No React context needed.** CSS custom properties cascade naturally and can be reset at any node.
+3. **ScrollArea is always full width.** ScrollArea.Root must span all 3 grid columns and apply its own gutter padding via `--gutter` on its Viewport. No parent should constrain its width.
+4. **Subgrid propagation.** Components with both Content and Viewport sub-components (e.g., SearchList) propagate the subgrid in their Content element when inside a Column context.
 
-## Proposed Solution: `--gutter-offset` CSS variable + `Column.Content`
+## Implemented Solution: Column.Content as subgrid
 
 ### Mechanism
 
-`Column.Content` sets `--gutter-offset` alongside its gutter padding. `ScrollArea.Root` compensates and resets. `Column.Root` only sets `--gutter` (unchanged).
+`Column.Content` uses `grid-cols-subgrid` to inherit `Column.Root`'s 3-column grid. Non-scrolling children default to the center column; ScrollArea children span all 3 columns.
 
 Direct children of `Column.Root` participate in the grid in one of three ways:
 
-- **Column.Row** — uses subgrid; gutters via grid columns.
-- **Column.Content** — spans full width; re-applies gutters as padding.
-- **Column.Viewport** — spans full width; delegates gutters to ScrollArea.
+- **Column.Row** — 3-col subgrid row (icons in gutters, content in center).
+- **Column.Content** — multi-row subgrid; children default to center column, ScrollArea spans full width.
+- **Column.Viewport** — full-width scrollable area (delegates gutters to ScrollArea).
 
 ```css
-/* Column.Content — full-width content area with gutter padding and offset signal */
+/* Column.Content — subgrid that inherits Column.Root's 3-column grid */
 .column-content {
   col-span-full;
-  padding-inline: var(--gutter);
-  --gutter-offset: var(--gutter);
-  display: flex;
-  flex-direction: column;
-}
-
-/* ScrollArea.Root — breaks out of parent gutter padding, resets for descendants */
-.scroll-area-root {
-  margin-inline: calc(var(--gutter-offset, 0px) * -1);
-  --gutter-offset: 0px;
+  display: grid;
+  grid-template-columns: subgrid;
+  min-height: 0;                          /* allow shrinking in flex/grid parents */
+  > *:not(.dx-container) { col-start: 2 } /* non-ScrollArea children → center column */
+  /* ScrollArea children span full width via [.dx-column_&]:col-span-full (existing) */
 }
 ```
 
-### How it works
+### Why subgrid instead of padding
 
-- **Column.Content sets `--gutter-offset`** to the value of `--gutter` and applies `px-[var(--gutter)]` padding. This signals to ScrollArea descendants: "I've added gutter padding; compensate for it." `Dialog.Body` and similar components delegate to `Column.Content`.
-- **ScrollArea.Root reads `--gutter-offset`** and applies negative inline margin to break out of the body's padding. It then resets `--gutter-offset: 0px` so nested ScrollAreas don't double-negate.
-- **ScrollArea.Viewport** continues to apply its own asymmetric padding (`pl-[var(--gutter)]`, `pr-[calc(var(--gutter)-scrollbar)]`) as it does today.
-- **Non-scrolling content** inherits `Column.Content`'s `px-[var(--gutter)]` padding and is correctly aligned with no extra work from the leaf.
-- **Standalone usage** (no Column.Content ancestor): `--gutter-offset` is undefined, defaults to `0px`, so no margin is applied. ScrollArea works exactly as today. This includes ScrollAreas directly inside Column.Root (without a Column.Content wrapper) — they are unaffected.
+An earlier approach used `px-[var(--gutter)]` padding on Column.Content with a `--gutter-offset`
+CSS variable for ScrollArea to break out via negative margins. This failed because:
 
-### Example: CreateObjectDialog after the change
+1. **Height constraint required `overflow-hidden`** — needed for ScrollArea to get a bounded height.
+2. **`overflow-hidden` clips negative margins** — ScrollArea couldn't break out horizontally.
+3. **CSS doesn't allow mixed overflow** — `overflow-y: hidden` with `overflow-x: visible` isn't possible (browser converts visible to auto).
+
+Subgrid avoids all three issues: gutters come from grid columns (not padding), so there's nothing to break out of and no overflow conflict.
+
+### Subgrid propagation pattern
+
+Components that have both a Content element and a ScrollArea-based Viewport must propagate
+the subgrid in their Content element when inside a Column context. This ensures the grid chain
+is maintained from Column.Root through intermediate components down to ScrollArea.Root.
+
+```css
+/* Applied to SearchList.Content (and similar) when inside a Column context */
+[.dx-column_&]:col-span-full
+[.dx-column_&]:grid
+[.dx-column_&]:grid-cols-subgrid
+[.dx-column_&]:[&>:not(.dx-container)]:col-start-2
+```
+
+Components using this pattern:
+- **SearchList.Content** — propagates subgrid; SearchList.Viewport (ScrollArea) spans full width
+
+Outside a Column context, these remain normal flex containers.
+
+### Example: CreateObjectDialog
 
 ```
-Dialog.Content (Column.Root, --gutter: var(--dx-gutter-sm))
-  Dialog.Header (Column.Row)
-  Dialog.Body → Column.Content (col-span-full, px: var(--gutter), --gutter-offset: var(--gutter))
+Dialog.Content (Column.Root, --gutter: var(--dx-gutter-sm), grid: 16px|1fr|16px)
+  Dialog.Header (Column.Row, center)
+  Dialog.Body → Column.Content (subgrid, children default to col-start-2)
     CreateObjectPanel:
-      Path A: SearchList.Viewport (ScrollArea.Root mx: -gutter-offset, resets to 0)
-                → ScrollArea.Viewport (applies own pl/pr with scrollbar offset)
-                → content correctly aligned ✓
+      Path A: SearchList.Content (subgrid in column context)
+                → SearchList.Input (col-start-2, in center — guttered ✓)
+                → SearchList.Viewport (ScrollArea, col-span-full — full width ✓)
+                    → ScrollArea.Viewport (pl/pr with --gutter and scrollbar offset ✓)
       Path B: (same as A) ✓
-      Path C: Form.Viewport (ScrollArea.Root mx: -gutter-offset, resets to 0)
-                → ScrollArea.Viewport (applies own pl/pr with scrollbar offset)
-                → Form.Content correctly aligned ✓
-      Path D: <plain text> — gets Column.Content's px-[var(--gutter)] for free ✓
+      Path C: Form.Viewport (ScrollArea, col-span-full — full width ✓)
+                → ScrollArea.Viewport (pl/pr with --gutter and scrollbar offset ✓)
+      Path D: <plain text> — col-start-2 (center column, guttered ✓)
 ```
 
-### Changes required
+### Dialog sub-component mapping
 
-| File                                           | Change                                                                                                |
-| :--------------------------------------------- | :---------------------------------------------------------------------------------------------------- |
-| `ui-theme/src/theme/primitives/column.ts`      | New `columnContent`: `col-span-full px-[var(--gutter)] [--gutter-offset:var(--gutter)] flex flex-col` |
-| `react-ui/src/primitives/Column/Column.tsx`    | New `Column.Content` component using `column.content` theme                                           |
-| `ui-theme/src/theme/components/scroll-area.ts` | `scrollAreaRoot`: add `mx-[calc(var(--gutter-offset,0px)*-1)]` and `[--gutter-offset:0px]`            |
-| `react-ui/src/components/Dialog/Dialog.tsx`    | `Dialog.Body` wraps or delegates to `Column.Content`                                                  |
+| Dialog sub-component | Column primitive   | Gutter mechanism                              |
+| :------------------- | :----------------- | :-------------------------------------------- |
+| Dialog.Content       | Column.Root        | Establishes the 3-col grid and sets `--gutter` |
+| Dialog.Header        | Column.Row         | Gutters via grid columns (subgrid)             |
+| Dialog.Body          | Column.Content     | Subgrid; children in center column             |
+| Dialog.ActionBar     | Column.Row         | Gutters via grid columns (subgrid)             |
 
-### What does NOT change
+### AlertDialog unified with Dialog ✅
 
-- `Column.Root`, `Column.Row`, `Column.Viewport` — unchanged.
-- `Form.Viewport`, `SearchList.Viewport`, `Settings.Root` — unchanged. ScrollArea.Root handles the breakout automatically via theme.
-- `--gutter` variable — unchanged. Still set by `Column.Root`, consumed by `ScrollArea.Viewport`.
-- Any existing consumer that uses `Dialog.Viewport` directly for simple content — still works (ScrollArea inside Dialog.Body breaks out correctly).
+AlertDialog now shares sub-components with Dialog:
 
-### Edge cases
-
-| Scenario                                      | Behavior                                                                                |
-| :-------------------------------------------- | :-------------------------------------------------------------------------------------- |
-| Nested ScrollAreas (ScrollArea in ScrollArea) | Inner ScrollArea sees `--gutter-offset: 0px` (reset by outer), no double-negation.      |
-| Form standalone (not in Dialog)               | No `--gutter-offset` set, defaults to `0px`. Form.Viewport works exactly as today.      |
-| ScrollArea directly in Column.Root (no Body)  | No `--gutter-offset` set (it's on Column.Content, not Root), defaults to `0px`. Safe.   |
-| Dialog with only simple text in Body          | Text gets `Column.Content`'s `px-[var(--gutter)]`. Correctly aligned, no scroll needed. |
-| Card with scrollable content                  | Card gains a Body via `Column.Content` — same pattern, no Card-specific code needed.    |
-
-### Naming rationale
-
-`Column.Content` (not `Column.Body`) follows Radix conventions where `Content` is the standard name for the main content container. `Column.Body` was considered but `Body` is an HTML term, not a component convention.
-
-Dialog sub-components each delegate to a Column primitive:
-
-| Dialog sub-component | Column primitive | Gutter mechanism                                |
-| :------------------- | :--------------- | :---------------------------------------------- |
-| Dialog.Content       | Column.Root      | Establishes the 3-col grid and sets `--gutter`  |
-| Dialog.Header        | Column.Row       | Gutters via grid columns (subgrid)              |
-| Dialog.Body          | Column.Content   | Gutters via `px-[var(--gutter)]` padding        |
-| Dialog.ActionBar     | Column.Row       | Gutters via grid columns (subgrid)              |
-| Dialog.Viewport      | Column.Viewport  | Gutters via ScrollArea padding (**deprecated**) |
-
-`Dialog.Content` and `Dialog.Body` are both necessary:
-
-- `Dialog.Content` wraps Radix `DialogPrimitive.Content` and creates `Column.Root` (the grid container). Adding padding here would double gutters for `Column.Row` children.
-- `Dialog.Body` is the content area between Header and ActionBar, delegating to `Column.Content` for gutter padding.
-
-Note: `AlertDialog.Body` currently uses `Column.Viewport` (ScrollArea), not `Column.Content`.
-This is inconsistent with `Dialog.Body` and may need alignment in a future pass.
+| Sub-component   | Source           | Notes                                  |
+| :-------------- | :--------------- | :------------------------------------- |
+| Header          | **Dialog.Header** | Shared — was missing from AlertDialog |
+| Body            | **Dialog.Body**   | Shared — was Column.Viewport, now Column.Content |
+| ActionBar       | **Dialog.ActionBar** | Shared — was duplicated, now shared |
+| CloseIconButton | **Dialog.CloseIconButton** | Shared — AlertDialog gains this |
+| Content         | AlertDialog-specific | Uses AlertDialogPrimitive.Content; gutter normalized to `'sm'` |
+| Overlay         | AlertDialog-specific | Uses AlertDialogPrimitive.Overlay |
+| Title/Description | AlertDialog-specific | Uses AlertDialogPrimitive.Title/Description |
+| Cancel/Action   | AlertDialog-specific | Radix dismissal primitives |
 
 ## Dialog Usage Audit
 
@@ -295,94 +288,65 @@ Full audit of all Dialog/AlertDialog consumers, checking whether they use the st
 
 4. **AlertDialog.Body uses Column.Viewport** (ScrollArea), while **Dialog.Body uses Column.Content** (non-scrolling). This inconsistency should be resolved — AlertDialog.Body should likely also use Column.Content so that child components can bring their own scroll.
 
-## Refactoring Plan
+## Completed Work
 
-### Phase 1: Unify Dialog and AlertDialog internals (done partially)
+### Column.Content primitive ✅
 
-Dialog and AlertDialog share the same theme keys (`dialog.*`), the same Column primitives,
-and the same structural pattern. The only fundamental difference is the Radix primitive:
-`@radix-ui/react-alert-dialog` forces explicit user action (no click-outside dismiss, no Escape).
+- New `Column.Content` component using CSS subgrid
+- `Column.Root` JSDoc updated to document three child types (Row, Content, Viewport)
+- `ColumnContentProps` exported from `@dxos/react-ui`
+- Column stories added (WithContent, ContentWithScrollArea)
 
-| Aspect           | Dialog                   | AlertDialog               | Difference                     |
-| :--------------- | :----------------------- | :------------------------ | :----------------------------- |
-| Radix base       | `react-dialog`           | `react-alert-dialog`      | Accessibility semantics        |
-| Dismissal        | Click-outside, Escape, Close | Must choose Cancel/Action | Fundamental                |
-| Content gutter   | `gutter='sm'`            | `gutter='md'` (default)   | Drift, not intentional         |
-| Header           | Column.Row (center)      | Missing                   | Drift                          |
-| Body             | Column.Content           | Column.Viewport (scroll)  | Inconsistent, should align     |
-| ActionBar        | Column.Row (center)      | Column.Row (center)       | Identical                      |
-| Title/Description| Radix primitive          | Radix primitive            | Same theme                     |
+### Dialog standardization ✅
 
-**Approach: shared internals, two exports.**
+- `Dialog.Viewport` removed (no consumers)
+- `Dialog.Body` delegates to `Column.Content`
+- Dialog stories updated (DefaultStory, ScrollingStory)
+- All dialog stories use consistent `Root > Overlay > Content` wrapping (no Portal)
 
-Extract shared sub-components into a common module. Dialog and AlertDialog become thin
-wrappers that wire up the correct Radix primitive and dismissal API.
+### AlertDialog unified with Dialog ✅
 
-#### Step 1: Align AlertDialog.Body with Dialog.Body
+- AlertDialog shares Header, Body, ActionBar, CloseIconButton with Dialog
+- AlertDialog.Content normalized to `gutter='sm'`
+- AlertDialog.Body changed from Column.Viewport (scroll) to Column.Content (subgrid)
 
-Change AlertDialog.Body from `Column.Viewport` to `Column.Content`.
-AlertDialog consumers that need scrolling should bring their own Viewport
-(same principle as Dialog).
+### Consumer migrations ✅
 
-#### Step 2: Add Header to AlertDialog
+All dialogs updated to standard `Dialog.Content > Dialog.Header > Dialog.Body` structure:
 
-AlertDialog.Header = Column.Row (center), same as Dialog.Header.
-Existing AlertDialogs that put Title directly in Content should be updated.
+1. CreateSpaceDialog — wrapped Form.Root in Dialog.Body ✅
+2. SearchDialog — added Header and Body ✅
+3. ShortcutsDialogContent — replaced custom flex layout with Header and Body ✅
+4. DeploymentDialog — restructured to use Header, Body, ActionBar ✅
+5. SpaceDialog — wrapped SpacePanel in Dialog.Body ✅
+6. IdentityDialog — wrapped IdentityPanel in Dialog.Body ✅
+7. JoinDialog (plugin-space) — wrapped JoinPanel in Dialog.Body ✅
+8. JoinDialog (plugin-client) — wrapped JoinPanel in Dialog.Body ✅
+9. plugin-client ResetDialog — already correct (ConfirmReset uses Dialog.Body internally) ✅
 
-#### Step 3: Normalize gutter size
+### SearchList subgrid propagation ✅
 
-Both Dialog.Content and AlertDialog.Content should use `gutter='sm'`.
-The current AlertDialog default of `'md'` appears to be drift, not intentional.
+- SearchList.Content propagates subgrid when inside a Column context
+- SearchList.Viewport now passes `padding` for gutter alignment
 
-#### Step 4: Extract shared sub-components
+## Remaining Work
 
-Create a shared internal module (e.g., `DialogParts`) with:
-- `DialogContentInner` — Column.Root wrapper (parameterized by Radix Content primitive)
-- `DialogHeader` — Column.Row (center)
-- `DialogBody` — Column.Content
-- `DialogTitle` / `DialogDescription` — parameterized by Radix primitive
-- `DialogActionBar` — Column.Row (center)
-- `DialogOverlay` — OverlayLayoutProvider wrapper
+### Storybook verification
 
-Dialog and AlertDialog re-export these, adding only their unique parts:
-- Dialog: Close, CloseIconButton
-- AlertDialog: Cancel, Action
-
-#### Step 5: Migrate consumers ✅
-
-Updated dialogs to use the standard `Dialog.Content > Dialog.Header > Dialog.Body` structure:
-
-1. **CreateSpaceDialog** — wrapped Form.Root in Dialog.Body ✅
-2. **SearchDialog** — added Header (with CloseIconButton) and Body; removed standalone Close button ✅
-3. **ShortcutsDialogContent** — replaced custom flex layout with Header and Body ✅
-4. **DeploymentDialog** — restructured to use Header, Body, ActionBar ✅
-5. **Shell panel dialogs**:
-   - SpaceDialog — wrapped SpacePanel in Dialog.Body ✅
-   - IdentityDialog — wrapped IdentityPanel in Dialog.Body ✅
-   - JoinDialog (plugin-space) — wrapped JoinPanel in Dialog.Body ✅
-   - JoinDialog (plugin-client) — wrapped JoinPanel in Dialog.Body ✅
-6. **plugin-client ResetDialog** — already correct (ConfirmReset uses Dialog.Body internally) ✅
-
-### Phase 1b: Standardize Dialog in current branch ✅
-
-Completed alongside the `Column.Content` + `--gutter-offset` changes.
-
-1. **Remove `Dialog.Viewport`** — removed, no consumers remain ✅
-2. **Update Dialog stories** — DefaultStory (non-scrolling) and ScrollingStory (with ScrollArea breakout) ✅
-3. **Update Column stories** — WithContent and ContentWithScrollArea stories added ✅
-4. **Update Column.Root JSDoc** — documents three child types (Row, Content, Viewport) ✅
-5. **Verify exports** — `ColumnContentProps` accessible from `@dxos/react-ui` ✅
-
-### Phase 2: Unify Dialog and AlertDialog internals
-
-Steps 1–5 from Phase 1 above (align AlertDialog.Body, add Header, normalize gutter,
-extract shared module, migrate consumers).
-
-### Phase 3: Storybook verification
-
-Add or update stories for each dialog variant to verify:
+Visually verify all migrated dialogs in storybook:
 - Gutter alignment for non-scrolling content in Dialog.Body
-- ScrollArea breakout (Form.Viewport, SearchList.Viewport inside Dialog.Body)
-- Nested ScrollArea reset (no double-negation)
-- AlertDialog with the aligned Body implementation
-- Dialog without Body (backward compat — ScrollArea directly in Content still works)
+- ScrollArea full width with correct gutter padding on Viewport
+- Height constraint and scrolling behavior
+- AlertDialog stories with the aligned Body implementation
+
+### Form subgrid propagation
+
+Form currently doesn't propagate the subgrid in Column context.
+If Form is used inside Dialog.Body, Form.Viewport (ScrollArea) needs to
+span full width. This may require the same subgrid propagation pattern
+applied to SearchList.Content.
+
+### Card alignment
+
+Card has no Body equivalent. Consider adding Card.Body using Column.Content
+for cards that need scrollable or guttered content areas.
