@@ -60,24 +60,23 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
 
     // NOTE: Uses --gutter CSS variable
     // If contained within Column.Root grid the gutter is set by that component.
-    // TODO(burdon): Increase padding.
 
     (orientation === 'vertical' || orientation === 'all') &&
       (padding
         ? thin
-          ? 'pl-[var(--gutter,4px)] pr-[calc(var(--gutter,4px)-4px)]'
-          : 'pl-[var(--gutter,8px)] pr-[calc(var(--gutter,8px)-8px)]'
-        : margin && (thin ? 'pl-[4px]' : 'pl-[8px]')),
+          ? 'pl-[var(--gutter,8px)] pr-[calc(var(--gutter,8px)-4px)]'
+          : 'pl-[var(--gutter,16px)] pr-[calc(var(--gutter,16px)-8px)]'
+        : margin && (thin ? 'pl-[8px]' : 'pl-[16px]')),
 
-    // NOTE: Minimal padding for forms (top/bottom outlines).
-    (orientation === 'vertical' || orientation === 'all') && 'py-form-chrome',
+    // NOTE: Add minimal padding for form top/bottom outlines.
+    (orientation === 'vertical' || orientation === 'all') && 'pt-form-chrome pb-form-chrome',
 
     (orientation === 'horizontal' || orientation === 'all') &&
       (padding
         ? thin
-          ? 'pt-[var(--gutter,4px)] pb-[calc(var(--gutter,4px)-4px)]'
-          : 'pt-[var(--gutter,8px)] pb-[calc(var(--gutter,8px)-8px)]'
-        : margin && (thin ? 'pt-[4px]' : 'pt-[8px]')),
+          ? 'pt-[var(--gutter,8px)] pb-[calc(var(--gutter,8px)-4px)]'
+          : 'pt-[var(--gutter,16px)] pb-[calc(var(--gutter,16px)-8px)]'
+        : margin && (thin ? 'pt-[8px]' : 'pt-[16px]')),
 
     snap && [
       orientation === 'vertical' && 'snap-y snap-mandatory',

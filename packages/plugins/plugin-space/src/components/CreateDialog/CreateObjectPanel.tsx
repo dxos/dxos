@@ -91,11 +91,11 @@ export const CreateObjectPanel = ({
   const inputSurfaceLookup = useInputSurfaceLookup({ target });
 
   // TODO(wittjosiah): These inputs should be rolled into a `Form` once it supports the necessary variants.
-
   if (!metadata) {
     return <SelectType options={sortedOptions} onChange={handleSelectOption} />;
   }
 
+  // TODO(burdon): Remove.
   if (!target) {
     return <SelectSpace spaces={spaces} defaultSpaceId={defaultSpaceId} onChange={onTargetChange} />;
   }
@@ -150,7 +150,6 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
           {results.map((option) => (
             <SearchList.Item
               key={option.id}
-              // classNames='flex items-center gap-form-gap'
               value={option.id}
               label={option.label}
               icon={option.icon ?? 'ph--placeholder--regular'}
@@ -170,7 +169,6 @@ type SelectSpaceProps = Pick<CreateObjectPanelProps, 'spaces' | 'defaultSpaceId'
 const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => {
   const { t } = useTranslation(meta.id);
 
-  // TODO(burdon): ???
   const sortedSpaces = useMemo(
     () =>
       [...spaces].sort((a, b) => {
@@ -191,7 +189,6 @@ const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => 
     [spaces, defaultSpaceId, t],
   );
 
-  // TODO(burdon): Why localized?
   const { results, handleSearch } = useSearchListResults({
     items: sortedSpaces,
     extract: (space) =>
@@ -213,13 +210,11 @@ const SelectSpace = ({ spaces, defaultSpaceId, onChange }: SelectSpaceProps) => 
         />
         <SearchList.Viewport>
           {results.map((space) => {
-            const displayName = getSpaceDisplayName(space, { personal: space.id === defaultSpaceId });
             return (
               <SearchList.Item
                 key={space.id}
-                // classNames='flex items-center gap-2'
                 value={space.id}
-                label={toLocalizedString(displayName, t)} // TODO(burdon): Localized?
+                label={toLocalizedString(getSpaceDisplayName(space, { personal: space.id === defaultSpaceId }), t)}
                 onSelect={() => onChange?.(space.db)}
               />
             );

@@ -14,7 +14,6 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MapPlugin } from '@dxos/plugin-map';
 import { TablePlugin } from '@dxos/plugin-table';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -29,7 +28,6 @@ const meta = {
   component: Toolbox as any,
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),

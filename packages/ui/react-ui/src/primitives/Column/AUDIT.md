@@ -186,6 +186,7 @@ is maintained from Column.Root through intermediate components down to ScrollAre
 ```
 
 Components using this pattern:
+
 - **SearchList.Content** — propagates subgrid; SearchList.Viewport (ScrollArea) spans full width
 
 Outside a Column context, these remain normal flex containers.
@@ -209,27 +210,27 @@ Dialog.Content (Column.Root, --gutter: var(--dx-gutter-sm), grid: 16px|1fr|16px)
 
 ### Dialog sub-component mapping
 
-| Dialog sub-component | Column primitive   | Gutter mechanism                              |
-| :------------------- | :----------------- | :-------------------------------------------- |
-| Dialog.Content       | Column.Root        | Establishes the 3-col grid and sets `--gutter` |
-| Dialog.Header        | Column.Row         | Gutters via grid columns (subgrid)             |
-| Dialog.Body          | Column.Content     | Subgrid; children in center column             |
-| Dialog.ActionBar     | Column.Row         | Gutters via grid columns (subgrid)             |
+| Dialog sub-component | Column primitive | Gutter mechanism                               |
+| :------------------- | :--------------- | :--------------------------------------------- |
+| Dialog.Content       | Column.Root      | Establishes the 3-col grid and sets `--gutter` |
+| Dialog.Header        | Column.Row       | Gutters via grid columns (subgrid)             |
+| Dialog.Body          | Column.Content   | Subgrid; children in center column             |
+| Dialog.ActionBar     | Column.Row       | Gutters via grid columns (subgrid)             |
 
 ### AlertDialog unified with Dialog ✅
 
 AlertDialog now shares sub-components with Dialog:
 
-| Sub-component   | Source           | Notes                                  |
-| :-------------- | :--------------- | :------------------------------------- |
-| Header          | **Dialog.Header** | Shared — was missing from AlertDialog |
-| Body            | **Dialog.Body**   | Shared — was Column.Viewport, now Column.Content |
-| ActionBar       | **Dialog.ActionBar** | Shared — was duplicated, now shared |
-| CloseIconButton | **Dialog.CloseIconButton** | Shared — AlertDialog gains this |
-| Content         | AlertDialog-specific | Uses AlertDialogPrimitive.Content; gutter normalized to `'sm'` |
-| Overlay         | AlertDialog-specific | Uses AlertDialogPrimitive.Overlay |
-| Title/Description | AlertDialog-specific | Uses AlertDialogPrimitive.Title/Description |
-| Cancel/Action   | AlertDialog-specific | Radix dismissal primitives |
+| Sub-component     | Source                     | Notes                                                          |
+| :---------------- | :------------------------- | :------------------------------------------------------------- |
+| Header            | **Dialog.Header**          | Shared — was missing from AlertDialog                          |
+| Body              | **Dialog.Body**            | Shared — was Column.Viewport, now Column.Content               |
+| ActionBar         | **Dialog.ActionBar**       | Shared — was duplicated, now shared                            |
+| CloseIconButton   | **Dialog.CloseIconButton** | Shared — AlertDialog gains this                                |
+| Content           | AlertDialog-specific       | Uses AlertDialogPrimitive.Content; gutter normalized to `'sm'` |
+| Overlay           | AlertDialog-specific       | Uses AlertDialogPrimitive.Overlay                              |
+| Title/Description | AlertDialog-specific       | Uses AlertDialogPrimitive.Title/Description                    |
+| Cancel/Action     | AlertDialog-specific       | Radix dismissal primitives                                     |
 
 ## Dialog Usage Audit
 
@@ -334,6 +335,7 @@ All dialogs updated to standard `Dialog.Content > Dialog.Header > Dialog.Body` s
 ### Storybook verification
 
 Visually verify all migrated dialogs in storybook:
+
 - Gutter alignment for non-scrolling content in Dialog.Body
 - ScrollArea full width with correct gutter padding on Viewport
 - Height constraint and scrolling behavior

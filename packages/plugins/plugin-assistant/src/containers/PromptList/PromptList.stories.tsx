@@ -17,7 +17,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Organization } from '@dxos/types';
 
 import { AssistantPlugin } from '../../AssistantPlugin';
@@ -74,7 +74,6 @@ const meta = {
   title: 'plugins/plugin-assistant/containers/PromptList',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [

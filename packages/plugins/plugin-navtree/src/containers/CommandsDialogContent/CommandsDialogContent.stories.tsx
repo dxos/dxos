@@ -5,11 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Dialog } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
 import { translations } from '../../translations';
@@ -29,7 +28,6 @@ const meta = {
   component: CommandsDialogContent,
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [...corePlugins(), StorybookPlugin({}), NavTreePlugin()],

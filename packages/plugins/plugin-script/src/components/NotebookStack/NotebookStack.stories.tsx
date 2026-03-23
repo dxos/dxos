@@ -11,7 +11,7 @@ import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 
 import { createNotebook } from '../../testing';
 import { translations } from '../../translations';
@@ -27,7 +27,6 @@ const meta = {
   title: 'plugins/plugin-script/components/NotebookStack',
   component: NotebookStackStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'column', classNames: 'w-document-max-width' }),
     withPluginManager({
       plugins: [
