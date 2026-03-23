@@ -8,8 +8,9 @@ import * as Option from 'effect/Option';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import {
   AppCapabilities,
-  COMPANION_PREFIX,
   LayoutOperation,
+  companionId,
+  companionSegment,
   getObjectPathFromObject,
   getSpacePath,
 } from '@dxos/app-toolkit';
@@ -52,7 +53,7 @@ export default Capability.makeModule(
 
         return Effect.succeed([
           {
-            id: `${COMPANION_PREFIX}presenter`,
+            id: companionSegment('presenter'),
             data: { type: meta.id, object },
             type: PLANK_COMPANION_TYPE,
             properties: {
@@ -83,7 +84,7 @@ export default Capability.makeModule(
             data: Effect.fnUntraced(function* () {
               const deckState = yield* Capabilities.getAtomValue(DeckCapabilities.State);
               const deck = deckState.decks[deckState.activeDeck];
-              const presenterId = `${objectPath}/${COMPANION_PREFIX}presenter`;
+              const presenterId = companionId(objectPath, 'presenter');
               if (!deck?.fullscreen) {
                 yield* Operation.invoke(DeckOperation.Adjust, {
                   type: 'solo--fullscreen' as const,

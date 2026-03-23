@@ -6,19 +6,18 @@ import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { Menu, MenuBuilder, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
 import { type MailboxActionHandler, Mailbox as MailboxComponent, MailboxEmpty } from '../../components';
@@ -54,11 +53,9 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // Menu state.
   const sortDescending = useAtomState(true);
-  const filterVisible = useAtomState(false);
   const menuActions = useMailboxActions({
     db,
     sortDescending: sortDescending.atom,
-    filterVisible: filterVisible.atom,
   });
 
   // Filter and messages.
@@ -89,7 +86,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // Merge tags into mailbox labels.
   const mergedLabels = useMemo(() => {
-    const labels = { ...(mailbox.labels ?? {}) };
+    const labels = { ...mailbox.labels };
     for (const [_messageId, messageTags] of Object.entries(messageTagsMap)) {
       for (const tag of messageTags) {
         labels[tag.id] = tag.label;
@@ -137,17 +134,17 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             selection: { mode: 'single', id: message?.id },
           });
 
-          const companionId = `${COMPANION_PREFIX}message`;
+          const companion = companionSegment('message');
           if (layout.mode === 'simple') {
             // Simple layout: open drawer with message companion.
             void invokePromise(LayoutOperation.UpdateComplementary, {
-              subject: companionId,
+              subject: companion,
               state: 'expanded',
             });
           } else {
             // Deck layout: open as companion panel.
             void invokePromise(DeckOperation.ChangeCompanion, {
-              companion: companionId,
+              companion,
             });
           }
           break;
@@ -163,7 +160,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
             return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
           });
-          filterVisible.set(true);
           filterEditorRef.current?.focus();
           break;
         }
@@ -183,11 +179,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     [id, layout.mode, mailbox, sortedMessages, invokePromise],
   );
 
-  const handleCancel = useCallback(() => {
-    filterVisible.set(false);
+  const handleClear = useCallback(() => {
     setFilterText(filterProp ?? '');
     setFilter(parser.build(filterProp ?? '').filter);
-  }, [filterVisible, filterProp, parser]);
+  }, [filterProp, parser]);
 
   return (
     <Panel.Root>
@@ -195,39 +190,30 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         {/* TODO(burdon): Factor out menu. */}
         <ElevationProvider elevation='positioned'>
           <Menu.Root {...menuActions} attendableId={id}>
-            <Menu.Toolbar />
-            {filterVisible.value && (
-              <div
-                role='none'
-                className='grid grid-cols-[1fr_min-content] w-full items-center p-1 gap-1 border-b border-separator'
-              >
-                <QueryEditor
-                  ref={filterEditorRef}
-                  classNames='min-w-0 ps-1'
-                  autoFocus
-                  db={db}
-                  tags={tagMap}
-                  value={filterText}
-                  onChange={setFilterText}
-                />
-                <div role='none' className='flex shrink-0 gap-1 items-center'>
-                  <IconButton
-                    ref={filterSaveButtonRef}
-                    disabled={!filter}
-                    label={t('mailbox toolbar save button label')}
-                    icon='ph--folder-plus--regular'
-                    iconOnly
-                    onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
-                  />
-                  <IconButton
-                    label={t('mailbox toolbar clear button label')}
-                    icon='ph--x--regular'
-                    iconOnly
-                    onClick={() => handleCancel()}
-                  />
-                </div>
-              </div>
-            )}
+            <Menu.Toolbar>
+              <QueryEditor
+                ref={filterEditorRef}
+                classNames='grow min-w-0 ps-1'
+                db={db}
+                tags={tagMap}
+                value={filterText}
+                onChange={setFilterText}
+              />
+              <IconButton
+                ref={filterSaveButtonRef}
+                disabled={!filter}
+                label={t('mailbox toolbar save button label')}
+                icon='ph--folder-plus--regular'
+                iconOnly
+                onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
+              />
+              <IconButton
+                label={t('mailbox toolbar clear button label')}
+                icon='ph--x--regular'
+                iconOnly
+                onClick={() => handleClear()}
+              />
+            </Menu.Toolbar>
           </Menu.Root>
         </ElevationProvider>
       </Panel.Toolbar>
@@ -314,18 +300,16 @@ const useMessageTagsMap = (
 const useMailboxActions = ({
   db,
   sortDescending,
-  filterVisible,
 }: {
   db?: Database.Database;
   sortDescending: Atom.Writable<boolean>;
-  filterVisible: Atom.Writable<boolean>;
 }) => {
   const { invokePromise } = useOperationInvoker();
 
   const menu = useMemo(
     () =>
       Atom.make((context) => {
-        const base = MenuBuilder.make()
+        return MenuBuilder.make()
           .root({
             label: ['mailbox toolbar title', { ns: meta.id }],
           })
@@ -339,15 +323,6 @@ const useMailboxActions = ({
             () => context.set(sortDescending, !context.get(sortDescending)),
           )
           .action(
-            'filterVisible',
-            {
-              type: 'filterVisible',
-              icon: 'ph--magnifying-glass--regular',
-              label: ['mailbox toolbar filter', { ns: meta.id }],
-            },
-            () => context.set(filterVisible, !context.get(filterVisible)),
-          )
-          .action(
             'composeEmail',
             {
               type: 'composeEmail',
@@ -357,22 +332,8 @@ const useMailboxActions = ({
             () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db }),
           )
           .build();
-
-        // Add gap separator before compose email action.
-        const gap = createGapSeparator();
-        return {
-          nodes: [...base.nodes, ...gap.nodes],
-          edges: [
-            // Keep edges for sort and filter actions.
-            ...base.edges.filter((e) => e.target !== 'composeEmail'),
-            // Add gap after filter action.
-            ...gap.edges,
-            // Add compose email after gap.
-            { source: 'root', target: 'composeEmail', relation: 'child' },
-          ],
-        };
       }),
-    [sortDescending, filterVisible, invokePromise, db],
+    [sortDescending, invokePromise, db],
   );
 
   return useMenuActions(menu);
