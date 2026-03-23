@@ -34,10 +34,10 @@ describe('Echo Atom - Batch Updates', () => {
     expect(initialCount).toBe(1); // Verify immediate update fired.
 
     // Make multiple updates to the same object in a single Obj.change call.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated1';
-      o.email = 'updated@example.com';
-      o.username = 'updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated1';
+      obj.email = 'updated@example.com';
+      obj.username = 'updated';
     });
 
     // Should have fired once for initial + once for the Obj.change (not once per property update).
@@ -72,14 +72,14 @@ describe('Echo Atom - Batch Updates', () => {
     expect(initialCount).toBe(1);
 
     // Make multiple separate Obj.change calls.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated1';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated1';
     });
-    Obj.change(obj, (o) => {
-      o.email = 'updated@example.com';
+    Obj.change(obj, (obj) => {
+      obj.email = 'updated@example.com';
     });
-    Obj.change(obj, (o) => {
-      o.username = 'updated';
+    Obj.change(obj, (obj) => {
+      obj.username = 'updated';
     });
 
     // Should have fired once for initial + once per Obj.change call.
@@ -114,10 +114,10 @@ describe('Echo Atom - Batch Updates', () => {
     expect(initialCount).toBe(1);
 
     // Make multiple updates to the same property in a single Obj.change call.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated1';
-      o.name = 'Updated2';
-      o.name = 'Updated3';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated1';
+      obj.name = 'Updated2';
+      obj.name = 'Updated3';
     });
 
     // Should have fired once for initial + once for the Obj.change (not once per assignment).

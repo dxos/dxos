@@ -64,14 +64,14 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        Obj.change(text, (t) => {
-          t.content = instructions;
+        Obj.change(text, (obj) => {
+          obj.content = instructions;
         });
         if (fn?.key) {
           const toolId = ToolId.make(fn.key);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            Obj.change(existingBlueprint, (b) => {
-              b.tools = [...(b.tools ?? []), toolId];
+            Obj.change(existingBlueprint, (obj) => {
+              obj.tools = [...(obj.tools ?? []), toolId];
             });
           }
         }
@@ -151,8 +151,8 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
 
   const handleBindingBlur = useCallback(() => {
     if (fn) {
-      Obj.change(fn, (f) => {
-        f.binding = binding;
+      Obj.change(fn, (obj) => {
+        obj.binding = binding;
       });
     }
   }, [fn, binding]);
@@ -173,8 +173,8 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
                 disabled
                 value={functionUrl}
                 onChange={(event) => {
-                  Obj.change(fn, (f) => {
-                    f.name = event.target.value;
+                  Obj.change(fn, (obj) => {
+                    obj.name = event.target.value;
                   });
                 }}
               />

@@ -86,13 +86,13 @@ const meta = {
               yield* Effect.promise(() => space.waitUntilReady());
               const board = space.db.add(createBoard());
 
-              Obj.change(board, (b) => {
+              Obj.change(board, (obj) => {
                 // Add some sample items
                 Array.from({ length: 10 }).map(() => {
                   const org = createOrg();
                   space.db.add(org);
-                  b.items.push(Ref.make(org));
-                  b.layout.cells[org.id] = {
+                  obj.items.push(Ref.make(org));
+                  obj.layout.cells[org.id] = {
                     x: Math.floor(Math.random() * 5) - 2,
                     y: Math.floor(Math.random() * 5) - 2,
                     width: 1,

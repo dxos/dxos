@@ -19,8 +19,8 @@ const handler: Operation.WithHandler<typeof RestoreMessage> = RestoreMessage.pip
       const db = Obj.getDatabase(thread);
       invariant(db, 'Database not found');
 
-      Obj.change(thread, (t) => {
-        t.messages.splice(messageIndex, 0, Ref.make(message));
+      Obj.change(thread, (obj) => {
+        obj.messages.splice(messageIndex, 0, Ref.make(message));
       });
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
