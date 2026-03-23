@@ -6,6 +6,8 @@ import { syntaxTree } from '@codemirror/language';
 import { type Extension } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, WidgetType } from '@codemirror/view';
 
+import { Domino } from '@dxos/ui';
+
 export type PromptExtensionOptions = {
   /** Called when the user clicks the run button on a prompt code block. */
   onRun: (promptText: string) => void;
@@ -65,41 +67,6 @@ export const promptRunExtension = ({ onRun }: PromptExtensionOptions): Extension
         decorations: (v) => v.decorations,
       },
     ),
-    EditorView.theme({
-      '& .cm-prompt-run-container': {
-        position: 'relative',
-        display: 'block',
-        height: '0',
-      },
-      '& .cm-prompt-run': {
-        position: 'absolute',
-        right: '8px',
-        top: '8px',
-        zIndex: '10',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '24px',
-        height: '24px',
-        border: 'none',
-        borderRadius: '4px',
-        background: 'var(--color-success, #22c55e)',
-        cursor: 'pointer',
-        opacity: '0.85',
-        transition: 'opacity 0.15s ease',
-        '&:hover': {
-          opacity: '1',
-        },
-      },
-      '& .cm-prompt-run-icon': {
-        width: '0',
-        height: '0',
-        borderTop: '5px solid transparent',
-        borderBottom: '5px solid transparent',
-        borderLeft: '8px solid white',
-        marginLeft: '2px',
-      },
-    }),
   ];
 };
 
@@ -120,23 +87,25 @@ class PromptRunWidget extends WidgetType {
   }
 
   override toDOM() {
-    const container = document.createElement('div');
-    container.className = 'cm-prompt-run-container';
-
-    const button = document.createElement('button');
-    button.className = 'cm-prompt-run';
-    button.title = 'Run prompt in new chat';
-    button.addEventListener('mousedown', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      this._onRun(this._promptText);
-    });
-
-    const icon = document.createElement('span');
-    icon.className = 'cm-prompt-run-icon';
-    button.appendChild(icon);
-    container.appendChild(button);
-
-    return container;
+    return Domino.of('div')
+      .classNames('relative')
+      .children(
+        Domino.of('button')
+          .classNames('dx-button absolute right-0 top-4')
+          .on('mousedown', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            this._onRun(this._promptText);
+          })
+          .children(
+            Domino.of('svg', Domino.SVG)
+              .classNames('w-4 h-4 cursor-pointer')
+              .children(
+                Domino.of('use', Domino.SVG).attributes({
+                  href: Domino.icon('ph--play--regular'),
+                }),
+              ),
+          ),
+      ).root;
   }
 }
