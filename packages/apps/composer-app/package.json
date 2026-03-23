@@ -98,6 +98,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@fontsource/poiret-one": "catalog:",
+    "date-fns": "catalog:",
     "@tauri-apps/api": "catalog:",
     "@tauri-apps/plugin-deep-link": "catalog:",
     "@tauri-apps/plugin-haptics": "catalog:",
