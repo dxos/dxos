@@ -72,14 +72,14 @@ export const promptRunExtension = ({ onRun }: PromptExtensionOptions): Extension
 
 class PromptRunWidget extends WidgetType {
   constructor(
-    private readonly _promptText: string,
-    private readonly _onRun: (promptText: string) => void,
+    private readonly prompt: string,
+    private readonly onClick: (promptText: string) => void,
   ) {
     super();
   }
 
   override eq(other: this) {
-    return this._promptText === other._promptText;
+    return this.prompt === other.prompt;
   }
 
   override ignoreEvent() {
@@ -95,7 +95,7 @@ class PromptRunWidget extends WidgetType {
           .on('mousedown', (event) => {
             event.preventDefault();
             event.stopPropagation();
-            this._onRun(this._promptText);
+            this.onClick(this.prompt);
           })
           .children(
             Domino.of('svg', Domino.SVG)
