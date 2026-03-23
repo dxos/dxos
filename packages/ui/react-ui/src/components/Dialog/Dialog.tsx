@@ -227,7 +227,7 @@ const DialogActionBar = forwardRef<HTMLDivElement, DialogActionBarProps>(
   ({ children, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <Column.Row asChild center>
+      <Column.Row center>
         <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
           {children}
         </div>
