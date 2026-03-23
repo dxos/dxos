@@ -19,7 +19,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
@@ -53,7 +53,6 @@ const meta = {
   title: 'plugins/plugin-pipeline/containers/PipelineContainer',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [

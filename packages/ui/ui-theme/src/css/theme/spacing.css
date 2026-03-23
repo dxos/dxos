@@ -6,9 +6,10 @@
   /** Minimum inset from the viewport edge for floating surfaces. */
   --spacing-screen-border: 2rem;
 
-  --spacing-text-content: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+  --spacing-popover-min-width: 12rem;
 
   --spacing-document-max-width: 50rem;
+  --spacing-document-width: calc(50rem - env(safe-area-inset-left) - env(safe-area-inset-right));
 
   --spacing-popover-min-width: 16rem;
 

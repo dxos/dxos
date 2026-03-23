@@ -29,15 +29,16 @@ const gutterSizes: Record<GutterSize, string> = {
 type ColumnRootProps = ThemedClassName<SlottableProps<HTMLDivElement, { gutter?: GutterSize }>>;
 
 /**
- * Creates a vertical channel with left/right gutter columns.
- * The `--gutter` CSS variable is set for nested components (Dialog, ScrollArea, Form.Viewport, etc.).
- * Use `gutter='sm'` for compact layouts; `gutter='md'` (default) for whitespace layouts (Dialog); `gutter='lg'` for wider spacing.
- * Direct children must use Column.Row (spans all 3 cols) or Column.Viewport (center col only).
+ * Creates a 3-column CSS grid with left/right gutter columns and a center content column.
+ * Sets the `--gutter` CSS variable for nested components.
  *
- * NOTE: The theme applies a `dx-column` marker class to this element.
- * ScrollArea.Root detects this via `[.dx-column_&]:col-span-full` to span all 3 grid columns,
- * ensuring scroll content extends under the gutters rather than being confined to the center column.
- * The `--gutter` CSS variable is also consumed by ScrollArea's `margin` option to align scrollbar spacing.
+ * Direct children participate in the grid in one of three ways:
+ * - **Column.Row** — 3-col subgrid row (icons in gutters, content in center).
+ * - **Column.Content** — spans full width; re-applies gutters as `px-[var(--gutter)]` padding.
+ *   Sets `--gutter-offset` so nested ScrollAreas can break out of the padding.
+ * - **Column.Viewport** — spans full width; delegates gutters to ScrollArea.
+ *
+ * Gutter sizes: `'sm'` for compact layouts (Dialog); `'md'` (default); `'lg'` for wider spacing.
  */
 const ColumnRoot = forwardRef<HTMLDivElement, ColumnRootProps>(
   ({ children, asChild, role, gutter = 'md', ...props }, forwardedRef) => {
@@ -100,6 +101,34 @@ const ColumnRow = forwardRef<HTMLDivElement, ColumnRowProps>(
 ColumnRow.displayName = COLUMN_ROW_NAME;
 
 //
+// Content
+//
+
+const COLUMN_CONTENT_NAME = 'Column.Content';
+
+type ColumnContentProps = SlottableProps<HTMLDivElement>;
+
+/**
+ * Full-width content area that inherits Column.Root's 3-column grid via CSS subgrid.
+ * Non-scrolling children default to the center column (between gutters).
+ * ScrollArea children span all 3 columns via `[.dx-column_&]:col-span-full`.
+ */
+const ColumnContent = forwardRef<HTMLDivElement, ColumnContentProps>(
+  ({ children, asChild, role, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const { className, ...rest } = composableProps(props, { role: 'none' });
+    const Comp = asChild ? Slot : Primitive.div;
+    return (
+      <Comp {...rest} className={tx('column.content', {}, className)} ref={forwardedRef}>
+        {children}
+      </Comp>
+    );
+  },
+);
+
+ColumnContent.displayName = COLUMN_CONTENT_NAME;
+
+//
 // Viewport
 //
 
@@ -119,7 +148,7 @@ const ColumnViewport = forwardRef<HTMLDivElement, ColumnViewportProps>(
         padding
         ref={forwardedRef}
       >
-        <ScrollArea.Viewport classNames='py-2'>{children}</ScrollArea.Viewport>
+        <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
       </ScrollArea.Root>
     );
   },
@@ -133,8 +162,9 @@ ColumnViewport.displayName = COLUMN_VIEWPORT_NAME;
 
 export const Column = {
   Root: ColumnRoot,
-  Row: ColumnRow,
+  Content: ColumnContent,
   Viewport: ColumnViewport,
+  Row: ColumnRow,
 };
 
-export type { ColumnRootProps, ColumnRowProps, ColumnViewportProps };
+export type { ColumnRootProps, ColumnContentProps, ColumnViewportProps, ColumnRowProps };

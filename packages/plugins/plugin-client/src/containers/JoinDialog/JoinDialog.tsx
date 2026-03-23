@@ -35,19 +35,22 @@ export const JoinDialog = (props: JoinPanelProps) => {
     [invokePromise],
   );
 
+  // TODO(burdon): Move JoinHeading into Dialog.Heading.
   return (
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title classNames='sr-only'>{t('join space label', { ns: osTranslations })}</Dialog.Title>
       </Dialog.Header>
-      <JoinPanel
-        mode='halo-only'
-        {...props}
-        exitActionParent={<Dialog.Close asChild />}
-        doneActionParent={<Dialog.Close asChild />}
-        onCancelResetStorage={handleCancelResetStorage}
-        onDone={handleDone}
-      />
+      <Dialog.Body>
+        <JoinPanel
+          {...props}
+          mode='halo-only'
+          exitActionParent={<Dialog.Close asChild />}
+          doneActionParent={<Dialog.Close asChild />}
+          onCancelResetStorage={handleCancelResetStorage}
+          onDone={handleDone}
+        />
+      </Dialog.Body>
     </Dialog.Content>
   );
 };

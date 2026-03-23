@@ -250,7 +250,6 @@ const useMessageTagsMap = (
 
   useEffect(() => {
     const map: Record<string, Tag.Tag[]> = {};
-
     for (const relation of hasSubjectRelations) {
       try {
         const source = Relation.getSource(relation);

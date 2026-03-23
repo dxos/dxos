@@ -14,7 +14,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { translations as stackTranslations } from '@dxos/react-ui-stack';
 import { Organization, Person } from '@dxos/types';
 
@@ -73,7 +73,6 @@ const meta = {
   title: 'plugins/plugin-board/containers/BoardContainer',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
