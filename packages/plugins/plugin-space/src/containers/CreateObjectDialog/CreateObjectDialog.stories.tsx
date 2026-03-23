@@ -66,7 +66,7 @@ const SelectSpaceStory = () => {
               typename='org.dxos.type.document'
               target={target}
               resolve={mockResolve}
-              onTargetChange={setTarget as any}
+              onTargetChange={(nextTarget) => setTarget(nextTarget)}
               onCreateObject={async () => {}}
             />
           </Dialog.Body>

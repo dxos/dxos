@@ -101,7 +101,7 @@ const ColumnRow = forwardRef<HTMLDivElement, ColumnRowProps>(
 ColumnRow.displayName = COLUMN_ROW_NAME;
 
 //
-// Body
+// Content
 //
 
 const COLUMN_CONTENT_NAME = 'Column.Content';
@@ -109,10 +109,9 @@ const COLUMN_CONTENT_NAME = 'Column.Content';
 type ColumnContentProps = SlottableProps<HTMLDivElement>;
 
 /**
- * Full-width content area with gutter padding.
- * Use inside Column.Root for content that doesn't manage its own scroll.
- * ScrollArea-based children (e.g., Form.Viewport) automatically break out of this padding
- * via the `--gutter-offset` CSS variable set by Column.Root.
+ * Full-width content area that inherits Column.Root's 3-column grid via CSS subgrid.
+ * Non-scrolling children default to the center column (between gutters).
+ * ScrollArea children span all 3 columns via `[.dx-column_&]:col-span-full`.
  */
 const ColumnContent = forwardRef<HTMLDivElement, ColumnContentProps>(
   ({ children, asChild, role, ...props }, forwardedRef) => {

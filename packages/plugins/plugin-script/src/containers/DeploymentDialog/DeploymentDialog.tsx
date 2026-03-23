@@ -80,7 +80,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
         </ul>
       </Dialog.Body>
       <Dialog.ActionBar>
-        <Dialog.Close asChild disabled={status === 'pending'}>
+        <Dialog.Close asChild>
           <Button disabled={status === 'pending'}>{t('deployment dialog skip button label')}</Button>
         </Dialog.Close>
         <Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
