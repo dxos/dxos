@@ -13,7 +13,6 @@ import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { ElevationProvider } from '../ElevationProvider';
 
-// Re-export shared sub-components from Dialog.
 import {
   Dialog,
   type DialogHeaderProps,

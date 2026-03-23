@@ -14,16 +14,11 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type CreateObjectOption, type Metadata, CreateObjectPanel } from '../../components';
 import { translations } from '../../translations';
 
-//
-// Mock data.
-//
-
 const mockOptions: CreateObjectOption[] = [
   { id: 'org.dxos.type.document', label: 'Document', icon: 'ph--file-text--regular' },
   { id: 'org.dxos.type.table', label: 'Table', icon: 'ph--table--regular' },
   { id: 'org.dxos.type.canvas', label: 'Canvas', icon: 'ph--paint-brush--regular' },
   { id: 'org.dxos.type.thread', label: 'Thread', icon: 'ph--chat-circle-text--regular' },
-  ...Array.from({ length: 50 }).map((_, i) => ({ id: `x${i}`, label: `xx${i}` })),
 ];
 
 const mockSpaces = [
@@ -39,18 +34,18 @@ const DefaultStory = () => {
   return (
     <Dialog.Root open>
       <Dialog.Overlay>
-          <Dialog.Content>
-            <Dialog.Body>
-              <CreateObjectPanel
-                options={mockOptions}
-                spaces={mockSpaces}
-                typename={typename}
-                resolve={mockResolve}
-                onTypenameChange={setTypename}
-                onCreateObject={async () => {}}
-              />
-            </Dialog.Body>
-          </Dialog.Content>
+        <Dialog.Content>
+          <Dialog.Body>
+            <CreateObjectPanel
+              options={mockOptions}
+              spaces={mockSpaces}
+              typename={typename}
+              resolve={mockResolve}
+              onTypenameChange={setTypename}
+              onCreateObject={async () => {}}
+            />
+          </Dialog.Body>
+        </Dialog.Content>
       </Dialog.Overlay>
     </Dialog.Root>
   );
@@ -63,19 +58,19 @@ const SelectSpaceStory = () => {
   return (
     <Dialog.Root open>
       <Dialog.Overlay>
-          <Dialog.Content>
-            <Dialog.Body>
-              <CreateObjectPanel
-                options={mockOptions}
-                spaces={mockSpaces}
-                typename='org.dxos.type.document'
-                target={target}
-                resolve={mockResolve}
-                onTargetChange={setTarget as any}
-                onCreateObject={async () => {}}
-              />
-            </Dialog.Body>
-          </Dialog.Content>
+        <Dialog.Content>
+          <Dialog.Body>
+            <CreateObjectPanel
+              options={mockOptions}
+              spaces={mockSpaces}
+              typename='org.dxos.type.document'
+              target={target}
+              resolve={mockResolve}
+              onTargetChange={setTarget as any}
+              onCreateObject={async () => {}}
+            />
+          </Dialog.Body>
+        </Dialog.Content>
       </Dialog.Overlay>
     </Dialog.Root>
   );
