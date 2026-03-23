@@ -5,7 +5,7 @@
 import { formatDistance } from 'date-fns/formatDistance';
 import React from 'react';
 
-import { Button, Column, Dialog, useTranslation } from '@dxos/react-ui';
+import { Button, Column, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
 import { useConfig } from '@dxos/react-client';
 
 import { meta } from '../../meta';
@@ -35,11 +35,27 @@ export const AboutDialog = () => {
       <Dialog.Body>
         {/* TODO(burdon): Reconcile with plugin-status-bar */}
         <Column.Content classNames='flex flex-col text-sm'>
-          <div className='flex items-center gap-1'>
-            <span>{t('version')}</span>
-            <span>{v}</span>
+          <div role='none' className='flex items-center'>
+            {t('version label', { version: v })}
           </div>
-          {timestamp && <div>{formatDistance(new Date(timestamp), new Date(), { addSuffix: true })}</div>}
+          {timestamp && (
+            <div role='none' className='flex items-center gap-1'>
+              {t('published label', {
+                timestamp: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
+              })}
+            </div>
+          )}
+          <p>
+            <Trans
+              {...{
+                t,
+                i18nKey: 'powered by dxos message',
+                components: {
+                  dxos: <Link href='https://dxos.org' target='_blank' rel='noreferrer' variant='neutral' />,
+                },
+              }}
+            />
+          </p>
         </Column.Content>
       </Dialog.Body>
       <Dialog.ActionBar>

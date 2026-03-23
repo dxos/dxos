@@ -48,6 +48,8 @@ export const translations = [
 
         'open about label': 'About Composer',
         'version label': 'Version {{version}}',
+        'published label': 'Published {{timestamp}}',
+        'powered by dxos message': 'Powered by <dxos>DXOS</dxos>',
         'close label': 'Close',
       },
     },
