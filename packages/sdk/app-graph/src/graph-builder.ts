@@ -21,7 +21,7 @@ import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullab
 import * as Graph from './graph';
 import * as Node from './node';
 import * as NodeMatcher from './node-matcher';
-import { Separators, nodeArgsUnchanged, normalizeRelation, qualifyId, validateSegmentId } from './util';
+import { nodeArgsUnchanged, normalizeRelation, primaryKey, primaryParts, qualifyId, validateSegmentId } from './util';
 
 //
 // Extension Types
@@ -325,9 +325,8 @@ class GraphBuilderImpl implements GraphBuilder {
   }
 
   private _onRemoveNode(id: string): void {
-    const prefix = `${id}${Separators.primary}`;
     for (const [key, cleanup] of this._subscriptions) {
-      if (key.startsWith(prefix)) {
+      if (primaryParts(key)[0] === id) {
         cleanup();
         this._subscriptions.delete(key);
       }
@@ -828,19 +827,15 @@ const qualifyNodeArgs =
       };
     });
 
-const connectorKey = (id: string, relation: Node.RelationInput): string =>
-  `${id}${Separators.primary}${Graph.relationKey(relation)}`;
+const connectorKey = (id: string, relation: Node.RelationInput): string => primaryKey(id, Graph.relationKey(relation));
 
 const relationFromConnectorKey = (key: string): { id: string; relation: Node.Relation } => {
-  const separatorIndex = key.indexOf(Separators.primary);
-  const id = key.slice(0, separatorIndex);
-  return { id, relation: Graph.relationFromKey(key.slice(separatorIndex + 1)) };
+  const [id, encodedRelation] = primaryParts(key);
+  return { id, relation: Graph.relationFromKey(encodedRelation) };
 };
 
 const subscriptionKey = (id: string, kind: string, detail?: string): string =>
-  detail != null
-    ? `${id}${Separators.primary}${kind}${Separators.primary}${detail}`
-    : `${id}${Separators.primary}${kind}`;
+  detail != null ? primaryKey(id, kind, detail) : primaryKey(id, kind);
 
 export const flattenExtensions = (extension: BuilderExtensions, acc: BuilderExtension[] = []): BuilderExtension[] => {
   if (Array.isArray(extension)) {

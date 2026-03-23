@@ -6,7 +6,7 @@ import { EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { companionSegment } from '@dxos/app-toolkit';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { type EditorState, commentClickedEffect, commentsState, documentId, overlap } from '@dxos/ui-editor';
@@ -52,7 +52,7 @@ export default Capability.makeModule(
             transaction.effects.forEach(async (effect) => {
               if (effect.is(commentClickedEffect)) {
                 void invokePromise(DeckOperation.ChangeCompanion, {
-                  companion: `${COMPANION_PREFIX}comments`,
+                  companion: companionSegment('comments'),
                 });
               }
             });

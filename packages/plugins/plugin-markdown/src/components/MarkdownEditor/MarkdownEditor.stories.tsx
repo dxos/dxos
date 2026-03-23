@@ -13,7 +13,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as editorTranslations } from '@dxos/react-ui-editor';
 import { Text } from '@dxos/schema';
@@ -53,7 +53,6 @@ const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-markdown/components/MarkdownEditor',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [

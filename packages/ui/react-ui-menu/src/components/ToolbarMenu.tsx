@@ -205,7 +205,7 @@ const ToggleGroupToolbarItem = ({
 };
 
 export const ToolbarMenu = forwardRef<HTMLDivElement, MenuScopedProps<ToolbarMenuProps>>(
-  ({ __menuScope, classNames, ...props }, forwardRef) => {
+  ({ __menuScope, classNames, children, ...props }, forwardRef) => {
     const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
     const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenu', __menuScope);
     const { hasAttention } = useAttention(attendableId);
@@ -220,6 +220,7 @@ export const ToolbarMenu = forwardRef<HTMLDivElement, MenuScopedProps<ToolbarMen
         {items?.map((item: MenuItem) => (
           <ToolbarMenuItem key={item.id} __menuScope={__menuScope} item={item} />
         ))}
+        {children}
       </NaturalToolbar.Root>
     );
   },

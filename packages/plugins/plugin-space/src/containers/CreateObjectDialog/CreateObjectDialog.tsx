@@ -130,10 +130,7 @@ export const CreateObjectDialog = ({
       <Dialog.Header>
         <Dialog.Title>
           {t('create object dialog title', {
-            object: t('typename label', {
-              ns: typename,
-              defaultValue: views ? 'View' : 'Object',
-            }),
+            object: t('typename label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
           })}
         </Dialog.Title>
         <Dialog.Close asChild>
@@ -149,9 +146,9 @@ export const CreateObjectDialog = ({
           initialFormValues={initialFormValues}
           defaultSpaceId={client.spaces.default.id}
           resolve={resolve}
+          onCreateObject={handleCreateObject}
           onTargetChange={setTarget}
           onTypenameChange={setTypename}
-          onCreateObject={handleCreateObject}
         />
       </Dialog.Body>
     </Dialog.Content>

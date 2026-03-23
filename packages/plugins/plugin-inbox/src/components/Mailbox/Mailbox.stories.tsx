@@ -66,7 +66,7 @@ const meta = {
   title: 'plugins/plugin-inbox/components/Mailbox',
   component: MailboxComponent as any,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],
+  decorators: [withLayout({ layout: 'column' }), withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },
@@ -76,7 +76,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: [withTheme()],
+};
 
 export const WithCompanion: Story = {
   render: CompanionStory,

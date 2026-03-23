@@ -15,7 +15,7 @@ import type {
   QueueService,
   SyncQueueRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { ComplexMap } from '@dxos/util';
+import { ComplexMap, compositeKey } from '@dxos/util';
 
 /**
  * Backed by Edge.
@@ -61,7 +61,7 @@ export class QueueServiceImpl implements QueueService {
  */
 export class MockQueueService implements QueueService {
   private _queues = new ComplexMap<[subspaceTag: string, spaceId: SpaceId, queueId: ObjectId], unknown[]>(
-    ([subspaceTag, spaceId, queueId]) => `${subspaceTag}:${spaceId}:${queueId}`,
+    ([subspaceTag, spaceId, queueId]) => compositeKey(subspaceTag, spaceId, queueId),
   );
 
   async queryQueue(request: QueryQueueRequest): Promise<QueueQueryResult> {
