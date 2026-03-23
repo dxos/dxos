@@ -1,71 +1,93 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<body>
-<pre id="log"></pre>
-<script>
-  const log = document.getElementById('log');
-  const print = (msg) => { log.textContent += '\n' + msg; };
+  <body>
+    <pre id="log"></pre>
+    <script>
+      const log = document.getElementById('log');
+      const print = (msg) => {
+        log.textContent += '\n' + msg;
+      };
 
-  if (!confirm('This will WIPE ALL DATA for this origin (localStorage, IndexedDB, OPFS, cookies, caches, service workers).\n\nContinue?')) {
-    print('Aborted.');
-    throw new Error('aborted');
-  }
-
-  print('Clearing all storage...');
-
-  (async () => {
-    try { localStorage.clear(); print('localStorage cleared'); }
-    catch (e) { print('localStorage: ' + e.message); }
-
-    try { sessionStorage.clear(); print('sessionStorage cleared'); }
-    catch (e) { print('sessionStorage: ' + e.message); }
-
-    try {
-      const dbs = await indexedDB.databases();
-      for (const db of dbs) {
-        indexedDB.deleteDatabase(db.name);
-        print('Deleted IndexedDB: ' + db.name);
+      if (
+        !confirm(
+          'This will WIPE ALL DATA for this origin (localStorage, IndexedDB, OPFS, cookies, caches, service workers).\n\nContinue?',
+        )
+      ) {
+        print('Aborted.');
+        throw new Error('aborted');
       }
-      if (!dbs.length) print('No IndexedDB databases');
-    } catch (e) { print('IndexedDB: ' + e.message); }
 
-    try {
-      const root = await navigator.storage.getDirectory();
-      let count = 0;
-      for await (const [name] of root.entries()) {
-        await root.removeEntry(name, { recursive: true });
-        print('Removed OPFS: ' + name);
-        count++;
-      }
-      if (!count) print('No OPFS entries');
-    } catch (e) { print('OPFS: ' + e.message); }
+      print('Clearing all storage...');
 
-    try {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      for (const reg of regs) {
-        await reg.unregister();
-        print('Unregistered SW: ' + reg.scope);
-      }
-      if (!regs.length) print('No service workers');
-    } catch (e) { print('SW: ' + e.message); }
+      (async () => {
+        try {
+          localStorage.clear();
+          print('localStorage cleared');
+        } catch (e) {
+          print('localStorage: ' + e.message);
+        }
 
-    try {
-      const keys = await caches.keys();
-      for (const key of keys) {
-        await caches.delete(key);
-        print('Deleted cache: ' + key);
-      }
-      if (!keys.length) print('No caches');
-    } catch (e) { print('Caches: ' + e.message); }
+        try {
+          sessionStorage.clear();
+          print('sessionStorage cleared');
+        } catch (e) {
+          print('sessionStorage: ' + e.message);
+        }
 
-    document.cookie.split(';').forEach(c => {
-      const name = c.trim().split('=')[0];
-      if (name) document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
-    });
-    print('Cookies cleared');
+        try {
+          const dbs = await indexedDB.databases();
+          for (const db of dbs) {
+            indexedDB.deleteDatabase(db.name);
+            print('Deleted IndexedDB: ' + db.name);
+          }
+          if (!dbs.length) print('No IndexedDB databases');
+        } catch (e) {
+          print('IndexedDB: ' + e.message);
+        }
 
-    print('\nDone. Navigate to / to restart.');
-  })();
-</script>
-</body>
+        try {
+          const root = await navigator.storage.getDirectory();
+          let count = 0;
+          for await (const [name] of root.entries()) {
+            await root.removeEntry(name, { recursive: true });
+            print('Removed OPFS: ' + name);
+            count++;
+          }
+          if (!count) print('No OPFS entries');
+        } catch (e) {
+          print('OPFS: ' + e.message);
+        }
+
+        try {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          for (const reg of regs) {
+            await reg.unregister();
+            print('Unregistered SW: ' + reg.scope);
+          }
+          if (!regs.length) print('No service workers');
+        } catch (e) {
+          print('SW: ' + e.message);
+        }
+
+        try {
+          const keys = await caches.keys();
+          for (const key of keys) {
+            await caches.delete(key);
+            print('Deleted cache: ' + key);
+          }
+          if (!keys.length) print('No caches');
+        } catch (e) {
+          print('Caches: ' + e.message);
+        }
+
+        document.cookie.split(';').forEach((c) => {
+          const name = c.trim().split('=')[0];
+          if (name) document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+        });
+        print('Cookies cleared');
+
+        print('\nDone. Navigate to / to restart.');
+      })();
+    </script>
+  </body>
 </html>
