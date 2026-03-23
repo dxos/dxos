@@ -1794,9 +1794,6 @@ catalogs:
     workerize-loader:
       specifier: ^2.0.2
       version: 2.0.2
-    ws:
-      specifier: ^8.18.3
-      version: 8.18.3
     wtfnode:
       specifier: ^0.10.0
       version: 0.10.0
@@ -4805,7 +4802,7 @@ importers:
         specifier: 'catalog:'
         version: 3.1.1
       ws:
-        specifier: 'catalog:'
+        specifier: '>=8.17.1'
         version: 8.18.3
 
   packages/core/echo/echo-protocol:
