@@ -88,7 +88,7 @@ export const InvocationTraceStartEvent = Schema.Struct({
   }),
 );
 
-export interface InvocationTraceStartEvent extends Schema.Schema.Type<typeof InvocationTraceStartEvent> { }
+export interface InvocationTraceStartEvent extends Schema.Schema.Type<typeof InvocationTraceStartEvent> {}
 
 export const InvocationTraceEndEvent = Schema.Struct({
   /**
@@ -116,7 +116,7 @@ export const InvocationTraceEndEvent = Schema.Struct({
   }),
 );
 
-export interface InvocationTraceEndEvent extends Schema.Schema.Type<typeof InvocationTraceEndEvent> { }
+export interface InvocationTraceEndEvent extends Schema.Schema.Type<typeof InvocationTraceEndEvent> {}
 
 export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;
 

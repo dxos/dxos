@@ -4,8 +4,7 @@
 
 import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import type * as Runtime from 'effect/Runtime';
-import {
-  useContext, useMemo, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 
 import { Ref } from '@dxos/echo';
 import { AiConversation } from '@dxos/assistant';
