@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AgentStatus } from '@dxos/ai';
-import { type DXN, Obj } from '@dxos/echo';
+import { type DXN, Obj, Ref } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
@@ -158,6 +158,7 @@ export namespace TracingService {
       id: string;
       kind: Trigger.Kind;
     };
+    chat?: Ref.Ref<Obj.Unknown>;
   }
 }
 
