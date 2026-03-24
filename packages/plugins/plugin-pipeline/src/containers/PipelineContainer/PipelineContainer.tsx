@@ -14,7 +14,7 @@ import {
   type SurfaceComponentProps,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { companionSegment } from '@dxos/app-toolkit';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -37,7 +37,7 @@ export const PipelineContainer = ({ role, subject: pipeline, attendableId }: Pip
   const handleColumnAdd = useCallback(
     () =>
       invokePromise(DeckOperation.ChangeCompanion, {
-        companion: `${COMPANION_PREFIX}settings`,
+        companion: companionSegment('settings'),
       }),
     [invokePromise],
   );

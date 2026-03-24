@@ -54,8 +54,8 @@ const seedData = async (client: Client) => {
         name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
       }),
     );
-    Obj.change(expando, (e) => {
-      e.value.push(Ref.make(todo));
+    Obj.change(expando, (obj) => {
+      obj.value.push(Ref.make(todo));
     });
     await space.db.flush();
   }

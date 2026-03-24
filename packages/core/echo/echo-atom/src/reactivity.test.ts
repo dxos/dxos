@@ -29,8 +29,8 @@ describe('Echo Atom - Reactivity', () => {
     registry.subscribe(atom, () => {});
 
     // Update the object via Obj.change.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
 
     const updatedSnapshot = registry.get(atom);
@@ -51,8 +51,8 @@ describe('Echo Atom - Reactivity', () => {
     registry.subscribe(atom, () => {});
 
     // Update the property via Obj.change.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
 
     expect(registry.get(atom)).toBe('Updated');
@@ -83,8 +83,8 @@ describe('Echo Atom - Reactivity', () => {
     });
 
     // Update only email property via Obj.change.
-    Obj.change(obj, (o) => {
-      o.email = 'updated@example.com';
+    Obj.change(obj, (obj) => {
+      obj.email = 'updated@example.com';
     });
 
     // Name atom should NOT have changed.
@@ -110,9 +110,9 @@ describe('Echo Atom - Reactivity', () => {
     registry.subscribe(emailAtom, () => {});
 
     // Update multiple properties via Obj.change.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
-      o.email = 'updated@example.com';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
+      obj.email = 'updated@example.com';
     });
 
     expect(registry.get(nameAtom)).toBe('Updated');
@@ -141,11 +141,11 @@ describe('Echo Atom - Reactivity', () => {
     expect(initialCount).toBe(1);
 
     // Update object via Obj.change.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
-    Obj.change(obj, (o) => {
-      o.email = 'updated@example.com';
+    Obj.change(obj, (obj) => {
+      obj.email = 'updated@example.com';
     });
 
     // Updates fire through Obj.subscribe (one per Obj.change call).
@@ -167,8 +167,8 @@ describe('Echo Atom - Reactivity', () => {
     });
 
     actions.push('before');
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
     actions.push('after');
 
@@ -191,8 +191,8 @@ describe('Echo Atom - Reactivity', () => {
     });
 
     actions.push('before');
-    Obj.change(obj, (o) => {
-      o.stringArray!.splice(1, 1);
+    Obj.change(obj, (obj) => {
+      obj.stringArray!.splice(1, 1);
     });
     actions.push('after');
 

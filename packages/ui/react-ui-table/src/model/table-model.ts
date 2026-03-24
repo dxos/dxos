@@ -894,14 +894,14 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
       if (field) {
         // Persist sort to view.query.ast
         const newQuery = baseQuery.orderBy(Order.property<any>(field.path as string, inMemorySort.direction));
-        Obj.change(view, (v) => {
-          v.query.ast = newQuery.ast as Mutable<typeof newQuery.ast>;
+        Obj.change(view, (obj) => {
+          obj.query.ast = newQuery.ast as Mutable<typeof newQuery.ast>;
         });
       }
     } else {
       // Clear sort from view.query.ast
-      Obj.change(view, (v) => {
-        v.query.ast = baseQuery.ast as Mutable<typeof baseQuery.ast>;
+      Obj.change(view, (obj) => {
+        obj.query.ast = baseQuery.ast as Mutable<typeof baseQuery.ast>;
       });
     }
 

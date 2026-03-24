@@ -9,7 +9,7 @@ import { AppCapabilities, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
-import { REGISTRY_ID, REGISTRY_KEY, meta } from '../../meta';
+import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '../../meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -48,9 +48,9 @@ export default Capability.makeModule(
               },
               nodes: [
                 {
-                  id: `${REGISTRY_KEY}>all`,
+                  id: registryCategoryId('all'),
                   type: 'category' as const,
-                  data: `${REGISTRY_KEY}>all`,
+                  data: registryCategoryId('all'),
                   properties: {
                     label: ['all plugins label', { ns: meta.id }],
                     icon: 'ph--squares-four--regular',
@@ -59,9 +59,9 @@ export default Capability.makeModule(
                   },
                 },
                 {
-                  id: `${REGISTRY_KEY}>installed`,
+                  id: registryCategoryId('installed'),
                   type: 'category' as const,
-                  data: `${REGISTRY_KEY}>installed`,
+                  data: registryCategoryId('installed'),
                   properties: {
                     label: ['installed plugins label', { ns: meta.id }],
                     icon: 'ph--check--regular',
@@ -70,9 +70,9 @@ export default Capability.makeModule(
                   },
                 },
                 {
-                  id: `${REGISTRY_KEY}>recommended`,
+                  id: registryCategoryId('recommended'),
                   type: 'category' as const,
-                  data: `${REGISTRY_KEY}>recommended`,
+                  data: registryCategoryId('recommended'),
                   properties: {
                     label: ['recommended plugins label', { ns: meta.id }],
                     icon: 'ph--star--regular',
@@ -81,9 +81,9 @@ export default Capability.makeModule(
                   },
                 },
                 {
-                  id: `${REGISTRY_KEY}>labs`,
+                  id: registryCategoryId('labs'),
                   type: 'category' as const,
-                  data: `${REGISTRY_KEY}>labs`,
+                  data: registryCategoryId('labs'),
                   properties: {
                     label: ['labs plugins label', { ns: meta.id }],
                     icon: 'ph--flask--regular',

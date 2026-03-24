@@ -31,8 +31,8 @@ const handler: Operation.WithHandler<typeof DeleteMessage> = DeleteMessage.pipe(
         return { messageIndex: -1 };
       }
 
-      Obj.change(thread, (t) => {
-        t.messages.splice(msgIndex, 1);
+      Obj.change(thread, (obj) => {
+        obj.messages.splice(msgIndex, 1);
       });
 
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {

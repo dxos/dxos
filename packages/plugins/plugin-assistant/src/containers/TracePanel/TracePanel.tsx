@@ -7,7 +7,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Schema from 'effect/Schema';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
@@ -19,6 +19,7 @@ import { Input, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 
+import { extractFirstDxnFromToolInput, extractFirstDxnFromToolResult } from './dxn-extractor';
 import { meta } from '../../meta';
 
 export const TracePanel = ({ space }: { space: Space }) => {
@@ -27,6 +28,14 @@ export const TracePanel = ({ space }: { space: Space }) => {
   const isRunning = state?.enabled ?? false;
 
   const { branches, commits } = useAtomValue(useMemo(() => getExecutionGraph(space), [space]));
+
+  const handleCommitClick = useCallback((commit: Commit) => {
+    if (commit.link) {
+      const anchor = document.createElement('dx-anchor') as HTMLElement & { dxn: string };
+      anchor.dxn = commit.link;
+      anchor.click();
+    }
+  }, []);
 
   return (
     <Panel.Root>
@@ -41,7 +50,7 @@ export const TracePanel = ({ space }: { space: Space }) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        <Timeline branches={branches} commits={commits} compact />
+        <Timeline branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
       </Panel.Content>
     </Panel.Root>
   );
@@ -184,11 +193,14 @@ const getExecutionGraph = (
           });
 
           // Subevents of the invocation.
+          // Track tool call IDs to their corresponding DXNs for linking tool results.
+          const toolCallDxns = new Map<string, string>();
+
           for (const subevent of invocation.subevents.slice(-subeventsLimit)) {
             if (Obj.instanceOf(Message.Message, subevent)) {
               for (const block of subevent.blocks) {
                 switch (block._tag) {
-                  case 'text':
+                  case 'text': {
                     commits.push({
                       id: subevent.id,
                       branch: branchName,
@@ -202,7 +214,15 @@ const getExecutionGraph = (
                       branches.push(branchName);
                     }
                     break;
-                  case 'toolCall':
+                  }
+                  case 'toolCall': {
+                    // Extract DXN from tool call input.
+                    const dxn = extractFirstDxnFromToolInput(block.input);
+                    const link = dxn?.toString();
+                    if (link) {
+                      toolCallDxns.set(block.toolCallId, link);
+                    }
+
                     commits.push({
                       id: subevent.id,
                       branch: branchName,
@@ -211,11 +231,53 @@ const getExecutionGraph = (
                       level: LogLevel.VERBOSE,
                       message: block.name,
                       timestamp: new Date(subevent.created),
+                      link,
                     });
                     if (!branches.includes(branchName)) {
                       branches.push(branchName);
                     }
                     break;
+                  }
+                  case 'toolResult': {
+                    // Extract DXN from tool result, or use the one from the corresponding tool call.
+                    const resultDxn = extractFirstDxnFromToolResult(block.result);
+                    const link = resultDxn?.toString() ?? toolCallDxns.get(block.toolCallId);
+
+                    commits.push({
+                      id: `${subevent.id}_result_${block.toolCallId}`,
+                      branch: branchName,
+                      parents: [commits.at(-1)!.id],
+                      icon: block.error ? 'ph--x-circle--regular' : 'ph--check-circle--regular',
+                      level: block.error ? LogLevel.ERROR : LogLevel.INFO,
+                      message: block.error ? `Error: ${block.error.slice(0, 50)}` : `${block.name} completed`,
+                      timestamp: new Date(subevent.created),
+                      link,
+                    });
+                    if (!branches.includes(branchName)) {
+                      branches.push(branchName);
+                    }
+                    break;
+                  }
+                  case 'reference': {
+                    // Extract DXN from reference block.
+                    const refDxn = block.reference?.dxn;
+                    const link = refDxn?.toString();
+
+                    commits.push({
+                      id: `${subevent.id}_ref`,
+                      branch: branchName,
+                      parents: [commits.at(-1)!.id],
+                      icon: 'ph--link--regular',
+                      level: LogLevel.INFO,
+                      message: 'Reference',
+                      timestamp: new Date(subevent.created),
+                      link,
+                    });
+                    if (!branches.includes(branchName)) {
+                      branches.push(branchName);
+                    }
+                    break;
+                  }
                 }
               }
             }

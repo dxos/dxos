@@ -60,7 +60,10 @@ type FormContextValue<T extends AnyProperties = any> = {
    * Testing.
    */
   testId?: string;
-} & Pick<NaturalFormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection'>;
+} & Pick<
+  NaturalFormFieldSetProps<T>,
+  'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection' | 'createTypename' | 'createFieldMap'
+>;
 
 const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
 
@@ -231,7 +234,6 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   if (readonly || layout === 'static') {
     return null;
   }
-
   // TODO(burdon): Currently onCancel is a no-op; implement "revert values".
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 

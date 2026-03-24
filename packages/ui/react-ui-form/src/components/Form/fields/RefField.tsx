@@ -46,7 +46,10 @@ const defaultResultsHook: NonNullable<RefFieldProps['resultsHook']> = (db, typen
   );
 
 export type RefFieldProps = FormFieldComponentProps &
-  Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> & {
+  Pick<
+    ObjectPickerContentProps,
+    'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath' | 'createFieldMap'
+  > & {
     db?: Database.Database;
     resultsHook?: (db?: Database.Database, typename?: string) => Entity.Any[];
     schemaHook?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
@@ -66,6 +69,7 @@ export const RefField = (props: RefFieldProps) => {
     createOptionLabel,
     createOptionIcon,
     createInitialValuePath,
+    createFieldMap,
     db,
     resultsHook: useResults = defaultResultsHook,
     schemaHook: useSchema = useSchema$,
@@ -181,6 +185,7 @@ export const RefField = (props: RefFieldProps) => {
                 createOptionLabel={createOptionLabel}
                 createOptionIcon={createOptionIcon}
                 createInitialValuePath={createInitialValuePath}
+                createFieldMap={createFieldMap}
                 onCreate={handleCreate}
                 onSelect={handleSelect}
               />

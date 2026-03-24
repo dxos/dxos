@@ -1490,8 +1490,8 @@ describe('Query', () => {
       }
 
       // Update the object.
-      Obj.change(obj, (o) => {
-        o.title = 'Updated Title';
+      Obj.change(obj, (obj) => {
+        obj.title = 'Updated Title';
       });
       await db.flush();
 
@@ -2050,8 +2050,8 @@ describe('Query', () => {
       });
       onTestFinished(() => unsub());
 
-      Obj.change(contact, (c) => {
-        c.name = name;
+      Obj.change(contact, (obj) => {
+        obj.name = name;
       });
       db.add(Obj.make(TestSchema.Person, {}));
 

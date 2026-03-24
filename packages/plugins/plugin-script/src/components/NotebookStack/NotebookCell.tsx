@@ -61,8 +61,8 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {
       invariant(cell.source?.target);
-      Obj.change(cell.source.target, (s) => {
-        s.content = value;
+      Obj.change(cell.source.target, (obj) => {
+        obj.content = value;
       });
     },
     [cell],

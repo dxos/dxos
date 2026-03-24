@@ -114,6 +114,57 @@ export const WithScrollArea = {
   ),
 };
 
+/**
+ * Column.Content provides gutter padding for non-scrolling content.
+ * Compare with Column.Row which uses subgrid for gutter alignment.
+ */
+export const WithContent: Story = {
+  decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
+  render: () => (
+    <Column.Root classNames='overflow-hidden' gutter='md'>
+      <Column.Row center>
+        <h2 className='py-3'>Header (Column.Row)</h2>
+      </Column.Row>
+      <Column.Content>
+        <p className='py-2'>This text is inside Column.Content. It gets gutter padding automatically.</p>
+        <Input.Root>
+          <Input.Label>Name</Input.Label>
+          <Input.TextInput placeholder='Enter name' />
+        </Input.Root>
+      </Column.Content>
+      <Column.Row center>
+        <h2 className='py-3'>Footer (Column.Row)</h2>
+      </Column.Row>
+    </Column.Root>
+  ),
+};
+
+/**
+ * Column.Content with a nested ScrollArea.
+ * The ScrollArea breaks out of Content's gutter padding via `--gutter-offset`
+ * and applies its own asymmetric padding (accounting for scrollbar width).
+ */
+export const ContentWithScrollArea: Story = {
+  decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
+  render: () => (
+    <Column.Root classNames='overflow-hidden' gutter='md'>
+      <Column.Row center>
+        <h2 className='py-3'>Header (Column.Row)</h2>
+      </Column.Row>
+      <Column.Content>
+        <ScrollArea.Root orientation='vertical' padding thin>
+          <ScrollArea.Viewport>
+            <InputList items={30} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Column.Content>
+      <Column.Row center>
+        <h2 className='py-3'>Footer (Column.Row)</h2>
+      </Column.Row>
+    </Column.Root>
+  ),
+};
+
 export const Experimental = {
   render: () => {
     return (
