@@ -14,6 +14,7 @@ const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Inbox',
+    agentCanEnable: true,
     tools: Blueprint.toolDefinitions({
       operations: [
         InboxOperation.ClassifyEmail,
