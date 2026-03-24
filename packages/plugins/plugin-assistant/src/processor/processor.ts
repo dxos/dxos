@@ -189,14 +189,18 @@ export class AiChatProcessor {
           },
         });
 
-        const result = yield* this._conversation.createRequest({
-          system: this._options.system,
-          prompt: requestProp.message,
-          observer: this._observer,
-        }).pipe(
-          Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
-          Effect.exit,
-        );
+        const result = yield* this._conversation
+          .createRequest({
+            system: this._options.system,
+            prompt: requestProp.message,
+            observer: this._observer,
+          })
+          .pipe(
+            Effect.provide(
+              trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop,
+            ),
+            Effect.exit,
+          );
 
         if (Exit.isFailure(result)) {
           const error = Cause.prettyErrors(result.cause)[0];
