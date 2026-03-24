@@ -15,8 +15,8 @@ import { SpaceOperationConfig } from './helpers';
 const handler: Operation.WithHandler<typeof SpaceOperation.Lock> = SpaceOperation.Lock.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ space }) {
-      Obj.change(space.properties, (p) => {
-        p[COMPOSER_SPACE_LOCK] = true;
+      Obj.change(space.properties, (obj) => {
+        obj[COMPOSER_SPACE_LOCK] = true;
       });
 
       const { observability } = yield* Capability.get(SpaceOperationConfig);

@@ -78,12 +78,19 @@ export type FormFieldProps = {
    * Function to lookup custom renderers for specific properties.
    */
   fieldProvider?: FormFieldProvider;
+  /**
+   * Typename of the ref type that the create props apply to.
+   * When set, createOptionLabel/createOptionIcon/createInitialValuePath/createFieldMap/onCreate
+   * are only passed to ref fields whose typename matches.
+   */
+  createTypename?: string;
 } & Pick<FormFieldComponentProps, 'autoFocus' | 'readonly' | 'layout'> &
   Pick<
     RefFieldProps,
     | 'createOptionLabel'
     | 'createOptionIcon'
     | 'createInitialValuePath'
+    | 'createFieldMap'
     | 'db'
     | 'schemaHook'
     | 'getOptions'
@@ -102,9 +109,11 @@ export const FormField = (props: FormFieldProps) => {
     layout,
 
     // RefFieldProps
+    createTypename,
     createOptionLabel,
     createOptionIcon,
     createInitialValuePath,
+    createFieldMap,
     db,
     schemaHook,
     getOptions: getRefOptions,
@@ -196,13 +205,15 @@ export const FormField = (props: FormFieldProps) => {
 
   const refProps = getRefProps(type);
   if (refProps) {
+    const isCreateTarget = !createTypename || refProps.typename === createTypename;
     return (
       <RefField
         {...fieldProps}
         {...refProps}
-        createOptionLabel={createOptionLabel}
-        createOptionIcon={createOptionIcon}
-        createInitialValuePath={createInitialValuePath}
+        createOptionLabel={isCreateTarget ? createOptionLabel : undefined}
+        createOptionIcon={isCreateTarget ? createOptionIcon : undefined}
+        createInitialValuePath={isCreateTarget ? createInitialValuePath : undefined}
+        createFieldMap={isCreateTarget ? createFieldMap : undefined}
         db={db}
         schemaHook={schemaHook}
         getOptions={getRefOptions}

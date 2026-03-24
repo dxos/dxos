@@ -115,8 +115,8 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
             const space = await client.spaces.create();
             await space.waitUntilReady();
             await importData(space, backup);
-            Obj.change(space.properties, (p) => {
-              p.name = p.name + ' - IMPORTED';
+            Obj.change(space.properties, (obj) => {
+              obj.name = obj.name + ' - IMPORTED';
             });
           } else if (backup.type === 'application/x-tar') {
             const archive = {
@@ -135,8 +135,8 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
           const space = await client.spaces.create();
           await space.waitUntilReady();
           await importData(space, backup);
-          Obj.change(space.properties, (p) => {
-            p.name = p.name + ' - IMPORTED';
+          Obj.change(space.properties, (obj) => {
+            obj.name = obj.name + ' - IMPORTED';
           });
         }
       } catch (err) {

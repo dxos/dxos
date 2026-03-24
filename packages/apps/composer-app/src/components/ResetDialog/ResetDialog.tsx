@@ -21,7 +21,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 
-import { setSafeModeUrl } from '../config';
+import { setSafeModeUrl } from '../../config';
 
 // TODO(burdon): Factor out.
 const parseError = (t: (name: string, context?: object) => string, error: Error) => {
@@ -116,13 +116,15 @@ export const ResetDialog = ({
     >
       <AlertDialog.Overlay>
         <AlertDialog.Content size='md' data-testid='resetDialog'>
-          <AlertDialog.Body>
+          <AlertDialog.Header>
             <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
+          </AlertDialog.Header>
+          <AlertDialog.Body>
             <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
             {error && (
               <>
                 <div role='none'>
-                  <div className='flex items-center justify-between'>
+                  <div className='flex items-center justify-between py-3'>
                     <IconButton
                       icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                       variant='ghost'

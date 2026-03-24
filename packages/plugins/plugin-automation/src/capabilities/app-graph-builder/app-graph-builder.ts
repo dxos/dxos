@@ -5,9 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
 import { Script } from '@dxos/functions';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space';
@@ -55,7 +54,7 @@ export default Capability.makeModule(
         connector: (script) =>
           Effect.succeed([
             {
-              id: `${COMPANION_PREFIX}automation`,
+              id: companionSegment('automation'),
               type: PLANK_COMPANION_TYPE,
               data: 'automation',
               properties: {

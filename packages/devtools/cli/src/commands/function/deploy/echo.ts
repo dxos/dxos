@@ -77,13 +77,13 @@ export const upsertFunctionObject: (opts: {
     });
     space.db.add(functionObject);
   }
-  Obj.change(functionObject, (f) => {
-    f.key = uploadResult.meta.key ?? f.key;
-    f.name = name ?? uploadResult.meta.name ?? f.name;
-    f.version = uploadResult.version;
-    f.description = uploadResult.meta.description;
-    f.inputSchema = uploadResult.meta.inputSchema;
-    f.outputSchema = uploadResult.meta.outputSchema;
+  Obj.change(functionObject, (obj) => {
+    obj.key = uploadResult.meta.key ?? obj.key;
+    obj.name = name ?? uploadResult.meta.name ?? obj.name;
+    obj.version = uploadResult.version;
+    obj.description = uploadResult.meta.description;
+    obj.inputSchema = uploadResult.meta.inputSchema;
+    obj.outputSchema = uploadResult.meta.outputSchema;
   });
   Obj.change(functionObject, (fn) => setUserFunctionIdInMetadata(Obj.getMeta(fn), uploadResult.functionId));
   if (verbose) {
@@ -97,8 +97,8 @@ const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Ob
   if (collectionRef) {
     const collection = yield* Database.load(collectionRef);
     if (collection) {
-      Obj.change(collection, (c) => {
-        c.objects.push(Ref.make(obj));
+      Obj.change(collection, (obj) => {
+        obj.objects.push(Ref.make(obj));
       });
     }
   }
@@ -133,8 +133,8 @@ export const upsertComposerScript = Effect.fn(function* ({
     }
   } else {
     const obj = yield* Database.add(Script.make({ name: scriptFileName, source: scriptFileContent }));
-    Obj.change(functionObject, (f) => {
-      f.source = Ref.make(obj);
+    Obj.change(functionObject, (obj) => {
+      obj.source = Ref.make(obj);
     });
     yield* makeObjectNavigableInComposer(space, obj);
     if (verbose) {

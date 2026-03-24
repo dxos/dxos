@@ -31,15 +31,15 @@ const handler: Operation.WithHandler<typeof AddMessage> = AddMessage.pipe(
         sender,
         blocks: [{ _tag: 'text', text }],
       });
-      Obj.change(thread, (t) => {
-        t.messages.push(Ref.make(message));
+      Obj.change(thread, (obj) => {
+        obj.messages.push(Ref.make(message));
       });
 
       const state = registry.get(stateAtom);
       const draft = state.drafts[subjectId]?.find((a: { id: string }) => a.id === anchor.id);
       if (draft) {
-        Obj.change(thread, (t) => {
-          t.status = 'active';
+        Obj.change(thread, (obj) => {
+          obj.status = 'active';
         });
         registry.set(stateAtom, {
           ...state,
