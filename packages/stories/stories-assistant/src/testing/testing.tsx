@@ -355,11 +355,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
               invariant(space, 'Space not found');
 
               const queue = space.queues.create();
-              const traceQueue = space.queues.create();
               const chat = Obj.make(Assistant.Chat, {
                 name,
                 queue: Ref.fromDXN(queue.dxn),
-                traceQueue: Ref.fromDXN(traceQueue.dxn),
               });
               const binder = new AiContextBinder({ queue, registry });
 
