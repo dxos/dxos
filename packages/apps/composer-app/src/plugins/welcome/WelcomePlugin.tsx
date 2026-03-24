@@ -9,7 +9,7 @@ import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
 
-import { DefaultContent, Onboarding, ReactSurface } from './capabilities';
+import { AppGraphBuilder, DefaultContent, Onboarding, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
@@ -28,6 +28,11 @@ export const WelcomePlugin = Plugin.define(meta).pipe(
     id: `${meta.id}.module.translations`,
     activatesOn: AppActivationEvents.SetupTranslations,
     activate: () => Effect.succeed(Capability.contributes(AppCapabilities.Translations, translations)),
+  }),
+  Plugin.addModule({
+    id: `${meta.id}.module.app-graph-builder`,
+    activatesOn: AppActivationEvents.AppGraphReady,
+    activate: AppGraphBuilder,
   }),
   Plugin.addModule({
     id: `${meta.id}.module.react-surface`,
