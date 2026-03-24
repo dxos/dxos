@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
-import { WELCOME_SCREEN, WelcomeScreen } from '../components';
+import { ABOUT_DIALOG, AboutDialog, WELCOME_SCREEN, WelcomeScreen } from '../components';
 import { meta } from '../meta';
 
 export default Capability.makeModule(() =>
@@ -26,6 +26,12 @@ export default Capability.makeModule(() =>
           invariant(hubUrl, 'Hub URL not found');
           return <WelcomeScreen hubUrl={hubUrl} />;
         },
+      }),
+      Surface.create({
+        id: ABOUT_DIALOG,
+        role: 'dialog',
+        filter: (data): data is { component: string } => data.component === ABOUT_DIALOG,
+        component: () => <AboutDialog />,
       }),
     ]),
   ),

@@ -66,7 +66,7 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
         ? thin
           ? 'pl-[var(--gutter,8px)] pr-[calc(var(--gutter,8px)-4px)]'
           : 'pl-[var(--gutter,16px)] pr-[calc(var(--gutter,16px)-8px)]'
-        : margin && (thin ? 'pl-[8px]' : 'pl-[16px]')),
+        : margin && (thin ? 'pl-[4px]' : 'pl-[8px]')),
 
     // NOTE: Add minimal padding for form top/bottom outlines.
     (orientation === 'vertical' || orientation === 'all') && 'pt-form-chrome pb-form-chrome',
@@ -76,7 +76,7 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
         ? thin
           ? 'pt-[var(--gutter,8px)] pb-[calc(var(--gutter,8px)-4px)]'
           : 'pt-[var(--gutter,16px)] pb-[calc(var(--gutter,16px)-8px)]'
-        : margin && (thin ? 'pt-[8px]' : 'pt-[16px]')),
+        : margin && (thin ? 'pt-[4px]' : 'pt-[8px]')),
 
     snap && [
       orientation === 'vertical' && 'snap-y snap-mandatory',
