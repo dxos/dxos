@@ -25,8 +25,8 @@ export default Capability.makeModule(() =>
         component: () => <StatusBarActions />,
       }),
       Surface.create({
-        id: `${meta.id}.header-end`,
-        role: 'header-end',
+        id: `${meta.id}.version-info`,
+        role: 'version-info',
         component: () => <VersionNumber />,
       }),
     ]),

@@ -46,6 +46,10 @@ export type Commit = {
   message: string;
   timestamp?: Date;
   tags?: string[];
+  /**
+   * Optional DXN link for navigation to referenced objects.
+   */
+  link?: string;
 };
 
 export type TimelineProps = ThemedClassName<{
@@ -57,6 +61,11 @@ export type TimelineProps = ThemedClassName<{
   options?: TimelineOptions;
   debug?: boolean;
   onCurrentChange?: (props: { current?: number; commit?: Commit }) => void;
+  /**
+   * Callback when a commit with a link is clicked.
+   * If provided, commits with links will be navigable.
+   */
+  onCommitClick?: (commit: Commit) => void;
 }>;
 
 const empty = Object.freeze([]);
@@ -75,6 +84,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
       options = compact ? compactOptions : defaultOptions,
       debug = false,
       onCurrentChange,
+      onCommitClick,
     },
     forwardedRef,
   ) => {
@@ -215,6 +225,14 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                 return null;
               }
 
+              const hasLink = !!commit.link && !!onCommitClick;
+              const handleClick = () => {
+                setCurrent(index);
+                if (hasLink) {
+                  onCommitClick(commit);
+                }
+              };
+
               return (
                 <div
                   key={commit.id}
@@ -224,9 +242,10 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                     'group flex shrink-0 overflow-hidden px-3 gap-2 items-center',
                     // TODO(burdon): Factor out fragment.
                     'aria-[current=true]:bg-active-surface hover:bg-hover-surface',
+                    hasLink && 'cursor-pointer',
                   )}
                   style={{ height: `${options.lineHeight}px` }}
-                  onClick={() => setCurrent(index)}
+                  onClick={handleClick}
                 >
                   <div className='flex shrink-0'>
                     <LineVector
@@ -245,7 +264,12 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                       )}
                     </div>
                   )}
-                  <div className='text-sm truncate cursor-pointer text-subdued group-hover:text-base-surface-text'>
+                  <div
+                    className={mx(
+                      'text-sm truncate cursor-pointer text-subdued group-hover:text-base-surface-text',
+                      hasLink && 'underline decoration-dotted underline-offset-2',
+                    )}
+                  >
                     {debug ? JSON.stringify({ id: commit.id, parents: commit.parents }) : commit.message}
                   </div>
                 </div>
