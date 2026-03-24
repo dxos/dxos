@@ -172,6 +172,9 @@
       "path": "../plugin-observability"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-status-bar"
     },
     {
