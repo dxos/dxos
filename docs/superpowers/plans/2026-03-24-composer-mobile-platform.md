@@ -13,6 +13,7 @@
 ### Task 1: Increase mobile base font size
 
 **Files:**
+
 - Modify: `packages/apps/composer-app/index.html:32`
 
 - [ ] **Step 1: Update font size**
@@ -42,6 +43,7 @@ git commit -m "fix(composer-app): increase mobile base font size to 20px"
 ### Task 2: Add platform to ThemePluginOptions and wire through ThemeProvider
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-theme/src/react-context.tsx:18-51`
 
 - [ ] **Step 1: Add `platform` to `ThemePluginOptions`**
@@ -77,6 +79,7 @@ git commit -m "feat(plugin-theme): wire platform option through to ThemeProvider
 ### Task 3: Pass platform from plugin-defs to ThemePlugin
 
 **Files:**
+
 - Modify: `packages/apps/composer-app/src/plugin-defs.tsx:224-227`
 
 - [ ] **Step 1: Pass platform to ThemePlugin**
@@ -103,6 +106,7 @@ git commit -m "feat(composer-app): pass mobile platform to ThemePlugin"
 ### Task 4: Disable folding on mobile in useExtensions
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx:36,153`
 
 - [ ] **Step 1: Import useThemeContext**

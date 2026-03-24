@@ -22,7 +22,9 @@ export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCach
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* (
-    { appName, tx: propsTx = defaultTx, resourceExtensions = [], platform, ...rest }: ThemePluginOptions = { appName: 'test' },
+    { appName, tx: propsTx = defaultTx, resourceExtensions = [], platform, ...rest }: ThemePluginOptions = {
+      appName: 'test',
+    },
   ) {
     const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
     const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
