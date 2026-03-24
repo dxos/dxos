@@ -30,7 +30,7 @@ import {
 import { formatSystemPrompt } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
 import { runAndForwardErrors, throwCause, unwrapExit } from '@dxos/effect';
 import {
@@ -60,6 +60,10 @@ export type AiChatProcessorOptions = {
   blueprintRegistry?: Blueprint.Registry;
   observableRegistry?: Registry.Registry;
   extensions?: ToolContextExtensions;
+  /**
+   * For tracing.
+   */
+  chat?: Ref.Ref<Chat.Chat>;
 } & Pick<AiConversationRunProps, 'system'>;
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
@@ -183,6 +187,7 @@ export class AiChatProcessor {
         const trace = yield* tracer.traceInvocationStart({
           target: undefined,
           payload: {
+            chat: this._options.chat,
             data: {
               prompt: requestProp.message,
             },
