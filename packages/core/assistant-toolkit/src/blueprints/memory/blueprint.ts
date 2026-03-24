@@ -27,6 +27,7 @@ const make = () =>
     key: BLUEPRINT_KEY,
     name: 'Memory',
     description: 'Persistent memory storage and retrieval.',
+    agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
