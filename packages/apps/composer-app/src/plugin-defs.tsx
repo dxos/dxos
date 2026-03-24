@@ -224,6 +224,7 @@ export const getPlugins = ({
     ThemePlugin({
       appName: 'Composer',
       noCache: isDev,
+      platform: isMobile ? 'mobile' : 'desktop',
     }),
     ThreadPlugin(),
     TokenManagerPlugin(),

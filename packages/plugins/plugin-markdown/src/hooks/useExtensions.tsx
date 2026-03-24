@@ -34,6 +34,7 @@ import {
   selectionState,
   typewriter,
 } from '@dxos/ui-editor';
+import { useThemeContext } from '@dxos/react-ui';
 import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '../types';
@@ -50,6 +51,7 @@ export type ExtensionsOptions = {
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
   previewOptions?: PreviewOptions;
+  platform?: 'mobile' | 'desktop';
   /** Callback when an internal link is clicked. */
   onSelectObject?: (objectId: string) => void;
 };
@@ -65,6 +67,7 @@ export const useExtensions = ({
   previewOptions,
   onSelectObject,
 }: ExtensionsOptions): Extension[] => {
+  const { platform } = useThemeContext();
   const identity = useIdentity();
   const space = getSpace(object);
 
@@ -90,6 +93,7 @@ export const useExtensions = ({
         viewMode,
         previewOptions,
         onSelectObject,
+        platform,
       }),
     [
       id,
@@ -102,6 +106,7 @@ export const useExtensions = ({
       settings?.editorInputMode,
       settings?.folding,
       settings?.numberedHeadings,
+      platform,
       settings?.typewriter,
       selectionManager,
     ],
@@ -146,11 +151,12 @@ const createBaseExtensions = ({
   selectionManager,
   viewMode,
   previewOptions,
+  platform,
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     selectionManager && selectionChange(selectionManager),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
-    settings?.folding && folding(),
+    settings?.folding && platform !== 'mobile' && folding(),
   ].filter(isTruthy);
 
   //
