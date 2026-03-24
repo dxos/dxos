@@ -37,7 +37,7 @@ import {
   type CredentialsService,
   type FunctionInvocationService,
   type QueueService,
-  type TracingService,
+  TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -178,10 +178,42 @@ export class AiChatProcessor {
       const services = await this._services();
 
       // Create request.
-      const request = this._conversation.createRequest({
-        system: this._options.system,
-        prompt: requestProp.message,
-        observer: this._observer,
+      const request = Effect.gen(this, function* () {
+        const tracer = yield* TracingService;
+        const trace = yield* tracer.traceInvocationStart({
+          target: undefined,
+          payload: {
+            data: {
+              prompt: requestProp.message,
+            },
+          },
+        });
+
+        const result = yield* this._conversation
+          .createRequest({
+            system: this._options.system,
+            prompt: requestProp.message,
+            observer: this._observer,
+          })
+          .pipe(
+            Effect.provide(
+              trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop,
+            ),
+            Effect.exit,
+          );
+
+        if (Exit.isFailure(result)) {
+          const error = Cause.prettyErrors(result.cause)[0];
+          log.error(error.message, error.cause ?? error.stack);
+        }
+
+        yield* tracer.traceInvocationEnd({
+          trace,
+          // TODO(dmaretskyi): Might miss errors.
+          exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
+        });
+
+        return Effect.exit(result);
       });
 
       // Create fiber.
