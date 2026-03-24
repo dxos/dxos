@@ -9,9 +9,12 @@ import { pipe } from 'effect/Function';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { InvocationOutcome, InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
+import { DXN } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { type Space } from '@dxos/react-client/echo';
@@ -24,18 +27,24 @@ import { meta } from '../../meta';
 
 export const TracePanel = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
+  const { invokePromise } = useOperationInvoker();
   const { state, start, stop } = useTriggerRuntimeControls(space.db);
   const isRunning = state?.enabled ?? false;
 
   const { branches, commits } = useAtomValue(useMemo(() => getExecutionGraph(space), [space]));
 
-  const handleCommitClick = useCallback((commit: Commit) => {
-    if (commit.link) {
-      const anchor = document.createElement('dx-anchor') as HTMLElement & { dxn: string };
-      anchor.dxn = commit.link;
-      anchor.click();
-    }
-  }, []);
+  const handleCommitClick = useCallback(
+    (commit: Commit) => {
+      if (commit.link) {
+        const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
+        if (dxn?.spaceId && dxn.echoId) {
+          // TODO(dmaretskyi): Navigates, but fails to open.
+          void invokePromise(LayoutOperation.Open, { subject: [`${dxn.spaceId}:${dxn.echoId}`] });
+        }
+      }
+    },
+    [invokePromise],
+  );
 
   return (
     <Panel.Root>
@@ -223,19 +232,20 @@ const getExecutionGraph = (
                       toolCallDxns.set(block.toolCallId, link);
                     }
 
-                    commits.push({
-                      id: subevent.id,
-                      branch: branchName,
-                      parents: [commits.at(-1)!.id],
-                      icon: 'ph--wrench--regular',
-                      level: LogLevel.VERBOSE,
-                      message: block.name,
-                      timestamp: new Date(subevent.created),
-                      link,
-                    });
-                    if (!branches.includes(branchName)) {
-                      branches.push(branchName);
-                    }
+                    // Only show tool results.
+                    // commits.push({
+                    //   id: subevent.id,
+                    //   branch: branchName,
+                    //   parents: [commits.at(-1)!.id],
+                    //   icon: 'ph--wrench--regular',
+                    //   level: LogLevel.VERBOSE,
+                    //   message: block.name,
+                    //   timestamp: new Date(subevent.created),
+                    //   link,
+                    // });
+                    // if (!branches.includes(branchName)) {
+                    //   branches.push(branchName);
+                    // }
                     break;
                   }
                   case 'toolResult': {
@@ -244,12 +254,12 @@ const getExecutionGraph = (
                     const link = resultDxn?.toString() ?? toolCallDxns.get(block.toolCallId);
 
                     commits.push({
-                      id: `${subevent.id}_result_${block.toolCallId}`,
+                      id: `${subevent.id}_toolCall_${block.toolCallId}`,
                       branch: branchName,
                       parents: [commits.at(-1)!.id],
-                      icon: block.error ? 'ph--x-circle--regular' : 'ph--check-circle--regular',
-                      level: block.error ? LogLevel.ERROR : LogLevel.INFO,
-                      message: block.error ? `Error: ${block.error.slice(0, 50)}` : `${block.name} completed`,
+                      icon: 'ph--wrench--regular',
+                      level: block.error ? LogLevel.ERROR : LogLevel.VERBOSE,
+                      message: block.error ? `${block.name}: ${block.error.slice(0, 50)}` : block.name,
                       timestamp: new Date(subevent.created),
                       link,
                     });
