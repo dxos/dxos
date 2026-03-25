@@ -50,6 +50,15 @@ export const Prompt = Schema.Struct({
    * Additional context that the prompt may utilize.
    */
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
+
+  /**
+   * Sub-prompts that can be invoked as tools by this prompt.
+   */
+  prompts: Schema.optional(
+    Schema.Array(Schema.suspend((): Ref.RefSchema<Prompt> => Ref.Ref(Prompt))).pipe(
+      Annotation.FormInputAnnotation.set(false),
+    ),
+  ),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.prompt',
@@ -72,6 +81,7 @@ export const make = (params: {
   instructions?: string;
   blueprints?: Ref.Ref<Blueprint>[];
   context?: any[];
+  prompts?: Ref.Ref<Prompt>[];
 }): Prompt =>
   Obj.make(Prompt, {
     name: params.name,
@@ -81,4 +91,5 @@ export const make = (params: {
     instructions: Template.make({ source: params.instructions }),
     blueprints: params.blueprints ?? [],
     context: params.context ?? [],
+    prompts: params.prompts,
   });
