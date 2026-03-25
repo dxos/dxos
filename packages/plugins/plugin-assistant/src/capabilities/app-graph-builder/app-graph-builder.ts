@@ -24,6 +24,12 @@ import { ASSISTANT_DIALOG, meta } from '../../meta';
 import { AssistantCapabilities } from '../../types';
 import { AssistantOperation } from '../../operations';
 
+/** Match ECHO objects that are NOT chats. */
+const whenNonChatObject = NodeMatcher.whenAll(
+  NodeMatcher.whenEchoObject,
+  NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Chat.Chat)),
+);
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
@@ -104,9 +110,10 @@ export default Capability.makeModule(
           ]),
       }),
 
+      // Don't show assistant companion when a chat is already the primary object.
       GraphBuilder.createExtension({
         id: `${meta.id}.companion-chat`,
-        match: NodeMatcher.whenEchoObject,
+        match: whenNonChatObject,
         connector: (object, get) =>
           Effect.gen(function* () {
             const state = get(yield* Capability.get(AssistantCapabilities.State));
