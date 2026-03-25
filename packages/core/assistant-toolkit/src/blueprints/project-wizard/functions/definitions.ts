@@ -11,17 +11,6 @@ import { Operation } from '@dxos/operation';
 
 import { Project } from '../../../types';
 
-export const QueryBlueprints = Operation.make({
-  meta: {
-    key: 'org.dxos.function.project-wizard.query-blueprints',
-    name: 'Query blueprints',
-    description: 'Queries the blueprints.',
-  },
-  input: Schema.Struct({}),
-  output: Schema.Array(Blueprint.Blueprint),
-  services: [Blueprint.RegistryService],
-});
-
 export const ProjectRules = Operation.make({
   meta: {
     key: 'org.dxos.function.project-wizard.project-rules',

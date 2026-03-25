@@ -274,6 +274,7 @@ export namespace LayoutOperation {
     executionMode: 'sync',
     services: [Capability.Service],
     input: Schema.Struct({
+      // TODO(dmaretskyi): use Ref.Ref(Obj.Unknown)
       subject: Schema.Array(
         Schema.String.annotations({
           description: 'Navigation paths of the items to open.',

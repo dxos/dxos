@@ -96,8 +96,8 @@ export const handler = Effect.fn(function* ({
   if (queriedObjects.length > 0) {
     for (let i = 0; i < mutations; i++) {
       const object = faker.helpers.arrayElement(queriedObjects);
-      Obj.change(object, (o) => {
-        o.title = faker.lorem.word();
+      Obj.change(object, (obj) => {
+        obj.title = faker.lorem.word();
       });
       yield* Database.flush();
       yield* pause(interval, jitter);

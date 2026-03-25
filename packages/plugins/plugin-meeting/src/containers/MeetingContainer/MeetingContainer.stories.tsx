@@ -16,7 +16,7 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Channel } from '@dxos/plugin-thread/types';
 import { Query, useDatabase, useQuery } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Message, Thread, Transcript } from '@dxos/types';
 
@@ -39,7 +39,6 @@ const meta = {
   component: MeetingContainer,
   render: () => <Render />,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [

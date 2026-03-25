@@ -27,4 +27,10 @@
   --color-primary-800: var(--color-blue-800);
   --color-primary-900: var(--color-blue-900);
   --color-primary-950: var(--color-blue-950);
+
+  /* Composer logo colors */
+  --color-composer-100: rgb(5 40 61);
+  --color-composer-200: rgb(10 75 105);
+  --color-composer-300: rgb(1 122 183);
+  --color-composer-400: rgb(6 197 253);
 }

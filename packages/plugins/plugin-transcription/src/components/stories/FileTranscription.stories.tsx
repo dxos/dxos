@@ -19,7 +19,7 @@ import { ClientPlugin } from '@dxos/plugin-client';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 import { type Actor, Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
@@ -187,7 +187,6 @@ const AudioFile = ({
 const meta = {
   title: 'plugins/plugin-transcription/components/FileTranscription',
   decorators: [
-    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [

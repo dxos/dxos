@@ -77,7 +77,9 @@ export default Research.pipe(
 
         const finishedToolkit = yield* createToolkit({ toolkit }).pipe(Effect.provide(handlers));
 
-        const session = new AiSession();
+        const session = new AiSession({
+          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
+        });
         const result = yield* session.run({
           prompt: query,
           system: join(
@@ -85,7 +87,6 @@ export default Research.pipe(
             instructions && `<instructions>${instructions}</instructions>`,
           ),
           toolkit: finishedToolkit,
-          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'research' })),
         });
 
         const objects = yield* Effect.forEach(objectDXNs, (dxn) => Database.resolve(dxn)).pipe(

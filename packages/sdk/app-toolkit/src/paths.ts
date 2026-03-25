@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
  * Prefix for companion node segment IDs (e.g., `~settings`, `~comments`).
  * Chosen from RFC 1738's `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
  */
-const COMPANION_PREFIX = '~';
+export const COMPANION_PREFIX = '~';
 
 /**
  * Build a companion segment ID for use as a node ID in graph extensions.

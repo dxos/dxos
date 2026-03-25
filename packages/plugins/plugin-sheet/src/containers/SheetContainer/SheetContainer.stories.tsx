@@ -13,7 +13,7 @@ import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 
 import { ComputeGraphContext, useComputeGraph } from '../../components';
@@ -29,7 +29,6 @@ const meta = {
   title: 'plugins/plugin-sheet/containers/SheetContainer',
   component: SheetContainer,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator(),

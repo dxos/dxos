@@ -14,6 +14,7 @@ const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Markdown',
+    description: 'Work with markdown documents. Preferred over raw database operations.',
     tools: Blueprint.toolDefinitions({ operations: [Create, Open, Update] }),
     instructions: Template.make({
       // TODO(wittjosiah): Move example to function input schema annotation.

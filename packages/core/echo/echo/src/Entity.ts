@@ -208,9 +208,9 @@ export type Mutable<T> = internal.Mutable<T>;
  * @example
  * ```typescript
  * // Mutate within Entity.change
- * Entity.change(entity, (e) => {
- *   e.name = 'Updated';
- *   e.count = 42;
+ * Entity.change(entity, (obj) => {
+ *   obj.name = 'Updated';
+ *   obj.count = 42;
  * });
  *
  * // Direct mutation throws

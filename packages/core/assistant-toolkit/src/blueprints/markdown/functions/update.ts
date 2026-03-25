@@ -14,8 +14,8 @@ export default Update.pipe(
     Effect.fn(function* ({ doc, content }) {
       const document = yield* Database.load(doc);
       const text = yield* Database.load(document.content);
-      Obj.change(text, (t) => {
-        t.content = content;
+      Obj.change(text, (obj) => {
+        obj.content = content;
       });
     }),
   ),

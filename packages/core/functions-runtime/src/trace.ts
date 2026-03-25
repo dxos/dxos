@@ -73,6 +73,11 @@ export const InvocationTraceStartEvent = Schema.Struct({
    */
   trigger: Schema.optional(Ref.Ref(Trigger.Trigger)),
   /**
+   * Chat that the invocation is run in.
+   * For invocations resulting from submitting a prompt in a chat thread.
+   */
+  chat: Schema.optional(Ref.Ref(Obj.Unknown)),
+  /**
    * Runtime executing the function.
    */
   runtime: Schema.optional(FunctionRuntimeKind),
@@ -278,6 +283,7 @@ export namespace TracingServiceExt {
                 invocationTraceQueue: Ref.fromDXN(invocationTraceQueue.dxn),
                 invocationTarget: target ? Ref.fromDXN(target) : undefined,
                 trigger: payload.trigger ? Ref.fromDXN(DXN.fromLocalObjectId(payload.trigger.id)) : undefined,
+                chat: payload.chat,
               });
               yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);
 

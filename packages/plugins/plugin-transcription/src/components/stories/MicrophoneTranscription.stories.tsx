@@ -26,7 +26,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { IndexKind, useSpace } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
@@ -194,7 +194,6 @@ const meta = {
   title: 'plugins/plugin-transcription/components/MicrophoneTranscription',
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [

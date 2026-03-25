@@ -16,11 +16,11 @@ const handler: Operation.WithHandler<typeof ToggleResolved> = ToggleResolved.pip
     Effect.fnUntraced(function* (input) {
       const thread = input.thread;
 
-      Obj.change(thread, (t) => {
-        if (t.status === 'active' || t.status === undefined) {
-          t.status = 'resolved';
-        } else if (t.status === 'resolved') {
-          t.status = 'active';
+      Obj.change(thread, (obj) => {
+        if (obj.status === 'active' || obj.status === undefined) {
+          obj.status = 'resolved';
+        } else if (obj.status === 'resolved') {
+          obj.status = 'active';
         }
       });
 

@@ -24,7 +24,7 @@ import {
 } from '../../hooks';
 import { meta } from '../../meta';
 
-const panelClassNames = 'w-[calc(100dvw-.5rem)] sm:w-max md:w-72 max-w-text-content';
+const panelClassNames = 'w-[calc(100dvw-.5rem)] sm:w-max md:w-72 max-w-document-width';
 
 export type ChatOptionsProps = {
   db: Database.Database;

@@ -12,9 +12,9 @@ import { Obj } from '@dxos/echo';
 import { Graph, type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-searchlist';
-import { mx, osTranslations } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { useSearchResults } from '../../hooks';
 import { meta } from '../../meta';
@@ -85,36 +85,40 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
 
   return (
     <Dialog.Content>
-      <Dialog.Title>{t('search dialog title')}</Dialog.Title>
-      <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Content classNames='max-h-[24rem] overflow-auto'>
-          <SearchList.Input placeholder={t('search placeholder')} />
-          <SearchList.Viewport>
-            {queryString.length > 0 ? (
-              resultObjects.length > 0 ? (
-                resultObjects
-                  .map((object) => Graph.getNode(graph, Obj.getDXN(object).toString()))
-                  .filter(Option.isSome)
-                  .map((node) => <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />)
+      <Dialog.Header>
+        <Dialog.Title>{t('search dialog title')}</Dialog.Title>
+        <Dialog.Close asChild>
+          <Dialog.CloseIconButton />
+        </Dialog.Close>
+      </Dialog.Header>
+      <Dialog.Body>
+        <SearchList.Root onSearch={handleSearch}>
+          <SearchList.Content classNames='max-h-[24rem]'>
+            <SearchList.Input placeholder={t('search placeholder')} />
+            <SearchList.Viewport>
+              {queryString.length > 0 ? (
+                resultObjects.length > 0 ? (
+                  resultObjects
+                    .map((object) => Graph.getNode(graph, Obj.getDXN(object).toString()))
+                    .filter(Option.isSome)
+                    .map((node) => <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />)
+                ) : (
+                  <p className='px-1'>{t(pending ? 'pending results message' : 'empty results message')}</p>
+                )
               ) : (
-                <p className='px-1'>{t(pending ? 'pending results message' : 'empty results message')}</p>
-              )
-            ) : (
-              <>
-                {closed.length > 0 && (
-                  <h2 className={mx('my-1', 'text-description')}>{t('recently closed heading')}</h2>
-                )}
-                {closed.filter(Option.isSome).map((node) => (
-                  <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />
-                ))}
-              </>
-            )}
-          </SearchList.Viewport>
-        </SearchList.Content>
-      </SearchList.Root>
-      <Dialog.Close asChild>
-        <Button variant='primary'>{t('close label', { ns: osTranslations })}</Button>
-      </Dialog.Close>
+                <>
+                  {closed.length > 0 && (
+                    <h2 className={mx('my-1', 'text-description')}>{t('recently closed heading')}</h2>
+                  )}
+                  {closed.filter(Option.isSome).map((node) => (
+                    <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />
+                  ))}
+                </>
+              )}
+            </SearchList.Viewport>
+          </SearchList.Content>
+        </SearchList.Root>
+      </Dialog.Body>
     </Dialog.Content>
   );
 };
