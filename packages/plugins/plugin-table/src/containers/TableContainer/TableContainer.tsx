@@ -15,7 +15,7 @@ import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { useQuery, useSchema } from '@dxos/react-client/echo';
+import { useObject, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import {
   Table as TableComponent,
@@ -29,7 +29,7 @@ import {
   useProjectionModel,
   useTableModel,
 } from '@dxos/react-ui-table';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from '../../meta';
 import { type Table } from '../../operations';
@@ -44,14 +44,13 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     const tableRef = useRef<TableController>(null);
 
     const db = Obj.getDatabase(object);
-    const view = object.view.target;
-    const query = view ? Query.fromAst(Obj.getSnapshot(view).query.ast) : Query.select(Filter.nothing());
-    const typename = getTypenameFromQuery(query.ast);
+    const [view] = useObject(object.view);
+    const queryAst = view?.query?.ast;
+    const typename = getTypenameFromQuery(queryAst);
     const schema = useSchema(db, typename);
-    // TODO(wittjosiah): This should use `query` above.
+    // TODO(wittjosiah): This should use the full query AST directly.
     //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
-    // const queriedObjects = useQuery(db, query);
-    const queriedObjects = useQueryWorkaround(db, query.ast, schema);
+    const queriedObjects = useQueryWorkaround(db, queryAst, schema);
     const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
     const { graph } = useAppGraph();
@@ -77,10 +76,11 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
 
     const handleDeleteColumn = useCallback(
       (fieldId: string) => {
-        invariant(view);
-        void invokePromise(SpaceOperation.DeleteField, { view, fieldId });
+        const liveView = object.view.target;
+        invariant(liveView);
+        void invokePromise(SpaceOperation.DeleteField, { view: liveView, fieldId });
       },
-      [invokePromise, view],
+      [invokePromise, object.view],
     );
 
     const features: Partial<TableFeatures> = useMemo(
@@ -197,29 +197,34 @@ const useQueryWorkaround = (
   ast: QueryAST.Query | undefined,
   schema: Type.AnyEntity | undefined,
 ) => {
-  // Extract order from query AST and apply it to the base filter query
+  // Extract order and tag filter from query AST and apply them to the base filter query.
   const query = useMemo(() => {
-    const baseQuery = schema ? Filter.type(schema) : Filter.nothing();
+    const baseFilter = schema ? Filter.type(schema) : Filter.nothing();
+    let query = Query.select(baseFilter);
 
-    if (!ast) {
-      return Query.select(baseQuery);
+    // Apply tag filter from the query AST.
+    const tag = getTagFromQuery(ast);
+    if (tag) {
+      query = query.select(Filter.tag(tag));
     }
 
+    if (!ast) {
+      return query;
+    }
+
+    // Apply sort order from the query AST.
     const orders = extractOrder(ast);
     if (orders && orders.length > 0) {
-      // Convert AST orders to Order objects and apply to query
-      const queryWithFilter = Query.select(baseQuery);
       const orderObjects = orders
         .filter((order): order is QueryAST.Order & { kind: 'property' } => order.kind === 'property')
         .map((order) => Order.property<any>(order.property, order.direction));
 
       if (orderObjects.length > 0) {
-        // TypeScript needs explicit type assertion for spread operator
-        return queryWithFilter.orderBy(...(orderObjects as [Order.Any, ...Order.Any[]]));
+        return query.orderBy(...(orderObjects as [Order.Any, ...Order.Any[]]));
       }
     }
 
-    return Query.select(baseQuery);
+    return query;
   }, [ast, schema]);
 
   return useQuery(db, query);

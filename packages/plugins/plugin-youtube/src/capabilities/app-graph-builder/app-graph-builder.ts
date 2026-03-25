@@ -16,7 +16,7 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { GraphBuilder } from '@dxos/plugin-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { ClearSyncedVideos, Sync } from '../../operations';
 import { meta } from '../../meta';
@@ -32,6 +32,8 @@ export default Capability.makeModule(
         return selection?.mode === 'single' ? selection.id : undefined;
       }),
     );
+
+    const whenYouTubeChannel = NodeMatcher.whenEchoType(Channel.YouTubeChannel);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -70,8 +72,8 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: `${meta.id}.sync-channel`,
-        match: (node) => (Channel.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        actions: (channel: Channel.YouTubeChannel) =>
+        match: whenYouTubeChannel,
+        actions: (channel) =>
           Effect.succeed([
             {
               id: 'sync',
