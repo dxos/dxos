@@ -356,10 +356,9 @@ export type FontOptions = {
 
 export const createFontTheme = ({ monospace }: FontOptions = {}) =>
   EditorView.theme({
-    // Set metrics on the scroller (this is often what CM uses for layout).
+    // Main content.
     '.cm-scroller': {
       fontFamily: monospace ? fontMono : fontBody,
-      fontSize: '16px',
     },
 
     // Maintain defaults for UI components.

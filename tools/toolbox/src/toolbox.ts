@@ -478,6 +478,7 @@ export class Toolbox {
       });
 
     await saveJson(join(this.rootDir, 'tsconfig.all.json'), tsconfigAll, this.options.verbose);
+    execSync('oxfmt tsconfig.all.json', { cwd: this.rootDir, stdio: 'ignore' });
   }
 
   async printStats(): Promise<void> {

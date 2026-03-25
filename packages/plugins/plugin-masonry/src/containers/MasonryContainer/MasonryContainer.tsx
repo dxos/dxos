@@ -12,12 +12,13 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Annotation, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Card, Toolbar } from '@dxos/react-ui';
+import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
+import { isNonNullable } from '@dxos/util';
 
 export type MasonryContainerProps = {
   view: View.View;
@@ -64,14 +65,33 @@ export const MasonryContainer = ({
     return tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
   }, [cardSchema, tag]);
   const objects = useQuery(db, query);
-  const filteredObjects = useGlobalFilteredObjects(objects);
+
+  const sortedObjects = useMemo(
+    () =>
+      objects.filter(isNonNullable).toSorted((a, b) => (Obj.getLabel(a) ?? '').localeCompare(Obj.getLabel(b) ?? '')),
+    [objects],
+  );
+
+  const { results, handleSearch } = useSearchListResults({
+    items: sortedObjects,
+    extract: (obj) => Obj.getLabel(obj) ?? '',
+  });
 
   return (
-    <MasonryComponent.Root
-      items={filteredObjects}
-      render={Item as any}
-      classNames='w-full max-w-full h-full max-h-full overflow-y-auto p-4'
-    />
+    <MasonryComponent.Root Tile={Item}>
+      <SearchList.Root onSearch={handleSearch}>
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root>
+              <SearchList.Input placeholder='Search...' />
+            </Toolbar.Root>
+          </Panel.Toolbar>
+          <Panel.Content>
+            <MasonryComponent.Content items={results} getId={(data: any) => data?.id} />
+          </Panel.Content>
+        </Panel.Root>
+      </SearchList.Root>
+    </MasonryComponent.Root>
   );
 };
 

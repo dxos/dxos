@@ -3,6 +3,8 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -26,8 +28,6 @@ const mockSpaces = [
   { id: 'space-2', db: {} as Database.Database, displayName: 'Team Space' },
 ] as unknown as Space[];
 
-const mockResolve = (_typename: string): Metadata | undefined => undefined;
-
 const DefaultStory = () => {
   const [typename, setTypename] = useState<string | undefined>(undefined);
 
@@ -40,7 +40,8 @@ const DefaultStory = () => {
               options={mockOptions}
               spaces={mockSpaces}
               typename={typename}
-              resolve={mockResolve}
+              target={{} as Database.Database}
+              resolve={() => mockMetadata}
               onTypenameChange={setTypename}
               onCreateObject={async () => {}}
             />
@@ -51,29 +52,16 @@ const DefaultStory = () => {
   );
 };
 
-// TODO(burdon): Remove.
-const SelectSpaceStory = () => {
-  const [target, setTarget] = useState<Database.Database | undefined>(undefined);
+const mockInputSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String.annotations({ title: 'Name' }),
+  description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
+});
 
-  return (
-    <Dialog.Root open>
-      <Dialog.Overlay>
-        <Dialog.Content>
-          <Dialog.Body>
-            <CreateObjectPanel
-              options={mockOptions}
-              spaces={mockSpaces}
-              typename='org.dxos.type.document'
-              target={target}
-              resolve={mockResolve}
-              onTargetChange={(nextTarget) => setTarget(nextTarget)}
-              onCreateObject={async () => {}}
-            />
-          </Dialog.Body>
-        </Dialog.Content>
-      </Dialog.Overlay>
-    </Dialog.Root>
-  );
+const mockMetadata: Metadata = {
+  createObject: () => Effect.succeed({ id: 'mock-id', subject: [], object: {} as any }),
+  inputSchema: mockInputSchema,
+  icon: 'ph--file-text--regular',
 };
 
 const meta = {
@@ -88,10 +76,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const SelectType: Story = {
+export const Default: Story = {
   render: DefaultStory,
-};
-
-export const SelectSpace: Story = {
-  render: SelectSpaceStory,
 };
