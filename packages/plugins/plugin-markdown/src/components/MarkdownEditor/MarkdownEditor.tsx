@@ -111,11 +111,7 @@ const MarkdownEditorRoot = ({
   const toolbarState = useEditorToolbar({ viewMode });
 
   // Context menu.
-  const menuOptions = useEditorMenuOptions({
-    editorView,
-    slashCommandGroups,
-    onLinkQuery,
-  });
+  const menuOptions = useEditorMenuOptions({ editorView, slashCommandGroups, onLinkQuery });
   const { extension: menuExtension, ...menuProps } = useEditorMenu(menuOptions);
 
   // Extensions.
