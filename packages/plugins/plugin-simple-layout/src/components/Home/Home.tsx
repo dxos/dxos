@@ -45,11 +45,6 @@ export const Home = (_: HomeProps) => {
   return (
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <SearchList.Input placeholder={t('search placeholder')} autoFocus={autoFocus} />
-          </Toolbar.Root>
-        </Panel.Toolbar>
         <Panel.Content asChild>
           <SearchList.Content>
             <Mosaic.Container asChild>
@@ -61,6 +56,11 @@ export const Home = (_: HomeProps) => {
             </Mosaic.Container>
           </SearchList.Content>
         </Panel.Content>
+        <Panel.Statusbar asChild>
+          <Toolbar.Root>
+            <SearchList.Input placeholder={t('search placeholder')} autoFocus={autoFocus} />
+          </Toolbar.Root>
+        </Panel.Statusbar>
       </Panel.Root>
     </SearchList.Root>
   );

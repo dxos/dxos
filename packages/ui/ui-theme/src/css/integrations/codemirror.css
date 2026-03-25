@@ -6,6 +6,7 @@
  * TODO(burdon): This could move into the ui-editor package (similar to graph.css).
  */
 
+/** TODO(burdon): Move to ui-editor */
 @theme {
   --color-cm-codeblock: oklch(from var(--color-neutral-500) l c h / 0.1);
   --color-cm-active-line: light-dark(

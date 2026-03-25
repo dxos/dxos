@@ -10,8 +10,8 @@ import { type MarkdownConfig, Table } from '@lezer/markdown';
 import { fontBody, markdownTheme } from '../../styles';
 
 const styles = {
-  code: 'font-mono no-underline! text-cm-code',
-  codeMark: 'font-mono text-cm-code-mark',
+  code: 'text-cm-code font-mono no-underline!',
+  codeMark: 'text-cm-code-mark font-mono',
   mark: 'opacity-50',
 };
 

@@ -44,8 +44,8 @@ const headings: Record<HeadingLevel, { className: string; fontSize: string; line
 };
 
 export const markdownTheme = {
-  code: 'font-mono no-underline! text-cm-code',
-  codeMark: 'font-mono text-cm-code-mark',
+  code: 'text-cm-code font-mono no-underline!',
+  codeMark: 'text-cm-code-mark font-mono',
   mark: 'opacity-50',
   heading: (level: HeadingLevel) => ({
     className: mx(headings[level].className, 'font-light text-cm-heading'),
@@ -58,7 +58,8 @@ export const markdownTheme = {
 
 // Font families matching --font-body and --font-mono in theme.css.
 export const fontBody = 'Inter Variable, ui-sans-serif, system-ui, sans-serif';
-export const fontMono = 'JetBrains Mono Variable, ui-monospace, Cascadia Code, Source Code Pro, monospace';
+// export const fontMono = '"JetBrains Mono Variable", ui-monospace, Cascadia Code, Source Code Pro, monospace';
+export const fontMono = 'ui-monospace';
 
 /**
  * Global base theme.
@@ -127,8 +128,8 @@ export const baseTheme = EditorView.baseTheme({
    * NOTE: Apply margins to content so that scrollbar is at the edge of the container.
    */
   '.cm-content': {
-    padding: 'unset',
     lineHeight: '24px',
+    padding: 'unset',
     color: 'unset',
   },
 
@@ -155,14 +156,27 @@ export const baseTheme = EditorView.baseTheme({
   '.cm-gutterElement': {
     lineHeight: '24px',
     fontSize: '12px',
+    // Prevent font-metric changes from introducing sub-pixel vertical padding.
+    padding: '0 !important',
+    margin: '0 !important',
   },
 
   /**
    * Line.
    */
   '.cm-line': {
-    lineHeight: '24px',
+    lineHeight: '24px !important',
+    // Prevent font-metric changes from inflating the line box.
+    padding: '0 !important',
+    margin: '0 !important',
     paddingInline: 0,
+  },
+  /**
+   * Force all inline children to inherit line-height to prevent monospace font metrics
+   * (JetBrains Mono ascent/descent) from inflating the line box beyond 24px.
+   */
+  '.cm-line *': {
+    lineHeight: 'inherit',
   },
   '.cm-activeLine': {
     background: 'var(--color-cm-active-line)',

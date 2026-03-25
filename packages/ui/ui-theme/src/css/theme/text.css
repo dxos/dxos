@@ -5,7 +5,7 @@
 @theme {
   /* Font families */
   --font-body: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
 
   /* Font size scale (Tailwind v4 defaults — clean rem/px values) */
   --text-xs: 0.75rem;
