@@ -39,9 +39,7 @@ const promptToolName = (prompt: Prompt.Prompt): string => {
  * Creates a GenericToolkit from prompts.
  * Each prompt becomes a tool that invokes the AgentPrompt operation.
  */
-export const createPromptToolkit = (
-  prompts: readonly Prompt.Prompt[],
-): GenericToolkit.GenericToolkit => {
+export const createPromptToolkit = (prompts: readonly Prompt.Prompt[]): GenericToolkit.GenericToolkit => {
   if (prompts.length === 0) {
     return GenericToolkit.empty;
   }
