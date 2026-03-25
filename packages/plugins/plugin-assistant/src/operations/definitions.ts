@@ -79,6 +79,36 @@ export const RunPromptInNewChat = Operation.make({
   }),
 });
 
+const NavigationTargetSchema = Schema.Struct({
+  path: Schema.String.annotations({ description: 'Navigation path to use with the Open operation.' }),
+  label: Schema.String.annotations({ description: 'Human-readable label.' }),
+  type: Schema.String.annotations({ description: 'Object type.' }),
+});
+
+export const ResolveNavigationTargets = Operation.make({
+  meta: {
+    key: `${ASSISTANT_OPERATION}.resolve-navigation-targets`,
+    name: 'Resolve navigation targets',
+    description:
+      'Resolve navigation targets within the application. The returned paths can be used with the Open operation. Without a query, returns pages that can be navigated to.',
+  },
+  input: Schema.Struct({
+    query: Schema.optional(
+      Schema.Struct({
+        dxn: Schema.optional(
+          Schema.String.annotations({
+            description: 'DXN of a specific object to resolve to a navigation path.',
+          }),
+        ),
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    targets: Schema.Array(NavigationTargetSchema),
+  }),
+  services: [Capability.Service],
+});
+
 export const BlueprintForm = Schema.Struct({
   key: Schema.String,
   name: Schema.String,

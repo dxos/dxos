@@ -43,6 +43,17 @@
 - Suggested actions could include actions that create artifacts.
 - After creating an artifact use a tool to add it to the chat context.
 
+## Navigation
+
+- When the user asks to open, go to, navigate to, or show a specific document, page, or object, use the navigation tools instead of loading content inline.
+- First, call the Resolve navigation targets tool to find the navigation path for the requested item.
+  - Without arguments, it returns available pages that can be navigated to.
+  - With a DXN in the query, it resolves that specific object to a navigation path.
+- If you know the object's DXN (e.g. from a database query or context objects), pass it in the query to get the exact navigation path.
+- Then, call the Open tool with the resolved navigation path(s) in the subject array to navigate the user to that item.
+- Do not respond with the document's content when the user asks to open it — open it in the main content area instead.
+- If multiple targets match, present the options to the user and let them choose which to open.
+
 ## Context
 
 Today is {{DATETIME}}.

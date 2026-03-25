@@ -99,6 +99,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           // TODO(dmaretskyi): Make blueprints reactive and registry accept an atom.
           Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
         ).pipe(
+          Layer.provideMerge(Layer.succeed(Capability.Service, this.#capabilities)),
           Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
           Layer.provideMerge(
             Layer.mergeAll(
