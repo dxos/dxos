@@ -143,3 +143,21 @@ export const getTypenameFromQuery = (query: QueryAST.Query | undefined): string 
 
   return typename;
 };
+
+/**
+ * Extract the tag DXN from a query AST.
+ * Searches through select and filter nodes for a tag filter.
+ */
+export const getTagFromQuery = (query: QueryAST.Query | undefined): string | undefined => {
+  let tag: string | undefined;
+  query &&
+    QueryAST.visit(query, (node) => {
+      if (node.type === 'select' && node.filter.type === 'tag') {
+        tag = node.filter.tag;
+      }
+      if (node.type === 'filter' && node.filter.type === 'tag') {
+        tag = node.filter.tag;
+      }
+    });
+  return tag;
+};
