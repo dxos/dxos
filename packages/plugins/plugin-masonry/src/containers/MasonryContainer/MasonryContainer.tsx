@@ -5,19 +5,19 @@
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Annotation, Filter, Obj, type Ref, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Toolbar } from '@dxos/react-ui';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 
 export type MasonryContainerProps = {
   view: View.View;
@@ -35,6 +35,7 @@ export const MasonryContainer = ({
   const schemas = useCapabilities(AppCapabilities.Schema);
   const db = view && Obj.getDatabase(view);
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
 
   const [cardSchema, setCardSchema] = useState<Schema.Schema.AnyNoContext>();
 
@@ -58,7 +59,11 @@ export const MasonryContainer = ({
     }
   }, [schemas, typename, db]);
 
-  const objects = useQuery(db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
+  const query = useMemo(() => {
+    const baseFilter = cardSchema ? Filter.type(cardSchema) : Filter.nothing();
+    return tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
+  }, [cardSchema, tag]);
+  const objects = useQuery(db, query);
   const filteredObjects = useGlobalFilteredObjects(objects);
 
   return (
