@@ -245,7 +245,7 @@ jobs:
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
           quarantine: true
-          run: moon run :e2e --affected remote --concurrency=2
+          run: moon run :e2e --affected remote --concurrency=1
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
@@ -257,7 +257,7 @@ jobs:
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
           quarantine: true
-          run: moon run :e2e --concurrency=2
+          run: moon run :e2e --concurrency=1
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
