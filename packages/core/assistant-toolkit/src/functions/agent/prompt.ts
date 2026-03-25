@@ -110,7 +110,7 @@ export default AgentPrompt.pipe(
 
       const toolkit = yield* createToolkit({ blueprints });
 
-      const session = new AiSession();
+      const session = new AiSession({ observer });
       const result = yield* session
         .run({
           prompt: promptText,
@@ -118,7 +118,6 @@ export default AgentPrompt.pipe(
           blueprints,
           objects: objects as Obj.Unknown[],
           toolkit,
-          observer,
         })
         .pipe(Effect.provide(modelLayer));
 
