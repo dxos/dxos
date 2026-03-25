@@ -140,6 +140,7 @@ jobs:
           junit-paths: 'test-results/**/results.xml'
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
           run: moon run :test :test-browser :test-storybook --affected remote -- --no-file-parallelism
 
       - name: Test All
@@ -149,6 +150,7 @@ jobs:
           junit-paths: 'test-results/**/results.xml'
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
           run: moon run :test :test-browser :test-storybook -- --no-file-parallelism
 
       - uses: 'moonrepo/run-report-action@v1'
@@ -240,8 +242,8 @@ jobs:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
-          run: PLAYWRIGHT_BROWSER=all moon run :e2e --affected remote --concurrency=2
-          verbose: true
+          quarantine: true
+          run: PLAYWRIGHT_BROWSER=all moon run :e2e --concurrency=2
 
       - name: Test All
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
@@ -250,8 +252,8 @@ jobs:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
           token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
           run: PLAYWRIGHT_BROWSER=all moon run :e2e --concurrency=2
-          verbose: true
 
       - uses: 'moonrepo/run-report-action@v1'
         if: (success() || failure()) && github.event_name == 'pull_request'
