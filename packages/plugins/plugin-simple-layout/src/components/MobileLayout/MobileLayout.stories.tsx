@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
-import { Flex, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
+import { Column, Flex, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout';
@@ -65,11 +65,15 @@ const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) =
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <Flex column classNames='p-1'>
-          <Input.Root>
-            <Input.TextInput />
-          </Input.Root>
-        </Flex>
+        <Column.Root gutter='xs'>
+          <Column.Content>
+            <Flex column classNames='p-1'>
+              <Input.Root>
+                <Input.TextInput placeholder={label} />
+              </Input.Root>
+            </Flex>
+          </Column.Content>
+        </Column.Root>
       </Panel.Content>
     </Panel.Root>
   );
