@@ -3,7 +3,7 @@
 //
 
 import { Registry } from '@effect-atom/atom-react';
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { AttentionManager, expandAttendableId, getSegmentId, getParentId, isSeparatorPrefixed } from './attention';
 

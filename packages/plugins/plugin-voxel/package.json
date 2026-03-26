@@ -46,6 +46,7 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/util": "workspace:*",

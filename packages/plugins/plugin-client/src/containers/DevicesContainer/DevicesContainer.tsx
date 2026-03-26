@@ -18,7 +18,7 @@ import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { ClientOperation } from '../../types';
+import { ClientOperation } from '../../operations';
 
 export type DevicesContainerProps = {
   createInvitationUrl?: (invitationCode: string) => string;
@@ -176,6 +176,7 @@ const InvitationSection = ({
         : state >= Invitation.State.READY_FOR_AUTHENTICATION && authCode
           ? 'auth-code'
           : 'qr-code';
+
   return activeView === 'init' ? (
     <>
       <p className='text-description mb-2'>{t('add device description')}</p>

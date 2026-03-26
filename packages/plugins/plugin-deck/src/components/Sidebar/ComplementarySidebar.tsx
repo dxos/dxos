@@ -3,7 +3,6 @@
 //
 
 import React, {
-  CSSProperties,
   Fragment,
   type MouseEvent,
   type PropsWithChildren,
@@ -17,7 +16,7 @@ import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
 import { IconButton, type Label, Main, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { largeIconSize, mx } from '@dxos/ui-theme';
+import { iconSize, mx } from '@dxos/ui-theme';
 
 import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState, useHoistStatusbar } from '../../hooks';
 import { meta } from '../../meta';
@@ -35,7 +34,7 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { t } = useTranslation(meta.id);
-  const { invokeSync } = useOperationInvoker();
+  const { invokePromise } = useOperationInvoker();
   const { state, deck, updateState } = useDeckState();
   const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();
@@ -62,10 +61,10 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       } else {
         setInternalValue(nextValue);
         updateState((state) => ({ ...state, complementarySidebarState: 'expanded' }));
-        invokeSync(LayoutOperation.UpdateComplementary, { subject: nextValue });
+        void invokePromise(LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
     },
-    [state.complementarySidebarState, activeId, invokeSync, updateState],
+    [state.complementarySidebarState, activeId, invokePromise, updateState],
   );
 
   const data = useMemo(
@@ -79,9 +78,9 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 
   useEffect(() => {
     if (!activeId) {
-      invokeSync(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+      void invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
     }
-  }, [activeId, invokeSync]);
+  }, [activeId, invokePromise]);
 
   return (
     <Main.ComplementarySidebar
@@ -91,17 +90,18 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         hoistStatusbar && 'bottom-(--dx-statusbar-size)',
       ]}
     >
-      <Tabs.Root orientation='vertical' verticalVariant='stateless' value={internalValue} classNames='contents'>
+      {/* TODO(burdon): asChild. */}
+      <Tabs.Root orientation='vertical' value={internalValue} classNames='contents'>
         <div
           role='none'
-          style={largeIconSize}
+          style={iconSize(5)}
           className={mx(
             'absolute z-[1] inset-y-0 end-0 !w-(--dx-r0-size)',
             'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-subdued-separator',
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-toolbar-surface dx-contain-layout dx-app-drag',
           )}
         >
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) p-1 gap-1 overflow-y-auto!'>
+          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto!'>
             {companions.map((companion) => (
               <Tabs.Tab key={getCompanionVariant(companion.id)} value={getCompanionVariant(companion.id)} asChild>
                 <IconButton
@@ -123,8 +123,12 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             ))}
           </Tabs.Tablist>
           {!hoistStatusbar && (
-            <div role='none' className='grid grid-cols-1 auto-rows-(--dx-rail-item) p-1 overflow-y-auto'>
-              <Surface.Surface role='status-bar--r0-footer' limit={1} />
+            <div
+              role='none'
+              className='grid grid-cols-1 auto-rows-(--dx-rail-item) gap-0.5 overflow-y-auto'
+              style={iconSize(4)}
+            >
+              <Surface.Surface role='status-indicator' />
             </div>
           )}
           <div role='none' className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>

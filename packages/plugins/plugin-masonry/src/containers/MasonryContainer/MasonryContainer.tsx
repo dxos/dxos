@@ -5,19 +5,20 @@
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Annotation, Filter, Obj, type Ref, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { type View } from '@dxos/echo';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Card, Toolbar } from '@dxos/react-ui';
+import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry as MasonryComponent } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
-import { getTypenameFromQuery } from '@dxos/schema';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
+import { isNonNullable } from '@dxos/util';
 
 export type MasonryContainerProps = {
   view: View.View;
@@ -35,6 +36,7 @@ export const MasonryContainer = ({
   const schemas = useCapabilities(AppCapabilities.Schema);
   const db = view && Obj.getDatabase(view);
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
+  const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
 
   const [cardSchema, setCardSchema] = useState<Schema.Schema.AnyNoContext>();
 
@@ -58,15 +60,38 @@ export const MasonryContainer = ({
     }
   }, [schemas, typename, db]);
 
-  const objects = useQuery(db, cardSchema ? Filter.type(cardSchema) : Filter.nothing());
-  const filteredObjects = useGlobalFilteredObjects(objects);
+  const query = useMemo(() => {
+    const baseFilter = cardSchema ? Filter.type(cardSchema) : Filter.nothing();
+    return tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
+  }, [cardSchema, tag]);
+  const objects = useQuery(db, query);
+
+  const sortedObjects = useMemo(
+    () =>
+      objects.filter(isNonNullable).toSorted((a, b) => (Obj.getLabel(a) ?? '').localeCompare(Obj.getLabel(b) ?? '')),
+    [objects],
+  );
+
+  const { results, handleSearch } = useSearchListResults({
+    items: sortedObjects,
+    extract: (obj) => Obj.getLabel(obj) ?? '',
+  });
 
   return (
-    <MasonryComponent.Root
-      items={filteredObjects}
-      render={Item as any}
-      classNames='w-full max-w-full h-full max-h-full overflow-y-auto p-4'
-    />
+    <MasonryComponent.Root Tile={Item}>
+      <SearchList.Root onSearch={handleSearch}>
+        <Panel.Root>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root>
+              <SearchList.Input placeholder='Search...' />
+            </Toolbar.Root>
+          </Panel.Toolbar>
+          <Panel.Content>
+            <MasonryComponent.Content items={results} getId={(data: any) => data?.id} />
+          </Panel.Content>
+        </Panel.Root>
+      </SearchList.Root>
+    </MasonryComponent.Root>
   );
 };
 

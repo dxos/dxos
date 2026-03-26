@@ -3,11 +3,11 @@
 //
 
 import { format } from 'date-fns/format';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { ComposableProps, IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { Journal as JournalType, getDateString, parseDateString } from '../../types';
@@ -15,16 +15,13 @@ import { Outline, type OutlineController, type OutlineProps } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
-// TODO(burdon): Convert to Radix format.
-
-export type JournalProps = ThemedClassName<
-  {
+export type JournalProps = Omit<ComposableProps<HTMLDivElement>, 'onSelect'> &
+  Pick<JournalEntryProps, 'onSelect'> & {
     journal: JournalType.Journal;
-  } & Pick<JournalEntryProps, 'onSelect'>
->;
+  };
 
 // TODO(burdon): Virtualize.
-export const Journal = ({ classNames, journal, ...props }: JournalProps) => {
+export const Journal = forwardRef<HTMLDivElement, JournalProps>(({ journal, onSelect, ...props }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const date = new Date();
 
@@ -45,27 +42,29 @@ export const Journal = ({ classNames, journal, ...props }: JournalProps) => {
     }
 
     const entry = JournalType.makeEntry();
-    Obj.change(journal, (j) => {
-      j.entries[getDateString(date)] = Ref.make(entry);
+    Obj.change(journal, (obj) => {
+      obj.entries[getDateString(date)] = Ref.make(entry);
     });
     setShowAddEntry(false);
   }, [journal, date]);
 
   return (
-    <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport classNames={classNames}>
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+      <ScrollArea.Viewport>
         {showAddEntry && (
           <div className='p-2'>
             <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
           </div>
         )}
         {JournalType.getEntries(journal).map((entry, i) => (
-          <JournalEntry key={entry.id} entry={entry} classNames='p-2' {...props} autoFocus={i === 0} />
+          <JournalEntry key={entry.id} entry={entry} classNames='p-2' onSelect={onSelect} autoFocus={i === 0} />
         ))}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
+
+Journal.displayName = 'Journal';
 
 type JournalEntryProps = ThemedClassName<
   {

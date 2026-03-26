@@ -19,6 +19,7 @@ import React, {
 } from 'react';
 
 import {
+  ComposableProps,
   type Density,
   type Elevation,
   Icon,
@@ -29,7 +30,7 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -232,17 +233,22 @@ SearchListRoot.displayName = 'SearchList.Root';
 // Content
 //
 
-type SearchListContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+type SearchListContentProps = ComposableProps<HTMLDivElement, ThemedClassName<ComponentPropsWithoutRef<'div'>>>;
 
-const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
-    return (
-      <div role='none' {...props} className={mx('dx-container flex flex-col gap-3', classNames)} ref={forwardedRef}>
-        {children}
-      </div>
-    );
-  },
-);
+const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(({ children, ...props }, forwardedRef) => {
+  return (
+    <div
+      {...composableProps(props, {
+        role: 'none',
+        className:
+          'flex flex-col min-h-0 [.dx-column_&]:col-span-full [.dx-column_&]:grid [.dx-column_&]:grid-cols-subgrid [.dx-column_&]:[&>:not(.dx-container)]:col-start-2',
+      })}
+      ref={forwardedRef}
+    >
+      {children}
+    </div>
+  );
+});
 
 SearchListContent.displayName = 'SearchList.Content';
 
@@ -380,12 +386,12 @@ SearchListInput.displayName = 'SearchList.Input';
 // Viewport
 //
 
-type SearchListViewportProps = ThemedClassName<PropsWithChildren>;
+type SearchListViewportProps = ComposableProps<HTMLDivElement>;
 
 const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
-  ({ classNames, children }, forwardedRef) => {
+  ({ children, ...props }, forwardedRef) => {
     return (
-      <ScrollArea.Root role='listbox' classNames={mx(classNames)} ref={forwardedRef} thin>
+      <ScrollArea.Root {...composableProps(props)} role='listbox' thin padding ref={forwardedRef}>
         <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
       </ScrollArea.Root>
     );
@@ -471,10 +477,10 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         )}
         onClick={handleClick}
       >
-        {icon && <Icon icon={icon} size={5} classNames={iconClassNames} />}
+        {icon && <Icon icon={icon} classNames={iconClassNames} />}
         <span className='w-0 grow truncate'>{label}</span>
         {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
-        {checked && <Icon icon='ph--check--regular' size={5} />}
+        {checked && <Icon icon='ph--check--regular' />}
       </div>
     );
   },

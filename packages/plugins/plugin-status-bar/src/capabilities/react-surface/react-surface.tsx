@@ -20,18 +20,13 @@ export default Capability.makeModule(() =>
         component: () => <StatusBarPanel />,
       }),
       Surface.create({
-        id: `${meta.id}.status-bar--r0-footer`,
-        role: 'status-bar--r0-footer',
-        component: () => <Surface.Surface role='status' />,
-      }),
-      Surface.create({
         id: `${meta.id}.status-bar--r1-footer`,
         role: 'status-bar--r1-footer',
         component: () => <StatusBarActions />,
       }),
       Surface.create({
-        id: `${meta.id}.header-end`,
-        role: 'header-end',
+        id: `${meta.id}.version-info`,
+        role: 'version-info',
         component: () => <VersionNumber />,
       }),
     ]),

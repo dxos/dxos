@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { CSSProperties, Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
+import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
@@ -11,11 +11,12 @@ import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
-import { hoverableControls, hoverableFocusedWithinControls, largeIconSize } from '@dxos/ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dxos/ui-theme';
 
 import { useBreakpoints } from '../../hooks';
 import { meta } from '../../meta';
-import { DeckOperation, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
+import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
+import { DeckOperation } from '../../operations';
 import { soloInlinePadding } from '../fragments';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
@@ -55,7 +56,7 @@ export const PlankHeading = memo(
     actions = [],
   }: PlankHeadingProps) => {
     const { t } = useTranslation(meta.id);
-    const { invokePromise, invokeSync } = useOperationInvoker();
+    const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
@@ -121,15 +122,15 @@ export const PlankHeading = memo(
           return invokePromise(DeckOperation.Adjust, { type: eventType, id });
         } else if (eventType === 'close') {
           if (part === 'complementary') {
-            return invokeSync(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+            return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
           } else {
-            return invokeSync(LayoutOperation.Close, { subject: [id] });
+            return invokePromise(LayoutOperation.Close, { subject: [id] });
           }
         } else {
           return invokePromise(DeckOperation.Adjust, { type: eventType, id });
         }
       },
-      [invokePromise, invokeSync, id, part],
+      [invokePromise, id, part],
     );
 
     const ActionRoot = node && popoverAnchorId === `${meta.id}:${node.id}` ? Popover.Anchor : Fragment;
@@ -148,7 +149,7 @@ export const PlankHeading = memo(
     return (
       <StackItem.Heading
         data-plank-heading
-        style={largeIconSize}
+        style={iconSize(5)}
         classNames={[
           'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-coarse',
           part === 'solo' ? soloInlinePadding : 'px-1',

@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, test } from 'vitest';
+import { beforeEach, describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Type } from '@dxos/echo';

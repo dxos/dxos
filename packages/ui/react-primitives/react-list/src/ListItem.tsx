@@ -13,7 +13,7 @@ import React, {
   type ComponentProps,
   type ComponentPropsWithoutRef,
   type Dispatch,
-  type ElementRef,
+  type ComponentRef,
   type ForwardRefExoticComponent,
   type RefAttributes,
   type SetStateAction,
@@ -44,7 +44,7 @@ type ListItemProps = Omit<ListItemData, 'id'> & { collapsible?: boolean } & RefA
     defaultSelected?: CheckboxProps['defaultChecked'];
   };
 
-type ListItemElement = ElementRef<'li'>;
+type ListItemElement = ComponentRef<'li'>;
 
 const [createListItemContext, createListItemScope] = createContextScope(LIST_ITEM_NAME, []);
 

@@ -1,7 +1,38 @@
 /**
- * Misc
+ * Tailwind utility classes.
  */
 
-@utility dx-icon-inline {
-  @apply inline-block align-[-0.125em];
+/**
+ * Layout rules for flex-based scroll containment:
+ * `flex flex-col`
+ *   On a container: makes it a flex column so children stack and can use `flex-1`.
+ * `flex-1`
+ *   On a child: grows to fill the flex parent. Requires the parent to be `flex`.
+ * `min-h-0` (alongside `flex-1`):
+ *   Overrides default flex children: `min-height:auto` (sized to content), which prevents shrinking.
+ *   Allows element to shrink and trigger overflow/scrolling.
+ *   Always pair with `flex-1` when scroll is needed.
+ * `h-full`:
+ *   Fills 100% of the parent's *computed* height.
+ *   Use when the parent has a definite height but is not a flex container (e.g. `overflow:hidden` wrapper).
+ *   Unlike `flex-1`, does not require the parent to be flex.
+ *
+ * Pattern for a scrollable region inside a flex ancestor:
+ *   ancestor         → `flex flex-col`             (or `flex flex-row`)
+ *   scroll root      → `flex-1 min-h-0`            (fills ancestor, can shrink)
+ *   scroll viewport  → `h-full overflow-y-scroll`  (fills root, scrolls)
+ */
+
+/**
+ * Fills the available space.
+ */
+@utility dx-expander {
+  @apply flex-1 min-h-0 min-w-0 h-full w-full;
+}
+
+/**
+ * Container that fills the available space (extends dx-expander with overflow clipping).
+ */
+@utility dx-container {
+  @apply dx-expander overflow-hidden;
 }

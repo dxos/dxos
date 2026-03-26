@@ -2,17 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 'react-syntax-highlighter';
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { ScrollArea, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { ComposableProps, ScrollArea, useThemeContext } from '@dxos/react-ui';
+import { composableProps } from '@dxos/ui-theme';
 
 const zeroWidthSpace = '\u200b';
 
-export type SyntaxHighlighterProps = ThemedClassName<
+export type SyntaxHighlighterProps = ComposableProps<
+  HTMLDivElement,
   NaturalSyntaxHighlighterProps & {
     fallback?: string;
   }
@@ -26,39 +27,37 @@ export type SyntaxHighlighterProps = ThemedClassName<
  * https://react-syntax-highlighter.github.io/react-syntax-highlighter/demo/prism.html
  */
 // TODO(burdon): Replace with react-ui-editor (and reuse styles).
-export const SyntaxHighlighter = ({
-  classNames,
-  children,
-  language = 'text',
-  fallback = zeroWidthSpace,
-  ...props
-}: SyntaxHighlighterProps) => {
-  const { themeMode } = useThemeContext();
+export const SyntaxHighlighter = forwardRef<HTMLDivElement, SyntaxHighlighterProps>(
+  ({ children, language = 'text', fallback = zeroWidthSpace, classNames, className, ...nativeProps }, forwardedRef) => {
+    const { themeMode } = useThemeContext();
 
-  return (
-    <ScrollArea.Root thin classNames={mx('p1', classNames)}>
-      <ScrollArea.Viewport>
-        <div role='none'>
-          <NativeSyntaxHighlighter
-            language={languages[language as keyof typeof languages] || language}
-            style={themeMode === 'dark' ? dark : light}
-            customStyle={{
-              background: 'unset',
-              border: 'none',
-              boxShadow: 'none',
-              padding: 0,
-              margin: 0,
-            }}
-            {...props}
-          >
-            {/* Non-empty fallback prevents collapse. */}
-            {children || fallback}
-          </NativeSyntaxHighlighter>
-        </div>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
-  );
-};
+    return (
+      <ScrollArea.Root {...composableProps({ classNames, className })} thin ref={forwardedRef}>
+        <ScrollArea.Viewport>
+          <div role='none'>
+            <NativeSyntaxHighlighter
+              language={languages[language as keyof typeof languages] || language}
+              style={themeMode === 'dark' ? dark : light}
+              customStyle={{
+                background: 'unset',
+                border: 'none',
+                boxShadow: 'none',
+                padding: 0,
+                margin: 0,
+              }}
+              {...nativeProps}
+            >
+              {/* Non-empty fallback prevents collapse. */}
+              {children || fallback}
+            </NativeSyntaxHighlighter>
+          </div>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
+
+SyntaxHighlighter.displayName = 'SyntaxHighlighter';
 
 const languages = {
   js: 'javascript',

@@ -17,7 +17,8 @@ import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '../../meta';
-import { SpaceCapabilities, SpaceForm, SpaceOperation } from '../../types';
+import { SpaceCapabilities, SpaceForm } from '../../types';
+import { SpaceOperation } from '../../operations';
 
 const SpaceFormSchema = SpaceForm.pipe(
   Schema.extend(
@@ -61,15 +62,15 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
       }
 
       if (changed['name'] || changed['icon'] || changed['hue']) {
-        Obj.change(space.properties, (p) => {
+        Obj.change(space.properties, (obj) => {
           if (changed['name'] && newValues.name !== undefined) {
-            p.name = newValues.name;
+            obj.name = newValues.name;
           }
           if (changed['icon']) {
-            p.icon = newValues.icon;
+            obj.icon = newValues.icon;
           }
           if (changed['hue']) {
-            p.hue = newValues.hue;
+            obj.hue = newValues.hue;
           }
         });
       }

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 
 import {
@@ -42,8 +42,8 @@ import { type LogBuffer } from '@dxos/log';
 import { log } from '@dxos/log';
 
 import { type Graph } from '@dxos/plugin-graph';
-import { ScriptOperation } from '@dxos/plugin-script/types';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { ScriptOperation } from '@dxos/plugin-script/operations';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -181,7 +181,8 @@ export default Capability.makeModule(
 
       Surface.create({
         id: `${meta.id}.status`,
-        role: 'status',
+        role: 'status-indicator',
+        position: 'hoist',
         component: () => <DebugStatus />,
       }),
       //

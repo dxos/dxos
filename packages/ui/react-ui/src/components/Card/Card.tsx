@@ -4,17 +4,10 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  CSSProperties,
-  type HTMLAttributes,
-  type PropsWithChildren,
-  createContext,
-  forwardRef,
-  useContext,
-} from 'react';
+import React, { type PropsWithChildren, createContext, forwardRef, useContext } from 'react';
 
-import { composableProps, largeIconSize, mx } from '@dxos/ui-theme';
-import { type Density, type SlottableProps } from '@dxos/ui-types';
+import { composableProps, iconSize, mx } from '@dxos/ui-theme';
+import { ComposableProps, type Density, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { Column } from '../../primitives';
@@ -86,7 +79,7 @@ const CardToolbar = forwardRef<HTMLDivElement, CardToolbarProps>(({ children, cl
   const { tx } = useThemeContext();
 
   return (
-    <Toolbar.Root {...props} style={largeIconSize} classNames={[tx('card.toolbar', {}), classNames]} ref={forwardedRef}>
+    <Toolbar.Root {...props} style={iconSize(5)} classNames={[tx('card.toolbar', {}), classNames]} ref={forwardedRef}>
       {children}
     </Toolbar.Root>
   );
@@ -100,8 +93,8 @@ type CardDragHandleProps = ToolbarDragHandleProps;
 
 const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((props, forwardedRef) => {
   return (
-    <CardIconBlock>
-      <Toolbar.DragHandle {...props} testId='card-drag-handle' ref={forwardedRef} />
+    <CardIconBlock padding>
+      <Toolbar.DragHandle {...props} ref={forwardedRef} />
     </CardIconBlock>
   );
 });
@@ -114,7 +107,7 @@ type CloseIconButtonProps = ToolbarCloseIconButtonProps;
 
 const CloseIconButton = forwardRef<HTMLButtonElement, CloseIconButtonProps>((props, forwardedRef) => {
   return (
-    <CardIconBlock>
+    <CardIconBlock padding>
       <Toolbar.CloseIconButton {...props} ref={forwardedRef} />
     </CardIconBlock>
   );
@@ -133,7 +126,7 @@ const CardMenu = <T extends any | void = void>({ context, items, ...props }: Car
   const combinedItems = [...(items ?? []), ...((menuItems as CardMenuItem<T>[]) ?? [])];
 
   return (
-    <CardIconBlock>
+    <CardIconBlock padding>
       <Toolbar.Menu {...props} context={context} items={combinedItems} />
     </CardIconBlock>
   );
@@ -155,11 +148,12 @@ const CardIcon = (props: IconProps) => {
 // IconBlock
 //
 
-const CardIconBlock = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildren>>(
-  ({ classNames, children, ...props }, forwardedRef) => {
+const CardIconBlock = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildren<{ padding?: boolean }>>>(
+  ({ classNames, children, padding, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
+
     return (
-      <div {...props} role='none' className={tx('card.icon-block', {}, classNames)} ref={forwardedRef}>
+      <div {...props} role='none' className={tx('card.icon-block', { padding }, classNames)} ref={forwardedRef}>
         {children}
       </div>
     );
@@ -173,12 +167,12 @@ const CardIconBlock = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildr
 type CardTitleProps = SlottableProps<HTMLDivElement>;
 
 const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(({ children, asChild, role, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
+  const { className, ...rest } = composableProps(props, { role: 'heading' });
   const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
 
   return (
-    <Comp {...rest} role={role ?? 'heading'} className={tx('card.title', {}, className)} ref={forwardedRef}>
+    <Comp {...rest} className={tx('card.title', {}, className)} ref={forwardedRef}>
       {children}
     </Comp>
   );
@@ -190,29 +184,34 @@ const CardTitle = forwardRef<HTMLDivElement, CardTitleProps>(({ children, asChil
 
 type CardContentProps = SlottableProps<HTMLDivElement>;
 
-const CardContent = forwardRef<HTMLDivElement, CardContentProps>(({ children, role, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
+const CardContent = forwardRef<HTMLDivElement, CardContentProps>(
+  ({ children, asChild, role, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props, { role: 'none' });
+    const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
 
-  return (
-    <div {...props} role={role ?? 'none'} className={tx('card.content', {})} ref={forwardedRef}>
-      {children}
-    </div>
-  );
-});
+    return (
+      <Comp {...rest} className={tx('card.content', {}, className)} ref={forwardedRef}>
+        {children}
+      </Comp>
+    );
+  },
+);
 
 //
 // Row
 //
 
-type CardRowProps = SlottableProps<HTMLDivElement, { icon?: string }>;
+type CardRowProps = ComposableProps<HTMLDivElement, { icon?: string; fullWidth?: boolean }>;
 
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(({ children, role, icon, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
+  const { className, ...rest } = composableProps(props, { role: 'none' });
+  const { tx } = useThemeContext();
+
   return (
-    <Column.Row {...rest} role={role ?? 'none'} classNames={className} ref={forwardedRef}>
-      {(icon && <CardIcon classNames='text-subdued' icon={icon} />) || <div />}
+    <Column.Row {...rest} className={tx('card.row', {}, className)} ref={forwardedRef}>
+      {(icon && <CardIcon classNames='text-subdued' icon={icon} size={4} />) || <div />}
       {children}
-      <div />
     </Column.Row>
   );
 });
@@ -223,6 +222,9 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(({ children, role, icon
 
 type CardSectionProps = SlottableProps<HTMLDivElement>;
 
+/**
+ * @deprecated Merge with Card.Row fullWidth
+ */
 const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
   ({ children, asChild, role, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
@@ -298,6 +300,7 @@ type CardPosterProps = ThemedClassName<
 const CardPoster = (props: CardPosterProps) => {
   const { tx } = useThemeContext();
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
+
   if (props.image) {
     return (
       <div role='none' className='col-span-full mb-1'>
@@ -325,9 +328,9 @@ const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onCl
   const { tx } = useThemeContext();
   return (
     <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
-      {icon ? <CardIcon classNames='text-subdued' icon={icon} /> : <div />}
+      {icon ? <CardIcon classNames='text-subdued' icon={icon} size={4} /> : <div />}
       <span className={tx('card.action-label', {}, !actionIcon ? 'col-span-2' : undefined)}>{label}</span>
-      {actionIcon && <CardIcon icon={actionIcon} />}
+      {actionIcon && <CardIcon icon={actionIcon} size={4} />}
     </Button>
   );
 };

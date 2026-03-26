@@ -28,13 +28,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { __unstable__loadDesignSystem } from 'tailwindcss';
-import { Scanner } from '@tailwindcss/oxide';
 import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { createRequire } from 'node:module';
+
+import { Scanner } from '@tailwindcss/oxide';
+import { __unstable__loadDesignSystem } from 'tailwindcss';
 
 // minimatch is a transitive CJS dependency — load via createRequire (ESM scope).
 const _req = createRequire(import.meta.url);
@@ -46,7 +47,7 @@ const minimatch = _req('minimatch') as (path: string, pattern: string, opts?: ob
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim();
-const THEME_CSS_PATH = path.resolve(__dirname, '../src/theme.css');
+const THEME_CSS_PATH = path.resolve(__dirname, '../src/main.css');
 const STYLES_DIR = path.resolve(__dirname, '../src/config');
 const TWIGNORE_PATH = path.join(ROOT, '.twignore');
 

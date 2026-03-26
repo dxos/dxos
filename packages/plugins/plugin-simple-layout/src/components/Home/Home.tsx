@@ -13,7 +13,7 @@ import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
 import { mx } from '@dxos/ui-theme';
-import { byPosition } from '@dxos/util';
+import { byPosition, getHostPlatform, isTauri } from '@dxos/util';
 
 import { meta } from '../../meta';
 import { useExpandPath } from '../hooks';
@@ -40,12 +40,14 @@ export const Home = (_: HomeProps) => {
     extract: (node) => toLocalizedString(node.properties.label, t),
   });
 
+  const autoFocus = !isTauri() || getHostPlatform() !== 'ios';
+
   return (
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <SearchList.Input placeholder={t('search placeholder')} />
+            <SearchList.Input placeholder={t('search placeholder')} autoFocus={autoFocus} />
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
@@ -133,6 +135,8 @@ const filterItems = (node: Node.Node, disposition: string) => {
 const useItemsByDisposition = (disposition: string, sort = false) => {
   const { graph } = useAppGraph();
   const connections = useConnections(graph, Node.RootId, 'child');
-  const filtered = connections.filter((node) => filterItems(node, disposition));
-  return sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
+  return useMemo(() => {
+    const filtered = connections.filter((node) => filterItems(node, disposition));
+    return sort ? filtered.toSorted((a, b) => byPosition(a.properties, b.properties)) : filtered;
+  }, [connections, disposition, sort]);
 };

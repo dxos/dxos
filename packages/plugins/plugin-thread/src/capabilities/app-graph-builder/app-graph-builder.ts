@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -16,7 +16,8 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
 
 import { meta } from '../../meta';
-import { Channel, ThreadCapabilities, ThreadOperation, type ThreadState } from '../../types';
+import { Channel, ThreadCapabilities, type ThreadState } from '../../types';
+import { ThreadOperation } from '../../operations';
 import { getAnchor } from '../../util';
 
 type CommentDisabledParams = {
@@ -133,7 +134,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             {
-              id: `${COMPANION_PREFIX}comments`,
+              id: companionSegment('comments'),
               type: PLANK_COMPANION_TYPE,
               data: 'comments',
               properties: {

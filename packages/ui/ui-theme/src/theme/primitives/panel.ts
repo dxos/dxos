@@ -6,9 +6,9 @@ import { type ComponentFunction } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
-export type PanelProps = {};
+export type PanelStyleProps = {};
 
-const panelRoot: ComponentFunction<PanelProps> = (_, ...etc) =>
+const panelRoot: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
   mx(
     // prettier-ignore
     'h-full w-full grid grid-cols-[100%] overflow-hidden',
@@ -17,7 +17,7 @@ const panelRoot: ComponentFunction<PanelProps> = (_, ...etc) =>
     ...etc,
   );
 
-const panelToolbar: ComponentFunction<PanelProps> = (_, ...etc) =>
+const panelToolbar: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
   mx(
     // prettier-ignore
     '[grid-area:toolbar]',
@@ -27,14 +27,14 @@ const panelToolbar: ComponentFunction<PanelProps> = (_, ...etc) =>
     ...etc,
   );
 
-const panelContent: ComponentFunction<PanelProps> = (_, ...etc) =>
+const panelContent: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
   mx(
     // prettier-ignore
     '[grid-area:content] overflow-hidden min-h-0',
     ...etc,
   );
 
-const panelStatusbar: ComponentFunction<PanelProps> = (_, ...etc) =>
+const panelStatusbar: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
   mx(
     // prettier-ignore
     '[grid-area:statusbar]',

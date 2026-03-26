@@ -10,7 +10,6 @@ import { fileURLToPath } from 'node:url';
 // import sourcemaps from 'rollup-plugin-sourcemaps';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, searchForWorkspaceRoot, type ConfigEnv, type Plugin, type PluginOption } from 'vite';
-import devtoolsJson from 'vite-plugin-devtools-json';
 import inspect from 'vite-plugin-inspect';
 import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
@@ -22,8 +21,6 @@ import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
-
-import { APP_KEY } from './src/constants';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
 const isFalse = (str?: string) => str === 'false' || str === '0';
@@ -98,6 +95,7 @@ export default defineConfig((env) => ({
         internal: path.resolve(dirname, './internal.html'),
         main: path.resolve(dirname, './index.html'),
         devtools: path.resolve(dirname, './devtools.html'),
+        reset: path.resolve(dirname, './reset.html'),
         'script-frame': path.resolve(dirname, './script-frame/index.html'),
       },
       output: {

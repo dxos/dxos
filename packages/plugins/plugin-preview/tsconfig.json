@@ -90,6 +90,9 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../../ui/react-ui-table"
     },
     {
@@ -106,9 +109,6 @@
     },
     {
       "path": "../plugin-deck"
-    },
-    {
-      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

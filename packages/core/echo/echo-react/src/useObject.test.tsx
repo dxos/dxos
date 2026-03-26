@@ -63,8 +63,8 @@ describe('useObject', () => {
     expect(result.current[0]).toBe('Test');
 
     // Update the property via Obj.change
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
 
     // Wait for reactivity to update
@@ -85,8 +85,8 @@ describe('useObject', () => {
     expect(result.current[0].name).toBe('Test');
 
     // Update a property via Obj.change
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
 
     // Wait for reactivity to update
@@ -107,8 +107,8 @@ describe('useObject', () => {
     expect(result.current[0]).toBe('Test');
 
     // Update a different property via Obj.change
-    Obj.change(obj, (o) => {
-      o.email = 'newemail@example.com';
+    Obj.change(obj, (obj) => {
+      obj.email = 'newemail@example.com';
     });
 
     // Wait a bit to ensure no update happens

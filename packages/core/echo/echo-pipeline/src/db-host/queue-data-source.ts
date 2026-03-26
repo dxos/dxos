@@ -10,7 +10,7 @@ import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
 import { type DataSourceCursor, type IndexDataSource, type IndexerObject } from '@dxos/index-core';
-import { failedInvariant, invariant } from '@dxos/invariant';
+import { failedInvariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';

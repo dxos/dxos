@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import Prompt from './prompt';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const AgentFunctions = {
-  Prompt,
-};
+export * from './definitions';
+
+export const AgentHandlers = OperationHandlerSet.lazy(() => import('./prompt'));

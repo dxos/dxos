@@ -39,6 +39,7 @@ import {
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
 } from './MarkdownEditorToolbar';
+import { Obj } from '@dxos/echo';
 
 //
 // Context
@@ -95,6 +96,7 @@ const MarkdownEditorRoot = ({
   const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
   const previewOptions = useMemo<PreviewOptions>(
     () => ({
+      db: Obj.isObject(object) ? Obj.getDatabase(object) : undefined,
       addBlockContainer: (block) => {
         setPreviewBlocks((prev) => [...prev, block]);
       },
@@ -102,7 +104,7 @@ const MarkdownEditorRoot = ({
         setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.dxn !== link.dxn));
       },
     }),
-    [],
+    [object],
   );
 
   // Toolbar state.

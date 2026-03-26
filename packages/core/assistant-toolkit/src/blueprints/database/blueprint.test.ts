@@ -15,12 +15,12 @@ import { ObjectId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 
 import DatabaseBlueprint from './blueprint';
-import { DatabaseFunctions } from './functions';
+import { DatabaseHandlers } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [...Object.values(DatabaseFunctions)],
+  operationHandlers: DatabaseHandlers,
   types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Blueprint.Blueprint],
   tracing: 'pretty',
 });

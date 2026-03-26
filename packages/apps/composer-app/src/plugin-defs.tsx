@@ -55,6 +55,7 @@ import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { VoxelPlugin } from '@dxos/plugin-voxel';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
+import { YouTubePlugin } from '@dxos/plugin-youtube';
 import { ZenPlugin } from '@dxos/plugin-zen';
 import { isTruthy } from '@dxos/util';
 
@@ -223,6 +224,7 @@ export const getPlugins = ({
     ThemePlugin({
       appName: 'Composer',
       noCache: isDev,
+      platform: isMobile ? 'mobile' : 'desktop',
     }),
     ThreadPlugin(),
     TokenManagerPlugin(),
@@ -230,6 +232,7 @@ export const getPlugins = ({
     VoxelPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),
+    YouTubePlugin(),
     ZenPlugin(),
   ]
     .filter(isTruthy)

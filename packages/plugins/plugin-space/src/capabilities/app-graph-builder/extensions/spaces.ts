@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
@@ -17,7 +17,8 @@ import { Expando } from '@dxos/schema';
 
 import { getActiveSpace } from '../../../hooks';
 import { meta } from '../../../meta';
-import { SPACE_TYPE, SpaceCapabilities, SpaceOperation } from '../../../types';
+import { SPACE_TYPE, SpaceCapabilities } from '../../../types';
+import { SpaceOperation } from '../../../operations';
 import { SHARED, getSpaceDisplayName } from '../../../util';
 
 import {

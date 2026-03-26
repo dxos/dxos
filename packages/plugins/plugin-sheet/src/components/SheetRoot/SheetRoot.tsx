@@ -20,7 +20,6 @@ import { type Sheet } from '../../types';
 export type SheetContextValue = {
   id: string;
   attendableId: string;
-
   model: SheetModel;
 
   // Cursor state.

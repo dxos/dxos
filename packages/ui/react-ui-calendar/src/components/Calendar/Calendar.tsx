@@ -125,7 +125,6 @@ const CalendarToolbar = ({ classNames, ...props }: CalendarToolbarProps) => {
       <div className='flex justify-start'>
         <IconButton
           variant='ghost'
-          size={5}
           icon='ph--calendar--regular'
           iconOnly
           classNames='aspect-square'
@@ -246,7 +245,6 @@ const CalendarGrid = ({ classNames, rows, onSelect, ...props }: CalendarGridProp
                     <Icon
                       classNames='absolute bottom-0'
                       icon={num > 3 ? 'ph--dots-three--regular' : 'ph--dot--regular'}
-                      size={5}
                     />
                   )}
                 </div>

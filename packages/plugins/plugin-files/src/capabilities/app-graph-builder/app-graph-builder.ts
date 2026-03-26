@@ -11,7 +11,8 @@ import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
-import { FileCapabilities, LocalFilesOperation } from '../../types';
+import { FilesOperation } from '../../operations';
+import { FileCapabilities } from '../../types';
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../../util';
 
 export default Capability.makeModule(
@@ -26,16 +27,16 @@ export default Capability.makeModule(
         actions: () =>
           Effect.succeed([
             {
-              id: LocalFilesOperation.Export.meta.key,
-              data: () => Operation.invoke(LocalFilesOperation.Export),
+              id: FilesOperation.Export.meta.key,
+              data: () => Operation.invoke(FilesOperation.Export),
               properties: {
                 label: ['export label', { ns: meta.id }],
                 icon: 'ph--floppy-disk--regular',
               },
             },
             {
-              id: LocalFilesOperation.Import.meta.key,
-              data: () => Operation.invoke(LocalFilesOperation.Import, {}),
+              id: FilesOperation.Import.meta.key,
+              data: () => Operation.invoke(FilesOperation.Import, {}),
               properties: {
                 label: ['import label', { ns: meta.id }],
                 icon: 'ph--folder-open--regular',
@@ -78,9 +79,9 @@ export default Capability.makeModule(
         actions: () =>
           Effect.succeed([
             {
-              id: LocalFilesOperation.OpenFile.meta.key,
+              id: FilesOperation.OpenFile.meta.key,
               data: Effect.fnUntraced(function* () {
-                const result = yield* Operation.invoke(LocalFilesOperation.OpenFile);
+                const result = yield* Operation.invoke(FilesOperation.OpenFile);
                 if (result?.subject) {
                   yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
                 }
@@ -95,7 +96,7 @@ export default Capability.makeModule(
                   {
                     id: 'open-directory',
                     data: Effect.fnUntraced(function* () {
-                      const result = yield* Operation.invoke(LocalFilesOperation.OpenDirectory);
+                      const result = yield* Operation.invoke(FilesOperation.OpenDirectory);
                       if (result?.subject) {
                         yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
                       }
@@ -151,8 +152,8 @@ export default Capability.makeModule(
         actions: (entity) =>
           Effect.succeed([
             {
-              id: `${LocalFilesOperation.Close.meta.key}:${entity.id}`,
-              data: () => Operation.invoke(LocalFilesOperation.Close, { id: entity.id }),
+              id: `${FilesOperation.Close.meta.key}:${entity.id}`,
+              data: () => Operation.invoke(FilesOperation.Close, { id: entity.id }),
               properties: {
                 label: ['close label', { ns: meta.id }],
                 icon: 'ph--x--regular',
@@ -161,8 +162,8 @@ export default Capability.makeModule(
             ...(entity.permission !== 'granted'
               ? [
                   {
-                    id: `${LocalFilesOperation.Reconnect.meta.key}:${entity.id}`,
-                    data: () => Operation.invoke(LocalFilesOperation.Reconnect, { id: entity.id }),
+                    id: `${FilesOperation.Reconnect.meta.key}:${entity.id}`,
+                    data: () => Operation.invoke(FilesOperation.Reconnect, { id: entity.id }),
                     properties: {
                       label: ['re-open label', { ns: meta.id }],
                       icon: 'ph--plugs--regular',
@@ -173,8 +174,8 @@ export default Capability.makeModule(
             ...(entity.permission === 'granted' && isLocalFile(entity)
               ? [
                   {
-                    id: `${LocalFilesOperation.Save.meta.key}:${entity.id}`,
-                    data: () => Operation.invoke(LocalFilesOperation.Save, { id: entity.id }),
+                    id: `${FilesOperation.Save.meta.key}:${entity.id}`,
+                    data: () => Operation.invoke(FilesOperation.Save, { id: entity.id }),
                     properties: {
                       label: [entity.handle ? 'save label' : 'save as label', { ns: meta.id }],
                       icon: 'ph--floppy-disk--regular',

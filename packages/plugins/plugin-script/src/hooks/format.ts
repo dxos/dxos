@@ -30,8 +30,8 @@ export const createFormat = (script: Script.Script) => {
           semi: true,
           singleQuote: true,
         });
-        Obj.change(script.source.target!, (s) => {
-          s.content = formatted;
+        Obj.change(script.source.target!, (obj) => {
+          obj.content = formatted;
         });
       } catch (err: any) {
         // TODO(wittjosiah): Show error in UI.

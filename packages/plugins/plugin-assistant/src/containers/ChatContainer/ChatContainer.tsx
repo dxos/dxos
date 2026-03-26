@@ -29,7 +29,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   const parentId = attendableId ? getParentId(attendableId) : undefined;
   const space = spaceProp ?? getSpace(chat);
   const settings = useAtomCapability(AssistantCapabilities.Settings);
-  const services = useChatServices({ id: space?.id, chat });
+  const services = useChatServices({ id: space?.id });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
@@ -69,8 +69,8 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   return (
     <ChatComponent.Root db={space?.db} chat={chat} processor={processor} onEvent={onEvent}>
       <Panel.Root role={role} classNames='dx-document' ref={forwardedRef}>
-        <Panel.Toolbar>
-          <ChatComponent.Toolbar attendableId={parentId} companionTo={companionTo} />
+        <Panel.Toolbar className='bg-toolbar-surface'>
+          <ChatComponent.Toolbar classNames='dx-document' attendableId={parentId} companionTo={companionTo} />
         </Panel.Toolbar>
         <Panel.Content>
           <ChatComponent.Viewport>

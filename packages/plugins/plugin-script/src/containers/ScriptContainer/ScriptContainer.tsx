@@ -26,6 +26,7 @@ export type ScriptEditorProps = SurfaceComponentProps<
 
 export const ScriptContainer = ({
   role,
+  attendableId,
   subject: script,
   settings = { editorInputMode: 'vscode' },
   env,
@@ -50,8 +51,8 @@ export const ScriptContainer = ({
       listener({
         onChange: ({ text }) => {
           if (script.source.target?.content !== text) {
-            Obj.change(script, (s) => {
-              s.changed = true;
+            Obj.change(script, (obj) => {
+              obj.changed = true;
             });
           }
         },
@@ -64,17 +65,17 @@ export const ScriptContainer = ({
   }
 
   return (
-    <Panel.Root role={role} className='dx-document'>
+    <Panel.Root role={role}>
       <Panel.Toolbar asChild>
-        <ScriptToolbar state={state} role={role} script={script} />
+        <ScriptToolbar script={script} attendableId={attendableId} state={state} role={role} />
       </Panel.Toolbar>
       <Panel.Content asChild>
         <TypescriptEditor
+          classNames={stackItemContentEditorClassNames(role)}
           id={script.id}
           env={env}
           initialValue={script.source?.target?.content}
           extensions={extensions}
-          classNames={stackItemContentEditorClassNames(role)}
           inputMode={settings.editorInputMode}
           toolbar
         />

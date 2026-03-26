@@ -27,6 +27,7 @@ import {
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
+import { OperationHandlerSet } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '../../types';
@@ -74,10 +75,9 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
         const registry = this.#capabilities.get(Capabilities.AtomRegistry);
 
         // TODO(dmaretskyi): Make these reactive.
-        const functions = [
-          ...this.#capabilities.getAll(AppCapabilities.Functions).flat(),
-          ...this.#capabilities.getAll(AppCapabilities.BlueprintDefinition).flatMap((blueprint) => blueprint.functions),
-        ];
+        const operationHandlers = OperationHandlerSet.merge(
+          ...this.#capabilities.getAll(Capabilities.OperationHandler),
+        );
 
         const genericToolkitProvider = Layer.succeed(GenericToolkit.Provider, {
           getToolkit: () => {
@@ -99,6 +99,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           // TODO(dmaretskyi): Make blueprints reactive and registry accept an atom.
           Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
         ).pipe(
+          Layer.provideMerge(Layer.succeed(Capability.Service, this.#capabilities)),
           Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
           Layer.provideMerge(
             Layer.mergeAll(
@@ -110,7 +111,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           Layer.provideMerge(
             FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
               Layer.provideMerge(genericToolkitProvider),
-              Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
+              Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: operationHandlers })),
               Layer.provideMerge(
                 RemoteFunctionExecutionService.fromClient(
                   client,
@@ -143,8 +144,8 @@ const TracingServiceLive = Layer.unwrapEffect(
     // TODO(burdon): Check ref target has loaded?
     if (!properties.invocationTraceQueue || !properties.invocationTraceQueue.target) {
       const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
-      Obj.change(properties, (m) => {
-        m.invocationTraceQueue = Ref.fromDXN(queue.dxn);
+      Obj.change(properties, (obj) => {
+        obj.invocationTraceQueue = Ref.fromDXN(queue.dxn);
       });
     }
 

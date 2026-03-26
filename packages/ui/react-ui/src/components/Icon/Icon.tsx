@@ -15,6 +15,9 @@ export type IconProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.s
   size?: Size;
 };
 
+/**
+ * The Icon's size can be set directly or inherited from the `--dx-icon-size` CSS variable.
+ */
 export const Icon = memo(
   forwardRef<SVGSVGElement, IconProps>(({ icon, classNames, size, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();

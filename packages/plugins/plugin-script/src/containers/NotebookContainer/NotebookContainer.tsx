@@ -10,11 +10,12 @@ import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { AgentFunctions } from '@dxos/assistant-toolkit';
+import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { type FunctionDefinition, FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { useComputeRuntimeCallback } from '@dxos/plugin-automation';
@@ -65,16 +66,16 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
             if (!graph) {
               const { view } = await ViewModel.makeFromDatabase({ db });
               const newGraph = Graph.make({ query: { ast }, view });
-              Obj.change(notebook!, (n) => {
-                const c = n.cells.find((c) => c.id === cell.id);
+              Obj.change(notebook!, (obj) => {
+                const c = obj.cells.find((c) => c.id === cell.id);
                 if (c) {
                   c.graph = Ref.make(newGraph);
                   c.name = name;
                 }
               });
             } else {
-              Obj.change(graph, (g) => {
-                g.query.ast = ast as Obj.Mutable<typeof ast>;
+              Obj.change(graph, (obj) => {
+                obj.query.ast = ast as Obj.Mutable<typeof ast>;
               });
             }
           }
@@ -132,10 +133,10 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       const from = notebook.cells.findIndex((cell) => cell.id === source.id);
       const to = notebook.cells.findIndex((cell) => cell.id === target.id);
       if (from != null && to != null) {
-        Obj.change(notebook, (n) => {
-          const cell = n.cells.splice(from, 1)[0];
+        Obj.change(notebook, (obj) => {
+          const cell = obj.cells.splice(from, 1)[0];
           if (cell) {
-            n.cells.splice(to, 0, cell);
+            obj.cells.splice(to, 0, cell);
           }
         });
       }
@@ -168,8 +169,8 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       }
 
       const idx = after ? notebook.cells.findIndex((cell) => cell.id === after) : notebook.cells.length;
-      Obj.change(notebook, (n) => {
-        n.cells.splice(idx, 0, cell);
+      Obj.change(notebook, (obj) => {
+        obj.cells.splice(idx, 0, cell);
       });
     },
     [db, notebook],
@@ -180,8 +181,8 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       invariant(notebook);
       const idx = notebook.cells.findIndex((cell) => cell.id === id);
       if (idx !== -1) {
-        Obj.change(notebook, (n) => {
-          n.cells.splice(idx, 1);
+        Obj.change(notebook, (obj) => {
+          obj.cells.splice(idx, 1);
         });
       }
     },
@@ -233,7 +234,7 @@ const runPrompt = Effect.fn(function* ({
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: FunctionDefinition.Input<typeof AgentFunctions.Prompt> = { prompt, input };
+  const inputData: Operation.Definition.Input<typeof AgentPrompt> = { prompt, input };
   const tracer = yield* TracingService;
   const trace = yield* tracer.traceInvocationStart({
     target: undefined,
@@ -243,7 +244,7 @@ const runPrompt = Effect.fn(function* ({
   });
 
   // Invoke the function.
-  const result = yield* FunctionInvocationService.invokeFunction(AgentFunctions.Prompt, inputData).pipe(
+  const result = yield* FunctionInvocationService.invokeFunction(AgentPrompt, inputData).pipe(
     Effect.provide(trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop),
     Effect.exit,
   );

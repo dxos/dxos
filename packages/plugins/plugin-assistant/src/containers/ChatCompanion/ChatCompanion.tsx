@@ -13,20 +13,24 @@ import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type ChatEvent } from '../../components';
 import { useBlueprintRegistry, useContextBinder } from '../../hooks';
-import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
+import { Assistant, AssistantCapabilities } from '../../types';
+import { AssistantOperation } from '../../operations';
 import ChatContainer from '../ChatContainer';
+
+// TODO(burdon): Use definition.
+// export type ChatCompanionProps = SurfaceComponentProps<Chat.Chat>;
 
 export type ChatCompanionProps = {
   role?: string;
   data: {
-    attendableId: string;
     subject: Chat.Chat | 'assistant-chat';
+    attendableId: string;
     companionTo: Obj.Unknown;
   };
 };
@@ -35,8 +39,8 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role, data }: ChatCompanionProps, forwardedRef) => {
     const { invokePromise } = useOperationInvoker();
     const blueprintRegistry = useBlueprintRegistry();
-    const companionTo = data.companionTo;
 
+    const companionTo = data.companionTo;
     const space = getSpace(companionTo);
     const [chat, setChat] = useState(data.subject === 'assistant-chat' ? undefined : data.subject);
 

@@ -4,10 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
-import { Panel } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 
 import { type Dream } from '../../types';

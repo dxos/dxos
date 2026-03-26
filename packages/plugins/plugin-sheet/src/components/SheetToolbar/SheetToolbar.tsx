@@ -3,17 +3,13 @@
 //
 
 import { Atom, type Registry, RegistryContext } from '@effect-atom/atom-react';
-import React, { type PropsWithChildren, useContext, useMemo } from 'react';
+import React, { forwardRef, useContext, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type CompleteCellRange } from '@dxos/compute';
-import {
-  type ActionGraphProps,
-  Menu,
-  type MenuRootProps,
-  createGapSeparator,
-  useMenuActions,
-} from '@dxos/react-ui-menu';
+import { ComposableProps } from '@dxos/react-ui';
+import { type ActionGraphProps, Menu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import { composableProps } from '@dxos/ui-theme';
 
 import { type SheetModel } from '../../model';
 import { useSheetContext } from '../SheetRoot';
@@ -59,11 +55,10 @@ const createToolbarActions = ({
   });
 };
 
-export type SheetToolbarProps = { id: string } & Partial<MenuRootProps> &
-  PropsWithChildren<{ id: string } & Partial<MenuRootProps>>;
+export type SheetToolbarProps = ComposableProps<HTMLDivElement>;
 
-export const SheetToolbar = ({ id, ...props }: SheetToolbarProps) => {
-  const { model, cursorFallbackRange } = useSheetContext();
+export const SheetToolbar = forwardRef<HTMLDivElement, SheetToolbarProps>((props, forwardedRef) => {
+  const { attendableId, model, cursorFallbackRange } = useSheetContext();
   const stateAtom = useToolbarState({});
   const registry = useContext(RegistryContext);
   useAlignState(stateAtom);
@@ -72,24 +67,26 @@ export const SheetToolbar = ({ id, ...props }: SheetToolbarProps) => {
   const { graph } = useAppGraph();
   const customActions = useMemo(() => {
     return Atom.make((get) => {
-      const actions = get(graph.actions(id));
+      const actions = get(graph.actions(attendableId));
       const nodes = actions.filter((action) => action.properties.disposition === 'toolbar');
       return {
         nodes,
         edges: nodes.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
       };
     });
-  }, [graph, id]);
+  }, [graph, attendableId]);
 
   const actionsCreator = useMemo(
     () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange, customActions }),
     [model, stateAtom, registry, cursorFallbackRange, customActions],
   );
-  const menu = useMenuActions(actionsCreator);
+  const menuActions = useMenuActions(actionsCreator);
 
   return (
-    <Menu.Root {...props} {...menu} attendableId={id}>
-      <Menu.Toolbar />
+    <Menu.Root {...menuActions} attendableId={attendableId}>
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
     </Menu.Root>
   );
-};
+});
+
+SheetToolbar.displayName = 'SheetToolbar';

@@ -81,7 +81,7 @@ export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>
         classNames={!hasActions && 'cursor-default'}
       >
         <span className='sr-only'>{triggerLabel}</span>
-        <Icon icon={icon} size={5} />
+        <Icon icon={icon} />
       </StackItemSigilButton>
     );
 

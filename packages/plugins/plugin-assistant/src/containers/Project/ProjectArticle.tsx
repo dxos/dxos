@@ -96,18 +96,22 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
           <Menu.Root>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
               <Card.Toolbar>
-                <Card.Icon icon={icon} />
+                <Card.IconBlock padding>
+                  <Card.Icon icon={icon} />
+                </Card.IconBlock>
                 <Card.Title>{Obj.getLabel(data)}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-                  <Toolbar.IconButton
-                    iconOnly
-                    variant='ghost'
-                    icon='ph--dots-three-vertical--regular'
-                    label='Actions'
-                  />
-                </Menu.Trigger>
-                <Menu.Content items={objectMenuItems} />
+                <Card.IconBlock padding>
+                  <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+                    <Toolbar.IconButton
+                      iconOnly
+                      variant='ghost'
+                      icon='ph--dots-three-vertical--regular'
+                      label='Actions'
+                    />
+                  </Menu.Trigger>
+                  <Menu.Content items={objectMenuItems} />
+                </Card.IconBlock>
               </Card.Toolbar>
               <Card.Content>
                 <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />

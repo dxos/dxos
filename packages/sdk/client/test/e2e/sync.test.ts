@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 import { Client, Config } from '@dxos/client';
-import { Obj, Type, Database } from '@dxos/echo';
+import { Obj, Database } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import type { SpaceSyncState } from '@dxos/echo-db';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';

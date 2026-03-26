@@ -3,30 +3,20 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { Database, Ref } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Database } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 
-export default defineFunction({
-  key: 'org.dxos.function.markdown.read',
-  name: 'Read markdown document',
-  description:
-    'Read markdown document. Note that result is a snapshot in time, and might have changed since the document was last read.',
-  inputSchema: Schema.Struct({
-    document: Ref.Ref(Markdown.Document).annotations({
-      description: 'The document to read.',
+import { Read } from './definitions';
+
+export default Read.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ document }) {
+      const { content } = yield* document.pipe(
+        Database.load,
+        Effect.flatMap((doc) => doc.content.pipe(Database.load)),
+      );
+      return { content };
     }),
-  }),
-  outputSchema: Schema.Struct({
-    content: Schema.String,
-  }),
-  handler: Effect.fn(function* ({ data: { document } }) {
-    const { content } = yield* document.pipe(
-      Database.load,
-      Effect.flatMap((doc) => doc.content.pipe(Database.load)),
-    );
-    return { content };
-  }),
-});
+  ),
+);

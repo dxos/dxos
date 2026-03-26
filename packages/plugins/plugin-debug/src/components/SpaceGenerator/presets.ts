@@ -4,13 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AgentFunctions, EntityExtractionFunctions, ResearchBlueprint } from '@dxos/assistant-toolkit';
+import { AgentPrompt, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
-import { Trigger, serializeFunction } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { GmailFunctions } from '@dxos/plugin-inbox';
+import { Operation } from '@dxos/operation';
+import { InboxOperation } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
@@ -73,8 +74,8 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.change(doc, (d) => {
-            Obj.getMeta(d).tags = [tagDxn];
+          Obj.change(doc, (obj) => {
+            Obj.getMeta(obj).tags = [tagDxn];
           });
 
           // space.db.add(
@@ -138,7 +139,7 @@ export const generator = () => ({
                 kind: 'timer',
                 cron: '* * * * *', // Every minute.
               },
-              function: Ref.make(serializeFunction(GmailFunctions.Sync)),
+              function: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
               input: {
                 mailbox: Ref.make(mailbox),
               },
@@ -153,7 +154,7 @@ export const generator = () => ({
                 kind: 'queue',
                 queue: queueDxn,
               },
-              function: Ref.make(serializeFunction(EntityExtractionFunctions.Extract)),
+              function: Ref.make(Operation.serialize(EntityExtraction)),
               input: {
                 source: '{{event.item}}',
               },
@@ -189,7 +190,7 @@ export const generator = () => ({
                   ast: organizationsQuery.ast,
                 },
               },
-              function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
+              function: Ref.make(Operation.serialize(AgentPrompt)),
               input: {
                 prompt: Ref.make(researchPrompt),
                 input: '{{event.subject}}',
@@ -814,9 +815,9 @@ const setupQueue = (
 const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  Obj.change(functionTrigger, (t) => {
-    t.function = Ref.make(computeModel.root);
-    t.inputNodeId = inputNode.id;
+  Obj.change(functionTrigger, (obj) => {
+    obj.function = Ref.make(computeModel.root);
+    obj.inputNodeId = inputNode.id;
   });
 };
 

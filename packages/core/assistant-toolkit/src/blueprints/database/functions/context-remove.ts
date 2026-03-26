@@ -3,33 +3,22 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
 import { AiContextService } from '@dxos/assistant';
-import { Obj, Ref } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
-import { trim } from '@dxos/util';
+import { Operation } from '@dxos/operation';
 
-export default defineFunction({
-  key: 'org.dxos.function.database.context-remove',
-  name: 'Remove from context',
-  description: trim`
-    Removes the object from the chat context.
-    Use this it for objects that are no longer useful for the conversation.
-  `,
-  inputSchema: Schema.Struct({
-    obj: Ref.Ref(Obj.Unknown).annotations({
-      description: 'Object to remove from the chat context.',
-    }),
-  }),
-  outputSchema: Schema.Void,
-  handler: Effect.fn(function* ({ data: { obj } }) {
-    const { binder } = yield* AiContextService;
-    yield* Effect.promise(() =>
-      binder.unbind({
-        blueprints: [],
-        objects: [obj],
-      }),
-    );
-  }, AiContextService.fixFunctionHandlerType),
-});
+import { ContextRemove } from './definitions';
+
+export default ContextRemove.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ obj }) {
+      const { binder } = yield* AiContextService;
+      yield* Effect.promise(() =>
+        binder.unbind({
+          blueprints: [],
+          objects: [obj],
+        }),
+      );
+    }) as any,
+  ),
+);

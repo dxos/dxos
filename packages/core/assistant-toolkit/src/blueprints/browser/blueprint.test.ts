@@ -15,13 +15,15 @@ import { Collection, Database, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { OperationHandlerSet } from '@dxos/operation';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { WithProperties } from '@dxos/plugin-markdown/testing';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { DatabaseBlueprint } from '../database';
+import { DatabaseBlueprint, DatabaseHandlers } from '../database';
+import { MarkdownHandlers } from '../markdown';
 import { addBlueprints } from '../testing';
 
 import BrowserBlueprint from './blueprint';
@@ -30,7 +32,7 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  functions: [DatabaseBlueprint, MarkdownBlueprint, BrowserBlueprint].flatMap((blueprint) => blueprint.functions),
+  operationHandlers: OperationHandlerSet.merge(DatabaseHandlers, MarkdownHandlers),
   types: [Blueprint.Blueprint, Person.Person, Markdown.Document, SpaceProperties, Collection.Collection],
   tracing: 'pretty',
 });

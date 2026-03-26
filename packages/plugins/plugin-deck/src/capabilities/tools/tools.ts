@@ -20,7 +20,7 @@ import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { DeckOperation } from '../../types';
+import { DeckOperation } from '../../operations';
 
 // TODO(burdon): Factor out.
 declare global {
