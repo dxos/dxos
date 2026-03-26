@@ -55,5 +55,3 @@
 - If multiple targets match, present the options to the user and let them choose which to open.
 
 ## Context
-
-Today is {{DATETIME}}.

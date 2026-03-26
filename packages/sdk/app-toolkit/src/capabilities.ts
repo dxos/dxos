@@ -12,7 +12,7 @@ import type { GenericToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { Blueprint } from '@dxos/blueprints';
-import type { Database, Type } from '@dxos/echo';
+import type { Database, DXN, Type } from '@dxos/echo';
 import type { AnchoredTo } from '@dxos/types';
 import type { FileInfo } from './file';
 import type { NodeSerializer } from './graph';
@@ -176,7 +176,7 @@ export namespace AppCapabilities {
   };
 
   export type NavigationQuery = {
-    dxn?: string;
+    dxn?: DXN.String;
   };
 
   /**
