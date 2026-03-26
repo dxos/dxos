@@ -56,7 +56,7 @@ export const Main = () => {
       <Panel.Toolbar asChild>
         <AppBar {...appBarProps} />
       </Panel.Toolbar>
-      <Panel.Content role='article' className='bg-base-surface border border-red-500'>
+      <Panel.Content role='article' className='bg-base-surface'>
         {/* <Column.Root gutter='md'>
           <Column.Content> */}
         <Surface.Surface
