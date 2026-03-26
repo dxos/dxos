@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, COMPANION_PREFIX, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment, LayoutOperation } from '@dxos/app-toolkit';
 import { type Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
@@ -57,7 +57,7 @@ export default Capability.makeModule(
           )[0];
           return Effect.succeed([
             {
-              id: `${COMPANION_PREFIX}video`,
+              id: companionSegment('video'),
               type: PLANK_COMPANION_TYPE,
               data: video ?? 'video',
               properties: {
