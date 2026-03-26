@@ -10867,6 +10867,9 @@ importers:
 
   packages/plugins/plugin-script:
     dependencies:
+      '@automerge/automerge':
+        specifier: 3.2.3
+        version: 3.2.3
       '@codemirror/autocomplete':
         specifier: 'catalog:'
         version: 6.19.0
@@ -11099,9 +11102,6 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
     devDependencies:
-      '@automerge/automerge':
-        specifier: 3.2.3
-        version: 3.2.3
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
