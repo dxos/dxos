@@ -175,9 +175,12 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
   }
 }
 
+export type ModuleResolver = <I, O>(executable: Process.Executable<I, O>) => Effect.Effect<Process.Module<I, O>, never>;
+
 export interface ProcessManagerImplOpts {
   registry: Registry.Registry;
   kvStore: KeyValueStore.KeyValueStore;
+  moduleResolver: ModuleResolver;
   serviceResolver?: ServiceResolver.ServiceResolver;
   tracingService?: Context.Tag.Service<TracingService>;
   handlerSet?: OperationHandlerSet.OperationHandlerSet;
@@ -188,16 +191,16 @@ export class ProcessManagerImpl implements Process.Manager {
   readonly #traceContexts = new Map<Process.ID, TracingService.TraceContext>();
   readonly #registry: Registry.Registry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
+  readonly #moduleResolver: ModuleResolver;
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
   readonly #tracingService: Context.Tag.Service<TracingService>;
-  readonly #handlerSet: OperationHandlerSet.OperationHandlerSet | undefined;
 
   constructor(opts: ProcessManagerImplOpts) {
     this.#registry = opts.registry;
     this.#kvStore = opts.kvStore;
     this.#serviceResolver = opts.serviceResolver ?? ServiceResolver.empty;
     this.#tracingService = opts.tracingService ?? TracingService.noop;
-    this.#handlerSet = opts.handlerSet;
+    this.#moduleResolver = opts.moduleResolver;
   }
 
   spawn<I, O>(
@@ -240,7 +243,6 @@ export class ProcessManagerImpl implements Process.Manager {
       if (this.#handlerSet) {
         const childInvoker = ProcessOperationInvoker.make({
           manager: this,
-          handlerSet: this.#handlerSet,
           parentProcessId: id,
         });
         builtinCtx = Context.add(builtinCtx, Operation.Service, {
@@ -353,27 +355,25 @@ export class ProcessManagerImpl implements Process.Manager {
  * Layer that provides ProcessManager backed by ProcessManagerImpl.
  * Requires KeyValueStore, ServiceResolver, TracingService, and OperationHandlerSet.Provider from the environment.
  */
-export const ProcessManagerLayer: Layer.Layer<
-  Process.ProcessManager,
+export const ProcessManagerLayer = (moduleResolver: ModuleResolver): Layer.Layer<
+  Process.ManagerService,
   never,
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
   | TracingService
-  | OperationHandlerSet.Provider
-> = Layer.effect(
-  Process.ProcessManager,
+> => Layer.effect(
+  Process.ManagerService,
   Effect.gen(function* () {
     const kvStore = yield* KeyValueStore.KeyValueStore;
     const serviceResolver = yield* ServiceResolver.ServiceResolver;
     const tracingService = yield* TracingService;
-    const handlerSet = yield* OperationHandlerSet.Provider;
     const registry = Registry.make();
     return new ProcessManagerImpl({
       registry,
       kvStore,
       serviceResolver,
       tracingService,
-      handlerSet,
+      moduleResolver,
     });
   }),
 );

@@ -20,6 +20,10 @@ import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import type { ServiceNotAvailableError } from '../errors';
 
+//
+// Process.
+//
+
 /**
  * A running process.
  *
@@ -150,43 +154,55 @@ export const mergeOutcomes = (left: Outcome, right: Outcome): Outcome => {
   return OutcomeDone;
 };
 
+
+//
+// Executable.
+//
+
 export const ExecutableTypeId = '~@dxos/functions-runtime/Executable' as const;
 export type ExecutableTypeId = typeof ExecutableTypeId;
 
 
-export type Executable = OperationExecutable<any, any> | PromptExecutable | AgentExecutable;
+export interface Executable<I, O> extends Executable.Variance<I, O> {
+  readonly spec: ExecutableSpec;
+}
 
-export const isExecutable = (executable: unknown): executable is Executable => typeof executable === 'object' && executable !== null && ExecutableTypeId in executable;
+export const isExecutable = (executable: unknown): executable is Executable.Any => typeof executable === 'object' && executable !== null && ExecutableTypeId in executable;
 
 export namespace Executable {
-  export interface Base<I, O> {
+  export interface Variance<I, O> {
     readonly [ExecutableTypeId]: {
       readonly _Input: Types.Contravariant<I>;
       readonly _Output: Types.Covariant<O>;
     };
-
-    readonly kind: string;
   }
+
+  export type Any = Executable<any, any>;
 }
 
+export type ExecutableSpec = {
+  readonly kind: 'operation';
+
+  readonly operation: Operation.Definition.Any;
+} | {
+  readonly kind: 'prompt';
+  readonly prompt: Ref.Ref<Obj.Unknown>;
+} | {
+  readonly kind: 'agent';
+  readonly chat: Ref.Ref<Obj.Unknown>;
+};
 /**
  * Executes an operation.
  * Takes one input and produces one output.
  */
-export interface OperationExecutable<I, O> extends Executable.Base<I, O> {
-  readonly kind: 'operation';
-
-  readonly operation: Operation.Definition<I, O>;
-}
-
-export const isOperationExecutable = (executable: unknown): executable is OperationExecutable<any, any> => isExecutable(executable) && executable.kind === 'operation';
-
 export const makeOperationExecutable = <const Op extends Operation.Definition.Any>(
   op: Op,
-): OperationExecutable<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>> => ({
+): Executable<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>> => ({
   [ExecutableTypeId]: {} as any,
-  kind: 'operation',
-  operation: op,
+  spec: {
+    kind: 'operation',
+    operation: op,
+  },
 });
 
 /**
@@ -195,38 +211,26 @@ export const makeOperationExecutable = <const Op extends Operation.Definition.An
  * Input type is based on the prompt's input schema.
  * Output type is based on the prompt's output schema.
  */
-export interface PromptExecutable extends Executable.Base<any, any> {
-  readonly kind: 'prompt';
-
-  // TODO(dmaretskyi): Should be a ref to prompt object but I did not want to add package dependency.
-  readonly prompt: Ref.Ref<Obj.Unknown>;
-}
-export const isPromptExecutable = (executable: unknown): executable is PromptExecutable => isExecutable(executable) && executable.kind === 'prompt';
-
-export const makePromptExecutable = (prompt: Ref.Ref<Obj.Unknown>): PromptExecutable => ({
+export const makePromptExecutable = (prompt: Ref.Ref<Obj.Unknown>): Executable<any, any> => ({
   [ExecutableTypeId]: {} as any,
-  kind: 'prompt',
-  prompt,
+  spec: {
+    kind: 'prompt',
+    prompt,
+  },
 });
 
 /**
  * Agent takes in many inputs in the form of user instructions or events and produces no output.
  * Agebt writes its output to the chat.
  */
-export interface AgentExecutable extends Executable.Base<any, unknown> {
-  readonly kind: 'agent';
-
-  // Chat in which to run the agent.
-  readonly chat: Ref.Ref<Obj.Unknown>;
-}
-
-export const isAgentExecutable = (executable: unknown): executable is AgentExecutable => isExecutable(executable) && executable.kind === 'agent';
-
-export const makeAgentExecutable = (chat: Ref.Ref<Obj.Unknown>): AgentExecutable => ({
+export const makeAgentExecutable = (chat: Ref.Ref<Obj.Unknown>): Executable<any, unknown> => ({
   [ExecutableTypeId]: {} as any,
-  kind: 'agent',
-  chat,
+  spec: {
+    kind: 'agent',
+    chat,
+  },
 });
+
 
 export const ModuleTypeId = '~@dxos/functions-runtime/Module' as const;
 export type ModuleTypeId = typeof ModuleTypeId;
@@ -246,6 +250,9 @@ export interface Module<I, O, R = never> {
   run(ctx: ProcessContext<I, O>): Effect.Effect<Process<I, O>, never, Scope.Scope | R>;
 }
 
+//
+// Module.
+//
 
 export namespace Module {
   export type Any = Module<any, any>;
@@ -268,7 +275,7 @@ export const makeModule = <const Opts extends Types.NoExcessProperties<MakeModul
   };
 };
 
-export const makeOperatioModule = <const Op extends Operation.Definition.Any>(
+export const makeOperationModule = <const Op extends Operation.Definition.Any>(
   op: Op,
   handler: OperationHandlerSet.OperationHandlerSet,
 ): Module<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
@@ -359,17 +366,36 @@ export interface SpawnOptions {
   readonly tracing?: TracingOptions;
 }
 
+/**
+ * API for managing processes.
+ */
 export interface Manager {
-  spawn<I, O>(factory: Module<I, O>, options?: SpawnOptions): Effect.Effect<Handle<I, O>, ServiceNotAvailableError>;
+  /**
+   * Spawn a new process for an executable.
+   */
+  spawn<I, O>(executable: Executable<I, O>, options?: SpawnOptions): Effect.Effect<Handle<I, O>, ServiceNotAvailableError>;
+  /**
+   * Attach to an existing process.
+   */
   attach<I, O>(id: ID): Effect.Effect<Handle<I, O>>;
+
+  /**
+   * Attach to an existing process if it exists, otherwise spawn a new process for the executable.
+   * `executable` and `options` are ignored if the process already exists.
+   */
+  ensure<I, O>(id: ID, executable: Executable<I, O>, options?: SpawnOptions): Effect.Effect<Handle<I, O>, never>;
+
+  /**
+   * List all spawned processes.
+   */
   list(): Effect.Effect<readonly Handle.Any[]>;
 }
 
 /**
  * Tag for the ProcessManager service.
  */
-export class ProcessManager extends Context.Tag('@dxos/functions-runtime/ProcessManager')<
-  ProcessManager,
+export class ManagerService extends Context.Tag('@dxos/functions-runtime/ManagerService')<
+  ManagerService,
   Manager
 >() {
 }

@@ -10,7 +10,7 @@ import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
 import { runAndForwardErrors } from '@dxos/effect';
-import { type OperationHandlerSet, type OperationInvoker, type Operation } from '@dxos/operation';
+import { type OperationInvoker, type Operation } from '@dxos/operation';
 
 import * as Process from './Process';
 
@@ -22,7 +22,6 @@ import * as Process from './Process';
  */
 export const make = (opts: {
   manager: Process.Manager;
-  handlerSet: OperationHandlerSet.OperationHandlerSet;
   parentProcessId?: Process.ID;
 }): OperationInvoker.OperationInvoker => {
   const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
@@ -35,14 +34,12 @@ export const make = (opts: {
     tracingOptions?: Process.TracingOptions,
   ): Effect.Effect<O, Error> =>
     Effect.gen(function* () {
-      const executable = Process.makeOperationExecutable(op, opts.handlerSet) as Process.Module<I, O>;
+      const executable = Process.makeOperationExecutable(op);
 
-      const spawnOptions: Process.SpawnOptions = {
+      const handle = yield* opts.manager.spawn(executable, {
         parentProcessId: opts.parentProcessId,
         tracing: tracingOptions,
-      };
-
-      const handle = yield* opts.manager.spawn(executable, spawnOptions).pipe(
+      }).pipe(
         Effect.mapError((err) => new Error(err.message, { cause: err })),
       );
 
