@@ -51,6 +51,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
             displayName: 'Test User',
             data: { emoji: '🧪', hue: 'amber' },
           });
+          void invokePromise(ClientOperation.CreateAgent);
         }
         await invokePromise(LayoutOperation.UpdateDialog, { state: false });
         return;
