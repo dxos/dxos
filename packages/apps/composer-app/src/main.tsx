@@ -128,8 +128,9 @@ const main = async () => {
     runAndForwardErrors,
   );
 
-  // Use single-client mode on mobile Tauri apps where SharedWorker crashes on WKWebView.
-  const useSingleClientMode = isTauri && isMobile;
+  // Use in-process coordinator (no SharedWorker) for all Tauri apps. WKWebView does not reliably
+  // deliver messages on the coordinator SharedWorker port (desktop and iOS); single-window is enough for now.
+  const useSingleClientMode = isTauri;
 
   const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
   const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
