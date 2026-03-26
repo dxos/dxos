@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { ServiceNotAvailableError } from '../errors';
+import { Database } from '@dxos/echo';
 
 const ServiceResolverTypeId = '~@dxos/functions-runtime/ServiceResolver' as const;
 type ServiceResolverTypeId = typeof ServiceResolverTypeId;
@@ -96,8 +97,6 @@ export const layerRequirements = <const Tags extends readonly Context.Tag<any, a
   ...tags: Tags
 ): Layer.Layer<ServiceResolver, never, Context.Tag.Identifier<Tags[number]>> =>
   Layer.effect(ServiceResolver, fromRequirements(...tags));
-
-
 
 /**
  * Compose multiple resolvers left to right. Earlier resolvers take precedence:

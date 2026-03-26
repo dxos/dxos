@@ -35,7 +35,7 @@ export const make = (opts: {
     tracingOptions?: Process.TracingOptions,
   ): Effect.Effect<O, Error> =>
     Effect.gen(function* () {
-      const executable = Process.makeOperationExecutable(op, opts.handlerSet) as Process.Executable<I, O>;
+      const executable = Process.makeOperationExecutable(op, opts.handlerSet) as Process.Module<I, O>;
 
       const spawnOptions: Process.SpawnOptions = {
         parentProcessId: opts.parentProcessId,

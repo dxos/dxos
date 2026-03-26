@@ -34,7 +34,8 @@ class DatabaseService extends Context.Tag('@test/DatabaseService')<
     query(sql: string): Effect.Effect<readonly string[]>;
     execute(sql: string): Effect.Effect<void>;
   }
->() {}
+>() {
+}
 
 const makeInMemoryDatabase = () => {
   const rows: string[] = [];
@@ -131,7 +132,7 @@ const makeDbOperationExecutables = () => {
   };
 };
 
-const makeSimpleExecutable = (): Process.Executable<{ value: number }, number> =>
+const makeSimpleExecutable = (): Process.Module<{ value: number }, number> =>
   Process.makeExecutable(
     {
       input: Schema.Struct({ value: Schema.Number }),
@@ -384,7 +385,7 @@ describe('ProcessManagerImpl', () => {
       'provides scoped storage to processes',
       Effect.fn(function* ({ expect }) {
         const { kvStore, manager } = yield* makeManager();
-        const executable = makeStorageExecutable() as Process.Executable<{ key: string; value: string }, string>;
+        const executable = makeStorageExecutable() as Process.Module<{ key: string; value: string }, string>;
 
         const handle = yield* manager.spawn(executable);
 
@@ -401,7 +402,7 @@ describe('ProcessManagerImpl', () => {
       'isolates storage between processes',
       Effect.fn(function* ({ expect }) {
         const { kvStore, manager } = yield* makeManager();
-        const executable = makeStorageExecutable() as Process.Executable<{ key: string; value: string }, string>;
+        const executable = makeStorageExecutable() as Process.Module<{ key: string; value: string }, string>;
 
         const handle1 = yield* manager.spawn(executable);
         const handle2 = yield* manager.spawn(executable);
@@ -423,7 +424,7 @@ describe('ProcessManagerImpl', () => {
       'cleans up storage on process completion',
       Effect.fn(function* ({ expect }) {
         const { kvStore, manager } = yield* makeManager();
-        const executable = makeStorageExecutable() as Process.Executable<{ key: string; value: string }, string>;
+        const executable = makeStorageExecutable() as Process.Module<{ key: string; value: string }, string>;
 
         const handle = yield* manager.spawn(executable);
 
@@ -460,7 +461,7 @@ describe('ProcessManagerImpl', () => {
                 tick: () => Effect.succeed(Process.OutcomeSuspend as Process.Outcome),
               };
             }),
-        ) as Process.Executable<{ key: string; value: string }, string>;
+        ) as Process.Module<{ key: string; value: string }, string>;
 
         const handle = yield* manager.spawn(storageWriter);
         yield* handle.submitInput({ key: 'persist', value: 'value1' });
@@ -571,7 +572,7 @@ describe('ProcessManagerImpl', () => {
         gates.push(gate1, gate2);
 
         let gateIndex = 0;
-        const executable: Process.Executable<string, string> = Process.makeExecutable(
+        const executable: Process.Module<string, string> = Process.makeExecutable(
           { input: Schema.String, output: Schema.String, services: [] },
           (ctx) =>
             Effect.succeed({
@@ -738,7 +739,7 @@ describe('ProcessManagerImpl', () => {
         const { manager } = yield* makeManager({ serviceResolver: resolver });
         const { insertRow } = makeDbOperationExecutables();
 
-        const handle = yield* manager.spawn(insertRow as Process.Executable<string, string>);
+        const handle = yield* manager.spawn(insertRow as Process.Module<string, string>);
         const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
 
         yield* handle.submitInput('row-1');
@@ -760,7 +761,7 @@ describe('ProcessManagerImpl', () => {
         const { manager } = yield* makeManager({ serviceResolver: resolver });
         const { queryRows } = makeDbOperationExecutables();
 
-        const handle = yield* manager.spawn(queryRows as Process.Executable<string, readonly string[]>);
+        const handle = yield* manager.spawn(queryRows as Process.Module<string, readonly string[]>);
         const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
 
         yield* handle.submitInput('alice');
@@ -775,7 +776,7 @@ describe('ProcessManagerImpl', () => {
         const { manager } = yield* makeManager();
         const { insertRow } = makeDbOperationExecutables();
 
-        const result = yield* manager.spawn(insertRow as Process.Executable<string, string>).pipe(
+        const result = yield* manager.spawn(insertRow as Process.Module<string, string>).pipe(
           Effect.flip,
         );
 
@@ -791,7 +792,7 @@ describe('ProcessManagerImpl', () => {
         const { manager } = yield* makeManager({ serviceResolver: resolver });
         const { insertRow } = makeDbOperationExecutables();
 
-        const result = yield* manager.spawn(insertRow as Process.Executable<string, string>).pipe(
+        const result = yield* manager.spawn(insertRow as Process.Module<string, string>).pipe(
           Effect.flip,
         );
 
@@ -812,7 +813,7 @@ describe('ProcessManagerImpl', () => {
         const { manager } = yield* makeManager({ serviceResolver: combined });
         const { insertRow } = makeDbOperationExecutables();
 
-        const handle = yield* manager.spawn(insertRow as Process.Executable<string, string>);
+        const handle = yield* manager.spawn(insertRow as Process.Module<string, string>);
         const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
 
         yield* handle.submitInput('composed-row');
@@ -986,7 +987,7 @@ describe('ProcessManagerImpl', () => {
                 tick: () => Effect.succeed(Process.OutcomeSuspend as Process.Outcome),
               };
             }),
-        ) as Process.Executable<void, string>;
+        ) as Process.Module<void, string>;
 
         const { manager } = yield* makeManager({ tracingService });
 
@@ -1053,7 +1054,7 @@ describe('ProcessManagerImpl', () => {
               handleInput: (_input: void) => Effect.die(new Error('boom')),
               tick: () => Effect.succeed(Process.OutcomeSuspend as Process.Outcome),
             }),
-        ) as Process.Executable<void, void>;
+        ) as Process.Module<void, void>;
 
         const { manager } = yield* makeManager({ tracingService });
         const handle = yield* manager.spawn(failingExecutable);

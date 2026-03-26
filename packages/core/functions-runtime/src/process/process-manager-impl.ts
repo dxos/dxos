@@ -201,7 +201,7 @@ export class ProcessManagerImpl implements Process.Manager {
   }
 
   spawn<I, O>(
-    executable: Process.Executable<I, O>,
+    executable: Process.Module<I, O>,
     options?: Process.SpawnOptions,
   ): Effect.Effect<Process.Handle<I, O>, ServiceNotAvailableError> {
     return Effect.gen(this, function* () {

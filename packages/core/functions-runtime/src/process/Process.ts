@@ -14,6 +14,7 @@ import type * as Exit from 'effect/Exit';
 import * as Context from 'effect/Context';
 import type * as Types from 'effect/Types';
 
+import { Ref, type Obj } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
@@ -22,8 +23,9 @@ import type { ServiceNotAvailableError } from '../errors';
 /**
  * A running process.
  *
+ * `init` is called when the process is spawned.
  * `handleInput` is called for every input submitted to the process.
- * `tick` is called initially on freshly spawned process, and to continue suspended execution.
+ * `tick` is called to continue suspended execution.
  * `handleInput` and `tick` can be called concurrently.
  *
  * Outcomes:
@@ -39,10 +41,22 @@ import type { ServiceNotAvailableError } from '../errors';
  * Example execution flow:
  *
  * ```
- * spawn -> tick -> handleInput -> handleInput -> tick -> tick -> done
+ * spawn -> init -> handleInput -> handleInput -> tick -> tick -> done
  * ```
  */
 export interface Process<I, O> {
+
+  /**
+   * Called when the process is spawned.
+   * Not called for processes that are resumed from a previously suspended state.
+   *
+   * @returns A signal indicating to the runtime whether the process is finished, or should be resumed later.
+   * @throws Throwing in the handler will terminate the process with an error.
+   *
+   * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
+   */
+  init(): Effect.Effect<Outcome>;
+
   /**
    * Called when there's input available to process.
    *
@@ -56,7 +70,7 @@ export interface Process<I, O> {
   handleInput(input: I): Effect.Effect<Outcome>;
 
   /**
-   * Called when the process is spawned or resumed from a previosly suspended state.
+   * Called when the process is resumed from a previously suspended state.
    *
    * @returns A signal indicating to the runtime whether the process is finished, or should be resumed later.
    * @throws Throwing in the handler will terminate the process with an error.
@@ -139,12 +153,90 @@ export const mergeOutcomes = (left: Outcome, right: Outcome): Outcome => {
 export const ExecutableTypeId = '~@dxos/functions-runtime/Executable' as const;
 export type ExecutableTypeId = typeof ExecutableTypeId;
 
+
+export type Executable = OperationExecutable<any, any> | PromptExecutable | AgentExecutable;
+
+export const isExecutable = (executable: unknown): executable is Executable => typeof executable === 'object' && executable !== null && ExecutableTypeId in executable;
+
+export namespace Executable {
+  export interface Base<I, O> {
+    readonly [ExecutableTypeId]: {
+      readonly _Input: Types.Contravariant<I>;
+      readonly _Output: Types.Covariant<O>;
+    };
+
+    readonly kind: string;
+  }
+}
+
 /**
- * Executable can be run by process manager to create a process.
+ * Executes an operation.
+ * Takes one input and produces one output.
+ */
+export interface OperationExecutable<I, O> extends Executable.Base<I, O> {
+  readonly kind: 'operation';
+
+  readonly operation: Operation.Definition<I, O>;
+}
+
+export const isOperationExecutable = (executable: unknown): executable is OperationExecutable<any, any> => isExecutable(executable) && executable.kind === 'operation';
+
+export const makeOperationExecutable = <const Op extends Operation.Definition.Any>(
+  op: Op,
+): OperationExecutable<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>> => ({
+  [ExecutableTypeId]: {} as any,
+  kind: 'operation',
+  operation: op,
+});
+
+/**
+ * Executes a prompt.
+ * Takes one input and produces one output.
+ * Input type is based on the prompt's input schema.
+ * Output type is based on the prompt's output schema.
+ */
+export interface PromptExecutable extends Executable.Base<any, any> {
+  readonly kind: 'prompt';
+
+  // TODO(dmaretskyi): Should be a ref to prompt object but I did not want to add package dependency.
+  readonly prompt: Ref.Ref<Obj.Unknown>;
+}
+export const isPromptExecutable = (executable: unknown): executable is PromptExecutable => isExecutable(executable) && executable.kind === 'prompt';
+
+export const makePromptExecutable = (prompt: Ref.Ref<Obj.Unknown>): PromptExecutable => ({
+  [ExecutableTypeId]: {} as any,
+  kind: 'prompt',
+  prompt,
+});
+
+/**
+ * Agent takes in many inputs in the form of user instructions or events and produces no output.
+ * Agebt writes its output to the chat.
+ */
+export interface AgentExecutable extends Executable.Base<any, unknown> {
+  readonly kind: 'agent';
+
+  // Chat in which to run the agent.
+  readonly chat: Ref.Ref<Obj.Unknown>;
+}
+
+export const isAgentExecutable = (executable: unknown): executable is AgentExecutable => isExecutable(executable) && executable.kind === 'agent';
+
+export const makeAgentExecutable = (chat: Ref.Ref<Obj.Unknown>): AgentExecutable => ({
+  [ExecutableTypeId]: {} as any,
+  kind: 'agent',
+  chat,
+});
+
+export const ModuleTypeId = '~@dxos/functions-runtime/Module' as const;
+export type ModuleTypeId = typeof ModuleTypeId;
+
+/**
+ * Module can be run by process manager to create a process.
  * I.e. its a process factory.
  */
-export interface Executable<I, O, R = never> {
-  readonly [ExecutableTypeId]: ExecutableTypeId;
+export interface Module<I, O, R = never> {
+  readonly [ModuleTypeId]: ModuleTypeId;
 
   readonly services: readonly Context.Tag<any, any>[];
 
@@ -154,38 +246,33 @@ export interface Executable<I, O, R = never> {
   run(ctx: ProcessContext<I, O>): Effect.Effect<Process<I, O>, never, Scope.Scope | R>;
 }
 
-export interface MakeProcessFactoryOpts {
+
+export namespace Module {
+  export type Any = Module<any, any>;
+}
+
+export interface MakeModuleOpts {
   readonly input: Schema.Schema.AnyNoContext;
   readonly output: Schema.Schema.AnyNoContext;
   readonly services: readonly Context.Tag<any, any>[];
 }
 
-export const makeExecutable = <const Opts extends Types.NoExcessProperties<MakeProcessFactoryOpts, Opts>>(
+export const makeModule = <const Opts extends Types.NoExcessProperties<MakeModuleOpts, Opts>>(
   opts: Opts,
-  run: (
-    ctx: ProcessContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
-  ) => Effect.Effect<
-    Process<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
-    never,
-    Scope.Scope | Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
-  >,
-): Executable<
-  Schema.Schema.Type<Opts['input']>,
-  Schema.Schema.Type<Opts['output']>,
-  Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
-> => {
+  run: (ctx: ProcessContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>) => Effect.Effect<Process<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>, never, Scope.Scope | Context.Tag.Identifier<NonNullable<Opts['services']>[number]>>,
+): Module<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>, Context.Tag.Identifier<NonNullable<Opts['services']>[number]>> => {
   return {
-    [ExecutableTypeId]: ExecutableTypeId,
+    [ModuleTypeId]: ModuleTypeId,
     ...opts,
     run,
   };
 };
 
-export const makeOperationExecutable = <const Op extends Operation.Definition.Any>(
+export const makeOperatioModule = <const Op extends Operation.Definition.Any>(
   op: Op,
   handler: OperationHandlerSet.OperationHandlerSet,
-): Executable<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
-  makeExecutable(
+): Module<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
+  makeModule(
     {
       input: op.input,
       output: op.output,
@@ -196,64 +283,27 @@ export const makeOperationExecutable = <const Op extends Operation.Definition.An
         const runtime = yield* Effect.runtime<Operation.Definition.Services<Op>>();
 
         return {
+          init: () => Effect.succeed(OutcomeSuspend),
           handleInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
               const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
               const output = yield* opHandler
                 .handler(input)
                 .pipe(Effect.orDie, Effect.provide(runtime)) as Effect.Effect<
-                Operation.Definition.Output<Op>,
-                never,
-                never
-              >;
+                  Operation.Definition.Output<Op>,
+                  never,
+                  never
+                >;
 
               ctx.submitOutput(output);
-              return OutcomeDone as Outcome;
+              return OutcomeDone;
             }),
 
-          tick: () => Effect.succeed(OutcomeSuspend as Outcome),
+          tick: () => Effect.succeed(OutcomeDone),
         };
       }),
   );
 
-/**
- * Create an executable that folds inputs into an accumulator, similar to `Array.reduce` but with Effect.
- *
- * The reducer receives the current accumulator and each input, returning the new accumulator and an Outcome.
- * When the reducer returns `OutcomeDone`, `finalize` converts the accumulator to the final output.
- */
-export const makeAggregationExecutable = <Acc, I, O>(opts: {
-  readonly input: Schema.Schema.AnyNoContext;
-  readonly output: Schema.Schema.AnyNoContext;
-  readonly initial: Acc;
-  readonly reducer: (accumulator: Acc, input: I) => Effect.Effect<readonly [Acc, Outcome]>;
-  readonly finalize: (accumulator: Acc) => O;
-}): Executable<I, O> =>
-  makeExecutable(
-    { input: opts.input, output: opts.output, services: [] as const },
-    (ctx) =>
-      Effect.sync(() => {
-        let accumulator = opts.initial;
-
-        return {
-          handleInput: (input: I) =>
-            Effect.gen(function* () {
-              const [newAcc, outcome] = yield* opts.reducer(accumulator, input);
-              accumulator = newAcc;
-              if (isOutcomeDone(outcome)) {
-                ctx.submitOutput(opts.finalize(accumulator));
-              }
-              return outcome;
-            }),
-
-          tick: () => Effect.succeed(OutcomeSuspend as Outcome),
-        };
-      }),
-  );
-
-export namespace Executable {
-  export type Any = Executable<any, any>;
-}
 
 export enum State {
   RUNNING = 'running',
@@ -310,7 +360,7 @@ export interface SpawnOptions {
 }
 
 export interface Manager {
-  spawn<I, O>(factory: Executable<I, O>, options?: SpawnOptions): Effect.Effect<Handle<I, O>, ServiceNotAvailableError>;
+  spawn<I, O>(factory: Module<I, O>, options?: SpawnOptions): Effect.Effect<Handle<I, O>, ServiceNotAvailableError>;
   attach<I, O>(id: ID): Effect.Effect<Handle<I, O>>;
   list(): Effect.Effect<readonly Handle.Any[]>;
 }
@@ -321,4 +371,5 @@ export interface Manager {
 export class ProcessManager extends Context.Tag('@dxos/functions-runtime/ProcessManager')<
   ProcessManager,
   Manager
->() {}
+>() {
+}
