@@ -269,13 +269,17 @@ export namespace LayoutOperation {
     meta: {
       key: `${LAYOUT_PLUGIN}.operation.open`,
       name: 'Open',
-      description: 'Open items in the main content area.',
+      description: 'Open items in the main content area. Takes navigation paths as subjects.',
     },
     executionMode: 'sync',
     services: [Capability.Service],
     input: Schema.Struct({
       // TODO(dmaretskyi): use Ref.Ref(Obj.Unknown)
-      subject: Schema.Array(Schema.String.annotations({ description: 'Ids of the items to open.' })),
+      subject: Schema.Array(
+        Schema.String.annotations({
+          description: 'Navigation paths of the items to open.',
+        }),
+      ),
       state: Schema.optional(Schema.Literal(true).annotations({ description: 'The items are being added.' })),
       variant: Schema.optional(Schema.String.annotations({ description: 'The variant of the item to open.' })),
       key: Schema.optional(

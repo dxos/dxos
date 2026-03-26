@@ -12,17 +12,19 @@ import {
   BlueprintManagerHandlers,
   BrowserBlueprint,
   DatabaseBlueprint,
+  DatabaseHandlers,
   DiscordBlueprint,
   EntityExtractionHandlers,
   LinearBlueprint,
   PlanningBlueprint,
   ProjectBlueprint,
   ProjectHandlers,
+  ProjectWizardBlueprint,
+  ProjectWizardHandlers,
   ResearchBlueprint,
   WebSearchBlueprint,
   MemoryBlueprint,
   AutomationBlueprint,
-  ProjectWizardBlueprint,
 } from '@dxos/assistant-toolkit';
 
 import { AssistantBlueprint } from '../../blueprints';
@@ -46,8 +48,10 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
 
     Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
     Capability.contributes(Capabilities.OperationHandler, BlueprintManagerHandlers),
+    Capability.contributes(Capabilities.OperationHandler, DatabaseHandlers),
     Capability.contributes(Capabilities.OperationHandler, EntityExtractionHandlers),
     Capability.contributes(Capabilities.OperationHandler, ProjectHandlers),
+    Capability.contributes(Capabilities.OperationHandler, ProjectWizardHandlers),
   ]),
 );
 

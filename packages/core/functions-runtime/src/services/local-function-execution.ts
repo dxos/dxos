@@ -21,6 +21,7 @@ import {
 import { type FunctionServices } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { runAndForwardErrors } from '@dxos/effect';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
   LocalFunctionExecutionService,
@@ -95,6 +96,8 @@ const invokeOperation = (
   input: any,
 ): Effect.Effect<unknown, never, FunctionServices> =>
   Effect.gen(function* () {
+    const functionInvocationService = yield* FunctionInvocationService;
+
     // Assert input matches schema.
     try {
       const assertInput = operationDef.input.pipe(Schema.asserts);
@@ -109,10 +112,32 @@ const invokeOperation = (
 
     log('invoking operation', { name: operationDef.meta.name, input });
 
+    // Provide Operation.Service backed by FunctionInvocationService so handlers
+    // can invoke other operations through the same execution pipeline.
+    // TODO(wittjosiah): Improve type safety once FunctionServices includes Operation.Service.
+    const operationService = {
+      invoke: (op: any, ...args: any[]) => functionInvocationService.invokeFunction(op, args[0]),
+      schedule: (op: any, ...args: any[]) =>
+        functionInvocationService.invokeFunction(op, args[0]).pipe(Effect.fork, Effect.asVoid),
+      invokePromise: async (op: any, ...args: any[]) => {
+        try {
+          const data = await runAndForwardErrors(
+            functionInvocationService.invokeFunction(op, args[0]) as unknown as Effect.Effect<any>,
+          );
+          return { data };
+        } catch (error) {
+          return { error: error as Error };
+        }
+      },
+    } as unknown as Operation.OperationService;
+
     const data = yield* Effect.gen(function* () {
       const result = operationDef.handler(input);
       if (Effect.isEffect(result)) {
-        return yield* (result as Effect.Effect<unknown, unknown, FunctionServices>).pipe(Effect.orDie);
+        return yield* (result as Effect.Effect<unknown, unknown, FunctionServices>).pipe(
+          Effect.provideService(Operation.Service, operationService),
+          Effect.orDie,
+        );
       } else if (
         typeof result === 'object' &&
         result !== null &&
