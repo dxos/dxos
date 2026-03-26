@@ -9,7 +9,6 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useNode } from '@dxos/plugin-graph';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { mx } from '@dxos/ui-theme';
 
 import { useAppBarProps, useNavbarActions, useSimpleLayoutState } from '../../hooks';
 import { Loading } from '../Loading';
@@ -53,34 +52,27 @@ export const Main = () => {
   const showNavBar = !keyboardOpen && !state.isPopover && state.drawerState === 'closed';
 
   return (
-    <Panel.Root
-      role='none'
-      className={mx(
-        'bg-toolbar-surface',
-        showNavBar
-          ? 'grid-rows-[var(--dx-rail-action)_1fr_var(--dx-toolbar-size)]'
-          : 'grid-rows-[var(--dx-rail-action)_1fr]',
-      )}
-      {...attentionAttrs}
-    >
+    <Panel.Root {...attentionAttrs}>
       <Panel.Toolbar asChild>
         <AppBar {...appBarProps} />
       </Panel.Toolbar>
-      <Panel.Content asChild>
-        <article className='bg-base-surface border'>
-          <Surface.Surface
-            key={id}
-            role='article'
-            data={data}
-            limit={1}
-            fallback={ErrorFallback}
-            placeholder={placeholder}
-          />
-        </article>
+      <Panel.Content role='article' className='bg-base-surface border border-red-500'>
+        {/* <Column.Root gutter='md'>
+          <Column.Content> */}
+        <Surface.Surface
+          key={id}
+          role='article'
+          data={data}
+          limit={1}
+          fallback={ErrorFallback}
+          placeholder={placeholder}
+        />
+        {/* </Column.Content>
+        </Column.Root> */}
       </Panel.Content>
       {showNavBar && (
         <Panel.Statusbar asChild>
-          <NavBar classNames='border-y border-subdued-separator' actions={actions} onAction={onAction} />
+          <NavBar actions={actions} onAction={onAction} />
         </Panel.Statusbar>
       )}
     </Panel.Root>

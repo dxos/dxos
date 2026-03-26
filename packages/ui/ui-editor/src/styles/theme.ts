@@ -58,8 +58,7 @@ export const markdownTheme = {
 
 // Font families matching --font-body and --font-mono in theme.css.
 export const fontBody = 'Inter Variable, ui-sans-serif, system-ui, sans-serif';
-// export const fontMono = '"JetBrains Mono Variable", ui-monospace, Cascadia Code, Source Code Pro, monospace';
-export const fontMono = 'ui-monospace';
+export const fontMono = '"JetBrains Mono Variable", ui-monospace, Cascadia Code, Source Code Pro, monospace';
 
 /**
  * Global base theme.
@@ -128,7 +127,7 @@ export const baseTheme = EditorView.baseTheme({
    * NOTE: Apply margins to content so that scrollbar is at the edge of the container.
    */
   '.cm-content': {
-    lineHeight: '24px',
+    lineHeight: 1.5,
     padding: 'unset',
     color: 'unset',
   },
@@ -154,21 +153,15 @@ export const baseTheme = EditorView.baseTheme({
    * Height is set to match the corresponding line (which may have wrapped).
    */
   '.cm-gutterElement': {
-    lineHeight: '24px',
+    lineHeight: 1.5,
     fontSize: '12px',
-    // Prevent font-metric changes from introducing sub-pixel vertical padding.
-    padding: '0 !important',
-    margin: '0 !important',
   },
 
   /**
    * Line.
    */
   '.cm-line': {
-    lineHeight: '24px !important',
-    // Prevent font-metric changes from inflating the line box.
-    padding: '0 !important',
-    margin: '0 !important',
+    lineHeight: 1.5,
     paddingInline: 0,
   },
   /**

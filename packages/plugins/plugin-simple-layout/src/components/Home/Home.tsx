@@ -48,8 +48,8 @@ export const Home = (_: HomeProps) => {
         <Panel.Content asChild>
           <SearchList.Content>
             <Mosaic.Container asChild>
-              <ScrollArea.Root orientation='vertical'>
-                <ScrollArea.Viewport classNames='p-2'>
+              <ScrollArea.Root margin padding thin>
+                <ScrollArea.Viewport>
                   <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
@@ -57,9 +57,13 @@ export const Home = (_: HomeProps) => {
           </SearchList.Content>
         </Panel.Content>
         <Panel.Statusbar asChild>
+          {/* <Column.Root gutter='xs'>
+            <Column.Content> */}
           <Toolbar.Root>
             <SearchList.Input placeholder={t('search placeholder')} autoFocus={autoFocus} />
           </Toolbar.Root>
+          {/* </Column.Content>
+          </Column.Root> */}
         </Panel.Statusbar>
       </Panel.Root>
     </SearchList.Root>
@@ -108,7 +112,7 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
       onClick={handleSelect}
       ref={cardRef}
     >
-      <Card.Toolbar density='coarse'>
+      <Card.Toolbar density='fine'>
         <Avatar.Root>
           <Avatar.Content
             icon={data.properties.icon}
@@ -118,7 +122,7 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
             size={8}
             fallback={name}
           />
-          <Avatar.Label>{name}</Avatar.Label>
+          <Avatar.Label classNames='cursor-pointer'>{name}</Avatar.Label>
           <Icon icon='ph--caret-right--regular' />
         </Avatar.Root>
       </Card.Toolbar>
