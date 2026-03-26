@@ -45,4 +45,19 @@ export const collections = {
       description: z.string(),
     }),
   }),
+
+  blog: defineCollection({
+    loader: glob({ pattern: '**/*.md', base: './src/content/blog' }),
+    schema: z.object({
+      title: z.string(),
+      slug: z.string(),
+      date: z.coerce.date(),
+      description: z.string().optional(),
+      author: z.string(),
+      tags: z.array(z.string()).default([]),
+      featureImage: z.string().optional(),
+      bskyPostUri: z.string().optional(),
+      documentAtUri: z.string().optional(),
+    }),
+  }),
 };

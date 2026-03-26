@@ -1,13 +1,12 @@
 ---
 import DxosLogo from './svg/DxosLogo.astro';
-import IconExternalLink from './svg/IconExternalLink.astro';
 import IconGitHub from './svg/IconGitHub.astro';
 import IconDiscord from './svg/IconDiscord.astro';
 import IconX from './svg/IconX.astro';
 import IconBluesky from './svg/IconBluesky.astro';
 
 interface Props {
-  currentPage: 'home' | 'composer' | 'plugins';
+  currentPage: 'home' | 'composer' | 'plugins' | 'blog';
 }
 
 const { currentPage } = Astro.props;
@@ -46,9 +45,8 @@ const accent = currentPage !== 'home' ? ' c' : '';
           <a href="/docs" class={`nav-link${accent} w-inline-block`}>
             <div>Docs</div>
           </a>
-          <a href="https://blog.dxos.org/" target="_blank" class={`nav-link${accent} w-inline-block`}>
+          <a href="/blog" {...(currentPage === 'blog' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'blog' ? ' w--current' : ''}`}>
             <div>Blog</div>
-            <div class="icon-1x1-xxsmall nav-arrow w-embed"><IconExternalLink /></div>
           </a>
         </div>
       </nav>

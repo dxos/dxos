@@ -722,6 +722,7 @@ patchedDependencies:
 
 peerDependencyRules:
   allowedVersions:
+    '@bryanguffey/astro-standard-site>astro': '>=5.0.0'
     dfx>@effect/platform: '>=0.93.0'
   ignoreMissing:
     - '@cloudflare/ai-chat'

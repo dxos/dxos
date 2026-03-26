@@ -1,0 +1,98 @@
+---
+//
+// Copyright 2026 DXOS.org
+//
+
+import WebflowLayout from './WebflowLayout.astro';
+import WebflowNav from '../components/WebflowNav.astro';
+import WebflowFooter from '../components/WebflowFooter.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const { title, description = 'DXOS Blog', ogImage = '/webflow/images/dxos-home-og-image.png' } = Astro.props;
+---
+<WebflowLayout
+  title={`${title} — DXOS Blog`}
+  description={description}
+  ogImage={ogImage}
+  wfPageId="blog"
+>
+  <style is:inline slot="head">
+    .blog-article img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 0.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .blog-article h2 {
+      font-size: 1.75rem;
+      margin-top: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .blog-article h3 {
+      font-size: 1.375rem;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .blog-article p {
+      line-height: 1.75;
+      margin-bottom: 1.25rem;
+    }
+
+    .blog-article blockquote {
+      border-left: 3px solid rgba(255, 255, 255, 0.2);
+      padding-left: 1.25rem;
+      margin: 1.5rem 0;
+      color: rgba(255, 255, 255, 0.7);
+      font-style: italic;
+    }
+
+    .blog-article ul, .blog-article ol {
+      padding-left: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .blog-article li {
+      margin-bottom: 0.5rem;
+      line-height: 1.75;
+    }
+
+    .blog-article a {
+      color: #00d1b2;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .blog-article a:hover {
+      opacity: 0.8;
+    }
+
+    .blog-article pre {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 0.5rem;
+      padding: 1.25rem;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+
+    .blog-article code {
+      font-size: 0.875em;
+    }
+
+    .blog-article hr {
+      border: none;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      margin: 2.5rem 0;
+    }
+  </style>
+  <WebflowNav currentPage="blog" />
+  <slot />
+  <WebflowFooter />
+</WebflowLayout>

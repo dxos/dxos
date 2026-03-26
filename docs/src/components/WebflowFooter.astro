@@ -1,10 +1,10 @@
 ---
 import DxosLogo from './svg/DxosLogo.astro';
-import IconExternalLink from './svg/IconExternalLink.astro';
 import IconGitHub from './svg/IconGitHub.astro';
 import IconDiscord from './svg/IconDiscord.astro';
 import IconX from './svg/IconX.astro';
 import IconBluesky from './svg/IconBluesky.astro';
+import IconRss from './svg/IconRss.astro';
 import IconChevronRight from './svg/IconChevronRight.astro';
 
 interface Props {
@@ -44,9 +44,8 @@ const accent = accentColor === 'blue' ? ' c' : '';
           <a href="/docs" target="_blank" class={`nav-link${accent} w-inline-block`}>
             <div>Docs</div>
           </a>
-          <a href="https://blog.dxos.org/" target="_blank" class={`nav-link${accent} w-inline-block`}>
+          <a href="/blog" class={`nav-link${accent} w-inline-block`}>
             <div>Blog</div>
-            <div class="icon-1x1-xxsmall nav-arrow w-embed"><IconExternalLink /></div>
           </a>
         </div>
         <div id="w-node-_5785e1e9-ecb0-6203-d3ea-48342ccfe8cd-2ccfe8b8" class="footer-grid-block">
@@ -62,6 +61,9 @@ const accent = accentColor === 'blue' ? ' c' : '';
             </a>
             <a href="https://x.com/dxos_org" target="_blank" class={`button is-link is-icon-only${accent} w-inline-block`}>
               <div class="icon-1x1-xsmall w-embed"><IconX /></div>
+            </a>
+            <a href="/blog/rss.xml" class={`button is-link is-icon-only${accent} w-inline-block`}>
+              <div class="icon-1x1-xsmall w-embed"><IconRss /></div>
             </a>
           </div>
         </div>

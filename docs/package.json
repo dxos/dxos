@@ -20,18 +20,23 @@
     "typedoc": "./scripts/collect-typedoc.sh"
   },
   "dependencies": {
+    "@astrojs/rss": "^4.0.17",
     "@astrojs/starlight": "catalog:",
+    "@bryanguffey/astro-standard-site": "^1.0.3",
     "astro": "catalog:",
     "sharp": "catalog:",
     "starlight-links-validator": "catalog:"
   },
   "devDependencies": {
+    "@atproto/api": "^0.19.5",
     "@dxos/app-framework": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/react-client": "workspace:*",
-    "@dxos/schema": "workspace:*"
+    "@dxos/schema": "workspace:*",
+    "@types/turndown": "catalog:",
+    "turndown": "catalog:"
   }
 }

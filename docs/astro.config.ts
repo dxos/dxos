@@ -13,6 +13,7 @@ const DX_POSTHOG_API_HOST = process.env.DX_POSTHOG_API_HOST;
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://dxos.org',
   integrations: [
     starlight({
       title: 'DXOS Documentation',
@@ -81,7 +82,7 @@ export default defineConfig({
           collapsed: false,
         },
       ],
-      plugins: [starlightLinksValidator({ exclude: ['/typedoc/**'] })],
+      plugins: [starlightLinksValidator({ exclude: ['/typedoc/**', '/blog/**'] })],
       // PostHog snippet: https://posthog.com/docs/getting-started/install
       head:
         DX_POSTHOG_API_KEY && DX_POSTHOG_API_HOST
