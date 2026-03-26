@@ -52,7 +52,7 @@ export const markdownTheme = {
   codeMark: 'font-mono! text-cm-code-mark',
   mark: 'font-mono!',
   heading: (level: HeadingLevel) => ({
-    className: mx(headings[level].className, 'font-light text-cm-heading'),
+    className: mx(headings[level].className, 'font-light text-cm-heading-number'),
     color: 'var(--color-cm-heading) !important',
     lineHeight: headings[level].lineHeight,
     fontSize: headings[level].fontSize,

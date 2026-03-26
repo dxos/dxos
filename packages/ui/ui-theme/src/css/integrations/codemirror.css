@@ -28,6 +28,6 @@
   /* Markdown syntax highlighting */
   --color-cm-code: light-dark(var(--color-neutral-700), var(--color-neutral-300));
   --color-cm-code-mark: var(--color-blue-500);
-  --color-cm-mark-opacity: 0.5;
-  --color-cm-heading: light-dark(var(--color-neutral-900), var(--color-neutral-400));
+  --color-cm-heading: light-dark(var(--color-neutral-600), var(--color-neutral-400));
+  --color-cm-heading-number: light-dark(var(--color-neutral-950), var(--color-neutral-600));
 }

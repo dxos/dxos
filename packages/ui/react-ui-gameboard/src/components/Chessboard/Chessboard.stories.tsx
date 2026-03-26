@@ -109,5 +109,6 @@ export const Debug: Story = {
 };
 
 export const Grid = {
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
   render: GridStory,
 };

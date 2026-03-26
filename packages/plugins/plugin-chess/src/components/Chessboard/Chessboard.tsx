@@ -104,14 +104,9 @@ type Role = 'card--content';
 
 type ContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
 
-const Content = ({ classNames, children, role }: ContentProps) => {
+const Content = ({ classNames, children }: ContentProps) => {
   return (
-    <Gameboard.Content
-      classNames={mx(
-        classNames,
-        role === 'card--content' ? 'dx-size-container dx-card-square' : 'flex flex-col justify-center',
-      )}
-    >
+    <Gameboard.Content grow contain classNames={classNames}>
       {children}
     </Gameboard.Content>
   );

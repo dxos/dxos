@@ -242,7 +242,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
               headers
                 .slice(from - 1)
                 .map((level) => level?.number ?? 0)
-                .join('.') + ' ';
+                .join('.') + '). ';
 
             if (num.length) {
               atomicDecoRanges.push({
