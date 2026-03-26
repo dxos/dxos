@@ -5,11 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Collection } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
-import { ClientOperation } from '@dxos/plugin-client/operations';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
