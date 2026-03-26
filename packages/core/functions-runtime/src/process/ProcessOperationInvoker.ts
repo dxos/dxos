@@ -10,9 +10,10 @@ import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
 import { runAndForwardErrors } from '@dxos/effect';
-import { type OperationInvoker, type Operation } from '@dxos/operation';
+import { Operation, type OperationInvoker, } from '@dxos/operation';
 
 import * as Process from './Process';
+import * as Layer from 'effect/Layer';
 
 /**
  * Creates an OperationInvoker that executes each operation by spawning a process via the ProcessManager.
@@ -23,7 +24,7 @@ import * as Process from './Process';
 export const make = (opts: {
   manager: Process.Manager;
   parentProcessId?: Process.ID;
-}): OperationInvoker.OperationInvoker => {
+}): Operation.OperationService => {
   const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
   const pendingCount = Effect.runSync(Ref.make(0));
   const pendingFibers = new Set<Fiber.RuntimeFiber<any, any>>();
@@ -39,9 +40,7 @@ export const make = (opts: {
       const handle = yield* opts.manager.spawn(executable, {
         parentProcessId: opts.parentProcessId,
         tracing: tracingOptions,
-      }).pipe(
-        Effect.mapError((err) => new Error(err.message, { cause: err })),
-      );
+      });
 
       const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
       yield* handle.submitInput(input);
@@ -120,11 +119,10 @@ export const make = (opts: {
     schedule,
     invokePromise,
     invokeSync,
-    invocations: pubsub,
-    pendingFollowups: Ref.get(pendingCount),
-    awaitFollowups: Effect.gen(function* () {
-      const fibers = [...pendingFibers];
-      yield* Effect.forEach(fibers, (fiber) => Fiber.join(fiber).pipe(Effect.ignore));
-    }),
   };
 };
+
+export const layer = Layer.effect(Operation.Service, Effect.gen(function* () {
+  const manager = yield* Process.ManagerService;
+  return make({ manager });
+}));

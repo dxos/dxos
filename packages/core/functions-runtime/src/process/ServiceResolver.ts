@@ -10,7 +10,6 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
 import { ServiceNotAvailableError } from '../errors';
-import { Database } from '@dxos/echo';
 
 const ServiceResolverTypeId = '~@dxos/functions-runtime/ServiceResolver' as const;
 type ServiceResolverTypeId = typeof ServiceResolverTypeId;

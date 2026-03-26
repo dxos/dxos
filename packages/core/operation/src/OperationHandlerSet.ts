@@ -96,6 +96,7 @@ export class Provider extends Context.Tag('@dxos/operation/OperationHandlerSetPr
   Provider,
   OperationHandlerSet
 >() {
-  static layer = (handlers: OperationHandlerSet): Layer.Layer<Provider, never, never> =>
-    Layer.succeed(Provider, handlers);
 }
+
+export const provide = (handlers: OperationHandlerSet): Layer.Layer<Provider, never, never> =>
+  Layer.succeed(Provider, handlers);

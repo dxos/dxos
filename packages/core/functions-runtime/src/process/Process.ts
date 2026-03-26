@@ -18,7 +18,6 @@ import { Ref, type Obj } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
-import type { ServiceNotAvailableError } from '../errors';
 
 //
 // Process.
@@ -306,7 +305,7 @@ export const makeOperationModule = <const Op extends Operation.Definition.Any>(
               return OutcomeDone;
             }),
 
-          tick: () => Effect.succeed(OutcomeDone),
+          tick: () => Effect.succeed(OutcomeSuspend),
         };
       }),
   );
@@ -373,7 +372,7 @@ export interface Manager {
   /**
    * Spawn a new process for an executable.
    */
-  spawn<I, O>(executable: Executable<I, O>, options?: SpawnOptions): Effect.Effect<Handle<I, O>, ServiceNotAvailableError>;
+  spawn<I, O>(executable: Executable<I, O>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
   /**
    * Attach to an existing process.
    */
@@ -383,7 +382,7 @@ export interface Manager {
    * Attach to an existing process if it exists, otherwise spawn a new process for the executable.
    * `executable` and `options` are ignored if the process already exists.
    */
-  ensure<I, O>(id: ID, executable: Executable<I, O>, options?: SpawnOptions): Effect.Effect<Handle<I, O>, never>;
+  ensure<I, O>(id: ID, executable: Executable<I, O>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
 
   /**
    * List all spawned processes.

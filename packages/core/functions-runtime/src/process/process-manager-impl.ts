@@ -19,7 +19,6 @@ import { TracingService } from '@dxos/functions';
 
 import { OperationHandlerSet, Operation } from '@dxos/operation';
 
-import type { ServiceNotAvailableError } from '../errors';
 
 import * as Process from './Process';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
@@ -175,7 +174,7 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
   }
 }
 
-export type ModuleResolver = <I, O>(executable: Process.Executable<I, O>) => Effect.Effect<Process.Module<I, O>, never>;
+export type ModuleResolver = <I, O>(executable: Process.Executable<I, O>) => Effect.Effect<Process.Module<I, O>>;
 
 export interface ProcessManagerImplOpts {
   registry: Registry.Registry;
@@ -204,10 +203,11 @@ export class ProcessManagerImpl implements Process.Manager {
   }
 
   spawn<I, O>(
-    executable: Process.Module<I, O>,
+    executable: Process.Executable<I, O>,
     options?: Process.SpawnOptions,
-  ): Effect.Effect<Process.Handle<I, O>, ServiceNotAvailableError> {
+  ): Effect.Effect<Process.Handle<I, O>> {
     return Effect.gen(this, function* () {
+      const module = yield* this.#moduleResolver(executable);
       const id = Schema.decodeSync(Process.ID)(crypto.randomUUID());
       const scope = yield* Scope.make();
       const outputQueue = yield* Queue.unbounded<OutputItem<O>>();
@@ -240,18 +240,17 @@ export class ProcessManagerImpl implements Process.Manager {
       );
 
       // Provide Operation.Service that spawns child processes with parentProcessId set.
-      if (this.#handlerSet) {
-        const childInvoker = ProcessOperationInvoker.make({
-          manager: this,
-          parentProcessId: id,
-        });
-        builtinCtx = Context.add(builtinCtx, Operation.Service, {
-          invoke: childInvoker.invoke,
-          schedule: childInvoker.schedule,
-          invokePromise: childInvoker.invokePromise,
-          invokeSync: childInvoker.invokeSync,
-        });
-      }
+      // TODO(dmaretskyi): Cleanup operation services.
+      const childInvoker = ProcessOperationInvoker.make({
+        manager: this,
+        parentProcessId: id,
+      });
+      builtinCtx = Context.add(builtinCtx, Operation.Service, {
+        invoke: childInvoker.invoke,
+        schedule: childInvoker.schedule,
+        invokePromise: childInvoker.invokePromise,
+        invokeSync: childInvoker.invokeSync,
+      });
 
       const builtinTagKeys = new Set([
         StorageService.StorageService.key,
@@ -259,16 +258,16 @@ export class ProcessManagerImpl implements Process.Manager {
         TracingService.key,
         Operation.Service.key,
       ]);
-      const externalServices = executable.services.filter((tag) => !builtinTagKeys.has(tag.key));
+      const externalServices = module.services.filter((tag) => !builtinTagKeys.has(tag.key));
 
       let serviceCtx: Context.Context<never> = Context.empty() as Context.Context<never>;
       if (externalServices.length > 0) {
-        serviceCtx = yield* this.#serviceResolver.resolve(externalServices);
+        serviceCtx = yield* this.#serviceResolver.resolve(externalServices).pipe(Effect.orDie);
       }
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
 
-      const process = yield* executable.run(ctx).pipe(
+      const process = yield* module.run(ctx).pipe(
         Effect.provide(fullCtx as Context.Context<any>),
       );
 
@@ -300,6 +299,14 @@ export class ProcessManagerImpl implements Process.Manager {
 
       return handle;
     });
+  }
+
+  ensure<I, O>(id: Process.ID, executable: Process.Executable<I, O>, options?: Process.SpawnOptions): Effect.Effect<Process.Handle<I, O>, never> {
+    const process = this.#handles.get(id);
+    if (process) {
+      return Effect.succeed(process);
+    }
+    return this.spawn(executable, options);
   }
 
   /**
@@ -355,25 +362,32 @@ export class ProcessManagerImpl implements Process.Manager {
  * Layer that provides ProcessManager backed by ProcessManagerImpl.
  * Requires KeyValueStore, ServiceResolver, TracingService, and OperationHandlerSet.Provider from the environment.
  */
-export const ProcessManagerLayer = (moduleResolver: ModuleResolver): Layer.Layer<
+export const ProcessManagerLayer: Layer.Layer<
   Process.ManagerService,
   never,
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
   | TracingService
-> => Layer.effect(
+  | OperationHandlerSet.Provider
+> = Layer.effect(
   Process.ManagerService,
   Effect.gen(function* () {
     const kvStore = yield* KeyValueStore.KeyValueStore;
     const serviceResolver = yield* ServiceResolver.ServiceResolver;
     const tracingService = yield* TracingService;
+    const handlerSet = yield* OperationHandlerSet.Provider;
     const registry = Registry.make();
     return new ProcessManagerImpl({
       registry,
       kvStore,
       serviceResolver,
       tracingService,
-      moduleResolver,
+      moduleResolver: (executable) => Effect.gen(function* () {
+        if (executable.spec.kind === 'operation') {
+          return Process.makeOperationModule(executable.spec.operation, handlerSet) as Process.Module.Any;
+        }
+        return yield* Effect.die(new Error(`Unsupported executable type: ${executable.spec.kind}`));
+      }),
     });
   }),
 );
