@@ -8,7 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { SpaceSchema } from '@dxos/client/echo';
-import { Collection, Database, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, DXN, Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
@@ -95,11 +95,7 @@ export const ResolveNavigationTargets = Operation.make({
   input: Schema.Struct({
     query: Schema.optional(
       Schema.Struct({
-        dxn: Schema.optional(
-          Schema.String.annotations({
-            description: 'DXN of a specific object to resolve to a navigation path.',
-          }),
-        ),
+        dxn: DXN.Schema.pipe(Schema.optional),
       }),
     ),
   }),

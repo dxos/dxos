@@ -18,7 +18,7 @@ export default ResolveNavigationTargets.pipe(
       // Delegate to contributed resolvers.
       const resolvers = capabilities.getAll(AppCapabilities.NavigationTargetResolver);
       const results = yield* Effect.forEach(resolvers, (resolver) =>
-        resolver(query).pipe(Effect.catchAll(() => Effect.succeed([]))),
+        resolver(query as AppCapabilities.NavigationQuery).pipe(Effect.catchAll(() => Effect.succeed([]))),
       );
       return { targets: results.flat() };
     }),
