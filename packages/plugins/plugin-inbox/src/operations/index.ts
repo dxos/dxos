@@ -6,26 +6,18 @@ import { OperationHandlerSet } from '@dxos/operation';
 
 export * as InboxOperation from './definitions';
 
-export const InboxLocalOperationHandlerSet = OperationHandlerSet.lazy(
+export const InboxOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-mailbox'),
-  () => import('./draft-email-and-open'),
-  () => import('./extract-contact'),
-  () => import('./on-create-space'),
-  () => import('./sync-calendar'),
-  () => import('./sync-mailbox'),
-);
-
-export const InboxRemoteOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./classify-email'),
+  () => import('./draft-email-and-open'),
   () => import('./draft-email'),
+  () => import('./extract-contact'),
   () => import('./google/calendar/sync'),
   () => import('./google/gmail/send'),
   () => import('./google/gmail/sync'),
+  () => import('./on-create-space'),
   () => import('./read-email'),
   () => import('./summarize-mailbox'),
-);
-
-export const InboxOperationHandlerSet = OperationHandlerSet.merge(
-  InboxLocalOperationHandlerSet,
-  InboxRemoteOperationHandlerSet,
+  () => import('./sync-calendar'),
+  () => import('./sync-mailbox'),
 );
