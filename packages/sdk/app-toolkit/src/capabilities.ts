@@ -3,6 +3,7 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
+import type * as Effect$ from 'effect/Effect';
 import type * as Layer$ from 'effect/Layer';
 import type * as Schema$ from 'effect/Schema';
 
@@ -11,7 +12,7 @@ import type { GenericToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { Blueprint } from '@dxos/blueprints';
-import type { Database, Type } from '@dxos/echo';
+import type { Database, DXN, Type } from '@dxos/echo';
 import type { AnchoredTo } from '@dxos/types';
 import type { FileInfo } from './file';
 import type { NodeSerializer } from './graph';
@@ -164,4 +165,29 @@ export namespace AppCapabilities {
    * @category Capability
    */
   export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchor-sort');
+
+  export type NavigationTarget = {
+    /** Navigation path usable with the Open operation. */
+    path: string;
+    /** Human-readable label. */
+    label: string;
+    /** Object type. */
+    type: string;
+  };
+
+  export type NavigationQuery = {
+    dxn?: DXN.String;
+  };
+
+  /**
+   * Resolves a query to navigation targets.
+   * Each plugin interprets the query and returns matching targets.
+   * When called without a query, returns the plugin's default navigable pages.
+   * @category Capability
+   */
+  export type NavigationTargetResolver = (query?: NavigationQuery) => Effect$.Effect<NavigationTarget[]>;
+
+  export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
+    'org.dxos.app-framework.capability.navigation-target-resolver',
+  );
 }

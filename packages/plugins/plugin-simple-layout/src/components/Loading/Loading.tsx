@@ -5,6 +5,6 @@
 import React from 'react';
 
 // TODO(burdon): Show skeleton: https://github.com/dxos/dxos/issues/8259
-export const ContentLoading = () => {
+export const Loading = () => {
   return <div role='none' className='grid place-items-center dx-attention-surface' />;
 };

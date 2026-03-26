@@ -15,7 +15,6 @@ import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-
 import { meta } from '../meta';
 
 import { SyncMailbox } from './definitions';
-import { GmailFunctions } from './google/gmail';
 
 const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
   Operation.withHandler(
@@ -24,6 +23,7 @@ const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
       const db = Obj.getDatabase(mailbox);
       invariant(db);
       const runtime = computeRuntime.getRuntime(db.spaceId);
+      const { GmailFunctions } = yield* Effect.promise(() => import('./google/gmail'));
       yield* Effect.tryPromise(() =>
         runtime.runPromise(
           invokeFunctionWithTracing(GmailFunctions.Sync, {

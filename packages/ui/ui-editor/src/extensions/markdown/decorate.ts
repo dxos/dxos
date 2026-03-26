@@ -8,7 +8,6 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 import { type SyntaxNodeRef } from '@lezer/common';
 
 import { invariant } from '@dxos/invariant';
-import { mx } from '@dxos/ui-theme';
 
 import { type HeadingLevel, markdownTheme } from '../../styles';
 import { type RenderCallback } from '../../types';
@@ -131,8 +130,8 @@ class TextWidget extends WidgetType {
 const hide = Decoration.replace({});
 const blockQuote = Decoration.line({ class: 'cm-blockquote' });
 const fencedCodeLine = Decoration.line({ class: 'cm-code cm-codeblock-line' });
-const fencedCodeLineFirst = Decoration.line({ class: mx('cm-code cm-codeblock-line', 'cm-codeblock-start') });
-const fencedCodeLineLast = Decoration.line({ class: mx('cm-code cm-codeblock-line', 'cm-codeblock-end') });
+const fencedCodeLineFirst = Decoration.line({ class: 'cm-code cm-codeblock-line cm-codeblock-start' });
+const fencedCodeLineLast = Decoration.line({ class: 'cm-code cm-codeblock-line cm-codeblock-end' });
 const commentBlockLine = fencedCodeLine;
 const commentBlockLineFirst = fencedCodeLineFirst;
 const commentBlockLineLast = fencedCodeLineLast;
@@ -243,7 +242,7 @@ const buildDecorations = (view: EditorView, options: DecorateOptions, focus: boo
               headers
                 .slice(from - 1)
                 .map((level) => level?.number ?? 0)
-                .join('.') + ' ';
+                .join('.') + '). ';
 
             if (num.length) {
               atomicDecoRanges.push({

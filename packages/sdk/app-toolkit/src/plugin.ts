@@ -212,6 +212,23 @@ export namespace AppPlugin {
     });
   }
 
+  export type NavigationResolverModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes navigation target resolvers.
+   */
+  export function addNavigationResolverModule<T = void>(
+    options: NavigationResolverModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-resolver',
+      activatesOn: options.activatesOn ?? ActivationEvents.OperationInvokerReady,
+      activatesBefore: options.activatesBefore,
+      activatesAfter: options.activatesAfter,
+      activate: options.activate,
+    });
+  }
+
   export type SurfaceModuleOptions = PluginModuleOptions;
 
   /**

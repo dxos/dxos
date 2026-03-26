@@ -135,6 +135,7 @@ components should add a `play` function that waits for the component to mount. S
 - Primitive subdirectory preservation: when a subdirectory contains both a surface component and primitives, only the surface file moves to `containers/`; primitives stay with an updated subdir `index.ts`.
 - Constants extraction: string constants for dialog/surface role IDs should live in `src/constants.ts`, not inline in `react-surface.tsx`.
 - The `Surface` component in app-framework provides the top-level `<Suspense>` boundary for all lazy containers; individual containers only need their own Suspense if they use `React.use()` or render lazy sub-components internally.
+- `addSchemaModule` should only register schemas **owned** by the plugin (e.g., `Board.Board` in `plugin-board`). Don't re-register schemas from other domains (e.g., `Trigger.Trigger`, `Operation.PersistentOperation`) — those are owned and registered by their respective plugins (`plugin-automation`). Schema contributions are deduplicated, so duplicates are harmless but add unnecessary coupling.
 
 ## Recommendations
 

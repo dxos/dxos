@@ -43,22 +43,22 @@ const headings: Record<HeadingLevel, { className: string; fontSize: string; line
   },
 };
 
+// Font families matching --font-body and --font-mono in theme.css.
+export const fontBody = '"Inter Variable", ui-sans-serif, system-ui, sans-serif';
+export const fontMono = '"JetBrains Mono Variable", ui-monospace, "Cascadia Code", "Source Code Pro", monospace';
+
 export const markdownTheme = {
-  code: 'font-mono no-underline! text-cm-code',
-  codeMark: 'font-mono text-cm-code-mark',
-  mark: 'opacity-50',
+  code: 'font-mono! text-cm-code',
+  codeMark: 'font-mono! text-cm-code-mark',
+  mark: 'font-mono!',
   heading: (level: HeadingLevel) => ({
-    className: mx(headings[level].className, 'font-light text-cm-heading'),
+    className: mx(headings[level].className, 'font-light text-cm-heading-number'),
     color: 'var(--color-cm-heading) !important',
     lineHeight: headings[level].lineHeight,
     fontSize: headings[level].fontSize,
     fontWeight: '100 !important',
   }),
 };
-
-// Font families matching --font-body and --font-mono in theme.css.
-export const fontBody = 'Inter Variable, ui-sans-serif, system-ui, sans-serif';
-export const fontMono = 'JetBrains Mono Variable, ui-monospace, Cascadia Code, Source Code Pro, monospace';
 
 /**
  * Global base theme.
@@ -128,7 +128,6 @@ export const baseTheme = EditorView.baseTheme({
    */
   '.cm-content': {
     padding: 'unset',
-    lineHeight: '24px',
     color: 'unset',
   },
 
@@ -153,7 +152,7 @@ export const baseTheme = EditorView.baseTheme({
    * Height is set to match the corresponding line (which may have wrapped).
    */
   '.cm-gutterElement': {
-    lineHeight: '24px',
+    lineHeight: 1.5,
     fontSize: '12px',
   },
 
@@ -161,8 +160,15 @@ export const baseTheme = EditorView.baseTheme({
    * Line.
    */
   '.cm-line': {
-    lineHeight: '24px',
+    lineHeight: 1.5,
     paddingInline: 0,
+  },
+  /**
+   * Force all inline children to inherit line-height to prevent monospace font metrics
+   * (JetBrains Mono ascent/descent) from inflating the line box beyond 24px.
+   */
+  '.cm-line *': {
+    lineHeight: 'inherit',
   },
   '.cm-activeLine': {
     background: 'var(--color-cm-active-line)',

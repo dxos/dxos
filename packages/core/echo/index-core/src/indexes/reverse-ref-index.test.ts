@@ -40,6 +40,7 @@ describe('ReverseRefIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: 1,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_PERSON,
@@ -73,6 +74,7 @@ describe('ReverseRefIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: 1,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,
@@ -114,6 +116,7 @@ describe('ReverseRefIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: 1,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,
@@ -153,6 +156,7 @@ describe('ReverseRefIndex', () => {
         queueId,
         documentId: null,
         recordId,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,
@@ -171,6 +175,7 @@ describe('ReverseRefIndex', () => {
         queueId,
         documentId: null,
         recordId,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,
@@ -203,6 +208,7 @@ describe('ReverseRefIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: 1,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,
@@ -234,6 +240,7 @@ describe('ReverseRefIndex', () => {
         queueId: null,
         documentId: 'doc-123',
         recordId: 1,
+        updatedAt: Date.now(),
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,

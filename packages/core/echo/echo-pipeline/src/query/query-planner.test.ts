@@ -1597,6 +1597,26 @@ describe('QueryPlanner', () => {
       scope: { spaceIds: [SPACE_ID] },
     });
   });
+
+  test('and(type, compare, timestamp) throws descriptive error about timestamp limitation', () => {
+    const query = Query.select(
+      Filter.and(
+        Filter.type(TestSchema.Person),
+        Filter.type(TestSchema.Person, { name: 'Alice' }),
+        Filter.updated({ after: Date.now() }),
+      ),
+    );
+    expect(() => planner.createPlan(withSpaceIdOptions(query.ast))).toThrow(/[Tt]imestamp/);
+  });
+
+  test('and(type, timestamp) produces valid plan', () => {
+    const query = Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.updated({ after: Date.now() })));
+    const plan = planner.createPlan(withSpaceIdOptions(query.ast));
+    const hasTimestampFilter = plan.steps.some(
+      (step) => step._tag === 'FilterStep' && JSON.stringify(step.filter).includes('timestamp'),
+    );
+    expect(hasTimestampFilter).toBe(true);
+  });
 });
 
 const SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'); // Stable id for inline snapshots.

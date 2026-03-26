@@ -6,16 +6,16 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { ContentLoading } from './ContentLoading';
+import { Loading } from './Loading';
 
 const meta = {
-  title: 'plugins/plugin-simple-layout/components/ContentLoading',
-  component: ContentLoading,
+  title: 'plugins/plugin-simple-layout/components/Loading',
+  component: Loading,
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
-} satisfies Meta<typeof ContentLoading>;
+} satisfies Meta<typeof Loading>;
 
 export default meta;
 
