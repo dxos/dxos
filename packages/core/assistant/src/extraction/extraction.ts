@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj } from '@dxos/echo';
-import { type FunctionExecutor } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
@@ -20,18 +19,17 @@ export const ExtractionInput = Schema.Struct({
     }),
   ),
 });
-export interface ExtractionInput extends Schema.Schema.Type<typeof ExtractionInput> {}
+export interface ExtractionInput extends Schema.Schema.Type<typeof ExtractionInput> { }
 
 export const ExtractionOutput = Schema.Struct({
   message: Message.Message,
   timeElapsed: Schema.Number,
 });
-export interface ExtractionOutput extends Schema.Schema.Type<typeof ExtractionOutput> {}
+export interface ExtractionOutput extends Schema.Schema.Type<typeof ExtractionOutput> { }
 
 export type ProcessTranscriptMessageProps = {
   input: ExtractionInput;
   function: Operation.Definition<ExtractionInput, ExtractionOutput>;
-  executor: FunctionExecutor;
 
   options?: {
     /**
