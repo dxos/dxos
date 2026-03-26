@@ -15,7 +15,7 @@ catalog:
   '@antv/graphlib': ^2.0.4
   '@antv/layout': ^1.2.13
   '@ark-ui/solid': ^5.30.0
-  '@astrojs/starlight': ^0.32.5
+  '@astrojs/starlight': ^0.38.2
   '@atlaskit/pragmatic-drag-and-drop': 1.7.7
   '@atlaskit/pragmatic-drag-and-drop-auto-scroll': ^2.1.2
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
@@ -312,7 +312,7 @@ catalog:
   aria-hidden: ^1.2.4
   array-iterate: ~2.0.1
   assert: ^2.0.0
-  astro: ^5.15.9
+  astro: ^6.0.8
   autoprefixer: ^10.4.12
   base-x: ~3.0.11
   base32-decode: ^1.0.0
@@ -557,7 +557,7 @@ catalog:
   seedrandom: ^3.0.5
   semver: ^7.5.4
   serve: ^14.2.5
-  sharp: ^0.32.5
+  sharp: ^0.34.5
   sodium-javascript: ~0.8.0
   sodium-native: ^3.2.0
   sodium-universal: ^3.0.2
@@ -565,7 +565,7 @@ catalog:
   solid-js: ^1.9.11
   sort-package-json: ^1.57.0
   stage-js: 1.0.0-alpha.17
-  starlight-links-validator: ^0.14.3
+  starlight-links-validator: ^0.20.1
   storybook: ^10.2.12
   storybook-solidjs-vite: ^10.0.9
   streamx: ^2.12.5

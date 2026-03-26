@@ -28,12 +28,12 @@ export default defineConfig({
         alt: 'DXOS Logotype',
         replacesTitle: true,
       },
-      social: {
-        github: 'https://github.com/dxos/dxos',
-        discord: 'https://dxos.org/discord',
-        blueSky: 'https://bsky.app/profile/dxos.org',
-        'x.com': 'https://x.com/dxos_org',
-      },
+      social: [
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/dxos/dxos' },
+        { icon: 'discord', label: 'Discord', href: 'https://dxos.org/discord' },
+        { icon: 'blueSky', label: 'Bluesky', href: 'https://bsky.app/profile/dxos.org' },
+        { icon: 'x.com', label: 'X', href: 'https://x.com/dxos_org' },
+      ],
       expressiveCode: {
         themes: ['github-light', 'github-dark'],
       },
