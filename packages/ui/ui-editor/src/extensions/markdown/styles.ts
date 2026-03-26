@@ -46,7 +46,7 @@ export const formattingStyles = EditorView.theme({
     background: 'var(--color-cm-codeblock)',
     borderLeft: '2px solid var(--color-cm-separator)',
     paddingLeft: '1rem',
-    margin: '0',
+    margin: 0,
   },
 
   /**
@@ -54,6 +54,23 @@ export const formattingStyles = EditorView.theme({
    */
   '& .cm-code': {
     fontFamily: fontMono,
+  },
+  // Inline code spans (triggered by backticks) use `text-cm-code` + `font-mono`.
+  // Different monospace font metrics can slightly overflow the fixed CodeMirror line box,
+  // so constrain them to the target 24px height.
+  '& .text-cm-code': {
+    fontFamily: fontMono,
+    height: '24px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  '& .text-cm-code-mark': {
+    fontFamily: fontMono,
+    height: '24px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
   '& .cm-codeblock-line': {
     background: 'var(--color-cm-codeblock)',
@@ -87,6 +104,7 @@ export const formattingStyles = EditorView.theme({
    */
   '.cm-table *': {
     fontFamily: fontMono,
+    lineHeight: 1.5,
     textDecoration: 'none !important',
   },
   '.cm-table-head': {
@@ -113,12 +131,12 @@ export const formattingStyles = EditorView.theme({
   },
   '.cm-image-with-loader': {
     display: 'block',
-    opacity: '0',
+    opacity: 0,
     transitionDuration: '350ms',
     transitionProperty: 'opacity',
   },
   '.cm-image-with-loader.cm-loaded-image': {
-    opacity: '1',
+    opacity: 1,
   },
   '.cm-image-wrapper': {
     'grid-template-columns': '1fr',

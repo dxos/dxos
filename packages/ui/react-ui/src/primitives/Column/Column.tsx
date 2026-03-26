@@ -18,9 +18,10 @@ import { ScrollArea, ScrollAreaRootProps } from '../../components';
 
 const COLUMN_ROOT_NAME = 'Column.Root';
 
-type GutterSize = 'sm' | 'md' | 'lg';
+type GutterSize = 'xs' | 'sm' | 'md' | 'lg';
 
 const gutterSizes: Record<GutterSize, string> = {
+  xs: 'var(--dx-gutter-xs)',
   sm: 'var(--dx-gutter-sm)',
   md: 'var(--dx-gutter-md)',
   lg: 'var(--dx-gutter-lg)',

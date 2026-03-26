@@ -12,7 +12,7 @@ import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { Menu, useMenuActions } from '@dxos/react-ui-menu';
 
 import { useCompanions, useDrawerActions, useSimpleLayoutState } from '../../hooks';
-import { ContentLoading } from '../ContentLoading';
+import { Loading } from '../Loading';
 
 const DRAWER_NAME = 'SimpleLayout.Drawer';
 
@@ -23,7 +23,7 @@ export const Drawer = () => {
   const { graph } = useAppGraph();
   const { state: layoutState } = useSimpleLayoutState();
 
-  const placeholder = useMemo(() => <ContentLoading />, []);
+  const placeholder = useMemo(() => <Loading />, []);
 
   // Get all companions for the current active (primary) item.
   const activeId = layoutState.active ?? layoutState.workspace;
