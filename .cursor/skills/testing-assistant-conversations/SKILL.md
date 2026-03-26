@@ -25,19 +25,21 @@ Use **`AssistantTestLayerWithTriggers`** when the scenario uses scheduled trigge
 
 ### Important options
 
-| Option                        | Role                                                                                                                                                           |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `operationHandlers`           | `OperationHandlerSet` (or merged sets) so `FunctionInvocationService.invokeFunction` resolves your operations.                                                 |
-| `types`                       | Every ECHO entity type the test creates or queries (`Blueprint.Blueprint`, plugin types, `Message.Message`, etc.). Missing types break DB/schema expectations. |
-| `blueprints`                  | Optional registry seed when code reads blueprints from `Blueprint.RegistryService` instead of only binding at runtime.                                         |
-| `toolkits`                    | Extra toolkits (e.g. `GenericToolkit.make(WebSearchToolkit, Layer.empty)`).                                                                                    |
-| `aiServicePreset`             | `'direct'` \| `'edge-local'` \| `'edge-remote'` — where real LLM calls go when generation is allowed.                                                          |
-| `tracing: 'pretty'`           | Useful locally to see tool traces.                                                                                                                             |
-| `disableLlmMemoization: true` | Skips memo wrapper; use only when you fully stub `AiService` / `LanguageModel` and do not need recorded conversations.                                         |
+| Option                        | Role                                                                                                                                                                                                                    |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `operationHandlers`           | `OperationHandlerSet` (or merged sets) so `FunctionInvocationService.invokeFunction` resolves your operations.                                                                                                          |
+| `types`                       | Every ECHO entity type the test creates or queries (`Blueprint.Blueprint`, plugin types, `Message.Message`, etc.). Missing types break DB/schema expectations.                                                          |
+| `blueprints`                  | Optional registry seed when code reads blueprints from `Blueprint.RegistryService` instead of only binding at runtime.                                                                                                  |
+| `toolkits`                    | Extra toolkits (e.g. `GenericToolkit.make(WebSearchToolkit, Layer.empty)`).                                                                                                                                             |
+| `aiServicePreset`             | `'direct'` \| `'edge-local'` \| `'edge-remote'` — where real LLM calls go when generation is allowed. Use `'edge-remote'` to route LLM calls through the DXOS Edge service so no Anthropic API key is required locally. |
+| `tracing: 'pretty'`           | Useful locally to see tool traces.                                                                                                                                                                                      |
+| `disableLlmMemoization: true` | Skips memo wrapper; use only when you fully stub `AiService` / `LanguageModel` and do not need recorded conversations.                                                                                                  |
 
 Implementation reference: `packages/core/assistant/src/testing/layer.ts`.
 
 ## Model memoization and `ALLOW_LLM_GENERATION`
+
+`AssistantTestLayer` includes memoization internally — you do **not** need to set up `MemoizedAiService` yourself. The layer wraps the AI service with `MemoizedAiService.layerTest` automatically (unless `disableLlmMemoization: true`).
 
 Default test AI goes through **`MemoizedAiService.layerTest`**, which:
 
@@ -69,13 +71,17 @@ Packages that participate are tagged **`memoized-llm`** in their `moon.yml` (e.g
 
 ### Timeouts
 
-Pattern from existing tests: pass a longer timeout when generation is on, e.g. `MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000` as the last argument to `it.effect` / `it.scoped`.
+LLM conversation tests should use a longer timeout to account for generation. Pattern: `{ timeout: 60_000 }` or `MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000`. Note that `MemoizedAiService` is only needed as an import for the timeout helper — the layer already handles memoization internally.
 
 ### `TestHelpers.provideTestContext`
 
 Effects that use memoization **must** end with **`TestHelpers.provideTestContext`** (from `@dxos/effect/testing`) so the memo layer knows the current test file path. Typical pipe:
 
 `Effect.fnUntraced(..., Effect.provide(TestLayer), TestHelpers.provideTestContext)`.
+
+### Using `edge-remote` to avoid local API keys
+
+Set `aiServicePreset: 'edge-remote'` to route LLM calls through the DXOS Edge service instead of calling Anthropic directly. This means no local Anthropic API key is required. Works for both direct operation invocations and full conversation tests. Example: `packages/core/assistant-toolkit/src/blueprints/blueprint-manager/blueprint.test.ts`.
 
 ## General test structure
 

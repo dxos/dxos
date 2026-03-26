@@ -402,8 +402,11 @@ describe('Query', () => {
       // Automerge timestamps have second-level precision.
       // Wait until we cross into the next second so the modification
       // gets a strictly later timestamp than the initial indexing.
-      await sleep(1001);
-      const cutoff = Date.now();
+      const secondAfterFlush = Math.floor(Date.now() / 1000) + 1;
+      while (Math.floor(Date.now() / 1000) < secondAfterFlush) {
+        await sleep(50);
+      }
+      const cutoff = secondAfterFlush * 1000;
 
       Obj.change(obj, (o: any) => {
         o.value = 999;

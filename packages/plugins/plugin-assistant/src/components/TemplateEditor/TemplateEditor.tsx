@@ -29,7 +29,7 @@ export type TemplateEditorProps = ThemedClassName<{
   lineNumbers?: boolean;
 }>;
 
-export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }: TemplateEditorProps) => {
+export const TemplateEditor = ({ classNames, id, template, lineNumbers = true }: TemplateEditorProps) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
   const { parentRef } = useTextEditor(() => {
@@ -41,20 +41,14 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
     return {
       initialValue: text.content ?? '',
       extensions: [
-        createDataExtensions({
-          id,
-          text: createDocAccessor(text, ['content']),
-        }),
+        createDataExtensions({ id, text: createDocAccessor(text, ['content']) }),
         createBasicExtensions({
           bracketMatching: false,
           lineNumbers,
           lineWrapping: true,
           placeholder: t('template placeholder'),
         }),
-        createThemeExtensions({
-          themeMode,
-          slots: { content: { className: '!pe-4' } },
-        }),
+        createThemeExtensions({ themeMode }),
         createMarkdownExtensions(),
         decorateMarkdown(),
         handlebars(),
@@ -66,5 +60,5 @@ export const TemplateEditor = ({ id, classNames, template, lineNumbers = true }:
     };
   }, [themeMode, template.source?.target, lineNumbers]);
 
-  return <div ref={parentRef} className={mx('h-full overflow-hidden', classNames)} />;
+  return <div role='none' className={mx('h-full overflow-hidden', classNames)} ref={parentRef} />;
 };

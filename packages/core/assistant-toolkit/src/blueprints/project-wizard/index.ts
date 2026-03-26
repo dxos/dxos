@@ -3,4 +3,4 @@
 //
 
 export { default as ProjectWizardBlueprint } from './blueprint';
-export { QueryBlueprints, ProjectRules, CreateProject, ProjectWizardHandlers } from './functions';
+export { ProjectRules, CreateProject, ProjectWizardHandlers } from './functions';

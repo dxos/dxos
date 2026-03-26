@@ -16,7 +16,6 @@ import {
   OperationHandler,
   ReactRoot,
   ReactSurface,
-  Toolkit,
   UrlHandler,
 } from './capabilities';
 import { meta } from './meta';
@@ -58,11 +57,6 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   //   activatesOn: Events.SetupArtifactDefinition,
   //   activate: Tools,
   // }),
-  Plugin.addModule({
-    // TODO(wittjosiah): Shouldn't use the startup event.
-    activatesOn: ActivationEvents.Startup,
-    activate: Toolkit,
-  }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, DeckEvents.StateReady),
     activate: UrlHandler,

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-// @ts-ignore
 import { testTree } from '@lezer/generator/test';
 import { parser } from '@lezer/markdown';
 import { describe, test } from 'vitest';

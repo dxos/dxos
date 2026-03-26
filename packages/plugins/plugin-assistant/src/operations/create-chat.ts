@@ -44,6 +44,14 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
       if (!defaultProjectWizardBlueprint) {
         defaultProjectWizardBlueprint = db.add(ProjectWizardBlueprint.make());
       }
+      // Dynamic import to avoid circular dependency with the barrel that also exports BlueprintManagerHandlers.
+      const { BlueprintManagerBlueprint } = yield* Effect.promise(() => import('@dxos/assistant-toolkit'));
+      let defaultBlueprintManagerBlueprint = blueprints.find(
+        (blueprint) => blueprint.key === BlueprintManagerBlueprint.key,
+      );
+      if (!defaultBlueprintManagerBlueprint) {
+        defaultBlueprintManagerBlueprint = db.add(BlueprintManagerBlueprint.make());
+      }
 
       const binder = new AiContextBinder({ queue, registry });
       yield* Effect.promise(() =>
@@ -53,6 +61,7 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
               Ref.make(defaultAssistantBlueprint!),
               Ref.make(defaultDatabaseBlueprint!),
               Ref.make(defaultProjectWizardBlueprint!),
+              Ref.make(defaultBlueprintManagerBlueprint!),
             ],
           }),
         ),

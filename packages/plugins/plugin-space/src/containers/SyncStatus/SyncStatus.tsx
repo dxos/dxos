@@ -16,6 +16,7 @@ import { Unit, type UnitFormat } from '@dxos/util';
 
 import { createClientSaveTracker, getIcon, getStatus } from '../../components';
 import { meta } from '../../meta';
+import { log } from '@dxos/log';
 
 const SYNC_STALLED_TIMEOUT = 5_000;
 
@@ -44,7 +45,8 @@ export const SyncStatusIndicator = ({ state, saved }: { state: SpaceSyncStateMap
     }
 
     const t = setTimeout(() => {
-      setClassNames('text-orange-500'); // TODO(wittjosiah): Use semantic color tokens.
+      log.warn('sync stalled', { state });
+      // setClassNames('text-error-text');
     }, SYNC_STALLED_TIMEOUT);
     return () => clearTimeout(t);
   }, [offline, needsToUpload, needsToDownload]);

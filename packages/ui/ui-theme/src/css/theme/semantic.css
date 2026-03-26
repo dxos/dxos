@@ -59,10 +59,10 @@
 
   /* Accent */
 
-  --color-accent-surface: light-dark(var(--color-blue-600), var(--color-blue-600));
+  --color-accent-surface: light-dark(var(--color-blue-500), var(--color-blue-700));
   --color-accent-surface-hover: light-dark(var(--color-blue-800), var(--color-blue-800));
   --color-accent-surface-text: var(--color-blue-100);
-  --color-accent-text: light-dark(var(--color-blue-600), var(--color-blue-600));
+  --color-accent-text: light-dark(var(--color-blue-600), var(--color-blue-400));
   --color-accent-text-hover: light-dark(var(--color-blue-500), var(--color-blue-500));
   --color-accent-focus-indicator: light-dark(var(--color-blue-600), var(--color-blue-600));
 

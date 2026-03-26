@@ -49,7 +49,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SetLayoutMode> = Lay
 
       if ('mode' in input) {
         const currentMode = getMode(deck);
-        const deckUpdates = computeModeUpdate(input.mode as LayoutMode, 'subject' in input ? input.subject : undefined);
+        const subject = 'subject' in input ? input.subject : undefined;
+        const deckUpdates = computeModeUpdate(input.mode as LayoutMode, subject);
 
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => {
           const newPreviousMode =
@@ -61,6 +62,10 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SetLayoutMode> = Lay
             previousMode: newPreviousMode,
           };
         });
+
+        if (subject) {
+          yield* Operation.schedule(LayoutOperation.Expose, { subject });
+        }
       } else if ('revert' in input) {
         const last = state.previousMode[state.activeDeck];
         const deckUpdates = computeModeUpdate(last ?? 'solo');

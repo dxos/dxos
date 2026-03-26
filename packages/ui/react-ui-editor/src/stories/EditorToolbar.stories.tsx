@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { useThemeContext } from '@dxos/react-ui';
+import { Panel, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import {
@@ -18,11 +18,10 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  editorWidth,
+  editorSlots,
   formattingKeymap,
   formattingListener,
 } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 
 import { EditorToolbar, type EditorToolbarState, useEditorToolbar } from '../components';
 import { type UseTextEditorProps, useTextEditor } from '../hooks';
@@ -53,9 +52,18 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
       selectionEnd: true,
       extensions: [
         editorInputMode ? InputModeExtensions[editorInputMode] : [],
-        createBasicExtensions({ placeholder, lineWrapping: true, readOnly: viewMode === 'readonly', search: true }),
+        createBasicExtensions({
+          placeholder,
+          lineWrapping: true,
+          readOnly: viewMode === 'readonly',
+          search: true,
+        }),
+        createThemeExtensions({
+          themeMode,
+          syntaxHighlighting: true,
+          slots: editorSlots,
+        }),
         createMarkdownExtensions(),
-        createThemeExtensions({ themeMode, syntaxHighlighting: true }),
         viewMode === 'source' ? [] : decorateMarkdown(),
         formattingKeymap(),
         formattingListener(updateToolbarState),
@@ -76,22 +84,29 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
     [registry, toolbarState],
   );
 
-  // TODO(marijn): This doesn't update the state on view changes.
-  //  Also not sure if view is even guaranteed to exist at this point.
   return (
-    <div role='none' className={mx('fixed inset-0 flex flex-col')}>
-      {toolbarState && <EditorToolbar state={toolbarState} getView={getView} onViewModeChange={handleViewModeChange} />}
-      <div role='none' className='grow overflow-hidden'>
-        <div className={mx(editorWidth)} ref={parentRef} />
-      </div>
-    </div>
+    <Panel.Root>
+      {toolbarState && (
+        <Panel.Toolbar>
+          <EditorToolbar
+            classNames='dx-document'
+            state={toolbarState}
+            getView={getView}
+            onViewModeChange={handleViewModeChange}
+          />
+        </Panel.Toolbar>
+      )}
+      <Panel.Content>
+        <div role='none' className='dx-container dx-document bg-base-surface' ref={parentRef} />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-editor/EditorToolbar',
   render: DefaultStory,
-  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen', classNames: 'bg-sidebar-surface' })],
   parameters: {
     layout: 'fullscreen',
     translations,

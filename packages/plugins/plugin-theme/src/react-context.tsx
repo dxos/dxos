@@ -17,11 +17,14 @@ import compositeEnUs from './translations/en-US';
 
 export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCache' | 'resourceExtensions'>> & {
   appName?: string;
+  platform?: 'mobile' | 'desktop';
 };
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* (
-    { appName, tx: propsTx = defaultTx, resourceExtensions = [], ...rest }: ThemePluginOptions = { appName: 'test' },
+    { appName, tx: propsTx = defaultTx, resourceExtensions = [], platform, ...rest }: ThemePluginOptions = {
+      appName: 'test',
+    },
   ) {
     const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
     const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
@@ -48,7 +51,7 @@ export default Capability.makeModule(
           );
 
           return (
-            <ThemeProvider {...{ tx: propsTx, themeMode, resourceExtensions: resources, ...rest }}>
+            <ThemeProvider {...{ tx: propsTx, themeMode, resourceExtensions: resources, platform, ...rest }}>
               <Toast.Provider>
                 <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
                   {children}

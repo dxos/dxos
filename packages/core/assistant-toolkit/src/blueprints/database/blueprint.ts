@@ -36,6 +36,7 @@ const make = () =>
     key: BLUEPRINT_KEY,
     name: 'Database',
     description: 'Query and manipulate objects in the ECHO database.',
+    agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
