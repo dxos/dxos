@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as A from '@automerge/automerge';
 import { type Heads } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
@@ -115,15 +116,21 @@ export class AutomergeDataSource implements IndexDataSource {
           const spaceKey = PublicKey.fromHex(spaceKeyHex);
           const spaceId = yield* Effect.promise(() => createIdFromSpaceKey(spaceKey));
 
-          // Extract objects from the document.
+          const existingCursor = cursorMap.get(documentId);
+          const { changedObjectIds, updatedAt } = inspectDocChanges(doc, existingCursor);
+
           const docObjects = doc.objects ?? {};
           for (const [objectId, structure] of Object.entries(docObjects)) {
+            if (changedObjectIds && !changedObjectIds.has(objectId)) {
+              continue;
+            }
             objects.push({
               spaceId,
               documentId,
               queueId: null,
               recordId: null,
               data: objectStructureToJson(objectId, structure),
+              updatedAt,
             });
           }
 
@@ -142,3 +149,32 @@ export class AutomergeDataSource implements IndexDataSource {
     });
   }
 }
+
+/**
+ * Determines which ECHO objects changed since the last indexing pass.
+ *
+ * Uses `A.diff` to extract changed objectIds from patch paths (`["objects", objectId, ...]`).
+ * Uses `Date.now()` for the timestamp because Automerge change metadata has only
+ * second-level precision, which is insufficient for sub-second timestamp filtering.
+ * Returns `changedObjectIds: null` when all objects should be indexed (new document).
+ */
+const inspectDocChanges = (
+  doc: DatabaseDirectory,
+  existingCursor: string | undefined,
+): { changedObjectIds: Set<string> | null; updatedAt: number } => {
+  if (!existingCursor) {
+    return { changedObjectIds: null, updatedAt: Date.now() };
+  }
+
+  const oldHeads = headsCodec.decode(existingCursor);
+
+  const patches = A.diff(doc, oldHeads, A.getHeads(doc));
+  const changedObjectIds = new Set<string>();
+  for (const patch of patches) {
+    if (patch.path.length >= 2 && patch.path[0] === 'objects') {
+      changedObjectIds.add(String(patch.path[1]));
+    }
+  }
+
+  return { changedObjectIds, updatedAt: Date.now() };
+};
