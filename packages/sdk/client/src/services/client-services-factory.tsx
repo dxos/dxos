@@ -24,7 +24,7 @@ export type CreateClientServicesOptions = {
   createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'];
   /**
    * Use single-client mode for the dedicated worker coordinator.
-   * This bypasses SharedWorker which doesn't work on iOS WKWebView.
+   * This bypasses SharedWorker; use for WKWebView where the coordinator SharedWorker port is unreliable.
    */
   singleClientMode?: boolean;
   /** Observability group sent with signaling metadata. */
@@ -86,24 +86,24 @@ export const createClientServices = async (
 
   return createDedicatedWorker
     ? new DedicatedWorkerClientServices({
-        createWorker: createDedicatedWorker,
-        createCoordinator: () =>
-          singleClientMode
-            ? new SingleClientCoordinator()
-            : createCoordinatorWorker
-              ? new SharedWorkerCoordinator(createCoordinatorWorker)
-              : new SharedWorkerCoordinator(),
-        config,
-      })
+      createWorker: createDedicatedWorker,
+      createCoordinator: () =>
+        singleClientMode
+          ? new SingleClientCoordinator()
+          : createCoordinatorWorker
+            ? new SharedWorkerCoordinator(createCoordinatorWorker)
+            : new SharedWorkerCoordinator(),
+      config,
+    })
     : createWorker && useWorker
       ? fromWorker(config, { createWorker, observabilityGroup, signalTelemetryEnabled })
       : fromHost(
-          config,
-          {
-            createOpfsWorker,
-            sqlitePath: effectiveSqlitePath,
-          },
-          observabilityGroup,
-          signalTelemetryEnabled,
-        );
+        config,
+        {
+          createOpfsWorker,
+          sqlitePath: effectiveSqlitePath,
+        },
+        observabilityGroup,
+        signalTelemetryEnabled,
+      );
 };
