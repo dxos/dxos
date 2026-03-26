@@ -134,7 +134,13 @@ describe('AutomergeDataSource', () => {
 
     const dataSource = new AutomergeDataSource(host);
     const cursors: IndexCursor[] = [
-      { indexName: 'fts', spaceId: null, sourceName: 'automerge', resourceId: handle1.documentId, cursor: doc1HeadsBefore },
+      {
+        indexName: 'fts',
+        spaceId: null,
+        sourceName: 'automerge',
+        resourceId: handle1.documentId,
+        cursor: doc1HeadsBefore,
+      },
       { indexName: 'fts', spaceId: null, sourceName: 'automerge', resourceId: handle2.documentId, cursor: doc2Heads },
     ];
 
