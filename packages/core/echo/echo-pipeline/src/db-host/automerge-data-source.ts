@@ -151,11 +151,12 @@ export class AutomergeDataSource implements IndexDataSource {
 }
 
 /**
- * Determines which ECHO objects changed and the document-level max change timestamp.
+ * Determines which ECHO objects changed since the last indexing pass.
  *
- * Uses `A.diff` to extract changed objectIds from patch paths (`["objects", objectId, ...]`),
- * and `A.getChangesMetaSince` for the max timestamp.
- * Returns `changedObjectIds: null` when all objects should be indexed (new document or error).
+ * Uses `A.diff` to extract changed objectIds from patch paths (`["objects", objectId, ...]`).
+ * Uses `Date.now()` for the timestamp because Automerge change metadata has only
+ * second-level precision, which is insufficient for sub-second timestamp filtering.
+ * Returns `changedObjectIds: null` when all objects should be indexed (new document).
  */
 const inspectDocChanges = (
   doc: DatabaseDirectory,
@@ -175,14 +176,5 @@ const inspectDocChanges = (
     }
   }
 
-  const changes = A.getChangesMetaSince(doc, oldHeads);
-  let maxTime = 0;
-  for (const change of changes) {
-    if (change.time > maxTime) {
-      maxTime = change.time;
-    }
-  }
-  const updatedAt = maxTime > 0 ? maxTime * 1000 : Date.now();
-
-  return { changedObjectIds, updatedAt };
+  return { changedObjectIds, updatedAt: Date.now() };
 };
