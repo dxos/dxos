@@ -404,7 +404,7 @@ catalog:
   glsl-curl-noise2: ^0.0.4
   glsl-noise: ^0.0.0
   glslify: ^7.1.1
-  handlebars: 4.7.8
+  handlebars: 4.7.9
   happy-dom: ^20.0.0
   hastscript: ^7.1.0
   highlight.js: ^11.9.0
