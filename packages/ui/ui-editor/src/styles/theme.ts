@@ -43,10 +43,14 @@ const headings: Record<HeadingLevel, { className: string; fontSize: string; line
   },
 };
 
+// Font families matching --font-body and --font-mono in theme.css.
+export const fontBody = '"Inter Variable", ui-sans-serif, system-ui, sans-serif';
+export const fontMono = '"JetBrains Mono Variable", ui-monospace, "Cascadia Code", "Source Code Pro", monospace';
+
 export const markdownTheme = {
-  code: 'text-cm-code font-mono no-underline!',
-  codeMark: 'text-cm-code-mark font-mono',
-  mark: 'opacity-50',
+  code: 'font-mono! text-cm-code',
+  codeMark: 'font-mono! text-cm-code-mark',
+  mark: 'font-mono!',
   heading: (level: HeadingLevel) => ({
     className: mx(headings[level].className, 'font-light text-cm-heading'),
     color: 'var(--color-cm-heading) !important',
@@ -55,10 +59,6 @@ export const markdownTheme = {
     fontWeight: '100 !important',
   }),
 };
-
-// Font families matching --font-body and --font-mono in theme.css.
-export const fontBody = 'Inter Variable, ui-sans-serif, system-ui, sans-serif';
-export const fontMono = '"JetBrains Mono Variable", ui-monospace, Cascadia Code, Source Code Pro, monospace';
 
 /**
  * Global base theme.
@@ -127,7 +127,6 @@ export const baseTheme = EditorView.baseTheme({
    * NOTE: Apply margins to content so that scrollbar is at the edge of the container.
    */
   '.cm-content': {
-    lineHeight: 1.5,
     padding: 'unset',
     color: 'unset',
   },

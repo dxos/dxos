@@ -9,12 +9,6 @@ import { type MarkdownConfig, Table } from '@lezer/markdown';
 
 import { fontBody, markdownTheme } from '../../styles';
 
-const styles = {
-  code: 'text-cm-code font-mono no-underline!',
-  codeMark: 'text-cm-code-mark font-mono',
-  mark: 'opacity-50',
-};
-
 /**
  * Custom tags defined and processed by the GFM lezer extension.
  * https://github.com/lezer-parser/markdown
@@ -120,7 +114,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
           markdownTags.LinkReference,
           markdownTags.ListMark,
         ],
-        class: styles.mark,
+        class: markdownTheme.mark,
       },
 
       // Markdown marks.
@@ -132,7 +126,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
           markdownTags.QuoteMark,
           markdownTags.EmphasisMark,
         ],
-        class: styles.mark,
+        class: markdownTheme.mark,
       },
 
       // E.g., code block language (after ```).
@@ -142,7 +136,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
           tags.function(tags.variableName),
           tags.labelName,
         ],
-        class: styles.codeMark,
+        class: markdownTheme.codeMark,
       },
 
       // Fonts.
@@ -179,7 +173,7 @@ export const markdownHighlightStyle = (_options: HighlightOptions = {}) => {
       // IMPORTANT: Therefore, the fenced code block will use the base editor font unless changed by an extension.
       {
         tag: [markdownTags.CodeText, markdownTags.InlineCode],
-        class: styles.code,
+        class: markdownTheme.code,
       },
 
       {
