@@ -1,0 +1,121 @@
+---
+import DxosLogo from './svg/DxosLogo.astro';
+import IconExternalLink from './svg/IconExternalLink.astro';
+import IconGitHub from './svg/IconGitHub.astro';
+import IconDiscord from './svg/IconDiscord.astro';
+import IconX from './svg/IconX.astro';
+import IconBluesky from './svg/IconBluesky.astro';
+import IconChevronRight from './svg/IconChevronRight.astro';
+
+interface Props {
+  accent?: 'green' | 'blue';
+}
+
+const { accent: accentColor = 'green' } = Astro.props;
+const accent = accentColor === 'blue' ? ' c' : '';
+---
+<div>
+  <div class="section_footer">
+    <div class="container-large">
+      <div class="w-layout-grid footer-grid">
+        <div id="w-node-_5785e1e9-ecb0-6203-d3ea-48342ccfe8bc-2ccfe8b8" class="horizontal-line-wrap">
+          <div class="horiozontal-line"></div>
+        </div>
+        <div id="w-node-_5785e1e9-ecb0-6203-d3ea-48342ccfe8be-2ccfe8b8" class="footer-grid-block">
+          <a href="/" class="w-nav-brand">
+            <div class="logo-wrap">
+              <div class="code-embed w-embed"><DxosLogo /></div>
+            </div>
+          </a>
+        </div>
+        <div id="w-node-_0620893b-3fac-fae2-8c07-d31332090c9e-2ccfe8b8" class="horizontal-line-wrap only-landscape-below">
+          <div class="horiozontal-line"></div>
+        </div>
+        <div id="w-node-_5785e1e9-ecb0-6203-d3ea-48342ccfe8c1-2ccfe8b8" class="footer-nav">
+          <a href="/" class={`nav-link${accent} w-inline-block`}>
+            <div>Home</div>
+          </a>
+          <a href="/composer" class={`nav-link${accent} w-inline-block`}>
+            <div>Composer</div>
+          </a>
+          <a href="/plugins" class={`nav-link${accent} w-inline-block`}>
+            <div>Plugins</div>
+          </a>
+          <a href="/docs" target="_blank" class={`nav-link${accent} w-inline-block`}>
+            <div>Docs</div>
+          </a>
+          <a href="https://blog.dxos.org/" target="_blank" class={`nav-link${accent} w-inline-block`}>
+            <div>Blog</div>
+            <div class="icon-1x1-xxsmall nav-arrow w-embed"><IconExternalLink /></div>
+          </a>
+        </div>
+        <div id="w-node-_5785e1e9-ecb0-6203-d3ea-48342ccfe8cd-2ccfe8b8" class="footer-grid-block">
+          <div class="display-inlineflex">
+            <a href="https://github.com/dxos" target="_blank" class={`button is-link is-icon-only${accent} w-inline-block`}>
+              <div class="icon-1x1-xsmall w-embed"><IconGitHub /></div>
+            </a>
+            <a href="https://discord.gg/eXVfryv3sW" target="_blank" class={`button is-link is-icon-only${accent} w-inline-block`}>
+              <div class="icon-1x1-xsmall w-embed"><IconDiscord /></div>
+            </a>
+            <a href="https://bsky.app/profile/dxos.org" target="_blank" class={`button is-link is-icon-only${accent} w-inline-block`}>
+              <div class="icon-1x1-xsmall w-embed"><IconBluesky /></div>
+            </a>
+            <a href="https://x.com/dxos_org" target="_blank" class={`button is-link is-icon-only${accent} w-inline-block`}>
+              <div class="icon-1x1-xsmall w-embed"><IconX /></div>
+            </a>
+          </div>
+        </div>
+        <div id="w-node-_5785e1e9-ecb0-6203-d3ea-48342ccfe8d6-2ccfe8b8" class="horizontal-line-wrap">
+          <div class="horiozontal-line"></div>
+        </div>
+        <div id="w-node-_5785e1e9-ecb0-6203-d3ea-48342ccfe8d8-2ccfe8b8" class="footer-grid-block left">
+          <div>
+            <div class="heading-style-h5">Contribute</div>
+            <div class="spacer-small"></div>
+            <div class="text-style-muted balanced">The DXOS Community is made of a diverse group of open source developers from all over the world.</div>
+          </div>
+          <div class="spacer-small"></div>
+          <a href="https://discord.gg/eXVfryv3sW" target="_blank" class={`button is-link is-alternate${accent} w-inline-block`}>
+            <div>Join Discord</div>
+            <div class="icon-embed-xsmall w-embed">
+              <IconChevronRight />
+            </div>
+          </a>
+        </div>
+        <div id="w-node-_5785e1e9-ecb0-6203-d3ea-48342ccfe8e4-2ccfe8b8" class="footer-grid-block contributors">
+          <div>
+            <div class="heading-style-h5">8</div>
+            <div class="spacer-small"></div>
+            <div class="text-style-muted balanced">Cities worldwide</div>
+          </div>
+          <div>
+            <div class="heading-style-h5">30+</div>
+            <div class="spacer-small"></div>
+            <div class="text-style-muted balanced">Contributors</div>
+          </div>
+          <div>
+            <div class="heading-style-h5">200+</div>
+            <div class="spacer-small"></div>
+            <div class="text-style-muted balanced">Community members</div>
+          </div>
+        </div>
+        <div id="w-node-_5785e1e9-ecb0-6203-d3ea-48342ccfe8f7-2ccfe8b8" class="footer-grid-block socket">
+          <div>
+            <div class="nav-link no-hover">
+              <div>&copy; {new Date().getFullYear()} DXOS</div>
+            </div>
+          </div>
+          <a href="/privacy" class={`nav-link${accent} w-inline-block`}>
+            <div>Privacy Policy</div>
+          </a>
+          <a href="/terms" class={`nav-link${accent} w-inline-block`}>
+            <div>Terms of Service</div>
+          </a>
+        </div>
+        <div id="w-node-_5785e1e9-ecb0-6203-d3ea-48342ccfe901-2ccfe8b8" class="horizontal-line-wrap">
+          <div class="horiozontal-line"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

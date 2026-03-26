@@ -1,0 +1,126 @@
+---
+import { getCollection } from 'astro:content';
+
+import WebflowLayout from '../layouts/WebflowLayout.astro';
+import WebflowNav from '../components/WebflowNav.astro';
+import WebflowFooter from '../components/WebflowFooter.astro';
+import IconExternalLink from '../components/svg/IconExternalLink.astro';
+
+const plugins = (await getCollection('plugins')).sort((a, b) => a.data.sortOrder - b.data.sortOrder);
+
+const topRowIcons = [1,17,3,4,5,6,18,24,9,10,22,21,13,14,20].map(
+  (n) => `/webflow/svg/plugins/plugin-${String(n).padStart(2, '0')}.svg`,
+);
+const bottomRowIcons = [14,1,17,24,22,10,3,9,4,20,5,21,6,18,13].map(
+  (n) => `/webflow/svg/plugins/plugin-${String(n).padStart(2, '0')}.svg`,
+);
+---
+
+<WebflowLayout
+  title="Plugins | DXOS"
+  description="Open source plugins for DXOS Composer."
+  ogImage="/webflow/images/dxos-home-og-image.png"
+  wfPageId=""
+>
+  <style is:inline slot="head">
+    @keyframes scroll-left {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+    @keyframes scroll-right {
+      from { transform: translateX(-50%); }
+      to { transform: translateX(0); }
+    }
+    .scroll-left,
+    .scroll-right {
+      flex-wrap: nowrap;
+      width: max-content;
+    }
+    .scroll-left {
+      animation: scroll-left 30s linear infinite;
+    }
+    .scroll-right {
+      animation: scroll-right 30s linear infinite;
+    }
+  </style>
+  <WebflowNav currentPage="plugins" />
+  <div class="section-plugins">
+    <div class="padding-global padding-section-large">
+      <div class="container-large">
+        <div class="w-layout-grid grid-2">
+          <div id="w-node-c6b286e2-1c48-8fa6-080e-01f8b5c899ee-plugins" class="title-card">
+            <div class="all-caps is-blue">Open Source + Extensible</div>
+            <div class="heading-style-h2">Plugins in Composer</div>
+            <div class="spacer-small"></div>
+            <div class="text-style-muted">Each plugin contributes unique functionality to Composer while providing the local AI assistant with access to additional context or external data.</div>
+          </div>
+          <a id="w-node-composer-cta-plugins" href="/webflow-composer" class="dxos_stack-card short right composer-cta plugins w-inline-block">
+            <div class="composer-grid-cta-ring-wrap">
+              <div class="w-embed"><img src="/webflow/svg/composer-rings.svg" alt="" width="512" height="512" loading="lazy" /></div>
+            </div>
+            <div class="display-inlineflex composer-cta">
+              <div class="heading-style-h5">Request Early Access</div>
+              <div class="icon-1x1-xsmall w-embed"><IconExternalLink /></div>
+            </div>
+          </a>
+          {plugins.map((plugin) => (
+            <a class="dxos_stack-card plugin w-inline-block" href="#">
+              {plugin.data.icon && (
+                <img src={plugin.data.icon} loading="lazy" alt={plugin.data.name} class="plugin-icon" />
+              )}
+              <div class="spacer-large"></div>
+              <div class="card-text-wrapper">
+                <div class="heading-style-h5">{plugin.data.name}</div>
+                <div class="text-style-muted balanced">{plugin.data.summary}</div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-plugins-scroll-icons">
+      <div class="masthead-wrap">
+        <div>
+          <p class="all-caps is-blue">Composer Plugins</p>
+          <h2 class="heading-style-h1 balanced">Build your own plugins to add custom functionality</h2>
+        </div>
+        <p class="text-size-large text-style-muted balanced">Build custom plugins to manipulate data from external sources, connect your favorite LLM and build collaborative workflows to optimize team productivity.</p>
+      </div>
+      <div class="spacer-xhuge"></div>
+      <div class="plugin-icon-scroll-wrap">
+        <div class="icon-scroll-wrap-outer scroll-left">
+          {[0, 1].map(() => (
+            <div class="icon-scroll-wrap">
+              {topRowIcons.map((src) => (
+                <div class="scroll-icon-outer">
+                  <div class="scroll-icon-inner">
+                    <div class="w-embed"><img src={src} alt="" width="65" height="65" loading="lazy" /></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div class="icon-scroll-wrap-outer bottom scroll-right">
+          {[0, 1].map(() => (
+            <div class="icon-scroll-wrap">
+              {bottomRowIcons.map((src) => (
+                <div class="scroll-icon-outer">
+                  <div class="scroll-icon-inner">
+                    <div class="w-embed"><img src={src} alt="" width="65" height="65" loading="lazy" /></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div class="spacer-xhuge"></div>
+    </div>
+  </div>
+
+  <WebflowFooter accent="blue" />
+</WebflowLayout>

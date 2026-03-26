@@ -1,0 +1,76 @@
+---
+import DxosLogo from './svg/DxosLogo.astro';
+import IconExternalLink from './svg/IconExternalLink.astro';
+import IconGitHub from './svg/IconGitHub.astro';
+import IconDiscord from './svg/IconDiscord.astro';
+import IconX from './svg/IconX.astro';
+import IconBluesky from './svg/IconBluesky.astro';
+
+interface Props {
+  currentPage: 'home' | 'composer' | 'plugins';
+}
+
+const { currentPage } = Astro.props;
+const accent = currentPage !== 'home' ? ' c' : '';
+---
+<div>
+  <div data-animation="default" class="nav_component w-nav" data-easing2="ease" fs-scrolldisable-element="smart-nav" data-easing="ease" data-collapse="medium" role="banner" data-duration="400">
+    <div class="nav_container">
+      <div class="nav-left">
+        <div class="nav_menu-button w-nav-button">
+          <div class="menu-icon2">
+            <div class="menu-icon2_line-top"></div>
+            <div class="menu-icon2_line-middle">
+              <div class="menu-icon2_line-middle-inner"></div>
+            </div>
+            <div class="menu-icon2_line-bottom"></div>
+          </div>
+        </div>
+        <a href="/" class="w-nav-brand">
+          <div class="logo-wrap">
+            <div class="code-embed w-embed"><DxosLogo /></div>
+          </div>
+        </a>
+      </div>
+      <nav role="navigation" id="w-node-a9f227b2-b35e-a924-c5e6-c57d658ccfe2-658ccfd6" class="nav-menu is-page-height-tablet w-nav-menu">
+        <div class="div-block-9">
+          <a href="/" {...(currentPage === 'home' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'home' ? ' w--current' : ''}`}>
+            <div>Home</div>
+          </a>
+          <a href="/composer" {...(currentPage === 'composer' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'composer' ? ' w--current' : ''}`}>
+            <div>Composer</div>
+          </a>
+          <a href="/plugins" {...(currentPage === 'plugins' ? { 'aria-current': 'page' } : {})} class={`nav-link${accent} w-inline-block${currentPage === 'plugins' ? ' w--current' : ''}`}>
+            <div>Plugins</div>
+          </a>
+          <a href="/docs" class={`nav-link${accent} w-inline-block`}>
+            <div>Docs</div>
+          </a>
+          <a href="https://blog.dxos.org/" target="_blank" class={`nav-link${accent} w-inline-block`}>
+            <div>Blog</div>
+            <div class="icon-1x1-xxsmall nav-arrow w-embed"><IconExternalLink /></div>
+          </a>
+        </div>
+      </nav>
+      <div id="w-node-a9f227b2-b35e-a924-c5e6-c57d658ccfea-658ccfd6" class="nav_button-wrap">
+        <div class="display-inlineflex hide-mobile">
+          <a href="https://github.com/dxos" target="_blank" class={`button is-link is-icon-only${accent} w-inline-block`}>
+            <div class="icon-1x1-xsmall w-embed"><IconGitHub /></div>
+          </a>
+          <a href="https://discord.gg/eXVfryv3sW" target="_blank" class={`button is-link is-icon-only${accent} w-inline-block`}>
+            <div class="icon-1x1-xsmall w-embed"><IconDiscord /></div>
+          </a>
+          <a href="https://bsky.app/profile/dxos.org" target="_blank" class={`button is-link is-icon-only${accent} w-inline-block`}>
+            <div class="icon-1x1-xsmall w-embed"><IconBluesky /></div>
+          </a>
+          <a href="https://x.com/dxos_org" target="_blank" class={`button is-link is-icon-only${accent} w-inline-block`}>
+            <div class="icon-1x1-xsmall w-embed"><IconX /></div>
+          </a>
+        </div>
+        <a href="https://composer.space" class="button is-tertiary w-inline-block">
+          <div>Try Composer</div>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

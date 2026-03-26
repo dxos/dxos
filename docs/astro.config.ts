@@ -37,14 +37,15 @@ export default defineConfig({
       expressiveCode: {
         themes: ['github-light', 'github-dark'],
       },
+      // TODO(wittjosiah): Nested docs subdir is needed because link validation doesn't work with generateId config.
       sidebar: [
         {
           label: 'Introduction',
-          slug: 'index',
+          slug: 'docs',
         },
         {
           label: 'Composer',
-          autogenerate: { directory: 'composer' },
+          autogenerate: { directory: 'docs/composer' },
           collapsed: false,
         },
         {
@@ -52,31 +53,31 @@ export default defineConfig({
           items: [
             {
               label: 'Introduction',
-              slug: 'echo/introduction',
+              slug: 'docs/echo/introduction',
             },
             {
               label: 'Installation',
-              autogenerate: { directory: 'echo/installation' },
+              autogenerate: { directory: 'docs/echo/installation' },
             },
             {
               label: 'Typescript',
-              autogenerate: { directory: 'echo/typescript' },
+              autogenerate: { directory: 'docs/echo/typescript' },
             },
             {
               label: 'React',
-              autogenerate: { directory: 'echo/react' },
+              autogenerate: { directory: 'docs/echo/react' },
             },
           ],
           collapsed: false,
         },
         {
           label: 'HALO Identity',
-          autogenerate: { directory: 'halo' },
+          autogenerate: { directory: 'docs/halo' },
           collapsed: false,
         },
         {
           label: 'Additional Resources',
-          autogenerate: { directory: 'additional-resources' },
+          autogenerate: { directory: 'docs/additional-resources' },
           collapsed: false,
         },
       ],

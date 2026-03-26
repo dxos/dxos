@@ -1,0 +1,317 @@
+---
+import { getCollection } from 'astro:content';
+
+import WebflowLayout from '../layouts/WebflowLayout.astro';
+import WebflowNav from '../components/WebflowNav.astro';
+import WebflowFooter from '../components/WebflowFooter.astro';
+import IconChevronRight from '../components/svg/IconChevronRight.astro';
+import IconExternalLink from '../components/svg/IconExternalLink.astro';
+import IconBluesky from '../components/svg/IconBluesky.astro';
+import IconGitHub from '../components/svg/IconGitHub.astro';
+import IconX from '../components/svg/IconX.astro';
+
+const team = (await getCollection('team')).sort((a, b) => a.data.sortOrder - b.data.sortOrder);
+---
+<WebflowLayout
+  title="DXOS"
+  description="The new standard for building collaborative local-first software. DXOS is an open source framework for building real-time, collaborative web applications."
+  ogImage="/webflow/images/dxos-home-og-image.png"
+  wfPageId="66edbd3a1299d20d06f1a634"
+>
+  <style is:inline slot="head">@media (min-width:992px) {html.w-mod-js:not(.w-mod-ix) [data-w-id="494e25c6-8883-e08a-7b4a-ab0ef6bc3e01"] {display:none;opacity:0;}html.w-mod-js:not(.w-mod-ix) [data-w-id="b79516ef-27f4-eef7-f96c-5324de88d4db"] {opacity:0.8;}html.w-mod-js:not(.w-mod-ix) [data-w-id="774a6187-1c4b-1d5f-a494-18a445b00a35"] {opacity:1;}html.w-mod-js:not(.w-mod-ix) [data-w-id="11021a42-dd1f-d73d-03a1-d66b1f5dc8f4"] {background-color:rgba(0,0,0,0);}}@media (max-width:991px) and (min-width:768px) {html.w-mod-js:not(.w-mod-ix) [data-w-id="b79516ef-27f4-eef7-f96c-5324de88d4db"] {opacity:0.8;}html.w-mod-js:not(.w-mod-ix) [data-w-id="774a6187-1c4b-1d5f-a494-18a445b00a35"] {opacity:1;}html.w-mod-js:not(.w-mod-ix) [data-w-id="11021a42-dd1f-d73d-03a1-d66b1f5dc8f4"] {background-color:rgba(0,0,0,0);}}@media (max-width:767px) and (min-width:480px) {html.w-mod-js:not(.w-mod-ix) [data-w-id="b79516ef-27f4-eef7-f96c-5324de88d4db"] {opacity:0.8;}html.w-mod-js:not(.w-mod-ix) [data-w-id="774a6187-1c4b-1d5f-a494-18a445b00a35"] {opacity:1;}html.w-mod-js:not(.w-mod-ix) [data-w-id="11021a42-dd1f-d73d-03a1-d66b1f5dc8f4"] {background-color:rgba(0,0,0,0);}}</style>
+  <WebflowNav currentPage="home" />
+      <div data-w-id="11021a42-dd1f-d73d-03a1-d66b1f5dc8f4" class="section_home-hero">
+        <div class="masthead-wrap">
+          <h1 blocks-non-deletable="true" class="heading-style-h1 balanced">The <span class="heading-highlight">new standard</span> for building collaborative local-first software</h1>
+          <p class="text-size-large text-style-muted">DXOS is an open source framework for building real-time, collaborative web applications that run entirely on the client and communicate peer-to-peer, without the need for centralized servers. </p>
+          <div class="button-group is-center">
+            <a data-w-id="0448ba28-0ad5-7b5e-4baa-939997584fc7" href="/composer" class="button w-inline-block">
+              <div>Meet Composer</div>
+              <div class="icon-embed-xsmall w-embed">
+                <IconChevronRight />
+              </div>
+            </a>
+            <a href="https://discord.gg/eXVfryv3sW" target="_blank" class="button is-tertiary w-button">Join Discord</a>
+          </div>
+        </div>
+        <div class="section-hero_lower-cta">
+          <a href="/docs" class="button is-link w-inline-block">
+            <div>Read the docs</div>
+            <div class="icon-embed-xsmall w-embed">
+              <IconChevronRight />
+            </div>
+          </a>
+        </div>
+        <div class="section-hero_glowing-x">
+          <div data-w-id="b79516ef-27f4-eef7-f96c-5324de88d4db" class="hero-dark-gradient w-embed"><img src="/webflow/svg/hero-blob.svg" alt="" width="1296" height="1088" loading="lazy" /></div>
+          <div class="hero-green-gradient"></div>
+          <div data-w-id="774a6187-1c4b-1d5f-a494-18a445b00a35" class="rive-hero" data-rive-url="/webflow/images/home-hero-13.riv" data-rive-state-machine="State Machine 1" data-rive-artboard="animation_1" data-rive-autoplay="true" data-rive-is-touch-scroll-enabled="false" data-rive-automatically-handle-events="false" data-rive-fit="cover" data-rive-alignment="center" data-animation-type="rive"><canvas style="height:100%;width:100%"></canvas></div>
+        </div>
+      </div>
+      <div class="section_partners">
+        <div class="container-large">
+          <div class="w-layout-grid partner_grid">
+            <div id="w-node-_6454d101-373d-3dce-f972-3a008902634f-8902634c" class="partners_left">
+              <div class="text-size-large balanced">Built with the help of our friends and partners</div>
+            </div>
+            <div id="w-node-_6454d101-373d-3dce-f972-3a0089026352-8902634c" class="partners_right">
+              <a href="https://www.inkandswitch.com/" target="_blank" class="partner-logo-wrap w-inline-block"><img src="/webflow/images/Ink--Switch.png" loading="lazy" alt="Ink and Switch logo" class="partner-logo"></a>
+              <a href="https://socketsupply.co/" target="_blank" class="partner-logo-wrap w-inline-block"><img src="/webflow/images/SocketSupply.png" loading="lazy" alt="Socket Supply logo" class="partner-logo"></a>
+              <a href="https://effect.website/" target="_blank" class="partner-logo-wrap w-inline-block"><img src="/webflow/images/Effect.png" loading="lazy" alt="Effect logo" class="partner-logo"></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="section_grid">
+        <div class="container-large">
+          <div class="w-layout-grid feature-grid">
+            <div id="w-node-_708c4443-22fe-5a5e-7f19-03b6f4d92650-06f1a634" class="dxos_stack-header no-bottom-line">
+              <div class="all-caps">The DXOS Stack</div>
+              <div class="heading-style-h2">Cloud Optional</div>
+            </div>
+            <div id="w-node-bef6dd1e-5036-f528-6e26-3037473736a6-06f1a634" class="dxos_stack-header no-bottom-line right">
+              <div class="text-style-muted balanced">Free yourself from the cost and constraints of traditional cloud infrastructure. Fully Open Source.</div>
+            </div>
+            <div id="w-node-_7693bde3-58d1-3091-74dc-fc336b85de79-06f1a634" class="horizontal-line-wrap">
+              <div class="horiozontal-line full"></div>
+            </div>
+            <div id="w-node-edc741ff-2bf3-89c2-ac9a-e1556f5789d9-06f1a634" class="dxos_stack-card"><img src="/webflow/images/ECHO-icon.png" loading="lazy" alt="">
+              <div class="spacer-huge"></div>
+              <div class="card-text-wrapper">
+                <div class="heading-style-h5">Client-side databases that scale</div>
+                <div class="text-style-muted balanced">ECHO is an open source database architecture that incorporates transparent data replication and conflict resolution for secure and scalable local storage.</div>
+              </div>
+              <div class="grid-corner-float">
+                <div class="dxos_stack-label echo">
+                  <div>ECHO</div>
+                </div>
+              </div>
+            </div>
+            <div id="w-node-_5ca0447c-cac4-9b48-c914-6a76b077f5fe-06f1a634" class="dxos_stack-card right"><img src="/webflow/images/HALO-Icon.png" loading="lazy" alt="">
+              <div class="spacer-huge"></div>
+              <div class="card-text-wrapper">
+                <div class="heading-style-h5">Seamless Public/Private key identities</div>
+                <div class="text-style-muted balanced">HALO seamlessly manages digital identities using public/private key pairs allowing nuanced control over access to applications, databases, and networked devices.</div>
+              </div>
+              <div class="grid-corner-float">
+                <div class="dxos_stack-label halo">
+                  <div>HALO</div>
+                </div>
+              </div>
+            </div>
+            <div id="w-node-_09dbec98-74a4-8ec3-21c4-7e5443b6e915-06f1a634" class="horizontal-line-wrap">
+              <div class="horiozontal-line"></div>
+            </div>
+            <div id="w-node-c4764957-c20a-136e-596e-bfbe9030c67b-06f1a634" class="dxos_stack-card"><img src="/webflow/images/MESH-Icon.png" loading="lazy" alt="">
+              <div class="spacer-huge"></div>
+              <div class="card-text-wrapper">
+                <div class="heading-style-h5">Performant Peer-to-Peer networks</div>
+                <div class="text-style-muted balanced">MESH extends existing internet protocols to enable secure and resilient peer-to-peer networks without the need for centralized server infrastructure.</div>
+              </div>
+              <div class="grid-corner-float">
+                <div class="dxos_stack-label mesh">
+                  <div>Mesh</div>
+                </div>
+              </div>
+            </div>
+            <a id="w-node-_313f8ca1-1c04-9c1c-1dc1-734dfc174eee-06f1a634" data-w-id="313f8ca1-1c04-9c1c-1dc1-734dfc174eee" href="/composer" class="dxos_stack-card right cta w-inline-block">
+              <div class="grid-cta-header">
+                <div class="heading-style-h5">Meet composer</div>
+                <div data-w-id="804312c0-110c-c114-6641-cf2896cd832c" style="color:rgb(255,255,255)" class="button is-link is-icon cta">
+                  <div>Get Early Access</div>
+                  <div class="icon-embed-xsmall w-embed">
+                    <IconChevronRight />
+                  </div>
+                </div>
+              </div>
+              <div class="spacer-medium"></div>
+              <div class="code-wrapper-outer"><img src="/webflow/images/Composer-preview2.png" loading="lazy" sizes="100vw" srcset="/webflow/images/Composer-preview-p-500.png 500w, /webflow/images/Composer-preview-p-800.png 800w, /webflow/images/Composer-preview2.png 1020w" alt="A preview image of Composer markdown editor by DXOS" class="dxos-stack-composer-preview"></div>
+              <div class="cta-bkg-gradient-wrap">
+                <div data-w-id="b1de00d7-7c94-9934-1116-5101f4cb8bc6" class="meet-composer-bkg-gradient"></div>
+              </div>
+            </a>
+            <div id="w-node-_08bc2cc5-5c83-10c7-c80a-ca59e10f7d7a-06f1a634" class="horizontal-line-wrap">
+              <div class="horiozontal-line full"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="section_multiplayer">
+        <div class="spacer-xxhuge"></div>
+        <div class="masthead-wrap">
+          <div>
+            <p class="all-caps">Seamless Collaboration</p>
+            <h2 blocks-non-deletable="true" class="heading-style-h1 balanced">Realtime multiplayer without the hassle</h2>
+          </div>
+          <p class="text-size-large text-style-muted balanced">Add realtime collaboration to your local-first application without the complexity of building your own sync engine.</p>
+          <div class="button-group is-center">
+            <div data-w-id="67731782-08e8-96ec-9239-0ab17fea7ac3">
+              <a href="/composer" class="button w-inline-block">
+                <div>Meet Composer</div>
+                <div class="icon-embed-xsmall w-embed">
+                  <IconChevronRight />
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="section_hexagons">
+        <div data-w-id="a117166d-e84f-dc77-786f-6cca21ce336f" class="hexagons-outer-wrap">
+          <div class="custom-hexagon-cursor-overlay">
+            <div data-w-id="494e25c6-8883-e08a-7b4a-ab0ef6bc3e01" class="hexagon-custom-cursor w-embed"><img src="/webflow/svg/hex-cursor-1.svg" alt="" width="52" height="43" loading="lazy" /></div>
+            <div class="fake-cursor-1 w-embed"><img src="/webflow/svg/hex-cursor-2.svg" alt="" width="94" height="43" loading="lazy" /></div>
+          </div>
+          <div class="hexagon-overlay-gradient">
+            <div class="hexagons-top-gradient"></div>
+            <div class="hexagons-top-gradient bottom"></div>
+          </div>
+          <div data-w-id="3fc9ad53-0403-14a8-96bb-57e80b3ae154" class="hexagons" data-rive-url="/webflow/images/home-hero-13.riv" data-rive-state-machine="State Machine 1" data-rive-artboard="animation_2" data-rive-autoplay="true" data-rive-is-touch-scroll-enabled="false" data-rive-automatically-handle-events="false" data-rive-fit="cover" data-rive-alignment="center" data-animation-type="rive"><canvas style="height:100%;width:100%"></canvas></div>
+        </div>
+      </div>
+      <div class="section_grid">
+        <div class="container-large">
+          <div class="w-layout-grid feature-grid _3col">
+            <div id="w-node-e1d1bce1-1c55-8a50-9205-5aa70e4b77ae-06f1a634" class="dxos_stack-header">
+              <div class="all-caps">Features</div>
+              <div class="heading-style-h2">All the tools you need</div>
+              <div class="spacer-small"></div>
+              <div class="text-style-muted">DXOS provides everything you need to build scalable local-first applications</div>
+            </div>
+            <div id="w-node-defd94db-820b-e809-8ddc-06d01237e142-06f1a634" class="dxos_stack-card small top">
+              <div class="w-embed"><img src="/webflow/svg/features/local-first.svg" alt="" width="65" height="65" loading="lazy" /></div>
+              <div class="card-text-wrapper">
+                <div class="heading-style-h5">Local-first</div>
+                <div class="text-style-muted balanced">Provide instant-on app experiences with native support for local data storage that is secure, scalable and performant.</div>
+              </div>
+            </div>
+            <div id="w-node-e1d1bce1-1c55-8a50-9205-5aa70e4b77b8-06f1a634" class="dxos_stack-card small">
+              <div class="w-embed"><img src="/webflow/svg/features/multiplayer.svg" alt="" width="51" height="49" loading="lazy" /></div>
+              <div class="card-text-wrapper">
+                <div class="heading-style-h5">Realtime multiplayer</div>
+                <div class="text-style-muted balanced">DXOS leverages Automerge. A powerful CRDT that enables multiple concurrent users to operate on the same data without loss or conflict.</div>
+              </div>
+            </div>
+            <div id="w-node-_7e911230-1285-fefd-30e3-fcaace78d21a-06f1a634" class="dxos_stack-card small middle">
+              <div class="w-embed"><img src="/webflow/svg/features/cloud-search.svg" alt="" width="65" height="65" loading="lazy" /></div>
+              <div class="card-text-wrapper">
+                <div class="heading-style-h5">Cloudless</div>
+                <div class="text-style-muted balanced">The only reason you need a central server is to serve your application shell. Everything else happens in the client and works peer-to-peer.</div>
+              </div>
+            </div>
+            <div id="w-node-_5c5b3be2-901d-d26a-f9a6-fe782a71b605-06f1a634" class="dxos_stack-card small">
+              <div class="w-embed"><img src="/webflow/svg/features/peer.svg" alt="" width="65" height="65" loading="lazy" /></div>
+              <div class="card-text-wrapper">
+                <div class="heading-style-h5">Peer-to-peer</div>
+                <div class="text-style-muted balanced">User identity, data storage, synchronization and networking are all handled natively using the DXOS client API.</div>
+              </div>
+            </div>
+            <div id="w-node-_5bd248d7-a75c-ffad-c84f-8152d4fb5165-06f1a634" class="dxos_stack-card small">
+              <div class="w-embed"><img src="/webflow/svg/features/graph.svg" alt="" width="65" height="65" loading="lazy" /></div>
+              <div class="card-text-wrapper">
+                <div class="heading-style-h5">Decentralized data graph</div>
+                <div class="text-style-muted balanced">Automatically synchronize data across networked devices using WebRTC for cloudless peer-to-peer networking.</div>
+              </div>
+            </div>
+            <div id="w-node-c94fb482-47d7-e47f-0e29-c397274bf8bd-06f1a634" class="dxos_stack-card small middle">
+              <div class="w-embed"><img src="/webflow/svg/features/reactivity.svg" alt="" width="65" height="65" loading="lazy" /></div>
+              <div class="card-text-wrapper">
+                <div class="heading-style-h5">Reactivity</div>
+                <div class="text-style-muted balanced">Re-render UI components automatically as the underlying data changes, with minimal impact on performance.</div>
+              </div>
+            </div>
+            <a id="w-node-e1d1bce1-1c55-8a50-9205-5aa70e4b77e1-06f1a634" data-w-id="e1d1bce1-1c55-8a50-9205-5aa70e4b77e1" href="https://docs.dxos.org/guide/" target="_blank" class="dxos_stack-card right cta small w-inline-block">
+              <div class="code-wrapper-outer small">
+                <div class="code-wrapper"><img src="/webflow/images/Code-snippet3.png" loading="lazy" sizes="100vw" srcset="/webflow/images/Code-snippet3-p-500.png 500w, /webflow/images/Code-snippet3.png 614w" alt=""></div>
+              </div>
+              <div class="spacer-medium"></div>
+              <div data-w-id="e1d1bce1-1c55-8a50-9205-5aa70e4b77e2" style="color:rgb(255,255,255)" class="grid-cta-header">
+                <div class="heading-style-h5">Try the SDK</div>
+                <div class="icon-1x1-xsmall w-embed"><IconExternalLink size={32} /></div>
+              </div>
+              <div class="cta-bkg-gradient-wrap">
+                <div data-w-id="e1d1bce1-1c55-8a50-9205-5aa70e4b77ed" class="meet-composer-bkg-gradient"></div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="section_home-about">
+        <div class="spacer-xxhuge"></div>
+        <div class="container-large">
+          <div class="home-hero">
+            <div>
+              <div class="masthead-wrap">
+                <div class="margin-bottom margin-small">
+                  <p class="all-caps">About DXOS</p>
+                  <h3 blocks-non-deletable="true" class="heading-style-h1">Our Vision</h3>
+                </div>
+                <div class="max-width-medium">
+                  <p class="text-size-large text-style-muted">We&#x27;re setting a <span class="heading-highlight small">new standard</span> for how modern software is built by <strong><em>reducing reliance on centralized servers</em> </strong>and focusing on scalable <strong><em>peer-to-peer data networks</em></strong>.<br><br>Our framework empowers anyone to create <strong><em>real-time collaborative tools</em></strong> within a privacy-focused, <strong><em>local-first workspace that is enhanced by AI capabilities.</em></strong><br></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="team-globe_wrap"><img src="/webflow/images/Globe-placeholder.webp" loading="lazy" sizes="100vw" srcset="/webflow/images/Globe-placeholder-p-500.png 500w, /webflow/images/Globe-placeholder-p-800.png 800w, /webflow/images/Globe-placeholder.webp 1440w" alt="" class="team-globe">
+          <div class="team-list">
+            <div>
+              <div class="team-globe_list-wrap w-dyn-list">
+                <div role="list" class="team-globe_list w-dyn-items">
+                  {team.map((member) => (
+                    <div role="listitem" class="team-globe_item-wrap w-dyn-item">
+                      <div class="team-globe_item">
+                        <div>
+                          <div class="heading-style-h5">{member.data.name}</div>
+                          <div class="all-caps">{member.data.title}</div>
+                        </div>
+                        <div class="display-inlineflex">
+                          {member.data.github && (
+                            <a href={member.data.github} target="_blank" class="button is-link is-icon-only w-inline-block">
+                              <div class="icon-1x1-xsmall w-embed"><IconGitHub /></div>
+                            </a>
+                          )}
+                          {member.data.bluesky && (
+                            <a href={member.data.bluesky} target="_blank" class="button is-link is-icon-only w-inline-block">
+                              <div class="icon-1x1-xsmall w-embed"><IconBluesky /></div>
+                            </a>
+                          )}
+                          {member.data.x && (
+                            <a href={member.data.x} target="_blank" class="button is-link is-icon-only w-inline-block">
+                              <div class="icon-1x1-xsmall w-embed"><IconX /></div>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="section_page-cta">
+        <div class="container-large">
+          <div class="masthead-wrap">
+            <div>
+              <p class="all-caps">Try DXos</p>
+              <h1 blocks-non-deletable="true" class="heading-style-h1 balanced">Start building collaborative local-first software today</h1>
+            </div>
+            <div class="button-group is-center">
+              <a data-w-id="76b06a30-e0f1-a082-a7a7-daa4a7256306" href="/composer" class="button w-inline-block">
+                <div>Meet Composer</div>
+                <div class="icon-embed-xsmall w-embed">
+                  <IconChevronRight />
+                </div>
+              </a>
+              <a href="https://discord.gg/eXVfryv3sW" target="_blank" class="button is-tertiary w-button">Join Discord</a>
+            </div>
+          </div>
+        </div>
+        <div class="page-cta-bkg-wrap">
+          <div class="cta-streaks hide w-embed"><img src="/webflow/svg/cta-streaks-home.svg" alt="" width="3201" height="1502" loading="lazy" /></div>
+        </div>
+      </div>
+  <WebflowFooter />
+</WebflowLayout>
