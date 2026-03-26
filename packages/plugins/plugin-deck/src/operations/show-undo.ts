@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof UndoOperation.ShowUndo> = UndoOperat
 
         const toast: LayoutOperation.Toast = {
           id: newUndoId,
-          title: ['undo available label', { ns: meta.id }],
+          title: input.message ?? ['undo available label', { ns: meta.id }],
           duration: 10_000,
           actionLabel: ['undo action label', { ns: meta.id }],
           actionAlt: ['undo action alt', { ns: meta.id }],
