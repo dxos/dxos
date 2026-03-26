@@ -107,7 +107,9 @@ test.describe('Board', () => {
     // Hold ~20px above the footer to trigger pragmatic auto-scroll,
     // then drop on the last item once it scrolls into view.
     const footer = col1.locator.getByTestId('board-column-add-item');
-    await col0.item(0).dragToEndWithAutoScroll(footer, col1.item(col1CountBefore - 1).locator, { x: 0, y: BELOW_OFFSET });
+    await col0
+      .item(0)
+      .dragToEndWithAutoScroll(footer, col1.item(col1CountBefore - 1).locator, { x: 0, y: BELOW_OFFSET });
 
     await expect(col0.items()).toHaveCount(col0CountBefore - 1);
     await expect(col1.items()).toHaveCount(col1CountBefore + 1);
