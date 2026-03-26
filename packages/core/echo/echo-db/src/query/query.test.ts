@@ -399,12 +399,14 @@ describe('Query', () => {
       const other = db.add(createTestObject({ value: 2 }));
       await db.flush();
 
-      // Automerge change timestamps have second-level precision,
-      // so we need to cross a second boundary between the initial
-      // indexing and the cutoff to ensure they fall in different seconds.
-      await sleep(1100);
-      const cutoff = Date.now();
-      await sleep(1100);
+      // Automerge timestamps have second-level precision.
+      // Wait until we cross into the next second so the modification
+      // gets a strictly later timestamp than the initial indexing.
+      const secondAfterFlush = Math.floor(Date.now() / 1000) + 1;
+      while (Math.floor(Date.now() / 1000) < secondAfterFlush) {
+        await sleep(50);
+      }
+      const cutoff = secondAfterFlush * 1000;
 
       Obj.change(obj, (o: any) => {
         o.value = 999;
