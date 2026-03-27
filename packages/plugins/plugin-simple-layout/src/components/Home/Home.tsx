@@ -42,6 +42,7 @@ export const Home = (_: HomeProps) => {
 
   const autoFocus = !isTauri() || getHostPlatform() !== 'ios';
 
+  // TODO(burdon): Factor out panel.
   return (
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root>
@@ -50,16 +51,25 @@ export const Home = (_: HomeProps) => {
             <Mosaic.Container asChild>
               <ScrollArea.Root margin padding thin>
                 <ScrollArea.Viewport>
-                  {/* TODO(burdon): Disable slots. */}
-                  <Mosaic.Stack draggable={false} items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
+                  <Mosaic.Stack
+                    classNames='gap-1'
+                    draggable={false}
+                    items={results}
+                    getId={(node) => node.id}
+                    Tile={WorkspaceTile}
+                  />
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
             </Mosaic.Container>
           </SearchList.Content>
         </Panel.Content>
-        <Panel.Statusbar>
+        <Panel.Statusbar asChild className='h-[50px] px-4 py-2'>
           <Toolbar.Root>
-            <SearchList.Input placeholder={t('search placeholder')} autoFocus={autoFocus} />
+            <SearchList.Input
+              classNames='px-4 rounded-lg'
+              placeholder={t('search placeholder')}
+              autoFocus={autoFocus}
+            />
           </Toolbar.Root>
         </Panel.Statusbar>
       </Panel.Root>

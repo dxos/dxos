@@ -77,11 +77,11 @@ const MosaicStackInner = forwardRef<HTMLDivElement, MosaicStackProps>(
         )}
         ref={forwardedRef}
       >
-        <InternalPlaceholder orientation={orientation} location={0.5} />
+        {draggable && <InternalPlaceholder orientation={orientation} location={0.5} />}
         {visibleItems?.map((item, index) => (
           <Fragment key={getId(item)}>
             <Tile id={getId(item)} data={item} location={index + 1} draggable={draggable} debug={debug} />
-            <InternalPlaceholder orientation={orientation} location={index + 1.5} />
+            {draggable && <InternalPlaceholder orientation={orientation} location={index + 1.5} />}
           </Fragment>
         ))}
       </div>
