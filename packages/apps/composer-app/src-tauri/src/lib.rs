@@ -19,13 +19,11 @@ pub const LOCALHOST_PORT: u16 = 26777;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // In production, serve bundled assets via the localhost plugin on a fixed port.
-    // In dev, use the Vite dev server directly for hot-reload.
-    let app_port: u16 = if cfg!(debug_assertions) { 5173 } else { LOCALHOST_PORT };
-
     let builder = tauri::Builder::default();
 
-    #[cfg(not(debug_assertions))]
+    // Serve bundled assets via localhost plugin on desktop only (needed for SharedWorker support).
+    // Mobile uses Tauri's default asset protocol instead.
+    #[cfg(all(not(debug_assertions), desktop))]
     let builder = builder.plugin(tauri_plugin_localhost::Builder::new(LOCALHOST_PORT).build());
 
     // Only include updater plugin for non-mobile targets.
@@ -113,12 +111,14 @@ pub fn run() {
                 )?;
             }
 
-            // Window is created programmatically (not via tauri.conf.json "windows") because
-            // declarative windows load from tauri:// which breaks SharedWorker in WKWebView.
+            // Desktop: create window pointing at localhost plugin (production) or Vite dev server (dev).
+            // SharedWorker requires HTTP origin, so desktop uses External URL.
             #[cfg(desktop)]
             {
                 use tauri::WebviewWindowBuilder;
 
+                // In production, use the localhost plugin port; in dev, use the Vite dev server.
+                let app_port: u16 = if cfg!(debug_assertions) { 5173 } else { LOCALHOST_PORT };
                 let url: tauri::Url = format!("http://localhost:{}", app_port).parse().unwrap();
                 let main_window = WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::External(url))
                     .title("Composer")
@@ -136,6 +136,15 @@ pub fn run() {
                     }
                 }
                 window_state::setup_window_state_tracking(&main_window);
+            }
+
+            // Mobile: create window using Tauri's default asset protocol.
+            // No localhost plugin needed — single window with main thread coordinator.
+            #[cfg(mobile)]
+            {
+                use tauri::WebviewWindowBuilder;
+                let _main_window = WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("index.html".into()))
+                    .build()?;
             }
 
             // Initialize menu bar (macOS only).
