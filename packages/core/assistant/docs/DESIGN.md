@@ -2,6 +2,10 @@
 
 We are designing the process model for the AI Agent runtime.
 
+DXOS is a decentralized, local-first architecture for building collaborative applications where data is stored and processed on user devices,
+synchronized peer-to-peer, and structured as a shared graph of objects with conflict-free merging.
+It emphasizes offline capability, data ownership, and composability, with optional coordination layers rather than centralized backends.
+
 ## Design Goals
 
 - **Clean layering.**

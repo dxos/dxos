@@ -990,7 +990,7 @@
         },
         {
           "type": "json",
-          "path": "packages/ui/react-ui-searchlist/package.json",
+          "path": "packages/ui/react-ui-search/package.json",
           "jsonpath": "$.version"
         },
         {

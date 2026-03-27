@@ -52,7 +52,7 @@ export const Main = () => {
   const showNavBar = !keyboardOpen && !state.isPopover && state.drawerState === 'closed';
 
   return (
-    <Panel.Root {...attentionAttrs}>
+    <Panel.Root {...attentionAttrs} className='dx-document'>
       <Panel.Toolbar asChild>
         <AppBar {...appBarProps} />
       </Panel.Toolbar>

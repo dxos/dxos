@@ -131,7 +131,7 @@
       "@dxos/react-ui-list": ["packages/ui/react-ui-list/src/index.ts"],
       "@dxos/react-ui-menu": ["packages/ui/react-ui-menu/src/index.ts"],
       "@dxos/react-ui-pickers": ["packages/ui/react-ui-pickers/src/index.ts"],
-      "@dxos/react-ui-searchlist": ["packages/ui/react-ui-searchlist/src/index.ts"],
+      "@dxos/react-ui-search": ["packages/ui/react-ui-search/src/index.ts"],
       "@dxos/react-ui-sfx": ["packages/ui/react-ui-sfx/src/index.ts"],
       "@dxos/react-ui-stack": ["packages/ui/react-ui-stack/src/index.ts"],
       "@dxos/react-ui-stack/testing": ["packages/ui/react-ui-stack/src/testing/index.ts"],
@@ -140,8 +140,8 @@
       "@dxos/react-ui-tabs": ["packages/ui/react-ui-tabs/src/index.ts"],
       "@dxos/react-ui-text-tooltip": ["packages/ui/react-ui-text-tooltip/src/index.ts"],
       "@dxos/react-ui-thread": ["packages/ui/react-ui-thread/src/index.ts"],
-      "@dxos/ui-types": ["packages/ui/ui-types/src/index.ts"]
-    }
+      "@dxos/ui-types": ["packages/ui/ui-types/src/index.ts"],
+    },
   },
-  "include": ["**/*"]
+  "include": ["**/*"],
 }
