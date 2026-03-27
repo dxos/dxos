@@ -10,8 +10,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 
-import { JournalContainer, OutlineCard, OutlineContainer } from '../../containers';
-import { meta } from '../../meta';
+import { JournalContainer, OutlineCard, OutlineContainer, QuickEntryDialog } from '../../containers';
+import { QUICK_ENTRY_DIALOG, meta } from '../../meta';
 import { Journal, Outline } from '../../types';
 
 export default Capability.makeModule(() =>
@@ -35,9 +35,15 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: `${meta.id}.card.outline`,
-        role: ['card'],
+        role: 'card--content',
         filter: (data): data is { subject: Outline.Outline } => Obj.instanceOf(Outline.Outline, data.subject),
         component: ({ data }) => <OutlineCard subject={data.subject} />,
+      }),
+      Surface.create({
+        id: QUICK_ENTRY_DIALOG,
+        role: 'dialog',
+        filter: (data): data is { component: string } => data.component === QUICK_ENTRY_DIALOG,
+        component: () => <QuickEntryDialog />,
       }),
     ]),
   ),
