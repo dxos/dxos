@@ -7,7 +7,7 @@ import React, { useEffect, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/react-client/echo';
-import { Button, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 import { type AccessToken } from '@dxos/types';
 
 import { useCreateAndDeployScriptTemplates } from '../../hooks';
@@ -37,7 +37,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     if (status === 'success') {
       // TODO(ZaymonFC): We can probably re-use this toast for normal script deployment.
       void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}/deployment-success`,
+        id: `${meta.id}.deployment-success`,
         icon: 'ph--check--regular',
         duration: Infinity,
         title: ['script deployment toast label', { ns: meta.id, count: scriptTemplates.length }],
@@ -49,7 +49,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
     if (status === 'error') {
       void invokePromise(LayoutOperation.UpdateDialog, { state: false });
       void invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}/deployment-error`,
+        id: `${meta.id}.deployment-error`,
         icon: 'ph--warning--regular',
         duration: Infinity,
         title: ['script deployment error toast label', { ns: meta.id, count: scriptTemplates.length }],
@@ -61,14 +61,13 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
 
   return (
     <Dialog.Content>
-      <div className='flex justify-between items-center'>
+      <Dialog.Header>
         <Dialog.Title>{t('deployment dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <IconButton icon='ph--x--regular' size={4} label='Close' iconOnly density='fine' variant='ghost' />
+          <Dialog.CloseIconButton />
         </Dialog.Close>
-      </div>
-      <div role='none' className='py-4'>
-        {/* TODO: Implement deployment logic and UI. */}
+      </Dialog.Header>
+      <Dialog.Body>
         <p>
           {t('deployment dialog scripts found message', {
             count: scriptTemplates.length,
@@ -79,8 +78,11 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
             return <li key={template.id}>{template.name}</li>;
           })}
         </ul>
-      </div>
-      <div role='none' className='flex flex-row-reverse gap-1'>
+      </Dialog.Body>
+      <Dialog.ActionBar>
+        <Dialog.Close asChild>
+          <Button disabled={status === 'pending'}>{t('deployment dialog skip button label')}</Button>
+        </Dialog.Close>
         <Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
           {status === 'pending'
             ? t('deployment dialog deploy functions pending button label', {
@@ -90,10 +92,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
                 count: scriptTemplates.length,
               })}
         </Button>
-        <Dialog.Close asChild disabled={status === 'pending'}>
-          <Button disabled={status === 'pending'}>{t('deployment dialog skip button label')}</Button>
-        </Dialog.Close>
-      </div>
+      </Dialog.ActionBar>
     </Dialog.Content>
   );
 };

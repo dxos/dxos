@@ -115,8 +115,8 @@ describe('Lazy Space Loading', () => {
 
     await expect.poll(() => hostSpace.db.getObjectById(guestObject.id)).not.toEqual(undefined);
 
-    Obj.change(guestObject, (o) => {
-      o.content = 'foo';
+    Obj.change(guestObject, (obj) => {
+      obj.content = 'foo';
     });
 
     await expect.poll(() => hostSpace.db.getObjectById(guestObject.id)?.content).toEqual(guestObject.content);

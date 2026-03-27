@@ -169,16 +169,9 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
         </Input.Root>
-        <Toolbar.IconButton
-          icon='ph--play--regular'
-          size={4}
-          label='Execute'
-          iconOnly
-          onClick={() => handleRequest(input)}
-        />
+        <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
         <Toolbar.IconButton
           icon={isExecuting ? 'ph--stop--regular' : 'ph--trash--regular'}
-          size={4}
           label={isExecuting ? 'Stop' : 'Clear'}
           iconOnly
           onClick={() => (isExecuting ? handleStop() : handleClear())}

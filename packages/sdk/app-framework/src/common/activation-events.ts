@@ -7,7 +7,7 @@ import { ActivationEvent as ActivationEvent$ } from '../core';
 /**
  * Fired when the app is started.
  */
-export const Startup = ActivationEvent$.make('dxos.org/app-framework/event/startup');
+export const Startup = ActivationEvent$.make('org.dxos.app-framework.event.startup');
 
 //
 // Dependent Events
@@ -16,18 +16,23 @@ export const Startup = ActivationEvent$.make('dxos.org/app-framework/event/start
 /**
  * Fired to load any newly available surfaces.
  */
-export const SetupReactSurface = ActivationEvent$.make('dxos.org/app-framework/event/setup-react-surface');
+export const SetupReactSurface = ActivationEvent$.make('org.dxos.app-framework.event.setup-react-surface');
 
 /**
  * Fired before the operation invoker is activated.
  */
-export const SetupOperationResolver = ActivationEvent$.make('dxos.org/app-framework/event/setup-operation-resolver');
+export const SetupOperationResolver = ActivationEvent$.make('org.dxos.app-framework.event.setup-operation-resolver');
+
+/**
+ * Fired before the operation invoker is activated.
+ */
+export const SetupOperationHandler = ActivationEvent$.make('org.dxos.app-framework.event.setup-operation-handler');
 
 /**
  * Fired before the managed runtime is created.
  * Plugins should contribute their Layer capabilities before this event.
  */
-export const SetupLayer = ActivationEvent$.make('dxos.org/app-framework/event/setup-layer');
+export const SetupLayer = ActivationEvent$.make('org.dxos.app-framework.event.setup-layer');
 
 //
 // Triggered Events
@@ -36,9 +41,9 @@ export const SetupLayer = ActivationEvent$.make('dxos.org/app-framework/event/se
 /**
  * Fired after the operation invoker is ready.
  */
-export const OperationInvokerReady = ActivationEvent$.make('dxos.org/app-framework/event/operation-invoker-ready');
+export const OperationInvokerReady = ActivationEvent$.make('org.dxos.app-framework.event.operation-invoker-ready');
 
 /**
  * Fired after the managed runtime is ready.
  */
-export const ManagedRuntimeReady = ActivationEvent$.make('dxos.org/app-framework/event/managed-runtime-ready');
+export const ManagedRuntimeReady = ActivationEvent$.make('org.dxos.app-framework.event.managed-runtime-ready');

@@ -11,7 +11,7 @@ import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
@@ -25,7 +25,7 @@ export type CommandsDialogContentProps = {
 export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogContentProps>(
   ({ selected: initial }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    const { invokeSync } = useOperationInvoker();
+    const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
     const [selected, setSelected] = useState<string | undefined>(initial);
@@ -38,7 +38,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       const actionMap = new Set<string>();
       const actions: Node.ActionLike[] = [];
       Graph.traverse(graph, {
-        relation: 'child',
+        relation: ['child', 'action'],
         visitor: (node, path) => {
           if (
             (Node.isAction(node) || Node.isActionGroup(node)) &&
@@ -71,62 +71,64 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
 
     return (
       <Dialog.Content ref={forwardedRef}>
-        <Dialog.Title>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
-        <SearchList.Root onSearch={handleSearch}>
-          <SearchList.Content>
-            <SearchList.Input placeholder={t('command list input placeholder')} />
-            <SearchList.Viewport>
-              {results.map((action) => {
-                const shortcut =
-                  typeof action.properties.keyBinding === 'string'
-                    ? action.properties.keyBinding
-                    : action.properties.keyBinding?.[getHostPlatform()];
+        <Dialog.Title srOnly>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
+        <Dialog.Body>
+          <SearchList.Root onSearch={handleSearch}>
+            <SearchList.Content>
+              <SearchList.Input placeholder={t('command list input placeholder')} />
+              <SearchList.Viewport>
+                {results.map((action) => {
+                  const shortcut =
+                    typeof action.properties.keyBinding === 'string'
+                      ? action.properties.keyBinding
+                      : action.properties.keyBinding?.[getHostPlatform()];
 
-                return (
-                  <SearchList.Item
-                    value={action.id}
-                    key={action.id}
-                    label={toLocalizedString(action.properties.label, t)}
-                    icon={action.properties.icon}
-                    suffix={shortcut ? keySymbols(shortcut).join('') : undefined}
-                    onSelect={() => {
-                      if (action.properties.disabled) {
-                        return;
-                      }
-
-                      if (Node.isActionGroup(action)) {
-                        setSelected(action.id);
-                        return;
-                      }
-
-                      invokeSync(LayoutOperation.UpdateDialog, { state: false });
-                      setTimeout(() => {
-                        const node = Graph.getConnections(
-                          graph,
-                          group?.id ?? action.id,
-                          Node.childRelation('inbound'),
-                        )[0];
-                        if (node && Node.isAction(action)) {
-                          void runAction(action, { parent: node, caller: KEY_BINDING });
+                  return (
+                    <SearchList.Item
+                      value={action.id}
+                      key={action.id}
+                      label={toLocalizedString(action.properties.label, t)}
+                      icon={action.properties.icon}
+                      suffix={shortcut ? keySymbols(shortcut).join('') : undefined}
+                      onSelect={() => {
+                        if (action.properties.disabled) {
+                          return;
                         }
-                      });
-                    }}
-                    classNames='flex items-center gap-2'
-                    disabled={action.properties.disabled}
-                    {...(action.properties?.testId && {
-                      'data-testid': action.properties.testId,
-                    })}
-                  />
-                );
-              })}
-            </SearchList.Viewport>
-          </SearchList.Content>
-        </SearchList.Root>
-        <div role='none' className='p-form-padding'>
+
+                        if (Node.isActionGroup(action)) {
+                          setSelected(action.id);
+                          return;
+                        }
+
+                        void invokePromise(LayoutOperation.UpdateDialog, { state: false });
+                        setTimeout(() => {
+                          const node = Graph.getConnections(
+                            graph,
+                            group?.id ?? action.id,
+                            Node.childRelation('inbound'),
+                          )[0];
+                          if (node && Node.isAction(action)) {
+                            void runAction(action, { parent: node, caller: KEY_BINDING });
+                          }
+                        });
+                      }}
+                      classNames='flex items-center gap-2'
+                      disabled={action.properties.disabled}
+                      {...(action.properties?.testId && {
+                        'data-testid': action.properties.testId,
+                      })}
+                    />
+                  );
+                })}
+              </SearchList.Viewport>
+            </SearchList.Content>
+          </SearchList.Root>
+        </Dialog.Body>
+        <Dialog.ActionBar>
           <Dialog.Close asChild>
             <Button classNames='w-full'>{t('close label', { ns: osTranslations })}</Button>
           </Dialog.Close>
-        </div>
+        </Dialog.ActionBar>
       </Dialog.Content>
     );
   },

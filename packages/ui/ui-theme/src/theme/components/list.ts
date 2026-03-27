@@ -4,8 +4,8 @@
 
 import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
 
-import { densityBlockSize, focusRing, getSize, ghostHover } from '../../fragments';
-import { mx } from '../../util';
+import { densityBlockSize, focusRing, ghostHover } from '../../fragments';
+import { getSize, mx } from '../../util';
 
 export type ListStyleProps = Partial<{
   density: Density;

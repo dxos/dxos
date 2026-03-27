@@ -4,13 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AgentFunctions, EntityExtractionFunctions, ResearchBlueprint } from '@dxos/assistant-toolkit';
+import { AgentPrompt, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
-import { Trigger, serializeFunction } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { GmailFunctions } from '@dxos/plugin-inbox';
+import { Operation } from '@dxos/operation';
+import { InboxOperation } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox/types';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { type Space } from '@dxos/react-client/echo';
@@ -73,8 +74,8 @@ export const generator = () => ({
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
           const tagDxn = Obj.getDXN(tag).toString();
-          Obj.change(doc, (d) => {
-            Obj.getMeta(d).tags = [tagDxn];
+          Obj.change(doc, (obj) => {
+            Obj.getMeta(obj).tags = [tagDxn];
           });
 
           // space.db.add(
@@ -116,10 +117,12 @@ export const generator = () => ({
     [
       PresetName.ORG_RESEARCH_PROJECT,
       async (space, n, cb) => {
-        const feeds = await space.db.query(Filter.type(Feed.Feed)).run();
-        const mailbox = feeds.find((feed) => feed.kind === Mailbox.kind);
-        invariant(mailbox, 'Mailbox feed not found');
-        const queueDxn = Feed.getQueueDxn(mailbox)?.toString();
+        const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
+        const mailbox = mailboxes[0];
+        invariant(mailbox, 'Mailbox not found');
+        const mailboxFeed = await mailbox.feed?.tryLoad();
+        invariant(mailboxFeed, 'Mailbox missing feed reference');
+        const queueDxn = Feed.getQueueDxn(mailboxFeed)?.toString();
         invariant(queueDxn, 'Mailbox feed missing queue DXN key');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagDxn = Obj.getDXN(tag).toString();
@@ -136,7 +139,7 @@ export const generator = () => ({
                 kind: 'timer',
                 cron: '* * * * *', // Every minute.
               },
-              function: Ref.make(serializeFunction(GmailFunctions.Sync)),
+              function: Ref.make(Operation.serialize(InboxOperation.GoogleMailSync)),
               input: {
                 mailbox: Ref.make(mailbox),
               },
@@ -151,7 +154,7 @@ export const generator = () => ({
                 kind: 'queue',
                 queue: queueDxn,
               },
-              function: Ref.make(serializeFunction(EntityExtractionFunctions.Extract)),
+              function: Ref.make(Operation.serialize(EntityExtraction)),
               input: {
                 source: '{{event.item}}',
               },
@@ -187,7 +190,7 @@ export const generator = () => ({
                   ast: organizationsQuery.ast,
                 },
               },
-              function: Ref.make(serializeFunction(AgentFunctions.Prompt)),
+              function: Ref.make(Operation.serialize(AgentPrompt)),
               input: {
                 prompt: Ref.make(researchPrompt),
                 input: '{{event.subject}}',
@@ -313,7 +316,7 @@ export const generator = () => ({
             'subscription',
             (triggerSpec) =>
               (triggerSpec.query = {
-                ast: Query.select(Filter.typename('dxos.org/type/Chess')).ast as Obj.Mutable<QueryAST.Query>,
+                ast: Query.select(Filter.typename('org.dxos.type.chess')).ast as Obj.Mutable<QueryAST.Query>,
               }),
             'type',
           );
@@ -812,9 +815,9 @@ const setupQueue = (
 const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  Obj.change(functionTrigger, (t) => {
-    t.function = Ref.make(computeModel.root);
-    t.inputNodeId = inputNode.id;
+  Obj.change(functionTrigger, (obj) => {
+    obj.function = Ref.make(computeModel.root);
+    obj.inputNodeId = inputNode.id;
   });
 };
 

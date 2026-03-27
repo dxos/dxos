@@ -5,11 +5,11 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Trigger } from '@dxos/async';
 import { Graph } from '@dxos/plugin-graph';
-import { ObservabilityOperation } from '@dxos/plugin-observability/types';
+import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -19,7 +19,7 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-export const JOIN_DIALOG = `${meta.id}/JoinDialog`;
+export const JOIN_DIALOG = `${meta.id}.JoinDialog`;
 
 export type JoinDialogProps = JoinPanelProps & {
   navigableCollections?: boolean;
@@ -40,7 +40,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
 
       await Promise.all([
         invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}/join-success`,
+          id: `${meta.id}.join-success`,
           duration: 5_000,
           title: ['join success label', { ns: meta.id }],
           closeLabel: ['dismiss label', { ns: meta.id }],
@@ -61,7 +61,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         space = await trigger.wait();
       }
 
-      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: space.id });
+      await invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
 
       // TODO(wittjosiah): If navigableCollections is false and there's no target,
       //   should try to navigate to the first object of the space replicates.
@@ -77,7 +77,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         ]);
       }
 
-      await onDone?.(result);
+      onDone?.(result);
 
       if (space) {
         await invokePromise(ObservabilityOperation.SendEvent, {
@@ -91,15 +91,18 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
     [invokePromise, client, graph, navigableCollections, onDone],
   );
 
+  // TODO(burdon): Move JoinHeading into Dialog.Heading.
   return (
     <Dialog.Content>
       <Dialog.Title classNames='sr-only'>{t('join space label', { ns: osTranslations })}</Dialog.Title>
-      <JoinPanel
-        {...props}
-        exitActionParent={<Dialog.Close asChild />}
-        doneActionParent={<Dialog.Close asChild />}
-        onDone={handleDone}
-      />
+      <Dialog.Body>
+        <JoinPanel
+          {...props}
+          exitActionParent={<Dialog.Close asChild />}
+          doneActionParent={<Dialog.Close asChild />}
+          onDone={handleDone}
+        />
+      </Dialog.Body>
     </Dialog.Content>
   );
 };

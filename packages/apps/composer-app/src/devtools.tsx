@@ -12,7 +12,7 @@ import { meta as debugMeta } from '@dxos/plugin-debug';
 
 const main = async () => {
   const enter =
-    localStorage.getItem(`${debugMeta.id}/devtools`) === 'true' || window.confirm('Continue to DXOS developer tools?');
+    localStorage.getItem(`${debugMeta.id}.devtools`) === 'true' || window.confirm('Continue to DXOS developer tools?');
   if (!enter) {
     window.location.pathname = '/';
     return;

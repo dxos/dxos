@@ -2,10 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { addressFromA1Notation, isFormula } from '@dxos/compute';
-import { Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 
 import { addressToIndex, initialize, mapFormulaRefsToIndices } from './util';
@@ -62,8 +64,12 @@ export const Sheet = Schema.Struct({
   ranges: Schema.Array(Range).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Sheet',
+    typename: 'org.dxos.type.sheet',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--grid-nine--regular',
+    hue: 'indigo',
   }),
 );
 
@@ -78,17 +84,17 @@ export const make = ({ name, cells = {}, ...size }: SheetProps = {}) => {
   const sheet = Obj.make(Sheet, { name, cells: {}, rows: [], columns: [], rowMeta: {}, columnMeta: {}, ranges: [] });
 
   // Initialize and set cells within Obj.change to satisfy change context requirements.
-  Obj.change(sheet, (s) => {
-    initialize(s, size);
+  Obj.change(sheet, (obj) => {
+    initialize(obj, size);
 
     if (cells) {
       Object.entries(cells).forEach(([key, { value }]) => {
-        const idx = addressToIndex(s, addressFromA1Notation(key));
+        const idx = addressToIndex(obj, addressFromA1Notation(key));
         if (isFormula(value)) {
-          value = mapFormulaRefsToIndices(s, value);
+          value = mapFormulaRefsToIndices(obj, value);
         }
 
-        s.cells[idx] = { value };
+        obj.cells[idx] = { value };
       });
     }
   });

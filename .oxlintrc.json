@@ -9,6 +9,7 @@
   "rules": {
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/header": "warn",
+    "@dxos/eslint-plugin-rules/import-as-namespace": "warn",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
     "@dxos/eslint-plugin-rules/no-effect-run-promise": "error",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
@@ -37,7 +38,7 @@
     "jest/valid-describe-callback": "off",
     "jest/valid-expect": "off",
     "jest/valid-title": "off",
-    "no-unused-vars": "off",
+    "no-unused-vars": "off", // TODO(burdon): Fix no-unused-imports.
     "oxc/only-used-in-recursion": "off",
     "promise/no-callback-in-promise": "off",
     "promise/valid-params": "off",
@@ -66,7 +67,9 @@
     "unicorn/no-useless-fallback-in-spread": "off",
     "unicorn/no-useless-spread": "off",
     "unicorn/prefer-string-starts-ends-with": "off",
-    "vitest/warn-todo": "off"
+    "vitest/warn-todo": "off",
+    "unused-imports/no-unused-imports": "warn",
+    "import-x-js/order": "off"
   },
   "settings": {
     "jsx-a11y": {
@@ -113,5 +116,9 @@
     "tools/swc-log-plugin/tests/__swc_snapshots__/**",
     "tools/swc-log-plugin/test-rig/**"
   ],
-  "jsPlugins": ["@dxos/eslint-plugin-rules"]
+  "jsPlugins": [
+    "@dxos/eslint-plugin-rules",
+    "eslint-plugin-unused-imports",
+    { "name": "import-x-js", "specifier": "eslint-plugin-import-x" }
+  ]
 }

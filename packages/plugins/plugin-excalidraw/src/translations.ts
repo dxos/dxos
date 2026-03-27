@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Diagram } from '@dxos/plugin-sketch/types';
+import { Sketch } from '@dxos/plugin-sketch/types';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
@@ -10,12 +10,13 @@ import { meta } from './meta';
 export const translations = [
   {
     'en-US': {
-      [Diagram.Diagram.typename]: {
+      [Sketch.Sketch.typename]: {
         'typename label': 'Excalidraw',
         'typename label_zero': 'Excalidraws',
         'typename label_one': 'Excalidraw',
         'typename label_other': 'Excalidraws',
         'object name placeholder': 'New excalidraw',
+        'add object label': 'Add excalidraw',
         'rename object label': 'Rename excalidraw',
         'delete object label': 'Delete excalidraw',
         'object deleted label': 'Excalidraw deleted',

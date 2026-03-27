@@ -11,7 +11,8 @@ import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
 
 import { meta } from '../../meta';
-import { Account, ClientCapabilities, ClientOperation } from '../../types';
+import { Account, ClientCapabilities } from '../../types';
+import { ClientOperation } from '../../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -21,7 +22,7 @@ export default Capability.makeModule(
       actions: () =>
         Effect.succeed([
           {
-            id: `${meta.id}/open-user-account`,
+            id: `${meta.id}.open-user-account`,
             data: () => Operation.invoke(ClientOperation.ShareIdentity),
             properties: {
               label: ['open user account label', { ns: meta.id }],

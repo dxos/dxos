@@ -23,12 +23,14 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
 
   return (
     <>
-      <Card.Heading variant='subtitle'>{t('related contacts title')}</Card.Heading>
+      <Card.Row>
+        <Card.Heading variant='subtitle'>{t('related contacts title')}</Card.Heading>
+      </Card.Row>
       {contacts.map((contact) => (
         <Card.Action
           key={contact.id}
           onClick={() => onContactClick?.(contact)}
-          label={contact.fullName || contact.emails?.[0].value || contact.id}
+          label={contact.fullName || contact.emails?.[0]?.value || contact.id}
           icon='ph--user--regular'
           actionIcon='ph--arrow-right--regular'
         />

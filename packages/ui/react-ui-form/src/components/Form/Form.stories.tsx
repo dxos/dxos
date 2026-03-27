@@ -23,7 +23,7 @@ const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
 }).pipe(
   Type.object({
-    typename: 'example.com/type/Organization', // TODO(burdon): Change all types to /schema
+    typename: 'com.example.type.organization',
     version: '0.1.0',
   }),
 );
@@ -65,7 +65,7 @@ const Person = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Person', // TODO(burdon): Change all types to /schema
+    typename: 'org.dxos.type.person', // TODO(burdon): Change all types to /schema
     version: '0.1.0',
   }),
 );
@@ -103,7 +103,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         <Form.Root
           debug={debug}
           schema={schema}
-          values={values}
+          defaultValues={values}
           db={space.db}
           onSave={handleSave}
           onCancel={handleCancel}
@@ -136,13 +136,8 @@ const meta = {
       onCreateIdentity: ({ client }) => {
         const space = client.spaces.default;
         [
-          Obj.make(Organization, { name: 'DXOS' }),
-          Obj.make(Organization, { name: 'BlueYard' }),
-          Obj.make(Organization, { name: 'Backed' }),
-          Obj.make(Organization, { name: 'BCV' }),
-          Tag.make({ label: 'Tag 1' }),
-          Tag.make({ label: 'Tag 2' }),
-          Tag.make({ label: 'Tag 3' }),
+          ...Array.from({ length: 3 }).map((_, i) => Obj.make(Tag.Tag, { label: `Tag ${i}` })),
+          ...Array.from({ length: 50 }).map((_, i) => Obj.make(Organization, { name: `Organization ${i}` })),
         ].map((obj) => space.db.add(obj));
       },
     }),

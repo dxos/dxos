@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
@@ -20,11 +20,15 @@ const GraphSchema = Schema.Struct({
   }).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Graph',
-    version: '0.2.0',
+    typename: 'org.dxos.type.graph',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--graph--regular',
+    hue: 'green',
+  }),
 );
 export interface Graph extends Schema.Schema.Type<typeof GraphSchema> {}
 export const Graph: Type.Obj<Graph> = GraphSchema as any;
@@ -43,21 +47,3 @@ export const make = ({
 }: MakeProps): Graph => {
   return Obj.make(Graph, { name, view: Ref.make(view), query });
 };
-
-//
-// V1
-//
-
-export const GraphV1 = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  query: Schema.Struct({
-    raw: Schema.optional(Schema.String),
-    ast: QueryAST.Query,
-  }),
-}).pipe(
-  Type.object({
-    typename: 'dxos.org/type/Graph',
-    version: '0.1.0',
-  }),
-  LabelAnnotation.set(['name']),
-);

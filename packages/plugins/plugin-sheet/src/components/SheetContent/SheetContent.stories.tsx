@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { testFunctionPlugins } from '@dxos/compute/testing';
-import { OperationPlugin, RuntimePlugin } from '@dxos/plugin-testing';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -29,7 +29,7 @@ export const Basic = () => {
   }
 
   return (
-    <SheetRoot graph={graph} sheet={sheet} ignoreAttention>
+    <SheetRoot graph={graph} sheet={sheet} attendableId='test' ignoreAttention>
       <div role='none' className='grid h-full w-full'>
         <SheetContent />
       </div>

@@ -6,12 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
-import { FileCapabilities, LocalFilesOperation } from '../../types';
+import { FilesOperation } from '../../operations';
+import { FileCapabilities } from '../../types';
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../../util';
 
 export default Capability.makeModule(
@@ -21,21 +22,21 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Create export/import actions.
       GraphBuilder.createExtension({
-        id: `${meta.id}/export`,
+        id: `${meta.id}.export`,
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
-              id: LocalFilesOperation.Export.meta.key,
-              data: () => Operation.invoke(LocalFilesOperation.Export),
+              id: FilesOperation.Export.meta.key,
+              data: () => Operation.invoke(FilesOperation.Export),
               properties: {
                 label: ['export label', { ns: meta.id }],
                 icon: 'ph--floppy-disk--regular',
               },
             },
             {
-              id: LocalFilesOperation.Import.meta.key,
-              data: () => Operation.invoke(LocalFilesOperation.Import, {}),
+              id: FilesOperation.Import.meta.key,
+              data: () => Operation.invoke(FilesOperation.Import, {}),
               properties: {
                 label: ['import label', { ns: meta.id }],
                 icon: 'ph--folder-open--regular',
@@ -46,7 +47,7 @@ export default Capability.makeModule(
 
       // Create files group node.
       GraphBuilder.createExtension({
-        id: `${meta.id}/root`,
+        id: `${meta.id}.root`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
           const settingsAtom = capabilities.get(FileCapabilities.Settings);
@@ -73,14 +74,14 @@ export default Capability.makeModule(
 
       // Create files nodes.
       GraphBuilder.createExtension({
-        id: `${meta.id}/files`,
-        match: NodeMatcher.whenId(meta.id),
+        id: `${meta.id}.files`,
+        match: NodeMatcher.whenId(getSpacePath('dxos:plugin-files')),
         actions: () =>
           Effect.succeed([
             {
-              id: LocalFilesOperation.OpenFile.meta.key,
+              id: FilesOperation.OpenFile.meta.key,
               data: Effect.fnUntraced(function* () {
-                const result = yield* Operation.invoke(LocalFilesOperation.OpenFile);
+                const result = yield* Operation.invoke(FilesOperation.OpenFile);
                 if (result?.subject) {
                   yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
                 }
@@ -95,7 +96,7 @@ export default Capability.makeModule(
                   {
                     id: 'open-directory',
                     data: Effect.fnUntraced(function* () {
-                      const result = yield* Operation.invoke(LocalFilesOperation.OpenDirectory);
+                      const result = yield* Operation.invoke(FilesOperation.OpenDirectory);
                       if (result?.subject) {
                         yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
                       }
@@ -128,7 +129,7 @@ export default Capability.makeModule(
 
       // Create sub-files nodes.
       GraphBuilder.createExtension({
-        id: `${meta.id}/sub-files`,
+        id: `${meta.id}.sub-files`,
         match: (node) => (isLocalDirectory(node.data) ? Option.some(node.data) : Option.none()),
         connector: (directory) =>
           Effect.succeed(
@@ -146,13 +147,13 @@ export default Capability.makeModule(
 
       // Create file actions.
       GraphBuilder.createExtension({
-        id: `${meta.id}/actions`,
+        id: `${meta.id}.actions`,
         match: (node) => (isLocalEntity(node.data) ? Option.some(node.data) : Option.none()),
         actions: (entity) =>
           Effect.succeed([
             {
-              id: `${LocalFilesOperation.Close.meta.key}:${entity.id}`,
-              data: () => Operation.invoke(LocalFilesOperation.Close, { id: entity.id }),
+              id: `${FilesOperation.Close.meta.key}:${entity.id}`,
+              data: () => Operation.invoke(FilesOperation.Close, { id: entity.id }),
               properties: {
                 label: ['close label', { ns: meta.id }],
                 icon: 'ph--x--regular',
@@ -161,8 +162,8 @@ export default Capability.makeModule(
             ...(entity.permission !== 'granted'
               ? [
                   {
-                    id: `${LocalFilesOperation.Reconnect.meta.key}:${entity.id}`,
-                    data: () => Operation.invoke(LocalFilesOperation.Reconnect, { id: entity.id }),
+                    id: `${FilesOperation.Reconnect.meta.key}:${entity.id}`,
+                    data: () => Operation.invoke(FilesOperation.Reconnect, { id: entity.id }),
                     properties: {
                       label: ['re-open label', { ns: meta.id }],
                       icon: 'ph--plugs--regular',
@@ -173,8 +174,8 @@ export default Capability.makeModule(
             ...(entity.permission === 'granted' && isLocalFile(entity)
               ? [
                   {
-                    id: `${LocalFilesOperation.Save.meta.key}:${entity.id}`,
-                    data: () => Operation.invoke(LocalFilesOperation.Save, { id: entity.id }),
+                    id: `${FilesOperation.Save.meta.key}:${entity.id}`,
+                    data: () => Operation.invoke(FilesOperation.Save, { id: entity.id }),
                     properties: {
                       label: [entity.handle ? 'save label' : 'save as label', { ns: meta.id }],
                       icon: 'ph--floppy-disk--regular',

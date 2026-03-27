@@ -11,7 +11,8 @@ import { SubscriptionList } from '@dxos/async';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 
 import { meta } from '../../meta';
-import { FileCapabilities, type FilesState, LocalFilesOperation } from '../../types';
+import { FilesOperation } from '../../operations';
+import { FileCapabilities, type FilesState } from '../../types';
 import { PREFIX, findFile, handleToLocalDirectory, handleToLocalFile } from '../../util';
 
 export default Capability.makeModule(
@@ -71,7 +72,7 @@ export default Capability.makeModule(
           }
 
           registry.update(stateAtom, (current) => ({ ...current, exportRunning: true }));
-          await invokePromise(LocalFilesOperation.Export);
+          await invokePromise(FilesOperation.Export);
           registry.update(stateAtom, (current) => ({ ...current, exportRunning: false }));
         }, interval);
       }),
@@ -114,7 +115,7 @@ export default Capability.makeModule(
     subscriptions.add(attention.subscribeCurrent(updateCurrentFile));
 
     const savedRootHandle = yield* Effect.tryPromise(() =>
-      localforage.getItem<FileSystemDirectoryHandle>(`${meta.id}/rootHandle`),
+      localforage.getItem<FileSystemDirectoryHandle>(`${meta.id}.rootHandle`),
     );
     if (savedRootHandle) {
       registry.update(stateAtom, (current) => ({ ...current, rootHandle: savedRootHandle }));
@@ -125,7 +126,7 @@ export default Capability.makeModule(
       registry.subscribe(stateAtom, () => {
         const rootHandle = getState().rootHandle;
         if (rootHandle) {
-          void localforage.setItem(`${meta.id}/rootHandle`, rootHandle);
+          void localforage.setItem(`${meta.id}.rootHandle`, rootHandle);
         }
       }),
     );

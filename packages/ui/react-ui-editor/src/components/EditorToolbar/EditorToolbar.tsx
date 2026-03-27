@@ -49,12 +49,12 @@ export type EditorToolbarProps = ThemedClassName<
 >;
 
 export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, ...props }: EditorToolbarProps) => {
-  const menuProps = useEditorToolbarActionGraph(props);
+  const menuActions = useEditorToolbarActionGraph(props);
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <Menu.Root {...menuProps} attendableId={attendableId} onAction={onAction}>
-        <Menu.Toolbar classNames={classNames} textBlockWidth />
+      <Menu.Root {...menuActions} attendableId={attendableId} onAction={onAction}>
+        <Menu.Toolbar classNames={classNames} />
       </Menu.Root>
     </ElevationProvider>
   );

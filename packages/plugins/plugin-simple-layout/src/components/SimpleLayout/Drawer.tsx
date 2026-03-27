@@ -5,14 +5,14 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { getCompanionVariant } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useNode } from '@dxos/plugin-graph';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 import { Menu, useMenuActions } from '@dxos/react-ui-menu';
 
 import { useCompanions, useDrawerActions, useSimpleLayoutState } from '../../hooks';
-import { ContentLoading } from '../ContentLoading';
+import { Loading } from '../Loading';
 
 const DRAWER_NAME = 'SimpleLayout.Drawer';
 
@@ -23,7 +23,7 @@ export const Drawer = () => {
   const { graph } = useAppGraph();
   const { state: layoutState } = useSimpleLayoutState();
 
-  const placeholder = useMemo(() => <ContentLoading />, []);
+  const placeholder = useMemo(() => <Loading />, []);
 
   // Get all companions for the current active (primary) item.
   const activeId = layoutState.active ?? layoutState.workspace;
@@ -49,13 +49,13 @@ export const Drawer = () => {
 
   // Get drawer actions (tabs + toolbar buttons).
   const { actions, onAction } = useDrawerActions(DRAWER_NAME);
-  const menu = useMenuActions(actions);
+  const menuActions = useMenuActions(actions);
 
   return (
     <Panel.Root>
       <Panel.Toolbar>
-        <Menu.Root {...menu} alwaysActive onAction={onAction}>
-          <Menu.Toolbar density='coarse' />
+        <Menu.Root {...menuActions} alwaysActive onAction={onAction}>
+          <Menu.Toolbar />
         </Menu.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
@@ -66,12 +66,6 @@ export const Drawer = () => {
 };
 
 Drawer.displayName = DRAWER_NAME;
-
-/** Parse entry ID to extract primary ID and variant. */
-const parseEntryId = (entryId: string) => {
-  const [id, variant] = entryId.split(ATTENDABLE_PATH_SEPARATOR);
-  return { id, variant };
-};
 
 /**
  * Resolves which companion to show based on variant preference.
@@ -85,10 +79,7 @@ const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string
 
     // Try to find companion matching the preferred variant.
     if (preferredVariant) {
-      const preferred = companions.find((c) => {
-        const { variant } = parseEntryId(c.id);
-        return variant === preferredVariant;
-      });
+      const preferred = companions.find((c) => getCompanionVariant(c.id) === preferredVariant);
       if (preferred) {
         return preferred;
       }
@@ -99,7 +90,7 @@ const useSelectedCompanion = (companions: Node.Node[], preferredVariant?: string
   }, [companions, preferredVariant]);
 
   const companionId = selectedCompanion?.id;
-  const { variant } = parseEntryId(companionId ?? '');
+  const variant = companionId ? getCompanionVariant(companionId) : undefined;
 
   return { selectedCompanion, companionId, variant };
 };

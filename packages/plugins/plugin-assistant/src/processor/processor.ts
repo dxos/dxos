@@ -30,14 +30,14 @@ import {
 import { formatSystemPrompt } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
 import { runAndForwardErrors, throwCause, unwrapExit } from '@dxos/effect';
 import {
   type CredentialsService,
   type FunctionInvocationService,
   type QueueService,
-  type TracingService,
+  TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -60,6 +60,10 @@ export type AiChatProcessorOptions = {
   blueprintRegistry?: Blueprint.Registry;
   observableRegistry?: Registry.Registry;
   extensions?: ToolContextExtensions;
+  /**
+   * For tracing.
+   */
+  chat?: Ref.Ref<Chat.Chat>;
 } & Pick<AiConversationRunProps, 'system'>;
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
@@ -178,10 +182,43 @@ export class AiChatProcessor {
       const services = await this._services();
 
       // Create request.
-      const request = this._conversation.createRequest({
-        system: this._options.system,
-        prompt: requestProp.message,
-        observer: this._observer,
+      const request = Effect.gen(this, function* () {
+        const tracer = yield* TracingService;
+        const trace = yield* tracer.traceInvocationStart({
+          target: undefined,
+          payload: {
+            chat: this._options.chat,
+            data: {
+              prompt: requestProp.message,
+            },
+          },
+        });
+
+        const result = yield* this._conversation
+          .createRequest({
+            system: this._options.system,
+            prompt: requestProp.message,
+            observer: this._observer,
+          })
+          .pipe(
+            Effect.provide(
+              trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop,
+            ),
+            Effect.exit,
+          );
+
+        if (Exit.isFailure(result)) {
+          const error = Cause.prettyErrors(result.cause)[0];
+          log.error(error.message, error.cause ?? error.stack);
+        }
+
+        yield* tracer.traceInvocationEnd({
+          trace,
+          // TODO(dmaretskyi): Might miss errors.
+          exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
+        });
+
+        return Effect.exit(result);
       });
 
       // Create fiber.

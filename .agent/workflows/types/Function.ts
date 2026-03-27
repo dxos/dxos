@@ -51,7 +51,7 @@ export const Function = Schema.Struct({
   binding: Schema.optional(Schema.String),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Function',
+    typename: 'org.dxos.type.function',
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),
@@ -68,15 +68,15 @@ export const make = (props: Obj.MakeProps<typeof Function>) => Obj.make(Function
  * @param source - Source object to copy properties from.
  */
 export const setFrom = (target: Function, source: Function) => {
-  Obj.change(target, (t) => {
-    t.key = source.key ?? target.key;
-    t.name = source.name ?? target.name;
-    t.version = source.version;
-    t.description = source.description;
-    t.updated = source.updated;
+  Obj.change(target, (obj) => {
+    obj.key = source.key ?? target.key;
+    obj.name = source.name ?? target.name;
+    obj.version = source.version;
+    obj.description = source.description;
+    obj.updated = source.updated;
     // TODO(dmaretskyi): A workaround for an ECHO bug.
-    t.inputSchema = source.inputSchema ? JSON.parse(JSON.stringify(source.inputSchema)) : undefined;
-    t.outputSchema = source.outputSchema ? JSON.parse(JSON.stringify(source.outputSchema)) : undefined;
-    Obj.getMeta(t).keys = JSON.parse(JSON.stringify(Obj.getMeta(source).keys));
+    obj.inputSchema = source.inputSchema ? JSON.parse(JSON.stringify(source.inputSchema)) : undefined;
+    obj.outputSchema = source.outputSchema ? JSON.parse(JSON.stringify(source.outputSchema)) : undefined;
+    Obj.getMeta(obj).keys = JSON.parse(JSON.stringify(Obj.getMeta(source).keys));
   });
 };

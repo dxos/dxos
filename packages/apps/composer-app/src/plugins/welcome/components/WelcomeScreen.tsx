@@ -7,8 +7,8 @@ import React, { useCallback, useRef, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client/types';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { ClientOperation } from '@dxos/plugin-client/operations';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -19,7 +19,7 @@ import { meta } from '../meta';
 
 import { Welcome, WelcomeState } from './Welcome';
 
-export const WELCOME_SCREEN = `${meta.id}/component/WelcomeScreen`;
+export const WELCOME_SCREEN = `${meta.id}.component.welcome-screen`;
 const TEST_EMAIL = 'test@dxos.org';
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
@@ -51,6 +51,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
             displayName: 'Test User',
             data: { emoji: '🧪', hue: 'amber' },
           });
+          void invokePromise(ClientOperation.CreateAgent);
         }
         await invokePromise(LayoutOperation.UpdateDialog, { state: false });
         return;

@@ -4,7 +4,7 @@
 
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useContext, useEffect } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
 import { Filter, Ref } from '@dxos/client/echo';
 import { JsonSchema, Obj, Query } from '@dxos/echo';
@@ -26,11 +26,13 @@ import { translations } from '../../translations';
 import { type ItemProps, PipelineComponent } from './PipelineComponent';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
+  const personSchema = useMemo(() => omitId(Person.Person), []);
+
   if (Obj.instanceOf(Person.Person, item)) {
     const contact = item as Obj.OfShape<Person.Person>;
 
     return (
-      <Form.Root schema={omitId(Person.Person)} projection={projectionModel} values={contact} autoSave>
+      <Form.Root schema={personSchema} projection={projectionModel} values={contact} autoSave>
         <Form.Viewport>
           <Form.Content>
             <Form.FieldSet />
@@ -62,10 +64,10 @@ const DefaultStory = () => {
       fields: ['fullName'],
     });
 
-    Obj.change(pipeline, (p) => {
-      p.columns.push({
+    Obj.change(pipeline, (obj) => {
+      obj.columns.push({
         name: 'New Contacts',
-        view: Ref.make(view) as (typeof p.columns)[number]['view'],
+        view: Ref.make(view) as (typeof obj.columns)[number]['view'],
         order: [],
       });
     });
@@ -106,10 +108,10 @@ const MutationsStory = () => {
       fields: ['fullName'],
     });
 
-    Obj.change(pipeline, (p) => {
-      p.columns.push({
+    Obj.change(pipeline, (obj) => {
+      obj.columns.push({
         name: 'New Contacts',
-        view: Ref.make(view) as (typeof p.columns)[number]['view'],
+        view: Ref.make(view) as (typeof obj.columns)[number]['view'],
         order: [],
       });
     });
@@ -129,8 +131,8 @@ const MutationsStory = () => {
       if (p < 0.4) {
         // Append to the name
         const contactToAdjust = faker.helpers.arrayElement(contacts);
-        Obj.change(contactToAdjust, (c) => {
-          c.fullName = (c.fullName ?? '') + ' X';
+        Obj.change(contactToAdjust, (obj) => {
+          obj.fullName = (obj.fullName ?? '') + ' X';
         });
         return;
       } else if (p < 0.7 && contacts.length > 1) {

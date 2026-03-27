@@ -31,7 +31,7 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
-              id: `app-menu/action-${i}`,
+              id: `action-${i}`,
               data: Effect.fnUntraced(function* () {
                 log.info('action', { id: 'app-menu', index: i });
               }),
@@ -130,11 +130,11 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
-              id: `space-actions/action-${i}`,
+              id: `action-${i}`,
               data: Effect.fnUntraced(function* () {
                 log.info('action', { id: 'space-actions', index: i });
               }),
-              properties: getProperties(`space-actions/action-${i}`, {
+              properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,
                 icon: faker.properties.icon(),
               }),
@@ -179,11 +179,11 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
-              id: `object-actions/action-${i}`,
+              id: `action-${i}`,
               data: Effect.fnUntraced(function* () {
                 log.info('action', { id: 'object-actions', index: i });
               }),
-              properties: getProperties(`object-actions/action-${i}`, {
+              properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,
                 icon: faker.properties.icon(),
               }),

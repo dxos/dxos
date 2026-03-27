@@ -4,21 +4,19 @@
 
 import React from 'react';
 
-import { Filter } from '@dxos/echo';
 import { Obj } from '@dxos/echo';
 import { InvocationTraceStartEvent } from '@dxos/functions-runtime';
-import { Assistant } from '@dxos/plugin-assistant';
-import { type Queue, useQuery, useQueue } from '@dxos/react-client/echo';
+import { type Queue, useQueue } from '@dxos/react-client/echo';
 import { Timeline, useExecutionGraph } from '@dxos/react-ui-components';
 
 import { type ComponentProps } from './types';
 
 export const ExecutionGraphModule = ({ space, traceQueue }: ComponentProps & { traceQueue?: Queue }) => {
-  const chats = useQuery(space.db, Filter.type(Assistant.Chat));
   const invocations =
     useQueue(space.properties?.invocationTraceQueue?.dxn)?.objects.filter(Obj.instanceOf(InvocationTraceStartEvent)) ??
     [];
-  const queue = traceQueue ?? invocations?.at(-1)?.invocationTraceQueue?.target ?? chats.at(-1)?.traceQueue?.target;
+  // Use provided traceQueue, or fall back to the per-invocation trace queue from the most recent invocation.
+  const queue = traceQueue ?? invocations?.at(-1)?.invocationTraceQueue?.target;
   const { branches, commits } = useExecutionGraph(queue);
 
   return (

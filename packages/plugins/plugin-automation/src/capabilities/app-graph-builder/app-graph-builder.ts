@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
 import { Script } from '@dxos/functions';
-import { ATTENDABLE_PATH_SEPARATOR, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space';
 
@@ -17,14 +17,14 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}/space-settings-automation`,
-        match: NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`),
+        id: `${meta.id}.space-settings-automation`,
+        match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
         connector: (node) =>
           Effect.succeed([
             {
-              id: `automation-${node.id}`,
-              type: `${meta.id}/space-settings-automation`,
-              data: `${meta.id}/space-settings-automation`,
+              id: `${meta.id}.automations`,
+              type: `${meta.id}.space-settings-automation`,
+              data: `${meta.id}.space-settings-automation`,
               properties: {
                 label: ['automation panel label', { ns: meta.id }],
                 icon: 'ph--lightning--regular',
@@ -33,14 +33,14 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}/space-settings-functions`,
-        match: NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`),
+        id: `${meta.id}.space-settings-functions`,
+        match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
         connector: (node) =>
           Effect.succeed([
             {
-              id: `functions-${node.id}`,
-              type: `${meta.id}/space-settings-functions`,
-              data: `${meta.id}/space-settings-functions`,
+              id: `${meta.id}.functions`,
+              type: `${meta.id}.space-settings-functions`,
+              data: `${meta.id}.space-settings-functions`,
               properties: {
                 label: ['functions panel label', { ns: meta.id }],
                 icon: 'ph--function--regular',
@@ -49,12 +49,12 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}/script-companion`,
+        id: `${meta.id}.script-companion`,
         type: Script.Script,
         connector: (script) =>
           Effect.succeed([
             {
-              id: [script.id, 'automation'].join(ATTENDABLE_PATH_SEPARATOR),
+              id: companionSegment('automation'),
               type: PLANK_COMPANION_TYPE,
               data: 'automation',
               properties: {

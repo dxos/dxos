@@ -69,7 +69,6 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
           {/* <Tooltip content='Create Space'> */}
           <IconButton
             icon='ph--plus-circle--regular'
-            size={6}
             label='Create Space'
             iconOnly
             onClick={() => client.spaces.create({ name: faker.commerce.productName() })}
@@ -79,7 +78,6 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
           <Tooltip content='Join Space'> */}
           <IconButton
             icon='ph--sign-in--fill'
-            size={6}
             label='Join Space'
             iconOnly
             onClick={() => setPanel('join')}
@@ -141,7 +139,6 @@ const Invitations = () => {
       {/* <Tooltip content='Create Identity'> */}
       <IconButton
         icon='ph--plus--regular'
-        size={6}
         label='Create Identity'
         iconOnly
         onClick={() => client.halo.createIdentity({ displayName: faker.person.firstName() })}
@@ -152,7 +149,6 @@ const Invitations = () => {
       <Tooltip content='Join Existing Identity'> */}
       <IconButton
         icon='ph--qr-code--fill'
-        size={6}
         label='Join Existing Identity'
         iconOnly
         onClick={() => setPanel('identity')}
@@ -163,7 +159,6 @@ const Invitations = () => {
       <Tooltip content='Devices'> */}
       <IconButton
         icon='ph--laptop--fill'
-        size={6}
         label='Devices'
         iconOnly
         onClick={() => setPanel('devices')}
@@ -174,7 +169,6 @@ const Invitations = () => {
       <Tooltip content='List Spaces'> */}
       <IconButton
         icon='ph--planet--fill'
-        size={6}
         label='List Spaces'
         iconOnly
         onClick={() => setPanel(undefined)}
@@ -185,7 +179,6 @@ const Invitations = () => {
       {/* <ToolTip content='Toggle Network'> */}
       <IconButton
         icon={networkStatus === ConnectionState.ONLINE ? 'ph--wifi-high--fill' : 'ph--wifi-slash--fill'}
-        size={6}
         label='Toggle Network'
         iconOnly
         onClick={() =>

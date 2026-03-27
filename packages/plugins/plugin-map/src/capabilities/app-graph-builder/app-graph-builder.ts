@@ -14,12 +14,13 @@ import { Operation } from '@dxos/operation';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
-import { Map, MapAction } from '../../types';
+import { MapOperation } from '../../operations';
+import { Map } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
-      id: MapAction.MapOperation.Toggle.meta.key,
+      id: MapOperation.Toggle.meta.key,
       match: (node) => Option.map(NodeMatcher.whenEchoType(View.View)(node), (view) => ({ view, node })),
       actions: ({ view, node }, get) => {
         const presentationRef = (node.properties as any).presentation;
@@ -29,8 +30,8 @@ export default Capability.makeModule(
         }
         return Effect.succeed([
           {
-            id: `${view.id}/toggle-map`,
-            data: () => Operation.invoke(MapAction.MapOperation.Toggle, undefined),
+            id: `${view.id}.toggle-map`,
+            data: () => Operation.invoke(MapOperation.Toggle, undefined),
             properties: {
               label: ['toggle type label', { ns: meta.id }],
               icon: 'ph--compass--regular',

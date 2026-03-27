@@ -2,10 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type ElementType, type HTMLAttributes } from 'react';
-import { type ClassNameValue, extendTailwindMerge, validators } from 'tailwind-merge';
-
-import { Slot } from '@radix-ui/react-slot';
+import { type HTMLAttributes } from 'react';
+import { extendTailwindMerge, validators } from 'tailwind-merge';
 
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -58,11 +56,17 @@ export const mx = extendTailwindMerge<AdditionalClassGroups>({
  * - `classNames` is the consumer-facing prop for theming overrides.
  * Use `composableProps` to reconcile both into a single `className`.
  */
+// TODO(burdon): Move to react-ui.
 export const composableProps = <P extends HTMLElement = HTMLElement>(
   { className, classNames, ...props }: ComposableProps,
   { className: defaultClassNames, ...defaults }: Partial<HTMLAttributes<P>> | undefined = {},
 ) => ({
+  // Default props.
   ...(defaults as object),
+
+  // Spread supplied props.
   ...props,
+
+  // Compose classnames.
   className: mx(defaultClassNames, className, classNames),
 });

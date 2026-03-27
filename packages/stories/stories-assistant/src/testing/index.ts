@@ -5,3 +5,5 @@
 export * from './data';
 export * from './schema';
 export * from './testing';
+
+export * from './ModuleContainer';

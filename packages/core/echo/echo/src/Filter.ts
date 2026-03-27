@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
@@ -307,6 +309,34 @@ export const between = <T>(from: T, to: T): Filter<unknown> => {
     to,
   });
 };
+
+type TimeRange = { after?: Date | number; before?: Date | number };
+
+const _toUnixMs = (date: Date | number): number => (typeof date === 'number' ? date : date.getTime());
+
+const _timeRangeFilter = (field: 'updatedAt' | 'createdAt', range: TimeRange): Any => {
+  const filters: Any[] = [];
+  if (range.after != null) {
+    filters.push(new FilterClass({ type: 'timestamp', field, operator: 'gte', value: _toUnixMs(range.after) }));
+  }
+  if (range.before != null) {
+    filters.push(new FilterClass({ type: 'timestamp', field, operator: 'lte', value: _toUnixMs(range.before) }));
+  }
+  if (filters.length === 0) {
+    return everything();
+  }
+  return filters.length === 1 ? filters[0] : and(...filters);
+};
+
+/**
+ * Filter objects by updatedAt timestamp.
+ */
+export const updated = (range: TimeRange): Any => _timeRangeFilter('updatedAt', range);
+
+/**
+ * Filter objects by createdAt timestamp.
+ */
+export const created = (range: TimeRange): Any => _timeRangeFilter('createdAt', range);
 
 /**
  * Negate the filter.

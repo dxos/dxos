@@ -48,14 +48,14 @@ describe('Feed', () => {
     const testLayer = Database.layer(db);
 
     await Effect.gen(function* () {
-      yield* Database.add(Feed.make({ name: 'notifications', kind: 'dxos.org/plugin/notifications/v1' }));
-      yield* Database.add(Feed.make({ name: 'messages', kind: 'dxos.org/plugin/messages/v1' }));
-      yield* Database.add(Feed.make({ name: 'other-notifications', kind: 'dxos.org/plugin/notifications/v1' }));
+      yield* Database.add(Feed.make({ name: 'notifications', kind: 'org.dxos.plugin.notifications.v1' }));
+      yield* Database.add(Feed.make({ name: 'messages', kind: 'org.dxos.plugin.messages.v1' }));
+      yield* Database.add(Feed.make({ name: 'other-notifications', kind: 'org.dxos.plugin.notifications.v1' }));
 
-      yield* Database.flush({ indexes: true });
+      yield* Database.flush();
 
       const notificationFeeds = yield* Database.runQuery(
-        Filter.type(Feed.Feed, { kind: 'dxos.org/plugin/notifications/v1' }),
+        Filter.type(Feed.Feed, { kind: 'org.dxos.plugin.notifications.v1' }),
       );
       expect(notificationFeeds).toHaveLength(2);
       expect(notificationFeeds.map((feed) => feed.name).sort()).toEqual(['notifications', 'other-notifications']);
@@ -78,6 +78,28 @@ describe('Feed', () => {
       const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
       expect(results).toHaveLength(2);
       expect(results.map((item: any) => item.name).sort()).toEqual(['alice', 'bob']);
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
+  test('feed objects have database returned with Obj.getDatabase', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'database-test' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.append(feed, [alice]);
+
+      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      expect(results).toHaveLength(1);
+
+      const feedObject = results[0];
+      const objDb = Obj.getDatabase(feedObject);
+      expect(objDb).toBeDefined();
+      expect(objDb?.spaceId).toEqual(db.spaceId);
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
   });
 

@@ -20,13 +20,13 @@ export const PersistentSchema = Schema.Struct({
   jsonSchema: JsonSchemaType,
 }).pipe(
   EchoObjectSchema({
-    typename: 'dxos.org/type/Schema',
+    typename: 'org.dxos.type.schema',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
   IconAnnotation.set({
-    icon: 'ph--brackets-curly--regular',
-    hue: 'blue',
+    icon: 'ph--database--regular',
+    hue: 'green',
   }),
 );
 

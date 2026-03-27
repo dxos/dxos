@@ -4,24 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Feed, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FeedAnnotation } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
-import { meta } from '../meta';
-
-/** Feed kind identifier for calendar feeds. */
-export const kind = `${meta.id}/calendar`;
-
-/** Checks if a value is a calendar feed. */
-export const instanceOf = (value: unknown): value is Feed.Feed =>
-  Obj.instanceOf(Feed.Feed, value) && value.kind === kind;
-
-/** Creates a calendar feed. */
-export const make = (props?: Omit<Obj.MakeProps<typeof Feed.Feed>, 'kind'>): Feed.Feed => Feed.make({ kind, ...props });
-
-/** Configuration schema for a calendar feed. */
-export const Config = Schema.Struct({
+/** Calendar object schema. */
+export const Calendar = Schema.Struct({
+  name: Schema.String.pipe(Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   // Track the last synced update timestamp to handle out-of-order event updates.
   lastSyncedUpdate: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
@@ -33,12 +23,20 @@ export const Config = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/CalendarConfig',
+    typename: 'org.dxos.type.calendar',
     version: '0.1.0',
+  }),
+  FeedAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--calendar--regular',
+    hue: 'rose',
   }),
 );
 
-export interface Config extends Schema.Schema.Type<typeof Config> {}
+export interface Calendar extends Schema.Schema.Type<typeof Calendar> {}
+
+/** Checks if a value is a Calendar object. */
+export const instanceOf = (value: unknown): value is Calendar => Obj.instanceOf(Calendar, value);
 
 export const CreateCalendarSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
@@ -50,5 +48,16 @@ export const CreateCalendarSchema = Schema.Struct({
   ),
 });
 
-/** Creates a calendar config object linked to a feed. */
-export const makeConfig = (props: Obj.MakeProps<typeof Config>) => Obj.make(Config, props);
+type CalendarProps = Omit<Obj.MakeProps<typeof Calendar>, 'feed' | 'lastSyncedUpdate'>;
+
+/** Creates a calendar object with a backing feed. */
+export const make = (props: CalendarProps = {}) => {
+  const feed = Feed.make();
+  const calendar = Obj.make(Calendar, {
+    feed: Ref.make(feed),
+    ...props,
+  });
+  // TODO(wittjosiah): Parent should be declarative in the schema.
+  Obj.setParent(feed, calendar);
+  return calendar;
+};

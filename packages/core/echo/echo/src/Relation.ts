@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
@@ -65,7 +67,7 @@ export const Unknown: Type.Relation<Unknown, Obj.Any, Obj.Any> = Schema.Struct({
   // NOTE: The EchoRelationSchema annotation is required for Ref.Ref(Relation.Unknown) to work.
   //   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
   internal.EchoRelationSchema({
-    typename: 'dxos.org/schema/AnyRelation',
+    typename: 'org.dxos.schema.any-relation',
     version: '0.0.0',
     source: Obj.Unknown,
     target: Obj.Unknown,
@@ -281,8 +283,8 @@ export type Mutable<T> = internal.Mutable<T>;
  * });
  *
  * // Mutate within Relation.change
- * Relation.change(worksFor, (r) => {
- *   r.role = 'Senior Engineer';
+ * Relation.change(worksFor, (obj) => {
+ *   obj.role = 'Senior Engineer';
  * });
  * ```
  *

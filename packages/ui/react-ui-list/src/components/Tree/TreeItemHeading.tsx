@@ -56,7 +56,6 @@ export const TreeItemHeading = memo(
           <Button
             data-testid='treeItem.heading'
             variant='ghost'
-            density='fine'
             classNames={[
               'grow gap-2 ps-0.5 hover:bg-transparent dark:hover:bg-transparent',
               'disabled:cursor-default disabled:opacity-100',
@@ -67,9 +66,7 @@ export const TreeItemHeading = memo(
             onKeyDown={handleButtonKeydown}
             {...(current && { 'aria-current': 'location' })}
           >
-            {icon && (
-              <Icon icon={icon ?? 'ph--placeholder--regular'} size={5} classNames={['my-1', styles?.surfaceText]} />
-            )}
+            {icon && <Icon icon={icon ?? 'ph--placeholder--regular'} classNames={['my-1', styles?.surfaceText]} />}
             <span className='flex-1 w-0 truncate text-start font-normal' data-tooltip>
               {toLocalizedString(label, t)}
             </span>

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Type } from '@dxos/echo';
@@ -39,13 +41,13 @@ export const Message = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Message',
-    version: '0.2.0',
+    typename: 'org.dxos.type.message',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['properties.subject']),
   Annotation.IconAnnotation.set({
-    icon: 'ph--envelope--regular',
-    hue: 'red',
+    icon: 'ph--note--regular',
+    hue: 'rose',
   }),
 );
 

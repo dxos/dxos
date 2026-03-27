@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import { useMemo } from 'react';
 
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, useActionRunner } from '@dxos/plugin-graph';
 import { useTranslation } from '@dxos/react-ui';
@@ -20,6 +20,7 @@ import { meta } from '../meta';
 import { SimpleLayoutState } from '../types';
 
 import { createCompanionActions } from './actions';
+import { useSimpleLayoutState } from './useSimpleLayoutState';
 
 const MAIN_MENU_GROUP_ID = 'navbar-main-menu';
 
@@ -38,8 +39,8 @@ export const useNavbarActions = (): NavbarActions => {
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
-  const { invokeSync } = useOperationInvoker();
   const stateAtom = useCapability(SimpleLayoutState);
+  const { updateState } = useSimpleLayoutState();
 
   // Create a computed atom that derives everything from graph connections and state.
   const actionsAtom = useMemo(
@@ -48,7 +49,7 @@ export const useNavbarActions = (): NavbarActions => {
         // Add companion actions.
         const { nodes, edges } = createCompanionActions(graph, stateAtom, get, {
           idPrefix: 'navbar',
-          invokeSync,
+          updateState,
         });
 
         // Add gap separator.
@@ -79,7 +80,7 @@ export const useNavbarActions = (): NavbarActions => {
 
         return { nodes, edges };
       }),
-    [graph, stateAtom, invokeSync, t],
+    [graph, stateAtom, updateState, t],
   );
 
   return { actions: actionsAtom, onAction: runAction };

@@ -3,25 +3,18 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { Database, Obj, Ref } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
-import { trim } from '@dxos/util';
+import { Database } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 
-export default defineFunction({
-  key: 'dxos.org/function/database/object-delete',
-  name: 'Delete object',
-  description: trim`
-    Deletes the object.
-  `,
-  inputSchema: Schema.Struct({
-    obj: Ref.Ref(Obj.Unknown),
-  }),
-  outputSchema: Schema.Void,
-  handler: Effect.fn(function* ({ data: { obj } }) {
-    const { db } = yield* Database.Service;
-    const object = yield* Database.load(obj);
-    db.remove(object);
-  }),
-});
+import { ObjectDelete } from './definitions';
+
+export default ObjectDelete.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ obj }) {
+      const { db } = yield* Database.Service;
+      const object = yield* Database.load(obj);
+      db.remove(object);
+    }),
+  ),
+);

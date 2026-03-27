@@ -6,21 +6,23 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { ATTENDABLE_PATH_SEPARATOR, DeckOperation, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
-import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
+import { Meeting, MeetingCapabilities } from '../../types';
+import { MeetingOperation } from '../../operations';
 
 /**
  * Atom families to derive meeting state properties.
@@ -43,7 +45,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // TODO(wittjosiah): This currently won't _start_ the call but will navigate to the correct channel.
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}/share-call-link`,
+        id: `${meta.id}.share-call-link`,
         type: Channel.Channel,
         actions: (channel, get) => {
           const space = getSpace(channel);
@@ -53,7 +55,7 @@ export default Capability.makeModule(
           }
           return Effect.succeed([
             {
-              id: `${Obj.getDXN(channel).toString()}/action/share-meeting-link`,
+              id: 'action.share-meeting-link',
               data: Effect.fnUntraced(function* () {
                 invariant(space);
                 yield* Operation.invoke(SpaceOperation.GetShareLink, {
@@ -72,7 +74,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}/call-thread`,
+        id: `${meta.id}.call-thread`,
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const store = yield* Capability.get(MeetingCapabilities.State);
@@ -91,7 +93,7 @@ export default Capability.makeModule(
 
           return [
             {
-              id: `${channelDxn}${ATTENDABLE_PATH_SEPARATOR}meeting-thread`,
+              id: 'meeting-thread',
               type: PLANK_COMPANION_TYPE,
               data: get(AtomObj.make(meeting.thread)),
               properties: {
@@ -106,7 +108,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}/call-companion`,
+        id: `${meta.id}.call-companion`,
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
@@ -122,7 +124,7 @@ export default Capability.makeModule(
 
           return [
             {
-              id: `${channelDxn}${ATTENDABLE_PATH_SEPARATOR}meeting`,
+              id: 'meeting',
               type: PLANK_COMPANION_TYPE,
               data,
               properties: {
@@ -137,7 +139,7 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}/call-transcript`,
+        id: `${meta.id}.call-transcript`,
         type: Channel.Channel,
         actions: Effect.fnUntraced(function* (channel, get) {
           const store = yield* Capability.get(MeetingCapabilities.State);
@@ -145,7 +147,7 @@ export default Capability.makeModule(
           const enabled = transcriptionManager ? get(transcriptionManager.enabled) : false;
           return [
             {
-              id: `${Obj.getDXN(channel).toString()}/action/start-stop-transcription`,
+              id: 'action.start-stop-transcription',
               data: Effect.fnUntraced(function* () {
                 const store = yield* Capability.get(MeetingCapabilities.State);
                 let meeting = store.state.activeMeeting;
@@ -175,8 +177,7 @@ export default Capability.makeModule(
                 if (!transcriptionEnabled) {
                   log.warn('transcription disabled');
                 } else {
-                  const primary = Obj.getDXN(channel).toString();
-                  const companion = `${primary}${ATTENDABLE_PATH_SEPARATOR}transcript`;
+                  const companion = companionSegment('transcript');
                   yield* Operation.invoke(DeckOperation.ChangeCompanion, { companion });
                 }
               }),
@@ -199,7 +200,7 @@ export default Capability.makeModule(
 
           return [
             {
-              id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
+              id: 'transcript',
               type: PLANK_COMPANION_TYPE,
               data: get(AtomObj.make(meeting.transcript)),
               properties: {
@@ -214,12 +215,12 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}/meeting-transcript-companion`,
+        id: `${meta.id}.meeting-transcript-companion`,
         type: Meeting.Meeting,
         connector: (meeting, get) =>
           Effect.succeed([
             {
-              id: `${Obj.getDXN(meeting).toString()}${ATTENDABLE_PATH_SEPARATOR}transcript`,
+              id: 'transcript',
               type: PLANK_COMPANION_TYPE,
               data: get(AtomObj.make(meeting.transcript)),
               properties: {

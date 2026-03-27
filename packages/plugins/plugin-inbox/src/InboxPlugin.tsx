@@ -3,21 +3,30 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { ActivationEvent, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Ref } from '@dxos/echo';
+import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Event, Message } from '@dxos/types';
 
 import { CalendarBlueprint, InboxBlueprint } from './blueprints';
-import { AppGraphBuilder, BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
+import {
+  AppGraphBuilder,
+  BlueprintDefinition,
+  NavigationResolver,
+  OperationHandler,
+  ReactSurface,
+} from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Calendar, InboxOperation, Mailbox } from './types';
+import { InboxOperation } from './operations';
+import { Calendar, Mailbox } from './types';
 import { CreateCalendarSchema } from './types/Calendar';
 import { CreateMailboxSchema } from './types/Mailbox';
 
@@ -27,61 +36,84 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activate: AppGraphBuilder,
   }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addMetadataModule({
     metadata: [
       {
-        id: Mailbox.kind,
+        id: Mailbox.Mailbox.typename,
         metadata: {
-          icon: 'ph--tray--regular',
-          iconHue: 'rose',
+          icon: Annotation.IconAnnotation.get(Mailbox.Mailbox).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Mailbox.Mailbox).pipe(Option.getOrThrow).hue ?? 'white',
           blueprints: [InboxBlueprint.key],
           inputSchema: CreateMailboxSchema,
-          createObject: ((props, { db }) =>
-            // TODO(wittjosiah): Should this allow multiple objects to be returned?
-            Effect.sync(() => {
-              const feed = Mailbox.make(props);
-              const config = Mailbox.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
-              db.add(config);
-              return feed;
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Mailbox.make(props);
+              return yield* Operation.invoke(InboxOperation.AddMailbox, {
+                object,
+                target: options.target,
+              });
             })) satisfies CreateObject,
         },
       },
       {
         id: Message.Message.typename,
         metadata: {
-          icon: 'ph--note--regular',
-          iconHue: 'rose',
-          createObject: (() => Effect.succeed(Message.make({ sender: 'user' }))) satisfies CreateObject,
+          icon: Annotation.IconAnnotation.get(Message.Message).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Message.Message).pipe(Option.getOrThrow).hue ?? 'white',
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Message.make({ sender: 'user' });
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
-        id: Calendar.kind,
+        id: Calendar.Calendar.typename,
         metadata: {
-          icon: 'ph--calendar--regular',
-          iconHue: 'rose',
+          icon: Annotation.IconAnnotation.get(Calendar.Calendar).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Calendar.Calendar).pipe(Option.getOrThrow).hue ?? 'white',
           blueprints: [CalendarBlueprint.key],
           inputSchema: CreateCalendarSchema,
-          createObject: ((props, { db }) =>
-            Effect.sync(() => {
-              const feed = Calendar.make(props);
-              const config = Calendar.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
-              db.add(config);
-              return feed;
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Calendar.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
             })) satisfies CreateObject,
         },
       },
       {
         id: Event.Event.typename,
         metadata: {
-          icon: 'ph--calendar-dot--regular',
-          iconHue: 'rose',
+          icon: Annotation.IconAnnotation.get(Event.Event).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Event.Event).pipe(Option.getOrThrow).hue ?? 'white',
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Event.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
     ],
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [Event.Event, Mailbox.Config, Calendar.Config, Message.Message],
+    schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

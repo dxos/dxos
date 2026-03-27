@@ -13,6 +13,7 @@ import { findAnnotation } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
+import { ParentLabelAnnotationId } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../../translations';
@@ -25,10 +26,11 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
   return typeof val === 'object' && typeof (val as any)?.['/'] === 'string';
 };
 
-const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results) =>
+const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results, { parentLabel } = {}) =>
   results.map((result) => {
     const id = Entity.getDXN(result).toString();
-    const label = Entity.getLabel(result);
+    const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
+    const label = parent ? Entity.getLabel(parent) : Entity.getLabel(result);
     return { id, label: label ?? id };
   });
 
@@ -44,11 +46,14 @@ const defaultResultsHook: NonNullable<RefFieldProps['resultsHook']> = (db, typen
   );
 
 export type RefFieldProps = FormFieldComponentProps &
-  Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> & {
+  Pick<
+    ObjectPickerContentProps,
+    'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath' | 'createFieldMap'
+  > & {
     db?: Database.Database;
     resultsHook?: (db?: Database.Database, typename?: string) => Entity.Any[];
     schemaHook?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
-    getOptions?: (objects: Entity.Any[]) => RefOption[];
+    getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
     onCreate?: (schema: Type.AnyEntity, values: any) => void;
   };
 
@@ -64,6 +69,7 @@ export const RefField = (props: RefFieldProps) => {
     createOptionLabel,
     createOptionIcon,
     createInitialValuePath,
+    createFieldMap,
     db,
     resultsHook: useResults = defaultResultsHook,
     schemaHook: useSchema = useSchema$,
@@ -80,7 +86,10 @@ export const RefField = (props: RefFieldProps) => {
   );
 
   const results = useResults(db, typename);
-  const options = useMemo(() => getOptions(results), [results, getOptions]);
+  const options = useMemo(() => {
+    const parentLabel = type ? findAnnotation<boolean>(type, ParentLabelAnnotationId) === true : false;
+    return getOptions(results, { parentLabel });
+  }, [results, getOptions, type]);
 
   const handleGetValue = useCallback(() => {
     const formValue = getValue();
@@ -153,13 +162,13 @@ export const RefField = (props: RefFieldProps) => {
           <ObjectPicker.Root>
             <ObjectPicker.Trigger asChild classNames='p-0'>
               {item ? (
-                <div className='flex gap-2 w-full'>
+                <div className='flex gap-form-gap w-full'>
                   <Input.Root key={item.id}>
                     <Input.TextInput value={item.label} readOnly classNames='w-full' />
                   </Input.Root>
                 </div>
               ) : (
-                <Button classNames='w-full text-start gap-2'>
+                <Button classNames='w-full text-start gap-form-gap'>
                   <div role='none' className='grow overflow-hidden'>
                     <span className='flex truncate text-description'>{placeholder ?? t('ref field placeholder')}</span>
                   </div>
@@ -176,6 +185,7 @@ export const RefField = (props: RefFieldProps) => {
                 createOptionLabel={createOptionLabel}
                 createOptionIcon={createOptionIcon}
                 createInitialValuePath={createInitialValuePath}
+                createFieldMap={createFieldMap}
                 onCreate={handleCreate}
                 onSelect={handleSelect}
               />

@@ -75,7 +75,7 @@ class CapabilityManagerImpl implements CapabilityManager {
     return Atom.make((get) => {
       const current = get(this._capabilityEntries(id));
       return current.map((c) => c.implementation);
-    });
+    }).pipe(Atom.keepAlive);
   });
 
   readonly _capability = Atom.family<string, Atom.Atom<unknown>>((id: string) => {

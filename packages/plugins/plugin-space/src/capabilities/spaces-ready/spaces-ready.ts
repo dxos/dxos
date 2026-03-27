@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -19,7 +19,8 @@ import { SPACE_ID_LENGTH, SpaceState, parseId } from '@dxos/react-client/echo';
 import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
-import { SpaceCapabilities, SpaceOperation } from '../../types';
+import { SpaceCapabilities } from '../../types';
+import { SpaceOperation } from '../../operations';
 import { COMPOSER_SPACE_LOCK, SHARED } from '../../util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
@@ -48,13 +49,13 @@ export default Capability.makeModule(
     // Check if deck state indicates we should switch to default space.
     const layout = registry.get(layoutAtom);
     if (layout.workspace === 'default') {
-      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: defaultSpace.id });
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(defaultSpace.id) });
     }
 
     // Initialize space sharing lock in default space.
     if (typeof defaultSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
-      Obj.change(defaultSpace.properties, (p) => {
-        p[COMPOSER_SPACE_LOCK] = true;
+      Obj.change(defaultSpace.properties, (obj) => {
+        obj[COMPOSER_SPACE_LOCK] = true;
       });
     }
 

@@ -121,7 +121,7 @@ export const DeviceListItem = forwardRef<
                   data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
                 >
                   <span className='sr-only'>{t('more options label')}</span>
-                  <Icon icon='ph--dots-three--regular' size={5} />
+                  <Icon icon='ph--dots-three--regular' />
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content>
@@ -135,19 +135,19 @@ export const DeviceListItem = forwardRef<
                       data-testid='device-list-item-current.join-existing'
                       onClick={onClickJoinExisting}
                     >
-                      <Icon icon='ph--share-fat--regular' size={5} />
+                      <Icon icon='ph--share-fat--regular' />
                       {t('choose join new identity label')}
                     </DropdownMenu.Item>
                   )}
                   {onClickRecover && (
                     <DropdownMenu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
-                      <Icon icon='ph--first-aid-kit--regular' size={5} />
+                      <Icon icon='ph--first-aid-kit--regular' />
                       {t('choose recover identity label')}
                     </DropdownMenu.Item>
                   )}
                   {onClickReset && (
                     <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
-                      <Icon icon='ph--power--regular' size={5} />
+                      <Icon icon='ph--power--regular' />
                       {t('reset device label')}
                     </DropdownMenu.Item>
                   )}

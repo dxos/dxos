@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import { compositeKey } from '@dxos/util';
+
 /**
  * A unique string identifier representing an event.
  * This is expected to be a URI, where initial parts are often the id of the plugin whose package defines the event.
  *
- * @example dxos.org/plugin/example/event/ready
+ * @example org.dxos.plugin.example.event.ready
  */
 export type ActivationEvent = {
   id: string;
@@ -31,7 +33,8 @@ export const make = (id: string, specifier?: string) => {
 /**
  * Helper to create an activation event key.
  */
-export const eventKey = (event: ActivationEvent) => (event.specifier ? `${event.id}:${event.specifier}` : event.id);
+export const eventKey = (event: ActivationEvent) =>
+  event.specifier ? compositeKey(event.id, event.specifier) : event.id;
 
 /**
  * Helper to create an activation event that triggers when any of the given events are activated.

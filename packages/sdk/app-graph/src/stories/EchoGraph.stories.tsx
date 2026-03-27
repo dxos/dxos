@@ -64,7 +64,7 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
                 const propertiesSnapshot = get(AtomObj.make(space.properties));
                 return {
                   id: space.id,
-                  type: 'dxos.org/type/Space',
+                  type: 'org.dxos.type.space',
                   properties: {
                     label: propertiesSnapshot.name,
                   },
@@ -88,7 +88,7 @@ const createGraph = (client: Client, registry: Registry.Registry): Graph.Expanda
             const objects = get(AtomQuery.make(space.db, Query.type(TestSchema.Expando, { type: 'test' })));
             return objects.map((object) => ({
               id: object.id,
-              type: 'dxos.org/type/test',
+              type: 'org.dxos.type.test',
               properties: { label: object.name },
               data: object,
             }));
@@ -146,8 +146,8 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_SPACE: {
       const space = getRandomSpace(client);
       if (space) {
-        Obj.change(space.properties, (p) => {
-          p.name = faker.commerce.productName();
+        Obj.change(space.properties, (obj) => {
+          obj.name = faker.commerce.productName();
         });
       }
       break;
@@ -176,8 +176,8 @@ const runAction = async (client: Client, action: Action) => {
       if (space) {
         const objects = await space.db.query(Filter.type(TestSchema.Expando, { type: 'test' })).run();
         const object = objects[Math.floor(Math.random() * objects.length)];
-        Obj.change(object, (o) => {
-          o.name = faker.commerce.productName();
+        Obj.change(object, (obj) => {
+          obj.name = faker.commerce.productName();
         });
       }
       break;
@@ -216,7 +216,6 @@ const Controls = ({ children }: PropsWithChildren) => {
           <Input.Root>
             <Input.TextInput
               autoComplete='off'
-              size={5}
               classNames='w-[100px] text-right pe-[22px]'
               placeholder='Interval'
               value={actionInterval}
@@ -347,7 +346,7 @@ export const TreeView: Story = {
             return {
               id: node.id,
               label: node.id,
-              icon: node.type === 'dxos.org/type/Space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
+              icon: node.type === 'org.dxos.type.space' ? 'ph--planet--regular' : 'ph--placeholder--regular',
               parentOf,
             };
           });

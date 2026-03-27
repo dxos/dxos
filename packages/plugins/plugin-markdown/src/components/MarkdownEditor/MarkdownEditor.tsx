@@ -13,6 +13,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
+import { type ThemedClassName } from '@dxos/react-ui';
 import {
   EditorMenuProvider,
   type EditorToolbarState,
@@ -46,6 +47,7 @@ import {
 
 type MarkdownEditorContextValue = {
   id: string;
+  attendableId?: string;
   setEditorView: (view: EditorView) => void;
   extensions: Extension[];
   previewBlocks: PreviewBlock[];
@@ -65,7 +67,10 @@ type MarkdownEditorRootProps = PropsWithChildren<
   {
     object?: DocumentType;
     extensions?: Extension[];
-  } & Pick<MarkdownEditorContextValue, 'id' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'> &
+  } & Pick<
+    MarkdownEditorContextValue,
+    'id' | 'attendableId' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'
+  > &
     Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
     Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>
 >;
@@ -73,6 +78,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
 const MarkdownEditorRoot = ({
   children,
   id,
+  attendableId,
   object,
   editorStateStore,
   selectionManager,
@@ -90,6 +96,7 @@ const MarkdownEditorRoot = ({
   const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
   const previewOptions = useMemo<PreviewOptions>(
     () => ({
+      db: Obj.isObject(object) ? Obj.getDatabase(object) : undefined,
       addBlockContainer: (block) => {
         setPreviewBlocks((prev) => [...prev, block]);
       },
@@ -97,18 +104,14 @@ const MarkdownEditorRoot = ({
         setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.dxn !== link.dxn));
       },
     }),
-    [],
+    [object],
   );
 
   // Toolbar state.
   const toolbarState = useEditorToolbar({ viewMode });
 
   // Context menu.
-  const menuOptions = useEditorMenuOptions({
-    editorView,
-    slashCommandGroups,
-    onLinkQuery,
-  });
+  const menuOptions = useEditorMenuOptions({ editorView, slashCommandGroups, onLinkQuery });
   const { extension: menuExtension, ...menuProps } = useEditorMenu(menuOptions);
 
   // Extensions.
@@ -131,6 +134,7 @@ const MarkdownEditorRoot = ({
   return (
     <MarkdownEditorContextProvider
       id={id}
+      attendableId={attendableId}
       editorView={editorView}
       setEditorView={setEditorView}
       extensions={extensions}
@@ -158,6 +162,7 @@ type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' |
 const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   const {
     id,
+    attendableId,
     editorView,
     setEditorView,
     viewMode,
@@ -171,6 +176,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
       <NaturalMarkdownEditorContent
         {...props}
         id={id}
+        attendableId={attendableId}
         viewMode={viewMode}
         toolbarState={toolbarState}
         extensions={extensions}
@@ -188,19 +194,18 @@ MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
 const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
 
-type MarkdownEditorToolbarProps = Omit<
-  NaturalMarkdownToolbarProps,
-  'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'
+type MarkdownEditorToolbarProps = ThemedClassName<
+  Omit<NaturalMarkdownToolbarProps, 'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'>
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {
-  const { id, editorView, toolbarState, onAction, onFileUpload, onViewModeChange } =
+  const { id, attendableId, editorView, toolbarState, onAction, onFileUpload, onViewModeChange } =
     useMarkdownEditorContext(MARKDOWN_EDITOR_TOOLBAR_NAME);
 
   return (
     <NaturalMarkdownToolbar
       {...props}
-      id={id}
+      id={attendableId ?? id}
       editorView={editorView}
       state={toolbarState}
       onAction={onAction}

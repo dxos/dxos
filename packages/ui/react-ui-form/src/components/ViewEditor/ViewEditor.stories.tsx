@@ -54,7 +54,7 @@ const DefaultStory = (props: StoryProps) => {
         salary: Format.Currency(),
       }).pipe(
         Type.object({
-          typename: 'example.com/type/Test',
+          typename: 'com.example.type.test',
           version: '0.1.0',
         }),
       );
@@ -65,7 +65,7 @@ const DefaultStory = (props: StoryProps) => {
         completed: Schema.Boolean,
       }).pipe(
         Type.object({
-          typename: 'example.com/type/Alternate',
+          typename: 'com.example.type.alternate',
           version: '0.1.0',
         }),
       );
@@ -91,8 +91,8 @@ const DefaultStory = (props: StoryProps) => {
       if (props.mode === 'tag') {
         const queue = target && DXN.tryParse(target) ? target : undefined;
         const query = queue ? Query.fromAst(newQuery).from({ queues: [queue] }) : Query.fromAst(newQuery);
-        Obj.change(view, (v) => {
-          v.query.ast = query.ast as Mutable<typeof query.ast>;
+        Obj.change(view, (obj) => {
+          obj.query.ast = query.ast as Mutable<typeof query.ast>;
         });
 
         const typename = getTypenameFromQuery(query.ast);
@@ -105,13 +105,13 @@ const DefaultStory = (props: StoryProps) => {
           query,
           jsonSchema: newSchema.jsonSchema,
         });
-        Obj.change(view, (v) => {
-          v.projection = Obj.getSnapshot(newView).projection as Mutable<typeof v.projection>;
+        Obj.change(view, (obj) => {
+          obj.projection = Obj.getSnapshot(newView).projection as Mutable<typeof obj.projection>;
         });
         setSchema(() => newSchema);
       } else {
-        Obj.change(view, (v) => {
-          v.query.ast = newQuery as Mutable<typeof newQuery>;
+        Obj.change(view, (obj) => {
+          obj.query.ast = newQuery as Mutable<typeof newQuery>;
         });
         schema.updateTypename(getTypenameFromQuery(newQuery));
       }

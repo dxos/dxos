@@ -3,32 +3,35 @@
 //
 
 import { type Atom } from '@effect-atom/atom-react';
-import React from 'react';
+import React, { forwardRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { ComposableProps } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/ui-theme';
+import { composableProps } from '@dxos/ui-theme';
 
 const NAVBAR_NAME = 'SimpleLayout.NavBar';
 
-export type NavBarProps = ThemedClassName<{
-  /** Action graph atom for the toolbar. */
-  actions: Atom.Atom<ActionGraphProps>;
-  /** Action executor callback. */
-  onAction?: ActionExecutor;
-}>;
+export type NavBarProps = ComposableProps<
+  HTMLDivElement,
+  {
+    /** Action graph atom for the toolbar. */
+    actions: Atom.Atom<ActionGraphProps>;
+    /** Action executor callback. */
+    onAction?: ActionExecutor;
+  }
+>;
 
 /**
  * Presentational navbar component that renders a toolbar from an action graph.
  */
-export const NavBar = ({ classNames, actions, onAction }: NavBarProps) => {
-  const menu = useMenuActions(actions);
+export const NavBar = forwardRef<HTMLDivElement, NavBarProps>(({ actions, onAction, ...props }, forwardedRef) => {
+  const menuActions = useMenuActions(actions);
 
   return (
-    <Menu.Root {...menu} alwaysActive onAction={onAction}>
-      <Menu.Toolbar density='coarse' classNames={mx(classNames)} />
+    <Menu.Root {...menuActions} alwaysActive onAction={onAction}>
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
     </Menu.Root>
   );
-};
+});
 
 NavBar.displayName = NAVBAR_NAME;

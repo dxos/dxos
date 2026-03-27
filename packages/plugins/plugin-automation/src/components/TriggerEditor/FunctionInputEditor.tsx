@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Database, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { type JsonPath } from '@dxos/echo/internal';
-import { type Function } from '@dxos/functions';
+import { type Operation } from '@dxos/operation';
 import { useOnTransition, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldStateProps, type FormRootProps, useFormValues } from '@dxos/react-ui-form';
 
@@ -15,7 +15,7 @@ import { meta } from '../../meta';
 
 export type FunctionInputEditorProps = {
   type: SchemaAST.AST;
-  functions: Function.Function[];
+  functions: Operation.PersistentOperation[];
   db?: Database.Database;
 } & FormFieldStateProps;
 

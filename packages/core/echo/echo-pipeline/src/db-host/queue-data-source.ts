@@ -22,11 +22,21 @@ export type QueueDataSourceOptions = {
    * Callback to get the list of space IDs that should be indexed.
    */
   getSpaceIds: () => SpaceId[];
+
+  /**
+   * Feed namespaces to index.
+   * @default [WellKnownNamespaces.data, WellKnownNamespaces.trace]
+   */
+  feedNamespaces?: string[];
 };
 
 export class QueueDataSource implements IndexDataSource {
   readonly sourceName = 'queue';
 
+  /**
+   * Feed namespaces to index.
+   */
+  private readonly _feedNamespaces: string[];
   private readonly _feedStore: FeedStore;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _getSpaceIds: () => SpaceId[];
@@ -35,6 +45,10 @@ export class QueueDataSource implements IndexDataSource {
     this._feedStore = options.feedStore;
     this._runtime = options.runtime;
     this._getSpaceIds = options.getSpaceIds;
+    this._feedNamespaces = options.feedNamespaces ?? [
+      FeedProtocol.WellKnownNamespaces.data,
+      FeedProtocol.WellKnownNamespaces.trace,
+    ];
   }
 
   getChangedObjects(
@@ -52,19 +66,19 @@ export class QueueDataSource implements IndexDataSource {
       const objects: IndexerObject[] = [];
       const updatedCursors: DataSourceCursor[] = [];
 
-      // Augment cursors with new spaces that haven't been indexed yet.
-      const existingSpaceIds = new Set(cursors.map((c) => c.spaceId).filter(Boolean));
-      const allSpaceIds = this._getSpaceIds();
-      const augmentedCursors = [...cursors];
-      for (const spaceId of allSpaceIds) {
-        if (!existingSpaceIds.has(spaceId)) {
-          // Add a new cursor for this space starting from the beginning.
-          // Empty string cursor means "start from beginning".
-          augmentedCursors.push({
-            spaceId,
-            resourceId: null,
-            cursor: '',
-          });
+      // Delete old cursors that did not have feed namespace set.
+      let augmentedCursors = [...cursors].filter((c) => c.resourceId !== null);
+      for (const spaceId of this._getSpaceIds()) {
+        for (const feedNamespace of this._feedNamespaces) {
+          if (!augmentedCursors.some((c) => c.spaceId === spaceId && c.resourceId === feedNamespace)) {
+            // Add a new cursor for this space starting from the beginning.
+            // Empty string cursor means "start from beginning".
+            augmentedCursors.push({
+              spaceId,
+              resourceId: feedNamespace,
+              cursor: '',
+            });
+          }
         }
       }
 
@@ -83,6 +97,16 @@ export class QueueDataSource implements IndexDataSource {
           updatedCursors.push(cursor);
           continue;
         }
+        if (
+          FeedProtocol.WellKnownNamespaces.data !== cursor.resourceId &&
+          FeedProtocol.WellKnownNamespaces.trace !== cursor.resourceId
+        ) {
+          // TODO(dmaretskyi): Update/remove this check when adding new feed namespaces.
+          log.warn('Ignoring cursor with invaliding feed namespace', { namespace: cursor.resourceId });
+          // Ignore cursors with unknown resourceId.
+          updatedCursors.push(cursor);
+          continue;
+        }
 
         // Empty string cursor means "start from beginning".
         const currentCursor =
@@ -93,7 +117,7 @@ export class QueueDataSource implements IndexDataSource {
         try {
           const result = yield* this._feedStore.query({
             spaceId: cursor.spaceId,
-            feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+            feedNamespace: cursor.resourceId,
             cursor: currentCursor,
             limit: remainingLimit,
           });
@@ -109,6 +133,7 @@ export class QueueDataSource implements IndexDataSource {
                 documentId: null,
                 recordId: null,
                 data,
+                updatedAt: block.timestamp,
               });
             } catch (err) {
               log.warn('Failed to parse block data for indexing', { spaceId: cursor.spaceId, err });
@@ -118,7 +143,7 @@ export class QueueDataSource implements IndexDataSource {
           remainingLimit -= result.blocks.length;
           updatedCursors.push({
             spaceId: cursor.spaceId,
-            resourceId: null,
+            resourceId: cursor.resourceId,
             cursor: result.nextCursor,
           });
         } catch (error) {

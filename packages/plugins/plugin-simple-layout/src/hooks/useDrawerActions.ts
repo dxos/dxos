@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import { useMemo } from 'react';
 
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Node, useActionRunner } from '@dxos/plugin-graph';
 import { useTranslation } from '@dxos/react-ui';
@@ -34,7 +34,6 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
   const stateAtom = useCapability(SimpleLayoutStateCapability);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
-  const { invokeSync } = useOperationInvoker();
   const { updateState } = useSimpleLayoutState();
   const { keyboardOpen } = useMobileLayout(consumerName);
 
@@ -48,8 +47,8 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
         // Add companion tab actions.
         const { nodes, edges } = createCompanionActions(graph, stateAtom, get, {
           idPrefix: 'drawer',
-          selectedVariant: state.companionVariant,
-          invokeSync,
+          selectedVariant: state.drawerState !== 'closed' ? state.companionVariant : undefined,
+          updateState,
         });
 
         // Add gap separator before toolbar buttons.
@@ -84,14 +83,17 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
             label: t('close drawer label'),
             iconOnly: true,
           },
-          data: () => Effect.sync(() => updateState((state) => ({ ...state, drawerState: 'closed' }))),
+          data: () =>
+            Effect.sync(() =>
+              updateState((state) => ({ ...state, drawerState: 'closed', companionVariant: undefined })),
+            ),
         };
         nodes.push(closeAction);
         edges.push({ source: 'root', target: closeAction.id, relation: 'child' });
 
         return { nodes, edges };
       }),
-    [graph, stateAtom, invokeSync, updateState, keyboardOpen, t],
+    [graph, stateAtom, updateState, keyboardOpen, t],
   );
 
   return { actions: actionsAtom, onAction: runAction };

@@ -13,7 +13,7 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-export const SPACE_RENAME_POPOVER = `${meta.id}/SpaceRenamePopover`;
+export const SPACE_RENAME_POPOVER = `${meta.id}.SpaceRenamePopover`;
 
 export const SpaceRenamePopover = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
@@ -22,8 +22,8 @@ export const SpaceRenamePopover = ({ space }: { space: Space }) => {
   const { invokePromise } = useOperationInvoker();
 
   const handleDone = useCallback(() => {
-    Obj.change(space.properties, (p) => {
-      p.name = name;
+    Obj.change(space.properties, (obj) => {
+      obj.name = name;
     });
     void invokePromise(LayoutOperation.UpdatePopover, { anchorId: '', state: false });
   }, [space, name, invokePromise]);

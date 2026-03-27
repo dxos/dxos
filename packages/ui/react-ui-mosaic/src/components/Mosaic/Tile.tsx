@@ -66,7 +66,7 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps<HT
     id: string;
     data: TData;
     location: TLocation;
-    draggable?: boolean; // TODO(burdon): Not currently implemented.
+    draggable?: boolean;
     debug?: boolean;
   }>;
 
@@ -80,6 +80,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
       location,
       id,
       data: dataProp,
+      draggable: draggableProp,
       debug: _,
       ...props
     }: MosaicTileProps,
@@ -119,7 +120,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
 
     useLayoutEffect(() => {
       const root = rootRef.current;
-      if (!root || !containerId || scrolling) {
+      if (!draggableProp || !root || !containerId || scrolling) {
         return;
       }
 
@@ -190,7 +191,17 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
           },
         }),
       );
-    }, [rootRef, dragHandle, eventHandler, data, scrolling, allowedEdges, setActiveLocation]);
+    }, [
+      rootRef,
+      forwardedRef,
+      containerId,
+      dragHandle,
+      eventHandler,
+      data,
+      scrolling,
+      allowedEdges,
+      setActiveLocation,
+    ]);
 
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
@@ -208,6 +219,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
           {children}
         </Comp>
 
+        {/* Dragging preview. */}
         {state.type === 'preview' &&
           createPortal(
             <Comp

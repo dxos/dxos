@@ -17,7 +17,7 @@ import { trim } from '@dxos/util';
 import { QueryEditor, type QueryEditorProps } from './QueryEditor';
 
 const SCRIPT = trim`
-  Query.select(Filter.type('dxos.org/type/Person'))
+  Query.select(Filter.type('org.dxos.type.person'))
 `;
 
 const DefaultStory = (props: QueryEditorProps) => {
@@ -82,13 +82,7 @@ const meta = {
   title: 'plugins/plugin-script/components/QueryEditor',
   component: QueryEditor,
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({
-      layout: 'column',
-      classNames: 'w-prose-max-width',
-    }),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-document-max-width' })],
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;

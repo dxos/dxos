@@ -10,7 +10,7 @@ import { Capability } from '../core';
 
 import { Label } from './translations';
 
-const UNDO_NAMESPACE = 'dxos.org/app-framework/undo';
+const UNDO_NAMESPACE = 'org.dxos.app-framework.undo';
 
 /**
  * Operations related to undo/history functionality.
@@ -22,17 +22,15 @@ export namespace UndoOperation {
    */
   export const ShowUndo = Operation.make({
     meta: {
-      key: `${UNDO_NAMESPACE}/operation/show-undo`,
+      key: `${UNDO_NAMESPACE}.operation.show-undo`,
       name: 'Show Undo',
       description: 'Show an undo toast notification.',
     },
     executionMode: 'sync',
     services: [Capability.Service],
-    schema: {
-      input: Schema.Struct({
-        message: Schema.optional(Label.annotations({ description: 'The message to display in the undo toast.' })),
-      }),
-      output: Schema.Void,
-    },
+    input: Schema.Struct({
+      message: Schema.optional(Label.annotations({ description: 'The message to display in the undo toast.' })),
+    }),
+    output: Schema.Void,
   });
 }

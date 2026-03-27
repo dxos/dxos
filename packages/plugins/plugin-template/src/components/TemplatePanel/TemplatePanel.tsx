@@ -12,7 +12,7 @@ export type TemplatePanelProps = SurfaceComponentProps<Obj.Unknown>;
 
 export const TemplatePanel = ({ role, subject: object }: TemplatePanelProps) => {
   return (
-    <Panel.Root role={role} className='dx-article'>
+    <Panel.Root role={role} className='dx-document'>
       <Panel.Content>
         <span>{Obj.getDXN(object).toString()}</span>
       </Panel.Content>

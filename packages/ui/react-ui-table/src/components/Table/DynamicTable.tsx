@@ -39,7 +39,7 @@ export type DynamicTableProps<T extends Type.AnyEntity = Type.AnyEntity> = Theme
 export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
   classNames,
   schema,
-  name = 'example.com/dynamic-table', // Rmove default or make random; this will lead to type collisions.
+  name = 'com.example.dynamic-table', // Remove default or make random; this will lead to type collisions.
   rows,
   properties,
   jsonSchema: jsonSchemaProp,

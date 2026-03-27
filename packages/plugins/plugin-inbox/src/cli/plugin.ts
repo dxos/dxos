@@ -6,11 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Ref } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Event, Message } from '@dxos/types';
 
-import { OperationResolver } from '../capabilities/operation-resolver';
+import { OperationHandler } from '../capabilities/operation-handler';
 import { meta } from '../meta';
 import { Calendar, Mailbox } from '../types';
 
@@ -19,36 +20,40 @@ export const InboxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: [
       {
-        id: Mailbox.kind,
+        id: Mailbox.Mailbox.typename,
         metadata: {
-          createObject: ((props, { db }) =>
-            Effect.sync(() => {
-              const feed = Mailbox.make(props);
-              const config = Mailbox.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
-              db.add(config);
-              return feed;
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Mailbox.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
             })) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
       {
-        id: Calendar.kind,
+        id: Calendar.Calendar.typename,
         metadata: {
-          createObject: ((props, { db }) =>
-            Effect.sync(() => {
-              const feed = Calendar.make(props);
-              const config = Calendar.makeConfig({ feed: Ref.make(feed), accessToken: props.accessToken });
-              db.add(config);
-              return feed;
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Calendar.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
             })) satisfies CreateObject,
-          addToCollectionOnCreate: true,
         },
       },
     ],
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [Event.Event, Mailbox.Config, Calendar.Config, Message.Message],
+    schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message],
   }),
   Plugin.make,
 );

@@ -12,7 +12,8 @@ import { Button, Panel, toLocalizedString, useTranslation } from '@dxos/react-ui
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
-import { type LocalEntity, type LocalFile, LocalFilesOperation } from '../../types';
+import { FilesOperation } from '../../operations';
+import { type LocalEntity, type LocalFile } from '../../types';
 
 export type LocalFileContainerProps = {
   file: LocalFile;
@@ -43,9 +44,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   const node = Graph.getNode(graph, entity.id).pipe(Option.getOrNull);
   const action =
     node &&
-    Graph.getActions(graph, node.id).find(
-      (action) => action.id === `${LocalFilesOperation.Reconnect.meta.key}:${node.id}`,
-    );
+    Graph.getActions(graph, node.id).find((action) => action.id === `${FilesOperation.Reconnect.meta.key}:${node.id}`);
 
   return (
     <Panel.Root>

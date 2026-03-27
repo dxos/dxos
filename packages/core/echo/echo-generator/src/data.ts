@@ -25,10 +25,10 @@ export const Priority = [1, 2, 3, 4, 5];
  * @deprecated
  */
 export enum TestSchemaType {
-  document = 'example.com/type/Document',
-  organization = 'example.com/type/Organization',
-  contact = 'example.com/type/Person',
-  project = 'example.com/type/Project',
+  document = 'com.example.type.document',
+  organization = 'com.example.type.organization',
+  contact = 'com.example.type.person',
+  project = 'com.example.type.project',
 }
 
 /**

@@ -13,3 +13,6 @@ export * from './websearch';
 export * from './browser';
 export * from './database';
 export * from './memory';
+export * from './automation';
+export * from './blueprint-manager';
+export * from './project-wizard';

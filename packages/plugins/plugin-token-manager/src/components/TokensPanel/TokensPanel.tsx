@@ -6,14 +6,14 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { type Key } from '@dxos/echo';
-import { Separator, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Form, Settings } from '@dxos/react-ui-form';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '../../meta';
 
-import { NewTokenSelector } from './NewTokenSelector';
 import { TokenManager } from './TokenManager';
+import { NewTokenSelector } from './NewTokenSelector';
 
 const initialValues = {
   note: '',
@@ -54,18 +54,17 @@ export const TokensPanel = ({
         description={t('integrations description', { ns: meta.id })}
       >
         {adding ? (
-          <Settings.Item title={t('new integration label')}>
+          <Settings.Item title={t('new integration label')} description={t('new integration description')}>
             <Form.Root schema={FormSchema} values={initialValues} onCancel={onCancel} onSave={onAdd}>
               <Form.FieldSet />
               <Form.Actions />
             </Form.Root>
           </Settings.Item>
         ) : (
-          <Settings.Group>
+          <Settings.Frame>
             <TokenManager tokens={tokens} onDelete={onDelete} />
-            {tokens.length > 0 && <Separator classNames='my-4' />}
             <NewTokenSelector spaceId={spaceId} onAddAccessToken={onAddAccessToken} onCustomToken={onNew} />
-          </Settings.Group>
+          </Settings.Frame>
         )}
       </Settings.Section>
     </Settings.Root>

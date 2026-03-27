@@ -23,7 +23,7 @@ import { Text } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { MarkdownFunctions } from '../markdown';
+import { MarkdownHandlers } from '../markdown';
 
 import DesignBlueprint from './blueprint';
 
@@ -84,7 +84,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
           Layer.provideMerge(Layer.mergeAll(GenericToolkit.providerEmpty, AiServiceTestingPreset('direct'))),
           Layer.provideMerge(
             FunctionInvocationServiceLayerTestMocked({
-              functions: Object.values(MarkdownFunctions),
+              functions: MarkdownHandlers,
             }).pipe(Layer.provideMerge(TracingService.layerNoop)),
           ),
         ),

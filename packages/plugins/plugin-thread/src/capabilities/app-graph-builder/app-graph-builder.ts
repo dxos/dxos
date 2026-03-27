@@ -7,16 +7,17 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
 
 import { meta } from '../../meta';
-import { Channel, ThreadCapabilities, ThreadOperation, type ThreadState } from '../../types';
+import { Channel, ThreadCapabilities, type ThreadState } from '../../types';
+import { ThreadOperation } from '../../operations';
 import { getAnchor } from '../../util';
 
 type CommentDisabledParams = {
@@ -64,7 +65,7 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: `${meta.id}/active-call`,
+        id: `${meta.id}.active-call`,
         match: NodeMatcher.whenRoot,
         connector: (node, get) => {
           const callManagerAtom = capabilities.atom(ThreadCapabilities.CallManager);
@@ -78,7 +79,7 @@ export default Capability.makeModule(
             joined
               ? [
                   {
-                    id: `${node.id}${ATTENDABLE_PATH_SEPARATOR}active-call`,
+                    id: 'active-call',
                     type: DECK_COMPANION_TYPE,
                     data: null,
                     properties: {
@@ -94,7 +95,7 @@ export default Capability.makeModule(
         },
       }),
       GraphBuilder.createTypeExtension({
-        id: `${meta.id}/channel-chat-companion`,
+        id: `${meta.id}.channel-chat-companion`,
         type: Channel.Channel,
         connector: (channel, get) => {
           const callManager = capabilities.get(ThreadCapabilities.CallManager);
@@ -108,7 +109,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             {
-              id: `${Obj.getDXN(channel).toString()}${ATTENDABLE_PATH_SEPARATOR}chat`,
+              id: 'chat',
               type: PLANK_COMPANION_TYPE,
               data: 'chat',
               properties: {
@@ -122,7 +123,7 @@ export default Capability.makeModule(
         },
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}/comments-companion`,
+        id: `${meta.id}.comments-companion`,
         match: (node) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();
@@ -130,10 +131,10 @@ export default Capability.makeModule(
           const metadata = resolve(Obj.getTypename(node.data)!);
           return typeof metadata.comments === 'string' ? Option.some(node) : Option.none();
         },
-        connector: (node) =>
+        connector: () =>
           Effect.succeed([
             {
-              id: [node.id, 'comments'].join(ATTENDABLE_PATH_SEPARATOR),
+              id: companionSegment('comments'),
               type: PLANK_COMPANION_TYPE,
               data: 'comments',
               properties: {
@@ -146,25 +147,26 @@ export default Capability.makeModule(
           ]),
       }),
       GraphBuilder.createExtension({
-        id: `${meta.id}/comment-toolbar`,
+        id: `${meta.id}.comment-toolbar`,
         match: (node) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();
           }
           const metadata = resolve(Obj.getTypename(node.data)!);
-          return typeof metadata.comments === 'string' ? Option.some(node.data) : Option.none();
+          return typeof metadata.comments === 'string' ? Option.some(node) : Option.none();
         },
-        actions: (object, get) => {
+        actions: (matched, get) => {
+          const object = matched.data;
+          const objectDxn = Obj.getDXN(object).toString();
           const stateAtom = capabilities.atom(ThreadCapabilities.State);
           const selectionManager = capabilities.get(AttentionCapabilities.Selection);
-          const objectId = Obj.getDXN(object).toString();
           const metadata = resolve(Obj.getTypename(object)!);
 
           const disabled = get(
             commentDisabledFamily({
               stateAtom,
               selectionManager,
-              objectId,
+              objectId: objectDxn,
               commentsType: metadata.comments as string,
               selectionMode: metadata.selectionMode,
             }),
@@ -172,10 +174,10 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             {
-              id: `${Obj.getDXN(object).toString()}/comment`,
+              id: 'comment',
               data: Effect.fnUntraced(function* () {
                 const metadata = resolve(Obj.getTypename(object)!);
-                const selection = selectionManager.getSelection(Obj.getDXN(object).toString());
+                const selection = selectionManager.getSelection(objectDxn);
                 const anchor = metadata.comments === 'anchored' ? getAnchor(selection) : Date.now().toString();
                 const name = metadata.getAnchorLabel?.(object, anchor);
                 yield* Operation.invoke(ThreadOperation.Create, {

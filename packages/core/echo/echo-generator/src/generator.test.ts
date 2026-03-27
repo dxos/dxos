@@ -96,13 +96,13 @@ describe('TestObjectGenerator', () => {
       name: Schema.optional(Schema.String),
     }).pipe(
       Type.object({
-        typename: 'example.org/type/Task',
+        typename: 'com.example.type.task',
         version: '0.1.0',
       }),
     );
 
     enum Types {
-      task = 'example.org/type/Task',
+      task = 'com.example.type.task',
     }
 
     const { space } = await setupTest();

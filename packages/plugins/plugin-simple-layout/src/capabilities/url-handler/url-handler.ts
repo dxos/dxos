@@ -5,58 +5,57 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, fromUrlPath, getWorkspaceFromPath, toUrlPath } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
-import { Node } from '@dxos/plugin-graph';
 import { isTauri } from '@dxos/util';
 
 import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapability } from '../../types';
 
 /**
  * URL handler for simple layout that syncs browser URL with layout state.
- * URL format: /{workspace} or /{workspace}/{active}
- * Root is represented as / or /root.
+ * URL paths map directly to qualified graph IDs with the leading `root` segment stripped.
+ * Root is represented as `/`.
  *
  * On mobile Tauri, also listens for deep links via the deep-link plugin.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokeSync } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
 
     /**
      * Handle navigation from a pathname.
-     * Parses path and updates state accordingly.
+     * Restores the qualified graph ID and dispatches layout operations.
      */
     const handlePathNavigation = (pathname: string) => {
+      if (isFilePath(pathname)) {
+        log.info('[UrlHandler] Skipping file path (not a graph node)', { pathname });
+        pathname = '/';
+      }
+
       log.info('[UrlHandler] Navigating to path', { pathname });
 
-      // Parse URL segments: /{workspace}/{active}
-      const [_, nextWorkspace, nextActive] = pathname.split('/');
+      const qualifiedId = fromUrlPath(pathname);
+      const workspace = getWorkspaceFromPath(qualifiedId);
 
-      // Determine target workspace (empty or 'root' means Node.RootId).
-      const targetWorkspace = !nextWorkspace || nextWorkspace === 'root' ? Node.RootId : nextWorkspace;
+      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: workspace });
 
-      // Navigate via operations (they will update state accordingly).
-      invokeSync(LayoutOperation.SwitchWorkspace, { subject: targetWorkspace });
-      if (nextActive) {
-        invokeSync(LayoutOperation.Open, { subject: [nextActive] });
+      const activeId = qualifiedId !== workspace ? qualifiedId : undefined;
+      if (activeId) {
+        void invokePromise(LayoutOperation.Open, { subject: [activeId] });
       }
     };
 
     const onNavigation = handleNavigation(handlePathNavigation);
 
-    // Handle initial URL and listen for browser navigation.
     yield* Effect.sync(() => onNavigation());
     window.addEventListener('popstate', onNavigation);
 
-    // Set up deep link listener for mobile Tauri.
     let unlistenDeepLink: (() => void) | undefined;
     if (isTauri()) {
       yield* Effect.tryPromise({
         try: async () => {
           const { getCurrent, onOpenUrl } = await import('@tauri-apps/plugin-deep-link');
 
-          // Check if app was launched via deep link (cold start).
           const launchUrls = await getCurrent();
           if (launchUrls && launchUrls.length > 0) {
             log.info('[UrlHandler] App launched with deep links', { urls: launchUrls });
@@ -65,7 +64,6 @@ export default Capability.makeModule(
             }
           }
 
-          // Listen for deep links while app is running.
           unlistenDeepLink = await onOpenUrl((urls) => {
             log.info('[UrlHandler] Deep links received', { urls });
             for (const url of urls) {
@@ -82,18 +80,16 @@ export default Capability.makeModule(
       }).pipe(Effect.catchAll(() => Effect.void));
     }
 
-    // Subscribe to state changes to update the URL.
     let lastWorkspace: string | undefined;
     let lastActive: string | undefined;
     const unsubscribe = yield* Capabilities.subscribeAtom(SimpleLayoutStateCapability, (state: SimpleLayoutState) => {
       const { workspace, active } = state;
 
-      // Only update URL if relevant state changed.
       if (workspace !== lastWorkspace || active !== lastActive) {
         lastWorkspace = workspace;
         lastActive = active;
 
-        const path = pathFromState(workspace, active);
+        const path = active ? toUrlPath(active) : toUrlPath(workspace);
         if (window.location.pathname !== path) {
           history.pushState(null, '', `${path}${window.location.search}`);
         }
@@ -110,9 +106,6 @@ export default Capability.makeModule(
   }),
 );
 
-// TODO(wittjosiah): Instead of hardcoding redirect paths, we should either:
-//   1. Validate that the workspace exists in the graph before navigating.
-//   2. Implement more structured routing with explicit route definitions.
 /**
  * Check if a path is a special redirect path that shouldn't be navigated to.
  * These paths are handled by other systems (e.g., OAuth).
@@ -120,16 +113,11 @@ export default Capability.makeModule(
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
 
 /**
- * Build pathname from layout state. Root workspace is / or /root/{active}.
+ * Paths with file extensions (e.g., `/iframe.html`) are not graph node paths.
+ * This guards against embedded contexts like Storybook iframes interpreting
+ * the host pathname as a navigation target.
  */
-const pathFromState = (workspace: string, active: string | undefined): string =>
-  workspace === Node.RootId
-    ? active
-      ? `/${Node.RootId}/${active}`
-      : '/'
-    : active
-      ? `/${workspace}/${active}`
-      : `/${workspace}`;
+const isFilePath = (pathname: string): boolean => /\.[a-z]+$/i.test(pathname);
 
 /**
  * Returns a handler for navigation events (initial load and popstate) that navigates to current pathname.

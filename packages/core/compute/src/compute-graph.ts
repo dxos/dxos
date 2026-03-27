@@ -6,10 +6,10 @@ import type * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { Event } from '@dxos/async';
 import { Filter, type Space } from '@dxos/client/echo';
-import { FQ_ID_LENGTH } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { Function, type FunctionInvocationService } from '@dxos/functions';
+import { type FunctionInvocationService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -37,7 +37,7 @@ type ObjectRef = { type: string; id: string };
 
 /**
  * Marker for sheets that are managed by an ECHO object.
- * Sheet ID: `dxos.org/type/SheetType@1234`
+ * Sheet ID: `org.dxos.type.sheet-type@1234`
  */
 export const createSheetName = ({ type, id }: ObjectRef) => `${type}@${id}`;
 export const parseSheetName = (name: string): Partial<ObjectRef> => {
@@ -60,7 +60,7 @@ export class ComputeGraph extends Resource {
   private readonly _nodes = new Map<number, ComputeNode>();
 
   // Cached function objects.
-  private _remoteFunctions: Function.Function[] = [];
+  private _remoteFunctions: Operation.PersistentOperation[] = [];
 
   public readonly update = new Event<{ type: ComputeGraphEvent }>();
 
@@ -153,7 +153,7 @@ export class ComputeGraph extends Resource {
       formula
         //
         // Map cross-sheet references by name onto sheet stored by ECHO object/model.
-        // Example: "Test Sheet"!A0 => "dxos.org/type/SheetType@1234"!A0
+        // Example: "Test Sheet"!A0 => "org.dxos.type.sheet-type@1234"!A0
         // https://hyperformula.handsontable.com/guide/cell-references.html#cell-references
         //
         .replace(/['"]?([ \w]+)['"]?!/, (_match, name) => {
@@ -198,8 +198,8 @@ export class ComputeGraph extends Resource {
   }
 
   /**
-   * Map from binding to fully qualified ECHO ID (to store).
-   * E.g., HELLO() => spaceId:objectId()
+   * Map from binding to fully qualified ECHO DXN (to store).
+   * E.g., HELLO() => dxn:echo:spaceId:objectId()
    */
   mapFunctionBindingToId(formula: string): string {
     return formula.replace(/(\w+)\((.*)\)/g, (match, binding, args) => {
@@ -218,23 +218,22 @@ export class ComputeGraph extends Resource {
   }
 
   /**
-   * Map from fully qualified ECHO ID to binding (from store).
-   * E.g., spaceId:objectId() => HELLO()
+   * Map from fully qualified ECHO DXN to binding (from store).
+   * E.g., dxn:echo:spaceId:objectId() => HELLO()
    */
   mapFunctionBindingFromId(formula: string): string | undefined {
-    const binding = formula.replace(/(\w+):([a-zA-Z0-9]+)\((.*)\)/g, (match, spaceId, objectId, args) => {
-      const id = `${spaceId}:${objectId}`;
-      if (id.length !== FQ_ID_LENGTH) {
-        return match;
-      }
-
-      const fn = this._remoteFunctions.find((fn) => Obj.getDXN(fn).toString() === id);
-      if (fn?.binding) {
-        return `${fn.binding}(${args})`;
-      } else {
-        return UNKNOWN_BINDING;
-      }
-    });
+    const binding = formula.replace(
+      /dxn:([^:]+):([^:(]+):([a-zA-Z0-9]+)\((.*)\)/g,
+      (_match, kind, spaceTag, objectId, args) => {
+        const dxn = `dxn:${kind}:${spaceTag}:${objectId}`;
+        const fn = this._remoteFunctions.find((fn) => Obj.getDXN(fn).toString() === dxn);
+        if (fn?.binding) {
+          return `${fn.binding}(${args})`;
+        } else {
+          return UNKNOWN_BINDING;
+        }
+      },
+    );
 
     if (binding.startsWith(`=${UNKNOWN_BINDING}`)) {
       return undefined;
@@ -246,11 +245,14 @@ export class ComputeGraph extends Resource {
   protected override async _open(): Promise<void> {
     if (this._space) {
       // Subscribe to remote function definitions.
-      const query = this._space.db.query(Filter.type(Function.Function));
-      const unsubscribe = query.subscribe(() => {
-        this._remoteFunctions = query.results.filter((fn) => fn.binding);
-        this.update.emit({ type: 'functionsUpdated' });
-      });
+      const query = this._space.db.query(Filter.type(Operation.PersistentOperation));
+      const unsubscribe = query.subscribe(
+        () => {
+          this._remoteFunctions = query.results.filter((fn) => fn.binding);
+          this.update.emit({ type: 'functionsUpdated' });
+        },
+        { fire: true },
+      );
 
       this._ctx.onDispose(unsubscribe);
     }

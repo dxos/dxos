@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom, RegistryContext } from '@effect-atom/atom-react';
+import { Atom, Registry, RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useEffect } from 'react';
 
 import { Graph, Node } from '@dxos/app-graph';
@@ -70,8 +70,13 @@ const buildNestedActions = (): ActionGraphProps => {
 
 export const createNestedActions = Atom.make(buildNestedActions()).pipe(Atom.keepAlive);
 
-export const createNestedActionsResolver = (groupParams?: CreateActionsProps, params?: CreateActionsProps) => {
-  const graph = Graph.make();
+export const createNestedActionsResolver = (props?: {
+  groupParams?: CreateActionsProps;
+  params?: CreateActionsProps;
+  registry?: Registry.Registry;
+}) => {
+  const { groupParams, params, registry } = props ?? {};
+  const graph = Graph.make({ ...(registry && { registry }) });
   const actionGroups = createActions({ type: Node.ActionGroupType, ...groupParams });
   actionGroups.forEach((group) => {
     const actions = createActions(params);

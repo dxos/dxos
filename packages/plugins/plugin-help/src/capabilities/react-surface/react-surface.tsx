@@ -16,12 +16,12 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/hints`,
+        id: `${meta.id}.hints`,
         role: 'hints',
         component: () => <ShortcutsHints />,
       }),
       Surface.create({
-        id: `${meta.id}/keyshortcuts`,
+        id: `${meta.id}.keyshortcuts`,
         role: 'keyshortcuts',
         component: () => <ShortcutsList />,
       }),

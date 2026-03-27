@@ -23,7 +23,9 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
     <>
       {recent.length > 0 ? (
         <>
-          <Card.Heading variant='subtitle'>{t('recent events title')}</Card.Heading>
+          <Card.Row>
+            <Card.Heading variant='subtitle'>{t('recent events title')}</Card.Heading>
+          </Card.Row>
           {recent
             .filter((event) => event.title || event.description)
             .map((event) => (
@@ -39,7 +41,9 @@ export const RelatedEvents = ({ recent, upcoming, onEventClick }: RelatedEventsP
       ) : null}
       {upcoming.length > 0 ? (
         <>
-          <Card.Heading variant='subtitle'>{t('upcoming events title')}</Card.Heading>
+          <Card.Row>
+            <Card.Heading variant='subtitle'>{t('upcoming events title')}</Card.Heading>
+          </Card.Row>
           {upcoming
             .filter((event) => event.title || event.description)
             .map((event) => (

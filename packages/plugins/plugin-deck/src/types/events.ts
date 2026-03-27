@@ -11,7 +11,7 @@ import { DeckCapabilities } from './capabilities';
 
 export namespace DeckEvents {
   export const StateReady: ActivationEvent.ActivationEvent = AppActivationEvents.createStateEvent(
-    `${meta.id}/state-ready`,
+    `${meta.id}.state-ready`,
   );
 
   /** Fired when DeckSettings capability is ready. */

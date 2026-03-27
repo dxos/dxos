@@ -14,13 +14,13 @@ import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import type { IndexerObject } from './interface';
 import { ObjectMetaIndex } from './object-meta-index';
 
-const TYPE_PERSON = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
-const TYPE_PERSON_VERSIONLESS = DXN.parse('dxn:type:example.com/type/Person').toString();
-const TYPE_RELATION = DXN.parse('dxn:type:example.com/type/Relation:0.1.0').toString();
-const TYPE_RELATION_UPDATED = DXN.parse('dxn:type:example.com/type/RelationUpdated:0.1.0').toString();
-const TYPE_WITH_UNDERSCORE = DXN.parse('dxn:type:example.com/type/Person_Extra:0.1.0').toString();
-const TYPE_WITH_UNDERSCORE_VERSIONLESS = DXN.parse('dxn:type:example.com/type/Person_Extra').toString();
-const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.parse('dxn:type:example.com/type/PersonAExtra:0.1.0').toString();
+const TYPE_PERSON = DXN.parse('dxn:type:com.example.type.person:0.1.0').toString();
+const TYPE_PERSON_VERSIONLESS = DXN.parse('dxn:type:com.example.type.person').toString();
+const TYPE_RELATION = DXN.parse('dxn:type:com.example.type.relation:0.1.0').toString();
+const TYPE_RELATION_UPDATED = DXN.parse('dxn:type:com.example.type.relation-updated:0.1.0').toString();
+const TYPE_WITH_UNDERSCORE = DXN.parse('dxn:type:com.example.type.person-extra:0.1.0').toString();
+const TYPE_WITH_UNDERSCORE_VERSIONLESS = DXN.parse('dxn:type:com.example.type.person-extra').toString();
+const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.parse('dxn:type:com.example.type.person-a-extra:0.1.0').toString();
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({
@@ -43,6 +43,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectId,
           [ATTR_TYPE]: TYPE_PERSON,
@@ -57,7 +58,7 @@ describe('ObjectMetaIndex', () => {
 
       const otherTypeResults = yield* index.query({
         spaceId,
-        typeDxn: DXN.parse('dxn:type:example.com/type/Other').toString(),
+        typeDxn: DXN.parse('dxn:type:com.example.type.other').toString(),
       });
       expect(otherTypeResults).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),
@@ -77,6 +78,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectIdMatch,
           [ATTR_TYPE]: TYPE_WITH_UNDERSCORE,
@@ -90,6 +92,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectIdFalsePositive,
           [ATTR_TYPE]: TYPE_UNDERSCORE_FALSE_POSITIVE,
@@ -125,6 +128,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectId1,
           [ATTR_TYPE]: TYPE_PERSON,
@@ -137,6 +141,7 @@ describe('ObjectMetaIndex', () => {
         queueId: null,
         documentId: 'doc-123',
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectId2,
           [ATTR_TYPE]: TYPE_RELATION,
@@ -217,6 +222,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectId1,
           [ATTR_TYPE]: TYPE_PERSON,
@@ -229,6 +235,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: objectId2,
           [ATTR_TYPE]: TYPE_RELATION,
@@ -241,6 +248,7 @@ describe('ObjectMetaIndex', () => {
         queueId: ObjectId.random(),
         documentId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: relationId,
           [ATTR_TYPE]: TYPE_RELATION,
@@ -317,6 +325,104 @@ describe('ObjectMetaIndex', () => {
         anchorDxns: [DXN.fromLocalObjectId(objectId2).toString()],
       });
       expect(byTarget.map((_) => _.objectId)).toEqual([relationId]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('should set createdAt and updatedAt from source timestamp on insert and updatedAt on update', () =>
+    Effect.gen(function* () {
+      const index = new ObjectMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const objectId = ObjectId.random();
+      const queueId = ObjectId.random();
+
+      const insertTimestamp = 1700000000000;
+      const item: IndexerObject = {
+        spaceId,
+        queueId,
+        documentId: null,
+        recordId: null,
+        updatedAt: insertTimestamp,
+        data: {
+          id: objectId,
+          [ATTR_TYPE]: TYPE_PERSON,
+          [ATTR_DELETED]: false,
+        },
+      };
+
+      yield* index.update([item]);
+
+      const results = yield* index.query({ spaceId, typeDxn: TYPE_PERSON });
+      expect(results.length).toBe(1);
+      expect(results[0].createdAt).toBe(insertTimestamp);
+      expect(results[0].updatedAt).toBe(insertTimestamp);
+
+      const updateTimestamp = 1700001000000;
+      yield* index.update([{ ...item, updatedAt: updateTimestamp, data: { ...item.data, [ATTR_DELETED]: true } }]);
+
+      const updated = yield* index.query({ spaceId, typeDxn: TYPE_PERSON });
+      expect(updated[0].createdAt).toBe(insertTimestamp);
+      expect(updated[0].updatedAt).toBe(updateTimestamp);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('should query by time range', () =>
+    Effect.gen(function* () {
+      const index = new ObjectMetaIndex();
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const queueId1 = ObjectId.random();
+      const queueId2 = ObjectId.random();
+      const objectId1 = ObjectId.random();
+      const objectId2 = ObjectId.random();
+
+      const earlyTimestamp = 1700000000000;
+      const midpoint = 1700000500000;
+      const lateTimestamp = 1700001000000;
+
+      yield* index.update([
+        {
+          spaceId,
+          queueId: queueId1,
+          documentId: null,
+          recordId: null,
+          updatedAt: earlyTimestamp,
+          data: { id: objectId1, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
+        },
+      ]);
+
+      yield* index.update([
+        {
+          spaceId,
+          queueId: queueId2,
+          documentId: null,
+          recordId: null,
+          updatedAt: lateTimestamp,
+          data: { id: objectId2, [ATTR_TYPE]: TYPE_PERSON, [ATTR_DELETED]: false },
+        },
+      ]);
+
+      // Query all -- both should match.
+      const all = yield* index.queryByTimeRange({ spaceIds: [spaceId], includeAllQueues: true });
+      expect(all.map((_) => _.objectId).sort()).toEqual([objectId1, objectId2].sort());
+
+      // Query only objects updated after midpoint (object2 has lateTimestamp).
+      const afterMid = yield* index.queryByTimeRange({
+        spaceIds: [spaceId],
+        updatedAfter: midpoint,
+        includeAllQueues: true,
+      });
+      expect(afterMid.map((_) => _.objectId)).toEqual([objectId2]);
+
+      // Query only objects created before midpoint (object1 has earlyTimestamp).
+      const beforeMid = yield* index.queryByTimeRange({
+        spaceIds: [spaceId],
+        createdBefore: midpoint,
+        includeAllQueues: true,
+      });
+      expect(beforeMid.map((_) => _.objectId)).toEqual([objectId1]);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

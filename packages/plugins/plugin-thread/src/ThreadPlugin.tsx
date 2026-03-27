@@ -3,15 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Ref, Type } from '@dxos/echo';
+import { Annotation, Ref, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
@@ -20,15 +22,16 @@ import {
   BlueprintDefinition,
   CallManager,
   Markdown,
-  OperationResolver,
+  OperationHandler,
+  UndoMappings,
   ReactRoot,
   ReactSurface,
-  Repair,
   ThreadState,
 } from './capabilities';
 import { THREAD_ITEM, meta } from './meta';
+import { ThreadOperation } from './operations';
 import { translations } from './translations';
-import { Channel, ThreadOperation } from './types';
+import { Channel } from './types';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
@@ -43,9 +46,18 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
       {
         id: Type.getTypename(Channel.Channel),
         metadata: {
-          icon: 'ph--hash--regular',
-          iconHue: 'rose',
-          createObject: ((props) => Effect.sync(() => Channel.make(props))) satisfies CreateObject,
+          icon: Annotation.IconAnnotation.get(Channel.Channel).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Channel.Channel).pipe(Option.getOrThrow).hue ?? 'white',
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Channel.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -72,7 +84,8 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({ id: 'undo-mappings', activate: UndoMappings }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
     schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Thread.Thread],
@@ -107,11 +120,6 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
           Operation.invoke(ThreadOperation.OnCreateSpace, params),
         ),
       ),
-  }),
-  Plugin.addModule({
-    id: 'repair',
-    activatesOn: ClientEvents.SpacesReady,
-    activate: Repair,
   }),
   Plugin.addModule({
     id: 'markdown',

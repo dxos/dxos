@@ -99,7 +99,7 @@ describe('Integration tests', () => {
     for (let i = 0; i < NUM_OBJECTS; i++) {
       db.add(Obj.make(TestSchema.Person, { name: `Person ${i}` }));
     }
-    await db.flush({ indexes: true });
+    await db.flush();
 
     await peer.reload();
     await using db2 = await peer.openLastDatabase();
@@ -417,7 +417,7 @@ describe('Integration tests', () => {
           }),
         );
         relationId = hasManager.id;
-        await db.flush({ indexes: true });
+        await db.flush();
       }
 
       await peer.reload();
@@ -450,7 +450,7 @@ describe('Integration tests', () => {
 
         const LocalTestSchema = Schema.Struct({
           field: Schema.String,
-        }).pipe(Type.object({ typename: 'example.com/type/Test', version: '0.1.0' }));
+        }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
         const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
         schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
 
@@ -458,7 +458,7 @@ describe('Integration tests', () => {
         expect(Obj.getSchema(object)).to.eq(stored);
 
         db.add(Obj.make(TestSchema.Expando, { text: 'Expando object' })); // Add Expando object to test filtering
-        await db.flush({ indexes: true });
+        await db.flush();
       }
 
       await peer.reload();
@@ -476,7 +476,7 @@ describe('Integration tests', () => {
         const objects = await db.query(Query.select(Filter.typeDXN(DXN.parse(schemaDxn)))).run();
         expect(objects.length).to.eq(1);
         expect(getTypeAnnotation(Obj.getSchema(objects[0])!)).to.include({
-          typename: 'example.com/type/Test',
+          typename: 'com.example.type.test',
           version: '0.1.0',
         });
       }
@@ -485,12 +485,12 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema ref.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const schema = db.schemaRegistry.getSchema('example.com/type/Test');
+        const schema = db.schemaRegistry.getSchema('com.example.type.test');
 
         const objects = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);
         expect(getTypeAnnotation(Obj.getSchema(objects[0])!)).to.include({
-          typename: 'example.com/type/Test',
+          typename: 'com.example.type.test',
           version: '0.1.0',
         });
       }
@@ -509,7 +509,7 @@ describe('Integration tests', () => {
       const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
       typeDXN = getSchemaDXN(schema)!;
       db.add(makeObject(schema, { name: 'Bob' }));
-      await db.flush({ indexes: true });
+      await db.flush();
     }
 
     await peer.reload();
@@ -532,7 +532,7 @@ describe('Integration tests', () => {
     {
       await using db = await peer.createDatabase();
       const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Verify object exists before deletion.
       const beforeDelete = await db.query(Filter.type(TestSchema.Person)).run();
@@ -540,7 +540,7 @@ describe('Integration tests', () => {
 
       // Delete the object.
       db.remove(person);
-      await db.flush({ indexes: true });
+      await db.flush();
 
       // Verify object is deleted before reload.
       const afterDelete = await db.query(Filter.type(TestSchema.Person)).run();

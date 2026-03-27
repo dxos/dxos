@@ -52,7 +52,7 @@ const Example = Schema.Struct({
     title: 'Parent',
   }),
 }).pipe(
-  Type.object({ typename: `example.com/type/${PublicKey.random().truncate()}`, version: '0.1.0' }),
+  Type.object({ typename: `com.example.type.${PublicKey.random().truncate()}`, version: '0.1.0' }),
   Annotation.LabelAnnotation.set(['name']),
 );
 interface Example extends Schema.Schema.Type<typeof Example> {}
@@ -74,8 +74,8 @@ const StoryViewEditor = ({
       invariant(Type.isMutable(schema));
       schema.updateTypename(getTypenameFromQuery(newQuery));
       invariant(view);
-      Obj.change(view, (v) => {
-        v.query.ast = newQuery as Mutable<typeof newQuery>;
+      Obj.change(view, (obj) => {
+        obj.query.ast = newQuery as Mutable<typeof newQuery>;
       });
     },
     [schema, view],
@@ -175,10 +175,10 @@ const meta = {
         const [schema] = await space.db.schemaRegistry.register([Example]);
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
-        Obj.change(view, (v) => {
-          v.projection.fields = [
-            v.projection.fields.find((field) => field.path === 'name')!,
-            ...v.projection.fields.filter((field) => field.path !== 'name'),
+        Obj.change(view, (obj) => {
+          obj.projection.fields = [
+            obj.projection.fields.find((field) => field.path === 'name')!,
+            ...obj.projection.fields.filter((field) => field.path !== 'name'),
           ];
         });
 
@@ -252,7 +252,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/ContactWithArrayOfEmails',
+    typename: 'org.dxos.type.contact-with-array-of-emails',
     version: '0.1.0',
   }),
 );
@@ -297,7 +297,7 @@ export const Tags: Meta<StoryProps> = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Configure schema.
-        const typename = 'example.com/SingleSelect';
+        const typename = 'com.example.type.single-select';
         const selectOptions = [
           { id: 'one', title: 'One', color: 'emerald' },
           { id: 'two', title: 'Two', color: 'blue' },

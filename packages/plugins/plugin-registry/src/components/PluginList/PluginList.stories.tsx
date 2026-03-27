@@ -32,7 +32,7 @@ const DefaultStory = () => {
     faker.helpers.multiple(
       () =>
         PluginNS.define({
-          id: `dxos.org/plugin/plugin-${faker.string.uuid()}`,
+          id: `org.dxos.plugin.plugin-${faker.string.uuid()}`,
           name: `${faker.commerce.productName()}`,
           description: faker.lorem.sentences(Math.ceil(Math.random() * 3)),
           tags: faker.helpers.uniqueArray(RegistryTagType.literals as any, Math.floor(Math.random() * 3)),
@@ -73,7 +73,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'bg-deck-surface' })],
+  parameters: {
+    layout: 'fullscreen',
+  },
 };
 
 export const FullScreen: Story = {

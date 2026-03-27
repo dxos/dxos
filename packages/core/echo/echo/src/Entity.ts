@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { DXN, ObjectId } from '@dxos/keys';
 
-import * as entityInternal from './internal/Entity';
 import * as internal from './internal';
 import type * as Relation from './Relation';
 
@@ -207,9 +208,9 @@ export type Mutable<T> = internal.Mutable<T>;
  * @example
  * ```typescript
  * // Mutate within Entity.change
- * Entity.change(entity, (e) => {
- *   e.name = 'Updated';
- *   e.count = 42;
+ * Entity.change(entity, (obj) => {
+ *   obj.name = 'Updated';
+ *   obj.count = 42;
  * });
  *
  * // Direct mutation throws

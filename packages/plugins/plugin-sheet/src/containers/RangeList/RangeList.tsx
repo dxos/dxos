@@ -9,7 +9,6 @@ import { rangeToA1Notation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
-import { ghostHover } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { rangeFromIndex } from '../../types';
@@ -45,7 +44,7 @@ export const RangeList = ({ sheet }: RangeListProps) => {
         <List.Root<Sheet.Range> items={sheet.ranges} isItem={Schema.is(Sheet.Range)}>
           {({ items: ranges }) =>
             ranges.map((range, i) => (
-              <List.Item key={i} item={range} classNames={['p-2', ghostHover]}>
+              <List.Item key={i} item={range}>
                 <List.ItemDragHandle />
                 <List.ItemTitle onClick={() => handleSelectRange(range)}>
                   {t('range title', {

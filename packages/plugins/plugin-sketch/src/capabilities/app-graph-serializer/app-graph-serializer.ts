@@ -8,11 +8,12 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { isSpace } from '@dxos/react-client/echo';
 
 import { translations } from '../../translations';
-import { Diagram, SketchOperation } from '../../types';
+import { Sketch } from '../../types';
+import { SketchOperation } from '../../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -21,14 +22,14 @@ export default Capability.makeModule(
 
     return Capability.contributes(AppCapabilities.AppGraphSerializer, [
       {
-        inputType: Diagram.Diagram.typename,
+        inputType: Sketch.Sketch.typename,
         outputType: 'application/tldraw',
         // Reconcile with metadata serializers.
         serialize: async (node) => {
-          const diagram = node.data;
-          const canvas = await diagram.canvas.load();
+          const sketch = node.data;
+          const canvas = await sketch.canvas.load();
           return {
-            name: diagram.name || translations[0]['en-US'][Diagram.Diagram.typename]['object name placeholder'],
+            name: sketch.name || translations[0]['en-US'][Sketch.Sketch.typename]['object name placeholder'],
             data: JSON.stringify({ schema: canvas.Schema, content: canvas.content }),
             type: 'application/tldraw',
           };

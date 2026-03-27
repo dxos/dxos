@@ -26,13 +26,12 @@ type PickerState = {
 
 export type BoardContainerProps = SurfaceComponentProps<BoardType.Board>;
 
-export const BoardContainer = ({ role, subject: board }: BoardContainerProps) => {
+export const BoardContainer = ({ role, subject: board, attendableId }: BoardContainerProps) => {
   const controller = useRef<BoardController>(null);
   const [boardItems] = useObject(board, 'items');
   const items = useObjects(boardItems ?? []);
   const addTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [pickerState, setPickerState] = useState<PickerState | null>(null);
-  const attendableId = Obj.getDXN(board).toString();
   const { hasAttention } = useAttention(attendableId);
 
   const db = Obj.getDatabase(board);
@@ -74,11 +73,11 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
       const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
-      Obj.change(board, (b) => {
+      Obj.change(board, (obj) => {
         if (idx !== -1) {
-          b.items.splice(idx, 1);
+          obj.items.splice(idx, 1);
         }
-        delete b.layout.cells[id];
+        delete obj.layout.cells[id];
       });
     },
     [board],
@@ -87,8 +86,8 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
   const handleMove = useCallback<NonNullable<BoardRootProps['onMove']>>(
     (id, position) => {
       const layout = board.layout.cells[id];
-      Obj.change(board, (b) => {
-        b.layout.cells[id] = { ...layout, ...position };
+      Obj.change(board, (obj) => {
+        obj.layout.cells[id] = { ...layout, ...position };
       });
     },
     [board],
@@ -107,11 +106,11 @@ export const BoardContainer = ({ role, subject: board }: BoardContainerProps) =>
       }
 
       // Create a reference to the selected object and add it to the board.
-      Obj.change(board, (b) => {
-        b.items.push(Ref.make(selectedObject));
+      Obj.change(board, (obj) => {
+        obj.items.push(Ref.make(selectedObject));
 
         // Set the layout position for the new item.
-        b.layout.cells[selectedObject.id.toString()] = pickerState.position;
+        obj.layout.cells[selectedObject.id.toString()] = pickerState.position;
       });
 
       // Close the picker.

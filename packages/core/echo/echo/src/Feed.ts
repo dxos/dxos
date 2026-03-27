@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -17,13 +19,14 @@ import * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
 import * as Type from './Type';
+import * as Annotation from './Annotation';
 
 /**
  * Runtime schema for a Feed object.
  *
  * @example
  * ```ts
- * const feed = Obj.make(Feed.Feed, { name: 'notifications', kind: 'dxos.org/plugin/notifications/v1' });
+ * const feed = Obj.make(Feed.Feed, { name: 'notifications', kind: 'org.dxos.plugin.notifications.v1' });
  * ```
  */
 export const Feed = Schema.Struct({
@@ -41,8 +44,13 @@ export const Feed = Schema.Struct({
   namespace: Schema.optional(Schema.Literal('data', 'trace')),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Feed',
+    typename: 'org.dxos.type.feed',
     version: '0.1.0',
+  }),
+  internal.SystemTypeAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--rows--regular',
+    hue: 'yellow',
   }),
 );
 
@@ -54,6 +62,12 @@ export interface Feed extends Schema.Schema.Type<typeof Feed> {}
 //
 // Types
 //
+
+/**
+ * Meta key source for storing the backing DXN bound to a feed object.
+ */
+// TODO(dmaretskyi): Enforce that Feed ObjectId = feed storage ID. And remove this key.
+export const DXN_KEY = 'org.dxos.key.feed';
 
 /**
  * Opaque cursor for iterating over feed items.
@@ -81,11 +95,11 @@ export interface RetentionOptions {
  *
  * @example
  * ```ts
- * const feed = Feed.make({ name: 'notifications', kind: 'dxos.org/plugin/notifications/v1' });
+ * const feed = Feed.make({ name: 'notifications', kind: 'org.dxos.plugin.notifications.v1' });
  * ```
  */
 // TODO(wittjosiah): How to control the feed namespace (data/trace)? Why do feeds have namespaces?
-export const make = (props: Obj.MakeProps<typeof Feed>): Feed => Obj.make(Feed, props);
+export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(Feed, props);
 
 /**
  * Derives the queue DXN from the feed object's DXN.

@@ -108,6 +108,20 @@ export interface FilterRange extends Schema.Schema.Type<typeof FilterRange_> {}
 export const FilterRange: Schema.Schema<FilterRange> = FilterRange_;
 
 /**
+ * Filter by system timestamp (createdAt / updatedAt).
+ * Timestamps are unix milliseconds stored in the object meta index.
+ */
+const FilterTimestamp_ = Schema.Struct({
+  type: Schema.Literal('timestamp'),
+  field: Schema.Literal('createdAt', 'updatedAt'),
+  operator: Schema.Literal('gt', 'gte', 'lt', 'lte'),
+  value: Schema.Number,
+});
+
+export interface FilterTimestamp extends Schema.Schema.Type<typeof FilterTimestamp_> {}
+export const FilterTimestamp: Schema.Schema<FilterTimestamp> = FilterTimestamp_;
+
+/**
  * Text search.
  */
 const FilterTextSearch_ = Schema.Struct({
@@ -162,11 +176,12 @@ export const Filter = Schema.Union(
   FilterContains,
   FilterTag,
   FilterRange,
+  FilterTimestamp,
   FilterTextSearch,
   FilterNot,
   FilterAnd,
   FilterOr,
-).annotations({ identifier: 'dxos.org/schema/Filter' });
+).annotations({ identifier: 'org.dxos.schema.filter' });
 
 export type Filter = Schema.Schema.Type<typeof Filter>;
 
@@ -384,7 +399,7 @@ const Query_ = Schema.Union(
   QueryOptionsClause,
   QueryLimitClause,
   QueryFromClause,
-).annotations({ identifier: 'dxos.org/schema/Query' });
+).annotations({ identifier: 'org.dxos.schema.query' });
 
 export type Query = Schema.Schema.Type<typeof Query_>;
 export const Query: Schema.Schema<Query> = Query_;

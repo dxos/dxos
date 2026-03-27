@@ -10,7 +10,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { SettingsOperation } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { Function, type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -38,12 +39,12 @@ export const ScriptObjectSettings = ({ object }: ScriptObjectSettingsProps) => {
 const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(object);
-  const [fn] = useQuery(db, Filter.type(Function.Function, { source: Ref.make(object) }));
+  const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
   const blueprints = useQuery(db, Filter.type(Blueprint.Blueprint));
 
   const [creating, setCreating] = useState(false);
   const [instructions, setInstructions] = useState<string>(`You can run the script "${object.name ?? 'script'}".`);
-  const blueprintKey = `dxos.org/blueprint/${kebabize(object.name ?? 'script')}`;
+  const blueprintKey = `org.dxos.blueprint.${kebabize(object.name ?? 'script')}`;
   const existingBlueprint = blueprints.find((bp) => bp.key === blueprintKey);
 
   useAsyncEffect(async () => {
@@ -63,14 +64,14 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        Obj.change(text, (t) => {
-          t.content = instructions;
+        Obj.change(text, (obj) => {
+          obj.content = instructions;
         });
         if (fn?.key) {
           const toolId = ToolId.make(fn.key);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            Obj.change(existingBlueprint, (b) => {
-              b.tools = [...(b.tools ?? []), toolId];
+            Obj.change(existingBlueprint, (obj) => {
+              obj.tools = [...(obj.tools ?? []), toolId];
             });
           }
         }
@@ -131,7 +132,7 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const db = Obj.getDatabase(object);
-  const [fn] = useQuery(db, Filter.type(Function.Function, { source: Ref.make(object) }));
+  const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
 
   const functionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
   const functionUrl =
@@ -149,36 +150,39 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   );
 
   const handleBindingBlur = useCallback(() => {
-    Obj.change(fn, (f) => {
-      f.binding = binding;
-    });
+    if (fn) {
+      Obj.change(fn, (obj) => {
+        obj.binding = binding;
+      });
+    }
   }, [fn, binding]);
 
-  if (!fn || !functionUrl) {
+  if (!fn) {
     return null;
   }
 
-  // TODO(burdon): Use form.
   return (
     <div role='form' className='flex flex-col gap-2 my-form-padding'>
       <h2>{t('remote function settings heading')}</h2>
-      <Input.Root>
-        <div role='none' className='flex flex-col gap-1'>
-          <Input.Label>{t('function url label')}</Input.Label>
-          <div role='none' className='flex gap-1'>
-            <Input.TextInput
-              disabled
-              value={functionUrl}
-              onChange={(event) => {
-                Obj.change(fn, (f) => {
-                  f.name = event.target.value;
-                });
-              }}
-            />
-            <Clipboard.IconButton value={functionUrl} />
+      {functionUrl && (
+        <Input.Root>
+          <div role='none' className='flex flex-col gap-1'>
+            <Input.Label>{t('function url label')}</Input.Label>
+            <div role='none' className='flex gap-1'>
+              <Input.TextInput
+                disabled
+                value={functionUrl}
+                onChange={(event) => {
+                  Obj.change(fn, (obj) => {
+                    obj.name = event.target.value;
+                  });
+                }}
+              />
+              <Clipboard.IconButton value={functionUrl} />
+            </div>
           </div>
-        </div>
-      </Input.Root>
+        </Input.Root>
+      )}
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
           <Input.Label>{t('function binding label')}</Input.Label>
@@ -226,7 +230,7 @@ const Publishing = ({ object }: ScriptObjectSettingsProps) => {
   const handleOpenTokenManager = useCallback(
     () =>
       invokePromise(SettingsOperation.Open, {
-        plugin: 'dxos.org/plugin/token-manager',
+        plugin: 'org.dxos.plugin.token-manager',
       }),
     [invokePromise],
   );

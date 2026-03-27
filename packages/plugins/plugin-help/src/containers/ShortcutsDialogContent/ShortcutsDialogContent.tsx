@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
+import { Dialog, useTranslation } from '@dxos/react-ui';
 
 import { ShortcutsList } from '../../components';
 import { meta } from '../../meta';
@@ -14,16 +14,15 @@ export const ShortcutsDialogContent = () => {
 
   return (
     <Dialog.Content>
-      <div role='none' className='flex justify-between mb-1 pt-3 ps-2 pe-3 @md:pt-4 @md:ps-4 @md:pe-5'>
+      <Dialog.Header>
         <Dialog.Title>{t('shortcuts dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <IconButton icon='ph--x--bold' iconOnly size={3} label='Close' variant='ghost' autoFocus />
+          <Dialog.CloseIconButton />
         </Dialog.Close>
-      </div>
-
-      <div className='flex items-center justify-center'>
+      </Dialog.Header>
+      <Dialog.Body>
         <ShortcutsList />
-      </div>
+      </Dialog.Body>
     </Dialog.Content>
   );
 };

@@ -11,8 +11,8 @@ import { View } from '@dxos/echo';
 import { type OperationInvoker } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Sheet } from '@dxos/plugin-sheet/types';
-import { Diagram } from '@dxos/plugin-sketch/types';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { Sketch } from '@dxos/plugin-sketch/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { faker } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -42,8 +42,6 @@ export const createGenerator = <S extends Type.AnyObj>(
     const staticSchema = client?.graph.schemaRegistry.query({ typename }).runSync()[0];
     if (!view && !staticSchema) {
       await invokePromise(SpaceOperation.AddSchema, { db: space.db, schema, show: false });
-    } else if (!view && staticSchema) {
-      await invokePromise(SpaceOperation.UseStaticSchema, { db: space.db, typename, show: false });
     }
 
     // Create objects.
@@ -70,10 +68,10 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
   [
-    Diagram.Diagram.typename,
+    Sketch.Sketch.typename,
     async (space, n, cb) => {
       const objects = range(n).map(() => {
-        const obj = space.db.add(Diagram.make({ name: faker.commerce.productName() }));
+        const obj = space.db.add(Sketch.make({ name: faker.commerce.productName() }));
         return obj;
       });
 

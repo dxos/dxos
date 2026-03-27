@@ -5,13 +5,13 @@
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/assistant-toolkit';
-import { Feed, Obj, Query, Ref } from '@dxos/echo';
-import { DXN } from '@dxos/echo';
+import { Project, syncProjectTriggers } from '@dxos/assistant-toolkit';
+import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { QueueService } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
@@ -20,8 +20,7 @@ import { Filter, useQuery } from '@dxos/react-client/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { ButtonGroup, Input } from '@dxos/react-ui';
-
-import { syncTriggers } from './triggers';
+import { FeedAnnotation } from '@dxos/schema';
 
 export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Project.Project>) => {
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
@@ -47,12 +46,30 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
   const [specInitialValue] = useObject(spec, 'content');
 
   useEffect(() => {
+    const db = Obj.getDatabase(project);
+    if (!db) return;
+    const runtime = computeRuntime.getRuntime(db.spaceId);
     return Obj.subscribe(project, () => {
-      queueMicrotask(() => syncTriggers(project));
+      queueMicrotask(() => runtime.runPromise(syncProjectTriggers(project)));
     });
-  }, [project]);
+  }, [project, computeRuntime]);
 
-  const subscribableObjects = useQuery(Obj.getDatabase(project), Query.select(Filter.type(Feed.Feed)));
+  const db = Obj.getDatabase(project);
+  const feedFilter = useMemo(() => {
+    if (!db) {
+      return Filter.nothing();
+    }
+    const schemas = db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync();
+    const feedSchemas = schemas.filter((schema) => {
+      const annotation = FeedAnnotation.get(schema);
+      return Option.isSome(annotation) && annotation.value === true;
+    });
+    if (feedSchemas.length === 0) {
+      return Filter.nothing();
+    }
+    return Filter.or(...feedSchemas.map((schema) => Filter.type(schema)));
+  }, [db]);
+  const subscribableObjects = useQuery(db, feedFilter);
 
   const existingSubscripts = useAtomValue(
     useMemo(

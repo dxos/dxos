@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import Fibonacci from './fib';
-import Reply from './reply';
-import Sleep from './sleep';
+import { OperationHandlerSet } from '@dxos/operation';
+export * from './definitions';
 
-export const ExampleFunctions = {
-  Fibonacci,
-  Reply,
-  Sleep,
-};
+export const ExampleHandlers = OperationHandlerSet.lazy(
+  () => import('./fib'),
+  () => import('./reply'),
+  () => import('./sleep'),
+);

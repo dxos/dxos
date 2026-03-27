@@ -4,6 +4,8 @@
 
 import { afterEach, assert, describe, it } from '@effect/vitest';
 import { type Atom, Registry } from '@effect-atom/atom-react';
+import * as Cause from 'effect/Cause';
+import * as Exit from 'effect/Exit';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
@@ -23,14 +25,14 @@ import type * as CapabilityManager from './capability-manager';
 import * as Plugin from './plugin';
 import * as PluginManager from './plugin-manager';
 
-const String = Capability.make<{ string: string }>('dxos.org/test/string');
-const Number = Capability.make<{ number: number }>('dxos.org/test/number');
-const Total = Capability.make<{ total: number }>('dxos.org/test/total');
+const String = Capability.make<{ string: string }>('org.dxos.test.string');
+const Number = Capability.make<{ number: number }>('org.dxos.test.number');
+const Total = Capability.make<{ total: number }>('org.dxos.test.total');
 
-const CountEvent = ActivationEvent.make('dxos.org/test/count');
-const FailEvent = ActivationEvent.make('dxos.org/test/fail');
+const CountEvent = ActivationEvent.make('org.dxos.test.count');
+const FailEvent = ActivationEvent.make('org.dxos.test.fail');
 
-const testMeta = { id: 'dxos.org/plugin/test', name: 'Test' };
+const testMeta = { id: 'org.dxos.plugin.test', name: 'Test' };
 
 // TODO(wittjosiah): Factor out?
 const atomCounter = (registry: Registry.Registry, atom: Atom.Atom<any>) => {
@@ -204,7 +206,7 @@ describe('PluginManager', () => {
 
   it.effect('should catch and log defects (synchronous throws) in module activation', () =>
     Effect.gen(function* () {
-      const DefectEvent = ActivationEvent.make('dxos.org/test/defect');
+      const DefectEvent = ActivationEvent.make('org.dxos.test.defect');
       const capturedErrors: LogEntry[] = [];
       const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
         if (entry.level === LogLevel.ERROR) {
@@ -238,7 +240,7 @@ describe('PluginManager', () => {
       const defectLog = capturedErrors.find(
         (entry) =>
           entry.message?.includes('module failed to activate') &&
-          entry.context?.module === 'dxos.org/plugin/test/module/DefectInEffectSync',
+          entry.context?.module === 'org.dxos.plugin.test.module.DefectInEffectSync',
       );
       assert.isNotNull(defectLog, 'Expected error log for defect');
       assert.strictEqual(defectLog?.context?.isDefect, true, 'Expected isDefect to be true for synchronous throw');
@@ -249,7 +251,7 @@ describe('PluginManager', () => {
 
   it.effect('should catch and log defects when activate throws before returning Effect', () =>
     Effect.gen(function* () {
-      const DefectEvent = ActivationEvent.make('dxos.org/test/defect-immediate');
+      const DefectEvent = ActivationEvent.make('org.dxos.test.defect-immediate');
       const capturedErrors: LogEntry[] = [];
       const removeProcessor = log.addProcessor((_config: LogConfig, entry: LogEntry) => {
         if (entry.level === LogLevel.ERROR) {
@@ -284,7 +286,7 @@ describe('PluginManager', () => {
       const defectLog = capturedErrors.find(
         (entry) =>
           entry.message?.includes('module failed to activate') &&
-          entry.context?.module === 'dxos.org/plugin/test/module/DefectImmediate',
+          entry.context?.module === 'org.dxos.plugin.test.module.DefectImmediate',
       );
       assert.isNotNull(defectLog, 'Expected error log for immediate defect');
       assert.strictEqual(
@@ -419,7 +421,7 @@ describe('PluginManager', () => {
 
   it.effect('should be able to fire custom activation events', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin1',
@@ -427,7 +429,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin2',
@@ -435,7 +437,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin3 = Plugin.define({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }).pipe(
+      const Plugin3 = Plugin.define({ id: 'org.dxos.test.plugin-3', name: 'Plugin 3' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin3',
@@ -546,7 +548,7 @@ describe('PluginManager', () => {
         state.total = numbers.reduce((acc: number, n: { number: number }) => acc + n.number, 0);
       };
 
-      const Count = Plugin.define({ id: 'dxos.org/test/count', name: 'Count' }).pipe(
+      const Count = Plugin.define({ id: 'org.dxos.test.count', name: 'Count' }).pipe(
         Plugin.addModule({
           id: 'Count',
           activatesOn: ActivationEvents.Startup,
@@ -626,7 +628,7 @@ describe('PluginManager', () => {
 
   it.effect('should be reactive', () =>
     Effect.gen(function* () {
-      const Plugin1 = Plugin.define({ id: 'dxos.org/test/plugin-1', name: 'Plugin 1' }).pipe(
+      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin1',
@@ -634,7 +636,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin2 = Plugin.define({ id: 'dxos.org/test/plugin-2', name: 'Plugin 2' }).pipe(
+      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin2',
@@ -642,7 +644,7 @@ describe('PluginManager', () => {
         }),
         Plugin.make,
       );
-      const Plugin3 = Plugin.define({ id: 'dxos.org/test/plugin-3', name: 'Plugin 3' }).pipe(
+      const Plugin3 = Plugin.define({ id: 'org.dxos.test.plugin-3', name: 'Plugin 3' }).pipe(
         Plugin.addModule({
           activatesOn: CountEvent,
           id: 'Plugin3',
@@ -752,8 +754,8 @@ describe('PluginManager', () => {
         }
       });
 
-      const SlowEvent = ActivationEvent.make('dxos.org/test/slow');
-      const SlowPlugin = Plugin.define({ id: 'dxos.org/test/slow-plugin', name: 'Slow Plugin' }).pipe(
+      const SlowEvent = ActivationEvent.make('org.dxos.test.slow');
+      const SlowPlugin = Plugin.define({ id: 'org.dxos.test.slow-plugin', name: 'Slow Plugin' }).pipe(
         Plugin.addModule({
           id: 'SlowModule',
           activatesOn: SlowEvent,
@@ -795,11 +797,11 @@ describe('PluginManager', () => {
   it.effect('should prevent concurrent loads of the same module via semaphore', () =>
     Effect.gen(function* () {
       // Two different events that both can trigger the same module.
-      const EventA = ActivationEvent.make('dxos.org/test/event-a');
-      const EventB = ActivationEvent.make('dxos.org/test/event-b');
+      const EventA = ActivationEvent.make('org.dxos.test.event-a');
+      const EventB = ActivationEvent.make('org.dxos.test.event-b');
 
       let activateCallCount = 0;
-      const ConcurrentPlugin = Plugin.define({ id: 'dxos.org/test/concurrent-plugin', name: 'Concurrent Plugin' }).pipe(
+      const ConcurrentPlugin = Plugin.define({ id: 'org.dxos.test.concurrent-plugin', name: 'Concurrent Plugin' }).pipe(
         Plugin.addModule({
           id: 'ConcurrentModule',
           // Module activates on either event - this allows two different events to race.
@@ -840,6 +842,252 @@ describe('PluginManager', () => {
       const strings = manager.capabilities.getAll(String);
       assert.isTrue(strings.length >= 1, 'capability should be contributed');
       assert.strictEqual(strings[0].string, 'concurrent');
+    }),
+  );
+
+  it.effect('should deactivate all active modules on shutdown', () =>
+    Effect.gen(function* () {
+      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+        Plugin.addModule({
+          activatesOn: ActivationEvents.Startup,
+          id: 'Plugin1',
+          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+        }),
+        Plugin.make,
+      );
+      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+        Plugin.addModule({
+          activatesOn: ActivationEvents.Startup,
+          id: 'Plugin2',
+          activate: () => Effect.succeed(Capability.contributes(Number, { number: 42 })),
+        }),
+        Plugin.make,
+      );
+      const plugin1 = Plugin1();
+      const plugin2 = Plugin2();
+      plugins = [plugin1, plugin2];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(Plugin1.meta.id);
+      yield* manager.add(Plugin2.meta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.strictEqual(manager.getActive().length, 2);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 1);
+      assert.strictEqual(manager.capabilities.getAll(Number).length, 1);
+
+      const result = yield* manager.shutdown();
+      assert.isTrue(result);
+      assert.deepStrictEqual(manager.getActive(), []);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 0);
+      assert.strictEqual(manager.capabilities.getAll(Number).length, 0);
+    }),
+  );
+
+  it.effect('should run capability deactivate hooks during shutdown', () =>
+    Effect.gen(function* () {
+      let deactivated = false;
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'WithDeactivate',
+          activatesOn: ActivationEvents.Startup,
+          activate: () =>
+            Effect.succeed(
+              Capability.contributes(String, { string: 'hello' }, () =>
+                Effect.sync(() => {
+                  deactivated = true;
+                }),
+              ),
+            ),
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.isFalse(deactivated);
+
+      yield* manager.shutdown();
+      assert.isTrue(deactivated);
+    }),
+  );
+
+  it.effect('should deactivate modules in reverse activation order during shutdown', () =>
+    Effect.gen(function* () {
+      const deactivationOrder: string[] = [];
+      const Plugin1 = Plugin.define({ id: 'org.dxos.test.plugin-1', name: 'Plugin 1' }).pipe(
+        Plugin.addModule({
+          activatesOn: ActivationEvents.Startup,
+          id: 'First',
+          activate: () =>
+            Effect.succeed(
+              Capability.contributes(String, { string: 'first' }, () =>
+                Effect.sync(() => {
+                  deactivationOrder.push('First');
+                }),
+              ),
+            ),
+        }),
+        Plugin.make,
+      );
+      const Plugin2 = Plugin.define({ id: 'org.dxos.test.plugin-2', name: 'Plugin 2' }).pipe(
+        Plugin.addModule({
+          activatesOn: ActivationEvents.Startup,
+          id: 'Second',
+          activate: () =>
+            Effect.succeed(
+              Capability.contributes(Number, { number: 2 }, () =>
+                Effect.sync(() => {
+                  deactivationOrder.push('Second');
+                }),
+              ),
+            ),
+        }),
+        Plugin.make,
+      );
+      plugins = [Plugin1(), Plugin2()];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(Plugin1.meta.id);
+      yield* manager.add(Plugin2.meta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+
+      yield* manager.shutdown();
+      assert.deepStrictEqual(deactivationOrder, ['Second', 'First']);
+    }),
+  );
+
+  it.effect('should clear lifecycle bookkeeping during shutdown', () =>
+    Effect.gen(function* () {
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.isTrue(manager.getEventsFired().length > 0);
+
+      yield* manager.shutdown();
+      assert.deepStrictEqual(manager.getEventsFired(), []);
+      assert.deepStrictEqual(manager.getPendingReset(), []);
+      assert.deepStrictEqual(manager.getActive(), []);
+    }),
+  );
+
+  it.effect('should interrupt in-flight activation during shutdown', () =>
+    Effect.gen(function* () {
+      const activationStarted = yield* Effect.makeLatch(false);
+      const allowActivationToComplete = yield* Effect.makeLatch(false);
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () =>
+            Effect.gen(function* () {
+              yield* activationStarted.open;
+              yield* allowActivationToComplete.await;
+              return Capability.contributes(String, { string: 'hello' });
+            }),
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+
+      const activationFiber = yield* Effect.fork(manager.activate(ActivationEvents.Startup));
+      yield* activationStarted.await;
+
+      const shutdownFiber = yield* Effect.fork(manager.shutdown());
+      yield* allowActivationToComplete.open;
+
+      const shutdownResult = yield* Fiber.join(shutdownFiber);
+      const activationExit = yield* Fiber.await(activationFiber);
+
+      assert.isTrue(shutdownResult);
+      assert.isTrue(Exit.isFailure(activationExit));
+      if (Exit.isFailure(activationExit)) {
+        assert.isTrue(Cause.isInterruptedOnly(activationExit.cause));
+      }
+      assert.strictEqual(manager.capabilities.getAll(String).length, 0);
+      assert.deepStrictEqual(manager.getActive(), []);
+      assert.deepStrictEqual(manager.getEventsFired(), []);
+    }),
+  );
+
+  it.effect('should preserve plugins, core, enabled, and modules after shutdown', () =>
+    Effect.gen(function* () {
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+
+      const pluginsBefore = manager.getPlugins();
+      const coreBefore = manager.getCore();
+      const enabledBefore = manager.getEnabled();
+      const modulesBefore = manager.getModules();
+
+      yield* manager.shutdown();
+
+      assert.deepStrictEqual(manager.getPlugins(), pluginsBefore);
+      assert.deepStrictEqual(manager.getCore(), coreBefore);
+      assert.deepStrictEqual(manager.getEnabled(), enabledBefore);
+      assert.deepStrictEqual(manager.getModules(), modulesBefore);
+    }),
+  );
+
+  it.effect('should allow re-activation after shutdown', () =>
+    Effect.gen(function* () {
+      let activateCount = 0;
+      const Test = Plugin.define(testMeta).pipe(
+        Plugin.addModule({
+          id: 'Hello',
+          activatesOn: ActivationEvents.Startup,
+          activate: () => {
+            activateCount++;
+            return Effect.succeed(Capability.contributes(String, { string: 'hello' }));
+          },
+        }),
+        Plugin.make,
+      );
+      const testPlugin = Test();
+      plugins = [testPlugin];
+
+      const manager = PluginManager.make({ pluginLoader });
+      yield* manager.add(testMeta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.strictEqual(activateCount, 1);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+
+      yield* manager.shutdown();
+      assert.deepStrictEqual(manager.getActive(), []);
+
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.strictEqual(activateCount, 2);
+      assert.deepStrictEqual(manager.getActive(), [testPlugin.modules[0].id]);
+      assert.strictEqual(manager.capabilities.getAll(String).length, 1);
     }),
   );
 });

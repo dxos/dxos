@@ -15,7 +15,7 @@ import { log } from '@dxos/log';
 import { type MakeOptional, isNonNullable } from '@dxos/util';
 
 import * as Node from './node';
-import { Separators, normalizeRelation, shallowEqual } from './util';
+import { normalizeRelation, primaryKey, primaryParts, secondaryKey, secondaryParts, shallowEqual } from './util';
 
 const graphSymbol = Symbol('graph');
 
@@ -49,8 +49,8 @@ export type GraphTraversalOptions = {
    */
   source?: string;
 
-  /** The relation to traverse graph edges. */
-  relation: Node.RelationInput;
+  /** The relation(s) to traverse graph edges. */
+  relation: Node.RelationInput | Node.RelationInput[];
 };
 
 export type GraphProps = {
@@ -183,6 +183,9 @@ class GraphImpl implements WritableGraph {
   // TODO(wittjosiah): Atom feature request, support for something akin to `ComplexMap` to allow for complex arguments.
   readonly _connections = Atom.family<string, Atom.Atom<Node.Node[]>>((key) => {
     return Atom.make((get) => {
+      if (!key || primaryParts(key).length < 2) {
+        return [];
+      }
       const { id, relation } = relationFromConnectionKey(key);
       const edges = get(this._edges(id));
       return (edges[relationKey(relation)] ?? [])
@@ -194,6 +197,9 @@ class GraphImpl implements WritableGraph {
 
   readonly _actions = Atom.family<string, Atom.Atom<(Node.Action | Node.ActionGroup)[]>>((id) => {
     return Atom.make((get) => {
+      if (!id) {
+        return [];
+      }
       return get(this._connections(connectionKey(id, Node.actionRelation()))) as (Node.Action | Node.ActionGroup)[];
     }).pipe(Atom.withLabel(`graph:actions:${id}`));
   });
@@ -515,9 +521,16 @@ const traverseImpl = (graph: BaseGraph, options: GraphTraversalOptions, path: st
     return;
   }
 
-  Object.values(getConnections(graph, source, relation)).forEach((child) =>
-    traverseImpl(graph, { source: child.id, relation, visitor }, [...path, source]),
-  );
+  const relations = Array.isArray(relation) ? relation : [relation];
+  const seen = new Set<string>();
+  for (const rel of relations) {
+    for (const connected of getConnections(graph, source, rel)) {
+      if (!seen.has(connected.id)) {
+        seen.add(connected.id);
+        traverseImpl(graph, { source: connected.id, relation, visitor }, [...path, source]);
+      }
+    }
+  }
 };
 
 /**
@@ -693,7 +706,7 @@ const expandImpl = <T extends ExpandableGraph | WritableGraph>(
 ): T => {
   const internal = getInternal(graph);
   const normalizedRelation = normalizeRelation(relation);
-  const key = `${id}${Separators.primary}${relationKey(normalizedRelation)}`;
+  const key = primaryKey(id, relationKey(normalizedRelation));
   const nodeOpt = internal._registry.get(internal._node(id));
   if (Option.isNone(nodeOpt)) {
     // Node not yet in graph: record expand to run when the node is added.
@@ -887,11 +900,10 @@ const addNodeImpl = <T extends WritableGraph>(graph: T, nodeArg: Node.NodeArg<an
       graph.onNodeChanged.emit({ id, node: newNode });
 
       // Apply any expands that were deferred because this node did not exist yet.
-      const prefix = `${id}${Separators.primary}`;
-      const toApply = [...internal._pendingExpands].filter((k) => k.startsWith(prefix));
+      const toApply = [...internal._pendingExpands].filter((k) => primaryParts(k)[0] === id);
       for (const pendingKey of toApply) {
         internal._pendingExpands.delete(pendingKey);
-        const relation = relationFromKey(pendingKey.slice(prefix.length));
+        const relation = relationFromKey(primaryParts(pendingKey)[1]);
         Record.set(internal._expanded, pendingKey, true);
         internal._onExpand?.(id, relation);
       }
@@ -1213,26 +1225,22 @@ export const make = (params?: GraphProps): Graph => {
 
 export const relationKey = (relation: Node.RelationInput): string => {
   const normalized = normalizeRelation(relation);
-  return `${normalized.kind}${Separators.secondary}${normalized.direction}`;
+  return secondaryKey(normalized.kind, normalized.direction);
 };
 
 export const relationFromKey = (encoded: string): Node.Relation => {
-  const separatorIndex = encoded.lastIndexOf(Separators.secondary);
-  invariant(separatorIndex > 0 && separatorIndex < encoded.length - 1, `Invalid relation key: ${encoded}`);
-  const kind = encoded.slice(0, separatorIndex);
-  const directionRaw = encoded.slice(separatorIndex + 1);
+  const parts = secondaryParts(encoded);
+  invariant(parts.length === 2 && parts[0].length > 0 && parts[1].length > 0, `Invalid relation key: ${encoded}`);
+  const [kind, directionRaw] = parts;
   invariant(directionRaw === 'outbound' || directionRaw === 'inbound', `Invalid relation direction: ${directionRaw}`);
   return Node.relation(kind, directionRaw);
 };
 
-const connectionKey = (id: string, relation: Node.RelationInput): string =>
-  `${id}${Separators.primary}${relationKey(relation)}`;
+const connectionKey = (id: string, relation: Node.RelationInput): string => primaryKey(id, relationKey(relation));
 
 const relationFromConnectionKey = (key: string): { id: string; relation: Node.Relation } => {
-  const separatorIndex = key.indexOf(Separators.primary);
-  invariant(separatorIndex > 0 && separatorIndex < key.length - 1, `Invalid connection key: ${key}`);
-  const id = key.slice(0, separatorIndex);
-  const encodedRelation = key.slice(separatorIndex + 1);
+  const [id, encodedRelation] = primaryParts(key);
+  invariant(id && encodedRelation, `Invalid connection key: ${key}`);
   return { id, relation: relationFromKey(encodedRelation) };
 };
 

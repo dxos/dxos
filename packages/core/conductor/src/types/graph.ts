@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 
 import { JsonSchema, Obj, Ref, Type } from '@dxos/echo';
-import { Function } from '@dxos/functions';
 import { Graph } from '@dxos/graph';
+import { Operation } from '@dxos/operation';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
 
@@ -32,7 +32,7 @@ export const ComputeNode = Schema.extend(
     /**
      * For composition of function nodes.
      */
-    function: Schema.optional(Ref.Ref(Function.Function)),
+    function: Schema.optional(Ref.Ref(Operation.PersistentOperation)),
 
     /**
      * For template nodes determines the type of the value.
@@ -92,7 +92,7 @@ export const ComputeGraph = Schema.Struct({
   output: Schema.optional(ComputeNode),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/ComputeGraph',
+    typename: 'org.dxos.type.compute-graph',
     version: '0.1.0',
   }),
 );

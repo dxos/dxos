@@ -6,6 +6,7 @@ import { type EditorView } from '@codemirror/view';
 import { type Atom, RegistryContext } from '@effect-atom/atom-react';
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo } from 'react';
 
+import { useCapabilities } from '@dxos/app-framework/ui';
 import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
@@ -30,13 +31,14 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
-import { useSelectCurrentThread } from '../../hooks';
 import { meta } from '../../meta';
+import { MarkdownCapabilities } from '../../types';
 
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar';
 
 export type MarkdownEditorContentProps = ThemedClassName<{
   id: string;
+  attendableId?: string;
   role?: string;
   viewMode?: EditorViewMode;
   scrollPastEnd?: boolean;
@@ -54,6 +56,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     {
       classNames,
       id,
+      attendableId,
       role,
       viewMode,
       initialValue,
@@ -132,7 +135,13 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
 
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
 
-    useSelectCurrentThread(editorView, id);
+    const [editorViewRegistry] = useCapabilities(MarkdownCapabilities.EditorViews);
+    useEffect(() => {
+      if (editorView && editorViewRegistry) {
+        editorViewRegistry.register(attendableId ?? id, editorView, id);
+        return () => editorViewRegistry.unregister(attendableId ?? id);
+      }
+    }, [editorView, editorViewRegistry, attendableId, id]);
 
     useTest(editorView);
 

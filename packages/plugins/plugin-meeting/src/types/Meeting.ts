@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Ref, Type } from '@dxos/echo';
+import { Annotation, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 import { Thread, Transcript } from '@dxos/types';
@@ -51,10 +51,14 @@ export const Meeting = Schema.Struct({
   thread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Meeting',
+    typename: 'org.dxos.type.meeting',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--note--regular',
+    hue: 'rose',
+  }),
 );
 export interface Meeting extends Schema.Schema.Type<typeof Meeting> {}
 

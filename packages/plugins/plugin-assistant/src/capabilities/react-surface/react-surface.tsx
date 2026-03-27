@@ -15,6 +15,7 @@ import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
+import { useActiveSpace } from '@dxos/plugin-space';
 
 import {
   AssistantSettings,
@@ -25,6 +26,8 @@ import {
   ProjectArticle,
   ProjectSettings,
   PromptArticle,
+  PromptList,
+  TracePanel,
   TriggerStatus,
 } from '../../containers';
 import { ASSISTANT_DIALOG, meta } from '../../meta';
@@ -34,7 +37,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/plugin-settings`,
+        id: `${meta.id}.plugin-settings`,
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
@@ -44,35 +47,52 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/chat`,
+        id: `${meta.id}.chat`,
         role: 'article',
-        filter: (data): data is { subject: Chat.Chat; variant: undefined } =>
-          Obj.instanceOf(Chat.Chat, data.subject) && data.variant !== 'assistant-chat',
-        component: ({ data, role, ref }) => <ChatContainer role={role} subject={data.subject} ref={ref} />,
+        filter: (data): data is { attendableId: string; subject: Chat.Chat; variant: undefined } =>
+          typeof data.attendableId === 'string' &&
+          Obj.instanceOf(Chat.Chat, data.subject) &&
+          data.variant !== 'assistant-chat',
+        component: ({ data, role, ref }) => (
+          <ChatContainer role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />
+        ),
       }),
       Surface.create({
-        id: `${meta.id}/project`,
+        id: `${meta.id}.project`,
         role: 'article',
         filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
         component: ({ data, role }) => <ProjectArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/project/companion/settings`,
+        id: `${meta.id}.project.companion.settings`,
         role: 'object-settings',
         filter: (data): data is { subject: Project.Project } => Obj.instanceOf(Project.Project, data.subject),
         component: ({ data }) => <ProjectSettings subject={data.subject} />,
       }),
       // TODO(wittjosiah): This is flashing when chat changes.
       Surface.create({
-        id: `${meta.id}/companion-chat`,
+        id: `${meta.id}.companion-chat`,
         role: 'article',
-        filter: (data): data is { companionTo: Obj.Unknown; subject: Chat.Chat | 'assistant-chat' } =>
+        filter: (
+          data,
+        ): data is { subject: Chat.Chat | 'assistant-chat'; attendableId: string; companionTo: Obj.Unknown } =>
+          typeof data.attendableId === 'string' &&
           Obj.isObject(data.companionTo) &&
           (Obj.instanceOf(Chat.Chat, data.subject) || data.subject === 'assistant-chat'),
-        component: ({ data, role, ref }) => <ChatCompanion role={role} data={data} ref={ref} />,
+        component: ({ data, role, ref }) => (
+          <ChatCompanion
+            role={role}
+            data={data}
+            // TODO(burdon): See comment in ChatCompanion.tsx
+            // data={data.subject}
+            // companionTo={data.companionTo}
+            // attendableId={data.attendableId}
+            ref={ref}
+          />
+        ),
       }),
       Surface.create({
-        id: `${meta.id}/companion-invocations`,
+        id: `${meta.id}.companion-invocations`,
         role: 'article',
         filter: (data): data is { companionTo: Sequence } =>
           (Obj.instanceOf(Sequence, data.companionTo) || Obj.instanceOf(Prompt.Prompt, data.companionTo)) &&
@@ -83,7 +103,7 @@ export default Capability.makeModule(() =>
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
           return (
-            <Panel.Root role={role} className='dx-article'>
+            <Panel.Root role={role} className='dx-document'>
               <Panel.Content asChild>
                 <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
               </Panel.Content>
@@ -92,13 +112,13 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/blueprint`,
+        id: `${meta.id}.blueprint`,
         role: 'article',
         filter: (data): data is { subject: Blueprint.Blueprint } => Obj.instanceOf(Blueprint.Blueprint, data.subject),
         component: ({ data }) => <BlueprintArticle subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/prompt`,
+        id: `${meta.id}.prompt`,
         role: 'article',
         filter: (data): data is { subject: Prompt.Prompt } => Obj.instanceOf(Prompt.Prompt, data.subject),
         component: ({ data }) => <PromptArticle subject={data.subject} />,
@@ -110,9 +130,28 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <ChatDialog {...data.props} />,
       }),
       Surface.create({
-        id: `${meta.id}/status`,
-        role: 'status',
+        id: `${meta.id}.trace`,
+        role: 'deck-companion--trace',
+        filter: (data): data is { subject: 'trace' } => data.subject === 'trace',
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <TracePanel space={space} />;
+        },
+      }),
+      Surface.create({
+        id: `${meta.id}.status`,
+        role: 'status-indicator',
         component: () => <TriggerStatus />,
+      }),
+      Surface.create({
+        id: `${meta.id}.prompts`,
+        role: 'prompts',
+        filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
+        component: ({ data }) => <PromptList subject={data.subject} />,
       }),
     ]),
   ),

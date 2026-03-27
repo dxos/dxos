@@ -5,18 +5,18 @@
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
 import { TextTooltip } from '@dxos/react-ui-text-tooltip';
-import { hoverableControls, hoverableFocusedWithinControls } from '@dxos/ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dxos/ui-theme';
 
 import { useBreakpoints } from '../../hooks';
-import { parseEntryId } from '../../layout';
 import { meta } from '../../meta';
-import { DeckOperation, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
+import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
+import { DeckOperation } from '../../operations';
 import { soloInlinePadding } from '../fragments';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
@@ -56,7 +56,7 @@ export const PlankHeading = memo(
     actions = [],
   }: PlankHeadingProps) => {
     const { t } = useTranslation(meta.id);
-    const { invokePromise, invokeSync } = useOperationInvoker();
+    const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
@@ -91,7 +91,7 @@ export const PlankHeading = memo(
       [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled],
     );
 
-    const { variant } = parseEntryId(id);
+    const variant = isCompanionNode ? getCompanionVariant(id) : undefined;
     const sigilActions = useMemo(() => {
       if (!node) {
         return undefined;
@@ -100,8 +100,8 @@ export const PlankHeading = memo(
       } else {
         return [
           actions,
-          Graph.getActions(graph, node.id).filter((a) =>
-            ['list-item', 'list-item-primary', 'heading-list-item'].includes(a.properties.disposition),
+          Graph.getActions(graph, node.id).filter((action) =>
+            ['list-item', 'list-item-primary', 'heading-list-item'].includes(action.properties.disposition),
           ),
         ].filter((a) => a.length > 0);
       }
@@ -122,18 +122,18 @@ export const PlankHeading = memo(
           return invokePromise(DeckOperation.Adjust, { type: eventType, id });
         } else if (eventType === 'close') {
           if (part === 'complementary') {
-            return invokeSync(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+            return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
           } else {
-            return invokeSync(LayoutOperation.Close, { subject: [id] });
+            return invokePromise(LayoutOperation.Close, { subject: [id] });
           }
         } else {
           return invokePromise(DeckOperation.Adjust, { type: eventType, id });
         }
       },
-      [invokePromise, invokeSync, id, part],
+      [invokePromise, id, part],
     );
 
-    const ActionRoot = node && popoverAnchorId === `dxos.org/ui/${meta.id}/${node.id}` ? Popover.Anchor : Fragment;
+    const ActionRoot = node && popoverAnchorId === `${meta.id}:${node.id}` ? Popover.Anchor : Fragment;
 
     const handleTabClick = useCallback(
       (event: MouseEvent) => {
@@ -148,6 +148,8 @@ export const PlankHeading = memo(
 
     return (
       <StackItem.Heading
+        data-plank-heading
+        style={iconSize(5)}
         classNames={[
           'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-coarse',
           part === 'solo' ? soloInlinePadding : 'px-1',
@@ -160,7 +162,6 @@ export const PlankHeading = memo(
               ]
             : []),
         ]}
-        data-plank-heading
       >
         {companions && isCompanionNode ? (
           /* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */

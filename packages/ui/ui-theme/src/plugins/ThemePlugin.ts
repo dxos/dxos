@@ -44,16 +44,15 @@ export type ThemePluginOptions = {
  */
 export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
   // Prefer source CSS if available (monorepo dev), fall back to dist for installed package.
-  const srcThemePath = resolve(import.meta.dirname, ROOT, 'src/theme.css');
-  const distThemePath = resolve(import.meta.dirname, '../theme.css');
+  const srcThemePath = resolve(import.meta.dirname, ROOT, 'src/main.css');
+  const distThemePath = resolve(import.meta.dirname, '../main.css');
   const isMonorepo = existsSync(srcThemePath);
 
-  // dark-mode.ts is always read from src (ships via "files": ["src"] in package.json).
-  // In monorepo: import.meta.dirname = src/plugins/, so the file is right here.
-  // In installed package: import.meta.dirname = dist/plugin/{format}/plugins/, so go up 4 levels.
-  const srcDarkModePath = resolve(import.meta.dirname, ROOT, 'src/plugins/dark-mode.ts');
-  const distDarkModePath = resolve(import.meta.dirname, ROOT, 'src/plugins/dark-mode.ts');
-  const darkModeScriptPath = existsSync(srcDarkModePath) ? srcDarkModePath : distDarkModePath;
+  // Static assets shipped via "files": ["src"] in package.json.
+  // Both monorepo and installed package resolve to the same src/plugins/ directory.
+  const pluginsDir = resolve(import.meta.dirname, ROOT, 'src/plugins');
+  const darkModeScriptPath = resolve(pluginsDir, 'dark-mode.ts');
+  const mainCssPath = resolve(pluginsDir, 'main.css');
 
   const config: ThemePluginOptions = {
     srcCssPath: isMonorepo ? srcThemePath : distThemePath,
@@ -112,23 +111,13 @@ export const ThemePlugin = (options: ThemePluginOptions): Plugin => {
         injectTo: 'head-prepend',
       };
 
-      // Critical pre-CSS fallbacks so text is readable before (and during) Vite HMR.
-      // In dev mode Vite injects CSS via JS; when an HMR update fires the old style tag is
-      // removed before the new one is inserted, briefly leaving all --color-* vars undefined.
-      // These static approximations of neutral-50/950 survive that gap.
-      // Values are intentionally kept in sync with @theme tokens in semantic.css.
+      // Critical styles: font sizing, overscroll, color fallbacks.
+      // Loaded from critical.css to keep styles maintainable and out of index.html.
       const criticalTag: HtmlTagDescriptor = {
         tag: 'style',
         attrs: { 'data-dxos-critical': '' },
         injectTo: 'head-prepend',
-        children: [
-          ':root { color-scheme: light; }',
-          'html { color: oklch(0.145 0 0); background-color: oklch(0.985 0 0); }', // ≈ neutral-950 / neutral-50
-          'html.dark { color-scheme: dark; color: oklch(0.985 0 0); background-color: oklch(0.145 0 0); }',
-          '@media (prefers-color-scheme: dark) {',
-          '  html:not(.dark) { color: oklch(0.985 0 0); background-color: oklch(0.145 0 0); }',
-          '}',
-        ].join('\n'),
+        children: readFileSync(mainCssPath, 'utf-8'),
       };
 
       return [darkModeTag, layersTag, criticalTag];

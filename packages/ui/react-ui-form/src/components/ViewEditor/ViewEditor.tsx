@@ -17,7 +17,13 @@ import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Message, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { List } from '@dxos/react-ui-list';
-import { ProjectionModel, VIEW_FIELD_LIMIT, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
+import {
+  ParentLabelAnnotation,
+  ProjectionModel,
+  VIEW_FIELD_LIMIT,
+  createEchoChangeCallback,
+  getTypenameFromQuery,
+} from '@dxos/schema';
 import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -124,7 +130,12 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (mode === 'tag') {
         return Schema.Struct({
           ...base.fields,
-          target: Schema.optional(Ref.Ref(Feed.Feed).annotations({ title: 'Target Feed' })),
+          // TODO(wittjosiah): Replace Type.Feed with Dataset.Dataset when Ref.Ref supports unions.
+          target: Ref.Ref(Feed.Feed).pipe(
+            Schema.annotations({ title: 'Target Feed' }),
+            ParentLabelAnnotation.set(true),
+            Schema.optional,
+          ),
         }).pipe(Schema.mutable);
       }
 
@@ -263,12 +274,12 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
       invariant(!readonly);
-      Obj.change(view, (v) => {
+      Obj.change(view, (obj) => {
         // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
-        const fields = [...v.projection.fields];
+        const fields = [...obj.projection.fields];
         const [moved] = fields.splice(fromIndex, 1);
         fields.splice(toIndex, 0, moved);
-        v.projection.fields = fields;
+        obj.projection.fields = fields;
       });
     },
     [view, readonly],
@@ -329,7 +340,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
                       {field.path}
                     </List.ItemTitle>
-                    <List.ItemButton
+                    <List.ItemIconButton
                       label={t(hidden ? 'show field label' : 'hide field label')}
                       data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                       icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
@@ -346,7 +357,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                           onClick={() => handleDelete(field.id)}
                           data-testid='field.delete'
                         />
-                        <IconButton
+                        <List.ItemIconButton
                           iconOnly
                           variant='ghost'
                           label={t('toggle expand label', { ns: osTranslations })}

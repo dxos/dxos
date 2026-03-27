@@ -32,7 +32,7 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
         </div>
       )}
       <span role='none' className='grow' />
-      <Surface.Surface role='header-end' limit={1} />
+      <Surface.Surface role='version-info' limit={1} />
       <Surface.Surface role='notch-start' limit={1} />
     </header>
   );

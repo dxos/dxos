@@ -5,10 +5,10 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
 import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
-import { getCompanionId, useDeckCompanions, useDeckState } from '../../hooks';
+import { useDeckCompanions, useDeckState } from '../../hooks';
 import { meta } from '../../meta';
 
 export const ToggleSidebarButton = ({
@@ -64,7 +64,7 @@ export const ToggleComplementarySidebarButton = ({
   classNames,
   current,
 }: ThemedClassName<{ inR0?: boolean; current?: string }>) => {
-  const { invokeSync } = useOperationInvoker();
+  const { invokePromise } = useOperationInvoker();
   const { state, updateState } = useDeckState();
   const { t } = useTranslation(meta.id);
 
@@ -73,11 +73,11 @@ export const ToggleComplementarySidebarButton = ({
     const nextState = state.complementarySidebarState === 'expanded' ? 'collapsed' : 'expanded';
     updateState((state) => ({ ...state, complementarySidebarState: nextState }));
 
-    const subject = state.complementarySidebarPanel ?? (companions[0] && getCompanionId(companions[0].id));
+    const subject = state.complementarySidebarPanel ?? (companions[0] && getCompanionVariant(companions[0].id));
     if (nextState === 'expanded' && !current && subject) {
-      invokeSync(LayoutOperation.UpdateComplementary, { subject });
+      void invokePromise(LayoutOperation.UpdateComplementary, { subject });
     }
-  }, [state, updateState, current, companions, invokeSync]);
+  }, [state, updateState, current, companions, invokePromise]);
 
   return (
     <IconButton
@@ -86,7 +86,6 @@ export const ToggleComplementarySidebarButton = ({
       icon='ph--sidebar-simple--regular'
       iconOnly
       label={t('open complementary sidebar label')}
-      size={inR0 ? 5 : 4}
       tooltipSide={inR0 ? 'left' : undefined}
       onClick={handleClick}
     />

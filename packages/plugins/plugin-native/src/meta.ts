@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/native',
+  id: 'org.dxos.plugin.native',
   name: 'Native',
   description: trim`
     Native platform integration providing desktop-specific features and system-level capabilities.

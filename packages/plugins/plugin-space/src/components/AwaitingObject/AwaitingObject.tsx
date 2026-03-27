@@ -14,7 +14,7 @@ import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
-import { SpaceOperation } from '../../types';
+import { SpaceOperation } from '../../operations';
 
 const WAIT_FOR_OBJECT_TIMEOUT = 3 * 60 * 1_000;
 const TOAST_TIMEOUT = 4 * 60 * 1_000;
@@ -64,17 +64,17 @@ export const AwaitingObject = ({ id }: { id: string }) => {
         <Toast.Title classNames='flex items-center gap-2'>
           {found ? (
             <>
-              <Icon icon='ph--check-circle--regular' size={5} />
+              <Icon icon='ph--check-circle--regular' />
               <span>{t('found object label')}</span>
             </>
           ) : waiting ? (
             <>
-              <Icon icon='ph--circle-notch--regular' size={5} classNames='animate-spin' />
+              <Icon icon='ph--circle-notch--regular' classNames='animate-spin' />
               <span>{t('waiting for object label')}</span>
             </>
           ) : (
             <>
-              <Icon icon='ph--circle-dashed--regular' size={5} />
+              <Icon icon='ph--circle-dashed--regular' />
               <span>{t('object not found label')}</span>
             </>
           )}

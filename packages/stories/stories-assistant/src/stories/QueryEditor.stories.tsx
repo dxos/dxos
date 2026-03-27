@@ -79,8 +79,8 @@ const meta: Meta<typeof QueryEditor> = {
           { type: Person.Person, count: 50 },
         ]);
         objects.forEach((obj) => {
-          Obj.change(obj, (o) => {
-            Obj.getMeta(o).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));
+          Obj.change(obj, (obj) => {
+            Obj.getMeta(obj).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));
           });
         });
       },
@@ -98,6 +98,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    value: '(type:dxos.org/type/Person OR type:dxos.org/type/Organization)',
+    value: '(type:org.dxos.type.person OR type:org.dxos.type.organization)',
   },
 };

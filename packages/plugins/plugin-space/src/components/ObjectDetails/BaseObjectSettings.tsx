@@ -11,10 +11,24 @@ import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
+import { HuePicker } from '@dxos/react-ui-pickers';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
+
+const createFieldMap: FormFieldMap = {
+  hue: ({ type, label, layout, getValue, onValueChange }) => {
+    const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
+    const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+    return (
+      <>
+        {layout !== 'inline' && <Form.Label label={label} />}
+        <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
+      </>
+    );
+  },
+};
 
 // TODO(wittjosiah): Would be nice to control order when extending so this isn't always first/last.
 const BaseSchema = Schema.Struct({
@@ -35,7 +49,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
     return Function.pipe(
       Obj.getSchema(object),
       Option.fromNullable,
-      Option.map((schema) => BaseSchema.pipe(Schema.extend(schema))),
+      Option.map((schema) => omitId(BaseSchema.pipe(Schema.extend(schema)))),
       Option.getOrUndefined,
     );
   }, [object]);
@@ -87,7 +101,7 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
         Obj.change(object, () => {
           for (const path of nonTagPaths) {
             const parts = splitJsonPath(path);
-            const value = Obj.getValue(values, parts);
+            const value = Obj.getValue(values as any, parts);
             Obj.setValue(object, parts, value);
           }
         });
@@ -102,11 +116,13 @@ export const BaseObjectSettings = ({ classNames, children, object }: BaseObjectS
 
   return (
     <Form.Root
-      schema={omitId(formSchema)}
-      defaultValues={values}
+      schema={formSchema}
+      defaultValues={values as any}
+      createTypename={Type.getTypename(Tag.Tag)}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
+      createFieldMap={createFieldMap}
       db={db}
       onValuesChanged={handleChange}
       onCreate={handleCreate}

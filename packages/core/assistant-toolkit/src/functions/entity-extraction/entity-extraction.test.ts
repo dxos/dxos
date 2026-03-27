@@ -15,6 +15,8 @@ import { FunctionInvocationService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
 import { Message, Organization, Person } from '@dxos/types';
 
+import { OperationHandlerSet } from '@dxos/operation';
+
 import { ResearchGraph } from '../../blueprints';
 
 import { default as entityExtraction } from './entity-extraction';
@@ -22,7 +24,7 @@ import { default as entityExtraction } from './entity-extraction';
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [entityExtraction],
+  operationHandlers: OperationHandlerSet.make(entityExtraction),
   types: [Blueprint.Blueprint, Message.Message, Person.Person, Organization.Organization, ResearchGraph.ResearchGraph],
 });
 
@@ -57,7 +59,7 @@ describe('Entity extraction', () => {
             ],
           }),
         );
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const result = yield* FunctionInvocationService.invokeFunction(entityExtraction, {
           source: email,
         });

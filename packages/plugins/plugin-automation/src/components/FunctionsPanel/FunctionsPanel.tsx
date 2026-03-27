@@ -6,10 +6,10 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
-import { Function, Script } from '@dxos/functions';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { Script } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Button, IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
@@ -24,7 +24,7 @@ export type FunctionsPanelProps = {
 
 export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
   const { t } = useTranslation(meta.id);
-  const functions = useQuery(space.db, Filter.type(Function.Function));
+  const functions = useQuery(space.db, Filter.type(Operation.PersistentOperation));
   const scripts = useQuery(space.db, Filter.type(Script.Script));
   const { invokePromise } = useOperationInvoker();
 
@@ -47,7 +47,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
   );
 
   const getScriptName = useCallback(
-    (func: Function.Function) => {
+    (func: Operation.PersistentOperation) => {
       const script = functionToScriptMap[func.id];
       return script?.name;
     },
@@ -55,28 +55,32 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
   );
 
   const handleGoToScript = useCallback(
-    (func: Function.Function) => {
+    (func: Operation.PersistentOperation) => {
       const script = functionToScriptMap[func.id];
       if (script) {
-        void invokePromise(LayoutOperation.Open, { subject: [Obj.getDXN(script).toString()] });
+        void invokePromise(LayoutOperation.Open, { subject: [getObjectPathFromObject(script)] });
       }
     },
     [functionToScriptMap, invokePromise],
   );
 
   const handleDelete = useCallback(
-    (func: Function.Function) => invokePromise(SpaceOperation.RemoveObjects, { objects: [func] }),
+    (func: Operation.PersistentOperation) => invokePromise(SpaceOperation.RemoveObjects, { objects: [func] }),
     [invokePromise],
   );
 
   return (
     <Settings.Container>
       {functions.length > 0 && (
-        <List.Root<Function.Function> items={functions} isItem={Schema.is(Function.Function)} getId={(func) => func.id}>
+        <List.Root<Operation.PersistentOperation>
+          items={functions}
+          isItem={Schema.is(Operation.PersistentOperation)}
+          getId={(func) => func.id}
+        >
           {({ items }) => (
             <div role='list' className='flex flex-col w-full'>
               {items?.map((func) => (
-                <List.Item<Function.Function>
+                <List.Item<Operation.PersistentOperation>
                   key={func.id}
                   item={func}
                   classNames={mx('grid grid-cols-[1fr_auto] min-h-[2.5rem] min-h-[3rem] px-2 items-center', ghostHover)}

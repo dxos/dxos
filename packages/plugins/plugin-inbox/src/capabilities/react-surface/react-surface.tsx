@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { type Feed, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { Event, Message, Organization, Person } from '@dxos/types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
@@ -32,13 +32,13 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/mailbox`,
+        id: `${meta.id}.mailbox`,
         role: ['article'],
         filter: (
           data,
         ): data is {
           attendableId?: string;
-          subject: Feed.Feed;
+          subject: Mailbox.Mailbox;
           properties: { filter?: string };
         } => Mailbox.instanceOf(data.subject),
         component: ({ data }) => {
@@ -48,16 +48,18 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/message`,
+        id: `${meta.id}.message`,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Message.Message; companionTo: Feed.Feed } =>
-          Obj.instanceOf(Message.Message, data.subject) && Mailbox.instanceOf(data.companionTo),
-        component: ({ data: { companionTo, subject }, role }) => {
-          return <MessageArticle role={role} subject={subject} feed={companionTo} />;
+        filter: (data): data is { attendableId: string; subject: Message.Message; companionTo: Mailbox.Mailbox } =>
+          typeof data.attendableId === 'string' &&
+          Obj.instanceOf(Message.Message, data.subject) &&
+          Mailbox.instanceOf(data.companionTo),
+        component: ({ data: { attendableId, companionTo, subject }, role }) => {
+          return <MessageArticle role={role} subject={subject} mailbox={companionTo} attendableId={attendableId} />;
         },
       }),
       Surface.create({
-        id: `${meta.id}/draft-message`,
+        id: `${meta.id}.draft-message`,
         role: ['article'],
         filter: (data): data is { subject: Message.Message } =>
           Obj.instanceOf(Message.Message, data.subject) && !Mailbox.instanceOf(data.companionTo),
@@ -66,28 +68,32 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: `${meta.id}/event`,
+        id: `${meta.id}.event`,
         role: ['article', 'section'],
-        filter: (data): data is { subject: Event.Event; companionTo: Feed.Feed } =>
+        filter: (data): data is { subject: Event.Event; companionTo: Calendar.Calendar } =>
           Obj.instanceOf(Event.Event, data.subject) && Calendar.instanceOf(data.companionTo),
-        component: ({ data: { companionTo, subject }, role }) => {
-          return <EventArticle role={role} subject={subject} feed={companionTo} />;
+        component: ({ data, role }) => {
+          if (!data?.subject || !data?.companionTo) return null;
+          return <EventArticle role={role} subject={data.subject} calendar={data.companionTo} />;
         },
       }),
       Surface.create({
-        id: `${meta.id}/calendar`,
+        id: `${meta.id}.calendar`,
         role: ['article'],
-        filter: (data): data is { subject: Feed.Feed } => Calendar.instanceOf(data.subject),
-        component: ({ data, role }) => <CalendarArticle role={role} subject={data.subject} />,
+        filter: (data): data is { subject: Calendar.Calendar; attendableId?: string } =>
+          Calendar.instanceOf(data.subject),
+        component: ({ data, role }) => (
+          <CalendarArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
-        id: `${meta.id}/message-card`,
+        id: `${meta.id}.message-card`,
         role: 'card--content',
         filter: (data): data is { subject: Message.Message } => Obj.instanceOf(Message.Message, data?.subject),
         component: ({ data: { subject }, role }) => <MessageCard subject={subject} role={role} />,
       }),
       Surface.create({
-        id: `${meta.id}/event-card`,
+        id: `${meta.id}.event-card`,
         role: 'card--content',
         filter: (data): data is { subject: Event.Event } => Obj.instanceOf(Event.Event, data?.subject),
         component: ({ data: { subject }, role }) => <EventCard subject={subject} role={role} />,
@@ -95,41 +101,39 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: POPOVER_SAVE_FILTER,
         role: 'popover',
-        filter: (data): data is { props: { feed: Feed.Feed; config?: Mailbox.Config; filter: string } } =>
+        filter: (data): data is { props: { mailbox: Mailbox.Mailbox; filter: string } } =>
           data.component === POPOVER_SAVE_FILTER &&
           data.props !== null &&
           typeof data.props === 'object' &&
-          'feed' in data.props &&
+          'mailbox' in data.props &&
           'filter' in data.props &&
-          Mailbox.instanceOf(data.props.feed) &&
+          Mailbox.instanceOf(data.props.mailbox) &&
           typeof data.props.filter === 'string',
-        component: ({ data }) => (
-          <SaveFilterPopover feed={data.props.feed} config={data.props.config} filter={data.props.filter} />
-        ),
+        component: ({ data }) => <SaveFilterPopover mailbox={data.props.mailbox} filter={data.props.filter} />,
       }),
       Surface.create({
-        id: `${meta.id}/mailbox/companion/settings`,
+        id: `${meta.id}.mailbox.companion.settings`,
         role: 'object-settings',
-        filter: (data): data is { subject: Feed.Feed } => Mailbox.instanceOf(data.subject),
+        filter: (data): data is { subject: Mailbox.Mailbox } => Mailbox.instanceOf(data.subject),
         component: ({ data }) => <MailboxSettings subject={data.subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/calendar/companion/settings`,
+        id: `${meta.id}.calendar.companion.settings`,
         role: 'object-settings',
-        filter: (data): data is { subject: Feed.Feed } => Calendar.instanceOf(data.subject),
+        filter: (data): data is { subject: Calendar.Calendar } => Calendar.instanceOf(data.subject),
         component: ({ data }) => <CalendarSettings subject={data.subject} />,
       }),
 
       // TODO(card-cleanup): Remove.
       // TODO(wittjosiah): Generalize the mess below.
       Surface.create({
-        id: `${meta.id}/contact-related`,
+        id: `${meta.id}.contact-related`,
         role: 'related',
         filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
         component: ({ data: { subject } }) => <RelatedToContact subject={subject} />,
       }),
       Surface.create({
-        id: `${meta.id}/organization-related`,
+        id: `${meta.id}.organization-related`,
         role: 'related',
         filter: (data): data is { subject: Organization.Organization } =>
           Obj.instanceOf(Organization.Organization, data.subject),

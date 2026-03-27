@@ -6,17 +6,26 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  LayoutOperation,
+  companionId,
+  companionSegment,
+  getObjectPathFromObject,
+  getSpacePath,
+} from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { DeckCapabilities } from '@dxos/plugin-deck';
-import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 import { meta } from '../../meta';
-import { PresenterCapabilities, PresenterOperation } from '../../types';
+import { PresenterCapabilities } from '../../types';
+import { PresenterOperation } from '../../operations';
 
 /** Match nodes that can be presented (Collection or Document). */
 const whenPresentable = (node: Node.Node) =>
@@ -29,7 +38,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
 
     const extensions = yield* GraphBuilder.createExtension({
-      id: `${meta.id}/root`,
+      id: `${meta.id}.root`,
       // TODO(wittjosiah): This is a hack to work around presenter previously relying on "variant". Remove.
       match: whenPresentable,
       connector: (object, get) => {
@@ -41,12 +50,12 @@ export default Capability.makeModule(
         if (!isPresentable) {
           return Effect.succeed([]);
         }
-        const id = Obj.getDXN(object).toString();
+
         return Effect.succeed([
           {
-            id: [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR),
+            id: companionSegment('presenter'),
             data: { type: meta.id, object },
-            type: meta.id,
+            type: PLANK_COMPANION_TYPE,
             properties: {
               label: 'Presenter',
               icon: 'ph--presentation--regular',
@@ -61,21 +70,21 @@ export default Capability.makeModule(
         const isPresentable = settings?.presentCollections
           ? Obj.instanceOf(Collection.Collection, object) || Obj.instanceOf(Markdown.Document, object)
           : Obj.instanceOf(Markdown.Document, object);
-        if (!isPresentable) {
+        const db = Obj.getDatabase(object);
+        if (!isPresentable || !db) {
           return Effect.succeed([]);
         }
-        const dxn = Obj.getDXN(object);
-        const id = dxn.toString();
-        const { spaceId } = dxn.asEchoDXN()!;
+        const objectPath = getObjectPathFromObject(object);
+
         return Effect.succeed([
           {
-            id: `${PresenterOperation.TogglePresentation.meta.key}/${id}`,
+            id: PresenterOperation.TogglePresentation.meta.key,
             // TODO(burdon): Allow function so can generate state when activated.
             //  So can set explicit fullscreen state coordinated with current presenter state.
             data: Effect.fnUntraced(function* () {
               const deckState = yield* Capabilities.getAtomValue(DeckCapabilities.State);
               const deck = deckState.decks[deckState.activeDeck];
-              const presenterId = [id, 'presenter'].join(ATTENDABLE_PATH_SEPARATOR);
+              const presenterId = companionId(objectPath, 'presenter');
               if (!deck?.fullscreen) {
                 yield* Operation.invoke(DeckOperation.Adjust, {
                   type: 'solo--fullscreen' as const,
@@ -84,7 +93,7 @@ export default Capability.makeModule(
               }
               yield* Operation.invoke(LayoutOperation.Open, {
                 subject: [presenterId],
-                workspace: spaceId,
+                workspace: getSpacePath(db.spaceId),
               });
             }),
             properties: {

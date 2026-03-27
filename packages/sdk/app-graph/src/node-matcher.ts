@@ -69,7 +69,7 @@ export const whenId =
  * ```ts
  * GraphBuilder.createExtension({
  *   id: 'space-settings-extension',
- *   match: NodeMatcher.whenNodeType('dxos.org/plugin/space/settings'),
+ *   match: NodeMatcher.whenNodeType('org.dxos.plugin.space.settings'),
  *   connector: (node) => Effect.succeed([...]),
  * });
  * ```
@@ -106,7 +106,10 @@ export const whenNodeType =
  * });
  * ```
  *
- * @see {@link whenEchoTypeMatches} - Use instead when composing with whenAll/whenAny.
+ * Can be composed directly with {@link whenAll}/{@link whenAny}/{@link whenNot} while
+ * preserving the typed entity data in the result.
+ *
+ * @see {@link whenEchoTypeMatches} - Returns the node instead of data for legacy composition.
  */
 export const whenEchoType =
   <T extends Type.AnyEntity>(type: T): NodeMatcher<Entity.Entity<Schema.Schema.Type<T>>> =>
@@ -129,12 +132,15 @@ export const whenEchoType =
  *   connector: (object) => {
  *     // `object` is typed as Obj.Unknown
  *     const id = Obj.getDXN(object).toString();
- *     return Effect.succeed([{ id: `${id}/settings`, ... }]);
+ *     return Effect.succeed([{ id: `${id}.settings`, ... }]);
  *   },
  * });
  * ```
  *
- * @see {@link whenEchoObjectMatches} - Use instead when composing with whenAll/whenAny.
+ * Can be composed directly with {@link whenAll}/{@link whenAny}/{@link whenNot} while
+ * preserving the `Obj.Unknown` data type in the result.
+ *
+ * @see {@link whenEchoObjectMatches} - Returns the node instead of data for legacy composition.
  */
 export const whenEchoObject = (node: Node.Node): Option.Option<Obj.Unknown> =>
   Obj.isObject(node.data) ? Option.some(node.data) : Option.none();
@@ -145,37 +151,53 @@ export const whenEchoObject = (node: Node.Node): Option.Option<Obj.Unknown> =>
 
 /**
  * Composes multiple matchers with AND logic - all matchers must match for success.
- * Returns the **node** (not the matched data) to enable further composition.
+ * The result data type is the intersection of all matchers' data types.
+ * Filter matchers like {@link whenNot} return `unknown`, making them transparent
+ * in the intersection (since `T & unknown = T`).
  *
  * @param matchers - The matchers to combine. All must return Option.some for success.
- * @returns A matcher that returns Option.some(node) if all match, Option.none() otherwise.
+ * @returns A matcher whose data type is the intersection of all input matchers' data types.
+ *   Returns the first matcher's value when all match, Option.none() otherwise.
  *
  * @example
  * ```ts
- * // Match ECHO objects that are NOT Channels
+ * // Match ECHO objects that are NOT Channels — result is NodeMatcher<Obj.Unknown>.
  * const whenCommentable = NodeMatcher.whenAll(
- *   NodeMatcher.whenEchoObjectMatches,
+ *   NodeMatcher.whenEchoObject,
  *   NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Channel.Channel)),
  * );
  * ```
  */
-export const whenAll =
-  (...matchers: NodeMatcher[]): NodeMatcher =>
-  (node: Node.Node): Option.Option<Node.Node> => {
+export const whenAll: {
+  <A>(a: NodeMatcher<A>, b: NodeMatcher<unknown>): NodeMatcher<A>;
+  <A>(a: NodeMatcher<unknown>, b: NodeMatcher<A>): NodeMatcher<A>;
+  <A, B>(a: NodeMatcher<A>, b: NodeMatcher<B>): NodeMatcher<A & B>;
+  <A, B, C>(a: NodeMatcher<A>, b: NodeMatcher<B>, c: NodeMatcher<C>): NodeMatcher<A & B & C>;
+  <A, B, C, D>(a: NodeMatcher<A>, b: NodeMatcher<B>, c: NodeMatcher<C>, d: NodeMatcher<D>): NodeMatcher<A & B & C & D>;
+  (...matchers: NodeMatcher<any>[]): NodeMatcher<any>;
+} =
+  (...matchers: NodeMatcher<any>[]): NodeMatcher<any> =>
+  (node: Node.Node) => {
+    let first: Option.Option<any> = Option.none();
     for (const candidate of matchers) {
-      if (Option.isNone(candidate(node))) {
+      const result = candidate(node);
+      if (Option.isNone(result)) {
         return Option.none();
       }
+      if (Option.isNone(first)) {
+        first = result;
+      }
     }
-    return Option.some(node);
+    return first;
   };
 
 /**
  * Composes multiple matchers with OR logic - at least one matcher must match.
- * Returns the **node** (not the matched data) to enable further composition.
+ * The result data type is the union of all matchers' data types.
  *
  * @param matchers - The matchers to combine. At least one must return Option.some.
- * @returns A matcher that returns Option.some(node) if any match, Option.none() otherwise.
+ * @returns A matcher whose data type is the union of all input matchers' data types.
+ *   Returns the first matching matcher's value, or Option.none() if none match.
  *
  * @example
  * ```ts
@@ -186,12 +208,18 @@ export const whenAll =
  * );
  * ```
  */
-export const whenAny =
-  (...matchers: NodeMatcher[]): NodeMatcher =>
-  (node: Node.Node): Option.Option<Node.Node> => {
+export const whenAny: {
+  <A, B>(a: NodeMatcher<A>, b: NodeMatcher<B>): NodeMatcher<A | B>;
+  <A, B, C>(a: NodeMatcher<A>, b: NodeMatcher<B>, c: NodeMatcher<C>): NodeMatcher<A | B | C>;
+  <A, B, C, D>(a: NodeMatcher<A>, b: NodeMatcher<B>, c: NodeMatcher<C>, d: NodeMatcher<D>): NodeMatcher<A | B | C | D>;
+  (...matchers: NodeMatcher<any>[]): NodeMatcher<any>;
+} =
+  (...matchers: NodeMatcher<any>[]): NodeMatcher<any> =>
+  (node: Node.Node) => {
     for (const candidate of matchers) {
-      if (Option.isSome(candidate(node))) {
-        return Option.some(node);
+      const result = candidate(node);
+      if (Option.isSome(result)) {
+        return result;
       }
     }
     return Option.none();
@@ -260,15 +288,19 @@ export const whenEchoObjectMatches = (node: Node.Node): Option.Option<Node.Node>
  * Negates a matcher - matches when the given matcher does NOT match.
  * Useful for exclusion patterns like "any object EXCEPT type X".
  *
+ * Returns `NodeMatcher<unknown>` because negation is a filter — it doesn't provide
+ * typed data. This makes it transparent in {@link whenAll} intersections
+ * (since `T & unknown = T`).
+ *
  * @param matcher - The matcher to negate.
  * @returns A matcher that returns Option.some(node) if the input matcher returns none,
  *   and Option.none() if the input matcher returns some.
  *
  * @example
  * ```ts
- * // Match any ECHO object that is NOT a Channel
+ * // Match any ECHO object that is NOT a Channel — result is NodeMatcher<Obj.Unknown>.
  * const whenCommentable = NodeMatcher.whenAll(
- *   NodeMatcher.whenEchoObjectMatches,
+ *   NodeMatcher.whenEchoObject,
  *   NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Channel.Channel)),
  * );
  *
@@ -277,6 +309,6 @@ export const whenEchoObjectMatches = (node: Node.Node): Option.Option<Node.Node>
  * ```
  */
 export const whenNot =
-  (matcher: NodeMatcher): NodeMatcher =>
-  (node: Node.Node): Option.Option<Node.Node> =>
+  (matcher: NodeMatcher<any>): NodeMatcher<unknown> =>
+  (node: Node.Node): Option.Option<unknown> =>
     Option.isNone(matcher(node)) ? Option.some(node) : Option.none();

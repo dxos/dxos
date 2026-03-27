@@ -104,6 +104,9 @@
       "path": "../../plugins/plugin-conductor"
     },
     {
+      "path": "../../plugins/plugin-daily-summary"
+    },
+    {
       "path": "../../plugins/plugin-debug"
     },
     {
@@ -225,6 +228,12 @@
     },
     {
       "path": "../../plugins/plugin-wnfs"
+    },
+    {
+      "path": "../../plugins/plugin-youtube"
+    },
+    {
+      "path": "../../plugins/plugin-zen"
     },
     {
       "path": "../../sdk/app-framework"

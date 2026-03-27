@@ -26,7 +26,7 @@ import {
   TimeSeries,
 } from './panels';
 
-const LOCAL_STORAGE_KEY = 'dxos.org/plugin/debug/panels';
+const LOCAL_STORAGE_KEY = 'org.dxos.plugin.debug.panels';
 
 const PANEL_KEYS = [
   'ts',
@@ -111,14 +111,8 @@ export const StatsPanel = ({ stats, onRefresh, children }: PropsWithChildren<Que
         icon='ph--chart-bar--regular'
         title='Stats'
         info={
-          <Toggle
-            pressed={live}
-            classNames='p-0 bg-transparent'
-            density='fine'
-            value='ghost'
-            onClick={handleToggleLive}
-          >
-            <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} size={4} />
+          <Toggle pressed={live} classNames='p-0 bg-transparent' value='ghost' onClick={handleToggleLive}>
+            <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} />
           </Toggle>
         }
       />

@@ -15,12 +15,12 @@ import { GraphBuilder } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 
 import { meta } from '../../meta';
-import { OutlineOperation } from '../../types';
+import { OutlineOperation } from '../../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* GraphBuilder.createExtension({
-      id: `${meta.id}/root`,
+      id: `${meta.id}.root`,
       match: (node) => {
         if (!Obj.isObject(node.data)) {
           return Option.none();
@@ -38,11 +38,10 @@ export default Capability.makeModule(
         return Option.some(node.data);
       },
       actions: (object) => {
-        const id = Obj.getDXN(object).toString();
         const db = Obj.getDatabase(object);
         return Effect.succeed([
           {
-            id: `${OutlineOperation.CreateOutline.meta.key}/${id}`,
+            id: OutlineOperation.CreateOutline.meta.key,
             properties: {
               label: ['create outline label', { ns: meta.id }],
               icon: 'ph--tree-structure--regular',

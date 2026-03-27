@@ -11,6 +11,7 @@ import * as Option from 'effect/Option';
 import React, {
   type ComponentPropsWithoutRef,
   type PropsWithChildren,
+  forwardRef,
   useCallback,
   useEffect,
   useMemo,
@@ -24,13 +25,14 @@ import { type Database, Filter, Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
+import { Input, type ThemedClassName, useDynamicRef, useTranslation, ComposableProps } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
-import { Menu } from '@dxos/react-ui-menu';
+import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
+import { composableProps } from '@dxos/ui-theme';
 
 import { useChatToolbarActions } from '../../hooks';
 import { meta } from '../../meta';
@@ -434,22 +436,27 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = ThemedClassName<{ companionTo?: Obj.Unknown } & ComponentPropsWithoutRef<typeof Menu.Root>>;
+type ChatToolbarProps = ComposableProps<
+  HTMLDivElement,
+  ThemedClassName<
+    Pick<MenuRootProps, 'attendableId'> & {
+      companionTo?: Obj.Unknown;
+    }
+  >
+>;
 
-const ChatToolbar = ({ classNames, companionTo, ...props }: ChatToolbarProps) => {
-  const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
-  const menu = useChatToolbarActions({ chat, companionTo });
+const ChatToolbar = forwardRef<HTMLDivElement, ChatToolbarProps>(
+  ({ attendableId, companionTo, ...props }, forwardedRef) => {
+    const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
+    const menuActions = useChatToolbarActions({ chat, companionTo });
 
-  return (
-    <Menu.Root
-      {...props}
-      {...menu}
-      attendableId={companionTo ? Obj.getDXN(companionTo).toString() : chat ? Obj.getDXN(chat).toString() : ''}
-    >
-      <Menu.Toolbar classNames={classNames} textBlockWidth />
-    </Menu.Root>
-  );
-};
+    return (
+      <Menu.Root {...menuActions} attendableId={attendableId}>
+        <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+      </Menu.Root>
+    );
+  },
+);
 
 ChatToolbar.displayName = CHAT_TOOLBAR_NAME;
 

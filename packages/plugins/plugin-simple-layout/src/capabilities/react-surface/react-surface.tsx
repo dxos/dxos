@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Node } from '@dxos/plugin-graph';
 
-import { Home, Workspace } from '../../components';
+import { Home, NavBranch } from '../../components';
 import { meta } from '../../meta';
 
 type SurfaceData = {
@@ -23,18 +23,20 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: `${meta.id}/home`,
+        id: `${meta.id}.home`,
         role: 'article',
         filter: (data): data is SurfaceData => data.attendableId === Node.RootId,
         component: () => <Home />,
       }),
       Surface.create({
-        id: `${meta.id}/workspace-article`,
+        id: `${meta.id}.nav-branch`,
         role: 'article',
         position: 'fallback',
-        filter: (data): data is SurfaceData =>
-          ALLOWED_DISPOSITIONS.includes((data.properties as Record<string, any>)?.disposition),
-        component: ({ data }) => <Workspace id={data.attendableId} />,
+        filter: (data): data is SurfaceData => {
+          const props = data.properties as Record<string, any>;
+          return ALLOWED_DISPOSITIONS.includes(props?.disposition) || props?.role === 'branch';
+        },
+        component: ({ data }) => <NavBranch id={data.attendableId} />,
       }),
     ]),
   ),

@@ -60,9 +60,9 @@ export namespace DXEnv {
   }
 }
 
-// Base directories.
-// TODO(burdon): Consider Windows, Linux, OSX.
-// https://wiki.archlinux.org/title/XDG_Base_Directory
-// Each `/dx` directory should contain `/profile/<DX_PROFILE>` subdirectories.
-export const getProfilePath = (root: string, profile: string, file: string | undefined = undefined) =>
+// Profile layout: profile/<name> is the profile dir; profile/<name>.yml is the config file.
+export const getProfilePath = (root: string, profile: string, file?: string) =>
   `${root}/profile/${profile}` + (file ? `/${file}` : '');
+
+/** Path to the profile config file (profile/<name>.yml). */
+export const getProfileConfigPath = (root: string, profile: string) => `${getProfilePath(root, profile)}.yml`;

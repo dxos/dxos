@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Database, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { defineFunction } from '@dxos/functions';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Text } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -19,21 +19,30 @@ import { AssistantTestLayer } from '../testing';
 
 import { formatSystemPrompt } from './format';
 
-const organizationListFunction = defineFunction({
-  key: 'dxos.org/function/organization-list',
-  name: 'Organization List',
-  description: 'List organizations',
-  inputSchema: Schema.Struct({}),
-  outputSchema: Schema.Array(Schema.String),
-  handler: Effect.fnUntraced(function* () {
-    const organizations = yield* Database.runQuery(Query.type(Organization.Organization));
-    return organizations.map((organization) => organization.name);
-  }),
+const OrganizationList = Operation.make({
+  meta: {
+    key: 'org.dxos.function.organization-list',
+    name: 'Organization List',
+    description: 'List organizations',
+  },
+  input: Schema.Struct({}),
+  output: Schema.Array(Schema.String),
+  services: [Database.Service],
 });
+
+const Handlers = OperationHandlerSet.make(
+  Operation.withHandler(
+    OrganizationList,
+    Effect.fnUntraced(function* () {
+      const organizations = yield* Database.runQuery(Query.type(Organization.Organization));
+      return organizations.map((organization) => organization.name);
+    }),
+  ),
+);
 
 const TestLayer = AssistantTestLayer({
   types: [Text.Text, Organization.Organization, Blueprint.Blueprint],
-  functions: [organizationListFunction],
+  operationHandlers: Handlers,
 });
 
 describe('format', () => {
@@ -102,7 +111,7 @@ describe('format', () => {
                 {
                   name: 'organizations',
                   kind: 'function',
-                  function: organizationListFunction.key,
+                  function: OrganizationList.meta.key,
                 },
               ],
             }),

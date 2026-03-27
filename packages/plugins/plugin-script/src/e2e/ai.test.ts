@@ -8,7 +8,7 @@ import { test } from 'vitest';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { configPreset } from '@dxos/config';
-import { Function } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { FunctionRuntimeKind } from '@dxos/protocols';
@@ -54,7 +54,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e')).skip('Functi
   });
 
   const setup = async () => {
-    const client = await new Client({ config, types: [Function.Function] }).initialize();
+    const client = await new Client({ config, types: [Operation.PersistentOperation] }).initialize();
     await client.halo.createIdentity();
 
     const space = await client.spaces.create();
@@ -66,7 +66,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e')).skip('Functi
   };
 
   const sync = async (space: Space) => {
-    await space.db.flush({ indexes: true });
+    await space.db.flush();
     await space.internal.syncToEdge({
       onProgress: (state) =>
         console.log(state ? `${state.unsyncedDocumentCount} documents syncing...` : 'connecting to edge...'),

@@ -52,12 +52,13 @@ export const Prompt = Schema.Struct({
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Prompt',
+    typename: 'org.dxos.type.prompt',
     version: '0.1.0',
   }),
+  Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--scroll--regular',
-    hue: 'blue',
+    hue: 'sky',
   }),
 );
 

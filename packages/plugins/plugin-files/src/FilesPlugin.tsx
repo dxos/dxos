@@ -9,7 +9,7 @@ import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolk
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { Node } from '@dxos/plugin-graph';
 
-import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { FileCapabilities } from './types';
@@ -20,7 +20,7 @@ const SettingsReady = AppActivationEvents.createSettingsEvent(FileCapabilities.S
 
 export const FilesPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSettingsModule({ activate: FileSettings, activatesAfter: [SettingsReady] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

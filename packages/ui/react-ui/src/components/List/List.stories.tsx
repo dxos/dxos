@@ -9,7 +9,7 @@ import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ReactNode, useCallback, useState } from 'react';
 
-import { getSize, ghostHover, ghostSelected, mx, surfaceShadow } from '@dxos/ui-theme';
+import { getSize, ghostHover, mx, surfaceShadow } from '@dxos/ui-theme';
 
 import { withTheme } from '../../testing';
 import { Icon } from '../Icon';
@@ -222,7 +222,7 @@ export const SelectableListbox: Story = {
             key={id}
             tabIndex={0}
             selected={selectedId === id}
-            classNames={mx(ghostHover, ghostSelected)}
+            classNames={mx(ghostHover, 'dx-selected')}
             onClick={() => setSelectedId(id)}
             onKeyUp={(event) => handleKeyUp(event, id)}
           >

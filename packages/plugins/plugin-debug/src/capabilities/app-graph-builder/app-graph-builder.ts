@@ -5,38 +5,37 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
+import { AppCapabilities, getSpaceIdFromPath } from '@dxos/app-toolkit';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { ATTENDABLE_PATH_SEPARATOR, DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { meta as spaceMeta } from '@dxos/plugin-space';
-import { parseId } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
 import { Devtools } from '../../types';
+import { getParentId } from '@dxos/react-ui-attention';
 
-const DEVTOOLS_TYPE = `${meta.id}/devtools`;
+const DEVTOOLS_TYPE = `${meta.id}.devtools`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       // Devtools node.
       GraphBuilder.createExtension({
-        id: `${meta.id}/devtools`,
-        match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(`${spaceMeta.id}/settings`)),
+        id: `${meta.id}.devtools`,
+        match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`)),
         connector: (node, get) =>
           Effect.gen(function* () {
             const client = yield* Capability.get(ClientCapabilities.Client);
             const layoutAtom = get(yield* Capability.atom(AppCapabilities.Layout))[0];
             const layout = layoutAtom ? get(layoutAtom) : undefined;
-            const { spaceId } = parseId(layout?.workspace);
+            const spaceId = layout?.workspace ? getSpaceIdFromPath(layout.workspace) : undefined;
             const space = spaceId ? client.spaces.get(spaceId) : undefined;
             const [graph] = get(yield* Capability.atom(AppCapabilities.AppGraph));
 
             return [
               {
-                id: `${Devtools.id}-${node.id}`,
+                id: Devtools.id,
                 data: null,
                 type: DEVTOOLS_TYPE,
                 properties: {
@@ -46,12 +45,12 @@ export default Capability.makeModule(
                   position: 'fallback',
                 },
                 nodes: [
-                  ...(space && node.type === `${spaceMeta.id}/settings`
+                  ...(space && node.type === `${spaceMeta.id}.settings`
                     ? [
                         {
-                          id: `debug-${node.id}`,
-                          type: `${meta.id}/space`,
-                          data: { space, type: `${meta.id}/space` },
+                          id: 'debug',
+                          type: `${meta.id}.space`,
+                          data: { space, type: `${meta.id}.space` },
                           properties: {
                             label: ['debug label', { ns: meta.id }],
                             icon: 'ph--bug--regular',
@@ -60,16 +59,16 @@ export default Capability.makeModule(
                       ]
                     : []),
                   {
-                    id: `app-graph-${node.id}`,
-                    type: `${meta.id}/app-graph`,
-                    data: { graph: graph?.graph, root: space ? space.id : Node.RootId },
+                    id: 'app-graph',
+                    type: `${meta.id}.app-graph`,
+                    data: { graph: graph?.graph, root: node.id === Node.RootId ? node.id : getParentId(node.id) },
                     properties: {
                       label: ['debug app graph label', { ns: meta.id }],
                       icon: 'ph--graph--regular',
                     },
                   },
                   {
-                    id: `${Devtools.Client.id}-${node.id}`,
+                    id: Devtools.Client.id,
                     data: null,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -78,7 +77,7 @@ export default Capability.makeModule(
                     },
                     nodes: [
                       {
-                        id: `${Devtools.Client.Config}-${node.id}`,
+                        id: Devtools.Client.Config,
                         data: Devtools.Client.Config,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -87,7 +86,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Client.Storage}-${node.id}`,
+                        id: Devtools.Client.Storage,
                         data: Devtools.Client.Storage,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -96,7 +95,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Client.Logs}-${node.id}`,
+                        id: Devtools.Client.Logs,
                         data: Devtools.Client.Logs,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -105,7 +104,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Client.Diagnostics}-${node.id}`,
+                        id: Devtools.Client.Diagnostics,
                         data: Devtools.Client.Diagnostics,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -114,7 +113,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Client.Tracing}-${node.id}`,
+                        id: Devtools.Client.Tracing,
                         data: Devtools.Client.Tracing,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -125,7 +124,7 @@ export default Capability.makeModule(
                     ],
                   },
                   {
-                    id: `${Devtools.Halo.id}-${node.id}`,
+                    id: Devtools.Halo.id,
                     data: null,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -134,7 +133,7 @@ export default Capability.makeModule(
                     },
                     nodes: [
                       {
-                        id: `${Devtools.Halo.Identity}-${node.id}`,
+                        id: Devtools.Halo.Identity,
                         data: Devtools.Halo.Identity,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -143,7 +142,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Halo.Devices}-${node.id}`,
+                        id: Devtools.Halo.Devices,
                         data: Devtools.Halo.Devices,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -152,7 +151,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Halo.Keyring}-${node.id}`,
+                        id: Devtools.Halo.Keyring,
                         data: Devtools.Halo.Keyring,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -161,7 +160,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Halo.Credentials}-${node.id}`,
+                        id: Devtools.Halo.Credentials,
                         data: Devtools.Halo.Credentials,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -172,7 +171,7 @@ export default Capability.makeModule(
                     ],
                   },
                   {
-                    id: `${Devtools.Echo.id}-${node.id}`,
+                    id: Devtools.Echo.id,
                     data: null,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -181,7 +180,7 @@ export default Capability.makeModule(
                     },
                     nodes: [
                       {
-                        id: `${Devtools.Echo.Spaces}-${node.id}`,
+                        id: Devtools.Echo.Spaces,
                         data: Devtools.Echo.Spaces,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -190,7 +189,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Echo.Space}-${node.id}`,
+                        id: Devtools.Echo.Space,
                         data: Devtools.Echo.Space,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -199,7 +198,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Echo.Feeds}-${node.id}`,
+                        id: Devtools.Echo.Feeds,
                         data: Devtools.Echo.Feeds,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -208,7 +207,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Echo.Objects}-${node.id}`,
+                        id: Devtools.Echo.Objects,
                         data: Devtools.Echo.Objects,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -217,7 +216,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Echo.Schema}-${node.id}`,
+                        id: Devtools.Echo.Schema,
                         data: Devtools.Echo.Schema,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -226,7 +225,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Echo.Automerge}-${node.id}`,
+                        id: Devtools.Echo.Automerge,
                         data: Devtools.Echo.Automerge,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -235,7 +234,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Echo.Queues}-${node.id}`,
+                        id: Devtools.Echo.Queues,
                         data: Devtools.Echo.Queues,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -244,7 +243,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Echo.Members}-${node.id}`,
+                        id: Devtools.Echo.Members,
                         data: Devtools.Echo.Members,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -253,7 +252,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Echo.Metadata}-${node.id}`,
+                        id: Devtools.Echo.Metadata,
                         data: Devtools.Echo.Metadata,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -264,7 +263,7 @@ export default Capability.makeModule(
                     ],
                   },
                   {
-                    id: `${Devtools.Mesh.id}-${node.id}`,
+                    id: Devtools.Mesh.id,
                     data: null,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -273,7 +272,7 @@ export default Capability.makeModule(
                     },
                     nodes: [
                       {
-                        id: `${Devtools.Mesh.Signal}-${node.id}`,
+                        id: Devtools.Mesh.Signal,
                         data: Devtools.Mesh.Signal,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -282,7 +281,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Mesh.Swarm}-${node.id}`,
+                        id: Devtools.Mesh.Swarm,
                         data: Devtools.Mesh.Swarm,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -291,7 +290,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Mesh.Network}-${node.id}`,
+                        id: Devtools.Mesh.Network,
                         data: Devtools.Mesh.Network,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -301,29 +300,8 @@ export default Capability.makeModule(
                       },
                     ],
                   },
-                  // TODO(wittjosiah): Remove?
-                  // {
-                  //   id: `${prefix}-${Devtools.Agent.id}`,
-                  //   data: null,
-                  //   type: DEVTOOLS_TYPE,
-                  //   properties: {
-                  //     label: ['agent label', { ns: meta.id }],
-                  //     icon: 'ph--robot--regular',
-                  //   },
-                  //   nodes: [
-                  //     {
-                  //       id: `${prefix}-${Devtools.Agent.Dashboard}`,
-                  //       data: Devtools.Agent.Dashboard,
-                  //       type: DEVTOOLS_TYPE,
-                  //       properties: {
-                  //         label: ['dashboard label', { ns: meta.id }],
-                  //         icon: 'ph--computer-tower--regular',
-                  //       },
-                  //     },
-                  //   ],
-                  // },
                   {
-                    id: `${Devtools.Edge.id}-${node.id}`,
+                    id: Devtools.Edge.id,
                     data: null,
                     type: DEVTOOLS_TYPE,
                     properties: {
@@ -332,7 +310,7 @@ export default Capability.makeModule(
                     },
                     nodes: [
                       {
-                        id: `${Devtools.Edge.Dashboard}-${node.id}`,
+                        id: Devtools.Edge.Dashboard,
                         data: Devtools.Edge.Dashboard,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -341,7 +319,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Edge.Workflows}-${node.id}`,
+                        id: Devtools.Edge.Workflows,
                         data: Devtools.Edge.Workflows,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -350,7 +328,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Edge.Traces}-${node.id}`,
+                        id: Devtools.Edge.Traces,
                         data: Devtools.Edge.Traces,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -359,7 +337,7 @@ export default Capability.makeModule(
                         },
                       },
                       {
-                        id: `${Devtools.Edge.Testing}-${node.id}`,
+                        id: Devtools.Edge.Testing,
                         data: Devtools.Edge.Testing,
                         type: DEVTOOLS_TYPE,
                         properties: {
@@ -377,12 +355,12 @@ export default Capability.makeModule(
 
       // Debug object companion.
       GraphBuilder.createExtension({
-        id: `${meta.id}/debug-object`,
+        id: `${meta.id}.debug-object`,
         match: NodeMatcher.whenEchoObject,
-        connector: (object) =>
+        connector: () =>
           Effect.succeed([
             {
-              id: [Obj.getDXN(object).toString(), 'debug'].join(ATTENDABLE_PATH_SEPARATOR),
+              id: 'debug',
               type: PLANK_COMPANION_TYPE,
               data: 'debug',
               properties: {
@@ -397,12 +375,12 @@ export default Capability.makeModule(
 
       // Devtools deck companion.
       GraphBuilder.createExtension({
-        id: `${meta.id}/devtools-overview`,
+        id: `${meta.id}.devtools-overview`,
         match: NodeMatcher.whenRoot,
-        connector: (node) =>
+        connector: () =>
           Effect.succeed([
             {
-              id: [node.id, 'devtools'].join(ATTENDABLE_PATH_SEPARATOR),
+              id: 'devtools',
               type: DECK_COMPANION_TYPE,
               data: 'devtools' as const,
               properties: {
@@ -417,12 +395,12 @@ export default Capability.makeModule(
 
       // Object explorer.
       GraphBuilder.createExtension({
-        id: `${meta.id}/space-objects`,
+        id: `${meta.id}.space-objects`,
         match: NodeMatcher.whenRoot,
-        connector: (node) =>
+        connector: () =>
           Effect.succeed([
             {
-              id: [node.id, 'space-objects'].join(ATTENDABLE_PATH_SEPARATOR),
+              id: 'space-objects',
               type: DECK_COMPANION_TYPE,
               data: 'space-objects' as const,
               properties: {

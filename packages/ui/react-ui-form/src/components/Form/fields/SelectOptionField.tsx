@@ -152,10 +152,10 @@ export const SelectOptionField = ({
                         />
                       </div>
                       {selected === item.id && (
-                        <div className='flex flex-col p-form-padding gap-1 dx-density-fine'>
+                        <div className='flex flex-col p-form-padding gap-form-gap dx-density-fine'>
                           {/* 16px to match drag handle width. */}
                           <Input.Label classNames='text-xs'>{t('select option label')}</Input.Label>
-                          <div className='grid grid-cols-[1fr_min-content_min-content] gap-1'>
+                          <div className='grid grid-cols-[1fr_min-content_min-content] gap-form-gap'>
                             <Input.TextInput
                               disabled={!!readonly}
                               placeholder={t('select option label placeholder')}

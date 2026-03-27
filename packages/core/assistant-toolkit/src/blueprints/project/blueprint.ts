@@ -6,11 +6,9 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { ProjectFunctions } from './functions';
+import { AddArtifact } from './functions';
 
-const BLUEPRINT_KEY = 'dxos.org/blueprint/project';
-
-const functions = [ProjectFunctions.AddArtifact];
+const BLUEPRINT_KEY = 'org.dxos.blueprint.project';
 
 /**
  * Creates the Project blueprint. This is a function to avoid circular dependency issues.
@@ -52,16 +50,15 @@ const make = () =>
         {
           name: 'project',
           kind: 'function',
-          function: 'dxos.org/function/project/get-context',
+          function: 'org.dxos.function.project.get-context',
         },
       ],
     }),
-    tools: Blueprint.toolDefinitions({ functions }),
+    tools: Blueprint.toolDefinitions({ operations: [AddArtifact] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
   make,
 };
 

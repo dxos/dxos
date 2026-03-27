@@ -2,9 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { Format, GeneratorAnnotation, LabelAnnotation, PropertyMeta } from '@dxos/echo/internal';
 
 import * as Geo from './Geo';
@@ -30,7 +32,11 @@ const PersonSchema = Schema.Struct({
   preferredName: Schema.String.pipe(Schema.annotations({ title: 'Preferred Name' }), Schema.optional),
   nickname: Schema.String.pipe(Schema.annotations({ title: 'Nickname' }), Schema.optional),
   // TODO(wittjosiah): Format.URL. Support ref?
-  image: Schema.String.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
+  image: Schema.String.pipe(
+    Schema.annotations({ title: 'Image' }),
+    GeneratorAnnotation.set('image.url'),
+    Schema.optional,
+  ),
   // TODO(burdon): Use reference links.
   organization: Ref.Ref(Organization.Organization).pipe(
     PropertyMeta('referenceProperty', 'name'),
@@ -108,11 +114,15 @@ export const Person = PersonSchema.pipe(
     }),
   ),
   Type.object({
-    typename: 'dxos.org/type/Person',
+    typename: 'org.dxos.type.person',
     version: '0.1.0',
   }),
   Schema.annotations({ title: 'Person' }),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--user--regular',
+    hue: 'neutral',
+  }),
 );
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}
@@ -124,7 +134,7 @@ export const make = (props: Partial<Obj.MakeProps<typeof Person>> = {}) => Obj.m
  */
 export const LegacyPerson = PersonSchema.pipe(
   Type.object({
-    typename: 'dxos.org/type/Person',
+    typename: 'org.dxos.type.person',
     version: '0.1.0',
   }),
   Schema.annotations({ title: 'Person' }),

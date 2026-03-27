@@ -9,7 +9,8 @@ import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { type Observability, ObservabilityProvider } from '@dxos/observability';
 
 import { meta } from '../../meta';
-import { ClientCapability, ObservabilityCapabilities, ObservabilityOperation } from '../../types';
+import { ClientCapability, ObservabilityCapabilities } from '../../types';
+import { ObservabilityOperation } from '../../operations';
 
 export type ClientReadyOptions = {
   namespace: string;
@@ -31,7 +32,7 @@ export default Capability.makeModule(
       const state = registry.get(stateAtom);
       if (!state.notified && notify) {
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.id}/notice`,
+          id: `${meta.id}.notice`,
           title: ['observability toast label', { ns: meta.id }],
           description: ['observability toast description', { ns: meta.id }],
           duration: Infinity,

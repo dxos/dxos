@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'dxos.org/plugin/automation',
+  id: 'org.dxos.plugin.automation',
   name: 'Automation',
   description: trim`
     Workflow automation engine that triggers custom actions based on object events and conditions.

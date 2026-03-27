@@ -15,7 +15,7 @@ describe('evalQuery', () => {
           "id": undefined,
           "props": {},
           "type": "object",
-          "typename": "dxn:type:dxos.org/type/Person:0.1.0",
+          "typename": "dxn:type:org.dxos.type.person:0.1.0",
         },
         "type": "select",
       }

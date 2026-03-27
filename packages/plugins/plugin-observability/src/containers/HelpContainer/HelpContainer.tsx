@@ -13,7 +13,8 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { FeedbackForm } from '../../components';
 import { meta } from '../../meta';
-import { ObservabilityCapabilities, ObservabilityOperation, type UserFeedback } from '../../types';
+import { ObservabilityCapabilities } from '../../types';
+import { ObservabilityOperation, type UserFeedback } from '../../operations';
 
 /** Renders the feedback form, disabling it when the feedback survey is unavailable. */
 export const HelpContainer = () => {
@@ -40,7 +41,7 @@ export const HelpContainer = () => {
       await invokePromise(ObservabilityOperation.CaptureUserFeedback, values);
       await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
       await invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.id}/feedback-success`,
+        id: `${meta.id}.feedback-success`,
         icon: 'ph--paper-plane-tilt--regular',
         duration: 3000,
         title: ['feedback toast label', { ns: meta.id }],

@@ -23,8 +23,8 @@ export const Table = Schema.Struct({
   }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Table',
-    version: '0.2.0',
+    typename: 'org.dxos.type.table',
+    version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
@@ -77,19 +77,3 @@ export const make = ({ name, sizes = {}, view, jsonSchema }: MakeProps): Table =
 
   return table;
 };
-
-//
-// V1
-//
-
-export const TableV1 = Schema.Struct({
-  sizes: Schema.Record({
-    key: Schema.String,
-    value: Schema.Number,
-  }).pipe(Schema.mutable),
-}).pipe(
-  Type.object({
-    typename: 'dxos.org/type/Table',
-    version: '0.1.0',
-  }),
-);

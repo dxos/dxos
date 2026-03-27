@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 
 import { SpaceProperties } from '@dxos/client-protocol/types';
@@ -18,8 +20,8 @@ type AddProps = {
 export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
   const objectRef = Ref.make(object);
   if (Collection.isCollection(target)) {
-    Obj.change(target, (t) => {
-      t.objects.push(objectRef);
+    Obj.change(target, (obj) => {
+      obj.objects.push(objectRef);
     });
   } else if (hidden) {
     yield* Database.add(object);
@@ -31,14 +33,14 @@ export const add = Effect.fn(function* ({ object, target, hidden }: AddProps) {
     const collectionRef: Ref.Ref<Collection.Collection> | undefined = properties[Collection.Collection.typename];
     if (collectionRef) {
       const collection = yield* Effect.promise(() => collectionRef.load());
-      Obj.change(collection, (c) => {
-        c.objects.push(objectRef);
+      Obj.change(collection, (obj) => {
+        obj.objects.push(objectRef);
       });
     } else {
       const newCollection = Collection.make({ objects: [objectRef] });
       const collectionRef = Ref.make(newCollection);
-      Obj.change(properties, (p) => {
-        p[Collection.Collection.typename] = collectionRef;
+      Obj.change(properties, (obj) => {
+        obj[Collection.Collection.typename] = collectionRef;
       });
     }
   }

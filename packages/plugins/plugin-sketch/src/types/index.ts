@@ -3,5 +3,5 @@
 //
 
 export * from './capabilities';
-export * as Diagram from './Diagram';
+export * as Sketch from './Sketch';
 export * from './types';

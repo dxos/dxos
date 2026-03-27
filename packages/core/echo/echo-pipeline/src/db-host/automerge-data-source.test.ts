@@ -17,9 +17,9 @@ import { AutomergeHost } from '../automerge';
 
 import { AutomergeDataSource, headsCodec } from './automerge-data-source';
 
-const TEST_TYPE = DXN.parse('dxn:type:example.com/type/Test:0.1.0').toString();
-const OTHER_TYPE = DXN.parse('dxn:type:example.com/type/Other:0.1.0').toString();
-const PERSON_TYPE = DXN.parse('dxn:type:example.com/type/Person:0.1.0').toString();
+const TEST_TYPE = DXN.parse('dxn:type:com.example.type.test:0.1.0').toString();
+const OTHER_TYPE = DXN.parse('dxn:type:com.example.type.other:0.1.0').toString();
+const PERSON_TYPE = DXN.parse('dxn:type:com.example.type.person:0.1.0').toString();
 
 /**
  * Set up a real AutomergeHost with LevelDB storage.
@@ -122,7 +122,8 @@ describe('AutomergeDataSource', () => {
     });
     await host.flush();
 
-    // Store the heads for doc2 (unchanged).
+    // Capture heads before mutation.
+    const doc1HeadsBefore = headsCodec.encode(getHeads(handle1.doc()!));
     const doc2Heads = headsCodec.encode(getHeads(handle2.doc()!));
 
     // Modify doc1 to have new heads.
@@ -133,7 +134,13 @@ describe('AutomergeDataSource', () => {
 
     const dataSource = new AutomergeDataSource(host);
     const cursors: IndexCursor[] = [
-      { indexName: 'fts', spaceId: null, sourceName: 'automerge', resourceId: handle1.documentId, cursor: 'oldhead' },
+      {
+        indexName: 'fts',
+        spaceId: null,
+        sourceName: 'automerge',
+        resourceId: handle1.documentId,
+        cursor: doc1HeadsBefore,
+      },
       { indexName: 'fts', spaceId: null, sourceName: 'automerge', resourceId: handle2.documentId, cursor: doc2Heads },
     ];
 

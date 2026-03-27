@@ -17,6 +17,7 @@ export const translations = [
         'typename label_one': 'Document',
         'typename label_other': 'Documents',
         'object name placeholder': 'New document',
+        'add object label': 'Add document',
         'rename object label': 'Rename document',
         'delete object label': 'Delete document',
         'object deleted label': 'Document deleted',

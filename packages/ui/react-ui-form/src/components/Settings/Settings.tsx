@@ -2,11 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren, forwardRef } from 'react';
 
 import {
   Button,
   type ButtonProps,
+  ComposableProps,
   Input,
   type Label,
   ScrollArea,
@@ -14,7 +15,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -39,15 +40,22 @@ const styles = {
 // Root
 //
 
-type SettingsRootProps = PropsWithChildren;
+type SettingsRootProps = ComposableProps<HTMLDivElement>;
 
-const SettingsRoot = ({ children }: SettingsRootProps) => {
+const SettingsRoot = forwardRef<HTMLDivElement, SettingsRootProps>(({ children, ...props }, forwardedRef) => {
+  const { className, ...composedProps } = composableProps(props);
   return (
-    <ScrollArea.Root orientation='vertical' className='dx-article'>
+    <ScrollArea.Root
+      {...composedProps}
+      className={mx('dx-document', className)}
+      orientation='vertical'
+      margin
+      ref={forwardedRef}
+    >
       <ScrollArea.Viewport classNames='p-trim-md'>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
 
 SettingsRoot.displayName = SETTINGS_ROOT_NAME;
 
@@ -150,7 +158,7 @@ const SettingsContainer = ({ classNames, children }: ThemedClassName<PropsWithCh
     <div
       role='none'
       className={mx([
-        'dx-article',
+        'dx-document',
         '*:first:mt-0! *:last:mb-0! px-trim-md py-trim-md',
         'border border-separator rounded-md',
         classNames,

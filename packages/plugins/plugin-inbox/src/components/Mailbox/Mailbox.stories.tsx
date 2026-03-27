@@ -10,6 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { Feed, Obj, Query } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
@@ -65,7 +66,7 @@ const meta = {
   title: 'plugins/plugin-inbox/components/Mailbox',
   component: MailboxComponent as any,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],
+  decorators: [withLayout({ layout: 'column' }), withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',
   },
@@ -75,7 +76,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: [withTheme()],
+};
 
 export const WithCompanion: Story = {
   render: CompanionStory,
@@ -85,14 +88,12 @@ export const WithCompanion: Story = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Feed.Feed, Mailbox.Config, Message.Message, Person.Person],
+          types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              yield* Effect.promise(() => client.spaces.waitUntilReady());
-              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
+              const { defaultSpace } = yield* initializeIdentity(client);
               // TODO(wittjosiah): Share message builder with transcription stories. Factor out to @dxos/schema/testing.
-              yield* Effect.promise(() => initializeMailbox(client.spaces.default));
+              yield* Effect.promise(() => initializeMailbox(defaultSpace));
             }),
         }),
 

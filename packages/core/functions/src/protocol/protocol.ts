@@ -20,33 +20,36 @@ import { PublicKey } from '@dxos/keys';
 import { type FunctionProtocol } from '@dxos/protocols';
 
 import { FunctionError } from '../errors';
-import { FunctionDefinition, type FunctionServices } from '../sdk';
+import { type FunctionServices } from '../sdk';
 import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '../services';
+import { Operation } from '@dxos/operation';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
 /**
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.
  */
-export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.Func => {
-  if (!FunctionDefinition.isFunction(func)) {
-    throw new TypeError('Invalid function definition');
+export const wrapFunctionHandler = (func: Operation.WithHandler<Operation.Definition.Any>): FunctionProtocol.Func => {
+  if (!Operation.isOperationWithHandler(func)) {
+    throw new TypeError('Expected operation with handler');
   }
+
+  const serviceTags = func.services.map((service) => service.key);
 
   return {
     meta: {
-      key: func.key,
-      name: func.name,
-      description: func.description,
-      inputSchema: JsonSchema.toJsonSchema(func.inputSchema),
-      outputSchema: func.outputSchema === undefined ? undefined : JsonSchema.toJsonSchema(func.outputSchema),
-      services: func.services,
+      key: func.meta.key,
+      name: func.meta.name,
+      description: func.meta.description,
+      inputSchema: JsonSchema.toJsonSchema(func.input),
+      outputSchema: func.output === undefined ? undefined : JsonSchema.toJsonSchema(func.output),
+      services: func.services.map((service) => service.key),
     },
     handler: async ({ data, context }) => {
       if (
-        (func.services.includes(Database.Service.key) ||
-          func.services.includes(QueueService.key) ||
-          func.services.includes(Feed.Service.key)) &&
+        (serviceTags.includes(Database.Service.key) ||
+          serviceTags.includes(QueueService.key) ||
+          serviceTags.includes(Feed.Service.key)) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
         throw new FunctionError({
@@ -56,9 +59,9 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
 
       // eslint-disable-next-line no-useless-catch
       try {
-        if (!SchemaAST.isAnyKeyword(func.inputSchema.ast)) {
+        if (!SchemaAST.isAnyKeyword(func.input.ast)) {
           try {
-            Schema.validateSync(func.inputSchema)(data);
+            Schema.validateSync(func.input)(data);
           } catch (error) {
             throw new FunctionError({ message: 'Invalid input schema', cause: error });
           }
@@ -72,15 +75,11 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
         }
 
         const dataWithDecodedRefs =
-          funcContext.db && !SchemaAST.isAnyKeyword(func.inputSchema.ast)
-            ? decodeRefsFromSchema(func.inputSchema.ast, data, funcContext.db)
+          funcContext.db && !SchemaAST.isAnyKeyword(func.input.ast)
+            ? decodeRefsFromSchema(func.input.ast, data, funcContext.db)
             : data;
 
-        let result = await func.handler({
-          // TODO(dmaretskyi): Fix the types.
-          context: context as any,
-          data: dataWithDecodedRefs,
-        });
+        let result: any = await func.handler(dataWithDecodedRefs);
 
         if (Effect.isEffect(result)) {
           result = await runAndForwardErrors(
@@ -91,8 +90,8 @@ export const wrapFunctionHandler = (func: FunctionDefinition): FunctionProtocol.
           );
         }
 
-        if (func.outputSchema && !SchemaAST.isAnyKeyword(func.outputSchema.ast)) {
-          Schema.validateSync(func.outputSchema)(result);
+        if (func.output && !SchemaAST.isAnyKeyword(func.output.ast)) {
+          Schema.validateSync(func.output)(result);
         }
 
         return result;

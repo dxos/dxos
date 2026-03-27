@@ -35,7 +35,7 @@ export const Default: Story = {
 };
 
 export const Column: Story = {
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-auto' })],
   render: () => (
     <Calendar.Root>
       <Panel.Root>

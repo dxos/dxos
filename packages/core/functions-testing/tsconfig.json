@@ -34,6 +34,9 @@
       "path": "../functions-runtime-cloudflare"
     },
     {
+      "path": "../operation"
+    },
+    {
       "path": "../protocols"
     }
   ]

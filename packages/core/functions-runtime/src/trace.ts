@@ -73,12 +73,17 @@ export const InvocationTraceStartEvent = Schema.Struct({
    */
   trigger: Schema.optional(Ref.Ref(Trigger.Trigger)),
   /**
+   * Chat that the invocation is run in.
+   * For invocations resulting from submitting a prompt in a chat thread.
+   */
+  chat: Schema.optional(Ref.Ref(Obj.Unknown)),
+  /**
    * Runtime executing the function.
    */
   runtime: Schema.optional(FunctionRuntimeKind),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/InvocationTraceStart',
+    typename: 'org.dxos.type.invocation-trace-start',
     version: '0.1.0',
   }),
 );
@@ -106,7 +111,7 @@ export const InvocationTraceEndEvent = Schema.Struct({
   error: Schema.optional(SerializedError),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/InvocationTraceEnd',
+    typename: 'org.dxos.type.invocation-trace-end',
     version: '0.1.0',
   }),
 );
@@ -131,7 +136,7 @@ export const TraceEvent = Schema.Struct({
   ingestionTimestamp: Schema.Number,
   logs: Schema.Array(TraceEventLog),
   exceptions: Schema.Array(TraceEventException),
-}).pipe(Type.object({ typename: 'dxos.org/type/TraceEvent', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'org.dxos.type.trace-event', version: '0.1.0' }));
 
 export type TraceEvent = Schema.Schema.Type<typeof TraceEvent>;
 
@@ -278,6 +283,7 @@ export namespace TracingServiceExt {
                 invocationTraceQueue: Ref.fromDXN(invocationTraceQueue.dxn),
                 invocationTarget: target ? Ref.fromDXN(target) : undefined,
                 trigger: payload.trigger ? Ref.fromDXN(DXN.fromLocalObjectId(payload.trigger.id)) : undefined,
+                chat: payload.chat,
               });
               yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);
 

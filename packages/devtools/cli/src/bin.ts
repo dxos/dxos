@@ -53,16 +53,15 @@ const program = Effect.gen(function* () {
     CliConfig.defaultConfig,
   )(dx.descriptor);
   const value = CommandDirective.isUserDefined(directive) ? Option.some(directive.value) : Option.none();
+  const profile = value.pipe(
+    Option.map(({ profile }) => profile),
+    Option.getOrElse(() => DEFAULT_PROFILE),
+  );
   const config = yield* value.pipe(
-    Option.map((v) => ConfigService.load(v)),
+    Option.map(({ config, profile }) => ConfigService.load({ config, profile })),
     Option.getOrElse(() => Effect.succeed(undefined)),
   );
 
-  // Get profile name from command value or use default
-  const profile: string = value.pipe(
-    Option.map((v) => (v as { profile?: string }).profile ?? DEFAULT_PROFILE),
-    Option.getOrElse(() => DEFAULT_PROFILE),
-  );
   const savedEnabled = yield* loadEnabledPlugins({ profile });
   const enabled = savedEnabled.length > 0 ? [...savedEnabled] : getDefaults();
 

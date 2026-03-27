@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { Function } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { type CellValue } from '@dxos/vendor-hyperformula';
 import { DetailedCellError } from '@dxos/vendor-hyperformula';
 
@@ -15,7 +15,7 @@ import { TestBuilder } from './testing';
 describe('ComputeGraph', () => {
   let testBuilder: TestBuilder;
   beforeEach(async () => {
-    testBuilder = new TestBuilder({ types: [Function.Function] });
+    testBuilder = new TestBuilder({ types: [Operation.PersistentOperation] });
     await testBuilder.open();
   });
   afterEach(async () => {
@@ -30,13 +30,45 @@ describe('ComputeGraph', () => {
     // Create script.
     const trigger = new Trigger();
     graph.update.once(() => trigger.wake());
-    const functionObject = space.db.add(Function.make({ name: 'test', version: '0.0.1', binding: 'TEST' }));
+    const functionObject = space.db.add(
+      Obj.make(Operation.PersistentOperation, { name: 'test', version: '0.0.1', binding: 'TEST' }),
+    );
     await trigger.wait();
     const functions = graph.getFunctions({ echo: true });
     expect(functions).to.toHaveLength(1);
 
     const id = graph.mapFunctionBindingToId('TEST()');
     expect(id).to.eq(`${Obj.getDXN(functionObject).toString()}()`);
+
+    const restored = graph.mapFunctionBindingFromId(id);
+    expect(restored).to.eq('TEST()');
+  });
+
+  test('map functions roundtrip with args', async () => {
+    const space = await testBuilder.client.spaces.create();
+    const graph = testBuilder.registry.createGraph(space);
+    await graph.open();
+
+    const trigger = new Trigger();
+    graph.update.once(() => trigger.wake());
+    space.db.add(Obj.make(Operation.PersistentOperation, { name: 'forex', version: '0.0.1', binding: 'FOREX' }));
+    await trigger.wait();
+
+    const stored = graph.mapFunctionBindingToId('=FOREX(C6,C7)');
+    expect(stored).to.include('dxn:echo:');
+    expect(stored).not.to.include('FOREX');
+
+    const restored = graph.mapFunctionBindingFromId(stored);
+    expect(restored).to.eq('=FOREX(C6,C7)');
+  });
+
+  test('map functions unknown binding returns undefined', async () => {
+    const space = await testBuilder.client.spaces.create();
+    const graph = testBuilder.registry.createGraph(space);
+    await graph.open();
+
+    const result = graph.mapFunctionBindingFromId('=dxn:echo:@:01ABCDEF01ABCDEF01ABCDEF01(A1,B1)');
+    expect(result).to.be.undefined;
   });
 
   test('cross-node references', async () => {

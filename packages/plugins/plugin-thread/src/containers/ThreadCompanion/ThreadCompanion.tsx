@@ -6,27 +6,38 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
 import { Ref, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { useAttended } from '@dxos/react-ui-attention';
+import { getParentId, useAttention } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { AnchoredTo, Thread } from '@dxos/types';
 
 import { CommentsPanel, type CommentsPanelProps } from '../../components';
 import { meta } from '../../meta';
-import { ThreadCapabilities, ThreadOperation, type ViewState } from '../../types';
+import { ThreadCapabilities, type ViewState } from '../../types';
+import { ThreadOperation } from '../../operations';
+import { SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 
-export const ThreadCompanion = ({ subject }: { subject: any }) => {
+export type ThreadCompanionProps = SurfaceComponentProps<
+  Thread.Thread,
+  {
+    attendableId?: string;
+  }
+>;
+
+export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps) => {
   const { t } = useTranslation(meta.id);
+  const manager = usePluginManager();
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const subjectId = Obj.getDXN(subject).toString();
+  const parentId = attendableId ? getParentId(attendableId) : undefined;
   const registry = useCapability(Capabilities.AtomRegistry);
 
   const stateAtom = useCapability(ThreadCapabilities.State);
@@ -68,7 +79,8 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
     .filter((anchor) => Obj.instanceOf(Thread.Thread, Relation.getSource(anchor)))
     .concat(drafts ?? []);
 
-  const attended = useAttended();
+  const { hasAttention, isAncestor, isRelated } = useAttention(parentId);
+  const isAttended = hasAttention || isAncestor || isRelated;
 
   const handleAttend = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
@@ -78,17 +90,26 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
       if (state.current !== threadId) {
         registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
 
-        // TODO(wittjosiah): Should this be a thread-specific intent?
-        //  The layout doesn't know about threads and this working depends on other plugins conditionally handling it.
-        //  This may be overloading this intent or highjacking its intended purpose.
-        void invokePromise(LayoutOperation.ScrollIntoView, {
-          subject: Obj.getDXN(subject).toString(),
-          cursor: anchor.anchor,
-          ref: threadId,
-        });
+        // Scroll plank into view (deck handler).
+        void invokePromise(LayoutOperation.ScrollIntoView, { subject: parentId });
+
+        // Scroll within content to anchor (metadata-driven, per typename).
+        if (anchor.anchor && parentId) {
+          const typename = Obj.getTypename(subject);
+          const metadata = manager.capabilities
+            .getAll(AppCapabilities.Metadata)
+            .find(({ id }) => id === typename)?.metadata;
+          if (metadata?.scrollToAnchor) {
+            void invokePromise(metadata.scrollToAnchor, {
+              subject: parentId,
+              cursor: anchor.anchor,
+              ref: threadId,
+            });
+          }
+        }
       }
     },
-    [state.current, invokePromise, subject, registry, stateAtom],
+    [state.current, invokePromise, registry, stateAtom, parentId, subject, manager],
   );
 
   const handleComment = useCallback(
@@ -152,7 +173,7 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
   const comments = (
     <CommentsPanel
       anchors={anchors}
-      currentId={attended.includes(subjectId) ? state.current : undefined}
+      currentId={isAttended ? state.current : undefined}
       showResolvedThreads={showResolvedThreads}
       onAttend={handleAttend}
       onComment={handleComment}
@@ -163,21 +184,20 @@ export const ThreadCompanion = ({ subject }: { subject: any }) => {
     />
   );
 
-  // TODO(burdon): Root should be headless.
   return (
     <Tabs.Root
-      value={showResolvedThreads ? 'all' : 'unresolved'}
       orientation='horizontal'
+      value={showResolvedThreads ? 'all' : 'unresolved'}
       onValueChange={onChangeViewState}
     >
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Tabs.Tablist>
-              <Tabs.Tab value='unresolved' classNames='text-sm'>
+            <Tabs.Tablist classNames='p-0'>
+              <Tabs.Tab classNames='text-sm' value='unresolved'>
                 {t('show unresolved label')}
               </Tabs.Tab>
-              <Tabs.Tab value='all' classNames='text-sm'>
+              <Tabs.Tab classNames='text-sm' value='all'>
                 {t('show all label')}
               </Tabs.Tab>
             </Tabs.Tablist>

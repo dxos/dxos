@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import Search from './exa';
-import Mock from './mock';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const ExaFunctions = {
-  Search,
-  Mock,
-};
+export * from './definitions';
+
+export const ExaHandlers = OperationHandlerSet.lazy(
+  () => import('./exa'),
+  () => import('./mock'),
+);

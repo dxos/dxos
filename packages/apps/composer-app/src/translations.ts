@@ -23,7 +23,7 @@ export const translations = [
         'reload page label': 'Reload',
         'safe mode label': 'Safe mode',
         'reset app label': 'Reset',
-        'reset app confirm label': 'Confirm to reset plugins & settings to default',
+        'reset app confirm label': 'Confirm to WIPE ALL DATA from this device.',
         'INVALID_STORAGE_VERSION title': 'Invalid storage version',
         'INVALID_STORAGE_VERSION message':
           'The application is not compatible with the current storage version. The data must be migrated to the new protocol in order to be used with this application. The current version is {{actual}} and the expected version is {{expected}}.',

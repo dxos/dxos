@@ -10,9 +10,9 @@ import { Icon, IconButton, List, ListItem, Message, useTranslation } from '@dxos
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { ClientOperation } from '../../types';
+import { ClientOperation } from '../../operations';
 
-export const MANAGE_CREDENTIALS_DIALOG = `${meta.id}/ManageCredentialsDialog`;
+export const MANAGE_CREDENTIALS_DIALOG = `${meta.id}.ManageCredentialsDialog`;
 
 export const RecoveryCredentialsContainer = () => {
   const { t } = useTranslation(meta.id);

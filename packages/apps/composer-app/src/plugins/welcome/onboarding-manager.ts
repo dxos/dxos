@@ -3,14 +3,15 @@
 //
 
 import { type Capabilities } from '@dxos/app-framework';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Account, ClientOperation } from '@dxos/plugin-client/types';
-import { HelpOperation } from '@dxos/plugin-help/types';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { Account } from '@dxos/plugin-client/types';
+import { ClientOperation } from '@dxos/plugin-client/operations';
+import { HelpOperation } from '@dxos/plugin-help/operations';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { type Client } from '@dxos/react-client';
 import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';
@@ -161,8 +162,10 @@ export class OnboardingManager {
       actionLabel: ['passkey setup toast action label', { ns: meta.id }],
       actionAlt: ['passkey setup toast action alt', { ns: meta.id }],
       onAction: async () => {
-        await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: Account.id });
-        await this._invokePromise(LayoutOperation.Open, { subject: [Account.Security] });
+        await this._invokePromise(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(Account.id) });
+        await this._invokePromise(LayoutOperation.Open, {
+          subject: [`${getSpacePath(Account.id)}/${Account.Security}`],
+        });
       },
     });
   }

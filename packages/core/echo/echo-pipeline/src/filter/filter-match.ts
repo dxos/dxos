@@ -72,6 +72,10 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
       return false;
     }
 
+    case 'timestamp': {
+      throw new Error('Timestamp filters must be handled at the index level, not in-memory matching.');
+    }
+
     case 'not': {
       return !filterMatchObject(filter.filter, obj);
     }
@@ -148,6 +152,10 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
     // TODO: Implement text search.
     case 'text-search': {
       return false;
+    }
+
+    case 'timestamp': {
+      throw new Error('Timestamp filters must be handled at the index level, not in-memory matching.');
     }
 
     case 'not': {
@@ -291,11 +299,11 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
  *
  * Examples: (expected) (actual)
  *
- * dxn:type:example.org/type/Task       !== dxn:type:example.org/type/Contact
- * dxn:type:example.org/type/Task       === dxn:type:example.org/type/Task
- * dxn:type:example.org/type/Task:0.1.0 !== dxn:type:example.org/type/Task:0.2.0
- * dxn:type:example.org/type/Task       === dxn:type:example.org/type/Task:0.1.0
- * dxn:type:example.org/type/Task:0.1.0 === dxn:type:example.org/type/Task
+ * dxn:type:com.example.type.task       !== dxn:type:com.example.type.contact
+ * dxn:type:com.example.type.task       === dxn:type:com.example.type.task
+ * dxn:type:com.example.type.task:0.1.0 !== dxn:type:com.example.type.task:0.2.0
+ * dxn:type:com.example.type.task       === dxn:type:com.example.type.task:0.1.0
+ * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
  *
  */
 const compareTypename = (expectedDXN: DXN, actualDXN: DXN): boolean => {

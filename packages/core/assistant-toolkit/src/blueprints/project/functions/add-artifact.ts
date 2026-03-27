@@ -3,39 +3,28 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
-import { AiContextService } from '@dxos/assistant';
-import { Database, Obj, Ref } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
+import { Database, Obj } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 
+import { AddArtifact } from './definitions';
 import { Project } from '../../../types';
 
-export default defineFunction({
-  key: 'dxos.org/function/project/add-artifact',
-  name: 'Add artifact',
-  description: 'Adds a new artifact.',
-  inputSchema: Schema.Struct({
-    name: Schema.String.annotations({
-      description: 'The name of the artifact to add.',
-    }),
-    artifact: Ref.Ref(Obj.Unknown).annotations({
-      description: 'The artifact to add. Do NOT guess or try to generate the ID.',
-    }),
-  }),
-  services: [AiContextService],
-  handler: Effect.fnUntraced(function* ({ data }) {
-    if (!(yield* Database.load(data.artifact))) {
-      throw new Error('Artifact not found.');
-    }
+export default AddArtifact.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ name, artifact }) {
+      if (!(yield* Database.load(artifact))) {
+        throw new Error('Artifact not found.');
+      }
 
-    const project = yield* Project.getFromChatContext;
+      const project = yield* Project.getFromChatContext;
 
-    Obj.change(project, (project) => {
-      project.artifacts.push({
-        name: data.name,
-        data: data.artifact,
+      Obj.change(project, (project) => {
+        project.artifacts.push({
+          name,
+          data: artifact,
+        });
       });
-    });
-  }, AiContextService.fixFunctionHandlerType),
-});
+    }) as any,
+  ),
+);

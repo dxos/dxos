@@ -3,17 +3,19 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { AppGraphBuilder, OperationResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Journal, Outline, OutlinerOperation } from './types';
+import { Journal, Outline } from './types';
 
 export const OutlinerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -22,36 +24,44 @@ export const OutlinerPlugin = Plugin.define(meta).pipe(
       {
         id: Journal.Journal.typename,
         metadata: {
-          icon: 'ph--calendar-check--regular',
-          iconHue: 'indigo',
-          createObject: ((props) => Effect.sync(() => Journal.make(props))) satisfies CreateObject,
+          icon: Annotation.IconAnnotation.get(Journal.Journal).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Journal.Journal).pipe(Option.getOrThrow).hue ?? 'white',
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Journal.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
         id: Outline.Outline.typename,
         metadata: {
-          icon: 'ph--tree-structure--regular',
-          iconHue: 'indigo',
-          createObject: ((props) => Effect.sync(() => Outline.make(props))) satisfies CreateObject,
+          icon: Annotation.IconAnnotation.get(Outline.Outline).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Outline.Outline).pipe(Option.getOrThrow).hue ?? 'white',
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Outline.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
     ],
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [Journal.JournalEntry, Journal.Journal, Outline.Outline],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
-  Plugin.addModule({
-    id: 'on-space-created',
-    activatesOn: SpaceEvents.SpaceCreated,
-    activate: () =>
-      Effect.succeed(
-        Capability.contributes(SpaceCapabilities.OnCreateSpace, (params) =>
-          Operation.invoke(OutlinerOperation.OnCreateSpace, params),
-        ),
-      ),
-  }),
   Plugin.make,
 );

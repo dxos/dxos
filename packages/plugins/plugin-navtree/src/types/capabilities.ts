@@ -17,5 +17,5 @@ export namespace NavTreeCapabilities {
     setItem: (path: string[], key: 'open' | 'current' | 'alternateTree', next: boolean) => void;
   };
 
-  export const State = Capability.make<NavTreeStateStore>(`${meta.id}/capability/state`);
+  export const State = Capability.make<NavTreeStateStore>(`${meta.id}.capability.state`);
 }

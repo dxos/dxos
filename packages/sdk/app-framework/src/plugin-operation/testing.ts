@@ -9,49 +9,39 @@ import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Operation, type OperationInvoker, OperationResolver } from '@dxos/operation';
+import { Operation, type OperationInvoker } from '@dxos/operation';
 
 //
 // Test Operations
 //
 
 export const Compute = Operation.make({
-  schema: {
-    input: Schema.Struct({ value: Schema.Number }),
-    output: Schema.Struct({ value: Schema.Number }),
-  },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ value: Schema.Number }),
   meta: { key: 'test.compute' },
 });
 
 export const HalveCompute = Operation.make({
-  schema: {
-    input: Schema.Struct({ value: Schema.Number }),
-    output: Schema.Struct({ value: Schema.Number }),
-  },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ value: Schema.Number }),
   meta: { key: 'test.halve-compute' },
 });
 
 export const ToString = Operation.make({
-  schema: {
-    input: Schema.Struct({ value: Schema.Number }),
-    output: Schema.Struct({ string: Schema.String }),
-  },
+  input: Schema.Struct({ value: Schema.Number }),
+  output: Schema.Struct({ string: Schema.String }),
   meta: { key: 'test.to-string' },
 });
 
 export const Add = Operation.make({
-  schema: {
-    input: Schema.Tuple(Schema.Number, Schema.Number),
-    output: Schema.Number,
-  },
+  input: Schema.Tuple(Schema.Number, Schema.Number),
+  output: Schema.Number,
   meta: { key: 'test.add' },
 });
 
 export const SideEffect = Operation.make({
-  schema: {
-    input: Schema.Void,
-    output: Schema.Void,
-  },
+  input: Schema.Void,
+  output: Schema.Void,
   meta: { key: 'test.side-effect' },
 });
 
@@ -59,34 +49,24 @@ export const SideEffect = Operation.make({
 // Test Handlers
 //
 
-export const computeHandler = OperationResolver.make({
-  operation: Compute,
-  handler: (data) =>
-    Effect.gen(function* () {
-      yield* Effect.sleep(data.value * 10);
-      return { value: data.value * 2 };
-    }),
-});
+export const computeHandler = Operation.withHandler(Compute, (data) =>
+  Effect.gen(function* () {
+    yield* Effect.sleep(data.value * 10);
+    return { value: data.value * 2 };
+  }),
+);
 
-export const halveComputeHandler = OperationResolver.make({
-  operation: HalveCompute,
-  handler: (data) => Effect.succeed({ value: data.value / 2 }),
-});
+export const halveComputeHandler = Operation.withHandler(HalveCompute, (data) =>
+  Effect.succeed({ value: data.value / 2 }),
+);
 
-export const toStringHandler = OperationResolver.make({
-  operation: ToString,
-  handler: (data) => Effect.succeed({ string: data.value.toString() }),
-});
+export const toStringHandler = Operation.withHandler(ToString, (data) =>
+  Effect.succeed({ string: data.value.toString() }),
+);
 
-export const addHandler = OperationResolver.make({
-  operation: Add,
-  handler: (data) => Effect.succeed(data[0] + data[1]),
-});
+export const addHandler = Operation.withHandler(Add, (data) => Effect.succeed(data[0] + data[1]));
 
-export const sideEffectHandler = OperationResolver.make({
-  operation: SideEffect,
-  handler: () => Effect.succeed(undefined),
-});
+export const sideEffectHandler = Operation.withHandler(SideEffect, () => Effect.succeed(undefined));
 
 //
 // Test Utilities

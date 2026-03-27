@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -69,7 +71,7 @@ export type FlushOptions = {
 
   /**
    * Wait for pending index updates.
-   * @default false
+   * @default true
    */
   indexes?: boolean;
 

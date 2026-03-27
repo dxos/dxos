@@ -4,7 +4,7 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { HTMLAttributes, type PropsWithChildren, forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 
 import { composableProps } from '@dxos/ui-theme';
 import { type ComposableProps, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';

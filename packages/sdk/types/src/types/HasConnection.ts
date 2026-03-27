@@ -2,11 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
 import { Obj, Relation, Type } from '@dxos/echo';
 
-import { Organization } from './Organization';
+import * as Organization from './Organization';
 
 export const HasConnection = Schema.Struct({
   id: Obj.ID,
@@ -17,10 +19,10 @@ export const HasConnection = Schema.Struct({
 })
   .pipe(
     Type.relation({
-      typename: 'dxos.org/relation/HasConnection',
+      typename: 'org.dxos.relation.has-connection',
       version: '0.1.0',
-      source: Organization,
-      target: Organization,
+      source: Organization.Organization,
+      target: Organization.Organization,
     }),
   )
   .annotations({

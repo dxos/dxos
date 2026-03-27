@@ -10,7 +10,7 @@ import '@dxos-theme';
 
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
-import React, { StrictMode } from 'react';
+import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
@@ -31,6 +31,16 @@ import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
 import { translations } from './translations';
 import { defaultStorageIsEmpty, isFalse, isTrue } from './util';
+
+declare global {
+  interface ImportMeta {
+    env: ImportMetaEnv;
+  }
+
+  interface ImportMetaEnv {
+    DEV: string;
+  }
+}
 
 const main = async () => {
   const url = new URL(window.location.href);
@@ -118,7 +128,9 @@ const main = async () => {
     runAndForwardErrors,
   );
 
-  // Use single-client mode on mobile Tauri apps where SharedWorker crashes on WKWebView.
+  // Use in-process coordinator (no SharedWorker) for mobile Tauri apps only. iOS WKWebView has a
+  // separate SharedWorker crash bug (Apple FB11723920) unrelated to origin. Desktop Tauri uses
+  // tauri-plugin-localhost which serves from http://localhost, giving SharedWorker a proper origin.
   const useSingleClientMode = isTauri && isMobile;
 
   const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
@@ -182,16 +194,22 @@ const main = async () => {
       updateServiceWorker,
     } = useRegisterSW();
 
+    const handleReset = useCallback(async () => {
+      localStorage.clear();
+      await services.services.SystemService?.reset();
+      window.location.href = window.location.origin;
+    }, [services]);
+
     return (
       <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
         <Tooltip.Provider>
           <ResetDialog
-            isDev={conf.isDev}
             error={error}
+            logBuffer={logBuffer}
+            observability={observability}
             needRefresh={needRefresh}
             onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
-            observability={observability}
-            logBuffer={logBuffer}
+            onReset={import.meta.env.DEV ? handleReset : undefined}
           />
         </Tooltip.Provider>
       </ThemeProvider>

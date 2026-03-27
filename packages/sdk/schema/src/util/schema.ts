@@ -54,7 +54,7 @@ export const createDefaultSchema = () =>
     }),
   }).pipe(
     Type.object({
-      typename: `example.com/type/${PublicKey.random().truncate()}`,
+      typename: `com.example.type.${PublicKey.random().truncate()}`,
       version: '0.1.0',
     }),
   );

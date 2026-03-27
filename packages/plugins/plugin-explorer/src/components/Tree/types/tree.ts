@@ -24,7 +24,7 @@ export const TreeType = Schema.Struct({
   nodes: Schema.mutable(Schema.Record({ key: Key.ObjectId, value: TreeNodeType })),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Tree',
+    typename: 'org.dxos.type.tree',
     version: '0.1.0',
   }),
 );
@@ -185,8 +185,8 @@ export class Tree {
   clear(): void {
     const root = this._tree.nodes[this._tree.root];
     root.children.length = 0;
-    Obj.change(this._tree, (t) => {
-      t.nodes = {
+    Obj.change(this._tree, (obj) => {
+      obj.nodes = {
         [root.id]: root,
       };
     });
@@ -202,8 +202,8 @@ export class Tree {
     }
 
     const nodeToAdd = node;
-    Obj.change(this._tree, (t) => {
-      t.nodes[nodeToAdd.id] = nodeToAdd;
+    Obj.change(this._tree, (obj) => {
+      obj.nodes[nodeToAdd.id] = nodeToAdd;
       parent.children.splice(index ?? parent.children.length, 0, nodeToAdd.id);
     });
     return node;
@@ -218,8 +218,8 @@ export class Tree {
       return undefined;
     }
 
-    Obj.change(this._tree, (t) => {
-      delete t.nodes[node.id];
+    Obj.change(this._tree, (obj) => {
+      delete obj.nodes[node.id];
     });
     const idx = parent.children.findIndex((child) => child === id);
     if (idx !== -1) {

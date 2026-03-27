@@ -46,8 +46,8 @@ describe('Obj', () => {
       expect(Obj.getDXN(snapshot)).toBeDefined();
 
       // getTypename - works with both.
-      expect(Obj.getTypename(obj)).toBe('example.com/type/Person');
-      expect(Obj.getTypename(snapshot)).toBe('example.com/type/Person');
+      expect(Obj.getTypename(obj)).toBe('com.example.type.person');
+      expect(Obj.getTypename(snapshot)).toBe('com.example.type.person');
 
       // getMeta - works with both.
       expect(Obj.getMeta(obj)).toBeDefined();
@@ -117,8 +117,8 @@ describe('Obj', () => {
 
     test('returns keys from reactive object and snapshot', ({ expect }) => {
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
-      Obj.change(obj, (o) => {
-        const meta = Obj.getMeta(o);
+      Obj.change(obj, (obj) => {
+        const meta = Obj.getMeta(obj);
         meta.keys.push({ source: SOURCE, id: 'key-1' });
         meta.keys.push({ source: SOURCE, id: 'key-2' });
         meta.keys.push({ source: 'other', id: 'key-3' });
@@ -166,8 +166,8 @@ describe('Obj', () => {
 
       const cloned = Obj.clone(original);
 
-      Obj.change(original, (p) => {
-        p.name = 'Bob';
+      Obj.change(original, (obj) => {
+        obj.name = 'Bob';
       });
 
       expect(original.name).toBe('Bob');
@@ -333,8 +333,8 @@ describe('Obj', () => {
       expect(cloned.address?.coordinates.lng).toBe(-122.4194);
 
       // Modifying nested properties should be independent
-      Obj.change(person, (p) => {
-        p.address!.city = 'New York';
+      Obj.change(person, (obj) => {
+        obj.address!.city = 'New York';
       });
 
       expect(cloned.address?.city).toBe('San Francisco');
@@ -366,8 +366,8 @@ describe('Obj', () => {
       expect(cloned.tasks?.[2]?.target).not.toBe(task3);
 
       // Modifying original tasks should not affect cloned ones
-      Obj.change(task1, (t) => {
-        t.title = 'Updated Task 1';
+      Obj.change(task1, (obj) => {
+        obj.title = 'Updated Task 1';
       });
 
       expect(cloned.tasks?.[0]?.target?.title).toBe('Task 1');

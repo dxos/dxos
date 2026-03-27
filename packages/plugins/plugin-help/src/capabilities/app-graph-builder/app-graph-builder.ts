@@ -11,7 +11,8 @@ import { Operation } from '@dxos/operation';
 
 import { SHORTCUTS_DIALOG } from '../../constants';
 import { meta } from '../../meta';
-import { HelpCapabilities, HelpOperation } from '../../types';
+import { HelpCapabilities } from '../../types';
+import { HelpOperation } from '../../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -38,7 +39,7 @@ export default Capability.makeModule(
             },
           },
           {
-            id: `${meta.id}/open-shortcuts`,
+            id: `${meta.id}.open-shortcuts`,
             data: Effect.fnUntraced(function* () {
               yield* Capabilities.updateAtomValue(HelpCapabilities.State, (s) => ({ ...s, showHints: true }));
               yield* Operation.invoke(LayoutOperation.UpdateDialog, {

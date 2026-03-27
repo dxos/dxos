@@ -6,12 +6,10 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { AttentionOperation } from '@dxos/plugin-attention/types';
-import { ATTENDABLE_PATH_SEPARATOR, DeckOperation } from '@dxos/plugin-deck/types';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -20,7 +18,7 @@ import { type Organization, Person } from '@dxos/types';
 import { RelatedContacts } from '../../components';
 
 export const RelatedToOrganization = ({ subject: organization }: SurfaceComponentProps<Organization.Organization>) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invoke } = useOperationInvoker();
   const db = Obj.getDatabase(organization);
   const defaultDb = useDatabase();
   const currentSpaceContacts = useQuery(db, Filter.type(Person.Person));
@@ -43,25 +41,14 @@ export const RelatedToOrganization = ({ subject: organization }: SurfaceComponen
   const handleContactClick = useCallback(
     (contact: Person.Person) =>
       Effect.gen(function* () {
-        const view = currentSpaceContacts.includes(contact) ? currentSpaceContactTable : defaultSpaceContactTable;
-        yield* Effect.promise(() => invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' }));
-        if (view) {
-          const id = Obj.getDXN(view).toString();
-          yield* Effect.promise(() => invokePromise(LayoutOperation.Open, { subject: [id], workspace: db?.spaceId }));
-          yield* Effect.promise(() =>
-            invokePromise(DeckOperation.ChangeCompanion, {
-              companion: [id, 'selected-objects'].join(ATTENDABLE_PATH_SEPARATOR),
-            }),
-          );
-          yield* Effect.promise(() =>
-            invokePromise(AttentionOperation.Select, {
-              contextId: id,
-              selection: { mode: 'multi', ids: [contact.id] },
-            }),
-          );
-        }
+        const contactPath = getObjectPathFromObject(contact);
+        yield* invoke(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
+        yield* invoke(LayoutOperation.Open, {
+          subject: [contactPath],
+          workspace: db ? getSpacePath(db.spaceId) : undefined,
+        });
       }).pipe(runAndForwardErrors),
-    [invokePromise, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, db, defaultDb],
+    [invoke, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, db, defaultDb],
   );
 
   return <RelatedContacts contacts={related} onContactClick={handleContactClick} />;

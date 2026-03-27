@@ -3,11 +3,12 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Ref, Tag, Type } from '@dxos/echo';
+import { Annotation, Ref, Tag, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
@@ -33,7 +34,9 @@ import {
   AppGraphBuilder,
   AppGraphSerializer,
   IdentityCreated,
-  OperationResolver,
+  NavigationResolver,
+  OperationHandler,
+  UndoMappings,
   ReactRoot,
   ReactSurface,
   Repair,
@@ -44,7 +47,8 @@ import {
 import { meta } from './meta';
 import { translations } from './translations';
 import { SpaceEvents } from './types';
-import { type CreateObject, SpaceOperation, type SpacePluginOptions } from './types';
+import { type CreateObject, type SpacePluginOptions } from './types';
+import { SpaceOperation } from './operations';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addMetadataModule({
@@ -52,66 +56,100 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       {
         id: Collection.Collection.typename,
         metadata: {
-          icon: 'ph--cards-three--regular',
-          iconHue: 'neutral',
+          icon: Annotation.IconAnnotation.get(Collection.Collection).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Collection.Collection).pipe(Option.getOrThrow).hue ?? 'white',
           // TODO(wittjosiah): Move out of metadata.
           loadReferences: async (collection: Collection.Collection) => await Ref.Array.loadAll(collection.objects),
           inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
-          createObject: ((props) => Effect.sync(() => Collection.make(props))) satisfies CreateObject,
-          addToCollectionOnCreate: true,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Collection.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: false,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
         id: Type.getTypename(Type.PersistentType),
         metadata: {
-          icon: 'ph--database--regular',
-          iconHue: 'green',
+          icon: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Type.PersistentType).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: SpaceOperation.StoredSchemaForm,
-          createObject: ((props, { db }) =>
+          createObject: ((props, options) =>
             Effect.gen(function* () {
-              if (props.typename) {
-                const result = yield* Operation.invoke(SpaceOperation.UseStaticSchema, {
-                  db,
-                  typename: props.typename,
-                });
-                return result as any;
-              } else {
-                const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
-                  db,
-                  name: props.name,
-                  schema: createDefaultSchema(),
-                });
-                return result.object;
-              }
+              const result = yield* Operation.invoke(SpaceOperation.AddSchema, {
+                db: options.db,
+                name: props.name,
+                schema: createDefaultSchema(),
+              });
+              return {
+                id: result.id,
+                subject: [],
+                object: result.object,
+              };
             })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Event.Event.typename,
-        metadata: {
-          icon: 'ph--calendar-dot--regular',
         },
       },
       {
         id: Organization.Organization.typename,
         metadata: {
-          icon: 'ph--building-office--regular',
+          icon: Annotation.IconAnnotation.get(Organization.Organization).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Organization.Organization).pipe(Option.getOrThrow).hue ?? 'white',
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Organization.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
         id: Person.Person.typename,
         metadata: {
-          icon: 'ph--user--regular',
+          icon: Annotation.IconAnnotation.get(Person.Person).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Person.Person).pipe(Option.getOrThrow).hue ?? 'white',
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Person.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
         id: Task.Task.typename,
         metadata: {
-          icon: 'ph--check-circle--regular',
+          icon: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).icon,
+          iconHue: Annotation.IconAnnotation.get(Task.Task).pipe(Option.getOrThrow).hue ?? 'white',
+          inputSchema: Task.Task,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Task.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
     ],
   }),
+  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
     schema: [
@@ -183,9 +221,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       };
 
       return {
-        id: Capability.getModuleTag(OperationResolver),
-        activatesOn: ActivationEvents.SetupOperationResolver,
-        activate: () => OperationResolver({ createInvitationUrl, observability }),
+        id: Capability.getModuleTag(UndoMappings),
+        activatesOn: ActivationEvents.SetupOperationHandler,
+        activate: () => UndoMappings({ createInvitationUrl, observability }),
       };
     },
   ),

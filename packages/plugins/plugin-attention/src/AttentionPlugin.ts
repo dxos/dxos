@@ -8,13 +8,13 @@ import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } f
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
-import { Keyboard, OperationResolver, ReactContext } from './capabilities';
+import { Keyboard, OperationHandler, ReactContext } from './capabilities';
 import { meta } from './meta';
 import { AttentionEvents } from './types';
 import { AttentionCapabilities } from './types';
 
 export const AttentionPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule({
     id: 'attention',
     activatesOn: ActivationEvents.Startup,
@@ -54,9 +54,9 @@ const setupDevtools = (attention: AttentionManager) => {
     },
     get currentSpace() {
       for (const id of attention.getCurrent()) {
-        const [spaceId, objectId] = id.split(':');
-        if (spaceId && objectId && spaceId.length === 33) {
-          return spaceId;
+        const segments = id.split('/');
+        if (segments.length > 1 && segments[1].length === 33) {
+          return segments[1];
         }
       }
     },

@@ -1,0 +1,87 @@
+/**
+ * Main theme.
+ */
+
+/**
+ * Establish CSS cascade layer order before Tailwind sets its own.
+ * First mention of a layer name wins its position in the order.
+ *
+ * NOTE: `utilities` must be last so it overrides all base and component layers.
+ * NOTE: This must be in sync with the `transformIndexHtml` function in `packages/ui/ui-theme/src/plugins/plugin.ts`.
+ */
+@layer properties, theme, dx-tokens, user-tokens, base, tw-base, dx-base, components, tw-components, dx-components, utilities;
+
+@import 'tailwindcss';
+
+/* @theme extensions */
+@import './css/theme/animation.css';
+@import './css/theme/border.css';
+@import './css/theme/palette.css';
+@import './css/theme/semantic.css';
+@import './css/theme/spacing.css';
+@import './css/theme/styles.css';
+@import './css/theme/text.css';
+
+/* @layer dx-base, dx-tokens */
+@import './css/base/base.css';
+@import './css/base/typography.css';
+
+/* @layer dx-components (components) */
+@import './css/components/button.css';
+@import './css/components/checkbox.css';
+@import './css/components/dialog.css';
+@import './css/components/focus-ring.css';
+@import './css/components/icon.css';
+@import './css/components/panel.css';
+@import './css/components/link.css';
+@import './css/components/scrollbar.css';
+@import './css/components/selected.css';
+@import './css/components/surface.css';
+@import './css/components/tag.css';
+@import './css/components/text.css';
+
+/* @layer dx-components (layout) */
+@import './css/layout/main.css';
+@import './css/layout/native.css';
+@import './css/layout/positioning.css';
+@import './css/layout/size.css';
+
+/* @layer dx-utilities */
+@import './css/utilities.css';
+
+/* Third-party integrations */
+@import './css/integrations/codemirror.css';
+@import './css/integrations/tldraw.css';
+
+/**
+ * Force-emit CSS variables for the full color palette for all: 
+ * --color-{hue}-{shade}
+ * --color-{hue}-{style}
+ */
+@source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{50,100,200,300,400,500,600,700,800,900,950}");
+@source inline("bg-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-{fill,surface,surface-text,text,border}");
+@source inline("border-{neutral,red,orange,amber,yellow,lime,green,emerald,teal,cyan,sky,blue,indigo,violet,purple,fuchsia,pink,rose}-border");
+@source inline("bg-{info,success,warning,error}-{fill,surface,surface-text,text,border}");
+@source inline("border-{info,success,warning,error}-border");
+
+/**
+ * Plugins must come after all imports.
+ */
+@plugin '@tailwindcss/forms';
+@plugin 'tailwind-scrollbar';
+@plugin 'tailwindcss-radix';
+
+/**
+ * Class-based dark mode.
+ * The `.dark` class on an ancestor toggles `dark:` utilities.
+ */
+@variant dark (&:where(.dark, .dark *));
+
+/** Mobile */
+@custom-variant pointer-coarse (@media (pointer: coarse));
+/** Web */
+@custom-variant pointer-fine (@media (pointer: fine));
+/** Supports mouse/trackpad (Web) */
+@custom-variant hover-hover (@media (hover: hover));
+/** Active navigation */
+@custom-variant is-current (&[aria-current]:not([aria-current="false"]));

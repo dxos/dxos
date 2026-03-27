@@ -6,32 +6,29 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { type Feed, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { type Message as MessageType } from '@dxos/types';
 
 import { Message, type MessageHeaderProps, type ViewMode } from '../../components';
 import { useActorContact } from '../../hooks';
-import { InboxOperation } from '../../types';
+import { InboxOperation } from '../../operations';
+import { type Mailbox } from '../../types';
 
 export type MessageArticleProps = SurfaceComponentProps<
   MessageType.Message,
   {
-    feed: Feed.Feed;
+    mailbox: Mailbox.Mailbox; // TODO(burdon): companionTo?
   }
 >;
 
-export const MessageArticle = ({
-  role,
-  subject: message,
-  feed, // TODO(burdon): companionTo?
-}: MessageArticleProps) => {
+export const MessageArticle = ({ role, subject: message, mailbox, attendableId }: MessageArticleProps) => {
   const viewMode = useMemo<ViewMode>(() => {
     const textBlocks = message?.blocks.filter((block) => 'text' in block) ?? [];
     return textBlocks.length > 1 && !!textBlocks[1]?.text ? 'enriched' : 'plain-only';
   }, [message]);
 
-  const db = Obj.getDatabase(feed);
+  const db = Obj.getDatabase(mailbox);
   const sender = useActorContact(db, message.sender);
 
   const { invokePromise } = useOperationInvoker();
@@ -46,25 +43,25 @@ export const MessageArticle = ({
 
   const handleReply = useCallback(() => {
     if (db) {
-      void invokePromise(InboxOperation.CreateDraft, { db, mode: 'reply', replyToMessage: message });
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', replyToMessage: message });
     }
   }, [db, invokePromise, message]);
 
   const handleReplyAll = useCallback(() => {
     if (db) {
-      void invokePromise(InboxOperation.CreateDraft, { db, mode: 'reply-all', replyToMessage: message });
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply-all', replyToMessage: message });
     }
   }, [db, invokePromise, message]);
 
   const handleForward = useCallback(() => {
     if (db) {
-      void invokePromise(InboxOperation.CreateDraft, { db, mode: 'forward', replyToMessage: message });
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'forward', replyToMessage: message });
     }
   }, [db, invokePromise, message]);
 
   return (
     <Message.Root
-      attendableId={Obj.getDXN(feed).toString()}
+      attendableId={attendableId}
       viewMode={viewMode}
       message={message}
       sender={sender}
@@ -72,7 +69,7 @@ export const MessageArticle = ({
       onReplyAll={handleReplyAll}
       onForward={handleForward}
     >
-      <Panel.Root role={role} className='dx-article'>
+      <Panel.Root role={role} className='dx-document'>
         <Panel.Toolbar asChild>
           <Message.Toolbar />
         </Panel.Toolbar>

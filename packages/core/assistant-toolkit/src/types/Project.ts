@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { Annotation, Type } from '@dxos/echo';
-import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { Annotation, Database, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
@@ -62,12 +63,12 @@ export const Project = Schema.Struct({
   }),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Project',
+    typename: 'org.dxos.type.project',
     version: '0.1.0',
   }),
   Annotation.IconAnnotation.set({
     icon: 'ph--circuitry--regular',
-    hue: 'green',
+    hue: 'sky',
   }),
   QueueAnnotation.set(true),
 );

@@ -10,18 +10,21 @@ import { AiService, type ModelName } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Feed, type Type } from '@dxos/echo';
-import { CredentialsService, type FunctionDefinition, type ServiceCredential, TracingService } from '@dxos/functions';
+import { CredentialsService, type ServiceCredential, TracingService } from '@dxos/functions';
 import { TracingServiceExt, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
+import { OperationHandlerSet } from '@dxos/operation';
 import { ToolExecutionServices } from '../functions';
+import { Blueprint } from '@dxos/blueprints';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
   model?: ModelName;
-  functions?: FunctionDefinition.Any[];
+  operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
   toolkits?: GenericToolkit.GenericToolkit[];
   types?: Type.AnyEntity[];
+  blueprints?: Blueprint.Blueprint[];
   credentials?: ServiceCredential[];
   /*
    * Tracing configuration.
@@ -35,18 +38,26 @@ interface TestLayerOptions {
 export const AssistantTestLayer = ({
   aiServicePreset = 'direct',
   model = '@anthropic/claude-opus-4-6',
-  functions = [],
+  operationHandlers = [],
   toolkits = [],
   types = [],
   credentials = [],
   tracing = 'noop',
   disableLlmMemoization = false,
+  blueprints = [],
 }: TestLayerOptions = {}) => {
   const toolkit = GenericToolkit.merge(...toolkits);
-  return Layer.mergeAll(AiService.model(model), ToolExecutionServices).pipe(
+  const operationHandlersSet = Array.isArray(operationHandlers)
+    ? OperationHandlerSet.merge(...operationHandlers)
+    : operationHandlers;
+  return Layer.mergeAll(
+    AiService.model(model),
+    ToolExecutionServices,
+    Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
+  ).pipe(
     Layer.provideMerge(
       FunctionInvocationServiceLayerTest({
-        functions,
+        functions: operationHandlersSet,
       }),
     ),
     Layer.provideMerge(

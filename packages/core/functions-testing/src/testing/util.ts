@@ -8,8 +8,8 @@ import { sleep } from '@dxos/async';
 import { Client, type Config } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Query } from '@dxos/echo';
-import { Function } from '@dxos/functions';
 import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
@@ -27,7 +27,7 @@ export const writeBundle = (path: string, bundle: BundleResult) => {
 export const setup = async (config: Config) => {
   const client = await new Client({
     config,
-    types: [Function.Function, Trigger.Trigger],
+    types: [Operation.PersistentOperation, Trigger.Trigger],
   }).initialize();
   await client.halo.createIdentity();
 
@@ -41,7 +41,7 @@ export const setup = async (config: Config) => {
 };
 
 export const sync = async (space: Space) => {
-  await space.db.flush({ indexes: true });
+  await space.db.flush();
   await space.internal.syncToEdge({
     onProgress: (state) =>
       console.log(state ? `${state.unsyncedDocumentCount} documents syncing...` : 'connecting to edge...'),
@@ -53,7 +53,7 @@ export const deployFunction = async (
   functionsServiceClient: FunctionsServiceClient,
   entryPoint: string,
   runtime: FunctionRuntimeKind,
-) => {
+): Promise<Operation.PersistentOperation> => {
   const artifact = await bundleFunction({
     entryPoint,
     verbose: true,

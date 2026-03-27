@@ -13,7 +13,7 @@ import React, {
   useState,
 } from 'react';
 
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { ComposableProps, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { composableProps, mx } from '@dxos/ui-theme';
 
@@ -90,12 +90,15 @@ const BoardRoot = BoardRootInner as <TColumn = any, TItem = any>(props: BoardRoo
 
 const BOARD_CONTENT_NAME = 'Board.Content';
 
-type BoardContentProps<TColumn = any> = ThemedClassName<{
-  id: string;
-  debug?: boolean;
-  eventHandler?: MosaicEventHandler<TColumn>;
-  Tile?: MosaicStackProps<TColumn>['Tile'];
-}>;
+type BoardContentProps<TColumn = any> = ComposableProps<
+  HTMLDivElement,
+  {
+    id: string;
+    debug?: boolean;
+    eventHandler?: MosaicEventHandler<TColumn>;
+    Tile?: MosaicStackProps<TColumn>['Tile'];
+  }
+>;
 
 const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
   ({ id: _id, debug, eventHandler, Tile = DefaultBoardColumn, ...props }, forwardedRef) => {

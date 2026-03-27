@@ -3,33 +3,22 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
 import { AiContextService } from '@dxos/assistant';
-import { Obj, Ref } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
-import { trim } from '@dxos/util';
+import { Operation } from '@dxos/operation';
 
-export default defineFunction({
-  key: 'dxos.org/function/database/context-add',
-  name: 'Add to context',
-  description: trim`
-    Adds the object to the chat context.
-    Use this it for objects that are useful long-term for the conversation.
-  `,
-  inputSchema: Schema.Struct({
-    obj: Ref.Ref(Obj.Unknown).annotations({
-      description: 'Object to add to the chat context.',
+import { ContextAdd } from './definitions';
+
+export default ContextAdd.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ obj }) {
+      const { binder } = yield* AiContextService;
+      yield* Effect.promise(() =>
+        binder.bind({
+          blueprints: [],
+          objects: [obj],
+        }),
+      );
     }),
-  }),
-  outputSchema: Schema.Void,
-  handler: Effect.fn(function* ({ data: { obj } }) {
-    const { binder } = yield* AiContextService;
-    yield* Effect.promise(() =>
-      binder.bind({
-        blueprints: [],
-        objects: [obj],
-      }),
-    );
-  }, AiContextService.fixFunctionHandlerType),
-});
+  ),
+);

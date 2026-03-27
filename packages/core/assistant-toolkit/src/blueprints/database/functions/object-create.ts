@@ -3,33 +3,36 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
 import { Database, Entity, Obj, Type } from '@dxos/echo';
-import { defineFunction } from '@dxos/functions';
+import { EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { trim } from '@dxos/util';
+import { Operation } from '@dxos/operation';
+import { deepMapValues } from '@dxos/util';
 
-export default defineFunction({
-  key: 'dxos.org/function/database/object-create',
-  name: 'Create object',
-  description: trim`
-    Creates a new object and adds it to the current space.
-    Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
-  `,
-  inputSchema: Schema.Struct({
-    typename: Schema.String,
-    data: Schema.Any,
-  }),
-  outputSchema: Schema.Unknown,
-  handler: Effect.fn(function* ({ data: { typename, data } }) {
-    const { db } = yield* Database.Service;
-    const schema = yield* Effect.promise(() =>
-      db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
-    );
-    invariant(Type.isObjectSchema(schema), 'Schema is not an object schema');
+import { ObjectCreate } from './definitions';
 
-    const object = db.add(Obj.make(schema, data));
-    return Entity.toJSON(object);
-  }),
-});
+export default ObjectCreate.pipe(
+  Operation.withHandler(
+    Effect.fn(function* ({ typename, data }) {
+      const { db } = yield* Database.Service;
+      const schema = yield* Effect.promise(() =>
+        db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
+      );
+      invariant(Type.isObjectSchema(schema), 'Schema is not an object schema');
+
+      const object = db.add(
+        Obj.make(
+          schema,
+          deepMapValues(data, (value, recurse) => {
+            if (EncodedReference.isEncodedReference(value)) {
+              return db.makeRef(EncodedReference.toDXN(value));
+            }
+            return recurse(value);
+          }),
+        ),
+      );
+      return Entity.toJSON(object);
+    }),
+  ),
+);

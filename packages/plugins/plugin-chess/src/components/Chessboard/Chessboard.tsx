@@ -27,7 +27,6 @@ import {
   useGameboardContext,
 } from '@dxos/react-ui-gameboard';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
-import { mx } from '@dxos/ui-theme';
 
 import { type Chess } from '../../types';
 
@@ -104,14 +103,9 @@ type Role = 'card--content';
 
 type ContentProps = ThemedClassName<PropsWithChildren<{ role?: Role }>>;
 
-const Content = ({ classNames, children, role }: ContentProps) => {
+const Content = ({ classNames, children }: ContentProps) => {
   return (
-    <Gameboard.Content
-      classNames={mx(
-        classNames,
-        role === 'card--content' ? 'dx-size-container dx-card-square' : 'flex flex-col justify-center',
-      )}
-    >
+    <Gameboard.Content grow contain classNames={classNames}>
       {children}
     </Gameboard.Content>
   );

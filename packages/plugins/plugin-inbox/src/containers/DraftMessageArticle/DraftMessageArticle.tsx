@@ -13,7 +13,7 @@ import { Panel } from '@dxos/react-ui';
 import { type Message } from '@dxos/types';
 
 import { ComposeEmailPanel } from '../../components';
-import { GmailFunctions } from '../../functions';
+import { GmailFunctions } from '../../operations/google/gmail';
 
 export type DraftMessageArticleProps = SurfaceComponentProps<Message.Message>;
 
@@ -31,7 +31,7 @@ export const DraftMessageArticle = ({ role, subject }: DraftMessageArticleProps)
   );
 
   return (
-    <Panel.Root role={role} className='dx-article'>
+    <Panel.Root role={role} className='dx-document'>
       <Panel.Content asChild>
         <ComposeEmailPanel draft={subject} onSend={handleSend} />
       </Panel.Content>

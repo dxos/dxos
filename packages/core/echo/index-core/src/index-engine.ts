@@ -29,7 +29,7 @@ export interface DataSourceCursor {
   spaceId: SpaceId | null;
 
   /**
-   * documentId or queueId.
+   * documentId or queueNamespace.
    */
   resourceId: string | null;
 
@@ -132,6 +132,18 @@ export class IndexEngine {
   }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.queryTypes(query);
   }
+  queryByTimeRange(query: {
+    spaceIds: readonly string[];
+    updatedAfter?: number;
+    updatedBefore?: number;
+    createdAfter?: number;
+    createdBefore?: number;
+    includeAllQueues?: boolean;
+    queueIds?: readonly string[] | null;
+  }): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
+    return this.#objectMetaIndex.queryByTimeRange(query);
+  }
+
   queryRelations(query: {
     endpoint: 'source' | 'target';
     anchorDxns: readonly string[];
@@ -160,13 +172,15 @@ export class IndexEngine {
   > {
     return Effect.gen(this, function* () {
       let updated = 0;
+      let done = true;
 
       const { updated: updatedFtsIndex, done: doneFtsIndex } = yield* this.#update(this.#ftsIndex, dataSource, {
-        indexName: 'fts',
+        indexName: 'fts5',
         spaceId: opts.spaceId,
         limit: opts.limit,
       });
       updated += updatedFtsIndex;
+      done = done && doneFtsIndex;
 
       const { updated: updatedReverseRefIndex, done: doneReverseRefIndex } = yield* this.#update(
         this.#reverseRefIndex,
@@ -178,8 +192,9 @@ export class IndexEngine {
         },
       );
       updated += updatedReverseRefIndex;
+      done = done && doneReverseRefIndex;
 
-      return { updated, done: doneFtsIndex && doneReverseRefIndex };
+      return { updated, done };
     }).pipe(Effect.withSpan('IndexEngine.update'));
   }
 
