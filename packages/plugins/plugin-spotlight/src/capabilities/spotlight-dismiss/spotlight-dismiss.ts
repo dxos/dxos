@@ -30,7 +30,11 @@ export default Capability.makeModule(() =>
     try {
       focusCleanup = await win.onFocusChanged(async ({ payload }: { payload: boolean }) => {
         if (!payload) {
-          await invoke('hide_spotlight');
+          try {
+            await invoke('hide_spotlight');
+          } catch (err) {
+            log.catch(err);
+          }
         }
       });
     } catch (err) {

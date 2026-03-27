@@ -65,7 +65,8 @@ export const makeEntry = (date = new Date()): JournalEntry => {
 export const addBullet = async (entry: JournalEntry, text: string) => {
   const textObj = await entry.content.load();
   const existing = textObj.content ?? '';
-  const bullet = `- [ ] ${text}`;
+  const sanitized = text.trim().replace(/\n+/g, ' ');
+  const bullet = `- [ ] ${sanitized}`;
   const newContent = existing.length > 0 ? `${existing}\n${bullet}` : bullet;
   updateText(textObj, ['content'], newContent);
 };

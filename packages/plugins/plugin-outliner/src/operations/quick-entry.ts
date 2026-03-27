@@ -16,6 +16,11 @@ import { QuickJournalEntry } from './definitions';
 const handler: Operation.WithHandler<typeof QuickJournalEntry> = QuickJournalEntry.pipe(
   Operation.withHandler(({ text }) =>
     Effect.gen(function* () {
+      const cleaned = text?.trim();
+      if (!cleaned) {
+        return;
+      }
+
       const client = yield* Capability.get(ClientCapabilities.Client);
       yield* Effect.tryPromise(async () => {
         const space = client.spaces.default;
@@ -25,7 +30,7 @@ const handler: Operation.WithHandler<typeof QuickJournalEntry> = QuickJournalEnt
         const journal = journals.length > 0 ? (journals[0] as Journal.Journal) : space.db.add(Journal.make());
 
         const entry = Journal.getOrCreateEntry(journal, space.db);
-        await Journal.addBullet(entry, text);
+        await Journal.addBullet(entry, cleaned);
       });
     }),
   ),

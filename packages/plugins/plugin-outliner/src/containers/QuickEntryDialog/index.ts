@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export { QuickEntryDialog } from './QuickEntryDialog';
+import { QuickEntryDialog } from './QuickEntryDialog';
+
+export default QuickEntryDialog;

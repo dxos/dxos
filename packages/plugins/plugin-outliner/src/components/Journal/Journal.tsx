@@ -33,7 +33,7 @@ export const Journal = forwardRef<HTMLDivElement, JournalProps>(({ journal, onSe
     () =>
       Object.entries(journalSnapshot?.entries ?? {})
         .toSorted(([a], [b]) => (a < b ? 1 : a > b ? -1 : 0))
-        .map(([, ref]) => ref),
+        .map(([dateKey, ref]) => ({ dateKey, ref })),
     [journalSnapshot],
   );
 
@@ -56,14 +56,8 @@ export const Journal = forwardRef<HTMLDivElement, JournalProps>(({ journal, onSe
             <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
           </div>
         )}
-        {entryRefs.map((ref, i) => (
-          <JournalEntry
-            key={ref.dxn?.toString() ?? i}
-            entryRef={ref}
-            classNames='p-2'
-            onSelect={onSelect}
-            autoFocus={i === 0}
-          />
+        {entryRefs.map(({ dateKey, ref }, i) => (
+          <JournalEntry key={dateKey} entryRef={ref} classNames='p-2' onSelect={onSelect} autoFocus={i === 0} />
         ))}
       </ScrollArea.Viewport>
     </ScrollArea.Root>

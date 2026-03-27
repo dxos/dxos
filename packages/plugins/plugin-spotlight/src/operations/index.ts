@@ -14,19 +14,17 @@ import { SpotlightState } from '../types';
 const DISMISS_DEBOUNCE_MS = 100;
 
 export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
-  //
   // UpdateDialog — switch content or schedule dismiss.
-  //
-  // The commands dialog (CommandsDialogContent) always calls UpdateDialog({ state: false })
-  // BEFORE running the selected action via setTimeout. If the action switches the spotlight
-  // to a different dialog (e.g., search or quick entry), it will call UpdateDialog({ subject })
-  // shortly after. Without the debounce, the spotlight would dismiss before the content switch
-  // arrives. The delay gives the action time to fire; if a new subject arrives, the pending
-  // dismiss is cancelled.
-  //
   LayoutOperation.UpdateDialog.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* (input) {
+        /* NOTE: The commands dialog (CommandsDialogContent) always calls UpdateDialog({ state: false })
+         * BEFORE running the selected action via setTimeout. If the action switches the spotlight
+         * to a different dialog (e.g., search or quick entry), it will call UpdateDialog({ subject })
+         * shortly after. Without the debounce, the spotlight would dismiss before the content switch
+         * arrives. The delay gives the action time to fire; if a new subject arrives, the pending
+         * dismiss is cancelled.
+         */
         if (input.subject) {
           // Cancel any pending dismiss and switch content.
           yield* Capabilities.updateAtomValue(SpotlightState, (state) => {

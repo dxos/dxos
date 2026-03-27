@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { Dialog, ErrorFallback } from '@dxos/react-ui';
+import { Dialog, ErrorFallback, useAsyncEffect } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
 
 import { useSpotlightState } from './useSpotlightState';
@@ -35,39 +35,29 @@ export const SpotlightLayout = () => {
   const dialogContent = state.dialogContent ?? { component: COMMANDS_DIALOG };
 
   // Reset state and autofocus when the popover window gains focus.
-  useEffect(() => {
+  useAsyncEffect(async () => {
     if (!isTauri()) {
       return;
     }
 
-    const tauriWindow = (globalThis as any).__TAURI__?.window;
-    if (!tauriWindow) {
-      return;
-    }
+    const { getCurrentWindow } = await import('@tauri-apps/api/window');
+    const win = getCurrentWindow();
 
-    let cleanup: (() => void) | undefined;
-    tauriWindow
-      .getCurrentWindow()
-      .onFocusChanged(({ payload }: { payload: boolean }) => {
-        if (payload) {
-          updateState(() => ({
-            dialogOpen: true,
-            dialogContent: { component: COMMANDS_DIALOG },
-          }));
-          requestAnimationFrame(() => focusSearchInput());
-        }
-      })
-      .then((unlisten: () => void) => {
-        cleanup = unlisten;
-      });
+    const unlisten = await win.onFocusChanged(({ payload }: { payload: boolean }) => {
+      if (payload) {
+        updateState(() => ({
+          dialogOpen: true,
+          dialogContent: { component: COMMANDS_DIALOG },
+        }));
+        requestAnimationFrame(() => focusSearchInput());
+      }
+    });
 
-    return () => {
-      cleanup?.();
-    };
+    return () => unlisten();
   }, [updateState]);
 
   return (
-    <div className='h-screen w-screen overflow-hidden' data-spotlight>
+    <div role='none' className='grid inset-0 overflow-hidden' data-spotlight>
       <Dialog.Root open={state.dialogOpen} modal={false}>
         <Surface.Surface role='dialog' data={dialogContent} limit={1} fallback={ErrorFallback} />
       </Dialog.Root>

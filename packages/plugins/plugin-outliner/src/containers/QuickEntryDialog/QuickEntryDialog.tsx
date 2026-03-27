@@ -16,6 +16,7 @@ import { OutlineOperation } from '../../operations';
 
 const QuickEntryForm = Schema.Struct({
   text: Schema.String.pipe(
+    Schema.filter((value) => value.trim().length > 0, { message: () => 'Entry cannot be empty.' }),
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
     Schema.annotations({ description: 'Journal entry' }),
   ),
@@ -29,10 +30,6 @@ export const QuickEntryDialog = () => {
 
   const handleSave = useCallback(
     async (values: QuickEntryForm) => {
-      if (!values.text.trim()) {
-        return;
-      }
-
       await invokePromise(OutlineOperation.QuickJournalEntry, { text: values.text.trim() });
       await invokePromise(LayoutOperation.UpdateDialog, { state: false });
     },
@@ -45,21 +42,28 @@ export const QuickEntryDialog = () => {
 
   return (
     <Dialog.Content>
-      <Dialog.Title srOnly>{t('quick entry dialog title')}</Dialog.Title>
-      <Form.Root
-        autoFocus
-        schema={QuickEntryForm}
-        defaultValues={{ text: '' }}
-        onSave={handleSave}
-        onCancel={handleCancel}
-      >
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-            <Form.Actions />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
+      <Dialog.Header>
+        <Dialog.Title>{t('quick entry dialog title')}</Dialog.Title>
+        <Dialog.Close asChild>
+          <Dialog.CloseIconButton />
+        </Dialog.Close>
+      </Dialog.Header>
+      <Dialog.Body>
+        <Form.Root
+          autoFocus
+          schema={QuickEntryForm}
+          defaultValues={{ text: '' }}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        >
+          <Form.Viewport>
+            <Form.Content>
+              <Form.FieldSet />
+              <Form.Actions />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </Dialog.Body>
     </Dialog.Content>
   );
 };
