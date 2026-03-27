@@ -18855,6 +18855,9 @@ importers:
 
   packages/ui/ui-theme:
     dependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/node-std':
         specifier: workspace:*
         version: link:../../common/node-std

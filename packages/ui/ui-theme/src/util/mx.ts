@@ -3,15 +3,18 @@
 //
 
 import {
+  Children,
   forwardRef,
   type ForwardRefExoticComponent,
   type ForwardedRef,
   type HTMLAttributes,
+  isValidElement,
   type ReactNode,
   type RefAttributes,
 } from 'react';
 import { extendTailwindMerge, validators } from 'tailwind-merge';
 
+import { log } from '@dxos/log';
 import { type ComposableProps, type SlottableProps } from '@dxos/ui-types';
 
 type AdditionalClassGroups = 'density' | 'dx-focus-ring';
@@ -99,10 +102,30 @@ export const composableProps = <P extends HTMLElement = HTMLElement>(
  * );
  * ```
  */
+/** Symbol used to mark components created by `composable()` or `slottable()`. */
+const COMPOSABLE = Symbol.for('dxos.composable');
+
 export function slottable<E extends HTMLElement, P extends object = {}>(
   render: (props: SlottableProps<P> & HTMLAttributes<E>, forwardedRef: ForwardedRef<E>) => ReactNode,
 ): ForwardRefExoticComponent<SlottableProps<P> & RefAttributes<E>> {
-  return forwardRef(render as any) as any;
+  const wrapped = (props: SlottableProps<P> & HTMLAttributes<E>, forwardedRef: ForwardedRef<E>) => {
+    if (props.asChild) {
+      try {
+        const child = Children.only(props.children);
+        if (isValidElement(child) && typeof child.type !== 'string' && !(child.type as any)[COMPOSABLE]) {
+          log.warn('slot child is not composable; create it with composable() or slottable()', {
+            child: (child.type as any).displayName ?? (child.type as any).name,
+          });
+        }
+      } catch {
+        // Children.only throws if not exactly one child — Slot handles this.
+      }
+    }
+    return render(props, forwardedRef);
+  };
+  const component = forwardRef(wrapped as any) as any;
+  (component as any)[COMPOSABLE] = true;
+  return component;
 }
 
 /**
@@ -126,5 +149,7 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
 export function composable<E extends HTMLElement, P extends object = {}>(
   render: (props: ComposableProps<P> & HTMLAttributes<E>, forwardedRef: ForwardedRef<E>) => ReactNode,
 ): ForwardRefExoticComponent<ComposableProps<P> & RefAttributes<E>> {
-  return forwardRef(render as any) as any;
+  const component = forwardRef(render as any) as any;
+  (component as any)[COMPOSABLE] = true;
+  return component;
 }

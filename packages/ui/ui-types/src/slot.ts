@@ -7,7 +7,6 @@ import { type ReactNode } from 'react';
 import { type ThemedClassName } from './theme';
 
 // TODO(burdon): Define base type for component with `testId`, etc.
-// TODO(burdon): Warn if slottable child is not ComposableProps.
 
 /**
  * Props for components that can receive merged props from a Radix Slot parent.
