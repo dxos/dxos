@@ -7,7 +7,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type HTMLAttributes, forwardRef } from 'react';
 
-import { composableProps } from '@dxos/ui-theme';
+import { composableProps, slottable } from '@dxos/ui-theme';
 import { type AllowedAxis, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
@@ -42,12 +42,12 @@ const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaConte
 
 const SCROLLAREA_ROOT_NAME = 'ScrollArea.Root';
 
-type ScrollAreaRootProps = SlottableProps<HTMLDivElement, Partial<ScrollAreaContextType>>;
+type ScrollAreaRootProps = SlottableProps<Partial<ScrollAreaContextType>>;
 
 /**
  * ScrollArea provides native scrollbars with custom styling.
  */
-const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
+const ScrollAreaRoot = slottable<HTMLDivElement, Partial<ScrollAreaContextType>>(
   (
     {
       children,

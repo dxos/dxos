@@ -15,16 +15,13 @@ import { composableProps, mx } from '@dxos/ui-theme';
 import { type AiChatProcessor } from '../../processor';
 import { ServiceType } from '../../types';
 
-export type ToolboxProps = ComposableProps<
-  HTMLDivElement,
-  {
-    services?: { service: ServiceType }[];
-    functions?: Operation.PersistentOperation[];
-    // TODO(burdon): Combine into single array.
-    blueprints?: readonly Blueprint.Blueprint[];
-    activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
-  }
->;
+export type ToolboxProps = ComposableProps<{
+  services?: { service: ServiceType }[];
+  functions?: Operation.PersistentOperation[];
+  // TODO(burdon): Combine into single array.
+  blueprints?: readonly Blueprint.Blueprint[];
+  activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
+}>;
 
 export const Toolbox = forwardRef<HTMLDivElement, ToolboxProps>(
   ({ functions, services, blueprints, activeBlueprints, ...props }, forwardedRef) => {

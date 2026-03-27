@@ -108,10 +108,7 @@ const BoardColumnRoot = BoardColumnRootInner as <TColumn = unknown>(
 
 const BOARD_COLUMN_HEADER_NAME = 'Board.Column.Header';
 
-type BoardColumnHeaderProps = ComposableProps<
-  HTMLDivElement,
-  { label: string; dragHandleRef: ReactRef<HTMLButtonElement> }
->;
+type BoardColumnHeaderProps = ComposableProps<{ label: string; dragHandleRef: ReactRef<HTMLButtonElement> }>;
 
 const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
   ({ label, dragHandleRef, ...props }, forwardedRef) => {
@@ -167,7 +164,6 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
 type BoardColumnBodyProps = ComposableProps<
-  HTMLDivElement,
   Pick<BoardColumnProps, 'data'> &
     Pick<MosaicContainerProps, 'eventHandler' | 'debug'> & {
       Tile?: MosaicStackProps<Obj.Unknown>['Tile'];

@@ -73,7 +73,7 @@ export type TableController = {
   handleInsertRowResult?: (insertRowResult?: InsertRowResult) => void;
 };
 
-export type TableMainProps<T extends Type.AnyEntity = Type.AnyEntity> = ComposableProps<HTMLDivElement> & {
+export type TableMainProps<T extends Type.AnyEntity = Type.AnyEntity> = ComposableProps<{
   schema?: T;
   model?: TableModel;
   presentation?: TablePresentation;
@@ -82,7 +82,7 @@ export type TableMainProps<T extends Type.AnyEntity = Type.AnyEntity> = Composab
   onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
   testId?: string;
-};
+}>;
 
 const TableMainInner = <T extends Type.AnyEntity = Type.AnyEntity>(
   { schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId, ...props }: TableMainProps<T>,

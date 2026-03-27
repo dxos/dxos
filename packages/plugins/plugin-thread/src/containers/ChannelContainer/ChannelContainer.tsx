@@ -204,9 +204,7 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
 };
 
 type ChannelToolbarProps = ComposableProps<
-  HTMLDivElement,
   Pick<MenuRootProps, 'attendableId'> & {
-    role?: string;
     onJoinCall?: () => void;
   }
 >;

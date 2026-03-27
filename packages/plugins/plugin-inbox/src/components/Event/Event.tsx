@@ -48,7 +48,7 @@ EventRoot.displayName = EVENT_ROOT_NAME;
 
 const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
 
-type EventToolbarProps = ComposableProps<HTMLDivElement, ThemedClassName<UseEventToolbarActionsProps>>;
+type EventToolbarProps = ComposableProps<UseEventToolbarActionsProps>;
 
 const EventToolbar = forwardRef<HTMLDivElement, EventToolbarProps>(({ onNoteCreate, ...props }, forwardedRef) => {
   const { attendableId } = useEventContext(EVENT_TOOLBAR_NAME);
@@ -69,7 +69,7 @@ EventToolbar.displayName = EVENT_TOOLBAR_NAME;
 
 const EVENT_VIEWPORT_NAME = 'Event.Viewport';
 
-type EventViewportProps = ComposableProps<HTMLDivElement>;
+type EventViewportProps = ComposableProps;
 
 const EventViewport = ({ children, ...props }: EventViewportProps) => {
   return (

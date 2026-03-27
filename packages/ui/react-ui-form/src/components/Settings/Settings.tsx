@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, forwardRef } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import {
   Button,
   type ButtonProps,
-  ComposableProps,
   Input,
   type Label,
   ScrollArea,
@@ -15,7 +14,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -40,9 +39,7 @@ const styles = {
 // Root
 //
 
-type SettingsRootProps = ComposableProps<HTMLDivElement>;
-
-const SettingsRoot = forwardRef<HTMLDivElement, SettingsRootProps>(({ children, ...props }, forwardedRef) => {
+const SettingsRoot = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { className, ...composedProps } = composableProps(props);
   return (
     <ScrollArea.Root
