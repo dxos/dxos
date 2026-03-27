@@ -28,6 +28,7 @@ export const Journal = forwardRef<HTMLDivElement, JournalProps>(({ journal, onSe
 
   // Subscribe to the journal object reactively so we pick up new entries.
   const [journalSnapshot] = useObject(journal);
+  // TODO(burdon): CRDT issue (merge entries with same date?)
   const entryRefs = useMemo(
     () =>
       Object.entries(journalSnapshot?.entries ?? {})
