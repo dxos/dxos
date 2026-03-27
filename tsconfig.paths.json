@@ -140,8 +140,8 @@
       "@dxos/react-ui-tabs": ["packages/ui/react-ui-tabs/src/index.ts"],
       "@dxos/react-ui-text-tooltip": ["packages/ui/react-ui-text-tooltip/src/index.ts"],
       "@dxos/react-ui-thread": ["packages/ui/react-ui-thread/src/index.ts"],
-      "@dxos/ui-types": ["packages/ui/ui-types/src/index.ts"],
-    },
+      "@dxos/ui-types": ["packages/ui/ui-types/src/index.ts"]
+    }
   },
-  "include": ["**/*"],
+  "include": ["**/*"]
 }
