@@ -3,10 +3,12 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as searchTranslations } from '@dxos/react-ui-search';
 
 import { meta } from './meta';
 
 export const translations = [
+  ...searchTranslations,
   {
     'en-US': {
       [meta.id]: {
@@ -22,7 +24,6 @@ export const translations = [
         'main menu label': 'Main menu',
         'companions menu label': 'Companions',
         'error fallback message': 'An error occurred',
-        'search placeholder': 'Search...',
         'drawer label': 'Drawer',
         'close drawer label': 'Close drawer',
         'expand drawer label': 'Expand drawer',

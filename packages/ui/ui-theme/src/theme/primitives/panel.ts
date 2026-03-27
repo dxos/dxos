@@ -19,26 +19,20 @@ const panelRoot: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
 
 const panelToolbar: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
   mx(
-    // prettier-ignore
     '[grid-area:toolbar]',
     'h-(--dx-toolbar-size)', // TODO(burdon): Option.
-    '[.dx-main-mobile-layout_&]:px-3',
-    // 'border-b border-subdued-separator relative',
+    'shrink-0',
     ...etc,
   );
 
 const panelContent: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
-  mx(
-    // prettier-ignore
-    '[grid-area:content] overflow-hidden min-h-0',
-    ...etc,
-  );
+  mx('[grid-area:content] overflow-hidden min-h-0', ...etc);
 
 const panelStatusbar: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
   mx(
-    // prettier-ignore
     '[grid-area:statusbar]',
     'h-(--dx-statusbar-size)', // TODO(burdon): Option.
+    'shrink-0',
     ...etc,
   );
 
