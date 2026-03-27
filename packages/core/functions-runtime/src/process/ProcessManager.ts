@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Atom, Registry } from '@effect-atom/atom';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Cause from 'effect/Cause';
@@ -22,17 +24,99 @@ import * as Process from './Process';
 import * as ProcessOperationInvoker from './ProcessOperationInvoker';
 import * as ServiceResolver from './ServiceResolver';
 import * as StorageService from './StorageService';
+import type { ObjectId } from '@dxos/protocols';
+
+export interface Status {
+  readonly state: Process.State;
+  readonly exit: Option.Option<Exit.Exit<void>>;
+
+  readonly startedAt: Date;
+  readonly completedAt: Option.Option<Date>;
+}
+
+export interface Handle<I, O> {
+  readonly pid: Process.ID;
+  readonly parentId: Option.Option<Process.ID>;
+
+  submitInput(input: I): Effect.Effect<void>;
+  subscribeOutputs(): Stream.Stream<O>;
+
+  terminate(): Effect.Effect<void>;
+  status(): Effect.Effect<Status>;
+  statusAtom: Atom.Atom<Status>;
+}
+
+export namespace Handle {
+  export type Any = Handle<any, any>;
+}
+
+/**
+ * Tracing metadata attached to a process spawn.
+ */
+export interface TracingOptions {
+  /** Parent message ObjectId for trace context. */
+  readonly message?: ObjectId;
+  /** Tool call ID for trace context. */
+  readonly toolCallId?: string;
+}
+
+/**
+ * Options for spawning a process.
+ */
+export interface SpawnOptions {
+  /** Parent process ID — child inherits the parent's trace context. */
+  readonly parentProcessId?: Process.ID;
+  /** Tracing metadata for this invocation. */
+  readonly tracing?: TracingOptions;
+}
+
+/**
+ * API for managing processes.
+ */
+export interface Manager {
+  /**
+   * Spawn a new process for an executable.
+   */
+  spawn<I, O>(executable: Process.Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
+  /**
+   * Attach to an existing process.
+   */
+  attach<I, O>(id: Process.ID): Effect.Effect<Handle<I, O>>;
+
+  /**
+   * Attach to an existing process if it exists, otherwise spawn a new process for the executable.
+   * `executable` and `options` are ignored if the process already exists.
+   */
+  ensure<I, O>(
+    id: Process.ID,
+    executable: Process.Executable<I, O, any>,
+    options?: SpawnOptions,
+  ): Effect.Effect<Handle<I, O>>;
+
+  /**
+   * List all spawned processes.
+   */
+  list(): Effect.Effect<readonly Handle.Any[]>;
+}
+
+/**
+ * Tag for the ProcessManager service.
+ */
+export class ProcessManagerService extends Context.Tag('@dxos/functions-runtime/ProcessManagerService')<
+  ProcessManagerService,
+  Manager
+>() {}
 
 /**
  * Output queue uses Option to signal completion: Some(value) for data, None for end-of-stream.
  */
 type OutputItem<O> = Option.Option<O>;
 
-class ProcessHandleImpl<I, O, R> implements Process.Handle<I, O> {
-  readonly statusAtom: Atom.Writable<Process.Status>;
+class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
+  readonly statusAtom: Atom.Writable<Status>;
   readonly parentId: Option.Option<Process.ID>;
 
-  #currentStatus: Process.Status;
+  #currentStatus: Status;
   #activeHandlers = 0;
   #finished = false;
   #exitRequested = false;
@@ -74,7 +158,7 @@ class ProcessHandleImpl<I, O, R> implements Process.Handle<I, O> {
       startedAt: new Date(),
       completedAt: Option.none(),
     };
-    this.statusAtom = Atom.make<Process.Status>(this.#currentStatus);
+    this.statusAtom = Atom.make<Status>(this.#currentStatus);
     this.#registry.mount(this.statusAtom);
   }
 
@@ -103,7 +187,7 @@ class ProcessHandleImpl<I, O, R> implements Process.Handle<I, O> {
     });
   }
 
-  status(): Effect.Effect<Process.Status> {
+  status(): Effect.Effect<Status> {
     return Effect.sync(() => this.#currentStatus);
   }
 
@@ -216,7 +300,7 @@ export interface ProcessManagerImplOpts {
   handlerSet?: OperationHandlerSet.OperationHandlerSet;
 }
 
-export class ProcessManagerImpl implements Process.Manager {
+export class ProcessManagerImpl implements Manager {
   readonly #handles = new Map<Process.ID, ProcessHandleImpl<any, any, any>>();
   readonly #traceContexts = new Map<Process.ID, TracingService.TraceContext>();
   readonly #registry: Registry.Registry;
@@ -233,10 +317,7 @@ export class ProcessManagerImpl implements Process.Manager {
     this.#handlerSet = opts.handlerSet;
   }
 
-  spawn<I, O>(
-    executable: Process.Executable<I, O, any>,
-    options?: Process.SpawnOptions,
-  ): Effect.Effect<Process.Handle<I, O>> {
+  spawn<I, O>(executable: Process.Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
       const id = Schema.decodeSync(Process.ID)(crypto.randomUUID());
       const scope = yield* Scope.make();
@@ -357,8 +438,8 @@ export class ProcessManagerImpl implements Process.Manager {
   ensure<I, O>(
     id: Process.ID,
     executable: Process.Executable<I, O, any>,
-    options?: Process.SpawnOptions,
-  ): Effect.Effect<Process.Handle<I, O>> {
+    options?: SpawnOptions,
+  ): Effect.Effect<Handle<I, O>> {
     const process = this.#handles.get(id);
     if (process) {
       return Effect.succeed(process);
@@ -369,7 +450,7 @@ export class ProcessManagerImpl implements Process.Manager {
   /**
    * Build trace context for a process, inheriting from parent if specified.
    */
-  #buildTraceContext(_id: Process.ID, options?: Process.SpawnOptions): Effect.Effect<TracingService.TraceContext> {
+  #buildTraceContext(_id: Process.ID, options?: SpawnOptions): Effect.Effect<TracingService.TraceContext> {
     return Effect.sync(() => {
       let baseContext: TracingService.TraceContext = {};
 
@@ -397,17 +478,17 @@ export class ProcessManagerImpl implements Process.Manager {
     return this.#traceContexts.get(processId);
   }
 
-  attach<I, O>(id: Process.ID): Effect.Effect<Process.Handle<I, O>> {
+  attach<I, O>(id: Process.ID): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
       const handle = this.#handles.get(id);
       if (!handle) {
         return yield* Effect.die(new Error(`Process not found: ${id}`));
       }
-      return handle as unknown as Process.Handle<I, O>;
+      return handle as unknown as Handle<I, O>;
     });
   }
 
-  list(): Effect.Effect<readonly Process.Handle.Any[]> {
+  list(): Effect.Effect<readonly Handle.Any[]> {
     return Effect.sync(() => [...this.#handles.values()]);
   }
 }
@@ -416,15 +497,15 @@ export class ProcessManagerImpl implements Process.Manager {
  * Layer that provides ProcessManager backed by ProcessManagerImpl.
  * Requires KeyValueStore, ServiceResolver, TracingService, and OperationHandlerSet.OperationHandlerProvider from the environment.
  */
-export const ProcessManagerLayer: Layer.Layer<
-  Process.ManagerService,
+export const layer: Layer.Layer<
+  ProcessManagerService,
   never,
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
   | TracingService
   | OperationHandlerSet.OperationHandlerProvider
 > = Layer.effect(
-  Process.ManagerService,
+  ProcessManagerService,
   Effect.gen(function* () {
     const kvStore = yield* KeyValueStore.KeyValueStore;
     const serviceResolver = yield* ServiceResolver.ServiceResolver;

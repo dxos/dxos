@@ -11,15 +11,11 @@
 
 import * as Scope from 'effect/Scope';
 import * as Effect from 'effect/Effect';
-import * as Stream from 'effect/Stream';
-import type { Atom } from '@effect-atom/atom';
 import * as Schema from 'effect/Schema';
-import type * as Option from 'effect/Option';
 import type * as Exit from 'effect/Exit';
 import * as Context from 'effect/Context';
 import type * as Types from 'effect/Types';
 
-import type { ObjectId } from '@dxos/keys';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import type { TracingService } from '@dxos/protocols/proto/dxos/tracing';
 
@@ -215,87 +211,27 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
   );
 
 export enum State {
+  // Process is actively running.
   RUNNING = 'running',
-  COMPLETED = 'completed',
-  TERMINATING = 'terminating', // TODO(dmaretskyi): Remove?
-  TERMINATED = 'terminated',
+
+  // Process is waiting for a child process to complete or an alarm to trigger.
   HYBERNATING = 'hybernating',
+
+  // Process is waiting for input. It will only resume when input is submitted.
+  SUSPENDED = 'suspended',
+
+  // Process is terminating and will transition to TERMINATED state.
+  TERMINATING = 'terminating',
+
+  // Process has been externally terminated.
+  TERMINATED = 'terminated',
+
+  // Process has completed successfully.
+  COMPLETED = 'completed',
+
+  // Process has failed.
   FAILED = 'failed',
-}
-
-export interface Status {
-  readonly state: State;
-  readonly exit: Option.Option<Exit.Exit<void>>;
-
-  readonly startedAt: Date;
-  readonly completedAt: Option.Option<Date>;
 }
 
 export const ID = Schema.UUID.pipe(Schema.brand('ProcessId'));
 export type ID = Schema.Schema.Type<typeof ID>;
-
-export interface Handle<I, O> {
-  readonly pid: ID;
-  readonly parentId: Option.Option<ID>;
-
-  submitInput(input: I): Effect.Effect<void>;
-  subscribeOutputs(): Stream.Stream<O>;
-
-  terminate(): Effect.Effect<void>;
-  status(): Effect.Effect<Status>;
-  statusAtom: Atom.Atom<Status>;
-}
-
-export namespace Handle {
-  export type Any = Handle<any, any>;
-}
-
-/**
- * Tracing metadata attached to a process spawn.
- */
-export interface TracingOptions {
-  /** Parent message ObjectId for trace context. */
-  readonly message?: ObjectId;
-  /** Tool call ID for trace context. */
-  readonly toolCallId?: string;
-}
-
-/**
- * Options for spawning a process.
- */
-export interface SpawnOptions {
-  /** Parent process ID — child inherits the parent's trace context. */
-  readonly parentProcessId?: ID;
-  /** Tracing metadata for this invocation. */
-  readonly tracing?: TracingOptions;
-}
-
-/**
- * API for managing processes.
- */
-export interface Manager {
-  /**
-   * Spawn a new process for an executable.
-   */
-  spawn<I, O>(executable: Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
-  /**
-   * Attach to an existing process.
-   */
-  attach<I, O>(id: ID): Effect.Effect<Handle<I, O>>;
-
-  /**
-   * Attach to an existing process if it exists, otherwise spawn a new process for the executable.
-   * `executable` and `options` are ignored if the process already exists.
-   */
-  ensure<I, O>(id: ID, executable: Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
-
-  /**
-   * List all spawned processes.
-   */
-  list(): Effect.Effect<readonly Handle.Any[]>;
-}
-
-/**
- * Tag for the ProcessManager service.
- */
-export class ManagerService extends Context.Tag('@dxos/functions-runtime/ManagerService')<ManagerService, Manager>() {}
