@@ -15,6 +15,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
+import { TAURI_LOCALHOST_PORT } from '../../constants';
 import { meta } from '../../meta';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
@@ -51,8 +52,9 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Skip updates if not supported or in dev mode.
     const platform = type();
-    if (!SUPPORTS_OTA.includes(platform) || window.location.protocol === 'http:') {
-      log.info('skipping updater', { platform, protocol: window.location.protocol });
+    const isDevServer = window.location.port !== TAURI_LOCALHOST_PORT;
+    if (!SUPPORTS_OTA.includes(platform) || isDevServer) {
+      log.info('skipping updater', { platform, port: window.location.port });
       return;
     }
 
