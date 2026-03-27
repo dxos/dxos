@@ -25,6 +25,7 @@ import * as ProcessOperationInvoker from './ProcessOperationInvoker';
 import * as ServiceResolver from './ServiceResolver';
 import * as StorageService from './StorageService';
 import type { ObjectId } from '@dxos/protocols';
+import * as Deferred from 'effect/Deferred';
 
 export interface Status {
   readonly state: Process.State;
@@ -44,6 +45,12 @@ export interface Handle<I, O> {
   terminate(): Effect.Effect<void>;
   status(): Effect.Effect<Status>;
   statusAtom: Atom.Atom<Status>;
+
+  /**
+   * Runs the process until it goes into a SUSPENDED, TERMINATED, FAILED, or COMPLETED state.
+   * I.e. it has completed all work with the currently submitted inputs.
+   */
+  runToCompletion(): Effect.Effect<void>;
 }
 
 export namespace Handle {
@@ -187,6 +194,19 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     });
   }
 
+  runToCompletion(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      const deferred = yield* Deferred.make<void>();
+      const unsubscribe = this.#registry.subscribe(
+        this.statusAtom,
+        () => Effect.runSync(Deferred.succeed(deferred, undefined)),
+        { immediate: true },
+      );
+      yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+      yield* Deferred.await(deferred);
+    }).pipe(Effect.scoped);
+  }
+
   status(): Effect.Effect<Status> {
     return Effect.sync(() => this.#currentStatus);
   }
@@ -323,7 +343,7 @@ export class ProcessManagerImpl implements Manager {
       const scope = yield* Scope.make();
       const outputQueue = yield* Queue.unbounded<OutputItem<O>>();
 
-      const storage = StorageService.StorageService.scoped(this.#kvStore, `process/${id}/`);
+      const storage = StorageService.layer(this.#kvStore, `process/${id}/`);
 
       const parentOption = options?.parentProcessId ? Option.some(options.parentProcessId) : Option.none<Process.ID>();
 

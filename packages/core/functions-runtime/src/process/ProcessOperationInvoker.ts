@@ -13,11 +13,13 @@ import * as Stream from 'effect/Stream';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
 
-import * as Process from './Process';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
-import { ProcessNotFoundError } from '../errors';
 import * as Context from 'effect/Context';
+
+import { ProcessNotFoundError } from '../errors';
+import * as Process from './Process';
+import * as ProcessManager from './ProcessManager';
 
 export interface OperationFiber<T> {
   pid: Process.ID;
@@ -32,7 +34,7 @@ export interface ProcessOperationInvoker {
   invokeFiber: <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
-    tracingOptions?: Process.TracingOptions,
+    tracingOptions?: ProcessManager.TracingOptions,
   ) => Effect.Effect<OperationFiber<O>>;
 
   /**
@@ -46,7 +48,7 @@ export class Service extends Context.Tag('@dxos/functions/ProcessOperationInvoke
   ProcessOperationInvoker
 >() {}
 
-const fiberFromProcess = <T>(handle: Process.Handle<any, T>): Effect.Effect<OperationFiber<T>> =>
+const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T>): Effect.Effect<OperationFiber<T>> =>
   Effect.gen(function* () {
     const outputFiber = yield* handle.subscribeOutputs().pipe(
       Stream.runCollect,
@@ -69,7 +71,7 @@ const fiberFromProcess = <T>(handle: Process.Handle<any, T>): Effect.Effect<Oper
  * When `parentProcessId` is set, spawned processes inherit the parent's trace context.
  */
 export const make = (opts: {
-  manager: Process.Manager;
+  manager: ProcessManager.Manager;
   handlerSet: OperationHandlerSet.OperationHandlerSet;
   parentProcessId?: Process.ID;
 }): Operation.OperationService & ProcessOperationInvoker => {
@@ -80,7 +82,7 @@ export const make = (opts: {
   const invokeFiber = <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
-    tracingOptions?: Process.TracingOptions,
+    tracingOptions?: ProcessManager.TracingOptions,
   ): Effect.Effect<OperationFiber<O>> =>
     Effect.gen(function* () {
       const executable = Process.fromOperation(op, opts.handlerSet);
@@ -105,7 +107,7 @@ export const make = (opts: {
     ...args: any[]
   ): Effect.Effect<O> => {
     const input = args[0] as I;
-    const options = args[1] as (Operation.InvokeOptions & { tracing?: Process.TracingOptions }) | undefined;
+    const options = args[1] as (Operation.InvokeOptions & { tracing?: ProcessManager.TracingOptions }) | undefined;
     return Effect.gen(function* () {
       const fiber = yield* invokeFiber(op, input, options?.tracing);
       const output = yield* fiber.await.pipe(Effect.flatten);
@@ -162,10 +164,10 @@ export const make = (opts: {
 export const layer: Layer.Layer<
   Operation.Service | Service,
   never,
-  Process.ManagerService | OperationHandlerSet.OperationHandlerProvider
+  ProcessManager.ProcessManagerService | OperationHandlerSet.OperationHandlerProvider
 > = Layer.unwrapEffect(
   Effect.gen(function* () {
-    const manager = yield* Process.ManagerService;
+    const manager = yield* ProcessManager.ProcessManagerService;
     const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
     const service = make({ manager, handlerSet });
     return Layer.mergeAll(Layer.succeed(Operation.Service, service), Layer.succeed(Service, service));
