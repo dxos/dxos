@@ -770,13 +770,11 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
 
-      // Create a feed object and bind it to the queue.
+      // Create a feed object - its queue DXN is derived from the feed's own DXN.
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
-      });
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDxn);
 
       // Add items to the queue and a separate item to the space.
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
@@ -796,12 +794,10 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
-      });
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDxn);
 
       const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
       const spaceItem = db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
@@ -845,12 +841,10 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      const queue = queues.create();
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
-      });
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDxn);
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
       await queue.append([

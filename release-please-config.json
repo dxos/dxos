@@ -685,6 +685,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-spotlight/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-stack/package.json",
           "jsonpath": "$.version"
         },
