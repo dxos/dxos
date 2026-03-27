@@ -5,15 +5,15 @@
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Layer from 'effect/Layer';
 import * as PubSub from 'effect/PubSub';
 import * as Ref from 'effect/Ref';
 import * as Stream from 'effect/Stream';
 
 import { runAndForwardErrors } from '@dxos/effect';
-import { Operation, type OperationInvoker, } from '@dxos/operation';
+import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
 
 import * as Process from './Process';
-import * as Layer from 'effect/Layer';
 
 /**
  * Creates an OperationInvoker that executes each operation by spawning a process via the ProcessManager.
@@ -23,6 +23,7 @@ import * as Layer from 'effect/Layer';
  */
 export const make = (opts: {
   manager: Process.Manager;
+  handlerSet: OperationHandlerSet.OperationHandlerSet;
   parentProcessId?: Process.ID;
 }): Operation.OperationService => {
   const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
@@ -35,13 +36,7 @@ export const make = (opts: {
     tracingOptions?: Process.TracingOptions,
   ): Effect.Effect<O, Error> =>
     Effect.gen(function* () {
-<<<<<<< HEAD
-      const executable = Process.makeOperationExecutable(op);
-||||||| 031c38213d (Separate executable from module)
-      const executable = Process.makeOperationExecutable(op, opts.handlerSet) as Process.Module<I, O>;
-=======
-      const executable = Process.makeOperationExecutable(op, opts.handlerSet) as Process.Executable<I, O>;
->>>>>>> parent of 031c38213d (Separate executable from module)
+      const executable = Process.fromOperation(op, opts.handlerSet);
 
       const handle = yield* opts.manager.spawn(executable, {
         parentProcessId: opts.parentProcessId,
@@ -128,7 +123,15 @@ export const make = (opts: {
   };
 };
 
-export const layer = Layer.effect(Operation.Service, Effect.gen(function* () {
-  const manager = yield* Process.ManagerService;
-  return make({ manager });
-}));
+export const layer: Layer.Layer<
+  Operation.Service,
+  never,
+  Process.ManagerService | OperationHandlerSet.Provider
+> = Layer.effect(
+  Operation.Service,
+  Effect.gen(function* () {
+    const manager = yield* Process.ManagerService;
+    const handlerSet = yield* OperationHandlerSet.Provider;
+    return make({ manager, handlerSet });
+  }),
+);
