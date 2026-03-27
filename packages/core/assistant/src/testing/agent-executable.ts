@@ -42,7 +42,7 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
       input: Schema.String,
       output: Schema.Void,
       services: [
-        GenericToolkit.Provider,
+        GenericToolkit.GenericToolkitProvider,
         Operation.Service,
         OperationRegistry.Service,
         StorageService.StorageService,

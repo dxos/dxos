@@ -21,7 +21,7 @@ import { Database, Feed } from '@dxos/echo';
 import { AiService, GenericToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
-import { ProcessManagerImpl, ProcessManagerLayer, ServiceResolver } from '@dxos/functions-runtime';
+import { Process, ProcessManagerImpl, ProcessManagerLayer, ServiceResolver } from '@dxos/functions-runtime';
 import { Organization, type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -104,7 +104,12 @@ const TestToolkitLayer = TestToolkit.toLayer({
 const TestLayer = TestToolkitLayer.pipe(
   Layer.provideMerge(ProcessManagerLayer),
   Layer.provideMerge(
-    ServiceResolver.layerRequirements(Database.Service, GenericToolkit.Provider, QueueService, AiService.AiService),
+    ServiceResolver.layerRequirements(
+      Database.Service,
+      GenericToolkit.GenericToolkitProvider,
+      QueueService,
+      AiService.AiService,
+    ),
   ),
   Layer.provideMerge(
     AssistantTestLayer({
@@ -130,71 +135,15 @@ describe('Agent Executable', () => {
     'runs AI agent with background tools via process manager',
     Effect.fnUntraced(
       function* (_) {
-        const toolkitHandler = yield* TestToolkit;
-        const kvStore = yield* KeyValueStore.KeyValueStore;
-        const tracingService = yield* TracingService;
+        const manager = yield* Process.ManagerService;
 
-        // Build a ServiceResolver for the AI services from the test environment.
-        const languageModel = yield* LanguageModel.LanguageModel;
-        const toolExec = yield* ToolExecutionService;
-        const toolResolver = yield* ToolResolverService;
-        const funcInvocation = yield* FunctionInvocationService;
-
-        const serviceCtx = Context.empty().pipe(
-          Context.add(LanguageModel.LanguageModel as any, languageModel),
-          Context.add(ToolExecutionService, toolExec),
-          Context.add(ToolResolverService, toolResolver),
-          Context.add(TracingService, tracingService),
-          Context.add(FunctionInvocationService, funcInvocation),
+        const handle = yield* manager.spawn(
+          makeAgentExecutable({
+            feed: Feed.make(),
+          }),
         );
-        const resolver = ServiceResolver.fromContext(serviceCtx as Context.Context<any>);
 
-        const manager = new ProcessManagerImpl({
-          registry: Registry.make(),
-          kvStore,
-          serviceResolver: resolver,
-          tracingService,
-        });
-
-        const executable = makeAgentExecutable({
-          feed: Feed.make(),
-        });
-
-        const handle = yield* manager.spawn(executable);
         const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
-
-        const inputQueue: string[] = [...TEST_DATA.organizations.map((organization) => JSON.stringify(organization))];
-
-        while (inputQueue.length > 0) {
-          yield* handle.submitInput(inputQueue.join('\n'));
-          inputQueue.length = 0;
-
-          for (const jobId of activeJobs.keys()) {
-            const result = yield* activeJobs.get(jobId)!.poll;
-            if (Option.isSome(result)) {
-              inputQueue.push(`Job completed: ${jobId}`);
-              activeJobs.delete(jobId);
-            }
-          }
-          if (inputQueue.length === 0 && activeJobs.size > 0) {
-            const result = yield* Effect.raceAll(
-              activeJobs.entries().map(([jobId, fiber]) =>
-                fiber.await.pipe(
-                  Effect.map(() => {
-                    activeJobs.delete(jobId);
-                    return `Job completed: ${jobId}`;
-                  }),
-                ),
-              ),
-            );
-            inputQueue.push(result);
-          }
-        }
-
-        yield* handle.terminate();
-        const outputs = yield* Fiber.join(outputFiber);
-        const outputArray = Chunk.toReadonlyArray(outputs) as Message.Message[];
-        console.log(`Agent produced ${outputArray.length} messages`);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -202,3 +151,29 @@ describe('Agent Executable', () => {
     { timeout: 120_000 },
   );
 });
+
+// while (inputQueue.length > 0) {
+//   yield* handle.submitInput(inputQueue.join('\n'));
+//   inputQueue.length = 0;
+
+//   for (const jobId of activeJobs.keys()) {
+//     const result = yield* activeJobs.get(jobId)!.poll;
+//     if (Option.isSome(result)) {
+//       inputQueue.push(`Job completed: ${jobId}`);
+//       activeJobs.delete(jobId);
+//     }
+//   }
+//   if (inputQueue.length === 0 && activeJobs.size > 0) {
+//     const result = yield* Effect.raceAll(
+//       activeJobs.entries().map(([jobId, fiber]) =>
+//         fiber.await.pipe(
+//           Effect.map(() => {
+//             activeJobs.delete(jobId);
+//             return `Job completed: ${jobId}`;
+//           }),
+//         ),
+//       ),
+//     );
+//     inputQueue.push(result);
+//   }
+// }

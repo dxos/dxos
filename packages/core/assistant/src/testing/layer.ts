@@ -82,6 +82,7 @@ export const AssistantTestLayer = ({
       ),
     ),
     Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
+    Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),
   );
 };
 
