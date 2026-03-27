@@ -414,19 +414,22 @@ export class ProcessManagerImpl implements Process.Manager {
 
 /**
  * Layer that provides ProcessManager backed by ProcessManagerImpl.
- * Requires KeyValueStore, ServiceResolver, TracingService, and OperationHandlerSet.Provider from the environment.
+ * Requires KeyValueStore, ServiceResolver, TracingService, and OperationHandlerSet.OperationHandlerProvider from the environment.
  */
 export const ProcessManagerLayer: Layer.Layer<
   Process.ManagerService,
   never,
-  KeyValueStore.KeyValueStore | ServiceResolver.ServiceResolver | TracingService | OperationHandlerSet.Provider
+  | KeyValueStore.KeyValueStore
+  | ServiceResolver.ServiceResolver
+  | TracingService
+  | OperationHandlerSet.OperationHandlerProvider
 > = Layer.effect(
   Process.ManagerService,
   Effect.gen(function* () {
     const kvStore = yield* KeyValueStore.KeyValueStore;
     const serviceResolver = yield* ServiceResolver.ServiceResolver;
     const tracingService = yield* TracingService;
-    const handlerSet = yield* OperationHandlerSet.Provider;
+    const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
     const registry = Registry.make();
     return new ProcessManagerImpl({
       registry,

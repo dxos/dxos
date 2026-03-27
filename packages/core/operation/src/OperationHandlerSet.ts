@@ -95,7 +95,10 @@ export const getHandler = <const Op extends Operation.Definition.Any>(
 /**
  * Gets a handler for an operation by key.
  */
-export const getHandlerByKey = (set: OperationHandlerSet, key: string): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> =>
+export const getHandlerByKey = (
+  set: OperationHandlerSet,
+  key: string,
+): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> =>
   Effect.gen(function* () {
     const handlers = yield* set.handlers;
     const handler = handlers.find((handler) => handler.meta.key === key);
@@ -105,11 +108,10 @@ export const getHandlerByKey = (set: OperationHandlerSet, key: string): Effect.E
     return handler as any;
   });
 
-export class Provider extends Context.Tag('@dxos/operation/OperationHandlerSetProvider')<
-  Provider,
+export class OperationHandlerProvider extends Context.Tag('@dxos/operation/OperationHandlerProvider')<
+  OperationHandlerProvider,
   OperationHandlerSet
->() {
-}
+>() {}
 
-export const provide = (handlers: OperationHandlerSet): Layer.Layer<Provider, never, never> =>
-  Layer.succeed(Provider, handlers);
+export const provide = (handlers: OperationHandlerSet): Layer.Layer<OperationHandlerProvider, never, never> =>
+  Layer.succeed(OperationHandlerProvider, handlers);

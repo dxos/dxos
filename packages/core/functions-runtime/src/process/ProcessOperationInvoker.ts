@@ -162,11 +162,11 @@ export const make = (opts: {
 export const layer: Layer.Layer<
   Operation.Service | Service,
   never,
-  Process.ManagerService | OperationHandlerSet.Provider
+  Process.ManagerService | OperationHandlerSet.OperationHandlerProvider
 > = Layer.unwrapEffect(
   Effect.gen(function* () {
     const manager = yield* Process.ManagerService;
-    const handlerSet = yield* OperationHandlerSet.Provider;
+    const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
     const service = make({ manager, handlerSet });
     return Layer.mergeAll(Layer.succeed(Operation.Service, service), Layer.succeed(Service, service));
   }),
