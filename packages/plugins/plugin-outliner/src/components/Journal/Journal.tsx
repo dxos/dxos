@@ -15,7 +15,7 @@ import { Outline, type OutlineController, type OutlineProps } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
-export type JournalProps = Omit<ComposableProps<HTMLDivElement>, 'onSelect'> &
+export type JournalProps = Omit<ComposableProps, 'onSelect'> &
   Pick<JournalEntryProps, 'onSelect'> & {
     journal: JournalType.Journal;
   };

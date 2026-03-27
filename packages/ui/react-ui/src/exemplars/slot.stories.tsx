@@ -3,25 +3,25 @@
 //
 
 import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { forwardRef, PropsWithChildren } from 'react';
+import React from 'react';
 
-import { composableProps } from '@dxos/ui-theme';
-import { type ComposableProps, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
+import { composable, composableProps, slottable } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
 import { withTheme } from '../testing';
-import { Slot } from '@radix-ui/react-slot';
 
 /**
- * Composition
- *
+ * Radix-style composition.
  * All Radix primitive parts that render a DOM element accept an asChild prop.
- * When asChild is set to true, Radix will not render a default DOM element, instead cloning the part's child and passing it the props and behavior required to make it functional.
+ * When asChild is set to true, Radix will not render a default DOM element,
+ * instead cloning the part's child and passing it the props and behavior required to make it functional.
  * https://www.radix-ui.com/primitives/docs/guides/composition
  */
 
-const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
-  ({ children, asChild, ...props }, forwardedRef) => {
+const Outer = slottable<HTMLDivElement, { priority?: number }>(
+  ({ children, asChild, priority, ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
     return (
       <Comp {...composableProps<HTMLDivElement>(props, { role: 'none' })} ref={forwardedRef}>
@@ -31,30 +31,26 @@ const Outer = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   },
 );
 
-const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
-  ({ children, asChild, ...props }, forwardedRef) => {
-    const Comp = asChild ? Slot : Primitive.div;
-    return (
-      <Comp {...composableProps<HTMLDivElement>(props, { role: 'none' })} ref={forwardedRef}>
-        {children}
-      </Comp>
-    );
-  },
-);
+const Middle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const Comp = asChild ? Slot : Primitive.div;
+  return (
+    <Comp {...composableProps<HTMLDivElement>(props, { role: 'none' })} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
-const Leaf = forwardRef<HTMLButtonElement, ComposableProps<HTMLButtonElement, PropsWithChildren>>(
-  ({ children, ...props }, forwardedRef) => {
-    return (
-      <button {...composableProps<HTMLButtonElement>(props, { role: 'none' })} ref={forwardedRef}>
-        {children}
-      </button>
-    );
-  },
-);
+const Leaf = composable<HTMLButtonElement>(({ children, ...props }, forwardedRef) => {
+  return (
+    <button {...composableProps<HTMLButtonElement>(props, { role: 'none' })} ref={forwardedRef}>
+      {children}
+    </button>
+  );
+});
 
 const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
   return (
-    <Outer asChild {...composableProps<HTMLDivElement>(props, { role: 'none' })}>
+    <Outer {...composableProps<HTMLDivElement>(props, { role: 'none' })} asChild priority={1}>
       <Leaf>Single asChild (non-compliant — see console)</Leaf>
     </Outer>
   );

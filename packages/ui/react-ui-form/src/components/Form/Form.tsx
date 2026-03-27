@@ -5,19 +5,13 @@
 import { createContext } from '@radix-ui/react-context';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
-import React, { type PropsWithChildren, forwardRef, useEffect, useMemo, useRef } from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
-import {
-  ComposableProps,
-  IconButton,
-  type IconButtonProps,
-  ScrollArea,
-  type ThemedClassName,
-  useTranslation,
-} from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { type ComposableProps } from '@dxos/ui-types';
 
 import {
   type FormHandler,
@@ -165,9 +159,9 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = ComposableProps<HTMLDivElement>;
+type FormViewportProps = ComposableProps;
 
-const FormViewport = forwardRef<HTMLDivElement, FormViewportProps>(({ children, ...props }, forwardedRef) => {
+const FormViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
     <ScrollArea.Root {...composableProps(props)} orientation='vertical' margin padding thin ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>

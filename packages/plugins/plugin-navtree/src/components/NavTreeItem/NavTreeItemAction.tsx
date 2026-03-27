@@ -14,7 +14,6 @@ import { meta } from '../../meta';
 import { type ActionProperties } from '../../types';
 
 export type NavTreeItemActionMenuProps = ComposableProps<
-  HTMLButtonElement,
   ActionProperties & {
     parent: Node.Node;
     path?: string[];

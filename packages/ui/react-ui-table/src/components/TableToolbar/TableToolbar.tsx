@@ -81,7 +81,6 @@ const createTableToolbarActions = ({
   });
 
 export type TableToolbarProps = ComposableProps<
-  HTMLDivElement,
   Pick<MenuRootProps, 'attendableId'> &
     TableToolbarState & {
       onAdd?: () => void;

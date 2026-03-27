@@ -14,23 +14,20 @@ import { useMobileLayout } from '../MobileLayout';
 
 const APP_BAR_NAME = 'SimpleLayout.AppBar';
 
-export type AppBarProps = ComposableProps<
-  HTMLDivElement,
-  {
-    /** Title/label to display in the banner. */
-    title?: string;
-    /** Action graph atom for the dropdown menu. */
-    actions: Atom.Atom<ActionGraphProps>;
-    /** Whether to show the back button. */
-    showBackButton?: boolean;
-    /** Popover anchor ID for the dropdown trigger. */
-    popoverAnchorId?: string;
-    /** Action executor callback. */
-    onAction?: ActionExecutor;
-    /** Callback when back button is clicked. */
-    onBack?: () => void;
-  }
->;
+export type AppBarProps = ComposableProps<{
+  /** Title/label to display in the banner. */
+  title?: string;
+  /** Action graph atom for the dropdown menu. */
+  actions: Atom.Atom<ActionGraphProps>;
+  /** Whether to show the back button. */
+  showBackButton?: boolean;
+  /** Popover anchor ID for the dropdown trigger. */
+  popoverAnchorId?: string;
+  /** Action executor callback. */
+  onAction?: ActionExecutor;
+  /** Callback when back button is clicked. */
+  onBack?: () => void;
+}>;
 
 /**
  * AppBar component that renders a title, optional back button, and actions dropdown.

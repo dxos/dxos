@@ -2,17 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React from 'react';
 
-import { composableProps, mx } from '@dxos/ui-theme';
-import { type ComposableProps } from '@dxos/ui-types';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-export type FlexProps = ComposableProps<HTMLDivElement> & {
-  column?: boolean;
-  grow?: boolean;
-};
+export type FlexProps = { column?: boolean; grow?: boolean };
 
-export const Flex = forwardRef<HTMLDivElement, FlexProps>(
+export const Flex = composable<HTMLDivElement, FlexProps>(
   ({ children, role, column, grow, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     return (

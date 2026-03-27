@@ -71,6 +71,9 @@
     "esbuild": "catalog:",
     "vite": "catalog:"
   },
+  "peerDependencies": {
+    "react": "catalog:"
+  },
   "publishConfig": {
     "access": "public"
   }

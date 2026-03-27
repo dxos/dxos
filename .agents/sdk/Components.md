@@ -13,8 +13,8 @@ Types are in `@dxos/ui-types/src/slot.ts`. Exemplar: `packages/ui/react-ui/src/e
 
 Key rules:
 
-- `ComposableProps` is **generic** — pass the HTML element type (e.g., `ComposableProps<HTMLDivElement>`).
-- `composableProps()` is also **generic** — pass the element type (e.g., `composableProps<HTMLDivElement>(props)`).
+- `ComposableProps` takes 0-1 type args for custom props only (e.g., `ComposableProps` or `ComposableProps<MyProps>`). Do NOT pass HTML element types.
+- `composableProps()` reconciles `className`/`classNames` — no type parameter needed.
 - Always use `forwardRef` — both patterns require ref forwarding (variable `forwardedRef`).
 - Spread `...composableProps(props)` (which reconciles `className`/`classNames`) — don't manually destructure and use `mx()`.
 - Custom callback props must NOT collide with HTML attribute names (e.g., use `onLayerUpdate` not `onChange`, use `onUpdate` not `onChange`).
