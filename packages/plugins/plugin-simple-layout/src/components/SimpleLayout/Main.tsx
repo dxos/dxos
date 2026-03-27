@@ -52,13 +52,11 @@ export const Main = () => {
   const showNavBar = !keyboardOpen && !state.isPopover && state.drawerState === 'closed';
 
   return (
-    <Panel.Root {...attentionAttrs}>
+    <Panel.Root {...attentionAttrs} className='dx-document'>
       <Panel.Toolbar asChild>
         <AppBar {...appBarProps} />
       </Panel.Toolbar>
-      <Panel.Content role='article' className='bg-base-surface border border-red-500'>
-        {/* <Column.Root gutter='md'>
-          <Column.Content> */}
+      <Panel.Content role='article' className='bg-base-surface'>
         <Surface.Surface
           key={id}
           role='article'
@@ -67,8 +65,6 @@ export const Main = () => {
           fallback={ErrorFallback}
           placeholder={placeholder}
         />
-        {/* </Column.Content>
-        </Column.Root> */}
       </Panel.Content>
       {showNavBar && (
         <Panel.Statusbar asChild>

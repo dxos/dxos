@@ -43,7 +43,7 @@
   "devDependencies": {
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-searchlist": "workspace:*",
+    "@dxos/react-ui-search": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@types/react": "catalog:",

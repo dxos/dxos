@@ -11,7 +11,7 @@ import { type Database, Filter, Obj, Type } from '@dxos/echo';
 import { Annotation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
-import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 

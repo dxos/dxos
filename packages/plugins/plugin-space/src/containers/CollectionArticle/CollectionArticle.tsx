@@ -9,10 +9,10 @@ import { AppCapabilities, LayoutOperation, getCollectionObjectPath, getObjectPat
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
-import { Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
-import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -34,26 +34,21 @@ export const CollectionArticle = ({ subject, attendableId }: SurfaceComponentPro
   const { items, handleSearch } = useCollectionItems(subject, resolveMetadata, attendableId);
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
-      <Panel.Root className='dx-document'>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <SearchList.Input placeholder={t('search placeholder')} />
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <SearchList.Content>
-            <Mosaic.Container asChild>
-              <ScrollArea.Root orientation='vertical'>
-                <ScrollArea.Viewport classNames='p-2'>
-                  <Mosaic.Stack items={items} getId={(item) => item.id} Tile={ObjectTile} />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Mosaic.Container>
-          </SearchList.Content>
-        </Panel.Content>
-      </Panel.Root>
-    </SearchList.Root>
+    <SearchPanel onSearch={handleSearch}>
+      <Mosaic.Container asChild>
+        <ScrollArea.Root margin padding thin>
+          <ScrollArea.Viewport>
+            <Mosaic.Stack
+              classNames='gap-1'
+              draggable={false}
+              items={items}
+              getId={(item) => item.id}
+              Tile={ObjectTile}
+            />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Mosaic.Container>
+    </SearchPanel>
   );
 };
 

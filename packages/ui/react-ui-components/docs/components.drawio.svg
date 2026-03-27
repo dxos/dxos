@@ -165,7 +165,7 @@
                                     Combobox
                                     <br/>
                                     <font style="font-size: 10px;">
-                                        (react-ui-searchlist)
+                                        (react-ui-search)
                                     </font>
                                 </div>
                             </div>
@@ -190,7 +190,7 @@
                                     SearchList
                                     <br/>
                                     <font style="font-size: 10px;">
-                                        (react-ui-searchlist)
+                                        (react-ui-search)
                                     </font>
                                 </div>
                             </div>
@@ -219,7 +219,7 @@
                                     QueryEditor
                                     <br/>
                                     <font style="font-size: 10px;">
-                                        (react-ui-searchlist)
+                                        (react-ui-search)
                                     </font>
                                 </div>
                             </div>
@@ -269,7 +269,7 @@
                                     Listbox
                                     <br/>
                                     <font style="font-size: 10px;">
-                                        (react-ui-searchlist)
+                                        (react-ui-search)
                                     </font>
                                 </div>
                             </div>
