@@ -59,6 +59,23 @@ export default Capability.makeModule(
       registry.set(stateAtom, fn(registry.get(stateAtom)));
     };
 
+    // Debounced dismiss: commands dialog calls UpdateDialog({ state: false }) before running
+    // the selected action via setTimeout. If the action opens a new dialog (e.g., search),
+    // we cancel the pending dismiss so the content can switch instead.
+    let dismissTimeout: ReturnType<typeof setTimeout> | undefined;
+    const scheduleDismiss = () => {
+      dismissTimeout = setTimeout(() => {
+        dismissTimeout = undefined;
+        void dismissSpotlight();
+      }, 100);
+    };
+    const cancelDismiss = () => {
+      if (dismissTimeout !== undefined) {
+        clearTimeout(dismissTimeout);
+        dismissTimeout = undefined;
+      }
+    };
+
     return Capability.contributes(Capabilities.OperationResolver, [
       //
       // SetLayoutMode - No-op.
@@ -85,16 +102,21 @@ export default Capability.makeModule(
       }),
 
       //
-      // UpdateDialog - Updates content or dismisses the spotlight when state is false.
+      // UpdateDialog - Updates content when a new subject is provided.
+      // Dismisses on state: false with a short delay so that actions which
+      // immediately open a new dialog (e.g., search) can cancel the dismiss.
       //
       OperationResolver.make({
         operation: LayoutOperation.UpdateDialog,
         handler: Effect.fnUntraced(function* (input) {
           if (input.subject) {
+            cancelDismiss();
             updateState((state) => ({
               ...state,
               dialogContent: { component: input.subject!, props: input.props },
             }));
+          } else if (input.state === false) {
+            scheduleDismiss();
           }
         }),
       }),
