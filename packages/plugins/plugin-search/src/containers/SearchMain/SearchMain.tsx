@@ -70,8 +70,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   );
 };
 
-const SearchResultTile: MosaicStackTileComponent<SearchResult> = (props) => {
-  const data = props.data;
+const SearchResultTile: MosaicStackTileComponent<SearchResult> = ({ data }) => {
   const objectMenuItems = useObjectMenuItems(data.object);
 
   return (
