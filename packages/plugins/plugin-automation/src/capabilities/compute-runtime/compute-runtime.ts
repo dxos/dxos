@@ -79,7 +79,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           ...this.#capabilities.getAll(Capabilities.OperationHandler),
         );
 
-        const genericToolkitProvider = Layer.succeed(GenericToolkit.Provider, {
+        const genericToolkitProvider = Layer.succeed(GenericToolkit.GenericToolkitProvider, {
           getToolkit: () => {
             const toolkits = this.#capabilities.getAll(AppCapabilities.Toolkit);
             return GenericToolkit.merge(...toolkits);

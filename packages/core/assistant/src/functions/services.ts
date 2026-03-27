@@ -37,12 +37,12 @@ import { RefFromLLM } from '../types';
 export const makeToolResolverFromFunctions = (): Layer.Layer<
   ToolResolverService,
   never,
-  GenericToolkit.Provider | FunctionInvocationService
+  GenericToolkit.GenericToolkitProvider | FunctionInvocationService
 > => {
   return Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
-      const toolkitProvider = yield* GenericToolkit.Provider;
+      const toolkitProvider = yield* GenericToolkit.GenericToolkitProvider;
       const functionInvocationService = yield* FunctionInvocationService;
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
@@ -70,12 +70,12 @@ export const makeToolResolverFromFunctions = (): Layer.Layer<
 export const makeToolExecutionServiceFromFunctions = (): Layer.Layer<
   ToolExecutionService,
   never,
-  FunctionInvocationService | GenericToolkit.Provider
+  FunctionInvocationService | GenericToolkit.GenericToolkitProvider
 > => {
   return Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {
-      const toolkitProvider = yield* GenericToolkit.Provider;
+      const toolkitProvider = yield* GenericToolkit.GenericToolkitProvider;
       const toolkit = toolkitProvider.getToolkit();
 
       const toolkitHandler = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
@@ -116,12 +116,12 @@ export const makeToolExecutionServiceFromFunctions = (): Layer.Layer<
 export const makeToolResolverFromOperations = (): Layer.Layer<
   ToolResolverService,
   never,
-  GenericToolkit.Provider | OperationRegistry.Service
+  GenericToolkit.GenericToolkitProvider | OperationRegistry.Service
 > => {
   return Layer.effect(
     ToolResolverService,
     Effect.gen(function* () {
-      const toolkitProvider = yield* GenericToolkit.Provider;
+      const toolkitProvider = yield* GenericToolkit.GenericToolkitProvider;
       const operationRegistry = yield* OperationRegistry.Service;
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
@@ -149,11 +149,11 @@ export const makeToolResolverFromOperations = (): Layer.Layer<
 
 export const makeToolExecutionService = <E, R>(opts: {
   invoke: (tool: Tool.Any, input: unknown) => Effect.Effect<unknown>;
-}): Layer.Layer<ToolExecutionService, never, GenericToolkit.Provider> =>
+}): Layer.Layer<ToolExecutionService, never, GenericToolkit.GenericToolkitProvider> =>
   Layer.effect(
     ToolExecutionService,
     Effect.gen(function* () {
-      const toolkitProvider = yield* GenericToolkit.Provider;
+      const toolkitProvider = yield* GenericToolkit.GenericToolkitProvider;
       const toolkit = toolkitProvider.getToolkit();
 
       const toolkitHandler = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
@@ -188,7 +188,7 @@ export const makeToolExecutionService = <E, R>(opts: {
 export const makeToolExecutionServiceFromOperationInvoker = (): Layer.Layer<
   ToolExecutionService,
   never,
-  Operation.Service | GenericToolkit.Provider
+  Operation.Service | GenericToolkit.GenericToolkitProvider
 > => {
   return Layer.unwrapEffect(
     Effect.gen(function* () {
