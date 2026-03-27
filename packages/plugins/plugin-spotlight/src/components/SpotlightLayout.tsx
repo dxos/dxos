@@ -46,17 +46,20 @@ export const SpotlightLayout = () => {
     }
 
     let cleanup: (() => void) | undefined;
-    tauriWindow.getCurrentWindow().onFocusChanged(({ payload }: { payload: boolean }) => {
-      if (payload) {
-        updateState(() => ({
-          dialogOpen: true,
-          dialogContent: { component: COMMANDS_DIALOG },
-        }));
-        requestAnimationFrame(() => focusSearchInput());
-      }
-    }).then((unlisten: () => void) => {
-      cleanup = unlisten;
-    });
+    tauriWindow
+      .getCurrentWindow()
+      .onFocusChanged(({ payload }: { payload: boolean }) => {
+        if (payload) {
+          updateState(() => ({
+            dialogOpen: true,
+            dialogContent: { component: COMMANDS_DIALOG },
+          }));
+          requestAnimationFrame(() => focusSearchInput());
+        }
+      })
+      .then((unlisten: () => void) => {
+        cleanup = unlisten;
+      });
 
     return () => {
       cleanup?.();

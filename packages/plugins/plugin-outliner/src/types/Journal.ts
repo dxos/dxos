@@ -75,11 +75,7 @@ export const addBullet = async (entry: JournalEntry, text: string) => {
  * If the entry doesn't exist, creates one and adds it to the journal.
  * Requires `db` to persist the new entry.
  */
-export const getOrCreateEntry = (
-  journal: Journal,
-  db: { add: (obj: any) => any },
-  date = new Date(),
-): JournalEntry => {
+export const getOrCreateEntry = (journal: Journal, db: { add: (obj: any) => any }, date = new Date()): JournalEntry => {
   const dateKey = getDateString(date);
   const existing = journal.entries[dateKey]?.target;
   if (existing) {

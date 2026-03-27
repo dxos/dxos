@@ -22,8 +22,7 @@ const handler: Operation.WithHandler<typeof QuickJournalEntry> = QuickJournalEnt
         await space.waitUntilReady();
 
         const journals = await space.db.query(Filter.type(Journal.Journal)).run();
-        const journal =
-          journals.length > 0 ? (journals[0] as Journal.Journal) : space.db.add(Journal.make());
+        const journal = journals.length > 0 ? (journals[0] as Journal.Journal) : space.db.add(Journal.make());
 
         const entry = Journal.getOrCreateEntry(journal, space.db);
         await Journal.addBullet(entry, text);

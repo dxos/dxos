@@ -2,9 +2,5 @@
   "identifier": "desktop-capability",
   "platforms": ["macOS"],
   "windows": ["main", "popover"],
-  "permissions": [
-    "updater:default",
-    "core:window:allow-show",
-    "core:window:allow-set-focus"
-  ]
+  "permissions": ["updater:default", "core:window:allow-show", "core:window:allow-set-focus"]
 }

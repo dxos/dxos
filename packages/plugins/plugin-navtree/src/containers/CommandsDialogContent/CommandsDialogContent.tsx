@@ -43,11 +43,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
           const isActionLike = Node.isAction(node) || Node.isActionGroup(node);
           const parentId = path.at(-2) ?? '';
           const matches = current === parentId || current.startsWith(parentId + '/');
-          if (
-            isActionLike &&
-            !actionMap.has(node.id) &&
-            matches
-          ) {
+          if (isActionLike && !actionMap.has(node.id) && matches) {
             actionMap.add(node.id);
             actions.push(node);
           }

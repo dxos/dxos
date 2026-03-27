@@ -44,10 +44,7 @@ export const SearchDialog = ({ pivotId: pivotIdProp }: SearchDialogProps) => {
   );
 
   const results = useGlobalSearchResults(objects);
-  const allResults = useMemo(
-    () => results.filter(({ object }) => object && Entity.getLabel(object)),
-    [results],
-  );
+  const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
 
   const handleSearch = useCallback(
     (text: string) => {
@@ -97,9 +94,7 @@ export const SearchDialog = ({ pivotId: pivotIdProp }: SearchDialogProps) => {
                   classNames='flex gap-2 items-center'
                 />
               ))}
-              {query && allResults.length === 0 && (
-                <SearchList.Empty>{t('empty results message')}</SearchList.Empty>
-              )}
+              {query && allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
             </SearchList.Viewport>
           </SearchList.Content>
         </SearchList.Root>

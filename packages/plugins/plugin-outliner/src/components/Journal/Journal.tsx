@@ -57,7 +57,13 @@ export const Journal = forwardRef<HTMLDivElement, JournalProps>(({ journal, onSe
           </div>
         )}
         {entryRefs.map((ref, i) => (
-          <JournalEntry key={ref.dxn?.toString() ?? i} entryRef={ref} classNames='p-2' onSelect={onSelect} autoFocus={i === 0} />
+          <JournalEntry
+            key={ref.dxn?.toString() ?? i}
+            entryRef={ref}
+            classNames='p-2'
+            onSelect={onSelect}
+            autoFocus={i === 0}
+          />
         ))}
       </ScrollArea.Viewport>
     </ScrollArea.Root>
