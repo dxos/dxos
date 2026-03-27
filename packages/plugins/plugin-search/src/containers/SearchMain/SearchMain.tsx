@@ -11,9 +11,9 @@ import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Card, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
+import { SearchPanel } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 
-import { SearchPanel } from '@dxos/react-ui-search';
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../../hooks';
 import { meta } from '../../meta';
 import { type SearchResult } from '../../types';
