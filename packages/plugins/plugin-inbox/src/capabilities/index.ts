@@ -4,5 +4,6 @@
 
 export * from './app-graph-builder';
 export * from './blueprint-definition';
-export * from './operation-resolver';
+export * from './navigation-resolver';
+export * from './operation-handler';
 export * from './react-surface';

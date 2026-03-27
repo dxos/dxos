@@ -12,13 +12,21 @@ mod spotlight;
 #[cfg(desktop)]
 use oauth::OAuthServerState;
 #[cfg(desktop)]
-use tauri::Manager;
-#[cfg(desktop)]
 use window_state::WindowState;
+
+/// Fixed port for the localhost asset server in production builds (CMPSR = 26777).
+pub const LOCALHOST_PORT: u16 = 26777;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // In production, serve bundled assets via the localhost plugin on a fixed port.
+    // In dev, use the Vite dev server directly for hot-reload.
+    let app_port: u16 = if cfg!(debug_assertions) { 5173 } else { LOCALHOST_PORT };
+
     let builder = tauri::Builder::default();
+
+    #[cfg(not(debug_assertions))]
+    let builder = builder.plugin(tauri_plugin_localhost::Builder::new(LOCALHOST_PORT).build());
 
     // Only include updater plugin for non-mobile targets.
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -105,15 +113,33 @@ pub fn run() {
                 )?;
             }
 
-            // Restore window state from previous session (desktop only).
+            // Window is created programmatically (not via tauri.conf.json "windows") because
+            // declarative windows load from tauri:// which breaks SharedWorker in WKWebView.
             #[cfg(desktop)]
-            if let Some(main_window) = app.get_webview_window("main") {
+            {
+                use tauri::WebviewWindowBuilder;
+
+                let url: tauri::Url = format!("http://localhost:{}", app_port).parse().unwrap();
+                let main_window = WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::External(url))
+                    .title("Composer")
+                    .inner_size(1600.0, 1200.0)
+                    .resizable(true)
+                    .fullscreen(false)
+                    .hidden_title(true)
+                    .title_bar_style(tauri::TitleBarStyle::Overlay)
+                    // Disable the native drag-drop handler so HTML5 drag events (dragover, dragenter, drop)
+                    // reach page JavaScript. Without this, WKWebView's NSDraggingDestination intercepts
+                    // all drag events after dragstart, breaking pragmatic-drag-and-drop drop targets.
+                    // Tradeoff: native file drop from Finder into the webview is disabled for now.
+                    .disable_drag_drop_handler()
+                    .devtools(true)
+                    .build()?;
+
                 if let Some(saved_state) = WindowState::load(&app.handle()) {
                     if let Err(e) = saved_state.apply_to_window(&main_window) {
                         log::warn!("Failed to restore window state: {}", e);
                     }
                 }
-                // Set up tracking to save window state on resize/move.
                 window_state::setup_window_state_tracking(&main_window);
             }
 

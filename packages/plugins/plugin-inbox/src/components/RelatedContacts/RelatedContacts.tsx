@@ -30,7 +30,7 @@ export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsPro
         <Card.Action
           key={contact.id}
           onClick={() => onContactClick?.(contact)}
-          label={contact.fullName || contact.emails?.[0].value || contact.id}
+          label={contact.fullName || contact.emails?.[0]?.value || contact.id}
           icon='ph--user--regular'
           actionIcon='ph--arrow-right--regular'
         />

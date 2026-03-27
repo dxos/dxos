@@ -11,7 +11,7 @@ import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
@@ -25,7 +25,7 @@ export type CommandsDialogContentProps = {
 export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogContentProps>(
   ({ selected: initial }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    const { invokeSync } = useOperationInvoker();
+    const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
     const [selected, setSelected] = useState<string | undefined>(initial);
@@ -100,7 +100,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
                           return;
                         }
 
-                        invokeSync(LayoutOperation.UpdateDialog, { state: false });
+                        void invokePromise(LayoutOperation.UpdateDialog, { state: false });
                         setTimeout(() => {
                           const node = Graph.getConnections(
                             graph,

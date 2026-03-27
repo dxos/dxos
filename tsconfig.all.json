@@ -301,6 +301,9 @@
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-daily-summary/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-debug/tsconfig.json"
     },
     {
@@ -577,7 +580,7 @@
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
     },
     {
-      "path": "packages/ui/react-ui-searchlist/tsconfig.json"
+      "path": "packages/ui/react-ui-search/tsconfig.json"
     },
     {
       "path": "packages/ui/react-ui-sfx/tsconfig.json"

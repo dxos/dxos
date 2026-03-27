@@ -16,6 +16,7 @@ tasks:
     inputs:
       - src/playwright/playwright.config.ts
       - '@group(sources)'
+      - '@group(tests)'
       - $CI
       - $CONFIG_DYNAMIC
       - $DX_ENVIRONMENT

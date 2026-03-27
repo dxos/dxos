@@ -22,7 +22,6 @@ import {
   RelationDelete,
   TagAdd,
   TagRemove,
-  DatabaseHandlers,
 } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.database';
@@ -37,6 +36,7 @@ const make = () =>
     key: BLUEPRINT_KEY,
     name: 'Database',
     description: 'Query and manipulate objects in the ECHO database.',
+    agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
@@ -61,7 +61,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: DatabaseHandlers,
   make,
 };
 

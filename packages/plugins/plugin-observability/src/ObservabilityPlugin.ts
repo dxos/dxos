@@ -13,7 +13,7 @@ import {
   ClientReady,
   ObservabilitySettings,
   ObservabilityState,
-  OperationResolver,
+  OperationHandler,
   ReactSurface,
 } from './capabilities';
 import { meta } from './meta';
@@ -50,10 +50,11 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     activate: () => ObservabilityState({ namespace }),
   })),
   Plugin.addModule(({ namespace }) => ({
-    id: Capability.getModuleTag(OperationResolver),
-    activatesOn: ActivationEvents.SetupOperationResolver,
-    activate: () => OperationResolver({ namespace }),
+    id: 'namespace',
+    activatesOn: ActivationEvents.Startup,
+    activate: () => Effect.succeed(Capability.contributes(ObservabilityCapabilities.Namespace, namespace)),
   })),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule(({ namespace, observability }) => ({
     id: Capability.getModuleTag(ClientReady),
     activatesOn: ActivationEvent.allOf(

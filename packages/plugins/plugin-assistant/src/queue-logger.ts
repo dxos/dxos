@@ -24,8 +24,8 @@ export class QueueLogger implements SequenceLogger {
     if (!dxn) {
       dxn = DXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, Key.ObjectId.random());
       const newDxn = dxn;
-      Obj.change(this._space.properties, (p) => {
-        p.invocationTraceQueue = Ref.fromDXN(newDxn);
+      Obj.change(this._space.properties, (obj) => {
+        obj.invocationTraceQueue = Ref.fromDXN(newDxn);
       });
     }
     this._invocationTraceQueue = this._space.queues.get(dxn);

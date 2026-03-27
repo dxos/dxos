@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { QueryMemories, SaveMemory, DeleteMemory, MemoryHandlers } from './functions';
+import { QueryMemories, SaveMemory, DeleteMemory } from './functions';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/memory';
 
@@ -27,6 +27,7 @@ const make = () =>
     key: BLUEPRINT_KEY,
     name: 'Memory',
     description: 'Persistent memory storage and retrieval.',
+    agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
@@ -35,7 +36,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: MemoryHandlers,
   make,
 };
 

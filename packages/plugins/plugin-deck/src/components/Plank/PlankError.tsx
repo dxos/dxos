@@ -2,8 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
+import { TimeoutError } from '@dxos/errors';
+import { log } from '@dxos/log';
 import { type Node } from '@dxos/plugin-graph';
 import { ErrorFallback, type ErrorFallbackProps, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
@@ -17,7 +19,7 @@ export const PlankError = ({
   id,
   part,
   node,
-  error,
+  error: errorProp,
 }: {
   id: string;
   part: PlankHeadingProps['part'];
@@ -29,6 +31,14 @@ export const PlankError = ({
     const timer = setTimeout(() => setTimedOut(true), 5_000);
     return () => clearTimeout(timer);
   }, []);
+
+  const error = useMemo(() => {
+    if (timedOut) {
+      return new TimeoutError({ message: 'Timeout loading content' });
+    }
+
+    return errorProp;
+  }, [timedOut, errorProp]);
 
   return (
     <>
@@ -43,6 +53,12 @@ export const PlankError = ({
  */
 export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
   const { t } = useTranslation(meta.id);
+
+  useEffect(() => {
+    if (error) {
+      log.error(error);
+    }
+  }, [error]);
 
   if (process.env.NODE_ENV === 'development') {
     return <ErrorFallback title='Plank Error' error={error} />;

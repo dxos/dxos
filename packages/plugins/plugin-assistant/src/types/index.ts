@@ -6,7 +6,6 @@
 export type { Chat as ChatType } from '@dxos/assistant-toolkit';
 
 export * as Assistant from './Assistant';
-export { AssistantOperation } from './AssistantAction';
 
 export * from './capabilities';
 export * from './defs';

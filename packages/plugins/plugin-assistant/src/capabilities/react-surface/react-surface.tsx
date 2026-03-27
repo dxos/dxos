@@ -15,6 +15,7 @@ import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
+import { useActiveSpace } from '@dxos/plugin-space';
 
 import {
   AssistantSettings,
@@ -132,7 +133,14 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.trace`,
         role: 'deck-companion--trace',
         filter: (data): data is { subject: 'trace' } => data.subject === 'trace',
-        component: () => <TracePanel />,
+        component: () => {
+          const space = useActiveSpace();
+          if (!space) {
+            return null;
+          }
+
+          return <TracePanel space={space} />;
+        },
       }),
       Surface.create({
         id: `${meta.id}.status`,
@@ -140,8 +148,8 @@ export default Capability.makeModule(() =>
         component: () => <TriggerStatus />,
       }),
       Surface.create({
-        id: `${meta.id}.magic`,
-        role: 'magic',
+        id: `${meta.id}.prompts`,
+        role: 'prompts',
         filter: (data): data is { subject: Obj.Unknown } => Obj.isObject(data.subject),
         component: ({ data }) => <PromptList subject={data.subject} />,
       }),

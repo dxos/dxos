@@ -21,7 +21,9 @@ import { kebabize } from '@dxos/util';
 
 import { MAILBOXES_SECTION_TYPE, MAILBOX_ALL_MAIL_TYPE, MAILBOX_DRAFTS_TYPE } from '../../constants';
 import { meta } from '../../meta';
-import { Calendar, InboxOperation, Mailbox } from '../../types';
+import { InboxOperation } from '../../operations';
+import { getAllMailId, getDraftsId, getMailboxesSectionId } from '../../paths';
+import { Calendar, Mailbox } from '../../types';
 
 const FILTER_TYPE = `${Mailbox.Mailbox.typename}-filter`;
 
@@ -56,7 +58,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             {
-              id: 'mailboxes',
+              id: getMailboxesSectionId(),
               type: MAILBOXES_SECTION_TYPE,
               data: null,
               properties: {
@@ -98,7 +100,7 @@ export default Capability.makeModule(
                 },
                 nodes: [
                   {
-                    id: 'all-mail',
+                    id: getAllMailId(),
                     type: MAILBOX_ALL_MAIL_TYPE,
                     data: mailbox,
                     properties: {
@@ -109,7 +111,7 @@ export default Capability.makeModule(
                     },
                   },
                   {
-                    id: 'drafts',
+                    id: getDraftsId(),
                     type: MAILBOX_DRAFTS_TYPE,
                     data: null,
                     properties: {
@@ -190,7 +192,7 @@ export default Capability.makeModule(
             {
               id: 'create-draft',
               type: Node.ActionType,
-              data: () => Operation.invoke(InboxOperation.CreateDraft, { db, mailbox }),
+              data: () => Operation.invoke(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
               properties: {
                 label: ['create draft label', { ns: meta.id }],
                 icon: 'ph--plus--regular',

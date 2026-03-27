@@ -6,49 +6,46 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Capabilities } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { OperationResolver } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
+import type { OperationHandlerSet as OperationHandlerSet$ } from '@dxos/operation';
 
 import { LayoutState } from '../../types';
 
-export default Capability.makeModule(
+export default Capability.makeModule<OperationHandlerSet$.OperationHandlerSet>(
   Effect.fnUntraced(function* () {
     const layout = yield* Capability.get(LayoutState);
-    return Capability.contributes(Capabilities.OperationResolver, [
-      OperationResolver.make({
-        operation: LayoutOperation.UpdateSidebar,
-        handler: ({ state }) =>
+    return Capability.contributes(
+      Capabilities.OperationHandler,
+      OperationHandlerSet.make(
+        Operation.withHandler(LayoutOperation.UpdateSidebar, ({ state }) =>
           Effect.sync(() => {
             const next = state ?? layout.sidebarState;
             if (next !== layout.sidebarState) {
               layout.sidebarState = next;
             }
           }),
-      }),
-      OperationResolver.make({
-        operation: LayoutOperation.UpdateComplementary,
-        handler: ({ state }) =>
+        ),
+        Operation.withHandler(LayoutOperation.UpdateComplementary, ({ state }) =>
           Effect.sync(() => {
             const next = state ?? layout.complementarySidebarState;
             if (next !== layout.complementarySidebarState) {
               layout.complementarySidebarState = next;
             }
           }),
-      }),
-      OperationResolver.make({
-        operation: LayoutOperation.UpdateDialog,
-        handler: ({ subject, state, type, blockAlign, overlayClasses, overlayStyle, props }) =>
-          Effect.sync(() => {
-            layout.dialogOpen = state ?? Boolean(subject);
-            layout.dialogType = type ?? 'default';
-            layout.dialogBlockAlign = blockAlign ?? 'center';
-            layout.dialogOverlayClasses = overlayClasses;
-            layout.dialogOverlayStyle = overlayStyle;
-            layout.dialogContent = subject ? { component: subject, props } : null;
-          }),
-      }),
-      OperationResolver.make({
-        operation: LayoutOperation.UpdatePopover,
-        handler: (input) =>
+        ),
+        Operation.withHandler(
+          LayoutOperation.UpdateDialog,
+          ({ subject, state, type, blockAlign, overlayClasses, overlayStyle, props }) =>
+            Effect.sync(() => {
+              layout.dialogOpen = state ?? Boolean(subject);
+              layout.dialogType = type ?? 'default';
+              layout.dialogBlockAlign = blockAlign ?? 'center';
+              layout.dialogOverlayClasses = overlayClasses;
+              layout.dialogOverlayStyle = overlayStyle;
+              layout.dialogContent = subject ? { component: subject, props } : null;
+            }),
+        ),
+        Operation.withHandler(LayoutOperation.UpdatePopover, (input) =>
           Effect.sync(() => {
             const { subject, state, side, props } = input;
             layout.popoverContent =
@@ -63,14 +60,13 @@ export default Capability.makeModule(
               layout.popoverAnchorId = input.anchorId;
             }
           }),
-      }),
-      OperationResolver.make({
-        operation: LayoutOperation.SwitchWorkspace,
-        handler: ({ subject }) =>
+        ),
+        Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>
           Effect.sync(() => {
             layout.workspace = subject;
           }),
-      }),
-    ]);
+        ),
+      ),
+    );
   }),
 );

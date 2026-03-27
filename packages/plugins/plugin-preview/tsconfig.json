@@ -111,9 +111,6 @@
       "path": "../plugin-deck"
     },
     {
-      "path": "../plugin-space"
-    },
-    {
       "path": "../plugin-testing"
     }
   ]

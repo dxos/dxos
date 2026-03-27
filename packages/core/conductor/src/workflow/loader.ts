@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { JsonSchema } from '@dxos/echo';
 import { FunctionInvocationService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { type DXN } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 
 import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT, type NodeType, inputNode, outputNode, registry } from '../nodes';

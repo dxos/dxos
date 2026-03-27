@@ -15,12 +15,13 @@ import { View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
 import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
@@ -63,7 +64,7 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
         types: [...types, View.View, Kanban.Kanban],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
-            yield* Effect.promise(() => client.halo.createIdentity());
+            yield* initializeIdentity(client);
             const space = yield* Effect.promise(() => client.spaces.create());
             yield* Effect.promise(() => space.waitUntilReady());
             yield* Effect.promise(() => onSpaceCreated?.(space) ?? Promise.resolve());
@@ -143,7 +144,7 @@ const meta = {
   title: 'plugins/plugin-kanban/containers/Kanban',
   component: DefaultComponent,
   render: () => <DefaultComponent />,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,

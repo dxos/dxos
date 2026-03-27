@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, COMPANION_PREFIX, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment, LayoutOperation } from '@dxos/app-toolkit';
 import { type Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
@@ -16,9 +16,9 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { GraphBuilder } from '@dxos/plugin-graph';
+import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
-import { ClearSyncedVideos, Sync } from '../../functions';
+import { ClearSyncedVideos, Sync } from '../../operations';
 import { meta } from '../../meta';
 import { Channel, Video } from '../../types';
 
@@ -32,6 +32,8 @@ export default Capability.makeModule(
         return selection?.mode === 'single' ? selection.id : undefined;
       }),
     );
+
+    const whenYouTubeChannel = NodeMatcher.whenEchoType(Channel.YouTubeChannel);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -55,7 +57,7 @@ export default Capability.makeModule(
           )[0];
           return Effect.succeed([
             {
-              id: `${COMPANION_PREFIX}video`,
+              id: companionSegment('video'),
               type: PLANK_COMPANION_TYPE,
               data: video ?? 'video',
               properties: {
@@ -70,8 +72,8 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: `${meta.id}.sync-channel`,
-        match: (node) => (Channel.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        actions: (channel: Channel.YouTubeChannel) =>
+        match: whenYouTubeChannel,
+        actions: (channel) =>
           Effect.succeed([
             {
               id: 'sync',

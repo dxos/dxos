@@ -161,17 +161,17 @@ export namespace AppPlugin {
     });
   }
 
-  export type OperationResolverModuleOptions = PluginModuleOptions;
+  export type OperationHandlerModuleOptions = PluginModuleOptions;
 
   /**
    * Creates a module that contributes operation handlers.
    */
-  export function addOperationResolverModule<T = void>(
-    options: OperationResolverModuleOptions,
+  export function addOperationHandlerModule<T = void>(
+    options: OperationHandlerModuleOptions,
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
-      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-resolver',
-      activatesOn: options.activatesOn ?? ActivationEvents.SetupOperationResolver,
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-handler',
+      activatesOn: options.activatesOn ?? ActivationEvents.SetupOperationHandler,
       activatesBefore: options.activatesBefore,
       activatesAfter: options.activatesAfter,
       activate: options.activate,
@@ -206,6 +206,23 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'react-root',
       activatesOn: options.activatesOn ?? ActivationEvents.Startup,
+      activatesBefore: options.activatesBefore,
+      activatesAfter: options.activatesAfter,
+      activate: options.activate,
+    });
+  }
+
+  export type NavigationResolverModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes navigation target resolvers.
+   */
+  export function addNavigationResolverModule<T = void>(
+    options: NavigationResolverModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-resolver',
+      activatesOn: options.activatesOn ?? ActivationEvents.OperationInvokerReady,
       activatesBefore: options.activatesBefore,
       activatesAfter: options.activatesAfter,
       activate: options.activate,

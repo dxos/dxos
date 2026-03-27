@@ -13,13 +13,14 @@ import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { getSpace } from '@dxos/client/echo';
 import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type ChatEvent } from '../../components';
 import { useBlueprintRegistry, useContextBinder } from '../../hooks';
-import { Assistant, AssistantCapabilities, AssistantOperation } from '../../types';
+import { Assistant, AssistantCapabilities } from '../../types';
+import { AssistantOperation } from '../../operations';
 import ChatContainer from '../ChatContainer';
 
 // TODO(burdon): Use definition.

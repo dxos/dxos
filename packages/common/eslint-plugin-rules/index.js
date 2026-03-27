@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import fs from 'node:fs';
+
 import comment from './rules/comment.js';
 import effectSubpathImports from './rules/effect-subpath-imports.js';
 import header from './rules/header.js';
@@ -9,7 +11,6 @@ import importAsNamespace from './rules/import-as-namespace.js';
 import noBareDotImports from './rules/no-bare-dot-imports.js';
 import noEffectRunPromise from './rules/no-effect-run-promise.js';
 import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
-import fs from 'node:fs';
 
 const pkg = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 

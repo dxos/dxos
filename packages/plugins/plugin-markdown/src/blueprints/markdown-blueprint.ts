@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { MarkdownHandlers, Create, Open, Update } from './functions';
+import { Create, Open, Update } from '../operations/definitions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
 
@@ -14,6 +14,7 @@ const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Markdown',
+    description: 'Work with markdown documents. Preferred over raw database operations.',
     tools: Blueprint.toolDefinitions({ operations: [Create, Open, Update] }),
     instructions: Template.make({
       // TODO(wittjosiah): Move example to function input schema annotation.
@@ -37,7 +38,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: MarkdownHandlers,
   make,
 };
 

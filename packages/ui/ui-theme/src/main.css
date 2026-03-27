@@ -77,9 +77,11 @@
  */
 @variant dark (&:where(.dark, .dark *));
 
-/**
- * Custom variants.
- */
-@custom-variant is-current (&[aria-current]:not([aria-current="false"]));
-@custom-variant hover-hover (@media (hover: hover));
+/** Mobile */
+@custom-variant pointer-coarse (@media (pointer: coarse));
+/** Web */
 @custom-variant pointer-fine (@media (pointer: fine));
+/** Supports mouse/trackpad (Web) */
+@custom-variant hover-hover (@media (hover: hover));
+/** Active navigation */
+@custom-variant is-current (&[aria-current]:not([aria-current="false"]));

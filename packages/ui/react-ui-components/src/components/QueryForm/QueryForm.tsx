@@ -59,7 +59,7 @@ export const QueryForm = ({ classNames, initialQuery, types, tags, onChange }: Q
       setType(type);
       handleChange({ type, tag });
     },
-    [handleChange],
+    [handleChange, tag],
   );
 
   const handleTagChange = useCallback(
@@ -67,7 +67,7 @@ export const QueryForm = ({ classNames, initialQuery, types, tags, onChange }: Q
       setTag(tag);
       handleChange({ type, tag });
     },
-    [handleChange],
+    [handleChange, type],
   );
 
   return (

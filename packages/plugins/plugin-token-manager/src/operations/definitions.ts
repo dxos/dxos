@@ -1,0 +1,18 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import { Operation } from '@dxos/operation';
+import { AccessToken } from '@dxos/types';
+
+import { meta } from '../meta';
+
+const TOKEN_MANAGER_OPERATION = `${meta.id}.operation`;
+
+export const AccessTokenCreated = Operation.make({
+  meta: { key: `${TOKEN_MANAGER_OPERATION}.access-token-created`, name: 'Access Token Created' },
+  input: Schema.Struct({ accessToken: AccessToken.AccessToken }),
+  output: Schema.Void,
+});

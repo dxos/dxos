@@ -2,21 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
-import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
-import { GenericToolkit } from '@dxos/ai';
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
   ActivationEvent,
   ActivationEvents,
   Capabilities,
   Capability,
-  type CapabilityManager,
   Plugin,
   PluginManager,
 } from '@dxos/app-framework';
@@ -24,7 +18,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { type WithPluginManagerOptions, withPluginManager } from '@dxos/app-framework/testing';
 import { useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
-import { AiContextBinder, ArtifactId } from '@dxos/assistant';
+import { AiContextBinder } from '@dxos/assistant';
 import {
   AgentHandlers,
   DesignBlueprint,
@@ -39,19 +33,19 @@ import { Obj, Ref } from '@dxos/echo';
 import { ExampleHandlers, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation, OperationResolver } from '@dxos/operation';
-import { Assistant, AssistantOperation, AssistantPlugin } from '@dxos/plugin-assistant';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { Assistant, AssistantPlugin } from '@dxos/plugin-assistant';
+import { AssistantOperation } from '@dxos/plugin-assistant/operations';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientCapabilities, ClientEvents, ClientPlugin } from '@dxos/plugin-client';
 import { type ClientPluginOptions } from '@dxos/plugin-client/types';
-import { DeckOperation } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin } from '@dxos/plugin-testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { type Client, Config } from '@dxos/react-client';
 import { AccessToken } from '@dxos/types';
-import { trim } from '@dxos/util';
 
 // TODO(burdon): Factor out.
 export const config = {
@@ -76,28 +70,6 @@ export const config = {
     },
   }),
 };
-
-const Toolkit$ = Toolkit.make(
-  Tool.make('open-item', {
-    description: trim`
-      Opens an item in the application.
-    `,
-    parameters: {
-      id: ArtifactId,
-    },
-    success: Schema.Any,
-    failure: Schema.Never,
-  }),
-);
-
-namespace TestingToolkit {
-  export const Toolkit = Toolkit$;
-
-  export const createLayer = (_capabilities: CapabilityManager.CapabilityManager) =>
-    Toolkit$.toLayer({
-      'open-item': ({ id }) => Console.log('Called open-item', { id }),
-    });
-}
 
 type LazyPluginsResult = {
   plugins: Plugin.Plugin[];
@@ -186,11 +158,15 @@ const buildPluginManagerOptions = ({
  * Inner component that creates the plugin manager and renders the app.
  * Separated to respect React hooks rules (hooks must be called unconditionally).
  */
-const PluginManagerHost: React.FC<{
+const PluginManagerHost = ({
+  options,
+  children,
+  contextId,
+}: {
   options: WithPluginManagerOptions;
   children: React.ReactNode;
   contextId: string;
-}> = ({ options, children, contextId }) => {
+}) => {
   const manager = useMemo(() => {
     const pluginManager = PluginManager.make({
       pluginLoader: () => Effect.die(new Error('Not implemented')),
@@ -300,24 +276,11 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
         Capability.contributes(AppCapabilities.BlueprintDefinition, MarkdownBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, DesignBlueprint),
         Capability.contributes(AppCapabilities.BlueprintDefinition, PlanningBlueprint),
-        Capability.contributes(AppCapabilities.Functions, MarkdownHandlers),
-        Capability.contributes(AppCapabilities.Functions, PlanningHandlers),
-        Capability.contributes(AppCapabilities.Functions, AgentHandlers),
-        Capability.contributes(AppCapabilities.Functions, ExampleHandlers),
+        Capability.contributes(Capabilities.OperationHandler, MarkdownHandlers),
+        Capability.contributes(Capabilities.OperationHandler, PlanningHandlers),
+        Capability.contributes(Capabilities.OperationHandler, AgentHandlers),
+        Capability.contributes(Capabilities.OperationHandler, ExampleHandlers),
       ]),
-  }),
-  Plugin.addModule({
-    id: 'example.com/plugin/testing/module/toolkit',
-    activatesOn: ActivationEvents.Startup,
-    activate: Effect.fnUntraced(function* () {
-      const capabilities = yield* Capability.Service;
-      return [
-        Capability.contributes(
-          AppCapabilities.Toolkit,
-          GenericToolkit.make(TestingToolkit.Toolkit, TestingToolkit.createLayer(capabilities)),
-        ),
-      ];
-    }),
   }),
   Plugin.addModule({
     id: 'example.com/plugin/testing/module/setup',
@@ -335,29 +298,24 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
     }),
   }),
   Plugin.addModule(({ onChatCreated }) => ({
-    id: 'example.com/plugin/testing/module/operation-resolver',
-    activatesOn: ActivationEvents.SetupOperationResolver,
+    id: 'example.com/plugin/testing/module/operation-handler',
+    activatesOn: ActivationEvents.SetupOperationHandler,
     activate: Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      return Capability.contributes(Capabilities.OperationResolver, [
-        OperationResolver.make({
-          operation: DeckOperation.ChangeCompanion,
-          handler: () => Effect.void,
-        }),
-        OperationResolver.make({
-          operation: AssistantOperation.CreateChat,
-          handler: ({ db, name }) =>
+      return Capability.contributes(
+        Capabilities.OperationHandler,
+        OperationHandlerSet.make(
+          Operation.withHandler(DeckOperation.ChangeCompanion, () => Effect.void),
+          Operation.withHandler(AssistantOperation.CreateChat, ({ db, name }) =>
             Effect.gen(function* () {
               const registry = yield* Capability.get(Capabilities.AtomRegistry);
               const space = client.spaces.get(db.spaceId);
               invariant(space, 'Space not found');
 
               const queue = space.queues.create();
-              const traceQueue = space.queues.create();
               const chat = Obj.make(Assistant.Chat, {
                 name,
                 queue: Ref.fromDXN(queue.dxn),
-                traceQueue: Ref.fromDXN(traceQueue.dxn),
               });
               const binder = new AiContextBinder({ queue, registry });
 
@@ -375,8 +333,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
                 object: chat,
               };
             }),
-        }),
-      ]);
+          ),
+        ),
+      );
     }),
   })),
   Plugin.make,

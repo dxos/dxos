@@ -31,6 +31,7 @@ import {
   type AiSessionRunRequirements,
   type GenerationObserver,
   createToolkit,
+  formatSystemPrompt,
 } from '../session';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
@@ -110,60 +111,71 @@ export class AiConversation extends Resource {
   ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
-
-      // Create toolkit.
       const blueprints = this.context.getBlueprints();
-
-      const mcps = yield* connectMcpServers(blueprints);
-
-      const toolkit = yield* createToolkit({
-        toolkit: this._toolkit,
-        blueprints,
-        genericToolkits: mcps,
-      });
-
-      // Context objects.
       const objects = this.context.getObjects();
 
       log('run', {
         history: history.length,
         blueprints: blueprints.length,
-        tools: Object.keys(toolkit.tools).length,
         objects: objects.length,
       });
 
-      // Process request.
       const session = new AiSession({
         summarizationThreshold: SUMMARY_THRESHOLD,
+        observer: params.observer,
+        onOutput: (message) => Effect.promise(() => this._queue.append([message])),
       });
-      const messages = yield* session
-        .run({
-          history,
-          blueprints,
+
+      yield* session.begin({
+        history,
+        blueprints,
+        objects,
+        prompt: params.prompt,
+        system: params.system,
+      });
+
+      // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled blueprints.
+      do {
+        const currentBlueprints = this.context.getBlueprints();
+        const mcps = yield* connectMcpServers(currentBlueprints);
+        const toolkit = yield* createToolkit({
+          toolkit: this._toolkit,
+          blueprints: currentBlueprints,
+          genericToolkits: mcps,
+        });
+        const system = yield* formatSystemPrompt({
+          system: params.system,
+          blueprints: currentBlueprints,
+          objects: this.context.getObjects(),
+        }).pipe(Effect.orDie);
+
+        const { done } = yield* session.runTurn({
+          system,
           toolkit,
-          objects,
-          ...params,
-          onOutput: (message) => Effect.promise(() => this._queue.append([message])),
-        })
-        .pipe(
-          Effect.provide(
-            Layer.mergeAll(
-              Layer.succeed(AiContextService, {
-                binder: this.context,
-              }),
-              Layer.succeed(AiConversationService, this),
-            ),
-          ),
-        );
+        });
+
+        if (done) {
+          break;
+        }
+      } while (true);
 
       log('result', {
-        messages: messages.length,
+        messages: session.pending.length,
         duration: session.duration,
         toolCalls: session.toolCalls,
       });
 
-      return messages;
-    });
+      return [...session.pending];
+    }).pipe(
+      Effect.provide(
+        Layer.mergeAll(
+          Layer.succeed(AiContextService, {
+            binder: this.context,
+          }),
+          Layer.succeed(AiConversationService, this),
+        ),
+      ),
+    );
   }
 }
 

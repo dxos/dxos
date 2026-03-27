@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, { MouseEvent, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { ComposableProps, ScrollArea } from '@dxos/react-ui';
@@ -11,7 +11,7 @@ import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
 import { composableProps, getHashStyles } from '@dxos/ui-theme';
 
-import { GoogleMail } from '../../functions/apis';
+import { GoogleMail } from '../../apis';
 import { type Mailbox as MailboxType } from '../../types';
 import { getMessageProps } from '../../util';
 
@@ -59,7 +59,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   }, [message.id, onAction]);
 
   const handleAvatarClick = useCallback(
-    (event: React.MouseEvent) => {
+    (event: MouseEvent) => {
       event.stopPropagation();
       onAction?.({ type: 'select', messageId: message.id });
     },
@@ -67,7 +67,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   );
 
   const handleTagClick = useCallback(
-    (event: React.MouseEvent, label: string) => {
+    (event: MouseEvent, label: string) => {
       event.stopPropagation();
       onAction?.({ type: 'select-tag', label });
     },

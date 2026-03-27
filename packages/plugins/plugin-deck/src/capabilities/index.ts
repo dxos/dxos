@@ -4,11 +4,10 @@
 
 export * from './app-graph-builder';
 export * from './check-app-scheme';
-export * from './operation-resolver';
+export * from './operation-handler';
 export * from './react-root';
 export * from './react-surface';
 export * from './settings';
 export * from './state';
-export * from './toolkit';
 // export * from './tools';
 export * from './url-handler';

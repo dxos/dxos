@@ -8,13 +8,13 @@ import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } f
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { AttentionManager, SelectionManager } from '@dxos/react-ui-attention';
 
-import { Keyboard, OperationResolver, ReactContext } from './capabilities';
+import { Keyboard, OperationHandler, ReactContext } from './capabilities';
 import { meta } from './meta';
 import { AttentionEvents } from './types';
 import { AttentionCapabilities } from './types';
 
 export const AttentionPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule({
     id: 'attention',
     activatesOn: ActivationEvents.Startup,

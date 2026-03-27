@@ -17,7 +17,7 @@ const List = () => {
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
           <Input.Root key={i}>
-            <Input.TextInput value={`Item ${i}`} />
+            <Input.TextInput value={`Item ${i}`} readOnly />
           </Input.Root>
         ))}
       </ScrollArea.Viewport>
@@ -46,9 +46,15 @@ const DefaultStory = () => {
         </div>
       </Column.Row>
 
-      <Column.Row classNames='overflow-hidden'>
-        <List />
-      </Column.Row>
+      <Column.Viewport asChild>
+        <div className='flex flex-col gap-2'>
+          {Array.from({ length: 100 }).map((_, i) => (
+            <Input.Root key={i}>
+              <Input.TextInput value={`Item ${i}`} readOnly />
+            </Input.Root>
+          ))}
+        </div>
+      </Column.Viewport>
 
       <Column.Row asChild center>
         <Flex column>
@@ -79,7 +85,87 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Raw = {
+const InputList = ({ items = 50 }: { items?: number }) => (
+  <div className='flex flex-col gap-2'>
+    {Array.from({ length: items }).map((_, index) => (
+      <Input.Root key={index}>
+        <Input.TextInput value={`Item ${index + 1}`} readOnly />
+      </Input.Root>
+    ))}
+  </div>
+);
+
+export const WithScrollArea = {
+  decorators: [withLayout({ layout: 'column' })],
+  render: () => (
+    <Column.Root classNames='overflow-hidden' gutter='md'>
+      <Column.Row center>
+        <h2 className='py-3'>Header</h2>
+      </Column.Row>
+      <ScrollArea.Root padding margin orientation='vertical' classNames='col-span-full'>
+        <ScrollArea.Viewport>
+          <InputList items={30} />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+      <Column.Row center>
+        <h2 className='py-3'>Footer</h2>
+      </Column.Row>
+    </Column.Root>
+  ),
+};
+
+/**
+ * Column.Content provides gutter padding for non-scrolling content.
+ * Compare with Column.Row which uses subgrid for gutter alignment.
+ */
+export const WithContent: Story = {
+  decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
+  render: () => (
+    <Column.Root classNames='overflow-hidden' gutter='md'>
+      <Column.Row center>
+        <h2 className='py-3'>Header (Column.Row)</h2>
+      </Column.Row>
+      <Column.Content>
+        <p className='py-2'>This text is inside Column.Content. It gets gutter padding automatically.</p>
+        <Input.Root>
+          <Input.Label>Name</Input.Label>
+          <Input.TextInput placeholder='Enter name' />
+        </Input.Root>
+      </Column.Content>
+      <Column.Row center>
+        <h2 className='py-3'>Footer (Column.Row)</h2>
+      </Column.Row>
+    </Column.Root>
+  ),
+};
+
+/**
+ * Column.Content with a nested ScrollArea.
+ * The ScrollArea breaks out of Content's gutter padding via `--gutter-offset`
+ * and applies its own asymmetric padding (accounting for scrollbar width).
+ */
+export const ContentWithScrollArea: Story = {
+  decorators: [withLayout({ layout: 'column', classNames: 'w-[25rem]' })],
+  render: () => (
+    <Column.Root classNames='overflow-hidden' gutter='md'>
+      <Column.Row center>
+        <h2 className='py-3'>Header (Column.Row)</h2>
+      </Column.Row>
+      <Column.Content>
+        <ScrollArea.Root orientation='vertical' padding thin>
+          <ScrollArea.Viewport>
+            <InputList items={30} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Column.Content>
+      <Column.Row center>
+        <h2 className='py-3'>Footer (Column.Row)</h2>
+      </Column.Row>
+    </Column.Root>
+  ),
+};
+
+export const Experimental = {
   render: () => {
     return (
       <div className='grid grid-cols-[2rem_1fr_2rem]'>
@@ -94,38 +180,4 @@ export const Raw = {
       </div>
     );
   },
-};
-
-const InputList = ({ items = 50 }: { items?: number }) => (
-  <div className='flex flex-col gap-2'>
-    {Array.from({ length: items }).map((_, index) => (
-      <Input.Root key={index}>
-        <Input.TextInput value={`Item ${index + 1}`} />
-      </Input.Root>
-    ))}
-  </div>
-);
-
-export const WithColumn = {
-  decorators: [withLayout({ layout: 'column' })],
-  render: () => (
-    <Column.Root classNames='overflow-hidden' gutter='md'>
-      <Column.Row center>
-        <h2>Header</h2>
-      </Column.Row>
-      <ScrollArea.Root padding margin orientation='vertical' classNames='col-span-full border border-blue-500'>
-        <ScrollArea.Viewport classNames='_border _border-red-500'>
-          <div>A</div>
-          <InputList items={3} />
-          {/* <Column.Row center>
-            <InputList items={3} />
-          </Column.Row> */}
-          <div>Z</div>
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-      <Column.Row center>
-        <h2>Footer</h2>
-      </Column.Row>
-    </Column.Root>
-  ),
 };

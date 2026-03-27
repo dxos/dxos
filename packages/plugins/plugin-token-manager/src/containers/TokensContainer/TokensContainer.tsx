@@ -6,12 +6,12 @@ import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Database, Filter, Obj } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { AccessToken } from '@dxos/types';
 
 import { TokensPanel } from '../../components';
-import { TokenManagerOperation } from '../../types';
+import { TokenManagerOperation } from '../../operations';
 
 export type TokensContainerProps = {
   db: Database.Database;
