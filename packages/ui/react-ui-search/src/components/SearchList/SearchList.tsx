@@ -272,12 +272,12 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
+    const { hasIosKeyboard, tx } = useThemeContext();
     const { query, onQueryChange, selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       useSearchListInputContext('SearchList.Input');
-    const { hasIosKeyboard, tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
-    const defaultPlaceholder = t('search.placeholder');
+    const defaultPlaceholder = t('search placeholder');
 
     const handleChange = useCallback(
       (event: ChangeEvent<HTMLInputElement>) => {
