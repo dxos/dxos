@@ -50,10 +50,10 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
 >() {
   static noop: Context.Tag.Service<TracingService> = {
     getTraceContext: () => ({}),
-    write: () => {},
+    write: () => { },
     traceInvocationStart: () =>
       Effect.sync(() => ({ invocationId: ObjectId.random(), invocationTraceQueue: undefined })),
-    traceInvocationEnd: () => Effect.sync(() => {}),
+    traceInvocationEnd: () => Effect.sync(() => { }),
   };
 
   static layerNoop: Layer.Layer<TracingService> = Layer.succeed(TracingService, TracingService.noop);
@@ -106,7 +106,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
   });
 
   static emitConverationMessage: (
-    data: Obj.MakeProps<typeof Message.Message>,
+    data: Obj.MakeProps<typeof Message.Message> | Message.Message,
   ) => Effect.Effect<void, never, TracingService> = Effect.fnUntraced(function* (data) {
     const tracing = yield* TracingService;
     tracing.write(

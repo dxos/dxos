@@ -3,8 +3,6 @@
 //
 
 import * as LanguageModel from '@effect/ai/LanguageModel';
-import type * as Tool from '@effect/ai/Tool';
-import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -14,18 +12,6 @@ import { Process } from '@dxos/functions-runtime';
 import { Message } from '@dxos/types';
 
 import { AiSession, type AiSessionRunRequirements } from '../session';
-
-/**
- * Options for creating an AI agent executable.
- */
-export interface AgentExecutableOptions<Tools extends Record<string, Tool.Any> = Record<string, Tool.Any>> {
-  /** System prompt for the agent. */
-  system?: string;
-  /** Pre-resolved toolkit with handlers. Obtain via `yield* MyToolkit` in an Effect context. */
-  toolkit?: Toolkit.WithHandler<Tools>;
-  /** Token threshold for history summarization. */
-  summarizationThreshold?: number;
-}
 
 /**
  * Creates a Process.Executable that wraps an AiSession.
@@ -38,9 +24,7 @@ export interface AgentExecutableOptions<Tools extends Record<string, Tool.Any> =
  *
  * Required services: LanguageModel, ToolExecutionService, ToolResolverService, TracingService, FunctionInvocationService.
  */
-export const makeAgentExecutable = <Tools extends Record<string, Tool.Any>>(
-  options: AgentExecutableOptions<Tools> = {},
-) =>
+export const makeAgentExecutable = () =>
   Process.makeExecutable(
     {
       input: Schema.String,
@@ -56,9 +40,7 @@ export const makeAgentExecutable = <Tools extends Record<string, Tool.Any>>(
     (ctx) =>
       Effect.gen(function* () {
         const runtime = yield* Effect.runtime<AiSessionRunRequirements>();
-        const session = new AiSession({
-          summarizationThreshold: options.summarizationThreshold,
-        });
+        const session = new AiSession();
         const history: Message.Message[] = [];
 
         return {
@@ -69,8 +51,6 @@ export const makeAgentExecutable = <Tools extends Record<string, Tool.Any>>(
                 .run({
                   history,
                   prompt,
-                  toolkit: options.toolkit,
-                  system: options.system,
                 })
                 .pipe(Effect.provide(runtime), Effect.orDie);
               history.push(...messages);

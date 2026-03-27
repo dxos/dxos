@@ -27,7 +27,7 @@ import { ProcessManagerImpl, ServiceResolver } from '@dxos/functions-runtime';
 import { Organization, type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { makeAgentExecutable } from '../functions/agent-executable';
+import { makeAgentExecutable } from './agent-executable';
 import { AssistantTestLayer } from './layer';
 
 //
@@ -113,7 +113,8 @@ class TestToolkit extends Toolkit.make(
       }),
     },
   }),
-) {}
+) {
+}
 
 const activeJobs = new Map<string, Fiber.Fiber<any>>();
 const jobResults = new Map<string, Exit.Exit<any, never>>();
@@ -165,10 +166,10 @@ const TestToolkitLayer = TestToolkit.toLayer({
           const result: Option.Option<Exit.Exit<any, never>> = !wait
             ? yield* fiber.poll
             : yield* fiber.await.pipe(
-                Effect.map(Option.some),
-                Effect.timeout(Duration.millis(timeout)),
-                Effect.catchTag('TimeoutException', () => Effect.succeed(Option.none())),
-              );
+              Effect.map(Option.some),
+              Effect.timeout(Duration.millis(timeout)),
+              Effect.catchTag('TimeoutException', () => Effect.succeed(Option.none())),
+            );
 
           return result.pipe(
             Option.match({

@@ -56,6 +56,8 @@ export type AiSessionRunProps<Tools extends Record<string, Tool.Any>> = {
   objects?: Obj.Unknown[];
   blueprints?: readonly Blueprint.Blueprint[];
   toolkit?: Toolkit.WithHandler<Tools>;
+
+  // TODO(dmaretskyi): Plan to phase out in favor of TracingService and the return type being a stream.
   observer?: GenerationObserver<Tools>;
   /**
    * Callback for when a message is received from the user, model, or tool.
@@ -90,7 +92,7 @@ export class AiSession {
   private _ended = 0;
   private _toolCalls = 0;
 
-  constructor(private readonly _options: AiSessionOptions = {}) {}
+  constructor(private readonly _options: AiSessionOptions = {}) { }
 
   get duration(): number {
     return this._ended - this._started;
