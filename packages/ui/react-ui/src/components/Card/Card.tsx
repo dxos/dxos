@@ -48,6 +48,7 @@ type CardRootOwnProps = {
   tabIndex?: number;
   onClick?: React.MouseEventHandler<HTMLDivElement>;
   'data-selected'?: boolean;
+  'data-testid'?: string;
 };
 
 type CardRootProps = SlottableProps<CardRootOwnProps>;

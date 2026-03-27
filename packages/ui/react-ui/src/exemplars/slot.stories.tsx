@@ -5,10 +5,9 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 
 import { composable, composableProps, slottable } from '@dxos/ui-theme';
-import { type ThemedClassName } from '@dxos/ui-types';
 
 import { withTheme } from '../testing';
 
@@ -48,35 +47,8 @@ const Leaf = composable<HTMLButtonElement>(({ children, ...props }, forwardedRef
   );
 });
 
-const TestSingle = (props: ThemedClassName<{ role?: string }>) => {
-  return (
-    <Outer {...composableProps<HTMLDivElement>(props, { role: 'none' })} asChild priority={1}>
-      <Leaf>Single asChild (non-compliant — see console)</Leaf>
-    </Outer>
-  );
-};
-
-const TestNested = (props: ThemedClassName<{ role?: string }>) => {
-  return (
-    <Outer asChild {...composableProps<HTMLDivElement>(props, { role: 'none' })}>
-      <Middle asChild>
-        <Leaf>Nested asChild</Leaf>
-      </Middle>
-    </Outer>
-  );
-};
-
-const TestInner = (props: ThemedClassName<{ role?: string }>) => {
-  return (
-    <Outer asChild {...composableProps<HTMLDivElement>(props, { role: 'none' })}>
-      <Middle asChild>
-        <Leaf>
-          <div role='none'>Leaf</div>
-        </Leaf>
-      </Middle>
-    </Outer>
-  );
-};
+/** This isn't a valid child for a slottable component. */
+const Simple = ({ children }: PropsWithChildren) => <div role='none'>{children}</div>;
 
 const meta = {
   title: 'ui/react-ui-core/exemplars/slot',
@@ -91,13 +63,41 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Single: Story = {
-  render: () => <TestSingle role='listitem' classNames='border-red-500' />,
+  render: () => (
+    <Outer asChild role='none' classNames='p-2 border border-red-500 rounded' priority={1}>
+      <Leaf>Single asChild (non-compliant — see console)</Leaf>
+    </Outer>
+  ),
 };
 
 export const Nested: Story = {
-  render: () => <TestNested role='listitem' classNames='border-green-500' />,
+  render: () => (
+    <Outer asChild role='none' classNames='p-2 border border-green-500 rounded'>
+      <Middle asChild>
+        <Leaf>Nested asChild</Leaf>
+      </Middle>
+    </Outer>
+  ),
 };
 
 export const Inner: Story = {
-  render: () => <TestInner role='listitem' classNames='border-blue-500' />,
+  render: () => (
+    <Outer asChild role='none' classNames='p-2 border border-blue-500 rounded'>
+      <Middle asChild>
+        <Leaf>
+          <div role='none'>Leaf</div>
+        </Leaf>
+      </Middle>
+    </Outer>
+  ),
+};
+
+export const Error: Story = {
+  render: () => (
+    <Outer asChild role='none' classNames='p-2 border border-green-500 rounded'>
+      <Middle asChild>
+        <Simple>Simple</Simple>
+      </Middle>
+    </Outer>
+  ),
 };
