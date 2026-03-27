@@ -8,6 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation, OperationResolver } from '@dxos/operation';
 
+import { SEARCH_DIALOG } from '../../constants';
 import { SearchOperation } from '../../types';
 
 export default Capability.makeModule(
@@ -16,7 +17,10 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: SearchOperation.OpenSearch,
         handler: Effect.fnUntraced(function* () {
-          yield* Operation.invoke(LayoutOperation.UpdateComplementary, { subject: 'search' });
+          yield* Operation.invoke(LayoutOperation.UpdateDialog, {
+            subject: SEARCH_DIALOG,
+            blockAlign: 'start',
+          });
         }),
       }),
     ]);

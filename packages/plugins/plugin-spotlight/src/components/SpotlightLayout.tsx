@@ -31,10 +31,10 @@ const focusSearchInput = () => {
 };
 
 export const SpotlightLayout = () => {
-  const { state } = useSpotlightState();
+  const { state, updateState } = useSpotlightState();
   const dialogContent = state.dialogContent ?? { component: COMMANDS_DIALOG };
 
-  // Autofocus the search input when the popover window gains focus.
+  // Reset state and autofocus when the popover window gains focus.
   useEffect(() => {
     if (!isTauri()) {
       return;
@@ -48,6 +48,10 @@ export const SpotlightLayout = () => {
     let cleanup: (() => void) | undefined;
     tauriWindow.getCurrentWindow().onFocusChanged(({ payload }: { payload: boolean }) => {
       if (payload) {
+        updateState(() => ({
+          dialogOpen: true,
+          dialogContent: { component: COMMANDS_DIALOG },
+        }));
         requestAnimationFrame(() => focusSearchInput());
       }
     }).then((unlisten: () => void) => {
@@ -57,7 +61,7 @@ export const SpotlightLayout = () => {
     return () => {
       cleanup?.();
     };
-  }, []);
+  }, [updateState]);
 
   return (
     <div className='h-screen w-screen overflow-hidden' data-spotlight>

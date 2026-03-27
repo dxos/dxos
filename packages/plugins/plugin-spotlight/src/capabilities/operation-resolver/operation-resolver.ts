@@ -90,9 +90,7 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: LayoutOperation.UpdateDialog,
         handler: Effect.fnUntraced(function* (input) {
-          if (input.state === false) {
-            yield* Effect.promise(() => dismissSpotlight());
-          } else if (input.subject) {
+          if (input.subject) {
             updateState((state) => ({
               ...state,
               dialogContent: { component: input.subject!, props: input.props },
