@@ -19,7 +19,6 @@ import type * as Exit from 'effect/Exit';
 import * as Context from 'effect/Context';
 import type * as Types from 'effect/Types';
 
-import { Ref, type Obj } from '@dxos/echo';
 import type { ObjectId } from '@dxos/keys';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
@@ -123,85 +122,7 @@ export const ExecutableTypeId = '~@dxos/functions-runtime/Executable' as const;
 export type ExecutableTypeId = typeof ExecutableTypeId;
 
 
-export interface Executable<I, O> extends Executable.Variance<I, O> {
-  readonly spec: ExecutableSpec;
-}
-
-export const isExecutable = (executable: unknown): executable is Executable.Any => typeof executable === 'object' && executable !== null && ExecutableTypeId in executable;
-
-export namespace Executable {
-  export interface Variance<I, O> {
-    readonly [ExecutableTypeId]: {
-      readonly _Input: Types.Contravariant<I>;
-      readonly _Output: Types.Covariant<O>;
-    };
-  }
-
-  export type Any = Executable<any, any>;
-}
-
-export type ExecutableSpec = {
-  readonly kind: 'operation';
-
-  readonly operation: Operation.Definition.Any;
-} | {
-  readonly kind: 'prompt';
-  readonly prompt: Ref.Ref<Obj.Unknown>;
-} | {
-  readonly kind: 'agent';
-  readonly chat: Ref.Ref<Obj.Unknown>;
-};
-/**
- * Executes an operation.
- * Takes one input and produces one output.
- */
-export const makeOperationExecutable = <const Op extends Operation.Definition.Any>(
-  op: Op,
-): Executable<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>> => ({
-  [ExecutableTypeId]: {} as any,
-  spec: {
-    kind: 'operation',
-    operation: op,
-  },
-});
-
-/**
- * Executes a prompt.
- * Takes one input and produces one output.
- * Input type is based on the prompt's input schema.
- * Output type is based on the prompt's output schema.
- */
-export const makePromptExecutable = (prompt: Ref.Ref<Obj.Unknown>): Executable<any, any> => ({
-  [ExecutableTypeId]: {} as any,
-  spec: {
-    kind: 'prompt',
-    prompt,
-  },
-});
-
-/**
- * Agent takes in many inputs in the form of user instructions or events and produces no output.
- * Agebt writes its output to the chat.
- */
-export const makeAgentExecutable = (chat: Ref.Ref<Obj.Unknown>): Executable<any, unknown> => ({
-  [ExecutableTypeId]: {} as any,
-  spec: {
-    kind: 'agent',
-    chat,
-  },
-});
-
-
-export const ModuleTypeId = '~@dxos/functions-runtime/Module' as const;
-export type ModuleTypeId = typeof ModuleTypeId;
-
-/**
- * Module can be run by process manager to create a process.
- * I.e. its a process factory.
- */
-export interface Module<I, O, R = never> {
-  readonly [ModuleTypeId]: ModuleTypeId;
-
+export interface Executable<I, O, R> extends Executable.Variance<I, O, R> {
   readonly services: readonly Context.Tag<any, any>[];
 
   /**
@@ -210,36 +131,42 @@ export interface Module<I, O, R = never> {
   run(ctx: ProcessContext<I, O>): Effect.Effect<Process<I, O>, never, Scope.Scope | R>;
 }
 
-//
-// Module.
-//
+export const isExecutable = (executable: unknown): executable is Executable.Any => typeof executable === 'object' && executable !== null && ExecutableTypeId in executable;
 
-export namespace Module {
-  export type Any = Module<any, any>;
+export namespace Executable {
+  export interface Variance<I, O, R> {
+    readonly [ExecutableTypeId]: {
+      readonly _Input: Types.Contravariant<I>;
+      readonly _Output: Types.Covariant<O>;
+      readonly _Requirements: Types.Covariant<R>;
+    };
+  }
+
+  export type Any = Executable<any, any, never>;
 }
 
-export interface MakeModuleOpts {
+export interface MakeExecutableOpts {
   readonly input: Schema.Schema.AnyNoContext;
   readonly output: Schema.Schema.AnyNoContext;
   readonly services: readonly Context.Tag<any, any>[];
 }
 
-export const makeModule = <const Opts extends Types.NoExcessProperties<MakeModuleOpts, Opts>>(
+export const makeExecutable = <const Opts extends Types.NoExcessProperties<MakeExecutableOpts, Opts>>(
   opts: Opts,
   run: (ctx: ProcessContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>) => Effect.Effect<Process<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>, never, Scope.Scope | Context.Tag.Identifier<NonNullable<Opts['services']>[number]>>,
-): Module<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>, Context.Tag.Identifier<NonNullable<Opts['services']>[number]>> => {
+): Executable<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>, Context.Tag.Identifier<NonNullable<Opts['services']>[number]>> => {
   return {
-    [ModuleTypeId]: ModuleTypeId,
+    [ExecutableTypeId]: {} as any,
     ...opts,
     run,
   };
 };
 
-export const makeOperationModule = <const Op extends Operation.Definition.Any>(
+export const fromOperation = <const Op extends Operation.Definition.Any>(
   op: Op,
   handler: OperationHandlerSet.OperationHandlerSet,
-): Module<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
-  makeModule(
+): Executable<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
+  makeExecutable(
     {
       input: op.input,
       output: op.output,
@@ -295,6 +222,7 @@ export type ID = Schema.Schema.Type<typeof ID>;
 
 export interface Handle<I, O> {
   readonly id: ID;
+  readonly parentId: Option.Option<ID>;
 
   submitInput(input: I): Effect.Effect<void>;
   subscribeOutputs(): Stream.Stream<O>;
@@ -335,7 +263,7 @@ export interface Manager {
   /**
    * Spawn a new process for an executable.
    */
-  spawn<I, O>(executable: Executable<I, O>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
+  spawn<I, O>(executable: Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
   /**
    * Attach to an existing process.
    */
@@ -345,7 +273,7 @@ export interface Manager {
    * Attach to an existing process if it exists, otherwise spawn a new process for the executable.
    * `executable` and `options` are ignored if the process already exists.
    */
-  ensure<I, O>(id: ID, executable: Executable<I, O>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
+  ensure<I, O>(id: ID, executable: Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
 
   /**
    * List all spawned processes.
