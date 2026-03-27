@@ -44,6 +44,7 @@ import { SearchPlugin } from '@dxos/plugin-search';
 import { SettingsPlugin } from '@dxos/plugin-settings';
 import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
+import { SpotlightPlugin } from '@dxos/plugin-spotlight';
 import { SketchPlugin } from '@dxos/plugin-sketch';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StackPlugin } from '@dxos/plugin-stack';
@@ -82,16 +83,20 @@ export type PluginConfig = State & {
 };
 
 export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
-  const useSimpleLayout = isPopover || isMobile;
+  const layoutPluginId = isPopover
+    ? SpotlightPlugin.meta.id
+    : isMobile
+      ? SimpleLayoutPlugin.meta.id
+      : DeckPlugin.meta.id;
   return [
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
-    useSimpleLayout ? SimpleLayoutPlugin.meta.id : DeckPlugin.meta.id,
+    layoutPluginId,
     FilesPlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
-    isTauri && !isMobile && NativePlugin.meta.id,
+    isTauri && !isMobile && !isPopover && NativePlugin.meta.id,
     OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
@@ -153,7 +158,7 @@ export const getPlugins = ({
   isPopover,
   isMobile,
 }: PluginConfig): Plugin.Plugin[] => {
-  const useSimpleLayout = isPopover || isMobile;
+  const layoutPlugin = isPopover ? SpotlightPlugin() : isMobile ? SimpleLayoutPlugin({}) : DeckPlugin();
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
     AssistantPlugin(),
@@ -179,7 +184,6 @@ export const getPlugins = ({
     }),
     ConductorPlugin(),
     DebugPlugin({ logBuffer }),
-    useSimpleLayout ? SimpleLayoutPlugin({ isPopover }) : DeckPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
     isLabs && FilesPlugin(),
@@ -188,13 +192,14 @@ export const getPlugins = ({
     InboxPlugin(),
     OperationPlugin(),
     KanbanPlugin(),
+    layoutPlugin,
     MapPlugin(),
     isLabs && MapPluginSolid(),
     MarkdownPlugin(),
     MasonryPlugin(),
     MeetingPlugin(),
     MermaidPlugin(),
-    isTauri && !isMobile && NativePlugin(),
+    isTauri && !isMobile && !isPopover && NativePlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,
