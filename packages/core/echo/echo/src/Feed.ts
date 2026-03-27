@@ -64,12 +64,6 @@ export interface Feed extends Schema.Schema.Type<typeof Feed> {}
 //
 
 /**
- * Meta key source for storing the backing DXN bound to a feed object.
- */
-// TODO(dmaretskyi): Enforce that Feed ObjectId = feed storage ID. And remove this key.
-export const DXN_KEY = 'org.dxos.key.feed';
-
-/**
  * Opaque cursor for iterating over feed items.
  */
 // TODO(dmaretskyi): T needs to be referenced in the type structure for typescript to respect it during inference and type-checking.
