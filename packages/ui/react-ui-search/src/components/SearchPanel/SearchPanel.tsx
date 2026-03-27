@@ -23,10 +23,10 @@ export const SearchPanel = ({ children, ...props }: SearchPanelProps) => {
         <Panel.Content asChild>
           <SearchList.Content>{children}</SearchList.Content>
         </Panel.Content>
-        <Panel.Statusbar asChild classNames={isTauri() && 'h-[50px] px-4 py-2'}>
+        <Panel.Statusbar asChild classNames={(true || isTauri()) && 'h-[50px] py-2'}>
           <Toolbar.Root>
             <SearchList.Input
-              classNames={isTauri() && 'px-4 rounded-lg'}
+              classNames={isTauri() && 'rounded-lg'}
               placeholder={t('search placeholder')}
               autoFocus={autoFocus}
             />
