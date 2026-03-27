@@ -57,8 +57,6 @@ export const Main = () => {
         <AppBar {...appBarProps} />
       </Panel.Toolbar>
       <Panel.Content role='article' className='bg-base-surface border border-red-500'>
-        {/* <Column.Root gutter='md'>
-          <Column.Content> */}
         <Surface.Surface
           key={id}
           role='article'
@@ -67,8 +65,6 @@ export const Main = () => {
           fallback={ErrorFallback}
           placeholder={placeholder}
         />
-        {/* </Column.Content>
-        </Column.Root> */}
       </Panel.Content>
       {showNavBar && (
         <Panel.Statusbar asChild>

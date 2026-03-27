@@ -50,20 +50,17 @@ export const Home = (_: HomeProps) => {
             <Mosaic.Container asChild>
               <ScrollArea.Root margin padding thin>
                 <ScrollArea.Viewport>
-                  <Mosaic.Stack items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
+                  {/* TODO(burdon): Disable slots. */}
+                  <Mosaic.Stack draggable={false} items={results} getId={(node) => node.id} Tile={WorkspaceTile} />
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
             </Mosaic.Container>
           </SearchList.Content>
         </Panel.Content>
-        <Panel.Statusbar asChild>
-          {/* <Column.Root gutter='xs'>
-            <Column.Content> */}
+        <Panel.Statusbar>
           <Toolbar.Root>
             <SearchList.Input placeholder={t('search placeholder')} autoFocus={autoFocus} />
           </Toolbar.Root>
-          {/* </Column.Content>
-          </Column.Root> */}
         </Panel.Statusbar>
       </Panel.Root>
     </SearchList.Root>
