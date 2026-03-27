@@ -35,7 +35,13 @@ export const make = (opts: {
     tracingOptions?: Process.TracingOptions,
   ): Effect.Effect<O, Error> =>
     Effect.gen(function* () {
+<<<<<<< HEAD
       const executable = Process.makeOperationExecutable(op);
+||||||| 031c38213d (Separate executable from module)
+      const executable = Process.makeOperationExecutable(op, opts.handlerSet) as Process.Module<I, O>;
+=======
+      const executable = Process.makeOperationExecutable(op, opts.handlerSet) as Process.Executable<I, O>;
+>>>>>>> parent of 031c38213d (Separate executable from module)
 
       const handle = yield* opts.manager.spawn(executable, {
         parentProcessId: opts.parentProcessId,

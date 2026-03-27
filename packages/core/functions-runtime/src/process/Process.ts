@@ -4,6 +4,11 @@
 
 // @import-as-namspace
 
+/*
+ - Termination notification.
+ - Backpressure.
+*/
+
 import * as Scope from 'effect/Scope';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
@@ -25,27 +30,13 @@ import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 /**
  * A running process.
- *
- * `init` is called when the process is spawned.
- * `handleInput` is called for every input submitted to the process.
- * `tick` is called to continue suspended execution.
- * `handleInput` and `tick` can be called concurrently.
- *
- * Outcomes:
- * - Done - process has completed execution.
- * - Resume - process execution should be resumed as soon as possible. Useful for splitting long-running operations in serverless environments.
- * - Suspend - process should be suspended until the next input is submitted.
- *
- * In case of conflicting outcomes: Resume takes precedence over Suspend, and Suspend takes precedence over Done.
- *
- * Resume outcome signals to the runtime that the process should be resumed by calling the `tick` method.
- * `tick` method can run in indefinite loop, by returning a Resume outcome.
- *
- * Example execution flow:
- *
- * ```
- * spawn -> init -> handleInput -> handleInput -> tick -> tick -> done
- * ```
+ * 
+ * Process lifecycle: Initial -> Running <-> Suspended -> Terminated.
+ * 
+ * - init -> called once when the process is spawned.
+ * - handleInput -> called for every input submitted to the process.
+ * - alarm -> called for processes scheduling alarms.
+ * - childEvent -> called when child process produces output or exits.
  */
 export interface Process<I, O> {
 
@@ -58,7 +49,7 @@ export interface Process<I, O> {
    *
    * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
-  init(): Effect.Effect<Outcome>;
+  init(): Effect.Effect<void>;
 
   /**
    * Called when there's input available to process.
@@ -70,88 +61,58 @@ export interface Process<I, O> {
    *
    * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
-  handleInput(input: I): Effect.Effect<Outcome>;
+  handleInput(input: I): Effect.Effect<void>;
 
   /**
-   * Called when the process is resumed from a previously suspended state.
+   * Called when the process's alarm is triggered.
    *
-   * @returns A signal indicating to the runtime whether the process is finished, or should be resumed later.
    * @throws Throwing in the handler will terminate the process with an error.
-   *
-   * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
-  tick(): Effect.Effect<Outcome>;
+  alarm(): Effect.Effect<void>;
+
+  /**
+   * Called when the process's child process produces output or exits.
+   * 
+   * This allows the parent process to hibernate while a long-running child process is running.
+   */
+  childEvent(event: ChildEvent<unknown>): Effect.Effect<void>;
+}
+
+export type ChildEvent<T> = {
+  readonly _tag: 'output';
+  readonly data: T;
+} | {
+  readonly _tag: 'exited';
+  readonly result: Exit.Exit<void>;
 }
 
 export interface ProcessContext<I, O> {
   readonly id: ID;
 
+  /**
+   * Complete this process with sucessful result.
+   * No additional events will be pushed to the process.
+   */
+  exit(): void;
+
+  /**
+   * Complete this process with an error.
+   * No additional events will be pushed to the process.
+   */
+  fail(error: Error): void;
+
+  /**
+   * Submit output of the process.
+   */
   submitOutput(output: O): void;
+
+  /**
+   * Set an alarm for the process to be woken up later.
+   * 
+   * @param timeout - Optional timeout in milliseconds. If not provided, the process is woken up as soon as possible.
+   */
+  setAlarm(timeout?: number): void;
 }
-
-const OutcomeTypeId = '~@dxos/functions-runtime/Outcome' as const;
-export type OutcomeTypeId = typeof OutcomeTypeId;
-
-/**
- * Process is done.
- */
-export type OutcomeDone = {
-  readonly [OutcomeTypeId]: OutcomeTypeId;
-  readonly _tag: 'done';
-};
-
-export const OutcomeDone: OutcomeDone = {
-  [OutcomeTypeId]: OutcomeTypeId,
-  _tag: 'done',
-};
-
-export const isOutcomeDone = (result: Outcome): result is OutcomeDone =>
-  result[OutcomeTypeId] === OutcomeTypeId && result._tag === 'done';
-
-/**
- * Process should be suspended until the next input is submitted.
- */
-export type OutcomeSuspend = {
-  readonly [OutcomeTypeId]: OutcomeTypeId;
-  readonly _tag: 'suspend';
-};
-
-export const OutcomeSuspend: OutcomeSuspend = {
-  [OutcomeTypeId]: OutcomeTypeId,
-  _tag: 'suspend',
-};
-
-export const isOutcomeSuspend = (result: Outcome): result is OutcomeSuspend =>
-  result[OutcomeTypeId] === OutcomeTypeId && result._tag === 'suspend';
-
-/**
- * Process execution should be resumed as soon as possible.
- */
-export type OutcomeResume = {
-  readonly [OutcomeTypeId]: OutcomeTypeId;
-  readonly _tag: 'resume';
-};
-
-export const OutcomeResume: OutcomeResume = {
-  [OutcomeTypeId]: OutcomeTypeId,
-  _tag: 'resume',
-};
-
-export const isOutcomeResume = (result: Outcome): result is OutcomeResume =>
-  result[OutcomeTypeId] === OutcomeTypeId && result._tag === 'resume';
-
-export type Outcome = OutcomeDone | OutcomeSuspend | OutcomeResume;
-
-export const isOutcome = (result: Outcome): result is Outcome => result[OutcomeTypeId] === OutcomeTypeId;
-
-/**
- * Merge two outcomes using precedence: resume > suspend > done.
- */
-export const mergeOutcomes = (left: Outcome, right: Outcome): Outcome => {
-  if (isOutcomeResume(left) || isOutcomeResume(right)) return OutcomeResume;
-  if (isOutcomeSuspend(left) || isOutcomeSuspend(right)) return OutcomeSuspend;
-  return OutcomeDone;
-};
 
 
 //
@@ -289,7 +250,7 @@ export const makeOperationModule = <const Op extends Operation.Definition.Any>(
         const runtime = yield* Effect.runtime<Operation.Definition.Services<Op>>();
 
         return {
-          init: () => Effect.succeed(OutcomeSuspend),
+          init: () => Effect.void,
           handleInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
               const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
@@ -302,10 +263,11 @@ export const makeOperationModule = <const Op extends Operation.Definition.Any>(
                 >;
 
               ctx.submitOutput(output);
-              return OutcomeDone;
+              ctx.exit();
             }),
 
-          tick: () => Effect.succeed(OutcomeSuspend),
+          alarm: () => Effect.void,
+          childEvent: (event: ChildEvent<unknown>) => Effect.void,
         };
       }),
   );
@@ -316,6 +278,7 @@ export enum State {
   COMPLETED = 'completed',
   TERMINATING = 'terminating', // TODO(dmaretskyi): Remove?
   TERMINATED = 'terminated',
+  HYBERNATING = 'hybernating',
   FAILED = 'failed',
 }
 
