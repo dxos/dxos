@@ -13,7 +13,7 @@ import { Graph, type Node } from '@dxos/plugin-graph';
 import { useClient } from '@dxos/react-client';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { SearchList } from '@dxos/react-ui-searchlist';
+import { SearchList } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
 
 import { useSearchResults } from '../../hooks';

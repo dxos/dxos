@@ -37,7 +37,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-searchlist/Listbox',
+  title: 'ui/react-ui-search/Listbox',
   component: Listbox.Root,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'p-2' })],

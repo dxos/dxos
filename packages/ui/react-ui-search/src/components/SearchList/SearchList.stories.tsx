@@ -467,7 +467,7 @@ const WithGroupsStory = () => {
 //
 
 const meta = {
-  title: 'ui/react-ui-searchlist/SearchList',
+  title: 'ui/react-ui-search/SearchList',
   component: SearchList.Root as any,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
