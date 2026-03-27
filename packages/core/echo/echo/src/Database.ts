@@ -295,6 +295,19 @@ export const runQuery: {
   query(queryOrFilter as any).pipe(Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())));
 
 /**
+ * Executes the query once and returns the first result as or None.
+ */
+export const runQueryFirst: {
+  <Q extends Query.Any>(query: Q): Effect.Effect<Option.Option<Query.Type<Q>>, never, Service>;
+  <F extends Filter.Any>(filter: F): Effect.Effect<Option.Option<Filter.Type<F>>, never, Service>;
+} = (queryOrFilter: Query.Any | Filter.Any) =>
+  query(queryOrFilter as any).pipe(
+    Effect.flatMap((queryResult) =>
+      promiseWithCauseCapture(async () => Option.fromNullable(await queryResult.firstOrUndefined())),
+    ),
+  );
+
+/**
  * Creates a schema query result that can be subscribed to.
  */
 // TODO(dmaretskyi): Change API to `yield* Database.querySchema(...).first` and `yield* Database.querySchema(...).schema`.

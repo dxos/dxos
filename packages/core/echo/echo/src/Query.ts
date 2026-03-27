@@ -55,10 +55,10 @@ export interface Query<T> {
     key: K,
   ): Query<
     T[K] extends Ref.Unknown
-      ? Ref.Target<T[K]>
-      : T[K] extends Ref.Unknown | undefined
-        ? Ref.Target<Exclude<T[K], undefined>>
-        : never
+    ? Ref.Target<T[K]>
+    : T[K] extends Ref.Unknown | undefined
+    ? Ref.Target<Exclude<T[K], undefined>>
+    : never
   >;
 
   /**
@@ -216,7 +216,7 @@ export type Type<Q extends Any> = Q extends Query<infer T> ? T : never;
 class QueryClass implements Any {
   private static 'variance': Any['~Query'] = {} as Any['~Query'];
 
-  constructor(public readonly ast: QueryAST.Query) {}
+  constructor(public readonly ast: QueryAST.Query) { }
 
   '~Query' = QueryClass.variance;
 
@@ -446,7 +446,10 @@ export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> =
  *
  * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
  */
-export const type = (schema: Schema.Schema.All | string, predicates?: Filter.Props<unknown>): Any => {
+export const type: {
+  <S extends Schema.Schema.All>(schema: S, predicates?: Filter.Props<Schema.Schema.Type<S>>): Query<Schema.Schema.Type<S>>;
+  (schema: string, predicates?: Filter.Props<unknown>): Query<unknown>;
+} = (schema: Schema.Schema.All | string, predicates?: Filter.Props<unknown>): Any => {
   return new QueryClass({
     type: 'select',
     filter: Filter.type(schema, predicates).ast,
