@@ -29,7 +29,7 @@ export interface OperationService {
   invoke: <I, O>(
     op: Operation.Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
-  ) => Effect.Effect<O, Error>;
+  ) => Effect.Effect<O>;
 
   /**
    * Schedule an operation to run as a followup.
@@ -66,7 +66,7 @@ export interface OperationService {
  * });
  * ```
  */
-export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() {}
+export class Service extends Context.Tag('@dxos/operation/Service')<Service, OperationService>() { }
 
 //
 // Namespace functions - ergonomic access to Operation.Service methods.
@@ -84,7 +84,7 @@ export class Service extends Context.Tag('@dxos/operation/Service')<Service, Ope
 export const invoke = <I, O>(
   op: Operation.Definition<I, O>,
   ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
-): Effect.Effect<O, Error, Service> =>
+): Effect.Effect<O, never, Service> =>
   Effect.flatMap(Service, (ops) => ops.invoke(op, ...(args as [I, InvokeOptions?])));
 
 /**

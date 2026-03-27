@@ -77,7 +77,7 @@ export const lazy = (
 };
 
 /**
- * Gets a handler for an operation by key.
+ * Gets a handler for an operation by definition.
  */
 export const getHandler = <const Op extends Operation.Definition.Any>(
   set: OperationHandlerSet,
@@ -88,6 +88,19 @@ export const getHandler = <const Op extends Operation.Definition.Any>(
     const handler = handlers.find((handler) => handler.meta.key === definition.meta.key);
     if (!handler) {
       return yield* Effect.fail(new NoHandlerError(definition.meta.key));
+    }
+    return handler as any;
+  });
+
+/**
+ * Gets a handler for an operation by key.
+ */
+export const getHandlerByKey = (set: OperationHandlerSet, key: string): Effect.Effect<Operation.WithHandler<Operation.Definition.Any>, NoHandlerError> =>
+  Effect.gen(function* () {
+    const handlers = yield* set.handlers;
+    const handler = handlers.find((handler) => handler.meta.key === key);
+    if (!handler) {
+      return yield* Effect.fail(new NoHandlerError(key));
     }
     return handler as any;
   });
