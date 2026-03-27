@@ -14,16 +14,19 @@ use oauth::OAuthServerState;
 #[cfg(desktop)]
 use window_state::WindowState;
 
-/// Stores the dynamic localhost port so spotlight and other modules can read it.
-pub struct LocalhostPort(pub u16);
+/// Fixed port for the localhost asset server in production builds (CMPSR = 26777).
+pub const LOCALHOST_PORT: u16 = 26777;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    // Pick an unused port for the localhost asset server (production builds only).
-    let port = portpicker::pick_unused_port().expect("failed to find unused port");
+    // In production, serve bundled assets via the localhost plugin on a fixed port.
+    // In dev, use the Vite dev server directly for hot-reload.
+    let app_port: u16 = if cfg!(debug_assertions) { 5173 } else { LOCALHOST_PORT };
 
-    let builder = tauri::Builder::default()
-        .plugin(tauri_plugin_localhost::Builder::new(port).build());
+    let builder = tauri::Builder::default();
+
+    #[cfg(not(debug_assertions))]
+    let builder = builder.plugin(tauri_plugin_localhost::Builder::new(LOCALHOST_PORT).build());
 
     // Only include updater plugin for non-mobile targets.
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -100,7 +103,6 @@ pub fn run() {
     let builder = builder.manage(OAuthServerState::new());
 
     builder
-        .manage(LocalhostPort(port))
         .setup(move |app| {
             // Initialize logging in debug mode.
             if cfg!(debug_assertions) {
@@ -111,14 +113,13 @@ pub fn run() {
                 )?;
             }
 
-            // Window is created programmatically (not via tauri.conf.json "windows") because:
-            // 1. Declarative windows load from tauri:// which breaks SharedWorker in WKWebView.
-            // 2. The localhost port is dynamic (chosen at runtime), so it can't be in static JSON.
+            // Window is created programmatically (not via tauri.conf.json "windows") because
+            // declarative windows load from tauri:// which breaks SharedWorker in WKWebView.
             #[cfg(desktop)]
             {
                 use tauri::WebviewWindowBuilder;
 
-                let url: tauri::Url = format!("http://localhost:{}", port).parse().unwrap();
+                let url: tauri::Url = format!("http://localhost:{}", app_port).parse().unwrap();
                 let main_window = WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::External(url))
                     .title("Composer")
                     .inner_size(1600.0, 1200.0)

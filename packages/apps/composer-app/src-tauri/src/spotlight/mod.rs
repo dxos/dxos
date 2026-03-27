@@ -13,7 +13,7 @@ use tauri_nspanel::{
     tauri_panel, CollectionBehavior, ManagerExt, PanelBuilder, PanelHandle, PanelLevel, StyleMask,
 };
 
-use crate::LocalhostPort;
+use crate::LOCALHOST_PORT;
 
 // Define panel class - no event handlers needed (frontend-driven dismiss).
 tauri_panel! {
@@ -30,7 +30,7 @@ tauri_panel! {
 pub fn init_spotlight(app: &AppHandle, config: &SpotlightConfig) -> Result<(), String> {
     log::debug!("Creating spotlight panel as NSPanel");
 
-    let port = app.state::<LocalhostPort>().0;
+    let port = if cfg!(debug_assertions) { 5173 } else { LOCALHOST_PORT };
     let url: tauri::Url = format!("http://localhost:{}", port).parse().unwrap();
 
     let panel = PanelBuilder::<_, SpotlightPanel>::new(app, SpotlightConfig::LABEL)
