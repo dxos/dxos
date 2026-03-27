@@ -4,7 +4,7 @@
 
 import * as Layer from 'effect/Layer';
 
-import { type Entity, Feed, type Filter, Obj, type Query } from '@dxos/echo';
+import { type Entity, Feed, type Filter, type Query } from '@dxos/echo';
 
 import type { QueueFactory } from './queue-factory';
 /**
