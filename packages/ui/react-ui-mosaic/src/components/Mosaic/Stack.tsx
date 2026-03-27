@@ -119,6 +119,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       getScrollElement,
       overscan = 8,
       onChange,
+      draggable = true,
       debug,
       ...props
     },
@@ -184,7 +185,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
               }}
               ref={virtualizer.measureElement}
             >
-              {virtualItem.index % 2 === 0 ? (
+              {draggable && virtualItem.index % 2 === 0 ? (
                 <InternalPlaceholder orientation={orientation} location={Math.floor(virtualItem.index / 2) + 0.5} />
               ) : (
                 <Tile id={getId(data)} data={data} location={Math.floor(virtualItem.index / 2) + 1} debug={debug} />
