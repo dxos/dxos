@@ -202,8 +202,8 @@ const makeStorageExecutable = () =>
           init: () => Effect.void,
           handleInput: (input: { key: string; value: string }) =>
             Effect.gen(function* () {
-              yield* storage.set(input.key, input.value);
-              const read = yield* storage.get(input.key);
+              yield* storage.set(Schema.String, input.key, input.value);
+              const read = yield* storage.get(Schema.String, input.key);
               ctx.submitOutput(Option.getOrElse(read, () => 'NOT_FOUND'));
               ctx.exit();
             }),
@@ -483,7 +483,7 @@ describe('ProcessManagerImpl', () => {
                 init: () => Effect.void,
                 handleInput: (input: { key: string; value: string }) =>
                   Effect.gen(function* () {
-                    yield* storage.set(input.key, input.value);
+                    yield* storage.set(Schema.String, input.key, input.value);
                   }),
                 alarm: () => Effect.void,
                 childEvent: () => Effect.void,

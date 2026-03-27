@@ -8,6 +8,7 @@ import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 
 /**
  * Scoped key-value storage service for processes.
@@ -17,10 +18,10 @@ export class StorageService extends Context.Tag('@dxos/functions-runtime/Storage
   StorageService,
   {
     /** Read a value by key. Returns `None` if key does not exist. */
-    get(key: string): Effect.Effect<Option.Option<string>>;
+    get<S extends Schema.Schema<any, string, any>>(schema: S, key: string): Effect.Effect<Option.Option<Schema.Schema.Type<S>>, never, Schema.Schema.Context<S>>;
 
     /** Write a value for the given key. */
-    set(key: string, value: string): Effect.Effect<void>;
+    set<S extends Schema.Schema<any, string, any>>(schema: S, key: string, value: Schema.Schema.Type<S>): Effect.Effect<void, never, Schema.Schema.Context<S>>;
 
     /** Remove a key. */
     delete(key: string): Effect.Effect<void>;
@@ -47,13 +48,24 @@ export class StorageService extends Context.Tag('@dxos/functions-runtime/Storage
     const knownKeys = new Set<string>();
 
     return {
-      get: (key: string) => prefixed.get(key).pipe(Effect.orDie),
+      get: <S extends Schema.Schema<any, string, any>>(schema: S, key: string) =>
+        Effect.gen(function* () {
+          const opt = yield* prefixed.get(key).pipe(Effect.orDie);
+          if (Option.isNone(opt)) {
+            return Option.none();
+          }
+          const decoded = yield* Schema.decode(schema)(opt.value).pipe(Effect.orDie);
+          return Option.some(decoded);
+        }),
 
-      set: (key: string, value: string) =>
-        prefixed.set(key, value).pipe(
-          Effect.tap(() => Effect.sync(() => knownKeys.add(key))),
-          Effect.orDie,
-        ),
+      set: <S extends Schema.Schema<any, string, any>>(schema: S, key: string, value: Schema.Schema.Type<S>) =>
+        Effect.gen(function* () {
+          const encoded = yield* Schema.encode(schema)(value).pipe(Effect.orDie);
+          yield* prefixed.set(key, encoded).pipe(
+            Effect.tap(() => Effect.sync(() => knownKeys.add(key))),
+            Effect.orDie,
+          );
+        }),
 
       delete: (key: string) =>
         prefixed.remove(key).pipe(
