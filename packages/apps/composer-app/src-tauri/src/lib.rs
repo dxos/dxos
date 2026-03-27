@@ -127,6 +127,11 @@ pub fn run() {
                     .fullscreen(false)
                     .hidden_title(true)
                     .title_bar_style(tauri::TitleBarStyle::Overlay)
+                    // Disable the native drag-drop handler so HTML5 drag events (dragover, dragenter, drop)
+                    // reach page JavaScript. Without this, WKWebView's NSDraggingDestination intercepts
+                    // all drag events after dragstart, breaking pragmatic-drag-and-drop drop targets.
+                    // Tradeoff: native file drop from Finder into the webview is disabled for now.
+                    .disable_drag_drop_handler()
                     .devtools(true)
                     .build()?;
 
