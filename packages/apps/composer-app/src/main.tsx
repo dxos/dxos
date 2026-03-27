@@ -128,9 +128,10 @@ const main = async () => {
     runAndForwardErrors,
   );
 
-  // Use in-process coordinator (no SharedWorker) for all Tauri apps. WKWebView does not reliably
-  // deliver messages on the coordinator SharedWorker port (desktop and iOS); single-window is enough for now.
-  const useSingleClientMode = isTauri;
+  // Use in-process coordinator (no SharedWorker) for mobile Tauri apps only. iOS WKWebView has a
+  // separate SharedWorker crash bug (Apple FB11723920) unrelated to origin. Desktop Tauri uses
+  // tauri-plugin-localhost which serves from http://localhost, giving SharedWorker a proper origin.
+  const useSingleClientMode = isTauri && isMobile;
 
   const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
   const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;

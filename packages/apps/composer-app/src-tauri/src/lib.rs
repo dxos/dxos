@@ -12,13 +12,18 @@ mod spotlight;
 #[cfg(desktop)]
 use oauth::OAuthServerState;
 #[cfg(desktop)]
-use tauri::Manager;
-#[cfg(desktop)]
 use window_state::WindowState;
+
+/// Stores the dynamic localhost port so spotlight and other modules can read it.
+pub struct LocalhostPort(pub u16);
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let builder = tauri::Builder::default();
+    // Pick an unused port for the localhost asset server (production builds only).
+    let port = portpicker::pick_unused_port().expect("failed to find unused port");
+
+    let builder = tauri::Builder::default()
+        .plugin(tauri_plugin_localhost::Builder::new(port).build());
 
     // Only include updater plugin for non-mobile targets.
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -95,6 +100,7 @@ pub fn run() {
     let builder = builder.manage(OAuthServerState::new());
 
     builder
+        .manage(LocalhostPort(port))
         .setup(move |app| {
             // Initialize logging in debug mode.
             if cfg!(debug_assertions) {
@@ -105,15 +111,29 @@ pub fn run() {
                 )?;
             }
 
-            // Restore window state from previous session (desktop only).
+            // Window is created programmatically (not via tauri.conf.json "windows") because:
+            // 1. Declarative windows load from tauri:// which breaks SharedWorker in WKWebView.
+            // 2. The localhost port is dynamic (chosen at runtime), so it can't be in static JSON.
             #[cfg(desktop)]
-            if let Some(main_window) = app.get_webview_window("main") {
+            {
+                use tauri::WebviewWindowBuilder;
+
+                let url: tauri::Url = format!("http://localhost:{}", port).parse().unwrap();
+                let main_window = WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::External(url))
+                    .title("Composer")
+                    .inner_size(1600.0, 1200.0)
+                    .resizable(true)
+                    .fullscreen(false)
+                    .hidden_title(true)
+                    .title_bar_style(tauri::TitleBarStyle::Overlay)
+                    .devtools(true)
+                    .build()?;
+
                 if let Some(saved_state) = WindowState::load(&app.handle()) {
                     if let Err(e) = saved_state.apply_to_window(&main_window) {
                         log::warn!("Failed to restore window state: {}", e);
                     }
                 }
-                // Set up tracking to save window state on resize/move.
                 window_state::setup_window_state_tracking(&main_window);
             }
 

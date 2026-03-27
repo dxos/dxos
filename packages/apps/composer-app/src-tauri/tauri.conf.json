@@ -15,19 +15,6 @@
       },
       "dangerousDisableAssetCspModification": true
     },
-    "windows": [
-      {
-        "devtools": true,
-        "fullscreen": false,
-        "height": 1200,
-        "hiddenTitle": true,
-        "label": "main",
-        "resizable": true,
-        "title": "Composer",
-        "titleBarStyle": "Overlay",
-        "width": 1600
-      }
-    ],
     "withGlobalTauri": true
   },
   "build": {

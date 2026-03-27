@@ -3,6 +3,9 @@
   "identifier": "default",
   "description": "enables the default permissions",
   "windows": ["main", "popover"],
+  "remote": {
+    "urls": ["http://localhost/*"]
+  },
   "permissions": [
     "core:default",
     "core:window:allow-start-dragging",
