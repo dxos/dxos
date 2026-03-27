@@ -7227,9 +7227,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/react-ui-searchlist':
+      '@dxos/react-ui-search':
         specifier: workspace:*
-        version: link:../../ui/react-ui-searchlist
+        version: link:../../ui/react-ui-search
       '@dxos/react-ui-sfx':
         specifier: workspace:*
         version: link:../../ui/react-ui-sfx
@@ -9719,9 +9719,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/react-ui-searchlist':
+      '@dxos/react-ui-search':
         specifier: workspace:*
-        version: link:../../ui/react-ui-searchlist
+        version: link:../../ui/react-ui-search
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -10158,9 +10158,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/react-ui-searchlist':
+      '@dxos/react-ui-search':
         specifier: workspace:*
-        version: link:../../ui/react-ui-searchlist
+        version: link:../../ui/react-ui-search
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -11331,9 +11331,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/react-ui-searchlist':
+      '@dxos/react-ui-search':
         specifier: workspace:*
-        version: link:../../ui/react-ui-searchlist
+        version: link:../../ui/react-ui-search
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -11697,9 +11697,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/react-ui-searchlist':
+      '@dxos/react-ui-search':
         specifier: workspace:*
-        version: link:../../ui/react-ui-searchlist
+        version: link:../../ui/react-ui-search
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -12035,9 +12035,9 @@ importers:
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../../ui/react-ui-pickers
-      '@dxos/react-ui-searchlist':
+      '@dxos/react-ui-search':
         specifier: workspace:*
-        version: link:../../ui/react-ui-searchlist
+        version: link:../../ui/react-ui-search
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -12180,9 +12180,9 @@ importers:
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/react-ui-searchlist':
+      '@dxos/react-ui-search':
         specifier: workspace:*
-        version: link:../../ui/react-ui-searchlist
+        version: link:../../ui/react-ui-search
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../../ui/react-ui-stack
@@ -15188,9 +15188,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
-      '@dxos/react-ui-searchlist':
+      '@dxos/react-ui-search':
         specifier: workspace:*
-        version: link:../../ui/react-ui-searchlist
+        version: link:../../ui/react-ui-search
       '@dxos/react-ui-sfx':
         specifier: workspace:*
         version: link:../../ui/react-ui-sfx
@@ -16978,9 +16978,9 @@ importers:
       '@dxos/react-ui-pickers':
         specifier: workspace:*
         version: link:../react-ui-pickers
-      '@dxos/react-ui-searchlist':
+      '@dxos/react-ui-search':
         specifier: workspace:*
-        version: link:../react-ui-searchlist
+        version: link:../react-ui-search
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack
@@ -17380,9 +17380,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/react-ui-searchlist':
+      '@dxos/react-ui-search':
         specifier: workspace:*
-        version: link:../react-ui-searchlist
+        version: link:../react-ui-search
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -17906,8 +17906,11 @@ importers:
         specifier: '>=7.1.11'
         version: 7.3.1(@types/node@22.10.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
-  packages/ui/react-ui-searchlist:
+  packages/ui/react-ui-search:
     dependencies:
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -18263,9 +18266,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../react-ui-menu
-      '@dxos/react-ui-searchlist':
+      '@dxos/react-ui-search':
         specifier: workspace:*
-        version: link:../react-ui-searchlist
+        version: link:../react-ui-search
       '@dxos/react-ui-stack':
         specifier: workspace:*
         version: link:../react-ui-stack

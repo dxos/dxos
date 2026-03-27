@@ -12,7 +12,7 @@ import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
-import { translations as searchTranslation } from '@dxos/react-ui-searchlist';
+import { translations as searchTranslation } from '@dxos/react-ui-search';
 
 import { SimpleLayoutPlugin } from '../../SimpleLayoutPlugin';
 import { translations } from '../../translations';

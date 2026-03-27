@@ -44,7 +44,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-searchlist/Combobox',
+  title: 'ui/react-ui-search/Combobox',
   component: Combobox.Root as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'p-2' })],

@@ -1,5 +1,5 @@
 {
-  "name": "@dxos/react-ui-searchlist",
+  "name": "@dxos/react-ui-search",
   "version": "0.8.3",
   "description": "A themed ⌘K-style combobox component, triggered by a button (or keyboard shortcut), where values are queried only within the invoked modal.",
   "homepage": "https://dxos.org",
@@ -29,6 +29,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/util": "workspace:*",
     "@fluentui/react-tabster": "catalog:",
     "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",

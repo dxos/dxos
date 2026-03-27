@@ -121,54 +121,54 @@ Problem: some components are not propagating props to spread on their root DOM e
   - Root component implements SlottableProps: Yes/No
   - Root component implements ComposableProps: Yes/No/ISSUE (if Root does not spread ...props on the first child element).
 
-| Package             | Component              | Headless | SlottableProps      | ComposableProps |
-| ------------------- | ---------------------- | -------- | ------------------- | --------------- |
-| react-ui            | `Panel.Root`           | No       | Yes                 | —               |
-| react-ui            | `Column.Root`          | No       | Yes                 | —               |
-| react-ui            | `Container`            | No       | Yes                 | —               |
-| react-ui            | `Flex`                 | No       | —                   | Yes             |
-| react-ui            | `Grid`                 | No       | —                   | Yes             |
-| react-ui            | `Card.Root`            | No       | Yes                 | —               |
-| react-ui            | `Breadcrumb.Root`      | No       | Yes                 | —               |
-| react-ui            | `ScrollArea.Root`      | No       | Yes                 | —               |
-| react-ui            | `Splitter.Root`        | No       | Yes                 | —               |
-| react-ui            | `Dialog.Root`          | Yes      | No                  | —               |
-| react-ui            | `AlertDialog.Root`     | Yes      | No                  | —               |
-| react-ui            | `Main.Root`            | Yes      | No                  | —               |
-| react-ui            | `Menu.Root`            | Yes      | No                  | —               |
-| react-ui            | `Popover.Root`         | Yes      | No                  | —               |
-| react-ui            | `Select.Root`          | Yes      | No                  | —               |
-| react-ui            | `Tooltip.Root`         | Yes      | No                  | —               |
-| react-ui            | `Input`                | No       | No                  | —               |
-| react-ui            | `List.ListItem.Root`   | No       | No                  | —               |
-| react-ui            | `Message.Root`         | No       | No (asChild inline) | —               |
-| react-ui            | `ScrollContainer.Root` | No       | No                  | —               |
-| react-ui            | `Toast.Root`           | No       | No                  | —               |
-| react-ui            | `Toolbar.Root`         | No       | No (TODO)           | —               |
-|                     |                        |          |                     |                 |
-| react-ui-attention  | `AttendableContainer`  | No       | No (asChild inline) | —               |
-|                     |                        |          |                     |                 |
-| react-ui-editor     | `Editor.Root`          | Yes      | No                  | —               |
-|                     |                        |          |                     |                 |
-| react-ui-form       | `ObjectPicker.Root`    | Yes      | No                  | —               |
-|                     |                        |          |                     |                 |
-| react-ui-list       | `List.Root`            | Yes      | No                  | —               |
-| react-ui-list       | `Accordion.Root`       | Yes      | No                  | —               |
-| react-ui-list       | `Tree.Root`            | Yes      | No                  | —               |
-|                     |                        |          |                     |                 |
-| react-ui-menu       | `Menu.Root`            | Yes      | No                  | —               |
-| react-ui-menu       | `DropdownMenu.Root`    | Yes      | No                  | —               |
-|                     |                        |          |                     |                 |
-| react-ui-mosaic     | `Mosaic.Root`          | No       | No (asChild inline) | —               |
-| react-ui-mosaic     | `Board.Root`           | No       | No                  | —               |
-|                     |                        |          |                     |                 |
-| react-ui-searchlist | `SearchList.Root`      | Yes      | No                  | —               |
-|                     |                        |          |                     |                 |
-| react-ui-stack      | `StackItem.Root`       | No       | No                  | —               |
-|                     |                        |          |                     |                 |
-| react-ui-table      | `Table.Root`           | No       | —                   | Yes             |
-|                     |                        |          |                     |                 |
-| react-ui-tabs       | `Tabs.Root`            | No       | No                  | —               |
-|                     |                        |          |                     |                 |
-| react-ui-thread     | `Thread.Root`          | No       | No                  | —               |
-| react-ui-thread     | `Message.Root`         | No       | No                  | —               |
+| Package            | Component              | Headless | SlottableProps      | ComposableProps |
+| ------------------ | ---------------------- | -------- | ------------------- | --------------- |
+| react-ui           | `Panel.Root`           | No       | Yes                 | —               |
+| react-ui           | `Column.Root`          | No       | Yes                 | —               |
+| react-ui           | `Container`            | No       | Yes                 | —               |
+| react-ui           | `Flex`                 | No       | —                   | Yes             |
+| react-ui           | `Grid`                 | No       | —                   | Yes             |
+| react-ui           | `Card.Root`            | No       | Yes                 | —               |
+| react-ui           | `Breadcrumb.Root`      | No       | Yes                 | —               |
+| react-ui           | `ScrollArea.Root`      | No       | Yes                 | —               |
+| react-ui           | `Splitter.Root`        | No       | Yes                 | —               |
+| react-ui           | `Dialog.Root`          | Yes      | No                  | —               |
+| react-ui           | `AlertDialog.Root`     | Yes      | No                  | —               |
+| react-ui           | `Main.Root`            | Yes      | No                  | —               |
+| react-ui           | `Menu.Root`            | Yes      | No                  | —               |
+| react-ui           | `Popover.Root`         | Yes      | No                  | —               |
+| react-ui           | `Select.Root`          | Yes      | No                  | —               |
+| react-ui           | `Tooltip.Root`         | Yes      | No                  | —               |
+| react-ui           | `Input`                | No       | No                  | —               |
+| react-ui           | `List.ListItem.Root`   | No       | No                  | —               |
+| react-ui           | `Message.Root`         | No       | No (asChild inline) | —               |
+| react-ui           | `ScrollContainer.Root` | No       | No                  | —               |
+| react-ui           | `Toast.Root`           | No       | No                  | —               |
+| react-ui           | `Toolbar.Root`         | No       | No (TODO)           | —               |
+|                    |                        |          |                     |                 |
+| react-ui-attention | `AttendableContainer`  | No       | No (asChild inline) | —               |
+|                    |                        |          |                     |                 |
+| react-ui-editor    | `Editor.Root`          | Yes      | No                  | —               |
+|                    |                        |          |                     |                 |
+| react-ui-form      | `ObjectPicker.Root`    | Yes      | No                  | —               |
+|                    |                        |          |                     |                 |
+| react-ui-list      | `List.Root`            | Yes      | No                  | —               |
+| react-ui-list      | `Accordion.Root`       | Yes      | No                  | —               |
+| react-ui-list      | `Tree.Root`            | Yes      | No                  | —               |
+|                    |                        |          |                     |                 |
+| react-ui-menu      | `Menu.Root`            | Yes      | No                  | —               |
+| react-ui-menu      | `DropdownMenu.Root`    | Yes      | No                  | —               |
+|                    |                        |          |                     |                 |
+| react-ui-mosaic    | `Mosaic.Root`          | No       | No (asChild inline) | —               |
+| react-ui-mosaic    | `Board.Root`           | No       | No                  | —               |
+|                    |                        |          |                     |                 |
+| react-ui-search    | `SearchList.Root`      | Yes      | No                  | —               |
+|                    |                        |          |                     |                 |
+| react-ui-stack     | `StackItem.Root`       | No       | No                  | —               |
+|                    |                        |          |                     |                 |
+| react-ui-table     | `Table.Root`           | No       | —                   | Yes             |
+|                    |                        |          |                     |                 |
+| react-ui-tabs      | `Tabs.Root`            | No       | No                  | —               |
+|                    |                        |          |                     |                 |
+| react-ui-thread    | `Thread.Root`          | No       | No                  | —               |
+| react-ui-thread    | `Message.Root`         | No       | No                  | —               |
