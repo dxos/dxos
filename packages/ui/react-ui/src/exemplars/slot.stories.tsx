@@ -20,25 +20,23 @@ import { ThemedClassName } from '../util';
  * https://www.radix-ui.com/primitives/docs/guides/composition
  */
 
-const Outer = slottable<HTMLDivElement, { priority?: number }>(
-  ({ children, asChild, priority, ...props }, forwardedRef) => {
-    const Comp = asChild ? Slot : Primitive.div;
-    return (
-      <Comp
-        {...composableProps<HTMLDivElement>(props, { role: 'none', className: 'border border-red-500' })}
-        ref={forwardedRef}
-      >
-        {children}
-      </Comp>
-    );
-  },
-);
+const Outer = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const Comp = asChild ? Slot : Primitive.div;
+  return (
+    <Comp
+      {...composableProps<HTMLDivElement>(props, { role: 'none', className: 'p-2 border border-red-500 rounded' })}
+      ref={forwardedRef}
+    >
+      {children}
+    </Comp>
+  );
+});
 
 const Middle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : Primitive.div;
   return (
     <Comp
-      {...composableProps<HTMLDivElement>(props, { role: 'none', className: 'border border-red-500' })}
+      {...composableProps<HTMLDivElement>(props, { role: 'none', className: 'p-2 border border-red-500 rounded' })}
       ref={forwardedRef}
     >
       {children}
@@ -49,7 +47,7 @@ const Middle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwa
 const Leaf = composable<HTMLButtonElement>(({ children, ...props }, forwardedRef) => {
   return (
     <button
-      {...composableProps<HTMLButtonElement>(props, { role: 'none', className: 'border border-red-500' })}
+      {...composableProps<HTMLButtonElement>(props, { role: 'none', className: 'p-2 border border-red-500 rounded' })}
       ref={forwardedRef}
     >
       {children}
@@ -78,7 +76,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Single: Story = {
   render: () => (
-    <Outer asChild role='ac' classNames='p-2 border border-green-500 rounded' priority={1}>
+    <Outer asChild role='article' classNames='border-green-500' priority={1}>
       <Leaf>Single asChild (non-compliant — see console)</Leaf>
     </Outer>
   ),
@@ -86,7 +84,7 @@ export const Single: Story = {
 
 export const Nested: Story = {
   render: () => (
-    <Outer asChild role='none' classNames='p-2 border border-blue-500 rounded'>
+    <Outer asChild role='article' classNames='border-blue-500'>
       <Middle asChild>
         <Leaf>Nested asChild</Leaf>
       </Middle>
@@ -96,7 +94,7 @@ export const Nested: Story = {
 
 export const Inner: Story = {
   render: () => (
-    <Outer asChild role='none' classNames='p-2 border border-orange-500 rounded'>
+    <Outer asChild role='article' classNames='border-orange-500'>
       <Middle asChild>
         <Leaf>
           <div role='none'>Leaf</div>
