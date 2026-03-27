@@ -114,7 +114,7 @@ type ColumnContentProps = SlottableProps;
  * Non-scrolling children default to the center column (between gutters).
  * ScrollArea children span all 3 columns via `[.dx-column_&]:col-span-full`.
  */
-const ColumnContent = slottable<HTMLDivElement>(({ children, asChild, role, ...props }, forwardedRef) => {
+const ColumnContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { className, ...rest } = composableProps(props, { role: 'none' });
   const Comp = asChild ? Slot : Primitive.div;

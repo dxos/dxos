@@ -25,17 +25,8 @@ export type SyntaxHighlighterProps = NaturalSyntaxHighlighterProps & {
  */
 // TODO(burdon): Replace with react-ui-editor (and reuse styles).
 export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterProps>(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   (
-    {
-      children,
-      language = 'text',
-      fallback = zeroWidthSpace,
-      classNames,
-      className,
-      style: _htmlStyle,
-      ...nativeProps
-    },
+    { children, language = 'text', fallback = zeroWidthSpace, classNames, className, style, ...nativeProps },
     forwardedRef,
   ) => {
     const { themeMode } = useThemeContext();
@@ -46,7 +37,7 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
           <div role='none'>
             <NativeSyntaxHighlighter
               language={languages[language as keyof typeof languages] || language}
-              style={themeMode === 'dark' ? dark : light}
+              style={(style as { [key: string]: React.CSSProperties }) ?? (themeMode === 'dark' ? dark : light)}
               customStyle={{
                 background: 'unset',
                 border: 'none',

@@ -3,7 +3,7 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, { type ReactElement, type Ref as ReactRef, forwardRef, useEffect, useMemo, useRef } from 'react';
+import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Card, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -46,18 +46,6 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
       [column, data, model.onItemDelete, t],
     );
 
-    // Focus the card root on click.
-    useEffect(() => {
-      const el = rootRef.current;
-      if (!el) {
-        return;
-      }
-
-      const handleClick = () => el.focus();
-      el.addEventListener('click', handleClick);
-      return () => el.removeEventListener('click', handleClick);
-    }, []);
-
     if (!data) {
       return null;
     }
@@ -77,7 +65,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
           debug={debug}
         >
           <Focus.Group asChild>
-            <Card.Root classNames={classNames} ref={composedRef}>
+            <Card.Root classNames={classNames} ref={composedRef} onClick={(event) => event.currentTarget.focus()}>
               <Card.Toolbar>
                 <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
                 <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>

@@ -7,7 +7,7 @@ import { Slot } from '@radix-ui/react-slot';
 import React, { type PropsWithChildren, createContext, forwardRef, useContext } from 'react';
 
 import { composable, composableProps, iconSize, mx, slottable } from '@dxos/ui-theme';
-import { type Density } from '@dxos/ui-types';
+import { type Density, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { Column } from '../../primitives';
@@ -39,7 +39,7 @@ const CardContext = createContext<CardContextValue>({});
 // Root
 //
 
-type CardRootProps = {
+type CardRootOwnProps = {
   id?: string;
   border?: boolean;
   fullWidth?: boolean;
@@ -50,7 +50,9 @@ type CardRootProps = {
   'data-selected'?: boolean;
 };
 
-const CardRoot = slottable<HTMLDivElement, CardRootProps>(
+type CardRootProps = SlottableProps<CardRootOwnProps>;
+
+const CardRoot = slottable<HTMLDivElement, CardRootOwnProps>(
   ({ children, id, asChild, role, border = true, fullWidth, density, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
@@ -165,7 +167,7 @@ const CardIconBlock = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildr
 // Title
 //
 
-const CardTitle = slottable<HTMLDivElement>(({ children, asChild, role, ...props }, forwardedRef) => {
+const CardTitle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { className, ...rest } = composableProps(props, { role: 'heading' });
   const Comp = asChild ? Slot : Primitive.div;
@@ -181,7 +183,7 @@ const CardTitle = slottable<HTMLDivElement>(({ children, asChild, role, ...props
 // Content
 //
 
-const CardContent = slottable<HTMLDivElement>(({ children, asChild, role, ...props }, forwardedRef) => {
+const CardContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props, { role: 'none' });
   const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
@@ -197,9 +199,9 @@ const CardContent = slottable<HTMLDivElement>(({ children, asChild, role, ...pro
 // Row
 //
 
-type CardRowProps = { role?: string; icon?: string; fullWidth?: boolean };
+type CardRowProps = { icon?: string; fullWidth?: boolean };
 
-const CardRow = composable<HTMLDivElement, CardRowProps>(({ children, role, icon, ...props }, forwardedRef) => {
+const CardRow = composable<HTMLDivElement, CardRowProps>(({ children, icon, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props, { role: 'none' });
   const { tx } = useThemeContext();
 

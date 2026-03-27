@@ -8,6 +8,7 @@ import { Slot } from '@radix-ui/react-slot';
 import React from 'react';
 
 import { composableProps, slottable } from '@dxos/ui-theme';
+import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 
@@ -35,9 +36,11 @@ const [SplitterProvider, useSplitterContext] = createSplitterContext<SplitterCon
 
 const ROOT_NAME = 'Splitter.Root';
 
-type RootProps = Partial<SplitterContextValue>;
+type RootOwnProps = Partial<SplitterContextValue>;
 
-const Root = slottable<HTMLDivElement, RootProps>(
+type RootProps = SlottableProps<RootOwnProps>;
+
+const Root = slottable<HTMLDivElement, RootOwnProps>(
   (
     {
       asChild,
@@ -73,11 +76,13 @@ Root.displayName = ROOT_NAME;
 
 const PANEL_NAME = 'Splitter.Panel';
 
-type PanelProps = {
+type PanelOwnProps = {
   position: 'upper' | 'lower';
 };
 
-const Panel = slottable<HTMLDivElement, PanelProps>(
+type PanelProps = SlottableProps<PanelOwnProps>;
+
+const Panel = slottable<HTMLDivElement, PanelOwnProps>(
   ({ asChild, children, position, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { __scopeSplitter, ...rest } = props as ScopedProps<typeof props>;
