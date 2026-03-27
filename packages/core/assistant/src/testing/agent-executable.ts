@@ -5,32 +5,34 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { AiService, GenericToolkit } from '@dxos/ai';
+import { AiService, GenericToolkit, type ModelName } from '@dxos/ai';
+import { Feed } from '@dxos/echo';
 import { QueueService, TracingService } from '@dxos/functions';
 import { Process, ProcessOperationInvoker, StorageService } from '@dxos/functions-runtime';
 import { Operation, OperationRegistry } from '@dxos/operation';
-import { Feed } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
+import { raise, todo } from '@dxos/debug';
+import { trim } from '@dxos/util';
+import * as Tool from '@effect/ai/Tool';
+import * as Toolkit from '@effect/ai/Toolkit';
+import * as Cause from 'effect/Cause';
+import * as Duration from 'effect/Duration';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
+import { AiConversation, type ContextBinding } from '../conversation';
 import {
   functionInvocationServiceFromOperations,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '../functions';
-import { AiConversation, type ContextBinding } from '../conversation';
-import * as Option from 'effect/Option';
-import * as Duration from 'effect/Duration';
-import * as Toolkit from '@effect/ai/Toolkit';
-import * as Tool from '@effect/ai/Tool';
-import { trim } from '@dxos/util';
-import { todo } from '@dxos/debug';
-import * as Exit from 'effect/Exit';
-import * as Cause from 'effect/Cause';
 
 interface AgentExecutableOptions {
   feed: Feed.Feed;
+  systemPrompt?: string;
+  model?: ModelName;
 }
 
 /**
@@ -55,7 +57,9 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
     },
     (ctx) =>
       Effect.gen(function* () {
-        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(Feed.getQueueDxn(options.feed)!);
+        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(
+          Feed.getQueueDxn(options.feed) ?? raise(new Error('Invalid feed; has it been saved to database?')),
+        );
         const conversation = new AiConversation({ queue });
 
         return {
@@ -66,6 +70,7 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
                 .createRequest({
                   prompt,
                   toolkit: AsynchronousExectionToolkit,
+                  system: options.systemPrompt,
                 })
                 .pipe(Effect.orDie);
             }).pipe(
@@ -73,7 +78,7 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
                 Layer.mergeAll(
                   toolServices,
                   AsynchronousExectionToolkitLayer,
-                  AiService.model('@anthropic/claude-opus-4-6'),
+                  AiService.model(options.model ?? '@anthropic/claude-opus-4-6'),
                 ).pipe(Layer.orDie),
               ),
             ),

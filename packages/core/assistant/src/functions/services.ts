@@ -199,7 +199,7 @@ export const makeToolExecutionServiceFromOperationInvoker = (): Layer.Layer<
           Effect.gen(function* () {
             const operationDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
 
-            return yield* operationInvoker.invoke(operationDef, input);
+            return yield* operationInvoker.invoke(operationDef, input).pipe(Effect.orDie);
           }),
       });
     }),
@@ -219,7 +219,7 @@ export const functionInvocationServiceFromOperations: Layer.Layer<
     const operationRegistry = yield* OperationRegistry.Service;
     const operationInvoker = yield* Operation.Service;
     return {
-      invokeFunction: (operationDef, input) => operationInvoker.invoke(operationDef, input),
+      invokeFunction: (operationDef, input) => operationInvoker.invoke(operationDef, input).pipe(Effect.orDie),
       resolveFunction: (key) =>
         operationRegistry.resolve(key).pipe(
           Effect.flatten,

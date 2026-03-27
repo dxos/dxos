@@ -49,6 +49,7 @@ export interface Handle<I, O> {
   /**
    * Runs the process until it goes into a SUSPENDED, TERMINATED, FAILED, or COMPLETED state.
    * I.e. it has completed all work with the currently submitted inputs.
+   * If the process fails, this effect will throw a defect.
    */
   runToCompletion(): Effect.Effect<void>;
 }
@@ -199,7 +200,21 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
       const deferred = yield* Deferred.make<void>();
       const unsubscribe = this.#registry.subscribe(
         this.statusAtom,
-        () => Effect.runSync(Deferred.succeed(deferred, undefined)),
+        (state) => {
+          switch (state.state) {
+            case Process.State.COMPLETED:
+            case Process.State.TERMINATED:
+            case Process.State.SUSPENDED:
+              return Effect.runSync(Deferred.succeed(deferred, undefined));
+            case Process.State.FAILED:
+              const error = state.exit.pipe(
+                Option.flatMap(Exit.causeOption),
+                Option.map(Cause.pretty),
+                Option.getOrElse(() => 'Process failed with unknown error'),
+              );
+              return Effect.runSync(Deferred.die(deferred, error));
+          }
+        },
         { immediate: true },
       );
       yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
@@ -390,11 +405,8 @@ export class ProcessManagerImpl implements Manager {
           handlerSet: this.#handlerSet,
           parentProcessId: id,
         });
-        builtinCtx = Context.add(builtinCtx, Operation.Service, {
-          invoke: childInvoker.invoke,
-          schedule: childInvoker.schedule,
-          invokePromise: childInvoker.invokePromise,
-        });
+        builtinCtx = Context.add(builtinCtx, Operation.Service, childInvoker);
+        builtinCtx = Context.add(builtinCtx, ProcessOperationInvoker.Service, childInvoker);
       }
 
       const builtinTagKeys = new Set([
@@ -402,6 +414,7 @@ export class ProcessManagerImpl implements Manager {
         Scope.Scope.key,
         TracingService.key,
         Operation.Service.key,
+        ProcessOperationInvoker.Service.key,
       ]);
       const externalServices = executable.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
 

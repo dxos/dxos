@@ -21,9 +21,10 @@ import { Database, Feed } from '@dxos/echo';
 import { AiService, GenericToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
-import { Process, ProcessManagerImpl, ProcessManagerLayer, ServiceResolver } from '@dxos/functions-runtime';
+import { Process, ProcessManager, ServiceResolver } from '@dxos/functions-runtime';
 import { Organization, type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
+import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
 import { makeAgentExecutable } from './agent-executable';
 import { AssistantTestLayer } from './layer';
@@ -102,18 +103,20 @@ const TestToolkitLayer = TestToolkit.toLayer({
 //
 
 const TestLayer = TestToolkitLayer.pipe(
-  Layer.provideMerge(ProcessManagerLayer),
+  Layer.provideMerge(ProcessManager.layer),
   Layer.provideMerge(
     ServiceResolver.layerRequirements(
       Database.Service,
       GenericToolkit.GenericToolkitProvider,
       QueueService,
       AiService.AiService,
+      OperationRegistry.Service,
     ),
   ),
+  Layer.provideMerge(OperationRegistry.layer),
   Layer.provideMerge(
     AssistantTestLayer({
-      types: [Organization.Organization],
+      types: [Organization.Organization, Feed.Feed],
       tracing: 'pretty',
       aiServicePreset: 'edge-remote',
     }),
@@ -135,15 +138,18 @@ describe('Agent Executable', () => {
     'runs AI agent with background tools via process manager',
     Effect.fnUntraced(
       function* (_) {
-        const manager = yield* Process.ManagerService;
+        const manager = yield* ProcessManager.ProcessManagerService;
 
         const handle = yield* manager.spawn(
           makeAgentExecutable({
-            feed: Feed.make(),
+            feed: yield* Database.add(Feed.make()),
+            systemPrompt: SYSTEM_PROMPT,
           }),
         );
-
-        const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
+        for (const org of TEST_DATA.organizations) {
+          yield* handle.submitInput(JSON.stringify(org));
+        }
+        yield* handle.runToCompletion();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

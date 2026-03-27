@@ -223,9 +223,13 @@ export class AiConversationService extends Context.Tag('@dxos/assistant/AiConver
   /**
    * Run a prompt in the current conversation.
    */
-  static run = (
-    params: AiConversationRunProps,
-  ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements | AiConversationService> =>
+  static run = <Tools extends Record<string, Tool.Any>>(
+    params: AiConversationRunProps<Tools>,
+  ): Effect.Effect<
+    Message.Message[],
+    AiSessionRunError,
+    AiSessionRunRequirements | Tool.HandlersFor<Tools> | AiConversationService
+  > =>
     Effect.gen(function* () {
       const conversation = yield* AiConversationService;
       return yield* conversation.createRequest(params);
