@@ -21,7 +21,7 @@ import type * as Types from 'effect/Types';
 
 import type { ObjectId } from '@dxos/keys';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
-
+import type { TracingService } from '@dxos/protocols/proto/dxos/tracing';
 
 //
 // Process.
@@ -29,16 +29,15 @@ import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 /**
  * A running process.
- * 
+ *
  * Process lifecycle: Initial -> Running <-> Suspended -> Terminated.
- * 
+ *
  * - init -> called once when the process is spawned.
  * - handleInput -> called for every input submitted to the process.
  * - alarm -> called for processes scheduling alarms.
  * - childEvent -> called when child process produces output or exits.
  */
-export interface Process<I, O> {
-
+export interface Process<I, O, R> {
   /**
    * Called when the process is spawned.
    * Not called for processes that are resumed from a previously suspended state.
@@ -48,7 +47,7 @@ export interface Process<I, O> {
    *
    * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
-  init(): Effect.Effect<void>;
+  init(): Effect.Effect<void, never, R | BaseServices>;
 
   /**
    * Called when there's input available to process.
@@ -60,30 +59,37 @@ export interface Process<I, O> {
    *
    * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
-  handleInput(input: I): Effect.Effect<void>;
+  handleInput(input: I): Effect.Effect<void, never, R | BaseServices>;
 
   /**
    * Called when the process's alarm is triggered.
    *
    * @throws Throwing in the handler will terminate the process with an error.
    */
-  alarm(): Effect.Effect<void>;
+  alarm(): Effect.Effect<void, never, R | BaseServices>;
 
   /**
    * Called when the process's child process produces output or exits.
-   * 
+   *
    * This allows the parent process to hibernate while a long-running child process is running.
    */
-  childEvent(event: ChildEvent<unknown>): Effect.Effect<void>;
+  childEvent(event: ChildEvent<unknown>): Effect.Effect<void, never, R | BaseServices>;
 }
 
-export type ChildEvent<T> = {
-  readonly _tag: 'output';
-  readonly data: T;
-} | {
-  readonly _tag: 'exited';
-  readonly result: Exit.Exit<void>;
-}
+/**
+ * Services that are always available to all processes.
+ */
+export type BaseServices = TracingService;
+
+export type ChildEvent<T> =
+  | {
+      readonly _tag: 'output';
+      readonly data: T;
+    }
+  | {
+      readonly _tag: 'exited';
+      readonly result: Exit.Exit<void>;
+    };
 
 export interface ProcessContext<I, O> {
   readonly id: ID;
@@ -107,12 +113,11 @@ export interface ProcessContext<I, O> {
 
   /**
    * Set an alarm for the process to be woken up later.
-   * 
+   *
    * @param timeout - Optional timeout in milliseconds. If not provided, the process is woken up as soon as possible.
    */
   setAlarm(timeout?: number): void;
 }
-
 
 //
 // Executable.
@@ -121,17 +126,17 @@ export interface ProcessContext<I, O> {
 export const ExecutableTypeId = '~@dxos/functions-runtime/Executable' as const;
 export type ExecutableTypeId = typeof ExecutableTypeId;
 
-
 export interface Executable<I, O, R> extends Executable.Variance<I, O, R> {
   readonly services: readonly Context.Tag<any, any>[];
 
   /**
    * Create new process of this executable.
    */
-  run(ctx: ProcessContext<I, O>): Effect.Effect<Process<I, O>, never, Scope.Scope | R>;
+  run(ctx: ProcessContext<I, O>): Effect.Effect<Process<I, O, R>, never, R | BaseServices | Scope.Scope>;
 }
 
-export const isExecutable = (executable: unknown): executable is Executable.Any => typeof executable === 'object' && executable !== null && ExecutableTypeId in executable;
+export const isExecutable = (executable: unknown): executable is Executable.Any =>
+  typeof executable === 'object' && executable !== null && ExecutableTypeId in executable;
 
 export namespace Executable {
   export interface Variance<I, O, R> {
@@ -153,8 +158,22 @@ export interface MakeExecutableOpts {
 
 export const makeExecutable = <const Opts extends Types.NoExcessProperties<MakeExecutableOpts, Opts>>(
   opts: Opts,
-  run: (ctx: ProcessContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>) => Effect.Effect<Process<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>, never, Scope.Scope | Context.Tag.Identifier<NonNullable<Opts['services']>[number]>>,
-): Executable<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>, Context.Tag.Identifier<NonNullable<Opts['services']>[number]>> => {
+  run: (
+    ctx: ProcessContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
+  ) => Effect.Effect<
+    Process<
+      Schema.Schema.Type<Opts['input']>,
+      Schema.Schema.Type<Opts['output']>,
+      Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
+    >,
+    never,
+    Context.Tag.Identifier<NonNullable<Opts['services']>[number]> | BaseServices | Scope.Scope
+  >,
+): Executable<
+  Schema.Schema.Type<Opts['input']>,
+  Schema.Schema.Type<Opts['output']>,
+  Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
+> => {
   return {
     [ExecutableTypeId]: {} as any,
     ...opts,
@@ -174,20 +193,16 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
     },
     (ctx) =>
       Effect.gen(function* () {
-        const runtime = yield* Effect.runtime<Operation.Definition.Services<Op>>();
-
         return {
           init: () => Effect.void,
           handleInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
               const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
-              const output = yield* opHandler
-                .handler(input)
-                .pipe(Effect.orDie, Effect.provide(runtime)) as Effect.Effect<
-                  Operation.Definition.Output<Op>,
-                  never,
-                  never
-                >;
+              const output = yield* opHandler.handler(input).pipe(Effect.orDie) as Effect.Effect<
+                Operation.Definition.Output<Op>,
+                never,
+                never
+              >;
 
               ctx.submitOutput(output);
               ctx.exit();
@@ -198,7 +213,6 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
         };
       }),
   );
-
 
 export enum State {
   RUNNING = 'running',
@@ -221,7 +235,7 @@ export const ID = Schema.UUID.pipe(Schema.brand('ProcessId'));
 export type ID = Schema.Schema.Type<typeof ID>;
 
 export interface Handle<I, O> {
-  readonly id: ID;
+  readonly pid: ID;
   readonly parentId: Option.Option<ID>;
 
   submitInput(input: I): Effect.Effect<void>;
@@ -284,8 +298,4 @@ export interface Manager {
 /**
  * Tag for the ProcessManager service.
  */
-export class ManagerService extends Context.Tag('@dxos/functions-runtime/ManagerService')<
-  ManagerService,
-  Manager
->() {
-}
+export class ManagerService extends Context.Tag('@dxos/functions-runtime/ManagerService')<ManagerService, Manager>() {}

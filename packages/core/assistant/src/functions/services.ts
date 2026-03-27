@@ -15,9 +15,10 @@ import { AiToolNotFoundError, ToolExecutionService, ToolResolverService } from '
 import { GenericToolkit } from '@dxos/ai';
 import { todo } from '@dxos/debug';
 import { Ref } from '@dxos/echo';
-import { FunctionInvocationService } from '@dxos/functions';
+import { FunctionInvocationService, FunctionNotFoundError } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationRegistry } from '@dxos/operation';
+import * as Option from 'effect/Option';
 
 import { RefFromLLM } from '../types';
 
@@ -30,6 +31,8 @@ import { RefFromLLM } from '../types';
  * If none of the above yield a match, the effect fails with `AiToolNotFoundError`.
  *
  * Requires `Database.Service` in the environment.
+ *
+ * @deprecated Moving to operation-based services.
  */
 export const makeToolResolverFromFunctions = (): Layer.Layer<
   ToolResolverService,
@@ -61,6 +64,9 @@ export const makeToolResolverFromFunctions = (): Layer.Layer<
   );
 };
 
+/**
+ * @deprecated Moving to operation-based services.
+ */
 export const makeToolExecutionServiceFromFunctions = (): Layer.Layer<
   ToolExecutionService,
   never,
@@ -90,7 +96,7 @@ export const makeToolExecutionServiceFromFunctions = (): Layer.Layer<
                 return result;
               }
 
-              const { definition: functionDef } = Context.get(FunctionToolAnnotation)(tool.annotations as any);
+              const functionDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
 
               return yield* functionInvocationService
                 .invokeFunction(functionDef, input as any)
@@ -107,6 +113,122 @@ export const makeToolExecutionServiceFromFunctions = (): Layer.Layer<
   );
 };
 
+export const makeToolResolverFromOperations = (): Layer.Layer<
+  ToolResolverService,
+  never,
+  GenericToolkit.Provider | OperationRegistry.Service
+> => {
+  return Layer.effect(
+    ToolResolverService,
+    Effect.gen(function* () {
+      const toolkitProvider = yield* GenericToolkit.Provider;
+      const operationRegistry = yield* OperationRegistry.Service;
+      return {
+        resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
+          Effect.gen(function* () {
+            const toolkit = toolkitProvider.getToolkit();
+
+            const tool = toolkit.toolkit.tools[id];
+            if (tool) {
+              return tool;
+            }
+
+            return yield* operationRegistry.resolve(id).pipe(
+              Effect.flatMap(
+                Option.match({
+                  onSome: (_) => Effect.succeed(projectFunctionToTool(_)),
+                  onNone: () => Effect.fail(new AiToolNotFoundError(id)),
+                }),
+              ),
+            );
+          }),
+      } satisfies Context.Tag.Service<ToolResolverService>;
+    }),
+  );
+};
+
+export const makeToolExecutionService = <E, R>(opts: {
+  invoke: (tool: Tool.Any, input: unknown) => Effect.Effect<unknown>;
+}): Layer.Layer<ToolExecutionService, never, GenericToolkit.Provider> =>
+  Layer.effect(
+    ToolExecutionService,
+    Effect.gen(function* () {
+      const toolkitProvider = yield* GenericToolkit.Provider;
+      const toolkit = toolkitProvider.getToolkit();
+
+      const toolkitHandler = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
+      invariant(isHandlerLike(toolkitHandler));
+
+      return {
+        handlersFor: (toolkit) => {
+          const makeHandler = (tool: Tool.Any): ((params: unknown) => Effect.Effect<unknown, any, any>) => {
+            return Effect.fn(`toolFunctionHandler ${tool.name}`)(function* (input: any) {
+              if (toolkitHandler.tools[tool.name]) {
+                if (Tool.isProviderDefined(tool)) {
+                  throw new Error('Attempted to call a provider-defined tool');
+                }
+
+                // TODO(wittjosiah): Everything is `never` here.
+                const { result } = yield* (toolkitHandler.handle as any)(tool.name, input);
+                return result;
+              }
+
+              return yield* opts.invoke(tool, input).pipe(Effect.catchAllDefect((defect) => Effect.fail(defect)));
+            });
+          };
+
+          return toolkit.of(
+            Record.map(toolkit.tools, (tool, _name) => (Tool.isUserDefined(tool) ? makeHandler(tool) : null)) as any,
+          ) as any;
+        },
+      };
+    }),
+  );
+
+export const makeToolExecutionServiceFromOperationInvoker = (): Layer.Layer<
+  ToolExecutionService,
+  never,
+  Operation.Service | GenericToolkit.Provider
+> => {
+  return Layer.unwrapEffect(
+    Effect.gen(function* () {
+      const operationInvoker = yield* Operation.Service;
+
+      return makeToolExecutionService({
+        invoke: (tool, input) =>
+          Effect.gen(function* () {
+            const operationDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
+
+            return yield* operationInvoker.invoke(operationDef, input);
+          }),
+      });
+    }),
+  );
+};
+
+/**
+ * @deprecated Bridge beetwen deprecated function invocataion service and operation services until we remove function invocation service.
+ */
+export const functionInvocationServiceFromOperations: Layer.Layer<
+  FunctionInvocationService,
+  never,
+  OperationRegistry.Service | Operation.Service
+> = Layer.effect(
+  FunctionInvocationService,
+  Effect.gen(function* () {
+    const operationRegistry = yield* OperationRegistry.Service;
+    const operationInvoker = yield* Operation.Service;
+    return {
+      invokeFunction: (operationDef, input) => operationInvoker.invoke(operationDef, input),
+      resolveFunction: (key) =>
+        operationRegistry.resolve(key).pipe(
+          Effect.flatten,
+          Effect.catchTag('NoSuchElementException', () => Effect.fail(new FunctionNotFoundError(key))),
+        ),
+    } satisfies Context.Tag.Service<FunctionInvocationService>;
+  }),
+);
+
 export const ToolExecutionServices = Layer.mergeAll(
   makeToolResolverFromFunctions(),
   makeToolExecutionServiceFromFunctions(),
@@ -116,6 +238,10 @@ class FunctionToolAnnotation extends Context.Tag('@dxos/assistant/FunctionToolAn
   FunctionToolAnnotation,
   { definition: Operation.Definition.Any }
 >() {}
+
+export const getOperationFromTool = (tool: Tool.Any): Option.Option<Operation.Definition.Any> => {
+  return Context.getOption(FunctionToolAnnotation)(tool.annotations).pipe(Option.map(({ definition }) => definition));
+};
 
 const toolCache = new WeakMap<Operation.Definition.Any, Tool.Any>();
 

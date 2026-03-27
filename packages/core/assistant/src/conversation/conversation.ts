@@ -36,10 +36,11 @@ import {
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
-export interface AiConversationRunProps {
+export interface AiConversationRunProps<Tools extends Record<string, Tool.Any>> {
   prompt: string;
   system?: string;
   observer?: GenerationObserver;
+  toolkit?: Toolkit.Toolkit<Tools>;
 }
 
 export type AiConversationOptions = {
@@ -106,9 +107,9 @@ export class AiConversation extends Resource {
   /**
    * Creates a new cancelable request effect.
    */
-  public createRequest(
-    params: AiConversationRunProps,
-  ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
+  public createRequest<Tools extends Record<string, Tool.Any> = {}>(
+    params: AiConversationRunProps<Tools>,
+  ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements | Tool.HandlersFor<Tools>> {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
       const blueprints = this.context.getBlueprints();
@@ -149,7 +150,7 @@ export class AiConversation extends Resource {
           objects: this.context.getObjects(),
         }).pipe(Effect.orDie);
 
-        const { done } = yield* session.runTurn({
+        const { done } = yield* session.runAgentTurn({
           system,
           toolkit,
         });
@@ -157,6 +158,8 @@ export class AiConversation extends Resource {
         if (done) {
           break;
         }
+
+        yield* session.runTools({ toolkit });
       } while (true);
 
       log('result', {

@@ -274,7 +274,7 @@ describe('ProcessManagerImpl', () => {
       );
 
       const handle = yield* manager.spawn(executable);
-      expect(handle.id).toBeDefined();
+      expect(handle.pid).toBeDefined();
 
       const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
 
@@ -324,8 +324,8 @@ describe('ProcessManagerImpl', () => {
 
       const handles = yield* manager.list();
       expect(handles).toHaveLength(2);
-      expect(handles.map((handle) => handle.id)).toContain(handle1.id);
-      expect(handles.map((handle) => handle.id)).toContain(handle2.id);
+      expect(handles.map((handle) => handle.pid)).toContain(handle1.pid);
+      expect(handles.map((handle) => handle.pid)).toContain(handle2.pid);
     }),
   );
 
@@ -336,8 +336,8 @@ describe('ProcessManagerImpl', () => {
       const executable = makeSimpleExecutable();
 
       const handle = yield* manager.spawn(executable);
-      const attached = yield* manager.attach(handle.id);
-      expect(attached.id).toEqual(handle.id);
+      const attached = yield* manager.attach(handle.pid);
+      expect(attached.pid).toEqual(handle.pid);
 
       const outputFiber = yield* Stream.runCollect(attached.subscribeOutputs()).pipe(Effect.fork);
       yield* attached.submitInput({ value: 7 });
@@ -635,9 +635,7 @@ describe('ProcessManagerImpl', () => {
       'resolves database service for operation executable',
       Effect.fn(function* ({ expect }) {
         const { service: dbService, rows } = makeInMemoryDatabase();
-        const resolver = ServiceResolver.fromContext(
-          Context.make(DatabaseService, dbService),
-        );
+        const resolver = ServiceResolver.fromContext(Context.make(DatabaseService, dbService));
         const { manager } = yield* makeManager({ serviceResolver: resolver });
         const { insertRow } = makeDbOperationExecutables();
 
@@ -657,9 +655,7 @@ describe('ProcessManagerImpl', () => {
         const { service: dbService, rows } = makeInMemoryDatabase();
         rows.push('alice', 'bob', 'alice-2');
 
-        const resolver = ServiceResolver.fromContext(
-          Context.make(DatabaseService, dbService),
-        );
+        const resolver = ServiceResolver.fromContext(Context.make(DatabaseService, dbService));
         const { manager } = yield* makeManager({ serviceResolver: resolver });
         const { queryRows } = makeDbOperationExecutables();
 
@@ -717,9 +713,7 @@ describe('ProcessManagerImpl', () => {
       Effect.fn(function* ({ expect }) {
         const { service: dbService, rows } = makeInMemoryDatabase();
 
-        const dbResolver = ServiceResolver.fromContext(
-          Context.make(DatabaseService, dbService),
-        );
+        const dbResolver = ServiceResolver.fromContext(Context.make(DatabaseService, dbService));
 
         const combined = ServiceResolver.compose(dbResolver);
         const { manager } = yield* makeManager({ serviceResolver: combined });
@@ -795,7 +789,7 @@ describe('ProcessManagerImpl', () => {
         const parentHandle = yield* manager.spawn(executable);
         expect(invocationStarts).toHaveLength(1);
 
-        const childHandle = yield* manager.spawn(executable, { parentProcessId: parentHandle.id });
+        const childHandle = yield* manager.spawn(executable, { parentProcessId: parentHandle.pid });
         expect(invocationStarts).toHaveLength(1);
 
         const outputFiber = yield* Stream.runCollect(childHandle.subscribeOutputs()).pipe(Effect.fork);
@@ -823,11 +817,11 @@ describe('ProcessManagerImpl', () => {
         });
 
         const childHandle = yield* manager.spawn(executable, {
-          parentProcessId: parentHandle.id,
+          parentProcessId: parentHandle.pid,
           tracing: { toolCallId: 'tc-child' },
         });
 
-        const childContext = manager.getTraceContext(childHandle.id);
+        const childContext = manager.getTraceContext(childHandle.pid);
         expect(childContext).toBeDefined();
         expect(childContext!.parentMessage).toEqual(messageId);
         expect(childContext!.toolCallId).toEqual('tc-child');
@@ -856,13 +850,13 @@ describe('ProcessManagerImpl', () => {
         const executable = makeSimpleExecutable();
 
         const handle = yield* manager.spawn(executable);
-        expect(manager.getTraceContext(handle.id)).toBeDefined();
+        expect(manager.getTraceContext(handle.pid)).toBeDefined();
 
         const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
         yield* handle.submitInput({ value: 1 });
         yield* Fiber.join(outputFiber);
 
-        expect(manager.getTraceContext(handle.id)).toBeUndefined();
+        expect(manager.getTraceContext(handle.pid)).toBeUndefined();
       }),
     );
 
@@ -1003,7 +997,7 @@ describe('ProcessManagerImpl', () => {
         const executable = makeSimpleExecutable();
 
         const parentHandle = yield* manager.spawn(executable);
-        const childHandle = yield* manager.spawn(executable, { parentProcessId: parentHandle.id });
+        const childHandle = yield* manager.spawn(executable, { parentProcessId: parentHandle.pid });
 
         const childOutputFiber = yield* Stream.runCollect(childHandle.subscribeOutputs()).pipe(Effect.fork);
         yield* childHandle.submitInput({ value: 3 });

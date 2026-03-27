@@ -14,6 +14,53 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
 
 import * as Process from './Process';
+import * as Exit from 'effect/Exit';
+import * as Option from 'effect/Option';
+import { ProcessNotFoundError } from '../errors';
+import * as Context from 'effect/Context';
+
+export interface OperationFiber<T> {
+  pid: Process.ID;
+  await: Effect.Effect<Exit.Exit<T>>;
+  poll: Effect.Effect<Option.Option<Exit.Exit<T>>>;
+}
+
+export interface ProcessOperationInvoker {
+  /**
+   * Invoke an operation and return a fiber that can be used to await the result.
+   */
+  invokeFiber: <I, O>(
+    op: Operation.Definition<I, O>,
+    input: I,
+    tracingOptions?: Process.TracingOptions,
+  ) => Effect.Effect<OperationFiber<O>>;
+
+  /**
+   * Attach to a running process and return a fiber that can be used to await the result.
+   */
+  attachFiber: <T>(pid: Process.ID) => Effect.Effect<OperationFiber<T>, ProcessNotFoundError>;
+}
+
+export class Service extends Context.Tag('@dxos/functions/ProcessOperationInvoker')<
+  Service,
+  ProcessOperationInvoker
+>() {}
+
+const fiberFromProcess = <T>(handle: Process.Handle<any, T>): Effect.Effect<OperationFiber<T>> =>
+  Effect.gen(function* () {
+    const outputFiber = yield* handle.subscribeOutputs().pipe(
+      Stream.runCollect,
+      Effect.map(Chunk.head),
+      Effect.flatten,
+      Effect.catchTag('NoSuchElementException', () => Effect.dieMessage(`Operation produced no output`)),
+      Effect.fork,
+    );
+    return {
+      pid: handle.pid,
+      await: outputFiber.await,
+      poll: outputFiber.poll,
+    };
+  });
 
 /**
  * Creates an OperationInvoker that executes each operation by spawning a process via the ProcessManager.
@@ -25,16 +72,16 @@ export const make = (opts: {
   manager: Process.Manager;
   handlerSet: OperationHandlerSet.OperationHandlerSet;
   parentProcessId?: Process.ID;
-}): Operation.OperationService => {
+}): Operation.OperationService & ProcessOperationInvoker => {
   const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
   const pendingCount = Effect.runSync(Ref.make(0));
-  const pendingFibers = new Set<Fiber.RuntimeFiber<any, any>>();
+  const pendingFibers = new Set<Fiber.RuntimeFiber<any>>();
 
-  const invokeCore = <I, O>(
+  const invokeFiber = <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
     tracingOptions?: Process.TracingOptions,
-  ): Effect.Effect<O, Error> =>
+  ): Effect.Effect<OperationFiber<O>> =>
     Effect.gen(function* () {
       const executable = Process.fromOperation(op, opts.handlerSet);
 
@@ -43,30 +90,25 @@ export const make = (opts: {
         tracing: tracingOptions,
       });
 
-      const outputFiber = yield* Stream.runCollect(handle.subscribeOutputs()).pipe(Effect.fork);
       yield* handle.submitInput(input);
-      const outputs = yield* Fiber.join(outputFiber);
-
-      const first = Chunk.head(outputs);
-      if (first._tag === 'None') {
-        const status = yield* handle.status();
-        if (status.state === Process.State.FAILED) {
-          return yield* Effect.fail(new Error(`Operation ${op.meta.key} failed`));
-        }
-        return yield* Effect.fail(new Error(`Operation ${op.meta.key} produced no output`));
-      }
-
-      return first.value;
+      return yield* fiberFromProcess(handle);
     });
 
-  const invoke: OperationInvoker.OperationInvoker['invoke'] = <I, O>(
+  const attachFiber = <T>(pid: Process.ID): Effect.Effect<OperationFiber<T>> =>
+    Effect.gen(function* () {
+      const handle = yield* opts.manager.attach<any, T>(pid);
+      return yield* fiberFromProcess(handle);
+    });
+
+  const invoke: Operation.OperationService['invoke'] = <I, O>(
     op: Operation.Definition<I, O>,
     ...args: any[]
-  ): Effect.Effect<O, Error> => {
+  ): Effect.Effect<O> => {
     const input = args[0] as I;
     const options = args[1] as (Operation.InvokeOptions & { tracing?: Process.TracingOptions }) | undefined;
     return Effect.gen(function* () {
-      const output = yield* invokeCore(op, input, options?.tracing);
+      const fiber = yield* invokeFiber(op, input, options?.tracing);
+      const output = yield* fiber.await.pipe(Effect.flatten);
 
       yield* PubSub.publish(pubsub, {
         operation: op,
@@ -86,7 +128,7 @@ export const make = (opts: {
     const input = args[0] as I;
     return Effect.gen(function* () {
       yield* Ref.update(pendingCount, (count) => count + 1);
-      const fiber = yield* invokeCore(op, input).pipe(
+      const fiber = yield* invokeFiber(op, input).pipe(
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
         Effect.ignore,
         Effect.fork,
@@ -108,30 +150,24 @@ export const make = (opts: {
     }
   };
 
-  const invokeSync: OperationInvoker.OperationInvoker['invokeSync'] = <I, O>(
-    _op: Operation.Definition<I, O>,
-    ..._args: any[]
-  ): { data?: O; error?: Error } => {
-    return { error: new Error('invokeSync is not supported for process-backed operations') };
-  };
-
   return {
     invoke,
     schedule,
     invokePromise,
-    invokeSync,
+    invokeFiber,
+    attachFiber,
   };
 };
 
 export const layer: Layer.Layer<
-  Operation.Service,
+  Operation.Service | Service,
   never,
   Process.ManagerService | OperationHandlerSet.Provider
-> = Layer.effect(
-  Operation.Service,
+> = Layer.unwrapEffect(
   Effect.gen(function* () {
     const manager = yield* Process.ManagerService;
     const handlerSet = yield* OperationHandlerSet.Provider;
-    return make({ manager, handlerSet });
+    const service = make({ manager, handlerSet });
+    return Layer.mergeAll(Layer.succeed(Operation.Service, service), Layer.succeed(Service, service));
   }),
 );

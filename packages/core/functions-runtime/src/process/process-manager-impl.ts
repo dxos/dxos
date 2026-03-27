@@ -28,7 +28,7 @@ import * as StorageService from './StorageService';
  */
 type OutputItem<O> = Option.Option<O>;
 
-class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
+class ProcessHandleImpl<I, O, R> implements Process.Handle<I, O> {
   readonly statusAtom: Atom.Writable<Process.Status>;
   readonly parentId: Option.Option<Process.ID>;
 
@@ -38,8 +38,9 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
   #exitRequested = false;
   #failError: Error | null = null;
   #alarmTimer: ReturnType<typeof setTimeout> | null = null;
+  #services: Context.Context<R | Process.BaseServices>;
 
-  readonly #process: Process.Process<I, O>;
+  readonly #process: Process.Process<I, O, R>;
   readonly #scope: Scope.CloseableScope;
   readonly #registry: Registry.Registry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
@@ -48,10 +49,11 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
   readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
 
   constructor(
-    readonly id: Process.ID,
+    readonly pid: Process.ID,
     parentId: Option.Option<Process.ID>,
-    process: Process.Process<I, O>,
+    process: Process.Process<I, O, R>,
     scope: Scope.CloseableScope,
+    services: Context.Context<R | Process.BaseServices>,
     registry: Registry.Registry,
     outputQueue: Queue.Queue<OutputItem<O>>,
     storage: Context.Tag.Service<typeof StorageService.StorageService>,
@@ -60,6 +62,7 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
     this.parentId = parentId;
     this.#process = process;
     this.#scope = scope;
+    this.#services = services;
     this.#registry = registry;
     this.#outputQueue = outputQueue;
     this.#storage = storage;
@@ -88,10 +91,7 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
   }
 
   subscribeOutputs(): Stream.Stream<O> {
-    return Stream.fromQueue(this.#outputQueue).pipe(
-      Stream.takeWhile(Option.isSome),
-      Stream.map(Option.getOrThrow),
-    );
+    return Stream.fromQueue(this.#outputQueue).pipe(Stream.takeWhile(Option.isSome), Stream.map(Option.getOrThrow));
   }
 
   terminate(): Effect.Effect<void> {
@@ -131,10 +131,11 @@ class ProcessHandleImpl<I, O> implements Process.Handle<I, O> {
     Queue.unsafeOffer(this.#outputQueue, Option.some(output));
   }
 
-  #runHandler(fn: () => Effect.Effect<void>): Effect.Effect<void> {
+  #runHandler(fn: () => Effect.Effect<void, never, R | Process.BaseServices>): Effect.Effect<void> {
     this.#activeHandlers++;
     this.#setStatus(Process.State.RUNNING);
     return fn().pipe(
+      Effect.provide(this.#services),
       Effect.tap(() => this.#handlerCompleted()),
       Effect.catchAllCause((cause) => this.#handleError(cause)),
     );
@@ -216,7 +217,7 @@ export interface ProcessManagerImplOpts {
 }
 
 export class ProcessManagerImpl implements Process.Manager {
-  readonly #handles = new Map<Process.ID, ProcessHandleImpl<any, any>>();
+  readonly #handles = new Map<Process.ID, ProcessHandleImpl<any, any, any>>();
   readonly #traceContexts = new Map<Process.ID, TracingService.TraceContext>();
   readonly #registry: Registry.Registry;
   readonly #kvStore: KeyValueStore.KeyValueStore;
@@ -243,18 +244,24 @@ export class ProcessManagerImpl implements Process.Manager {
 
       const storage = StorageService.StorageService.scoped(this.#kvStore, `process/${id}/`);
 
-      const parentOption = options?.parentProcessId
-        ? Option.some(options.parentProcessId)
-        : Option.none<Process.ID>();
+      const parentOption = options?.parentProcessId ? Option.some(options.parentProcessId) : Option.none<Process.ID>();
 
-      let handleRef: ProcessHandleImpl<I, O> | null = null;
+      let handleRef: ProcessHandleImpl<I, O, any> | null = null;
 
       const ctx: Process.ProcessContext<I, O> = {
         id,
-        exit: () => { handleRef?.requestExit(); },
-        fail: (error: Error) => { handleRef?.requestFail(error); },
-        submitOutput: (output: O) => { handleRef?.requestSubmitOutput(output); },
-        setAlarm: (timeout?: number) => { handleRef?.requestAlarm(timeout); },
+        exit: () => {
+          handleRef?.requestExit();
+        },
+        fail: (error: Error) => {
+          handleRef?.requestFail(error);
+        },
+        submitOutput: (output: O) => {
+          handleRef?.requestSubmitOutput(output);
+        },
+        setAlarm: (timeout?: number) => {
+          handleRef?.requestAlarm(timeout);
+        },
       };
 
       // Build tracing context for this process.
@@ -286,7 +293,6 @@ export class ProcessManagerImpl implements Process.Manager {
           invoke: childInvoker.invoke,
           schedule: childInvoker.schedule,
           invokePromise: childInvoker.invokePromise,
-          invokeSync: childInvoker.invokeSync,
         });
       }
 
@@ -296,9 +302,7 @@ export class ProcessManagerImpl implements Process.Manager {
         TracingService.key,
         Operation.Service.key,
       ]);
-      const externalServices = executable.services.filter(
-        (tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key),
-      );
+      const externalServices = executable.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
 
       let serviceCtx: Context.Context<never> = Context.empty() as Context.Context<never>;
       if (externalServices.length > 0) {
@@ -307,9 +311,7 @@ export class ProcessManagerImpl implements Process.Manager {
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
 
-      const process = yield* executable.run(ctx).pipe(
-        Effect.provide(fullCtx as Context.Context<any>),
-      );
+      const process = yield* executable.run(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
 
       const isRoot = !options?.parentProcessId;
 
@@ -332,8 +334,16 @@ export class ProcessManagerImpl implements Process.Manager {
           this.#traceContexts.delete(id);
         });
 
-      const handle = new ProcessHandleImpl<I, O>(
-        id, parentOption, process, scope, this.#registry, outputQueue, storage, onFinished,
+      const handle = new ProcessHandleImpl<I, O, any>(
+        id,
+        parentOption,
+        process,
+        scope,
+        builtinCtx,
+        this.#registry,
+        outputQueue,
+        storage,
+        onFinished,
       );
       handleRef = handle;
       this.#handles.set(id, handle);
@@ -359,10 +369,7 @@ export class ProcessManagerImpl implements Process.Manager {
   /**
    * Build trace context for a process, inheriting from parent if specified.
    */
-  #buildTraceContext(
-    _id: Process.ID,
-    options?: Process.SpawnOptions,
-  ): Effect.Effect<TracingService.TraceContext> {
+  #buildTraceContext(_id: Process.ID, options?: Process.SpawnOptions): Effect.Effect<TracingService.TraceContext> {
     return Effect.sync(() => {
       let baseContext: TracingService.TraceContext = {};
 
@@ -412,10 +419,7 @@ export class ProcessManagerImpl implements Process.Manager {
 export const ProcessManagerLayer: Layer.Layer<
   Process.ManagerService,
   never,
-  | KeyValueStore.KeyValueStore
-  | ServiceResolver.ServiceResolver
-  | TracingService
-  | OperationHandlerSet.Provider
+  KeyValueStore.KeyValueStore | ServiceResolver.ServiceResolver | TracingService | OperationHandlerSet.Provider
 > = Layer.effect(
   Process.ManagerService,
   Effect.gen(function* () {

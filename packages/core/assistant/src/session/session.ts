@@ -9,28 +9,30 @@ import type * as Toolkit from '@effect/ai/Toolkit';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
+import * as Array from 'effect/Array';
 
 import {
   AiParser,
   AiPreprocessor,
   AiSummarizer,
   type AiToolNotFoundError,
+  callTool,
   type PromptPreprocessingError,
   type ToolExecutionService,
   type ToolResolverService,
-  callTool,
   withoutToolCallParising,
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type FunctionInvocationService, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
-import { type ContentBlock, Message } from '@dxos/types';
+import { ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
 
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
+import { pipe } from 'effect/Function';
 
 export type AiSessionRunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
@@ -139,6 +141,14 @@ export class AiSession {
       return message;
     });
 
+  getToolCalls = () =>
+    pipe(
+      [...this._history, ...this._pending],
+      Array.reverse,
+      Array.takeWhile((_) => _.sender.role === 'assistant'),
+      Array.flatMap((_) => _.blocks.filter(ContentBlock.is('toolCall')).map((block) => ({ block, message: _ }))),
+    );
+
   /**
    * Initialize a session: set up history, perform summarization if needed, and submit the user prompt.
    * Must be called before `runTurn()`.
@@ -176,7 +186,7 @@ export class AiSession {
    * Execute a single turn: one LLM generation followed by tool execution.
    * The toolkit and system prompt can be updated between turns to reflect context changes (e.g. dynamically enabled blueprints).
    */
-  runTurn = <Tools extends Record<string, Tool.Any>>({
+  runAgentTurn = <Tools extends Record<string, Tool.Any>>({
     system,
     toolkit,
   }: AiSessionTurnProps<Tools>): Effect.Effect<AiSessionTurnResult, AiSessionRunError, AiSessionRunRequirements> =>
@@ -220,13 +230,7 @@ export class AiSession {
         Effect.map(Chunk.toArray),
       );
 
-      const toolCalls = messages.flatMap((message) =>
-        message.blocks
-          .filter(
-            (block): block is ContentBlock.ToolCall => block._tag === 'toolCall' && block.providerExecuted === false,
-          )
-          .map((block) => ({ block, message })),
-      );
+      const toolCalls = this.getToolCalls();
 
       if (toolCalls.length === 0) {
         this._ended = Date.now();
@@ -235,8 +239,17 @@ export class AiSession {
         throw new Error('No toolkit provided');
       }
 
+      return { messages, done: false };
+    });
+
+  runTools = <Tools extends Record<string, Tool.Any>>({ toolkit }: { toolkit?: Toolkit.WithHandler<Tools> }) =>
+    Effect.gen(this, function* () {
+      const toolCalls = this.getToolCalls();
       // TODO(burdon): Retry errors? Write result when each completes individually?
       const toolResults = yield* Effect.forEach(toolCalls, ({ block, message }) => {
+        if (!toolkit) {
+          throw new Error('No toolkit provided');
+        }
         return callTool(toolkit, block).pipe(
           Effect.provide(
             TracingService.layerSubframe((context) => ({
@@ -258,10 +271,8 @@ export class AiSession {
         }),
       );
 
-      this._toolCalls++;
-      return { messages, done: false };
+      this._toolCalls += toolResults.length;
     });
-
   /**
    * Run a full conversation turn loop. Equivalent to calling `begin()` then `runTurn()` in a loop.
    */
@@ -279,10 +290,11 @@ export class AiSession {
       const system = yield* formatSystemPrompt({ system: systemTemplate, blueprints, objects }).pipe(Effect.orDie);
 
       do {
-        const { done } = yield* this.runTurn({ system, toolkit });
+        const { done } = yield* this.runAgentTurn({ system, toolkit });
         if (done) {
           break;
         }
+        yield* this.runTools({ toolkit });
       } while (true);
 
       log('done', { pending: this._pending.length, duration: this.duration, tools: this._toolCalls });
