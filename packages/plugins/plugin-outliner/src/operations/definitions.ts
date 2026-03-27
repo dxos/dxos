@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
@@ -23,6 +24,7 @@ export const CreateOutline = Operation.make({
 
 export const QuickJournalEntry = Operation.make({
   meta: { key: `${OUTLINER_OPERATION}.quick-entry`, name: 'Quick Journal Entry' },
+  services: [Capability.Service],
   input: Schema.Struct({
     text: Schema.String,
   }),

@@ -8,6 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
+// TODO(wittjosiah): Formalize with a stricter schema if we evolve this protocol.
 type SpotlightInvokePayload = {
   operation: string;
   payload?: Record<string, any>;
@@ -18,7 +19,7 @@ type SpotlightInvokePayload = {
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokeSync } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
 
     const unlisten = yield* Effect.promise(async () => {
       const { listen } = await import('@tauri-apps/api/event');
@@ -30,10 +31,10 @@ export default Capability.makeModule(
         try {
           switch (operation) {
             case 'open':
-              invokeSync(LayoutOperation.Open, payload as any);
+              await invokePromise(LayoutOperation.Open, payload as any);
               break;
             case 'switch-workspace':
-              invokeSync(LayoutOperation.SwitchWorkspace, payload as any);
+              await invokePromise(LayoutOperation.SwitchWorkspace, payload as any);
               break;
             default:
               log.warn('Unknown spotlight operation', { operation });

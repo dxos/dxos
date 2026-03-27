@@ -11,76 +11,82 @@ import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { SpotlightState } from '../types';
 
-/**
- * Dismiss the spotlight panel.
- */
-const dismissSpotlight = async () => {
-  try {
-    const tauriCore = (globalThis as any).__TAURI__?.core;
-    if (tauriCore) {
-      await tauriCore.invoke('hide_spotlight');
-    }
-  } catch (err) {
-    log.catch(err);
-  }
-};
-
-/**
- * Forward an operation to the main window via Tauri event, then dismiss the spotlight.
- */
-const forwardToMainWindow = async (operation: string, payload?: Record<string, any>) => {
-  try {
-    const { emitTo } = await import('@tauri-apps/api/event');
-    await emitTo('main', 'spotlight:invoke', { operation, payload });
-  } catch (err) {
-    log.catch(err);
-  }
-
-  await dismissSpotlight();
-};
-
-// Debounced dismiss: commands dialog calls UpdateDialog({ state: false }) before running
-// the selected action via setTimeout. If the action opens a new dialog (e.g., search),
-// we cancel the pending dismiss so the content can switch instead.
-let dismissTimeout: ReturnType<typeof setTimeout> | undefined;
-
-const scheduleDismiss = () => {
-  dismissTimeout = setTimeout(() => {
-    dismissTimeout = undefined;
-    void dismissSpotlight();
-  }, 100);
-};
-
-const cancelDismiss = () => {
-  if (dismissTimeout !== undefined) {
-    clearTimeout(dismissTimeout);
-    dismissTimeout = undefined;
-  }
-};
+const DISMISS_DEBOUNCE_MS = 100;
 
 export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
-  LayoutOperation.SetLayoutMode.pipe(Operation.withHandler(() => Effect.void)),
-  LayoutOperation.UpdateSidebar.pipe(Operation.withHandler(() => Effect.void)),
-  LayoutOperation.UpdateComplementary.pipe(Operation.withHandler(() => Effect.void)),
-
+  //
+  // UpdateDialog — switch content or schedule dismiss.
+  //
+  // The commands dialog (CommandsDialogContent) always calls UpdateDialog({ state: false })
+  // BEFORE running the selected action via setTimeout. If the action switches the spotlight
+  // to a different dialog (e.g., search or quick entry), it will call UpdateDialog({ subject })
+  // shortly after. Without the debounce, the spotlight would dismiss before the content switch
+  // arrives. The delay gives the action time to fire; if a new subject arrives, the pending
+  // dismiss is cancelled.
+  //
   LayoutOperation.UpdateDialog.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* (input) {
         if (input.subject) {
-          cancelDismiss();
-          yield* Capabilities.updateAtomValue(SpotlightState, (state) => ({
-            ...state,
-            dialogContent: { component: input.subject!, props: input.props },
-          }));
+          // Cancel any pending dismiss and switch content.
+          yield* Capabilities.updateAtomValue(SpotlightState, (state) => {
+            if (state.dismissTimeout !== undefined) {
+              clearTimeout(state.dismissTimeout);
+            }
+            return {
+              ...state,
+              dismissTimeout: undefined,
+              dialogContent: { component: input.subject!, props: input.props },
+            };
+          });
         } else if (input.state === false) {
-          scheduleDismiss();
+          // Schedule dismiss after a short delay.
+          yield* Capabilities.updateAtomValue(SpotlightState, (state) => {
+            if (state.dismissTimeout !== undefined) {
+              clearTimeout(state.dismissTimeout);
+            }
+            return {
+              ...state,
+              dismissTimeout: setTimeout(async () => {
+                const { invoke } = await import('@tauri-apps/api/core');
+                await invoke('hide_spotlight');
+              }, DISMISS_DEBOUNCE_MS),
+            };
+          });
         }
       }),
     ),
   ),
 
-  LayoutOperation.UpdatePopover.pipe(Operation.withHandler(() => Effect.void)),
+  // Open — forward to main window and dismiss.
+  LayoutOperation.Open.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* (input) {
+        yield* Effect.promise(async () => {
+          try {
+            const { emitTo } = await import('@tauri-apps/api/event');
+            await emitTo('main', 'spotlight:invoke', {
+              operation: 'open',
+              payload: {
+                subject: input.subject,
+                state: input.state,
+                variant: input.variant,
+                workspace: input.workspace,
+                scrollIntoView: input.scrollIntoView,
+              },
+            });
+          } catch (err) {
+            log.catch(err);
+          }
 
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('hide_spotlight');
+        });
+      }),
+    ),
+  ),
+
+  // SwitchWorkspace — forward to main window without dismissing.
   LayoutOperation.SwitchWorkspace.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* (input) {
@@ -99,32 +105,24 @@ export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
     ),
   ),
 
-  LayoutOperation.RevertWorkspace.pipe(Operation.withHandler(() => Effect.void)),
-
-  LayoutOperation.Open.pipe(
-    Operation.withHandler(
-      Effect.fnUntraced(function* (input) {
-        yield* Effect.promise(() =>
-          forwardToMainWindow('open', {
-            subject: input.subject,
-            state: input.state,
-            variant: input.variant,
-            workspace: input.workspace,
-            scrollIntoView: input.scrollIntoView,
-          }),
-        );
-      }),
-    ),
-  ),
-
+  // Close — dismiss spotlight.
   LayoutOperation.Close.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* () {
-        yield* Effect.promise(() => dismissSpotlight());
+        yield* Effect.promise(async () => {
+          const { invoke } = await import('@tauri-apps/api/core');
+          await invoke('hide_spotlight');
+        });
       }),
     ),
   ),
 
+  // No-ops.
+  LayoutOperation.SetLayoutMode.pipe(Operation.withHandler(() => Effect.void)),
+  LayoutOperation.UpdateSidebar.pipe(Operation.withHandler(() => Effect.void)),
+  LayoutOperation.UpdateComplementary.pipe(Operation.withHandler(() => Effect.void)),
+  LayoutOperation.UpdatePopover.pipe(Operation.withHandler(() => Effect.void)),
+  LayoutOperation.RevertWorkspace.pipe(Operation.withHandler(() => Effect.void)),
   LayoutOperation.Set.pipe(Operation.withHandler(() => Effect.void)),
   LayoutOperation.ScrollIntoView.pipe(Operation.withHandler(() => Effect.void)),
   LayoutOperation.Expose.pipe(Operation.withHandler(() => Effect.void)),

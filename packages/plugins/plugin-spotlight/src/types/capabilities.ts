@@ -13,6 +13,8 @@ export type SpotlightState = {
   dialogContent?: { component: string; props?: Record<string, any> };
   /** Whether the dialog is currently showing. */
   dialogOpen: boolean;
+  /** Pending dismiss timeout handle. */
+  dismissTimeout?: ReturnType<typeof setTimeout>;
 };
 
 export const SpotlightState = Capability.make<Atom.Writable<SpotlightState>>(`${meta.id}.state`);
