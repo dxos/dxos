@@ -4,16 +4,19 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Chat } from '@dxos/assistant-toolkit';
 import { addEventListener } from '@dxos/async';
+import { type Queue } from '@dxos/echo-db';
 import { ProgressBar, type ProgressBarProps, TextCrawl, useExecutionGraph } from '@dxos/react-ui-components';
 
 export type ChatProgressProps = {
-  chat: Chat.Chat;
+  traceQueue?: Queue;
 };
 
-export const ChatProgress = ({ chat }: ChatProgressProps) => {
-  const { commits } = useExecutionGraph(chat.traceQueue?.target, true);
+/**
+ * Displays execution progress from the space's invocation trace queue.
+ */
+export const ChatProgress = ({ traceQueue }: ChatProgressProps) => {
+  const { commits } = useExecutionGraph(traceQueue, true);
   const nodes = useMemo(() => commits.map((commit) => ({ id: commit.id, message: commit.message })), [commits]);
   const lines = useMemo(() => commits.map((commit) => commit.message), [commits]);
 

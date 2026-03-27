@@ -76,8 +76,8 @@ describe.skip('Migrations', () => {
   });
 
   test('if some migrations have been run before, runs only the remaining migrations', async () => {
-    Obj.change(space.properties, (p) => {
-      p['test.version'] = '1970-01-02';
+    Obj.change(space.properties, (obj) => {
+      obj['test.version'] = '1970-01-02';
     });
     await space.db.graph.schemaRegistry.register([TestSchema.Expando]);
     space.db.add(Obj.make(TestSchema.Expando, { namespace: 'test', count: 5 }));
@@ -90,8 +90,8 @@ describe.skip('Migrations', () => {
   });
 
   test('if all migrations have been run before, does nothing', async () => {
-    Obj.change(space.properties, (p) => {
-      p['test.version'] = '1970-01-03';
+    Obj.change(space.properties, (obj) => {
+      obj['test.version'] = '1970-01-03';
     });
     await Migrations.migrate(space);
     const objects = await space.db.query(Filter.type(TestSchema.Expando, { namespace: 'test' })).run();

@@ -66,16 +66,16 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
             if (!graph) {
               const { view } = await ViewModel.makeFromDatabase({ db });
               const newGraph = Graph.make({ query: { ast }, view });
-              Obj.change(notebook!, (n) => {
-                const c = n.cells.find((c) => c.id === cell.id);
+              Obj.change(notebook!, (obj) => {
+                const c = obj.cells.find((c) => c.id === cell.id);
                 if (c) {
                   c.graph = Ref.make(newGraph);
                   c.name = name;
                 }
               });
             } else {
-              Obj.change(graph, (g) => {
-                g.query.ast = ast as Obj.Mutable<typeof ast>;
+              Obj.change(graph, (obj) => {
+                obj.query.ast = ast as Obj.Mutable<typeof ast>;
               });
             }
           }
@@ -133,10 +133,10 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       const from = notebook.cells.findIndex((cell) => cell.id === source.id);
       const to = notebook.cells.findIndex((cell) => cell.id === target.id);
       if (from != null && to != null) {
-        Obj.change(notebook, (n) => {
-          const cell = n.cells.splice(from, 1)[0];
+        Obj.change(notebook, (obj) => {
+          const cell = obj.cells.splice(from, 1)[0];
           if (cell) {
-            n.cells.splice(to, 0, cell);
+            obj.cells.splice(to, 0, cell);
           }
         });
       }
@@ -169,8 +169,8 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       }
 
       const idx = after ? notebook.cells.findIndex((cell) => cell.id === after) : notebook.cells.length;
-      Obj.change(notebook, (n) => {
-        n.cells.splice(idx, 0, cell);
+      Obj.change(notebook, (obj) => {
+        obj.cells.splice(idx, 0, cell);
       });
     },
     [db, notebook],
@@ -181,8 +181,8 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
       invariant(notebook);
       const idx = notebook.cells.findIndex((cell) => cell.id === id);
       if (idx !== -1) {
-        Obj.change(notebook, (n) => {
-          n.cells.splice(idx, 1);
+        Obj.change(notebook, (obj) => {
+          obj.cells.splice(idx, 1);
         });
       }
     },

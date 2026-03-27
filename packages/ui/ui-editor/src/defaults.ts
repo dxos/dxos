@@ -12,16 +12,14 @@ import { type ThemeExtensionsOptions } from './extensions';
  * 50rem = 800px. Maximum content width for solo mode.
  * NOTE: Max width - 4rem = 2rem left/right margin (or 2rem gutter plus 1rem left/right margin).
  */
-export const editorWidth = '!mx-auto w-full max-w-[min(50rem,100%-4rem)]';
+const editorWidth =
+  'mx-auto! w-full pointer-fine:max-w-[min(50rem,100%-4rem)] pointer-coarse:max-w-[min(50rem,100%-2rem)]';
 
 export const editorSlots: ThemeExtensionsOptions['slots'] = {
   content: {
     className: editorWidth,
   },
 };
-
-export const editorWithToolbarLayout =
-  'grid grid-cols-1 grid-rows-[min-content_1fr] data-[toolbar=disabled]:grid-rows-[1fr] justify-center content-start overflow-hidden';
 
 // NOTE: Padding is added to the editor to account for the focus ring (since otherwise the CM gutter will clip it)
 export const stackItemContentEditorClassNames = (role?: string) =>

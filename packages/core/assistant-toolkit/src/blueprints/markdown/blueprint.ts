@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Create, Read, Update, MarkdownHandlers } from './functions';
+import { Create, Read, Update } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
 
@@ -21,6 +21,7 @@ const make = () =>
     key: BLUEPRINT_KEY,
     name: 'Markdown',
     description: 'Work with markdown documents.',
+    agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
@@ -29,7 +30,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: MarkdownHandlers,
   make,
 };
 

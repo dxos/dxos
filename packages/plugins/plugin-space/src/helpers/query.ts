@@ -66,12 +66,15 @@ const resolveSchema = (
         Option.getOrElse(() => Effect.succeed(Option.none<Schema.Schema.AnyNoContext>())),
       ),
     ),
-    Match.when({ type: 'filter' }, ({ filter }) =>
-      typenameFromFilter(filter).pipe(
-        Option.map((typename) => resolve(typename)),
-        Option.getOrElse(() => Effect.succeed(Option.none<Schema.Schema.AnyNoContext>())),
-      ),
-    ),
+    Match.when({ type: 'filter' }, ({ filter, selection }) => {
+      const filterResult = typenameFromFilter(filter);
+      return Option.isSome(filterResult)
+        ? filterResult.pipe(
+            Option.map((typename) => resolve(typename)),
+            Option.getOrElse(() => Effect.succeed(Option.none<Schema.Schema.AnyNoContext>())),
+          )
+        : resolveSchema(selection, resolve);
+    }),
     Match.when({ type: 'reference-traversal' }, ({ anchor, property }) =>
       resolveSchema(anchor, resolve).pipe(
         Effect.map((base) =>

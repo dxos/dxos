@@ -3,4 +3,5 @@
 //
 
 export * from './blueprint-definition';
+export * from './operation-handler';
 export * from './react-surface';

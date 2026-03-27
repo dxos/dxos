@@ -14,7 +14,7 @@ import {
   SentenceNormalizationOutput,
   type MessageWithRangeIdType,
   type SentenceNormalizationInputType,
-} from '../functions/definitions';
+} from '../operations/definitions';
 
 export type MessageWithRangeId = MessageWithRangeIdType;
 

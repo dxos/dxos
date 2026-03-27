@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { Script } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Button, IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';

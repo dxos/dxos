@@ -104,6 +104,9 @@
       "path": "../../plugins/plugin-conductor"
     },
     {
+      "path": "../../plugins/plugin-daily-summary"
+    },
+    {
       "path": "../../plugins/plugin-debug"
     },
     {

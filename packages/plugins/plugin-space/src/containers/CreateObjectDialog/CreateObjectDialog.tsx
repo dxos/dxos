@@ -44,14 +44,18 @@ export const CreateObjectDialog = ({
   shouldNavigate: _shouldNavigate,
   targetNodeId,
 }: CreateObjectDialogProps) => {
-  const manager = usePluginManager();
   const { t } = useTranslation(meta.id);
+  const manager = usePluginManager();
   const operationInvoker = useOperationInvoker();
   const [target, setTarget] = useState<Database.Database | Collection.Collection | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
   const client = useClient();
   const spaces = useSpaces();
   const closeRef = useRef<HTMLButtonElement | null>(null);
+
+  const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
+  // TODO(wittjosiah): Support database schemas.
+  const schemas = db?.schemaRegistry.query({ location: ['runtime'], includeSystem: false }).runSync();
 
   const resolve = useCallback<NonNullable<CreateObjectPanelProps['resolve']>>(
     (id) => {
@@ -62,10 +66,6 @@ export const CreateObjectDialog = ({
     },
     [manager],
   );
-
-  const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
-  // TODO(wittjosiah): Support database schemas.
-  const schemas = db?.schemaRegistry.query({ location: ['runtime'], includeSystem: false }).runSync();
 
   const viewTypenames = useMemo(() => {
     const set = new Set<string>();
@@ -130,10 +130,7 @@ export const CreateObjectDialog = ({
       <Dialog.Header>
         <Dialog.Title>
           {t('create object dialog title', {
-            object: t('typename label', {
-              ns: typename,
-              defaultValue: views ? 'View' : 'Object',
-            }),
+            object: t('typename label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
           })}
         </Dialog.Title>
         <Dialog.Close asChild>
@@ -149,9 +146,9 @@ export const CreateObjectDialog = ({
           initialFormValues={initialFormValues}
           defaultSpaceId={client.spaces.default.id}
           resolve={resolve}
+          onCreateObject={handleCreateObject}
           onTargetChange={setTarget}
           onTypenameChange={setTypename}
-          onCreateObject={handleCreateObject}
         />
       </Dialog.Body>
     </Dialog.Content>

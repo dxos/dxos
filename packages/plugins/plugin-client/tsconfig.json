@@ -91,6 +91,9 @@
     },
     {
       "path": "../plugin-observability"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

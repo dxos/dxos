@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Database } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 

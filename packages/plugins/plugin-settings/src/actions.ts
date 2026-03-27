@@ -4,9 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
+import { pinnedWorkspaceId } from '@dxos/app-toolkit';
+
 import { meta } from './meta';
 
-export const SETTINGS_ID = '!dxos:settings';
+export const SETTINGS_ID = pinnedWorkspaceId('dxos:settings');
 export const SETTINGS_KEY = 'settings';
 
 export namespace SettingsAction {

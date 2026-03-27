@@ -9,7 +9,7 @@ import {
   AppGraphBuilder,
   Client,
   Migrations,
-  OperationResolver,
+  OperationHandler,
   ReactContext,
   ReactSurface,
   SchemaDefs,
@@ -21,7 +21,7 @@ import { type ClientPluginOptions } from './types';
 
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactContextModule({ activate: ReactContext }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule((options) => {

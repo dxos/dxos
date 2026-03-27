@@ -93,8 +93,8 @@ const setProperties = (
     const field = projection.getFields().find((field) => field.path === property.name);
     if (field) {
       if (property.size !== undefined) {
-        Obj.change(table, (t) => {
-          t.sizes[field.path] = property.size!;
+        Obj.change(table, (obj) => {
+          obj.sizes[field.path] = property.size!;
         });
       }
 
@@ -111,9 +111,9 @@ const setProperties = (
         const currentQuery = Query.fromAst(Obj.getSnapshot(view).query.ast);
         // Use any type parameter since we're working with dynamic field paths
         const newQuery = currentQuery.orderBy(Order.property<any>(field.path as string, property.sort));
-        Obj.change(view, (v) => {
+        Obj.change(view, (obj) => {
           // Type assertion needed because Query AST types have some variance issues.
-          v.query.ast = newQuery.ast as typeof v.query.ast;
+          obj.query.ast = newQuery.ast as typeof obj.query.ast;
         });
       }
     }

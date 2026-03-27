@@ -7,7 +7,7 @@ import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
-import { Fetch, WebSearchHandlers } from './functions';
+import { Fetch } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.web-search';
 
@@ -16,6 +16,7 @@ const make = () =>
     key: BLUEPRINT_KEY,
     name: 'Web Search',
     description: 'Search the web.',
+    agentCanEnable: true,
     instructions: {
       source: Ref.make(Text.make()),
     },
@@ -24,7 +25,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: WebSearchHandlers,
   make,
 };
 

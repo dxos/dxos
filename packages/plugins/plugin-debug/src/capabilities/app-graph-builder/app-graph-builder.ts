@@ -13,6 +13,7 @@ import { meta as spaceMeta } from '@dxos/plugin-space';
 
 import { meta } from '../../meta';
 import { Devtools } from '../../types';
+import { getParentId } from '@dxos/react-ui-attention';
 
 const DEVTOOLS_TYPE = `${meta.id}.devtools`;
 
@@ -60,7 +61,7 @@ export default Capability.makeModule(
                   {
                     id: 'app-graph',
                     type: `${meta.id}.app-graph`,
-                    data: { graph: graph?.graph, root: space ? space.id : Node.RootId },
+                    data: { graph: graph?.graph, root: node.id === Node.RootId ? node.id : getParentId(node.id) },
                     properties: {
                       label: ['debug app graph label', { ns: meta.id }],
                       icon: 'ph--graph--regular',

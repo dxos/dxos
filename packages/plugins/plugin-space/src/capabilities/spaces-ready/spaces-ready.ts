@@ -19,7 +19,8 @@ import { SPACE_ID_LENGTH, SpaceState, parseId } from '@dxos/react-client/echo';
 import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
-import { SpaceCapabilities, SpaceOperation } from '../../types';
+import { SpaceCapabilities } from '../../types';
+import { SpaceOperation } from '../../operations';
 import { COMPOSER_SPACE_LOCK, SHARED } from '../../util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
@@ -53,8 +54,8 @@ export default Capability.makeModule(
 
     // Initialize space sharing lock in default space.
     if (typeof defaultSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
-      Obj.change(defaultSpace.properties, (p) => {
-        p[COMPOSER_SPACE_LOCK] = true;
+      Obj.change(defaultSpace.properties, (obj) => {
+        obj[COMPOSER_SPACE_LOCK] = true;
       });
     }
 

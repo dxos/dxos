@@ -10,8 +10,10 @@ import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
+import { type ThemedClassName } from '@dxos/react-ui';
 import {
   EditorMenuProvider,
   type EditorToolbarState,
@@ -19,7 +21,6 @@ import {
   useEditorMenu,
   useEditorToolbar,
 } from '@dxos/react-ui-editor';
-import { type ThemedClassName } from '@dxos/react-ui';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
 import { isNonNullable } from '@dxos/util';
 
@@ -95,6 +96,7 @@ const MarkdownEditorRoot = ({
   const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
   const previewOptions = useMemo<PreviewOptions>(
     () => ({
+      db: Obj.isObject(object) ? Obj.getDatabase(object) : undefined,
       addBlockContainer: (block) => {
         setPreviewBlocks((prev) => [...prev, block]);
       },
@@ -102,18 +104,14 @@ const MarkdownEditorRoot = ({
         setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.dxn !== link.dxn));
       },
     }),
-    [],
+    [object],
   );
 
   // Toolbar state.
   const toolbarState = useEditorToolbar({ viewMode });
 
   // Context menu.
-  const menuOptions = useEditorMenuOptions({
-    editorView,
-    slashCommandGroups,
-    onLinkQuery,
-  });
+  const menuOptions = useEditorMenuOptions({ editorView, slashCommandGroups, onLinkQuery });
   const { extension: menuExtension, ...menuProps } = useEditorMenu(menuOptions);
 
   // Extensions.

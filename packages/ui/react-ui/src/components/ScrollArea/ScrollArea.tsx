@@ -24,6 +24,7 @@ type ScrollAreaContextType = {
   /** Hide scrollbars when not scrolling. */
   autoHide: boolean;
   /** Apply padding to opposite side of scrollbar. */
+  // TODO(burdon): Rename `center`.
   margin?: boolean;
   /** Apply padding. */
   padding: boolean;
@@ -61,9 +62,9 @@ const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
     },
     forwardedRef,
   ) => {
+    const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
-    const { tx } = useThemeContext();
     const options = { orientation, autoHide, margin, padding, thin, snap };
 
     return (

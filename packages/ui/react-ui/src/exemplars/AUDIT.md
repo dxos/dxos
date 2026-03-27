@@ -29,7 +29,7 @@
 | `react-ui-form`               | `Scrollable.Root` | `Settings.Root`                 | Compound | Yes             |
 | `react-ui-mosaic`             | `Scrollable.Root` | `BoardColumn.Body`              | Compound | Yes             |
 | `react-ui-mosaic`             | `Menu.Root`       | `BoardColumn.Header`            | Compound | Yes             |
-| `react-ui-searchlist`         | `Scrollable.Root` | `SearchList.Viewport`           | Compound | Yes             |
+| `react-ui-search`             | `Scrollable.Root` | `SearchList.Viewport`           | Compound | Yes             |
 | `react-ui-syntax-highlighter` | `Scrollable.Root` | `SyntaxHighlighter`             | Direct   | Yes             |
 | `react-ui-table`              | `Menu.Root`       | `TableToolbar`                  | Direct   | Yes             |
 
@@ -60,7 +60,7 @@ A component is Composable when:
 2. **Settings.Root** (react-ui-form) - Changed from `PropsWithChildren` to `ComposableProps`.
 3. **Board.Content** (react-ui-mosaic) - Extended with `ComposableProps`.
 4. **BoardColumn.Body** (react-ui-mosaic) - Extended with `ComposableProps`.
-5. **SearchList.Viewport** (react-ui-searchlist) - Changed from `ThemedClassName<PropsWithChildren>` to `ComposableProps`.
+5. **SearchList.Viewport** (react-ui-search) - Changed from `ThemedClassName<PropsWithChildren>` to `ComposableProps`.
 
 ## Phase 3: Remaining Files to Audit
 

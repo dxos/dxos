@@ -72,6 +72,13 @@ export const Blueprint = Schema.Struct({
   }),
 
   /**
+   * Whether an agent is allowed to auto-enable this blueprint in a conversation.
+   */
+  agentCanEnable: Schema.optional(Schema.Boolean).annotations({
+    description: 'Whether an agent is allowed to auto-enable this blueprint in a conversation.',
+  }),
+
+  /**
    * Array of MCP servers that the AI assistant can use when this blueprint is active.
    */
   mcpServers: Schema.optional(Schema.Array(McpServer)),

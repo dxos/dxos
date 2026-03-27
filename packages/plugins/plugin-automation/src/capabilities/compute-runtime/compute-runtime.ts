@@ -76,8 +76,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
         // TODO(dmaretskyi): Make these reactive.
         const operationHandlers = OperationHandlerSet.merge(
-          ...this.#capabilities.getAll(AppCapabilities.Functions),
-          ...this.#capabilities.getAll(AppCapabilities.BlueprintDefinition).map((blueprint) => blueprint.operations),
+          ...this.#capabilities.getAll(Capabilities.OperationHandler),
         );
 
         const genericToolkitProvider = Layer.succeed(GenericToolkit.Provider, {
@@ -100,6 +99,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           // TODO(dmaretskyi): Make blueprints reactive and registry accept an atom.
           Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
         ).pipe(
+          Layer.provideMerge(Layer.succeed(Capability.Service, this.#capabilities)),
           Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
           Layer.provideMerge(
             Layer.mergeAll(
@@ -144,8 +144,8 @@ const TracingServiceLive = Layer.unwrapEffect(
     // TODO(burdon): Check ref target has loaded?
     if (!properties.invocationTraceQueue || !properties.invocationTraceQueue.target) {
       const queue = yield* QueueService.createQueue({ subspaceTag: 'trace' });
-      Obj.change(properties, (m) => {
-        m.invocationTraceQueue = Ref.fromDXN(queue.dxn);
+      Obj.change(properties, (obj) => {
+        obj.invocationTraceQueue = Ref.fromDXN(queue.dxn);
       });
     }
 

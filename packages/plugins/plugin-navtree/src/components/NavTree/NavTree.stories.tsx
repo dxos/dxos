@@ -12,11 +12,11 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { OperationResolver } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { mx } from '@dxos/ui-theme';
@@ -120,7 +120,6 @@ const meta = {
   component: NavTreeContainer,
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
@@ -136,16 +135,17 @@ const meta = {
         return [
           Capability.contributes(StoryState, storyStateAtom),
           Capability.contributes(AppCapabilities.AppGraphBuilder, storybookGraphBuilders()),
-          Capability.contributes(Capabilities.OperationResolver, [
-            OperationResolver.make({
-              operation: LayoutOperation.SwitchWorkspace,
-              handler: ({ subject }) =>
+          Capability.contributes(
+            Capabilities.OperationHandler,
+            OperationHandlerSet.make(
+              Operation.withHandler(LayoutOperation.SwitchWorkspace, ({ subject }) =>
                 Effect.gen(function* () {
                   const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
                   registry.set(storyStateAtom, { tab: subject });
                 }),
-            }),
-          ]),
+              ),
+            ),
+          ),
         ];
       },
     }),

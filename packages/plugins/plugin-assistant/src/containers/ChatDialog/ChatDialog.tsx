@@ -24,7 +24,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
 
   const db = chat && Obj.getDatabase(chat);
   const settings = useAtomCapability(AssistantCapabilities.Settings);
-  const services = useChatServices({ id: db?.spaceId, chat });
+  const services = useChatServices({ id: db?.spaceId });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();

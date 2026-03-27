@@ -243,6 +243,32 @@ class FilterClass implements Filter$.Any {
     });
   }
 
+  static updated(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
+    return FilterClass.#timeRangeFilter('updatedAt', range);
+  }
+
+  static created(range: { after?: Date | number; before?: Date | number }): Filter$.Any {
+    return FilterClass.#timeRangeFilter('createdAt', range);
+  }
+
+  static #timeRangeFilter(
+    field: 'updatedAt' | 'createdAt',
+    range: { after?: Date | number; before?: Date | number },
+  ): Filter$.Any {
+    const toMs = (d: Date | number) => (typeof d === 'number' ? d : d.getTime());
+    const filters: Filter$.Any[] = [];
+    if (range.after != null) {
+      filters.push(new FilterClass({ type: 'timestamp', field, operator: 'gte', value: toMs(range.after) }));
+    }
+    if (range.before != null) {
+      filters.push(new FilterClass({ type: 'timestamp', field, operator: 'lte', value: toMs(range.before) }));
+    }
+    if (filters.length === 0) {
+      return FilterClass.everything();
+    }
+    return filters.length === 1 ? filters[0] : FilterClass.and(...filters);
+  }
+
   static not<F extends Filter$.Any>(filter: F): Filter$.Filter<Filter$.Type<F>> {
     return new FilterClass({
       type: 'not',

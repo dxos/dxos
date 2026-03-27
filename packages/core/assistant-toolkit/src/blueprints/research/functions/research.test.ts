@@ -26,13 +26,14 @@ import { HasSubject, type Message, Organization } from '@dxos/types';
 import ResearchBlueprint from '../blueprint';
 import { ResearchHandlers } from '../functions';
 import { ResearchDataTypes, ResearchGraph } from '../types';
+import { MarkdownHandlers } from '../../markdown';
 
 import { default as research } from './research';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: OperationHandlerSet.merge(ResearchHandlers, MarkdownBlueprint.operations),
+  operationHandlers: OperationHandlerSet.merge(ResearchHandlers, MarkdownHandlers),
   types: [
     ...ResearchDataTypes,
     ResearchGraph.ResearchGraph,

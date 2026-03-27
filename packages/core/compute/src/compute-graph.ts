@@ -246,10 +246,13 @@ export class ComputeGraph extends Resource {
     if (this._space) {
       // Subscribe to remote function definitions.
       const query = this._space.db.query(Filter.type(Operation.PersistentOperation));
-      const unsubscribe = query.subscribe(() => {
-        this._remoteFunctions = query.results.filter((fn) => fn.binding);
-        this.update.emit({ type: 'functionsUpdated' });
-      });
+      const unsubscribe = query.subscribe(
+        () => {
+          this._remoteFunctions = query.results.filter((fn) => fn.binding);
+          this.update.emit({ type: 'functionsUpdated' });
+        },
+        { fire: true },
+      );
 
       this._ctx.onDispose(unsubscribe);
     }

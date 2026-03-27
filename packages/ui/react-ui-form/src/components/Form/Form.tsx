@@ -60,7 +60,10 @@ type FormContextValue<T extends AnyProperties = any> = {
    * Testing.
    */
   testId?: string;
-} & Pick<NaturalFormFieldSetProps<T>, 'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection'>;
+} & Pick<
+  NaturalFormFieldSetProps<T>,
+  'readonly' | 'layout' | 'fieldMap' | 'fieldProvider' | 'projection' | 'createTypename' | 'createFieldMap'
+>;
 
 const [FormContextProvider, useFormContext] = createContext<FormContextValue>('Form');
 
@@ -188,7 +191,7 @@ const FormContent = ({ classNames, children }: FormContentProps) => {
   useKeyHandler(ref.current, form);
 
   return (
-    <div ref={ref} role='form' className={mx('w-full flex flex-col gap-form-padding', classNames)} data-testid={testId}>
+    <div ref={ref} role='form' className={mx('flex flex-col w-full', classNames)} data-testid={testId}>
       {children}
     </div>
   );
@@ -231,12 +234,11 @@ const FormActions = ({ classNames }: FormActionsProps) => {
   if (readonly || layout === 'static') {
     return null;
   }
-
   // TODO(burdon): Currently onCancel is a no-op; implement "revert values".
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div role='none' className={mx('grid grid-flow-col gap-2 auto-cols-fr py-form-padding', classNames)}>
+    <div role='none' className={mx('grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'

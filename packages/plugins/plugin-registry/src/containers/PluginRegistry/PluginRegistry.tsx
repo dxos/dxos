@@ -10,7 +10,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ObservabilityOperation } from '@dxos/plugin-observability/types';
+import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { ComposableProps, ScrollArea } from '@dxos/react-ui';
 import { composableProps } from '@dxos/ui-theme';
 

@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { OperationPlugin } from '@dxos/app-framework';
+import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -16,11 +16,11 @@ import { SpaceSettingsContainer, type SpaceSettingsContainerProps } from './Spac
 
 const Story = (props: Partial<SpaceSettingsContainerProps>) => {
   const { space } = useClientStory();
-  return (
-    <div role='none' className='p-2 border border-primary-500 rounded-sm'>
-      <SpaceSettingsContainer {...props} space={space!} />
-    </div>
-  );
+  if (!space) {
+    return <Loading />;
+  }
+
+  return <SpaceSettingsContainer {...props} space={space} />;
 };
 
 const meta = {
@@ -29,13 +29,14 @@ const meta = {
   render: Story,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'column' }),
     withClientProvider({ createIdentity: true, createSpace: true }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [OperationPlugin()] }),
+    withPluginManager({ plugins: [OperationPlugin(), RuntimePlugin()] }),
   ],
   parameters: {
     translations,
-    layout: 'centered',
+    layout: 'fullscreen',
   },
 } satisfies Meta<typeof SpaceSettingsContainer>;
 

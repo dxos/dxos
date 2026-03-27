@@ -12,7 +12,8 @@ import { Button, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
 
 import { meta } from '../../meta';
-import { InboxOperation, type Calendar } from '../../types';
+import { InboxOperation } from '../../operations';
+import { type Calendar } from '../../types';
 
 export const CalendarEmpty = ({ calendar }: { calendar: Calendar.Calendar }) => {
   const db = Obj.getDatabase(calendar);

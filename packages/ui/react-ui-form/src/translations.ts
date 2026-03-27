@@ -31,6 +31,7 @@ export const translations = [
         'ref field combobox input placeholder': 'Search…',
         'ref field placeholder_one': 'Select…',
         'ref field placeholder_other': 'Select items…',
+        'create option label': 'Create',
 
         'example placeholder': 'Example',
         'latitude placeholder': 'Latitude (e.g., 40.7128)',

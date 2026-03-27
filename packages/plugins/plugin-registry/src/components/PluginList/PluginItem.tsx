@@ -58,7 +58,7 @@ export const PluginItem = ({
       labelId={labelId}
       data-testid={`pluginList.${id}`}
       aria-describedby={descriptionId}
-      classNames={mx(gridCols, 'h-[12rem] w-full gap-3 pe-2 bg-modal-surface rounded-md overflow-hidden')}
+      classNames={mx(gridCols, 'h-[14rem] w-full gap-3 pe-2 bg-modal-surface rounded-md overflow-hidden')}
     >
       <div className={mx(gridRows, 'justify-center rounded-l-md', styles.surface)}>
         <Icon

@@ -6,7 +6,7 @@ import * as Array from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import React, { type FC, useCallback, useMemo, useState } from 'react';
+import React, { KeyboardEvent, type FC, useCallback, useMemo, useState } from 'react';
 
 import { type Database, Filter, type Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
@@ -196,7 +196,7 @@ export const InvocationTraceContainer = ({
                     tabIndex={0}
                     aria-selected={selectedId === row.id}
                     onClick={() => handleRowClick(row)}
-                    onKeyDown={(e: React.KeyboardEvent<HTMLTableRowElement>) => {
+                    onKeyDown={(e: KeyboardEvent<HTMLTableRowElement>) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
                         handleRowClick(row);

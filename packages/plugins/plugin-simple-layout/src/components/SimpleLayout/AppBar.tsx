@@ -5,29 +5,32 @@
 import { type Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { Fragment } from 'react';
 
-import { IconButton, Popover, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { ComposableProps, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
-import { mx, osTranslations } from '@dxos/ui-theme';
+import { composableProps, osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { useMobileLayout } from '../MobileLayout';
 
 const APP_BAR_NAME = 'SimpleLayout.AppBar';
 
-export type AppBarProps = ThemedClassName<{
-  /** Title/label to display in the banner. */
-  title?: string;
-  /** Action graph atom for the dropdown menu. */
-  actions: Atom.Atom<ActionGraphProps>;
-  /** Whether to show the back button. */
-  showBackButton?: boolean;
-  /** Popover anchor ID for the dropdown trigger. */
-  popoverAnchorId?: string;
-  /** Action executor callback. */
-  onAction?: ActionExecutor;
-  /** Callback when back button is clicked. */
-  onBack?: () => void;
-}>;
+export type AppBarProps = ComposableProps<
+  HTMLDivElement,
+  {
+    /** Title/label to display in the banner. */
+    title?: string;
+    /** Action graph atom for the dropdown menu. */
+    actions: Atom.Atom<ActionGraphProps>;
+    /** Whether to show the back button. */
+    showBackButton?: boolean;
+    /** Popover anchor ID for the dropdown trigger. */
+    popoverAnchorId?: string;
+    /** Action executor callback. */
+    onAction?: ActionExecutor;
+    /** Callback when back button is clicked. */
+    onBack?: () => void;
+  }
+>;
 
 /**
  * AppBar component that renders a title, optional back button, and actions dropdown.
@@ -40,6 +43,7 @@ export const AppBar = ({
   popoverAnchorId,
   onAction,
   onBack,
+  ...props
 }: AppBarProps) => {
   const { t } = useTranslation(meta.id);
   const menuActions = useMenuActions(actions);
@@ -55,12 +59,10 @@ export const AppBar = ({
 
   return (
     <Toolbar.Root
-      role='banner'
-      classNames={mx(
-        'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center',
-        'dx-density-fine',
-        classNames,
-      )}
+      {...composableProps(props, {
+        role: 'banner',
+        className: 'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-fine',
+      })}
     >
       {keyboardOpen ? (
         <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('done label')} />
