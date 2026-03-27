@@ -9,7 +9,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Filter, Obj, Tag } from '@dxos/echo';
-import { Function, Script, Trigger } from '@dxos/functions';
+import { Script, Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { useTypeOptions } from '@dxos/plugin-space';
@@ -39,7 +40,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   const { t } = useTranslation(meta.id);
   const client = useClient();
   const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
-  const functions = useQuery(space.db, Filter.type(Function.Function));
+  const functions = useQuery(space.db, Filter.type(Operation.PersistentOperation));
   const triggers = useQuery(space.db, Filter.type(Trigger.Trigger));
   const filteredTriggers = useMemo(() => {
     return object ? triggers.filter(triggerMatch(object)) : triggers;
@@ -96,8 +97,8 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
-    Obj.change(trigger, (t) => {
-      Obj.deleteKeys(t, KEY_QUEUE_CURSOR);
+    Obj.change(trigger, (obj) => {
+      Obj.deleteKeys(obj, KEY_QUEUE_CURSOR);
     });
     await space.db.flush({ indexes: true });
   };
@@ -159,7 +160,7 @@ const TriggerListItem = ({
   onForceRun,
 }: {
   trigger: Trigger.Trigger;
-  functions: Function.Function[];
+  functions: Operation.PersistentOperation[];
   onSelect?: (trigger: Trigger.Trigger) => void;
   onDelete?: (trigger: Trigger.Trigger) => void;
   onResetCursor?: (trigger: Trigger.Trigger) => void;
@@ -268,7 +269,7 @@ const getWebhookUrl = (client: Client, trigger: Trigger.Trigger) => {
   return new URL(`/webhook/${spaceId}:${trigger.id}`, edgeUrl).toString();
 };
 
-const getFunctionName = (functions: Function.Function[], trigger: Trigger.Trigger) => {
+const getFunctionName = (functions: Operation.PersistentOperation[], trigger: Trigger.Trigger) => {
   // TODO(wittjosiah): Truncation should be done in the UI.
   //   Warning that the List component is currently a can of worms.
   const shortId = trigger.function && `${trigger.function.dxn.toString().slice(0, 16)}…`;
@@ -278,7 +279,7 @@ const getFunctionName = (functions: Function.Function[], trigger: Trigger.Trigge
 
 const scriptMatch = (script: Script.Script) => (trigger: Trigger.Trigger) => {
   const fn = trigger.function?.target;
-  if (!Obj.instanceOf(Function.Function, fn)) {
+  if (!Obj.instanceOf(Operation.PersistentOperation, fn)) {
     return false;
   }
 

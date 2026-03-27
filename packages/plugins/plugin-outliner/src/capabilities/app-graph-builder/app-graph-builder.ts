@@ -15,7 +15,7 @@ import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 
 import { QUICK_ENTRY_DIALOG, meta } from '../../meta';
-import { JournalOperation, OutlineOperation } from '../../types';
+import { OutlineOperation } from '../../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -72,7 +72,7 @@ export default Capability.makeModule(
         actions: () =>
           Effect.succeed([
             {
-              id: JournalOperation.QuickEntry.meta.key,
+              id: OutlineOperation.QuickJournalEntry.meta.key,
               data: Effect.fnUntraced(function* () {
                 yield* Operation.invoke(LayoutOperation.UpdateDialog, {
                   subject: QUICK_ENTRY_DIALOG,

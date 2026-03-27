@@ -29,6 +29,7 @@ import {
   timer,
 } from '../../util';
 import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
+import { mx } from '@dxos/ui-theme';
 
 /**
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
@@ -135,11 +136,11 @@ const GlobeRoot = (props: GlobeRootProps) => {
   );
 
   return (
-    <div ref={containerRef} class={`relative flex grow overflow-hidden ${props.class ?? ''}`} {...props}>
-      <GlobeContextProvider size={size()} {...props}>
+    <GlobeContextProvider size={size()} {...props}>
+      <div ref={containerRef} class={mx('relative dx-container')} {...props}>
         {props.children}
-      </GlobeContextProvider>
-    </div>
+      </div>
+    </GlobeContextProvider>
   );
 };
 

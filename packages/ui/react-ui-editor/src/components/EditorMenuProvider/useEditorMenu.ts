@@ -62,7 +62,8 @@ export const useEditorMenu = ({
   const getMenuOptions = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
     async ({ text, trigger, ...props }) => {
       const groups = (await getMenu?.({ text, trigger, ...props })) ?? [];
-      return filter
+      // The "@" menu can use "@@" as syntax for block embeds, so it owns its own query filtering.
+      return filter && trigger !== '@'
         ? filterMenuGroups(groups, (item) =>
             text ? (item.label as string).toLowerCase().startsWith(text.toLowerCase()) : true,
           )

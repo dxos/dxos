@@ -99,6 +99,9 @@ const MobileLayoutPanel = forwardRef<HTMLDivElement, MobileLayoutPanelProps>(
         ref={forwardedRef}
       >
         {children}
+        {/* <Column.Root>
+          <Column.Content>{children}</Column.Content>
+        </Column.Root> */}
       </div>
     );
   },

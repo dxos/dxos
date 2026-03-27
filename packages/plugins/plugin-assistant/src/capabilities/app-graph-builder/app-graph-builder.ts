@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, COMPANION_PREFIX, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment, LayoutOperation } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -17,11 +17,18 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { getActiveSpace } from '@dxos/plugin-space';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Query } from '@dxos/react-client/echo';
 
 import { ASSISTANT_DIALOG, meta } from '../../meta';
-import { AssistantCapabilities, AssistantOperation } from '../../types';
+import { AssistantCapabilities } from '../../types';
+import { AssistantOperation } from '../../operations';
+
+/** Match ECHO objects that are NOT chats. */
+const whenNonChatObject = NodeMatcher.whenAll(
+  NodeMatcher.whenEchoObject,
+  NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Chat.Chat)),
+);
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -103,9 +110,10 @@ export default Capability.makeModule(
           ]),
       }),
 
+      // Don't show assistant companion when a chat is already the primary object.
       GraphBuilder.createExtension({
         id: `${meta.id}.companion-chat`,
-        match: NodeMatcher.whenEchoObject,
+        match: whenNonChatObject,
         connector: (object, get) =>
           Effect.gen(function* () {
             const state = get(yield* Capability.get(AssistantCapabilities.State));
@@ -177,7 +185,7 @@ export default Capability.makeModule(
         connector: () =>
           Effect.succeed([
             {
-              id: `${COMPANION_PREFIX}trace`,
+              id: companionSegment('trace'),
               type: DECK_COMPANION_TYPE,
               data: 'trace' as const,
               properties: {

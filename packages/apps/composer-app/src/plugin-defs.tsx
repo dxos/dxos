@@ -15,6 +15,7 @@ import { BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
+import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
@@ -56,6 +57,7 @@ import { TokenManagerPlugin } from '@dxos/plugin-token-manager';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription';
 import { VoxelPlugin } from '@dxos/plugin-voxel';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
+import { YouTubePlugin } from '@dxos/plugin-youtube';
 import { ZenPlugin } from '@dxos/plugin-zen';
 import { isTruthy } from '@dxos/util';
 
@@ -135,6 +137,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     // Labs
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
+      DailySummaryPlugin.meta.id,
       PipelinePlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
@@ -183,6 +186,7 @@ export const getPlugins = ({
         }),
     }),
     ConductorPlugin(),
+    DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
@@ -228,6 +232,7 @@ export const getPlugins = ({
     ThemePlugin({
       appName: 'Composer',
       noCache: isDev,
+      platform: isMobile ? 'mobile' : 'desktop',
     }),
     ThreadPlugin(),
     TokenManagerPlugin(),
@@ -235,6 +240,7 @@ export const getPlugins = ({
     VoxelPlugin(),
     WelcomePlugin(),
     WnfsPlugin(),
+    YouTubePlugin(),
     ZenPlugin(),
   ]
     .filter(isTruthy)

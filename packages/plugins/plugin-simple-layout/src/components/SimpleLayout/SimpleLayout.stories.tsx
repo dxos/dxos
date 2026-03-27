@@ -5,80 +5,55 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Collection } from '@dxos/echo';
-import { ClientOperation, ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client';
 import { SearchPlugin } from '@dxos/plugin-search';
 import { SpacePlugin } from '@dxos/plugin-space';
-import { SpaceOperation } from '@dxos/plugin-space/types';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { translations as searchTranslation } from '@dxos/react-ui-searchlist';
+import { withLayout } from '@dxos/react-ui/testing';
+import { translations as searchTranslation } from '@dxos/react-ui-search';
 
-import { OperationResolver, type SimpleLayoutStateOptions, State } from '../../capabilities';
-import { meta as pluginMeta } from '../../meta';
-import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
+import { SimpleLayoutPlugin } from '../../SimpleLayoutPlugin';
 import { translations } from '../../translations';
 
 import { SimpleLayout } from './SimpleLayout';
 
-const TestPlugin = Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
-  Plugin.addModule(({ isPopover = false }) => ({
-    id: Capability.getModuleTag(State),
-    activatesOn: ActivationEvents.Startup,
-    activatesAfter: [AppActivationEvents.LayoutReady],
-    activate: () => State({ initialState: { isPopover } } satisfies SimpleLayoutStateOptions),
-  })),
-  Plugin.addModule({
-    id: 'setup',
-    activatesOn: ActivationEvents.OperationInvokerReady,
-    activate: Effect.fnUntraced(function* () {
-      const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
-      yield* invoke(ClientOperation.CreateIdentity, {});
-      const { space: work } = yield* invoke(SpaceOperation.Create, { name: 'Work Space' });
-      const { space: sharedProject } = yield* invoke(SpaceOperation.Create, { name: 'Shared Project' });
-
-      // Add collections to Work Space.
-      yield* invoke(SpaceOperation.AddObject, {
-        target: work.db,
-        object: Collection.make({ name: 'Projects', objects: [] }),
-      });
-      yield* invoke(SpaceOperation.AddObject, {
-        target: work.db,
-        object: Collection.make({ name: 'Documents', objects: [] }),
-      });
-
-      // Add collections to Shared Project.
-      yield* invoke(SpaceOperation.AddObject, {
-        target: sharedProject.db,
-        object: Collection.make({ name: 'Tasks', objects: [] }),
-      });
-      yield* invoke(SpaceOperation.AddObject, {
-        target: sharedProject.db,
-        object: Collection.make({ name: 'Notes', objects: [] }),
-      });
-    }),
-  }),
-  Plugin.make,
-);
-
-const createPluginManager = ({ isPopover }: { isPopover: boolean }) => {
+const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
   return withPluginManager({
+    setupEvents: [AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
       ClientPlugin({
         types: [Collection.Collection],
+        onClientInitialized: ({ client }) =>
+          Effect.gen(function* () {
+            yield* Effect.promise(() => client.halo.createIdentity());
+            // const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
+            // yield* invoke(ClientOperation.CreateIdentity, {});
+            // const { space } = yield* invoke(SpaceOperation.Create, { name: 'Work' });
+            // yield* invoke(SpaceOperation.AddObject, {
+            //   target: space.db,
+            //   object: Collection.make({ name: 'Projects', objects: [] }),
+            // });
+            // yield* invoke(SpaceOperation.AddObject, {
+            //   target: space.db,
+            //   object: Collection.make({ name: 'Documents', objects: [] }),
+            // });
+          }),
       }),
       SearchPlugin(),
       SpacePlugin({}),
-      TestPlugin({ isPopover }),
+      SimpleLayoutPlugin({ isPopover }),
     ],
   });
 };
 
+/**
+ * NOTE: To expose to iphone on network:
+ * `moon run storybook-react:serve dev -H 0.0.0.0`
+ */
 const meta = {
   title: 'plugins/plugin-simple-layout/components/SimpleLayout',
   component: SimpleLayout,
@@ -92,22 +67,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/**
- * NOTE: To expose to iphone on network:
- * `moon run storybook-react:serve dev -H 0.0.0.0`
- */
 export const Default: Story = {
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'column', classNames: 'relative' }),
-    createPluginManager({ isPopover: false }),
-  ],
+  decorators: [withLayout({ layout: 'column', classNames: 'relative' }), createPluginManager({})],
 };
 
 export const Popover: Story = {
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'column', classNames: 'relative' }),
-    createPluginManager({ isPopover: true }),
-  ],
+  decorators: [withLayout({ layout: 'column', classNames: 'relative' }), createPluginManager({ isPopover: true })],
 };

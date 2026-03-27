@@ -8,7 +8,6 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { Annotation, Obj, QueryAST, Ref, Type } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
-import { Expando } from '@dxos/schema';
 
 /**
  * Type discriminator for TriggerType.
@@ -103,7 +102,7 @@ const TriggerSchema = Schema.Struct({
    * Function or workflow to invoke.
    */
   // TODO(dmaretskyi): Can be a Ref(FunctionType) or Ref(ComputeGraphType).
-  function: Schema.optional(Ref.Ref(Expando.Expando).annotations({ title: 'Function' })),
+  function: Schema.optional(Ref.Ref(Obj.Unknown).annotations({ title: 'Function' })),
 
   /**
    * Only used for workflowSchema.

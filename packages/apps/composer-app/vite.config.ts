@@ -95,6 +95,7 @@ export default defineConfig((env) => ({
         internal: path.resolve(dirname, './internal.html'),
         main: path.resolve(dirname, './index.html'),
         devtools: path.resolve(dirname, './devtools.html'),
+        reset: path.resolve(dirname, './reset.html'),
         'script-frame': path.resolve(dirname, './script-frame/index.html'),
       },
       output: {

@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import Fetch from './fetch-messages';
+import { OperationHandlerSet } from '@dxos/operation';
 
-export const DiscordFunctions = {
-  Fetch,
-};
+export * from './definitions';
+
+export const DiscordHandlers = OperationHandlerSet.lazy(() => import('./fetch-messages'));

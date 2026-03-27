@@ -5,13 +5,13 @@
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { OperationResolver, ReactRoot, SpotlightDismiss, State } from './capabilities';
+import { OperationHandler, ReactRoot, SpotlightDismiss, State } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { SpotlightEvents } from './types';
 
 export const SpotlightPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: Capability.getModuleTag(State),

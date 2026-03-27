@@ -8,7 +8,8 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { Trigger, Function } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/automation';
 
@@ -22,7 +23,7 @@ const instructions = trim`
   Triggers are configured by the properties of the Trigger object.
   - enabled: Must be true for trigger to run.
   - spec: Events that the trigger matches.
-  - function: Ref to a ${Function.Function.typename} object that will be invoked. Query the functions present in the space first, and reference them in the trigger.
+  - function: Ref to a ${Operation.PersistentOperation.typename} object that will be invoked. Query the functions present in the space first, and reference them in the trigger.
   - input: The spec of the input data that will be passed to the function.
 
   ## Input patterns
@@ -102,7 +103,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions: [],
   make,
 };
 

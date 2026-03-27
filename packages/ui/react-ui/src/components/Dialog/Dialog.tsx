@@ -20,6 +20,7 @@ import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
+import { SlottableProps } from '../..';
 
 //
 // Root
@@ -107,10 +108,19 @@ const DialogContent: ForwardRefExoticComponent<DialogContentProps> = forwardRef<
         // NOTE: Radix warning unless set to undefined.
         // https://www.radix-ui.com/primitives/docs/components/dialog#description
         aria-describedby={undefined}
-        className={tx('dialog.content', { inOverlayLayout: propsInOverlayLayout || inOverlayLayout, size }, classNames)}
+        className={tx(
+          'dialog.content',
+          {
+            size,
+            inOverlayLayout: propsInOverlayLayout || inOverlayLayout,
+          },
+          classNames,
+        )}
         ref={forwardedRef}
       >
-        <Column.Root gutter='md'>{children}</Column.Root>
+        <Column.Root classNames='dx-expander' gutter='sm'>
+          {children}
+        </Column.Root>
       </DialogPrimitive.Content>
     );
   },
@@ -122,15 +132,15 @@ DialogContent.displayName = DIALOG_CONTENT_NAME;
 // Header
 //
 
-type DialogHeaderProps = ThemedClassName<PropsWithChildren> & { srOnly?: boolean };
+type DialogHeaderProps = PropsWithChildren;
 
-const DialogHeader: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
-  ({ classNames, srOnly, ...props }, forwardedRef) => {
+const DialogHeader: ForwardRefExoticComponent<DialogHeaderProps> = forwardRef<HTMLHeadingElement, DialogHeaderProps>(
+  ({ children }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
-      <Column.Segment asChild>
-        <div role='heading' {...props} className={tx('dialog.header', { srOnly }, [classNames])} ref={forwardedRef} />
-      </Column.Segment>
+      <Column.Row className={tx('dialog.header')} center ref={forwardedRef}>
+        {children}
+      </Column.Row>
     );
   },
 );
@@ -151,7 +161,6 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
         icon='ph--x--regular'
         iconOnly
         size={4}
-        density='fine'
         variant='ghost'
         ref={forwardedRef}
       />
@@ -163,20 +172,16 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
 // Body
 //
 
-type DialogBodyProps = PropsWithChildren;
+type DialogBodyProps = SlottableProps<HTMLDivElement>;
 
-const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDivElement, DialogBodyProps>(
-  ({ children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    return (
-      <Column.Segment asChild>
-        <div role='none' {...props} className={tx('dialog.body')} ref={forwardedRef}>
-          {children}
-        </div>
-      </Column.Segment>
-    );
-  },
-);
+const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ children, asChild, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  return (
+    <Column.Content {...props} asChild={asChild} className={tx('dialog.body', {})} ref={forwardedRef}>
+      {children}
+    </Column.Content>
+  );
+});
 
 //
 // Title
@@ -184,7 +189,7 @@ const DialogBody: ForwardRefExoticComponent<DialogBodyProps> = forwardRef<HTMLDi
 
 type DialogTitleProps = ThemedClassName<DialogPrimitive.DialogTitleProps> & { srOnly?: boolean };
 
-const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTMLHeadingElement, DialogTitleProps>(
+const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
   ({ classNames, srOnly, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
@@ -199,19 +204,18 @@ const DialogTitle: ForwardRefExoticComponent<DialogTitleProps> = forwardRef<HTML
 
 type DialogDescriptionProps = ThemedClassName<DialogPrimitive.DialogDescriptionProps> & { srOnly?: boolean };
 
-const DialogDescription: ForwardRefExoticComponent<DialogDescriptionProps> = forwardRef<
-  HTMLParagraphElement,
-  DialogDescriptionProps
->(({ classNames, srOnly, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <DialogPrimitive.Description
-      {...props}
-      className={tx('dialog.description', { srOnly }, classNames)}
-      ref={forwardedRef}
-    />
-  );
-});
+const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProps>(
+  ({ classNames, srOnly, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <DialogPrimitive.Description
+        {...props}
+        className={tx('dialog.description', { srOnly }, classNames)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 //
 // ActionBar
@@ -219,19 +223,18 @@ const DialogDescription: ForwardRefExoticComponent<DialogDescriptionProps> = for
 
 type DialogActionBarProps = ThemedClassName<PropsWithChildren>;
 
-const DialogActionBar: ForwardRefExoticComponent<DialogActionBarProps> = forwardRef<
-  HTMLDivElement,
-  DialogActionBarProps
->(({ children, classNames, ...props }, forwardedRef) => {
-  const { tx } = useThemeContext();
-  return (
-    <Column.Segment asChild>
-      <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
-        {children}
-      </div>
-    </Column.Segment>
-  );
-});
+const DialogActionBar = forwardRef<HTMLDivElement, DialogActionBarProps>(
+  ({ children, classNames, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    return (
+      <Column.Row center>
+        <div {...props} className={tx('dialog.actionbar', {}, classNames)} ref={forwardedRef}>
+          {children}
+        </div>
+      </Column.Row>
+    );
+  },
+);
 
 //
 // Close
@@ -272,4 +275,5 @@ export type {
   DialogDescriptionProps,
   DialogActionBarProps,
   DialogCloseProps,
+  DialogCloseIconButtonProps,
 };

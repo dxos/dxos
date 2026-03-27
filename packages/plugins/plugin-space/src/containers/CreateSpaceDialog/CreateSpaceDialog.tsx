@@ -14,7 +14,8 @@ import { Form } from '@dxos/react-ui-form';
 
 import { useInputSurfaceLookup } from '../../hooks';
 import { meta } from '../../meta';
-import { SpaceForm, SpaceOperation } from '../../types';
+import { SpaceForm } from '../../types';
+import { SpaceOperation } from '../../operations';
 
 export const CREATE_SPACE_DIALOG = `${meta.id}.CreateSpaceDialog`;
 
@@ -52,21 +53,23 @@ export const CreateSpaceDialog = () => {
           <Dialog.CloseIconButton ref={closeRef} />
         </Dialog.Close>
       </Dialog.Header>
-      <Form.Root
-        testId='create-space-form'
-        autoFocus
-        schema={SpaceForm}
-        defaultValues={initialValues}
-        fieldProvider={inputSurfaceLookup}
-        onSave={handleCreateSpace}
-      >
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-            <Form.Submit />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
+      <Dialog.Body>
+        <Form.Root
+          testId='create-space-form'
+          autoFocus
+          schema={SpaceForm}
+          defaultValues={initialValues}
+          fieldProvider={inputSurfaceLookup}
+          onSave={handleCreateSpace}
+        >
+          <Form.Viewport>
+            <Form.Content>
+              <Form.FieldSet />
+              <Form.Submit />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </Dialog.Body>
     </Dialog.Content>
   );
 };

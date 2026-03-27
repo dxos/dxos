@@ -15,7 +15,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { ObjectId } from '@dxos/keys';
 
 import MemoryBlueprint from './blueprint';
-import { MemoryFunctions } from './functions';
+import { MemoryHandlers } from './functions';
 import { Memory } from '../../types/Memory';
 import { WebSearchBlueprint, WebSearchToolkit } from '../websearch';
 import { addBlueprints } from '../testing';
@@ -23,13 +23,13 @@ import { addBlueprints } from '../testing';
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [...Object.values(MemoryFunctions)],
+  operationHandlers: MemoryHandlers,
   types: [Memory, Blueprint.Blueprint],
   tracing: 'pretty',
 });
 
 const TestLayerWithWebSearch = AssistantTestLayer({
-  functions: [...Object.values(MemoryFunctions)],
+  operationHandlers: MemoryHandlers,
   toolkits: [GenericToolkit.make(WebSearchToolkit, Layer.empty)],
   types: [Memory, Blueprint.Blueprint],
   tracing: 'pretty',

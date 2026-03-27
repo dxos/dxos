@@ -18,7 +18,7 @@ import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { ClientOperation } from '../../types';
+import { ClientOperation } from '../../operations';
 
 export type DevicesContainerProps = {
   createInvitationUrl?: (invitationCode: string) => string;

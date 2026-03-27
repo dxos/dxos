@@ -15,7 +15,7 @@ import { type Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
 import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cli-util';
 import { SpaceProperties } from '@dxos/client/echo';
-import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Database, Filter, Obj, Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -63,15 +63,11 @@ export const add = Command.make(
         return yield* Effect.fail(new Error(`Unknown typename: ${selectedTypename}`));
       }
 
-      const object = yield* metadata.createObject({}, { db });
+      const result = yield* metadata.createObject({}, { db, target: collection });
+      const object = result.object;
       if (!Obj.isObject(object)) {
         return yield* Effect.fail(new Error(`Invalid object: ${object}`));
       }
-
-      const objectRef = Ref.make(object);
-      Obj.change(collection, (c) => {
-        c.objects.push(objectRef);
-      });
 
       if (json) {
         yield* Console.log(JSON.stringify(object, null, 2));

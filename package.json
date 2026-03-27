@@ -109,6 +109,7 @@
     "esbuild-plugin-raw": "catalog:",
     "esbuild-plugin-yaml": "catalog:",
     "eslint": "^10.0.3",
+    "eslint-plugin-import-x": "^4.16.2",
     "eslint-plugin-unused-imports": "^4.4.1",
     "execa": "catalog:",
     "extensionless": "catalog:",

@@ -14,18 +14,13 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { type Database, Feed, type Key } from '@dxos/echo';
-import {
-  CredentialsService,
-  type FunctionDefinition,
-  type FunctionInvocationService,
-  type QueueService,
-  TracingService,
-} from '@dxos/functions';
+import { CredentialsService, type FunctionInvocationService, type QueueService, TracingService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   RemoteFunctionExecutionService,
 } from '@dxos/functions-runtime';
+import { type OperationHandlerSet } from '@dxos/operation';
 
 // TODO(burdon): Factor out (see plugin-assistant/processor.ts)
 export type AiChatServices =
@@ -44,7 +39,7 @@ export type Provider = Schema.Schema.Type<typeof Provider>;
 export type LayerOptions = {
   provider: Provider;
   spaceId: Option.Option<Key.SpaceId>;
-  functions: FunctionDefinition.Any[];
+  functions: OperationHandlerSet.OperationHandlerSet;
 };
 
 // TODO(wittjosiah): Factor out.

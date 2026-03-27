@@ -45,6 +45,12 @@ export const translations = [
           'Setup a passkey to ensure you maintain access to your account and sign in on other devices.',
         'passkey setup toast action label': 'Setup',
         'passkey setup toast action alt': 'Navigate to the passkeys management page.',
+
+        'open about label': 'About Composer',
+        'version label': 'Version {{version}}',
+        'published label': 'Published {{timestamp}}',
+        'powered by dxos message': 'Powered by <dxos>DXOS</dxos>',
+        'close label': 'Close',
       },
     },
   },

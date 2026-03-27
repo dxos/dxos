@@ -10,7 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { type Feed, Filter, Query } from '@dxos/echo';
-import { AttentionOperation } from '@dxos/plugin-attention/types';
+import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';

@@ -13,6 +13,8 @@ import { type ObservabilitySettingsProps } from '../containers';
 import { meta } from '../meta';
 
 export namespace ObservabilityCapabilities {
+  export const Namespace = Capability.make<string>(`${meta.id}.capability.namespace`);
+
   export const Settings = Capability.make<Atom.Writable<ObservabilitySettingsProps>>(`${meta.id}.capability.settings`);
 
   export const StateSchema = Schema.mutable(

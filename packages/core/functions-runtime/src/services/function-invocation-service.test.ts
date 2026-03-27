@@ -8,7 +8,8 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
-import { FunctionInvocationService, defineFunction } from '@dxos/functions';
+import { FunctionInvocationService } from '@dxos/functions';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { TestDatabaseLayer } from '../testing';
 
@@ -26,6 +27,25 @@ const TestLayer = Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-0')).
   ),
 );
 
+const Add = Operation.make({
+  meta: { key: 'example.org/function/add', name: 'Add' },
+  input: Schema.Struct({ a: Schema.Number, b: Schema.Number }),
+  output: Schema.Number,
+});
+
+const AddHandler = Operation.withHandler(
+  Add,
+  Effect.fn(function* ({ a, b }) {
+    return a + b;
+  }),
+);
+
+const Echo = Operation.make({
+  meta: { key: 'example.org/function/echo', name: 'Echo' },
+  input: Schema.Unknown,
+  output: Schema.Unknown,
+});
+
 describe('FunctionInvocationService', () => {
   it(
     'should be defined',
@@ -38,17 +58,13 @@ describe('FunctionInvocationService', () => {
   it(
     'routes to local when implementation is available',
     Effect.fnUntraced(function* () {
-      const add = defineFunction({
-        key: 'example.org/function/add',
-        name: 'add',
-        inputSchema: Schema.Struct({ a: Schema.Number, b: Schema.Number }),
-        outputSchema: Schema.Number,
-        handler: ({ data }) => data.a + data.b,
-      });
-
-      const layer = TestLayer.pipe(Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: [add] })));
+      const layer = TestLayer.pipe(
+        Layer.provideMerge(
+          FunctionImplementationResolver.layerTest({ functions: OperationHandlerSet.make(AddHandler) }),
+        ),
+      );
       const result = yield* Effect.gen(function* () {
-        return yield* FunctionInvocationService.invokeFunction(add, { a: 2, b: 3 });
+        return yield* FunctionInvocationService.invokeFunction(Add, { a: 2, b: 3 });
       }).pipe(Effect.provide(layer));
 
       expect(result).toEqual(5);
@@ -58,21 +74,12 @@ describe('FunctionInvocationService', () => {
   it(
     'routes to remote when no local implementation is found',
     Effect.fnUntraced(function* () {
-      // This function is not deployed, so mock layer will be used.
-      const echo = defineFunction({
-        key: 'example.org/function/echo',
-        name: 'function-that-w-deployed',
-        inputSchema: Schema.Unknown,
-        outputSchema: Schema.Unknown,
-        handler: () => {},
-      });
-
-      // No resolver provided → resolveFunctionImplementation will fail → remote path is used.
+      // No resolver provided -> resolveFunctionImplementation will fail -> remote path is used.
       const result = yield* Effect.gen(function* () {
-        return yield* FunctionInvocationService.invokeFunction(echo, { hello: 'world' });
+        return yield* FunctionInvocationService.invokeFunction(Echo, { hello: 'world' });
       }).pipe(Effect.provide(TestLayer));
 
-      // RemoteFunctionExecutionService.mock echos input back.
+      // RemoteFunctionExecutionService.mock echoes input back.
       expect(result).toEqual({ hello: 'world', resolved: 'remote' });
     }),
   );

@@ -15,13 +15,17 @@ export type TokenManagerProps = {
 };
 
 export const TokenManager = ({ tokens, onDelete }: TokenManagerProps) => {
-  return tokens.length > 0 ? (
+  if (!tokens.length) {
+    return null;
+  }
+
+  return (
     <List>
       {tokens.map((token) => (
         <TokenListItem key={token.id} token={token} onDelete={onDelete} />
       ))}
     </List>
-  ) : null;
+  );
 };
 
 type TokenListItemProps = {
@@ -38,7 +42,7 @@ const TokenListItem = ({ token, onDelete }: TokenListItemProps) => {
 
   return (
     <ListItem.Root>
-      <ListItem.Heading>{token.note}</ListItem.Heading>
+      <ListItem.Heading classNames='grow truncate'>{token.note}</ListItem.Heading>
       <div className='flex items-center text-description text-sm truncate'>{token.source}</div>
       <ListItem.Endcap>
         <IconButton iconOnly icon='ph--x--regular' variant='ghost' label={t('delete token')} onClick={handleDelete} />

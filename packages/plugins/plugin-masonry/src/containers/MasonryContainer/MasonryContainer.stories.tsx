@@ -9,11 +9,11 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { View } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, useObject, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel } from '@dxos/schema';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
@@ -38,8 +38,6 @@ const meta = {
   component: StorybookMasonry,
   render: () => <StorybookMasonry />,
   decorators: [
-    withTheme(),
-    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),
@@ -48,7 +46,7 @@ const meta = {
           types: [Organization.Organization, View.View, Masonry.Masonry],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* initializeIdentity(client);
               const space = yield* Effect.promise(() => client.spaces.create());
               yield* Effect.promise(() => space.waitUntilReady());
               const { view } = yield* Effect.promise(() =>

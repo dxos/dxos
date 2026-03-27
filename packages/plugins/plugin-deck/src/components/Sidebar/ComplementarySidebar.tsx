@@ -34,7 +34,7 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { t } = useTranslation(meta.id);
-  const { invokeSync } = useOperationInvoker();
+  const { invokePromise } = useOperationInvoker();
   const { state, deck, updateState } = useDeckState();
   const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();
@@ -61,10 +61,10 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       } else {
         setInternalValue(nextValue);
         updateState((state) => ({ ...state, complementarySidebarState: 'expanded' }));
-        invokeSync(LayoutOperation.UpdateComplementary, { subject: nextValue });
+        void invokePromise(LayoutOperation.UpdateComplementary, { subject: nextValue });
       }
     },
-    [state.complementarySidebarState, activeId, invokeSync, updateState],
+    [state.complementarySidebarState, activeId, invokePromise, updateState],
   );
 
   const data = useMemo(
@@ -78,9 +78,9 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 
   useEffect(() => {
     if (!activeId) {
-      invokeSync(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+      void invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
     }
-  }, [activeId, invokeSync]);
+  }, [activeId, invokePromise]);
 
   return (
     <Main.ComplementarySidebar
@@ -90,7 +90,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         hoistStatusbar && 'bottom-(--dx-statusbar-size)',
       ]}
     >
-      <Tabs.Root orientation='vertical' verticalVariant='stateless' value={internalValue} classNames='contents'>
+      {/* TODO(burdon): asChild. */}
+      <Tabs.Root orientation='vertical' value={internalValue} classNames='contents'>
         <div
           role='none'
           style={iconSize(5)}
@@ -100,7 +101,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-toolbar-surface dx-contain-layout dx-app-drag',
           )}
         >
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) p-1 gap-1 overflow-y-auto!'>
+          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto!'>
             {companions.map((companion) => (
               <Tabs.Tab key={getCompanionVariant(companion.id)} value={getCompanionVariant(companion.id)} asChild>
                 <IconButton

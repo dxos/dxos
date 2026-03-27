@@ -5,14 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, COMPANION_PREFIX, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment, getSpaceIdFromPath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DECK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
-import { SearchOperation } from '../../types';
+import { SearchOperation } from '../../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -29,7 +29,7 @@ export default Capability.makeModule(
 
           return [
             {
-              id: `${COMPANION_PREFIX}search`,
+              id: companionSegment('search'),
               type: DECK_COMPANION_TYPE,
               data: space,
               properties: {

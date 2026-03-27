@@ -21,7 +21,7 @@ import { ViewAnnotation } from '@dxos/schema';
 import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '../../../meta';
-import { SpaceOperation } from '../../../types';
+import { SpaceOperation } from '../../../operations';
 
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
@@ -202,7 +202,12 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
                 droppable: false,
               });
             })
-            .filter(isNonNullable),
+            .filter(isNonNullable)
+            .toSorted((nodeA, nodeB) => {
+              const labelA = typeof nodeA.properties.label === 'string' ? nodeA.properties.label : '';
+              const labelB = typeof nodeB.properties.label === 'string' ? nodeB.properties.label : '';
+              return labelA.localeCompare(labelB);
+            }),
         );
       },
     }),
@@ -331,18 +336,13 @@ const createSchemaActions = ({
                   typename,
                 });
               } else {
-                const createdObject = yield* createObjectFn({}, { db: space.db }) as Effect.Effect<
-                  Obj.Unknown,
+                const result = yield* createObjectFn({}, { db: space.db, target: space.db }) as Effect.Effect<
+                  { subject: readonly string[] },
                   Error,
                   never
                 >;
-                const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
-                  target: space.db,
-                  hidden: true,
-                  object: createdObject,
-                });
-                if (addResult.subject) {
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: addResult.subject });
+                if (result.subject.length > 0) {
+                  yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
                 }
               }
             }),

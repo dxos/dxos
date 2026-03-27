@@ -24,6 +24,12 @@
       "types": "./dist/types/src/cli/index.d.ts",
       "node": "./dist/lib/node-esm/cli/index.mjs"
     },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "browser": "./dist/lib/browser/operations/index.mjs",
+      "node": "./dist/lib/node-esm/operations/index.mjs"
+    },
     "./types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
@@ -36,6 +42,9 @@
     "*": {
       "types": [
         "dist/types/src/types/index.d.ts"
+      ],
+      "operations": [
+        "dist/types/src/operations/index.d.ts"
       ]
     }
   },
@@ -84,7 +93,7 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
-    "@dxos/react-ui-searchlist": "workspace:*",
+    "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-stack": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/react-ui-tabs": "workspace:*",
@@ -107,6 +116,7 @@
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@babel/core": "catalog:",
     "@dxos/lit-ui": "workspace:*",
+    "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",

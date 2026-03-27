@@ -23,16 +23,11 @@ import * as Struct from 'effect/Struct';
 import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
-import {
-  type FunctionDefinition,
-  FunctionInvocationService,
-  QueueService,
-  TracingService,
-  deserializeFunction,
-} from '@dxos/functions';
-import { Function, Trigger, type TriggerEvent } from '@dxos/functions';
+import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
+import { Trigger, type TriggerEvent } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { FeedProtocol, type ObjectId } from '@dxos/protocols';
 
 import { createInvocationPayload } from './input-builder';
@@ -105,7 +100,7 @@ type TriggerDispatcherServices =
 export type InvocationsState = {
   invocationId: ObjectId;
   trigger: Trigger.Trigger;
-  function: FunctionDefinition.Any | null;
+  function: Operation.Definition.Any | null;
   event: TriggerEvent.TriggerEvent;
   result: Exit.Exit<unknown> | null;
 };
@@ -330,10 +325,10 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           return yield* Effect.dieMessage('Trigger has no function reference');
         }
 
-        // Resolve the function
-        const serialiedFunction = yield* Database.load(trigger.function!).pipe(Effect.orDie);
-        invariant(Obj.instanceOf(Function.Function, serialiedFunction));
-        const functionDef = deserializeFunction(serialiedFunction);
+        // Resolve the operation definition from the persistent record.
+        const serializedOperation = yield* Database.load(trigger.function!).pipe(Effect.orDie);
+        invariant(Obj.instanceOf(Operation.PersistentOperation, serializedOperation));
+        const functionDef = Operation.deserialize(serializedOperation);
 
         this._registry.update(
           this._state,

@@ -14,8 +14,8 @@ import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
-import { type CreateObject } from '@dxos/plugin-space/types';
+import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { HasSubject } from '@dxos/types';
 
 import {
@@ -26,14 +26,15 @@ import {
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
-  OperationResolver,
+  OperationHandler,
   ReactSurface,
   Settings,
   Toolkit,
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { AssistantEvents, AssistantOperation } from './types';
+import { AssistantEvents } from './types';
+import { AssistantOperation } from './operations';
 import * as Option from 'effect/Option';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
@@ -46,10 +47,19 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Chat.Chat).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Chat.Chat).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props, { db }) =>
-            Operation.invoke(AssistantOperation.CreateChat, { db, name: props?.name }).pipe(
-              Effect.map(({ object }) => object),
-            )) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const { object } = yield* Operation.invoke(AssistantOperation.CreateChat, {
+                db: options.db,
+                name: props?.name,
+              });
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -58,7 +68,16 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
           icon: Annotation.IconAnnotation.get(Blueprint.Blueprint).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Blueprint.Blueprint).pipe(Option.getOrThrow).hue ?? 'white',
           inputSchema: AssistantOperation.BlueprintForm,
-          createObject: ((props) => Effect.sync(() => Blueprint.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Blueprint.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -66,7 +85,16 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Prompt.Prompt).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Prompt.Prompt).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props) => Effect.sync(() => Prompt.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Prompt.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -74,7 +102,16 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Sequence).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Sequence).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props) => Effect.sync(() => Obj.make(Sequence, props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Obj.make(Sequence, props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -82,19 +119,27 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Project.Project).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((_, { db }) =>
-            Project.makeInitialized(
-              {
-                name: 'New Project',
-                spec: 'Not specified yet',
-              },
-              ProjectBlueprint.make(),
-            ).pipe(withComputeRuntime(db.spaceId))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = yield* Project.makeInitialized(
+                {
+                  name: 'New Project',
+                  spec: 'Not specified yet',
+                },
+                ProjectBlueprint.make(),
+              ).pipe(withComputeRuntime(options.db.spaceId));
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
     ],
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [
       Chat.Chat,

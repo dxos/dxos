@@ -10,7 +10,7 @@ import React, { forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { composableProps, type ToolbarStyleProps } from '@dxos/ui-theme';
-import { type SlottableProps } from '@dxos/ui-types';
+import { ComposableProps, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -34,11 +34,14 @@ import { Separator, type SeparatorProps } from '../Separator';
 // Root
 //
 
-type ToolbarRootProps = ThemedClassName<ToolbarPrimitive.ToolbarProps & ToolbarStyleProps>;
+type ToolbarRootProps = ComposableProps<
+  HTMLDivElement,
+  ThemedClassName<ToolbarPrimitive.ToolbarProps & ToolbarStyleProps>
+>;
 
 const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
   ({ children, density, disabled, layoutManaged, orientation, ...props }, forwardedRef) => {
-    const { className, dir: _, ...rest } = composableProps(props);
+    const { className, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
 
     return (

@@ -12,7 +12,7 @@ import { Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { JournalOperation } from '../../types';
+import { OutlineOperation } from '../../operations';
 
 const QuickEntryForm = Schema.Struct({
   text: Schema.String.pipe(
@@ -33,7 +33,7 @@ export const QuickEntryDialog = () => {
         return;
       }
 
-      await invokePromise(JournalOperation.QuickEntry, { text: values.text.trim() });
+      await invokePromise(OutlineOperation.QuickJournalEntry, { text: values.text.trim() });
       await invokePromise(LayoutOperation.UpdateDialog, { state: false });
     },
     [invokePromise],

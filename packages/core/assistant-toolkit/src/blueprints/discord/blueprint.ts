@@ -2,18 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ToolId } from '@dxos/ai';
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint } from '@dxos/blueprints';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { DiscordFunctions } from './functions';
+import { FetchMessages } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.discord';
-
-const functions = Object.values(DiscordFunctions);
 
 /**
  * Agent prompt instructions for managing hierarchical task lists.
@@ -34,12 +31,11 @@ const make = () =>
     instructions: {
       source: Ref.make(Text.make(instructions)),
     },
-    tools: [ToolId.make(DiscordFunctions.Fetch.key)],
+    tools: Blueprint.toolDefinitions({ operations: [FetchMessages] }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  functions,
   make,
 };
 

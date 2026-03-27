@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { Icon, IconButton, type ThemedClassName, Splitter, Toolbar, Panel, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 
@@ -28,9 +29,10 @@ export type MixerProps = ThemedClassName<{
 /** Multi-layer audio mixer with sequencer layers. */
 export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
   const [playing, setPlaying] = useState(false);
-  const layers = dream.sequences ?? [];
+  const [dreamSnapshot] = useObject(dream);
+  const layers = dreamSnapshot?.sequences ?? [];
   const [selected, setSelected] = useState<string | undefined>();
-  const durationSeconds = dream.duration ?? 0;
+  const durationSeconds = dreamSnapshot?.duration ?? 0;
   const timed = durationSeconds > 0;
   const { remaining, formattedTime, start: startCountdown, stop: stopCountdown } = useCountdown(durationSeconds);
 
@@ -89,8 +91,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
-    Obj.change(dream, (d) => {
-      d.sequences = [...(d.sequences ?? []), sequence];
+    Obj.change(dream, (obj) => {
+      obj.sequences = [...(obj.sequences ?? []), sequence];
     });
     setSelected(sequence.id);
   }, [dream]);
@@ -231,7 +233,7 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
         }}
       />
       <List.ItemDeleteButton
-        onClick={(event: React.MouseEvent) => {
+        onClick={(event: MouseEvent) => {
           event.stopPropagation();
           onLayerDelete(item.id);
         }}

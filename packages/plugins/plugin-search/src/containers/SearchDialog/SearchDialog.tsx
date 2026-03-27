@@ -10,10 +10,9 @@ import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Query } from '@dxos/echo';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { Button, Dialog, useTranslation } from '@dxos/react-ui';
-import { SearchList } from '@dxos/react-ui-searchlist';
+import { Dialog, useTranslation } from '@dxos/react-ui';
+import { SearchList } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
-import { osTranslations } from '@dxos/ui-theme';
 
 import { useGlobalSearch, useGlobalSearchResults } from '../../hooks';
 import { meta } from '../../meta';
@@ -77,10 +76,15 @@ export const SearchDialog = ({ pivotId: pivotIdProp }: SearchDialogProps) => {
 
   return (
     <Dialog.Content>
-      <Dialog.Title srOnly>{t('search dialog title')}</Dialog.Title>
+      <Dialog.Header>
+        <Dialog.Title>{t('search dialog title')}</Dialog.Title>
+        <Dialog.Close asChild>
+          <Dialog.CloseIconButton />
+        </Dialog.Close>
+      </Dialog.Header>
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch}>
-          <SearchList.Content>
+          <SearchList.Content classNames='max-h-[24rem]'>
             <SearchList.Input placeholder={t('search placeholder')} />
             <SearchList.Viewport>
               {allResults.map((result) => (
@@ -100,11 +104,6 @@ export const SearchDialog = ({ pivotId: pivotIdProp }: SearchDialogProps) => {
           </SearchList.Content>
         </SearchList.Root>
       </Dialog.Body>
-      <Dialog.ActionBar>
-        <Dialog.Close asChild>
-          <Button classNames='w-full'>{t('close label', { ns: osTranslations })}</Button>
-        </Dialog.Close>
-      </Dialog.ActionBar>
     </Dialog.Content>
   );
 };

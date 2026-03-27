@@ -10,10 +10,10 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MapPlugin } from '@dxos/plugin-map';
 import { TablePlugin } from '@dxos/plugin-table';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
 
@@ -28,14 +28,13 @@ const meta = {
   component: Toolbox as any,
   render: DefaultStory,
   decorators: [
-    withTheme(),
     withPluginManager({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* initializeIdentity(client);
             }),
         }),
         ChessPlugin(),

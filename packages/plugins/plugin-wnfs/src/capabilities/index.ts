@@ -5,5 +5,5 @@
 export * from './blockstore';
 export * from './file-uploader';
 export * from './markdown';
-export * from './operation-resolver';
+export * from './operation-handler';
 export * from './react-surface';

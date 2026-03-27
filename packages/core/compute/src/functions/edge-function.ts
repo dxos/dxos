@@ -7,8 +7,8 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { Filter } from '@dxos/client/echo';
 import { JsonSchema, Obj } from '@dxos/echo';
-import { Function, FunctionInvocationService, TracingService } from '@dxos/functions';
-import { FunctionDefinition } from '@dxos/functions';
+import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 import { type ProcedureAst } from '@dxos/vendor-hyperformula';
@@ -35,7 +35,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
           return new CellError(ErrorType.REF, 'Missing space');
         }
 
-        const [fn] = await space.db.query(Filter.type(Function.Function, { binding })).run();
+        const [fn] = await space.db.query(Filter.type(Operation.PersistentOperation, { binding })).run();
         if (!fn) {
           log.info('Function not found', { binding });
           return new CellError(ErrorType.REF, 'Function not found');
@@ -55,7 +55,7 @@ export class EdgeFunctionPlugin extends AsyncFunctionPlugin {
         }
 
         const runtime = this.context.runtime;
-        const functionDef = FunctionDefinition.deserialize(fn);
+        const functionDef = Operation.deserialize(fn);
         // If input schema exists, construct an object from args using the schema props order, otherwise pass { args }.
         let input: any;
         if (fn.inputSchema) {

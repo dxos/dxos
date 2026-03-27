@@ -12,15 +12,16 @@ import { Annotation, Type } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { translations as formTranslations } from '@dxos/react-ui-form';
 import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { Table } from '@dxos/react-ui-table/types';
 import { ViewModel } from '@dxos/schema';
 
-import { BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
+import { BlueprintDefinition, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { CreateTableSchema, TableOperation } from './types';
+import { CreateTableSchema, TableOperation } from './operations';
 
 export const TablePlugin = Plugin.define(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
@@ -32,15 +33,26 @@ export const TablePlugin = Plugin.define(meta).pipe(
         iconHue: Annotation.IconAnnotation.get(Table.Table).pipe(Option.getOrThrow).hue ?? 'white',
         comments: 'unanchored',
         inputSchema: CreateTableSchema,
-        createObject: ((props, { db }) =>
-          Effect.promise(async () => {
-            const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db, typename: props.typename });
-            return Table.make({ name: props.name, view, jsonSchema });
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = yield* Effect.promise(async () => {
+              const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+                db: options.db,
+                typename: props.typename,
+              });
+              return Table.make({ name: props.name, view, jsonSchema });
+            });
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
           })) satisfies CreateObject,
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Table.Table] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...formTranslations, ...tableTranslations] }),
