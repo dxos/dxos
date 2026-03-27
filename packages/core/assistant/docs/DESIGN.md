@@ -26,13 +26,13 @@ It emphasizes offline capability, data ownership, and composability, with option
 - Operations are short-lived functions that are invoked by a process.
 - A Feed is an append-only log of messages.
 - A Conversation is a process that reads from and writes to a Feed.
-  - When a messages is read, it is processed by an LLM/model and the output is written to the Feed.
+  - When a message is read, it is processed by an LLM/model and the output is written to the Feed.
   - During processing, the Conversation may invoke Tools, which are implemented as Operations.
-  - During processing, the Conversation may spawn an new Process (branching the current Conversation);
+  - During processing, the Conversation may spawn a new Process (branching the current Conversation);
     - Once the sub-process completes it writes the result into the parent's Conversation.
 - A Conversation may create a Plan Artifact that it uses to manage its state through successive Tool requests.
 - Triggers define event subscriptions which may initiate a Process.
-  - An event might trigger a Process, which runs an operation and then immediately exist.
+  - An event might trigger a Process, which runs an operation and then immediately exits.
   - An event might trigger a Process, which binds a Feed to a Conversation.
 - Agents are implemented as a Conversation bound to a Feed, a set of Tools, and some base instructions.
 
