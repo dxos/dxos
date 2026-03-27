@@ -98,6 +98,8 @@ export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(F
 /**
  * Derives the queue DXN from the feed object's DXN.
  * Returns `undefined` when the feed is not stored in a space yet.
+ *
+ * Used internally by the feed service layer.
  */
 export const getQueueDxn = (feed: Feed): DXN | undefined => {
   const self = Obj.getDXN(feed).asEchoDXN();
