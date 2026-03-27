@@ -4,7 +4,7 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { forwardRef } from 'react';
+import React, { forwardRef, PropsWithChildren } from 'react';
 
 import { composableProps } from '@dxos/ui-theme';
 import { type ComposableProps, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
@@ -42,7 +42,7 @@ const Middle = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
   },
 );
 
-const Leaf = forwardRef<HTMLButtonElement, ComposableProps<HTMLButtonElement>>(
+const Leaf = forwardRef<HTMLButtonElement, ComposableProps<HTMLButtonElement, PropsWithChildren>>(
   ({ children, ...props }, forwardedRef) => {
     return (
       <button {...composableProps<HTMLButtonElement>(props, { role: 'none' })} ref={forwardedRef}>

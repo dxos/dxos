@@ -133,12 +133,7 @@ Root.displayName = 'ScrollContainer.Root';
 
 const VIEWPORT_NAME = 'ScrollContainer.Viewport';
 
-type ViewportProps = ComposableProps<
-  HTMLDivElement,
-  {
-    fade?: boolean;
-  }
->;
+type ViewportProps = ComposableProps<HTMLDivElement, PropsWithChildren<{ fade?: boolean }>>;
 
 const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ children, fade, ...props }, forwardedRef) => {
   const scrollerRef = useRef<HTMLDivElement>(null);

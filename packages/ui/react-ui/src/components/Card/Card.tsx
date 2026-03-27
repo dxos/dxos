@@ -202,7 +202,10 @@ const CardContent = forwardRef<HTMLDivElement, CardContentProps>(
 // Row
 //
 
-type CardRowProps = ComposableProps<HTMLDivElement, { icon?: string; fullWidth?: boolean }>;
+type CardRowProps = ComposableProps<
+  HTMLDivElement,
+  PropsWithChildren<{ role?: string; icon?: string; fullWidth?: boolean }>
+>;
 
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(({ children, role, icon, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props, { role: 'none' });

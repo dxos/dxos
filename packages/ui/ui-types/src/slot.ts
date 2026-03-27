@@ -4,7 +4,7 @@
 
 import { type ForwardRefExoticComponent, type HTMLAttributes, type RefAttributes } from 'react';
 
-import { type ClassNameValue } from './theme';
+import { ThemedClassName, type ClassNameValue } from './theme';
 
 // TODO(burdon): Define base type for component with `testId`, etc.
 
@@ -25,6 +25,7 @@ import { type ClassNameValue } from './theme';
  *
  * @see slot.stories.tsx (@dxos/react-ui)
  */
+// TODO(burdon): Don't expose HTMLAttributes.
 // TODO(burdon): Warn if child is not ComposableProps.
 export type SlottableProps<E extends HTMLElement, P extends Record<string, unknown> = {}> = HTMLAttributes<E> &
   P & {
@@ -51,14 +52,10 @@ export type SlottableProps<E extends HTMLElement, P extends Record<string, unkno
  *
  * @see slot.stories.tsx (@dxos/react-ui)
  */
-// TODO(burdon): P as Void
-export type ComposableProps<E extends HTMLElement = HTMLElement, P extends Record<string, unknown> = {}> = Omit<
-  HTMLAttributes<E>,
-  'dir' // TODO(burdon): Explain.
-> &
-  P & {
-    classNames?: ClassNameValue;
-  };
+export type ComposableProps<
+  E extends HTMLElement = HTMLElement,
+  P extends Record<string, unknown> = {},
+> = ThemedClassName<P> & Pick<HTMLAttributes<E>, 'className'>;
 
 /**
  * Marks a component as slot-compatible — its root element accepts and merges
