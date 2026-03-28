@@ -91,6 +91,7 @@
     "@typescript/native-preview": "catalog:",
     "@vitejs/plugin-react-swc": "catalog:",
     "@vitest/browser": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "@vitest/expect": "catalog:",
     "@vitest/runner": "catalog:",
