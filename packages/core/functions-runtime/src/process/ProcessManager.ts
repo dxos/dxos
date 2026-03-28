@@ -254,7 +254,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   }
 
   requestChildEvent(event: Process.ChildEvent<unknown>): void {
-    this.#runHandler(() => this.#process.childEvent(event)).pipe(Effect.forkIn(this.#scope));
+    Effect.runFork(this.#runHandler(() => this.#process.childEvent(event)).pipe(Effect.forkIn(this.#scope)));
   }
 
   #runHandler(fn: () => Effect.Effect<void, never, R | Process.BaseServices>): Effect.Effect<void> {
@@ -363,12 +363,13 @@ export class ProcessManagerImpl implements Manager {
   spawn<I, O>(executable: Process.Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
       const id = Schema.decodeSync(Process.ID)(crypto.randomUUID());
+      log.info('spawn', { pid: id, parentPid: options?.parentProcessId });
       const scope = yield* Scope.make();
       const outputQueue = yield* Queue.unbounded<OutputItem<O>>();
 
       const storage = StorageService.layer(this.#kvStore, `process/${id}/`);
 
-      const parentOption = options?.parentProcessId ? Option.some(options.parentProcessId) : Option.none<Process.ID>();
+      const parentOption = Option.fromNullable(options?.parentProcessId);
 
       let handleRef: ProcessHandleImpl<I, O, any> | null = null;
 
@@ -448,14 +449,18 @@ export class ProcessManagerImpl implements Manager {
 
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen(this, function* () {
+          log.info('onFinished', { pid: handle.pid });
           if (Option.isSome(handle.parentId)) {
             const parentHandle = this.#handles.get(handle.parentId.value);
             if (parentHandle) {
+              log.info('requesting child event', { pid: handle.parentId.value });
               parentHandle.requestChildEvent({
                 _tag: 'exited',
                 pid: handle.pid,
                 result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
               });
+            } else {
+              log.warn('parent handle not found', { pid: handle.parentId.value });
             }
           }
 
