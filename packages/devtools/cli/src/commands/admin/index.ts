@@ -14,7 +14,7 @@ import { spaces } from './spaces';
 
 export const admin = Command.make('admin', {
   adminKey: Options.text('admin-key').pipe(
-    Options.withDescription('Edge admin key (or DX_EDGE_ADMIN_KEY env var).'),
+    Options.withDescription('Edge admin key (or DX_HUB_API_KEY env var).'),
     Options.withAlias('k'),
     Options.optional,
   ),
@@ -31,7 +31,7 @@ export const admin = Command.make('admin', {
       const parentProvider = yield* Effect.configProviderWith(Effect.succeed);
 
       const overrides: Record<string, string> = {};
-      Option.map(adminKey, (value) => (overrides.DX_EDGE_ADMIN_KEY = value));
+      Option.map(adminKey, (value) => (overrides.DX_HUB_API_KEY = value));
       Option.map(edgeUrl, (value) => (overrides.DX_EDGE_BASE_URL = value));
 
       const childProvider = ConfigProvider.fromJson(overrides);

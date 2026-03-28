@@ -18,21 +18,28 @@ type SpaceDetail = {
     count: number;
     list: { identityKey: string; role?: string; agentKey?: string }[];
   };
-  feeds: {
-    count: number;
-    totalBlocks: number;
-    byNamespace: {
-      namespace: string;
-      feeds: { feedId: string; blockCount: number }[];
-    }[];
+  controlFeeds: {
     replicationProgress: Record<string, { replicated: number; processed: number }>;
   };
   echo: {
+    dataFeeds: {
+      count: number;
+      totalBlocks: number;
+      byNamespace: {
+        namespace: string;
+        feeds: { feedId: string; blockCount: number }[];
+      }[];
+    };
     documentCount: number;
     objectCount: number;
+    deletedObjectCount: number;
+    indexedDocumentCount: number;
     objectsByType: { typeDxn: string; count: number }[];
-    storageSizeBytes: number;
-    indexerStatus: { indexingInProgress: boolean; indexedChanges: number; totalChanges: number };
+    indexerStatus: {
+      indexingInProgress: boolean;
+      cursors: { indexName: string; sourceName: string; resourceId: string | null; cursor: string | number }[];
+      totalChanges: number;
+    };
   };
   usageInLast30Days: {
     lastActivity: string | null;
@@ -41,16 +48,6 @@ type SpaceDetail = {
     totalEvents: number;
   } | null;
   durableObjects: { type: string; doId: string }[];
-};
-
-const formatBytes = (bytes: number): string => {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-  if (bytes < 1024 * 1024) {
-    return `${(bytes / 1024).toFixed(1)} KB`;
-  }
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
 const printSection = function* (title: string, lines: string[]) {
@@ -90,22 +87,30 @@ export const inspect = Command.make(
         return `${member.identityKey}${role}${agent}`;
       }));
 
-      yield* printSection(`Feeds (${result.feeds.count}, ${result.feeds.totalBlocks} blocks)`, [
-        ...result.feeds.byNamespace.flatMap((ns) => [
+      const controlProgress = Object.entries(result.controlFeeds.replicationProgress);
+      if (controlProgress.length > 0) {
+        yield* printSection('Control Feeds', controlProgress.map(
+          ([key, progress]) => `${key}: replicated=${progress.replicated} processed=${progress.processed}`,
+        ));
+      }
+
+      const { dataFeeds } = result.echo;
+      const indexer = result.echo.indexerStatus;
+      const indexerLabel = indexer.indexingInProgress
+        ? `indexing (${indexer.totalChanges} total changes)`
+        : `idle (${indexer.totalChanges} total changes)`;
+      yield* printSection('Echo', [
+        `Data feeds:       ${dataFeeds.count} (${dataFeeds.totalBlocks} blocks)`,
+        `Documents:        ${result.echo.documentCount} (${result.echo.indexedDocumentCount} indexed)`,
+        `Objects:          ${result.echo.objectCount} active, ${result.echo.deletedObjectCount} deleted`,
+        `Indexer:          ${indexerLabel}`,
+        ...indexer.cursors.map(
+          (cursor) => `  ${cursor.indexName}/${cursor.sourceName}: ${cursor.cursor}`,
+        ),
+        ...dataFeeds.byNamespace.flatMap((ns) => [
           `${ns.namespace}:`,
           ...ns.feeds.map((feed) => `  ${feed.feedId} (${feed.blockCount} blocks)`),
         ]),
-      ]);
-
-      const indexer = result.echo.indexerStatus;
-      const indexerLabel = indexer.indexingInProgress
-        ? `indexing ${indexer.indexedChanges}/${indexer.totalChanges}`
-        : `idle (${indexer.indexedChanges}/${indexer.totalChanges})`;
-      yield* printSection('Echo', [
-        `Documents: ${result.echo.documentCount}`,
-        `Objects:   ${result.echo.objectCount}`,
-        `Storage:   ${formatBytes(result.echo.storageSizeBytes)}`,
-        `Indexer:   ${indexerLabel}`,
         ...result.echo.objectsByType.slice(0, 10).map(
           (entry) => `  ${entry.typeDxn}: ${entry.count}`,
         ),

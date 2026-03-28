@@ -26,7 +26,7 @@ export const adminRequest = (
   options?: { query?: Record<string, string> },
 ) =>
   Effect.gen(function* () {
-    const adminKey = yield* Config.string('DX_EDGE_ADMIN_KEY');
+    const adminKey = yield* Config.string('DX_HUB_API_KEY');
     const baseUrl = yield* Config.string('DX_EDGE_BASE_URL');
 
     const url = new URL(path, baseUrl);
@@ -57,7 +57,7 @@ export const adminRequest = (
  */
 export const adminDownload = (path: string) =>
   Effect.gen(function* () {
-    const adminKey = yield* Config.string('DX_EDGE_ADMIN_KEY');
+    const adminKey = yield* Config.string('DX_HUB_API_KEY');
     const baseUrl = yield* Config.string('DX_EDGE_BASE_URL');
 
     const url = new URL(path, baseUrl);
