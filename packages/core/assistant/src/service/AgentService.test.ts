@@ -127,31 +127,14 @@ const SYSTEM_PROMPT = trim`
   Do internal reasoning, but only show the answers to the user.
 `;
 
-const TestLayer = Layer.empty.pipe(
-  Layer.provideMerge(AgentService.layer({ systemPrompt: SYSTEM_PROMPT })),
-  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
-  Layer.provideMerge(
-    ServiceResolver.layerRequirements(
-      Database.Service,
-      GenericToolkit.GenericToolkitProvider,
-      QueueService,
-      AiService.AiService,
-      OperationRegistry.Service,
-    ),
-  ),
-  Layer.provideMerge(OperationRegistry.layer),
-  Layer.provideMerge(
-    AssistantTestLayer({
-      types: [Organization.Organization, Feed.Feed, Blueprint.Blueprint],
-      tracing: 'pretty',
-      aiServicePreset: 'edge-remote',
-      operationHandlers: [handlers],
-      blueprints: [ResearchBlueprint],
-    }),
-  ),
-  Layer.provideMerge(KeyValueStore.layerMemory),
-  Layer.provideMerge(Registry.layer),
-);
+const TestLayer = AssistantTestLayer({
+  types: [Organization.Organization, Feed.Feed, Blueprint.Blueprint],
+  tracing: 'pretty',
+  aiServicePreset: 'edge-remote',
+  operationHandlers: [handlers],
+  blueprints: [ResearchBlueprint],
+  systemPrompt: SYSTEM_PROMPT,
+});
 
 describe('Agent Executable', () => {
   it.live(

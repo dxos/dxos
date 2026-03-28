@@ -9,14 +9,31 @@ import * as Match from 'effect/Match';
 import { AiService, type ModelName } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { Feed, type Type } from '@dxos/echo';
-import { CredentialsService, type ServiceCredential, TracingService } from '@dxos/functions';
-import { TracingServiceExt, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import { Database, Feed, type Type } from '@dxos/echo';
+import {
+  CredentialsService,
+  type FunctionInvocationService,
+  QueueService,
+  type ServiceCredential,
+  TracingService,
+} from '@dxos/functions';
+import {
+  ProcessManager,
+  ServiceResolver,
+  TracingServiceExt,
+  TriggerDispatcher,
+  TriggerStateStore,
+  type Process,
+} from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet, OperationRegistry, type OperationInvoker } from '@dxos/operation';
 import { ToolExecutionServices } from '../functions';
 import { Blueprint } from '@dxos/blueprints';
+import { AgentService } from '../service';
+import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import { TestContextService } from '@dxos/effect/testing';
+import type { LanguageModel } from '@effect/ai';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
@@ -33,7 +50,23 @@ interface TestLayerOptions {
   tracing?: 'noop' | 'console' | 'pretty';
 
   disableLlmMemoization?: boolean;
+
+  /**
+   * Core system prompt for the agent.
+   */
+  systemPrompt?: string;
 }
+
+export type AssistantTestServices =
+  | LanguageModel.LanguageModel
+  | Blueprint.RegistryService
+  | AgentService.AgentService
+  | ProcessManager.ProcessManagerService
+  | Process.ProcessMonitorService
+  | Database.Service
+  | QueueService
+  | FunctionInvocationService
+  | Registry.AtomRegistry;
 
 export const AssistantTestLayer = ({
   aiServicePreset = 'direct',
@@ -45,16 +78,25 @@ export const AssistantTestLayer = ({
   tracing = 'noop',
   disableLlmMemoization = false,
   blueprints = [],
-}: TestLayerOptions = {}) => {
+  systemPrompt,
+}: TestLayerOptions = {}): Layer.Layer<AssistantTestServices, never, TestContextService> => {
   const toolkit = GenericToolkit.merge(...toolkits);
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
-  return Layer.mergeAll(
-    AiService.model(model),
-    ToolExecutionServices,
-    Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
-  ).pipe(
+  return Layer.empty.pipe(
+    Layer.provideMerge(AgentService.layer({ systemPrompt })),
+    Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
+    Layer.provideMerge(
+      ServiceResolver.layerRequirements(
+        Database.Service,
+        GenericToolkit.GenericToolkitProvider,
+        QueueService,
+        AiService.AiService,
+        OperationRegistry.Service,
+      ),
+    ),
+    Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(model), ToolExecutionServices)),
     Layer.provideMerge(
       FunctionInvocationServiceLayerTest({
         functions: operationHandlersSet,
@@ -81,8 +123,12 @@ export const AssistantTestLayer = ({
         ),
       ),
     ),
+    Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
     Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
     Layer.provideMerge(OperationHandlerSet.provide(operationHandlersSet)),
+    Layer.provideMerge(KeyValueStore.layerMemory),
+    Layer.provideMerge(Registry.layer),
+    Layer.orDie,
   );
 };
 
@@ -94,4 +140,4 @@ export const AssistantTestLayerWithTriggers = (options: TestLayerWithTriggersOpt
     TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
       Layer.provide(Registry.layer),
     ),
-  ).pipe(Layer.provideMerge(TriggerStateStore.layerMemory));
+  ).pipe(Layer.provide(TriggerStateStore.layerMemory));
