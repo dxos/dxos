@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type HTMLAttributes, forwardRef, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { composableProps, slottable } from '@dxos/ui-theme';
 import { type AllowedAxis, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
@@ -88,20 +88,20 @@ ScrollAreaRoot.displayName = SCROLLAREA_ROOT_NAME;
 
 const SCROLLAREA_VIEWPORT_NAME = 'ScrollArea.Viewport';
 
-type ScrollAreaViewportProps = ThemedClassName<HTMLAttributes<HTMLDivElement>>;
+type ScrollAreaViewportProps = SlottableProps;
 
-const ScrollAreaViewport = forwardRef<HTMLDivElement, ScrollAreaViewportProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const options = useScrollAreaContext(SCROLLAREA_VIEWPORT_NAME);
+const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  const options = useScrollAreaContext(SCROLLAREA_VIEWPORT_NAME);
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
 
-    return (
-      <div {...props} className={tx('scrollArea.viewport', options, classNames)} ref={forwardedRef}>
-        {children}
-      </div>
-    );
-  },
-);
+  return (
+    <Comp {...rest} className={tx('scrollArea.viewport', options, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 ScrollAreaViewport.displayName = SCROLLAREA_VIEWPORT_NAME;
 

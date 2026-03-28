@@ -213,8 +213,9 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
     return (
       <ScrollContainer.Root pin ref={scrollerRef}>
-        <ScrollContainer.Viewport classNames={classNames} ref={containerRef}>
+        <ScrollContainer.Viewport>
           <div
+            role='none'
             className='grid'
             style={{
               gridTemplateColumns: ['min-content', showTimestamp && '96px', showIcon && '1.5rem', '1fr']
@@ -288,6 +289,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
             )}
           </div>
         </ScrollContainer.Viewport>
+        <ScrollContainer.Fade />
         <ScrollContainer.ScrollDownButton />
       </ScrollContainer.Root>
     );

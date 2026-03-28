@@ -51,7 +51,7 @@
 
 ### React
 
-- Import all required properties from React (i.e., don't do `React.forwardRef`, do `forwardRef`).
+- Import all required properties from React (i.e., use `useMemo` not `React.useMemo`).
 - When using `forwardRef` use the variable name `forwardedRef`.
 
 ## New Packages

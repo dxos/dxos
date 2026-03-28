@@ -124,6 +124,7 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
 
     return render(props, forwardedRef);
   };
+
   const component = forwardRef(wrapped as any) as any;
   (component as any)[COMPOSABLE] = true;
   return component;

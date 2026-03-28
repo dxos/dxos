@@ -334,7 +334,7 @@ export const Streaming: Story = {
             <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content classNames='border border-red-400'>
+        <Panel.Content>
           <Timeline ref={scrollerRef} branches={branches} commits={commits} />
         </Panel.Content>
       </Panel.Root>

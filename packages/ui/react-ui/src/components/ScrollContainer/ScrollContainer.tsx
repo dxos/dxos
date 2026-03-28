@@ -5,6 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type PropsWithChildren,
+  type RefObject,
   forwardRef,
   useCallback,
   useEffect,
@@ -16,12 +17,13 @@ import React, {
 
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
+import { useForwardedRef } from '@dxos/react-hooks';
 import { composableProps, mx } from '@dxos/ui-theme';
+import { type ComposableProps } from '@dxos/ui-types';
 
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ScrollArea } from '../ScrollArea';
-import { type ComposableProps } from '@dxos/ui-types';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
@@ -36,10 +38,13 @@ export interface ScrollController {
 type ScrollContainerContextValue = {
   controller?: ScrollController;
   pinned?: boolean;
+  overflow?: boolean;
   /** Called by Viewport to register/unregister the scroll element. */
   setViewport: (el: HTMLDivElement | null) => void;
   /** Called by Viewport on wheel events to update pinned state. */
   setPinned: (value: boolean) => void;
+  /** Called by Viewport on scroll events to update overflow state. */
+  setOverflow: (value: boolean) => void;
 };
 
 const [ScrollContainerProvider, useScrollContainerContext] =
@@ -65,6 +70,7 @@ const Root = forwardRef<ScrollController, RootProps>(
     const scrollerRef = useRef<HTMLDivElement | null>(null);
     const autoScrollRef = useRef(false);
     const [pinned, setPinned] = useState(pin);
+    const [overflow, setOverflow] = useState(false);
 
     const timeoutRef = useRef<NodeJS.Timeout>(undefined);
     const scrollToBottom = useCallback(
@@ -120,8 +126,17 @@ const Root = forwardRef<ScrollController, RootProps>(
     }, []);
 
     return (
-      <ScrollContainerProvider pinned={pinned} controller={controller} setViewport={setViewport} setPinned={setPinned}>
-        {children}
+      <ScrollContainerProvider
+        pinned={pinned}
+        overflow={overflow}
+        controller={controller}
+        setViewport={setViewport}
+        setPinned={setPinned}
+        setOverflow={setOverflow}
+      >
+        <ScrollArea.Root thin margin padding className='relative'>
+          {children}
+        </ScrollArea.Root>
       </ScrollContainerProvider>
     );
   },
@@ -135,44 +150,11 @@ Root.displayName = 'ScrollContainer.Root';
 
 const VIEWPORT_NAME = 'ScrollContainer.Viewport';
 
-type ViewportProps = ComposableProps<{ fade?: boolean }>;
+type ViewportProps = ComposableProps;
 
-/**
- * Isolated component that consumes pinned/controller from context.
- * Kept separate so that Viewport does not re-render when pinned changes.
- */
-const PIN_EFFECT_NAME = 'ScrollContainer.PinEffect';
-
-const PinEffect = ({ scrollerRef }: { scrollerRef: React.RefObject<HTMLDivElement | null> }) => {
-  const { pinned, controller } = useScrollContainerContext(PIN_EFFECT_NAME);
-
-  // Pin scroll to bottom when content changes.
-  useEffect(() => {
-    if (!pinned || !scrollerRef.current) {
-      return;
-    }
-
-    // Scroll instantly so we don't visually jump while content is being added.
-    controller?.scrollToBottom('instant');
-
-    // Setup resize observer to detect content changes (e.g. streaming).
-    // Use instant scroll in the callback — smooth scrolling adds/removes the
-    // scrollbar-none class, which changes the element size and re-fires the
-    // observer, creating an infinite loop.
-    const resizeObserver = new ResizeObserver(() => controller?.scrollToBottom('instant'));
-    resizeObserver.observe(scrollerRef.current);
-    return () => resizeObserver.disconnect();
-  }, [pinned, controller, scrollerRef]);
-
-  return null;
-};
-
-// TODO(burdon): Split into Content and Viewport.
-const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ children, fade, ...props }, forwardedRef) => {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const [overflow, setOverflow] = useState(false);
-  // Only consume stable callbacks — not pinned/controller — so Viewport doesn't re-render on scroll state changes.
-  const { setViewport, setPinned } = useScrollContainerContext(VIEWPORT_NAME);
+const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ children, ...props }, forwardedRef) => {
+  const scrollerRef = useForwardedRef(forwardedRef);
+  const { setViewport, setPinned, setOverflow } = useScrollContainerContext(VIEWPORT_NAME);
 
   // Register the scroll element with Root and set up wheel/scroll listeners.
   useEffect(() => {
@@ -188,22 +170,82 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ children, fade, ..
       addEventListener(el, 'scroll', () => setOverflow((el.scrollTop ?? 0) > 0)),
       () => setViewport(null),
     );
-  }, [setViewport, setPinned]);
+  }, [setViewport, setPinned, setOverflow]);
 
   return (
-    <div {...composableProps(props, { role: 'none', className: 'relative grid dx-container' })} ref={forwardedRef}>
-      {fade && <Fade overflow={overflow} />}
-      <ScrollArea.Root thin margin>
-        <ScrollArea.Viewport ref={scrollerRef}>{children}</ScrollArea.Viewport>
-      </ScrollArea.Root>
+    <ScrollArea.Viewport {...composableProps(props)} ref={scrollerRef}>
+      {children}
       <PinEffect scrollerRef={scrollerRef} />
-    </div>
+    </ScrollArea.Viewport>
   );
 });
 
 Viewport.displayName = VIEWPORT_NAME;
 
-const Fade = ({ overflow }: { overflow: boolean }) => {
+/**
+ * Isolated component that consumes pinned/controller from context.
+ * Kept separate so that Viewport does not re-render when pinned changes.
+ */
+const PIN_EFFECT_NAME = 'ScrollContainer.PinEffect';
+
+const PinEffect = ({ scrollerRef }: { scrollerRef: RefObject<HTMLDivElement | null> }) => {
+  const { pinned, controller } = useScrollContainerContext(PIN_EFFECT_NAME);
+
+  // Pin scroll to bottom when content changes.
+  useEffect(() => {
+    const viewport = scrollerRef.current;
+    if (!pinned || !viewport) {
+      return;
+    }
+
+    // Scroll instantly so we don't visually jump while content is being added.
+    controller?.scrollToBottom('smooth');
+
+    // Setup resize observer on content children to detect size changes (e.g. streaming).
+    // We observe children rather than the viewport itself, because the viewport's size
+    // stays fixed — only its content grows.
+    // Use instant scroll in the callback — smooth scrolling adds/removes the
+    // scrollbar-none class, which changes the element size and re-fires the
+    // observer, creating an infinite loop.
+    const resizeObserver = new ResizeObserver(() => controller?.scrollToBottom('smooth'));
+    Array.from(viewport.children).forEach((child) => {
+      resizeObserver.observe(child);
+    });
+
+    // Watch for added/removed children.
+    const mutationObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof Element) {
+            resizeObserver.observe(node);
+          }
+        });
+      });
+
+      controller?.scrollToBottom('smooth');
+    });
+    mutationObserver.observe(viewport, { childList: true });
+
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [pinned, controller, scrollerRef]);
+
+  return null;
+};
+
+//
+// Fade
+//
+
+const FADE_NAME = 'ScrollContainer.Fade';
+
+type FadeProps = {};
+
+const Fade = () => {
+  const { overflow } = useScrollContainerContext(FADE_NAME);
+
   return (
     <div
       role='none'
@@ -217,6 +259,8 @@ const Fade = ({ overflow }: { overflow: boolean }) => {
     />
   );
 };
+
+Fade.displayName = FADE_NAME;
 
 //
 // ScrollDownButton
@@ -261,11 +305,13 @@ export { useScrollContainerContext };
 export const ScrollContainer = {
   Root,
   Viewport,
+  Fade,
   ScrollDownButton,
 };
 
 export type {
   RootProps as ScrollContainerRootProps,
   ViewportProps as ScrollContainerViewportProps,
+  FadeProps as ScrollContainerFadeProps,
   ScrollDownButtonProps as ScrollContainerScrollDownButtonProps,
 };
