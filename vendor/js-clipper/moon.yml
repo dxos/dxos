@@ -1,0 +1,16 @@
+id: vendor-js-clipper
+layer: library
+language: typescript
+tags:
+  - vendor
+  - pack
+workspace:
+  inheritedTasks:
+    exclude:
+      - lint
+
+tasks:
+  compile:
+    args:
+      - '--entryPoint=src/js-clipper.js'
+      - '--platform=browser'

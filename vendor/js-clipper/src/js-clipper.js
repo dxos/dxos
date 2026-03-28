@@ -77,22 +77,9 @@ var use_lines = true;
 var use_deprecated = false;
 
 var ClipperLib = {};
-var isNode = false;
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = ClipperLib;
-  isNode = true;
-} else {
-  if (typeof document !== 'undefined') window.ClipperLib = ClipperLib;
-  else self['ClipperLib'] = ClipperLib;
-}
 var navigator_appName;
-if (!isNode) {
-  var nav = navigator.userAgent.toString().toLowerCase();
-  navigator_appName = navigator.appName;
-} else {
-  var nav = 'chrome'; // Node.js uses Chrome's V8 engine
-  navigator_appName = 'Netscape'; // Firefox, Chrome and Safari returns "Netscape", so Node.js should also
-}
+var nav = 'chrome';
+navigator_appName = 'Netscape';
 // Browser test to speedup performance critical functions
 var browser = {};
 if (nav.indexOf('chrome') != -1 && nav.indexOf('chromium') == -1) browser.chrome = 1;
@@ -5839,4 +5826,20 @@ ClipperLib.JS.PolyTreeToExPolygons = function (polytree) {
   return expolygons;
 };
 
-module.exports = ClipperLib;
+// ESM exports
+export default ClipperLib;
+export const Clipper = ClipperLib.Clipper;
+export const ClipperOffset = ClipperLib.ClipperOffset;
+export const PolyTree = ClipperLib.PolyTree;
+export const Paths = ClipperLib.Paths;
+export const Path = ClipperLib.Path;
+export const IntPoint = ClipperLib.IntPoint;
+export const IntRect = ClipperLib.IntRect;
+export const ClipType = ClipperLib.ClipType;
+export const PolyType = ClipperLib.PolyType;
+export const PolyFillType = ClipperLib.PolyFillType;
+export const JoinType = ClipperLib.JoinType;
+export const EndType = ClipperLib.EndType;
+export const JS = ClipperLib.JS;
+export const ExPolygons = ClipperLib.ExPolygons;
+export const ExPolygon = ClipperLib.ExPolygon;

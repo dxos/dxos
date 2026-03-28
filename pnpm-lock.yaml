@@ -660,6 +660,9 @@ catalogs:
     '@types/globrex':
       specifier: ^0.1.4
       version: 0.1.4
+    '@types/js-clipper':
+      specifier: ^0.0.32
+      version: 0.0.32
     '@types/js-yaml':
       specifier: ^4.0.5
       version: 4.0.9
@@ -17325,6 +17328,9 @@ importers:
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../react-ui-mosaic
+      '@dxos/vendor-js-clipper':
+        specifier: workspace:*
+        version: link:../../../vendor/js-clipper
       '@effect-atom/atom-react':
         specifier: 'catalog:'
         version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)(react@19.2.3)(scheduler@0.27.0)
@@ -17337,9 +17343,6 @@ importers:
       immutability-helper:
         specifier: 'catalog:'
         version: 3.1.1
-      js-clipper:
-        specifier: 'catalog:'
-        version: 1.0.1
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1
@@ -19450,6 +19453,15 @@ importers:
       hyperformula:
         specifier: 'catalog:'
         version: 2.7.1
+
+  vendor/js-clipper:
+    devDependencies:
+      '@types/js-clipper':
+        specifier: 'catalog:'
+        version: 0.0.32
+      js-clipper:
+        specifier: 'catalog:'
+        version: 1.0.1
 
   vendor/quickjs:
     dependencies:
@@ -26588,6 +26600,9 @@ packages:
 
   '@types/istanbul-reports@3.0.1':
     resolution: {integrity: sha512-c3mAZEuK0lvBp8tmuL74XRKn1+y2dcwOUpH7x4WrF6gk1GIgiluDRgMYQtw2OFcBvAJWlt6ASU3tSqxp0Uu0Aw==}
+
+  '@types/js-clipper@0.0.32':
+    resolution: {integrity: sha512-aKHiWGeIEzVFbJrTfohih1a3NYqVzdFNz3WOWe8ndh7wFz/ImavYIX1ZVvI0SAD0ZqrRQRwHYieodXa/MZS8PA==}
 
   '@types/js-cookie@2.2.7':
     resolution: {integrity: sha512-aLkWa0C0vO5b4Sr798E26QgOkss68Un0bLjs7u9qxzPT5CG+8DuNTffWES58YzJs3hrVAOs1wonycqEBqNJubA==}
@@ -46246,6 +46261,8 @@ snapshots:
   '@types/istanbul-reports@3.0.1':
     dependencies:
       '@types/istanbul-lib-report': 3.0.0
+
+  '@types/js-clipper@0.0.32': {}
 
   '@types/js-cookie@2.2.7': {}
 

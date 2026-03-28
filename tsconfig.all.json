@@ -673,6 +673,9 @@
       "path": "vendor/hyperformula/tsconfig.json"
     },
     {
+      "path": "vendor/js-clipper/tsconfig.json"
+    },
+    {
       "path": "vendor/quickjs/tsconfig.json"
     }
   ],

@@ -3,7 +3,7 @@
 //
 
 import { easeCubicOut, line, polygonHull, select } from 'd3';
-import * as Clipper from 'js-clipper';
+import * as Clipper from '@dxos/vendor-js-clipper';
 
 import { log } from '@dxos/log';
 

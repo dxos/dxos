@@ -107,7 +107,7 @@ export default defineConfig((env) => ({
     },
   },
   optimizeDeps: {
-    exclude: ['@dxos/wa-sqlite', 'js-clipper'],
+    exclude: ['@dxos/wa-sqlite'],
     ...(isFastBundle && {
       include: [
         // React.

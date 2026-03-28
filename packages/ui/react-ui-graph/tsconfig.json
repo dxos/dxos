@@ -9,6 +9,9 @@
   ],
   "references": [
     {
+      "path": "../../../vendor/js-clipper"
+    },
+    {
       "path": "../../common/async"
     },
     {

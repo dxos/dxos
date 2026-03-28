@@ -1150,6 +1150,11 @@
         },
         {
           "type": "json",
+          "path": "vendor/js-clipper/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "vendor/quickjs/package.json",
           "jsonpath": "$.version"
         }
