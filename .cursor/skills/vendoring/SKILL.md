@@ -63,10 +63,11 @@ vendor/<name>/
     }
   },
   "files": ["dist", "src"],
-  "dependencies": {},
-  "devDependencies": {
-    "<original-package>": "catalog:",
+  "dependencies": {
     "@types/<original-package>": "catalog:"
+  },
+  "devDependencies": {
+    "<original-package>": "catalog:"
   },
   "publishConfig": {
     "access": "public"
@@ -79,8 +80,8 @@ vendor/<name>/
 - **`type: "module"`**: All vendored packages use ESM.
 - **`exports`**: Use conditional exports with `types` first, then platform-specific or `default`.
 - **`files`**: Include both `dist` (built output) and `src` (types and source).
-- **`devDependencies`**: Original package and its types go here (bundled at build time).
-- **`dependencies`**: Only runtime dependencies that should NOT be bundled.
+- **`dependencies`**: `@types/*` packages go here so consumers get types installed.
+- **`devDependencies`**: Original package goes here (bundled at build time via `--bundlePackage`).
 
 ## moon.yml Template
 
@@ -127,7 +128,7 @@ tasks:
 
 ### Entry Point (`src/<name>.js`)
 
-Simple re-export of the original package:
+Simple re-export of the original package. The `--bundlePackage` flag in moon.yml will bundle this into ESM:
 
 ```javascript
 //
@@ -135,25 +136,33 @@ Simple re-export of the original package:
 //
 
 export * from '<original-package>';
+export { default } from '<original-package>';
 ```
 
-If the package needs patching (e.g., UTF-8 issues), include the fixed source directly.
+Note: Include `export { default }` if the package has a default export.
 
 ### Type Definitions (`src/<name>.d.ts`)
 
-Passthrough types from `@types/*` package:
+Passthrough types from `@types/*` package. Use a triple-slash reference to ensure types are available to consumers:
 
 ```typescript
 //
 // Copyright 2026 DXOS.org
 //
 
-export * from '<original-package>';
+/// <reference types="@types/<original-package>" />
+
+import OriginalPackage from '<original-package>';
+
+export default OriginalPackage;
+
+// Re-export named exports with their types
+export const SomeExport: typeof OriginalPackage.SomeExport;
 ```
 
-If `@types/*` doesn't exist or needs augmentation, hand-write the `.d.ts` file.
+**Important**: If using `@types/*`, move it to `dependencies` (not `devDependencies`) so consumers get the types installed.
 
-For packages with complex type exports, you may need to explicitly re-export specific types:
+If `@types/*` doesn't exist or the package has built-in types, use simple re-exports:
 
 ```typescript
 //

@@ -14,3 +14,4 @@ tasks:
     args:
       - '--entryPoint=src/js-clipper.js'
       - '--platform=browser'
+      - '--bundlePackage=js-clipper'
