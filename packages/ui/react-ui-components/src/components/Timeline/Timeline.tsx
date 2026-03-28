@@ -222,8 +222,8 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
       <ScrollContainer.Root pin ref={scrollerRef}>
         <ScrollContainer.Viewport>
           <div
-            tabIndex={0}
             role='none'
+            tabIndex={0}
             className='grid outline-none'
             style={{
               gridTemplateColumns: ['min-content', showTimestamp && '96px', showIcon && '1.5rem', '1fr']
