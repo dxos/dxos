@@ -13,7 +13,7 @@
     "isolatedModules": true,
     "jsx": "react",
     "rewriteRelativeImportExtensions": true,
-    "lib": ["DOM", "ESNext"],
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "module": "Preserve",
     "moduleResolution": "Bundler",
     "noImplicitOverride": true,
