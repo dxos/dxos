@@ -57,8 +57,12 @@ const createStorybookProject = (dirname: string) =>
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', 'react/jsx-runtime'],
-      exclude: ['js-clipper'],
+      include: ['react', 'react-dom', 'react/jsx-runtime', 'js-clipper'],
+    },
+    resolve: {
+      alias: {
+        'js-clipper': new URL('./tools/vitest/stubs/js-clipper-fixed.js', import.meta.url).pathname,
+      },
     },
     plugins: [
       storybookTest({
