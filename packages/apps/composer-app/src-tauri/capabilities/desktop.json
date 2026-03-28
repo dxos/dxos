@@ -2,5 +2,8 @@
   "identifier": "desktop-capability",
   "platforms": ["macOS"],
   "windows": ["main", "popover"],
+  "remote": {
+    "urls": ["http://localhost:26777/*"]
+  },
   "permissions": ["updater:default", "core:window:allow-show", "core:window:allow-set-focus"]
 }

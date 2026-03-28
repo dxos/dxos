@@ -7,9 +7,10 @@ import { Slot } from '@radix-ui/react-slot';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { PropsWithChildren } from 'react';
 
-import { composable, composableProps, slottable } from '@dxos/ui-theme';
+import { composable, composableProps, mx, slottable } from '@dxos/ui-theme';
 
 import { withTheme } from '../testing';
+import { ThemedClassName } from '../util';
 
 /**
  * Radix-style composition.
@@ -23,7 +24,10 @@ const Outer = slottable<HTMLDivElement, { priority?: number }>(
   ({ children, asChild, priority, ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp {...composableProps<HTMLDivElement>(props, { role: 'none' })} ref={forwardedRef}>
+      <Comp
+        {...composableProps<HTMLDivElement>(props, { role: 'none', className: 'p-2 border border-red-500 rounded' })}
+        ref={forwardedRef}
+      >
         {children}
       </Comp>
     );
@@ -33,7 +37,10 @@ const Outer = slottable<HTMLDivElement, { priority?: number }>(
 const Middle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp {...composableProps<HTMLDivElement>(props, { role: 'none' })} ref={forwardedRef}>
+    <Comp
+      {...composableProps<HTMLDivElement>(props, { role: 'none', className: 'p-2 border border-red-500 rounded' })}
+      ref={forwardedRef}
+    >
       {children}
     </Comp>
   );
@@ -41,14 +48,21 @@ const Middle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwa
 
 const Leaf = composable<HTMLButtonElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <button {...composableProps<HTMLButtonElement>(props, { role: 'none' })} ref={forwardedRef}>
+    <button
+      {...composableProps<HTMLButtonElement>(props, { role: 'none', className: 'p-2 border border-red-500 rounded' })}
+      ref={forwardedRef}
+    >
       {children}
     </button>
   );
 });
 
-/** This isn't a valid child for a slottable component. */
-const Simple = ({ children }: PropsWithChildren) => <div role='none'>{children}</div>;
+/** This isn't a valid child for a `slottable` component. */
+const Simple = ({ children, classNames }: ThemedClassName<PropsWithChildren>) => (
+  <div role='none' className={mx(classNames)}>
+    {children}
+  </div>
+);
 
 const meta = {
   title: 'ui/react-ui-core/exemplars/slot',
@@ -64,7 +78,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Single: Story = {
   render: () => (
-    <Outer asChild role='none' classNames='p-2 border border-red-500 rounded' priority={1}>
+    <Outer asChild role='article' classNames='border-green-500' priority={1}>
       <Leaf>Single asChild (non-compliant — see console)</Leaf>
     </Outer>
   ),
@@ -72,7 +86,7 @@ export const Single: Story = {
 
 export const Nested: Story = {
   render: () => (
-    <Outer asChild role='none' classNames='p-2 border border-green-500 rounded'>
+    <Outer asChild role='article' classNames='border-blue-500'>
       <Middle asChild>
         <Leaf>Nested asChild</Leaf>
       </Middle>
@@ -82,7 +96,7 @@ export const Nested: Story = {
 
 export const Inner: Story = {
   render: () => (
-    <Outer asChild role='none' classNames='p-2 border border-blue-500 rounded'>
+    <Outer asChild role='article' classNames='border-orange-500'>
       <Middle asChild>
         <Leaf>
           <div role='none'>Leaf</div>
