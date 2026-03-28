@@ -22,6 +22,7 @@ import {
   type Density,
   type Elevation,
   Icon,
+  Input,
   ScrollArea,
   type ThemedClassName,
   useDensityContext,
@@ -352,6 +353,22 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
         }
       },
       [selectedValue, onSelectedValueChange, getItemValues, triggerSelect, onQueryChange],
+    );
+
+    return (
+      <Input.Root>
+        <Input.TextInput
+          {...props}
+          classNames='p-0 px-2'
+          variant='subdued'
+          autoFocus={props.autoFocus && !hasIosKeyboard}
+          placeholder={placeholder ?? defaultPlaceholder}
+          value={query}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          ref={forwardedRef}
+        />
+      </Input.Root>
     );
 
     return (
