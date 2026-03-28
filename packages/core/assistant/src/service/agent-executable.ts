@@ -16,7 +16,6 @@ import { raise } from '@dxos/debug';
 import { trim } from '@dxos/util';
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
-import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
@@ -31,6 +30,7 @@ import {
 import { acquireReleaseResource } from '@dxos/effect';
 import { log } from '@dxos/log';
 import * as Match from 'effect/Match';
+import * as Cause from 'effect/Cause';
 
 interface AgentExecutableOptions {
   systemPrompt?: string;
@@ -95,7 +95,11 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
 
               const prompt = Match.value(item).pipe(
                 Match.tag('prompt', (item) => item.content),
-                Match.tag('childExited', (item) => `Process ${item.pid} completed`),
+                Match.tag('tool_result', (item) =>
+                  item.isError
+                    ? toolErrorResponse(item.pid, item.result as string)
+                    : toolResultResponse(item.pid, item.result),
+                ),
                 Match.exhaustive,
               );
 
@@ -123,10 +127,27 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
           onChildEvent: Effect.fnUntraced(function* (event) {
             log.info('childEvent', { event });
             if (event._tag === 'exited') {
-              inputQueue.push({
-                _tag: 'prompt',
-                content: `Process ${event.pid} exited with result: ${event.result}`,
-              });
+              const operationInvoker = yield* ProcessOperationInvoker.Service;
+              const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
+              const result = yield* fiber.await.pipe(Effect.orDie).pipe(
+                Effect.map(
+                  Exit.match({
+                    onSuccess: (value): AgentEvent => ({
+                      _tag: 'tool_result',
+                      pid: event.pid,
+                      result: value,
+                      isError: false,
+                    }),
+                    onFailure: (cause): AgentEvent => ({
+                      _tag: 'tool_result',
+                      pid: event.pid,
+                      result: Cause.pretty(cause),
+                      isError: true,
+                    }),
+                  }),
+                ),
+              );
+              inputQueue.push(result);
               yield* storeEvents(inputQueue);
               ctx.setAlarm();
             }
@@ -147,8 +168,10 @@ const AgentEvent = Schema.Union(
   Schema.TaggedStruct('prompt', {
     content: Schema.String,
   }),
-  Schema.TaggedStruct('childExited', {
+  Schema.TaggedStruct('tool_result', {
     pid: Process.ID,
+    result: Schema.Unknown,
+    isError: Schema.Boolean,
   }),
 );
 type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
@@ -183,12 +206,6 @@ const ToolExecutionService = ({ backgroundThreshold = Duration.seconds(1) }: Too
       });
     }),
   );
-
-/**
- * Instructs model that the tool is running in the background.
- */
-const toolIsRunningInBackgroundResponse = (pid: Process.ID) =>
-  `Tool is running in the background id=${pid}; use ${AsynchronousExectionToolkit.tools['poll-tools'].name} to get the result.`;
 
 // Services to brige tool execution to runtime.
 const toolServices = Layer.mergeAll(
@@ -235,8 +252,8 @@ const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(
               Effect.timeout(Duration.millis(timeout)),
               Effect.flatMap(
                 Exit.match({
-                  onSuccess: (value) => Effect.succeed(`<result pid=${pid}>${JSON.stringify(value)}</result>`),
-                  onFailure: (cause) => Effect.succeed(`<error pid=${pid}>${Cause.pretty(cause)}</error>`),
+                  onSuccess: (value) => Effect.succeed(toolResultResponse(pid, value)),
+                  onFailure: (cause) => Effect.succeed(toolErrorResponse(pid, Cause.pretty(cause))),
                 }),
               ),
               Effect.catchTag('ProcessNotFoundError', () => Effect.succeed(`Process not found: ${pid}`)),
@@ -247,3 +264,13 @@ const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(
     };
   }),
 );
+
+/**
+ * Instructs model that the tool is running in the background.
+ */
+const toolIsRunningInBackgroundResponse = (pid: Process.ID) =>
+  `Tool is running in the background id=${pid}; use ${AsynchronousExectionToolkit.tools['poll-tools'].name} to get the result.`;
+
+const toolResultResponse = (pid: string, value: unknown) => `<result pid=${pid}>${JSON.stringify(value)}</result>`;
+
+const toolErrorResponse = (pid: string, cause: string) => `<error pid=${pid}>${cause}</error>`;
