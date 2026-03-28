@@ -13,6 +13,24 @@ import * as Stream from 'effect/Stream';
 
 import { log } from '@dxos/log';
 import { type EdgeFunctionEnv, ErrorCodec } from '@dxos/protocols';
+
+/**
+ * Converts HeadersInit to a plain object that @effect/platform Headers.fromInput accepts.
+ */
+const convertHeadersInit = (headers: HeadersInit): Record<string, string> => {
+  if (headers instanceof globalThis.Headers) {
+    const result: Record<string, string> = {};
+    headers.forEach((value, key) => {
+      result[key] = value;
+    });
+    return result;
+  }
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers);
+  }
+  return headers as Record<string, string>;
+};
+
 /**
  * Copy pasted from https://github.com/Effect-TS/effect/blob/main/packages/platform/src/internal/fetchHttpClient.ts
  */
@@ -24,7 +42,7 @@ export class FunctionsAiHttpClient {
       const context = fiber.getFiberRef(FiberRef.currentContext);
       const options: RequestInit = context.unsafeMap.get(requestInitTagKey) ?? {};
       const headers = options.headers
-        ? Headers.merge(Headers.fromInput(options.headers), request.headers)
+        ? Headers.merge(Headers.fromInput(convertHeadersInit(options.headers)), request.headers)
         : request.headers;
 
       const send = (body: BodyInit | undefined) =>
