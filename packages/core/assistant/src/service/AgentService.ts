@@ -47,6 +47,16 @@ export interface Session {
    * Wait until agent has completed its work.
    */
   waitForCompletion: () => Effect.Effect<void>;
+
+  /**
+   * Adds context objects to the agent.
+   */
+  addContext: (context: Ref.Ref<Obj.Unknown>[]) => Effect.Effect<void, never, QueueService>;
+
+  /**
+   * Gets the context objects from the agent.
+   */
+  getContext: () => Effect.Effect<Ref.Ref<Obj.Unknown>[], never, QueueService>;
 }
 
 /**
@@ -116,4 +126,25 @@ const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Fe
   feed,
   submitPrompt: (prompt: string) => process.submitInput(prompt),
   waitForCompletion: () => process.runToCompletion(),
+  addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
+    Effect.gen(function* () {
+      const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(
+        Feed.getQueueDxn(feed) ?? failedInvariant(),
+      );
+      const binder = yield* acquireReleaseResource(() => new AiContextBinder({ queue }));
+      yield* Effect.promise(() =>
+        binder.bind({
+          blueprints: [],
+          objects: context,
+        }),
+      );
+    }).pipe(Effect.scoped),
+  getContext: () =>
+    Effect.gen(function* () {
+      const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(
+        Feed.getQueueDxn(feed) ?? failedInvariant(),
+      );
+      const binder = yield* acquireReleaseResource(() => new AiContextBinder({ queue }));
+      return binder.getObjects().map((object) => Ref.make(object));
+    }).pipe(Effect.scoped),
 });

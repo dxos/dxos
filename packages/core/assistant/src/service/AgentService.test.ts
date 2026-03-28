@@ -137,7 +137,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('Agent Executable', () => {
-  it.live(
+  it.scoped(
     'runs AI agent with background tools via process manager',
     Effect.fnUntraced(
       function* (_) {

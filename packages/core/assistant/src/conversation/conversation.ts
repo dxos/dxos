@@ -223,7 +223,7 @@ export class AiConversationService extends Context.Tag('@dxos/assistant/AiConver
   /**
    * Run a prompt in the current conversation.
    */
-  static run = <Tools extends Record<string, Tool.Any>>(
+  static run = <Tools extends Record<string, Tool.Any> = {}>(
     params: AiConversationRunProps<Tools>,
   ): Effect.Effect<
     Message.Message[],

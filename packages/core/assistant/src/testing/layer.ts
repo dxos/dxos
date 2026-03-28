@@ -6,7 +6,7 @@ import { Registry } from '@effect-atom/atom';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
-import { AiService, type ModelName } from '@dxos/ai';
+import { AiService, type ModelName, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Database, Feed, type Type } from '@dxos/echo';
@@ -27,13 +27,14 @@ import {
 } from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 
-import { OperationHandlerSet, OperationRegistry, type OperationInvoker } from '@dxos/operation';
+import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 import { ToolExecutionServices } from '../functions';
 import { Blueprint } from '@dxos/blueprints';
 import { AgentService } from '../service';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
-import { TestContextService } from '@dxos/effect/testing';
-import type { LanguageModel } from '@effect/ai';
+import * as LanguageModel from '@effect/ai/LanguageModel';
+
+import type { TestContextService } from '@dxos/effect/testing';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
@@ -58,15 +59,31 @@ interface TestLayerOptions {
 }
 
 export type AssistantTestServices =
+  // Convinience
   | LanguageModel.LanguageModel
-  | Blueprint.RegistryService
+  | Feed.Service
+  | CredentialsService
   | AgentService.AgentService
-  | ProcessManager.ProcessManagerService
-  | Process.ProcessMonitorService
+  | AiService.AiService
   | Database.Service
   | QueueService
-  | FunctionInvocationService
-  | Registry.AtomRegistry;
+  // Registries
+  | Blueprint.RegistryService
+  | OperationRegistry.Service
+  | GenericToolkit.GenericToolkitProvider
+  // Core
+  | ProcessManager.ProcessManagerService
+  | Process.ProcessMonitorService
+  | Registry.AtomRegistry
+  // Should those be here?
+  | OperationHandlerSet.OperationHandlerProvider
+  | KeyValueStore.KeyValueStore
+  | ServiceResolver.ServiceResolver
+  | TracingService
+  // Deperacted
+  | ToolExecutionService
+  | ToolResolverService
+  | FunctionInvocationService;
 
 export const AssistantTestLayer = ({
   aiServicePreset = 'direct',
