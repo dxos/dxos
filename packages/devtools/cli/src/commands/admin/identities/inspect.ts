@@ -16,14 +16,13 @@ export const inspect = Command.make(
   'inspect',
   { identityKey: Args.text({ name: 'identityKey' }) },
   Effect.fn(function* ({ identityKey }) {
-    const data = yield* adminRequest('GET', `/admin/identities/${identityKey}`).pipe(
+    const result = yield* adminRequest<InspectIdentityResponse>('GET', `/admin/identities/${identityKey}`).pipe(
       Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
     );
 
     if (yield* CommandConfig.isJson) {
-      yield* Console.log(JSON.stringify(data, null, 2));
+      yield* Console.log(JSON.stringify(result, null, 2));
     } else {
-      const result = data as InspectIdentityResponse;
       yield* Console.log(`Identity: ${result.identityKey}`);
       yield* Console.log(`  Recovery:   ${result.hasRecovery ? 'yes' : 'no'}`);
       yield* Console.log(`  Halo space: ${result.haloSpaceId ?? 'n/a'}`);

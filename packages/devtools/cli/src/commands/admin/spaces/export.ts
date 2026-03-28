@@ -42,11 +42,9 @@ export const exportSpace = Command.make(
     ),
   },
   Effect.fn(function* ({ spaceId, download, output }) {
-    const data = yield* adminRequest('POST', `/admin/spaces/${spaceId}/export`).pipe(
+    const result = yield* adminRequest<ExportTriggerResponse>('POST', `/admin/spaces/${spaceId}/export`).pipe(
       Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
     );
-
-    const result = data as ExportTriggerResponse;
 
     if (download) {
       const outputPath = output._tag === 'Some' ? output.value : `export-${spaceId}.json`;

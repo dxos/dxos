@@ -9,18 +9,15 @@ import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 
 import { withRetry } from '@dxos/edge-client';
+import { BaseError } from '@dxos/errors';
+import { type EdgeEnvelope } from '@dxos/protocols';
 
-class AdminApiError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'AdminApiError';
-  }
-}
+export class AdminApiError extends BaseError.extend('AdminApiError', 'Admin API error') {}
 
 /**
  * Makes an authenticated request to the Edge Admin API and unwraps the response envelope.
  */
-export const adminRequest = (
+export const adminRequest = <T>(
   method: 'GET' | 'POST' | 'DELETE',
   path: string,
   options?: { query?: Record<string, string> },
@@ -44,12 +41,12 @@ export const adminRequest = (
 
     const result = yield* withRetry(HttpClient.execute(request)).pipe(Effect.provide(FetchHttpClient.layer));
 
-    const envelope = result as { success: boolean; data?: unknown; error?: { message: string } };
+    const envelope = result as EdgeEnvelope<T>;
     if (!envelope.success) {
-      yield* Effect.fail(new AdminApiError(envelope.error?.message ?? 'Unknown admin API error'));
+      yield* Effect.fail(new AdminApiError({ message: envelope.message }));
     }
 
-    return envelope.data;
+    return envelope.data as T;
   });
 
 /**
@@ -68,7 +65,7 @@ export const adminDownload = (path: string) =>
     if (response.status !== 200) {
       const body = yield* response.json;
       const envelope = body as { error?: string };
-      yield* Effect.fail(new AdminApiError(envelope?.error ?? `HTTP ${response.status}`));
+      yield* Effect.fail(new AdminApiError({ message: envelope?.error ?? `HTTP ${response.status}` }));
     }
 
     return response;

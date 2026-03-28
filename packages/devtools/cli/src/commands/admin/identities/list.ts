@@ -33,14 +33,13 @@ export const list = Command.make(
       query.cursor = cursor.value;
     }
 
-    const data = yield* adminRequest('GET', '/admin/identities', { query }).pipe(
+    const result = yield* adminRequest<ListActiveIdentitiesResponse>('GET', '/admin/identities', { query }).pipe(
       Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
     );
 
     if (yield* CommandConfig.isJson) {
-      yield* Console.log(JSON.stringify(data, null, 2));
+      yield* Console.log(JSON.stringify(result, null, 2));
     } else {
-      const result = data as ListActiveIdentitiesResponse;
       if (result.identities.length === 0) {
         yield* Console.log('No identities found.');
       } else {

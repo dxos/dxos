@@ -23,14 +23,13 @@ export const inspect = Command.make(
   'inspect',
   { spaceId: Args.text({ name: 'spaceId' }) },
   Effect.fn(function* ({ spaceId }) {
-    const data = yield* adminRequest('GET', `/admin/spaces/${spaceId}`).pipe(
+    const result = yield* adminRequest<InspectSpaceResponse>('GET', `/admin/spaces/${spaceId}`).pipe(
       Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
     );
 
     if (yield* CommandConfig.isJson) {
-      yield* Console.log(JSON.stringify(data, null, 2));
+      yield* Console.log(JSON.stringify(result, null, 2));
     } else {
-      const result = data as InspectSpaceResponse;
       yield* Console.log(`Space: ${result.spaceId}`);
 
       if (result.metadata) {

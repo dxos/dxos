@@ -37,14 +37,13 @@ export const list = Command.make(
       query.cursor = cursor.value;
     }
 
-    const data = yield* adminRequest('GET', '/admin/spaces', { query }).pipe(
+    const result = yield* adminRequest<ListSpacesResponse>('GET', '/admin/spaces', { query }).pipe(
       Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
     );
 
     if (yield* CommandConfig.isJson) {
-      yield* Console.log(JSON.stringify(data, null, 2));
+      yield* Console.log(JSON.stringify(result, null, 2));
     } else {
-      const result = data as ListSpacesResponse;
       if (result.spaces.length === 0) {
         yield* Console.log('No spaces found.');
       } else {

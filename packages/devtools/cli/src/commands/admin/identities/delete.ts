@@ -24,18 +24,16 @@ export const del = Command.make(
   },
   Effect.fn(function* ({ identityKey, force }) {
     if (!force) {
-      yield* Console.error('This action is irreversible. Pass --force to confirm.');
-      return;
+      yield* Effect.fail(new Error('This action is irreversible. Pass --force to confirm.'));
     }
 
-    const data = yield* adminRequest('DELETE', `/admin/identities/${identityKey}`).pipe(
+    const result = yield* adminRequest<DeleteIdentityResponse>('DELETE', `/admin/identities/${identityKey}`).pipe(
       Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
     );
 
     if (yield* CommandConfig.isJson) {
-      yield* Console.log(JSON.stringify(data, null, 2));
+      yield* Console.log(JSON.stringify(result, null, 2));
     } else {
-      const result = data as DeleteIdentityResponse;
       yield* Console.log(`Identity ${result.identityKey} deletion ${result.status}.`);
     }
   }),
