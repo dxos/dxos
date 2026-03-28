@@ -38,32 +38,6 @@ interface AgentExecutableOptions {
   model?: ModelName;
 }
 
-// while (inputQueue.length > 0) {
-//   yield* handle.submitInput(inputQueue.join('\n'));
-//   inputQueue.length = 0;
-
-//   for (const jobId of activeJobs.keys()) {
-//     const result = yield* activeJobs.get(jobId)!.poll;
-//     if (Option.isSome(result)) {
-//       inputQueue.push(`Job completed: ${jobId}`);
-//       activeJobs.delete(jobId);
-//     }
-//   }
-//   if (inputQueue.length === 0 && activeJobs.size > 0) {
-//     const result = yield* Effect.raceAll(
-//       activeJobs.entries().map(([jobId, fiber]) =>
-//         fiber.await.pipe(
-//           Effect.map(() => {
-//             activeJobs.delete(jobId);
-//             return `Job completed: ${jobId}`;
-//           }),
-//         ),
-//       ),
-//     );
-//     inputQueue.push(result);
-//   }
-// }
-
 /**
  * Hosts a presistant, suspendible AiAgent that can process a number of prompts.
  */
@@ -93,14 +67,13 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
         let inputQueue: AgentEvent[] = [...(yield* loadEvents)];
 
         return {
-          init: () => Effect.void,
-          handleInput: (prompt: string) =>
-            Effect.gen(function* () {
-              inputQueue.push({ _tag: 'prompt', content: prompt });
-              ctx.setAlarm();
-            }),
-          alarm: () =>
-            Effect.gen(function* () {
+          init: Effect.fnUntraced(function* () {}),
+          handleInput: Effect.fnUntraced(function* (prompt: string) {
+            inputQueue.push({ _tag: 'prompt', content: prompt });
+            ctx.setAlarm();
+          }),
+          alarm: Effect.fnUntraced(
+            function* () {
               const item = inputQueue.shift();
               if (!item) {
                 return;
@@ -123,31 +96,31 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
               if (inputQueue.length > 0) {
                 ctx.setAlarm();
               }
-            }).pipe(
-              Effect.orDie,
-              Effect.provide(
-                Layer.mergeAll(
-                  toolServices,
-                  AsynchronousExectionToolkitLayer,
-                  AiService.model(options.model ?? '@anthropic/claude-opus-4-6'),
-                ).pipe(Layer.orDie),
-              ),
+            },
+            Effect.orDie,
+            Effect.provide(
+              Layer.mergeAll(
+                toolServices,
+                AsynchronousExectionToolkitLayer,
+                AiService.model(options.model ?? '@anthropic/claude-opus-4-6'),
+              ).pipe(Layer.orDie),
             ),
-          childEvent: (event) =>
-            Effect.gen(function* () {
-              log.info('childEvent', { event });
-              if (event._tag === 'exited') {
-                inputQueue.push({
-                  _tag: 'prompt',
-                  content: `Process ${event.pid} exited with result: ${event.result}`,
-                });
-                yield* storeEvents(inputQueue);
-                ctx.setAlarm();
-              }
-            }),
+          ),
+          childEvent: Effect.fnUntraced(function* (event) {
+            log.info('childEvent', { event });
+            if (event._tag === 'exited') {
+              inputQueue.push({
+                _tag: 'prompt',
+                content: `Process ${event.pid} exited with result: ${event.result}`,
+              });
+              yield* storeEvents(inputQueue);
+              ctx.setAlarm();
+            }
+          }),
         };
       }),
   );
+
 interface ToolExecutionServiceOptions {
   /**
    * Threshold after which the tool execution is placed in the background.
