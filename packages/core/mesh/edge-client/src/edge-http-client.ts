@@ -18,8 +18,6 @@ import {
   type CreateAgentResponseBody,
   type CreateSpaceRequest,
   type CreateSpaceResponseBody,
-  type DeleteIdentityResponse,
-  type DeleteSpaceResponse,
   EdgeAuthChallengeError,
   EdgeCallFailedError,
   type EdgeFailure,
@@ -30,7 +28,6 @@ import {
   type FeedProtocol,
   type GetAgentStatusResponseBody,
   type GetNotarizationResponseBody,
-  type IdentityInspectionResponse,
   type ImportBundleRequest,
   type InitiateOAuthFlowRequest,
   type InitiateOAuthFlowResponse,
@@ -40,7 +37,6 @@ import {
   type PostNotarizationRequestBody,
   type RecoverIdentityRequest,
   type RecoverIdentityResponseBody,
-  type SpaceInspectionResponse,
   type UploadFunctionRequest,
   type UploadFunctionResponseBody,
 } from '@dxos/protocols';
@@ -406,26 +402,6 @@ export class EdgeHttpClient {
       body,
       method: 'POST',
     });
-  }
-
-  //
-  // Data Management
-  //
-
-  public async inspectSpace(spaceId: SpaceId, args?: EdgeHttpGetArgs): Promise<SpaceInspectionResponse> {
-    return this._call(new URL(`/data/space/${spaceId}`, this.baseUrl), { ...args, method: 'GET' });
-  }
-
-  public async inspectIdentity(identityKey: string, args?: EdgeHttpGetArgs): Promise<IdentityInspectionResponse> {
-    return this._call(new URL(`/data/identity/${identityKey}`, this.baseUrl), { ...args, method: 'GET' });
-  }
-
-  public async deleteSpace(spaceId: SpaceId, args?: EdgeHttpGetArgs): Promise<DeleteSpaceResponse> {
-    return this._call(new URL(`/data/space/${spaceId}`, this.baseUrl), { ...args, method: 'DELETE' });
-  }
-
-  public async deleteIdentity(identityKey: string, args?: EdgeHttpGetArgs): Promise<DeleteIdentityResponse> {
-    return this._call(new URL(`/data/identity/${identityKey}`, this.baseUrl), { ...args, method: 'DELETE' });
   }
 
   //

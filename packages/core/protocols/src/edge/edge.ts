@@ -412,39 +412,6 @@ export type ExportBundleResponse = {
   }[];
 };
 
-//
-// Data management.
-//
-
-export type SpaceInspectionResponse = {
-  spaceId: string;
-  metadata: any;
-  durableObjects: { type: string; doId: string }[];
-  storageSizeBytes: number | null;
-  usage: Record<string, unknown> | null;
-};
-
-export type IdentityInspectionResponse = {
-  identityKey: string;
-  agentKey: string | null;
-  haloSpaceId: string | null;
-  hasRecovery: boolean;
-  routerDoId: string;
-  agentDoId: string | null;
-  ownedFunctions: { id: string; name: string; versionCount: number }[];
-  spaces: { spaceId: string; durableObjects: { type: string; doId: string }[] }[];
-};
-
-export type DeleteSpaceResponse = {
-  status: 'queued';
-  spaceId: string;
-};
-
-export type DeleteIdentityResponse = {
-  status: 'queued';
-  identityKey: string;
-};
-
 export const DocumentCodec = Object.freeze({
   encode: (doc: Uint8Array) => Buffer.from(doc).toString('base64'),
   decode: (doc: string) => new Uint8Array(Buffer.from(doc, 'base64')),
