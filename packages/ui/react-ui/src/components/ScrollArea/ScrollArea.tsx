@@ -8,7 +8,7 @@ import { Slot } from '@radix-ui/react-slot';
 import React, { useMemo } from 'react';
 
 import { composableProps, slottable } from '@dxos/ui-theme';
-import { type AllowedAxis, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
+import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 

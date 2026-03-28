@@ -22,7 +22,13 @@ export const withTheme =
     } = context;
 
     return (
-      <ThemeProvider tx={tx} themeMode={theme as ThemeMode} resourceExtensions={translations} noCache={noCache} platform={platform}>
+      <ThemeProvider
+        tx={tx}
+        themeMode={theme as ThemeMode}
+        resourceExtensions={translations}
+        noCache={noCache}
+        platform={platform}
+      >
         <Tooltip.Provider>
           <Story />
         </Tooltip.Provider>
