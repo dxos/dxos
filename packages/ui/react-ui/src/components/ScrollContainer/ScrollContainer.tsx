@@ -70,21 +70,23 @@ const Root = forwardRef<ScrollController, RootProps>(
     const scrollToBottom = useCallback(
       (behavior: ScrollBehavior = behaviorProp) => {
         if (scrollerRef.current) {
-          // Temporarily hide scrollbar to prevent flickering.
-          autoScrollRef.current = true;
-          scrollerRef.current.classList.add('scrollbar-none');
-          scrollerRef.current.scrollTo({
-            top: scrollerRef.current.scrollHeight,
-            behavior,
-          });
-
-          clearTimeout(timeoutRef.current);
           if (behavior !== 'instant') {
+            // Temporarily hide scrollbar to prevent flickering during smooth scroll.
+            // For instant scrolling we skip this — there's no animation to hide,
+            // and adding the class changes element size which re-fires the ResizeObserver.
+            autoScrollRef.current = true;
+            scrollerRef.current.classList.add('scrollbar-none');
+            clearTimeout(timeoutRef.current);
             timeoutRef.current = setTimeout(() => {
               scrollerRef.current?.classList.remove('scrollbar-none');
               autoScrollRef.current = false;
             }, 500);
           }
+
+          scrollerRef.current.scrollTo({
+            top: scrollerRef.current.scrollHeight,
+            behavior,
+          });
 
           setPinned(true);
         }

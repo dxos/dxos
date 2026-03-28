@@ -112,7 +112,6 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
     if (props.asChild) {
       try {
         const child = Children.only(props.children);
-        console.log(child);
         if (isValidElement(child) && typeof child.type !== 'string' && !(child.type as any)[COMPOSABLE]) {
           log.warn('slot child is not composable; create it with composable() or slottable()', {
             child: (child.type as any).displayName ?? (child.type as any).name,
@@ -122,6 +121,7 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
         // Children.only throws if not exactly one child — Slot handles this.
       }
     }
+
     return render(props, forwardedRef);
   };
   const component = forwardRef(wrapped as any) as any;

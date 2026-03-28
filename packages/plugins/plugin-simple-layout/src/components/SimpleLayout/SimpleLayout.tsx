@@ -15,7 +15,6 @@ import { PopoverContent, PopoverRoot } from '../Popover';
 import { Drawer } from './Drawer';
 import { Main } from './Main';
 
-// TODO(burdon): Mobile/Desktop variance?
 export const SimpleLayout = () => {
   const { state } = useSimpleLayoutState();
   const [keyboardOpen, setKeyboardOpen] = useState(false);

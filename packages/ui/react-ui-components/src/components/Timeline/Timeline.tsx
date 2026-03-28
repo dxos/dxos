@@ -217,7 +217,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
           <div
             className='grid'
             style={{
-              gridTemplateColumns: ['min-content', showTimestamp && '96px', showIcon && 'min-content', '1fr']
+              gridTemplateColumns: ['min-content', showTimestamp && '96px', showIcon && '1.5rem', '1fr']
                 .filter(Boolean)
                 .join(' '),
             }}
@@ -262,22 +262,17 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                       currentCommit={currentCommit}
                       options={options}
                     />
-                    {showTimestamp && commit.timestamp && (
+                    {showTimestamp && (
                       <div className='text-xs font-mono truncate items-center text-subdued'>
-                        {format(commit.timestamp, 'HH:mm:ss.SSS')}
+                        {commit.timestamp && format(commit.timestamp, 'HH:mm:ss.SSS')}
                       </div>
                     )}
-                    {showIcon && (
-                      <div className='flex shrink-0 w-6 justify-center'>
-                        {commit.icon && (
-                          <Icon
-                            icon={commit.icon}
-                            classNames={mx(commit.level && levelColors[commit.level])}
-                            size={4}
-                          />
-                        )}
-                      </div>
-                    )}
+                    {showIcon &&
+                      (commit.icon ? (
+                        <Icon icon={commit.icon} classNames={mx(commit.level && levelColors[commit.level])} size={4} />
+                      ) : (
+                        <div />
+                      ))}
                     <div
                       role='none'
                       className={mx(
