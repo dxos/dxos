@@ -17,9 +17,9 @@ import React, {
 
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
-import { useForwardedRef } from '@dxos/react-hooks';
+import { useMergeRefs } from '@dxos/react-hooks';
 import { composableProps, mx } from '@dxos/ui-theme';
-import { type ComposableProps } from '@dxos/ui-types';
+import { SlottableProps } from '@dxos/ui-types';
 
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
@@ -150,10 +150,11 @@ Root.displayName = 'ScrollContainer.Root';
 
 const VIEWPORT_NAME = 'ScrollContainer.Viewport';
 
-type ViewportProps = ComposableProps;
+type ViewportProps = SlottableProps;
 
 const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ children, ...props }, forwardedRef) => {
-  const scrollerRef = useForwardedRef(forwardedRef);
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const mergedRef = useMergeRefs([forwardedRef, scrollerRef]);
   const { setViewport, setPinned, setOverflow } = useScrollContainerContext(VIEWPORT_NAME);
 
   // Register the scroll element with Root and set up wheel/scroll listeners.
@@ -173,10 +174,12 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ children, ...props
   }, [setViewport, setPinned, setOverflow]);
 
   return (
-    <ScrollArea.Viewport {...composableProps(props)} ref={scrollerRef}>
-      {children}
+    <>
+      <ScrollArea.Viewport {...composableProps(props)} ref={mergedRef}>
+        {children}
+      </ScrollArea.Viewport>
       <PinEffect scrollerRef={scrollerRef} />
-    </ScrollArea.Viewport>
+    </>
   );
 });
 
@@ -199,7 +202,7 @@ const PinEffect = ({ scrollerRef }: { scrollerRef: RefObject<HTMLDivElement | nu
     }
 
     // Scroll instantly so we don't visually jump while content is being added.
-    controller?.scrollToBottom('smooth');
+    controller?.scrollToBottom('instant');
 
     // Setup resize observer on content children to detect size changes (e.g. streaming).
     // We observe children rather than the viewport itself, because the viewport's size

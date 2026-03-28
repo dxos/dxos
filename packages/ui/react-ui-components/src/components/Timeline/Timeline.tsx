@@ -213,7 +213,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
     return (
       <ScrollContainer.Root pin ref={scrollerRef}>
-        <ScrollContainer.Viewport>
+        <ScrollContainer.Viewport ref={containerRef}>
           <div
             role='none'
             className='grid'
@@ -224,7 +224,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
             }}
           >
             {commits.length < 1 ? (
-              <p className='text-description p-trim-md'>{t('no commits message')}</p>
+              <p className='col-span-full text-description p-trim-md'>{t('no commits message')}</p>
             ) : (
               commits.map((commit, index) => {
                 // Skip branches that are not whitelisted.
@@ -247,7 +247,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                     data-index={index}
                     aria-current={current === index}
                     className={mx(
-                      'group col-span-full px-1 grid grid-cols-subgrid gap-1 overflow-hidden items-center',
+                      'group col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center',
                       // TODO(burdon): Factor out fragment.
                       'aria-[current=true]:bg-active-surface hover:bg-hover-surface',
                       hasLink && 'cursor-pointer',
@@ -255,14 +255,16 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                     style={{ height: `${options.lineHeight}px` }}
                     onClick={handleClick}
                   >
-                    <LineVector
-                      branches={branches}
-                      spans={spans}
-                      index={index}
-                      commit={commit}
-                      currentCommit={currentCommit}
-                      options={options}
-                    />
+                    <div role='none' className='px-1'>
+                      <LineVector
+                        branches={branches}
+                        spans={spans}
+                        index={index}
+                        commit={commit}
+                        currentCommit={currentCommit}
+                        options={options}
+                      />
+                    </div>
                     {showTimestamp && (
                       <div className='text-xs font-mono truncate items-center text-subdued'>
                         {commit.timestamp && format(commit.timestamp, 'HH:mm:ss.SSS')}
@@ -289,8 +291,8 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
             )}
           </div>
         </ScrollContainer.Viewport>
-        <ScrollContainer.Fade />
         <ScrollContainer.ScrollDownButton />
+        <ScrollContainer.Fade />
       </ScrollContainer.Root>
     );
   },
@@ -321,24 +323,19 @@ const levelColors: Record<LogLevel, string> = {
   [LogLevel.ERROR]: 'text-red-500',
 };
 
-/**
- * SVG for node and connector paths.
- */
-const LineVector = ({
-  branches,
-  spans,
-  index,
-  commit,
-  currentCommit,
-  options,
-}: {
+type LineVectorProps = {
   branches: readonly string[];
   spans: Map<string, Span>;
   index: number;
   commit: Commit;
   currentCommit: Commit | undefined;
   options: TimelineOptions;
-}) => {
+};
+
+/**
+ * SVG for node and connector paths.
+ */
+const LineVector = ({ branches, spans, index, commit, currentCommit, options }: LineVectorProps) => {
   const halfHeight = options.lineHeight / 2;
   const cx = (c: number) => c * options.columnWidth + options.columnWidth / 2;
   const getBranchIndex = (branch: string): number => branches.findIndex((b) => b === branch);
