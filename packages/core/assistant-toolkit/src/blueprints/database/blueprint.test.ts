@@ -57,7 +57,6 @@ describe('Database Blueprint', () => {
           'Add a new schema called "Project" with typename "com.example.type.project" and fields: name (string), description (string), and status (string).',
         );
         yield* agent.waitForCompletion();
-        const { db } = yield* Database.Service;
         const schemas = yield* Database.runSchemaQuery({
           typename: 'com.example.type.project',
           location: ['database', 'runtime'],
