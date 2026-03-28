@@ -58,6 +58,7 @@ const createStorybookProject = (dirname: string) =>
     },
     optimizeDeps: {
       include: ['react', 'react-dom', 'react/jsx-runtime'],
+      exclude: ['js-clipper'],
     },
     plugins: [
       storybookTest({
