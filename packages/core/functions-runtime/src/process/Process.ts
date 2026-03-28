@@ -22,6 +22,8 @@ import * as Option from 'effect/Option';
 import type { Atom } from '@effect-atom/atom';
 import type { ObjectId } from '@dxos/protocols';
 import { assertArgument } from '@dxos/invariant';
+import type { A } from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
+import type { Layer } from 'effect';
 
 //
 // Process.
@@ -32,7 +34,7 @@ export const ID = Schema.String.pipe(Schema.brand('ProcessId'));
 export type ID = Schema.Schema.Type<typeof ID>;
 
 /**
- * A running process.
+ * A running process callbacks.
  *
  * Process lifecycle: Initial -> Running <-> Suspended -> Terminated.
  *
@@ -41,7 +43,7 @@ export type ID = Schema.Schema.Type<typeof ID>;
  * - onAlarm -> called for processes scheduling alarms.
  * - onChildEvent -> called when child process produces output or exits.
  */
-export interface Process<I, O, R> {
+export interface Callbacks<I, O, R> {
   /**
    * Called when the process is spawned.
    * Not called for processes that are resumed from a previously suspended state.
@@ -149,14 +151,16 @@ export interface Params {
 // Executable.
 //
 
-export const ExecutableTypeId = '~@dxos/functions-runtime/Executable' as const;
-export type ExecutableTypeId = typeof ExecutableTypeId;
+export const ProcessTypeId = '~@dxos/functions-runtime/Process' as const;
+export type ProcessTypeId = typeof ProcessTypeId;
 
 /**
- * A process factory.
+ * A process (factory).
+ * Can be instantiated mutlitple times to produce new runtime instance with separate state and callbacks.
+ * `create` is used to instantiate a new process.
+ * Can store runtime state in scope of `create` function.
  */
-// TODO(dmaretskyi): ProcessModule ProcessFactory?
-export interface Executable<I, O, R> extends Executable.Variance<I, O, R> {
+export interface Process<I, O, R> extends Process.Variance<I, O, R> {
   /**
    * Unique identifier for the executable in the reverse DNS format.
    */
@@ -170,49 +174,44 @@ export interface Executable<I, O, R> extends Executable.Variance<I, O, R> {
   readonly services: readonly Context.Tag<any, any>[];
 
   /**
-   * Create new process of this executable.
+   * Create a new instance of the process.
    */
-  create(ctx: ProcessContext<I, O>): Effect.Effect<Process<I, O, R>, never, R | BaseServices | Scope.Scope>;
+  create(ctx: ProcessContext<I, O>): Effect.Effect<Callbacks<I, O, R>, never, R | BaseServices | Scope.Scope>;
 }
 
-export const isExecutable = (executable: unknown): executable is Executable.Any =>
-  typeof executable === 'object' && executable !== null && ExecutableTypeId in executable;
+export const isProcess = (executable: unknown): executable is Process.Any =>
+  typeof executable === 'object' && executable !== null && ProcessTypeId in executable;
 
-export namespace Executable {
+export namespace Process {
   export interface Variance<I, O, R> {
-    readonly [ExecutableTypeId]: {
+    readonly [ProcessTypeId]: {
       readonly _Input: Types.Contravariant<I>;
       readonly _Output: Types.Covariant<O>;
       readonly _Requirements: Types.Covariant<R>;
     };
   }
 
-  export type Any = Executable<any, any, never>;
+  export type Any = Process<any, any, never>;
 }
 
-export interface MakeExecutableOpts {
+export interface MakeProcessOpts {
   /**
-   * Unique identifier for the executable in the reverse DNS format.
+   * Unique identifier for the process in the reverse DNS format.
    */
   readonly key: string;
-
-  /**
-   * Human-readable label for this executable; optional.
-   */
-  readonly name?: string;
 
   readonly input: Schema.Schema.AnyNoContext;
   readonly output: Schema.Schema.AnyNoContext;
   readonly services: readonly Context.Tag<any, any>[];
 }
 
-export const makeExecutable = <const Opts extends Types.NoExcessProperties<MakeExecutableOpts, Opts>>(
+export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts, Opts>>(
   opts: Opts,
   create: (
     ctx: ProcessContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
   ) => Effect.Effect<
     Partial<
-      Process<
+      Callbacks<
         Schema.Schema.Type<Opts['input']>,
         Schema.Schema.Type<Opts['output']>,
         Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
@@ -221,7 +220,7 @@ export const makeExecutable = <const Opts extends Types.NoExcessProperties<MakeE
     never,
     Context.Tag.Identifier<NonNullable<Opts['services']>[number]> | BaseServices | Scope.Scope
   >,
-): Executable<
+): Process<
   Schema.Schema.Type<Opts['input']>,
   Schema.Schema.Type<Opts['output']>,
   Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
@@ -232,7 +231,7 @@ export const makeExecutable = <const Opts extends Types.NoExcessProperties<MakeE
     'Invalid key',
   );
   return {
-    [ExecutableTypeId]: {} as any,
+    [ProcessTypeId]: {} as any,
     ...opts,
     create: (ctx) =>
       create(ctx).pipe(
@@ -250,11 +249,10 @@ export const makeExecutable = <const Opts extends Types.NoExcessProperties<MakeE
 export const fromOperation = <const Op extends Operation.Definition.Any>(
   op: Op,
   handler: OperationHandlerSet.OperationHandlerSet,
-): Executable<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
-  makeExecutable(
+): Process<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
+  make(
     {
       key: op.meta.key,
-      ...(op.meta.name != null && op.meta.name !== '' ? { name: op.meta.name } : {}),
       input: op.input,
       output: op.output,
       services: op.services,
@@ -280,6 +278,9 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
       }),
   );
 
+/**
+ * Runtime state of a process.
+ */
 export enum State {
   // Process is actively running.
   RUNNING = 'RUNNING',
@@ -311,12 +312,12 @@ export interface Monitor {
   /**
    * Get the current state of the process tree.
    */
-  processTree: Effect.Effect<readonly ProcessInfo[]>;
+  processTree: Effect.Effect<readonly Info[]>;
 
   /**
    * Atom for the process tree.
    */
-  processTreeAtom: Atom.Atom<readonly ProcessInfo[]>;
+  processTreeAtom: Atom.Atom<readonly Info[]>;
 }
 
 export class ProcessMonitorService extends Context.Tag('@dxos/functions-runtime/ProcessMonitorService')<
@@ -324,16 +325,16 @@ export class ProcessMonitorService extends Context.Tag('@dxos/functions-runtime/
   Monitor
 >() {}
 
-export interface ProcessInfo {
+export interface Info {
   readonly pid: ID;
   readonly parentPid: ID | null;
 
-  readonly executableKey: string;
-
   /**
-   * Human-readable executable label when the executable defines {@link Executable.name}.
+   * Key of the process.
+   *
+   * NOTE: There might be multiple running processes with the same key.
    */
-  readonly executableName: string | null;
+  readonly key: string;
 
   /**
    * Parameters of the process.
@@ -382,14 +383,14 @@ export interface ProcessInfo {
 /**
  * Renders spawned processes as a forest: top-level rows use "- ", nested rows use ├── / └── / │.
  */
-export const prettyProcessTree = (tree: readonly ProcessInfo[]): string => {
+export const prettyProcessTree = (tree: readonly Info[]): string => {
   if (tree.length === 0) {
     return '';
   }
 
   const pidSet = new Set(tree.map((node) => node.pid));
-  const childrenByParent = new Map<string, ProcessInfo[]>();
-  const roots: ProcessInfo[] = [];
+  const childrenByParent = new Map<string, Info[]>();
+  const roots: Info[] = [];
 
   for (const node of tree) {
     const parent = node.parentPid;
@@ -403,18 +404,15 @@ export const prettyProcessTree = (tree: readonly ProcessInfo[]): string => {
     childrenByParent.set(key, siblings);
   }
 
-  const byPid = (a: ProcessInfo, b: ProcessInfo) => String(a.pid).localeCompare(String(b.pid));
+  const byPid = (a: Info, b: Info) => String(a.pid).localeCompare(String(b.pid));
   roots.sort(byPid);
   for (const siblings of childrenByParent.values()) {
     siblings.sort(byPid);
   }
 
-  const formatLabel = (node: ProcessInfo): string => {
+  const formatLabel = (node: Info): string => {
     const idShort = String(node.pid).slice(0, 6);
     const parts = [idShort, node.state];
-    if (node.executableName != null && node.executableName !== '') {
-      parts.push(node.executableName);
-    }
     if (node.params.name != null && node.params.name !== '') {
       parts.push(node.params.name);
     }
@@ -428,7 +426,7 @@ export const prettyProcessTree = (tree: readonly ProcessInfo[]): string => {
 
   const lines: string[] = [];
 
-  const walk = (node: ProcessInfo, prefix: string, isLast: boolean, isRoot: boolean): void => {
+  const walk = (node: Info, prefix: string, isLast: boolean, isRoot: boolean): void => {
     if (isRoot) {
       lines.push(`- ${formatLabel(node)}`);
     } else {

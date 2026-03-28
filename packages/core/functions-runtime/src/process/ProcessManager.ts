@@ -40,9 +40,9 @@ export interface Handle<I, O> {
   readonly parentId: Process.ID | null;
 
   /**
-   * Executable key ({@link Process.Executable.key}) for this process.
+   * Process definition key ({@link Process.Process.key}) for this process.
    */
-  readonly executableKey: string;
+  readonly key: string;
 
   /**
    * Parameters of the process.
@@ -105,9 +105,9 @@ export interface SpawnOptions {
 
 export interface ListOptions {
   /**
-   * Filter processes by executable key.
+   * Filter processes by process definition key.
    */
-  readonly executableKey?: string;
+  readonly key?: string;
 
   /**
    * Filter processes by parent process ID.
@@ -130,9 +130,9 @@ export interface ListOptions {
  */
 export interface Manager {
   /**
-   * Spawn a new process for an executable.
+   * Spawn a new process from a process definition.
    */
-  spawn<I, O>(executable: Process.Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
+  spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
 
   /**
    * Attach to an existing process.
@@ -174,9 +174,8 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   #finished = false;
   #succeedRequested = false;
   #failError: Error | null = null;
-  readonly executableKey: string;
+  readonly key: string;
   readonly params: Process.Params;
-  readonly #executableName: string | null;
   #wallTimeMs = 0;
   #inputCount = 0;
   #outputCount = 0;
@@ -184,7 +183,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   #services: Context.Context<R | Process.BaseServices>;
   #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
 
-  readonly #process: Process.Process<I, O, R>;
+  readonly #callbacks: Process.Callbacks<I, O, R>;
   readonly #scope: Scope.CloseableScope;
   readonly #registry: Registry.Registry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
@@ -197,24 +196,22 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   constructor(
     readonly pid: Process.ID,
     parentId: Process.ID | null,
-    process: Process.Process<I, O, R>,
+    callbacks: Process.Callbacks<I, O, R>,
     scope: Scope.CloseableScope,
     services: Context.Context<R | Process.BaseServices>,
     registry: Registry.Registry,
     outputQueue: Queue.Queue<OutputItem<O>>,
     storage: Context.Tag.Service<typeof StorageService.StorageService>,
-    executableKey: string,
-    executableName: string | null,
+    key: string,
     params: Process.Params,
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
     onStatusChanged?: () => void,
     hasRunningChildren?: () => boolean,
   ) {
     this.parentId = parentId;
-    this.executableKey = executableKey;
+    this.key = key;
     this.params = params;
-    this.#executableName = executableName;
-    this.#process = process;
+    this.#callbacks = callbacks;
     this.#scope = scope;
     this.#services = services;
     this.#registry = registry;
@@ -238,7 +235,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     return this.#currentStatus;
   }
 
-  snapshotProcessInfo(): Process.ProcessInfo {
+  snapshotProcessInfo(): Process.Info {
     const status = this.#currentStatus;
     const error = Option.getOrNull(
       Option.flatMap(status.exit, (ex) =>
@@ -251,8 +248,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     return {
       pid: this.pid,
       parentPid: this.parentId,
-      executableKey: this.executableKey,
-      executableName: this.#executableName,
+      key: this.key,
       params: this.params,
       state: status.state,
       error,
@@ -268,7 +264,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
 
   /** Run process onSpawn. Called by ProcessManagerImpl after spawn. */
   runOnSpawn(): Effect.Effect<void> {
-    return this.#runHandler(() => this.#process.onSpawn());
+    return this.#runHandler(() => this.#callbacks.onSpawn());
   }
 
   submitInput(input: I): Effect.Effect<void> {
@@ -276,7 +272,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
       return Effect.void;
     }
     this.#inputCount++;
-    return this.#runHandler(() => this.#process.onInput(input)).pipe(Effect.forkIn(this.#scope));
+    return this.#runHandler(() => this.#callbacks.onInput(input)).pipe(Effect.forkIn(this.#scope));
   }
 
   subscribeOutputs(): Stream.Stream<O> {
@@ -342,7 +338,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     this.#alarmTimer = setTimeout(() => {
       this.#alarmTimer = null;
       if (!this.#finished) {
-        Effect.runFork(this.#runHandler(() => this.#process.onAlarm()).pipe(this.#alarmSemaphore.withPermits(1)));
+        Effect.runFork(this.#runHandler(() => this.#callbacks.onAlarm()).pipe(this.#alarmSemaphore.withPermits(1)));
       }
     }, delay);
   }
@@ -353,7 +349,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   }
 
   requestChildEvent(event: Process.ChildEvent<unknown>): void {
-    Effect.runFork(this.#runHandler(() => this.#process.onChildEvent(event)).pipe(Effect.forkIn(this.#scope)));
+    Effect.runFork(this.#runHandler(() => this.#callbacks.onChildEvent(event)).pipe(Effect.forkIn(this.#scope)));
   }
 
   #runHandler(fn: () => Effect.Effect<void, never, R | Process.BaseServices>): Effect.Effect<void> {
@@ -465,7 +461,7 @@ export class ProcessManagerImpl implements Manager {
   readonly #tracingService: Context.Tag.Service<TracingService>;
   readonly #handlerSet: OperationHandlerSet.OperationHandlerSet | undefined;
 
-  readonly #processTreeAtom: Atom.Writable<readonly Process.ProcessInfo[]>;
+  readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
 
   constructor(opts: ProcessManagerImplOpts) {
@@ -476,7 +472,7 @@ export class ProcessManagerImpl implements Manager {
     this.#tracingService = opts.tracingService ?? TracingService.noop;
     this.#handlerSet = opts.handlerSet;
 
-    this.#processTreeAtom = Atom.make<readonly Process.ProcessInfo[]>([]);
+    this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
     this.#registry.mount(this.#processTreeAtom);
     this.#monitor = {
       processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
@@ -500,7 +496,7 @@ export class ProcessManagerImpl implements Manager {
     return false;
   }
 
-  #buildProcessTreeSnapshot(): readonly Process.ProcessInfo[] {
+  #buildProcessTreeSnapshot(): readonly Process.Info[] {
     return [...this.#handles.values()].map((handle) => handle.snapshotProcessInfo());
   }
 
@@ -563,7 +559,7 @@ export class ProcessManagerImpl implements Manager {
     return result;
   }
 
-  spawn<I, O>(executable: Process.Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
+  spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
       const id = this.#idGenerator();
       log.info('spawn', { pid: id, parentPid: options?.parentProcessId });
@@ -634,7 +630,7 @@ export class ProcessManagerImpl implements Manager {
         Operation.Service.key,
         ProcessOperationInvoker.Service.key,
       ]);
-      const externalServices = executable.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
+      const externalServices = definition.services.filter((tag: Context.Tag<any, any>) => !builtinTagKeys.has(tag.key));
 
       let serviceCtx: Context.Context<never> = Context.empty() as Context.Context<never>;
       if (externalServices.length > 0) {
@@ -643,7 +639,7 @@ export class ProcessManagerImpl implements Manager {
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
 
-      const process = yield* executable.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
+      const callbacks = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
 
       const isRoot = !options?.parentProcessId;
 
@@ -684,14 +680,13 @@ export class ProcessManagerImpl implements Manager {
       const handle = new ProcessHandleImpl<I, O, any>(
         id,
         Option.getOrNull(parentOption),
-        process,
+        callbacks,
         scope,
         fullCtx,
         this.#registry,
         outputQueue,
         storage,
-        executable.key,
-        executable.name ?? null,
+        definition.key,
         params,
         onFinished,
         () => this.#refreshProcessTree(),
@@ -751,8 +746,8 @@ export class ProcessManagerImpl implements Manager {
   list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]> {
     return Effect.sync(() => {
       let impls: ProcessHandleImpl<any, any, any>[] = [...this.#handles.values()];
-      if (options?.executableKey !== undefined) {
-        impls = impls.filter((handle) => handle.executableKey === options.executableKey);
+      if (options?.key !== undefined) {
+        impls = impls.filter((handle) => handle.key === options.key);
       }
       if (options?.parentProcessId !== undefined) {
         impls = impls.filter((handle) => handle.parentId === options.parentProcessId);

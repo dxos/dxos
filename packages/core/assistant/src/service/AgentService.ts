@@ -107,7 +107,7 @@ export const layer = (opts?: {
         getSession: (feed: Feed.Feed) =>
           Effect.gen(function* () {
             const executable = makeAgentExecutable({ systemPrompt: opts?.systemPrompt });
-            const processes = yield* processManager.list({ target: feed.id, executableKey: executable.key });
+            const processes = yield* processManager.list({ target: feed.id, key: executable.key });
             if (processes.length > 0) {
               return makeSession(processes[0], feed);
             }

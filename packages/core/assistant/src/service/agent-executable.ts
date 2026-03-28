@@ -41,11 +41,10 @@ interface AgentExecutableOptions {
  * Hosts a presistant, suspendible AiAgent that can process a number of prompts.
  */
 export const makeAgentExecutable = (options: AgentExecutableOptions) =>
-  Process.makeExecutable(
+  Process.make(
     {
-      key: 'org.dxos.testing.agent-executable',
-      name: 'Agent',
-      // TODO(dmaretskyi): Expand this. Currently prompts that are fed to the agent.
+      key: 'org.dxos.testing.process.agent',
+      // TODO(dmaretskyi): Expand input type. Currently prompts that are fed to the agent.
       input: Schema.String,
       output: Schema.Void,
       services: [

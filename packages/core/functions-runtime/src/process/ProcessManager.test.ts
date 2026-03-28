@@ -52,7 +52,7 @@ const handlers = OperationHandlerSet.make(
  * Never exits keeps adding numbers to the accumulator.
  */
 const makeSumAggregator = () =>
-  Process.makeExecutable(
+  Process.make(
     {
       key: 'test.sum-aggregator',
       input: Schema.Number,
@@ -81,7 +81,7 @@ const makeSumAggregator = () =>
  * Waits for 500ms and then exits.
  */
 const makeWaitingExecutable = () =>
-  Process.makeExecutable({ key: 'test.waiting', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+  Process.make({ key: 'test.waiting', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
     Effect.succeed({
       onSpawn: () =>
         Effect.gen(function* () {
