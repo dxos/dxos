@@ -184,7 +184,7 @@ const useAutoScroll = () => {
       if (el === document.documentElement || el === document.body) {
         return;
       }
-      dbg(`scroll: ${el.tagName}.${[...el.classList].slice(0, 2).join('.')} top=${el.scrollTop.toFixed(0)}`);
+      dbg(`scroll: ${el.tagName}.${Array.from(el.classList).slice(0, 2).join('.')} top=${el.scrollTop.toFixed(0)}`);
     };
 
     return combine(
