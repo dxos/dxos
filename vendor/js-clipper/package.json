@@ -21,9 +21,10 @@
     "dist",
     "src"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "@types/js-clipper": "catalog:"
+  },
   "devDependencies": {
-    "@types/js-clipper": "catalog:",
     "js-clipper": "catalog:"
   },
   "publishConfig": {

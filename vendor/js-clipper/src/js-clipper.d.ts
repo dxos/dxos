@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+/// <reference types="@types/js-clipper" />
+
 import ClipperLib from 'js-clipper';
 
 export default ClipperLib;

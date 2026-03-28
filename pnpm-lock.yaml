@@ -19455,10 +19455,11 @@ importers:
         version: 2.7.1
 
   vendor/js-clipper:
-    devDependencies:
+    dependencies:
       '@types/js-clipper':
         specifier: 'catalog:'
         version: 0.0.32
+    devDependencies:
       js-clipper:
         specifier: 'catalog:'
         version: 1.0.1
