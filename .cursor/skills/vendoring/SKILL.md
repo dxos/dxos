@@ -62,10 +62,7 @@ vendor/<name>/
       "default": "./dist/lib/<platform>/<name>.mjs"
     }
   },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "dependencies": {},
   "devDependencies": {
     "<original-package>": "catalog:",
@@ -103,7 +100,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/<name>.js'
-      - '--platform=<platform>'  # browser, node, or neutral
+      - '--platform=<platform>' # browser, node, or neutral
       - '--bundlePackage=<original-package>'
       # Add more --bundlePackage for transitive deps if needed
 ```
