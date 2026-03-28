@@ -3,6 +3,7 @@
 //
 
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import { Registry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
@@ -105,6 +106,7 @@ const TestLayer = ProcessOperationInvoker.layer.pipe(
   Layer.provide(KeyValueStore.layerMemory),
   Layer.provide(OperationHandlerSet.provide(handlers)),
   Layer.provide(TracingService.layerNoop),
+  Layer.provideMerge(Registry.layer),
 );
 
 describe('ProcessManagerImpl', () => {
@@ -145,7 +147,9 @@ describe('ProcessManagerImpl', () => {
         expect(status.state).toEqual(Process.State.HYBERNATING);
       }
       {
-        yield* handle.runToCompletion();
+        // `runToCompletion` also completes on HYBERNATING, so it would return before the 500ms alarm fires.
+        // Process alarms use real `setTimeout`; `it.effect` uses TestClock, so `Effect.sleep` would not advance wall time.
+        yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 600)));
         const status = yield* handle.status();
         expect(status.state).toEqual(Process.State.SUCCEEDED);
       }

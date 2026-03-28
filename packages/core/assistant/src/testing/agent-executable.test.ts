@@ -18,7 +18,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import { Blueprint } from '@dxos/blueprints';
 
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import { AiService, GenericToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
@@ -33,7 +33,7 @@ import { ObjectId } from '@dxos/keys';
 import { AiContextBinder, ContextBinding } from '../conversation';
 import { acquireReleaseResource } from '@dxos/effect';
 import { failedInvariant } from '@dxos/invariant';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -161,15 +161,8 @@ describe('Agent Executable', () => {
           Feed.getQueueDxn(feed) ?? failedInvariant(),
         );
         const binder = yield* acquireReleaseResource(() => new AiContextBinder({ queue }));
-        const researchBlueprint = yield* Database.add(Obj.clone(ResearchBlueprint, { deep: true }));
+        const researchBlueprint = yield* Blueprint.upsert(ResearchBlueprint.key);
 
-        const { db } = yield* Database.Service;
-        dbg(Obj.getDXN(researchBlueprint));
-        dbg(researchBlueprint.instructions.source.dxn);
-        dbg(Obj.getDXN(researchBlueprint.instructions.source.target!));
-        dbg(db.makeRef(researchBlueprint.instructions.source.dxn).target);
-
-        // return;
         yield* Effect.promise(() =>
           binder.bind({
             blueprints: [Ref.make(researchBlueprint)],

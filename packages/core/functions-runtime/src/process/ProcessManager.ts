@@ -26,7 +26,7 @@ import * as ServiceResolver from './ServiceResolver';
 import * as StorageService from './StorageService';
 import type { ObjectId } from '@dxos/protocols';
 import * as Deferred from 'effect/Deferred';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 
 export interface Status {
   readonly state: Process.State;
@@ -48,7 +48,8 @@ export interface Handle<I, O> {
   statusAtom: Atom.Atom<Status>;
 
   /**
-   * Runs the process until it goes into IDLE, HYBERNATING, TERMINATED, FAILED, or SUCCEEDED state.
+   * Runs the process until it goes into IDLE, TERMINATED, FAILED, or SUCCEEDED state.
+   * Note: We wait for hibernating processes to complete.
    * I.e. it has completed all work with the currently submitted inputs.
    * If the process fails, this effect will throw a defect.
    */
@@ -114,6 +115,11 @@ export interface Manager {
    * List all spawned processes.
    */
   list(): Effect.Effect<readonly Handle.Any[]>;
+
+  /**
+   * Terminates all spawned processes (e.g. when tearing down the manager layer).
+   */
+  shutdown(): Effect.Effect<void>;
 }
 
 /**
@@ -208,6 +214,9 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
 
   terminate(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
+      if (this.#finished) {
+        return;
+      }
       this.#finished = true;
       this.#setStatus(Process.State.TERMINATING);
       yield* this.#cleanup();
@@ -225,7 +234,6 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
             case Process.State.SUCCEEDED:
             case Process.State.TERMINATED:
             case Process.State.IDLE:
-            case Process.State.HYBERNATING:
               return Effect.runSync(Deferred.succeed(deferred, undefined));
             case Process.State.FAILED:
               const error = state.exit.pipe(
@@ -419,6 +427,60 @@ export class ProcessManagerImpl implements Manager {
 
   #refreshProcessTree(): void {
     this.#registry.set(this.#processTreeAtom, this.#buildProcessTreeSnapshot());
+  }
+
+  /**
+   * Terminates every spawned process handle (children before parents), clears alarms, and empties the handle map.
+   * Safe to call when there are no handles. Per-handle `terminate` is idempotent.
+   */
+  shutdown(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      if (this.#handles.size === 0) {
+        return;
+      }
+      const order = this.#shutdownTerminationOrder();
+      for (const handle of order) {
+        yield* handle.terminate();
+      }
+      this.#handles.clear();
+      this.#refreshProcessTree();
+    });
+  }
+
+  /**
+   * Pids with no pending children in the handle map first, so child processes shut down before parents.
+   */
+  #shutdownTerminationOrder(): ProcessHandleImpl<any, any, any>[] {
+    const byPid = new Map(this.#handles);
+    const pending = new Set<Process.ID>(byPid.keys());
+    const result: ProcessHandleImpl<any, any, any>[] = [];
+
+    const pendingChildCount = (pid: Process.ID): number => {
+      let count = 0;
+      for (const childPid of pending) {
+        const child = byPid.get(childPid)!;
+        if (Option.isSome(child.parentId) && child.parentId.value === pid) {
+          count++;
+        }
+      }
+      return count;
+    };
+
+    while (pending.size > 0) {
+      let leaves = [...pending].filter((pid) => pendingChildCount(pid) === 0);
+      if (leaves.length === 0) {
+        leaves = [[...pending][0]!];
+      }
+      for (const pid of leaves) {
+        pending.delete(pid);
+        const handle = byPid.get(pid);
+        if (handle) {
+          result.push(handle);
+        }
+      }
+    }
+
+    return result;
   }
 
   spawn<I, O>(executable: Process.Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
@@ -615,8 +677,12 @@ export class ProcessManagerImpl implements Manager {
 }
 
 /**
- * Layer that provides ProcessManager backed by ProcessManagerImpl.
- * Requires KeyValueStore, ServiceResolver, TracingService, and OperationHandlerSet.OperationHandlerProvider from the environment.
+ * Scoped layer that provides ProcessManager and ProcessMonitorService.
+ * On scope close, the manager's `shutdown()` runs (layer finalizer), stopping
+ * alarms and process work so the shared Atom registry is not updated after disposal.
+ *
+ * Requires KeyValueStore, ServiceResolver, TracingService, OperationHandlerSet.OperationHandlerProvider,
+ * and Registry.AtomRegistry from the environment.
  */
 export const layer: Layer.Layer<
   ProcessManagerService | Process.ProcessMonitorService,
@@ -626,13 +692,14 @@ export const layer: Layer.Layer<
   | TracingService
   | OperationHandlerSet.OperationHandlerProvider
   | Registry.AtomRegistry
-> = Layer.unwrapEffect(
+> = Layer.scopedContext(
   Effect.gen(function* () {
     const kvStore = yield* KeyValueStore.KeyValueStore;
     const serviceResolver = yield* ServiceResolver.ServiceResolver;
     const tracingService = yield* TracingService;
     const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
     const registry = yield* Registry.AtomRegistry;
+
     const manager = new ProcessManagerImpl({
       registry,
       kvStore,
@@ -640,9 +707,12 @@ export const layer: Layer.Layer<
       tracingService,
       handlerSet,
     });
-    return Layer.mergeAll(
-      Layer.succeed(ProcessManagerService, manager),
-      Layer.succeed(Process.ProcessMonitorService, manager.monitor),
+
+    yield* Effect.addFinalizer(() => manager.shutdown());
+
+    return Context.mergeAll(
+      Context.make(ProcessManagerService, manager),
+      Context.make(Process.ProcessMonitorService, manager.monitor),
     );
   }),
 );

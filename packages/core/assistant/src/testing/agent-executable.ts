@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiService, GenericToolkit, type ModelName } from '@dxos/ai';
-import { Feed } from '@dxos/echo';
+import { Database, Feed } from '@dxos/echo';
 import { QueueService, TracingService } from '@dxos/functions';
 import { Process, ProcessOperationInvoker, StorageService } from '@dxos/functions-runtime';
 import { Operation, OperationRegistry } from '@dxos/operation';
@@ -29,7 +29,7 @@ import {
   makeToolResolverFromOperations,
 } from '../functions';
 import { acquireReleaseResource } from '@dxos/effect';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { Match } from 'effect';
 
 interface AgentExecutableOptions {
@@ -48,6 +48,7 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
       input: Schema.String,
       output: Schema.Void,
       services: [
+        Database.Service,
         GenericToolkit.GenericToolkitProvider,
         Operation.Service,
         OperationRegistry.Service,
