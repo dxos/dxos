@@ -172,9 +172,7 @@ describe('Agent Executable', () => {
           yield* agent.submitPrompt(JSON.stringify(org));
         }
         yield* agent.submitPrompt('When all research is complete, print 1-sentence summary for each organization.');
-
-        const manager = yield* ProcessManager.ProcessManagerService;
-        yield* manager.runAllProcessesToCompletion();
+        yield* agent.waitForCompletion();
       },
       Effect.provide(TestLayer),
       Effect.scoped,

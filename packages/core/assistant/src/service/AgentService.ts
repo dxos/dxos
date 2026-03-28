@@ -42,6 +42,11 @@ export interface Session {
    * Submits a prompt to the agent.
    */
   submitPrompt: (prompt: string) => Effect.Effect<void>;
+
+  /**
+   * Wait until agent has completed its work.
+   */
+  waitForCompletion: () => Effect.Effect<void>;
 }
 
 /**
@@ -110,4 +115,5 @@ export const layer = (opts?: {
 const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Feed): Session => ({
   feed,
   submitPrompt: (prompt: string) => process.submitInput(prompt),
+  waitForCompletion: () => process.runToCompletion(),
 });
