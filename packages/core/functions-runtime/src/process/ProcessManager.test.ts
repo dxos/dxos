@@ -275,6 +275,9 @@ describe('ProcessManagerImpl', () => {
         expect(info?.metrics.outputCount).toEqual(1);
         expect(info?.metrics.wallTime).toBeGreaterThanOrEqual(0);
 
+        const pretty = Process.prettyProcessTree(tree);
+        expect(pretty).toContain('[in:1 out:1 wall:');
+
         yield* handle.terminate();
       }, Effect.provide(TestLayer)),
     );

@@ -421,6 +421,8 @@ export const prettyProcessTree = (tree: readonly ProcessInfo[]): string => {
     if (node.error != null) {
       parts.push(`(${node.error})`);
     }
+    const { inputCount, outputCount, wallTime } = node.metrics;
+    parts.push(`[in:${inputCount} out:${outputCount} wall:${Math.round(wallTime)}ms]`);
     return parts.join(' ');
   };
 
