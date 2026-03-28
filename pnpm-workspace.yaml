@@ -289,7 +289,7 @@ catalog:
   '@valtown/codemirror-ts': ^2.3.1
   '@virtuoso.dev/masonry': ^1.4.2
   '@vitejs/plugin-react': ^6.0.1
-  '@vitejs/plugin-react-swc': ^4.3.0
+  '@vitejs/plugin-react-swc': 4.2.2
   '@vitest/browser': ^4.1.2
   '@vitest/browser-playwright': ^4.1.2
   '@vitest/coverage-v8': ^4.1.2
@@ -674,6 +674,7 @@ onlyBuiltDependencies:
 
 overrides:
   '@automerge/automerge': 'catalog:'
+  '@vitejs/plugin-react-swc>@swc/core': 'catalog:'
   '@grpc/grpc-js': '>=1.10.9'
   '@lezer/lr': 'catalog:'
   '@modelcontextprotocol/sdk': '>=1.26.0'
