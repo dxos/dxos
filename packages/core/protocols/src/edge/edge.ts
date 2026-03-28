@@ -492,7 +492,6 @@ export const EdgeHttpErrorCodec = Object.freeze({
   },
 });
 
-
 //
 // Data management.
 //
