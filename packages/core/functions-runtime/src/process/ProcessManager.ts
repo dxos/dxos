@@ -144,6 +144,8 @@ export interface Manager {
    */
   list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]>;
 
+  runAllProcessesToCompletion(): Effect.Effect<void>;
+
   /**
    * Terminates all spawned processes (e.g. when tearing down the manager layer).
    */
@@ -762,6 +764,15 @@ export class ProcessManagerImpl implements Manager {
         impls = impls.filter((handle) => handle.params.target === options.target);
       }
       return impls;
+    });
+  }
+
+  runAllProcessesToCompletion(): Effect.Effect<void> {
+    return Effect.gen(this, function* () {
+      yield* Effect.forEach(this.#handles.values(), (handle) => handle.runToCompletion(), {
+        concurrency: 'unbounded',
+        discard: true,
+      });
     });
   }
 }

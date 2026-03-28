@@ -28,12 +28,13 @@ import { trim } from '@dxos/util';
 import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
 import { makeAgentExecutable } from './agent-executable';
-import { AssistantTestLayer } from './layer';
+import { AssistantTestLayer } from '../testing';
 import { ObjectId } from '@dxos/keys';
 import { AiContextBinder, ContextBinding } from '../conversation';
 import { acquireReleaseResource } from '@dxos/effect';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import * as AgentService from './AgentService';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -117,7 +118,17 @@ const ResearchBlueprint = Blueprint.make({
 // Test layer: AI services + toolkit.
 //
 
+const SYSTEM_PROMPT = trim`
+  You are reacting to a continuous stream of organizations.
+  Research each organization.
+  Research takes a while to complete.
+  Do not block on the research since there might be more organizations to research, and we want research to happen in parallel.
+  Do not wait longer then 3 seconds to keep the conversation open for new events or user queries.
+  Do internal reasoning, but only show the answers to the user.
+`;
+
 const TestLayer = Layer.empty.pipe(
+  Layer.provideMerge(AgentService.layer({ systemPrompt: SYSTEM_PROMPT })),
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
   Layer.provideMerge(
     ServiceResolver.layerRequirements(
@@ -141,15 +152,6 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(KeyValueStore.layerMemory),
   Layer.provideMerge(Registry.layer),
 );
-
-const SYSTEM_PROMPT = trim`
-  You are reacting to a continuous stream of organizations.
-  Research each organization.
-  Research takes a while to complete.
-  Do not block on the research since there might be more organizations to research, and we want research to happen in parallel.
-  Do not wait longer then 3 seconds to keep the conversation open for new events or user queries.
-  Do internal reasoning, but only show the answers to the user.
-`;
 
 describe('Agent Executable', () => {
   it.live(
@@ -176,15 +178,13 @@ describe('Agent Executable', () => {
           console.log(`\n----- Process tree -----\n${Process.prettyProcessTree(tree)}\n-----------------\n`);
         });
 
-        const manager = yield* ProcessManager.ProcessManagerService;
-        const handle = yield* manager.spawn(makeAgentExecutable({ systemPrompt: SYSTEM_PROMPT }), {
-          name: 'agent',
-          target: feed.id,
-        });
+        const agent = yield* AgentService.getSession(feed);
         for (const org of TEST_DATA.organizations) {
-          yield* handle.submitInput(JSON.stringify(org));
+          yield* agent.submitPrompt(JSON.stringify(org));
         }
-        yield* handle.runToCompletion();
+
+        const manager = yield* ProcessManager.ProcessManagerService;
+        yield* manager.runAllProcessesToCompletion();
       },
       Effect.provide(TestLayer),
       Effect.scoped,
