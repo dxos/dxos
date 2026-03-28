@@ -48,7 +48,7 @@ export interface Handle<I, O> {
   statusAtom: Atom.Atom<Status>;
 
   /**
-   * Runs the process until it goes into a SUSPENDED, TERMINATED, FAILED, or COMPLETED state.
+   * Runs the process until it goes into IDLE, HYBERNATING, TERMINATED, FAILED, or SUCCEEDED state.
    * I.e. it has completed all work with the currently submitted inputs.
    * If the process fails, this effect will throw a defect.
    */
@@ -75,6 +75,12 @@ export interface TracingOptions {
 export interface SpawnOptions {
   /** Parent process ID — child inherits the parent's trace context. */
   readonly parentProcessId?: Process.ID;
+
+  /**
+   * Process name for debugging purposes.
+   */
+  readonly name?: string;
+
   /** Tracing metadata for this invocation. */
   readonly tracing?: TracingOptions;
 }
@@ -87,6 +93,7 @@ export interface Manager {
    * Spawn a new process for an executable.
    */
   spawn<I, O>(executable: Process.Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>>;
+
   /**
    * Attach to an existing process.
    */
@@ -96,6 +103,7 @@ export interface Manager {
    * Attach to an existing process if it exists, otherwise spawn a new process for the executable.
    * `executable` and `options` are ignored if the process already exists.
    */
+  // TODO(dmaretskyi): attach or spawn
   ensure<I, O>(
     id: Process.ID,
     executable: Process.Executable<I, O, any>,
@@ -128,7 +136,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   #currentStatus: Status;
   #activeHandlers = 0;
   #finished = false;
-  #exitRequested = false;
+  #succeedRequested = false;
   #failError: Error | null = null;
   #alarmTimer: ReturnType<typeof setTimeout> | null = null;
   #services: Context.Context<R | Process.BaseServices>;
@@ -139,6 +147,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   readonly #registry: Registry.Registry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
   readonly #storage: Context.Tag.Service<typeof StorageService.StorageService>;
+  #name: string | undefined;
 
   readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
 
@@ -151,6 +160,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     registry: Registry.Registry,
     outputQueue: Queue.Queue<OutputItem<O>>,
     storage: Context.Tag.Service<typeof StorageService.StorageService>,
+    name?: string,
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
   ) {
     this.parentId = parentId;
@@ -160,6 +170,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     this.#registry = registry;
     this.#outputQueue = outputQueue;
     this.#storage = storage;
+    this.#name = name;
     this.#onFinished = onFinished;
 
     this.#currentStatus = {
@@ -172,16 +183,16 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     this.#registry.mount(this.statusAtom);
   }
 
-  /** Run process init. Called by ProcessManagerImpl after spawn. */
-  runInit(): Effect.Effect<void> {
-    return this.#runHandler(() => this.#process.init());
+  /** Run process onSpawn. Called by ProcessManagerImpl after spawn. */
+  runOnSpawn(): Effect.Effect<void> {
+    return this.#runHandler(() => this.#process.onSpawn());
   }
 
   submitInput(input: I): Effect.Effect<void> {
     if (this.#finished) {
       return Effect.void;
     }
-    return this.#runHandler(() => this.#process.handleInput(input)).pipe(Effect.forkIn(this.#scope));
+    return this.#runHandler(() => this.#process.onInput(input)).pipe(Effect.forkIn(this.#scope));
   }
 
   subscribeOutputs(): Stream.Stream<O> {
@@ -204,9 +215,10 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
         this.statusAtom,
         (state) => {
           switch (state.state) {
-            case Process.State.COMPLETED:
+            case Process.State.SUCCEEDED:
             case Process.State.TERMINATED:
-            case Process.State.SUSPENDED:
+            case Process.State.IDLE:
+            case Process.State.HYBERNATING:
               return Effect.runSync(Deferred.succeed(deferred, undefined));
             case Process.State.FAILED:
               const error = state.exit.pipe(
@@ -228,8 +240,8 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     return Effect.sync(() => this.#currentStatus);
   }
 
-  requestExit(): void {
-    this.#exitRequested = true;
+  requestSucceed(): void {
+    this.#succeedRequested = true;
   }
 
   requestFail(error: Error): void {
@@ -244,7 +256,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     this.#alarmTimer = setTimeout(() => {
       this.#alarmTimer = null;
       if (!this.#finished) {
-        Effect.runFork(this.#runHandler(() => this.#process.alarm()).pipe(this.#alarmSemaphore.withPermits(1)));
+        Effect.runFork(this.#runHandler(() => this.#process.onAlarm()).pipe(this.#alarmSemaphore.withPermits(1)));
       }
     }, delay);
   }
@@ -254,7 +266,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   }
 
   requestChildEvent(event: Process.ChildEvent<unknown>): void {
-    Effect.runFork(this.#runHandler(() => this.#process.childEvent(event)).pipe(Effect.forkIn(this.#scope)));
+    Effect.runFork(this.#runHandler(() => this.#process.onChildEvent(event)).pipe(Effect.forkIn(this.#scope)));
   }
 
   #runHandler(fn: () => Effect.Effect<void, never, R | Process.BaseServices>): Effect.Effect<void> {
@@ -281,11 +293,11 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
       );
     }
 
-    if (this.#exitRequested && this.#activeHandlers === 0) {
+    if (this.#succeedRequested && this.#activeHandlers === 0) {
       this.#finished = true;
       return this.#cleanup().pipe(
-        Effect.tap(() => this.#setStatus(Process.State.COMPLETED, Exit.void)),
-        Effect.tap(() => this.#onFinished?.(Process.State.COMPLETED) ?? Effect.void),
+        Effect.tap(() => this.#setStatus(Process.State.SUCCEEDED, Exit.void)),
+        Effect.tap(() => this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void),
       );
     }
 
@@ -324,7 +336,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   #setStatus(state: Process.State, exit?: Exit.Exit<void>) {
     log('setStatus', { pid: this.pid, state });
     const isTerminal =
-      state === Process.State.COMPLETED || state === Process.State.TERMINATED || state === Process.State.FAILED;
+      state === Process.State.SUCCEEDED || state === Process.State.TERMINATED || state === Process.State.FAILED;
     this.#currentStatus = {
       state,
       exit: exit ? Option.some(exit) : Option.none(),
@@ -375,8 +387,8 @@ export class ProcessManagerImpl implements Manager {
 
       const ctx: Process.ProcessContext<I, O> = {
         id,
-        exit: () => {
-          handleRef?.requestExit();
+        succeed: () => {
+          handleRef?.requestSucceed();
         },
         fail: (error: Error) => {
           handleRef?.requestFail(error);
@@ -481,12 +493,13 @@ export class ProcessManagerImpl implements Manager {
         this.#registry,
         outputQueue,
         storage,
+        options?.name,
         onFinished,
       );
       handleRef = handle;
       this.#handles.set(id, handle);
 
-      yield* handle.runInit();
+      yield* handle.runOnSpawn();
 
       return handle;
     });

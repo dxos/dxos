@@ -28,10 +28,10 @@ import type { TracingService } from '@dxos/protocols/proto/dxos/tracing';
  *
  * Process lifecycle: Initial -> Running <-> Suspended -> Terminated.
  *
- * - init -> called once when the process is spawned.
- * - handleInput -> called for every input submitted to the process.
- * - alarm -> called for processes scheduling alarms.
- * - childEvent -> called when child process produces output or exits.
+ * - onSpawn -> called once when the process is spawned.
+ * - onInput -> called for every input submitted to the process.
+ * - onAlarm -> called for processes scheduling alarms.
+ * - onChildEvent -> called when child process produces output or exits.
  */
 export interface Process<I, O, R> {
   /**
@@ -43,8 +43,7 @@ export interface Process<I, O, R> {
    *
    * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
-  // TODO(dmaretskyi): onSpawn
-  init(): Effect.Effect<void, never, R | BaseServices>;
+  onSpawn(): Effect.Effect<void, never, R | BaseServices>;
 
   /**
    * Called when there's input available to process.
@@ -56,24 +55,21 @@ export interface Process<I, O, R> {
    *
    * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
-  // TODO(dmaretskyi): onInput
-  handleInput(input: I): Effect.Effect<void, never, R | BaseServices>;
+  onInput(input: I): Effect.Effect<void, never, R | BaseServices>;
 
   /**
    * Called when the process's alarm is triggered.
    *
    * @throws Throwing in the handler will terminate the process with an error.
    */
-  // TODO(dmaretskyi): onAlarm
-  alarm(): Effect.Effect<void, never, R | BaseServices>;
+  onAlarm(): Effect.Effect<void, never, R | BaseServices>;
 
   /**
    * Called when the process's child process produces output or exits.
    *
    * This allows the parent process to hibernate while a long-running child process is running.
    */
-  // TODO(dmaretskyi): onChildEvent
-  childEvent(event: ChildEvent<unknown>): Effect.Effect<void, never, R | BaseServices>;
+  onChildEvent(event: ChildEvent<unknown>): Effect.Effect<void, never, R | BaseServices>;
 }
 
 /**
@@ -100,8 +96,7 @@ export interface ProcessContext<I, O> {
    * Complete this process with sucessful result.
    * No additional events will be pushed to the process.
    */
-  // TODO(dmaretskyi): succeed
-  exit(): void;
+  succeed(): void;
 
   /**
    * Complete this process with an error.
@@ -202,8 +197,8 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
     (ctx) =>
       Effect.gen(function* () {
         return {
-          init: () => Effect.void,
-          handleInput: (input: Operation.Definition.Input<Op>) =>
+          onSpawn: () => Effect.void,
+          onInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
               const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
               const output = yield* opHandler.handler(input).pipe(Effect.orDie) as Effect.Effect<
@@ -213,11 +208,11 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               >;
 
               ctx.submitOutput(output);
-              ctx.exit();
+              ctx.succeed();
             }),
 
-          alarm: () => Effect.void,
-          childEvent: (event: ChildEvent<unknown>) => Effect.void,
+          onAlarm: () => Effect.void,
+          onChildEvent: (event: ChildEvent<unknown>) => Effect.void,
         };
       }),
   );
@@ -230,8 +225,7 @@ export enum State {
   HYBERNATING = 'hybernating',
 
   // Process is waiting for input. It will only resume when input is submitted.
-  // TODO(dmaretskyi): IDLE
-  SUSPENDED = 'suspended',
+  IDLE = 'idle',
 
   // Process is terminating and will transition to TERMINATED state.
   // TODO(dmaretskyi): Consider removing.
@@ -241,8 +235,7 @@ export enum State {
   TERMINATED = 'terminated',
 
   // Process has completed successfully.
-  // TODO(dmaretskyi): SUCCEEDED
-  COMPLETED = 'completed',
+  SUCCEEDED = 'succeeded',
 
   // Process has failed.
   FAILED = 'failed',

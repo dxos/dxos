@@ -59,19 +59,19 @@ const makeSumAggregator = () =>
     },
     (ctx) =>
       Effect.succeed({
-        init: () =>
+        onSpawn: () =>
           Effect.gen(function* () {
             yield* StorageService.set(Schema.NumberFromString, 'acc', 0);
           }),
-        handleInput: (input: number) =>
+        onInput: (input: number) =>
           Effect.gen(function* () {
             let acc = yield* StorageService.get(Schema.NumberFromString, 'acc').pipe(Effect.flatten, Effect.orDie);
             acc += input;
             yield* StorageService.set(Schema.NumberFromString, 'acc', acc);
             ctx.submitOutput(acc);
           }),
-        alarm: () => Effect.void,
-        childEvent: () => Effect.void,
+        onAlarm: () => Effect.void,
+        onChildEvent: () => Effect.void,
       }),
   );
 
@@ -81,16 +81,16 @@ const makeSumAggregator = () =>
 const makeWaitingExecutable = () =>
   Process.makeExecutable({ input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
     Effect.succeed({
-      init: () =>
+      onSpawn: () =>
         Effect.gen(function* () {
           ctx.setAlarm(500);
         }),
-      handleInput: () => Effect.void,
-      alarm: () =>
+      onInput: () => Effect.void,
+      onAlarm: () =>
         Effect.gen(function* () {
-          ctx.exit();
+          ctx.succeed();
         }),
-      childEvent: () => Effect.void,
+      onChildEvent: () => Effect.void,
     }),
   );
 
@@ -147,7 +147,7 @@ describe('ProcessManagerImpl', () => {
       {
         yield* handle.runToCompletion();
         const status = yield* handle.status();
-        expect(status.state).toEqual(Process.State.COMPLETED);
+        expect(status.state).toEqual(Process.State.SUCCEEDED);
       }
     }, Effect.provide(TestLayer)),
   );
@@ -182,14 +182,14 @@ describe('ProcessManagerImpl', () => {
       {
         yield* handle.runToCompletion();
         const status = yield* handle.status();
-        expect(status.state).toEqual(Process.State.SUSPENDED);
+        expect(status.state).toEqual(Process.State.HYBERNATING);
       }
       {
         yield* handle.submitInput(1);
         yield* handle.submitInput(2);
         yield* handle.runToCompletion();
         const status = yield* handle.status();
-        expect(status.state).toEqual(Process.State.COMPLETED);
+        expect(status.state).toEqual(Process.State.HYBERNATING);
         expect(lastOutput).toEqual(3);
       }
     }, Effect.provide(TestLayer)),

@@ -68,13 +68,13 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
         let inputQueue: AgentEvent[] = [...(yield* loadEvents)];
 
         return {
-          init: Effect.fnUntraced(function* () {}),
-          handleInput: Effect.fnUntraced(function* (prompt: string) {
+          onSpawn: Effect.fnUntraced(function* () {}),
+          onInput: Effect.fnUntraced(function* (prompt: string) {
             inputQueue.push({ _tag: 'prompt', content: prompt });
             yield* storeEvents(inputQueue);
             ctx.setAlarm();
           }),
-          alarm: Effect.fnUntraced(
+          onAlarm: Effect.fnUntraced(
             function* () {
               const item = inputQueue.shift();
               if (!item) {
@@ -108,7 +108,7 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
               ).pipe(Layer.orDie),
             ),
           ),
-          childEvent: Effect.fnUntraced(function* (event) {
+          onChildEvent: Effect.fnUntraced(function* (event) {
             log.info('childEvent', { event });
             if (event._tag === 'exited') {
               inputQueue.push({
