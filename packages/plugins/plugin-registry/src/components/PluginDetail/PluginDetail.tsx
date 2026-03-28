@@ -10,14 +10,11 @@ import { composableProps, getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-export type PluginDetailProps = ComposableProps<
-  HTMLDivElement,
-  {
-    plugin: Plugin.Plugin;
-    enabled?: boolean;
-    onEnabledChange?: (enabled: boolean) => void;
-  }
->;
+export type PluginDetailProps = ComposableProps<{
+  plugin: Plugin.Plugin;
+  enabled?: boolean;
+  onEnabledChange?: (enabled: boolean) => void;
+}>;
 
 export const PluginDetail = forwardRef<HTMLDivElement, PluginDetailProps>(
   ({ plugin, enabled, onEnabledChange, ...props }, forwardedRef) => {

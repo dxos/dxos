@@ -49,7 +49,7 @@ export const RawDataPanel: FC<ThemedClassName<RawDataPanelProps>> = ({ className
   };
 
   return (
-    <SyntaxHighlighter language='json' className={classNames} renderer={rowRenderer}>
+    <SyntaxHighlighter language='json' classNames={classNames} renderer={rowRenderer}>
       {JSON.stringify(combinedData, null, 2)}
     </SyntaxHighlighter>
   );

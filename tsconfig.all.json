@@ -397,6 +397,9 @@
       "path": "packages/plugins/plugin-space/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-spotlight/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-stack/tsconfig.json"
     },
     {
