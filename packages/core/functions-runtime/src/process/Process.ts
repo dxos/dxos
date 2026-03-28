@@ -164,10 +164,12 @@ export const makeExecutable = <const Opts extends Types.NoExcessProperties<MakeE
   run: (
     ctx: ProcessContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
   ) => Effect.Effect<
-    Process<
-      Schema.Schema.Type<Opts['input']>,
-      Schema.Schema.Type<Opts['output']>,
-      Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
+    Partial<
+      Process<
+        Schema.Schema.Type<Opts['input']>,
+        Schema.Schema.Type<Opts['output']>,
+        Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
+      >
     >,
     never,
     Context.Tag.Identifier<NonNullable<Opts['services']>[number]> | BaseServices | Scope.Scope
@@ -180,7 +182,16 @@ export const makeExecutable = <const Opts extends Types.NoExcessProperties<MakeE
   return {
     [ExecutableTypeId]: {} as any,
     ...opts,
-    run,
+    run: (ctx) =>
+      run(ctx).pipe(
+        Effect.map((partial) => ({
+          onSpawn: () => Effect.void,
+          onInput: () => Effect.void,
+          onAlarm: () => Effect.void,
+          onChildEvent: () => Effect.void,
+          ...partial,
+        })),
+      ),
   };
 };
 
@@ -196,8 +207,9 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
     },
     (ctx) =>
       Effect.gen(function* () {
+        const semaphore = yield* Effect.makeSemaphore(1);
+
         return {
-          onSpawn: () => Effect.void,
           onInput: (input: Operation.Definition.Input<Op>) =>
             Effect.gen(function* () {
               const opHandler = yield* OperationHandlerSet.getHandler(handler, op).pipe(Effect.orDie);
@@ -209,10 +221,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
 
               ctx.submitOutput(output);
               ctx.succeed();
-            }),
-
-          onAlarm: () => Effect.void,
-          onChildEvent: (event: ChildEvent<unknown>) => Effect.void,
+            }).pipe(semaphore.withPermits(1)),
         };
       }),
   );

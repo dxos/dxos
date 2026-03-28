@@ -68,7 +68,6 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
         let inputQueue: AgentEvent[] = [...(yield* loadEvents)];
 
         return {
-          onSpawn: Effect.fnUntraced(function* () {}),
           onInput: Effect.fnUntraced(function* (prompt: string) {
             inputQueue.push({ _tag: 'prompt', content: prompt });
             yield* storeEvents(inputQueue);
