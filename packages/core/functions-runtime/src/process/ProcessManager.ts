@@ -38,7 +38,12 @@ export interface Status {
 
 export interface Handle<I, O> {
   readonly pid: Process.ID;
-  readonly parentId: Option.Option<Process.ID>;
+  readonly parentId: Process.ID | null;
+
+  /**
+   * Debug name from {@link SpawnOptions.name}, if set when spawned.
+   */
+  readonly name: string | null;
 
   submitInput(input: I): Effect.Effect<void>;
   subscribeOutputs(): Stream.Stream<O>;
@@ -48,10 +53,13 @@ export interface Handle<I, O> {
   statusAtom: Atom.Atom<Status>;
 
   /**
-   * Runs the process until it goes into IDLE, TERMINATED, FAILED, or SUCCEEDED state.
-   * Note: We wait for hibernating processes to complete.
-   * I.e. it has completed all work with the currently submitted inputs.
-   * If the process fails, this effect will throw a defect.
+   * Resolves when the process reaches {@link Process.State.IDLE} (nothing in-flight; waiting for input),
+   * or a terminal state ({@link Process.State.SUCCEEDED}, {@link Process.State.TERMINATED}, {@link Process.State.FAILED}).
+   *
+   * Does not resolve while the process is {@link Process.State.HYBERNATING} (e.g. alarm pending or non-terminal child).
+   * The effect keeps waiting until that external work finishes and the process becomes idle or terminal.
+   *
+   * If the process fails, this effect throws a defect.
    */
   runToCompletion(): Effect.Effect<void>;
 }
@@ -137,7 +145,7 @@ type OutputItem<O> = Option.Option<O>;
 
 class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   readonly statusAtom: Atom.Writable<Status>;
-  readonly parentId: Option.Option<Process.ID>;
+  readonly parentId: Process.ID | null;
 
   #currentStatus: Status;
   #activeHandlers = 0;
@@ -153,23 +161,24 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   readonly #registry: Registry.Registry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
   readonly #storage: Context.Tag.Service<typeof StorageService.StorageService>;
-  #name: string | undefined;
 
   readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
   readonly #onStatusChanged: (() => void) | undefined;
+  readonly #hasRunningChildren: () => boolean;
 
   constructor(
     readonly pid: Process.ID,
-    parentId: Option.Option<Process.ID>,
+    parentId: Process.ID | null,
     process: Process.Process<I, O, R>,
     scope: Scope.CloseableScope,
     services: Context.Context<R | Process.BaseServices>,
     registry: Registry.Registry,
     outputQueue: Queue.Queue<OutputItem<O>>,
     storage: Context.Tag.Service<typeof StorageService.StorageService>,
-    name?: string,
+    readonly name: string | null,
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
     onStatusChanged?: () => void,
+    hasRunningChildren?: () => boolean,
   ) {
     this.parentId = parentId;
     this.#process = process;
@@ -178,9 +187,9 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     this.#registry = registry;
     this.#outputQueue = outputQueue;
     this.#storage = storage;
-    this.#name = name;
     this.#onFinished = onFinished;
     this.#onStatusChanged = onStatusChanged;
+    this.#hasRunningChildren = hasRunningChildren ?? (() => false);
 
     this.#currentStatus = {
       state: Process.State.RUNNING,
@@ -317,7 +326,8 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     }
 
     if (this.#activeHandlers === 0) {
-      this.#setStatus(Process.State.HYBERNATING);
+      const hybernating = this.#alarmTimer !== null || this.#hasRunningChildren();
+      this.#setStatus(hybernating ? Process.State.HYBERNATING : Process.State.IDLE);
     }
     return Effect.void;
   }
@@ -411,6 +421,18 @@ export class ProcessManagerImpl implements Manager {
     );
   }
 
+  #hasNonTerminalChildren(parentPid: Process.ID): boolean {
+    for (const handle of this.#handles.values()) {
+      if (handle.parentId === parentPid) {
+        const { state } = handle.snapshotStatus();
+        if (state !== Process.State.SUCCEEDED && state !== Process.State.FAILED && state !== Process.State.TERMINATED) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   #buildProcessTreeSnapshot(): readonly Process.ProcessInfo[] {
     return [...this.#handles.values()].map((handle) => {
       const status = handle.snapshotStatus();
@@ -418,7 +440,8 @@ export class ProcessManagerImpl implements Manager {
         pid: handle.pid,
         parentPid: handle.parentId,
         state: status.state,
-        error: this.#exitOptionToError(status.exit),
+        error: Option.getOrNull(this.#exitOptionToError(status.exit)),
+        ...(handle.name != null && handle.name !== '' ? { name: handle.name } : {}),
         startedAt: status.startedAt.getTime(),
         completedAt: Option.map(status.completedAt, (date) => date.getTime()),
       };
@@ -433,6 +456,7 @@ export class ProcessManagerImpl implements Manager {
    * Terminates every spawned process handle (children before parents), clears alarms, and empties the handle map.
    * Safe to call when there are no handles. Per-handle `terminate` is idempotent.
    */
+  // TODO(dmaretskyi): Make it so that the ProcessManager is durable, then this will not terminate processes. just stop scheduling callbacks.
   shutdown(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       if (this.#handles.size === 0) {
@@ -459,7 +483,7 @@ export class ProcessManagerImpl implements Manager {
       let count = 0;
       for (const childPid of pending) {
         const child = byPid.get(childPid)!;
-        if (Option.isSome(child.parentId) && child.parentId.value === pid) {
+        if (child.parentId === pid) {
           count++;
         }
       }
@@ -573,17 +597,17 @@ export class ProcessManagerImpl implements Manager {
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen(this, function* () {
           log.info('onFinished', { pid: handle.pid });
-          if (Option.isSome(handle.parentId)) {
-            const parentHandle = this.#handles.get(handle.parentId.value);
+          if (handle.parentId !== null) {
+            const parentHandle = this.#handles.get(handle.parentId);
             if (parentHandle) {
-              log.info('requesting child event', { pid: handle.parentId.value });
+              log.info('requesting child event', { pid: handle.parentId });
               parentHandle.requestChildEvent({
                 _tag: 'exited',
                 pid: handle.pid,
                 result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
               });
             } else {
-              log.warn('parent handle not found', { pid: handle.parentId.value });
+              log.warn('parent handle not found', { pid: handle.parentId });
             }
           }
 
@@ -597,16 +621,17 @@ export class ProcessManagerImpl implements Manager {
 
       const handle = new ProcessHandleImpl<I, O, any>(
         id,
-        parentOption,
+        Option.getOrNull(parentOption),
         process,
         scope,
         fullCtx,
         this.#registry,
         outputQueue,
         storage,
-        options?.name,
+        options?.name ?? null,
         onFinished,
         () => this.#refreshProcessTree(),
+        () => this.#hasNonTerminalChildren(id),
       );
       handleRef = handle;
       this.#handles.set(id, handle);

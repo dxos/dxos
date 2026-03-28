@@ -92,6 +92,7 @@ export const make = (opts: {
       const handle = yield* opts.manager.spawn(executable, {
         parentProcessId: opts.parentProcessId,
         tracing: tracingOptions,
+        name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
       });
       log('spawned process', { op, input, handle });
 

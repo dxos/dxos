@@ -182,6 +182,7 @@ describe('Agent Executable', () => {
             feed,
             systemPrompt: SYSTEM_PROMPT,
           }),
+          { name: 'agent' },
         );
         for (const org of TEST_DATA.organizations) {
           yield* handle.submitInput(JSON.stringify(org));

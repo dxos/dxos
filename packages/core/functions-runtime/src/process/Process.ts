@@ -233,26 +233,26 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
 
 export enum State {
   // Process is actively running.
-  RUNNING = 'running',
+  RUNNING = 'RUNNING',
 
   // Process is waiting for a child process to complete or an alarm to trigger.
-  HYBERNATING = 'hybernating',
+  HYBERNATING = 'HYBERNATING',
 
   // Process is waiting for input. It will only resume when input is submitted.
-  IDLE = 'idle',
+  IDLE = 'IDLE',
 
   // Process is terminating and will transition to TERMINATED state.
   // TODO(dmaretskyi): Consider removing.
-  TERMINATING = 'terminating',
+  TERMINATING = 'TERMINATING',
 
   // Process has been externally terminated.
-  TERMINATED = 'terminated',
+  TERMINATED = 'TERMINATED',
 
   // Process has completed successfully.
-  SUCCEEDED = 'succeeded',
+  SUCCEEDED = 'SUCCEEDED',
 
   // Process has failed.
-  FAILED = 'failed',
+  FAILED = 'FAILED',
 }
 
 /**
@@ -277,9 +277,14 @@ export class ProcessMonitorService extends Context.Tag('@dxos/functions-runtime/
 
 export interface ProcessInfo {
   readonly pid: ID;
-  readonly parentPid: Option.Option<ID>;
+  readonly parentPid: ID | null;
   readonly state: State;
-  readonly error: Option.Option<string>;
+  readonly error: string | null;
+
+  /**
+   * Optional display name from spawn options when the process was spawned.
+   */
+  readonly name?: string;
 
   /**
    * UNIX timestamp in milliseconds.
@@ -307,8 +312,8 @@ export const prettyProcessTree = (tree: readonly ProcessInfo[]): string => {
   const roots: ProcessInfo[] = [];
 
   for (const node of tree) {
-    const parent = Option.getOrUndefined(node.parentPid);
-    if (parent === undefined || !pidSet.has(parent)) {
+    const parent = node.parentPid;
+    if (parent === null || !pidSet.has(parent)) {
       roots.push(node);
       continue;
     }
@@ -325,11 +330,15 @@ export const prettyProcessTree = (tree: readonly ProcessInfo[]): string => {
   }
 
   const formatLabel = (node: ProcessInfo): string => {
-    const bits = [String(node.pid), node.state];
-    if (Option.isSome(node.error)) {
-      bits.push(`(${node.error.value})`);
+    const idShort = String(node.pid).slice(0, 6);
+    const parts = [idShort, node.state];
+    if (node.name != null && node.name !== '') {
+      parts.push(node.name);
     }
-    return bits.join(' ');
+    if (node.error != null) {
+      parts.push(`(${node.error})`);
+    }
+    return parts.join(' ');
   };
 
   const lines: string[] = [];

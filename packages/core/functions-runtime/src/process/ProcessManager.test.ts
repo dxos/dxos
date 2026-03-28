@@ -147,8 +147,8 @@ describe('ProcessManagerImpl', () => {
         expect(status.state).toEqual(Process.State.HYBERNATING);
       }
       {
-        // `runToCompletion` also completes on HYBERNATING, so it would return before the 500ms alarm fires.
-        // Process alarms use real `setTimeout`; `it.effect` uses TestClock, so `Effect.sleep` would not advance wall time.
+        // Process stays HYBERNATING until the alarm fires; `runToCompletion` would block until SUCCEEDED.
+        // Alarms use real `setTimeout`; `it.effect` uses TestClock, so `Effect.sleep` would not advance wall time.
         yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 600)));
         const status = yield* handle.status();
         expect(status.state).toEqual(Process.State.SUCCEEDED);
@@ -186,14 +186,14 @@ describe('ProcessManagerImpl', () => {
       {
         yield* handle.runToCompletion();
         const status = yield* handle.status();
-        expect(status.state).toEqual(Process.State.HYBERNATING);
+        expect(status.state).toEqual(Process.State.IDLE);
       }
       {
         yield* handle.submitInput(1);
         yield* handle.submitInput(2);
         yield* handle.runToCompletion();
         const status = yield* handle.status();
-        expect(status.state).toEqual(Process.State.HYBERNATING);
+        expect(status.state).toEqual(Process.State.IDLE);
         expect(lastOutput).toEqual(3);
       }
     }, Effect.provide(TestLayer)),
