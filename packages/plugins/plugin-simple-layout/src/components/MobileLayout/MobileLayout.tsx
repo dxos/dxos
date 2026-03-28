@@ -360,7 +360,9 @@ const useIOSKeyboard = (): IOSKeyboard => {
 
           // TODO(burdon): Remove debug logging.
           const vp = window.visualViewport;
-          dbg(`kb:${type} h=${height} dur=${duration} scrollY=${window.scrollY} vpOffset=${vp?.offsetTop?.toFixed(0) ?? '?'}`);
+          dbg(
+            `kb:${type} h=${height} dur=${duration} scrollY=${window.scrollY} vpOffset=${vp?.offsetTop?.toFixed(0) ?? '?'}`,
+          );
           log.info('keyboard event', { type, height, duration });
 
           updateState(height, type === 'show', durationMs);
