@@ -33,7 +33,7 @@ import * as StorageService from './StorageService';
 //
 
 const Double = Operation.make({
-  meta: { key: 'test/double', name: 'Double' },
+  meta: { key: 'org.dxos.test.double', name: 'Double' },
   input: Schema.Struct({ value: Schema.Number }),
   output: Schema.Number,
 });
@@ -54,6 +54,7 @@ const handlers = OperationHandlerSet.make(
 const makeSumAggregator = () =>
   Process.makeExecutable(
     {
+      key: 'test.sum-aggregator',
       input: Schema.Number,
       output: Schema.Number,
       services: [StorageService.StorageService],
@@ -80,7 +81,7 @@ const makeSumAggregator = () =>
  * Waits for 500ms and then exits.
  */
 const makeWaitingExecutable = () =>
-  Process.makeExecutable({ input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
+  Process.makeExecutable({ key: 'test.waiting', input: Schema.Void, output: Schema.Void, services: [] }, (ctx) =>
     Effect.succeed({
       onSpawn: () =>
         Effect.gen(function* () {
@@ -255,6 +256,26 @@ describe('ProcessManagerImpl', () => {
 
         yield* parent.terminate();
         yield* child.terminate();
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'processTree exposes input, output, and wall-time metrics',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.ProcessManagerService;
+        const monitor = yield* Process.ProcessMonitorService;
+
+        const handle = yield* manager.spawn(makeSumAggregator());
+        yield* handle.submitInput(1);
+        yield* handle.runToCompletion();
+
+        const tree = yield* monitor.processTree;
+        const info = tree.find((node) => node.pid === handle.pid);
+        expect(info?.metrics.inputCount).toEqual(1);
+        expect(info?.metrics.outputCount).toEqual(1);
+        expect(info?.metrics.wallTime).toBeGreaterThanOrEqual(0);
+
+        yield* handle.terminate();
       }, Effect.provide(TestLayer)),
     );
   });

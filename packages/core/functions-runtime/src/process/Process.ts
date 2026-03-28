@@ -20,6 +20,8 @@ import { Operation, OperationHandlerSet } from '@dxos/operation';
 import type { TracingService } from '@dxos/protocols/proto/dxos/tracing';
 import * as Option from 'effect/Option';
 import type { Atom } from '@effect-atom/atom';
+import type { ObjectId } from '@dxos/protocols';
+import { assertArgument } from '@dxos/invariant';
 
 //
 // Process.
@@ -98,6 +100,11 @@ export interface ProcessContext<I, O> {
   readonly id: ID;
 
   /**
+   * Parameters assigned during process creation.
+   */
+  readonly params: Params;
+
+  /**
    * Complete this process with sucessful result.
    * No additional events will be pushed to the process.
    */
@@ -122,6 +129,21 @@ export interface ProcessContext<I, O> {
   setAlarm(timeout?: number): void;
 }
 
+/**
+ * Generic parameters for a all processes.
+ */
+export interface Params {
+  /**
+   * Process name for debugging purposes.
+   */
+  readonly name: string | null;
+
+  /**
+   * Target object that this process is assigned to.
+   */
+  readonly target: ObjectId | null;
+}
+
 //
 // Executable.
 //
@@ -134,13 +156,22 @@ export type ExecutableTypeId = typeof ExecutableTypeId;
  */
 // TODO(dmaretskyi): ProcessModule ProcessFactory?
 export interface Executable<I, O, R> extends Executable.Variance<I, O, R> {
+  /**
+   * Unique identifier for the executable in the reverse DNS format.
+   */
+  readonly key: string;
+
+  /**
+   * Human-readable label from {@link MakeExecutableOpts.name} when provided.
+   */
+  readonly name?: string;
+
   readonly services: readonly Context.Tag<any, any>[];
 
   /**
    * Create new process of this executable.
    */
-  // TODO(dmaretskyi): create
-  run(ctx: ProcessContext<I, O>): Effect.Effect<Process<I, O, R>, never, R | BaseServices | Scope.Scope>;
+  create(ctx: ProcessContext<I, O>): Effect.Effect<Process<I, O, R>, never, R | BaseServices | Scope.Scope>;
 }
 
 export const isExecutable = (executable: unknown): executable is Executable.Any =>
@@ -159,6 +190,16 @@ export namespace Executable {
 }
 
 export interface MakeExecutableOpts {
+  /**
+   * Unique identifier for the executable in the reverse DNS format.
+   */
+  readonly key: string;
+
+  /**
+   * Human-readable label for this executable; optional.
+   */
+  readonly name?: string;
+
   readonly input: Schema.Schema.AnyNoContext;
   readonly output: Schema.Schema.AnyNoContext;
   readonly services: readonly Context.Tag<any, any>[];
@@ -166,7 +207,7 @@ export interface MakeExecutableOpts {
 
 export const makeExecutable = <const Opts extends Types.NoExcessProperties<MakeExecutableOpts, Opts>>(
   opts: Opts,
-  run: (
+  create: (
     ctx: ProcessContext<Schema.Schema.Type<Opts['input']>, Schema.Schema.Type<Opts['output']>>,
   ) => Effect.Effect<
     Partial<
@@ -184,11 +225,16 @@ export const makeExecutable = <const Opts extends Types.NoExcessProperties<MakeE
   Schema.Schema.Type<Opts['output']>,
   Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
 > => {
+  assertArgument(
+    /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/i.test(opts.key),
+    'key',
+    'Invalid key',
+  );
   return {
     [ExecutableTypeId]: {} as any,
     ...opts,
-    run: (ctx) =>
-      run(ctx).pipe(
+    create: (ctx) =>
+      create(ctx).pipe(
         Effect.map((partial) => ({
           onSpawn: () => Effect.void,
           onInput: () => Effect.void,
@@ -206,6 +252,8 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
 ): Executable<Operation.Definition.Input<Op>, Operation.Definition.Output<Op>, Operation.Definition.Services<Op>> =>
   makeExecutable(
     {
+      key: op.meta.key,
+      ...(op.meta.name != null && op.meta.name !== '' ? { name: op.meta.name } : {}),
       input: op.input,
       output: op.output,
       services: op.services,
@@ -278,13 +326,29 @@ export class ProcessMonitorService extends Context.Tag('@dxos/functions-runtime/
 export interface ProcessInfo {
   readonly pid: ID;
   readonly parentPid: ID | null;
-  readonly state: State;
-  readonly error: string | null;
+
+  readonly executableKey: string;
 
   /**
-   * Optional display name from spawn options when the process was spawned.
+   * Human-readable executable label when the executable defines {@link Executable.name}.
    */
-  readonly name?: string;
+  readonly executableName: string | null;
+
+  /**
+   * Parameters of the process.
+   */
+  readonly params: Params;
+
+  /**
+   * State of the process.
+   */
+  readonly state: State;
+
+  /**
+   * Error of the process.
+   * Only for process in FAILED state.
+   */
+  readonly error: string | null;
 
   /**
    * UNIX timestamp in milliseconds.
@@ -296,7 +360,22 @@ export interface ProcessInfo {
    */
   readonly completedAt: Option.Option<number>;
 
-  // TODO(dmaretskyi): CPU time, wall time, number of inputs, number of outputs
+  readonly metrics: {
+    /**
+     * Total wall time of all handler invocations of the process in milliseconds.
+     */
+    readonly wallTime: number;
+
+    /**
+     * Total number of inputs submitted to the process.
+     */
+    readonly inputCount: number;
+
+    /**
+     * Total number of outputs submitted to the process.
+     */
+    readonly outputCount: number;
+  };
 }
 
 /**
@@ -332,8 +411,11 @@ export const prettyProcessTree = (tree: readonly ProcessInfo[]): string => {
   const formatLabel = (node: ProcessInfo): string => {
     const idShort = String(node.pid).slice(0, 6);
     const parts = [idShort, node.state];
-    if (node.name != null && node.name !== '') {
-      parts.push(node.name);
+    if (node.executableName != null && node.executableName !== '') {
+      parts.push(node.executableName);
+    }
+    if (node.params.name != null && node.params.name !== '') {
+      parts.push(node.params.name);
     }
     if (node.error != null) {
       parts.push(`(${node.error})`);

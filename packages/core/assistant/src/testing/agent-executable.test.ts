@@ -177,13 +177,10 @@ describe('Agent Executable', () => {
         });
 
         const manager = yield* ProcessManager.ProcessManagerService;
-        const handle = yield* manager.spawn(
-          makeAgentExecutable({
-            feed,
-            systemPrompt: SYSTEM_PROMPT,
-          }),
-          { name: 'agent' },
-        );
+        const handle = yield* manager.spawn(makeAgentExecutable({ systemPrompt: SYSTEM_PROMPT }), {
+          name: 'agent',
+          target: feed.id,
+        });
         for (const org of TEST_DATA.organizations) {
           yield* handle.submitInput(JSON.stringify(org));
         }

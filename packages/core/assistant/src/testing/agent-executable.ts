@@ -6,13 +6,13 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiService, GenericToolkit, type ModelName } from '@dxos/ai';
-import { Database, Feed } from '@dxos/echo';
+import { Database, DXN, Feed } from '@dxos/echo';
 import { QueueService, TracingService } from '@dxos/functions';
 import { Process, ProcessOperationInvoker, StorageService } from '@dxos/functions-runtime';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
-import { raise, todo } from '@dxos/debug';
+import { raise } from '@dxos/debug';
 import { trim } from '@dxos/util';
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
@@ -30,10 +30,9 @@ import {
 } from '../functions';
 import { acquireReleaseResource } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Match } from 'effect';
+import * as Match from 'effect/Match';
 
 interface AgentExecutableOptions {
-  feed: Feed.Feed;
   systemPrompt?: string;
   model?: ModelName;
 }
@@ -44,6 +43,8 @@ interface AgentExecutableOptions {
 export const makeAgentExecutable = (options: AgentExecutableOptions) =>
   Process.makeExecutable(
     {
+      key: 'org.dxos.testing.agent-executable',
+      name: 'Agent',
       // TODO(dmaretskyi): Expand this. Currently prompts that are fed to the agent.
       input: Schema.String,
       output: Schema.Void,
@@ -62,8 +63,19 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
     },
     (ctx) =>
       Effect.gen(function* () {
+        const targetId = ctx.params.target;
+        if (targetId == null) {
+          return yield* Effect.die(
+            new Error('Agent executable requires spawn options.target set to a Feed object id in the database.'),
+          );
+        }
+        const feed = yield* Database.resolve(DXN.fromLocalObjectId(targetId), Feed.Feed).pipe(
+          Effect.catchTag('ObjectNotFoundError', () =>
+            Effect.die(new Error(`Target must be a Feed object: ${targetId}`)),
+          ),
+        );
         const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(
-          Feed.getQueueDxn(options.feed) ?? raise(new Error('Invalid feed; has it been saved to database?')),
+          Feed.getQueueDxn(feed) ?? raise(new Error('Invalid feed; has it been saved to database?')),
         );
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
         let inputQueue: AgentEvent[] = [...(yield* loadEvents)];

@@ -41,9 +41,14 @@ export interface Handle<I, O> {
   readonly parentId: Process.ID | null;
 
   /**
-   * Debug name from {@link SpawnOptions.name}, if set when spawned.
+   * Executable key ({@link Process.Executable.key}) for this process.
    */
-  readonly name: string | null;
+  readonly executableKey: string;
+
+  /**
+   * Parameters of the process.
+   */
+  readonly params: Process.Params;
 
   submitInput(input: I): Effect.Effect<void>;
   subscribeOutputs(): Stream.Stream<O>;
@@ -90,8 +95,35 @@ export interface SpawnOptions {
    */
   readonly name?: string;
 
+  /**
+   * Target object that this process is assigned to.
+   */
+  readonly target?: ObjectId;
+
   /** Tracing metadata for this invocation. */
   readonly tracing?: TracingOptions;
+}
+
+export interface ListOptions {
+  /**
+   * Filter processes by executable key.
+   */
+  readonly executableKey?: string;
+
+  /**
+   * Filter processes by parent process ID.
+   */
+  readonly parentProcessId?: Process.ID;
+
+  /**
+   * Filter processes by state.
+   */
+  readonly state?: Process.State;
+
+  /**
+   * Filter processes by target object ID.
+   */
+  readonly target?: ObjectId;
 }
 
 /**
@@ -111,7 +143,7 @@ export interface Manager {
   /**
    * List all spawned processes.
    */
-  list(): Effect.Effect<readonly Handle.Any[]>;
+  list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]>;
 
   /**
    * Terminates all spawned processes (e.g. when tearing down the manager layer).
@@ -141,6 +173,12 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   #finished = false;
   #succeedRequested = false;
   #failError: Error | null = null;
+  readonly executableKey: string;
+  readonly params: Process.Params;
+  readonly #executableName: string | null;
+  #wallTimeMs = 0;
+  #inputCount = 0;
+  #outputCount = 0;
   #alarmTimer: ReturnType<typeof setTimeout> | null = null;
   #services: Context.Context<R | Process.BaseServices>;
   #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
@@ -164,12 +202,17 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     registry: Registry.Registry,
     outputQueue: Queue.Queue<OutputItem<O>>,
     storage: Context.Tag.Service<typeof StorageService.StorageService>,
-    readonly name: string | null,
+    executableKey: string,
+    executableName: string | null,
+    params: Process.Params,
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
     onStatusChanged?: () => void,
     hasRunningChildren?: () => boolean,
   ) {
     this.parentId = parentId;
+    this.executableKey = executableKey;
+    this.params = params;
+    this.#executableName = executableName;
     this.#process = process;
     this.#scope = scope;
     this.#services = services;
@@ -194,6 +237,34 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     return this.#currentStatus;
   }
 
+  snapshotProcessInfo(): Process.ProcessInfo {
+    const status = this.#currentStatus;
+    const error = Option.getOrNull(
+      Option.flatMap(status.exit, (ex) =>
+        Exit.match(ex, {
+          onFailure: (cause) => Option.some(Cause.pretty(cause)),
+          onSuccess: () => Option.none(),
+        }),
+      ),
+    );
+    return {
+      pid: this.pid,
+      parentPid: this.parentId,
+      executableKey: this.executableKey,
+      executableName: this.#executableName,
+      params: this.params,
+      state: status.state,
+      error,
+      startedAt: status.startedAt.getTime(),
+      completedAt: Option.map(status.completedAt, (date) => date.getTime()),
+      metrics: {
+        wallTime: this.#wallTimeMs,
+        inputCount: this.#inputCount,
+        outputCount: this.#outputCount,
+      },
+    };
+  }
+
   /** Run process onSpawn. Called by ProcessManagerImpl after spawn. */
   runOnSpawn(): Effect.Effect<void> {
     return this.#runHandler(() => this.#process.onSpawn());
@@ -203,6 +274,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     if (this.#finished) {
       return Effect.void;
     }
+    this.#inputCount++;
     return this.#runHandler(() => this.#process.onInput(input)).pipe(Effect.forkIn(this.#scope));
   }
 
@@ -275,6 +347,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   }
 
   requestSubmitOutput(output: O): void {
+    this.#outputCount++;
     Queue.unsafeOffer(this.#outputQueue, Option.some(output));
   }
 
@@ -285,10 +358,20 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   #runHandler(fn: () => Effect.Effect<void, never, R | Process.BaseServices>): Effect.Effect<void> {
     this.#activeHandlers++;
     this.#setStatus(Process.State.RUNNING);
+    const t0 = performance.now();
+    const recordWall = () => {
+      this.#wallTimeMs += performance.now() - t0;
+    };
     return fn().pipe(
       Effect.provide(this.#services),
+      Effect.tap(() => Effect.sync(recordWall)),
       Effect.tap(() => this.#handlerCompleted()),
-      Effect.catchAllCause((cause) => this.#handleError(cause)),
+      Effect.catchAllCause((cause) =>
+        Effect.gen(this, function* () {
+          recordWall();
+          yield* this.#handleError(cause);
+        }),
+      ),
     );
   }
 
@@ -401,15 +484,6 @@ export class ProcessManagerImpl implements Manager {
     return this.#monitor;
   }
 
-  #exitOptionToError(exit: Option.Option<Exit.Exit<void>>): Option.Option<string> {
-    return Option.flatMap(exit, (ex) =>
-      Exit.match(ex, {
-        onFailure: (cause) => Option.some(Cause.pretty(cause)),
-        onSuccess: () => Option.none(),
-      }),
-    );
-  }
-
   #hasNonTerminalChildren(parentPid: Process.ID): boolean {
     for (const handle of this.#handles.values()) {
       if (handle.parentId === parentPid) {
@@ -423,18 +497,7 @@ export class ProcessManagerImpl implements Manager {
   }
 
   #buildProcessTreeSnapshot(): readonly Process.ProcessInfo[] {
-    return [...this.#handles.values()].map((handle) => {
-      const status = handle.snapshotStatus();
-      return {
-        pid: handle.pid,
-        parentPid: handle.parentId,
-        state: status.state,
-        error: Option.getOrNull(this.#exitOptionToError(status.exit)),
-        ...(handle.name != null && handle.name !== '' ? { name: handle.name } : {}),
-        startedAt: status.startedAt.getTime(),
-        completedAt: Option.map(status.completedAt, (date) => date.getTime()),
-      };
-    });
+    return [...this.#handles.values()].map((handle) => handle.snapshotProcessInfo());
   }
 
   #refreshProcessTree(): void {
@@ -509,8 +572,14 @@ export class ProcessManagerImpl implements Manager {
 
       let handleRef: ProcessHandleImpl<I, O, any> | null = null;
 
+      const params: Process.Params = {
+        name: options?.name ?? null,
+        target: options?.target ?? null,
+      };
+
       const ctx: Process.ProcessContext<I, O> = {
         id,
+        params,
         succeed: () => {
           handleRef?.requestSucceed();
         },
@@ -570,7 +639,7 @@ export class ProcessManagerImpl implements Manager {
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
 
-      const process = yield* executable.run(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
+      const process = yield* executable.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
 
       const isRoot = !options?.parentProcessId;
 
@@ -617,7 +686,9 @@ export class ProcessManagerImpl implements Manager {
         this.#registry,
         outputQueue,
         storage,
-        options?.name ?? null,
+        executable.key,
+        executable.name ?? null,
+        params,
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
@@ -673,10 +744,34 @@ export class ProcessManagerImpl implements Manager {
     });
   }
 
-  list(): Effect.Effect<readonly Handle.Any[]> {
-    return Effect.sync(() => [...this.#handles.values()]);
+  list(options?: ListOptions): Effect.Effect<readonly Handle.Any[]> {
+    return Effect.sync(() => {
+      let impls: ProcessHandleImpl<any, any, any>[] = [...this.#handles.values()];
+      if (options?.executableKey !== undefined) {
+        impls = impls.filter((handle) => handle.executableKey === options.executableKey);
+      }
+      if (options?.parentProcessId !== undefined) {
+        impls = impls.filter((handle) => handle.parentId === options.parentProcessId);
+      }
+      if (options?.state !== undefined) {
+        impls = impls.filter((handle) => handle.snapshotStatus().state === options.state);
+      }
+      if (options?.target !== undefined) {
+        impls = impls.filter((handle) => handle.params.target === options.target);
+      }
+      return impls;
+    });
   }
 }
+
+export type ProcessIdGenerator = () => Process.ID;
+
+export const UUIDProcessIdGenerator: ProcessIdGenerator = () => Process.ID.make(crypto.randomUUID());
+
+export const SequentialProcessIdGenerator: ProcessIdGenerator = (() => {
+  let nextId = 0;
+  return () => Process.ID.make(String(nextId++));
+})();
 
 /**
  * Scoped layer that provides ProcessManager and ProcessMonitorService.
