@@ -28,12 +28,41 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '../functions';
+import { acquireReleaseResource } from '@dxos/effect';
+import { dbg, log } from '@dxos/log';
+import { Match } from 'effect';
 
 interface AgentExecutableOptions {
   feed: Feed.Feed;
   systemPrompt?: string;
   model?: ModelName;
 }
+
+// while (inputQueue.length > 0) {
+//   yield* handle.submitInput(inputQueue.join('\n'));
+//   inputQueue.length = 0;
+
+//   for (const jobId of activeJobs.keys()) {
+//     const result = yield* activeJobs.get(jobId)!.poll;
+//     if (Option.isSome(result)) {
+//       inputQueue.push(`Job completed: ${jobId}`);
+//       activeJobs.delete(jobId);
+//     }
+//   }
+//   if (inputQueue.length === 0 && activeJobs.size > 0) {
+//     const result = yield* Effect.raceAll(
+//       activeJobs.entries().map(([jobId, fiber]) =>
+//         fiber.await.pipe(
+//           Effect.map(() => {
+//             activeJobs.delete(jobId);
+//             return `Job completed: ${jobId}`;
+//           }),
+//         ),
+//       ),
+//     );
+//     inputQueue.push(result);
+//   }
+// }
 
 /**
  * Hosts a presistant, suspendible AiAgent that can process a number of prompts.
@@ -60,20 +89,42 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
         const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(
           Feed.getQueueDxn(options.feed) ?? raise(new Error('Invalid feed; has it been saved to database?')),
         );
-        const conversation = new AiConversation({ queue });
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
+        let inputQueue: AgentEvent[] = [...(yield* loadEvents)];
 
         return {
           init: () => Effect.void,
           handleInput: (prompt: string) =>
             Effect.gen(function* () {
-              yield* conversation
-                .createRequest({
-                  prompt,
-                  toolkit: AsynchronousExectionToolkit,
-                  system: options.systemPrompt,
-                })
-                .pipe(Effect.orDie);
+              inputQueue.push({ _tag: 'prompt', content: prompt });
+              ctx.setAlarm();
+            }),
+          alarm: () =>
+            Effect.gen(function* () {
+              const item = inputQueue.shift();
+              if (!item) {
+                return;
+              }
+
+              const prompt = Match.value(item).pipe(
+                Match.tag('prompt', (item) => item.content),
+                Match.tag('childExited', (item) => `Process ${item.pid} completed`),
+                Match.exhaustive,
+              );
+
+              log.info('begin request');
+              yield* conversation.createRequest({
+                prompt,
+                toolkit: AsynchronousExectionToolkit,
+                system: options.systemPrompt,
+              });
+              log.info('end request');
+              yield* storeEvents(inputQueue);
+              if (inputQueue.length > 0) {
+                ctx.setAlarm();
+              }
             }).pipe(
+              Effect.orDie,
               Effect.provide(
                 Layer.mergeAll(
                   toolServices,
@@ -82,8 +133,18 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
                 ).pipe(Layer.orDie),
               ),
             ),
-          alarm: () => Effect.void,
-          childEvent: () => Effect.void,
+          childEvent: (event) =>
+            Effect.gen(function* () {
+              log.info('childEvent', { event });
+              if (event._tag === 'exited') {
+                inputQueue.push({
+                  _tag: 'prompt',
+                  content: `Process ${event.pid} exited with result: ${event.result}`,
+                });
+                yield* storeEvents(inputQueue);
+                ctx.setAlarm();
+              }
+            }),
         };
       }),
   );
@@ -95,6 +156,24 @@ interface ToolExecutionServiceOptions {
   backgroundThreshold?: Duration.Duration;
 }
 
+const AgentEvent = Schema.Union(
+  Schema.TaggedStruct('prompt', {
+    content: Schema.String,
+  }),
+  Schema.TaggedStruct('childExited', {
+    pid: Process.ID,
+  }),
+);
+type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
+
+const loadEvents = StorageService.get(Schema.parseJson(Schema.Array(AgentEvent)), 'inputQueue').pipe(
+  Effect.flatten,
+  Effect.catchTag('NoSuchElementException', () => Effect.succeed([] as readonly AgentEvent[])),
+);
+
+const storeEvents = (value: AgentEvent[]) =>
+  StorageService.set(Schema.parseJson(Schema.Array(AgentEvent)), 'inputQueue', value);
+
 const ToolExecutionService = ({ backgroundThreshold = Duration.seconds(1) }: ToolExecutionServiceOptions = {}) =>
   Layer.unwrapEffect(
     Effect.gen(function* () {
@@ -103,12 +182,16 @@ const ToolExecutionService = ({ backgroundThreshold = Duration.seconds(1) }: Too
         invoke: (tool, input) =>
           Effect.gen(function* () {
             const operationDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
+            log('invoking operation', { operationDef, input });
             const fiber = yield* operationInvoker.invokeFiber(operationDef, input);
+            log('invoked operation', { operationDef, input, fiber });
 
-            return yield* fiber.await.pipe(
+            const result = yield* fiber.await.pipe(
               Effect.timeout(backgroundThreshold),
               Effect.catchTag('TimeoutException', () => Effect.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
             );
+            log('result', { result });
+            return result;
           }),
       });
     }),
@@ -160,21 +243,18 @@ const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(
       'poll-tools': ({ ids, wait, timeout = 10_000 }) =>
         Effect.gen(function* () {
           return yield* Effect.forEach(ids, (pid) =>
-            Effect.gen(function* () {
-              const x = invoker.attachFiber<unknown>(Process.ID.make(pid)).pipe(
-                Effect.flatMap((_) => _.await),
-                Effect.timeout(Duration.millis(timeout)),
-                Effect.flatMap(
-                  Exit.match({
-                    onSuccess: (value) => Effect.succeed(`<result pid=${pid}>${JSON.stringify(value)}</result>`),
-                    onFailure: (cause) => Effect.succeed(`<error pid=${pid}>${Cause.pretty(cause)}</error>`),
-                  }),
-                ),
-                Effect.catchTag('ProcessNotFoundError', () => Effect.succeed(`Process not found: ${pid}`)),
-                Effect.catchTag('TimeoutException', () => Effect.succeed(`Process still running: ${pid}`)),
-              );
-              return todo() as any;
-            }),
+            invoker.attachFiber<unknown>(Process.ID.make(pid)).pipe(
+              Effect.flatMap((_) => _.await),
+              Effect.timeout(Duration.millis(timeout)),
+              Effect.flatMap(
+                Exit.match({
+                  onSuccess: (value) => Effect.succeed(`<result pid=${pid}>${JSON.stringify(value)}</result>`),
+                  onFailure: (cause) => Effect.succeed(`<error pid=${pid}>${Cause.pretty(cause)}</error>`),
+                }),
+              ),
+              Effect.catchTag('ProcessNotFoundError', () => Effect.succeed(`Process not found: ${pid}`)),
+              Effect.catchTag('TimeoutException', () => Effect.succeed(`Process still running: ${pid}`)),
+            ),
           );
         }),
     };

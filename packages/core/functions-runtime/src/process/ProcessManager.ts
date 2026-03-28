@@ -26,6 +26,7 @@ import * as ServiceResolver from './ServiceResolver';
 import * as StorageService from './StorageService';
 import type { ObjectId } from '@dxos/protocols';
 import * as Deferred from 'effect/Deferred';
+import { dbg, log } from '@dxos/log';
 
 export interface Status {
   readonly state: Process.State;
@@ -131,6 +132,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   #failError: Error | null = null;
   #alarmTimer: ReturnType<typeof setTimeout> | null = null;
   #services: Context.Context<R | Process.BaseServices>;
+  #alarmSemaphore = Effect.runSync(Effect.makeSemaphore(1));
 
   readonly #process: Process.Process<I, O, R>;
   readonly #scope: Scope.CloseableScope;
@@ -179,7 +181,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     if (this.#finished) {
       return Effect.void;
     }
-    return this.#runHandler(() => this.#process.handleInput(input));
+    return this.#runHandler(() => this.#process.handleInput(input)).pipe(Effect.forkIn(this.#scope));
   }
 
   subscribeOutputs(): Stream.Stream<O> {
@@ -234,6 +236,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     this.#failError = error;
   }
 
+  // TODO(dmaretskyi): Update to make it prefer the earliest alarm.
   requestAlarm(timeout?: number): void {
     if (this.#finished) return;
     this.#clearAlarm();
@@ -241,13 +244,17 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     this.#alarmTimer = setTimeout(() => {
       this.#alarmTimer = null;
       if (!this.#finished) {
-        Effect.runFork(this.#runHandler(() => this.#process.alarm()));
+        Effect.runFork(this.#runHandler(() => this.#process.alarm()).pipe(this.#alarmSemaphore.withPermits(1)));
       }
     }, delay);
   }
 
   requestSubmitOutput(output: O): void {
     Queue.unsafeOffer(this.#outputQueue, Option.some(output));
+  }
+
+  requestChildEvent(event: Process.ChildEvent<unknown>): void {
+    this.#runHandler(() => this.#process.childEvent(event)).pipe(Effect.forkIn(this.#scope));
   }
 
   #runHandler(fn: () => Effect.Effect<void, never, R | Process.BaseServices>): Effect.Effect<void> {
@@ -315,6 +322,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   }
 
   #setStatus(state: Process.State, exit?: Exit.Exit<void>) {
+    log('setStatus', { pid: this.pid, state });
     const isTerminal =
       state === Process.State.COMPLETED || state === Process.State.TERMINATED || state === Process.State.FAILED;
     this.#currentStatus = {
@@ -440,6 +448,17 @@ export class ProcessManagerImpl implements Manager {
 
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen(this, function* () {
+          if (Option.isSome(handle.parentId)) {
+            const parentHandle = this.#handles.get(handle.parentId.value);
+            if (parentHandle) {
+              parentHandle.requestChildEvent({
+                _tag: 'exited',
+                pid: handle.pid,
+                result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
+              });
+            }
+          }
+
           // Call traceInvocationEnd for root processes.
           if (isRoot && invocationTrace) {
             const exception = state === Process.State.FAILED && cause ? cause : undefined;
@@ -453,7 +472,7 @@ export class ProcessManagerImpl implements Manager {
         parentOption,
         process,
         scope,
-        builtinCtx,
+        fullCtx,
         this.#registry,
         outputQueue,
         storage,

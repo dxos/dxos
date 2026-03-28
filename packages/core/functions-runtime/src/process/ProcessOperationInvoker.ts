@@ -20,6 +20,7 @@ import * as Context from 'effect/Context';
 import { ProcessNotFoundError } from '../errors';
 import * as Process from './Process';
 import * as ProcessManager from './ProcessManager';
+import { log } from '@dxos/log';
 
 export interface OperationFiber<T> {
   pid: Process.ID;
@@ -57,6 +58,7 @@ const fiberFromProcess = <T>(handle: ProcessManager.Handle<any, T>): Effect.Effe
       Effect.catchTag('NoSuchElementException', () => Effect.dieMessage(`Operation produced no output`)),
       Effect.fork,
     );
+    log('subscribed to outputs', { handle });
     return {
       pid: handle.pid,
       await: outputFiber.await,
@@ -91,8 +93,10 @@ export const make = (opts: {
         parentProcessId: opts.parentProcessId,
         tracing: tracingOptions,
       });
+      log('spawned process', { op, input, handle });
 
       yield* handle.submitInput(input);
+      log('submitted input', { op, input, handle });
       return yield* fiberFromProcess(handle);
     });
 

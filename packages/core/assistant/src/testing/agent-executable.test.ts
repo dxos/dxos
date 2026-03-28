@@ -16,18 +16,26 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
+import { Blueprint } from '@dxos/blueprints';
 
-import { Database, Feed } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { AiService, GenericToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { Process, ProcessManager, ServiceResolver } from '@dxos/functions-runtime';
 import { Organization, type Message } from '@dxos/types';
 import { trim } from '@dxos/util';
-import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 
 import { makeAgentExecutable } from './agent-executable';
 import { AssistantTestLayer } from './layer';
+import { ObjectId } from '@dxos/keys';
+import { AiContextBinder, ContextBinding } from '../conversation';
+import { acquireReleaseResource } from '@dxos/effect';
+import { failedInvariant } from '@dxos/invariant';
+import { dbg, log } from '@dxos/log';
+
+ObjectId.dangerouslyDisableRandomness();
 
 //
 // Test data.
@@ -72,37 +80,43 @@ const TEST_DATA = {
   } as Record<string, string>,
 };
 
-//
-// Toolkit with background job support.
-//
-
-class TestToolkit extends Toolkit.make(
-  Tool.make('research-organization', {
-    description: 'Get information about an organization',
-    parameters: {
-      website: Schema.String.annotations({
-        description: 'The website of the organization to get information about',
-        examples: ['https://cyberdyne.com'],
-      }),
-    },
+const Research = Operation.make({
+  meta: {
+    key: 'org.dxos.function.research',
+    name: 'Research',
+    description: 'Research an organization',
+  },
+  input: Schema.Struct({
+    website: Schema.String.annotations({ description: 'The website of the organization to research' }),
   }),
-) {}
+  output: Schema.String,
+});
 
-const TestToolkitLayer = TestToolkit.toLayer({
-  'research-organization': ({ website }) =>
-    Effect.gen(function* () {
-      yield* Effect.sleep(
-        15_000 * (TEST_DATA.organizations.findIndex((organization) => organization.website === website) + 1),
-      );
-      return TEST_DATA.research[website];
-    }),
+const handlers = OperationHandlerSet.make(
+  Research.pipe(
+    Operation.withHandler(
+      Effect.fnUntraced(function* ({ website }) {
+        log.info('begin research', { website });
+        yield* Effect.sleep(
+          15_000 * (TEST_DATA.organizations.findIndex((organization) => organization.website === website) + 1),
+        );
+        log.info('end research', { website });
+        return TEST_DATA.research[website];
+      }),
+    ),
+  ),
+);
+const ResearchBlueprint = Blueprint.make({
+  key: 'org.dxos.blueprint.research',
+  name: 'Research',
+  tools: Blueprint.toolDefinitions({ operations: [Research] }),
 });
 
 //
 // Test layer: AI services + toolkit.
 //
 
-const TestLayer = TestToolkitLayer.pipe(
+const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(ProcessManager.layer),
   Layer.provideMerge(
     ServiceResolver.layerRequirements(
@@ -116,9 +130,11 @@ const TestLayer = TestToolkitLayer.pipe(
   Layer.provideMerge(OperationRegistry.layer),
   Layer.provideMerge(
     AssistantTestLayer({
-      types: [Organization.Organization, Feed.Feed],
+      types: [Organization.Organization, Feed.Feed, Blueprint.Blueprint],
       tracing: 'pretty',
       aiServicePreset: 'edge-remote',
+      operationHandlers: [handlers],
+      blueprints: [ResearchBlueprint],
     }),
   ),
   Layer.provideMerge(KeyValueStore.layerMemory),
@@ -138,11 +154,23 @@ describe('Agent Executable', () => {
     'runs AI agent with background tools via process manager',
     Effect.fnUntraced(
       function* (_) {
-        const manager = yield* ProcessManager.ProcessManagerService;
+        const feed = yield* Database.add(Feed.make());
+        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(
+          Feed.getQueueDxn(feed) ?? failedInvariant(),
+        );
+        const binder = yield* acquireReleaseResource(() => new AiContextBinder({ queue }));
+        const researchBlueprint = yield* Database.add(ResearchBlueprint);
+        yield* Effect.promise(() =>
+          binder.bind({
+            blueprints: [Ref.make(researchBlueprint)],
+            objects: [],
+          }),
+        );
 
+        const manager = yield* ProcessManager.ProcessManagerService;
         const handle = yield* manager.spawn(
           makeAgentExecutable({
-            feed: yield* Database.add(Feed.make()),
+            feed,
             systemPrompt: SYSTEM_PROMPT,
           }),
         );
@@ -152,34 +180,9 @@ describe('Agent Executable', () => {
         yield* handle.runToCompletion();
       },
       Effect.provide(TestLayer),
+      Effect.scoped,
       TestHelpers.provideTestContext,
     ),
     { timeout: 120_000 },
   );
 });
-
-// while (inputQueue.length > 0) {
-//   yield* handle.submitInput(inputQueue.join('\n'));
-//   inputQueue.length = 0;
-
-//   for (const jobId of activeJobs.keys()) {
-//     const result = yield* activeJobs.get(jobId)!.poll;
-//     if (Option.isSome(result)) {
-//       inputQueue.push(`Job completed: ${jobId}`);
-//       activeJobs.delete(jobId);
-//     }
-//   }
-//   if (inputQueue.length === 0 && activeJobs.size > 0) {
-//     const result = yield* Effect.raceAll(
-//       activeJobs.entries().map(([jobId, fiber]) =>
-//         fiber.await.pipe(
-//           Effect.map(() => {
-//             activeJobs.delete(jobId);
-//             return `Job completed: ${jobId}`;
-//           }),
-//         ),
-//       ),
-//     );
-//     inputQueue.push(result);
-//   }
-// }

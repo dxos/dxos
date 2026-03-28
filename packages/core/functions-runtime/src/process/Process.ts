@@ -80,10 +80,12 @@ export type BaseServices = TracingService;
 export type ChildEvent<T> =
   | {
       readonly _tag: 'output';
+      readonly pid: ID;
       readonly data: T;
     }
   | {
       readonly _tag: 'exited';
+      readonly pid: ID;
       readonly result: Exit.Exit<void>;
     };
 

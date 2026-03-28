@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 import { ToolFormatter } from '../ToolFormatter';
+import { dbg } from '@dxos/log';
 
 type Mode = 'text' | 'json';
 
@@ -156,6 +157,11 @@ export class ConsolePrinter {
             break;
           case 'summary':
             this.log(`${prefix}📝 [Summary] ${content.content}`);
+            break;
+          case 'stats':
+            this.log(
+              `${prefix}📊 [Stats] ${content.usage?.inputTokens} tokens in, ${content.usage?.outputTokens} tokens out, ${content.usage?.totalTokens} total tokens, ${content.duration}ms duration, ${content.toolCalls} tool calls, ${content.errors} errors, ${content.model}`,
+            );
             break;
           default: {
             this.log(`${prefix}[${content._tag}] ${inspect(content, { depth: null, colors: true })}`);
