@@ -12,7 +12,6 @@ import * as Schema from 'effect/Schema';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 import { ToolFormatter } from '../ToolFormatter';
-import { dbg } from '@dxos/log';
 
 type Mode = 'text' | 'json';
 

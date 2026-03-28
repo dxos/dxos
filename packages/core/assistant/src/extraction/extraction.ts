@@ -19,13 +19,13 @@ export const ExtractionInput = Schema.Struct({
     }),
   ),
 });
-export interface ExtractionInput extends Schema.Schema.Type<typeof ExtractionInput> { }
+export interface ExtractionInput extends Schema.Schema.Type<typeof ExtractionInput> {}
 
 export const ExtractionOutput = Schema.Struct({
   message: Message.Message,
   timeElapsed: Schema.Number,
 });
-export interface ExtractionOutput extends Schema.Schema.Type<typeof ExtractionOutput> { }
+export interface ExtractionOutput extends Schema.Schema.Type<typeof ExtractionOutput> {}
 
 export type ProcessTranscriptMessageProps = {
   input: ExtractionInput;

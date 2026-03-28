@@ -22,8 +22,6 @@ import * as Option from 'effect/Option';
 import type { Atom } from '@effect-atom/atom';
 import type { ObjectId } from '@dxos/protocols';
 import { assertArgument } from '@dxos/invariant';
-import type { A } from 'vitest/dist/chunks/reporters.d.BFLkQcL6.js';
-import type { Layer } from 'effect';
 
 //
 // Process.

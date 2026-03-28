@@ -3,36 +3,20 @@
 //
 
 import { Registry } from '@effect-atom/atom';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
-import * as LanguageModel from '@effect/ai/LanguageModel';
 import { describe, it } from '@effect/vitest';
-import * as Chunk from 'effect/Chunk';
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Fiber from 'effect/Fiber';
-import * as Layer from 'effect/Layer';
-import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as Stream from 'effect/Stream';
 import { Blueprint } from '@dxos/blueprints';
 
-import { Database, Feed, Ref } from '@dxos/echo';
-import { AiService, GenericToolkit, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
-import { Process, ProcessManager, ServiceResolver } from '@dxos/functions-runtime';
-import { Organization, type Message } from '@dxos/types';
+import { Process } from '@dxos/functions-runtime';
+import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
-import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 
-import { makeAgentExecutable } from './agent-executable';
 import { AssistantTestLayer } from '../testing';
 import { ObjectId } from '@dxos/keys';
-import { AiContextBinder, ContextBinding } from '../conversation';
-import { acquireReleaseResource } from '@dxos/effect';
-import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as AgentService from './AgentService';
 
