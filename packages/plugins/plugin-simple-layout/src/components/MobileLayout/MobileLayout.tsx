@@ -66,7 +66,7 @@ const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
         return;
       }
       const isEditable = (el: HTMLElement) =>
-        el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || (el.tagName === 'DIV' && el.isContentEditable);
+        el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable;
       const handleFocus = (event: FocusEvent) => {
         const target = event.target as HTMLElement;
         if (isEditable(target)) {
@@ -195,21 +195,25 @@ const useAutoScroll = () => {
       addEventListener(document, 'scroll', detectContainerScroll as EventListener, { capture: true } as any),
 
       // Prevent focus-triggered scroll-into-view on inputs.
-      addEventListener(
-        document,
-        'focus',
-        (event: FocusEvent) => {
-          const target = event.target as HTMLElement;
-          if (
-            target.tagName === 'INPUT' ||
-            target.tagName === 'TEXTAREA' ||
-            (target.tagName === 'DIV' && target.isContentEditable)
-          ) {
-            target.focus({ preventScroll: true });
-          }
-        },
-        { capture: true },
-      ),
+      (() => {
+        let focusingWithPreventScroll = false;
+        return addEventListener(
+          document,
+          'focus',
+          (event: FocusEvent) => {
+            if (focusingWithPreventScroll) {
+              return;
+            }
+            const target = event.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+              focusingWithPreventScroll = true;
+              target.focus({ preventScroll: true });
+              focusingWithPreventScroll = false;
+            }
+          },
+          { capture: true },
+        );
+      })(),
     );
   }, [dbg]);
 };
@@ -349,6 +353,8 @@ const useIOSKeyboard = (): IOSKeyboard => {
       log.info('viewport size', { initialHeight, vvh, keyboardHeight, keyboardOpen, animationDuration });
     };
 
+    let rafId: number | undefined;
+
     return combine(
       // Handler for native iOS keyboard events (from KeyboardObserver.swift).
       addEventListener(
@@ -356,7 +362,8 @@ const useIOSKeyboard = (): IOSKeyboard => {
         'keyboard' as any,
         (event: CustomEvent<{ type: 'show' | 'hide'; height: number; duration: number }>) => {
           const { type, height, duration } = event.detail;
-          const durationMs = duration > 10 ? duration : duration * 1000;
+          // iOS KeyboardObserver.swift sends duration in seconds (e.g., 0.25). Convert to ms.
+          const durationMs = duration < 1 ? duration * 1000 : duration;
 
           // TODO(burdon): Remove debug logging.
           const vp = window.visualViewport;
@@ -384,12 +391,17 @@ const useIOSKeyboard = (): IOSKeyboard => {
               window.scrollTo(0, 0);
             }
             if (performance.now() < end) {
-              requestAnimationFrame(monitorFrame);
+              rafId = requestAnimationFrame(monitorFrame);
             }
           };
-          requestAnimationFrame(monitorFrame);
+          rafId = requestAnimationFrame(monitorFrame);
         },
       ),
+      () => {
+        if (rafId !== undefined) {
+          cancelAnimationFrame(rafId);
+        }
+      },
     );
   }, [dbg]);
 
