@@ -437,12 +437,9 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
 type ChatToolbarProps = ComposableProps<
-  HTMLDivElement,
-  ThemedClassName<
-    Pick<MenuRootProps, 'attendableId'> & {
-      companionTo?: Obj.Unknown;
-    }
-  >
+  Pick<MenuRootProps, 'attendableId'> & {
+    companionTo?: Obj.Unknown;
+  }
 >;
 
 const ChatToolbar = forwardRef<HTMLDivElement, ChatToolbarProps>(

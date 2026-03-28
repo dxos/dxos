@@ -20,7 +20,7 @@ const styles = {
     'grid grid-cols-[8rem_1fr_1fr_8rem] p-4 overflow-hidden items-center [&_label]:m-0 [&_label]:text-base',
 };
 
-export type OptionsProps = ComposableProps<HTMLDivElement>;
+export type OptionsProps = ComposableProps;
 
 export const Options = forwardRef<HTMLDivElement, OptionsProps>((props, forwardedRef) => {
   const { t } = useTranslation(translationKey);

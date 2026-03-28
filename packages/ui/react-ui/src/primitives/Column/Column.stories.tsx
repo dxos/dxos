@@ -13,7 +13,7 @@ import { Flex } from '../Flex';
 
 const List = () => {
   return (
-    <ScrollArea.Root margin role='list'>
+    <ScrollArea.Root margin>
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
           <Input.Root key={i}>

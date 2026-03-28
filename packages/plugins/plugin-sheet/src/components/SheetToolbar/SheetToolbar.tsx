@@ -55,7 +55,7 @@ const createToolbarActions = ({
   });
 };
 
-export type SheetToolbarProps = ComposableProps<HTMLDivElement>;
+export type SheetToolbarProps = ComposableProps;
 
 export const SheetToolbar = forwardRef<HTMLDivElement, SheetToolbarProps>((props, forwardedRef) => {
   const { attendableId, model, cursorFallbackRange } = useSheetContext();

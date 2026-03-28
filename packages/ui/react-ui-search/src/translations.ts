@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'search.placeholder': 'Search...',
+        'search placeholder': 'Search...',
       },
     },
   },

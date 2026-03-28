@@ -2,85 +2,44 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ForwardRefExoticComponent, type HTMLAttributes, type RefAttributes } from 'react';
+import { type ReactNode } from 'react';
 
-import { type ClassNameValue } from './theme';
+import { type ThemedClassName } from './theme';
 
 // TODO(burdon): Define base type for component with `testId`, etc.
 
 /**
- * Props for components that render a default DOM element but support `asChild` to delegate rendering to a child via Radix Slot.
- * Extends `ComposableProps` with standard HTML attributes.
- *
- * @example
- * ```tsx
- * const Primitive = forwardRef<HTMLDivElement, SlottableProps<HTMLDivElement>>(
- *   ({ children, asChild, ...props }, forwardedRef) => {
- *     const { className, ...rest } = composableProps(props);
- *     const Comp = asChild ? Slot : Primitive.div;
- *     return <Comp {...rest} className={mx('border border-separator', className)} ref={forwardedRef}>{children}</Comp>;
- *   },
- * );
- * ```
- *
- * @see slot.stories.tsx (@dxos/react-ui)
- */
-// TODO(burdon): Warn if child is not ComposableProps.
-export type SlottableProps<E extends HTMLElement, P extends Record<string, unknown> = {}> = HTMLAttributes<E> &
-  P & {
-    classNames?: ClassNameValue;
-    asChild?: boolean;
-  };
-
-/**
  * Props for components that can receive merged props from a Radix Slot parent.
+ * A composable component spreads unknown props onto its root DOM element and forwards its ref,
+ * allowing a parent slot to inject layout or styling props transparently.
+ *
  * - `className` is set by the Slot merge mechanism.
  * - `classNames` is the consumer-facing prop for theming overrides.
+ * - `children` is always accepted.
  *
- * NOTE: Use `composableProps` to reconcile both into a single `className`.
+ * NOTE: Use `composableProps` to reconcile both `className` and `classNames` into a single `className`.
  *
- * @example
- * ```tsx
- * const Leaf = forwardRef<HTMLButtonElement, ComposableProps & PropsWithChildren>(
- *   ({ children, ...props }, forwardedRef) => {
- *     const { className, ...rest } = composableProps(props);
- *     return <button {...rest} className={className} ref={forwardedRef}>{children}</button>;
- *   },
- * );
- * ```
- *
+ * @see https://www.radix-ui.com/primitives/docs/guides/composition
  * @see slot.stories.tsx (@dxos/react-ui)
  */
-// TODO(burdon): P as Void
-export type ComposableProps<E extends HTMLElement = HTMLElement, P extends Record<string, unknown> = {}> = Omit<
-  HTMLAttributes<E>,
-  'dir' // TODO(burdon): Explain.
-> &
-  P & {
-    classNames?: ClassNameValue;
-  };
+export type ComposableProps<P extends object = {}> = ThemedClassName<P> & {
+  className?: string;
+  children?: ReactNode;
+  role?: string;
+};
 
 /**
- * Marks a component as slot-compatible — its root element accepts and merges
- * structural props from a parent slot (Panel.Content, Panel.Toolbar, etc.).
+ * Props for components that render a default DOM element but support `asChild` to delegate rendering
+ * to a child via Radix Slot. Extends `ComposableProps` with `asChild`.
  *
- * Requirements:
- *   - Spreads unknown props onto the root DOM element.
- *   - Forwards ref to the root DOM element.
- *   - Merges className (does not overwrite).
- *   - Does not add wrapper elements around its root for layout purposes.
+ * When `asChild` is true the component does not render its own element — instead it clones its child
+ * and merges props (including event handlers) onto it.
  *
- * @example
- * ```tsx
- * const MyComponent: SlotCompatible<HTMLDivElement, { icon?: string }> = forwardRef(
- *   ({ children, icon, ...props }, ref) => {
- *     const { className, ...rest } = composableProps(props);
- *     return <div {...rest} className={mx('my-class', className)} ref={ref}>{children}</div>;
- *   },
- * );
- * ```
+ * Every slottable component is implicitly composable (it spreads props and forwards its ref).
+ *
+ * @see https://www.radix-ui.com/primitives/docs/guides/composition
+ * @see slot.stories.tsx (@dxos/react-ui)
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export type SlotCompatible<E extends HTMLElement, P extends Record<string, unknown> = {}> = ForwardRefExoticComponent<
-  HTMLAttributes<E> & P & RefAttributes<E>
->;
+export type SlottableProps<P extends object = {}> = ComposableProps<P> & {
+  asChild?: boolean;
+};

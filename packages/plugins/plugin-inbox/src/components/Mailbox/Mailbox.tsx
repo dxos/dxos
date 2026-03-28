@@ -147,17 +147,14 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
 MessageTile.displayName = 'MessageTile';
 
-export type MailboxProps = ComposableProps<
-  HTMLDivElement,
-  {
-    id: string;
-    messages: Message.Message[];
-    labels?: MailboxType.Labels;
-    currentMessageId?: string;
-    ignoreAttention?: boolean;
-    onAction?: MailboxActionHandler;
-  }
->;
+export type MailboxProps = ComposableProps<{
+  id: string;
+  messages: Message.Message[];
+  labels?: MailboxType.Labels;
+  currentMessageId?: string;
+  ignoreAttention?: boolean;
+  onAction?: MailboxActionHandler;
+}>;
 
 /**
  * Card-based mailbox component using mosaic layout.
