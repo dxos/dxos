@@ -20,17 +20,19 @@ import { ThemedClassName } from '../util';
  * https://www.radix-ui.com/primitives/docs/guides/composition
  */
 
-const Outer = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const Comp = asChild ? Slot : Primitive.div;
-  return (
-    <Comp
-      {...composableProps<HTMLDivElement>(props, { role: 'none', className: 'p-2 border border-red-500 rounded' })}
-      ref={forwardedRef}
-    >
-      {children}
-    </Comp>
-  );
-});
+const Outer = slottable<HTMLDivElement, { priority?: number }>(
+  ({ children, asChild, priority, ...props }, forwardedRef) => {
+    const Comp = asChild ? Slot : Primitive.div;
+    return (
+      <Comp
+        {...composableProps<HTMLDivElement>(props, { role: 'none', className: 'p-2 border border-red-500 rounded' })}
+        ref={forwardedRef}
+      >
+        {children}
+      </Comp>
+    );
+  },
+);
 
 const Middle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : Primitive.div;
