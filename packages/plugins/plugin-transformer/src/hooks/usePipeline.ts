@@ -8,7 +8,6 @@ import { useEffect, useRef, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-
 // Configure cache and runtime settings.
 env.cacheDir = './.cache';
 env.allowLocalModels = true;
