@@ -8,47 +8,9 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { CommandConfig } from '@dxos/cli-util';
+import { type InspectSpaceResponse } from '@dxos/protocols';
 
 import { adminRequest, formatAdminError } from '../util';
-
-type SpaceDetail = {
-  spaceId: string;
-  metadata: { createdAt: string; identityKey?: string; status?: string } | null;
-  members: {
-    count: number;
-    list: { identityKey: string; role?: string; agentKey?: string }[];
-  };
-  controlFeeds: {
-    replicationProgress: Record<string, { replicated: number; processed: number }>;
-  };
-  echo: {
-    dataFeeds: {
-      count: number;
-      totalBlocks: number;
-      byNamespace: {
-        namespace: string;
-        feeds: { feedId: string; blockCount: number }[];
-      }[];
-    };
-    documentCount: number;
-    objectCount: number;
-    deletedObjectCount: number;
-    indexedDocumentCount: number;
-    objectsByType: { typeDxn: string; count: number }[];
-    indexerStatus: {
-      indexingInProgress: boolean;
-      cursors: { indexName: string; sourceName: string; resourceId: string | null; cursor: string | number }[];
-      totalChanges: number;
-    };
-  };
-  usageInLast30Days: {
-    lastActivity: string | null;
-    wsEvents: number;
-    httpEvents: number;
-    totalEvents: number;
-  } | null;
-  durableObjects: { type: string; doId: string }[];
-};
 
 const printSection = function* (title: string, lines: string[]) {
   yield* Console.log(`\n  ${title}`);
@@ -68,7 +30,7 @@ export const inspect = Command.make(
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(data, null, 2));
     } else {
-      const result = data as SpaceDetail;
+      const result = data as InspectSpaceResponse;
       yield* Console.log(`Space: ${result.spaceId}`);
 
       if (result.metadata) {

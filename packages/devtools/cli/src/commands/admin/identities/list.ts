@@ -8,18 +8,11 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { CommandConfig } from '@dxos/cli-util';
+import { type ListActiveIdentitiesResponse } from '@dxos/protocols';
 
 import { adminRequest, formatAdminError } from '../util';
 
-type IdentityEntry = {
-  identityKey: string;
-  haloSpaceId: string | null;
-  createdAt: string | null;
-  agentKey: string | null;
-  hasRecovery: boolean;
-};
-
-const formatIdentityRow = (identity: IdentityEntry): string => {
+const formatIdentityRow = (identity: ListActiveIdentitiesResponse['identities'][number]): string => {
   const recovery = identity.hasRecovery ? 'recovery' : 'no-recovery';
   const created = identity.createdAt ? new Date(identity.createdAt).toLocaleString() : 'n/a';
   return `  ${identity.identityKey}  ${recovery.padEnd(12)} ${created}`;
@@ -47,7 +40,7 @@ export const list = Command.make(
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(data, null, 2));
     } else {
-      const result = data as { identities: IdentityEntry[]; cursor?: string; complete: boolean; totalCount: number };
+      const result = data as ListActiveIdentitiesResponse;
       if (result.identities.length === 0) {
         yield* Console.log('No identities found.');
       } else {

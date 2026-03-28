@@ -11,17 +11,11 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { CommandConfig } from '@dxos/cli-util';
+import { type SpaceExportResult } from '@dxos/protocols';
 
 import { adminDownload, adminRequest, formatAdminError } from '../util';
 
-type ExportResult = {
-  spaceId: string;
-  downloadPath: string;
-  downloadUrl: string;
-  expiresAt: string;
-  objectCount: number;
-  sizeBytes: number;
-};
+type ExportTriggerResponse = SpaceExportResult & { downloadUrl: string };
 
 const formatBytes = (bytes: number): string => {
   if (bytes < 1024) {
@@ -52,7 +46,7 @@ export const exportSpace = Command.make(
       Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
     );
 
-    const result = data as ExportResult;
+    const result = data as ExportTriggerResponse;
 
     if (download) {
       const outputPath = output._tag === 'Some' ? output.value : `export-${spaceId}.json`;

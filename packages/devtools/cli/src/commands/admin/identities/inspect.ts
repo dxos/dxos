@@ -8,19 +8,9 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { CommandConfig } from '@dxos/cli-util';
+import { type InspectIdentityResponse } from '@dxos/protocols';
 
 import { adminRequest, formatAdminError } from '../util';
-
-type IdentityDetail = {
-  identityKey: string;
-  agentKey: string | null;
-  haloSpaceId: string | null;
-  hasRecovery: boolean;
-  routerDoId: string;
-  agentDoId: string | null;
-  ownedFunctions: { id: string; name: string; versionCount: number }[];
-  spaces: { spaceId: string; durableObjects: { type: string; doId: string }[] }[];
-};
 
 export const inspect = Command.make(
   'inspect',
@@ -33,7 +23,7 @@ export const inspect = Command.make(
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(data, null, 2));
     } else {
-      const result = data as IdentityDetail;
+      const result = data as InspectIdentityResponse;
       yield* Console.log(`Identity: ${result.identityKey}`);
       yield* Console.log(`  Recovery:   ${result.hasRecovery ? 'yes' : 'no'}`);
       yield* Console.log(`  Halo space: ${result.haloSpaceId ?? 'n/a'}`);

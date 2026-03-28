@@ -491,3 +491,110 @@ export const EdgeHttpErrorCodec = Object.freeze({
     return ErrorCodec.decode(body.error);
   },
 });
+
+
+//
+// Data management.
+//
+
+export type ListSpacesRequest = { limit?: number; cursor?: string; order?: 'asc' | 'desc' };
+export type ListSpacesResponse = {
+  spaces: SpaceActivityEntry[];
+  cursor?: string;
+  limit: number;
+};
+
+export type ListActiveIdentitiesRequest = { cursor?: string; limit?: number };
+export type ListActiveIdentitiesResponse = {
+  identities: {
+    identityKey: string;
+    haloSpaceId: string | null;
+    createdAt: string | null;
+    agentKey: string | null;
+    hasRecovery: boolean;
+  }[];
+  cursor?: string;
+  complete: boolean;
+  totalCount: number;
+};
+
+export type InspectSpaceRequest = { spaceId: string };
+export type InspectSpaceResponse = {
+  spaceId: string;
+  metadata: { createdAt: string; identityKey?: string; status?: 'active' | 'deleting' } | null;
+  members: {
+    count: number;
+    list: { identityKey: string; role?: string; agentKey?: string }[];
+  };
+  controlFeeds: {
+    replicationProgress: { [feedKey: string]: { replicated: number; processed: number } };
+  };
+  echo: {
+    dataFeeds: {
+      count: number;
+      totalBlocks: number;
+      byNamespace: { namespace: string; feeds: { feedId: string; blockCount: number }[] }[];
+    };
+    documentCount: number;
+    objectCount: number;
+    deletedObjectCount: number;
+    indexedDocumentCount: number;
+    objectsByType: { typeDxn: string; count: number }[];
+    indexerStatus: {
+      indexingInProgress: boolean;
+      cursors: { indexName: string; sourceName: string; resourceId: string | null; cursor: string | number }[];
+      totalChanges: number;
+    };
+  };
+  usageInLast30Days: {
+    lastActivity: string | null;
+    wsEvents: number;
+    httpEvents: number;
+    totalEvents: number;
+  } | null;
+  durableObjects: { type: string; doId: string }[];
+};
+
+export type InspectIdentityRequest = { identityKey: string };
+export type InspectIdentityResponse = {
+  identityKey: string;
+  agentKey: string | null;
+  haloSpaceId: string | null;
+  hasRecovery: boolean;
+  routerDoId: string;
+  agentDoId: string | null;
+  ownedFunctions: { id: string; name: string; versionCount: number }[];
+  spaces: { spaceId: string; durableObjects: { type: string; doId: string }[] }[];
+};
+
+/** Matches the SerializedSpace format from @dxos/echo-db, extended with spaceId. */
+export type SpaceExportPayload = {
+  version: number;
+  timestamp: string;
+  spaceId: string;
+  objects: Record<string, unknown>[];
+};
+
+export type SpaceActivityEntry = {
+  spaceId: string;
+  lastActivity: string;
+  totalEvents: number;
+  metadata: { createdAt: string; identityKey?: string; status?: 'active' | 'deleting' } | null;
+};
+
+export type SpaceExportResult = {
+  spaceId: string;
+  downloadPath: string;
+  downloadUrl: string;
+  expiresAt: string;
+  objectCount: number;
+  sizeBytes: number;
+};
+
+export type ExportSpaceRequest = { spaceId: string; origin: string };
+
+export type DeleteSpaceRequest = { spaceId: string };
+export type DeleteSpaceResponse = { status: string; spaceId: string };
+
+export type DeleteIdentityRequest = { identityKey: string };
+export type DeleteIdentityResponse = { status: string; identityKey: string };

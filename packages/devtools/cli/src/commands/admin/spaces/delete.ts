@@ -9,6 +9,7 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { CommandConfig } from '@dxos/cli-util';
+import { type DeleteSpaceResponse } from '@dxos/protocols';
 
 import { adminRequest, formatAdminError } from '../util';
 
@@ -34,7 +35,7 @@ export const del = Command.make(
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(data, null, 2));
     } else {
-      const result = data as { status: string; spaceId: string };
+      const result = data as DeleteSpaceResponse;
       yield* Console.log(`Space ${result.spaceId} deletion ${result.status}.`);
     }
   }),

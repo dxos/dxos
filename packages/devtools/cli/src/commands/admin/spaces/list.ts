@@ -8,17 +8,11 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { CommandConfig } from '@dxos/cli-util';
+import { type ListSpacesResponse, type SpaceActivityEntry } from '@dxos/protocols';
 
 import { adminRequest, formatAdminError } from '../util';
 
-type SpaceEntry = {
-  spaceId: string;
-  lastActivity: string;
-  totalEvents: number;
-  metadata: { createdAt: string; identityKey?: string; status?: string } | null;
-};
-
-const formatSpaceRow = (space: SpaceEntry): string => {
+const formatSpaceRow = (space: SpaceActivityEntry): string => {
   const status = space.metadata?.status ?? 'unknown';
   const activity = space.lastActivity ? new Date(space.lastActivity).toLocaleString() : 'n/a';
   return `  ${space.spaceId}  ${status.padEnd(10)} ${String(space.totalEvents).padStart(8)} events  ${activity}`;
@@ -32,9 +26,13 @@ export const list = Command.make(
       Options.withDefault(50),
     ),
     cursor: Options.text('cursor').pipe(Options.withDescription('Pagination cursor.'), Options.optional),
+    order: Options.choice('order', ['asc', 'desc']).pipe(
+      Options.withDescription('Sort order by last activity.'),
+      Options.withDefault('desc' as const),
+    ),
   },
-  Effect.fn(function* ({ limit, cursor }) {
-    const query: Record<string, string> = { limit: String(limit) };
+  Effect.fn(function* ({ limit, cursor, order }) {
+    const query: Record<string, string> = { limit: String(limit), order };
     if (cursor._tag === 'Some') {
       query.cursor = cursor.value;
     }
@@ -46,7 +44,7 @@ export const list = Command.make(
     if (yield* CommandConfig.isJson) {
       yield* Console.log(JSON.stringify(data, null, 2));
     } else {
-      const result = data as { spaces: SpaceEntry[]; cursor?: string; limit: number };
+      const result = data as ListSpacesResponse;
       if (result.spaces.length === 0) {
         yield* Console.log('No spaces found.');
       } else {
