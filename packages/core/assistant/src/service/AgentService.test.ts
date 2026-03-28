@@ -158,27 +158,16 @@ describe('Agent Executable', () => {
     'runs AI agent with background tools via process manager',
     Effect.fnUntraced(
       function* (_) {
-        const feed = yield* Database.add(Feed.make());
-        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(
-          Feed.getQueueDxn(feed) ?? failedInvariant(),
-        );
-        const binder = yield* acquireReleaseResource(() => new AiContextBinder({ queue }));
-        const researchBlueprint = yield* Blueprint.upsert(ResearchBlueprint.key);
-
-        yield* Effect.promise(() =>
-          binder.bind({
-            blueprints: [Ref.make(researchBlueprint)],
-            objects: [],
-          }),
-        );
-
         const registry = yield* Registry.AtomRegistry;
         const monitor = yield* Process.ProcessMonitorService;
         registry.subscribe(monitor.processTreeAtom, (tree) => {
           console.log(`\n----- Process tree -----\n${Process.prettyProcessTree(tree)}\n-----------------\n`);
         });
 
-        const agent = yield* AgentService.getSession(feed);
+        const agent = yield* AgentService.createSession({
+          blueprints: [ResearchBlueprint],
+        });
+
         for (const org of TEST_DATA.organizations) {
           yield* agent.submitPrompt(JSON.stringify(org));
         }
