@@ -139,6 +139,7 @@ const TestLayer = Layer.empty.pipe(
     }),
   ),
   Layer.provideMerge(KeyValueStore.layerMemory),
+  Layer.provideMerge(Registry.layer),
 );
 
 const SYSTEM_PROMPT = trim`
@@ -160,13 +161,27 @@ describe('Agent Executable', () => {
           Feed.getQueueDxn(feed) ?? failedInvariant(),
         );
         const binder = yield* acquireReleaseResource(() => new AiContextBinder({ queue }));
-        const researchBlueprint = yield* Database.add(ResearchBlueprint);
+        const researchBlueprint = yield* Database.add(Obj.clone(ResearchBlueprint, { deep: true }));
+
+        const { db } = yield* Database.Service;
+        dbg(Obj.getDXN(researchBlueprint));
+        dbg(researchBlueprint.instructions.source.dxn);
+        dbg(Obj.getDXN(researchBlueprint.instructions.source.target!));
+        dbg(db.makeRef(researchBlueprint.instructions.source.dxn).target);
+
+        // return;
         yield* Effect.promise(() =>
           binder.bind({
             blueprints: [Ref.make(researchBlueprint)],
             objects: [],
           }),
         );
+
+        const registry = yield* Registry.AtomRegistry;
+        const monitor = yield* Process.ProcessMonitorService;
+        registry.subscribe(monitor.processTreeAtom, (tree) => {
+          console.log(`\n----- Process tree -----\n${Process.prettyProcessTree(tree)}\n-----------------\n`);
+        });
 
         const manager = yield* ProcessManager.ProcessManagerService;
         const handle = yield* manager.spawn(

@@ -18,10 +18,15 @@ import type * as Types from 'effect/Types';
 
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import type { TracingService } from '@dxos/protocols/proto/dxos/tracing';
+import * as Option from 'effect/Option';
+import type { Atom } from '@effect-atom/atom';
 
 //
 // Process.
 //
+
+export const ID = Schema.UUID.pipe(Schema.brand('ProcessId'));
+export type ID = Schema.Schema.Type<typeof ID>;
 
 /**
  * A running process.
@@ -250,5 +255,103 @@ export enum State {
   FAILED = 'failed',
 }
 
-export const ID = Schema.UUID.pipe(Schema.brand('ProcessId'));
-export type ID = Schema.Schema.Type<typeof ID>;
+/**
+ * Read-only view of a process tree
+ */
+export interface Monitor {
+  /**
+   * Get the current state of the process tree.
+   */
+  processTree: Effect.Effect<readonly ProcessInfo[]>;
+
+  /**
+   * Atom for the process tree.
+   */
+  processTreeAtom: Atom.Atom<readonly ProcessInfo[]>;
+}
+
+export class ProcessMonitorService extends Context.Tag('@dxos/functions-runtime/ProcessMonitorService')<
+  ProcessMonitorService,
+  Monitor
+>() {}
+
+export interface ProcessInfo {
+  readonly pid: ID;
+  readonly parentPid: Option.Option<ID>;
+  readonly state: State;
+  readonly error: Option.Option<string>;
+
+  /**
+   * UNIX timestamp in milliseconds.
+   */
+  readonly startedAt: number;
+
+  /**
+   * UNIX timestamp in milliseconds.
+   */
+  readonly completedAt: Option.Option<number>;
+
+  // TODO(dmaretskyi): CPU time, wall time, number of inputs, number of outputs
+}
+
+/**
+ * Renders spawned processes as a forest: top-level rows use "- ", nested rows use ├── / └── / │.
+ */
+export const prettyProcessTree = (tree: readonly ProcessInfo[]): string => {
+  if (tree.length === 0) {
+    return '';
+  }
+
+  const pidSet = new Set(tree.map((node) => node.pid));
+  const childrenByParent = new Map<string, ProcessInfo[]>();
+  const roots: ProcessInfo[] = [];
+
+  for (const node of tree) {
+    const parent = Option.getOrUndefined(node.parentPid);
+    if (parent === undefined || !pidSet.has(parent)) {
+      roots.push(node);
+      continue;
+    }
+    const key = String(parent);
+    const siblings = childrenByParent.get(key) ?? [];
+    siblings.push(node);
+    childrenByParent.set(key, siblings);
+  }
+
+  const byPid = (a: ProcessInfo, b: ProcessInfo) => String(a.pid).localeCompare(String(b.pid));
+  roots.sort(byPid);
+  for (const siblings of childrenByParent.values()) {
+    siblings.sort(byPid);
+  }
+
+  const formatLabel = (node: ProcessInfo): string => {
+    const bits = [String(node.pid), node.state];
+    if (Option.isSome(node.error)) {
+      bits.push(`(${node.error.value})`);
+    }
+    return bits.join(' ');
+  };
+
+  const lines: string[] = [];
+
+  const walk = (node: ProcessInfo, prefix: string, isLast: boolean, isRoot: boolean): void => {
+    if (isRoot) {
+      lines.push(`- ${formatLabel(node)}`);
+    } else {
+      const branch = isLast ? '└── ' : '├── ';
+      lines.push(`${prefix}${branch}${formatLabel(node)}`);
+    }
+
+    const children = childrenByParent.get(String(node.pid)) ?? [];
+    const nextPrefix = isRoot ? '  ' : `${prefix}${isLast ? '    ' : '│   '}`;
+    children.forEach((child, index) => {
+      walk(child, nextPrefix, index === children.length - 1, false);
+    });
+  };
+
+  for (const root of roots) {
+    walk(root, '', true, true);
+  }
+
+  return lines.join('\n');
+};

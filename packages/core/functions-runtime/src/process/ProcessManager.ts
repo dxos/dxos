@@ -150,6 +150,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   #name: string | undefined;
 
   readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
+  readonly #onStatusChanged: (() => void) | undefined;
 
   constructor(
     readonly pid: Process.ID,
@@ -162,6 +163,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     storage: Context.Tag.Service<typeof StorageService.StorageService>,
     name?: string,
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
+    onStatusChanged?: () => void,
   ) {
     this.parentId = parentId;
     this.#process = process;
@@ -172,6 +174,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     this.#storage = storage;
     this.#name = name;
     this.#onFinished = onFinished;
+    this.#onStatusChanged = onStatusChanged;
 
     this.#currentStatus = {
       state: Process.State.RUNNING,
@@ -181,6 +184,10 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     };
     this.statusAtom = Atom.make<Status>(this.#currentStatus);
     this.#registry.mount(this.statusAtom);
+  }
+
+  snapshotStatus(): Status {
+    return this.#currentStatus;
   }
 
   /** Run process onSpawn. Called by ProcessManagerImpl after spawn. */
@@ -344,6 +351,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
       completedAt: isTerminal ? Option.some(new Date()) : Option.none(),
     };
     this.#registry.set(this.statusAtom, this.#currentStatus);
+    this.#onStatusChanged?.();
   }
 }
 
@@ -364,12 +372,53 @@ export class ProcessManagerImpl implements Manager {
   readonly #tracingService: Context.Tag.Service<TracingService>;
   readonly #handlerSet: OperationHandlerSet.OperationHandlerSet | undefined;
 
+  readonly #processTreeAtom: Atom.Writable<readonly Process.ProcessInfo[]>;
+  readonly #monitor: Process.Monitor;
+
   constructor(opts: ProcessManagerImplOpts) {
     this.#registry = opts.registry;
     this.#kvStore = opts.kvStore;
     this.#serviceResolver = opts.serviceResolver ?? ServiceResolver.empty;
     this.#tracingService = opts.tracingService ?? TracingService.noop;
     this.#handlerSet = opts.handlerSet;
+
+    this.#processTreeAtom = Atom.make<readonly Process.ProcessInfo[]>([]);
+    this.#registry.mount(this.#processTreeAtom);
+    this.#monitor = {
+      processTree: Effect.sync(() => this.#registry.get(this.#processTreeAtom)),
+      processTreeAtom: this.#processTreeAtom,
+    };
+  }
+
+  get monitor(): Process.Monitor {
+    return this.#monitor;
+  }
+
+  #exitOptionToError(exit: Option.Option<Exit.Exit<void>>): Option.Option<string> {
+    return Option.flatMap(exit, (ex) =>
+      Exit.match(ex, {
+        onFailure: (cause) => Option.some(Cause.pretty(cause)),
+        onSuccess: () => Option.none(),
+      }),
+    );
+  }
+
+  #buildProcessTreeSnapshot(): readonly Process.ProcessInfo[] {
+    return [...this.#handles.values()].map((handle) => {
+      const status = handle.snapshotStatus();
+      return {
+        pid: handle.pid,
+        parentPid: handle.parentId,
+        state: status.state,
+        error: this.#exitOptionToError(status.exit),
+        startedAt: status.startedAt.getTime(),
+        completedAt: Option.map(status.completedAt, (date) => date.getTime()),
+      };
+    });
+  }
+
+  #refreshProcessTree(): void {
+    this.#registry.set(this.#processTreeAtom, this.#buildProcessTreeSnapshot());
   }
 
   spawn<I, O>(executable: Process.Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
@@ -495,9 +544,11 @@ export class ProcessManagerImpl implements Manager {
         storage,
         options?.name,
         onFinished,
+        () => this.#refreshProcessTree(),
       );
       handleRef = handle;
       this.#handles.set(id, handle);
+      this.#refreshProcessTree();
 
       yield* handle.runOnSpawn();
 
@@ -568,26 +619,30 @@ export class ProcessManagerImpl implements Manager {
  * Requires KeyValueStore, ServiceResolver, TracingService, and OperationHandlerSet.OperationHandlerProvider from the environment.
  */
 export const layer: Layer.Layer<
-  ProcessManagerService,
+  ProcessManagerService | Process.ProcessMonitorService,
   never,
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
   | TracingService
   | OperationHandlerSet.OperationHandlerProvider
-> = Layer.effect(
-  ProcessManagerService,
+  | Registry.AtomRegistry
+> = Layer.unwrapEffect(
   Effect.gen(function* () {
     const kvStore = yield* KeyValueStore.KeyValueStore;
     const serviceResolver = yield* ServiceResolver.ServiceResolver;
     const tracingService = yield* TracingService;
     const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
-    const registry = Registry.make();
-    return new ProcessManagerImpl({
+    const registry = yield* Registry.AtomRegistry;
+    const manager = new ProcessManagerImpl({
       registry,
       kvStore,
       serviceResolver,
       tracingService,
       handlerSet,
     });
+    return Layer.mergeAll(
+      Layer.succeed(ProcessManagerService, manager),
+      Layer.succeed(Process.ProcessMonitorService, manager.monitor),
+    );
   }),
 );
