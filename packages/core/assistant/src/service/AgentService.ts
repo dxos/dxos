@@ -12,7 +12,7 @@ import * as Layer from 'effect/Layer';
 import { Blueprint } from '@dxos/blueprints';
 import { ProcessManager } from '@dxos/functions-runtime';
 import { failedInvariant } from '@dxos/invariant';
-import { makeAgentExecutable } from './agent-executable';
+import { AgentProcess } from './agent-process';
 
 import { Ref } from '@dxos/echo';
 import { QueueService } from '@dxos/functions';
@@ -106,7 +106,7 @@ export const layer = (opts?: {
       return {
         getSession: (feed: Feed.Feed) =>
           Effect.gen(function* () {
-            const executable = makeAgentExecutable({ systemPrompt: opts?.systemPrompt });
+            const executable = AgentProcess({ systemPrompt: opts?.systemPrompt });
             const processes = yield* processManager.list({ target: feed.id, key: executable.key });
             if (processes.length > 0) {
               return makeSession(processes[0], feed);

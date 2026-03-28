@@ -32,7 +32,7 @@ import { log } from '@dxos/log';
 import * as Match from 'effect/Match';
 import * as Cause from 'effect/Cause';
 
-interface AgentExecutableOptions {
+interface AgentProcessOptions {
   systemPrompt?: string;
   model?: ModelName;
 }
@@ -40,7 +40,7 @@ interface AgentExecutableOptions {
 /**
  * Hosts a presistant, suspendible AiAgent that can process a number of prompts.
  */
-export const makeAgentExecutable = (options: AgentExecutableOptions) =>
+export const AgentProcess = (options: AgentProcessOptions) =>
   Process.make(
     {
       key: 'org.dxos.testing.process.agent',
