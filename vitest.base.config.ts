@@ -12,7 +12,6 @@ import { defineProject, UserWorkspaceConfig, type ViteUserConfig } from 'vitest/
 import WasmPlugin from 'vite-plugin-wasm';
 import Inspect from 'vite-plugin-inspect';
 
-import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
 
@@ -94,19 +93,13 @@ const createBrowserProject = ({
       // Inspect()
     ],
     optimizeDeps: {
-      include: ['buffer/'],
-      esbuildOptions: {
-        plugins: [
-          // TODO(burdon): esbuild version mismatch.
-          FixGracefulFsPlugin(),
-          // TODO(wittjosiah): Compute nodeStd from package.json
-          ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
-        ],
-      },
+      include: ['buffer'],
       exclude: ['@dxos/wa-sqlite'],
     },
-    esbuild: {
-      target: 'esnext',
+    resolve: {
+      alias: {
+        'graceful-fs': new URL('./tools/vitest/stubs/graceful-fs.js', import.meta.url).pathname,
+      },
     },
     test: {
       name: `browser-${browserName}`,
