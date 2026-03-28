@@ -109,6 +109,7 @@ const generateCommit = (
     commit = {
       id: faker.string.uuid(),
       branch: lastBranch,
+      timestamp: new Date(),
       icon: faker.helpers.arrayElement([
         IconType.WARN,
         IconType.CHECK,
@@ -172,6 +173,36 @@ export const Branch: Story = {
       { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
       { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
       { id: 'c3', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c2'] },
+    ],
+  },
+};
+
+export const Timestamp: Story = {
+  args: {
+    debug: true,
+    showIcon: false,
+    showTimestamp: true,
+    commits: [
+      {
+        id: 'c1',
+        timestamp: new Date(Date.now()),
+        message: faker.lorem.paragraph(),
+        branch: 'main',
+      },
+      {
+        id: 'c2',
+        timestamp: new Date(Date.now() + 100),
+        message: faker.lorem.paragraph(),
+        branch: 'main',
+        parents: ['c1'],
+      },
+      {
+        id: 'c3',
+        timestamp: new Date(Date.now() + 120),
+        message: faker.lorem.paragraph(),
+        branch: 'feature-a',
+        parents: ['c2'],
+      },
     ],
   },
 };

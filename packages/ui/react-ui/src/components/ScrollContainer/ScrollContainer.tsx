@@ -102,8 +102,8 @@ const Root = forwardRef<ScrollController, RootProps>(
           scrollerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
           setPinned(false);
         },
-        scrollToBottom: () => {
-          scrollToBottom('smooth');
+        scrollToBottom: (behavior = 'smooth' as ScrollBehavior) => {
+          scrollToBottom(behavior);
         },
       }),
       [scrollToBottom],
@@ -135,10 +135,42 @@ const VIEWPORT_NAME = 'ScrollContainer.Viewport';
 
 type ViewportProps = ComposableProps<{ fade?: boolean }>;
 
+/**
+ * Isolated component that consumes pinned/controller from context.
+ * Kept separate so that Viewport does not re-render when pinned changes.
+ */
+const PIN_EFFECT_NAME = 'ScrollContainer.PinEffect';
+
+const PinEffect = ({ scrollerRef }: { scrollerRef: React.RefObject<HTMLDivElement | null> }) => {
+  const { pinned, controller } = useScrollContainerContext(PIN_EFFECT_NAME);
+
+  // Pin scroll to bottom when content changes.
+  useEffect(() => {
+    if (!pinned || !scrollerRef.current) {
+      return;
+    }
+
+    // Scroll instantly so we don't visually jump while content is being added.
+    controller?.scrollToBottom('instant');
+
+    // Setup resize observer to detect content changes (e.g. streaming).
+    // Use instant scroll in the callback — smooth scrolling adds/removes the
+    // scrollbar-none class, which changes the element size and re-fires the
+    // observer, creating an infinite loop.
+    const resizeObserver = new ResizeObserver(() => controller?.scrollToBottom('instant'));
+    resizeObserver.observe(scrollerRef.current);
+    return () => resizeObserver.disconnect();
+  }, [pinned, controller, scrollerRef]);
+
+  return null;
+};
+
+// TODO(burdon): Split into Content and Viewport.
 const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ children, fade, ...props }, forwardedRef) => {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [overflow, setOverflow] = useState(false);
-  const { pinned, controller, setViewport, setPinned } = useScrollContainerContext(VIEWPORT_NAME);
+  // Only consume stable callbacks — not pinned/controller — so Viewport doesn't re-render on scroll state changes.
+  const { setViewport, setPinned } = useScrollContainerContext(VIEWPORT_NAME);
 
   // Register the scroll element with Root and set up wheel/scroll listeners.
   useEffect(() => {
@@ -156,43 +188,33 @@ const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ children, fade, ..
     );
   }, [setViewport, setPinned]);
 
-  // Pin scroll to bottom when content changes.
-  useEffect(() => {
-    if (!pinned || !scrollerRef.current) {
-      return;
-    }
-
-    // Scroll instantly otherwise it might move while we're scrolling.
-    controller?.scrollToBottom();
-
-    // Setup resize observer to detect content changes.
-    const resizeObserver = new ResizeObserver(() => controller?.scrollToBottom());
-    resizeObserver.observe(scrollerRef.current);
-    return () => resizeObserver.disconnect();
-  }, [pinned, controller]);
-
   return (
-    <div {...composableProps(props, { className: 'relative grid dx-container' })} ref={forwardedRef}>
-      {fade && (
-        <div
-          role='none'
-          data-visible={overflow}
-          className={mx(
-            // NOTE: Gradients may not be visible with dark reader extensions.
-            'z-10 absolute top-0 inset-x-0 h-24 w-full',
-            'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
-            'bg-gradient-to-b from-(--surface-bg) to-transparent pointer-events-none',
-          )}
-        />
-      )}
+    <div {...composableProps(props, { role: 'none', className: 'relative grid dx-container' })} ref={forwardedRef}>
+      {fade && <Fade overflow={overflow} />}
       <ScrollArea.Root thin margin>
         <ScrollArea.Viewport ref={scrollerRef}>{children}</ScrollArea.Viewport>
       </ScrollArea.Root>
+      <PinEffect scrollerRef={scrollerRef} />
     </div>
   );
 });
 
 Viewport.displayName = VIEWPORT_NAME;
+
+const Fade = ({ overflow }: { overflow: boolean }) => {
+  return (
+    <div
+      role='none'
+      data-visible={overflow}
+      className={mx(
+        // NOTE: Gradients may not be visible with dark reader extensions.
+        'z-10 absolute top-0 inset-x-0 h-24 w-full',
+        'opacity-0 duration-200 transition-opacity data-[visible="true"]:opacity-100',
+        'bg-gradient-to-b from-(--surface-bg) to-transparent pointer-events-none',
+      )}
+    />
+  );
+};
 
 //
 // ScrollDownButton

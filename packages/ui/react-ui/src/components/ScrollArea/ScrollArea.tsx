@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type HTMLAttributes, forwardRef } from 'react';
+import React, { type HTMLAttributes, forwardRef, useMemo } from 'react';
 
 import { composableProps, slottable } from '@dxos/ui-theme';
 import { type AllowedAxis, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
@@ -65,7 +65,10 @@ const ScrollAreaRoot = slottable<HTMLDivElement, Partial<ScrollAreaContextType>>
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
-    const options = { orientation, autoHide, margin, padding, thin, snap };
+    const options = useMemo(
+      () => ({ orientation, autoHide, margin, padding, thin, snap }),
+      [orientation, autoHide, margin, padding, thin, snap],
+    );
 
     return (
       <ScrollAreaProvider {...options}>
