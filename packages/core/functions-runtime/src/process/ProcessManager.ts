@@ -13,7 +13,6 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Queue from 'effect/Queue';
-import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
@@ -451,9 +450,11 @@ export interface ProcessManagerImplOpts {
   serviceResolver?: ServiceResolver.ServiceResolver;
   tracingService?: Context.Tag.Service<TracingService>;
   handlerSet?: OperationHandlerSet.OperationHandlerSet;
+  idGenerator?: ProcessIdGenerator;
 }
 
 export class ProcessManagerImpl implements Manager {
+  readonly #idGenerator: ProcessIdGenerator;
   readonly #handles = new Map<Process.ID, ProcessHandleImpl<any, any, any>>();
   readonly #traceContexts = new Map<Process.ID, TracingService.TraceContext>();
   readonly #registry: Registry.Registry;
@@ -466,6 +467,7 @@ export class ProcessManagerImpl implements Manager {
   readonly #monitor: Process.Monitor;
 
   constructor(opts: ProcessManagerImplOpts) {
+    this.#idGenerator = opts.idGenerator ?? UUIDProcessIdGenerator;
     this.#registry = opts.registry;
     this.#kvStore = opts.kvStore;
     this.#serviceResolver = opts.serviceResolver ?? ServiceResolver.empty;
@@ -561,7 +563,7 @@ export class ProcessManagerImpl implements Manager {
 
   spawn<I, O>(executable: Process.Executable<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
-      const id = Schema.decodeSync(Process.ID)(crypto.randomUUID());
+      const id = this.#idGenerator();
       log.info('spawn', { pid: id, parentPid: options?.parentProcessId });
       const scope = yield* Scope.make();
       const outputQueue = yield* Queue.unbounded<OutputItem<O>>();
@@ -766,8 +768,14 @@ export class ProcessManagerImpl implements Manager {
 
 export type ProcessIdGenerator = () => Process.ID;
 
+/**
+ * Generates a random process id (UUID string).
+ */
 export const UUIDProcessIdGenerator: ProcessIdGenerator = () => Process.ID.make(crypto.randomUUID());
 
+/**
+ * Generates sequential string process ids (`0`, `1`, …); useful in tests.
+ */
 export const SequentialProcessIdGenerator: ProcessIdGenerator = (() => {
   let nextId = 0;
   return () => Process.ID.make(String(nextId++));
@@ -781,7 +789,9 @@ export const SequentialProcessIdGenerator: ProcessIdGenerator = (() => {
  * Requires KeyValueStore, ServiceResolver, TracingService, OperationHandlerSet.OperationHandlerProvider,
  * and Registry.AtomRegistry from the environment.
  */
-export const layer: Layer.Layer<
+export const layer = (opts?: {
+  idGenerator?: ProcessIdGenerator;
+}): Layer.Layer<
   ProcessManagerService | Process.ProcessMonitorService,
   never,
   | KeyValueStore.KeyValueStore
@@ -789,27 +799,30 @@ export const layer: Layer.Layer<
   | TracingService
   | OperationHandlerSet.OperationHandlerProvider
   | Registry.AtomRegistry
-> = Layer.scopedContext(
-  Effect.gen(function* () {
-    const kvStore = yield* KeyValueStore.KeyValueStore;
-    const serviceResolver = yield* ServiceResolver.ServiceResolver;
-    const tracingService = yield* TracingService;
-    const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
-    const registry = yield* Registry.AtomRegistry;
+> =>
+  Layer.scopedContext(
+    Effect.gen(function* () {
+      const kvStore = yield* KeyValueStore.KeyValueStore;
+      const serviceResolver = yield* ServiceResolver.ServiceResolver;
+      const tracingService = yield* TracingService;
 
-    const manager = new ProcessManagerImpl({
-      registry,
-      kvStore,
-      serviceResolver,
-      tracingService,
-      handlerSet,
-    });
+      const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
+      const registry = yield* Registry.AtomRegistry;
 
-    yield* Effect.addFinalizer(() => manager.shutdown());
+      const manager = new ProcessManagerImpl({
+        registry,
+        kvStore,
+        serviceResolver,
+        tracingService,
+        handlerSet,
+        idGenerator: opts?.idGenerator,
+      });
 
-    return Context.mergeAll(
-      Context.make(ProcessManagerService, manager),
-      Context.make(Process.ProcessMonitorService, manager.monitor),
-    );
-  }),
-);
+      yield* Effect.addFinalizer(() => manager.shutdown());
+
+      return Context.mergeAll(
+        Context.make(ProcessManagerService, manager),
+        Context.make(Process.ProcessMonitorService, manager.monitor),
+      );
+    }),
+  );

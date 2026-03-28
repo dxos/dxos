@@ -97,7 +97,7 @@ const makeWaitingExecutable = () =>
   );
 
 const TestLayer = ProcessOperationInvoker.layer.pipe(
-  Layer.provideMerge(ProcessManager.layer),
+  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
   Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
   Layer.provide(
     TestDatabaseLayer({

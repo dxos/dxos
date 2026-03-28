@@ -27,7 +27,8 @@ import { assertArgument } from '@dxos/invariant';
 // Process.
 //
 
-export const ID = Schema.UUID.pipe(Schema.brand('ProcessId'));
+/** Opaque process id (arbitrary string). */
+export const ID = Schema.String.pipe(Schema.brand('ProcessId'));
 export type ID = Schema.Schema.Type<typeof ID>;
 
 /**

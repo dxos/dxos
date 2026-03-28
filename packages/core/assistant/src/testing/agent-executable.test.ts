@@ -118,7 +118,7 @@ const ResearchBlueprint = Blueprint.make({
 //
 
 const TestLayer = Layer.empty.pipe(
-  Layer.provideMerge(ProcessManager.layer),
+  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
   Layer.provideMerge(
     ServiceResolver.layerRequirements(
       Database.Service,
