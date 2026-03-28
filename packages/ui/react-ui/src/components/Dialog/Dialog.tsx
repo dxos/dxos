@@ -20,7 +20,8 @@ import { Column } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ElevationProvider } from '../ElevationProvider';
-import { SlottableProps } from '../..';
+import { slottable } from '@dxos/ui-theme';
+import { type SlottableProps } from '@dxos/ui-types';
 
 //
 // Root
@@ -172,9 +173,9 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
 // Body
 //
 
-type DialogBodyProps = SlottableProps<HTMLDivElement>;
+type DialogBodyProps = SlottableProps;
 
-const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ children, asChild, ...props }, forwardedRef) => {
+const DialogBody = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
     <Column.Content {...props} asChild={asChild} className={tx('dialog.body', {})} ref={forwardedRef}>

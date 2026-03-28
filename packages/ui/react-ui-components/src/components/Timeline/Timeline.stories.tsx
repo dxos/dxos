@@ -11,7 +11,7 @@ import { LogLevel, log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
 import { type ScrollController } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useExecutionGraph } from '@dxos/react-ui-components';
@@ -109,6 +109,7 @@ const generateCommit = (
     commit = {
       id: faker.string.uuid(),
       branch: lastBranch,
+      timestamp: new Date(),
       icon: faker.helpers.arrayElement([
         IconType.WARN,
         IconType.CHECK,
@@ -176,6 +177,36 @@ export const Branch: Story = {
   },
 };
 
+export const Timestamp: Story = {
+  args: {
+    debug: true,
+    showIcon: false,
+    showTimestamp: true,
+    commits: [
+      {
+        id: 'c1',
+        timestamp: new Date(Date.now()),
+        message: faker.lorem.paragraph(),
+        branch: 'main',
+      },
+      {
+        id: 'c2',
+        timestamp: new Date(Date.now() + 100),
+        message: faker.lorem.paragraph(),
+        branch: 'main',
+        parents: ['c1'],
+      },
+      {
+        id: 'c3',
+        timestamp: new Date(Date.now() + 120),
+        message: faker.lorem.paragraph(),
+        branch: 'feature-a',
+        parents: ['c2'],
+      },
+    ],
+  },
+};
+
 export const Merge: Story = {
   args: {
     debug: true,
@@ -215,9 +246,10 @@ export const Compact: Story = {
   args: { ...generateCommits(100), compact: true },
 };
 
-const slice = 0;
 export const ExecutionGraph: Story = {
+  decorators: [withClientProvider({ createIdentity: true })],
   render: () => {
+    const slice = 0;
     const space = useSpace();
     const queue = useMemo(() => space?.queues.create(), [space]);
     useAsyncEffect(async () => {
@@ -244,7 +276,6 @@ export const ExecutionGraph: Story = {
     log.info('execution graph', { branches, commits });
     return <Timeline branches={branches} commits={commits} />;
   },
-  decorators: [withClientProvider({ createIdentity: true })],
 };
 
 export const Streaming: Story = {
@@ -294,15 +325,19 @@ export const Streaming: Story = {
     const scrollerRef = useRef<ScrollController>(null);
 
     return (
-      <div className='flex flex-col w-full h-full overflow-hidden'>
-        <Toolbar.Root>
-          <Button onClick={() => setRunning(true)}>Start</Button>
-          <Button onClick={() => setRunning(false)}>Stop</Button>
-          <Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button>
-          <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
-        </Toolbar.Root>
-        <Timeline ref={scrollerRef} branches={branches} commits={commits} />
-      </div>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Button onClick={() => setRunning(true)}>Start</Button>
+            <Button onClick={() => setRunning(false)}>Stop</Button>
+            <Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button>
+            <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content>
+          <Timeline ref={scrollerRef} branches={branches} commits={commits} />
+        </Panel.Content>
+      </Panel.Root>
     );
   },
 };

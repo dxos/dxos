@@ -9,7 +9,6 @@ import React, { ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, us
 import {
   Button,
   type ButtonProps,
-  ComposableProps,
   Icon,
   Popover,
   type PopoverArrowProps,
@@ -17,7 +16,7 @@ import {
   type PopoverVirtualTriggerProps,
 } from '@dxos/react-ui';
 import { useId } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import {
   SearchList,
@@ -102,9 +101,9 @@ const ComboboxRoot = ({
 // ContentProps
 //
 
-type ComboboxContentProps = ComposableProps<HTMLDivElement, SearchListRootProps & PopoverContentProps>;
+type ComboboxContentProps = SearchListRootProps & PopoverContentProps;
 
-const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
+const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
   ({ children, value, defaultValue, debounceMs, onSearch, ...props }, forwardedRef) => {
     const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
 

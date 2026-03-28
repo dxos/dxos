@@ -6,12 +6,17 @@ import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AssistantEvents } from '@dxos/plugin-assistant';
 
-import { Ollama, Updater, Window } from './capabilities';
+import { Ollama, SpotlightListener, Updater, Window } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 
 export const NativePlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
+  Plugin.addModule({
+    id: 'spotlight-listener',
+    activatesOn: ActivationEvents.OperationInvokerReady,
+    activate: SpotlightListener,
+  }),
   Plugin.addModule({
     id: 'updater',
     activatesOn: ActivationEvents.OperationInvokerReady,

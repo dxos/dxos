@@ -12,7 +12,7 @@ import { Panel } from './Panel';
 
 const List = () => {
   return (
-    <ScrollArea.Root margin role='list'>
+    <ScrollArea.Root role='list' margin>
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
           <div key={i} role='listitem' className='p-1 hover:bg-hover-surface'>

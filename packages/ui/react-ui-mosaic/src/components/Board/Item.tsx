@@ -68,8 +68,8 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
             <Card.Root
               classNames={classNames}
               data-testid='board-item'
-              onClick={() => rootRef.current?.focus()}
               ref={composedRef}
+              onClick={(event) => event.currentTarget.focus()}
             >
               <Card.Toolbar>
                 <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />

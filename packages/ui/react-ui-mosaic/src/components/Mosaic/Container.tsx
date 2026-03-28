@@ -69,7 +69,7 @@ const MOSAIC_CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 let counter = 0;
 
-type MosaicContainerProps = ComposableProps<HTMLDivElement> &
+type MosaicContainerProps = ComposableProps &
   PropsWithChildren<
     Partial<Pick<MosaicContainerContextValue, 'eventHandler' | 'orientation'>> & {
       asChild?: boolean;

@@ -58,7 +58,7 @@ export const Drawer = () => {
           <Menu.Toolbar />
         </Menu.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <Surface.Surface role='article' data={data} limit={1} fallback={ErrorFallback} placeholder={placeholder} />
       </Panel.Content>
     </Panel.Root>

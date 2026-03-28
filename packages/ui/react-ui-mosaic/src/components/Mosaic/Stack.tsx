@@ -42,7 +42,7 @@ const MOSAIC_STACK_NAME = 'MosaicStack';
 
 type MosaicStackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
-type MosaicStackProps<TData = any> = Omit<ComposableProps<HTMLDivElement>, 'onChange'> & {
+type MosaicStackProps<TData = any> = Omit<ComposableProps, 'onChange'> & {
   Tile: MosaicStackTileComponent<TData>;
   getId: GetId<TData>;
   role?: string;

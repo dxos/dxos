@@ -11,7 +11,7 @@ import { translations } from './translations';
 import { SimpleLayoutEvents } from './types';
 
 export type SimpleLayoutPluginOptions = {
-  /** Whether running in popover window context (hides mobile-specific UI). */
+  /** Determines if running in popover window context (hides mobile-specific UI). */
   isPopover?: boolean;
 };
 

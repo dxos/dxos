@@ -21,10 +21,8 @@ import {
 import { meta } from '../../meta';
 
 export type ScriptToolbarProps = ComposableProps<
-  HTMLDivElement,
   Pick<MenuRootProps, 'attendableId'> & {
     script: Script.Script;
-    role?: string;
     state: ScriptToolbarStateStore;
   }
 >;

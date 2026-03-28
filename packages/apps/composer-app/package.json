@@ -75,6 +75,7 @@
     "@dxos/plugin-simple-layout": "workspace:*",
     "@dxos/plugin-sketch": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/plugin-spotlight": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
     "@dxos/plugin-table": "workspace:*",

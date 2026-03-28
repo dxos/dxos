@@ -16,7 +16,7 @@ import {
 
 import { type GeoControlProps } from '../types';
 
-export type MapControlProps = ComposableProps<HTMLDivElement, GeoControlProps & MapContentProps & MapRootProps>;
+export type MapControlProps = ComposableProps<GeoControlProps & MapContentProps & MapRootProps>;
 
 export const MapControl = forwardRef<HTMLDivElement, MapControlProps>(
   ({ center, zoom, markers, selected, onToggle, onChange, ...props }, forwardedRef) => {

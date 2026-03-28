@@ -5,7 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
+import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Collection } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { SearchPlugin } from '@dxos/plugin-search';
@@ -14,13 +16,17 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { translations as searchTranslation } from '@dxos/react-ui-search';
 
-import { SimpleLayoutPlugin } from '../../SimpleLayoutPlugin';
+import { ReactRoot, ReactSurface, State } from '../../capabilities';
+import { meta as pluginMeta } from '../../meta';
+import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
 import { translations } from '../../translations';
+import { SimpleLayoutEvents } from '../../types';
 
 import { SimpleLayout } from './SimpleLayout';
 
 const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
   return withPluginManager({
+    setupEvents: [AppActivationEvents.SetupSettings],
     plugins: [
       ...corePlugins(),
       ClientPlugin({
@@ -28,22 +34,32 @@ const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
             yield* Effect.promise(() => client.halo.createIdentity());
-            // const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
-            // yield* invoke(ClientOperation.CreateIdentity, {});
-            // const { space } = yield* invoke(SpaceOperation.Create, { name: 'Work' });
-            // yield* invoke(SpaceOperation.AddObject, {
-            //   target: space.db,
-            //   object: Collection.make({ name: 'Projects', objects: [] }),
-            // });
-            // yield* invoke(SpaceOperation.AddObject, {
-            //   target: space.db,
-            //   object: Collection.make({ name: 'Documents', objects: [] }),
-            // });
           }),
       }),
+
       SearchPlugin(),
       SpacePlugin({}),
-      SimpleLayoutPlugin({ isPopover }),
+
+      // TODO(burdon): This should be factored ouf from SimpleLayoutPlugin.
+      Plugin.define<SimpleLayoutPluginOptions>(pluginMeta).pipe(
+        Plugin.addModule(({ isPopover = false }) => ({
+          id: Capability.getModuleTag(State),
+          activatesOn: ActivationEvents.Startup,
+          activatesAfter: [SimpleLayoutEvents.StateReady, AppActivationEvents.LayoutReady],
+          activate: () => State({ initialState: { isPopover } }),
+        })),
+        Plugin.addModule({
+          id: Capability.getModuleTag(ReactRoot),
+          activatesOn: ActivationEvents.Startup,
+          activate: ReactRoot,
+        }),
+        Plugin.addModule({
+          id: Capability.getModuleTag(ReactSurface),
+          activatesOn: ActivationEvents.Startup,
+          activate: ReactSurface,
+        }),
+        Plugin.make,
+      )({ isPopover }),
     ],
   });
 };

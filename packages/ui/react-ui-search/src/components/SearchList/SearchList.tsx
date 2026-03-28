@@ -6,7 +6,6 @@ import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import React, {
   type ChangeEvent,
   type ComponentPropsWithRef,
-  type ComponentPropsWithoutRef,
   type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
@@ -19,7 +18,7 @@ import React, {
 } from 'react';
 
 import {
-  ComposableProps,
+  type ComposableProps,
   type Density,
   type Elevation,
   Icon,
@@ -30,7 +29,7 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -233,9 +232,9 @@ SearchListRoot.displayName = 'SearchList.Root';
 // Content
 //
 
-type SearchListContentProps = ComposableProps<HTMLDivElement, ThemedClassName<ComponentPropsWithoutRef<'div'>>>;
+type SearchListContentProps = ComposableProps;
 
-const SearchListContent = forwardRef<HTMLDivElement, SearchListContentProps>(({ children, ...props }, forwardedRef) => {
+const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
     <div
       {...composableProps(props, {
@@ -272,12 +271,12 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     forwardedRef,
   ) => {
     const { t } = useTranslation(translationKey);
+    const { hasIosKeyboard, tx } = useThemeContext();
     const { query, onQueryChange, selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       useSearchListInputContext('SearchList.Input');
-    const { hasIosKeyboard, tx } = useThemeContext();
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
-    const defaultPlaceholder = t('search.placeholder');
+    const defaultPlaceholder = t('search placeholder');
 
     const handleChange = useCallback(
       (event: ChangeEvent<HTMLInputElement>) => {
@@ -386,17 +385,15 @@ SearchListInput.displayName = 'SearchList.Input';
 // Viewport
 //
 
-type SearchListViewportProps = ComposableProps<HTMLDivElement>;
+type SearchListViewportProps = ComposableProps;
 
-const SearchListViewport = forwardRef<HTMLDivElement, SearchListViewportProps>(
-  ({ children, ...props }, forwardedRef) => {
-    return (
-      <ScrollArea.Root {...composableProps(props)} role='listbox' thin padding ref={forwardedRef}>
-        <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-      </ScrollArea.Root>
-    );
-  },
-);
+const SearchListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+  return (
+    <ScrollArea.Root {...composableProps(props)} role='listbox' thin padding ref={forwardedRef}>
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+});
 
 SearchListViewport.displayName = 'SearchList.Viewport';
 
