@@ -4,6 +4,7 @@
 
 import {
   Children,
+  createElement,
   forwardRef,
   type ForwardRefExoticComponent,
   type ForwardedRef,
@@ -109,11 +110,12 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
   render: (props: SlottableProps<P> & HTMLAttributes<E>, forwardedRef: ForwardedRef<E>) => ReactNode,
 ): ForwardRefExoticComponent<SlottableProps<P> & RefAttributes<E>> {
   const wrapped = (props: SlottableProps<P> & HTMLAttributes<E>, forwardedRef: ForwardedRef<E>) => {
+    let warn = false;
     if (props.asChild) {
       try {
         const child = Children.only(props.children);
-        console.log(child);
         if (isValidElement(child) && typeof child.type !== 'string' && !(child.type as any)[COMPOSABLE]) {
+          warn = true;
           log.warn('slot child is not composable; create it with composable() or slottable()', {
             child: (child.type as any).displayName ?? (child.type as any).name,
           });
@@ -122,8 +124,15 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
         // Children.only throws if not exactly one child — Slot handles this.
       }
     }
-    return render(props, forwardedRef);
+
+    const result = render(props, forwardedRef);
+    if (!warn) {
+      return result;
+    }
+
+    return createElement('div', { className: 'dx-slot-warning border-2 border-rose-500', role: 'none' }, result);
   };
+
   const component = forwardRef(wrapped as any) as any;
   (component as any)[COMPOSABLE] = true;
   return component;
