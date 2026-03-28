@@ -20,13 +20,10 @@ import { getPluginPath } from '../../meta';
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
   a.localeCompare(b);
 
-export type PluginRegistryProps = ComposableProps<
-  HTMLDivElement,
-  {
-    id: string;
-    plugins: Plugin.Plugin[];
-  }
->;
+export type PluginRegistryProps = ComposableProps<{
+  id: string;
+  plugins: Plugin.Plugin[];
+}>;
 
 export const PluginRegistry = forwardRef<HTMLDivElement, PluginRegistryProps>(
   ({ id, plugins: pluginsProp, ...props }, forwardedRef) => {

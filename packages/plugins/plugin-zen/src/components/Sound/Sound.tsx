@@ -11,10 +11,10 @@ import { Form, type FormFieldMap, SelectField, omitId } from '@dxos/react-ui-for
 import { Sequence } from '../../types';
 import { BRAINWAVE_PRESETS, SAMPLE_URLS } from '../../generator';
 
-export type SoundProps = ComposableProps<HTMLDivElement> & {
+export type SoundProps = ComposableProps<{
   sequence: Sequence.Sequence;
   onUpdate: (sequence: Sequence.Sequence) => void;
-};
+}>;
 
 /** Form editor for a single sequence layer. */
 export const Sound = forwardRef<HTMLDivElement, SoundProps>(({ sequence, onUpdate, ...props }, forwardedRef) => {
@@ -75,7 +75,7 @@ export const Sound = forwardRef<HTMLDivElement, SoundProps>(({ sequence, onUpdat
   );
 
   return (
-    <div {...composableProps<HTMLDivElement>(props)} ref={forwardedRef}>
+    <div {...composableProps(props)} ref={forwardedRef}>
       <Form.Root<Omit<Sequence.Sequence, 'id'>>
         key={`${sequence.id}-${sequence.source.type}-${sequence.source.type === 'generator' ? sequence.source.preset : sequence.source.sample}`}
         schema={schema}

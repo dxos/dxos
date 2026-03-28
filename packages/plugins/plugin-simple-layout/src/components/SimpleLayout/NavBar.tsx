@@ -11,15 +11,12 @@ import { composableProps } from '@dxos/ui-theme';
 
 const NAVBAR_NAME = 'SimpleLayout.NavBar';
 
-export type NavBarProps = ComposableProps<
-  HTMLDivElement,
-  {
-    /** Action graph atom for the toolbar. */
-    actions: Atom.Atom<ActionGraphProps>;
-    /** Action executor callback. */
-    onAction?: ActionExecutor;
-  }
->;
+export type NavBarProps = ComposableProps<{
+  /** Action graph atom for the toolbar. */
+  actions: Atom.Atom<ActionGraphProps>;
+  /** Action executor callback. */
+  onAction?: ActionExecutor;
+}>;
 
 /**
  * Presentational navbar component that renders a toolbar from an action graph.

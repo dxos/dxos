@@ -36,7 +36,6 @@ const useFocus = () => useContext(FocusContext);
 //
 
 type GroupProps = ComposableProps<
-  HTMLDivElement,
   PropsWithChildren<{
     asChild?: boolean;
     orientation?: Axis;

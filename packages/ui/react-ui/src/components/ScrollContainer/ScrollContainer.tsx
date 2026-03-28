@@ -21,7 +21,7 @@ import { composableProps, mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ScrollArea } from '../ScrollArea';
-import { ComposableProps } from '@dxos/ui-types';
+import { type ComposableProps } from '@dxos/ui-types';
 
 const isBottom = (el: HTMLElement | null) => {
   return !!(el && el.scrollHeight - el.scrollTop === el.clientHeight);
@@ -133,12 +133,7 @@ Root.displayName = 'ScrollContainer.Root';
 
 const VIEWPORT_NAME = 'ScrollContainer.Viewport';
 
-type ViewportProps = ComposableProps<
-  HTMLDivElement,
-  {
-    fade?: boolean;
-  }
->;
+type ViewportProps = ComposableProps<{ fade?: boolean }>;
 
 const Viewport = forwardRef<HTMLDivElement, ViewportProps>(({ children, fade, ...props }, forwardedRef) => {
   const scrollerRef = useRef<HTMLDivElement>(null);

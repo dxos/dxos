@@ -210,11 +210,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
     return (
       <ScrollContainer.Root pin ref={scrollerRef}>
-        <ScrollContainer.Viewport
-          classNames={['flex flex-col w-full outline-hidden!', classNames]}
-          tabIndex={0}
-          ref={containerRef}
-        >
+        <ScrollContainer.Viewport classNames={['flex flex-col w-full outline-hidden!', classNames]} ref={containerRef}>
           {commits.length < 1 ? (
             <p className={mx('text-description', 'p-trim-md')}>{t('no commits message')}</p>
           ) : (

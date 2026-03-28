@@ -15,7 +15,6 @@ import { composableProps, mx, subtleHover } from '@dxos/ui-theme';
 const MAX_RENDERED_COUNT = 80;
 
 export type ItemListProps<T> = ComposableProps<
-  HTMLDivElement,
   {
     objects: T[];
   } & Pick<ItemProps<T>, 'debug' | 'onDelete'>

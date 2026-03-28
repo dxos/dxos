@@ -4,13 +4,13 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type CSSProperties, forwardRef } from 'react';
+import React, { type CSSProperties } from 'react';
 
-import { ColumnStyleProps, composableProps } from '@dxos/ui-theme';
-import { ThemedClassName, type SlottableProps } from '@dxos/ui-types';
+import { type ColumnStyleProps, composableProps, slottable } from '@dxos/ui-theme';
+import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { ScrollArea, ScrollAreaRootProps } from '../../components';
+import { ScrollArea, type ScrollAreaRootProps } from '../../components';
 
 //
 // Root
@@ -27,7 +27,7 @@ const gutterSizes: Record<GutterSize, string> = {
   lg: 'var(--dx-gutter-lg)',
 };
 
-type ColumnRootProps = ThemedClassName<SlottableProps<HTMLDivElement, { gutter?: GutterSize }>>;
+type ColumnRootProps = SlottableProps<{ gutter?: GutterSize }>;
 
 /**
  * Creates a 3-column CSS grid with left/right gutter columns and a center content column.
@@ -41,7 +41,7 @@ type ColumnRootProps = ThemedClassName<SlottableProps<HTMLDivElement, { gutter?:
  *
  * Gutter sizes: `'sm'` for compact layouts (Dialog); `'md'` (default); `'lg'` for wider spacing.
  */
-const ColumnRoot = forwardRef<HTMLDivElement, ColumnRootProps>(
+const ColumnRoot = slottable<HTMLDivElement, { gutter?: GutterSize }>(
   ({ children, asChild, role, gutter = 'md', ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
@@ -74,14 +74,14 @@ ColumnRoot.displayName = COLUMN_ROOT_NAME;
 
 const COLUMN_ROW_NAME = 'Column.Row';
 
-type ColumnRowProps = SlottableProps<HTMLDivElement, ColumnStyleProps>;
+type ColumnRowProps = SlottableProps<ColumnStyleProps>;
 
 /**
  * Spans all 3 columns of the parent Column.Root and uses CSS subgrid to inherit their sizing.
  * Children map to: [col-1: icon/slot] [col-2: content] [col-3: icon/action].
  * Must be a direct child of Column.Root.
  */
-const ColumnRow = forwardRef<HTMLDivElement, ColumnRowProps>(
+const ColumnRow = slottable<HTMLDivElement, ColumnStyleProps>(
   ({ children, asChild, role, fullWidth, center, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
@@ -107,25 +107,23 @@ ColumnRow.displayName = COLUMN_ROW_NAME;
 
 const COLUMN_CONTENT_NAME = 'Column.Content';
 
-type ColumnContentProps = SlottableProps<HTMLDivElement>;
+type ColumnContentProps = SlottableProps;
 
 /**
  * Full-width content area that inherits Column.Root's 3-column grid via CSS subgrid.
  * Non-scrolling children default to the center column (between gutters).
  * ScrollArea children span all 3 columns via `[.dx-column_&]:col-span-full`.
  */
-const ColumnContent = forwardRef<HTMLDivElement, ColumnContentProps>(
-  ({ children, asChild, role, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const { className, ...rest } = composableProps(props, { role: 'none' });
-    const Comp = asChild ? Slot : Primitive.div;
-    return (
-      <Comp {...rest} className={tx('column.content', {}, className)} ref={forwardedRef}>
-        {children}
-      </Comp>
-    );
-  },
-);
+const ColumnContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  const { className, ...rest } = composableProps(props, { role: 'none' });
+  const Comp = asChild ? Slot : Primitive.div;
+  return (
+    <Comp {...rest} className={tx('column.content', {}, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 ColumnContent.displayName = COLUMN_CONTENT_NAME;
 
@@ -135,9 +133,9 @@ ColumnContent.displayName = COLUMN_CONTENT_NAME;
 
 const COLUMN_VIEWPORT_NAME = 'Column.Viewport';
 
-type ColumnViewportProps = SlottableProps<HTMLDivElement, Pick<ScrollAreaRootProps, 'thin'>>;
+type ColumnViewportProps = SlottableProps<Pick<ScrollAreaRootProps, 'thin'>>;
 
-const ColumnViewport = forwardRef<HTMLDivElement, ColumnViewportProps>(
+const ColumnViewport = slottable<HTMLDivElement, Pick<ScrollAreaRootProps, 'thin'>>(
   ({ children, asChild, role, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);

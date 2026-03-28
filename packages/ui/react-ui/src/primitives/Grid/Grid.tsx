@@ -2,18 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React from 'react';
 
-import { composableProps, mx } from '@dxos/ui-theme';
-import { type ComposableProps } from '@dxos/ui-types';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
-export type GridProps = ComposableProps<HTMLDivElement> & {
-  cols?: number;
-  rows?: number;
-  grow?: boolean;
-};
+export type GridProps = { cols?: number; rows?: number; grow?: boolean };
 
-export const Grid = forwardRef<HTMLDivElement, GridProps>(
+export const Grid = composable<HTMLDivElement, GridProps>(
   ({ children, style, role, cols, rows, grow = true, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     return (
