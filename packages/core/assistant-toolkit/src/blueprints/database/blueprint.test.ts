@@ -58,9 +58,10 @@ describe('Database Blueprint', () => {
         );
         yield* agent.waitForCompletion();
         const { db } = yield* Database.Service;
-        const schemas = yield* Effect.promise(() =>
-          db.schemaRegistry.query({ typename: 'com.example.type.project', location: ['database', 'runtime'] }).run(),
-        );
+        const schemas = yield* Database.runSchemaQuery({
+          typename: 'com.example.type.project',
+          location: ['database', 'runtime'],
+        });
         expect(schemas.length).toBeGreaterThanOrEqual(1);
       },
       Effect.provide(TestLayer),
