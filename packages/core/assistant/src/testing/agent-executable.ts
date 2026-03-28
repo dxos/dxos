@@ -44,6 +44,7 @@ interface AgentExecutableOptions {
 export const makeAgentExecutable = (options: AgentExecutableOptions) =>
   Process.makeExecutable(
     {
+      // TODO(dmaretskyi): Expand this. Currently prompts that are fed to the agent.
       input: Schema.String,
       output: Schema.Void,
       services: [
@@ -70,6 +71,7 @@ export const makeAgentExecutable = (options: AgentExecutableOptions) =>
           init: Effect.fnUntraced(function* () {}),
           handleInput: Effect.fnUntraced(function* (prompt: string) {
             inputQueue.push({ _tag: 'prompt', content: prompt });
+            yield* storeEvents(inputQueue);
             ctx.setAlarm();
           }),
           alarm: Effect.fnUntraced(

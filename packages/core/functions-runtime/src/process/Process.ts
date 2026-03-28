@@ -43,6 +43,7 @@ export interface Process<I, O, R> {
    *
    * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
+  // TODO(dmaretskyi): onSpawn
   init(): Effect.Effect<void, never, R | BaseServices>;
 
   /**
@@ -55,6 +56,7 @@ export interface Process<I, O, R> {
    *
    * Note: This function should aim to complete in under 5 seconds to avoid exceeding limits in serverless environments.
    */
+  // TODO(dmaretskyi): onInput
   handleInput(input: I): Effect.Effect<void, never, R | BaseServices>;
 
   /**
@@ -62,6 +64,7 @@ export interface Process<I, O, R> {
    *
    * @throws Throwing in the handler will terminate the process with an error.
    */
+  // TODO(dmaretskyi): onAlarm
   alarm(): Effect.Effect<void, never, R | BaseServices>;
 
   /**
@@ -69,6 +72,7 @@ export interface Process<I, O, R> {
    *
    * This allows the parent process to hibernate while a long-running child process is running.
    */
+  // TODO(dmaretskyi): onChildEvent
   childEvent(event: ChildEvent<unknown>): Effect.Effect<void, never, R | BaseServices>;
 }
 
@@ -96,6 +100,7 @@ export interface ProcessContext<I, O> {
    * Complete this process with sucessful result.
    * No additional events will be pushed to the process.
    */
+  // TODO(dmaretskyi): succeed
   exit(): void;
 
   /**
@@ -124,12 +129,17 @@ export interface ProcessContext<I, O> {
 export const ExecutableTypeId = '~@dxos/functions-runtime/Executable' as const;
 export type ExecutableTypeId = typeof ExecutableTypeId;
 
+/**
+ * A process factory.
+ */
+// TODO(dmaretskyi): ProcessModule ProcessFactory?
 export interface Executable<I, O, R> extends Executable.Variance<I, O, R> {
   readonly services: readonly Context.Tag<any, any>[];
 
   /**
    * Create new process of this executable.
    */
+  // TODO(dmaretskyi): create
   run(ctx: ProcessContext<I, O>): Effect.Effect<Process<I, O, R>, never, R | BaseServices | Scope.Scope>;
 }
 
@@ -220,15 +230,18 @@ export enum State {
   HYBERNATING = 'hybernating',
 
   // Process is waiting for input. It will only resume when input is submitted.
+  // TODO(dmaretskyi): IDLE
   SUSPENDED = 'suspended',
 
   // Process is terminating and will transition to TERMINATED state.
+  // TODO(dmaretskyi): Consider removing.
   TERMINATING = 'terminating',
 
   // Process has been externally terminated.
   TERMINATED = 'terminated',
 
   // Process has completed successfully.
+  // TODO(dmaretskyi): SUCCEEDED
   COMPLETED = 'completed',
 
   // Process has failed.

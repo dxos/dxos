@@ -106,6 +106,7 @@ const handlers = OperationHandlerSet.make(
     ),
   ),
 );
+
 const ResearchBlueprint = Blueprint.make({
   key: 'org.dxos.blueprint.research',
   name: 'Research',
