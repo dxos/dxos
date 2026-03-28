@@ -81,17 +81,23 @@ export const inspect = Command.make(
         yield* Console.log('  Metadata: not in registry');
       }
 
-      yield* printSection(`Members (${result.members.count})`, result.members.list.map((member) => {
-        const role = member.role ? ` [${member.role}]` : '';
-        const agent = member.agentKey ? ` agent:${member.agentKey.slice(0, 12)}...` : '';
-        return `${member.identityKey}${role}${agent}`;
-      }));
+      yield* printSection(
+        `Members (${result.members.count})`,
+        result.members.list.map((member) => {
+          const role = member.role ? ` [${member.role}]` : '';
+          const agent = member.agentKey ? ` agent:${member.agentKey.slice(0, 12)}...` : '';
+          return `${member.identityKey}${role}${agent}`;
+        }),
+      );
 
       const controlProgress = Object.entries(result.controlFeeds.replicationProgress);
       if (controlProgress.length > 0) {
-        yield* printSection('Control Feeds', controlProgress.map(
-          ([key, progress]) => `${key}: replicated=${progress.replicated} processed=${progress.processed}`,
-        ));
+        yield* printSection(
+          'Control Feeds',
+          controlProgress.map(
+            ([key, progress]) => `${key}: replicated=${progress.replicated} processed=${progress.processed}`,
+          ),
+        );
       }
 
       const { dataFeeds } = result.echo;
@@ -104,16 +110,12 @@ export const inspect = Command.make(
         `Documents:        ${result.echo.documentCount} (${result.echo.indexedDocumentCount} indexed)`,
         `Objects:          ${result.echo.objectCount} active, ${result.echo.deletedObjectCount} deleted`,
         `Indexer:          ${indexerLabel}`,
-        ...indexer.cursors.map(
-          (cursor) => `  ${cursor.indexName}/${cursor.sourceName}: ${cursor.cursor}`,
-        ),
+        ...indexer.cursors.map((cursor) => `  ${cursor.indexName}/${cursor.sourceName}: ${cursor.cursor}`),
         ...dataFeeds.byNamespace.flatMap((ns) => [
           `${ns.namespace}:`,
           ...ns.feeds.map((feed) => `  ${feed.feedId} (${feed.blockCount} blocks)`),
         ]),
-        ...result.echo.objectsByType.slice(0, 10).map(
-          (entry) => `  ${entry.typeDxn}: ${entry.count}`,
-        ),
+        ...result.echo.objectsByType.slice(0, 10).map((entry) => `  ${entry.typeDxn}: ${entry.count}`),
         ...(result.echo.objectsByType.length > 10
           ? [`  ... and ${result.echo.objectsByType.length - 10} more types`]
           : []),
@@ -130,9 +132,10 @@ export const inspect = Command.make(
       }
 
       if (result.durableObjects.length > 0) {
-        yield* printSection('Durable Objects', result.durableObjects.map(
-          (dobj) => `${dobj.type}: ${dobj.doId}`,
-        ));
+        yield* printSection(
+          'Durable Objects',
+          result.durableObjects.map((dobj) => `${dobj.type}: ${dobj.doId}`),
+        );
       }
     }
   }),

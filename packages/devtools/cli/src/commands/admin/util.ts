@@ -61,9 +61,7 @@ export const adminDownload = (path: string) =>
     const baseUrl = yield* Config.string('DX_EDGE_BASE_URL');
 
     const url = new URL(path, baseUrl);
-    const request = HttpClientRequest.get(url.toString()).pipe(
-      HttpClientRequest.setHeader('X-Admin-Key', adminKey),
-    );
+    const request = HttpClientRequest.get(url.toString()).pipe(HttpClientRequest.setHeader('X-Admin-Key', adminKey));
 
     const response = yield* HttpClient.execute(request).pipe(Effect.provide(FetchHttpClient.layer));
 

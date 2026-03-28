@@ -55,8 +55,7 @@ export const exportSpace = Command.make(
     const result = data as ExportResult;
 
     if (download) {
-      const outputPath =
-        output._tag === 'Some' ? output.value : `export-${spaceId}.json`;
+      const outputPath = output._tag === 'Some' ? output.value : `export-${spaceId}.json`;
 
       const response = yield* adminDownload(result.downloadPath).pipe(
         Effect.catchAll((error) => Effect.fail(new Error(formatAdminError(error)))),
@@ -68,7 +67,9 @@ export const exportSpace = Command.make(
       if (yield* CommandConfig.isJson) {
         yield* Console.log(JSON.stringify({ ...result, savedTo: outputPath }, null, 2));
       } else {
-        yield* Console.log(`Export saved to ${outputPath} (${formatBytes(result.sizeBytes)}, ${result.objectCount} objects).`);
+        yield* Console.log(
+          `Export saved to ${outputPath} (${formatBytes(result.sizeBytes)}, ${result.objectCount} objects).`,
+        );
       }
     } else {
       if (yield* CommandConfig.isJson) {
