@@ -2,8 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
+import { createRequire } from 'node:module';
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
+
+const require = createRequire(import.meta.url);
 
 import type * as Swc from '@swc/core';
 import * as Array from 'effect/Array';
@@ -11,16 +14,17 @@ import * as Function from 'effect/Function';
 import { type Format, type Platform, type Plugin, build, formatMessages } from 'esbuild';
 import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
-import { yamlPlugin } from 'esbuild-plugin-yaml';
+import esbuildPluginYaml from 'esbuild-plugin-yaml';
+const { yamlPlugin } = esbuildPluginYaml;
 import pkgUp from 'pkg-up';
 
 import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
 
-import { bundleDepsPlugin } from './bundle-deps-plugin';
-import { esmOutputToCjs } from './esm-output-to-cjs-plugin';
-import { fixRequirePlugin } from './fix-require-plugin';
-import { restrictRelativeImportsPlugin } from './plugin-restrict-relative-imports';
-import { SwcTransformPlugin } from './swc-transform-plugin';
+import { bundleDepsPlugin } from './bundle-deps-plugin.ts';
+import { esmOutputToCjs } from './esm-output-to-cjs-plugin.ts';
+import { fixRequirePlugin } from './fix-require-plugin.ts';
+import { restrictRelativeImportsPlugin } from './plugin-restrict-relative-imports.ts';
+import { SwcTransformPlugin } from './swc-transform-plugin.ts';
 
 export interface EsbuildExecutorOptions {
   bundle: boolean;

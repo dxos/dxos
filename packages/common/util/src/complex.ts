@@ -214,6 +214,27 @@ export class ComplexMap<K, V> implements Map<K, V> {
     return this;
   }
 
+  getOrInsert(key: K, defaultValue: V): V {
+    const primitive = this._keyProjection(key);
+    if (this._values.has(primitive)) {
+      return this._values.get(primitive)!;
+    }
+    this._keys.set(primitive, key);
+    this._values.set(primitive, defaultValue);
+    return defaultValue;
+  }
+
+  getOrInsertComputed(key: K, callbackfn: (key: K) => V): V {
+    const primitive = this._keyProjection(key);
+    if (this._values.has(primitive)) {
+      return this._values.get(primitive)!;
+    }
+    const value = callbackfn(key);
+    this._keys.set(primitive, key);
+    this._values.set(primitive, value);
+    return value;
+  }
+
   get size(): number {
     return this._keys.size;
   }

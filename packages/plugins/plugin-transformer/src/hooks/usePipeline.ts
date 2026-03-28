@@ -8,24 +8,6 @@ import { useEffect, useRef, useState } from 'react';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-// Add WebGPU types.
-declare global {
-  interface Navigator {
-    gpu?: {
-      requestAdapter(): Promise<GPUAdapter | null>;
-    };
-  }
-
-  interface GPUAdapter {
-    requestAdapterInfo(): Promise<GPUAdapterInfo>;
-  }
-
-  interface GPUAdapterInfo {
-    vendor: string;
-    architecture: string;
-    description: string;
-  }
-}
 
 // Configure cache and runtime settings.
 env.cacheDir = './.cache';
@@ -87,20 +69,15 @@ export const usePipeline = ({ active, model, debug }: PipelineConfig) => {
               throw new Error('No GPU adapter found');
             }
 
-            // Try to get adapter info if available.
-            try {
-              const adapterInfo = await adapter.requestAdapterInfo();
-              if (adapterInfo) {
-                setState((prev) => ({
-                  ...prev,
-                  gpuInfo: `${adapterInfo.description || 'GPU'} (${adapterInfo.vendor || 'Unknown'})`,
-                }));
-              } else {
-                setState((prev) => ({ ...prev, gpuInfo: 'GPU Available (details unknown)' }));
-              }
-            } catch (err) {
-              log.warn('could not get GPU info', { err });
-              setState((prev) => ({ ...prev, gpuInfo: 'GPU Available (details unavailable)' }));
+            // Get adapter info from the info property (modern WebGPU API).
+            const adapterInfo = adapter.info;
+            if (adapterInfo) {
+              setState((prev) => ({
+                ...prev,
+                gpuInfo: `${adapterInfo.description || 'GPU'} (${adapterInfo.vendor || 'Unknown'})`,
+              }));
+            } else {
+              setState((prev) => ({ ...prev, gpuInfo: 'GPU Available (details unknown)' }));
             }
           } catch (err) {
             log.warn('WebGPU initialization failed', { err });

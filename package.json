@@ -88,7 +88,6 @@
     "@types/uuid": "catalog:",
     "@types/wicg-file-system-access": "catalog:",
     "@types/zen-observable": "catalog:",
-    "@typescript/native-preview": "catalog:",
     "@vitejs/plugin-react-swc": "catalog:",
     "@vitest/browser": "catalog:",
     "@vitest/coverage-v8": "catalog:",

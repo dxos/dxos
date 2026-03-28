@@ -47,7 +47,7 @@ export type DiKey<T> =
     }
   | SymbolDiKey<T>;
 
-export const DiKey = new (class DiKeyConstructor {
+class DiKeyConstructor {
   /**
    * Needed to ensure referential equality of combined keys.
    *
@@ -57,7 +57,7 @@ export const DiKey = new (class DiKeyConstructor {
    */
   // TODO(dmaretskyi): Disable private members lowering for dev env.
   // TODO(dmaretskyi): Could be a weak map after a NodeJS upgrade.
-  #combinedRegistry = new WeakMap();
+  private _combinedRegistry = new WeakMap();
 
   define<T>(name: string): DiKey<T> {
     return new SymbolDiKey(name);
@@ -88,24 +88,26 @@ export const DiKey = new (class DiKeyConstructor {
    * Maintains referential equality: `DiKey.combine(A, B) === DiKey.combine(A, B)`
    */
   combine(...ids: DiKey<any>[]) {
-    const map = this.#lookupCombined(this.#combinedRegistry, ids);
-    return defaultMap(this.#combinedRegistry, map, () => this.#combinedDescription(ids));
+    const map = this._lookupCombined(this._combinedRegistry, ids);
+    return defaultMap(this._combinedRegistry, map, () => this._combinedDescription(ids));
   }
 
   getSingletonFactory<T>(id: DiKey<T>): SingletonFactory<T> | undefined {
     return (id as any)[symbolSingleton];
   }
 
-  #lookupCombined(map: WeakMap<any, any>, [first, ...rest]: DiKey<any>[]): WeakMap<any, any> {
+  private _lookupCombined(map: WeakMap<any, any>, [first, ...rest]: DiKey<any>[]): WeakMap<any, any> {
     const value = defaultMap(map, first, () => new Map());
     if (rest.length > 0) {
-      return this.#lookupCombined(value, rest);
+      return this._lookupCombined(value, rest);
     } else {
       return value;
     }
   }
 
-  #combinedDescription([first, ...rest]: DiKey<any>[]) {
+  private _combinedDescription([first, ...rest]: DiKey<any>[]) {
     return `${this.stringify(first)}<${rest.map(this.stringify).join(', ')}>`;
   }
-})();
+}
+
+export const DiKey = new DiKeyConstructor();

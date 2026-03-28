@@ -23,6 +23,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
+    "noUncheckedSideEffectImports": false,
     "stripInternal": true,
     "target": "ESNext",
 

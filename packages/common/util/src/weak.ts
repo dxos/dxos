@@ -60,6 +60,25 @@ export class WeakDictionary<K, V extends object> implements Map<K, V> {
     return this;
   }
 
+  getOrInsert(key: K, defaultValue: V): V {
+    const existing = this.get(key);
+    if (existing !== undefined) {
+      return existing;
+    }
+    this.set(key, defaultValue);
+    return defaultValue;
+  }
+
+  getOrInsertComputed(key: K, callbackfn: (key: K) => V): V {
+    const existing = this.get(key);
+    if (existing !== undefined) {
+      return existing;
+    }
+    const value = callbackfn(key);
+    this.set(key, value);
+    return value;
+  }
+
   has(key: K): boolean {
     return this._internal.has(key) && this._internal.get(key)!.deref() !== undefined;
   }
