@@ -8,6 +8,7 @@ import { Splitter, type SplitterMode } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { useSimpleLayoutState } from '../../hooks';
+import { DebugOverlay } from '../DebugOverlay';
 import { Dialog } from '../Dialog';
 import { MobileLayout } from '../MobileLayout';
 import { PopoverContent, PopoverRoot } from '../Popover';
@@ -44,30 +45,32 @@ export const SimpleLayout = () => {
   }, [state.drawerState, keyboardOpen]);
 
   return (
-    <PopoverRoot>
-      <Mosaic.Root classNames='dx-container grid relative'>
-        <MobileLayout.Root
-          classNames='bg-toolbar-surface'
-          onKeyboardOpenChange={(nextKeyboardOpen: boolean) => setKeyboardOpen(nextKeyboardOpen)}
-          onFocusedElementChange={handleFocusedElementChange}
-        >
-          <MobileLayout.Panel
-            safe={{ top: true, bottom: splitterMode === 'upper' }}
-            // classNames='border border-green-500'
+    <DebugOverlay.Root enabled={false}>
+      <PopoverRoot>
+        <Mosaic.Root classNames='dx-container grid relative'>
+          <MobileLayout.Root
+            classNames='bg-toolbar-surface'
+            onKeyboardOpenChange={(nextKeyboardOpen: boolean) => setKeyboardOpen(nextKeyboardOpen)}
+            onFocusedElementChange={handleFocusedElementChange}
           >
-            <Splitter.Root mode={splitterMode} ratio={0.55}>
-              <Splitter.Panel position='upper'>
-                <Main />
-              </Splitter.Panel>
-              <Splitter.Panel position='lower' ref={drawerRef}>
-                <Drawer />
-              </Splitter.Panel>
-            </Splitter.Root>
-            <Dialog />
-            <PopoverContent />
-          </MobileLayout.Panel>
-        </MobileLayout.Root>
-      </Mosaic.Root>
-    </PopoverRoot>
+            <MobileLayout.Panel
+              safe={{ top: true, bottom: splitterMode === 'upper' }}
+              // classNames='border border-green-500'
+            >
+              <Splitter.Root mode={splitterMode} ratio={0.55}>
+                <Splitter.Panel position='upper'>
+                  <Main />
+                </Splitter.Panel>
+                <Splitter.Panel position='lower' ref={drawerRef}>
+                  <Drawer />
+                </Splitter.Panel>
+              </Splitter.Root>
+              <Dialog />
+              <PopoverContent />
+            </MobileLayout.Panel>
+          </MobileLayout.Root>
+        </Mosaic.Root>
+      </PopoverRoot>
+    </DebugOverlay.Root>
   );
 };

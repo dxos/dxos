@@ -3,20 +3,14 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, {
-  type PropsWithChildren,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, forwardRef, useEffect, useLayoutEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+import { useDebugLog } from '../DebugOverlay';
 
 // TODO(burdon): Move into @dxos/react-ui?
 
@@ -42,7 +36,7 @@ type MobileLayoutRootProps = ThemedClassName<
   PropsWithChildren<{
     transition?: number;
     onKeyboardOpenChange?: (nextState: boolean) => void;
-    /** Fired when an editable element (input/textarea/contenteditable) gains focus. */
+    /** Fired when an editable element (input/textarea/contenteditable) gains or loses focus. */
     onFocusedElementChange?: (element: HTMLElement | null) => void;
   }>
 >;
@@ -59,6 +53,7 @@ const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
     const { open: keyboardOpen, duration } = useIOSKeyboard();
     useAutoScroll();
     useLockBodyScroll(keyboardOpen);
+
     // Fire synchronously after DOM mutation (before paint) so SimpleLayout's Splitter mode
     // change is batched into the same paint as the keyboard open state change, preventing
     // intermediate render frames from showing an un-adjusted layout.
@@ -95,24 +90,19 @@ const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
     // Use the native keyboard animation duration so the height transition syncs with iOS.
     const animationDuration = duration ?? transition;
 
-    // TODO(burdon): Remove debug overlay.
-    // const { overlayRef, overlay } = useDebugOverlay();
-    // void overlayRef; // used via window.__mobileDebugLog
-
     return (
       <MobileLayoutProvider keyboardOpen={keyboardOpen}>
         <div
           {...props}
           role='none'
           style={{
-            // transition: `height ${animationDuration}ms ease-out`,
+            transition: `height ${animationDuration}ms ease-out`,
             height: 'calc(100vh - var(--kb-height, 0px))',
           }}
           className={mx('fixed top-0 left-0 right-0 grid overflow-hidden', classNames)}
           ref={forwardedRef}
         >
           {children}
-          {/* {overlay} */}
         </div>
       </MobileLayoutProvider>
     );
@@ -172,75 +162,23 @@ export { useMobileLayout };
 export type { MobileLayoutRootProps, MobileLayoutPanelProps };
 
 /**
- * On-screen debug overlay for mobile layout development.
- * Displays timestamped log entries directly in the Simulator without needing DevTools.
- * Exposes window.__mobileDebugLog(msg) for use by other hooks in this file.
- */
-const useDebugOverlay = () => {
-  const overlayRef = useRef<HTMLDivElement>(null);
-
-  const dbg = useCallback((msg: string) => {
-    if (!overlayRef.current) {
-      return;
-    }
-
-    const line = document.createElement('pre');
-    line.textContent = `${(performance.now() / 1000).toFixed(2).padStart(8, ' ')} ${msg}`;
-    overlayRef.current.prepend(line);
-    while (overlayRef.current.children.length > 5) {
-      overlayRef.current.lastChild?.remove();
-    }
-  }, []);
-
-  useEffect(() => {
-    (window as any).__mobileDebugLog = dbg;
-    return () => {
-      (window as any).__mobileDebugLog = undefined;
-    };
-  }, [dbg]);
-
-  const overlay = (
-    <div
-      ref={overlayRef}
-      style={{
-        position: 'fixed',
-        bottom: 'calc(var(--kb-height, 0px) + 8px)',
-        left: 8,
-        right: 8,
-        background: 'rgba(0,0,0,0.8)',
-        color: '#0f0',
-        fontSize: 10,
-        fontFamily: 'monospace',
-        padding: 6,
-        borderRadius: 4,
-        zIndex: 9999,
-        pointerEvents: 'none',
-      }}
-    />
-  );
-
-  return { overlayRef, dbg, overlay };
-};
-
-/**
  * Prevents iOS (WKWebView) from shifting the layout when the keyboard appears.
  *
  * Scroll events and window.scrollY stay at 0 in this WKWebView setup — the shift is
  * caused by the browser's scroll-into-view for the focused input. We keep a window
- * scroll reset as belt-and-suspenders, and also monitor visualViewport.offsetTop
- * which tracks native UIScrollView shifts that JavaScript scroll events miss.
+ * scroll reset as belt-and-suspenders, and also monitor container scroll events.
  */
 const useAutoScroll = () => {
+  const { dbg } = useDebugLog('useAutoScroll');
+
   useEffect(() => {
-    const dbg: (msg: string) => void = (window as any).__mobileDebugLog ?? (() => {});
     const resetScroll = () => {
       if (window.scrollX !== 0 || window.scrollY !== 0) {
         window.scrollTo(0, 0);
       }
     };
 
-    // Detect which container element is scrolling (window.scrollY stays at 0).
-    // TODO(burdon): Remove debug logging.
+    // TODO(burdon): Remove debug logging. Detect which container element is scrolling.
     const detectContainerScroll = (event: Event) => {
       const el = event.target as HTMLElement;
       if (el === document.documentElement || el === document.body) {
@@ -273,7 +211,7 @@ const useAutoScroll = () => {
         { capture: true },
       ),
     );
-  }, []);
+  }, [dbg]);
 };
 
 /**
@@ -383,6 +321,8 @@ type IOSKeyboard = {
  * Falls back to VisualViewport API on other platforms.
  */
 const useIOSKeyboard = (): IOSKeyboard => {
+  const { dbg } = useDebugLog('useIOSKeyboard');
+
   const [open, setOpen] = useState(false);
   const [height, setHeight] = useState(0);
   const [duration, setDuration] = useState<number | undefined>(undefined);
@@ -419,17 +359,13 @@ const useIOSKeyboard = (): IOSKeyboard => {
           const durationMs = duration > 10 ? duration : duration * 1000;
 
           // TODO(burdon): Remove debug logging.
-          const dbg: (msg: string) => void = (window as any).__mobileDebugLog ?? (() => {});
           const vp = window.visualViewport;
-          dbg(
-            `kb:${type} h=${height} dur=${duration} scrollY=${window.scrollY} vpOffset=${vp?.offsetTop?.toFixed(0) ?? '?'}`,
-          );
+          dbg(`kb:${type} h=${height} dur=${duration} scrollY=${window.scrollY} vpOffset=${vp?.offsetTop?.toFixed(0) ?? '?'}`);
           log.info('keyboard event', { type, height, duration });
 
           updateState(height, type === 'show', durationMs);
 
           // RAF loop: monitor visualViewport.offsetTop and window.scrollY every frame.
-          // offsetTop tracks native UIScrollView shifts that window.scrollY misses.
           // TODO(burdon): Remove debug logging.
           const end = performance.now() + durationMs + 300;
           let prevOffsetTop = vp?.offsetTop ?? 0;
@@ -453,7 +389,7 @@ const useIOSKeyboard = (): IOSKeyboard => {
         },
       ),
     );
-  }, []);
+  }, [dbg]);
 
   return { open, height, duration };
 };
