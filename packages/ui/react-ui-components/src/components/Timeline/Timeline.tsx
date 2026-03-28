@@ -153,13 +153,20 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     const [current, setCurrent] = useState<number | undefined>();
     const currentRef = useDynamicRef(current);
     const currentCommit = useMemo(() => (current !== undefined ? commits[current] : undefined), [current, commits]);
+
     useEffect(() => {
       onCurrentChange?.({ current, commit: current === undefined ? undefined : commits[current] });
       const el = containerRef.current?.querySelector(`[data-index="${current}"]`);
       el?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
     }, [current]);
+
     useEffect(() => {
-      return addEventListener(containerRef.current!, 'keydown', (event) => {
+      if (!containerRef.current) {
+        return;
+      }
+
+      return addEventListener(containerRef.current, 'keydown', (event) => {
+        console.log('::::::', event);
         switch (event.key) {
           case 'ArrowUp': {
             event.preventDefault(); // Prevent implicit scrolling.
@@ -213,15 +220,17 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
 
     return (
       <ScrollContainer.Root pin ref={scrollerRef}>
-        <ScrollContainer.Viewport ref={containerRef}>
+        <ScrollContainer.Viewport>
           <div
+            tabIndex={0}
             role='none'
-            className='grid'
+            className='grid outline-none'
             style={{
               gridTemplateColumns: ['min-content', showTimestamp && '96px', showIcon && '1.5rem', '1fr']
                 .filter(Boolean)
                 .join(' '),
             }}
+            ref={containerRef}
           >
             {commits.length < 1 ? (
               <p className='col-span-full text-description p-trim-md'>{t('no commits message')}</p>
@@ -248,7 +257,6 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
                     aria-current={current === index}
                     className={mx(
                       'group col-span-full grid grid-cols-subgrid gap-1 overflow-hidden items-center',
-                      // TODO(burdon): Factor out fragment.
                       'aria-[current=true]:bg-active-surface hover:bg-hover-surface',
                       hasLink && 'cursor-pointer',
                     )}
