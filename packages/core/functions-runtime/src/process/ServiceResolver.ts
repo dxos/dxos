@@ -97,8 +97,6 @@ export const layerRequirements = <const Tags extends readonly Context.Tag<any, a
 ): Layer.Layer<ServiceResolver, never, Context.Tag.Identifier<Tags[number]>> =>
   Layer.effect(ServiceResolver, fromRequirements(...tags));
 
-
-
 /**
  * Compose multiple resolvers left to right. Earlier resolvers take precedence:
  * the first resolver that can satisfy a tag wins.

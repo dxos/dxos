@@ -109,17 +109,6 @@ export interface Manager {
   attach<I, O>(id: Process.ID): Effect.Effect<Handle<I, O>>;
 
   /**
-   * Attach to an existing process if it exists, otherwise spawn a new process for the executable.
-   * `executable` and `options` are ignored if the process already exists.
-   */
-  // TODO(dmaretskyi): attach or spawn
-  ensure<I, O>(
-    id: Process.ID,
-    executable: Process.Executable<I, O, any>,
-    options?: SpawnOptions,
-  ): Effect.Effect<Handle<I, O>>;
-
-  /**
    * List all spawned processes.
    */
   list(): Effect.Effect<readonly Handle.Any[]>;
@@ -641,18 +630,6 @@ export class ProcessManagerImpl implements Manager {
 
       return handle;
     });
-  }
-
-  ensure<I, O>(
-    id: Process.ID,
-    executable: Process.Executable<I, O, any>,
-    options?: SpawnOptions,
-  ): Effect.Effect<Handle<I, O>> {
-    const process = this.#handles.get(id);
-    if (process) {
-      return Effect.succeed(process);
-    }
-    return this.spawn(executable, options);
   }
 
   /**

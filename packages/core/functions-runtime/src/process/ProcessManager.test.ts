@@ -216,4 +216,46 @@ describe('ProcessManagerImpl', () => {
       yield* handle2.terminate();
     }, Effect.provide(TestLayer)),
   );
+
+  describe('ProcessMonitor', () => {
+    it.effect(
+      'processTree lists spawned process with expected pid and state',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.ProcessManagerService;
+        const monitor = yield* Process.ProcessMonitorService;
+
+        const handle = yield* manager.spawn(makeWaitingExecutable());
+
+        const tree = yield* monitor.processTree;
+        expect(tree).toHaveLength(1);
+        expect(tree[0]!.pid).toEqual(handle.pid);
+        expect(tree[0]!.parentPid).toBeNull();
+        expect(tree[0]!.state).toEqual(Process.State.HYBERNATING);
+
+        yield* handle.terminate();
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'processTree records parentPid for child processes',
+      Effect.fn(function* ({ expect }) {
+        const manager = yield* ProcessManager.ProcessManagerService;
+        const monitor = yield* Process.ProcessMonitorService;
+
+        const parent = yield* manager.spawn(makeWaitingExecutable());
+        const child = yield* manager.spawn(makeWaitingExecutable(), { parentProcessId: parent.pid });
+
+        const tree = yield* monitor.processTree;
+        expect(tree).toHaveLength(2);
+
+        const parentInfo = tree.find((node) => node.pid === parent.pid);
+        const childInfo = tree.find((node) => node.pid === child.pid);
+        expect(parentInfo?.parentPid).toBeNull();
+        expect(childInfo?.parentPid).toEqual(parent.pid);
+
+        yield* parent.terminate();
+        yield* child.terminate();
+      }, Effect.provide(TestLayer)),
+    );
+  });
 });
