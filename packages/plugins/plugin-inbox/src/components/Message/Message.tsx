@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type ComponentPropsWithoutRef, forwardRef, type PropsWithChildren, useMemo, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useMemo, useState } from 'react';
 
 import { type DXN } from '@dxos/echo';
 import { ComposableProps, Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
@@ -17,7 +17,7 @@ import {
   decorateMarkdown,
   preview,
 } from '@dxos/ui-editor';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
@@ -84,7 +84,7 @@ const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 type MessageToolbarProps = ComposableProps;
 
-const MessageToolbar = forwardRef<HTMLDivElement, MessageToolbarProps>((props, forwardedRef) => {
+const MessageToolbar = composable<HTMLDivElement, MessageToolbarProps>((props, forwardedRef) => {
   const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
   const menuActions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
@@ -106,21 +106,25 @@ const MESSAGE_VIEWPORT_NAME = 'Message.Viewport';
 
 type MessageViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
 
-const MessageViewport = ({ classNames, children, role, ...props }: MessageViewportProps) => {
-  return (
-    <div
-      role='none'
-      {...props}
-      className={mx(
-        'overflow-hidden grid',
-        role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
-        classNames,
-      )}
-    >
-      {children}
-    </div>
-  );
-};
+const MessageViewport = composable<HTMLDivElement, MessageViewportProps>(
+  ({ classNames, children, role, ...props }, forwardedRef) => {
+    return (
+      <div
+        {...composableProps(props, {
+          role: 'none',
+          className: mx(
+            'overflow-hidden grid',
+            role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
+            classNames,
+          ),
+        })}
+        ref={forwardedRef}
+      >
+        {children}
+      </div>
+    );
+  },
+);
 
 MessageViewport.displayName = MESSAGE_VIEWPORT_NAME;
 

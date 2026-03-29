@@ -40,18 +40,18 @@ export const compactOptions: TimelineOptions = {
  */
 export type Commit = {
   id: string;
+  timestamp?: Date; // TODO(burdon): Unix time?
   parents?: string[];
   branch: string;
   icon?: string;
   level?: LogLevel;
   message: string;
-  timestamp?: Date; // TODO(burdon): Number?
   tags?: string[];
-  /**
-   * Optional DXN link for navigation to referenced objects.
-   */
+  /** DXN link for navigation to referenced objects. */
   link?: string;
 };
+
+const empty = Object.freeze([]);
 
 export type TimelineProps = ThemedClassName<{
   /** Optional whitelist. */
@@ -70,8 +70,6 @@ export type TimelineProps = ThemedClassName<{
   onCommitClick?: (commit: Commit) => void;
 }>;
 
-const empty = Object.freeze([]);
-
 /**
  * GitGraph-style timeline.
  */
@@ -81,7 +79,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
       classNames,
       branches: branchesProp,
       commits = empty,
-      showTimestamp = true,
+      showTimestamp = false,
       showIcon = true,
       compact = false,
       options = compact ? compactOptions : defaultOptions,
@@ -166,7 +164,6 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
       }
 
       return addEventListener(containerRef.current, 'keydown', (event) => {
-        console.log('::::::', event);
         switch (event.key) {
           case 'ArrowUp': {
             event.preventDefault(); // Prevent implicit scrolling.
@@ -219,7 +216,7 @@ export const Timeline = forwardRef<ScrollController, TimelineProps>(
     }, [commits, containerRef.current]);
 
     return (
-      <ScrollContainer.Root pin ref={scrollerRef}>
+      <ScrollContainer.Root classNames={classNames} pin ref={scrollerRef}>
         <ScrollContainer.Viewport>
           <div
             role='none'
