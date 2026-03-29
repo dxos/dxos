@@ -405,7 +405,7 @@ catalog:
   glsl-noise: ^0.0.0
   glslify: ^7.1.1
   handlebars: 4.7.8
-  happy-dom: ^20.0.0
+  happy-dom: ^20.8.9
   hastscript: ^7.1.0
   highlight.js: ^11.9.0
   husky: ^8.0.0
