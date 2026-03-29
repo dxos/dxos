@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type ComponentPropsWithoutRef, type PropsWithChildren, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useMemo, useState } from 'react';
 
 import { type DXN } from '@dxos/echo';
 import { ComposableProps, Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
@@ -104,7 +104,7 @@ MessageToolbar.displayName = MESSAGE_TOOLBAR_NAME;
 
 const MESSAGE_VIEWPORT_NAME = 'Message.Viewport';
 
-type MessageViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
+type MessageViewportProps = ThemedClassName<PropsWithChildren>;
 
 const MessageViewport = composable<HTMLDivElement, MessageViewportProps>(
   ({ classNames, children, role, ...props }, forwardedRef) => {
@@ -178,9 +178,9 @@ MessageHeader.displayName = MESSAGE_HEADER_NAME;
 
 const MESSAGE_CONTENT_NAME = 'Message.Content';
 
-type MessageContentProps = ThemedClassName<{}>;
+type MessageBodyProps = ThemedClassName;
 
-const MessageContent = ({ classNames }: MessageContentProps) => {
+const MessageBody = ({ classNames }: MessageBodyProps) => {
   const { message, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
   const { themeMode } = useThemeContext();
 
@@ -219,7 +219,7 @@ const MessageContent = ({ classNames }: MessageContentProps) => {
   );
 };
 
-MessageContent.displayName = MESSAGE_CONTENT_NAME;
+MessageBody.displayName = MESSAGE_CONTENT_NAME;
 
 //
 // Message
@@ -231,7 +231,7 @@ export const Message = {
   Toolbar: MessageToolbar,
   Viewport: MessageViewport,
   Header: MessageHeader,
-  Content: MessageContent,
+  Body: MessageBody,
 };
 
-export type { MessageRootProps, MessageToolbarProps, MessageViewportProps, MessageHeaderProps, MessageContentProps };
+export type { MessageRootProps, MessageToolbarProps, MessageViewportProps, MessageHeaderProps, MessageBodyProps };
