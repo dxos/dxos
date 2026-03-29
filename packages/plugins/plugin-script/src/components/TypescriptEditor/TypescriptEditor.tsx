@@ -9,10 +9,11 @@ import { lintKeymap } from '@codemirror/lint';
 import { Prec } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import { type VirtualTypeScriptEnvironment } from '@typescript/vfs';
 import { continueKeymap } from '@valtown/codemirror-continue';
 import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } from '@valtown/codemirror-ts';
-import React, { memo } from 'react';
+import React from 'react';
 
 import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
@@ -25,7 +26,7 @@ import {
   createThemeExtensions,
   defaultStyles,
 } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = ThemedClassName<
@@ -39,19 +40,23 @@ export type TypescriptEditorProps = ThemedClassName<
   } & Pick<UseTextEditorProps, 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>
 >;
 
-export const TypescriptEditor = memo(
-  ({
-    classNames,
-    id,
-    role = 'article',
-    inputMode = 'vscode',
-    env,
-    options,
-    initialValue,
-    extensions,
-    scrollTo,
-    selection,
-  }: TypescriptEditorProps) => {
+export const TypescriptEditor = composable<HTMLDivElement, TypescriptEditorProps>(
+  (
+    {
+      classNames,
+      id,
+      role = 'article',
+      inputMode = 'vscode',
+      env,
+      options,
+      initialValue,
+      extensions,
+      scrollTo,
+      selection,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const { themeMode } = useThemeContext();
     const { parentRef, focusAttributes } = useTextEditor(
       () => ({
@@ -98,7 +103,12 @@ export const TypescriptEditor = memo(
       [themeMode, id, extensions, inputMode, selection, scrollTo, env],
     );
 
-    return <div ref={parentRef} className={mx(classNames)} {...focusAttributes} />;
+    return (
+      <div
+        {...composableProps(props, { className: mx(classNames), ...focusAttributes })}
+        ref={composeRefs(parentRef, forwardedRef)}
+      />
+    );
   },
 );
 

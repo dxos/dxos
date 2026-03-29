@@ -22,6 +22,7 @@ import {
   useEditorToolbar,
 } from '@dxos/react-ui-editor';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import {
@@ -159,32 +160,34 @@ const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
 
 type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
-const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
-  const {
-    id,
-    attendableId,
-    editorView,
-    setEditorView,
-    viewMode,
-    toolbarState,
-    extensions,
-    popoverMenu: { groupsRef, ...menuProps },
-  } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(
+  ({ children, ...props }, forwardedRef) => {
+    const {
+      id,
+      attendableId,
+      editorView,
+      setEditorView,
+      viewMode,
+      toolbarState,
+      extensions,
+      popoverMenu: { groupsRef, ...menuProps },
+    } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
 
-  return (
-    <EditorMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
-      <NaturalMarkdownEditorContent
-        {...props}
-        id={id}
-        attendableId={attendableId}
-        viewMode={viewMode}
-        toolbarState={toolbarState}
-        extensions={extensions}
-        ref={setEditorView}
-      />
-    </EditorMenuProvider>
-  );
-};
+    return (
+      <EditorMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
+        <NaturalMarkdownEditorContent
+          {...composableProps(props)}
+          id={id}
+          attendableId={attendableId}
+          viewMode={viewMode}
+          toolbarState={toolbarState}
+          extensions={extensions}
+          ref={setEditorView}
+        />
+      </EditorMenuProvider>
+    );
+  },
+);
 
 MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 

@@ -20,19 +20,11 @@ import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  type CSSProperties,
-  type PropsWithChildren,
-  forwardRef,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type CSSProperties, type PropsWithChildren, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type ComposableProps } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { useMosaicContainerContext } from './Container';
 import { type LocationType, type MosaicTileData, getSourceData } from './types';
@@ -58,8 +50,9 @@ const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTi
 // State attribute: data-[mosaic-tile-state=dragging]
 const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps &
+type MosaicTileProps<TData = any, TLocation = LocationType> = ThemedClassName<
   PropsWithChildren<{
+    className?: string;
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
     allowedEdges?: Edge[];
@@ -68,9 +61,10 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps &
     location: TLocation;
     draggable?: boolean;
     debug?: boolean;
-  }>;
+  }>
+>;
 
-const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
+const MosaicTile = composable<HTMLDivElement, MosaicTileProps>(
   (
     {
       children,

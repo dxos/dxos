@@ -55,10 +55,9 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
 
   return (
     <Card.Content>
-      <TableComponent.Root>
-        <TableComponent.Main
+      <TableComponent.Root ref={tableRef}>
+        <TableComponent.Content
           key={Obj.getDXN(object).toString()}
-          ref={tableRef}
           model={model}
           presentation={presentation}
           schema={schema}

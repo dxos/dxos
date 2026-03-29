@@ -51,7 +51,7 @@
 
 ### React
 
-- Import all required properties from React (i.e., use `useMemo` not `React.useMemo`).
+- Import all required symbols from React — hooks, types, and utilities — as named imports (i.e., use `useMemo` not `React.useMemo`, use `type Ref` not `React.Ref`).
 - When using `forwardRef` use the variable name `forwardedRef`.
 
 ## New Packages

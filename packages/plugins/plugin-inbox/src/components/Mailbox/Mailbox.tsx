@@ -5,11 +5,11 @@
 import React, { MouseEvent, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { ComposableProps, ScrollArea } from '@dxos/react-ui';
+import { ScrollArea } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
-import { composableProps, getHashStyles } from '@dxos/ui-theme';
+import { composable, composableProps, getHashStyles } from '@dxos/ui-theme';
 
 import { GoogleMail } from '../../apis';
 import { type Mailbox as MailboxType } from '../../types';
@@ -147,19 +147,19 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
 MessageTile.displayName = 'MessageTile';
 
-export type MailboxProps = ComposableProps<{
+export type MailboxProps = {
   id: string;
   messages: Message.Message[];
   labels?: MailboxType.Labels;
   currentMessageId?: string;
   ignoreAttention?: boolean;
   onAction?: MailboxActionHandler;
-}>;
+};
 
 /**
  * Card-based mailbox component using mosaic layout.
  */
-export const Mailbox = forwardRef<HTMLDivElement, MailboxProps>(
+export const Mailbox = composable<HTMLDivElement, MailboxProps>(
   ({ messages, labels, currentMessageId, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 

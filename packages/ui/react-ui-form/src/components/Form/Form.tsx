@@ -11,7 +11,6 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
-import { type ComposableProps } from '@dxos/ui-types';
 
 import {
   type FormHandler,
@@ -159,7 +158,7 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = ComposableProps;
+type FormViewportProps = {};
 
 const FormViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (

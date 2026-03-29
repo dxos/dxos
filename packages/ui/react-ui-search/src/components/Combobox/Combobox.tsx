@@ -4,7 +4,7 @@
 
 import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, useCallback } from 'react';
+import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, useCallback } from 'react';
 
 import {
   Button,
@@ -24,7 +24,6 @@ import {
   type SearchListInputProps,
   type SearchListItemProps,
   type SearchListRootProps,
-  type SearchListViewportProps,
 } from '../SearchList';
 
 const COMBOBOX_NAME = 'Combobox';
@@ -193,7 +192,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 // List
 //
 
-type ComboboxListProps = SearchListViewportProps;
+type ComboboxListProps = PropsWithChildren<{ classNames?: string | string[] }>;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
   return <SearchList.Viewport {...props} classNames={['py-form-chrome', classNames]} ref={forwardedRef} />;

@@ -6,7 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo, useState } from 'react';
 
 import { type DXN } from '@dxos/echo';
-import { ComposableProps, Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
@@ -82,9 +82,7 @@ MessageRoot.displayName = 'Message.Root';
 
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
-type MessageToolbarProps = ComposableProps;
-
-const MessageToolbar = composable<HTMLDivElement, MessageToolbarProps>((props, forwardedRef) => {
+const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
   const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
   const menuActions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
@@ -234,4 +232,4 @@ export const Message = {
   Body: MessageBody,
 };
 
-export type { MessageRootProps, MessageToolbarProps, MessageViewportProps, MessageHeaderProps, MessageBodyProps };
+export type { MessageRootProps, MessageViewportProps, MessageHeaderProps, MessageBodyProps };

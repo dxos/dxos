@@ -24,7 +24,11 @@ const OutlineStory = () => {
     return undefined;
   }, [space]);
   if (text) {
-    return <OutlineComponent id={text.id} text={text} />;
+    return (
+      <OutlineComponent.Root id={text.id} text={text}>
+        <OutlineComponent.Content />
+      </OutlineComponent.Root>
+    );
   }
   return null;
 };

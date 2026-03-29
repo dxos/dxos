@@ -3,26 +3,25 @@
 //
 
 import { format } from 'date-fns/format';
-import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { ComposableProps, IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { Journal as JournalType, getDateString, parseDateString } from '../../types';
-import { Outline, type OutlineController, type OutlineProps } from '../Outline';
+import { Outline, type OutlineController, type OutlineRootProps } from '../Outline';
 
 const RECENT = 7 * 24 * 60 * 60 * 1_000;
 
-export type JournalProps = Omit<ComposableProps, 'onSelect'> &
-  Pick<JournalEntryProps, 'onSelect'> & {
-    journal: JournalType.Journal;
-  };
+export type JournalProps = Pick<JournalEntryProps, 'onSelect'> & {
+  journal: JournalType.Journal;
+};
 
 // TODO(burdon): Virtualize.
-export const Journal = forwardRef<HTMLDivElement, JournalProps>(({ journal, onSelect, ...props }, forwardedRef) => {
+export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSelect, ...props }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const date = new Date();
 
@@ -70,7 +69,7 @@ type JournalEntryProps = ThemedClassName<
   {
     entryRef: Ref.Ref<JournalType.JournalEntry>;
     onSelect?: (event: { date: Date }) => void;
-  } & Pick<OutlineProps, 'autoFocus'>
+  } & Pick<OutlineRootProps, 'autoFocus'>
 >;
 
 const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntryProps) => {
@@ -111,15 +110,16 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
         {isRecent && date && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
         {isToday && <div className='text-xs'>{t('today label')}</div>}
       </div>
-      <Outline
+      <Outline.Root
         ref={outlinerRef}
         id={entry.id}
         text={entry.content.target}
-        classNames='pt-2 pb-2'
         scrollable={false}
         showSelected={false}
         {...props}
-      />
+      >
+        <Outline.Content classNames='pt-2 pb-2' />
+      </Outline.Root>
     </div>
   );
 };

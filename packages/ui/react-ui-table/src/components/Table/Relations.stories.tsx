@@ -99,7 +99,7 @@ const DefaultStory = () => {
   return (
     <div className='w-full h-full grid grid-cols-2 divide-x divide-separator'>
       <TableComponent.Root>
-        <TableComponent.Main
+        <TableComponent.Content
           model={orgModel}
           schema={Organization.Organization}
           presentation={orgPresentation}
@@ -109,7 +109,7 @@ const DefaultStory = () => {
         />
       </TableComponent.Root>
       <TableComponent.Root>
-        <TableComponent.Main
+        <TableComponent.Content
           model={contactModel}
           schema={Person.Person}
           presentation={contactPresentation}

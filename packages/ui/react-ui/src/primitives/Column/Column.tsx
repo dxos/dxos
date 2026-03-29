@@ -27,7 +27,7 @@ const gutterSizes: Record<GutterSize, string> = {
   lg: 'var(--dx-gutter-lg)',
 };
 
-type ColumnRootProps = SlottableProps<{ gutter?: GutterSize }>;
+type ColumnRootProps = { gutter?: GutterSize };
 
 /**
  * Creates a 3-column CSS grid with left/right gutter columns and a center content column.
@@ -41,7 +41,7 @@ type ColumnRootProps = SlottableProps<{ gutter?: GutterSize }>;
  *
  * Gutter sizes: `'sm'` for compact layouts (Dialog); `'md'` (default); `'lg'` for wider spacing.
  */
-const ColumnRoot = slottable<HTMLDivElement, { gutter?: GutterSize }>(
+const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
   ({ children, asChild, role, gutter = 'md', ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
@@ -74,14 +74,14 @@ ColumnRoot.displayName = COLUMN_ROOT_NAME;
 
 const COLUMN_ROW_NAME = 'Column.Row';
 
-type ColumnRowProps = SlottableProps<ColumnStyleProps>;
+type ColumnRowProps = ColumnStyleProps;
 
 /**
  * Spans all 3 columns of the parent Column.Root and uses CSS subgrid to inherit their sizing.
  * Children map to: [col-1: icon/slot] [col-2: content] [col-3: icon/action].
  * Must be a direct child of Column.Root.
  */
-const ColumnRow = slottable<HTMLDivElement, ColumnStyleProps>(
+const ColumnRow = slottable<HTMLDivElement, ColumnRowProps>(
   ({ children, asChild, role, fullWidth, center, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
@@ -133,9 +133,9 @@ ColumnContent.displayName = COLUMN_CONTENT_NAME;
 
 const COLUMN_VIEWPORT_NAME = 'Column.Viewport';
 
-type ColumnViewportProps = SlottableProps<Pick<ScrollAreaRootProps, 'thin'>>;
+type ColumnViewportProps = Pick<ScrollAreaRootProps, 'thin'>;
 
-const ColumnViewport = slottable<HTMLDivElement, Pick<ScrollAreaRootProps, 'thin'>>(
+const ColumnViewport = slottable<HTMLDivElement, ColumnViewportProps>(
   ({ children, asChild, role, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);

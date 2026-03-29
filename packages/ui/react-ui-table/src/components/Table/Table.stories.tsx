@@ -119,7 +119,7 @@ const DefaultStory = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      <TableComponent.Root>
+      <TableComponent.Root ref={tableRef}>
         <Panel.Root>
           <Panel.Toolbar asChild>
             <TableComponent.Toolbar
@@ -129,8 +129,7 @@ const DefaultStory = () => {
             />
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <TableComponent.Main
-              ref={tableRef}
+            <TableComponent.Content
               schema={schema}
               model={model}
               presentation={presentation}

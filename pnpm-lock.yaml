@@ -7281,6 +7281,9 @@ importers:
       '@effect/platform-browser':
         specifier: 'catalog:'
         version: 0.74.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)
+      '@radix-ui/react-compose-refs':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
@@ -10409,6 +10412,12 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@radix-ui/react-compose-refs':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
+      '@radix-ui/react-context':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -11189,6 +11198,9 @@ importers:
       '@octokit/core':
         specifier: 'catalog:'
         version: 7.0.6
+      '@radix-ui/react-compose-refs':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
       '@typescript/vfs':
         specifier: 'catalog:'
         version: 1.6.2(typescript@5.9.3)
@@ -15965,6 +15977,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@radix-ui/react-compose-refs':
+        specifier: 'catalog:'
+        version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)

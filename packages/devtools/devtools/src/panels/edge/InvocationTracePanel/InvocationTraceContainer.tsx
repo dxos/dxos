@@ -19,7 +19,7 @@ import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';
@@ -39,187 +39,187 @@ export type InvocationTraceContainerProps = {
   detailAxis?: 'block' | 'inline';
 };
 
-export const InvocationTraceContainer = ({
-  db,
-  queueDxn,
-  detailAxis = 'inline',
-  showSpaceSelector = false,
-  target,
-}: InvocationTraceContainerProps) => {
-  const resolver = useFunctionNameResolver({ db });
-  const invocationSpans = useInvocationSpans({ queueDxn, target });
+export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTraceContainerProps>(
+  ({ classNames, db, queueDxn, detailAxis = 'inline', showSpaceSelector = false, target, ...props }, forwardedRef) => {
+    const resolver = useFunctionNameResolver({ db });
+    const invocationSpans = useInvocationSpans({ queueDxn, target });
 
-  const [selectedId, setSelectedId] = useState<string>();
-  const selectedInvocation = useMemo(() => {
-    if (!selectedId) {
-      return undefined;
-    }
-
-    return invocationSpans.find((span) => selectedId === span.id);
-  }, [selectedId, invocationSpans]);
-
-  const properties: TablePropertyDefinition[] = useMemo(() => {
-    function* generateProperties() {
-      if (target === undefined) {
-        yield { name: 'target', title: 'Target', format: Format.TypeFormat.String, size: 200 };
+    const [selectedId, setSelectedId] = useState<string>();
+    const selectedInvocation = useMemo(() => {
+      if (!selectedId) {
+        return undefined;
       }
 
-      yield* [
-        {
-          name: 'time',
-          title: 'Started',
-          format: Format.TypeFormat.DateTime,
-          sort: 'desc' as const,
-          size: 194,
-        },
-        {
-          name: 'status',
-          title: 'Status',
-          format: Format.TypeFormat.SingleSelect,
-          size: 110,
-          config: {
-            options: [
-              { id: 'pending', title: 'Pending', color: 'blue' },
-              { id: 'success', title: 'Success', color: 'emerald' },
-              { id: 'failure', title: 'Failure', color: 'red' },
-              { id: 'unknown', title: 'Unknown', color: 'neutral' },
-            ],
+      return invocationSpans.find((span) => selectedId === span.id);
+    }, [selectedId, invocationSpans]);
+
+    const properties: TablePropertyDefinition[] = useMemo(() => {
+      function* generateProperties() {
+        if (target === undefined) {
+          yield { name: 'target', title: 'Target', format: Format.TypeFormat.String, size: 200 };
+        }
+
+        yield* [
+          {
+            name: 'time',
+            title: 'Started',
+            format: Format.TypeFormat.DateTime,
+            sort: 'desc' as const,
+            size: 194,
           },
-        },
-        {
-          name: 'duration',
-          title: 'Duration',
-          format: Format.TypeFormat.Duration,
-          size: 110,
-        },
-        {
-          name: 'queue',
-          title: 'Queue',
-          format: Format.TypeFormat.String,
-          // TODO(burdon): Add formatter.
-          // formatter: (value: string) => value.split(':').pop(),
-          size: 400,
-        },
-      ];
-    }
-
-    return [...generateProperties()];
-  }, [target]);
-
-  const rows = useMemo(() => {
-    return invocationSpans.map((invocation) => {
-      const status = invocation.outcome;
-      // Handle both Ref objects and encoded references.
-      const targetDxn =
-        invocation.invocationTarget?.dxn ??
-        (invocation.invocationTarget && '/' in invocation.invocationTarget
-          ? DXN.parse((invocation.invocationTarget as any)['/'])
-          : undefined);
-
-      // TODO(burdon): Use InvocationTraceStartEvent.
-      return {
-        id: invocation.id,
-        target: resolver(targetDxn),
-        // TODO(burdon): Change to timestamp?
-        time: new Date(invocation.timestamp),
-        duration: formatDuration(invocation.duration),
-        status,
-        queue:
-          invocation.invocationTraceQueue?.dxn?.toString() ??
-          (invocation.invocationTraceQueue && '/' in invocation.invocationTraceQueue
-            ? (invocation.invocationTraceQueue as any)['/']
-            : 'unknown'),
-        _original: invocation,
-      };
-    });
-  }, [invocationSpans, resolver]);
-
-  const handleRowClick = useCallback((row: any) => {
-    if (!row) {
-      return;
-    }
-    setSelectedId(row.id);
-  }, []);
-
-  const gridLayout = useMemo(() => {
-    if (selectedInvocation) {
-      switch (detailAxis) {
-        case 'inline':
-          return 'grid grid-cols-[1fr_30rem]';
-        case 'block':
-          return 'grid grid-rows-[1fr_2fr]';
+          {
+            name: 'status',
+            title: 'Status',
+            format: Format.TypeFormat.SingleSelect,
+            size: 110,
+            config: {
+              options: [
+                { id: 'pending', title: 'Pending', color: 'blue' },
+                { id: 'success', title: 'Success', color: 'emerald' },
+                { id: 'failure', title: 'Failure', color: 'red' },
+                { id: 'unknown', title: 'Unknown', color: 'neutral' },
+              ],
+            },
+          },
+          {
+            name: 'duration',
+            title: 'Duration',
+            format: Format.TypeFormat.Duration,
+            size: 110,
+          },
+          {
+            name: 'queue',
+            title: 'Queue',
+            format: Format.TypeFormat.String,
+            // TODO(burdon): Add formatter.
+            // formatter: (value: string) => value.split(':').pop(),
+            size: 400,
+          },
+        ];
       }
-    }
 
-    return 'grid grid-cols-1';
-  }, [selectedInvocation, detailAxis]);
+      return [...generateProperties()];
+    }, [target]);
 
-  const features: Partial<TableFeatures> = useMemo(
-    () => ({
-      selection: { enabled: true, mode: 'single' },
-    }),
-    [],
-  );
+    const rows = useMemo(() => {
+      return invocationSpans.map((invocation) => {
+        const status = invocation.outcome;
+        // Handle both Ref objects and encoded references.
+        const targetDxn =
+          invocation.invocationTarget?.dxn ??
+          (invocation.invocationTarget && '/' in invocation.invocationTarget
+            ? DXN.parse((invocation.invocationTarget as any)['/'])
+            : undefined);
 
-  return (
-    <PanelContainer
-      toolbar={
-        showSpaceSelector ? (
-          <Toolbar.Root classNames='border-b border-subdued-separator'>
-            <DataSpaceSelector />
-          </Toolbar.Root>
-        ) : undefined
+        // TODO(burdon): Use InvocationTraceStartEvent.
+        return {
+          id: invocation.id,
+          target: resolver(targetDxn),
+          // TODO(burdon): Change to timestamp?
+          time: new Date(invocation.timestamp),
+          duration: formatDuration(invocation.duration),
+          status,
+          queue:
+            invocation.invocationTraceQueue?.dxn?.toString() ??
+            (invocation.invocationTraceQueue && '/' in invocation.invocationTraceQueue
+              ? (invocation.invocationTraceQueue as any)['/']
+              : 'unknown'),
+          _original: invocation,
+        };
+      });
+    }, [invocationSpans, resolver]);
+
+    const handleRowClick = useCallback((row: any) => {
+      if (!row) {
+        return;
       }
-    >
-      <div className={mx('h-full', gridLayout)}>
-        {/* <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} /> */}
-        <div className='overflow-auto'>
-          <table className='table-fixed min-w-full text-xs border-collapse'>
-            <thead className='sticky top-0 z-10 bg-background'>
-              <tr>
-                <th>ID</th>
-                <th>Target</th>
-                <th>Started</th>
-                <th>Duration</th>
-                <th>Status</th>
-                <th>Queue</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows
-                .toSorted((a, b) => b.time.getTime() - a.time.getTime())
-                .slice(0, 50)
-                .map((row) => (
-                  <tr
-                    key={row.id}
-                    role='button'
-                    tabIndex={0}
-                    aria-selected={selectedId === row.id}
-                    onClick={() => handleRowClick(row)}
-                    onKeyDown={(e: KeyboardEvent<HTMLTableRowElement>) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault();
-                        handleRowClick(row);
-                      }
-                    }}
-                    className='cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent'
-                  >
-                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.id}</td>
-                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.target}</td>
-                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.time.toLocaleString()}</td>
-                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.duration}</td>
-                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.status}</td>
-                    <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.queue}</td>
+      setSelectedId(row.id);
+    }, []);
+
+    const gridLayout = useMemo(() => {
+      if (selectedInvocation) {
+        switch (detailAxis) {
+          case 'inline':
+            return 'grid grid-cols-[1fr_30rem]';
+          case 'block':
+            return 'grid grid-rows-[1fr_2fr]';
+        }
+      }
+
+      return 'grid grid-cols-1';
+    }, [selectedInvocation, detailAxis]);
+
+    const features: Partial<TableFeatures> = useMemo(
+      () => ({
+        selection: { enabled: true, mode: 'single' },
+      }),
+      [],
+    );
+
+    return (
+      <div {...composableProps(props, { className: mx('h-full', classNames) })} ref={forwardedRef}>
+        <PanelContainer
+          toolbar={
+            showSpaceSelector ? (
+              <Toolbar.Root classNames='border-b border-subdued-separator'>
+                <DataSpaceSelector />
+              </Toolbar.Root>
+            ) : undefined
+          }
+        >
+          <div className={mx('h-full', gridLayout)}>
+            {/* <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} /> */}
+            <div className='overflow-auto'>
+              <table className='table-fixed min-w-full text-xs border-collapse'>
+                <thead className='sticky top-0 z-10 bg-background'>
+                  <tr>
+                    <th>ID</th>
+                    <th>Target</th>
+                    <th>Started</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Queue</th>
                   </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
-        {selectedInvocation && <Selected span={selectedInvocation} />}
+                </thead>
+                <tbody>
+                  {rows
+                    .toSorted((a, b) => b.time.getTime() - a.time.getTime())
+                    .slice(0, 50)
+                    .map((row) => (
+                      <tr
+                        key={row.id}
+                        role='button'
+                        tabIndex={0}
+                        aria-selected={selectedId === row.id}
+                        onClick={() => handleRowClick(row)}
+                        onKeyDown={(e: KeyboardEvent<HTMLTableRowElement>) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleRowClick(row);
+                          }
+                        }}
+                        className='cursor-pointer focus:outline-hidden focus-visible:ring-2 focus-visible:ring-accent'
+                      >
+                        <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.id}</td>
+                        <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.target}</td>
+                        <td className='px-2 py-1 whitespace-nowrap border border-separator'>
+                          {row.time.toLocaleString()}
+                        </td>
+                        <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.duration}</td>
+                        <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.status}</td>
+                        <td className='px-2 py-1 whitespace-nowrap border border-separator'>{row.queue}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+            {selectedInvocation && <Selected span={selectedInvocation} />}
+          </div>
+        </PanelContainer>
       </div>
-    </PanelContainer>
-  );
-};
+    );
+  },
+);
 
 const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');

@@ -10,10 +10,10 @@ import {
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type PropsWithChildren, createContext, forwardRef, useContext, useRef, useState } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useRef, useState } from 'react';
 
-import { ComposableProps, type Axis } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { type Axis } from '@dxos/react-ui';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 //
 // Context
@@ -35,17 +35,15 @@ const useFocus = () => useContext(FocusContext);
 // Group
 //
 
-type GroupProps = ComposableProps<
-  PropsWithChildren<{
-    asChild?: boolean;
-    orientation?: Axis;
-  }>
->;
+type GroupProps = PropsWithChildren<{
+  asChild?: boolean;
+  orientation?: Axis;
+}>;
 
 // TODO(wittjosiah): Consider how this could integrate with with react-ui-attention.
 //   Perhaps react-ui-attention comes under the mosaic umbrella as it supports selection?
-const Group = forwardRef<HTMLDivElement, GroupProps>(
-  ({ children, asChild, orientation = 'vertical', ...props }: GroupProps, forwardedRef) => {
+const Group = composable<HTMLDivElement, GroupProps>(
+  ({ children, asChild, orientation = 'vertical', ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);

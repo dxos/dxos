@@ -9,17 +9,7 @@
 
 ## Slots
 
-Types are in `@dxos/ui-types/src/slot.ts`. Exemplar: `packages/ui/react-ui/src/exemplars/slot.stories.tsx`.
-
-Key rules:
-
-- `ComposableProps` takes 0-1 type args for custom props only (e.g., `ComposableProps` or `ComposableProps<MyProps>`). Do NOT pass HTML element types.
-- `composableProps()` reconciles `className`/`classNames` — no type parameter needed.
-- Use `composable()` and `slottable()` factory functions to create components (these handle ref forwarding internally). Do NOT use `forwardRef` directly.
-- The accepted destructuring pattern is: `const { className, ...rest } = composableProps(props)`.
-- Spread `...rest` from `composableProps()` (which reconciles `className`/`classNames`) — don't manually destructure and use `mx()`.
-- Custom callback props must NOT collide with HTML attribute names (e.g., use `onLayerUpdate` not `onChange`, use `onUpdate` not `onChange`).
-- Export public prop types wrapped with `SlottableProps<OwnProps>` or `ComposableProps<OwnProps>` as appropriate. Keep `OwnProps` private.
+Exemplar: `packages/ui/react-ui/src/exemplars/slot.stories.tsx`.
 
 ## Schema
 
