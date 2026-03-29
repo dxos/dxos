@@ -31,6 +31,7 @@ type DebugOverlayRootProps = PropsWithChildren<{
    * Set to false to suppress the overlay while keeping the context available.
    */
   enabled?: boolean;
+  maxLines?: number;
 }>;
 
 /**
@@ -43,7 +44,7 @@ type DebugOverlayRootProps = PropsWithChildren<{
  * Intended for transient mobile debugging in the iOS Simulator where DevTools
  * console output may not be accessible.
  */
-const DebugOverlayRoot = ({ children, enabled = true }: DebugOverlayRootProps) => {
+const DebugOverlayRoot = ({ children, enabled = true, maxLines = 10 }: DebugOverlayRootProps) => {
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const dbg = useCallback((msg: string) => {
@@ -53,7 +54,7 @@ const DebugOverlayRoot = ({ children, enabled = true }: DebugOverlayRootProps) =
     const line = document.createElement('pre');
     line.textContent = `${(performance.now() / 1000).toFixed(2).padStart(8, ' ')} ${msg}`;
     overlayRef.current.prepend(line);
-    while (overlayRef.current.children.length > 5) {
+    while (overlayRef.current.children.length > maxLines) {
       overlayRef.current.lastChild?.remove();
     }
   }, []);
