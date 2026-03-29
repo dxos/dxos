@@ -50,13 +50,10 @@ export const SimpleLayout = () => {
         <Mosaic.Root classNames='dx-container grid relative'>
           <MobileLayout.Root
             classNames='bg-toolbar-surface'
-            onKeyboardOpenChange={(nextKeyboardOpen: boolean) => setKeyboardOpen(nextKeyboardOpen)}
-            onFocusedElementChange={handleFocusedElementChange}
+            onKeyboardOpenChange={(nextKeyboardOpen) => setKeyboardOpen(nextKeyboardOpen)}
+            // onFocusedElementChange={handleFocusedElementChange}
           >
-            <MobileLayout.Panel
-              safe={{ top: true, bottom: splitterMode === 'upper' }}
-              // classNames='border border-green-500'
-            >
+            <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'upper' }}>
               <Splitter.Root mode={splitterMode} ratio={0.55}>
                 <Splitter.Panel position='upper'>
                   <Main />
