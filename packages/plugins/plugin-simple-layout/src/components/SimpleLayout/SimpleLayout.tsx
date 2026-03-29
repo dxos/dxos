@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 
 import { Splitter, type SplitterMode } from '@dxos/react-ui';
 import { Mosaic } from '@dxos/react-ui-mosaic';
@@ -23,20 +23,6 @@ export const SimpleLayout = () => {
 
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  // When a keyboard-triggering element gains focus, update the Splitter mode immediately
-  // (BEFORE the keyboard event fires). This ensures the Splitter layout has already settled
-  // by the time the container height starts its CSS transition, preventing a compound
-  // visual glitch caused by two simultaneous layout changes.
-  const handleFocusedElementChange = useCallback(
-    (element: HTMLElement | null) => {
-      if (element) {
-        const drawerHasFocus = drawerRef.current?.contains(element);
-        setSplitterMode(drawerHasFocus ? 'lower' : 'upper');
-      }
-    },
-    [drawerRef],
-  );
-
   // Restore Splitter mode when keyboard closes.
   useLayoutEffect(() => {
     if (!keyboardOpen) {
@@ -51,7 +37,6 @@ export const SimpleLayout = () => {
           <MobileLayout.Root
             classNames='bg-toolbar-surface'
             onKeyboardOpenChange={(nextKeyboardOpen) => setKeyboardOpen(nextKeyboardOpen)}
-            // onFocusedElementChange={handleFocusedElementChange}
           >
             <MobileLayout.Panel safe={{ top: true, bottom: splitterMode === 'upper' }}>
               <Splitter.Root mode={splitterMode} ratio={0.55}>

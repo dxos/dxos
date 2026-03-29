@@ -34,8 +34,6 @@ type MobileLayoutRootProps = ThemedClassName<
   PropsWithChildren<{
     transition?: number;
     onKeyboardOpenChange?: (nextState: boolean) => void;
-    /** Fired when an editable element (input/textarea/contenteditable) gains or loses focus. */
-    onFocusedElementChange?: (element: HTMLElement | null) => void;
   }>
 >;
 
@@ -44,10 +42,7 @@ type MobileLayoutRootProps = ThemedClassName<
  */
 // TODO(burdon): Should this be ios-only?
 const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
-  (
-    { classNames, children, transition = 500, onKeyboardOpenChange, onFocusedElementChange, ...props },
-    forwardedRef,
-  ) => {
+  ({ classNames, children, transition = 500, onKeyboardOpenChange, ...props }, forwardedRef) => {
     const { open: keyboardOpen } = useIOSKeyboard();
     useLockBodyScroll(keyboardOpen);
     useAutoScroll();
@@ -56,41 +51,6 @@ const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
     // change is batched into the same paint as the keyboard open state change, preventing
     // intermediate render frames from showing an un-adjusted layout.
     useLayoutEffect(() => onKeyboardOpenChange?.(keyboardOpen), [keyboardOpen, onKeyboardOpenChange]);
-
-    // TODO(burdon): Test if this does anything.
-    // Notify parent when an editable element gains/loses focus so layout can adjust
-    // BEFORE the keyboard event fires (focus always precedes the keyboard animation).
-    useEffect(() => {
-      if (!onFocusedElementChange) {
-        return;
-      }
-
-      const isEditable = (el: HTMLElement | null) =>
-        el?.tagName === 'INPUT' || el?.tagName === 'TEXTAREA' || el?.isContentEditable;
-
-      return combine(
-        addEventListener(
-          document,
-          'focus',
-          ({ target }: FocusEvent) => {
-            if (isEditable(target as HTMLElement)) {
-              onFocusedElementChange?.(target as HTMLElement);
-            }
-          },
-          { capture: true },
-        ),
-        addEventListener(
-          document,
-          'blur',
-          ({ target }: FocusEvent) => {
-            if (isEditable(target as HTMLElement)) {
-              onFocusedElementChange?.(null);
-            }
-          },
-          { capture: true },
-        ),
-      );
-    }, [onFocusedElementChange]);
 
     return (
       <MobileLayoutProvider keyboardOpen={keyboardOpen}>
