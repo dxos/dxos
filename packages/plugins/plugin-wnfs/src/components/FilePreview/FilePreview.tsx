@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { ForwardedRef } from 'react';
 
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -18,7 +18,7 @@ export const FilePreview = composable<HTMLElement, FilePreviewProps>(
         <img
           {...composableProps(props, { className: 'w-full h-full object-contain' })}
           src={url}
-          ref={forwardedRef as React.ForwardedRef<HTMLImageElement>}
+          ref={forwardedRef as ForwardedRef<HTMLImageElement>}
         />
       );
     } else if (type.startsWith('video/')) {
@@ -27,7 +27,7 @@ export const FilePreview = composable<HTMLElement, FilePreviewProps>(
           {...composableProps(props, { className: 'w-full h-full object-contain' })}
           src={url}
           controls
-          ref={forwardedRef as React.ForwardedRef<HTMLVideoElement>}
+          ref={forwardedRef as ForwardedRef<HTMLVideoElement>}
         />
       );
     } else {
@@ -35,7 +35,7 @@ export const FilePreview = composable<HTMLElement, FilePreviewProps>(
         <iframe
           {...composableProps(props, { className: 'w-full h-full overflow-auto' })}
           src={url}
-          ref={forwardedRef as React.ForwardedRef<HTMLIFrameElement>}
+          ref={forwardedRef as ForwardedRef<HTMLIFrameElement>}
         />
       );
     }

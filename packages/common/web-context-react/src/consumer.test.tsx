@@ -5,7 +5,7 @@
 // @vitest-environment jsdom
 
 import { act, cleanup, render, screen } from '@testing-library/react';
-import React from 'react';
+import React, { ReactNode, useEffect, useRef, useState } from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
 import { CONTEXT_REQUEST_EVENT, createContext } from '@dxos/web-context';
@@ -37,7 +37,7 @@ describe('useWebComponentContext', () => {
 
   test('consumes context from updates (subscription)', async () => {
     const Container = () => {
-      const [val, setVal] = React.useState('initial');
+      const [val, setVal] = useState('initial');
       return (
         <>
           <button onClick={() => setVal('updated')}>Update</button>
@@ -59,9 +59,9 @@ describe('useWebComponentContext', () => {
   });
 
   test('consumes context from DOM parent (outside React tree)', () => {
-    const Wrapper = ({ children }: { children: React.ReactNode }) => {
-      const ref = React.useRef<HTMLDivElement>(null);
-      React.useEffect(() => {
+    const Wrapper = ({ children }: { children: ReactNode }) => {
+      const ref = useRef<HTMLDivElement>(null);
+      useEffect(() => {
         const handler = (e: Event) => {
           const event = e as any;
           if (event.context === ctx) {
