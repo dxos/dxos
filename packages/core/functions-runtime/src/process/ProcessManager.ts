@@ -640,7 +640,6 @@ export class ProcessManagerImpl implements Manager {
         write: (event, traceCtx) => this.#tracingService.write(event, traceCtx),
         ephemeral: (event, traceCtx) => {
           handleRef?.pushEphemeral(event);
-          this.#tracingService.ephemeral(event, traceCtx);
         },
         traceInvocationStart: (opts) => this.#tracingService.traceInvocationStart(opts),
         traceInvocationEnd: (opts) => this.#tracingService.traceInvocationEnd(opts),

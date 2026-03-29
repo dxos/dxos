@@ -16,7 +16,7 @@ import type * as Types from 'effect/Types';
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
-import { log } from '@dxos/log';
+import { dbg, log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
 import { type StreamBlock, StreamTransform } from './parser';
@@ -128,7 +128,7 @@ export const parseResponse =
         const emitPartialContentBlock = Effect.fnUntraced(function* (block: Types.Mutable<ContentBlock.Any>) {
           yield* onBlock({ ...block } as ContentBlock.Any);
           if (emitPartial) {
-            emit.single(block as ContentBlock.Any);
+            emit.single({ ...block } as ContentBlock.Any);
           }
           blocks++;
         });
@@ -166,6 +166,7 @@ export const parseResponse =
 
         const handlePart = Effect.fnUntraced(function* (part: Response.StreamPart<Tools>) {
           log('part', { type: part.type, part });
+          dbg(part.type);
           yield* onPart(part);
           switch (part.type) {
             case 'text-start': {

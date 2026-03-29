@@ -16,9 +16,9 @@ import { trim } from '@dxos/util';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 
 import { AssistantTestLayer } from '../testing';
-import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as AgentService from './AgentService';
+import { ObjectId } from '@dxos/keys';
 
 ObjectId.dangerouslyDisableRandomness();
 
