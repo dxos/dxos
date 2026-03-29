@@ -166,7 +166,6 @@ export const parseResponse =
 
         const handlePart = Effect.fnUntraced(function* (part: Response.StreamPart<Tools>) {
           log('part', { type: part.type, part });
-          dbg(part.type);
           yield* onPart(part);
           switch (part.type) {
             case 'text-start': {
