@@ -12,8 +12,6 @@ import { mx } from '@dxos/ui-theme';
 
 import { useDebugLog } from '../DebugOverlay';
 
-// TODO(burdon): Move into @dxos/react-ui?
-
 const MOBILE_LAYOUT_NAME = 'MobileLayout';
 const MOBILE_LAYOUT_ROOT_NAME = 'MobileLayout.Root';
 const MOBILE_LAYOUT_PANEL_NAME = 'MobileLayout.Panel';
@@ -36,8 +34,6 @@ type MobileLayoutRootProps = ThemedClassName<
   PropsWithChildren<{
     transition?: number;
     onKeyboardOpenChange?: (nextState: boolean) => void;
-    /** Fired when an editable element (input/textarea/contenteditable) gains or loses focus. */
-    onFocusedElementChange?: (element: HTMLElement | null) => void;
   }>
 >;
 
@@ -46,49 +42,15 @@ type MobileLayoutRootProps = ThemedClassName<
  */
 // TODO(burdon): Should this be ios-only?
 const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
-  (
-    { classNames, children, transition = 350, onKeyboardOpenChange, onFocusedElementChange, ...props },
-    forwardedRef,
-  ) => {
-    const { open: keyboardOpen, duration } = useIOSKeyboard();
-    useAutoScroll();
+  ({ classNames, children, transition = 500, onKeyboardOpenChange, ...props }, forwardedRef) => {
+    const { open: keyboardOpen } = useIOSKeyboard();
     useLockBodyScroll(keyboardOpen);
+    useAutoScroll();
 
     // Fire synchronously after DOM mutation (before paint) so SimpleLayout's Splitter mode
     // change is batched into the same paint as the keyboard open state change, preventing
     // intermediate render frames from showing an un-adjusted layout.
     useLayoutEffect(() => onKeyboardOpenChange?.(keyboardOpen), [keyboardOpen, onKeyboardOpenChange]);
-
-    // Notify parent when an editable element gains/loses focus so layout can adjust
-    // BEFORE the keyboard event fires (focus always precedes the keyboard animation).
-    useEffect(() => {
-      if (!onFocusedElementChange) {
-        return;
-      }
-      const isEditable = (el: HTMLElement) =>
-        el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable;
-      const handleFocus = (event: FocusEvent) => {
-        const target = event.target as HTMLElement;
-        if (isEditable(target)) {
-          onFocusedElementChange(target);
-        }
-      };
-      const handleBlur = (event: FocusEvent) => {
-        const target = event.target as HTMLElement;
-        if (isEditable(target)) {
-          onFocusedElementChange(null);
-        }
-      };
-      document.addEventListener('focus', handleFocus, { capture: true });
-      document.addEventListener('blur', handleBlur, { capture: true });
-      return () => {
-        document.removeEventListener('focus', handleFocus, { capture: true });
-        document.removeEventListener('blur', handleBlur, { capture: true });
-      };
-    }, [onFocusedElementChange]);
-
-    // Use the native keyboard animation duration so the height transition syncs with iOS.
-    const animationDuration = duration ?? transition;
 
     return (
       <MobileLayoutProvider keyboardOpen={keyboardOpen}>
@@ -96,8 +58,9 @@ const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
           {...props}
           role='none'
           style={{
-            transition: `height ${animationDuration}ms ease-out`,
             height: 'calc(100vh - var(--kb-height, 0px))',
+            transition: `height ${keyboardOpen ? 0 : transition}ms ease-out`,
+            // transition: `height ${animationDuration}ms ease-out`,
           }}
           className={mx('fixed top-0 left-0 right-0 grid overflow-hidden', classNames)}
           ref={forwardedRef}
@@ -169,6 +132,7 @@ export type { MobileLayoutRootProps, MobileLayoutPanelProps };
  * scroll reset as belt-and-suspenders, and also monitor container scroll events.
  */
 const useAutoScroll = () => {
+  // TODO(burdon): Remove debug logging.
   const { dbg } = useDebugLog('useAutoScroll');
 
   useEffect(() => {
@@ -178,12 +142,12 @@ const useAutoScroll = () => {
       }
     };
 
-    // TODO(burdon): Remove debug logging. Detect which container element is scrolling.
     const detectContainerScroll = (event: Event) => {
       const el = event.target as HTMLElement;
       if (el === document.documentElement || el === document.body) {
         return;
       }
+
       dbg(`scroll: ${el.tagName}.${Array.from(el.classList).slice(0, 2).join('.')} top=${el.scrollTop.toFixed(0)}`);
     };
 
@@ -204,6 +168,7 @@ const useAutoScroll = () => {
             if (focusingWithPreventScroll) {
               return;
             }
+
             const target = event.target as HTMLElement;
             if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
               focusingWithPreventScroll = true;
