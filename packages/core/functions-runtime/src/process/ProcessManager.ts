@@ -16,6 +16,7 @@ import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
+import { Obj } from '@dxos/echo';
 import { TracingService } from '@dxos/functions';
 import { OperationHandlerSet, Operation } from '@dxos/operation';
 
@@ -51,6 +52,13 @@ export interface Handle<I, O> {
 
   submitInput(input: I): Effect.Effect<void>;
   subscribeOutputs(): Stream.Stream<O>;
+
+  /**
+   * Subscribe to ephemeral trace events for this process.
+   * Replays buffered events, then streams new ones as they arrive.
+   * The stream completes when the process reaches a terminal state.
+   */
+  subscribeEphemeral(): Stream.Stream<Obj.Unknown>;
 
   terminate(): Effect.Effect<void>;
   status(): Effect.Effect<Status>;
@@ -189,6 +197,9 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
   readonly #storage: Context.Tag.Service<typeof StorageService.StorageService>;
 
+  readonly #ephemeralBuffer = new EphemralTraceBuffer();
+  readonly #ephemeralSubscribers: Queue.Queue<Option.Option<Obj.Unknown>>[] = [];
+
   readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
   readonly #onStatusChanged: (() => void) | undefined;
   readonly #hasRunningChildren: () => boolean;
@@ -277,6 +288,27 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
 
   subscribeOutputs(): Stream.Stream<O> {
     return Stream.fromQueue(this.#outputQueue).pipe(Stream.takeWhile(Option.isSome), Stream.map(Option.getOrThrow));
+  }
+
+  pushEphemeral(event: Obj.Unknown): void {
+    this.#ephemeralBuffer.push(event);
+    for (const queue of this.#ephemeralSubscribers) {
+      Queue.unsafeOffer(queue, Option.some(event));
+    }
+  }
+
+  subscribeEphemeral(): Stream.Stream<Obj.Unknown> {
+    return Stream.unwrap(
+      Effect.gen(this, function* () {
+        const snapshot = [...this.#ephemeralBuffer.buffer];
+        const queue = yield* Queue.unbounded<Option.Option<Obj.Unknown>>();
+        this.#ephemeralSubscribers.push(queue);
+        return Stream.concat(
+          Stream.fromIterable(snapshot),
+          Stream.fromQueue(queue).pipe(Stream.takeWhile(Option.isSome), Stream.map(Option.getOrThrow)),
+        );
+      }),
+    );
   }
 
   terminate(): Effect.Effect<void> {
@@ -415,6 +447,10 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     return Effect.gen(this, function* () {
       this.#clearAlarm();
       Queue.unsafeOffer(this.#outputQueue, Option.none());
+      for (const queue of this.#ephemeralSubscribers) {
+        Queue.unsafeOffer(queue, Option.none());
+      }
+      this.#ephemeralSubscribers.length = 0;
       yield* this.#storage.clear();
       yield* Scope.close(this.#scope, Exit.void);
     });
@@ -602,6 +638,10 @@ export class ProcessManagerImpl implements Manager {
       const processTracingService: Context.Tag.Service<TracingService> = {
         getTraceContext: () => traceContext,
         write: (event, traceCtx) => this.#tracingService.write(event, traceCtx),
+        ephemeral: (event, traceCtx) => {
+          handleRef?.pushEphemeral(event);
+          this.#tracingService.ephemeral(event, traceCtx);
+        },
         traceInvocationStart: (opts) => this.#tracingService.traceInvocationStart(opts),
         traceInvocationEnd: (opts) => this.#tracingService.traceInvocationEnd(opts),
       };
@@ -832,3 +872,58 @@ export const layer = (opts?: {
       );
     }),
   );
+
+/**
+ * Compacting circular buffer of ephemeral trace events.
+ */
+class EphemralTraceBuffer {
+  #maxLength: number;
+  #buffer: Obj.Unknown[] = [];
+
+  constructor(maxLength: number = 25) {
+    this.#maxLength = maxLength;
+  }
+
+  get buffer(): readonly Obj.Unknown[] {
+    return this.#buffer;
+  }
+
+  push(event: Obj.Unknown): void {
+    const id = typeof event.id === 'string' ? event.id : undefined;
+    const buf = this.#buffer;
+    if (id !== undefined) {
+      let firstIdx = -1;
+      for (let index = 0; index < buf.length; index++) {
+        if (buf[index]!.id === id) {
+          firstIdx = index;
+          break;
+        }
+      }
+      if (firstIdx !== -1) {
+        let write = 0;
+        for (let read = 0; read < buf.length; read++) {
+          const item = buf[read]!;
+          if (item.id === id) {
+            if (read === firstIdx) {
+              buf[write++] = event;
+            }
+          } else if (write !== read) {
+            buf[write++] = item;
+          } else {
+            write++;
+          }
+        }
+        buf.length = write;
+        return;
+      }
+    }
+    buf.push(event);
+    if (buf.length > this.#maxLength) {
+      buf.shift();
+    }
+  }
+
+  clear(): void {
+    this.#buffer.length = 0;
+  }
+}

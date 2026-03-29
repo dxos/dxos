@@ -10,7 +10,7 @@ import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 import * as Array from 'effect/Array';
-
+import * as Option from 'effect/Option';
 import {
   AiParser,
   AiPreprocessor,
@@ -203,6 +203,7 @@ export class AiSession {
       });
 
       const observer = this._observer;
+      let currentMessageId: Obj.ID | null = null; // Consistent IDs for pending blocks preceding the complete one.
       const messages = yield* LanguageModel.streamText({
         prompt,
         toolkit,
@@ -210,22 +211,45 @@ export class AiSession {
       }).pipe(
         withoutToolCallParising,
         AiParser.parseResponse({
+          emitPartial: true,
           onBegin: () => observer.onBegin(),
           onBlock: (block) => observer.onBlock(block),
           onPart: (part) => observer.onPart(part as any),
           onEnd: (summary) => observer.onEnd(summary),
         }),
-        Stream.mapEffect((block) =>
-          Effect.gen(this, function* () {
-            return yield* this._submitMessage(
-              Obj.make(Message.Message, {
-                created: new Date().toISOString(),
-                sender: { role: 'assistant' },
-                blocks: [block],
-              }),
-            );
-          }),
+        Stream.mapEffect(
+          (block) =>
+            Effect.gen(this, function* () {
+              if (block.pending) {
+                currentMessageId ??= Obj.ID.random();
+                yield* TracingService.emitEphemeralMessage(
+                  Obj.make(Message.Message, {
+                    id: currentMessageId,
+                    created: new Date().toISOString(),
+                    sender: { role: 'assistant' },
+                    blocks: [block],
+                  }),
+                );
+                return Option.none();
+              } else {
+                currentMessageId ??= Obj.ID.random();
+                const id = currentMessageId;
+                currentMessageId = null;
+                return Option.some(
+                  yield* this._submitMessage(
+                    Obj.make(Message.Message, {
+                      id,
+                      created: new Date().toISOString(),
+                      sender: { role: 'assistant' },
+                      blocks: [block],
+                    }),
+                  ),
+                );
+              }
+            }),
+          { concurrency: 1, unordered: false },
         ),
+        Stream.filterMap((_) => _),
         Stream.runCollect,
         Effect.map(Chunk.toArray),
       );

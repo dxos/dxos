@@ -77,6 +77,13 @@ export interface ParseResponseCallbacks<Tools extends Record<string, Tool.Any> =
    * Called when the stream ends.
    */
   onEnd: (block: ContentBlock.Stats) => Effect.Effect<void>;
+
+  /**
+   * Emit partial blocks in the output stream.
+   * Partial blocks will have `pending` set to `true`.
+   * @default false
+   */
+  emitPartial?: boolean;
 }
 
 export interface ParseResponseOptions<Tools extends Record<string, Tool.Any>> extends ParseResponseCallbacks<Tools> {
@@ -97,6 +104,7 @@ export const parseResponse =
     onPart = Function.constant(Effect.void),
     onBlock = Function.constant(Effect.void),
     onEnd = Function.constant(Effect.void),
+    emitPartial = false,
   }: Partial<ParseResponseOptions<Tools>> = {}) =>
   <E, R>(input: Stream.Stream<Response.StreamPart<Tools>, E, R>): Stream.Stream<ContentBlock.Any, E, R> =>
     Stream.asyncPush(
@@ -119,6 +127,9 @@ export const parseResponse =
 
         const emitPartialContentBlock = Effect.fnUntraced(function* (block: Types.Mutable<ContentBlock.Any>) {
           yield* onBlock({ ...block } as ContentBlock.Any);
+          if (emitPartial) {
+            emit.single(block as ContentBlock.Any);
+          }
           blocks++;
         });
 

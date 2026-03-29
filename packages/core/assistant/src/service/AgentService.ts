@@ -8,6 +8,7 @@ import { Database, Feed, type Obj } from '@dxos/echo';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Stream from 'effect/Stream';
 
 import { Blueprint } from '@dxos/blueprints';
 import { ProcessManager } from '@dxos/functions-runtime';
@@ -47,6 +48,12 @@ export interface Session {
    * Wait until agent has completed its work.
    */
   waitForCompletion: () => Effect.Effect<void>;
+
+  /**
+   * Subscribe to ephemeral trace events (e.g. streaming partial messages).
+   * Replays buffered events, then streams new ones until the process ends.
+   */
+  subscribeEphemeral: () => Stream.Stream<Obj.Unknown>;
 
   /**
    * Adds context objects to the agent.
@@ -126,6 +133,7 @@ const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Fe
   feed,
   submitPrompt: (prompt: string) => process.submitInput(prompt),
   waitForCompletion: () => process.runToCompletion(),
+  subscribeEphemeral: () => process.subscribeEphemeral(),
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
     Effect.gen(function* () {
       const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(
