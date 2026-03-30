@@ -20,7 +20,6 @@ import { Organization } from '@dxos/types';
 import { TestDatabaseLayer } from '../testing';
 import * as Process from './Process';
 import * as ProcessManager from './ProcessManager';
-import { ProcessOperationInvoker } from './ProcessManager';
 import * as ServiceResolver from './ServiceResolver';
 import * as StorageService from './StorageService';
 

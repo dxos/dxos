@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiService, GenericToolkit, type ModelName } from '@dxos/ai';
-import { Database, DXN, Feed } from '@dxos/echo';
+import { Database, DXN } from '@dxos/echo';
 import { QueueService, TracingService } from '@dxos/functions';
-import { Process, ProcessOperationInvoker, StorageService } from '@dxos/functions-runtime';
+import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime';
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
@@ -53,7 +53,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         OperationRegistry.Service,
         StorageService.StorageService,
         QueueService,
-        ProcessOperationInvoker.Service,
+        ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
 
         TracingService,
@@ -117,7 +117,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           onChildEvent: Effect.fnUntraced(function* (event) {
             log.info('childEvent', { event });
             if (event._tag === 'exited') {
-              const operationInvoker = yield* ProcessOperationInvoker.Service;
+              const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
               const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
               const result = yield* fiber.await.pipe(Effect.orDie).pipe(
                 Effect.map(
@@ -177,7 +177,7 @@ const storeEvents = (value: AgentEvent[]) =>
 const ToolExecutionService = ({ backgroundThreshold = Duration.seconds(1) }: ToolExecutionServiceOptions = {}) =>
   Layer.unwrapEffect(
     Effect.gen(function* () {
-      const operationInvoker = yield* ProcessOperationInvoker.Service;
+      const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
       return makeToolExecutionService({
         invoke: (tool, input) =>
           Effect.gen(function* () {
@@ -232,7 +232,7 @@ class AsynchronousExectionToolkit extends Toolkit.make(
 
 const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(
   Effect.gen(function* () {
-    const invoker = yield* ProcessOperationInvoker.Service;
+    const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
     return {
       'poll-tools': ({ ids, wait, timeout = 10_000 }) =>
         Effect.gen(function* () {
