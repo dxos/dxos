@@ -26,7 +26,7 @@ export const NativeFilesystemPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'state',
-    activatesOn: ActivationEvents.Startup,
+    activatesOn: ActivationEvent.oneOf(ActivationEvents.Startup, AppActivationEvents.SetupAppGraph),
     activatesAfter: [StateReady],
     activate: State,
   }),

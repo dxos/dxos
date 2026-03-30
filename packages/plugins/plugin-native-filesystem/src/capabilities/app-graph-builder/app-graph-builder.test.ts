@@ -155,7 +155,11 @@ const setupNativeFilesystemGraphBuilder = ({
   stateAtom: Atom.Writable<NativeFilesystemState>;
 }) => {
   const rootExtensions = Effect.runSync(createWorkspaceRootExtensions(stateAtom));
-  const entryExtensions = Effect.runSync(createFilesystemEntryExtensions(stateAtom, createMarkdownDocumentsStub()));
+  const stateCapabilitiesAtom = Atom.make([stateAtom]);
+  const nativeMarkdownDocsCapabilitiesAtom = Atom.make([createMarkdownDocumentsStub()]);
+  const entryExtensions = Effect.runSync(
+    createFilesystemEntryExtensions(stateCapabilitiesAtom, nativeMarkdownDocsCapabilitiesAtom),
+  );
 
   return setupGraphBuilder({
     registry,

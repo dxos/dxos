@@ -38,14 +38,20 @@ const IMAGE_TYPE = `${meta.id}.image`;
 const workspaceRearrangeCache = new Map<string, (nextOrder: (FilesystemWorkspace | unknown)[]) => void>();
 
 export const createFilesystemEntryExtensions = (
-  stateAtom: Atom.Writable<NativeFilesystemState>,
-  nativeMarkdownDocs: NativeMarkdownDocumentsService,
+  stateCapabilitiesAtom: Atom.Atom<Atom.Writable<NativeFilesystemState>[]>,
+  nativeMarkdownDocsCapabilitiesAtom: Atom.Atom<NativeMarkdownDocumentsService[]>,
 ) =>
   Effect.all([
     GraphBuilder.createExtension({
       id: `${meta.id}.workspace-entries`,
       match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
       connector: (node, get) => {
+        const [stateAtom] = get(stateCapabilitiesAtom);
+        const [nativeMarkdownDocs] = get(nativeMarkdownDocsCapabilitiesAtom);
+        if (!stateAtom || !nativeMarkdownDocs) {
+          return Effect.succeed([]);
+        }
+
         const workspaceId = (node.data as FilesystemWorkspace).id;
         const state: NativeFilesystemState = get(stateAtom);
         const workspace = state.workspaces.find((item) => item.id === workspaceId);
@@ -59,6 +65,12 @@ export const createFilesystemEntryExtensions = (
       id: `${meta.id}.directory-entries`,
       match: NodeMatcher.whenNodeType(DIRECTORY_TYPE),
       connector: (node, get) => {
+        const [stateAtom] = get(stateCapabilitiesAtom);
+        const [nativeMarkdownDocs] = get(nativeMarkdownDocsCapabilitiesAtom);
+        if (!stateAtom || !nativeMarkdownDocs) {
+          return Effect.succeed([]);
+        }
+
         const directoryId = (node.data as FilesystemDirectory).id;
         const state: NativeFilesystemState = get(stateAtom);
         const directory = findDirectoryById(state.workspaces, directoryId);
@@ -72,9 +84,15 @@ export const createFilesystemEntryExtensions = (
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
-    const stateAtom = yield* Capability.get(NativeFilesystemCapabilities.State);
-    const nativeMarkdownDocs = yield* Capability.get(NativeFilesystemCapabilities.NativeMarkdownDocuments);
-    const filesystemEntryExtensions = yield* createFilesystemEntryExtensions(stateAtom, nativeMarkdownDocs);
+    const stateCapabilitiesAtom = yield* Capability.atom(NativeFilesystemCapabilities.State);
+    const nativeMarkdownDocsCapabilitiesAtom = yield* Capability.atom(
+      NativeFilesystemCapabilities.NativeMarkdownDocuments,
+    );
+    const appGraphCapabilitiesAtom = capabilities.atom(AppCapabilities.AppGraph);
+    const filesystemEntryExtensions = yield* createFilesystemEntryExtensions(
+      stateCapabilitiesAtom,
+      nativeMarkdownDocsCapabilitiesAtom,
+    );
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -105,6 +123,11 @@ export default Capability.makeModule(
         id: `${meta.id}.workspaces`,
         match: NodeMatcher.whenRoot,
         connector: (_node, get) => {
+          const [stateAtom] = get(stateCapabilitiesAtom);
+          if (!stateAtom) {
+            return Effect.succeed([]);
+          }
+
           const state: NativeFilesystemState = get(stateAtom);
           const client = capabilities.get(ClientCapabilities.Client);
           const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
@@ -124,7 +147,11 @@ export default Capability.makeModule(
             spacesOrder = order;
           }
 
-          const { graph } = capabilities.get(AppCapabilities.AppGraph);
+          const [appGraph] = get(appGraphCapabilitiesAtom);
+          if (!appGraph) {
+            return Effect.succeed([]);
+          }
+          const graph = appGraph.graph;
 
           return Effect.succeed(
             state.workspaces.map((workspace: FilesystemWorkspace) => {

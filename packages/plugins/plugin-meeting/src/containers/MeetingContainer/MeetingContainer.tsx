@@ -6,7 +6,6 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
 import { IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
