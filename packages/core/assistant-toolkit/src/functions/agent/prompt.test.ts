@@ -61,7 +61,15 @@ const StubAiServiceLayer = Layer.succeed(AiService.AiService, {
   model: () => StubLanguageModelLayer,
 });
 
-const testTypes = [Prompt.Prompt, Chat.Chat, Blueprint.Blueprint, Feed.Feed, Message.Message, ContextBinding, Text.Text];
+const testTypes = [
+  Prompt.Prompt,
+  Chat.Chat,
+  Blueprint.Blueprint,
+  Feed.Feed,
+  Message.Message,
+  ContextBinding,
+  Text.Text,
+];
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),

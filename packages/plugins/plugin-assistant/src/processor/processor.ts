@@ -153,10 +153,7 @@ export class AiChatProcessor {
         const blueprints = this.context.getBlueprints();
         const objects = this.context.getObjects();
         return yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
-      }).pipe(
-        Effect.provideService(AiContextService, { binder: this.context }),
-        Effect.orDie,
-      ),
+      }).pipe(Effect.provideService(AiContextService, { binder: this.context }), Effect.orDie),
     );
   }
 

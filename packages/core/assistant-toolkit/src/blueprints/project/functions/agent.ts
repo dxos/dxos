@@ -32,9 +32,7 @@ export default Agent.pipe(
         const queueDxn = Feed.getQueueDxn(chatFeed);
         invariant(queueDxn, 'Feed queue DXN not found.');
         const chatQueue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
-        const conversation = yield* acquireReleaseResource(
-          () => new AiConversation({ queue: chatQueue }),
-        );
+        const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue: chatQueue }));
 
         const iniativesInContext = conversation.context.getObjects().filter(Obj.instanceOf(Project.Project));
         if (iniativesInContext.length !== 1) {
