@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { type ComponentPropsWithoutRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -15,10 +16,9 @@ import {
   type SVGContext,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
-import { composable, getHashStyles, mx } from '@dxos/ui-theme';
+import { composable, composableProps, getHashStyles } from '@dxos/ui-theme';
 
 import '@dxos/react-ui-graph/styles/graph.css';
-import { Atom, useAtomValue } from '@effect-atom/atom-react';
 
 export type D3ForceGraphProps = {
   model?: SpaceGraphModel;
@@ -31,14 +31,14 @@ export type D3ForceGraphProps = {
 const EMPTY_ATOM = Atom.make<{ nodes: SpaceGraphNode[]; edges: SpaceGraphEdge[] }>({ nodes: [], edges: [] });
 
 export const D3ForceGraph = composable<HTMLDivElement, D3ForceGraphProps>(
-  ({ classNames, className, model, selection: _selection, grid, drag, ...props }, forwardedRef) => {
+  ({ model, selection: _selection, grid, drag, ...props }, forwardedRef) => {
     // TODO(wittjosiah): This should go into Graph.tsx but for some reason doesn't work.
     useAtomValue(model?.graphAtom ?? EMPTY_ATOM);
 
-    const context = useRef<SVGContext>(null);
+    const svgRef = useRef<SVGContext>(null);
     const projector = useMemo<GraphForceProjector | undefined>(() => {
-      if (context.current) {
-        return new GraphForceProjector(context.current, {
+      if (svgRef.current) {
+        return new GraphForceProjector(svgRef.current, {
           attributes: {
             linkForce: (edge) => {
               // TODO(burdon): Check type (currently assumes Employee property).
@@ -53,7 +53,7 @@ export const D3ForceGraph = composable<HTMLDivElement, D3ForceGraphProps>(
           },
         });
       }
-    }, [context.current]);
+    }, []);
 
     const graph = useRef<GraphController>(null);
     const selection = useMemo(() => _selection ?? new SelectionModel(), [_selection]);
@@ -71,37 +71,39 @@ export const D3ForceGraph = composable<HTMLDivElement, D3ForceGraphProps>(
     );
 
     return (
-      <SVG.Root ref={context} classNames={mx(classNames, className)} {...props}>
-        <SVG.Markers />
-        {grid && <SVG.Grid axis />}
-        <SVG.Zoom extent={[1 / 2, 2]}>
-          <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
-            drag={drag}
-            ref={graph}
-            model={model}
-            projector={projector}
-            labels={{
-              text: (node) => {
-                return node.data?.data.label ?? node.id;
-              },
-            }}
-            attributes={{
-              node: (node: GraphLayoutNode<SpaceGraphNode>) => {
-                const obj = node.data?.data.object;
-                return {
-                  data: {
-                    color: getHashStyles(obj && Obj.getTypename(obj))?.hue,
-                  },
-                  classes: {
-                    'dx-selected': selection.contains(node.id),
-                  },
-                };
-              },
-            }}
-            onSelect={handleSelect}
-          />
-        </SVG.Zoom>
-      </SVG.Root>
+      <div {...composableProps(props, { role: 'none', className: 'dx-container' })} ref={forwardedRef}>
+        <SVG.Root ref={svgRef}>
+          <SVG.Markers />
+          {grid && <SVG.Grid axis />}
+          <SVG.Zoom extent={[1 / 2, 2]}>
+            <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
+              drag={drag}
+              ref={graph}
+              model={model}
+              projector={projector}
+              labels={{
+                text: (node) => {
+                  return node.data?.data.label ?? node.id;
+                },
+              }}
+              attributes={{
+                node: (node: GraphLayoutNode<SpaceGraphNode>) => {
+                  const obj = node.data?.data.object;
+                  return {
+                    data: {
+                      color: getHashStyles(obj && Obj.getTypename(obj))?.hue,
+                    },
+                    classes: {
+                      'dx-selected': selection.contains(node.id),
+                    },
+                  };
+                },
+              }}
+              onSelect={handleSelect}
+            />
+          </SVG.Zoom>
+        </SVG.Root>
+      </div>
     );
   },
 );
