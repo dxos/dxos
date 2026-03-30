@@ -149,7 +149,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }: any) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
@@ -207,8 +207,41 @@ export const Default: Story = {
       { timeout: 5000 },
     );
 
-    // TODO(burdon): Object creation via relation cell editor doesn't propagate to grid repaint.
-    //  The created object is saved but the cell never displays the value.
-    //  See: https://github.com/dxos/dxos/issues/TBD
+    // Test object creation (new relations) - equivalent to "new relations work as expected" test
+    // Find a different cell to test object creation (second row, relations column)
+    const newTargetCell = await within(secondGrid).findByTestId('grid.4.1', undefined, { timeout: 10_000 });
+    await expect(newTargetCell).toBeTruthy();
+
+    // Click to focus the cell
+    await userEvent.click(newTargetCell as Element);
+
+    await userEvent.keyboard('{Enter}');
+
+    // Look for the combobox that should appear in edit mode
+    const newCombobox = await body.findByRole('combobox');
+    await userEvent.click(newCombobox);
+
+    const newSearchField = await body.findByPlaceholderText('Search…');
+    await userEvent.click(newSearchField);
+
+    // Type a new object name (this will create a new object).
+    const newOrgName = 'Salieri LLC';
+    await userEvent.type(newSearchField, newOrgName);
+
+    // Click the create option directly to open the create form.
+    const createOptionLabel = await body.findByText(/Create new object/, undefined, { timeout: 2000 });
+    await userEvent.click(createOptionLabel.closest('[role="option"]') as HTMLElement);
+
+    // Look for and click save button.
+    const createReferencedObjectForm = await body.findByTestId('create-referenced-object-form', undefined, {
+      timeout: 2000,
+    });
+    const saveObjectButton = await within(createReferencedObjectForm).findByTestId('save-button');
+    await expect(saveObjectButton).not.toBeDisabled();
+    await userEvent.click(saveObjectButton);
+
+    // Verify the relation was set by checking for the accessory link anchor in the cell.
+    const updatedNewCell = await within(secondGrid).findByTestId('grid.4.1', undefined, { timeout: 5000 });
+    await expect(updatedNewCell.querySelector('dx-anchor')).toBeTruthy();
   },
-} as any;
+};

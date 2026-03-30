@@ -61,12 +61,13 @@ export default Capability.makeModule(
     const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
 
     // https://tauri.app/plugin/updater/#checking-for-updates
+    // Returns true to keep checking, false to stop.
     const action = Effect.gen(function* () {
       log.info('checking for updates');
       const update = yield* Effect.promise(() => check());
       if (!update) {
         log.info('no update available');
-        return;
+        return true;
       }
       log.info('update check complete', {
         available: update.available,
@@ -107,12 +108,17 @@ export default Capability.makeModule(
             actionAlt: ['update alt', { ns: meta.id }],
             onAction: () => relaunch(),
           });
+          return false;
         }
       }
+      return true;
     });
 
-    // Run immediately on startup, then repeat every hour.
-    const fiber = yield* action.pipe(Effect.repeat(Schedule.fixed(Duration.hours(1))), Effect.forkDaemon);
+    // Run immediately on startup, then repeat every hour. Stop once an update is found.
+    const schedule = Schedule.fixed(Duration.hours(1)).pipe(
+      Schedule.whileInput((keepChecking: boolean) => keepChecking),
+    );
+    const fiber = yield* action.pipe(Effect.repeat(schedule), Effect.forkDaemon);
     log.info('updater module initialized, update check scheduled');
 
     return Capability.contributes(Capabilities.Null, null, () =>
