@@ -52,17 +52,22 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
         return;
       }
 
-      const nextIcon = changed['icon'] ? newValues.icon : workspace.icon;
-      const nextHue = changed['hue'] ? newValues.hue : workspace.hue;
+      let mergedIcon: string | undefined;
+      let mergedHue: string | undefined;
 
-      updateState((state) => ({
-        ...state,
-        workspaces: state.workspaces.map((ws) =>
-          ws.id === workspace.id ? { ...ws, icon: nextIcon, hue: nextHue } : ws,
-        ),
-      }));
+      updateState((state) => {
+        const current = state.workspaces.find((ws) => ws.id === workspace.id);
+        mergedIcon = changed['icon'] ? newValues.icon : current?.icon;
+        mergedHue = changed['hue'] ? newValues.hue : current?.hue;
+        return {
+          ...state,
+          workspaces: state.workspaces.map((ws) =>
+            ws.id === workspace.id ? { ...ws, icon: mergedIcon, hue: mergedHue } : ws,
+          ),
+        };
+      });
 
-      const config = { icon: nextIcon, hue: nextHue };
+      const config = { icon: mergedIcon, hue: mergedHue };
       log.info('Writing composer config', { path: workspace.path, config });
       void runAndForwardErrors(
         writeComposerConfig(workspace.path, config).pipe(

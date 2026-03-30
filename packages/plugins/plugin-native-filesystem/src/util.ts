@@ -307,6 +307,10 @@ const readDir = (path: string): Effect.Effect<DirEntry[]> => {
 
 const processEntry = (entry: DirEntry, parentPath: string): Effect.Effect<FilesystemEntry | null> =>
   Effect.gen(function* () {
+    if (entry.isSymlink) {
+      return null;
+    }
+
     const entryPath = pathJoin(parentPath, entry.name);
     const entryId = createFileId(entryPath);
 
@@ -337,6 +341,9 @@ const processEntry = (entry: DirEntry, parentPath: string): Effect.Effect<Filesy
     }
 
     const text = yield* readFileContent(entryPath);
+    if (text === undefined) {
+      return null;
+    }
     return {
       id: entryId,
       name: entry.name,

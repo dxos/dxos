@@ -264,7 +264,7 @@ export default Capability.makeModule(
       directoryWatchers.set(workspaceId, { _tag: 'active', unwatch });
     };
 
-    const refreshDirectoryWatcher = (workspaceId: string, event: WatchEvent): Effect.Effect<void> =>
+    const refreshDirectoryWatcher = (workspaceId: string, _event: WatchEvent): Effect.Effect<void> =>
       Effect.gen(function* () {
         if (!isDirectoryWatcherEnabled(workspaceId)) {
           return;
@@ -278,16 +278,9 @@ export default Capability.makeModule(
 
         // TODO(wittjosiah): Refresh only the changed branch.
         //   This reloads the entire workspace snapshot, causing connectors to run even for localized changes.
-        nativeMarkdownDocuments.evictForWorkspace(currentWorkspace);
         const refreshed = yield* refreshWorkspace(currentWorkspace);
-        const includesChangedPaths =
-          refreshed && event.paths.length > 0
-            ? event.paths.map((path) => ({
-                path,
-                existsInRefreshedTree: workspaceContainsPath(refreshed.children, path),
-              }))
-            : [];
         if (refreshed) {
+          nativeMarkdownDocuments.evictForWorkspace(currentWorkspace);
           registry.update(stateAtom, (state) => ({
             ...state,
             workspaces: state.workspaces.map((ws) => (ws.id === workspaceId ? refreshed : ws)),

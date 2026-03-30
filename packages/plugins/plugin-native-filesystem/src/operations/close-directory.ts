@@ -18,21 +18,22 @@ export default NativeFilesystemOperation.CloseDirectory.pipe(
       const stateAtom = yield* Capability.get(NativeFilesystemCapabilities.State);
       const nativeMarkdownDocs = yield* Capability.get(NativeFilesystemCapabilities.NativeMarkdownDocuments);
 
-      const dirWatcher = yield* Capability.get(NativeFilesystemCapabilities.DirectoryWatcher);
-      yield* dirWatcher.stopWatching(id);
-
       const workspace = registry.get(stateAtom).workspaces.find((ws) => ws.id === id);
-      if (workspace) {
-        nativeMarkdownDocs.evictForWorkspace(workspace);
-      }
 
+      // Update state and persist before stopping watcher/evicting docs.
       registry.update(stateAtom, (current) => ({
         ...current,
         workspaces: current.workspaces.filter((ws) => ws.id !== id),
       }));
-
       const state = registry.get(stateAtom);
       yield* Effect.promise(() => localforage.setItem(STORAGE_KEY, state.workspaces));
+
+      const dirWatcher = yield* Capability.get(NativeFilesystemCapabilities.DirectoryWatcher);
+      yield* dirWatcher.stopWatching(id);
+
+      if (workspace) {
+        nativeMarkdownDocs.evictForWorkspace(workspace);
+      }
     }),
   ),
 );

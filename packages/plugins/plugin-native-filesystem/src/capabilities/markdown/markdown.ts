@@ -32,16 +32,22 @@ export default Capability.makeModule(
 
             const registry = capabilities.get(Capabilities.AtomRegistry);
             const stateAtom = capabilities.get(NativeFilesystemCapabilities.State);
-            const state: NativeFilesystemState = registry.get(stateAtom);
-            const result = findFileById(state.workspaces, fileId);
-            if (result) {
-              registry.update(stateAtom, (current: NativeFilesystemState) => ({
+            registry.update(stateAtom, (current: NativeFilesystemState) => {
+              const result = findFileById(current.workspaces, fileId);
+              if (!result) {
+                return current;
+              }
+              // Only clear modified if the saved text matches the current in-memory text.
+              if (result.file.text !== text) {
+                return current;
+              }
+              return {
                 ...current,
                 workspaces: current.workspaces.map((ws: FilesystemWorkspace) =>
                   ws.id === result.workspace.id ? updateFileInWorkspace(ws, fileId, { modified: false }) : ws,
                 ),
-              }));
-            }
+              };
+            });
             log('File auto-saved', { path });
           }),
         ),
