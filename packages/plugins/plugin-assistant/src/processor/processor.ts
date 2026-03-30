@@ -33,7 +33,6 @@ import {
   type TracingService,
 } from '@dxos/functions';
 import { runAndForwardErrors } from '@dxos/effect';
-import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 

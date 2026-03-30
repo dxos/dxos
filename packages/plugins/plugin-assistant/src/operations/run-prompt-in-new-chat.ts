@@ -16,7 +16,6 @@ import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { Text } from '@dxos/schema';
-import { type Message } from '@dxos/types';
 
 import { AssistantCapabilities } from '../types';
 import { CreateChat, RunPromptInNewChat } from './definitions';
