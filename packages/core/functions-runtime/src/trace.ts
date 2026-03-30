@@ -225,6 +225,7 @@ export namespace TracingServiceExt {
           log.warn('Failed to write trace event to queue', { error });
         });
       },
+      ephemeral: () => {},
       traceInvocationStart: () => Effect.die('TracingService.traceInvocationStart is not supported in this context.'),
       traceInvocationEnd: () => Effect.die('TracingService.traceInvocationEnd is not supported in this context.'),
     });
@@ -237,6 +238,9 @@ export namespace TracingServiceExt {
       getTraceContext: () => ({}),
       write: (event: Obj.Unknown, context: TracingService.TraceContext) => {
         log.info('trace event', { event });
+      },
+      ephemeral: (event: Obj.Unknown) => {
+        log.info('ephemeral trace event', { event });
       },
       traceInvocationStart: ({ payload, target }) =>
         Effect.sync(() => {
@@ -269,6 +273,7 @@ export namespace TracingServiceExt {
               log.warn('Failed to write trace event to queue', { error });
             });
           },
+          ephemeral: () => {},
           traceInvocationStart: Effect.fn('traceInvocationStart')(
             function* ({ payload, target }) {
               const invocationId = ObjectId.random();
@@ -343,6 +348,8 @@ class PrettyConsoleTracer implements Context.Tag.Service<TracingService> {
       console.log('[EVENT]', JSON.stringify(traceContext), JSON.stringify(event, null, 2));
     }
   }
+
+  ephemeral(_event: Obj.Unknown, _traceContext: TracingService.TraceContext): void {}
 
   traceInvocationStart = Effect.fn('traceInvocationStart')(function* ({ payload, target }) {
     const now = Date.now();

@@ -164,7 +164,7 @@ const TracingServiceLive = Layer.unwrapEffect(
       });
     }
 
-    const queue = properties.invocationTraceQueue.target;
+    const queue = properties.invocationTraceQueue!.target;
     invariant(queue);
     return TracingServiceExt.layerInvocationsQueue({ invocationTraceQueue: queue });
   }),

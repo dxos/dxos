@@ -113,7 +113,7 @@ export const layer = (opts?: {
       return {
         getSession: (queueDxn: DXN) =>
           Effect.gen(function* () {
-            const target = DXN.stringify(queueDxn);
+            const target = queueDxn.toString();
             const executable = AgentProcess({ systemPrompt: opts?.systemPrompt });
             const processes = yield* processManager.list({ target, key: executable.key });
             if (processes.length > 0) {
