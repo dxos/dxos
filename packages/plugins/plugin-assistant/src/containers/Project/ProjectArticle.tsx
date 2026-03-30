@@ -92,7 +92,7 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
 
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-        <Focus.Group asChild>
+        <Focus.Item asChild>
           <Menu.Root>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
               <Card.Toolbar>
@@ -118,7 +118,7 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
               </Card.Content>
             </Card.Root>
           </Menu.Root>
-        </Focus.Group>
+        </Focus.Item>
       </Mosaic.Tile>
     );
   },

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type KeyboardEvent, MouseEvent, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, { type KeyboardEvent, MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { ScrollArea } from '@dxos/react-ui';
@@ -33,28 +33,12 @@ type MessageTileData = {
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'location' | 'data'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location }, forwardedRef) => {
-  const rootRef = useRef<HTMLDivElement | null>(null);
   const { message, labels, currentMessageId, onAction } = data;
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), true);
 
-  // TODO(wittjosiah): Show selection state in the UI.
-  // const _isCurrent = currentMessageId === message.id;
+  const isCurrent = currentMessageId === message.id;
 
-  // Combine forwardedRef with local ref.
-  const setRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      rootRef.current = node;
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(node);
-      } else if (forwardedRef) {
-        forwardedRef.current = node;
-      }
-    },
-    [forwardedRef],
-  );
-
-  const handleClick = useCallback(() => {
-    rootRef.current?.focus();
+  const handleCurrentChange = useCallback(() => {
     onAction?.({ type: 'current', messageId: message.id });
   }, [message.id, onAction]);
 
@@ -90,8 +74,9 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   }, [labels, message.properties?.labels]);
 
   return (
-    <Mosaic.Tile classNames='dx-hover dx-current dx-selected' asChild id={message.id} data={data} location={location}>
-      <Card.Root onClick={handleClick} ref={setRef}>
+    <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={message.id} data={data} location={location}>
+      <Focus.Item asChild current={isCurrent} onCurrentChange={handleCurrentChange}>
+        <Card.Root ref={forwardedRef}>
         <Card.Toolbar>
           <Card.IconBlock>
             <DxAvatar
@@ -137,7 +122,8 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
             </Card.Row>
           )}
         </Card.Content>
-      </Card.Root>
+        </Card.Root>
+      </Focus.Item>
     </Mosaic.Tile>
   );
 });

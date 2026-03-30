@@ -64,7 +64,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
           location={location}
           debug={debug}
         >
-          <Focus.Group asChild>
+          <Focus.Item asChild>
             <Card.Root
               classNames={classNames}
               data-testid='board-item'
@@ -97,7 +97,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
                 )}
               </Card.Row>
             </Card.Root>
-          </Focus.Group>
+          </Focus.Item>
         </Mosaic.Tile>
       </Menu.Root>
     );

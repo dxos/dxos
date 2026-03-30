@@ -138,18 +138,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default = {
+export const Default: Story = {
   render: DefaultStackStory,
 };
 
-export const DefaultDraggable = {
+export const DefaultDraggable: Story = {
   render: DefaultStackStory,
   args: {
     draggable: true,
   },
 };
 
-export const DefaultDebug = {
+export const DefaultDebug: Story = {
   render: DefaultStackStory,
   args: {
     debug: true,
@@ -157,11 +157,11 @@ export const DefaultDebug = {
   },
 };
 
-export const Virtual = {
+export const Virtual: Story = {
   render: VirtualStackStory,
 };
 
-export const VirtualDraggable = {
+export const VirtualDraggable: Story = {
   render: VirtualStackStory,
   args: {
     draggable: true,

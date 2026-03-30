@@ -13,16 +13,17 @@ import { Slot } from '@radix-ui/react-slot';
 import React, {
   type FocusEvent,
   type KeyboardEvent,
-  type PropsWithChildren,
+  type MouseEvent,
   createContext,
   useCallback,
   useContext,
-  useRef,
   useState,
 } from 'react';
 
 import { type Axis } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composableProps, mx, slottable } from '@dxos/ui-theme';
+
+// TODO(burdon): Move into react-ui.
 
 //
 // Context
@@ -44,60 +45,34 @@ const useFocus = () => useContext(FocusContext);
 // Group
 //
 
-type GroupProps = PropsWithChildren<{
-  asChild?: boolean;
+type GroupProps = {
   orientation?: Axis;
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
-}>;
+};
 
+/**
+ * Provides arrow-key navigation across focusable children via tabster.
+ * Does not manage `aria-current` — use `Focus.Item` on each child for that.
+ */
 // TODO(wittjosiah): Consider how this could integrate with with react-ui-attention.
 //   Perhaps react-ui-attention comes under the mosaic umbrella as it supports selection?
-const Group = composable<HTMLDivElement, GroupProps>(
+const Group = slottable<HTMLDivElement, GroupProps>(
   ({ children, asChild, orientation = 'vertical', ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
-    const rootRef = useRef<HTMLDivElement>(null);
-    const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: orientation, memorizeCurrent: true });
     const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
     const [state, setState] = useState<FocusState | undefined>();
-    const currentRef = useRef<HTMLElement | null>(null);
 
-    // Track the currently focused tile via event delegation.
-    const handleFocusIn = useCallback((event: FocusEvent<HTMLDivElement>) => {
-      const target = event.target as HTMLElement;
-      const tile = target.closest('[role="listitem"]') as HTMLElement | null;
-      if (tile === currentRef.current) {
-        return;
-      }
-      if (currentRef.current) {
-        currentRef.current.removeAttribute('aria-current');
-      }
-      if (tile && rootRef.current?.contains(tile)) {
-        tile.setAttribute('aria-current', 'true');
-        currentRef.current = tile;
-      }
-    }, []);
-
-    const handleFocusOut = useCallback((event: FocusEvent<HTMLDivElement>) => {
-      // Clear aria-current when focus leaves the group entirely.
-      const related = event.relatedTarget as HTMLElement | null;
-      if (!related || !rootRef.current?.contains(related)) {
-        if (currentRef.current) {
-          currentRef.current.removeAttribute('aria-current');
-          currentRef.current = null;
-        }
-      }
-    }, []);
-
+    // TODO(burdon): Move into react-ui and use theme styles (focus.ts).
+    // TODO(burdon): Ring (box-shadow) requires a margin.
     return (
       <FocusContext.Provider value={{ setFocus: setState }}>
         <Comp
           {...composableProps(props, {
             tabIndex: 0,
             className: mx([
-              // TODO(burdon): Option for border/rounded; ring/outline vs border?
-              'outline-hidden border border-separator rounded-xs',
+              'ring-0 outline-hidden border border-separator rounded-xs',
               // Focus (e.g., via tabster).
               'focus:border-neutral-focus-indicator',
               // Active (e.g., drop target).
@@ -108,13 +83,82 @@ const Group = composable<HTMLDivElement, GroupProps>(
           })}
           {...tabsterAttrs}
           {...(state && { [`data-${FOCUS_STATE_ATTR}`]: state })}
-          onFocus={handleFocusIn}
-          onBlur={handleFocusOut}
-          ref={composedRef}
+          ref={useComposedRefs<HTMLDivElement>(forwardedRef)}
         >
           {children}
         </Comp>
       </FocusContext.Provider>
+    );
+  },
+);
+
+//
+// Item
+//
+
+type ItemProps = {
+  current?: boolean;
+  onCurrentChange?: () => void;
+};
+
+/**
+ * Focusable item within a `Focus.Group`.
+ * Uses `useFocusableGroup` so the parent Group's arrow navigation treats this as a single unit
+ * (internal buttons are not arrow-navigation targets; Enter/Escape to go in/out).
+ * Supports controlled (`current` prop) and uncontrolled (focus-driven) `aria-current`.
+ */
+const Item = slottable<HTMLDivElement, ItemProps>(
+  ({ children, asChild, current, onCurrentChange, onClick, onFocus, onBlur, ...props }, forwardedRef) => {
+    const Comp = asChild ? Slot : Primitive.div;
+    const focusableGroupAttrs = useFocusableGroup();
+    const controlled = current !== undefined;
+    const [focused, setFocused] = useState(false);
+
+    const handleClick = useCallback(
+      (event: MouseEvent<HTMLDivElement>) => {
+        onCurrentChange?.();
+        onClick?.(event);
+      },
+      [onCurrentChange, onClick],
+    );
+
+    const handleFocus = useCallback(
+      (event: FocusEvent<HTMLDivElement>) => {
+        if (!controlled) {
+          setFocused(true);
+        }
+        onFocus?.(event);
+      },
+      [controlled, onFocus],
+    );
+
+    const handleBlur = useCallback(
+      (event: FocusEvent<HTMLDivElement>) => {
+        if (!controlled) {
+          setFocused(false);
+        }
+        onBlur?.(event);
+      },
+      [controlled, onBlur],
+    );
+
+    const isCurrent = controlled ? current : focused;
+
+    return (
+      <Comp
+        {...composableProps(props, {
+          tabIndex: 0,
+          className: 'outline-hidden',
+        })}
+        {...focusableGroupAttrs}
+        aria-current={isCurrent || undefined}
+        onClick={handleClick}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        ref={forwardedRef}
+      >
+        {children}
+      </Comp>
     );
   },
 );
@@ -125,8 +169,9 @@ const Group = composable<HTMLDivElement, GroupProps>(
 
 export const Focus = {
   Group,
+  Item,
 };
 
-export type { GroupProps as FocusGroupProps };
+export type { GroupProps as FocusGroupProps, ItemProps as FocusItemProps };
 
 export { useFocus };

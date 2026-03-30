@@ -16,7 +16,6 @@ import {
   attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
-import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
@@ -93,7 +92,6 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       setActiveLocation,
     } = useMosaicContainerContext(MOSAIC_TILE_NAME);
     const [state, setState] = useState<MosaicTileState>({ type: 'idle' });
-    const focusableGroupAttrs = useFocusableGroup();
 
     const allowedEdges = useMemo<Edge[]>(
       () => allowedEdgesProp || (orientation === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
