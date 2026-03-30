@@ -71,6 +71,22 @@ for APP_PATH in "${APPS[@]}"; do
       --release-name "$outdir" \
       --release-version "$RELEASE_VERSION"
   fi
+
+  # Strip sourcemaps exceeding Cloudflare Pages' 25 MiB per-file limit.
+  # PostHog upload (above) has already ingested them for symbolication.
+  MAX_BYTES=$((25 * 1024 * 1024))
+  while IFS= read -r -d '' mapfile; do
+    size=$(stat --format='%s' "$mapfile" 2>/dev/null || stat -f '%z' "$mapfile")
+    if (( size > MAX_BYTES )); then
+      jsfile="${mapfile%.map}"
+      if [[ -f "$jsfile" ]]; then
+        sed -i "s|//# sourceMappingURL=.*||" "$jsfile"
+      fi
+      echo "Stripped oversized sourcemap before deploy: $mapfile ($((size / 1024 / 1024)) MiB)"
+      rm "$mapfile"
+    fi
+  done < <(find "out/$outdir" -name '*.map' -print0 2>/dev/null)
+
   pnpm exec wrangler pages deploy out/"$outdir" --branch "$BRANCH"
   wrangler_rc=$?
   set -e

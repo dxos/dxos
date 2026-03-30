@@ -212,8 +212,11 @@ export default defineConfig((env) => ({
   plugins: [
     ...sharedPlugins(env),
 
-    // TODO(wittjosiah): Temporary hack to get publishing running again.
-    //   Enforce max file size for Cloudflare Pages (25 MiB limit).
+    // TODO(wittjosiah): Investigate splitting chunks so no sourcemap exceeds 25 MiB,
+    //   rather than stripping oversized maps after the build.
+    // Warn about assets exceeding Cloudflare Pages' 25 MiB file-size limit.
+    // Oversized sourcemaps are left in the build output so PostHog can upload them for symbolication.
+    // The publish script strips them from the output directory before the Cloudflare deploy.
     {
       name: 'enforce-max-asset-size',
       enforce: 'post',
@@ -224,10 +227,19 @@ export default defineConfig((env) => ({
             const mapSize = Buffer.byteLength(JSON.stringify(entry.map));
             if (mapSize > maxBytes) {
               const mapName = `${entry.fileName}.map`;
-              entry.code = entry.code.replace(/\n?\/\/# sourceMappingURL=.*$/, '');
-              entry.map = null!;
-              delete bundle[mapName];
-              console.warn(`Removed ${mapName} (${(mapSize / 1024 / 1024).toFixed(1)} MiB exceeds 25 MiB limit)`);
+              console.error(
+                `[enforce-max-asset-size] ${mapName} is ${(mapSize / 1024 / 1024).toFixed(1)} MiB ` +
+                  `(exceeds 25 MiB Cloudflare Pages limit); will be stripped before deploy.`,
+              );
+            }
+          }
+          if (entry.type === 'asset' && typeof entry.source === 'string') {
+            const size = Buffer.byteLength(entry.source);
+            if (size > maxBytes) {
+              this.error(
+                `${entry.fileName} is ${(size / 1024 / 1024).toFixed(1)} MiB ` +
+                  `and exceeds the 25 MiB Cloudflare Pages limit.`,
+              );
             }
           }
         }
