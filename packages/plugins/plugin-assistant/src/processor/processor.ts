@@ -64,6 +64,11 @@ export type AiChatProcessorOptions = {
    * For tracing.
    */
   chat?: Ref.Ref<Chat.Chat>;
+  /**
+   * Returns ambient focus context to inject into prompts.
+   * "Ambient focus" (not "context") to avoid collision with AiContextBinder / AiContextService.
+   */
+  getAmbientFocus?: () => string | undefined;
 } & Pick<AiConversationRunProps, 'system'>;
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
@@ -181,6 +186,10 @@ export class AiChatProcessor {
 
       const services = await this._services();
 
+      // Prepend ambient focus context if available.
+      const ambientFocus = this._options.getAmbientFocus?.();
+      const prompt = ambientFocus ? `${ambientFocus}\n${requestProp.message}` : requestProp.message;
+
       // Create request.
       const request = Effect.gen(this, function* () {
         const tracer = yield* TracingService;
@@ -189,7 +198,7 @@ export class AiChatProcessor {
           payload: {
             chat: this._options.chat,
             data: {
-              prompt: requestProp.message,
+              prompt,
             },
           },
         });
@@ -197,7 +206,7 @@ export class AiChatProcessor {
         const result = yield* this._conversation
           .createRequest({
             system: this._options.system,
-            prompt: requestProp.message,
+            prompt,
             observer: this._observer,
           })
           .pipe(

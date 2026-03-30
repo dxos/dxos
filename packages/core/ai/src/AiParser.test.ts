@@ -250,6 +250,51 @@ describe('parser', () => {
         ] satisfies ContentBlock.Any[]);
       }),
     );
+
+    it.effect(
+      'ephemeral_context tag is silently dropped (unknown tag)',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          ...text([
+            '<ephemeral_context>Currently viewing: [dxn:echo:space1:obj1 Document "My Doc" path:root/space1/obj1].</ephemeral_context>',
+            'Hello, world!',
+          ]),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          {
+            _tag: 'text',
+            text: 'Hello, world!',
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
+
+    it.effect(
+      'ephemeral_context tag with recently viewed is silently dropped',
+      Effect.fn(function* ({ expect }) {
+        const result = yield* makeInputStream([
+          ...text(
+            splitByCharacter(
+              '<ephemeral_context>Currently viewing: [dxn:echo:space1:obj1 Document "Doc1"]. Recently viewed: [dxn:echo:space1:obj2 Note "Note1"].</ephemeral_context>What is this document about?',
+            ),
+          ),
+        ])
+          .pipe(AiParser.parseResponse())
+          .pipe(Stream.runCollect)
+          .pipe(Effect.map(Chunk.toArray));
+
+        expect(result).toEqual([
+          {
+            _tag: 'text',
+            text: 'What is this document about?',
+          },
+        ] satisfies ContentBlock.Any[]);
+      }),
+    );
   });
 
   describe('streaming', () => {

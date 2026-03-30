@@ -4,7 +4,12 @@
 
 import { Atom, type Registry } from '@effect-atom/atom-react';
 
-import { type Attention } from './types';
+import { type Attention, type AttentionHistoryEntry } from './types';
+
+/**
+ * Default maximum number of entries in the attention history ring buffer.
+ */
+const DEFAULT_HISTORY_SIZE = 20;
 
 /**
  * Manages attention state for an application.
@@ -14,11 +19,17 @@ export class AttentionManager {
   private readonly _map = new Map<string, Atom.Writable<Attention>>();
   private readonly _currentAtom: Atom.Writable<string[]>;
 
+  /** Bounded ring buffer for attention history (newest first). */
+  private readonly _history: AttentionHistoryEntry[] = [];
+  private readonly _historySize: number;
+
   constructor(
     private readonly _registry: Registry.Registry,
     initial: string[] = [],
+    historySize: number = DEFAULT_HISTORY_SIZE,
   ) {
     this._currentAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
+    this._historySize = historySize;
     if (initial.length > 0) {
       this.update(initial);
     }
@@ -88,6 +99,22 @@ export class AttentionManager {
   }
 
   /**
+   * Returns deduplicated recent attention history entries, newest first.
+   * Entries are deduplicated by ID, keeping only the most recent occurrence.
+   */
+  getHistory(): AttentionHistoryEntry[] {
+    const seen = new Set<string>();
+    const deduplicated: AttentionHistoryEntry[] = [];
+    for (const entry of this._history) {
+      if (!seen.has(entry.id)) {
+        seen.add(entry.id);
+        deduplicated.push(entry);
+      }
+    }
+    return deduplicated;
+  }
+
+  /**
    * Update the currently attended element.
    * Takes the array of qualified IDs collected from the DOM; the first element is the primary attended item.
    * Ancestry is derived from the progressive prefixes of the primary ID.
@@ -102,6 +129,8 @@ export class AttentionManager {
     if (!primaryId) {
       return;
     }
+
+    this._pushHistory(primaryId);
 
     const currentIds = this.getCurrent();
     const prevPrimaryId = currentIds[0];
@@ -152,6 +181,21 @@ export class AttentionManager {
       isAncestor: attention.isAncestor ?? false,
       isRelated: attention.isRelated ?? false,
     });
+  }
+
+  /**
+   * Push a new entry to the history ring buffer.
+   * Maintains bounded size by removing oldest entries when full.
+   */
+  private _pushHistory(id: string): void {
+    const entry: AttentionHistoryEntry = {
+      id,
+      timestamp: Date.now(),
+    };
+    this._history.unshift(entry);
+    while (this._history.length > this._historySize) {
+      this._history.pop();
+    }
   }
 }
 

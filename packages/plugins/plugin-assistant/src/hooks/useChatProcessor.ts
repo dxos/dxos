@@ -4,13 +4,15 @@
 
 import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import type * as Runtime from 'effect/Runtime';
-import { useContext, useMemo, useState } from 'react';
+import { useCallback, useContext, useMemo, useState } from 'react';
 
+import { type Graph } from '@dxos/app-graph';
 import { Ref } from '@dxos/echo';
 import { AiConversation } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { log } from '@dxos/log';
+import { type AttentionManager, createAmbientFocusContext } from '@dxos/plugin-attention';
 import { type Queue, type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
@@ -24,6 +26,10 @@ export type UseChatProcessorProps = {
   services?: () => Promise<Runtime.Runtime<AiChatServices>>;
   blueprintRegistry?: Blueprint.Registry;
   settings?: Assistant.Settings;
+  /** Attention manager for ambient focus context injection. */
+  attention?: AttentionManager;
+  /** App graph for resolving attention IDs to ECHO nodes. */
+  graph?: Graph.ReadableGraph;
 };
 
 /**
@@ -36,6 +42,8 @@ export const useChatProcessor = ({
   services,
   blueprintRegistry,
   settings,
+  attention,
+  graph,
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
@@ -61,6 +69,14 @@ export const useChatProcessor = ({
     };
   }, [space, chat?.queue.dxn.toString()]);
 
+  // Create ambient focus getter.
+  const getAmbientFocus = useCallback(() => {
+    if (!attention || !graph) {
+      return undefined;
+    }
+    return createAmbientFocusContext({ attention, graph });
+  }, [attention, graph]);
+
   // Create processor.
   const processor = useMemo(() => {
     if (!services || !conversation) {
@@ -73,8 +89,9 @@ export const useChatProcessor = ({
       observableRegistry,
       blueprintRegistry,
       model: preset?.model,
+      getAmbientFocus,
     });
-  }, [services, conversation, blueprintRegistry, preset]);
+  }, [services, conversation, blueprintRegistry, preset, getAmbientFocus]);
 
   return processor;
 };
