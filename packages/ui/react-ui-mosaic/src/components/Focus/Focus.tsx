@@ -10,7 +10,7 @@ import {
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type PropsWithChildren, createContext, useContext, useRef, useState } from 'react';
+import React, { type KeyboardEvent, type PropsWithChildren, createContext, useContext, useRef, useState } from 'react';
 
 import { type Axis } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
@@ -38,6 +38,7 @@ const useFocus = () => useContext(FocusContext);
 type GroupProps = PropsWithChildren<{
   asChild?: boolean;
   orientation?: Axis;
+  onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
 }>;
 
 // TODO(wittjosiah): Consider how this could integrate with with react-ui-attention.
@@ -47,15 +48,8 @@ const Group = composable<HTMLDivElement, GroupProps>(
     const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-
-    // TODO(burdon): Configure.
-    const focusableGroupAttrs = useFocusableGroup({
-      tabBehavior: 'limited-trap-focus',
-    });
-    const arrowNavigationAttrs = useArrowNavigationGroup({
-      axis: orientation,
-      memorizeCurrent: true,
-    });
+    const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
+    const arrowNavigationAttrs = useArrowNavigationGroup({ axis: orientation, memorizeCurrent: true });
     const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
     const [state, setState] = useState<FocusState | undefined>();
 
@@ -63,9 +57,10 @@ const Group = composable<HTMLDivElement, GroupProps>(
       <FocusContext.Provider value={{ setFocus: setState }}>
         <Comp
           {...composableProps(props, {
+            tabIndex: 0,
             className: mx([
               // TODO(burdon): Option for border/rounded; ring/outline vs border?
-              'outline-hidden border border-separator md:rounded-xs',
+              'outline-hidden border border-separator rounded-xs',
               // Focus (e.g., via tabster).
               'focus:border-neutral-focus-indicator',
               // Active (e.g., drop target).
@@ -75,10 +70,7 @@ const Group = composable<HTMLDivElement, GroupProps>(
             ]),
           })}
           {...tabsterAttrs}
-          {...(state && {
-            [`data-${FOCUS_STATE_ATTR}`]: state,
-          })}
-          tabIndex={0}
+          {...(state && { [`data-${FOCUS_STATE_ATTR}`]: state })}
           ref={composedRef}
         >
           {children}

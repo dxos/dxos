@@ -4,19 +4,20 @@
 
 @layer dx-components {
   .dx-hover {
-    @apply hover:bg-highlight-surface! hover:text-highlight-surface-text!;
+    @apply cursor-pointer hover:bg-highlight-surface! hover:text-highlight-surface-text!;
   }
 
+  /** TODO(burdon): Disambiguate from dx-hover */
   .dx-highlighted {
     @apply data-[highlighted]:bg-highlight-surface
       data-[highlighted]:text-highlight-surface-text
       hover:data-[highlighted]:bg-highlight-surface-hover;
   }
 
+  /** TODO(burdon): Reconcile with current */
   .dx-selected {
     @apply aria-selected:bg-selected-surface
-      aria-selected:text-selected-surface-text
-      hover:aria-selected:text-selected-surface-text
+      aria-selected:text-selected-surface-text hover:aria-selected:text-selected-surface-text
       aria-selected:font-semibold aria-selected:tracking-normal
       transition-[color,font-variation-settings,letter-spacing];
   }

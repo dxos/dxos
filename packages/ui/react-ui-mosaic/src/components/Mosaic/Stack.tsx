@@ -44,11 +44,11 @@ type MosaicStackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
 type MosaicStackProps<TData = any> = ThemedClassName<
   {
-    Tile: MosaicStackTileComponent<TData>;
-    getId: GetId<TData>;
     role?: string;
+    getId: GetId<TData>;
     orientation?: Axis;
     items?: readonly TData[];
+    Tile: MosaicStackTileComponent<TData>;
   } & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>
 >;
 
@@ -58,7 +58,7 @@ type MosaicStackProps<TData = any> = ThemedClassName<
  */
 const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
   (
-    { role = 'list', orientation: orientationProp = 'vertical', draggable = true, items, getId, Tile, debug, ...props },
+    { role = 'list', getId, orientation: orientationProp = 'vertical', items, Tile, draggable = true, debug, ...props },
     forwardedRef,
   ) => {
     const { className, ...rest } = composableProps(props);

@@ -209,6 +209,7 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
     return (
       <ToolbarIconButton
         data-testid={testId}
+        tabIndex={-1}
         noTooltip
         iconOnly
         icon='ph--dots-six-vertical--regular'

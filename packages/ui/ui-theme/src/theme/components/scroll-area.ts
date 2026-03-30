@@ -69,7 +69,7 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
         : margin && (thin ? 'pl-[4px]' : 'pl-[8px]')),
 
     // NOTE: Add minimal padding for form top/bottom outlines.
-    (orientation === 'vertical' || orientation === 'all') && 'pt-form-chrome pb-form-chrome',
+    // (orientation === 'vertical' || orientation === 'all') && 'pt-form-chrome pb-form-chrome',
 
     (orientation === 'horizontal' || orientation === 'all') &&
       (padding

@@ -31,7 +31,6 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
           <Card.Toolbar>
             <Card.DragHandle ref={dragHandleRef} />
             <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
-            {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
             <Menu.Trigger asChild disabled={!menuItems?.length}>
               <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
             </Menu.Trigger>
