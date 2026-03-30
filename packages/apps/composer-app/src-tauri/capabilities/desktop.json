@@ -10,6 +10,18 @@
     "core:window:allow-set-focus",
     "core:window:allow-show",
     "core:window:allow-start-dragging",
+    "dialog:default",
+    "dialog:allow-open",
+    "fs:read-all",
+    {
+      "identifier": "fs:allow-watch",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "**" }]
+    },
+    "fs:write-all",
     "process:default",
     "shell:allow-open",
     {

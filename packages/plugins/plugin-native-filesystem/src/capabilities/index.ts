@@ -4,5 +4,5 @@
 
 export { AppGraphBuilder } from './app-graph-builder';
 export { Markdown } from './markdown';
-export { OperationResolver } from './operation-resolver';
+export { OperationHandler } from './operation-handler';
 export { State } from './state';

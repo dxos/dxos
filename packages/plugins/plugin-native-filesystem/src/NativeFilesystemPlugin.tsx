@@ -6,7 +6,7 @@ import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
-import { AppGraphBuilder, Markdown, OperationResolver, State } from './capabilities';
+import { AppGraphBuilder, Markdown, OperationHandler, State } from './capabilities';
 import { meta } from './meta';
 import { NativeFilesystemCapabilities } from './types';
 import { translations } from './translations';
@@ -15,7 +15,7 @@ const StateReady = AppActivationEvents.createStateEvent(NativeFilesystemCapabili
 
 export const NativeFilesystemPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addAppGraphModule({
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, StateReady),
     activate: AppGraphBuilder,
