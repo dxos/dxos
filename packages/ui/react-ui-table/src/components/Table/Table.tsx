@@ -47,7 +47,15 @@ type TableRootProps = PropsWithChildren;
 
 const TableRoot = forwardRef<TableController, TableRootProps>(({ children }, forwardedRef) => {
   const controllerRef = useRef<TableController>({});
-  useImperativeHandle(forwardedRef, () => controllerRef.current, []);
+
+  useImperativeHandle(
+    forwardedRef,
+    () => ({
+      update: (cell) => controllerRef.current?.update?.(cell),
+      handleInsertRowResult: (result) => controllerRef.current?.handleInsertRowResult?.(result),
+    }),
+    [],
+  );
 
   return <TableContextProvider controllerRef={controllerRef}>{children}</TableContextProvider>;
 });
