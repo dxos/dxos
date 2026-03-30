@@ -5,7 +5,7 @@
 import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import { useContext, useMemo, useState } from 'react';
 
-import { Ref } from '@dxos/echo';
+import { Feed, Ref } from '@dxos/echo';
 import { AiConversation } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
@@ -45,7 +45,12 @@ export const useChatProcessor = ({
       return;
     }
 
-    const queue = space.queues.get(chat.queue.dxn);
+    const feedTarget = chat.feed.target;
+    const queueDxn = feedTarget ? Feed.getQueueDxn(feedTarget) : undefined;
+    if (!queueDxn) {
+      return;
+    }
+    const queue = space.queues.get(queueDxn);
     const conversation = new AiConversation({
       queue: queue as Queue<any>,
       registry: observableRegistry as Registry.Registry,
@@ -56,21 +61,23 @@ export const useChatProcessor = ({
       void conversation.close();
       setConversation(undefined);
     };
-  }, [space, chat?.queue.dxn.toString()]);
+  }, [space, chat?.feed.target]);
+
+  const feed = chat?.feed.target;
 
   const processor = useMemo(() => {
-    if (!runtime || !conversation || !chat) {
+    if (!runtime || !conversation || !chat || !feed) {
       return undefined;
     }
 
     log('creating processor', { preset, model: preset?.model, settings });
-    return new AiChatProcessor(conversation, runtime, chat.queue.dxn, {
+    return new AiChatProcessor(conversation, runtime, feed, {
       chat: chat ? Ref.make(chat) : undefined,
       observableRegistry,
       blueprintRegistry,
       model: preset?.model,
     });
-  }, [runtime, conversation, blueprintRegistry, preset]);
+  }, [runtime, conversation, blueprintRegistry, preset, feed]);
 
   return processor;
 };

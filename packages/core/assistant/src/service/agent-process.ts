@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiService, GenericToolkit, type ModelName } from '@dxos/ai';
-import { Database, DXN } from '@dxos/echo';
+import { Database, DXN, Feed } from '@dxos/echo';
 import { QueueService, TracingService } from '@dxos/functions';
 import { Process, ProcessOperationInvoker, StorageService } from '@dxos/functions-runtime';
 import { Operation, OperationRegistry } from '@dxos/operation';

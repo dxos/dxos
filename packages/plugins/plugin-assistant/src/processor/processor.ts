@@ -8,7 +8,14 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
+import {
+  type AiService,
+  DEFAULT_EDGE_MODEL,
+  type ModelName,
+  type ModelRegistry,
+  type ToolExecutionService,
+  type ToolResolverService,
+} from '@dxos/ai';
 import {
   AiContextService,
   type AiConversation,
@@ -18,20 +25,40 @@ import {
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
-import { DXN, Obj, Ref } from '@dxos/echo';
+import { type Database, Feed, Obj, Ref } from '@dxos/echo';
+import {
+  type CredentialsService,
+  type FunctionInvocationService,
+  type QueueService,
+  type TracingService,
+} from '@dxos/functions';
 import { runAndForwardErrors } from '@dxos/effect';
+import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { updateName } from './update-name';
 import type { AutomationCapabilities } from '@dxos/plugin-automation';
 
+/**
+ * @deprecated Services type for the old direct-conversation processor path.
+ * Retained for backward compatibility with CLI and update-name.
+ */
+export type AiChatServices =
+  | CredentialsService
+  | Database.Service
+  | QueueService
+  | FunctionInvocationService
+  | AiService.AiService
+  | ToolExecutionService
+  | ToolResolverService
+  | TracingService;
+
 export type AiChatProcessorOptions = {
   model?: ModelName;
   modelRegistry?: ModelRegistry;
   blueprintRegistry?: Blueprint.Registry;
   observableRegistry?: Registry.Registry;
-  extensions?: ToolContextExtensions;
   /**
    * For tracing.
    */
@@ -63,11 +90,14 @@ export class AiChatProcessor {
   /** Currently streaming messages (from ephemeral trace events). */
   readonly #streaming = Atom.make<Message.Message[]>([]);
 
-  /** Currently active streaming fiber. */
-  #streamFiber: Fiber.Fiber<void, any> | undefined;
+  /** Set of message IDs that have been finalized (non-pending delivered via ephemeral). */
+  readonly #finalizedIds = new Set<string>();
+
+  /** Currently active streaming fiber (scoped to the runtime). */
+  #streamFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
 
   /** Currently active request fiber. */
-  #requestFiber: Fiber.Fiber<void, any> | undefined;
+  #requestFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
 
   /** Last request (for retries). */
   #lastRequest: AiRequest | undefined;
@@ -87,7 +117,7 @@ export class AiChatProcessor {
   constructor(
     private readonly _conversation: AiConversation,
     private readonly _runtime: AutomationCapabilities.ComputeRuntime,
-    private readonly _queueDxn: DXN,
+    private readonly _feed: Feed.Feed,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     this.#registry = this._options.observableRegistry ?? Registry.make();
@@ -124,9 +154,7 @@ export class AiChatProcessor {
         const objects = this.context.getObjects();
         return yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
       }).pipe(
-        Effect.provideService(AiContextService, {
-          binder: this.context,
-        }),
+        Effect.provideService(AiContextService, { binder: this.context }),
         Effect.orDie,
       ),
     );
@@ -146,31 +174,31 @@ export class AiChatProcessor {
       this.#registry.set(this.active, true);
 
       const effect = Effect.gen(this, function* () {
-        const session = yield* AgentService.getSession(this._queueDxn);
+        const session = yield* AgentService.getSession(this._feed);
 
         const ephemeralStream = session.subscribeEphemeral();
-        const streamEffect = Stream.runForEach(ephemeralStream, (event: Obj.Unknown) => {
-          return Effect.sync(() => {
+        const streamEffect = Stream.runForEach(ephemeralStream, (event: Obj.Unknown) =>
+          Effect.sync(() => {
             if (Obj.instanceOf(Message.Message, event)) {
               this.#handleEphemeralMessage(event);
             }
-          });
-        });
+          }),
+        );
 
         const streamFiber = yield* Effect.fork(streamEffect);
-        this.#streamFiber = streamFiber as any;
+        this.#streamFiber = streamFiber;
 
         yield* session.submitPrompt(requestProp.message);
         yield* session.waitForCompletion();
         yield* Fiber.interrupt(streamFiber);
 
         this.#flushStreaming();
-      }).pipe(Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)));
+      });
 
-      this.#requestFiber = this._runtime.runFork(effect) as any;
+      this.#requestFiber = this._runtime.runFork(effect);
 
       try {
-        await this._runtime.runPromise(Fiber.join(this.#requestFiber!));
+        await this._runtime.runPromise(Fiber.join(this.#requestFiber));
       } catch (err: any) {
         if (err._tag === 'InterruptedException' || err.message?.includes('interrupted')) {
           return;
@@ -230,12 +258,17 @@ export class AiChatProcessor {
 
   /**
    * Handles an ephemeral message from the agent process.
-   * Aggregates by message ID: pending blocks update streaming state, non-pending blocks finalize.
+   * Both pending and completed blocks arrive here. Completed blocks are deduped
+   * against messages already written to the feed queue to handle the race between
+   * ephemeral delivery and feed replication.
    */
   #handleEphemeralMessage(message: Message.Message) {
     const isPending = message.blocks.some((block) => block.pending);
 
     if (isPending) {
+      if (this.#finalizedIds.has(message.id)) {
+        return;
+      }
       this.#registry.update(this.#streaming, (streaming) => {
         const idx = streaming.findIndex((existing) => existing.id === message.id);
         if (idx >= 0) {
@@ -246,8 +279,14 @@ export class AiChatProcessor {
         return [...streaming, message];
       });
     } else {
+      this.#finalizedIds.add(message.id);
       this.#registry.update(this.#streaming, (streaming) => streaming.filter((existing) => existing.id !== message.id));
-      this.#registry.update(this.#pending, (pending) => [...pending, message]);
+      this.#registry.update(this.#pending, (pending) => {
+        if (pending.some((existing) => existing.id === message.id)) {
+          return pending;
+        }
+        return [...pending, message];
+      });
     }
   }
 
@@ -260,24 +299,6 @@ export class AiChatProcessor {
       this.#registry.update(this.#pending, (pending) => [...pending, ...remaining]);
       this.#registry.set(this.#streaming, []);
     }
+    this.#finalizedIds.clear();
   }
 }
-
-/**
- * Context extensions placeholder.
- */
-export type ToolContextExtensions = Record<string, unknown>;
-
-/**
- * @deprecated Services type for the old direct-conversation processor path.
- * Retained for backward compatibility with CLI and update-name.
- */
-export type AiChatServices =
-  | import('@dxos/functions').CredentialsService
-  | import('@dxos/echo').Database.Service
-  | import('@dxos/functions').QueueService
-  | import('@dxos/functions').FunctionInvocationService
-  | import('@dxos/ai').AiService.AiService
-  | import('@dxos/ai').ToolExecutionService
-  | import('@dxos/ai').ToolResolverService
-  | import('@dxos/functions').TracingService;

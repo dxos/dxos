@@ -99,9 +99,10 @@ describe('Agent prompt', () => {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const messageCountBefore = yield* countQueueMessages(queue);
 
+        const feed = yield* Database.add(Feed.make());
         const chat = yield* Database.add(
           Chat.make({
-            queue: Ref.fromDXN(queue.dxn),
+            feed: Ref.make(feed),
           }),
         );
 
