@@ -34,7 +34,8 @@ export const setupGraphBuilder = ({ registry = Registry.make(), extensions }: Se
       await GraphBuilder.flush(builder);
     },
     flush: () => GraphBuilder.flush(builder),
-    getConnections: (id: string, relation: Node.RelationInput = 'child') => registry.get(graph.connections(id, relation)),
+    getConnections: (id: string, relation: Node.RelationInput = 'child') =>
+      registry.get(graph.connections(id, relation)),
     getNode: (id: string) => Graph.getNode(graph, id).pipe(Option.getOrNull),
   };
 };

@@ -355,13 +355,13 @@ const readDirectoryContents = (path: string): Effect.Effect<FilesystemEntry[]> =
     return processedEntries
       .filter((entry): entry is FilesystemEntry => entry !== null)
       .sort((entryA, entryB) => {
-      const aIsDir = 'children' in entryA;
-      const bIsDir = 'children' in entryB;
-      if (aIsDir !== bIsDir) {
-        return aIsDir ? -1 : 1;
-      }
-      return entryA.name.localeCompare(entryB.name);
-    });
+        const aIsDir = 'children' in entryA;
+        const bIsDir = 'children' in entryB;
+        if (aIsDir !== bIsDir) {
+          return aIsDir ? -1 : 1;
+        }
+        return entryA.name.localeCompare(entryB.name);
+      });
   });
 
 export const loadWorkspace = (path: string): Effect.Effect<FilesystemWorkspace | null> => {

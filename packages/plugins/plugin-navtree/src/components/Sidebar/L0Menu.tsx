@@ -303,7 +303,7 @@ export const L0Menu = ({
         source.id === target.id
           ? sourceIndex
           : targetIndex +
-          (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
+            (sourceIndex < targetIndex ? (closestEdge === 'top' ? -1 : 0) : closestEdge === 'bottom' ? 1 : 0);
       const nextOrder = arrayMove([...topLevelItems], sourceIndex, insertIndex);
       return sourceItem.properties.onRearrange(nextOrder.map((item) => item.data));
     },

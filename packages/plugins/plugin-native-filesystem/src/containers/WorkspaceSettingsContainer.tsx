@@ -67,7 +67,9 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
       void runAndForwardErrors(
         writeComposerConfig(workspace.path, config).pipe(
           Effect.tap((success) =>
-            success ? Effect.void : Effect.sync(() => log.warn('Failed to write composer config', { path: workspace.path })),
+            success
+              ? Effect.void
+              : Effect.sync(() => log.warn('Failed to write composer config', { path: workspace.path })),
           ),
         ),
       );
@@ -89,7 +91,12 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
           <Settings.Item title={label} description={t('icon description')}>
-            <IconPicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
+            <IconPicker
+              value={getValue()}
+              onChange={handleChange}
+              onReset={handleReset}
+              classNames='justify-self-end'
+            />
           </Settings.Item>
         );
       },
@@ -109,7 +116,12 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
   return (
     <Settings.Root>
       <Settings.Section title={t('folder properties title')}>
-        <Form.Root fieldMap={fieldMap} schema={WorkspaceSettingsSchema} values={values} onValuesChanged={handleValuesChanged}>
+        <Form.Root
+          fieldMap={fieldMap}
+          schema={WorkspaceSettingsSchema}
+          values={values}
+          onValuesChanged={handleValuesChanged}
+        >
           <Form.FieldSet />
         </Form.Root>
       </Settings.Section>

@@ -177,7 +177,9 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
       ) : (
         <div data-tauri-drag-region className='w-6' />
       )}
-      <h2 data-tauri-drag-region className='flex-1 truncate min-w-0'>{title}</h2>
+      <h2 data-tauri-drag-region className='flex-1 truncate min-w-0'>
+        {title}
+      </h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
       <div role='none' className='contents dx-app-no-drag'>
         {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled && (

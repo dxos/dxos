@@ -915,7 +915,6 @@ describe('GraphBuilder', () => {
           expect(connections[0].data).to.equal('updated');
         }
       });
-
     });
 
     describe('extension error handling', () => {

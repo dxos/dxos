@@ -47,7 +47,9 @@ export const createFilesystemEntryExtensions = (
         const workspaceId = (node.data as FilesystemWorkspace).id;
         const state: NativeFilesystemState = get(stateAtom);
         const workspace = state.workspaces.find((item) => item.id === workspaceId);
-        return Effect.succeed(workspace ? workspace.children.map((entry) => constructEntryNode(entry, nativeMarkdownDocs)) : []);
+        return Effect.succeed(
+          workspace ? workspace.children.map((entry) => constructEntryNode(entry, nativeMarkdownDocs)) : [],
+        );
       },
     }),
 
@@ -58,7 +60,9 @@ export const createFilesystemEntryExtensions = (
         const directoryId = (node.data as FilesystemDirectory).id;
         const state: NativeFilesystemState = get(stateAtom);
         const directory = findDirectoryById(state.workspaces, directoryId);
-        return Effect.succeed(directory ? directory.children.map((entry) => constructEntryNode(entry, nativeMarkdownDocs)) : []);
+        return Effect.succeed(
+          directory ? directory.children.map((entry) => constructEntryNode(entry, nativeMarkdownDocs)) : [],
+        );
       },
     }),
   ]).pipe(Effect.map((extensions) => extensions.flat()));
@@ -199,7 +203,10 @@ export default Capability.makeModule(
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, [...extensions.flat(), ...filesystemEntryExtensions]);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, [
+      ...extensions.flat(),
+      ...filesystemEntryExtensions,
+    ]);
   }),
 );
 
@@ -249,10 +256,7 @@ const constructEntryNode = (
   };
 };
 
-const findDirectoryById = (
-  workspaces: FilesystemWorkspace[],
-  directoryId: string,
-): FilesystemDirectory | undefined => {
+const findDirectoryById = (workspaces: FilesystemWorkspace[], directoryId: string): FilesystemDirectory | undefined => {
   for (const workspace of workspaces) {
     const directory = findDirectoryInEntries(workspace.children, directoryId);
     if (directory) {
@@ -263,10 +267,7 @@ const findDirectoryById = (
   return undefined;
 };
 
-const findDirectoryInEntries = (
-  entries: FilesystemEntry[],
-  directoryId: string,
-): FilesystemDirectory | undefined => {
+const findDirectoryInEntries = (entries: FilesystemEntry[], directoryId: string): FilesystemDirectory | undefined => {
   for (const entry of entries) {
     if (!isFilesystemDirectory(entry)) {
       continue;

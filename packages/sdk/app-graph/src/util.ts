@@ -69,8 +69,7 @@ export const nodeArgsUnchanged = (prev: Node.NodeArg<any>[], next: Node.NodeArg<
 /**
  * Build a qualified node ID by joining path segments.
  */
-export const qualifyId = (parentId: string, ...segmentIds: string[]): string =>
-  [parentId, ...segmentIds].join(PATH);
+export const qualifyId = (parentId: string, ...segmentIds: string[]): string => [parentId, ...segmentIds].join(PATH);
 
 /**
  * Validate that a segment ID does not contain the path separator.
