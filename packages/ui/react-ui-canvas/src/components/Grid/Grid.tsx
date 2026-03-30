@@ -54,11 +54,7 @@ export const GridComponent = forwardRef<SVGSVGElement, GridProps>(
       <svg
         {...testId('dx-canvas-grid')}
         ref={svgRef}
-        className={mx(
-          'dx-fullscreen pointer-events-none touch-none select-none',
-          'stroke-neutral-500',
-          classNames,
-        )}
+        className={mx('dx-fullscreen pointer-events-none touch-none select-none', 'stroke-neutral-500', classNames)}
       >
         {/* NOTE: The pattern is offset so that the middle of the pattern aligns with the grid. */}
         <defs>

@@ -160,34 +160,32 @@ const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
 
 type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
-const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(
-  ({ ...props }, _forwardedRef) => {
-    const {
-      id,
-      attendableId,
-      editorView,
-      setEditorView,
-      viewMode,
-      toolbarState,
-      extensions,
-      popoverMenu: { groupsRef, ...menuProps },
-    } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(({ ...props }, _forwardedRef) => {
+  const {
+    id,
+    attendableId,
+    editorView,
+    setEditorView,
+    viewMode,
+    toolbarState,
+    extensions,
+    popoverMenu: { groupsRef, ...menuProps },
+  } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
 
-    return (
-      <EditorMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
-        <NaturalMarkdownEditorContent
-          {...composableProps(props)}
-          id={id}
-          attendableId={attendableId}
-          viewMode={viewMode}
-          toolbarState={toolbarState}
-          extensions={extensions}
-          ref={setEditorView}
-        />
-      </EditorMenuProvider>
-    );
-  },
-);
+  return (
+    <EditorMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
+      <NaturalMarkdownEditorContent
+        {...composableProps(props)}
+        id={id}
+        attendableId={attendableId}
+        viewMode={viewMode}
+        toolbarState={toolbarState}
+        extensions={extensions}
+        ref={setEditorView}
+      />
+    </EditorMenuProvider>
+  );
+});
 
 MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
