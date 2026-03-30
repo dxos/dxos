@@ -59,7 +59,7 @@ const Container = ({ classNames, children }: ThemedClassName<PropsWithChildren>)
 export const Vertical = {
   render: () => (
     <Container classNames='h-72 w-48'>
-      <ScrollArea.Root orientation='vertical' margin padding>
+      <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport>
           <List />
         </ScrollArea.Viewport>
@@ -71,7 +71,19 @@ export const Vertical = {
 export const VerticalThin = {
   render: () => (
     <Container classNames='h-72 w-48'>
-      <ScrollArea.Root orientation='vertical' margin padding thin>
+      <ScrollArea.Root orientation='vertical' thin>
+        <ScrollArea.Viewport>
+          <List />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Container>
+  ),
+};
+
+export const VerticalPadded = {
+  render: () => (
+    <Container classNames='h-72 w-48'>
+      <ScrollArea.Root orientation='vertical' centered padding thin>
         <ScrollArea.Viewport>
           <List />
         </ScrollArea.Viewport>
@@ -100,7 +112,7 @@ export const VerticalColumn = {
 export const Horizontal = {
   render: () => (
     <Container classNames='w-96'>
-      <ScrollArea.Root orientation='horizontal' margin padding>
+      <ScrollArea.Root orientation='horizontal'>
         <ScrollArea.Viewport>
           <Row />
         </ScrollArea.Viewport>
@@ -112,7 +124,7 @@ export const Horizontal = {
 export const HorizontalThin = {
   render: () => (
     <Container classNames='w-96'>
-      <ScrollArea.Root orientation='horizontal' margin padding thin>
+      <ScrollArea.Root orientation='horizontal' thin>
         <ScrollArea.Viewport>
           <Row />
         </ScrollArea.Viewport>

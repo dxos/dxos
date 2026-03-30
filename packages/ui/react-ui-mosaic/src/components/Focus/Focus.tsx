@@ -17,6 +17,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useRef,
   useState,
 } from 'react';
 
@@ -35,6 +36,8 @@ const FOCUS_STATE_ATTR = 'focus-state';
 
 type ContextValue = {
   setFocus?: (state: FocusState | undefined) => void;
+  /** True when any item within the group has DOM focus. */
+  groupHasFocus?: boolean;
 };
 
 const FocusContext = createContext<ContextValue>({});
@@ -59,15 +62,28 @@ type GroupProps = {
 const Group = slottable<HTMLDivElement, GroupProps>(
   ({ children, asChild, orientation = 'vertical', ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
+    const rootRef = useRef<HTMLDivElement>(null);
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: orientation, memorizeCurrent: true });
     const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
     const [state, setState] = useState<FocusState | undefined>();
+    const [groupHasFocus, setGroupHasFocus] = useState(false);
+
+    const handleFocusIn = useCallback(() => setGroupHasFocus(true), []);
+    const handleFocusOut = useCallback(
+      (event: FocusEvent<HTMLDivElement>) => {
+        const related = event.relatedTarget as HTMLElement | null;
+        if (!related || !rootRef.current?.contains(related)) {
+          setGroupHasFocus(false);
+        }
+      },
+      [],
+    );
 
     // TODO(burdon): Move into react-ui and use theme styles (focus.ts).
     // TODO(burdon): Ring (box-shadow) requires a margin.
     return (
-      <FocusContext.Provider value={{ setFocus: setState }}>
+      <FocusContext.Provider value={{ setFocus: setState, groupHasFocus }}>
         <Comp
           {...composableProps(props, {
             tabIndex: 0,
@@ -83,7 +99,9 @@ const Group = slottable<HTMLDivElement, GroupProps>(
           })}
           {...tabsterAttrs}
           {...(state && { [`data-${FOCUS_STATE_ATTR}`]: state })}
-          ref={useComposedRefs<HTMLDivElement>(forwardedRef)}
+          onFocus={handleFocusIn}
+          onBlur={handleFocusOut}
+          ref={useComposedRefs<HTMLDivElement>(rootRef, forwardedRef)}
         >
           {children}
         </Comp>
@@ -111,7 +129,7 @@ const Item = slottable<HTMLDivElement, ItemProps>(
   ({ children, asChild, current, onCurrentChange, onClick, onFocus, onBlur, ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
     const focusableGroupAttrs = useFocusableGroup();
-    const controlled = current !== undefined;
+    const { groupHasFocus } = useFocus();
     const [focused, setFocused] = useState(false);
 
     const handleClick = useCallback(
@@ -124,25 +142,23 @@ const Item = slottable<HTMLDivElement, ItemProps>(
 
     const handleFocus = useCallback(
       (event: FocusEvent<HTMLDivElement>) => {
-        if (!controlled) {
-          setFocused(true);
-        }
+        setFocused(true);
         onFocus?.(event);
       },
-      [controlled, onFocus],
+      [onFocus],
     );
 
     const handleBlur = useCallback(
       (event: FocusEvent<HTMLDivElement>) => {
-        if (!controlled) {
-          setFocused(false);
-        }
+        setFocused(false);
         onBlur?.(event);
       },
-      [controlled, onBlur],
+      [onBlur],
     );
 
-    const isCurrent = controlled ? current : focused;
+    // When navigating (group has focus), only the focused item is current.
+    // When the group loses focus, fall back to the controlled `current` prop.
+    const isCurrent = groupHasFocus ? focused : (current ?? focused);
 
     return (
       <Comp

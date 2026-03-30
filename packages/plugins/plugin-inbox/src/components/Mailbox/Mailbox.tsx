@@ -36,7 +36,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   const { message, labels, currentMessageId, onAction } = data;
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), true);
 
-  const isCurrent = currentMessageId === message.id;
+  const isCurrent = currentMessageId ? currentMessageId === message.id : undefined;
 
   const handleCurrentChange = useCallback(() => {
     onAction?.({ type: 'current', messageId: message.id });
@@ -77,51 +77,51 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
     <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={message.id} data={data} location={location}>
       <Focus.Item asChild current={isCurrent} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef}>
-        <Card.Toolbar>
-          <Card.IconBlock>
-            <DxAvatar
-              hue={hue}
-              hueVariant='surface'
-              variant='square'
-              size={6}
-              fallback={from}
-              onClick={handleAvatarClick}
-            />
-          </Card.IconBlock>
-          <Card.Title classNames='flex items-center gap-3'>
-            <span className='grow truncate font-medium'>{subject}</span>
-            <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
-          </Card.Title>
-          <Card.Menu />
-        </Card.Toolbar>
-        <Card.Content>
-          <Card.Row icon='ph--user--regular'>
-            <Card.Text>{from}</Card.Text>
-          </Card.Row>
-          {snippet && (
-            <Card.Row>
-              <Card.Text variant='description'>{snippet}</Card.Text>
+          <Card.Toolbar>
+            <Card.IconBlock>
+              <DxAvatar
+                hue={hue}
+                hueVariant='surface'
+                variant='square'
+                size={6}
+                fallback={from}
+                onClick={handleAvatarClick}
+              />
+            </Card.IconBlock>
+            <Card.Title classNames='flex items-center gap-3'>
+              <span className='grow truncate font-medium'>{subject}</span>
+              <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
+            </Card.Title>
+            <Card.Menu />
+          </Card.Toolbar>
+          <Card.Content>
+            <Card.Row icon='ph--user--regular'>
+              <Card.Text>{from}</Card.Text>
             </Card.Row>
-          )}
-          {messageLabels.length > 0 && (
-            <Card.Row>
-              <div role='none' className='flex flex-wrap gap-1 py-1'>
-                {messageLabels.map(({ id: labelId, label, hue: labelHue }) => (
-                  <button
-                    key={labelId}
-                    type='button'
-                    className='dx-tag dx-focus-ring'
-                    data-hue={labelHue}
-                    data-label={label}
-                    onClick={(event) => handleTagClick(event, label)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </Card.Row>
-          )}
-        </Card.Content>
+            {snippet && (
+              <Card.Row>
+                <Card.Text variant='description'>{snippet}</Card.Text>
+              </Card.Row>
+            )}
+            {messageLabels.length > 0 && (
+              <Card.Row>
+                <div role='none' className='flex flex-wrap gap-1 py-1'>
+                  {messageLabels.map(({ id: labelId, label, hue: labelHue }) => (
+                    <button
+                      key={labelId}
+                      type='button'
+                      className='dx-tag dx-focus-ring'
+                      data-hue={labelHue}
+                      data-label={label}
+                      onClick={(event) => handleTagClick(event, label)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </Card.Row>
+            )}
+          </Card.Content>
         </Card.Root>
       </Focus.Item>
     </Mosaic.Tile>
@@ -166,10 +166,10 @@ export const Mailbox = composable<HTMLDivElement, MailboxProps>(
     return (
       <Focus.Group {...composableProps(props)} asChild onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus autoScroll={viewport}>
-          <ScrollArea.Root orientation='vertical' margin>
+          <ScrollArea.Root orientation='vertical' padding>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.Stack
-                classNames='gap-1'
+                classNames='py-1 gap-1'
                 items={items}
                 getId={(item) => item.message.id}
                 draggable={false}
