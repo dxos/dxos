@@ -148,7 +148,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }: any) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
@@ -237,4 +237,4 @@ export const Default: Story = {
     const updatedNewCell = await within(secondGrid).findByTestId('grid.4.1', undefined, { timeout: 5000 });
     await expect(updatedNewCell.querySelector('dx-anchor')).toBeTruthy();
   },
-} as any;
+};
