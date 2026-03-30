@@ -20,7 +20,7 @@ import { Organization } from '@dxos/types';
 import { TestDatabaseLayer } from '../testing';
 import * as Process from './Process';
 import * as ProcessManager from './ProcessManager';
-import * as ProcessOperationInvoker from './ProcessOperationInvoker';
+import { ProcessOperationInvoker } from './ProcessManager';
 import * as ServiceResolver from './ServiceResolver';
 import * as StorageService from './StorageService';
 
@@ -96,7 +96,7 @@ const makeWaitingExecutable = () =>
     }),
   );
 
-const TestLayer = ProcessOperationInvoker.layer.pipe(
+const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
   Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
   Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
   Layer.provide(

@@ -4,6 +4,6 @@
 
 export * as Process from './Process';
 export * as ProcessManager from './ProcessManager';
-export * as ProcessOperationInvoker from './ProcessOperationInvoker';
+export { ProcessOperationInvoker } from './ProcessManager';
 export * as ServiceResolver from './ServiceResolver';
 export * as StorageService from './StorageService';
