@@ -63,9 +63,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
       Effect.gen(function* () {
         const queueDxnStr = ctx.params.target;
         if (queueDxnStr == null) {
-          return yield* Effect.die(
-            new Error('Agent executable requires spawn options.target set to a queue DXN.'),
-          );
+          return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
         const queueDxn = DXN.parse(queueDxnStr);
         const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);

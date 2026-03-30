@@ -22,7 +22,6 @@ import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   ProcessManager,
-  ProcessOperationInvoker,
   RemoteFunctionExecutionService,
   ServiceResolver,
   TracingServiceExt,

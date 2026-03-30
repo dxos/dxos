@@ -3,7 +3,6 @@
 //
 
 import { type Registry, RegistryContext } from '@effect-atom/atom-react';
-import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import { useContext, useMemo, useState } from 'react';
 
 import { Ref } from '@dxos/echo';

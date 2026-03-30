@@ -69,8 +69,10 @@ export interface Session {
 /**
  * Gets or creates a session for a queue DXN.
  */
-export const getSession: (queueDxn: DXN) => Effect.Effect<Session, never, AgentService> =
-  Effect.serviceFunctionEffect(AgentService, (service) => service.getSession);
+export const getSession: (queueDxn: DXN) => Effect.Effect<Session, never, AgentService> = Effect.serviceFunctionEffect(
+  AgentService,
+  (service) => service.getSession,
+);
 
 export interface CreateSessionOptions {
   readonly blueprints?: Blueprint.Blueprint[];

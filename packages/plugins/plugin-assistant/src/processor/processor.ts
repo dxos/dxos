@@ -5,7 +5,6 @@
 import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
-import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
@@ -13,7 +12,6 @@ import { AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } fro
 import {
   AiContextService,
   type AiConversation,
-  ArtifactDiffResolver,
   createSystemPrompt,
   formatSystemPrompt,
   AgentService,
@@ -23,11 +21,10 @@ import { type Blueprint } from '@dxos/blueprints';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type ContentBlock, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { updateName } from './update-name';
 import type { AutomationCapabilities } from '@dxos/plugin-automation';
-import type { SpaceId } from '@dxos/keys';
 
 export type AiChatProcessorOptions = {
   model?: ModelName;
@@ -168,16 +165,12 @@ export class AiChatProcessor {
         yield* Fiber.interrupt(streamFiber);
 
         this.#flushStreaming();
-      }).pipe(
-        Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
-      );
+      }).pipe(Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)));
 
       this.#requestFiber = this._runtime.runFork(effect) as any;
 
       try {
-        await this._runtime.runPromise(
-          Fiber.join(this.#requestFiber!),
-        );
+        await this._runtime.runPromise(Fiber.join(this.#requestFiber!));
       } catch (err: any) {
         if (err._tag === 'InterruptedException' || err.message?.includes('interrupted')) {
           return;
@@ -253,9 +246,7 @@ export class AiChatProcessor {
         return [...streaming, message];
       });
     } else {
-      this.#registry.update(this.#streaming, (streaming) =>
-        streaming.filter((existing) => existing.id !== message.id),
-      );
+      this.#registry.update(this.#streaming, (streaming) => streaming.filter((existing) => existing.id !== message.id));
       this.#registry.update(this.#pending, (pending) => [...pending, message]);
     }
   }
