@@ -200,9 +200,9 @@ export const Default: Story = {
     // Verify the relation was set (cell should now contain the org name).
     // Wait for the grid (Lit web component) to repaint after the reactive data update.
     await waitFor(
-      () => {
+      async () => {
         const updatedCell = within(secondGrid).getByTestId('grid.4.0');
-        expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
+        await expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
       },
       { timeout: 5000 },
     );
