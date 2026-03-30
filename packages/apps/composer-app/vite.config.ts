@@ -212,6 +212,28 @@ export default defineConfig((env) => ({
   plugins: [
     ...sharedPlugins(env),
 
+    // TODO(wittjosiah): Temporary hack to get publishing running again.
+    //   Enforce max file size for Cloudflare Pages (25 MiB limit).
+    {
+      name: 'enforce-max-asset-size',
+      enforce: 'post',
+      generateBundle(_, bundle) {
+        const maxBytes = 25 * 1024 * 1024;
+        for (const entry of Object.values(bundle)) {
+          if (entry.type === 'chunk' && entry.map) {
+            const mapSize = Buffer.byteLength(JSON.stringify(entry.map));
+            if (mapSize > maxBytes) {
+              const mapName = `${entry.fileName}.map`;
+              entry.code = entry.code.replace(/\n?\/\/# sourceMappingURL=.*$/, '');
+              entry.map = null!;
+              delete bundle[mapName];
+              console.warn(`Removed ${mapName} (${(mapSize / 1024 / 1024).toFixed(1)} MiB exceeds 25 MiB limit)`);
+            }
+          }
+        }
+      },
+    },
+
     // Handle .md?raw imports.
     {
       name: 'raw-md-loader',
