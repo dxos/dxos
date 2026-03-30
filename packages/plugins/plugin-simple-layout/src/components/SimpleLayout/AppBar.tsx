@@ -5,7 +5,7 @@
 import { type Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { Fragment } from 'react';
 
-import { ComposableProps, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
 import { composable, composableProps, osTranslations } from '@dxos/ui-theme';
 
@@ -14,7 +14,7 @@ import { useMobileLayout } from '../MobileLayout';
 
 const APP_BAR_NAME = 'SimpleLayout.AppBar';
 
-export type AppBarProps = ComposableProps<{
+export type AppBarProps = {
   /** Title/label to display in the banner. */
   title?: string;
   /** Action graph atom for the dropdown menu. */
@@ -27,7 +27,7 @@ export type AppBarProps = ComposableProps<{
   onAction?: ActionExecutor;
   /** Callback when back button is clicked. */
   onBack?: () => void;
-}>;
+};
 
 /**
  * AppBar component that renders a title, optional back button, and actions dropdown.

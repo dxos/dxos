@@ -13,14 +13,14 @@ import { Card } from './Card';
 
 faker.seed(0);
 
-type StoryProps = {
+type DefaultStoryProps = {
   title: string;
   description?: string;
   image?: string;
   fullWidth?: boolean;
 };
 
-const DefaultStory = ({ title, description, image, fullWidth }: StoryProps) => {
+const DefaultStory = ({ title, description, image, fullWidth }: DefaultStoryProps) => {
   const handleRef = useRef<HTMLButtonElement>(null);
   console.log(title);
   return (

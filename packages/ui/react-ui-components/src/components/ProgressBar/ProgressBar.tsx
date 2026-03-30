@@ -180,7 +180,7 @@ const Node = ({ state = 'open', selected, classes, options = defaultOptions, onC
             onClick={onClick}
           />
           {state === 'active' && (
-            <Notch classNames={['absolute inset-0 w-full h-full animate-spin', classes?.active, '!bg-transparent']} />
+            <Notch classNames={['dx-fullscreen animate-spin', classes?.active, '!bg-transparent']} />
           )}
         </motion.div>
       </div>

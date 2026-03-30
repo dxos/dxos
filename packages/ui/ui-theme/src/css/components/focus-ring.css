@@ -29,6 +29,13 @@
     }
   }
 
+  .dx-focus-ring-none {
+    &:focus,
+    &:focus-visible {
+      @apply outline-hidden! ring-0!;
+    }
+  }
+
   .dx-focus-ring-always,
   .dx-focus-ring-inset-always {
     &:not([disabled]),

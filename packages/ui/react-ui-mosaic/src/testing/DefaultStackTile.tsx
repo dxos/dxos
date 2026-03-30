@@ -9,7 +9,7 @@ import { Card, Toolbar } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
 
-import { Mosaic, type MosaicStackTileComponent } from '../components';
+import { Focus, Mosaic, type MosaicStackTileComponent } from '../components';
 
 export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
@@ -26,24 +26,25 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
 
   return (
     <Mosaic.Tile {...props} asChild>
-      <Card.Root>
-        <Menu.Root>
-          <Card.Toolbar>
-            <Card.DragHandle ref={dragHandleRef} />
-            <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
-            {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-            <Menu.Trigger asChild disabled={!menuItems?.length}>
-              <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
-            </Menu.Trigger>
-            <Menu.Content items={menuItems} />
-          </Card.Toolbar>
-        </Menu.Root>
-        {open && (
-          <Card.Row>
-            <Json data={props.data} classNames='text-xs' />
-          </Card.Row>
-        )}
-      </Card.Root>
+      <Focus.Item asChild>
+        <Card.Root className='dx-current dx-hover'>
+          <Menu.Root>
+            <Card.Toolbar>
+              <Card.DragHandle ref={dragHandleRef} />
+              <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
+              <Menu.Trigger asChild disabled={!menuItems?.length}>
+                <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
+              </Menu.Trigger>
+              <Menu.Content items={menuItems} />
+            </Card.Toolbar>
+          </Menu.Root>
+          {open && (
+            <Card.Row>
+              <Json data={props.data} classNames='text-xs' />
+            </Card.Row>
+          )}
+        </Card.Root>
+      </Focus.Item>
     </Mosaic.Tile>
   );
 };

@@ -46,7 +46,7 @@ const SettingsRoot = composable<HTMLDivElement>(({ children, ...props }, forward
       {...composedProps}
       className={mx('dx-document', className)}
       orientation='vertical'
-      margin
+      centered
       ref={forwardedRef}
     >
       <ScrollArea.Viewport classNames='p-trim-md'>{children}</ScrollArea.Viewport>

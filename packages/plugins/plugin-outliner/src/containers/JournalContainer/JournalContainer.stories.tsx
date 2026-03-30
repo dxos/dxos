@@ -11,49 +11,56 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { translations } from '../../translations';
-import { Outline } from '../../types';
+import { Journal, Outline } from '../../types';
 
-import { Outline as OutlineComponent } from './Outline';
+import { JournalContainer } from './JournalContainer';
 
-const OutlineStory = () => {
+type DefaultStoryProps = {
+  showCalendar?: boolean;
+};
+
+const DefaultStory = ({ showCalendar }: DefaultStoryProps) => {
   const space = useSpace();
-  const text = useMemo(() => {
+  const journal = useMemo(() => {
     if (space) {
-      return space.db.add(Text.make('- [x] Initial content'));
+      return space.db.add(Journal.make());
     }
     return undefined;
   }, [space]);
-  if (text) {
-    return (
-      <OutlineComponent.Root id={text.id} text={text}>
-        <OutlineComponent.Content />
-      </OutlineComponent.Root>
-    );
+
+  if (!journal) {
+    return null;
   }
-  return null;
+
+  return <JournalContainer role='article' subject={journal} showCalendar={showCalendar} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-outliner/components/Outline',
-  component: OutlineStory,
+  title: 'plugins/plugin-outliner/containers/JournalContainer',
+  component: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    // TODO(burdon): Can we create a storybook for the Outliner without the database?
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Text.Text, Outline.Outline],
+      types: [Text.Text, Journal.Journal, Journal.JournalEntry, Outline.Outline],
     }),
   ],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof OutlineStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const WithCalendar: Story = {
+  args: {
+    showCalendar: true,
+  },
+};

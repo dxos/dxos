@@ -23,9 +23,9 @@ import { Markdown } from '../../types';
 
 import { MarkdownEditor, type MarkdownEditorRootProps } from './MarkdownEditor';
 
-type StoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'>;
+type DefaultStoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'>;
 
-const DefaultStory = (props: StoryProps) => {
+const DefaultStory = (props: DefaultStoryProps) => {
   const space = useSpace();
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
   const id = doc && Obj.getDXN(doc).toString();

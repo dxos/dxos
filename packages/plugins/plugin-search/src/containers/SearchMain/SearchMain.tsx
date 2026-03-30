@@ -54,7 +54,7 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <ScrollArea.Root margin padding thin>
+        <ScrollArea.Root centered padding thin>
           <ScrollArea.Viewport>
             <Mosaic.Stack
               classNames='gap-1'

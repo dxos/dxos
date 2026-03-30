@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 'react-syntax-highlighter';
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -37,7 +37,7 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
           <div role='none'>
             <NativeSyntaxHighlighter
               language={languages[language as keyof typeof languages] || language}
-              style={(style as { [key: string]: React.CSSProperties }) ?? (themeMode === 'dark' ? dark : light)}
+              style={(style as { [key: string]: CSSProperties }) ?? (themeMode === 'dark' ? dark : light)}
               customStyle={{
                 background: 'unset',
                 border: 'none',

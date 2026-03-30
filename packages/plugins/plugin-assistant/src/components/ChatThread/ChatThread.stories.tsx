@@ -33,9 +33,9 @@ faker.seed(1);
 
 type MessageGenerator = Effect.Effect<void, never, Database.Service | ContextQueueService>;
 
-type StoryProps = { generator?: MessageGenerator[]; delay?: number; wait?: boolean } & ChatThreadProps;
+type DefaultStoryProps = { generator?: MessageGenerator[]; delay?: number; wait?: boolean } & ChatThreadProps;
 
-const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: StoryProps) => {
+const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStoryProps) => {
   const space = useSpace();
   const queueDxn = useMemo(() => space?.queues.create().dxn, [space]);
   const queue = useQueue<Message.Message>(queueDxn);
@@ -111,11 +111,11 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<StoryProps>;
+} satisfies Meta<DefaultStoryProps>;
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<DefaultStoryProps>;
 
 export const Default: Story = {
   args: {

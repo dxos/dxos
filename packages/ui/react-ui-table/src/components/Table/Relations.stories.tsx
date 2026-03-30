@@ -5,13 +5,12 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
-import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { faker } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -21,6 +20,8 @@ import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator, createAsyncGenerator } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import { Organization, Person } from '@dxos/types';
+
+import '@dxos/lit-ui/dx-tag-picker.pcss';
 
 import { useProjectionModel, useTableModel } from '../../hooks';
 import { type TableFeatures, TablePresentation, type TableRow } from '../../model';
@@ -97,9 +98,9 @@ const DefaultStory = () => {
   );
 
   return (
-    <div className='w-full h-full grid grid-cols-2 divide-x divide-separator'>
+    <div className='dx-expander grid grid-cols-2 divide-x divide-separator'>
       <TableComponent.Root>
-        <TableComponent.Main
+        <TableComponent.Content
           model={orgModel}
           schema={Organization.Organization}
           presentation={orgPresentation}
@@ -109,7 +110,7 @@ const DefaultStory = () => {
         />
       </TableComponent.Root>
       <TableComponent.Root>
-        <TableComponent.Main
+        <TableComponent.Content
           model={contactModel}
           schema={Person.Person}
           presentation={contactPresentation}
@@ -197,8 +198,14 @@ export const Default: Story = {
     await userEvent.click(saveButton);
 
     // Verify the relation was set (cell should now contain the org name).
-    const updatedCell = within(secondGrid).getByTestId('grid.4.0');
-    await expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
+    // Wait for the grid (Lit web component) to repaint after the reactive data update.
+    await waitFor(
+      async () => {
+        const updatedCell = within(secondGrid).getByTestId('grid.4.0');
+        await expect(updatedCell).toHaveTextContent(orgName.substring(0, 4));
+      },
+      { timeout: 5000 },
+    );
 
     // Test object creation (new relations) - equivalent to "new relations work as expected" test
     // Find a different cell to test object creation (second row, relations column)

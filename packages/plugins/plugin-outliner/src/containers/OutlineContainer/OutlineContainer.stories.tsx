@@ -13,33 +13,45 @@ import { Text } from '@dxos/schema';
 import { translations } from '../../translations';
 import { Outline } from '../../types';
 
-import { Outline as OutlineComponent } from './Outline';
+import { OutlineContainer } from './OutlineContainer';
 
-const OutlineStory = () => {
+const DefaultStory = () => {
   const space = useSpace();
-  const text = useMemo(() => {
+  const outline = useMemo(() => {
     if (space) {
-      return space.db.add(Text.make('- [x] Initial content'));
+      return space.db.add(Outline.make({ content: '- Item 1\n- Item 2\n- Item 3' }));
     }
     return undefined;
   }, [space]);
-  if (text) {
-    return (
-      <OutlineComponent.Root id={text.id} text={text}>
-        <OutlineComponent.Content />
-      </OutlineComponent.Root>
-    );
+
+  if (!outline) {
+    return null;
   }
-  return null;
+
+  return <OutlineContainer role='article' subject={outline} />;
+};
+
+const EmptyStory = () => {
+  const space = useSpace();
+  const outline = useMemo(() => {
+    if (space) {
+      return space.db.add(Outline.make());
+    }
+    return undefined;
+  }, [space]);
+
+  if (!outline) {
+    return null;
+  }
+
+  return <OutlineContainer role='article' subject={outline} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-outliner/components/Outline',
-  component: OutlineStory,
+  title: 'plugins/plugin-outliner/containers/OutlineContainer',
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    // TODO(burdon): Can we create a storybook for the Outliner without the database?
     withClientProvider({
       createIdentity: true,
       createSpace: true,
@@ -50,10 +62,16 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof OutlineStory>;
+} satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  render: () => <DefaultStory />,
+};
+
+export const Empty: Story = {
+  render: () => <EmptyStory />,
+};

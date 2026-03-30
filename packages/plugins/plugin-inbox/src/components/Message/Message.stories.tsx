@@ -31,7 +31,7 @@ const DefaultStory = () => {
       <Message.Toolbar />
       <Message.Viewport>
         <Message.Header />
-        <Message.Content />
+        <Message.Body />
       </Message.Viewport>
     </Message.Root>
   );

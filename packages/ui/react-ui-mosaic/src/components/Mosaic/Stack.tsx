@@ -3,11 +3,11 @@
 //
 
 import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-virtual';
-import React, { type FC, Fragment, type ReactElement, type Ref, forwardRef } from 'react';
+import React, { type FC, forwardRef, Fragment, type ReactElement, type Ref } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type Axis, type ComposableProps } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { type Axis, type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
 
@@ -42,21 +42,23 @@ const MOSAIC_STACK_NAME = 'MosaicStack';
 
 type MosaicStackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
-type MosaicStackProps<TData = any> = Omit<ComposableProps, 'onChange'> & {
-  Tile: MosaicStackTileComponent<TData>;
-  getId: GetId<TData>;
-  role?: string;
-  orientation?: Axis;
-  items?: readonly TData[];
-} & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>;
+type MosaicStackProps<TData = any> = ThemedClassName<
+  {
+    role?: string;
+    getId: GetId<TData>;
+    orientation?: Axis;
+    items?: readonly TData[];
+    Tile: MosaicStackTileComponent<TData>;
+  } & Pick<MosaicTileProps<TData>, 'draggable' | 'debug'>
+>;
 
 /**
  * Linear layout of Mosaic tiles.
  * NOTE: This is a low-level component and should be wrapped by a scrollable container.
  */
-const MosaicStackInner = forwardRef<HTMLDivElement, MosaicStackProps>(
+const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
   (
-    { role = 'list', orientation: orientationProp = 'vertical', draggable = true, items, getId, Tile, debug, ...props },
+    { role = 'list', getId, orientation: orientationProp = 'vertical', items, Tile, draggable = true, debug, ...props },
     forwardedRef,
   ) => {
     const { className, ...rest } = composableProps(props);
@@ -203,6 +205,7 @@ MosaicVirtualStackInner.displayName = MOSAIC_VIRTUAL_STACK_NAME;
 const MosaicVirtualStack = MosaicVirtualStackInner as <TData = any>(
   props: MosaicVirtualStackProps<TData> & { ref?: Ref<HTMLDivElement> },
 ) => ReactElement;
+(MosaicVirtualStack as any)[Symbol.for('dxos.composable')] = true;
 
 //
 // InternalPlaceholder

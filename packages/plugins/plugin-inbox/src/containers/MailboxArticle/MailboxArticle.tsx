@@ -120,7 +120,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   useEffect(() => {
     const t = setTimeout(() => {
       setEmpty(messagesWithTags.length === 0);
-    }, 1000);
+    }, 1_000);
     return () => clearTimeout(t);
   }, [messagesWithTags]);
 

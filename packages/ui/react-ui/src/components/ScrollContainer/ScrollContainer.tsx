@@ -134,7 +134,7 @@ const Root = forwardRef<ScrollController, RootProps>(
         setPinned={setPinned}
         setOverflow={setOverflow}
       >
-        <ScrollArea.Root thin margin padding className='relative'>
+        <ScrollArea.Root thin centered padding className='relative'>
           {children}
         </ScrollArea.Root>
       </ScrollContainerProvider>

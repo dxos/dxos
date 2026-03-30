@@ -121,7 +121,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
 
     return (
       <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-        <Focus.Group asChild>
+        <Focus.Item asChild>
           <Menu.Root>
             <Card.Root classNames={classNames} ref={composedRef}>
               <Card.Toolbar>
@@ -145,7 +145,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
               </Card.Content>
             </Card.Root>
           </Menu.Root>
-        </Focus.Group>
+        </Focus.Item>
       </Mosaic.Tile>
     );
   },

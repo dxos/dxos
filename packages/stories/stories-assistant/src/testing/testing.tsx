@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
@@ -164,7 +164,7 @@ const PluginManagerHost = ({
   contextId,
 }: {
   options: WithPluginManagerOptions;
-  children: React.ReactNode;
+  children: ReactNode;
   contextId: string;
 }) => {
   const manager = useMemo(() => {
