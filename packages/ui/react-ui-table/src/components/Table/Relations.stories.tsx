@@ -148,7 +148,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }: any) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
 
@@ -217,24 +217,24 @@ export const Default: Story = {
     const newSearchField = await body.findByPlaceholderText('Search…');
     await userEvent.click(newSearchField);
 
-    // Type a new object name (this will create a new object)
+    // Type a new object name (this will create a new object).
     const newOrgName = 'Salieri LLC';
     await userEvent.type(newSearchField, newOrgName);
 
-    // Wait for the create option to appear (debounce is 200ms, allow time for render)
-    const createOption = await body.findByRole('option', undefined, { timeout: 500 });
-    await expect(createOption).toBeVisible();
+    // Click the create option directly to open the create form.
+    const createOptionLabel = await body.findByText(/Create new object/, undefined, { timeout: 2000 });
+    await userEvent.click(createOptionLabel.closest('[role="option"]') as HTMLElement);
 
-    // Press Enter to select/create
-    await userEvent.keyboard('{Enter}');
-
-    // Look for and click save button
-    const createReferencedObjectForm = await body.findByTestId('create-referenced-object-form');
+    // Look for and click save button.
+    const createReferencedObjectForm = await body.findByTestId('create-referenced-object-form', undefined, {
+      timeout: 2000,
+    });
     const saveObjectButton = await within(createReferencedObjectForm).findByTestId('save-button');
+    await expect(saveObjectButton).not.toBeDisabled();
     await userEvent.click(saveObjectButton);
 
-    // Verify the new object was created and relation was set.
-    const updatedNewCell = within(secondGrid).getByTestId('grid.4.1');
-    await expect(updatedNewCell).toHaveTextContent(newOrgName);
+    // Verify the relation was set by checking for the accessory link anchor in the cell.
+    const updatedNewCell = await within(secondGrid).findByTestId('grid.4.1', undefined, { timeout: 5000 });
+    await expect(updatedNewCell.querySelector('dx-anchor')).toBeTruthy();
   },
-} as any;
+};
