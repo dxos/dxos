@@ -25,7 +25,7 @@ import {
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
 import { type FunctionInvocationService, TracingService } from '@dxos/functions';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { type AiAssistantError } from '../errors';
@@ -235,16 +235,14 @@ export class AiSession {
                 currentMessageId ??= Obj.ID.random();
                 const id = currentMessageId;
                 currentMessageId = null;
-                return Option.some(
-                  yield* this._submitMessage(
-                    Obj.make(Message.Message, {
-                      id,
-                      created: new Date().toISOString(),
-                      sender: { role: 'assistant' },
-                      blocks: [block],
-                    }),
-                  ),
-                );
+                const message = Obj.make(Message.Message, {
+                  id,
+                  created: new Date().toISOString(),
+                  sender: { role: 'assistant' },
+                  blocks: [block],
+                });
+                yield* TracingService.emitEphemeralMessage(message);
+                return Option.some(yield* this._submitMessage(message));
               }
             }),
           { concurrency: 1, unordered: false },

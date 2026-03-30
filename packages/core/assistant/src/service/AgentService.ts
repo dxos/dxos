@@ -24,7 +24,7 @@ import { AiContextBinder, ContextBinding } from '../conversation';
 
 export interface Service {
   /**
-   * Gets or createsa session context for a feed.
+   * Gets or creates a session for a feed.
    */
   getSession: (feed: Feed.Feed) => Effect.Effect<Session>;
 }
@@ -67,7 +67,7 @@ export interface Session {
 }
 
 /**
- * Gets or creates a session context for a feed.
+ * Gets or creates a session for a feed.
  */
 export const getSession = Effect.serviceFunctionEffect(AgentService, (service) => service.getSession);
 
@@ -88,9 +88,8 @@ export const createSession: (
   );
 
   const feed = yield* Database.add(Feed.make());
-  const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(
-    Feed.getQueueDxn(feed) ?? failedInvariant(),
-  );
+  const queueDxn = Feed.getQueueDxn(feed) ?? failedInvariant();
+  const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
   const binder = yield* acquireReleaseResource(() => new AiContextBinder({ queue }));
 
   yield* Effect.promise(() =>
@@ -110,20 +109,34 @@ export const layer = (opts?: {
     AgentService,
     Effect.gen(function* () {
       const processManager = yield* ProcessManager.ProcessManagerService;
+      const sessionCache = new Map<string, Session>();
+
       return {
         getSession: (feed: Feed.Feed) =>
           Effect.gen(function* () {
-            const executable = AgentProcess({ systemPrompt: opts?.systemPrompt });
-            const processes = yield* processManager.list({ target: feed.id, key: executable.key });
-            if (processes.length > 0) {
-              return makeSession(processes[0], feed);
+            const cached = sessionCache.get(feed.id);
+            if (cached) {
+              return cached;
             }
 
-            const handle = yield* processManager.spawn(executable, {
-              name: 'agent',
-              target: feed.id,
-            });
-            return makeSession(handle, feed);
+            const queueDxn = Feed.getQueueDxn(feed) ?? failedInvariant();
+            const target = queueDxn.toString();
+            const executable = AgentProcess({ systemPrompt: opts?.systemPrompt });
+            const processes = yield* processManager.list({ target, key: executable.key });
+
+            let handle: ProcessManager.Handle<string, void>;
+            if (processes.length > 0) {
+              handle = processes[0];
+            } else {
+              handle = yield* processManager.spawn(executable, {
+                name: 'agent',
+                target,
+              });
+            }
+
+            const session = makeSession(handle, feed);
+            sessionCache.set(feed.id, session);
+            return session;
           }),
       };
     }),
@@ -136,9 +149,8 @@ const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Fe
   subscribeEphemeral: () => process.subscribeEphemeral(),
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
     Effect.gen(function* () {
-      const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(
-        Feed.getQueueDxn(feed) ?? failedInvariant(),
-      );
+      const queueDxn = Feed.getQueueDxn(feed) ?? failedInvariant();
+      const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
       const binder = yield* acquireReleaseResource(() => new AiContextBinder({ queue }));
       yield* Effect.promise(() =>
         binder.bind({
@@ -149,9 +161,8 @@ const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Fe
     }).pipe(Effect.scoped),
   getContext: () =>
     Effect.gen(function* () {
-      const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(
-        Feed.getQueueDxn(feed) ?? failedInvariant(),
-      );
+      const queueDxn = Feed.getQueueDxn(feed) ?? failedInvariant();
+      const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
       const binder = yield* acquireReleaseResource(() => new AiContextBinder({ queue }));
       return binder.getObjects().map((object) => Ref.make(object));
     }).pipe(Effect.scoped),

@@ -2,17 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Tool from '@effect/ai/Tool';
 import { Atom, Registry } from '@effect-atom/atom-react';
-import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
-import * as Runtime from 'effect/Runtime';
+import * as Stream from 'effect/Stream';
 
 import {
-  AiService,
+  type AiService,
   DEFAULT_EDGE_MODEL,
   type ModelName,
   type ModelRegistry,
@@ -22,28 +19,31 @@ import {
 import {
   AiContextService,
   type AiConversation,
-  type AiConversationRunProps,
-  ArtifactDiffResolver,
-  GenerationObserver,
   createSystemPrompt,
+  formatSystemPrompt,
+  AgentService,
 } from '@dxos/assistant';
-import { formatSystemPrompt } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
-import { Obj, Ref } from '@dxos/echo';
-import { type Database } from '@dxos/echo';
-import { runAndForwardErrors, throwCause, unwrapExit } from '@dxos/effect';
+import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import {
   type CredentialsService,
   type FunctionInvocationService,
   type QueueService,
-  TracingService,
+  type TracingService,
 } from '@dxos/functions';
+import { runAndForwardErrors } from '@dxos/effect';
+import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { type ContentBlock, Message } from '@dxos/types';
+import { Message } from '@dxos/types';
 
 import { updateName } from './update-name';
+import type { AutomationCapabilities } from '@dxos/plugin-automation';
 
+/**
+ * @deprecated Services type for the old direct-conversation processor path.
+ * Retained for backward compatibility with CLI and update-name.
+ */
 export type AiChatServices =
   | CredentialsService
   | Database.Service
@@ -59,18 +59,17 @@ export type AiChatProcessorOptions = {
   modelRegistry?: ModelRegistry;
   blueprintRegistry?: Blueprint.Registry;
   observableRegistry?: Registry.Registry;
-  extensions?: ToolContextExtensions;
   /**
    * For tracing.
    */
   chat?: Ref.Ref<Chat.Chat>;
-} & Pick<AiConversationRunProps, 'system'>;
+  system?: string;
+};
 
 const defaultOptions: Partial<AiChatProcessorOptions> = {
   model: DEFAULT_EDGE_MODEL,
 };
 
-// TODO(burdon): Retry, timeout?
 export type AiRequestOptions = {};
 
 export type AiRequest = {
@@ -80,50 +79,48 @@ export type AiRequest = {
 
 /**
  * Handles interactions with the AI service.
- * Handles streaming responses from the conversation.
+ * Uses AgentService to spawn a process-backed agent and subscribes to ephemeral trace events for streaming.
  */
 export class AiChatProcessor {
-  private readonly _registry: Registry.Registry;
+  readonly #registry: Registry.Registry;
 
-  /** External observer. */
-  private readonly _observer: GenerationObserver;
+  /** Pending messages (finalized, non-streaming). */
+  readonly #pending = Atom.make<Message.Message[]>([]);
 
-  /** Pending messages (incl. the current user request). */
-  private readonly _pending = Atom.make<Message.Message[]>([]);
+  /** Currently streaming messages (from ephemeral trace events). */
+  readonly #streaming = Atom.make<Message.Message[]>([]);
 
-  /** Currently streaming message (from the AI service). */
-  private readonly _streaming = Atom.make<Message.Message[]>([]);
+  /** Set of message IDs that have been finalized (non-pending delivered via ephemeral). */
+  readonly #finalizedIds = new Set<string>();
+
+  /** Currently active streaming fiber (scoped to the runtime). */
+  #streamFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
 
   /** Currently active request fiber. */
-  private _fiber: Fiber.Fiber<void, any> | undefined;
+  #requestFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
 
   /** Last request (for retries). */
-  private _lastRequest: AiRequest | undefined;
+  #lastRequest: AiRequest | undefined;
 
   /** Streaming state. */
-  public readonly streaming = Atom.make<boolean>((get) => get(this._streaming).length > 0);
+  public readonly streaming = Atom.make<boolean>((get) => get(this.#streaming).length > 0);
 
   /** Active state. */
   public readonly active = Atom.make(false);
 
   /** Array of Messages (incl. the current message being streamed). */
-  public readonly messages = Atom.make<Message.Message[]>((get) => [...get(this._pending), ...get(this._streaming)]);
+  public readonly messages = Atom.make<Message.Message[]>((get) => [...get(this.#pending), ...get(this.#streaming)]);
 
   /** Last error. */
   public readonly error = Atom.make<Option.Option<Error>>(Option.none());
 
   constructor(
     private readonly _conversation: AiConversation,
-    // TODO(dmaretskyi): Replace this with effect's ManagedRuntime wrapping this layer.
-    private readonly _services: () => Promise<Runtime.Runtime<AiChatServices>>,
+    private readonly _runtime: AutomationCapabilities.ComputeRuntime,
+    private readonly _feed: Feed.Feed,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
-    // Initialize registries and defaults before using in other logic.
-    this._registry = this._options.observableRegistry ?? Registry.make();
-    this._observer = GenerationObserver.make({
-      onBlock: this._onBlock,
-      onMessage: this._onMessage,
-    });
+    this.#registry = this._options.observableRegistry ?? Registry.make();
     if (this._options.model && !this._options.system) {
       const capabilities = this._options.modelRegistry?.getCapabilities(this._options.model) ?? {};
       this._options.system = createSystemPrompt(capabilities);
@@ -146,105 +143,76 @@ export class AiChatProcessor {
     return this._options.system ?? '';
   }
 
-  async getTools(): Promise<Record<string, Tool.Any>> {
-    return unwrapExit(await this._conversation.getTools().pipe(await Runtime.runPromiseExit(await this._services())));
+  async getTools(): Promise<Record<string, any>> {
+    return this._runtime.runPromise(this._conversation.getTools());
   }
 
   async getSystemPrompt(): Promise<string> {
-    return unwrapExit(
-      await Effect.gen(this, function* () {
+    return this._runtime.runPromise(
+      Effect.gen(this, function* () {
         const blueprints = this.context.getBlueprints();
         const objects = this.context.getObjects();
-        const system = yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
-        return system;
-      }).pipe(
-        Effect.provideService(AiContextService, {
-          binder: this.context,
-        }),
-        await Runtime.runPromiseExit(await this._services()),
-      ),
+        return yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
+      }).pipe(Effect.provideService(AiContextService, { binder: this.context }), Effect.orDie),
     );
   }
 
   /**
-   * Initiates a new request.
+   * Initiates a new request via AgentService.
    */
   async request(requestProp: AiRequest): Promise<void> {
-    if (this._fiber) {
+    if (this.#requestFiber) {
       await this.cancel();
     }
 
     try {
-      this._lastRequest = requestProp;
-      this._registry.set(this.error, Option.none());
-      this._registry.set(this.active, true);
+      this.#lastRequest = requestProp;
+      this.#registry.set(this.error, Option.none());
+      this.#registry.set(this.active, true);
 
-      const services = await this._services();
+      const effect = Effect.gen(this, function* () {
+        const session = yield* AgentService.getSession(this._feed);
 
-      // Create request.
-      const request = Effect.gen(this, function* () {
-        const tracer = yield* TracingService;
-        const trace = yield* tracer.traceInvocationStart({
-          target: undefined,
-          payload: {
-            chat: this._options.chat,
-            data: {
-              prompt: requestProp.message,
-            },
-          },
-        });
+        const ephemeralStream = session.subscribeEphemeral();
+        const streamEffect = Stream.runForEach(ephemeralStream, (event: Obj.Unknown) =>
+          Effect.sync(() => {
+            if (Obj.instanceOf(Message.Message, event)) {
+              this.#handleEphemeralMessage(event);
+            }
+          }),
+        );
 
-        const result = yield* this._conversation
-          .createRequest({
-            system: this._options.system,
-            prompt: requestProp.message,
-            observer: this._observer,
-          })
-          .pipe(
-            Effect.provide(
-              trace.invocationTraceQueue ? TracingService.layerInvocation(trace) : TracingService.layerNoop,
-            ),
-            Effect.exit,
-          );
+        const streamFiber = yield* Effect.fork(streamEffect);
+        this.#streamFiber = streamFiber;
 
-        if (Exit.isFailure(result)) {
-          const error = Cause.prettyErrors(result.cause)[0];
-          log.error(error.message, error.cause ?? error.stack);
-        }
+        yield* session.submitPrompt(requestProp.message);
+        yield* session.waitForCompletion();
+        yield* Fiber.interrupt(streamFiber);
 
-        yield* tracer.traceInvocationEnd({
-          trace,
-          // TODO(dmaretskyi): Might miss errors.
-          exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
-        });
-
-        return Effect.exit(result);
+        this.#flushStreaming();
       });
 
-      // Create fiber.
-      this._fiber = request.pipe(
-        Effect.provide(AiService.model(this._options.model ?? DEFAULT_EDGE_MODEL)),
-        // TODO(dmaretskyi): Move ArtifactDiffResolver upstream.
-        Effect.provideService(ArtifactDiffResolver, this._artifactDiffResolver),
-        Effect.asVoid,
-        Runtime.runFork(services), // Runs in the background.
-      );
+      this.#requestFiber = this._runtime.runFork(effect);
 
-      // Execute request.
-      const response = await this._fiber.pipe(Fiber.join, Effect.runPromiseExit);
-      if (!Exit.isSuccess(response) && !Cause.isInterruptedOnly(response.cause)) {
-        throwCause(response.cause);
+      try {
+        await this._runtime.runPromise(Fiber.join(this.#requestFiber));
+      } catch (err: any) {
+        if (err._tag === 'InterruptedException' || err.message?.includes('interrupted')) {
+          return;
+        }
+        throw err;
       }
 
-      this._registry.set(this.error, Option.none());
-      this._lastRequest = undefined;
-      this._fiber = undefined;
+      this.#registry.set(this.error, Option.none());
+      this.#lastRequest = undefined;
+      this.#requestFiber = undefined;
     } catch (err) {
       log.error('request failed', { error: err });
-      this._registry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
+      this.#registry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
     } finally {
-      this._registry.set(this.active, false);
-      this._fiber = undefined;
+      this.#registry.set(this.active, false);
+      this.#requestFiber = undefined;
+      this.#streamFiber = undefined;
     }
   }
 
@@ -254,22 +222,26 @@ export class AiChatProcessor {
   async cancel(): Promise<void> {
     await runAndForwardErrors(
       Effect.gen(this, function* () {
-        if (this._fiber) {
-          yield* this._fiber.pipe(Fiber.interrupt);
+        if (this.#streamFiber) {
+          yield* Fiber.interrupt(this.#streamFiber);
+        }
+        if (this.#requestFiber) {
+          yield* Fiber.interrupt(this.#requestFiber);
         }
       }),
     );
 
-    this._fiber = undefined;
-    this._registry.set(this.active, false);
+    this.#requestFiber = undefined;
+    this.#streamFiber = undefined;
+    this.#registry.set(this.active, false);
   }
 
   /**
    * Retry last failed request.
    */
   async retry(): Promise<void> {
-    if (this._lastRequest) {
-      return this.request(this._lastRequest);
+    if (this.#lastRequest) {
+      return this.request(this.#lastRequest);
     }
   }
 
@@ -277,57 +249,53 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
-    const runtime = await this._services();
+    const runtime = await this._runtime.runPromise(Effect.runtime<any>());
     await updateName(runtime, this._conversation, chat, this._options.model);
   }
 
-  // TODO(burdon): Fix/factor out.
-  private _artifactDiffResolver: ArtifactDiffResolver.Service = {
-    resolve: async (_artifacts) => {
-      const versions = new Map();
-      // await Promise.all(
-      //   artifacts.map(async (artifact) => {
-      //     const {
-      //       objects: [object],
-      //     } = await space.db.query(Filter.id(artifact.id)).run();
-      //     if (!object) {
-      //       return;
-      //     }
+  /**
+   * Handles an ephemeral message from the agent process.
+   * Both pending and completed blocks arrive here. Completed blocks are deduped
+   * against messages already written to the feed queue to handle the race between
+   * ephemeral delivery and feed replication.
+   */
+  #handleEphemeralMessage(message: Message.Message) {
+    const isPending = message.blocks.some((block) => block.pending);
 
-      //     versions.set(artifact.id, {
-      //       version: getVersion(object),
-      //       diff: `Current state: ${JSON.stringify(object)}`,
-      //     });
-      //   }),
-      // );
-
-      return versions;
-    },
-  };
-
-  // TODO(dmaretskyi): Due to the way effect streams do buffering, we cannot rely on _onBlock and _onMessage to be called in order.
-  private _onBlock = Effect.fn(
-    function* (this: AiChatProcessor, block: ContentBlock.Any) {
-      this._registry.update(this._streaming, (streaming) => {
-        const blocks = streaming.filter((message) => message.blocks.every((block) => !block.pending));
-
-        // AiSession emits a message per each assistant content-block, so we do the same.
-        return [
-          ...blocks,
-          Obj.make(Message.Message, {
-            created: new Date().toISOString(),
-            sender: { role: 'assistant' },
-            blocks: [block],
-          }),
-        ];
+    if (isPending) {
+      if (this.#finalizedIds.has(message.id)) {
+        return;
+      }
+      this.#registry.update(this.#streaming, (streaming) => {
+        const idx = streaming.findIndex((existing) => existing.id === message.id);
+        if (idx >= 0) {
+          const updated = [...streaming];
+          updated[idx] = message;
+          return updated;
+        }
+        return [...streaming, message];
       });
-    }.bind(this),
-  );
+    } else {
+      this.#finalizedIds.add(message.id);
+      this.#registry.update(this.#streaming, (streaming) => streaming.filter((existing) => existing.id !== message.id));
+      this.#registry.update(this.#pending, (pending) => {
+        if (pending.some((existing) => existing.id === message.id)) {
+          return pending;
+        }
+        return [...pending, message];
+      });
+    }
+  }
 
-  private _onMessage = Effect.fn(
-    function* (this: AiChatProcessor, message: Message.Message) {
-      this._registry.set(this._streaming, []);
-      this._registry.update(this._pending, (pending) => [...pending, message]);
-    }.bind(this),
-  );
+  /**
+   * Move remaining streaming messages to pending (called when agent completes).
+   */
+  #flushStreaming() {
+    const remaining = this.#registry.get(this.#streaming);
+    if (remaining.length > 0) {
+      this.#registry.update(this.#pending, (pending) => [...pending, ...remaining]);
+      this.#registry.set(this.#streaming, []);
+    }
+    this.#finalizedIds.clear();
+  }
 }

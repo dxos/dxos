@@ -21,7 +21,7 @@ import React, {
 
 import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
-import { type Database, Filter, Obj } from '@dxos/echo';
+import { type Database, Feed, Filter, Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -83,7 +83,7 @@ const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProp
   const lastPrompt = useRef<string | undefined>(undefined);
 
   // Messages.
-  const storedMessages = useQuery(chat?.queue?.target, Filter.type(Message.Message));
+  const storedMessages = useQuery(chat?.feed?.target, Filter.type(Message.Message));
   const messages = useMemo(() => {
     return Array.dedupeWith([...storedMessages, ...pending], ({ id: a }, { id: b }) => a === b);
   }, [storedMessages, pending]);

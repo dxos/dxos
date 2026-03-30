@@ -12,7 +12,6 @@ import { Process, ProcessOperationInvoker, StorageService } from '@dxos/function
 import { Operation, OperationRegistry } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
-import { raise } from '@dxos/debug';
 import { trim } from '@dxos/util';
 import * as Tool from '@effect/ai/Tool';
 import * as Toolkit from '@effect/ai/Toolkit';
@@ -38,13 +37,13 @@ interface AgentProcessOptions {
 }
 
 /**
- * Hosts a presistant, suspendible AiAgent that can process a number of prompts.
+ * Hosts a persistent, suspendible AiAgent that can process a number of prompts.
+ * The process target is a queue DXN string.
  */
 export const AgentProcess = (options: AgentProcessOptions) =>
   Process.make(
     {
       key: 'org.dxos.testing.process.agent',
-      // TODO(dmaretskyi): Expand input type. Currently prompts that are fed to the agent.
       input: Schema.String,
       output: Schema.Void,
       services: [
@@ -62,20 +61,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     },
     (ctx) =>
       Effect.gen(function* () {
-        const targetId = ctx.params.target;
-        if (targetId == null) {
-          return yield* Effect.die(
-            new Error('Agent executable requires spawn options.target set to a Feed object id in the database.'),
-          );
+        const queueDxnStr = ctx.params.target;
+        if (queueDxnStr == null) {
+          return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
-        const feed = yield* Database.resolve(DXN.fromLocalObjectId(targetId), Feed.Feed).pipe(
-          Effect.catchTag('ObjectNotFoundError', () =>
-            Effect.die(new Error(`Target must be a Feed object: ${targetId}`)),
-          ),
-        );
-        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(
-          Feed.getQueueDxn(feed) ?? raise(new Error('Invalid feed; has it been saved to database?')),
-        );
+        const queueDxn = DXN.parse(queueDxnStr);
+        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
         let inputQueue: AgentEvent[] = [...(yield* loadEvents)];
 

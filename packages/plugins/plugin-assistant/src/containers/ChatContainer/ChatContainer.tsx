@@ -29,7 +29,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   const parentId = attendableId ? getParentId(attendableId) : undefined;
   const space = spaceProp ?? getSpace(chat);
   const settings = useAtomCapability(AssistantCapabilities.Settings);
-  const services = useChatServices({ id: space?.id });
+  const runtime = useChatServices({ id: space?.id });
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
   const blueprintRegistry = useBlueprintRegistry();
@@ -37,7 +37,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
     space,
     chat,
     preset,
-    services,
+    runtime,
     blueprintRegistry,
     settings,
   });

@@ -151,10 +151,15 @@ export const AssistantTestLayer = ({
 
 interface TestLayerWithTriggersOptions extends TestLayerOptions {}
 
-export const AssistantTestLayerWithTriggers = (options: TestLayerWithTriggersOptions) =>
+export type AssistantTestServicesWithTriggers = AssistantTestServices | TriggerDispatcher | TriggerStateStore;
+
+export const AssistantTestLayerWithTriggers = (
+  options: TestLayerWithTriggersOptions,
+): Layer.Layer<AssistantTestServicesWithTriggers, never, TestContextService> =>
   Layer.mergeAll(
     AssistantTestLayer(options),
     TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }).pipe(
       Layer.provide(Registry.layer),
     ),
-  ).pipe(Layer.provide(TriggerStateStore.layerMemory));
+    TriggerStateStore.layerMemory,
+  ) as any;
