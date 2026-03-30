@@ -4,4 +4,3 @@
 
 export * from './ollama';
 export * from './updater';
-export * from './window';

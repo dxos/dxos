@@ -95,6 +95,9 @@ const RawTreeItem = <T extends { id: string } = any>({
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const openRef = useRef(false);
   const cancelExpandRef = useRef<NodeJS.Timeout | null>(null);
+  const lastCanDropLogRef = useRef<string | null>(null);
+  const lastInstructionLogRef = useRef<string | null>(null);
+  const nativeEventLogRef = useRef<Record<string, boolean>>({});
   const [_state, setState] = useState<TreeItemDragState>('idle');
   const [instruction, setInstruction] = useState<Instruction | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -129,6 +132,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
   const canSelectItem = canSelect?.({ item, path }) ?? true;
   const data = { id, path, item } satisfies TreeData;
+  const shouldSeedNativeDragData = typeof document !== 'undefined' && document.body.hasAttribute('data-platform');
 
   const cancelExpand = useCallback(() => {
     if (cancelExpandRef.current) {
@@ -139,6 +143,71 @@ const RawTreeItem = <T extends { id: string } = any>({
 
   const isItemDraggable = draggableProp && itemDraggable !== false;
   const isItemDroppable = itemDroppable !== false;
+  const nativeDragText = id;
+
+  useEffect(() => {
+    if (!draggableProp || !rowRef.current || !buttonRef.current) {
+      return;
+    }
+
+    nativeEventLogRef.current = {};
+    const listeners = [
+      { element: rowRef.current, elementRole: 'row' },
+      { element: buttonRef.current, elementRole: 'button' },
+    ] as const;
+
+    const removers = listeners.flatMap(({ element, elementRole }) => {
+      const log = (eventType: string, event: DragEvent) => {
+        const key = `${elementRole}:${eventType}`;
+        if (nativeEventLogRef.current[key]) {
+          return;
+        }
+        nativeEventLogRef.current[key] = true;
+        // #region agent log H6
+        fetch('http://127.0.0.1:7242/ingest/2fc9cc4c-4972-4b72-bea5-aa0a81d6e670',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4cdd86'},body:JSON.stringify({sessionId:'4cdd86',runId:'initial',hypothesisId:'H6',location:'TreeItem.tsx:native-events',message:'Native drag event observed on tree item',data:{id,path,elementRole,eventType,targetTag:event.target instanceof Element ? event.target.tagName : null,currentTargetTag:event.currentTarget instanceof Element ? event.currentTarget.tagName : null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+      };
+
+      const onDragStart = (event: DragEvent) => {
+        // #region agent log H8
+        fetch('http://127.0.0.1:7242/ingest/2fc9cc4c-4972-4b72-bea5-aa0a81d6e670',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4cdd86'},body:JSON.stringify({sessionId:'4cdd86',runId:'initial',hypothesisId:'H8',location:'TreeItem.tsx:native-dragstart',message:'Native dragstart observed on tree item',data:{id,path,elementRole,types:event.dataTransfer ? Array.from(event.dataTransfer.types) : [],items:event.dataTransfer?.items?.length ?? null,effectAllowed:event.dataTransfer?.effectAllowed ?? null,dropEffect:event.dataTransfer?.dropEffect ?? null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+      };
+      const onDragEnter = (event: DragEvent) => log('dragenter', event);
+      const onDragOver = (event: DragEvent) => log('dragover', event);
+      const onDragEnd = (event: DragEvent) => {
+        // #region agent log H9
+        fetch('http://127.0.0.1:7242/ingest/2fc9cc4c-4972-4b72-bea5-aa0a81d6e670',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4cdd86'},body:JSON.stringify({sessionId:'4cdd86',runId:'initial',hypothesisId:'H9',location:'TreeItem.tsx:native-dragend',message:'Native dragend observed on tree item',data:{id,path,elementRole,dropEffect:event.dataTransfer?.dropEffect ?? null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+      };
+      const onDrop = (event: DragEvent) => {
+        log('drop', event);
+        nativeEventLogRef.current = {};
+      };
+      const onDragLeave = () => {
+        nativeEventLogRef.current[`${elementRole}:dragenter`] = false;
+        nativeEventLogRef.current[`${elementRole}:dragover`] = false;
+      };
+
+      element.addEventListener('dragstart', onDragStart);
+      element.addEventListener('dragenter', onDragEnter);
+      element.addEventListener('dragover', onDragOver);
+      element.addEventListener('dragleave', onDragLeave);
+      element.addEventListener('dragend', onDragEnd);
+      element.addEventListener('drop', onDrop);
+
+      return [
+        () => element.removeEventListener('dragstart', onDragStart),
+        () => element.removeEventListener('dragenter', onDragEnter),
+        () => element.removeEventListener('dragover', onDragOver),
+        () => element.removeEventListener('dragleave', onDragLeave),
+        () => element.removeEventListener('dragend', onDragEnd),
+        () => element.removeEventListener('drop', onDrop),
+      ];
+    });
+
+    return () => removers.forEach((remove) => remove());
+  }, [draggableProp, id, path]);
 
   useEffect(() => {
     if (!draggableProp) {
@@ -151,7 +220,20 @@ const RawTreeItem = <T extends { id: string } = any>({
       draggable({
         element: buttonRef.current!,
         getInitialData: () => data,
+        getInitialDataForExternal: () => {
+          if (!shouldSeedNativeDragData) {
+            return undefined;
+          }
+
+          // #region agent log H10
+          fetch('http://127.0.0.1:7242/ingest/2fc9cc4c-4972-4b72-bea5-aa0a81d6e670',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4cdd86'},body:JSON.stringify({sessionId:'4cdd86',runId:'post-fix-2',hypothesisId:'H10',location:'TreeItem.tsx:getInitialDataForExternal',message:'Seeded native drag data for tree item',data:{id,path,mediaTypes:['text/plain'],plainTextLength:nativeDragText.length},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+          return { 'text/plain': nativeDragText };
+        },
         onDragStart: () => {
+          // #region agent log H1
+          fetch('http://127.0.0.1:7242/ingest/2fc9cc4c-4972-4b72-bea5-aa0a81d6e670',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4cdd86'},body:JSON.stringify({sessionId:'4cdd86',runId:'initial',hypothesisId:'H1',location:'TreeItem.tsx:onDragStart',message:'Tree item drag started',data:{id,path,open,hasTauriDragRegionAncestor:Boolean(buttonRef.current?.closest('[data-tauri-drag-region]')),hasAppDragAncestor:Boolean(buttonRef.current?.closest('.dx-app-drag'))},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
           setState('dragging');
           if (open) {
             openRef.current = true;
@@ -184,7 +266,15 @@ const RawTreeItem = <T extends { id: string } = any>({
       },
       canDrop: ({ source }) => {
         const _canDrop = canDrop ?? (() => true);
-        return source.element !== buttonRef.current && _canDrop({ source: source.data as TreeData, target: data });
+        const allowed = source.element !== buttonRef.current && _canDrop({ source: source.data as TreeData, target: data });
+        const logKey = JSON.stringify({ sourceId: (source.data as TreeData | undefined)?.id ?? null, targetId: id, allowed });
+        if (lastCanDropLogRef.current !== logKey) {
+          lastCanDropLogRef.current = logKey;
+          // #region agent log H2
+          fetch('http://127.0.0.1:7242/ingest/2fc9cc4c-4972-4b72-bea5-aa0a81d6e670',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4cdd86'},body:JSON.stringify({sessionId:'4cdd86',runId:'initial',hypothesisId:'H2',location:'TreeItem.tsx:canDrop',message:'Tree item canDrop evaluated',data:{id,path,sourceId:(source.data as TreeData | undefined)?.id??null,targetId:data.id,allowed,hasTauriDragRegionAncestor:Boolean(buttonRef.current?.closest('[data-tauri-drag-region]')),hasAppDragAncestor:Boolean(buttonRef.current?.closest('.dx-app-drag'))},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+        }
+        return allowed;
       },
       getIsSticky: () => true,
       onDrag: ({ self, source }) => {
@@ -193,6 +283,19 @@ const RawTreeItem = <T extends { id: string } = any>({
           desired && blockInstruction?.({ instruction: desired, source: source.data as TreeData, target: data });
         const instruction: Instruction | null =
           block && desired.type !== 'instruction-blocked' ? { type: 'instruction-blocked', desired } : desired;
+        const logKey = JSON.stringify({
+          sourceId: (source.data as TreeData | undefined)?.id ?? null,
+          targetId: id,
+          desiredType: desired?.type ?? null,
+          blocked: Boolean(block),
+          instructionType: instruction?.type ?? null,
+        });
+        if (lastInstructionLogRef.current !== logKey) {
+          lastInstructionLogRef.current = logKey;
+          // #region agent log H3
+          fetch('http://127.0.0.1:7242/ingest/2fc9cc4c-4972-4b72-bea5-aa0a81d6e670',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4cdd86'},body:JSON.stringify({sessionId:'4cdd86',runId:'initial',hypothesisId:'H3',location:'TreeItem.tsx:onDrag',message:'Tree item drag instruction computed',data:{id,path,sourceId:(source.data as TreeData | undefined)?.id??null,targetId:data.id,desiredType:desired?.type??null,blocked:Boolean(block),instructionType:instruction?.type??null,isBranch,open},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+        }
 
         if (source.data.id !== id) {
           if (instruction?.type === 'make-child' && isBranch && !open && !cancelExpandRef.current) {

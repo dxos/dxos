@@ -25,12 +25,17 @@ import {
   writeFileContent,
 } from '../../util';
 
+/** Read the current content string from a cached in-memory Text.Text. */
+const getDocumentText = (doc: { content?: string }): string | undefined =>
+  doc.content;
+
 const STORAGE_KEY = `${meta.id}.workspaces`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(NativeFilesystemCapabilities.State);
+    const nativeMarkdownDocs = yield* Capability.get(NativeFilesystemCapabilities.NativeMarkdownDocuments);
     const getState = (): NativeFilesystemState => registry.get(stateAtom);
     const updateState = (fn: (current: NativeFilesystemState) => NativeFilesystemState): void => {
       registry.update(stateAtom, fn);
@@ -71,6 +76,11 @@ export default Capability.makeModule(
       OperationResolver.make({
         operation: NativeFilesystemOperation.CloseDirectory,
         handler: Effect.fnUntraced(function* ({ id }) {
+          const workspace = getState().workspaces.find((ws) => ws.id === id);
+          if (workspace) {
+            nativeMarkdownDocs.evictForWorkspace(workspace);
+          }
+
           updateState((current) => ({
             ...current,
             workspaces: current.workspaces.filter((ws) => ws.id !== id),
@@ -94,12 +104,15 @@ export default Capability.makeModule(
 
           const { workspace, file } = result;
 
-          if (file.text === undefined) {
+          const cachedDoc = nativeMarkdownDocs.getByFileId(id);
+          const text = cachedDoc ? getDocumentText(cachedDoc) : file.text;
+
+          if (text === undefined) {
             log.warn('File has no content to save', { id });
             return;
           }
 
-          const success = yield* Effect.promise(() => writeFileContent(file.path, file.text!));
+          const success = yield* Effect.promise(() => writeFileContent(file.path, text));
           if (success) {
             updateState((current) => ({
               ...current,
@@ -121,6 +134,8 @@ export default Capability.makeModule(
             log.warn('Workspace not found for refresh', { id });
             return;
           }
+
+          nativeMarkdownDocs.evictForWorkspace(workspace);
 
           const refreshed = yield* Effect.promise(() => refreshWorkspace(workspace));
           if (refreshed) {

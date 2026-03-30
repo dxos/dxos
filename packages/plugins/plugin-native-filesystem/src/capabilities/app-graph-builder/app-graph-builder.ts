@@ -5,25 +5,26 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SHARED } from '@dxos/plugin-space';
-import { Expando } from '@dxos/schema';
+import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { SHARED } from '@dxos/plugin-space/types';
+import { Expando, Text } from '@dxos/schema';
 
 import { meta } from '../../meta';
 import {
   NativeFilesystemCapabilities,
   NativeFilesystemOperation,
   isFilesystemDirectory,
-  isFilesystemFile,
   isFilesystemWorkspace,
+  type NativeMarkdownDocumentsService,
   type FilesystemDirectory,
   type FilesystemEntry,
+  type FilesystemFile,
   type FilesystemWorkspace,
   type NativeFilesystemState,
 } from '../../types';
@@ -35,8 +36,8 @@ const workspaceRearrangeCache = new Map<string, (nextOrder: (FilesystemWorkspace
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(NativeFilesystemCapabilities.State);
+    const nativeMarkdownDocs = yield* Capability.get(NativeFilesystemCapabilities.NativeMarkdownDocuments);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -68,27 +69,22 @@ export default Capability.makeModule(
         match: NodeMatcher.whenRoot,
         connector: (_node, get) => {
           const state: NativeFilesystemState = get(stateAtom);
+          const client = capabilities.get(ClientCapabilities.Client);
+          const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
+          const isReady = get(isReadyAtom);
 
-          if (!state.workspaces.length) {
+          if (!state.workspaces.length || !isReady) {
             return Effect.succeed([]);
           }
 
-          const client = capabilities.get(ClientCapabilities.Client);
-
           let spacesOrder: Obj.Any | undefined;
           let orderMap = new Map<string, number>();
-          try {
-            const [order] = get(
-              AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })),
-            );
-            if (order) {
-              const snapshot = get(AtomObj.make(order)) as { order?: string[] } | undefined;
-              const orderArray: string[] = snapshot?.order ?? [];
-              orderMap = new Map(orderArray.map((id, index) => [id, index]));
-              spacesOrder = order;
-            }
-          } catch {
-            // Ignore errors when spaces aren't ready yet.
+          const [order] = get(AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })));
+          if (order) {
+            const snapshot = get(AtomObj.make(order)) as { order?: string[] } | undefined;
+            const orderArray: string[] = snapshot?.order ?? [];
+            orderMap = new Map(orderArray.map((id, index) => [id, index]));
+            spacesOrder = order;
           }
 
           const { graph } = capabilities.get(AppCapabilities.AppGraph);
@@ -164,7 +160,7 @@ export default Capability.makeModule(
             },
           ]),
         connector: (workspace: FilesystemWorkspace) =>
-          Effect.succeed(workspace.children.map((entry: FilesystemEntry) => constructEntryNode(entry))),
+          Effect.succeed(workspace.children.map((entry: FilesystemEntry) => constructEntryNode(entry, nativeMarkdownDocs))),
       }),
 
       GraphBuilder.createExtension({
@@ -174,18 +170,23 @@ export default Capability.makeModule(
             ? Option.some(node.data as FilesystemDirectory)
             : Option.none(),
         connector: (directory: FilesystemDirectory) =>
-          Effect.succeed(directory.children.map((entry: FilesystemEntry) => constructEntryNode(entry))),
+          Effect.succeed(directory.children.map((entry: FilesystemEntry) => constructEntryNode(entry, nativeMarkdownDocs))),
       }),
 
       GraphBuilder.createExtension({
         id: `${meta.id}.file-actions`,
-        match: (node) =>
-          isFilesystemFile(node.data) && node.data.type === 'markdown' ? Option.some(node.data) : Option.none(),
-        actions: (file) =>
+        match: (node) => {
+          if (Obj.instanceOf(Text.Text, node.data)) {
+            const fileId = node.properties.nativeFilesystemFileId as string | undefined;
+            return fileId ? Option.some(fileId) : Option.none();
+          }
+          return Option.none();
+        },
+        actions: (fileId: string) =>
           Effect.succeed([
             {
-              id: `${NativeFilesystemOperation.SaveFile.meta.key}:${file.id}`,
-              data: () => Operation.invoke(NativeFilesystemOperation.SaveFile, { id: file.id }),
+              id: `${NativeFilesystemOperation.SaveFile.meta.key}:${fileId}`,
+              data: () => Operation.invoke(NativeFilesystemOperation.SaveFile, { id: fileId }),
               properties: {
                 label: ['save file label', { ns: meta.id }],
                 icon: 'ph--floppy-disk--regular',
@@ -203,7 +204,10 @@ export default Capability.makeModule(
   }),
 );
 
-const constructEntryNode = (entry: FilesystemEntry): Node.NodeArg<FilesystemEntry> => {
+const constructEntryNode = (
+  entry: FilesystemEntry,
+  nativeMarkdownDocs: NativeMarkdownDocumentsService,
+): Node.NodeArg<any> => {
   if (isFilesystemDirectory(entry)) {
     return {
       id: entry.id,
@@ -217,14 +221,31 @@ const constructEntryNode = (entry: FilesystemEntry): Node.NodeArg<FilesystemEntr
     };
   }
 
+  const file = entry as FilesystemFile;
+  if (file.type === 'markdown') {
+    const text = nativeMarkdownDocs.getOrCreate(file);
+    return {
+      id: file.id,
+      type: Text.Text.typename,
+      data: text,
+      properties: {
+        label: file.name,
+        icon: 'ph--file-text--regular',
+        modified: file.modified,
+        nativeFilesystemFileId: file.id,
+        nativeFilesystemPath: file.path,
+        persistenceClass: 'memory',
+      },
+    };
+  }
+
   return {
-    id: entry.id,
-    type: entry.type === 'image' ? `${meta.id}.image` : `${meta.id}.markdown`,
-    data: entry,
+    id: file.id,
+    type: `${meta.id}.image`,
+    data: file,
     properties: {
-      label: entry.name,
-      icon: entry.type === 'image' ? 'ph--image--regular' : 'ph--file-text--regular',
-      modified: entry.modified,
+      label: file.name,
+      icon: 'ph--image--regular',
     },
   };
 };

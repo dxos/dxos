@@ -92,6 +92,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     >
       <Tabs.Root orientation='vertical' verticalVariant='stateless' value={internalValue} classNames='contents'>
         <div
+          data-tauri-drag-region
           role='none'
           style={iconSize(5)}
           className={mx(
@@ -100,7 +101,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-toolbar-surface dx-contain-layout dx-app-drag',
           )}
         >
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) p-1 gap-1 overflow-y-auto!'>
+          <Tabs.Tablist data-tauri-drag-region classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) p-1 gap-1 overflow-y-auto!'>
             {companions.map((companion) => (
               <Tabs.Tab key={getCompanionVariant(companion.id)} value={getCompanionVariant(companion.id)} asChild>
                 <IconButton

@@ -47,10 +47,19 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.surface.text`,
         role: ['article', 'section', 'tabpanel'],
-        filter: (data): data is { id: string; subject: Text.Text } =>
-          typeof data.id === 'string' && Obj.instanceOf(Text.Text, data.subject),
-        component: ({ data, role }) => {
-          return <Container id={data.id} subject={data.subject} role={role} />;
+        filter: (data): data is { id?: string; attendableId?: string; subject: Text.Text } =>
+          (typeof data.id === 'string' || typeof data.attendableId === 'string') &&
+          Obj.instanceOf(Text.Text, data.subject),
+        component: ({ data, role, ref }) => {
+          return (
+            <Container
+              id={data.id ?? Obj.getDXN(data.subject).toString()}
+              attendableId={data.attendableId}
+              subject={data.subject}
+              role={role}
+              ref={ref}
+            />
+          );
         },
       }),
       Surface.create({

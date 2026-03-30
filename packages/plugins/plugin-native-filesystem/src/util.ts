@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import type { WatchEvent } from '@tauri-apps/plugin-fs';
+
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
@@ -60,6 +62,8 @@ export const openDirectoryPicker = async (): Promise<string | null> => {
     const selected = await open({
       directory: true,
       multiple: false,
+      /** Required so Tauri adds recursive FS scope for vault-style folder trees. */
+      recursive: true,
     });
     return selected as string | null;
   } catch (error) {
@@ -68,7 +72,8 @@ export const openDirectoryPicker = async (): Promise<string | null> => {
   }
 };
 
-const readFileContent = async (path: string): Promise<string | undefined> => {
+/** Read UTF-8 text from a file path (Tauri desktop only). */
+export const readFileContent = async (path: string): Promise<string | undefined> => {
   if (!isTauriAvailable()) {
     return undefined;
   }
@@ -79,6 +84,56 @@ const readFileContent = async (path: string): Promise<string | undefined> => {
   } catch (error) {
     log.warn('Failed to read file', { path, error });
     return undefined;
+  }
+};
+
+/**
+ * Watch a single markdown file for external changes. Uses debounced Tauri watch.
+ * Invokes onExternalChange when the file may have been modified on disk.
+ */
+export const watchMarkdownFile = async (
+  filePath: string,
+  onExternalChange: () => void | Promise<void>,
+): Promise<(() => void) | null> => {
+  if (!isTauriAvailable()) {
+    return null;
+  }
+
+  try {
+    const { watch } = await import('@tauri-apps/plugin-fs');
+    const shouldSyncFromDisk = (event: WatchEvent): boolean => {
+      const t = event.type;
+      if (t === 'any') {
+        return false;
+      }
+      if (typeof t === 'object' && t !== null) {
+        if ('modify' in t) {
+          return true;
+        }
+        if ('create' in t) {
+          return true;
+        }
+        if ('remove' in t) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    const unwatch = await watch(
+      filePath,
+      (event) => {
+        if (!shouldSyncFromDisk(event)) {
+          return;
+        }
+        void Promise.resolve(onExternalChange());
+      },
+      { delayMs: 250 },
+    );
+    return unwatch;
+  } catch (error) {
+    log.warn('Failed to watch file', { filePath, error });
+    return null;
   }
 };
 

@@ -22,6 +22,18 @@
     "opener:default",
     "opener:allow-open-url",
     "opener:allow-default-urls",
-    "shell:allow-open"
+    "shell:allow-open",
+    "dialog:default",
+    "dialog:allow-open",
+    "fs:read-all",
+    "fs:write-all",
+    {
+      "identifier": "fs:allow-watch",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "**" }]
+    }
   ]
 }

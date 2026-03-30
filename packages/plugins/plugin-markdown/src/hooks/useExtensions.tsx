@@ -109,7 +109,6 @@ export const useExtensions = ({
   return useMemo<Extension[]>(
     () =>
       [
-        // TODO(burdon): Pass this in?
         // NOTE: Data extensions must be first so that automerge is updated before other extensions compute their state.
         target &&
           createDataExtensions({

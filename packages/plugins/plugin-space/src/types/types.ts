@@ -21,6 +21,9 @@ export const SPACE_DIRECTORY_HANDLE = `${meta.id}.directory`;
 
 export const SPACE_TYPE = 'org.dxos.type.space';
 
+/** Key for the Expando that stores cross-space ordering (must stay stable for persisted data). */
+export const SHARED = 'shared-spaces';
+
 export type SpacePluginOptions = {
   /**
    * Origin used for shareable links (object copy-link and invitation base).
