@@ -158,6 +158,7 @@ export const Mailbox = composable<HTMLDivElement, MailboxProps>(
 
     const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Enter') {
+        console.log('click');
         event.preventDefault();
         (document.activeElement as HTMLElement | null)?.click();
       }

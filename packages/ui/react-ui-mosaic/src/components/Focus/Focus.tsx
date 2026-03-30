@@ -70,17 +70,13 @@ const Group = slottable<HTMLDivElement, GroupProps>(
     const [groupHasFocus, setGroupHasFocus] = useState(false);
 
     const handleFocusIn = useCallback(() => setGroupHasFocus(true), []);
-    const handleFocusOut = useCallback(
-      (event: FocusEvent<HTMLDivElement>) => {
-        const related = event.relatedTarget as HTMLElement | null;
-        if (!related || !rootRef.current?.contains(related)) {
-          setGroupHasFocus(false);
-        }
-      },
-      [],
-    );
+    const handleFocusOut = useCallback((event: FocusEvent<HTMLDivElement>) => {
+      const related = event.relatedTarget as HTMLElement | null;
+      if (!related || !rootRef.current?.contains(related)) {
+        setGroupHasFocus(false);
+      }
+    }, []);
 
-    // TODO(burdon): Move into react-ui and use theme styles (focus.ts).
     // TODO(burdon): Ring (box-shadow) requires a margin.
     return (
       <FocusContext.Provider value={{ setFocus: setState, groupHasFocus }}>
@@ -128,7 +124,8 @@ type ItemProps = {
 const Item = slottable<HTMLDivElement, ItemProps>(
   ({ children, asChild, current, onCurrentChange, onClick, onFocus, onBlur, ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
-    const focusableGroupAttrs = useFocusableGroup();
+    // Tell tabster's groupper to ignore Enter so it doesn't move focus into the group.
+    const focusableGroupAttrs = useFocusableGroup({ ignoreDefaultKeydown: { Enter: true } });
     const { groupHasFocus } = useFocus();
     const [focused, setFocused] = useState(false);
 
@@ -138,6 +135,15 @@ const Item = slottable<HTMLDivElement, ItemProps>(
         onClick?.(event);
       },
       [onCurrentChange, onClick],
+    );
+
+    const handleKeyDown = useCallback(
+      (event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Enter') {
+          onCurrentChange?.();
+        }
+      },
+      [onCurrentChange],
     );
 
     const handleFocus = useCallback(
@@ -162,13 +168,11 @@ const Item = slottable<HTMLDivElement, ItemProps>(
 
     return (
       <Comp
-        {...composableProps(props, {
-          tabIndex: 0,
-          className: 'outline-hidden',
-        })}
+        {...composableProps(props, { tabIndex: 0, className: 'outline-hidden' })}
         {...focusableGroupAttrs}
         aria-current={isCurrent || undefined}
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
         onFocus={handleFocus}
         onBlur={handleBlur}
         ref={forwardedRef}
