@@ -6,6 +6,7 @@ import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import type * as Runtime from 'effect/Runtime';
 import { useContext, useMemo, useState } from 'react';
 
+import { Ref } from '@dxos/echo';
 import { AiConversation } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
@@ -68,6 +69,7 @@ export const useChatProcessor = ({
 
     log('creating processor', { preset, model: preset?.model, settings });
     return new AiChatProcessor(conversation, services, {
+      chat: chat ? Ref.make(chat) : undefined,
       observableRegistry,
       blueprintRegistry,
       model: preset?.model,

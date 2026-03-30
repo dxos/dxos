@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { type ThemeMode, useAsyncState, useThemeContext } from '@dxos/react-ui';
+import { type ComposableProps, type ThemeMode, useAsyncState, useThemeContext } from '@dxos/react-ui';
 import {
   type ControlProps,
   Globe,
@@ -77,7 +77,7 @@ const globeStyles = (themeMode: ThemeMode) =>
         },
       };
 
-export type GlobeControlProps = GeoControlProps & GlobeRootProps;
+export type GlobeControlProps = ComposableProps<GeoControlProps & GlobeRootProps>;
 
 export const GlobeControl = ({
   classNames,

@@ -30,7 +30,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.surface.document`,
         role: ['article', 'section', 'tabpanel'],
-        filter: (data): data is { attendableId: string; subject: Markdown.Document; variant: undefined } =>
+        filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
           typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
         component: ({ data, role, ref }) => {
           return (

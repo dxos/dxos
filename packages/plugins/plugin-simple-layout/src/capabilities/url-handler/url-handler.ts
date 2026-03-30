@@ -20,23 +20,28 @@ import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapabilit
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokeSync } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
 
     /**
      * Handle navigation from a pathname.
      * Restores the qualified graph ID and dispatches layout operations.
      */
     const handlePathNavigation = (pathname: string) => {
+      if (isFilePath(pathname)) {
+        log.info('[UrlHandler] Skipping file path (not a graph node)', { pathname });
+        pathname = '/';
+      }
+
       log.info('[UrlHandler] Navigating to path', { pathname });
 
       const qualifiedId = fromUrlPath(pathname);
       const workspace = getWorkspaceFromPath(qualifiedId);
 
-      invokeSync(LayoutOperation.SwitchWorkspace, { subject: workspace });
+      void invokePromise(LayoutOperation.SwitchWorkspace, { subject: workspace });
 
       const activeId = qualifiedId !== workspace ? qualifiedId : undefined;
       if (activeId) {
-        invokeSync(LayoutOperation.Open, { subject: [activeId] });
+        void invokePromise(LayoutOperation.Open, { subject: [activeId] });
       }
     };
 
@@ -106,6 +111,13 @@ export default Capability.makeModule(
  * These paths are handled by other systems (e.g., OAuth).
  */
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
+
+/**
+ * Paths with file extensions (e.g., `/iframe.html`) are not graph node paths.
+ * This guards against embedded contexts like Storybook iframes interpreting
+ * the host pathname as a navigation target.
+ */
+const isFilePath = (pathname: string): boolean => /\.[a-z]+$/i.test(pathname);
 
 /**
  * Returns a handler for navigation events (initial load and popstate) that navigates to current pathname.

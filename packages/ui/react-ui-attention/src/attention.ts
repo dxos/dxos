@@ -4,7 +4,7 @@
 
 import { Atom, type Registry } from '@effect-atom/atom-react';
 
-import { ATTENDABLE_PATH_SEPARATOR, type Attention } from './types';
+import { type Attention } from './types';
 
 /**
  * Manages attention state for an application.
@@ -184,6 +184,8 @@ export const getAttendables = (selector: string, cursor: Element, acc: string[] 
 export type AttendableId = { attendableId?: string };
 
 export type Related = { related?: boolean };
+
+const ATTENDABLE_PATH_SEPARATOR = '~';
 
 /**
  * Decompose a qualified graph ID into progressive prefixes for ancestry tracking.

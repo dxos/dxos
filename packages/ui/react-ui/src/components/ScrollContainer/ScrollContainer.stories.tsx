@@ -45,7 +45,7 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Stor
           <div className='px-1'>{lines.length}</div>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content asChild>
+      <Panel.Content>
         <ScrollContainer.Root {...props} ref={scroller}>
           <ScrollContainer.Viewport>
             {lines.map((line, index) => (
@@ -55,6 +55,7 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Stor
             ))}
           </ScrollContainer.Viewport>
           <ScrollContainer.ScrollDownButton />
+          <ScrollContainer.Fade />
         </ScrollContainer.Root>
       </Panel.Content>
     </Panel.Root>
@@ -75,7 +76,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     pin: true,
-    fade: true,
+
     running: true,
   },
 };
@@ -83,7 +84,7 @@ export const Default: Story = {
 export const Large: Story = {
   args: {
     pin: true,
-    fade: true,
+
     initialLines: 100,
   },
 };

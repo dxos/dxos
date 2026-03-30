@@ -5,10 +5,10 @@
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type HTMLAttributes, forwardRef } from 'react';
+import React, { useMemo } from 'react';
 
-import { composableProps } from '@dxos/ui-theme';
-import { type AllowedAxis, type SlottableProps, type ThemedClassName } from '@dxos/ui-types';
+import { composableProps, slottable } from '@dxos/ui-theme';
+import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 
@@ -24,6 +24,7 @@ type ScrollAreaContextType = {
   /** Hide scrollbars when not scrolling. */
   autoHide: boolean;
   /** Apply padding to opposite side of scrollbar. */
+  // TODO(burdon): Rename `center`.
   margin?: boolean;
   /** Apply padding. */
   padding: boolean;
@@ -41,12 +42,12 @@ const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaConte
 
 const SCROLLAREA_ROOT_NAME = 'ScrollArea.Root';
 
-type ScrollAreaRootProps = SlottableProps<HTMLDivElement, Partial<ScrollAreaContextType>>;
+type ScrollAreaRootProps = SlottableProps<Partial<ScrollAreaContextType>>;
 
 /**
  * ScrollArea provides native scrollbars with custom styling.
  */
-const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
+const ScrollAreaRoot = slottable<HTMLDivElement, Partial<ScrollAreaContextType>>(
   (
     {
       children,
@@ -61,10 +62,13 @@ const ScrollAreaRoot = forwardRef<HTMLDivElement, ScrollAreaRootProps>(
     },
     forwardedRef,
   ) => {
+    const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
-    const { tx } = useThemeContext();
-    const options = { orientation, autoHide, margin, padding, thin, snap };
+    const options = useMemo(
+      () => ({ orientation, autoHide, margin, padding, thin, snap }),
+      [orientation, autoHide, margin, padding, thin, snap],
+    );
 
     return (
       <ScrollAreaProvider {...options}>
@@ -84,20 +88,20 @@ ScrollAreaRoot.displayName = SCROLLAREA_ROOT_NAME;
 
 const SCROLLAREA_VIEWPORT_NAME = 'ScrollArea.Viewport';
 
-type ScrollAreaViewportProps = ThemedClassName<HTMLAttributes<HTMLDivElement>>;
+type ScrollAreaViewportProps = SlottableProps;
 
-const ScrollAreaViewport = forwardRef<HTMLDivElement, ScrollAreaViewportProps>(
-  ({ classNames, children, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const options = useScrollAreaContext(SCROLLAREA_VIEWPORT_NAME);
+const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+  const { tx } = useThemeContext();
+  const options = useScrollAreaContext(SCROLLAREA_VIEWPORT_NAME);
+  const { className, ...rest } = composableProps(props);
+  const Comp = asChild ? Slot : Primitive.div;
 
-    return (
-      <div {...props} className={tx('scrollArea.viewport', options, classNames)} ref={forwardedRef}>
-        {children}
-      </div>
-    );
-  },
-);
+  return (
+    <Comp {...rest} className={tx('scrollArea.viewport', options, className)} ref={forwardedRef}>
+      {children}
+    </Comp>
+  );
+});
 
 ScrollAreaViewport.displayName = SCROLLAREA_VIEWPORT_NAME;
 

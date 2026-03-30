@@ -11,6 +11,7 @@
 
 - All dependency versions are managed in the default pnpm catalog.
 - To add a new dependency, run `pnpm add --filter "<project>" --save-catalog "<package>"`.
+- **IMPORTANT**: Any `@dxos` package that lives within this repo must be added as `workspace:*`, never from the catalog. The catalog is only for external (non-workspace) packages.
 
 ## Build, Test, Lint Commands
 
@@ -48,13 +49,18 @@
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 - Use barrel imports whenever possible.
 
+### React
+
+- Import all required properties from React (i.e., use `useMemo` not `React.useMemo`).
+- When using `forwardRef` use the variable name `forwardedRef`.
+
 ## New Packages
 
 - **IMPORTANT**: Any new package created in this repo MUST have `"private": true` in its `package.json`. The `private` flag can only be removed manually once a trusted publisher has been configured for the package.
 
 ## Workflow
 
-- Never work on main; create a new git worktree for the branch you are working on.
+- Never work on main; if not already in a worktree, create a new git worktree for the branch you are working on.
 - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
 - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
 - Check `moon.yml` for available package tasks
@@ -78,15 +84,16 @@ Examples:
 ## Submitting PRs
 
 - When the user asks you to submit a PR:
-  - Use `gh` CLI to create and manage PRs
-  - Check `moon run :lint -- --fix` succeeds
-  - Check `moon run :test` succeeds
-  - Commit and push any pending changes
-  - Monitor CI: `pnpm -w gh-action --verify --watch`
+  - Use `gh` CLI to create and manage PRs.
+  - Merge `origin/main` in to current branch and resolve conflicts.
+  - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
+  - Check `moon run :test` succeeds.
+  - Commit and push any pending changes.
+  - Monitor CI (every 5 minutes): `pnpm -w gh-action --verify --watch`.
   - **IMPORTANT**: Address all PR review comments (fix or explain why not) and post a reply to all comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
   - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".
-  - After the PR is merged, remove the local worktree and branch.
+  - **IMPORTANT**: DO NOT DELETE ANY BRANCHES OR WORKTREES THAT HAVE UNCOMMITTED CHANGES.
 
 ## Cursor Cloud specific instructions
 

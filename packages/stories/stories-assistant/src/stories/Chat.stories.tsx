@@ -288,18 +288,14 @@ export const WithMail: Story = {
       return { plugins: [InboxPlugin(), MarkdownPlugin(), ThreadPlugin()] };
     },
     config: config.remote,
-    types: [Feed.Feed, Mailbox.Mailbox],
     onInit: async ({ space }) => {
-      const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const feed = await mailbox.feed?.tryLoad();
-      invariant(feed);
-      const queue = space.queues.create<Message.Message>();
-      Obj.change(feed, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
-      });
+      const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
+      const feedDxn = Feed.getQueueDxn(feed)!;
+      const queue = space.queues.get<Message.Message>(feedDxn);
       const messages = createTestMailbox();
       await queue.append(messages);
     },
+    types: [Feed.Feed, Mailbox.Mailbox],
     onChatCreated: async ({ space, binder }) => {
       const mailboxes = await space.db.query(Filter.type(Mailbox.Mailbox)).run();
       const mailbox = mailboxes[0];
@@ -763,16 +759,14 @@ export const WithProject: Story = {
       const tagDxn = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
-        Obj.change(person, (p) => {
-          Obj.getMeta(p).tags = [tagDxn];
+        Obj.change(person, (obj) => {
+          Obj.getMeta(obj).tags = [tagDxn];
         });
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const queue = space.queues.create<Message.Message>();
-      Obj.change(mailbox, (mutable) => {
-        Obj.getMeta(mutable).keys.push({ source: Feed.DXN_KEY, id: queue.dxn.toString() });
-      });
+      const mailboxDxn = Feed.getQueueDxn(mailbox)!;
+      const queue = space.queues.get<Message.Message>(mailboxDxn);
       const messages = createTestMailbox(people);
       await queue.append(messages);
 
@@ -789,8 +783,8 @@ export const WithProject: Story = {
         }),
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
-        Obj.change(research, (r) => {
-          Obj.getMeta(r).tags = [tagDxn];
+        Obj.change(research, (obj) => {
+          Obj.getMeta(obj).tags = [tagDxn];
         });
       });
 

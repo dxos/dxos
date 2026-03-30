@@ -17,7 +17,7 @@ import { ViewModel } from '@dxos/schema';
 
 import { resolveSchemaWithRegistry } from '../../helpers';
 import { useTypeOptions } from '../../hooks';
-import { SpaceOperation } from '../../types';
+import { SpaceOperation } from '../../operations';
 
 export type ViewEditorProps = { view: View.View };
 
@@ -54,8 +54,8 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
       const query = queue ? Query.fromAst(newQuery).from({ queues: [queue] }) : Query.fromAst(newQuery);
-      Obj.change(view, (v) => {
-        v.query.ast = query.ast as Mutable<typeof query.ast>;
+      Obj.change(view, (obj) => {
+        obj.query.ast = query.ast as Mutable<typeof query.ast>;
       });
       const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
       if (!newSchema) {
@@ -66,8 +66,8 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
         query,
         jsonSchema: JsonSchema.toJsonSchema(newSchema),
       });
-      Obj.change(view, (v) => {
-        v.projection = Obj.getSnapshot(newView).projection as Mutable<typeof v.projection>;
+      Obj.change(view, (obj) => {
+        obj.projection = Obj.getSnapshot(newView).projection as Mutable<typeof obj.projection>;
       });
 
       setSchema(() => newSchema);

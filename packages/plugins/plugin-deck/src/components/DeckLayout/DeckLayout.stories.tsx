@@ -9,9 +9,9 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 
-import { DeckState, LayoutOperationResolver } from '../../capabilities';
+import { DeckState, OperationHandler } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
@@ -23,8 +23,8 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     activatesOn: AppActivationEvents.AppGraphReady,
     activate: () => DeckState(),
   }),
-  AppPlugin.addOperationResolverModule({
-    activate: LayoutOperationResolver,
+  AppPlugin.addOperationHandlerModule({
+    activate: OperationHandler,
   }),
   Plugin.make,
 );
@@ -34,7 +34,6 @@ const meta = {
   component: DeckLayout,
   render: (args) => <DeckLayout {...args} />,
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],

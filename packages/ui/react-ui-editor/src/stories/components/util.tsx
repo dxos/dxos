@@ -211,16 +211,16 @@ export const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) 
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer', 'aria-label': 'Open link' })
       .classNames(hover, 'flex items-center gap-2')
-      .text(safeUrl(url)?.origin ?? url)
+      .text(safeUrl(url)?.toString() ?? url)
       .children(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };
 
 export const renderLinkButton: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(
-    Domino.of('a')
-      .attributes({ href: url, target: '_blank', rel: 'noreferrer', 'aria-label': 'Open link' })
-      .classNames(hover, 'inline-block ms-1 align-[-0.125em]') // Center icon.
+    Domino.of('span')
+      .attributes({ 'aria-hidden': 'true' })
+      .classNames(hover, 'ms-1 inline-block align-[-0.125em]')
       .children(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };

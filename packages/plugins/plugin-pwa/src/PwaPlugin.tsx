@@ -18,11 +18,11 @@ export const PwaPlugin = Plugin.define(meta).pipe(
     id: 'register-pwa',
     activatesOn: ActivationEvents.OperationInvokerReady,
     activate: Effect.fnUntraced(function* () {
-      const { invokeSync } = yield* Capability.get(Capabilities.OperationInvoker);
+      const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
 
       const updateSW = registerSW({
         onNeedRefresh: () => {
-          invokeSync(LayoutOperation.AddToast, {
+          void invokePromise(LayoutOperation.AddToast, {
             id: `${meta.id}.need-refresh`,
             title: ['need refresh label', { ns: meta.id }],
             description: ['need refresh description', { ns: meta.id }],
@@ -33,7 +33,7 @@ export const PwaPlugin = Plugin.define(meta).pipe(
           });
         },
         onOfflineReady: () => {
-          invokeSync(LayoutOperation.AddToast, {
+          void invokePromise(LayoutOperation.AddToast, {
             id: `${meta.id}.offline-ready`,
             title: ['offline ready label', { ns: meta.id }],
             closeLabel: ['confirm label', { ns: meta.id }],

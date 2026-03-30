@@ -10,12 +10,12 @@ import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as PubSub from 'effect/PubSub';
 
 import type { Key } from '@dxos/echo';
-import { DynamicRuntime, causeToError, runAndForwardErrors } from '@dxos/effect';
+import { DynamicRuntime, unwrapExit } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { NoHandlerError } from './errors';
+
+import { InvokerNotInitializedError, NoHandlerError } from './errors';
 import * as Operation from './Operation';
-import type * as OperationResolver from './OperationResolver';
 import * as Scheduler from './scheduler';
 
 // @import-as-namespace
@@ -34,7 +34,7 @@ export type InvocationEvent<I = any, O = any> = {
  * Resolves a spaceId to a context containing Database.Service.
  * Provided by the caller to avoid coupling to client/echo.
  */
-export type DatabaseResolver = (spaceId: Key.SpaceId) => Effect.Effect<Context.Context<any>, Error>;
+export type DatabaseResolver = (spaceId: Key.SpaceId) => Effect.Effect<Context.Context<any>>;
 
 //
 // Public Interface
@@ -49,7 +49,7 @@ export interface OperationInvoker {
     ...args: void extends I
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
-  ) => Effect.Effect<O, Error>;
+  ) => Effect.Effect<O, NoHandlerError>;
   /**
    * Schedule an operation to run as a followup.
    * The followup is tracked and won't be cancelled when the parent operation completes.
@@ -65,17 +65,6 @@ export interface OperationInvoker {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ) => Promise<{ data?: O; error?: Error }>;
-  /**
-   * Synchronously invoke an operation.
-   * Only works for operations marked with `executionMode: 'sync'`.
-   * Throws if the operation is async or if the handler performs async work.
-   */
-  invokeSync: <I, O>(
-    op: Operation.Definition<I, O>,
-    ...args: void extends I
-      ? [input?: I, options?: Operation.InvokeOptions]
-      : [input: I, options?: Operation.InvokeOptions]
-  ) => { data?: O; error?: Error };
   /** Effect stream of invocation events. */
   invocations: PubSub.PubSub<InvocationEvent>;
   /** Number of pending followup operations. */
@@ -97,7 +86,7 @@ export interface OperationInvokerInternal extends OperationInvoker {
     op: Operation.Definition<I, O>,
     input: I,
     options?: Operation.InvokeOptions,
-  ) => Effect.Effect<O, Error>;
+  ) => Effect.Effect<O, NoHandlerError>;
 }
 
 //
@@ -108,20 +97,17 @@ type AnyManagedRuntime = ManagedRuntime.ManagedRuntime<any, any>;
 
 class OperationInvokerImpl implements OperationInvokerInternal {
   private readonly _pubsub: PubSub.PubSub<InvocationEvent>;
-  private readonly _getHandlers: () => Effect.Effect<
-    OperationResolver.OperationResolver<any, any, Error, any>[],
-    Error
-  >;
+  private readonly _getHandlers: () => Effect.Effect<Operation.WithHandler<Operation.Definition.Any>[]>;
   private readonly _followupScheduler: Scheduler.FollowupScheduler;
-  private readonly _managedRuntime?: AnyManagedRuntime;
+  private readonly _managedRuntime: AnyManagedRuntime;
   private readonly _databaseResolver?: DatabaseResolver;
   // Cache for DynamicRuntime instances keyed by service tag keys.
   private readonly _dynamicRuntimeCache = new Map<string, DynamicRuntime.DynamicRuntime<any>>();
 
   constructor(
-    getHandlers: () => Effect.Effect<OperationResolver.OperationResolver<any, any, Error, any>[], Error>,
+    getHandlers: () => Effect.Effect<Operation.WithHandler<Operation.Definition.Any>[]>,
     followupScheduler: Scheduler.FollowupScheduler,
-    managedRuntime?: AnyManagedRuntime,
+    managedRuntime: AnyManagedRuntime,
     databaseResolver?: DatabaseResolver,
   ) {
     this._getHandlers = getHandlers;
@@ -172,7 +158,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     ...args: void extends I
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
-  ): Effect.Effect<O, Error> => {
+  ): Effect.Effect<O, NoHandlerError> => {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
     return Effect.gen(this, function* () {
@@ -197,47 +183,26 @@ class OperationInvokerImpl implements OperationInvokerInternal {
       ? [input?: I, options?: Operation.InvokeOptions]
       : [input: I, options?: Operation.InvokeOptions]
   ): Promise<{ data?: O; error?: Error }> => {
-    return runAndForwardErrors(this.invoke(op, ...args))
-      .then((data) => ({ data }))
-      .catch((error) => {
-        log.catch(error);
-        return { error };
-      });
-  };
-
-  // Arrow function to preserve `this` context when destructured.
-  invokeSync = <I, O>(
-    op: Operation.Definition<I, O>,
-    ...args: void extends I
-      ? [input?: I, options?: Operation.InvokeOptions]
-      : [input: I, options?: Operation.InvokeOptions]
-  ): { data?: O; error?: Error } => {
     const effect = this.invoke(op, ...args);
-    // Use ManagedRuntime.runSyncExit when available - it handles fiber scheduling correctly.
-    // Fall back to Effect.runSyncExit for operations without ManagedRuntime.
-    const exit = this._managedRuntime ? this._managedRuntime.runSyncExit(effect) : Effect.runSyncExit(effect);
-    if (Exit.isSuccess(exit)) {
-      return { data: exit.value };
-    } else {
-      const error = causeToError(exit.cause);
-      log.catch(error);
-      return { error };
+    const exit = await this._managedRuntime.runPromiseExit(effect);
+    try {
+      const data = unwrapExit(exit);
+      return { data };
+    } catch (error) {
+      log.catch(error as Error);
+      return { error: error as Error };
     }
   };
 
   private _resolveHandler(
     operation: Operation.Definition<any, any>,
-  ): Effect.Effect<Operation.Handler<any, any, Error, Operation.Service> | undefined, Error> {
+  ): Effect.Effect<Operation.Handler<any, any, NoHandlerError, Operation.Service> | undefined> {
     return Effect.gen(this, function* () {
-      const candidates = yield* this._getHandlers().pipe(
-        Effect.map((handlers) => handlers.filter((reg) => reg.operation.meta.key === operation.meta.key)),
+      const match = yield* this._getHandlers().pipe(
+        Effect.map((handlers) => handlers.find((reg) => reg.meta.key === operation.meta.key)),
       );
 
-      if (candidates.length === 0) {
-        return undefined;
-      }
-
-      return candidates[0].handler;
+      return match?.handler;
     });
   }
 
@@ -249,7 +214,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
     op: Operation.Definition<I, O>,
     input: I,
     options?: Operation.InvokeOptions,
-  ): Effect.Effect<O, Error> => {
+  ): Effect.Effect<O, NoHandlerError> => {
     return Effect.gen(this, function* () {
       const handler = yield* this._resolveHandler(op);
       if (!handler) {
@@ -261,11 +226,11 @@ class OperationInvokerImpl implements OperationInvokerInternal {
 
       // Build the effect with Operation.Service provided.
       let handlerEffect = handler(input).pipe(
+        Effect.withSpan(op.meta.key),
         Effect.provideService(Operation.Service, {
           invoke: this.invoke,
           schedule: this._followupScheduler.schedule,
           invokePromise: this.invokePromise,
-          invokeSync: this.invokeSync,
         }),
       );
 
@@ -277,17 +242,12 @@ class OperationInvokerImpl implements OperationInvokerInternal {
 
       let output: O;
 
-      // If the operation declares services and we have a ManagedRuntime, use DynamicRuntime.
-      if (op.services && op.services.length > 0 && this._managedRuntime) {
-        // Get or create a cached DynamicRuntime for this service combination.
+      // If the operation declares external services, use DynamicRuntime to resolve them.
+      if (op.services && op.services.length > 0) {
         const dynamicRuntime = this._getDynamicRuntime(op.services);
-        // Use runtimeEffect to get the runtime - when cached, this returns immediately.
-        // For sync operations, the caller must ensure the cache is populated first
-        // (e.g., via an async warmup call during initialization).
         const runtime = yield* dynamicRuntime.runtimeEffect;
         output = yield* handlerEffect.pipe(Effect.provide(runtime.context));
       } else {
-        // No services declared or no runtime available - run directly.
         output = yield* handlerEffect;
       }
 
@@ -316,7 +276,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
  * Creates an OperationInvoker that resolves handlers and invokes operations.
  * Emits invocation events to subscribers after successful invocations.
  *
- * @param getHandlers - Function to get the list of operation resolvers.
+ * @param getHandlers - Function to get the list of operation handlers.
  * @param managedRuntime - Optional ManagedRuntime for providing services declared on operations.
  * @param databaseResolver - Optional function to resolve spaceId to database context.
  *
@@ -337,8 +297,8 @@ class OperationInvokerImpl implements OperationInvokerInternal {
  * ```
  */
 export const make = (
-  getHandlers: () => Effect.Effect<OperationResolver.OperationResolver<any, any, Error, any>[], Error>,
-  managedRuntime?: AnyManagedRuntime,
+  getHandlers: () => Effect.Effect<Operation.WithHandler<Operation.Definition.Any>[]>,
+  managedRuntime: AnyManagedRuntime,
   databaseResolver?: DatabaseResolver,
 ): OperationInvokerInternal => {
   // Use a ref object so the closure can access the invoker after initialization.
@@ -346,7 +306,7 @@ export const make = (
 
   const invokeFn: Scheduler.InvokeFn = (op, input, options) => {
     if (!ref.invoker) {
-      return Effect.die(new Error('Invoker not initialized'));
+      return Effect.fail(new InvokerNotInitializedError());
     }
     return ref.invoker._invokeCore(op, input, options);
   };

@@ -14,7 +14,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -39,15 +39,20 @@ const styles = {
 // Root
 //
 
-type SettingsRootProps = PropsWithChildren;
-
-const SettingsRoot = ({ children }: SettingsRootProps) => {
+const SettingsRoot = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+  const { className, ...composedProps } = composableProps(props);
   return (
-    <ScrollArea.Root className='dx-document' orientation='vertical' margin>
+    <ScrollArea.Root
+      {...composedProps}
+      className={mx('dx-document', className)}
+      orientation='vertical'
+      margin
+      ref={forwardedRef}
+    >
       <ScrollArea.Viewport classNames='p-trim-md'>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
 
 SettingsRoot.displayName = SETTINGS_ROOT_NAME;
 

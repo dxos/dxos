@@ -37,6 +37,8 @@ tauri-plugin-web-auth = "1"
 tauri-plugin-haptics = "2"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+# Localhost plugin serves bundled assets via HTTP (needed for SharedWorker in WKWebView on desktop).
+tauri-plugin-localhost = "2"
 # OAuth HTTP server dependencies (desktop only, mobile uses web-auth plugin).
 hyper = { version = "1", features = ["http1", "server"] }
 hyper-util = { version = "0.1", features = ["tokio"] }

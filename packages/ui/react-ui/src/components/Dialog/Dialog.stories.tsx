@@ -10,6 +10,7 @@ import { faker } from '@dxos/random';
 import { withTheme } from '../../testing';
 import { Button } from '../Button';
 import { Input } from '../Input';
+import { ScrollArea } from '../ScrollArea';
 
 import { Dialog, type DialogContentProps } from './Dialog';
 
@@ -22,6 +23,10 @@ type StoryProps = Pick<DialogContentProps, 'size'> &
     blockAlign: 'start' | 'center';
   }>;
 
+/**
+ * Standard Dialog with non-scrolling content in Dialog.Body.
+ * Dialog.Body delegates to Column.Content, which applies gutter padding via `px-[var(--gutter)]`.
+ */
 const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryProps) => {
   return (
     <Dialog.Root defaultOpen modal>
@@ -44,6 +49,45 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
               <Input.Label>Value</Input.Label>
               <Input.TextInput placeholder='Enter value' />
             </Input.Root>
+          </Dialog.Body>
+          <Dialog.ActionBar>
+            <Dialog.Close asChild>
+              <Button variant='primary'>{closeTrigger}</Button>
+            </Dialog.Close>
+          </Dialog.ActionBar>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
+  );
+};
+
+/**
+ * Dialog with a ScrollArea child inside Dialog.Body.
+ * The ScrollArea breaks out of Body's gutter padding via `--gutter-offset`
+ * and applies its own asymmetric padding (accounting for scrollbar width).
+ */
+const ScrollingStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryProps) => {
+  return (
+    <Dialog.Root defaultOpen modal>
+      <Dialog.Trigger asChild>
+        <Button>{openTrigger}</Button>
+      </Dialog.Trigger>
+      <Dialog.Overlay blockAlign={blockAlign}>
+        <Dialog.Content size={size}>
+          <Dialog.Header>
+            <Dialog.Title>{title}</Dialog.Title>
+            {closeTrigger && (
+              <Dialog.Close asChild>
+                <Dialog.CloseIconButton />
+              </Dialog.Close>
+            )}
+          </Dialog.Header>
+          <Dialog.Body>
+            <ScrollArea.Root orientation='vertical' padding thin>
+              <ScrollArea.Viewport>
+                <Dialog.Description>{description}</Dialog.Description>
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
           </Dialog.Body>
           <Dialog.ActionBar>
             <Dialog.Close asChild>
@@ -118,5 +162,17 @@ export const ExtraLarge: Story = {
     closeTrigger: 'Close',
     blockAlign: 'center',
     size: 'xl',
+  },
+};
+
+export const Scrolling: Story = {
+  render: ScrollingStory,
+  args: {
+    title: 'Dialog title',
+    description: faker.lorem.paragraph(20),
+    openTrigger: 'Open Dialog',
+    closeTrigger: 'Close',
+    blockAlign: 'center',
+    size: 'md',
   },
 };

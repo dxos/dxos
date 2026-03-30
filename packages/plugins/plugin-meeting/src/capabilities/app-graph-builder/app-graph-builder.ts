@@ -6,22 +6,23 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
 import { Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
-import { DeckOperation, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
-import { Meeting, MeetingCapabilities, MeetingOperation } from '../../types';
+import { Meeting, MeetingCapabilities } from '../../types';
+import { MeetingOperation } from '../../operations';
 
 /**
  * Atom families to derive meeting state properties.
@@ -176,7 +177,7 @@ export default Capability.makeModule(
                 if (!transcriptionEnabled) {
                   log.warn('transcription disabled');
                 } else {
-                  const companion = `${COMPANION_PREFIX}transcript`;
+                  const companion = companionSegment('transcript');
                   yield* Operation.invoke(DeckOperation.ChangeCompanion, { companion });
                 }
               }),

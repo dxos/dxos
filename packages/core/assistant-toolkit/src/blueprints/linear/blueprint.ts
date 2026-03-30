@@ -8,7 +8,7 @@ import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-import { SyncIssues, LinearHandlers } from './functions';
+import { SyncIssues } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.linear';
 
@@ -37,7 +37,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: LinearHandlers,
   make,
 };
 

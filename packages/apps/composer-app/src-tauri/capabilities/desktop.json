@@ -2,5 +2,26 @@
   "identifier": "desktop-capability",
   "platforms": ["macOS"],
   "windows": ["main", "popover"],
-  "permissions": ["updater:default"]
+  "remote": {
+    "urls": ["http://localhost:26777/*"]
+  },
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-focus",
+    "core:window:allow-show",
+    "core:window:allow-start-dragging",
+    "process:default",
+    "shell:allow-open",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "args": ["serve"],
+          "name": "sidecar/ollama",
+          "sidecar": true
+        }
+      ]
+    },
+    "updater:default"
+  ]
 }

@@ -58,7 +58,7 @@ const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTi
 // State attribute: data-[mosaic-tile-state=dragging]
 const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps<HTMLDivElement> &
+type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps &
   PropsWithChildren<{
     asChild?: boolean;
     dragHandle?: HTMLElement | null;
@@ -66,7 +66,7 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps<HT
     id: string;
     data: TData;
     location: TLocation;
-    draggable?: boolean; // TODO(burdon): Not currently implemented.
+    draggable?: boolean;
     debug?: boolean;
   }>;
 
@@ -80,6 +80,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
       location,
       id,
       data: dataProp,
+      draggable: draggableProp,
       debug: _,
       ...props
     }: MosaicTileProps,
@@ -89,15 +90,6 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
     const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
-
-    // Sync forwarded ref into rootRef when parent's ref is set by a descendant (e.g. BoardItem's Card.Root).
-    // Then we can read rootRef.current only in the effects below.
-    useLayoutEffect(() => {
-      const el = forwardedRef && 'current' in forwardedRef ? (forwardedRef.current as HTMLDivElement | null) : null;
-      if (el != null) {
-        (rootRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-      }
-    }, [forwardedRef]);
 
     // State.
     const {
@@ -127,12 +119,8 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
     );
 
     useLayoutEffect(() => {
-      const forwardedEl =
-        forwardedRef != null && 'current' in forwardedRef
-          ? (forwardedRef as React.RefObject<HTMLDivElement | null>).current
-          : null;
-      const root = (rootRef.current ?? forwardedEl) as HTMLDivElement | null;
-      if (!root || !containerId || scrolling) {
+      const root = rootRef.current;
+      if (!draggableProp || !root || !containerId || scrolling) {
         return;
       }
 
@@ -231,6 +219,7 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
           {children}
         </Comp>
 
+        {/* Dragging preview. */}
         {state.type === 'preview' &&
           createPortal(
             <Comp

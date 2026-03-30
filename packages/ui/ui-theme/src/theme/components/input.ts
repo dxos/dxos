@@ -21,8 +21,7 @@ import {
   staticFocusRing,
   subduedFocus,
 } from '../../fragments';
-import { computeSize, sizeValue, textValence } from '../../util';
-import { getSize, getHeight, getWidth, mx } from '../../util';
+import { getSize, getHeight, getWidth, mx, snapSize, sizeValue, textValence } from '../../util';
 
 export type InputStyleProps = Partial<{
   variant: 'default' | 'subdued' | 'static';
@@ -106,18 +105,18 @@ const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
           ...etc,
         );
 
-const inputTextArea: ComponentFunction<InputStyleProps> = (props, ...etc) => inputInput(props, ...['-mb-1.5', ...etc]);
+const inputTextArea: ComponentFunction<InputStyleProps> = (props, ...etc) => inputInput(props, ...etc);
 
 const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx('dx-checkbox dx-focus-ring', getSize(size), ...etc);
 
 const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5, checked }, ...etc) =>
-  mx(getSize(computeSize(sizeValue(size) * 0.65, 4)), !checked && 'invisible', ...etc);
+  mx(getSize(snapSize(sizeValue(size) * 0.65, 4)), !checked && 'invisible', ...etc);
 
 const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
   mx(
     getHeight(size),
-    getWidth(computeSize(sizeValue(size) * 1.75, 9)),
+    getWidth(snapSize(sizeValue(size) * 1.75, 9)),
     booleanInputSurface,
     !disabled && booleanInputSurfaceHover,
     // TODO(burdon): Added m-1 margin to make 40px width to align with 40px icon button.

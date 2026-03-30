@@ -26,15 +26,17 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
-import { type ThemeMode, type ThemedClassName, useDynamicRef, useThemeContext } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
-
 import {
-  GlobeContextProvider,
-  type GlobeContextProviderProps,
-  type GlobeContextType,
-  useGlobeContext,
-} from '../../hooks';
+  type ThemeMode,
+  type ThemedClassName,
+  useComposedRefs,
+  useControlledState,
+  useDynamicRef,
+  useThemeContext,
+} from '@dxos/react-ui';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
+
+import { GlobeContext, type GlobeContextType, type Point, type Vector, useGlobeContext } from '../../hooks';
 import {
   type Features,
   type StyleSet,
@@ -126,19 +128,43 @@ const getProjection = (type: GlobeCanvasProps['projection'] = 'orthographic'): G
 // Root
 //
 
-type GlobeRootProps = PropsWithChildren<ThemedClassName<GlobeContextProviderProps>>;
+type GlobeRootProps = Partial<Pick<GlobeContextType, 'center' | 'zoom' | 'translation' | 'rotation'>>;
 
-const GlobeRoot = ({ classNames, children, ...props }: GlobeRootProps) => {
-  const { ref, width, height } = useResizeDetector<HTMLDivElement>();
+const GlobeRoot = composable<HTMLDivElement, GlobeRootProps>(
+  (
+    { children, center: centerProp, zoom: zoomProp, translation: translationProp, rotation: rotationProp, ...props },
+    forwardedRef,
+  ) => {
+    const localRef = useRef<HTMLDivElement>(null);
+    const composedRef = useComposedRefs<HTMLDivElement>(localRef, forwardedRef);
+    const { width, height } = useResizeDetector<HTMLDivElement>({ targetRef: localRef });
 
-  return (
-    <div ref={ref} className={mx('relative flex grow overflow-hidden', classNames)}>
-      <GlobeContextProvider size={{ width, height }} {...props}>
-        {children}
-      </GlobeContextProvider>
-    </div>
-  );
-};
+    const [center, setCenter] = useControlledState(centerProp);
+    const [zoom, setZoom] = useControlledState(zoomProp ?? 4);
+    const [translation, setTranslation] = useControlledState<Point>(translationProp);
+    const [rotation, setRotation] = useControlledState<Vector>(rotationProp);
+
+    return (
+      <GlobeContext.Provider
+        value={{
+          size: { width, height },
+          center,
+          zoom,
+          translation,
+          rotation,
+          setCenter,
+          setZoom,
+          setTranslation,
+          setRotation,
+        }}
+      >
+        <div {...composableProps(props, { className: 'relative dx-container' })} ref={composedRef}>
+          {children}
+        </div>
+      </GlobeContext.Provider>
+    );
+  },
+);
 
 //
 // Canvas

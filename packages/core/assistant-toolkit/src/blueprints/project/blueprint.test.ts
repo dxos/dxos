@@ -29,6 +29,7 @@ import { trim } from '@dxos/util';
 
 import { Chat, Plan, Project } from '../../types';
 import { PlanningBlueprint } from '../planning';
+import { MarkdownHandlers } from '../markdown';
 
 import ProjectBlueprintDef from './blueprint';
 import { Agent, ProjectHandlers } from './functions';
@@ -37,7 +38,7 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  operationHandlers: OperationHandlerSet.merge(ProjectHandlers, MarkdownBlueprint.operations),
+  operationHandlers: OperationHandlerSet.merge(ProjectHandlers, MarkdownHandlers),
   types: [
     Project.Project,
     Plan.Plan,

@@ -7,9 +7,10 @@ import React, { forwardRef } from 'react';
 import { addressToA1Notation, isFormula, rangeToA1Notation } from '@dxos/compute';
 import { type ComposableProps, Icon } from '@dxos/react-ui';
 
+import { composableProps, mx } from '@dxos/ui-theme';
+
 import { mapFormulaIndicesToRefs } from '../../types';
 import { useSheetContext } from '../SheetRoot';
-import { composableProps, mx } from '@dxos/ui-theme';
 
 export type SheetStatusbarProps = ComposableProps;
 

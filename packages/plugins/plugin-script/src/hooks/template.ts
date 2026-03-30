@@ -15,9 +15,9 @@ const createTemplateSelectActions = (script: Script.Script) => {
     return createMenuAction<TemplateActionProperties>(
       `template--${template.id}`,
       () => {
-        Obj.change(script, (s) => {
-          s.name = template.name;
-          const meta = Obj.getMeta(s);
+        Obj.change(script, (obj) => {
+          obj.name = template.name;
+          const meta = Obj.getMeta(obj);
           const oldPresetIndex = meta.keys.findIndex((key) => key.source === FUNCTIONS_PRESET_META_KEY);
           if (oldPresetIndex >= 0) {
             meta.keys.splice(oldPresetIndex, 1);
@@ -27,8 +27,8 @@ const createTemplateSelectActions = (script: Script.Script) => {
           }
         });
         if (script.source?.target) {
-          Obj.change(script.source.target, (s) => {
-            s.content = template.source;
+          Obj.change(script.source.target, (obj) => {
+            obj.content = template.source;
           });
         }
       },

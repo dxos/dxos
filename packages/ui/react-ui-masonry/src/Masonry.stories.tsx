@@ -19,9 +19,16 @@ import { Masonry } from './Masonry';
 const StoryItem = ({ data: { image, name, description } }: { data: Organization.Organization }) => {
   return (
     <Card.Root>
+      <Card.Toolbar>
+        <Card.Icon icon='ph--building-office--regular' />
+        <Card.Title>{name}</Card.Title>
+      </Card.Toolbar>
       <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
-      <Card.Heading>{name}</Card.Heading>
-      {description && <Card.Text variant='description'>{description}</Card.Text>}
+      {description && (
+        <Card.Section classNames='px-2 pb-2'>
+          <Card.Text variant='description'>{description}</Card.Text>
+        </Card.Section>
+      )}
     </Card.Root>
   );
 };
@@ -31,11 +38,9 @@ const DefaultStory = () => {
   const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
 
   return (
-    <Masonry.Root<Organization.Organization>
-      items={organizations}
-      render={StoryItem}
-      classNames='w-full max-w-full h-full max-h-full overflow-y-auto p-4'
-    />
+    <Masonry.Root Tile={StoryItem}>
+      <Masonry.Content items={organizations} />
+    </Masonry.Root>
   );
 };
 
@@ -57,7 +62,7 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof Masonry>;
+} satisfies Meta;
 
 export default meta;
 

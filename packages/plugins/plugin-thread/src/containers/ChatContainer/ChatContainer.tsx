@@ -7,8 +7,7 @@ import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Obj, Ref } from '@dxos/echo';
 import { type Space, useMembers } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Icon, ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
-import { StackItem } from '@dxos/react-ui-stack';
+import { ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   MessageTextbox,
   type MessageTextboxProps,
@@ -87,8 +86,8 @@ export const ChatContainer = ({
       return false;
     }
 
-    Obj.change(thread, (t) => {
-      t.messages.push(
+    Obj.change(thread, (obj) => {
+      obj.messages.push(
         Ref.make(
           Obj.make(Message.Message, {
             created: new Date().toISOString(),
@@ -129,17 +128,5 @@ export const ChatContainer = ({
       <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
       <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
     </ThreadComponent.Root>
-  );
-};
-
-export const ChatHeading = ({ attendableId }: { attendableId?: string }) => {
-  const { t } = useTranslation(meta.id);
-  return (
-    <div role='none' className='flex items-center'>
-      <StackItem.SigilButton attendableId={attendableId}>
-        <Icon icon='ph--chat--regular' />
-      </StackItem.SigilButton>
-      <StackItem.HeadingLabel attendableId={attendableId}>{t('chat heading')}</StackItem.HeadingLabel>
-    </div>
   );
 };

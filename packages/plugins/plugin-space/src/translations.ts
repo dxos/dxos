@@ -44,6 +44,7 @@ export const translations = [
         'add object label': 'Add event',
         'rename object label': 'Rename event',
         'delete object label': 'Delete event',
+        'object deleted label': 'Event deleted',
       },
       [Message.Message.typename]: {
         'typename label': 'Message',
@@ -54,6 +55,7 @@ export const translations = [
         'add object label': 'Add message',
         'rename object label': 'Rename message',
         'delete object label': 'Delete message',
+        'object deleted label': 'Message deleted',
       },
       [Organization.Organization.typename]: {
         'typename label': 'Organization',
@@ -64,6 +66,7 @@ export const translations = [
         'add object label': 'Add organization',
         'rename object label': 'Rename organization',
         'delete object label': 'Delete organization',
+        'object deleted label': 'Organization deleted',
       },
       [Person.Person.typename]: {
         'typename label': 'Person',
@@ -74,6 +77,7 @@ export const translations = [
         'add object label': 'Add person',
         'rename object label': 'Rename person',
         'delete object label': 'Delete person',
+        'object deleted label': 'Person deleted',
       },
       [Pipeline.Pipeline.typename]: {
         'typename label': 'Project',
@@ -84,6 +88,7 @@ export const translations = [
         'add object label': 'Add project',
         'rename object label': 'Rename project',
         'delete object label': 'Delete project',
+        'object deleted label': 'Project deleted',
       },
       [Task.Task.typename]: {
         'typename label': 'Task',
@@ -94,6 +99,7 @@ export const translations = [
         'add object label': 'Add task',
         'rename object label': 'Rename task',
         'delete object label': 'Delete task',
+        'object deleted label': 'Task deleted',
       },
       [meta.id]: {
         'plugin name': 'Spaces',
@@ -207,6 +213,7 @@ export const translations = [
         'foreign keys': 'Foreign Keys',
         'add key': 'Add Key',
         'open space settings label': 'Open settings',
+        'related actions label': 'Related Actions',
         'related objects label': 'Related Objects',
 
         'row details no selection label': 'No objects selected',

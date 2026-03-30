@@ -9,12 +9,12 @@ import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
 import React, { forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { composableProps, type ToolbarStyleProps } from '@dxos/ui-theme';
-import { type SlottableProps } from '@dxos/ui-types';
+import { composable, composableProps, slottable, type ToolbarStyleProps } from '@dxos/ui-theme';
+import { type ComposableProps, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { translationKey } from '../../translations';
-import { type ThemedClassName } from '../../util';
+
 import {
   Button,
   ButtonGroup,
@@ -34,11 +34,11 @@ import { Separator, type SeparatorProps } from '../Separator';
 // Root
 //
 
-type ToolbarRootProps = ThemedClassName<ToolbarPrimitive.ToolbarProps & ToolbarStyleProps>;
+type ToolbarRootProps = ComposableProps<ToolbarPrimitive.ToolbarProps & ToolbarStyleProps>;
 
-const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
+const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
   ({ children, density, disabled, layoutManaged, orientation, ...props }, forwardedRef) => {
-    const { className, dir: _, ...rest } = composableProps(props);
+    const { className, ...rest } = composableProps(props);
     const { tx } = useThemeContext();
 
     return (
@@ -59,9 +59,9 @@ const ToolbarRoot = forwardRef<HTMLDivElement, ToolbarRootProps>(
 // Text
 //
 
-type ToolbarTextProps = SlottableProps<HTMLDivElement>;
+type ToolbarTextProps = SlottableProps;
 
-const ToolbarText = forwardRef<HTMLDivElement, ToolbarTextProps>(({ children, asChild, ...props }, forwardedRef) => {
+const ToolbarText = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();

@@ -8,8 +8,9 @@ import * as Option from 'effect/Option';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import {
   AppCapabilities,
-  COMPANION_PREFIX,
   LayoutOperation,
+  companionId,
+  companionSegment,
   getObjectPathFromObject,
   getSpacePath,
 } from '@dxos/app-toolkit';
@@ -17,12 +18,14 @@ import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { DeckCapabilities } from '@dxos/plugin-deck';
-import { DeckOperation, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
 import { meta } from '../../meta';
-import { PresenterCapabilities, PresenterOperation } from '../../types';
+import { PresenterCapabilities } from '../../types';
+import { PresenterOperation } from '../../operations';
 
 /** Match nodes that can be presented (Collection or Document). */
 const whenPresentable = (node: Node.Node) =>
@@ -50,7 +53,7 @@ export default Capability.makeModule(
 
         return Effect.succeed([
           {
-            id: `${COMPANION_PREFIX}presenter`,
+            id: companionSegment('presenter'),
             data: { type: meta.id, object },
             type: PLANK_COMPANION_TYPE,
             properties: {
@@ -81,7 +84,7 @@ export default Capability.makeModule(
             data: Effect.fnUntraced(function* () {
               const deckState = yield* Capabilities.getAtomValue(DeckCapabilities.State);
               const deck = deckState.decks[deckState.activeDeck];
-              const presenterId = `${objectPath}/${COMPANION_PREFIX}presenter`;
+              const presenterId = companionId(objectPath, 'presenter');
               if (!deck?.fullscreen) {
                 yield* Operation.invoke(DeckOperation.Adjust, {
                   type: 'solo--fullscreen' as const,

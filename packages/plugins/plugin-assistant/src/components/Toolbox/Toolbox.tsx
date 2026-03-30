@@ -2,20 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { Fragment, useEffect, useState } from 'react';
+import React, { Fragment, forwardRef, useEffect, useState } from 'react';
 
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, type Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { ComposableProps, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { type AiChatProcessor } from '../../processor';
 import { ServiceType } from '../../types';
 
-export type ToolboxProps = ThemedClassName<{
+export type ToolboxProps = ComposableProps<{
   services?: { service: ServiceType }[];
   functions?: Operation.PersistentOperation[];
   // TODO(burdon): Combine into single array.
@@ -23,50 +23,54 @@ export type ToolboxProps = ThemedClassName<{
   activeBlueprints?: readonly Ref.Ref<Blueprint.Blueprint>[];
 }>;
 
-export const Toolbox = ({ classNames, functions, services, blueprints, activeBlueprints }: ToolboxProps) => {
-  return (
-    <ScrollArea.Root thin orientation='vertical'>
-      <ScrollArea.Viewport classNames={classNames}>
-        {blueprints && blueprints.length > 0 && (
-          <Section
-            title='Blueprints'
-            items={blueprints.map(({ name, description, tools }) => ({
-              name,
-              description,
-              subitems: tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
-            }))}
-          />
-        )}
+export const Toolbox = forwardRef<HTMLDivElement, ToolboxProps>(
+  ({ functions, services, blueprints, activeBlueprints, ...props }, forwardedRef) => {
+    return (
+      <ScrollArea.Root {...composableProps(props)} thin orientation='vertical' ref={forwardedRef}>
+        <ScrollArea.Viewport>
+          {blueprints && blueprints.length > 0 && (
+            <Section
+              title='Blueprints'
+              items={blueprints.map(({ name, description, tools }) => ({
+                name,
+                description,
+                subitems: tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
+              }))}
+            />
+          )}
 
-        {activeBlueprints && activeBlueprints.length > 0 && (
-          <Section
-            title='Blueprints'
-            items={activeBlueprints.map(({ target }) => ({
-              name: target?.name ?? '',
-              description: target?.description ?? '',
-              subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
-            }))}
-          />
-        )}
+          {activeBlueprints && activeBlueprints.length > 0 && (
+            <Section
+              title='Blueprints'
+              items={activeBlueprints.map(({ target }) => ({
+                name: target?.name ?? '',
+                description: target?.description ?? '',
+                subitems: target?.tools.map((toolId) => ({ name: `∙ ${safeToolId(toolId)}` })),
+              }))}
+            />
+          )}
 
-        {services && services.length > 0 && (
-          <Section
-            title='Services'
-            items={services.map(({ service: { serviceId, name, description } }) => ({
-              name: name ?? serviceId,
-              description,
-              // subitems: tools.map(({ name, description }) => ({ name: `∙ ${name}`, description })),
-            }))}
-          />
-        )}
+          {services && services.length > 0 && (
+            <Section
+              title='Services'
+              items={services.map(({ service: { serviceId, name, description } }) => ({
+                name: name ?? serviceId,
+                description,
+                // subitems: tools.map(({ name, description }) => ({ name: `∙ ${name}`, description })),
+              }))}
+            />
+          )}
 
-        {functions && functions.length > 0 && (
-          <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
-        )}
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
-  );
-};
+          {functions && functions.length > 0 && (
+            <Section title='Functions' items={functions.map(({ name, description }) => ({ name, description }))} />
+          )}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
+
+Toolbox.displayName = 'Toolbox';
 
 type SectionProps = {
   title: string;

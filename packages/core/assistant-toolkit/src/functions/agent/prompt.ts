@@ -8,16 +8,35 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ModelName } from '@dxos/ai';
-import { AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
+import { AiConversation, type ContextBinding, AiSession, GenerationObserver, createToolkit } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
 import { Database, Obj, Ref } from '@dxos/echo';
+import { type Queue } from '@dxos/echo-db';
+import { acquireReleaseResource } from '@dxos/effect';
 import { TracingService } from '@dxos/functions';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
+import { type Message } from '@dxos/types';
 
 import { AgentPrompt } from './definitions';
 
+import * as Chat from '../../types/Chat';
+
 const DEFAULT_MODEL: ModelName = '@anthropic/claude-opus-4-0';
+
+const observer = GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'agent' }));
+
+const lastTextFromMessages = (messages: Message.Message[]): string | undefined => {
+  const blocks = messages.flatMap((message) => message.blocks);
+  for (let index = blocks.length - 1; index >= 0; index--) {
+    const block = blocks[index]!;
+    if (block._tag === 'text') {
+      return block.text;
+    }
+  }
+  return undefined;
+};
 
 export default AgentPrompt.pipe(
   Operation.withHandler(
@@ -42,7 +61,6 @@ export default AgentPrompt.pipe(
         Effect.map(Array.filter(Option.isSome)),
         Effect.map(Array.map((option) => option.value)),
       );
-      const toolkit = yield* createToolkit({ blueprints });
 
       const objects = yield* Function.pipe(
         prompt.context,
@@ -58,7 +76,41 @@ export default AgentPrompt.pipe(
       const systemInstructions = systemPrompt ? yield* Database.load(systemPrompt.instructions.source) : undefined;
       const systemText = systemInstructions ? Template.process(systemInstructions.content, {}) : undefined;
 
-      const session = new AiSession();
+      const modelLayer = AiService.model(data.model ?? DEFAULT_MODEL);
+
+      if (data.chat) {
+        const chat = yield* Database.load(data.chat);
+        invariant(Obj.instanceOf(Chat.Chat, chat), 'Expected Chat object.');
+        const chatQueue = yield* Database.load(chat.queue);
+        invariant(chatQueue, 'Chat queue not found.');
+
+        const conversation = yield* acquireReleaseResource(
+          () => new AiConversation({ queue: chatQueue as Queue<Message.Message | ContextBinding> }),
+        );
+
+        yield* Effect.promise(() =>
+          conversation.context.bind({
+            blueprints: blueprints.map((blueprint) => Ref.make(blueprint)),
+            objects: objects.map((object) => Ref.make(object as Obj.Unknown)),
+          }),
+        );
+
+        const messages = yield* conversation
+          .createRequest({
+            prompt: promptText,
+            system: systemText,
+            observer,
+          })
+          .pipe(Effect.provide(modelLayer));
+
+        return {
+          note: lastTextFromMessages(messages),
+        };
+      }
+
+      const toolkit = yield* createToolkit({ blueprints });
+
+      const session = new AiSession({ observer });
       const result = yield* session
         .run({
           prompt: promptText,
@@ -66,17 +118,12 @@ export default AgentPrompt.pipe(
           blueprints,
           objects: objects as Obj.Unknown[],
           toolkit,
-          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'agent' })),
         })
-        .pipe(Effect.provide(AiService.model(data.model ?? DEFAULT_MODEL)));
-      const lastBlock = result
-        .at(-1)
-        ?.blocks.filter((block) => block._tag === 'text')
-        .at(-1);
+        .pipe(Effect.provide(modelLayer));
 
       return {
-        note: lastBlock?.text,
+        note: lastTextFromMessages(result),
       };
-    }),
+    }, Effect.scoped),
   ),
 );

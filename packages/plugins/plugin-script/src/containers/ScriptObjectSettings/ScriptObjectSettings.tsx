@@ -64,14 +64,14 @@ const BlueprintEditor = ({ object }: ScriptObjectSettingsProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        Obj.change(text, (t) => {
-          t.content = instructions;
+        Obj.change(text, (obj) => {
+          obj.content = instructions;
         });
         if (fn?.key) {
           const toolId = ToolId.make(fn.key);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            Obj.change(existingBlueprint, (b) => {
-              b.tools = [...(b.tools ?? []), toolId];
+            Obj.change(existingBlueprint, (obj) => {
+              obj.tools = [...(obj.tools ?? []), toolId];
             });
           }
         }
@@ -150,36 +150,39 @@ const Binding = ({ object }: ScriptObjectSettingsProps) => {
   );
 
   const handleBindingBlur = useCallback(() => {
-    Obj.change(fn, (f) => {
-      f.binding = binding;
-    });
+    if (fn) {
+      Obj.change(fn, (obj) => {
+        obj.binding = binding;
+      });
+    }
   }, [fn, binding]);
 
-  if (!fn || !functionUrl) {
+  if (!fn) {
     return null;
   }
 
-  // TODO(burdon): Use form.
   return (
     <div role='form' className='flex flex-col gap-2 my-form-padding'>
       <h2>{t('remote function settings heading')}</h2>
-      <Input.Root>
-        <div role='none' className='flex flex-col gap-1'>
-          <Input.Label>{t('function url label')}</Input.Label>
-          <div role='none' className='flex gap-1'>
-            <Input.TextInput
-              disabled
-              value={functionUrl}
-              onChange={(event) => {
-                Obj.change(fn, (f) => {
-                  f.name = event.target.value;
-                });
-              }}
-            />
-            <Clipboard.IconButton value={functionUrl} />
+      {functionUrl && (
+        <Input.Root>
+          <div role='none' className='flex flex-col gap-1'>
+            <Input.Label>{t('function url label')}</Input.Label>
+            <div role='none' className='flex gap-1'>
+              <Input.TextInput
+                disabled
+                value={functionUrl}
+                onChange={(event) => {
+                  Obj.change(fn, (obj) => {
+                    obj.name = event.target.value;
+                  });
+                }}
+              />
+              <Clipboard.IconButton value={functionUrl} />
+            </div>
           </div>
-        </div>
-      </Input.Root>
+        </Input.Root>
+      )}
       <Input.Root>
         <div role='none' className='flex flex-col gap-1'>
           <Input.Label>{t('function binding label')}</Input.Label>

@@ -67,12 +67,11 @@ describe('Research', () => {
           }),
         );
         yield* Database.flush();
-        yield* new AiSession().run({
+        yield* new AiSession({ observer: GenerationObserver.fromPrinter(new ConsolePrinter()) }).run({
           prompt: `What is the name of the organization? ${org.id}`,
           toolkit: yield* createToolkit({
             blueprints: [blueprint],
           }),
-          observer: GenerationObserver.fromPrinter(new ConsolePrinter()),
         });
       },
       Effect.provide(TestLayer),

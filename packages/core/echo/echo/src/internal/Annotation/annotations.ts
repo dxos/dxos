@@ -338,6 +338,7 @@ export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationI
 /**
  * Returns the label for a given object based on {@link LabelAnnotationId}.
  * Lower-level version that requires explicit schema parameter.
+ * Skips empty strings and whitespace-only strings, continuing to the next field.
  */
 // TODO(burdon): Convert to JsonPath?
 export const getLabelWithSchema = <S extends Schema.Schema.Any>(
@@ -353,7 +354,13 @@ export const getLabelWithSchema = <S extends Schema.Schema.Any>(
     );
     const value = getField(object, accessor as JsonPath);
     switch (typeof value) {
-      case 'string':
+      case 'string': {
+        const trimmed = value.trim();
+        if (trimmed.length > 0) {
+          return value;
+        }
+        continue;
+      }
       case 'number':
       case 'boolean':
       case 'bigint':

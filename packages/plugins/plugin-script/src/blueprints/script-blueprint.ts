@@ -4,7 +4,6 @@
 
 import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
-import { OperationHandlerSet } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.script';
@@ -23,7 +22,6 @@ const make = () =>
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: OperationHandlerSet.empty,
   make,
 };
 

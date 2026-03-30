@@ -28,8 +28,8 @@ export default Capability.makeModule(
     const client = yield* Capability.get(ClientCapabilities.Client);
 
     const space = client.spaces.default;
-    Obj.change(space.properties, (p) => {
-      p.icon = SPACE_ICON;
+    Obj.change(space.properties, (obj) => {
+      obj.icon = SPACE_ICON;
     });
     const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
 

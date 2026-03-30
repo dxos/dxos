@@ -2,38 +2,12 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "enables the default permissions",
-  "windows": ["main", "popover"],
+  "windows": ["main"],
   "permissions": [
-    "core:default",
-    "core:window:allow-start-dragging",
     "deep-link:default",
-    "os:default",
-    "process:default",
-    {
-      "identifier": "shell:allow-spawn",
-      "allow": [
-        {
-          "args": ["serve"],
-          "name": "sidecar/ollama",
-          "sidecar": true
-        }
-      ]
-    },
-    "opener:default",
-    "opener:allow-open-url",
     "opener:allow-default-urls",
-    "shell:allow-open",
-    "dialog:default",
-    "dialog:allow-open",
-    "fs:read-all",
-    "fs:write-all",
-    {
-      "identifier": "fs:allow-watch",
-      "allow": [{ "path": "**" }]
-    },
-    {
-      "identifier": "fs:scope",
-      "allow": [{ "path": "**" }]
-    }
+    "opener:allow-open-url",
+    "opener:default",
+    "os:default"
   ]
 }

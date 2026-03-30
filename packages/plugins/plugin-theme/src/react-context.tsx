@@ -4,7 +4,7 @@
 
 import { Atom, type Registry, useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import React, { useMemo } from 'react';
+import React, { ReactNode, useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/ui';
@@ -17,11 +17,14 @@ import compositeEnUs from './translations/en-US';
 
 export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCache' | 'resourceExtensions'>> & {
   appName?: string;
+  platform?: 'mobile' | 'desktop';
 };
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* (
-    { appName, tx: propsTx = defaultTx, resourceExtensions = [], ...rest }: ThemePluginOptions = { appName: 'test' },
+    { appName, tx: propsTx = defaultTx, resourceExtensions = [], platform, ...rest }: ThemePluginOptions = {
+      appName: 'test',
+    },
   ) {
     const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
     const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
@@ -39,7 +42,7 @@ export default Capability.makeModule(
       Capabilities.ReactContext,
       {
         id: meta.id,
-        context: ({ children }: { children?: React.ReactNode }) => {
+        context: ({ children }: { children?: ReactNode }) => {
           const _resources = useCapabilities(AppCapabilities.Translations);
           const { themeMode } = useAtomValue(themeAtom);
           const resources = useMemo(
@@ -48,7 +51,7 @@ export default Capability.makeModule(
           );
 
           return (
-            <ThemeProvider {...{ tx: propsTx, themeMode, resourceExtensions: resources, ...rest }}>
+            <ThemeProvider {...{ tx: propsTx, themeMode, resourceExtensions: resources, platform, ...rest }}>
               <Toast.Provider>
                 <Tooltip.Provider delayDuration={1_000} skipDelayDuration={100} disableHoverableContent>
                   {children}

@@ -3,7 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ChangeEvent, forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
@@ -13,10 +13,11 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
+import { ComposableProps, ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
-import { Menu, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
+import { Menu, MenuRootProps, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
+import { composableProps } from '@dxos/ui-theme';
 
 import { Call } from '../../components';
 import { meta } from '../../meta';
@@ -202,20 +203,22 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
   return useMenuActions(creator);
 };
 
-type ChannelToolbarProps = {
-  attendableId?: string;
-  role?: string;
-  onJoinCall?: () => void;
-};
+type ChannelToolbarProps = ComposableProps<
+  Pick<MenuRootProps, 'attendableId'> & {
+    onJoinCall?: () => void;
+  }
+>;
 
-const ChannelToolbar = ({ attendableId, role, onJoinCall }: ChannelToolbarProps) => {
-  const menuProps = useChannelToolbarActions(onJoinCall);
+const ChannelToolbar = forwardRef<HTMLDivElement, ChannelToolbarProps>(
+  ({ attendableId, role, onJoinCall, ...props }, forwardedRef) => {
+    const menuActions = useChannelToolbarActions(onJoinCall);
 
-  return (
-    <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
-      <Menu.Root {...menuProps} attendableId={attendableId}>
-        <Menu.Toolbar />
-      </Menu.Root>
-    </ElevationProvider>
-  );
-};
+    return (
+      <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
+        <Menu.Root {...menuActions} attendableId={attendableId}>
+          <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+        </Menu.Root>
+      </ElevationProvider>
+    );
+  },
+);

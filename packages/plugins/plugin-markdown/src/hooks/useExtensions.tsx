@@ -34,10 +34,12 @@ import {
   selectionState,
   typewriter,
 } from '@dxos/ui-editor';
+import { useThemeContext } from '@dxos/react-ui';
 import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '../types';
 import { setFallbackName } from '../util';
+import { fromUrlPath } from '@dxos/app-toolkit';
 
 export type DocumentType = Markdown.Document | Text.Text | { id: string; text: string };
 
@@ -49,6 +51,7 @@ export type ExtensionsOptions = {
   viewMode?: EditorViewMode;
   editorStateStore?: EditorStateStore;
   previewOptions?: PreviewOptions;
+  platform?: 'mobile' | 'desktop';
   /** Callback when an internal link is clicked. */
   onSelectObject?: (objectId: string) => void;
 };
@@ -64,6 +67,7 @@ export const useExtensions = ({
   previewOptions,
   onSelectObject,
 }: ExtensionsOptions): Extension[] => {
+  const { platform } = useThemeContext();
   const identity = useIdentity();
   const space = getSpace(object);
 
@@ -89,6 +93,7 @@ export const useExtensions = ({
         viewMode,
         previewOptions,
         onSelectObject,
+        platform,
       }),
     [
       id,
@@ -101,6 +106,7 @@ export const useExtensions = ({
       settings?.editorInputMode,
       settings?.folding,
       settings?.numberedHeadings,
+      platform,
       settings?.typewriter,
       selectionManager,
     ],
@@ -144,11 +150,12 @@ const createBaseExtensions = ({
   selectionManager,
   viewMode,
   previewOptions,
+  platform,
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     selectionManager && selectionChange(selectionManager),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
-    settings?.folding && folding(),
+    settings?.folding && platform !== 'mobile' && folding(),
   ].filter(isTruthy);
 
   //
@@ -208,21 +215,33 @@ const createRenderLink =
   (el, { url }) => {
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
-    const anchor = Domino.of('a')
-      .classNames('dx-link dx-icon-inline ms-1')
+    const qualifiedId = isInternal ? fromUrlPath(new URL(url, window.location.origin).pathname) : undefined;
+    const icon = Domino.of('span')
+      .classNames('dx-link ms-1 inline-block align-[-0.125em]')
       .children(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
 
     if (isInternal) {
-      anchor.on('click', () => {
-        const qualifiedId = url.split('/').at(-1);
-        invariant(qualifiedId, 'Invalid link format.');
-        onSelectObject(qualifiedId);
-      });
-    } else {
-      anchor.attributes({ href: url, rel: 'noreferrer', target: '_blank' });
+      invariant(qualifiedId, 'Invalid link format.');
+      icon
+        .attributes({ role: 'button', tabindex: '0' })
+        .on('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          onSelectObject(qualifiedId);
+        })
+        .on('keydown', (event) => {
+          const keyboardEvent = event as KeyboardEvent;
+          if (keyboardEvent.key !== 'Enter' && keyboardEvent.key !== ' ') {
+            return;
+          }
+
+          keyboardEvent.preventDefault();
+          keyboardEvent.stopPropagation();
+          onSelectObject(qualifiedId);
+        });
     }
 
-    el.appendChild(anchor.root);
+    el.appendChild(icon.root);
   };
 
 const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
@@ -230,7 +249,7 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
       .classNames('dx-link flex items-center gap-2')
-      .text(safeUrl(url)?.origin ?? url)
+      .text(safeUrl(url)?.toString() ?? url)
       .children(Domino.svg('ph--arrow-square-out--regular')).root,
   );
 };

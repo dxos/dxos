@@ -46,7 +46,10 @@ const defaultResultsHook: NonNullable<RefFieldProps['resultsHook']> = (db, typen
   );
 
 export type RefFieldProps = FormFieldComponentProps &
-  Pick<ObjectPickerContentProps, 'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath'> & {
+  Pick<
+    ObjectPickerContentProps,
+    'createOptionLabel' | 'createOptionIcon' | 'createInitialValuePath' | 'createFieldMap'
+  > & {
     db?: Database.Database;
     resultsHook?: (db?: Database.Database, typename?: string) => Entity.Any[];
     schemaHook?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
@@ -66,6 +69,7 @@ export const RefField = (props: RefFieldProps) => {
     createOptionLabel,
     createOptionIcon,
     createInitialValuePath,
+    createFieldMap,
     db,
     resultsHook: useResults = defaultResultsHook,
     schemaHook: useSchema = useSchema$,
@@ -158,13 +162,13 @@ export const RefField = (props: RefFieldProps) => {
           <ObjectPicker.Root>
             <ObjectPicker.Trigger asChild classNames='p-0'>
               {item ? (
-                <div className='flex gap-2 w-full'>
+                <div className='flex gap-form-gap w-full'>
                   <Input.Root key={item.id}>
                     <Input.TextInput value={item.label} readOnly classNames='w-full' />
                   </Input.Root>
                 </div>
               ) : (
-                <Button classNames='w-full text-start gap-2'>
+                <Button classNames='w-full text-start gap-form-gap'>
                   <div role='none' className='grow overflow-hidden'>
                     <span className='flex truncate text-description'>{placeholder ?? t('ref field placeholder')}</span>
                   </div>
@@ -181,6 +185,7 @@ export const RefField = (props: RefFieldProps) => {
                 createOptionLabel={createOptionLabel}
                 createOptionIcon={createOptionIcon}
                 createInitialValuePath={createInitialValuePath}
+                createFieldMap={createFieldMap}
                 onCreate={handleCreate}
                 onSelect={handleSelect}
               />

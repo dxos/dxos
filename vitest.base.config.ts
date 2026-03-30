@@ -273,7 +273,7 @@ const resolveReporterConfig = (cwd: string): ViteUserConfig['test'] => {
   if (xmlReport) {
     return {
       passWithNoTests: true,
-      reporters: ['junit', 'verbose'],
+      reporters: [['junit', { addFileAttribute: true }], 'verbose'],
       outputFile: join(resultsDirectory, 'results.xml'),
       coverage: {
         enabled: coverageEnabled,

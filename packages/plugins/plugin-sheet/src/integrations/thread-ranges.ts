@@ -5,12 +5,12 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { companionSegment } from '@dxos/app-toolkit';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
-import { DeckOperation } from '@dxos/plugin-deck/types';
-import { ThreadOperation } from '@dxos/plugin-thread/types';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
+import { ThreadOperation } from '@dxos/plugin-thread/operations';
 import { Filter, Query, useQuery } from '@dxos/react-client/echo';
 import { AnchoredTo, Thread } from '@dxos/types';
 
@@ -60,7 +60,7 @@ export const useSelectThreadOnCellFocus = () => {
         void (async () => {
           await invokePromise(ThreadOperation.Select, { current: Relation.getDXN(closestThread).toString() });
           await invokePromise(DeckOperation.ChangeCompanion, {
-            companion: `${COMPANION_PREFIX}comments`,
+            companion: companionSegment('comments'),
           });
         })();
       }

@@ -17,10 +17,6 @@ import { Mosaic, type MosaicTileProps } from '../Mosaic';
 import { useBoard } from './Board';
 import { useBoardColumn } from './Column';
 
-//
-// Item
-//
-
 const BOARD_ITEM_NAME = 'Board.Item';
 
 type BoardItemProps<TItem extends Obj.Unknown = any> = Pick<
@@ -58,22 +54,22 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
     const description = Obj.getDescription(data);
 
     return (
-      <Mosaic.Tile
-        ref={rootRef}
-        asChild
-        dragHandle={dragHandleRef.current}
-        id={data.id}
-        data={data}
-        location={location}
-        debug={debug}
-      >
-        <Focus.Group asChild>
-          <Menu.Root>
+      <Menu.Root>
+        <Mosaic.Tile
+          ref={rootRef}
+          asChild
+          dragHandle={dragHandleRef.current}
+          id={data.id}
+          data={data}
+          location={location}
+          debug={debug}
+        >
+          <Focus.Group asChild>
             <Card.Root
               classNames={classNames}
               data-testid='board-item'
-              onClick={() => rootRef.current?.focus()}
               ref={composedRef}
+              onClick={(event) => event.currentTarget.focus()}
             >
               <Card.Toolbar>
                 <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
@@ -91,7 +87,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
               </Card.Toolbar>
               {/* TODO(burdon): Replace with surface. */}
               <Card.Row icon='ph--note--regular' classNames='text-description'>
-                {description}
+                <Card.Text>{description}</Card.Text>
               </Card.Row>
               <Card.Row icon='ph--tag--regular'>
                 {label && (
@@ -101,15 +97,18 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
                 )}
               </Card.Row>
             </Card.Root>
-          </Menu.Root>
-        </Focus.Group>
-      </Mosaic.Tile>
+          </Focus.Group>
+        </Mosaic.Tile>
+      </Menu.Root>
     );
   },
 );
 
 BoardItemInner.displayName = BOARD_ITEM_NAME;
 
+/**
+ * Default board tile.
+ */
 const BoardItem = BoardItemInner as <TItem extends Obj.Unknown = any>(
   props: BoardItemProps<TItem> & { ref?: ReactRef<HTMLDivElement> },
 ) => ReactElement;

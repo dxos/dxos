@@ -4,4 +4,3 @@
 
 export * from './meta';
 export * from './TablePlugin';
-export * from './types';

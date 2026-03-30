@@ -21,7 +21,7 @@ export const SetupReactSurface = ActivationEvent$.make('org.dxos.app-framework.e
 /**
  * Fired before the operation invoker is activated.
  */
-export const SetupOperationResolver = ActivationEvent$.make('org.dxos.app-framework.event.setup-operation-resolver');
+export const SetupOperationHandler = ActivationEvent$.make('org.dxos.app-framework.event.setup-operation-handler');
 
 /**
  * Fired before the managed runtime is created.

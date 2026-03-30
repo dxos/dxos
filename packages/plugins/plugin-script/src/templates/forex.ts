@@ -22,7 +22,9 @@ const Forex = Operation.make({
 
 export default Forex.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ from, to }) {
+    Effect.fn(function* ({ from: rawFrom, to: rawTo }) {
+      const from = rawFrom.toUpperCase();
+      const to = rawTo.toUpperCase();
       const res = yield* Effect.promise(() => fetch(`https://free.ratesdb.com/v1/rates?from=${from}&to=${to}`));
       const {
         data: { rates },

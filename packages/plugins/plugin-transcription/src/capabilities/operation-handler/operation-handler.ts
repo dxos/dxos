@@ -5,21 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { OperationResolver } from '@dxos/operation';
-import { Transcript } from '@dxos/types';
+import type { OperationHandlerSet } from '@dxos/operation';
 
-import { TranscriptOperation } from '../../types';
+import { TranscriptionOperationHandlerSet } from '../../operations';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(
-    Capability.contributes(Capabilities.OperationResolver, [
-      OperationResolver.make({
-        operation: TranscriptOperation.Create,
-        handler: ({ space }) =>
-          Effect.succeed({
-            object: Transcript.make(space.queues.create().dxn),
-          }),
-      }),
-    ]),
-  ),
+export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
+  Effect.fnUntraced(function* () {
+    return Capability.contributes(Capabilities.OperationHandler, TranscriptionOperationHandlerSet);
+  }),
 );
