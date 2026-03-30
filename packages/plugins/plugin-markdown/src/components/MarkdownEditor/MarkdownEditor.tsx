@@ -161,7 +161,7 @@ const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
 type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
 const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(
-  ({ children, ...props }, forwardedRef) => {
+  ({ ...props }, _forwardedRef) => {
     const {
       id,
       attendableId,
