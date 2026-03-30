@@ -610,6 +610,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-native-filesystem/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-navtree/package.json",
           "jsonpath": "$.version"
         },

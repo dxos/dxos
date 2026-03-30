@@ -5,4 +5,3 @@
 export * from './ollama';
 export * from './spotlight-listener';
 export * from './updater';
-export * from './window';

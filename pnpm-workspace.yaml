@@ -57,8 +57,6 @@ catalog:
   '@dnd-kit/modifiers': ^6.0.0
   '@dnd-kit/sortable': ^7.0.1
   '@dnd-kit/utilities': ^3.2.0
-  '@dxos/operation': ^0.0.0
-  '@dxos/plugin-preview': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.1
   '@effect-atom/atom-react': ^0.5.0
@@ -203,6 +201,8 @@ catalog:
   '@tauri-apps/api': ^2.8.0
   '@tauri-apps/cli': ^2.8.4
   '@tauri-apps/plugin-deep-link': ^2.2.0
+  '@tauri-apps/plugin-dialog': ^2.2.0
+  '@tauri-apps/plugin-fs': ^2.4.0
   '@tauri-apps/plugin-haptics': ^2.3.2
   '@tauri-apps/plugin-opener': ^2.5.3
   '@tauri-apps/plugin-os': ^2.3.1

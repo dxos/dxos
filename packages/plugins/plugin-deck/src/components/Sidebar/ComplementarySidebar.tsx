@@ -93,6 +93,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       {/* TODO(burdon): asChild. */}
       <Tabs.Root orientation='vertical' value={internalValue} classNames='contents'>
         <div
+          data-tauri-drag-region
           role='none'
           style={iconSize(5)}
           className={mx(

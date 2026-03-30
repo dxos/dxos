@@ -60,6 +60,7 @@
     "@dxos/plugin-meeting": "workspace:*",
     "@dxos/plugin-mermaid": "workspace:*",
     "@dxos/plugin-native": "workspace:*",
+    "@dxos/plugin-native-filesystem": "workspace:*",
     "@dxos/plugin-navtree": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-outliner": "workspace:*",
