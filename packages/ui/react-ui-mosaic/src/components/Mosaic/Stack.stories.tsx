@@ -37,7 +37,7 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
   const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   return (
-    <Mosaic.Root debug={props.debug} classNames='dx-container'>
+    <Mosaic.Root classNames='dx-container' debug={props.debug}>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
@@ -78,7 +78,7 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
   const [DebugInfo, debugHandler] = useContainerDebug(props.debug);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   return (
-    <Mosaic.Root debug={props.debug} classNames='grid grid-rows-[min-content_1fr_min-content]'>
+    <Mosaic.Root classNames='dx-container' debug={props.debug}>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
