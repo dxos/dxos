@@ -235,16 +235,14 @@ export class AiSession {
                 currentMessageId ??= Obj.ID.random();
                 const id = currentMessageId;
                 currentMessageId = null;
-                return Option.some(
-                  yield* this._submitMessage(
-                    Obj.make(Message.Message, {
-                      id,
-                      created: new Date().toISOString(),
-                      sender: { role: 'assistant' },
-                      blocks: [block],
-                    }),
-                  ),
-                );
+                const message = Obj.make(Message.Message, {
+                  id,
+                  created: new Date().toISOString(),
+                  sender: { role: 'assistant' },
+                  blocks: [block],
+                });
+                yield* TracingService.emitEphemeralMessage(message);
+                return Option.some(yield* this._submitMessage(message));
               }
             }),
           { concurrency: 1, unordered: false },
