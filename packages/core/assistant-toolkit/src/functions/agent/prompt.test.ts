@@ -61,7 +61,7 @@ const StubAiServiceLayer = Layer.succeed(AiService.AiService, {
   model: () => StubLanguageModelLayer,
 });
 
-const testTypes = [Prompt.Prompt, Chat.Chat, Blueprint.Blueprint, Message.Message, ContextBinding, Text.Text];
+const testTypes = [Prompt.Prompt, Chat.Chat, Blueprint.Blueprint, Feed.Feed, Message.Message, ContextBinding, Text.Text];
 
 const TestLayer = Layer.mergeAll(
   AiService.model('@anthropic/claude-opus-4-0'),
@@ -96,10 +96,11 @@ describe('Agent prompt', () => {
     'chat mode appends assistant messages to the chat queue',
     Effect.fnUntraced(
       function* (_) {
-        const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
+        const feed = yield* Database.add(Feed.make());
+        const queueDxn = Feed.getQueueDxn(feed)!;
+        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
         const messageCountBefore = yield* countQueueMessages(queue);
 
-        const feed = yield* Database.add(Feed.make());
         const chat = yield* Database.add(
           Chat.make({
             feed: Ref.make(feed),
