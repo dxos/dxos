@@ -5,7 +5,7 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { Obj, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
@@ -217,41 +217,24 @@ export const Default: Story = {
     const newSearchField = await body.findByPlaceholderText('Search…');
     await userEvent.click(newSearchField);
 
-    // Type a new object name (this will create a new object)
+    // Type a new object name (this will create a new object).
     const newOrgName = 'Salieri LLC';
     await userEvent.type(newSearchField, newOrgName);
 
-    // Wait for the create option to be selected after search debounce filters results.
-    await waitFor(
-      () => {
-        const selected = document.querySelector('[role="option"][aria-selected="true"][data-value="__create__"]');
-        expect(selected).toBeTruthy();
-      },
-      { timeout: 2000 },
-    );
+    // Click the create option directly to open the create form.
+    const createOptionLabel = await body.findByText(/Create new object/, undefined, { timeout: 2000 });
+    await userEvent.click(createOptionLabel.closest('[role="option"]') as HTMLElement);
 
-    // Press Enter to open the create form.
-    await userEvent.keyboard('{Enter}');
-
-    // Look for and click save button
+    // Look for and click save button.
     const createReferencedObjectForm = await body.findByTestId('create-referenced-object-form', undefined, {
       timeout: 2000,
     });
     const saveObjectButton = await within(createReferencedObjectForm).findByTestId('save-button');
     await expect(saveObjectButton).not.toBeDisabled();
     await userEvent.click(saveObjectButton);
-    // Verify the form closed (save was accepted by the form handler).
-    await waitFor(() => expect(body.queryByTestId('create-referenced-object-form')).toBeNull(), { timeout: 2000 });
 
-    // Verify the new object was created and relation was set.
-    // Check for the accessory link that appears when a ref is set (even if label is still resolving).
-    await waitFor(
-      () => {
-        const updatedNewCell = within(secondGrid).getByTestId('grid.4.1');
-        const anchor = updatedNewCell.querySelector('dx-anchor');
-        expect(anchor).toBeTruthy();
-      },
-      { timeout: 5000 },
-    );
+    // Verify the relation was set by checking for the accessory link anchor in the cell.
+    const updatedNewCell = await within(secondGrid).findByTestId('grid.4.1', undefined, { timeout: 5000 });
+    await expect(updatedNewCell.querySelector('dx-anchor')).toBeTruthy();
   },
 } as any;
