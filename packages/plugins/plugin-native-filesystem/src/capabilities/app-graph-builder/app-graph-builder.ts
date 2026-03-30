@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
@@ -30,14 +30,45 @@ import {
 } from '../../types';
 
 const FILESYSTEM_TYPE = `${meta.id}.workspace`;
+const SETTINGS_TYPE = `${meta.id}.settings`;
+const GENERAL_TYPE = `${meta.id}.general`;
 
 const workspaceRearrangeCache = new Map<string, (nextOrder: (FilesystemWorkspace | unknown)[]) => void>();
+
+export const createFilesystemEntryExtensions = (
+  stateAtom: Atom.Writable<NativeFilesystemState>,
+  nativeMarkdownDocs: NativeMarkdownDocumentsService,
+) =>
+  Effect.all([
+    GraphBuilder.createExtension({
+      id: `${meta.id}.workspace-entries`,
+      match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
+      connector: (node, get) => {
+        const workspaceId = (node.data as FilesystemWorkspace).id;
+        const state: NativeFilesystemState = get(stateAtom);
+        const workspace = state.workspaces.find((item) => item.id === workspaceId);
+        return Effect.succeed(workspace ? workspace.children.map((entry) => constructEntryNode(entry, nativeMarkdownDocs)) : []);
+      },
+    }),
+
+    GraphBuilder.createExtension({
+      id: `${meta.id}.directory-entries`,
+      match: NodeMatcher.whenNodeType(`${meta.id}.directory`),
+      connector: (node, get) => {
+        const directoryId = (node.data as FilesystemDirectory).id;
+        const state: NativeFilesystemState = get(stateAtom);
+        const directory = findDirectoryById(state.workspaces, directoryId);
+        return Effect.succeed(directory ? directory.children.map((entry) => constructEntryNode(entry, nativeMarkdownDocs)) : []);
+      },
+    }),
+  ]).pipe(Effect.map((extensions) => extensions.flat()));
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
     const stateAtom = yield* Capability.get(NativeFilesystemCapabilities.State);
     const nativeMarkdownDocs = yield* Capability.get(NativeFilesystemCapabilities.NativeMarkdownDocuments);
+    const filesystemEntryExtensions = yield* createFilesystemEntryExtensions(stateAtom, nativeMarkdownDocs);
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
@@ -124,12 +155,25 @@ export default Capability.makeModule(
                 data: workspace,
                 properties: {
                   label: workspace.name,
-                  icon: 'ph--folder--regular',
+                  icon: workspace.icon ? `ph--${workspace.icon}--regular` : 'ph--folder--regular',
+                  hue: workspace.hue,
                   disposition: 'workspace',
                   testId: 'nativeFilesystem.workspace',
                   position: orderMap.get(workspace.id),
                   onRearrange,
                 },
+                nodes: [
+                  {
+                    id: 'settings',
+                    type: SETTINGS_TYPE,
+                    data: null,
+                    properties: {
+                      label: ['settings panel label', { ns: meta.id }],
+                      icon: 'ph--faders--regular',
+                      disposition: 'alternate-tree',
+                    },
+                  },
+                ],
               };
             }),
           );
@@ -137,70 +181,25 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: `${meta.id}.workspace-entries`,
-        match: (node) =>
-          isFilesystemWorkspace(node.data) ? Option.some(node.data as FilesystemWorkspace) : Option.none(),
-        actions: (workspace: FilesystemWorkspace) =>
+        id: `${meta.id}.settings-sections`,
+        match: NodeMatcher.whenNodeType(SETTINGS_TYPE),
+        connector: () =>
           Effect.succeed([
             {
-              id: `${NativeFilesystemOperation.CloseDirectory.meta.key}:${workspace.id}`,
-              data: () => Operation.invoke(NativeFilesystemOperation.CloseDirectory, { id: workspace.id }),
+              id: GENERAL_TYPE,
+              type: GENERAL_TYPE,
+              data: GENERAL_TYPE,
               properties: {
-                label: ['close directory label', { ns: meta.id }],
-                icon: 'ph--x--regular',
-              },
-            },
-            {
-              id: `${NativeFilesystemOperation.RefreshDirectory.meta.key}:${workspace.id}`,
-              data: () => Operation.invoke(NativeFilesystemOperation.RefreshDirectory, { id: workspace.id }),
-              properties: {
-                label: 'Refresh',
-                icon: 'ph--arrows-clockwise--regular',
-              },
-            },
-          ]),
-        connector: (workspace: FilesystemWorkspace) =>
-          Effect.succeed(workspace.children.map((entry: FilesystemEntry) => constructEntryNode(entry, nativeMarkdownDocs))),
-      }),
-
-      GraphBuilder.createExtension({
-        id: `${meta.id}.directory-entries`,
-        match: (node) =>
-          isFilesystemDirectory(node.data) && !isFilesystemWorkspace(node.data)
-            ? Option.some(node.data as FilesystemDirectory)
-            : Option.none(),
-        connector: (directory: FilesystemDirectory) =>
-          Effect.succeed(directory.children.map((entry: FilesystemEntry) => constructEntryNode(entry, nativeMarkdownDocs))),
-      }),
-
-      GraphBuilder.createExtension({
-        id: `${meta.id}.file-actions`,
-        match: (node) => {
-          if (Obj.instanceOf(Text.Text, node.data)) {
-            const fileId = node.properties.nativeFilesystemFileId as string | undefined;
-            return fileId ? Option.some(fileId) : Option.none();
-          }
-          return Option.none();
-        },
-        actions: (fileId: string) =>
-          Effect.succeed([
-            {
-              id: `${NativeFilesystemOperation.SaveFile.meta.key}:${fileId}`,
-              data: () => Operation.invoke(NativeFilesystemOperation.SaveFile, { id: fileId }),
-              properties: {
-                label: ['save file label', { ns: meta.id }],
-                icon: 'ph--floppy-disk--regular',
-                keyBinding: {
-                  macos: 'meta+s',
-                  windows: 'ctrl+s',
-                },
+                label: ['settings general label', { ns: meta.id }],
+                icon: 'ph--sliders--regular',
+                position: 'hoist',
               },
             },
           ]),
       }),
     ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, [...extensions.flat(), ...filesystemEntryExtensions]);
   }),
 );
 
@@ -248,4 +247,40 @@ const constructEntryNode = (
       icon: 'ph--image--regular',
     },
   };
+};
+
+const findDirectoryById = (
+  workspaces: FilesystemWorkspace[],
+  directoryId: string,
+): FilesystemDirectory | undefined => {
+  for (const workspace of workspaces) {
+    const directory = findDirectoryInEntries(workspace.children, directoryId);
+    if (directory) {
+      return directory;
+    }
+  }
+
+  return undefined;
+};
+
+const findDirectoryInEntries = (
+  entries: FilesystemEntry[],
+  directoryId: string,
+): FilesystemDirectory | undefined => {
+  for (const entry of entries) {
+    if (!isFilesystemDirectory(entry)) {
+      continue;
+    }
+
+    if (entry.id === directoryId) {
+      return entry;
+    }
+
+    const nestedDirectory = findDirectoryInEntries(entry.children, directoryId);
+    if (nestedDirectory) {
+      return nestedDirectory;
+    }
+  }
+
+  return undefined;
 };

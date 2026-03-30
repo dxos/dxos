@@ -35,12 +35,16 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
     "@dxos/echo-db": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-pickers": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
@@ -52,12 +56,15 @@
     "localforage": "catalog:"
   },
   "devDependencies": {
+    "@dxos/app-graph": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "react": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "react": "catalog:"
   },
   "publishConfig": {
     "access": "public"

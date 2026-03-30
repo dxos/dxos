@@ -6,7 +6,7 @@ import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
-import { AppGraphBuilder, Markdown, OperationHandler, State } from './capabilities';
+import { AppGraphBuilder, Markdown, OperationHandler, ReactSurface, State } from './capabilities';
 import { meta } from './meta';
 import { NativeFilesystemCapabilities } from './types';
 import { translations } from './translations';
@@ -19,6 +19,10 @@ export const NativeFilesystemPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
     activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, StateReady),
     activate: AppGraphBuilder,
+  }),
+  AppPlugin.addSurfaceModule({
+    activatesOn: ActivationEvent.allOf(ActivationEvents.SetupReactSurface, StateReady),
+    activate: ReactSurface,
   }),
   Plugin.addModule({
     id: 'state',

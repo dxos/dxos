@@ -26,30 +26,37 @@ export default Capability.makeModule(
 
     const pendingSaves = new Map<string, ReturnType<typeof debounce>>();
 
-    const saveFile = async (fileId: string, path: string, text: string) => {
-      const success = await writeFileContent(path, text);
-      if (success) {
-        const registry = capabilities.get(Capabilities.AtomRegistry);
-        const stateAtom = capabilities.get(NativeFilesystemCapabilities.State);
-        const state: NativeFilesystemState = registry.get(stateAtom);
-        const result = findFileById(state.workspaces, fileId);
-        if (result) {
-          registry.update(stateAtom, (current: NativeFilesystemState) => ({
-            ...current,
-            workspaces: current.workspaces.map((ws: FilesystemWorkspace) =>
-              ws.id === result.workspace.id ? updateFileInWorkspace(ws, fileId, { modified: false }) : ws,
-            ),
-          }));
-        }
-        log('File auto-saved', { path });
-      }
-    };
+    const saveFile = (fileId: string, path: string, text: string): Effect.Effect<void> =>
+      writeFileContent(path, text).pipe(
+        Effect.tap((success) =>
+          Effect.sync(() => {
+            if (!success) {
+              return;
+            }
+
+            const registry = capabilities.get(Capabilities.AtomRegistry);
+            const stateAtom = capabilities.get(NativeFilesystemCapabilities.State);
+            const state: NativeFilesystemState = registry.get(stateAtom);
+            const result = findFileById(state.workspaces, fileId);
+            if (result) {
+              registry.update(stateAtom, (current: NativeFilesystemState) => ({
+                ...current,
+                workspaces: current.workspaces.map((ws: FilesystemWorkspace) =>
+                  ws.id === result.workspace.id ? updateFileInWorkspace(ws, fileId, { modified: false }) : ws,
+                ),
+              }));
+            }
+            log('File auto-saved', { path });
+          }),
+        ),
+        Effect.asVoid,
+      );
 
     const getDebouncedSave = (fileId: string, path: string) => {
       let debouncedFn = pendingSaves.get(fileId);
       if (!debouncedFn) {
-        debouncedFn = debounce(async (text: string) => {
-          await saveFile(fileId, path, text);
+        debouncedFn = debounce((text: string) => {
+          void Effect.runFork(saveFile(fileId, path, text));
         }, AUTO_SAVE_DELAY_MS);
         pendingSaves.set(fileId, debouncedFn);
       }

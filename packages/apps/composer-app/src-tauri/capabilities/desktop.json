@@ -19,7 +19,7 @@
     },
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "**" }]
+      "allow": [{ "path": "**" }, { "path": "**/.composer" }, { "path": "**/.composer/**" }]
     },
     "fs:write-all",
     "process:default",

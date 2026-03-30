@@ -18,6 +18,9 @@ export default NativeFilesystemOperation.CloseDirectory.pipe(
       const stateAtom = yield* Capability.get(NativeFilesystemCapabilities.State);
       const nativeMarkdownDocs = yield* Capability.get(NativeFilesystemCapabilities.NativeMarkdownDocuments);
 
+      const dirWatcher = yield* Capability.get(NativeFilesystemCapabilities.DirectoryWatcher);
+      yield* dirWatcher.stopWatching(id);
+
       const workspace = registry.get(stateAtom).workspaces.find((ws) => ws.id === id);
       if (workspace) {
         nativeMarkdownDocs.evictForWorkspace(workspace);

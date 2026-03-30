@@ -26,13 +26,6 @@ export namespace NativeFilesystemOperation {
     output: Schema.Void,
   });
 
-  export const SaveFile = Operation.make({
-    meta: { key: `${FILESYSTEM_OPERATION}.save-file`, name: 'Save File' },
-    services: [Capability.Service],
-    input: Schema.Struct({ id: Schema.String }),
-    output: Schema.Void,
-  });
-
   export const RefreshDirectory = Operation.make({
     meta: { key: `${FILESYSTEM_OPERATION}.refresh-directory`, name: 'Refresh Folder' },
     services: [Capability.Service],
@@ -64,6 +57,8 @@ export type FilesystemWorkspace = {
   name: string;
   path: string;
   children: FilesystemEntry[];
+  icon?: string;
+  hue?: string;
 };
 
 export type NativeFilesystemState = {

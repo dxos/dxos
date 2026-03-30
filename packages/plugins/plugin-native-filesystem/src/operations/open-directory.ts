@@ -19,12 +19,12 @@ export default NativeFilesystemOperation.OpenDirectory.pipe(
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const stateAtom = yield* Capability.get(NativeFilesystemCapabilities.State);
 
-      const path = yield* Effect.promise(openDirectoryPicker);
+      const path = yield* openDirectoryPicker();
       if (!path) {
         return undefined;
       }
 
-      const workspace = yield* Effect.promise(() => loadWorkspace(path));
+      const workspace = yield* loadWorkspace(path);
       if (!workspace) {
         log.warn('Failed to load workspace', { path });
         return undefined;
@@ -42,6 +42,9 @@ export default NativeFilesystemOperation.OpenDirectory.pipe(
 
       const state = registry.get(stateAtom);
       yield* Effect.promise(() => localforage.setItem(STORAGE_KEY, state.workspaces));
+
+      const dirWatcher = yield* Capability.get(NativeFilesystemCapabilities.DirectoryWatcher);
+      yield* dirWatcher.startWatching(workspace);
 
       return { id: workspace.id, subject: [workspace.id] };
     }),

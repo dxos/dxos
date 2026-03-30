@@ -28,7 +28,7 @@ export default NativeFilesystemOperation.RefreshDirectory.pipe(
 
       nativeMarkdownDocs.evictForWorkspace(workspace);
 
-      const refreshed = yield* Effect.promise(() => refreshWorkspace(workspace));
+      const refreshed = yield* refreshWorkspace(workspace);
       if (refreshed) {
         registry.update(stateAtom, (current) => ({
           ...current,

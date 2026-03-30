@@ -2,6 +2,7 @@ layer: library
 language: typescript
 tags:
   - ts-build
+  - ts-test
   - pack
 tasks:
   compile:

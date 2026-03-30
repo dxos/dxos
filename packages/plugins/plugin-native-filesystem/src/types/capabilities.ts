@@ -3,13 +3,22 @@
 //
 
 import { type Atom } from '@effect-atom/atom-react';
+import type * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { type Text } from '@dxos/schema';
 
 import { meta } from '../meta';
 
-import type { FilesystemFile, NativeFilesystemState, FilesystemWorkspace } from './schema';
+import type { FilesystemFile, FilesystemWorkspace, NativeFilesystemState } from './schema';
+
+/** Service for managing recursive directory watchers on filesystem workspaces. */
+export type DirectoryWatcherService = {
+  /** Start watching a workspace directory for structural changes. */
+  startWatching: (workspace: FilesystemWorkspace) => Effect.Effect<void>;
+  /** Stop watching a workspace directory. */
+  stopWatching: (workspaceId: string) => Effect.Effect<void>;
+};
 
 /** Service for managing in-memory Text.Text instances backed by native filesystem files. */
 export type NativeMarkdownDocumentsService = {
@@ -30,4 +39,5 @@ export namespace NativeFilesystemCapabilities {
   export const NativeMarkdownDocuments = Capability.make<NativeMarkdownDocumentsService>(
     `${meta.id}.native-markdown-documents`,
   );
+  export const DirectoryWatcher = Capability.make<DirectoryWatcherService>(`${meta.id}.directory-watcher`);
 }
