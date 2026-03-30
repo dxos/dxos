@@ -32,6 +32,8 @@ import {
 const FILESYSTEM_TYPE = `${meta.id}.workspace`;
 const SETTINGS_TYPE = `${meta.id}.settings`;
 const GENERAL_TYPE = `${meta.id}.general`;
+const DIRECTORY_TYPE = `${meta.id}.directory`;
+const IMAGE_TYPE = `${meta.id}.image`;
 
 const workspaceRearrangeCache = new Map<string, (nextOrder: (FilesystemWorkspace | unknown)[]) => void>();
 
@@ -55,7 +57,7 @@ export const createFilesystemEntryExtensions = (
 
     GraphBuilder.createExtension({
       id: `${meta.id}.directory-entries`,
-      match: NodeMatcher.whenNodeType(`${meta.id}.directory`),
+      match: NodeMatcher.whenNodeType(DIRECTORY_TYPE),
       connector: (node, get) => {
         const directoryId = (node.data as FilesystemDirectory).id;
         const state: NativeFilesystemState = get(stateAtom);
@@ -217,7 +219,7 @@ const constructEntryNode = (
   if (isFilesystemDirectory(entry)) {
     return {
       id: entry.id,
-      type: `${meta.id}.directory`,
+      type: DIRECTORY_TYPE,
       data: entry,
       properties: {
         label: entry.name,
@@ -247,7 +249,7 @@ const constructEntryNode = (
 
   return {
     id: file.id,
-    type: `${meta.id}.image`,
+    type: IMAGE_TYPE,
     data: file,
     properties: {
       label: file.name,
