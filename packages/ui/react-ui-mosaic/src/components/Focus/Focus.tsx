@@ -10,7 +10,16 @@ import {
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type KeyboardEvent, type PropsWithChildren, createContext, useContext, useRef, useState } from 'react';
+import React, {
+  type FocusEvent,
+  type KeyboardEvent,
+  type PropsWithChildren,
+  createContext,
+  useCallback,
+  useContext,
+  useRef,
+  useState,
+} from 'react';
 
 import { type Axis } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
@@ -52,6 +61,34 @@ const Group = composable<HTMLDivElement, GroupProps>(
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: orientation, memorizeCurrent: true });
     const tabsterAttrs = useMergedTabsterAttributes_unstable(focusableGroupAttrs, arrowNavigationAttrs);
     const [state, setState] = useState<FocusState | undefined>();
+    const currentRef = useRef<HTMLElement | null>(null);
+
+    // Track the currently focused tile via event delegation.
+    const handleFocusIn = useCallback((event: FocusEvent<HTMLDivElement>) => {
+      const target = event.target as HTMLElement;
+      const tile = target.closest('[role="listitem"]') as HTMLElement | null;
+      if (tile === currentRef.current) {
+        return;
+      }
+      if (currentRef.current) {
+        currentRef.current.removeAttribute('aria-current');
+      }
+      if (tile && rootRef.current?.contains(tile)) {
+        tile.setAttribute('aria-current', 'true');
+        currentRef.current = tile;
+      }
+    }, []);
+
+    const handleFocusOut = useCallback((event: FocusEvent<HTMLDivElement>) => {
+      // Clear aria-current when focus leaves the group entirely.
+      const related = event.relatedTarget as HTMLElement | null;
+      if (!related || !rootRef.current?.contains(related)) {
+        if (currentRef.current) {
+          currentRef.current.removeAttribute('aria-current');
+          currentRef.current = null;
+        }
+      }
+    }, []);
 
     return (
       <FocusContext.Provider value={{ setFocus: setState }}>
@@ -71,6 +108,8 @@ const Group = composable<HTMLDivElement, GroupProps>(
           })}
           {...tabsterAttrs}
           {...(state && { [`data-${FOCUS_STATE_ATTR}`]: state })}
+          onFocus={handleFocusIn}
+          onBlur={handleFocusOut}
           ref={composedRef}
         >
           {children}

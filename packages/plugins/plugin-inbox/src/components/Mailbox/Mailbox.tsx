@@ -90,59 +90,54 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   }, [labels, message.properties?.labels]);
 
   return (
-    <Mosaic.Tile classNames='dx-hover dx-selected' asChild id={message.id} data={data} location={location}>
-      <Focus.Group
-        asChild
-        // onKeyDown={() => {}}
-      >
-        <Card.Root onClick={handleClick} ref={setRef}>
-          <Card.Toolbar>
-            <Card.IconBlock>
-              <DxAvatar
-                hue={hue}
-                hueVariant='surface'
-                variant='square'
-                size={6}
-                fallback={from}
-                onClick={handleAvatarClick}
-              />
-            </Card.IconBlock>
-            <Card.Title classNames='flex items-center gap-3'>
-              <span className='grow truncate font-medium'>{subject}</span>
-              <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
-            </Card.Title>
-            <Card.Menu />
-          </Card.Toolbar>
-          <Card.Content>
-            <Card.Row icon='ph--user--regular'>
-              <Card.Text>{from}</Card.Text>
+    <Mosaic.Tile classNames='dx-hover dx-current dx-selected' asChild id={message.id} data={data} location={location}>
+      <Card.Root onClick={handleClick} ref={setRef}>
+        <Card.Toolbar>
+          <Card.IconBlock>
+            <DxAvatar
+              hue={hue}
+              hueVariant='surface'
+              variant='square'
+              size={6}
+              fallback={from}
+              onClick={handleAvatarClick}
+            />
+          </Card.IconBlock>
+          <Card.Title classNames='flex items-center gap-3'>
+            <span className='grow truncate font-medium'>{subject}</span>
+            <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
+          </Card.Title>
+          <Card.Menu />
+        </Card.Toolbar>
+        <Card.Content>
+          <Card.Row icon='ph--user--regular'>
+            <Card.Text>{from}</Card.Text>
+          </Card.Row>
+          {snippet && (
+            <Card.Row>
+              <Card.Text variant='description'>{snippet}</Card.Text>
             </Card.Row>
-            {snippet && (
-              <Card.Row>
-                <Card.Text variant='description'>{snippet}</Card.Text>
-              </Card.Row>
-            )}
-            {messageLabels.length > 0 && (
-              <Card.Row>
-                <div role='none' className='flex flex-wrap gap-1 py-1'>
-                  {messageLabels.map(({ id: labelId, label, hue: labelHue }) => (
-                    <button
-                      key={labelId}
-                      type='button'
-                      className='dx-tag dx-focus-ring'
-                      data-hue={labelHue}
-                      data-label={label}
-                      onClick={(event) => handleTagClick(event, label)}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </Card.Row>
-            )}
-          </Card.Content>
-        </Card.Root>
-      </Focus.Group>
+          )}
+          {messageLabels.length > 0 && (
+            <Card.Row>
+              <div role='none' className='flex flex-wrap gap-1 py-1'>
+                {messageLabels.map(({ id: labelId, label, hue: labelHue }) => (
+                  <button
+                    key={labelId}
+                    type='button'
+                    className='dx-tag dx-focus-ring'
+                    data-hue={labelHue}
+                    data-label={label}
+                    onClick={(event) => handleTagClick(event, label)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </Card.Row>
+          )}
+        </Card.Content>
+      </Card.Root>
     </Mosaic.Tile>
   );
 });

@@ -215,7 +215,7 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
         icon='ph--dots-six-vertical--regular'
         variant='ghost'
         label={label ?? t('toolbar drag handle label')}
-        classNames='cursor-pointer'
+        classNames='dx-focus-ring-none cursor-pointer'
         disabled={!forwardedRef}
         ref={forwardedRef}
       />

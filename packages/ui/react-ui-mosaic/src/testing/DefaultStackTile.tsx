@@ -26,7 +26,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
 
   return (
     <Mosaic.Tile {...props} asChild>
-      <Card.Root>
+      <Card.Root className='dx-current dx-hover'>
         <Menu.Root>
           <Card.Toolbar>
             <Card.DragHandle ref={dragHandleRef} />

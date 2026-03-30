@@ -60,7 +60,8 @@
   --color-selected-surface-hover: light-dark(var(--color-neutral-250), var(--color-neutral-750));
   --color-selected-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
-  /* Accent */
+  /* Accent (primary) */
+  /* TODO(burdon): Rename primary */
 
   --color-accent-surface: light-dark(var(--color-blue-500), var(--color-blue-700));
   --color-accent-surface-hover: light-dark(var(--color-blue-800), var(--color-blue-800));
@@ -75,8 +76,9 @@
   /* Separator */
 
   --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-  --color-primary-separator: light-dark(var(--color-neutral-400), var(--color-neutral-800));
+  --color-primary-separator: light-dark(var(--color-neutral-500), var(--color-neutral-700));
   --color-subdued-separator: light-dark(var(--color-neutral-300), var(--color-neutral-900));
+  --color-active-separator: light-dark(var(--color-blue-500), var(--color-blue-500));
 
   /* Scrollbar */
 

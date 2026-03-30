@@ -16,15 +16,16 @@ import {
   attachClosestEdge,
   extractClosestEdge,
 } from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { useFocusableGroup } from '@fluentui/react-tabster';
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type CSSProperties, type PropsWithChildren, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { type PropsWithChildren, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composableProps, slottable } from '@dxos/ui-theme';
 
 import { useMosaicContainerContext } from './Container';
 import { type LocationType, type MosaicTileData, getSourceData } from './types';
@@ -53,7 +54,6 @@ const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
 type MosaicTileProps<TData = any, TLocation = LocationType> = ThemedClassName<
   PropsWithChildren<{
     className?: string;
-    asChild?: boolean;
     dragHandle?: HTMLElement | null;
     allowedEdges?: Edge[];
     id: string;
@@ -64,7 +64,7 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = ThemedClassName<
   }>
 >;
 
-const MosaicTile = composable<HTMLDivElement, MosaicTileProps>(
+const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
   (
     {
       children,
@@ -77,10 +77,9 @@ const MosaicTile = composable<HTMLDivElement, MosaicTileProps>(
       draggable: draggableProp,
       debug: _,
       ...props
-    }: MosaicTileProps,
+    },
     forwardedRef,
   ) => {
-    const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
@@ -94,6 +93,7 @@ const MosaicTile = composable<HTMLDivElement, MosaicTileProps>(
       setActiveLocation,
     } = useMosaicContainerContext(MOSAIC_TILE_NAME);
     const [state, setState] = useState<MosaicTileState>({ type: 'idle' });
+    const focusableGroupAttrs = useFocusableGroup();
 
     const allowedEdges = useMemo<Edge[]>(
       () => allowedEdgesProp || (orientation === 'vertical' ? ['top', 'bottom'] : ['left', 'right']),
@@ -197,6 +197,8 @@ const MosaicTile = composable<HTMLDivElement, MosaicTileProps>(
       setActiveLocation,
     ]);
 
+    const { className, ...rest } = composableProps(props, { className: 'relative outline-none' });
+
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
     return (
@@ -207,7 +209,10 @@ const MosaicTile = composable<HTMLDivElement, MosaicTileProps>(
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
-          className={mx('relative', className)}
+          className={className}
+          // TODO(burdon): Option.
+          // tabIndex={0}
+          // {...focusableGroupAttrs}
           ref={composedRef}
         >
           {children}
@@ -221,14 +226,11 @@ const MosaicTile = composable<HTMLDivElement, MosaicTileProps>(
                 // NOTE: Use to control appearance while dragging.
                 [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
               }}
-              // TODO(burdon): Configure drop animation.
-              className={mx('relative', className)}
-              style={
-                {
-                  width: `${state.rect.width}px`,
-                  height: `${state.rect.height}px`,
-                } as CSSProperties
-              }
+              className={className}
+              style={{
+                width: `${state.rect.width}px`,
+                height: `${state.rect.height}px`,
+              }}
             >
               {children}
             </Comp>,

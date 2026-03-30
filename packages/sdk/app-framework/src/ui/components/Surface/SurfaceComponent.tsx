@@ -27,9 +27,9 @@ import { SurfaceContext } from './context';
 import { SurfaceInfo } from './SurfaceInfo';
 import { type Definition, type Props, type WebComponentDefinition } from './types';
 
-const DEFAULT_PLACEHOLDER = <Fragment />;
-
 const DEBUG = import.meta.env.VITE_DEBUG;
+
+const DEFAULT_PLACEHOLDER = <Fragment />;
 
 /**
  * Wrapper component for rendering Web Component surfaces.
