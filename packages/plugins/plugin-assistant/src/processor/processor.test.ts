@@ -8,7 +8,7 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { AiConversation } from '@dxos/assistant';
 import { AssistantTestLayer } from '@dxos/assistant/testing';
-import { DXN } from '@dxos/echo';
+import { Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { QueueService } from '@dxos/functions';
@@ -27,7 +27,8 @@ describe('Chat processor', () => {
         const managedRuntime = ManagedRuntime.make(
           Effect.runSync(Effect.map(Effect.context<never>(), () => undefined as any)) as any,
         );
-        const processor = new AiChatProcessor(conversation, managedRuntime as any, DXN.parse(queue.dxn.toString()));
+        const feed = Feed.make();
+        const processor = new AiChatProcessor(conversation, managedRuntime as any, feed);
         expect(processor).toBeDefined();
         expect(processor.active).toBeDefined();
       },
