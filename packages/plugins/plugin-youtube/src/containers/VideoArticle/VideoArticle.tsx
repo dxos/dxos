@@ -54,18 +54,18 @@ export const VideoArticle = ({ subject: video, role }: VideoArticleProps) => {
                 title={video.title}
                 allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
                 allowFullScreen
-                className='w-full h-full rounded-lg'
+                className='h-full w-full rounded-lg'
               />
             ) : (
               <button
                 type='button'
                 onClick={() => setShowPlayer(true)}
-                className='relative w-full h-full group cursor-pointer'
+                className='relative h-full w-full group cursor-pointer'
               >
                 {video.thumbnailUrl ? (
-                  <img src={video.thumbnailUrl} alt={video.title} className='w-full h-full object-cover rounded-lg' />
+                  <img src={video.thumbnailUrl} alt={video.title} className='h-full w-full object-cover rounded-lg' />
                 ) : (
-                  <div className='w-full h-full bg-surface-hover rounded-lg flex items-center justify-center'>
+                  <div className='h-full w-full bg-surface-hover rounded-lg flex items-center justify-center'>
                     <Icon icon='ph--play--fill' size={12} />
                   </div>
                 )}

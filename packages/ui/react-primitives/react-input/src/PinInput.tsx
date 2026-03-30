@@ -186,7 +186,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
           })}
           {...props}
           pattern={pattern}
-          className='absolute inset-0 opacity-0 w-full h-full'
+          className='dx-fullscreen opacity-0'
           style={{
             caretColor: 'transparent',
             ...props.style,

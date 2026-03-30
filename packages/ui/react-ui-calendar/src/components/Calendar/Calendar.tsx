@@ -241,7 +241,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                     {border && (
                       <div
                         role='none'
-                        className={mx('absolute top-0 left-0 w-full h-full border-2 rounded-full', border)}
+                        className={mx('absolute top-0 left-0 h-full w-full border-2 rounded-full', border)}
                       />
                     )}
                     {num > 0 && (

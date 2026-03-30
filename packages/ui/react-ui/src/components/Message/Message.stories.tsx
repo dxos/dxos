@@ -14,13 +14,13 @@ import { Message } from './Message';
 
 faker.seed(123);
 
-type StoryProps = {
+type DefaultStoryProps = {
   valence: MessageValence;
   title: string;
   body: string;
 };
 
-const DefaultStory = ({ valence, title, body }: StoryProps) => (
+const DefaultStory = ({ valence, title, body }: DefaultStoryProps) => (
   <div className='w-[30rem]'>
     <Message.Root valence={valence}>
       {title && <Message.Title>{title}</Message.Title>}

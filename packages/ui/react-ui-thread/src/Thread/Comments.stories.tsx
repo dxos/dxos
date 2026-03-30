@@ -252,12 +252,12 @@ const Sidebar = ({ threads, selected, onSelect, onResolve }: SidebarProps) => {
 // Story container.
 //
 
-type StoryProps = {
+type DefaultStoryProps = {
   text?: string;
   autoCreate?: boolean;
 };
 
-const DefaultStory = ({ text, autoCreate }: StoryProps) => {
+const DefaultStory = ({ text, autoCreate }: DefaultStoryProps) => {
   const [item] = useState(() => Obj.make(TestSchema.Expando, { content: text ?? '' }));
   const [threads, setThreads] = useState<StoryCommentThread[]>([]);
   const [selected, setSelected] = useState<string>();

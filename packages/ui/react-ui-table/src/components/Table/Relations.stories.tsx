@@ -98,7 +98,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <div className='w-full h-full grid grid-cols-2 divide-x divide-separator'>
+    <div className='dx-expander grid grid-cols-2 divide-x divide-separator'>
       <TableComponent.Root>
         <TableComponent.Content
           model={orgModel}

@@ -27,9 +27,9 @@ import { EditorToolbar, type EditorToolbarState, useEditorToolbar } from '../com
 import { type UseTextEditorProps, useTextEditor } from '../hooks';
 import { translations } from '../translations';
 
-type StoryProps = { placeholder?: string } & UseTextEditorProps;
+type DefaultStoryProps = { placeholder?: string } & UseTextEditorProps;
 
-const DefaultStory = ({ autoFocus, initialValue, placeholder }: StoryProps) => {
+const DefaultStory = ({ autoFocus, initialValue, placeholder }: DefaultStoryProps) => {
   const { themeMode } = useThemeContext();
   const registry = useContext(RegistryContext);
 

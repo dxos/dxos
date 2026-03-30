@@ -150,11 +150,11 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
     return (
       <div
         {...composableProps(props, {
-          className: `grid place-items-center w-full h-full overflow-hidden bg-black ${fullscreen ? 'absolute inset-0' : ''}`,
+          className: `dx-container grid place-items-center bg-black ${fullscreen ? 'absolute inset-0' : ''}`,
         })}
         ref={forwardedRef}
       >
-        <div className='relative aspect-video w-full h-full h-auto max-h-full overflow-hidden'>
+        <div role='none' className='relative aspect-video h-full w-full h-auto max-h-full overflow-hidden'>
           <div ref={deckDivRef} className='absolute inset-0 reveal'>
             {/* NOTE: Must be in head. */}
             <style>

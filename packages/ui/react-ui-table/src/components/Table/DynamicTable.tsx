@@ -98,7 +98,7 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
 
   // TODO(burdon): Do we need the outer divs?
   return (
-    <div role='none' className={mx('w-full h-full grow grid', classNames)}>
+    <div role='none' className={mx('dx-expander grid', classNames)}>
       <div role='none' className='grid min-h-0 overflow-hidden'>
         <Table.Root ref={tableRef}>
           <Table.Content model={model} presentation={presentation} ignoreAttention onRowClick={onRowClick} />

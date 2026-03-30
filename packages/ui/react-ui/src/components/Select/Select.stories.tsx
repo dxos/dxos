@@ -16,9 +16,9 @@ faker.seed(1234);
 
 type ItemProps = { id: string; text: string };
 
-type StoryProps = { items: ItemProps[] };
+type DefaultStoryProps = { items: ItemProps[] };
 
-const DefaultStory = ({ items = [] }: StoryProps) => {
+const DefaultStory = ({ items = [] }: DefaultStoryProps) => {
   const [value, setValue] = useState<string>();
   return (
     <Select.Root value={value} onValueChange={setValue}>

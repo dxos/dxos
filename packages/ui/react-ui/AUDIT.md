@@ -71,6 +71,10 @@ These use Radix `asChild` to pass non-composable children:
 
 - [ ] `SelectPrimitive.Trigger asChild` -> `Button` (`Select.tsx:39`)
 
+### Containers
+
+- [ ] Use `dx-container` or `dx-expander` to grow containers (replace `h-full w-full`).
+
 ## Notes
 
 - Radix

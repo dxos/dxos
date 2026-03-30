@@ -82,7 +82,7 @@ export const Sine = ({ classNames }: SineProps) => {
 
   return (
     <div ref={ref} className={mx(classNames)}>
-      <svg ref={svgRef} className='w-full h-full' viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`} />
+      <svg ref={svgRef} className='h-full w-full' viewBox={`${-width / 2} ${-height / 2} ${width} ${height}`} />
     </div>
   );
 };
