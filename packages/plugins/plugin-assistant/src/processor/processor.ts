@@ -33,7 +33,7 @@ import {
   type TracingService,
 } from '@dxos/functions';
 import { runAndForwardErrors } from '@dxos/effect';
-import { log } from '@dxos/log';
+import { dbg, log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { updateName } from './update-name';
@@ -91,9 +91,6 @@ export class AiChatProcessor {
 
   /** Set of message IDs that have been finalized (non-pending delivered via ephemeral). */
   readonly #finalizedIds = new Set<string>();
-
-  /** Currently active streaming fiber (scoped to the runtime). */
-  #streamFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
 
   /** Currently active request fiber. */
   #requestFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
@@ -173,20 +170,21 @@ export class AiChatProcessor {
         const session = yield* AgentService.getSession(this._feed);
 
         const ephemeralStream = session.subscribeEphemeral();
-        const streamEffect = Stream.runForEach(ephemeralStream, (event: Obj.Unknown) =>
-          Effect.sync(() => {
-            if (Obj.instanceOf(Message.Message, event)) {
-              this.#handleEphemeralMessage(event);
-            }
-          }),
+        yield* ephemeralStream.pipe(
+          Stream.runForEach((event: Obj.Unknown) =>
+            Effect.sync(() => {
+              dbg(event);
+              if (Obj.instanceOf(Message.Message, event)) {
+                this.#handleEphemeralMessage(event);
+              }
+            }),
+          ),
+          Effect.fork,
         );
-
-        const streamFiber = yield* Effect.fork(streamEffect);
-        this.#streamFiber = streamFiber;
 
         yield* session.submitPrompt(requestProp.message);
         yield* session.waitForCompletion();
-        yield* Fiber.interrupt(streamFiber);
+        log.info('session complete');
 
         this.#flushStreaming();
       });
@@ -209,9 +207,9 @@ export class AiChatProcessor {
       log.error('request failed', { error: err });
       this.#registry.set(this.error, Option.some(new Error('AI service error', { cause: err })));
     } finally {
+      log.info('setting active to false');
       this.#registry.set(this.active, false);
       this.#requestFiber = undefined;
-      this.#streamFiber = undefined;
     }
   }
 
@@ -221,9 +219,6 @@ export class AiChatProcessor {
   async cancel(): Promise<void> {
     await runAndForwardErrors(
       Effect.gen(this, function* () {
-        if (this.#streamFiber) {
-          yield* Fiber.interrupt(this.#streamFiber);
-        }
         if (this.#requestFiber) {
           yield* Fiber.interrupt(this.#requestFiber);
         }
@@ -231,7 +226,6 @@ export class AiChatProcessor {
     );
 
     this.#requestFiber = undefined;
-    this.#streamFiber = undefined;
     this.#registry.set(this.active, false);
   }
 
