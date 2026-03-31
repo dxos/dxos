@@ -5,6 +5,7 @@
 import React, {
   Fragment,
   type NamedExoticComponent,
+  Profiler,
   type RefAttributes,
   Suspense,
   forwardRef,
@@ -25,6 +26,7 @@ import { useCapabilities } from '../../hooks';
 
 import { SurfaceContext } from './context';
 import { SurfaceInfo } from './SurfaceInfo';
+import { useSurfaceProfilerCallback } from './SurfaceProfilerContext';
 import { type Definition, type Props, type WebComponentDefinition } from './types';
 
 const DEBUG = import.meta.env.VITE_DEBUG;
@@ -109,6 +111,8 @@ const SurfaceContextProvider = memo(
   forwardRef<HTMLElement, Props & { definition: Definition }>(
     ({ id, role, data, limit, fallback = ErrorFallback, definition, ...rest }, forwardedRef) => {
       const contextValue = useMemo(() => ({ id, role, data }), [id, role, data]);
+      const onProfilerRender = useSurfaceProfilerCallback();
+      const profilerId = `surface/${id}/${role}`;
 
       // Handle Web Component surfaces
       if (definition.kind === 'web-component') {
@@ -140,7 +144,13 @@ const SurfaceContextProvider = memo(
             <div role='none' className='contents' data-id={id} data-role={role}>
               <SurfaceContext.Provider value={contextValue}>
                 <SurfaceInfo ref={forwardedRef}>
-                  <Component id={id} role={role} data={data} limit={limit} {...rest} />
+                  {onProfilerRender && !profilerId.includes('org.dxos.plugin.debug') ? (
+                    <Profiler id={profilerId} onRender={onProfilerRender}>
+                      <Component id={id} role={role} data={data} limit={limit} {...rest} />
+                    </Profiler>
+                  ) : (
+                    <Component id={id} role={role} data={data} limit={limit} {...rest} />
+                  )}
                 </SurfaceInfo>
               </SurfaceContext.Provider>
             </div>
