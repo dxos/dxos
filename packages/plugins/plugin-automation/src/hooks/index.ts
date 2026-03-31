@@ -4,3 +4,4 @@
 
 export * from './useComputeRuntimeCallback';
 export * from './useTriggerRuntimeControls';
+export * from './useComputeRuntime';
