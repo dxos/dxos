@@ -75,26 +75,29 @@ const Group = slottable<HTMLDivElement, GroupProps>(
       }
     }, []);
 
-    // TODO(burdon): Ring (box-shadow) requires a margin.
     return (
       <FocusContext.Provider value={{ setFocus: setState, groupHasFocus }}>
         <Comp
           {...composableProps(props, {
             tabIndex: 0,
             className: mx([
-              'ring-0 outline-hidden border border-separator rounded-xs',
+              // TODO(burdon): Ring (box-shadow) requires a margin.
+              'outline-hidden ring ring-subdued-separator rounded-sm',
+              // 'outline-hidden border border-transparent',
               // Focus (e.g., via tabster).
-              'focus:border-neutral-focus-indicator',
+              'focus:z-50 focus:ring-neutral-focus-indicator',
               // Active (e.g., drop target).
-              'data-[focus-state=active]:border-neutral-focus-indicator',
+              'data-[focus-state=active]:z-50 data-[focus-state=active]:ring-neutral-focus-indicator',
               // Error
-              'data-[focus-state=error]:border-rose-500',
+              'data-[focus-state=error]:z-50 data-[focus-state=error]:ring-rose-500',
             ]),
           })}
           {...tabsterAttrs}
-          {...(state && { [`data-${FOCUS_STATE_ATTR}`]: state })}
-          onFocus={handleFocusIn}
+          {...(state && {
+            [`data-${FOCUS_STATE_ATTR}`]: state,
+          })}
           onBlur={handleFocusOut}
+          onFocus={handleFocusIn}
           ref={useComposedRefs<HTMLDivElement>(rootRef, forwardedRef)}
         >
           {children}
