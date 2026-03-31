@@ -22,6 +22,7 @@ import * as Process from './Process';
 import * as ProcessManager from './ProcessManager';
 import * as ServiceResolver from './ServiceResolver';
 import * as StorageService from './StorageService';
+import { log } from '@dxos/log';
 
 //
 // Test services (for unit tests without full ECHO stack).
@@ -174,11 +175,13 @@ describe('ProcessManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.ProcessManagerService;
       const handle = yield* manager.spawn(makeSumAggregator());
-      let lastOutput = 0;
+      let lastOutput = 0,
+        outputCount = 0;
       yield* handle.subscribeOutputs().pipe(
         Stream.runForEach((output) =>
           Effect.sync(() => {
             lastOutput = output;
+            outputCount++;
           }),
         ),
         Effect.fork,
@@ -194,7 +197,9 @@ describe('ProcessManagerImpl', () => {
         yield* handle.runToCompletion();
         const status = yield* handle.status();
         expect(status.state).toEqual(Process.State.IDLE);
-        expect(lastOutput).toEqual(3);
+        // TODO(dmaretskyi): Output streaming is async, not sure how to sync it.
+        yield* Effect.promise(() => expect.poll(() => outputCount).toEqual(2));
+        yield* Effect.promise(() => expect.poll(() => lastOutput).toEqual(3));
       }
     }, Effect.provide(TestLayer)),
   );
@@ -268,6 +273,7 @@ describe('ProcessManagerImpl', () => {
         yield* handle.submitInput(1);
         yield* handle.runToCompletion();
 
+        log('get tree');
         const tree = yield* monitor.processTree;
         const info = tree.find((node) => node.pid === handle.pid);
         expect(info?.metrics.inputCount).toEqual(1);

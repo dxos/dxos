@@ -283,22 +283,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   /** Run process onSpawn. Called by ProcessManagerImpl after spawn. */
   runOnSpawn(): Effect.Effect<void> {
     log('lifecycle: onspawn');
-    return this.#runHandler(() => this.#callbacks.onSpawn()).pipe(
-      Performance.addTrackEntry({
-        name: 'spawn',
-        detail: {
-          pid: this.pid,
-          key: this.key,
-          params: this.params,
-        },
-        devtools: {
-          dataType: 'track-entry',
-          track: 'Process',
-          trackGroup: 'Compute',
-          color: 'primary',
-        },
-      }),
-    );
+    return this.#runHandler('spawn', () => this.#callbacks.onSpawn()).pipe(Effect.flatMap(Fiber.join));
   }
 
   submitInput(input: I): Effect.Effect<void> {
@@ -307,23 +292,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     }
     this.#inputCount++;
     log('lifecycle: input', { n: this.#inputCount });
-    return this.#runHandler(() => this.#callbacks.onInput(input)).pipe(
-      Performance.addTrackEntry({
-        name: 'input',
-        detail: {
-          pid: this.pid,
-          key: this.key,
-          params: this.params,
-        },
-        devtools: {
-          dataType: 'track-entry',
-          track: 'Process',
-          trackGroup: 'Compute',
-          color: 'primary',
-        },
-      }),
-      Effect.forkIn(this.#scope),
-    );
+    return this.#runHandler('input', () => this.#callbacks.onInput(input)).pipe(Effect.asVoid);
   }
 
   subscribeOutputs(): Stream.Stream<O> {
@@ -414,21 +383,8 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
       this.#alarmTimer = null;
       if (!this.#finished) {
         Effect.runFork(
-          this.#runHandler(() => this.#callbacks.onAlarm()).pipe(
-            Performance.addTrackEntry({
-              name: 'alarm',
-              detail: {
-                pid: this.pid,
-                key: this.key,
-                params: this.params,
-              },
-              devtools: {
-                dataType: 'track-entry',
-                track: 'Process',
-                trackGroup: 'Compute',
-                color: 'primary',
-              },
-            }),
+          this.#runHandler('alarm', () => this.#callbacks.onAlarm()).pipe(
+            Effect.flatMap(Fiber.join),
             this.#alarmSemaphore.withPermits(1),
           ),
         );
@@ -437,34 +393,21 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   }
 
   requestSubmitOutput(output: O): void {
+    log('lifecycle: submit output', { pid: this.pid });
     this.#outputCount++;
+    this.#onStatusChanged?.();
     Queue.unsafeOffer(this.#outputQueue, Option.some(output));
   }
 
   requestChildEvent(event: Process.ChildEvent<unknown>): void {
     log('lifecycle: child event', { tag: event._tag, childPid: event.pid });
-    Effect.runFork(
-      this.#runHandler(() => this.#callbacks.onChildEvent(event)).pipe(
-        Performance.addTrackEntry({
-          name: 'alarm',
-          detail: {
-            pid: this.pid,
-            key: this.key,
-            params: this.params,
-          },
-          devtools: {
-            dataType: 'track-entry',
-            track: 'Process',
-            trackGroup: 'Compute',
-            color: 'primary',
-          },
-        }),
-        Effect.forkIn(this.#scope),
-      ),
-    );
+    Effect.runFork(this.#runHandler('childEvent', () => this.#callbacks.onChildEvent(event)));
   }
 
-  #runHandler(fn: () => Effect.Effect<void, never, R | Process.BaseServices>): Effect.Effect<void> {
+  #runHandler(
+    name: string,
+    fn: () => Effect.Effect<void, never, R | Process.BaseServices>,
+  ): Effect.Effect<Fiber.RuntimeFiber<void>> {
     return Effect.uninterruptibleMask((restore) =>
       Effect.gen(this, function* () {
         this.#activeHandlers++;
@@ -474,9 +417,23 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
         const recordWall = () => {
           this.#wallTimeMs += performance.now() - t0;
         };
-        return restore(fn()).pipe(
+        return yield* restore(fn()).pipe(
           Effect.provide(this.#services),
           Effect.tap(() => Effect.sync(recordWall)),
+          Performance.addTrackEntry({
+            name,
+            detail: {
+              pid: this.pid,
+              key: this.key,
+              params: this.params,
+            },
+            devtools: {
+              dataType: 'track-entry',
+              track: 'Process',
+              trackGroup: 'Compute',
+              color: 'primary',
+            },
+          }),
           Effect.tap(() => this.#handlerCompleted()),
           Effect.catchAllCause((cause) =>
             Effect.gen(this, function* () {
@@ -484,6 +441,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
               yield* this.#handleError(cause);
             }),
           ),
+          Effect.forkIn(this.#scope),
         );
       }),
     );
@@ -628,6 +586,7 @@ export class ProcessManagerImpl implements Manager {
   }
 
   #refreshProcessTree(): void {
+    log('refresh process tree');
     this.#registry.set(this.#processTreeAtom, this.#buildProcessTreeSnapshot());
   }
 
@@ -838,6 +797,7 @@ export class ProcessManagerImpl implements Manager {
       this.#handles.set(id, handle);
       this.#refreshProcessTree();
 
+      // TODO(dmaretskyi): Background?
       yield* handle.runOnSpawn();
       log('lifecycle: started', { pid: id, key: definition.key });
 
