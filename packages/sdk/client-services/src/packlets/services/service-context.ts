@@ -42,6 +42,7 @@ import { safeInstanceof } from '@dxos/util';
 import { EdgeAgentManager } from '../agents';
 import {
   type CreateIdentityOptions,
+  type Identity,
   IdentityManager,
   type IdentityManagerProps,
   type JoinIdentityProps,
@@ -350,7 +351,7 @@ export class ServiceContext extends Resource {
 
   private async _acceptIdentity(params: JoinIdentityProps) {
     const { identity, identityRecord } = await this.identityManager.prepareIdentity(params);
-    await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential! });
+    await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential!, identity });
     await identity.joinNetwork();
     await this.identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
     await this._initialize(new Context());
@@ -451,13 +452,13 @@ export class ServiceContext extends Resource {
     await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync);
   }
 
-  private async _setNetworkIdentity(params?: { deviceCredential: Credential }): Promise<void> {
+  private async _setNetworkIdentity(params?: { deviceCredential: Credential; identity?: Identity }): Promise<void> {
     log('_setNetworkIdentity: acquiring mutex...');
     using _ = await this._edgeIdentityUpdateMutex.acquire();
     log('_setNetworkIdentity: mutex acquired');
 
     let edgeIdentity: EdgeIdentity;
-    const identity = this.identityManager.identity;
+    const identity = params?.identity ?? this.identityManager.identity;
     if (identity) {
       log('_setNetworkIdentity: has identity', {
         identity: identity.identityKey.toHex(),
