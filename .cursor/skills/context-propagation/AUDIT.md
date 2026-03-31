@@ -8,7 +8,9 @@ Out of scope: RPC client-service boundary context propagation.
 
 The PR successfully wires `ctx: Context` through the majority of the networking stack — signal managers, messengers, swarm layer, edge replicator, echo pipeline, data-space lifecycle, and identity. The OTEL bridge (`RemoteTracing` ↔ `traces-browser.ts`) correctly maps DXOS span IDs to OpenTelemetry contexts and propagates `traceparent` in WebSocket messages.
 
-There are several categories of issues below, ranging from **structural limitations** to **specific violations** of the context propagation rules.
+Context propagation relies entirely on explicit `ctx: Context` parameter passing. The `StackContextManager` has been removed — OTEL auto-instrumentation (e.g. fetch) produces orphaned root spans and should not be relied on for parent-child relationships or header injection into EDGE requests.
+
+There are several categories of issues below, ranging from **fetch instrumentation conflicts** to **specific violations** of the context propagation rules.
 
 ---
 
@@ -24,17 +26,23 @@ WebSocket messages (`EdgeClient.send`) do inject `message.traceContext` from ctx
 
 **Fix:** In `_call`, extract the OTEL context from `ctx` (same pattern as `EdgeClient.send`) and inject `traceparent`/`tracestate` as HTTP headers on the `fetch` request.
 
-### 2. `StackContextManager` does not survive `await` boundaries
+### 2. Fetch auto-instrumentation does not produce correctly parented spans
 
 **Location:** `packages/sdk/observability/src/extensions/otel/traces-browser.ts`
 
-`StackContextManager.with(ctx, fn)` pushes/pops ctx synchronously. When `fn` is an `async` function (as in `@trace.span()` decorated methods), the stack is popped as soon as the first `await` yields. Any code after `await` that calls `otelContext.active()` will **not** see the current span.
+DXOS relies on explicit `ctx: Context` parameter passing, not on OTEL's `ContextManager` (the `StackContextManager` has been removed). Without a context manager, `otelContext.active()` always returns `ROOT_CONTEXT`. This means:
 
-This is partially mitigated by `@trace.span()` calling `wrapExecution` which sets the OTEL context for the outermost synchronous slice. But child spans created after an `await` inside the method body (e.g. via `fetch` instrumentation) will not be parented correctly unless they go through `@trace.span()` themselves.
+- **Fetch auto-instrumentation creates fetch spans** — visible in SigNoz.
+- **Those spans are always orphaned root spans** — `otelContext.active()` has no parent.
+- **Auto-injected `traceparent` headers carry a new root trace ID** — disconnected from the DXOS client-side trace tree.
 
-**Impact:** Auto-instrumented `fetch` calls that happen after an `await` inside a `@trace.span()` method will not be parented to the DXOS span. This is a **structural limitation** of the stack-based approach vs Zone.js.
+Additionally, if `EdgeHttpClient._call` manually injects `traceparent` from the DXOS `ctx` and fetch auto-instrumentation is also active for the same URL, the auto-instrumentation may **overwrite** the manually injected `traceparent` with its own orphaned one.
 
-**Mitigation:** Document this limitation. Consider using `AsyncLocalStorage`-based context manager for Node.js environments. For browser, the DXOS explicit `ctx` chain is the primary mechanism; OTEL auto-instrumentation is supplementary.
+**Action required:**
+1. Add EDGE HTTP URLs to the `ignoreUrls` list in the fetch instrumentation config, so auto-instrumentation does not intercept EDGE calls.
+2. Manually inject `traceparent`/`tracestate` in `EdgeHttpClient._call` from the DXOS `ctx` (same pattern as `EdgeClient.send`).
+
+Fetch auto-instrumentation remains useful for non-EDGE HTTP calls (third-party APIs, etc.) where visibility alone is sufficient and parentage is not critical.
 
 ### 3. `ServiceContext._acceptIdentity` uses `new Context()` instead of `this._ctx`
 
@@ -127,7 +135,7 @@ These areas are properly wired:
 
 ## Recommendations for follow-up
 
-1. **P0: Inject trace headers in `EdgeHttpClient._call` `fetch` requests.** This is the biggest gap — all HTTP-based EDGE interactions have no trace propagation.
+1. **P0: Inject trace headers in `EdgeHttpClient._call` `fetch` requests.** This is the biggest gap — all HTTP-based EDGE interactions have no trace propagation. Also add EDGE URLs to the fetch auto-instrumentation `ignoreUrls` to prevent the auto-instrumentation from overwriting manually injected headers.
 
 2. **P1: Fix `ServiceContext._acceptIdentity` to use `this._ctx` instead of `new Context()`.** Breaks trace chain on identity recovery/join paths.
 
@@ -135,9 +143,7 @@ These areas are properly wired:
 
 4. **P2: Evaluate `AutomergeHost.flush(ctx)` — either use ctx for cancellation or remove the parameter** to avoid confusion.
 
-5. **P2: Document `StackContextManager` async limitation** in the observability package or skill doc. Browser OTEL auto-instrumented spans after `await` boundaries will not be parented correctly.
-
-6. **P3: Clean up unused `_ctx` parameters** (`Connection.signal`, `SignalClient.join/leave/sendMessage`) — either wire them or rename to `_` to signal intentional non-use.
+5. **P3: Clean up unused `_ctx` parameters** (`Connection.signal`, `SignalClient.join/leave/sendMessage`) — either wire them or rename to `_` to signal intentional non-use.
 
 ---
 
