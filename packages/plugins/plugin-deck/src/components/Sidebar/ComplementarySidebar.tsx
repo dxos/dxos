@@ -2,19 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, {
-  Fragment,
-  type MouseEvent,
-  type PropsWithChildren,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
-import { IconButton, type Label, Main, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { IconButton, type Label, Main, Panel, toLocalizedString, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { iconSize, mx } from '@dxos/ui-theme';
 
@@ -143,7 +135,6 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
               classNames={[
                 'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
                 'inset-y-0 start-0 w-[calc(100%-var(--dx-r0-size))] lg:w-(--dx-r1-size)',
-                'grid grid-cols-1 grid-rows-[var(--dx-rail-size)_1fr_min-content] py-[env(safe-area-inset-top)]',
               ]}
               {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
             >
@@ -177,48 +168,37 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
     return null;
   }
 
-  const Wrapper = companion.properties.fixed ? Fragment : ScrollAreaWrapper;
-
   return (
-    <>
-      <div role='none' className='flex items-center p-1 gap-1 border-b border-subdued-separator'>
-        <IconButton
-          label={toLocalizedString(companion.properties.label, t)}
-          icon={companion.properties.icon}
-          iconOnly
-          tooltipSide='left'
-          data-value={getCompanionVariant(companion.id)}
-          classNames='h-10 w-10'
-          variant='default'
-        />
-        <div role='none' className='px-1'>
-          {toLocalizedString(companion.properties.label, t)}
-        </div>
-      </div>
-      <Wrapper>
+    <Panel.Root>
+      <Panel.Toolbar asChild size='lg'>
+        <Toolbar.Root classNames='bg-modal-surface'>
+          <IconButton
+            label={toLocalizedString(companion.properties.label, t)}
+            icon={companion.properties.icon}
+            iconOnly
+            tooltipSide='left'
+            data-value={getCompanionVariant(companion.id)}
+            classNames='h-10 w-10'
+            variant='default'
+          />
+          <div role='none' className='px-1'>
+            {toLocalizedString(companion.properties.label, t)}
+          </div>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content>
         <Surface.Surface
           role={`deck-companion--${getCompanionVariant(companion.id)}`}
           data={data}
           fallback={PlankErrorFallback}
           placeholder={<PlankLoading />}
         />
-      </Wrapper>
+      </Panel.Content>
       {!hoistStatusbar && (
-        <div
-          role='contentinfo'
-          className='flex flex-wrap justify-center items-center border-y border-subdued-separator pt-1 pb-[max(env(safe-area-inset-bottom),0.25rem)]'
-        >
+        <Panel.Statusbar classNames='px-1' size='sm'>
           <Surface.Surface role='status-bar--r1-footer' limit={1} />
-        </div>
+        </Panel.Statusbar>
       )}
-    </>
-  );
-};
-
-const ScrollAreaWrapper = ({ children }: PropsWithChildren) => {
-  return (
-    <ScrollArea.Root thin orientation='vertical' classNames='grow'>
-      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-    </ScrollArea.Root>
+    </Panel.Root>
   );
 };

@@ -4,11 +4,10 @@
 
 import React, { type JSX, type PropsWithChildren } from 'react';
 
-import { Icon } from '@dxos/react-ui';
+import { Icon, ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-export type PanelProps = {
-  className?: string; // TODO(burdon): Change to ThemedClassName.
+export type PanelProps = ThemedClassName<{
   id: string;
   icon: string;
   title: string;
@@ -17,13 +16,13 @@ export type PanelProps = {
   maxHeight?: number;
   open?: boolean;
   onToggle?: (id: string, open: boolean) => void;
-};
+}>;
 
 export type CustomPanelProps<T> = Pick<PanelProps, 'id' | 'open' | 'onToggle'> & T;
 
 export const Panel = ({
+  classNames,
   children,
-  className,
   id,
   icon,
   title,
@@ -34,7 +33,7 @@ export const Panel = ({
   onToggle,
 }: PropsWithChildren<PanelProps>) => {
   return (
-    <div className='flex flex-col overflow-hidden'>
+    <div className='flex flex-col shrink-0 overflow-hidden'>
       <div
         className='flex items-center justify-between px-2 text-sm text-fine cursor-pointer'
         onClick={() => onToggle?.(id, !open)}
@@ -52,7 +51,7 @@ export const Panel = ({
             'flex flex-col w-full transition-all duration-200 ease-in-out',
             maxHeight ? 'overflow-y-auto' : 'h-full overflow-hidden',
             padding && 'px-2',
-            className,
+            classNames,
           )}
         >
           {children}
