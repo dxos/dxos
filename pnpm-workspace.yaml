@@ -728,3 +728,5 @@ peerDependencyRules:
     - '@cloudflare/codemode'
 
 strictPeerDependencies: true
+
+trustPolicy: no-downgrade
