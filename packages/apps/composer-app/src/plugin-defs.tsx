@@ -137,9 +137,9 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
       DailySummaryPlugin.meta.id,
-      PipelinePlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
+      PipelinePlugin.meta.id,
       TranscriptionPlugin.meta.id,
       ZenPlugin.meta.id,
     ],
