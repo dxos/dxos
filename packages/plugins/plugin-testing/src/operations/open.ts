@@ -8,9 +8,11 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
-  Operation.withHandler(Effect.fnUntraced(function* (input) {
-    return input.subject;
-  })),
+  Operation.withHandler(
+    Effect.fnUntraced(function* (input) {
+      return input.subject;
+    }),
+  ),
 );
 
 export default handler;

@@ -5,7 +5,15 @@
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, OperationHandler, ReactRoot, ReactSurface, SpotlightDismiss, State, UrlHandler } from './capabilities';
+import {
+  AppGraphBuilder,
+  OperationHandler,
+  ReactRoot,
+  ReactSurface,
+  SpotlightDismiss,
+  State,
+  UrlHandler,
+} from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { SimpleLayoutEvents } from './types';

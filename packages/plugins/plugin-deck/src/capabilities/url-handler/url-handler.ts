@@ -64,7 +64,7 @@ export default Capability.makeModule(
         if (!deck.solo) {
           await invokePromise(LayoutOperation.SetLayoutMode, { subject: resolvedIds?.[0] ?? activeId, mode: 'solo' });
         }
-      } else if (deck.solo) {
+      } else if (deck.solo && deck.solo !== NOT_FOUND_PATH) {
         // Stay in solo mode; redirect URL to reflect the current solo item.
         // Do not switch to deck mode here — only explicit user action should change layout mode.
         const path = toUrlPath(deck.solo);

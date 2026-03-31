@@ -54,16 +54,18 @@ export default Capability.makeModule(
 
     // Resolve mailbox paths (root/<spaceId>/mailboxes/<mailboxId>/...) to DXNs.
     const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) =>
-      Effect.succeed((() => {
-        const segments = qualifiedPath.split('/');
-        const spaceId = getSpaceIdFromPath(qualifiedPath);
-        const mailboxesIdx = segments.indexOf(getMailboxesSectionId());
-        const mailboxId = mailboxesIdx >= 0 ? segments[mailboxesIdx + 1] : undefined;
-        if (spaceId && mailboxId && Key.ObjectId.isValid(mailboxId)) {
-          return DXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
-        }
-        return undefined;
-      })());
+      Effect.succeed(
+        (() => {
+          const segments = qualifiedPath.split('/');
+          const spaceId = getSpaceIdFromPath(qualifiedPath);
+          const mailboxesIdx = segments.indexOf(getMailboxesSectionId());
+          const mailboxId = mailboxesIdx >= 0 ? segments[mailboxesIdx + 1] : undefined;
+          if (spaceId && mailboxId && Key.ObjectId.isValid(mailboxId)) {
+            return DXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
+          }
+          return undefined;
+        })(),
+      );
 
     return [
       Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver),

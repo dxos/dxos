@@ -30,7 +30,7 @@ export const os = (appName?: string) => ({
   'pending label': 'Pending',
   'more options label': 'More options',
   'not found heading': 'Not Found',
-  'not found description': 'This object doesn\'t exist or is no longer available.',
+  'not found description': "This object doesn't exist or is no longer available.",
   'empty space message': 'Nobody else is in this space… yet.',
   'space members label': 'Members',
   'go to space label': 'Done',

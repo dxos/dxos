@@ -26,14 +26,17 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const pathResolvers = capabilities.getAll(AppCapabilities.NavigationPathResolver);
       const checkRemoteExistence = yield* Capability.get(ClientCapabilities.Client).pipe(
         Effect.map((client) =>
-          createEdgeExistenceChecker(
-            (spaceId, body) => client.edge.http.execQuery(spaceId, body),
-          ),
+          createEdgeExistenceChecker((spaceId, body) => client.edge.http.execQuery(spaceId, body)),
         ),
         Effect.catchAll(() => Effect.succeed(undefined)),
       );
 
-      const validatedId = yield* validateNavigationTarget({ graph, subjectId: id, pathResolvers, checkRemoteExistence });
+      const validatedId = yield* validateNavigationTarget({
+        graph,
+        subjectId: id,
+        pathResolvers,
+        checkRemoteExistence,
+      });
 
       updateState((state) => {
         const newHistory = state.active ? [...state.history, state.active] : state.history;
