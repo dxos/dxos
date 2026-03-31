@@ -137,9 +137,9 @@ These areas are properly wired:
 
 1. **P0: Inject trace headers in `EdgeHttpClient._call` `fetch` requests.** This is the biggest gap — all HTTP-based EDGE interactions have no trace propagation. Also add EDGE URLs to the fetch auto-instrumentation `ignoreUrls` to prevent the auto-instrumentation from overwriting manually injected headers.
 
-2. **P1: Fix `ServiceContext._acceptIdentity` to use `this._ctx` instead of `new Context()`.** Breaks trace chain on identity recovery/join paths.
+2. ~~**P1: Fix `ServiceContext._acceptIdentity` to use `this._ctx` instead of `new Context()`.**~~ **RESOLVED** — Changed to `this._ctx`.
 
-3. **P1: Forward `ctx` to `EchoHost.openSpaceRoot` `loadDoc` call** instead of `Context.default()`.
+3. ~~**P1: Forward `ctx` to `EchoHost.openSpaceRoot` `loadDoc` call** instead of `Context.default()`.~~ **RESOLVED** — Added `ctx` parameter to `openSpaceRoot` and `createSpaceRoot`; all callers updated. Also fixed `DataSpace._onNewAutomergeRoot` to pass `this._ctx` instead of `Context.default()` to `loadDoc`.
 
 4. **P2: Evaluate `AutomergeHost.flush(ctx)` — either use ctx for cancellation or remove the parameter** to avoid confusion.
 

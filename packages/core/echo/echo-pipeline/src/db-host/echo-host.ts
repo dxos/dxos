@@ -300,7 +300,7 @@ export class EchoHost extends Resource {
   /**
    * Create new space root.
    */
-  async createSpaceRoot(spaceKey: PublicKey): Promise<DatabaseRoot> {
+  async createSpaceRoot(ctx: Context, spaceKey: PublicKey): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const spaceId = await createIdFromSpaceKey(spaceKey);
 
@@ -313,15 +313,15 @@ export class EchoHost extends Resource {
       links: {},
     });
 
-    await this._automergeHost.flush(this._ctx, { documentIds: [automergeRoot.documentId] });
+    await this._automergeHost.flush(ctx, { documentIds: [automergeRoot.documentId] });
 
-    return await this.openSpaceRoot(spaceId, automergeRoot.url);
+    return await this.openSpaceRoot(ctx, spaceId, automergeRoot.url);
   }
 
   // TODO(dmaretskyi): Change to document id.
-  async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
+  async openSpaceRoot(ctx: Context, spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), automergeUrl, {
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
       fetchFromNetwork: true,
     });
     await handle.whenReady();

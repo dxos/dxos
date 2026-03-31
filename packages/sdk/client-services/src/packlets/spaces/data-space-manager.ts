@@ -324,9 +324,9 @@ export class DataSpaceManager extends Resource {
       const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
       DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
 
-      root = await this._echoHost.openSpaceRoot(spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
+      root = await this._echoHost.openSpaceRoot(ctx, spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
     } else {
-      root = await this._echoHost.createSpaceRoot(spaceKey);
+      root = await this._echoHost.createSpaceRoot(ctx, spaceKey);
     }
     await this._echoHost.flush(ctx);
 

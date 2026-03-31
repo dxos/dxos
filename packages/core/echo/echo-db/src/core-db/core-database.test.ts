@@ -331,7 +331,7 @@ describe('CoreDatabase', () => {
         let coreDb: CoreDatabase;
         {
           // Create db.
-          const root = await peer.host.createSpaceRoot(spaceKey);
+          const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
           // NOTE: Client closes the database when it is closed.
           const spaceId = await createIdFromSpaceKey(spaceKey);
           const db = peer.client.constructDatabase({ spaceId, spaceKey });

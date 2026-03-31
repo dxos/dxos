@@ -355,7 +355,7 @@ export class ServiceContext extends Resource {
     await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential!, identity });
     await identity.joinNetwork(this._ctx);
     await this.identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
-    await this._initialize(new Context());
+    await this._initialize(this._ctx);
     return identity;
   }
 
