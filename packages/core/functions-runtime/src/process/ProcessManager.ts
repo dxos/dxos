@@ -696,8 +696,16 @@ export class ProcessManagerImpl implements Manager {
       // Create TracingService scoped to this process's trace context.
       const processTracingService: Context.Tag.Service<TracingService> = {
         getTraceContext: () => traceContext,
-        write: (event, traceCtx) => this.#tracingService.write(event, traceCtx),
+        write: (event, traceCtx) => {
+          log('trace event', { pid: id, event: JSON.stringify(event), traceCtx: JSON.stringify(traceCtx) });
+          this.#tracingService.write(event, traceCtx);
+        },
         ephemeral: (event, traceCtx) => {
+          log('ephemeral trace event', {
+            pid: id,
+            event: JSON.stringify(event).slice(0, 50),
+            traceCtx: JSON.stringify(traceCtx),
+          });
           handleRef?.pushEphemeral(event);
         },
         traceInvocationStart: (opts) => this.#tracingService.traceInvocationStart(opts),
