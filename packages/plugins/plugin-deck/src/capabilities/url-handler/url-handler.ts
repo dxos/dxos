@@ -64,8 +64,12 @@ export default Capability.makeModule(
           await invokePromise(LayoutOperation.SetLayoutMode, { subject: activeId, mode: 'solo' });
         }
       } else if (deck.solo) {
-        // URL points to workspace root with no specific object; exit solo mode.
-        await invokePromise(LayoutOperation.SetLayoutMode, { mode: 'deck' });
+        // Stay in solo mode; redirect URL to reflect the current solo item.
+        // Do not switch to deck mode here — only explicit user action should change layout mode.
+        const path = toUrlPath(deck.solo);
+        if (window.location.pathname !== path) {
+          history.replaceState(null, '', `${path}${window.location.search}`);
+        }
       }
     };
 

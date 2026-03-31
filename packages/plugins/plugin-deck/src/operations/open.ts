@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       {
         const deck = yield* DeckCapabilities.getDeck();
         previouslyOpenIds = new Set<string>(deck.solo ? [deck.solo] : deck.active);
-        const next = deck.solo
+        const next = (deck.solo || !deck.initialized)
           ? [...input.subject]
           : input.subject.reduce(
               (acc, entryId) =>
