@@ -10,6 +10,8 @@ import { type CustomPanelProps, Panel } from '../Panel';
 
 const SLOW_TIME = 16; // One frame at 60fps.
 
+const ALL = '__all__';
+
 /**
  * Aggregated stats for a single profiled surface.
  */
@@ -37,7 +39,7 @@ export const SurfaceProfilerPanel = ({
   }
 
   const ids = stats.map((stat) => stat.id);
-  const selected = selectedId !== '__all__' ? stats.find((stat) => stat.id === selectedId) : undefined;
+  const selected = selectedId !== ALL ? stats.find((stat) => stat.id === selectedId) : undefined;
   const displayed = selected ? [selected] : stats;
 
   return (
@@ -51,12 +53,12 @@ export const SurfaceProfilerPanel = ({
       <table className='table-fixed w-full text-xs font-mono'>
         <thead>
           <tr className='text-left text-subdued'>
-            <th className='p-1 truncate'>Surface</th>
-            <th className='p-1 w-[48px] text-right'>Mnt</th>
-            <th className='p-1 w-[48px] text-right'>Upd</th>
-            <th className='p-1 w-[64px] text-right'>Avg</th>
-            <th className='p-1 w-[64px] text-right'>Max</th>
-            <th className='p-1 w-[64px] text-right'>Last</th>
+            <th className='truncate'>Surface</th>
+            <th className='w-[40px] text-right'>Mnt</th>
+            <th className='w-[40px] text-right'>Upd</th>
+            <th className='w-[60px] text-right'>Avg/ms</th>
+            <th className='w-[60px] text-right'>Max/ms</th>
+            <th className='w-[60px] text-right'>Last/ms</th>
           </tr>
         </thead>
         <tbody>
@@ -80,13 +82,13 @@ export const SurfaceProfilerPanel = ({
           ))}
         </tbody>
       </table>
-      <div className='flex gap-1 items-center justify-between'>
+      <div role='toolbar' className='flex gap-1 py-1 items-center justify-between'>
         <Select.Root value={selectedId ?? ''} onValueChange={(value) => setSelectedId(value || undefined)}>
           <Select.TriggerButton classNames='flex-1 text-xs font-mono' placeholder={`All (${stats.length})`} />
           <Select.Portal>
             <Select.Content>
               <Select.Viewport>
-                <Select.Option value='__all__'>All ({stats.length})</Select.Option>
+                <Select.Option value={ALL}>All ({stats.length})</Select.Option>
                 {ids.map((id) => (
                   <Select.Option key={id} value={id}>
                     {id}
@@ -96,12 +98,12 @@ export const SurfaceProfilerPanel = ({
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-        {onClear && <IconButton variant='ghost' icon='ph--trash--regular' iconOnly label='clear' onClick={onClear} />}
+        {onClear && <IconButton variant='ghost' icon='ph--trash--regular' iconOnly label='Reset' onClick={onClear} />}
       </div>
     </Panel>
   );
 };
 
 const Duration = ({ value }: { value: number }) => (
-  <span className={value > SLOW_TIME ? 'text-error-text' : undefined}>{value.toFixed(1)}ms</span>
+  <span className={value > SLOW_TIME ? 'text-error-text' : undefined}>{value.toFixed(1)}</span>
 );
