@@ -13,22 +13,30 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { InvocationOutcome, InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
+import {
+  InvocationOutcome,
+  InvocationTraceEndEvent,
+  InvocationTraceStartEvent,
+  Process,
+} from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { dbg, LogLevel } from '@dxos/log';
-import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
+import { useComputeRuntimeService, useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { type Space } from '@dxos/react-client/echo';
-import { Input, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Icon, Input, Panel, Toolbar, Treegrid, useTranslation, Separator } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { Message, type ContentBlock } from '@dxos/types';
 
 import { extractFirstDxnFromToolInput, extractFirstDxnFromToolResult } from './dxn-extractor';
 import { meta } from '../../meta';
+import { SpaceId } from '@dxos/keys';
+import * as Match from 'effect/Match';
 
 export const TracePanel = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const { state, start, stop } = useTriggerRuntimeControls(space.db);
+  const activeProcesses = useActiveProcesses(space.id);
   const isRunning = state?.enabled ?? false;
 
   const { branches, commits } = useAtomValue(useMemo(() => getExecutionGraph(space), [space]));
@@ -59,6 +67,8 @@ export const TracePanel = ({ space }: { space: Space }) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
+        <ProcessTree processes={activeProcesses} />
+        <Separator />
         <Timeline branches={branches} commits={commits} compact onCommitClick={handleCommitClick} />
       </Panel.Content>
     </Panel.Root>
@@ -69,6 +79,40 @@ type InvocationInfo = {
   startEvent: InvocationTraceStartEvent;
   endEvent: InvocationTraceEndEvent | null;
   subevents: Obj.Unknown[];
+};
+
+const ProcessTree = ({ processes }: { processes: readonly Process.Info[] }) => {
+  return (
+    <Treegrid.Root gridTemplateColumns='min-content 1fr'>
+      {processes.map((process) => (
+        <Treegrid.Row
+          key={process.pid.toString()}
+          id={process.pid.toString()}
+          parentOf={process.parentPid?.toString()}
+          classNames='gap-1'
+        >
+          <Treegrid.Cell>
+            <Icon
+              icon={Match.value(process.state).pipe(
+                Match.when(Process.State.RUNNING, () => 'ph--spinner-gap--regular'),
+                Match.when(Process.State.SUCCEEDED, () => 'ph--check-circle--regular'),
+                Match.when(Process.State.FAILED, () => 'ph--warning--regular'),
+                Match.when(Process.State.HYBERNATING, () => 'ph--spinner--regular'),
+                Match.when(Process.State.IDLE, () => 'ph--houglass--regular'),
+                Match.when(Process.State.TERMINATING, () => 'ph--x-circle--regular'),
+                Match.when(Process.State.TERMINATED, () => 'ph--x-circle--regular'),
+                Match.orElse(() => 'ph--spinner-gap--regular'),
+              )}
+              classNames='w-4 h-4'
+            />
+          </Treegrid.Cell>
+          <Treegrid.Cell>
+            <div className='text-xs overflow-hidden text-ellipsis'> {process.params.name}</div>
+          </Treegrid.Cell>
+        </Treegrid.Row>
+      ))}
+    </Treegrid.Root>
+  );
 };
 
 const getExecutionGraph = (
@@ -344,4 +388,12 @@ const getExecutionGraph = (
         return { branches, commits };
       }),
   );
+};
+
+// Stable ref.
+const atomEmpty = Atom.make(() => [] as const);
+
+const useActiveProcesses = (id?: SpaceId) => {
+  const runtime = useComputeRuntimeService(Process.ProcessMonitorService, id);
+  return useAtomValue(runtime?.processTreeAtom ?? atomEmpty);
 };
