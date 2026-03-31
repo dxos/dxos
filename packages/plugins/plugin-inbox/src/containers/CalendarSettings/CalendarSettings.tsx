@@ -8,9 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { Button, ButtonGroup, IconButton, useTranslation } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
 
 import { useSyncTrigger } from '../../hooks';
 import { meta } from '../../meta';
@@ -20,26 +18,6 @@ export const CalendarSettings = ({ subject }: SurfaceComponentProps<Calendar.Cal
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
-
-  const handleChange = useCallback(
-    (values: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
-      if (!isValid) {
-        return;
-      }
-
-      const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
-      if (changedPaths.length > 0) {
-        Obj.change(subject, () => {
-          for (const path of changedPaths) {
-            const parts = splitJsonPath(path);
-            const value = Obj.getValue(values, parts);
-            Obj.setValue(subject, parts, value);
-          }
-        });
-      }
-    },
-    [subject],
-  );
 
   const { syncEnabled, syncTrigger, pending, handleToggleSync } = useSyncTrigger({
     db,
@@ -59,13 +37,6 @@ export const CalendarSettings = ({ subject }: SurfaceComponentProps<Calendar.Cal
 
   return (
     <div className='flex flex-col gap-4'>
-      <Form.Root schema={omitId(Calendar.Calendar)} values={subject} db={db} onValuesChanged={handleChange}>
-        <Form.Viewport>
-          <Form.Content>
-            <Form.FieldSet />
-          </Form.Content>
-        </Form.Viewport>
-      </Form.Root>
       <h2>{t('calendar sync label')}</h2>
       <div className='p-1 flex flex-row gap-1'>
         <ButtonGroup>

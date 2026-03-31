@@ -9,9 +9,7 @@ import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { useActiveSpace } from '@dxos/plugin-space';
 import { StatusBar } from '@dxos/plugin-status-bar';
 import { type Database } from '@dxos/react-client/echo';
-import { Icon, Input, Popover, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
-import { mx } from '@dxos/ui-theme';
+import { IconButton, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
@@ -52,6 +50,7 @@ export const TriggerStatus = () => {
 };
 
 const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
+  const { t } = useTranslation(meta.id);
   const { state, start, stop } = useTriggerRuntimeControls(db);
   const isRunning = state?.enabled ?? false;
 
@@ -76,21 +75,26 @@ const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
     return 'idle';
   }, [isRunning, state?.invocations]);
 
-  const { t } = useTranslation(meta.id);
-  const title = t(`trigger status ${triggerState} label`);
-  const icon = <Icon icon={getIcon(triggerState)} classNames={getIconClassNames(triggerState)} />;
-
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <StatusBar.Item title={title}>{icon}</StatusBar.Item>
+        <StatusBar.Item>
+          <IconButton
+            icon={getIcon(triggerState)}
+            iconOnly
+            label={t(`trigger status ${triggerState} label`)}
+            classNames={getIconClassNames(triggerState)}
+          />
+        </StatusBar.Item>
       </Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content>
+        <Popover.Content side='left'>
           <TriggerStatusPopover
             isRunning={isRunning}
             state={triggerState}
-            currentFunctionName={state?.invocations.at(-1)?.function?.name ?? state?.invocations.at(-1)?.function?.key}
+            currentFunctionName={
+              state?.invocations.at(-1)?.function?.meta.name ?? state?.invocations.at(-1)?.function?.meta.key
+            }
             lastInvocation={state?.invocations.at(-1)}
             onToggle={isRunning ? stop : start}
           />
@@ -101,36 +105,36 @@ const SpaceStatusMain = ({ db }: { db: Database.Database }) => {
   );
 };
 
-interface TriggerStatusPopoverProps {
+type TriggerStatusPopoverProps = {
   isRunning: boolean;
   state: TriggerStatusState;
   currentFunctionName?: string;
   lastInvocation?: InvocationsState;
   onToggle: () => void;
-}
+};
 
 const TriggerStatusPopover = ({
   isRunning,
   state,
   currentFunctionName,
-  lastInvocation,
+  lastInvocation, // TODO(burdon): Show.
   onToggle,
 }: TriggerStatusPopoverProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <div className='min-w-[240px] p-2 space-y-3'>
-      {/* Runtime Toggle */}
-      <Settings.ItemInput title={t('trigger runtime label')} description={t('trigger runtime description')}>
-        <Input.Switch classNames='justify-self-end' checked={isRunning} onCheckedChange={onToggle} />
-      </Settings.ItemInput>
+    <div className='flex flex-col gap-2 p-2 w-[240px]'>
+      <Input.Root>
+        <div className='flex items-center gap-2'>
+          <Input.Switch checked={isRunning} onCheckedChange={onToggle} />
+          <Input.Label>{t('trigger runtime label')}</Input.Label>
+        </div>
+      </Input.Root>
 
-      {/* Status Indicator */}
-      <div className='flex items-center gap-2 pt-2 border-t border-separator'>
-        <Icon icon={getIcon(state)} classNames={mx(getIconClassNames(state), 'shrink-0')} />
-        <span className='text-sm'>{t(`trigger status ${state} label`)}</span>
+      <div className='flex flex-col gap-1'>
+        <div className='text-sm'>{t(`trigger status ${state} label`)}</div>
         {currentFunctionName && state === 'running' && (
-          <span className='text-xs text-description'>{currentFunctionName}</span>
+          <div className='text-xs text-description'>{currentFunctionName}</div>
         )}
       </div>
     </div>

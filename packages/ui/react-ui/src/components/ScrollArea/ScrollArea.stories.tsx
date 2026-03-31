@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { PropsWithChildren, useMemo } from 'react';
 
 import { faker } from '@dxos/random';
 import { mx } from '@dxos/ui-theme';
@@ -10,6 +10,9 @@ import { mx } from '@dxos/ui-theme';
 import { withLayout, withTheme } from '../../testing';
 
 import { ScrollArea } from './ScrollArea';
+import { Column } from '../../primitives';
+import { Input } from '../Input';
+import { ThemedClassName } from '@dxos/ui-types';
 
 faker.seed(123);
 
@@ -22,22 +25,22 @@ export default {
   },
 };
 
-const Column = () => (
+const List = ({ items = 50 }: { items?: number }) => (
   <div>
-    {Array.from({ length: 50 }).map((_, index) => (
-      <div key={index} className='px-1 text-sm cursor-pointer hover:bg-hover-surface'>
+    {Array.from({ length: items }).map((_, index) => (
+      <div key={index} className='px-1 cursor-pointer hover:bg-hover-surface'>
         Item {index + 1}
       </div>
     ))}
   </div>
 );
 
-const Row = () => (
+const Row = ({ items = 50 }: { items?: number }) => (
   <div className='flex gap-2 w-max'>
-    {Array.from({ length: 50 }).map((_, index) => (
+    {Array.from({ length: items }).map((_, index) => (
       <div
         key={index}
-        className='shrink-0 h-20 w-20 cursor-pointer border border-separator rounded-md flex items-center justify-center text-sm hover:bg-hover-surface'
+        className='shrink-0 h-20 w-20 cursor-pointer border border-separator rounded-md flex items-center justify-center hover:bg-hover-surface'
       >
         {index + 1}
       </div>
@@ -45,58 +48,95 @@ const Row = () => (
   </div>
 );
 
+const Container = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
+  return (
+    <div role='none' className={mx('border border-separator rounded-md overflow-hidden', classNames)}>
+      {children}
+    </div>
+  );
+};
+
 export const Vertical = {
   render: () => (
-    <div className='h-72 w-48 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='vertical' padding>
+    <Container classNames='h-72 w-48'>
+      <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport>
-          <Column />
+          <List />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </div>
+    </Container>
   ),
 };
 
 export const VerticalThin = {
   render: () => (
-    <div className='h-72 w-48 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='vertical' padding thin>
+    <Container classNames='h-72 w-48'>
+      <ScrollArea.Root orientation='vertical' thin>
         <ScrollArea.Viewport>
-          <Column />
+          <List />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </div>
+    </Container>
+  ),
+};
+
+export const VerticalPadded = {
+  render: () => (
+    <Container classNames='h-72 w-48'>
+      <ScrollArea.Root orientation='vertical' centered padding thin>
+        <ScrollArea.Viewport>
+          <List />
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    </Container>
+  ),
+};
+
+export const VerticalColumn = {
+  render: () => (
+    <Container classNames='h-72 w-48'>
+      <Column.Root gutter='sm' classNames='h-full overflow-hidden'>
+        <ScrollArea.Root orientation='vertical' padding thin>
+          <ScrollArea.Viewport classNames='py-2'>
+            <Input.Root>
+              <Input.TextInput classNames='p-1' />
+            </Input.Root>
+            <List />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Column.Root>
+    </Container>
   ),
 };
 
 export const Horizontal = {
   render: () => (
-    <div className='w-96 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='horizontal' padding>
+    <Container classNames='w-96'>
+      <ScrollArea.Root orientation='horizontal'>
         <ScrollArea.Viewport>
           <Row />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </div>
+    </Container>
   ),
 };
 
 export const HorizontalThin = {
   render: () => (
-    <div className='w-96 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='horizontal' padding thin>
+    <Container classNames='w-96'>
+      <ScrollArea.Root orientation='horizontal' thin>
         <ScrollArea.Viewport>
           <Row />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </div>
+    </Container>
   ),
 };
 
 export const Both = {
   render: () => (
-    <div className='h-96 w-96 p-2 border border-separator rounded-md'>
-      <ScrollArea.Root orientation='all' padding>
+    <Container classNames='w-96 h-96'>
+      <ScrollArea.Root orientation='all'>
         <ScrollArea.Viewport>
           <div className='flex flex-col gap-2'>
             {Array.from({ length: 50 }).map((_, rowIndex) => (
@@ -114,7 +154,31 @@ export const Both = {
           </div>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </div>
+    </Container>
+  ),
+};
+
+export const Fullscreen = {
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  render: () => (
+    <ScrollArea.Root orientation='all' thin>
+      <ScrollArea.Viewport>
+        <div className='flex flex-col gap-2'>
+          {Array.from({ length: 50 }).map((_, rowIndex) => (
+            <div key={rowIndex} className='flex gap-2'>
+              {Array.from({ length: 50 }).map((_, colIndex) => (
+                <div
+                  key={colIndex}
+                  className='shrink-0 h-20 w-20 flex items-center justify-center text-sm border border-separator font-mono'
+                >
+                  [{colIndex}:{rowIndex}]
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   ),
 };
 
@@ -131,7 +195,7 @@ export const NestedScrollAreas = {
     );
 
     return (
-      <ScrollArea.Root thin orientation='horizontal'>
+      <ScrollArea.Root orientation='horizontal' thin padding>
         <ScrollArea.Viewport classNames='gap-4'>
           {columns.map((column) => (
             <section
@@ -170,7 +234,7 @@ export const NativeScroll = {
           'group-hover:[&::-webkit-scrollbar-thumb]:bg-scrollbar-thumb',
         )}
       >
-        <Column />
+        <List />
       </div>
     </div>
   ),

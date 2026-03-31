@@ -5,10 +5,10 @@
 import React, { useMemo } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { AgentFunctions } from '@dxos/assistant-toolkit';
+import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { type FunctionDefinition } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { invokeFunctionWithTracing, useComputeRuntimeCallback } from '@dxos/plugin-automation';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -24,7 +24,7 @@ export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProp
   const { hasAttention } = useAttention(attendableId);
   const db = Obj.getDatabase(subject);
 
-  const inputData = useMemo<FunctionDefinition.Input<typeof AgentFunctions.Prompt> | undefined>(
+  const inputData = useMemo<Operation.Definition.Input<typeof AgentPrompt> | undefined>(
     () =>
       subject && db
         ? {
@@ -39,13 +39,13 @@ export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProp
     db?.spaceId,
     () => {
       invariant(inputData);
-      return invokeFunctionWithTracing(AgentFunctions.Prompt, inputData);
+      return invokeFunctionWithTracing(AgentPrompt, inputData);
     },
     [inputData],
   );
 
   return (
-    <Panel.Root role={role} className='dx-article'>
+    <Panel.Root role={role} className='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} onClick={handleRun}>
           <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run prompt label')} onClick={handleRun} />

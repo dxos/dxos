@@ -128,7 +128,7 @@ const createTrip = (
   );
 };
 
-type StoryProps = Pick<GlobeRootProps, 'zoom' | 'translation' | 'rotation'> &
+type DefaultStoryProps = Pick<GlobeRootProps, 'zoom' | 'translation' | 'rotation'> &
   Pick<GlobeCanvasProps, 'projection' | 'styles'> & {
     drag?: boolean;
     spin?: boolean;
@@ -137,7 +137,7 @@ type StoryProps = Pick<GlobeRootProps, 'zoom' | 'translation' | 'rotation'> &
   };
 
 const DefaultStory = ({
-  zoom: _zoom = 1,
+  zoom: zoomProp = 1,
   translation,
   rotation = [0, 0, 0],
   projection,
@@ -146,7 +146,7 @@ const DefaultStory = ({
   spin = false,
   tour = false,
   xAxis = false,
-}: StoryProps) => {
+}: DefaultStoryProps) => {
   const controller = useRef<GlobeController>(null);
   const [dots] = useAsyncState(async () => {
     const points = (await import('../../../data/countries-dots-3.ts')).default;
@@ -203,13 +203,13 @@ const DefaultStory = ({
   };
 
   return (
-    <Globe.Root classNames='absolute inset-0' zoom={_zoom} translation={translation} rotation={rotation}>
+    <Globe.Root zoom={zoomProp} translation={translation} rotation={rotation}>
       <Globe.Canvas
-        ref={controller}
         topology={styles?.dots ? dots : topology}
         projection={projection}
         styles={styles}
         features={tour ? { points: features?.points ?? [] } : features}
+        ref={controller}
       />
       <Globe.Zoom onAction={handleAction} />
       <Globe.Action onAction={handleAction} />

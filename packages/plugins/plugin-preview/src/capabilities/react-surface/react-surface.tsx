@@ -12,7 +12,7 @@ import { Card } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import { FormCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../../cards';
+import { FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../../cards';
 import { meta } from '../../meta';
 
 export default Capability.makeModule(() =>
@@ -29,7 +29,12 @@ export default Capability.makeModule(() =>
         position: 'hoist',
         filter: (data): data is { subject: Person.Person } => Obj.instanceOf(Person.Person, data.subject),
         component: ({ data, role }) => {
-          return <PersonCard role={role} subject={data.subject} />;
+          return (
+            <>
+              <PersonCard role={role} subject={data.subject} />
+              <Surface.Surface role='related' data={data} limit={1} />
+            </>
+          );
         },
       }),
       Surface.create({
@@ -39,7 +44,12 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Organization.Organization } =>
           Obj.instanceOf(Organization.Organization, data.subject),
         component: ({ data, role }) => {
-          return <OrganizationCard role={role} subject={data.subject} />;
+          return (
+            <>
+              <OrganizationCard role={role} subject={data.subject} />
+              <Surface.Surface role='related' data={data} limit={1} />
+            </>
+          );
         },
       }),
       Surface.create({
@@ -72,6 +82,16 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: Obj.Unknown; projection?: ProjectionModel } => Obj.isObject(data.subject),
         component: ({ data, role }) => {
           return <FormCard role={role} subject={data.subject} projection={data.projection} />;
+        },
+      }),
+
+      Surface.create({
+        id: `${meta.id}.fallback-json`,
+        role: 'card--content',
+        position: 'fallback',
+        filter: (data): data is Record<string, unknown> => true,
+        component: ({ data }) => {
+          return <JsonCard data={data} />;
         },
       }),
 

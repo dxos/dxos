@@ -72,7 +72,7 @@ const Person = Schema.Struct({
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}
 
-type StoryProps<T extends AnyProperties> = {
+type DefaultStoryProps<T extends AnyProperties> = {
   debug?: boolean;
   schema: Schema.Schema<T>;
 } & FormRootProps<T>;
@@ -82,7 +82,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   schema,
   values: valuesProp,
   ...props
-}: StoryProps<T>) => {
+}: DefaultStoryProps<T>) => {
   const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   const client = useClient();
   const space = client.spaces.default;
@@ -103,7 +103,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
         <Form.Root
           debug={debug}
           schema={schema}
-          values={values}
+          defaultValues={values}
           db={space.db}
           onSave={handleSave}
           onCancel={handleCancel}
@@ -136,13 +136,8 @@ const meta = {
       onCreateIdentity: ({ client }) => {
         const space = client.spaces.default;
         [
-          Obj.make(Organization, { name: 'DXOS' }),
-          Obj.make(Organization, { name: 'BlueYard' }),
-          Obj.make(Organization, { name: 'Backed' }),
-          Obj.make(Organization, { name: 'BCV' }),
-          Tag.make({ label: 'Tag 1' }),
-          Tag.make({ label: 'Tag 2' }),
-          Tag.make({ label: 'Tag 3' }),
+          ...Array.from({ length: 3 }).map((_, i) => Obj.make(Tag.Tag, { label: `Tag ${i}` })),
+          ...Array.from({ length: 50 }).map((_, i) => Obj.make(Organization, { name: `Organization ${i}` })),
         ].map((obj) => space.db.add(obj));
       },
     }),
@@ -151,11 +146,11 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<StoryProps<any>>;
+} satisfies Meta<DefaultStoryProps<any>>;
 
 export default meta;
 
-type Story<T extends AnyProperties> = StoryObj<StoryProps<T>>;
+type Story<T extends AnyProperties> = StoryObj<DefaultStoryProps<T>>;
 
 const values: Partial<Person> = {
   name: 'Alice',

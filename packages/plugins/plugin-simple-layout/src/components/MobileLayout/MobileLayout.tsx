@@ -3,14 +3,14 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, forwardRef, useEffect, useState } from 'react';
+import React, { type PropsWithChildren, forwardRef, useEffect, useLayoutEffect, useState } from 'react';
 
 import { addEventListener, combine } from '@dxos/async';
 import { log } from '@dxos/log';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-// TODO(burdon): Move into @dxos/react-ui?
+import { useDebugLog } from '../DebugOverlay';
 
 const MOBILE_LAYOUT_NAME = 'MobileLayout';
 const MOBILE_LAYOUT_ROOT_NAME = 'MobileLayout.Root';
@@ -42,11 +42,15 @@ type MobileLayoutRootProps = ThemedClassName<
  */
 // TODO(burdon): Should this be ios-only?
 const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
-  ({ classNames, children, transition = 250, onKeyboardOpenChange, ...props }, forwardedRef) => {
+  ({ classNames, children, transition = 500, onKeyboardOpenChange, ...props }, forwardedRef) => {
     const { open: keyboardOpen } = useIOSKeyboard();
-    useAutoScroll();
-    useEffect(() => onKeyboardOpenChange?.(keyboardOpen), [onKeyboardOpenChange, keyboardOpen]);
     useLockBodyScroll(keyboardOpen);
+    useAutoScroll();
+
+    // Fire synchronously after DOM mutation (before paint) so SimpleLayout's Splitter mode
+    // change is batched into the same paint as the keyboard open state change, preventing
+    // intermediate render frames from showing an un-adjusted layout.
+    useLayoutEffect(() => onKeyboardOpenChange?.(keyboardOpen), [keyboardOpen, onKeyboardOpenChange]);
 
     return (
       <MobileLayoutProvider keyboardOpen={keyboardOpen}>
@@ -54,10 +58,11 @@ const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
           {...props}
           role='none'
           style={{
-            transition: `h-size ${transition}ms ease-out`,
-            blockSize: 'calc(100vh - var(--kb-height, 0px))',
+            height: 'calc(100vh - var(--kb-height, 0px))',
+            transition: `height ${keyboardOpen ? 0 : transition}ms ease-out`,
+            // transition: `height ${animationDuration}ms ease-out`,
           }}
-          className={mx('absolute top-0 left-0 right-0 flex flex-col', classNames)}
+          className={mx('fixed top-0 left-0 right-0 grid overflow-hidden', classNames)}
           ref={forwardedRef}
         >
           {children}
@@ -95,7 +100,7 @@ const MobileLayoutPanel = forwardRef<HTMLDivElement, MobileLayoutPanelProps>(
           paddingTop: safe?.top ? 'env(safe-area-inset-top)' : undefined,
           paddingBottom: safe?.bottom ? `calc((1 - var(--kb-open, 0)) * env(safe-area-inset-bottom))` : undefined,
         }}
-        className={mx('relative h-full flex flex-col overflow-hidden', classNames)}
+        className={mx(classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -120,42 +125,62 @@ export { useMobileLayout };
 export type { MobileLayoutRootProps, MobileLayoutPanelProps };
 
 /**
- * Prevent auto-scroll when input is focused.
+ * Prevents iOS (WKWebView) from shifting the layout when the keyboard appears.
+ *
+ * Scroll events and window.scrollY stay at 0 in this WKWebView setup — the shift is
+ * caused by the browser's scroll-into-view for the focused input. We keep a window
+ * scroll reset as belt-and-suspenders, and also monitor container scroll events.
  */
 const useAutoScroll = () => {
+  // TODO(burdon): Remove debug logging.
+  const { dbg } = useDebugLog('useAutoScroll');
+
   useEffect(() => {
-    // Prevent auto-scroll when input is focused.
-    return addEventListener(
-      document,
-      'focus',
-      (event: FocusEvent) => {
-        const target = event.target as HTMLElement;
-        if (
-          target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          (target.tagName === 'DIV' && target.isContentEditable)
-        ) {
-          // Prevent default focus behavior.
-          event.preventDefault();
+    const resetScroll = () => {
+      if (window.scrollX !== 0 || window.scrollY !== 0) {
+        window.scrollTo(0, 0);
+      }
+    };
 
-          // Manually focus without scroll.
-          target.focus({ preventScroll: true });
+    const detectContainerScroll = (event: Event) => {
+      const el = event.target as HTMLElement;
+      if (el === document.documentElement || el === document.body) {
+        return;
+      }
 
-          // Lock current scroll position.
-          const scrollX = window.scrollX;
-          const scrollY = window.scrollY;
-          requestAnimationFrame(() => {
-            window.scrollTo(scrollX, scrollY);
-          });
+      dbg(`scroll: ${el.tagName}.${Array.from(el.classList).slice(0, 2).join('.')} top=${el.scrollTop.toFixed(0)}`);
+    };
 
-          // TODO(burdon): Scroll to position in parent; this may need to be via an intent,
-          //  since it may be plugin-specific (e.g., codemirror document.)
-        }
-      },
-      // Important: focus events don't bubble, so capture phase is required.
-      { capture: true },
+    return combine(
+      addEventListener(window, 'scroll', resetScroll),
+      window.visualViewport ? addEventListener(window.visualViewport, 'scroll' as any, resetScroll) : () => {},
+
+      // TODO(burdon): Remove debug logging.
+      addEventListener(document, 'scroll', detectContainerScroll as EventListener, { capture: true } as any),
+
+      // Prevent focus-triggered scroll-into-view on inputs.
+      (() => {
+        let focusingWithPreventScroll = false;
+        return addEventListener(
+          document,
+          'focus',
+          (event: FocusEvent) => {
+            if (focusingWithPreventScroll) {
+              return;
+            }
+
+            const target = event.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+              focusingWithPreventScroll = true;
+              target.focus({ preventScroll: true });
+              focusingWithPreventScroll = false;
+            }
+          },
+          { capture: true },
+        );
+      })(),
     );
-  }, []);
+  }, [dbg]);
 };
 
 /**
@@ -231,6 +256,8 @@ const useLockBodyScroll = (enabled: boolean) => {
 type IOSKeyboard = {
   open: boolean;
   height: number;
+  /** Native keyboard animation duration in ms, from the iOS keyboard event. */
+  duration: number | undefined;
 };
 
 /**
@@ -263,10 +290,13 @@ type IOSKeyboard = {
  * Falls back to VisualViewport API on other platforms.
  */
 const useIOSKeyboard = (): IOSKeyboard => {
+  const { dbg } = useDebugLog('useIOSKeyboard');
+
   const [open, setOpen] = useState(false);
   const [height, setHeight] = useState(0);
+  const [duration, setDuration] = useState<number | undefined>(undefined);
 
-  // Detect keybaord state.
+  // Detect keyboard state.
   useEffect(() => {
     const viewport = window.visualViewport;
     if (!viewport) {
@@ -276,16 +306,19 @@ const useIOSKeyboard = (): IOSKeyboard => {
     // Handler for VisualViewport resize (fallback for non-iOS).
     const initialHeight = viewport.height ?? window.innerHeight;
 
-    const updateState = (keyboardHeight: number, keyboardOpen: boolean) => {
+    const updateState = (keyboardHeight: number, keyboardOpen: boolean, animationDuration?: number) => {
       setOpen(keyboardOpen);
       setHeight(keyboardHeight);
+      setDuration(animationDuration);
 
       const vvh = initialHeight - keyboardHeight;
       document.documentElement.style.setProperty('--vvh', `${vvh}px`);
       document.documentElement.style.setProperty('--kb-height', `${keyboardHeight}px`);
       document.documentElement.style.setProperty('--kb-open', keyboardOpen ? '1' : '0');
-      log.info('viewport size', { initialHeight, vvh, keyboardHeight, keyboardOpen });
+      log.info('viewport size', { initialHeight, vvh, keyboardHeight, keyboardOpen, animationDuration });
     };
+
+    let rafId: number | undefined;
 
     return combine(
       // Handler for native iOS keyboard events (from KeyboardObserver.swift).
@@ -293,13 +326,49 @@ const useIOSKeyboard = (): IOSKeyboard => {
         window,
         'keyboard' as any,
         (event: CustomEvent<{ type: 'show' | 'hide'; height: number; duration: number }>) => {
-          const { type, height } = event.detail;
-          log.info('keyboard event', { type, height });
-          updateState(height, type === 'show');
+          const { type, height, duration } = event.detail;
+          // iOS KeyboardObserver.swift sends duration in seconds (e.g., 0.25). Convert to ms.
+          const durationMs = duration < 1 ? duration * 1000 : duration;
+
+          // TODO(burdon): Remove debug logging.
+          const vp = window.visualViewport;
+          dbg(
+            `kb:${type} h=${height} dur=${duration} scrollY=${window.scrollY} vpOffset=${vp?.offsetTop?.toFixed(0) ?? '?'}`,
+          );
+          log.info('keyboard event', { type, height, duration });
+
+          updateState(height, type === 'show', durationMs);
+
+          // RAF loop: monitor visualViewport.offsetTop and window.scrollY every frame.
+          // TODO(burdon): Remove debug logging.
+          const end = performance.now() + durationMs + 300;
+          let prevOffsetTop = vp?.offsetTop ?? 0;
+          let prevScrollY = window.scrollY;
+          const monitorFrame = () => {
+            const offsetTop = vp?.offsetTop ?? 0;
+            const scrollY = window.scrollY;
+            if (offsetTop !== prevOffsetTop || scrollY !== prevScrollY) {
+              dbg(`Δ vpOffset=${offsetTop.toFixed(0)} scrollY=${scrollY.toFixed(0)}`);
+              prevOffsetTop = offsetTop;
+              prevScrollY = scrollY;
+            }
+            if (scrollY !== 0) {
+              window.scrollTo(0, 0);
+            }
+            if (performance.now() < end) {
+              rafId = requestAnimationFrame(monitorFrame);
+            }
+          };
+          rafId = requestAnimationFrame(monitorFrame);
         },
       ),
+      () => {
+        if (rafId !== undefined) {
+          cancelAnimationFrame(rafId);
+        }
+      },
     );
-  }, []);
+  }, [dbg]);
 
-  return { open, height };
+  return { open, height, duration };
 };

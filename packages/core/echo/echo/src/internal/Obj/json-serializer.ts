@@ -10,6 +10,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
+import type * as Database from '../../Database';
 import type * as Obj from '../../Obj';
 import { getTypeDXN, setTypename } from '../Annotation';
 import {
@@ -17,6 +18,7 @@ import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_SELF_DXN,
+  ObjectDatabaseId,
   type ObjectJSON,
   RelationSourceDXNId,
   RelationSourceId,
@@ -70,10 +72,15 @@ export const objectToJSON = <T extends AnyEntity>(obj: T): SerializedObject<T> =
  * Performs schema validation.
  * References and schema will be resolvable if the `refResolver` is provided.
  * The function need to be async to support resolving the schema as well as the relation endpoints.
+ *
+ * @param jsonData - JSON representation of the object.
+ * @param options.refResolver - Resolver for references.
+ * @param options.dxn - Override object DXN.
+ * @param options.database - Database to associate with the object.
  */
 export const objectFromJSON = async (
   jsonData: unknown,
-  { refResolver, dxn }: { refResolver?: RefResolver; dxn?: DXN } = {},
+  { refResolver, dxn, database }: { refResolver?: RefResolver; dxn?: DXN; database?: Database.Database } = {},
 ): Promise<AnyEntity> => {
   assumeType<ObjectJSON>(jsonData);
   assertArgument(typeof jsonData === 'object' && jsonData !== null, 'jsonData', 'expect object');
@@ -137,6 +144,10 @@ export const objectFromJSON = async (
 
   if (dxn) {
     defineHiddenProperty(obj, SelfDXNId, dxn);
+  }
+
+  if (database) {
+    defineHiddenProperty(obj, ObjectDatabaseId, database);
   }
 
   assertObjectModel(obj);

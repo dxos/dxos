@@ -7,7 +7,8 @@ import { useCallback, useMemo, useState } from 'react';
 import { type Client } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { DXN, type Database, Filter, Obj, Ref } from '@dxos/echo';
-import { Function, Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
+import { Trigger } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
 import { Query, useObject, useQuery } from '@dxos/react-client/echo';
@@ -22,17 +23,17 @@ const ensureFunction = async (
   client: Client,
   db: Database.Database,
   functionKey: string,
-): Promise<Function.Function | undefined> => {
+): Promise<Operation.PersistentOperation | undefined> => {
   const deployed = await getDeployedFunctions(Context.default(), client, true);
   const match = deployed.find((fn) => fn.key === functionKey);
   if (!match) {
     return undefined;
   }
 
-  const existing = await db.query(Query.type(Function.Function, { key: functionKey })).run();
+  const existing = await db.query(Query.type(Operation.PersistentOperation, { key: functionKey })).run();
   const [existingFunc] = existing;
   if (existingFunc) {
-    Function.setFrom(existingFunc, match);
+    Operation.setFrom(existingFunc, match);
     return existingFunc;
   }
 

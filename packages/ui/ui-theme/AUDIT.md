@@ -69,7 +69,6 @@ None
 - `dx-main-content-padding`
 - `dx-main-content-padding-transitions`
 - `dx-main-intrinsic-size`
-- `dx-main-mobile-layout`
 - `dx-main-overlay`
 - `dx-main-sidebar`
 - `dx-modal-surface`
@@ -85,7 +84,7 @@ None
 - `dx-card-popover`
 - `dx-card-square`
 - `dx-contain-layout`
-- `dx-article`
+- `dx-document`
 - `dx-density-coarse`
 - `dx-size-container`
 - `dx-sticky-bottom-from-statusbar-bottom`

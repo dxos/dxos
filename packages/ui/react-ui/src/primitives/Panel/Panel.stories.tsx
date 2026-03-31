@@ -12,7 +12,7 @@ import { Panel } from './Panel';
 
 const List = () => {
   return (
-    <ScrollArea.Root margin role='list'>
+    <ScrollArea.Root role='list' centered>
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
           <div key={i} role='listitem' className='p-1 hover:bg-hover-surface'>
@@ -26,7 +26,7 @@ const List = () => {
 
 const DefaultStory = () => {
   return (
-    <Panel.Root className='dx-article'>
+    <Panel.Root className='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root classNames='gap-2'>
           <Toolbar.IconButton icon='ph--plus--regular' variant='primary' label='Add' />
@@ -43,8 +43,8 @@ const DefaultStory = () => {
 
       <Panel.Statusbar asChild>
         <Toolbar.Root classNames='justify-between'>
-          <Toolbar.IconButton variant='ghost' icon='ph--house--regular' iconOnly label='Add' size={4} />
-          <Toolbar.IconButton variant='ghost' icon='ph--alarm--regular' iconOnly label='Status' size={4} />
+          <Toolbar.IconButton variant='ghost' icon='ph--house--regular' iconOnly label='Add' />
+          <Toolbar.IconButton variant='ghost' icon='ph--alarm--regular' iconOnly label='Status' />
         </Toolbar.Root>
       </Panel.Statusbar>
     </Panel.Root>

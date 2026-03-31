@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, COMPANION_PREFIX } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment } from '@dxos/app-toolkit';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '../../meta';
@@ -21,7 +21,7 @@ export default Capability.makeModule(
         connector: (node) =>
           Effect.succeed([
             {
-              id: `${COMPANION_PREFIX}help`,
+              id: companionSegment('help'),
               type: DECK_COMPANION_TYPE,
               data: null,
               properties: {

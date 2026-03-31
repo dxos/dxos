@@ -44,7 +44,7 @@ export const PopoverCardContainer = ({
   return (
     <Popover.Root open>
       <Popover.Trigger asChild>
-        <Icon icon={icon} size={5} />
+        <Icon icon={icon} />
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
@@ -85,7 +85,7 @@ export const IntrinsicCardContainer = ({
       style={sizeStyle(size, 'horizontal')}
       {...resizeAttributes}
     >
-      <div role='none' className='flex flex-col w-full h-full overflow-hidden'>
+      <div role='none' className='dx-container flex flex-col'>
         {children}
       </div>
       <ResizeHandle

@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, { type KeyboardEvent, MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { ScrollArea } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
-import { getHashStyles } from '@dxos/ui-theme';
+import { composable, composableProps, getHashStyles } from '@dxos/ui-theme';
 
-import { GoogleMail } from '../../functions/apis';
+import { GoogleMail } from '../../apis';
 import { type Mailbox as MailboxType } from '../../types';
 import { getMessageProps } from '../../util';
 
@@ -23,15 +23,6 @@ export type MailboxAction =
 
 export type MailboxActionHandler = (action: MailboxAction) => void;
 
-export type MailboxProps = {
-  id: string;
-  messages: Message.Message[];
-  labels?: MailboxType.Labels;
-  currentMessageId?: string;
-  ignoreAttention?: boolean;
-  onAction?: MailboxActionHandler;
-};
-
 type MessageTileData = {
   message: Message.Message;
   labels?: MailboxType.Labels;
@@ -42,32 +33,17 @@ type MessageTileData = {
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'location' | 'data'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location }, forwardedRef) => {
-  const rootRef = useRef<HTMLDivElement | null>(null);
   const { message, labels, currentMessageId, onAction } = data;
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), true);
-  // TODO(wittjosiah): Show selection state in the UI.
-  const _isCurrent = currentMessageId === message.id;
 
-  // Combine forwardedRef with local ref.
-  const setRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      rootRef.current = node;
-      if (typeof forwardedRef === 'function') {
-        forwardedRef(node);
-      } else if (forwardedRef) {
-        forwardedRef.current = node;
-      }
-    },
-    [forwardedRef],
-  );
+  const isCurrent = currentMessageId ? currentMessageId === message.id : undefined;
 
-  const handleClick = useCallback(() => {
-    rootRef.current?.focus();
+  const handleCurrentChange = useCallback(() => {
     onAction?.({ type: 'current', messageId: message.id });
   }, [message.id, onAction]);
 
   const handleAvatarClick = useCallback(
-    (event: React.MouseEvent) => {
+    (event: MouseEvent) => {
       event.stopPropagation();
       onAction?.({ type: 'select', messageId: message.id });
     },
@@ -75,7 +51,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   );
 
   const handleTagClick = useCallback(
-    (event: React.MouseEvent, label: string) => {
+    (event: MouseEvent, label: string) => {
       event.stopPropagation();
       onAction?.({ type: 'select-tag', label });
     },
@@ -97,14 +73,20 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       .filter((item) => item.label);
   }, [labels, message.properties?.labels]);
 
-  // TODO(burdon): Reconcile with MessageCard.
   return (
-    <Mosaic.Tile asChild id={message.id} data={data} location={location}>
-      <Focus.Group asChild>
-        <Card.Root onClick={handleClick} ref={setRef}>
+    <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={message.id} data={data} location={location}>
+      <Focus.Item asChild current={isCurrent} onCurrentChange={handleCurrentChange}>
+        <Card.Root ref={forwardedRef}>
           <Card.Toolbar>
-            <Card.IconBlock onClick={handleAvatarClick}>
-              <DxAvatar hue={hue} hueVariant='surface' variant='square' size={7} fallback={from} />
+            <Card.IconBlock>
+              <DxAvatar
+                hue={hue}
+                hueVariant='surface'
+                variant='square'
+                size={6}
+                fallback={from}
+                onClick={handleAvatarClick}
+              />
             </Card.IconBlock>
             <Card.Title classNames='flex items-center gap-3'>
               <span className='grow truncate font-medium'>{subject}</span>
@@ -113,7 +95,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
             <Card.Menu />
           </Card.Toolbar>
           <Card.Content>
-            <Card.Row>
+            <Card.Row icon='ph--user--regular'>
               <Card.Text>{from}</Card.Text>
             </Card.Row>
             {snippet && (
@@ -131,7 +113,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
                       className='dx-tag dx-focus-ring'
                       data-hue={labelHue}
                       data-label={label}
-                      onClick={(e) => handleTagClick(e, label)}
+                      onClick={(event) => handleTagClick(event, label)}
                     >
                       {label}
                     </button>
@@ -141,43 +123,65 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
             )}
           </Card.Content>
         </Card.Root>
-      </Focus.Group>
+      </Focus.Item>
     </Mosaic.Tile>
   );
 });
 
 MessageTile.displayName = 'MessageTile';
 
+export type MailboxProps = {
+  id: string;
+  messages: Message.Message[];
+  labels?: MailboxType.Labels;
+  currentMessageId?: string;
+  ignoreAttention?: boolean;
+  onAction?: MailboxActionHandler;
+};
+
 /**
  * Card-based mailbox component using mosaic layout.
  */
-export const Mailbox = ({ messages, labels, currentMessageId, onAction }: MailboxProps) => {
-  const [viewport, setViewport] = useState<HTMLElement | null>(null);
+export const Mailbox = composable<HTMLDivElement, MailboxProps>(
+  ({ messages, labels, currentMessageId, onAction, ...props }, forwardedRef) => {
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
+    const items = useMemo(
+      () =>
+        messages.map((message) => ({
+          message,
+          labels,
+          currentMessageId,
+          onAction,
+        })),
+      [messages, labels, currentMessageId, onAction],
+    );
 
-  // Transform messages into tile data.
-  const items = useMemo(
-    () =>
-      messages.map((message) => ({
-        message,
-        labels,
-        currentMessageId,
-        onAction,
-      })),
-    [messages, labels, currentMessageId, onAction],
-  );
+    const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Enter') {
+        console.log('click');
+        event.preventDefault();
+        (document.activeElement as HTMLElement | null)?.click();
+      }
+    }, []);
 
-  // TODO(wittjosiah): This needs Selction.Group in addition to Focus.Group.
-  return (
-    <Focus.Group asChild>
-      <Mosaic.Container asChild withFocus autoScroll={viewport}>
-        <ScrollArea.Root orientation='vertical' margin>
-          <ScrollArea.Viewport ref={setViewport}>
-            <Mosaic.Stack items={items} getId={(item) => item.message.id} draggable={false} Tile={MessageTile} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Mosaic.Container>
-    </Focus.Group>
-  );
-};
+    return (
+      <Focus.Group {...composableProps(props)} asChild onKeyDown={handleKeyDown} ref={forwardedRef}>
+        <Mosaic.Container asChild withFocus autoScroll={viewport}>
+          <ScrollArea.Root orientation='vertical' padding>
+            <ScrollArea.Viewport ref={setViewport}>
+              <Mosaic.Stack
+                classNames='py-1 gap-1'
+                items={items}
+                getId={(item) => item.message.id}
+                draggable={false}
+                Tile={MessageTile}
+              />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Mosaic.Container>
+      </Focus.Group>
+    );
+  },
+);
 
 Mailbox.displayName = 'Mailbox';

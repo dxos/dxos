@@ -14,11 +14,13 @@ const ICONS_URL = '/icons.svg';
 export class Domino<T extends HTMLElement | SVGElement> {
   static SVG = 'http://www.w3.org/2000/svg';
 
+  // TODO(burdon): Make private.
   static icon = (icon: string) => ICONS_URL + '#' + icon;
 
   /**
    * Creates an SVG icon element from the icon sprite sheet.
    */
+  // TODO(burdon): Rename icon.
   static svg = (icon: string) =>
     Domino.of('svg', Domino.SVG)
       .classNames('shrink-0 h-[1em] w-[1em]')

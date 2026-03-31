@@ -11,7 +11,7 @@ import { type Database, Filter, Obj, Type } from '@dxos/echo';
 import { Annotation } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Popover, Select, useTranslation } from '@dxos/react-ui';
-import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -24,7 +24,7 @@ import {
 } from '../../hooks';
 import { meta } from '../../meta';
 
-const panelClassNames = 'w-[calc(100dvw-.5rem)] sm:w-max md:w-72 max-w-text-content';
+const panelClassNames = 'w-[calc(100dvw-.5rem)] sm:w-max md:w-72 max-w-document-width';
 
 export type ChatOptionsProps = {
   db: Database.Database;
@@ -84,7 +84,7 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
                   <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset px-0!'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
                   </Tabs.Tabpanel>
-                  <Tabs.Tablist classNames='sm:overflow-x-hidden justify-center p-form-chrome border-y border-subdued-separator order-last'>
+                  <Tabs.Tablist classNames='justify-center p-form-chrome border-y border-subdued-separator order-last'>
                     <Tabs.IconTab
                       value='blueprints'
                       icon='ph--blueprint--regular'
@@ -231,7 +231,7 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
 
       <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 px-form-chrome mb-form-chrome'>
         <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
-          <Select.TriggerButton density='fine' placeholder={t('type filter placeholder')} />
+          <Select.TriggerButton placeholder={t('type filter placeholder')} />
           <Select.Portal>
             <Select.Content>
               <Select.ScrollUpButton />

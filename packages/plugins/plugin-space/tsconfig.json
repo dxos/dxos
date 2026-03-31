@@ -130,13 +130,16 @@
       "path": "../../ui/react-ui-masonry"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
       "path": "../../ui/react-ui-mosaic"
     },
     {
       "path": "../../ui/react-ui-pickers"
     },
     {
-      "path": "../../ui/react-ui-searchlist"
+      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-stack"
@@ -167,6 +170,9 @@
     },
     {
       "path": "../plugin-observability"
+    },
+    {
+      "path": "../plugin-preview"
     },
     {
       "path": "../plugin-status-bar"

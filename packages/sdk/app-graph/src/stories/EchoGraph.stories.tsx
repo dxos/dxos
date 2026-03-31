@@ -146,8 +146,8 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_SPACE: {
       const space = getRandomSpace(client);
       if (space) {
-        Obj.change(space.properties, (p) => {
-          p.name = faker.commerce.productName();
+        Obj.change(space.properties, (obj) => {
+          obj.name = faker.commerce.productName();
         });
       }
       break;
@@ -176,8 +176,8 @@ const runAction = async (client: Client, action: Action) => {
       if (space) {
         const objects = await space.db.query(Filter.type(TestSchema.Expando, { type: 'test' })).run();
         const object = objects[Math.floor(Math.random() * objects.length)];
-        Obj.change(object, (o) => {
-          o.name = faker.commerce.productName();
+        Obj.change(object, (obj) => {
+          obj.name = faker.commerce.productName();
         });
       }
       break;
@@ -216,7 +216,6 @@ const Controls = ({ children }: PropsWithChildren) => {
           <Input.Root>
             <Input.TextInput
               autoComplete='off'
-              size={5}
               classNames='w-[100px] text-right pe-[22px]'
               placeholder='Interval'
               value={actionInterval}

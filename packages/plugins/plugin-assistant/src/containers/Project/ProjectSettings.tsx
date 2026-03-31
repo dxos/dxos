@@ -10,7 +10,7 @@ import React, { useCallback, useEffect, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Project } from '@dxos/assistant-toolkit';
+import { Project, syncProjectTriggers } from '@dxos/assistant-toolkit';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { QueueService } from '@dxos/functions';
@@ -21,8 +21,6 @@ import { useObject } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { ButtonGroup, Input } from '@dxos/react-ui';
 import { FeedAnnotation } from '@dxos/schema';
-
-import { syncTriggers } from './triggers';
 
 export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Project.Project>) => {
   const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
@@ -48,10 +46,13 @@ export const ProjectSettings = ({ subject: project }: SurfaceComponentProps<Proj
   const [specInitialValue] = useObject(spec, 'content');
 
   useEffect(() => {
+    const db = Obj.getDatabase(project);
+    if (!db) return;
+    const runtime = computeRuntime.getRuntime(db.spaceId);
     return Obj.subscribe(project, () => {
-      queueMicrotask(() => syncTriggers(project));
+      queueMicrotask(() => runtime.runPromise(syncProjectTriggers(project)));
     });
-  }, [project]);
+  }, [project, computeRuntime]);
 
   const db = Obj.getDatabase(project);
   const feedFilter = useMemo(() => {

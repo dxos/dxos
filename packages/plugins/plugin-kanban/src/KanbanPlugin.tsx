@@ -3,14 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Type } from '@dxos/echo';
+import { Annotation, Type } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
 import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { ViewModel } from '@dxos/schema';
 
-import { BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
+import { BlueprintDefinition, OperationHandler, UndoMappings, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { CreateKanbanSchema, Kanban } from './types';
@@ -21,22 +24,31 @@ export const KanbanPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Type.getTypename(Kanban.Kanban),
       metadata: {
-        icon: 'ph--kanban--regular',
-        iconHue: 'green',
+        icon: Annotation.IconAnnotation.get(Kanban.Kanban).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Kanban.Kanban).pipe(Option.getOrThrow).hue ?? 'white',
         inputSchema: CreateKanbanSchema,
-        createObject: ((props, { db }) =>
-          Effect.promise(async () => {
-            const { view } = await ViewModel.makeFromDatabase({
-              db,
-              typename: props.typename,
-              pivotFieldName: props.initialPivotColumn,
+        createObject: ((props, options) =>
+          Effect.gen(function* () {
+            const object = yield* Effect.promise(async () => {
+              const { view } = await ViewModel.makeFromDatabase({
+                db: options.db,
+                typename: props.typename,
+                pivotFieldName: props.initialPivotColumn,
+              });
+              return Kanban.make({ name: props.name, view });
             });
-            return Kanban.make({ name: props.name, view });
+            return yield* Operation.invoke(SpaceOperation.AddObject, {
+              object,
+              target: options.target,
+              hidden: true,
+              targetNodeId: options.targetNodeId,
+            });
           })) satisfies CreateObject,
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({ id: 'undo-mappings', activate: UndoMappings }),
   AppPlugin.addSchemaModule({ schema: [Kanban.Kanban] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

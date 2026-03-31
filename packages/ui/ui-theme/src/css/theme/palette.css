@@ -10,8 +10,10 @@
 
 @theme {
   --color-neutral-75: color-mix(in oklch, var(--color-neutral-50) 50%, var(--color-neutral-100) 50%);
+  --color-neutral-150: color-mix(in oklch, var(--color-neutral-100) 50%, var(--color-neutral-200) 50%);
   --color-neutral-250: color-mix(in oklch, var(--color-neutral-200) 50%, var(--color-neutral-300) 50%);
   --color-neutral-750: color-mix(in oklch, var(--color-neutral-700) 50%, var(--color-neutral-800) 50%);
+  --color-neutral-850: color-mix(in oklch, var(--color-neutral-800) 50%, var(--color-neutral-900) 50%);
   --color-neutral-925: color-mix(in oklch, var(--color-neutral-900) 50%, var(--color-neutral-950) 50%);
 
   --color-primary-50: var(--color-blue-50);
@@ -25,4 +27,10 @@
   --color-primary-800: var(--color-blue-800);
   --color-primary-900: var(--color-blue-900);
   --color-primary-950: var(--color-blue-950);
+
+  /* Composer logo colors */
+  --color-composer-100: rgb(5 40 61);
+  --color-composer-200: rgb(10 75 105);
+  --color-composer-300: rgb(1 122 183);
+  --color-composer-400: rgb(6 197 253);
 }

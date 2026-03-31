@@ -9,11 +9,13 @@ import React, { useContext, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Database, Obj, Ref } from '@dxos/echo';
-import { ClientPlugin, StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { ClientPlugin } from '@dxos/plugin-client';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { Board, type BoardModel, Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { TestColumn, TestItem } from '@dxos/react-ui-mosaic/testing';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
@@ -25,7 +27,7 @@ const generator = faker as any as ValueGenerator;
 
 faker.seed(999);
 
-type StoryProps = {
+type DefaultStoryProps = {
   columns?: number;
   debug?: boolean;
 };
@@ -48,7 +50,7 @@ const createColumns = (count: number, db: Database.Database) =>
     return col;
   });
 
-const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) => {
+const DefaultStory = ({ columns: columnsProp = 1, debug = false }: DefaultStoryProps) => {
   const [space] = useSpaces();
   const db = space.db;
   const registry = useContext(RegistryContext);
@@ -102,7 +104,6 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withRegistry,
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<{ title?: string; content?: string }>(() => ({
       plugins: [
@@ -112,12 +113,9 @@ const meta = {
           types: [TestColumn, TestItem, Organization.Organization, Person.Person, Pipeline.Pipeline],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              yield* Effect.promise(() => client.spaces.waitUntilReady());
-              yield* Effect.promise(() => client.spaces.default.waitUntilReady());
-              const space = client.spaces.default;
+              const { defaultSpace } = yield* initializeIdentity(client);
 
-              const factory = createObjectFactory(space.db, generator);
+              const factory = createObjectFactory(defaultSpace.db, generator);
               yield* Effect.promise(() =>
                 factory([
                   { type: Organization.Organization, count: 20 },

@@ -13,9 +13,10 @@ import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
-import { FUNCTIONS_META_KEY, Function, setUserFunctionIdInMetadata } from '@dxos/functions';
+import { FUNCTIONS_META_KEY, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { log } from '@dxos/log';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
@@ -75,17 +76,17 @@ export const getDeployedFunctions = async (
   ctx: Context,
   client: Client,
   dedupe = false,
-): Promise<Function.Function[]> => {
+): Promise<Operation.PersistentOperation[]> => {
   const edgeClient = createEdgeClient(client);
   const result = await edgeClient.listFunctions(ctx);
-  const functions: Function.Function[] = result.uploadedFunctions.flatMap((record: any) => {
+  const functions: Operation.PersistentOperation[] = result.uploadedFunctions.flatMap((record: any) => {
     // Record shape is determined by EDGE API. We defensively parse.
     const latest = record.latestVersion ?? {};
     const versionMeta = safeParseJson<any>(latest.versionMetaJSON);
     if (!versionMeta) {
       return [];
     }
-    const fn = Function.make({
+    const fn = Obj.make(Operation.PersistentOperation, {
       key: versionMeta.key,
       name: versionMeta.name ?? versionMeta.key ?? record.id,
       version: latest?.version ?? '0.0.0',
@@ -103,9 +104,9 @@ export const getDeployedFunctions = async (
     return Function$.pipe(
       functions,
       Array.filter((_) => _.key !== undefined),
-      Array.sort(Order.reverse(Order.mapInput(Order.string, (_: Function.Function) => _.updated ?? ''))),
+      Array.sort(Order.reverse(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => _.updated ?? ''))),
       Array.dedupeWith((self, that) => self.key === that.key),
-      Array.sort(Order.mapInput(Order.string, (_: Function.Function) => _.key ?? '')),
+      Array.sort(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => _.key ?? '')),
     );
   } else {
     return functions;
@@ -118,7 +119,7 @@ export const getDeployedFunctions = async (
 export const invokeFunction = async (
   ctx: Context,
   edgeClient: EdgeHttpClient,
-  fn: Function.Function,
+  fn: Operation.PersistentOperation,
   input: unknown,
   {
     spaceId,

@@ -398,9 +398,9 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
 
     return (
       <Comp
-        role={role}
         {...(handlesFocus && { ...mover })}
         {...props}
+        role={role}
         data-sidebar-left-state={navigationSidebarState}
         data-sidebar-right-state={complementarySidebarState}
         data-handles-focus={handlesFocus}

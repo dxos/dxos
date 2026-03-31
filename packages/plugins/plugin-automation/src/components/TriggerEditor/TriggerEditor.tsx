@@ -6,7 +6,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { ComputeGraph } from '@dxos/conductor';
 import { DXN, type Database, Entity, Feed, Obj, type Query } from '@dxos/echo';
-import { Function, Script, Trigger } from '@dxos/functions';
+import { Script, Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { Filter, Ref, useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
@@ -45,13 +46,14 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
 
   const handleValuesChanged = useCallback(
     (newValues: Partial<TriggerFormSchema>) => {
-      Obj.change(trigger, (t) => {
-        Object.assign(t, newValues);
+      Obj.change(trigger, (obj) => {
+        Object.assign(obj, newValues);
       });
     },
     [trigger],
   );
 
+  const triggerSchema = useMemo(() => omitId(Trigger.Trigger), []);
   const defaultValues = useMemo(() => {
     const { id: _, ...values } = trigger;
     return values;
@@ -60,9 +62,9 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
   return (
     <Form.Root<TriggerFormSchema>
       {...formProps}
-      schema={omitId(Trigger.Trigger)}
-      defaultValues={defaultValues}
       db={db}
+      schema={triggerSchema}
+      defaultValues={defaultValues}
       fieldMap={fieldMap}
       onValuesChanged={handleValuesChanged}
     >
@@ -82,7 +84,7 @@ type UseCustomInputsProps = {
 } & Pick<QueryFormProps, 'types' | 'tags'>;
 
 const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps): FormFieldMap => {
-  const functions = useQuery(db, Filter.type(Function.Function));
+  const functions = useQuery(db, Filter.type(Operation.PersistentOperation));
   const workflows = useQuery(db, Filter.type(ComputeGraph));
   const scripts = useQuery(db, Filter.type(Script.Script));
   const feeds = useQuery(db, Filter.type(Feed.Feed));
@@ -153,8 +155,9 @@ const getWorkflowOptions = (graphs: ComputeGraph[]) => {
   return graphs.map((graph) => ({ label: `compute-${graph.id}`, value: `dxn:echo:@:${graph.id}` }));
 };
 
-const getFunctionOptions = (scripts: Script.Script[], functions: Function.Function[]) => {
-  const getLabel = (fn: Function.Function) => scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
+const getFunctionOptions = (scripts: Script.Script[], functions: Operation.PersistentOperation[]) => {
+  const getLabel = (fn: Operation.PersistentOperation) =>
+    scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
   return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
 };
 

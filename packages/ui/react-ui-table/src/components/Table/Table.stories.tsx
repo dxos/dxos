@@ -74,8 +74,8 @@ const StoryViewEditor = ({
       invariant(Type.isMutable(schema));
       schema.updateTypename(getTypenameFromQuery(newQuery));
       invariant(view);
-      Obj.change(view, (v) => {
-        v.query.ast = newQuery as Mutable<typeof newQuery>;
+      Obj.change(view, (obj) => {
+        obj.query.ast = newQuery as Mutable<typeof newQuery>;
       });
     },
     [schema, view],
@@ -119,7 +119,7 @@ const DefaultStory = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      <TableComponent.Root>
+      <TableComponent.Root ref={tableRef}>
         <Panel.Root>
           <Panel.Toolbar asChild>
             <TableComponent.Toolbar
@@ -129,8 +129,7 @@ const DefaultStory = () => {
             />
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <TableComponent.Main
-              ref={tableRef}
+            <TableComponent.Content
               schema={schema}
               model={model}
               presentation={presentation}
@@ -152,7 +151,7 @@ const DefaultStory = () => {
   );
 };
 
-type StoryProps = { rows?: number };
+type DefaultStoryProps = { rows?: number };
 
 //
 // Story definitions.
@@ -175,10 +174,10 @@ const meta = {
         const [schema] = await space.db.schemaRegistry.register([Example]);
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
-        Obj.change(view, (v) => {
-          v.projection.fields = [
-            v.projection.fields.find((field) => field.path === 'name')!,
-            ...v.projection.fields.filter((field) => field.path !== 'name'),
+        Obj.change(view, (obj) => {
+          obj.projection.fields = [
+            obj.projection.fields.find((field) => field.path === 'name')!,
+            ...obj.projection.fields.filter((field) => field.path !== 'name'),
           ];
         });
 
@@ -287,7 +286,7 @@ export const ArrayOfObjects: StoryObj = {
   },
 };
 
-export const Tags: Meta<StoryProps> = {
+export const Tags: Meta<DefaultStoryProps> = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
   decorators: [

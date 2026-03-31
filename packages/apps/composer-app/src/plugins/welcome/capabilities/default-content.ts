@@ -28,8 +28,8 @@ export default Capability.makeModule(
     const client = yield* Capability.get(ClientCapabilities.Client);
 
     const space = client.spaces.default;
-    Obj.change(space.properties, (p) => {
-      p.icon = SPACE_ICON;
+    Obj.change(space.properties, (obj) => {
+      obj.icon = SPACE_ICON;
     });
     const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
 
@@ -61,7 +61,7 @@ export default Capability.makeModule(
     // This will allow the expose action to work before the navtree renders for the first time.
     graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(space.id, 'child'));
 
-    const readmePath = `${getCollectionsPath(space.id)}/${gettingStarted.id}/${readme.id}`;
+    const readmePath = getCollectionsPath(space.id, gettingStarted.id, readme.id);
     yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
     yield* invoke(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: readmePath });
     yield* schedule(LayoutOperation.Expose, { subject: readmePath });

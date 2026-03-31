@@ -24,6 +24,10 @@ export const Script = Schema.Struct({
     version: '0.1.0',
   }),
   Annotation.LabelAnnotation.set(['name']),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--code--regular',
+    hue: 'sky',
+  }),
 );
 
 export interface Script extends Schema.Schema.Type<typeof Script> {}

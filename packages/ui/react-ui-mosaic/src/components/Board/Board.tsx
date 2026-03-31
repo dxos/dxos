@@ -15,7 +15,7 @@ import React, {
 
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { useContainerDebug } from '../../hooks';
 import { Focus } from '../Focus';
@@ -97,9 +97,8 @@ type BoardContentProps<TColumn = any> = ThemedClassName<{
   Tile?: MosaicStackProps<TColumn>['Tile'];
 }>;
 
-const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
+const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
   ({ id: _id, debug, eventHandler, Tile = DefaultBoardColumn, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props);
     const { model } = useBoardContext(BOARD_CONTENT_NAME);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -107,7 +106,7 @@ const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
     const items = useAtomValue(model.columns);
 
     return (
-      <div role='none' {...rest} className={mx('dx-container', className)} ref={forwardedRef}>
+      <div {...composableProps(props, { role: 'none', className: 'dx-container' })} ref={forwardedRef}>
         <Focus.Group asChild orientation='horizontal'>
           <Mosaic.Container
             asChild
@@ -117,7 +116,7 @@ const BoardContentInner = forwardRef<HTMLDivElement, BoardContentProps>(
             eventHandler={eventHandler}
             debug={debugHandler}
           >
-            <ScrollArea.Root orientation='horizontal' classNames='md:pt-3' margin padding>
+            <ScrollArea.Root orientation='horizontal' classNames='md:pt-3' centered padding>
               <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
                 <Mosaic.Stack items={items} getId={model.getColumnId} Tile={Tile} debug={debug} />
               </ScrollArea.Viewport>

@@ -8,7 +8,8 @@ import React, { useCallback, useMemo } from 'react';
 import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { Form, omitId } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, omitId } from '@dxos/react-ui-form';
+import { HuePicker } from '@dxos/react-ui-pickers';
 import { isNonNullable } from '@dxos/util';
 
 import { meta as pluginMeta } from '../../meta';
@@ -18,14 +19,29 @@ export type ObjectFormProps = {
   object: Obj.Unknown;
 };
 
+const createFieldMap: FormFieldMap = {
+  hue: ({ type, label, layout, getValue, onValueChange }) => {
+    const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
+    const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+    return (
+      <>
+        {layout !== 'inline' && <Form.Label label={label} />}
+        <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
+      </>
+    );
+  },
+};
+
 export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const db = Obj.getDatabase(object);
 
   const formSchema = useMemo(
     () =>
-      Schema.Struct({
-        tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
-      }).pipe(Schema.extend(omitId(schema))),
+      omitId(
+        Schema.Struct({
+          tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
+        }).pipe(Schema.extend(schema)),
+      ),
     [schema],
   );
 
@@ -78,11 +94,13 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
 
   return (
     <Form.Root
-      schema={omitId(formSchema)}
+      schema={formSchema}
       defaultValues={values}
+      createTypename={Type.getTypename(Tag.Tag)}
       createOptionIcon='ph--plus--regular'
       createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
+      createFieldMap={createFieldMap}
       db={db}
       onValuesChanged={handleChange}
       onCreate={handleCreate}

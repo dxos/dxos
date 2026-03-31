@@ -14,7 +14,8 @@ import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps } from '../../components';
 import { useShadowObject } from '../../hooks';
-import { type Calendar, InboxOperation } from '../../types';
+import { InboxOperation } from '../../operations';
+import { type Calendar } from '../../types';
 
 export type EventArticleProps = SurfaceComponentProps<
   EventType.Event,
@@ -35,8 +36,8 @@ export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => 
     const event = createShadowEvent();
     const notes = await event.notes?.load();
     if (!notes) {
-      Obj.change(event, (e) => {
-        e.notes = Ref.make(Text.make());
+      Obj.change(event, (obj) => {
+        obj.notes = Ref.make(Text.make());
       });
     }
   }, [id, subject, db, shadowedEvent]);
@@ -52,7 +53,7 @@ export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => 
 
   return (
     <Event.Root event={subject}>
-      <Panel.Root role={role} className='dx-article'>
+      <Panel.Root role={role} className='dx-document'>
         <Panel.Toolbar asChild>
           <Event.Toolbar onNoteCreate={handleNoteCreate} />
         </Panel.Toolbar>

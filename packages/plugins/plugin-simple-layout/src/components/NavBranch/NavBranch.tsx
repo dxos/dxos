@@ -8,10 +8,10 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Node, useConnections } from '@dxos/plugin-graph';
-import { Avatar, Icon, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
-import { SearchList, useSearchListItem, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
@@ -36,7 +36,10 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
   // TODO(wittjosiah): Move alternate-tree nodes to a non-child relation so they don't need filtering.
   const visibleChildren = useMemo(
-    () => children.filter((node) => node.properties.disposition !== 'alternate-tree'),
+    () =>
+      children.filter(
+        (node) => node.properties.disposition !== 'alternate-tree' && node.properties.disposition !== 'hidden',
+      ),
     [children],
   );
 
@@ -46,34 +49,28 @@ export const NavBranch = ({ id }: NavBranchProps) => {
   });
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
-      <Panel.Root>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            {/* TODO(wittjosiah): Search should be pluggable. Must support searching via ECHO query inside a space. */}
-            <SearchList.Input placeholder={t('search placeholder')} autoFocus />
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <SearchList.Content>
-            <Mosaic.Container asChild>
-              <ScrollArea.Root orientation='vertical'>
-                <ScrollArea.Viewport classNames='p-2'>
-                  <Mosaic.Stack items={results} getId={(child) => child.id} Tile={NavBranchTile} />
-                </ScrollArea.Viewport>
-              </ScrollArea.Root>
-            </Mosaic.Container>
-          </SearchList.Content>
-        </Panel.Content>
-      </Panel.Root>
-    </SearchList.Root>
+    <SearchPanel onSearch={handleSearch}>
+      <Mosaic.Container asChild>
+        <ScrollArea.Root centered padding thin>
+          <ScrollArea.Viewport>
+            <Mosaic.Stack
+              classNames='gap-1'
+              draggable={false}
+              items={results}
+              getId={(item) => item.id}
+              Tile={NavBranchTile}
+            />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Mosaic.Container>
+    </SearchPanel>
   );
 };
 
 const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
   const data = props.data;
   const { t } = useTranslation(meta.id);
-  const { invokeSync } = useOperationInvoker();
+  const { invokePromise } = useOperationInvoker();
   const ref = useRef<HTMLDivElement>(null);
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const isSelected = selectedValue === data.id;
@@ -81,8 +78,8 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
   const name = toLocalizedString(data.properties.label, t);
 
   const handleSelect = useCallback(
-    () => invokeSync(LayoutOperation.Open, { subject: [data.id] }),
-    [invokeSync, data.id],
+    () => void invokePromise(LayoutOperation.Open, { subject: [data.id] }),
+    [invokePromise, data.id],
   );
 
   // Register this item with the search context.
@@ -108,17 +105,17 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
-      classNames={mx('dx-focus-ring', isSelected && 'bg-hover-overlay')}
+      classNames={mx('dx-focus-ring cursor-pointer', isSelected && 'bg-hover-overlay')}
       onClick={handleSelect}
     >
-      <Card.Toolbar density='coarse'>
+      <Card.Toolbar>
         <Avatar.Root>
           <Avatar.Content
             hue={data.properties.hue}
             icon={data.properties.icon}
             hueVariant='transparent'
             variant='square'
-            size={12}
+            size={8}
             fallback={name}
           />
           <Avatar.Label>{name}</Avatar.Label>

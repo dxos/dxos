@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { List, ListItem, type ThemedClassName } from '@dxos/react-ui';
+import { List, ListItem, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type Event } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -25,15 +25,21 @@ export type EventListProps = ThemedClassName<{
   onSelect?: (contact: Event.Event) => void;
 }>;
 
+// TODO(burdon): Convert to mosaic with list management.
 export const EventList = ({ classNames, events = [], onSelect }: EventListProps) => {
+  // TODO(burdon): Move ScrollArea into compound List object.
   return (
-    <List classNames={mx('@container w-full divide-y divide-separator overflow-y-auto', classNames)}>
-      {events.map((event) => (
-        <ListItem.Root key={event.id} classNames='p-2 hover:bg-hover-overlay' onClick={() => onSelect?.(event)}>
-          <EventComponent event={event} />
-        </ListItem.Root>
-      ))}
-    </List>
+    <ScrollArea.Root thin>
+      <ScrollArea.Viewport>
+        <List classNames={mx('@container w-full divide-y divide-separator', classNames)}>
+          {events.map((event) => (
+            <ListItem.Root key={event.id} classNames='p-2 hover:bg-hover-overlay' onClick={() => onSelect?.(event)}>
+              <EventComponent event={event} />
+            </ListItem.Root>
+          ))}
+        </List>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };
 

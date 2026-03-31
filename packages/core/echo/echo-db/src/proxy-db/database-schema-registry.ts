@@ -22,7 +22,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { DXN, type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { coerceArray } from '@dxos/util';
+import { coerceArray, compositeKey } from '@dxos/util';
 
 import { getObjectCore } from '../echo-handler';
 
@@ -122,7 +122,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         };
 
     const getSortKey = (entry: Entry) =>
-      Type.getTypename(entry.schema) + ':' + Type.getVersion(entry.schema) + ':' + Type.getDXN(entry.schema);
+      compositeKey(Type.getTypename(entry.schema), Type.getVersion(entry.schema), String(Type.getDXN(entry.schema)));
 
     const filterOrderResults = (schemas: Entry[]) => {
       log('Filtering schemas', { schemas, query });
@@ -251,9 +251,16 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         if (unsubscribe) {
           return;
         }
-        unsubscribe = self._subscribe(() => {
+        const unsubscribeDatabase = self._subscribe(() => {
           changes.emit();
         });
+        const unsubscribeRuntime = self._db.graph.schemaRegistry.schemaChanges.on(() => {
+          changes.emit();
+        });
+        unsubscribe = () => {
+          unsubscribeDatabase();
+          unsubscribeRuntime();
+        };
       },
       async stop() {
         unsubscribe?.();

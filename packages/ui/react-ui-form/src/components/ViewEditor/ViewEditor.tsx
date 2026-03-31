@@ -274,12 +274,12 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
       invariant(!readonly);
-      Obj.change(view, (v) => {
+      Obj.change(view, (obj) => {
         // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
-        const fields = [...v.projection.fields];
+        const fields = [...obj.projection.fields];
         const [moved] = fields.splice(fromIndex, 1);
         fields.splice(toIndex, 0, moved);
-        v.projection.fields = fields;
+        obj.projection.fields = fields;
       });
     },
     [view, readonly],
@@ -340,7 +340,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
                       {field.path}
                     </List.ItemTitle>
-                    <List.ItemButton
+                    <List.ItemIconButton
                       label={t(hidden ? 'show field label' : 'hide field label')}
                       data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                       icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
@@ -357,7 +357,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                           onClick={() => handleDelete(field.id)}
                           data-testid='field.delete'
                         />
-                        <IconButton
+                        <List.ItemIconButton
                           iconOnly
                           variant='ghost'
                           label={t('toggle expand label', { ns: osTranslations })}

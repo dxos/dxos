@@ -27,7 +27,6 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
         iconOnly
         label='Home'
         onClick={onHome}
-        size={6}
         variant='ghost'
       />
       <IconButton
@@ -36,7 +35,6 @@ export const AppToolbar = ({ onHome, onProfile, onDevtools }: AppToolbarProps) =
         iconOnly
         label='Developer tools'
         onClick={onDevtools}
-        size={6}
         variant='ghost'
       />
       <div className='grow' />

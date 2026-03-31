@@ -14,15 +14,14 @@ import React, {
   type CSSProperties,
   type PropsWithChildren,
   type ReactNode,
-  forwardRef,
   useEffect,
   useMemo,
   useRef,
   useState,
 } from 'react';
 
-import { type AllowedAxis, type ComposableProps } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { type AllowedAxis } from '@dxos/react-ui';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
@@ -69,18 +68,17 @@ const MOSAIC_CONTAINER_PLACEHOLDER_HEIGHT = '--mosaic-placeholder-height';
 
 let counter = 0;
 
-type MosaicContainerProps = ComposableProps<HTMLDivElement> &
-  PropsWithChildren<
-    Partial<Pick<MosaicContainerContextValue, 'eventHandler' | 'orientation'>> & {
-      asChild?: boolean;
-      autoScroll?: HTMLElement | null;
-      withFocus?: boolean;
-      debug?: () => ReactNode;
-    }
-  >;
+type MosaicContainerProps = PropsWithChildren<
+  Partial<Pick<MosaicContainerContextValue, 'eventHandler' | 'orientation'>> & {
+    asChild?: boolean;
+    autoScroll?: HTMLElement | null;
+    withFocus?: boolean;
+    debug?: () => ReactNode;
+  }
+>;
 
 // TODO(burdon): Make generic.
-const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
+const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
   (
     {
       children,
@@ -91,7 +89,7 @@ const MosaicContainer = forwardRef<HTMLDivElement, MosaicContainerProps>(
       withFocus,
       debug,
       ...props
-    }: MosaicContainerProps,
+    },
     forwardedRef,
   ) => {
     const { className, ...rest } = composableProps(props);

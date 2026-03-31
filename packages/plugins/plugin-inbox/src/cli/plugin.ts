@@ -6,10 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/operation';
 import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Event, Message } from '@dxos/types';
 
-import { OperationResolver } from '../capabilities/operation-resolver';
+import { OperationHandler } from '../capabilities/operation-handler';
 import { meta } from '../meta';
 import { Calendar, Mailbox } from '../types';
 
@@ -20,18 +22,36 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       {
         id: Mailbox.Mailbox.typename,
         metadata: {
-          createObject: ((props) => Effect.sync(() => Mailbox.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Mailbox.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
         id: Calendar.Calendar.typename,
         metadata: {
-          createObject: ((props) => Effect.sync(() => Calendar.make(props))) satisfies CreateObject,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Calendar.make(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
     ],
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message],
   }),

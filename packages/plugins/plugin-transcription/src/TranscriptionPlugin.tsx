@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Option from 'effect/Option';
+
 import { Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Message, Transcript } from '@dxos/types';
 
-import { BlueprintDefinition, OperationResolver, ReactSurface, Transcriber } from './capabilities';
+import { BlueprintDefinition, OperationHandler, ReactSurface, Transcriber } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { renderByline } from './util';
@@ -19,8 +21,8 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
     metadata: {
       id: Transcript.Transcript.typename,
       metadata: {
-        icon: 'ph--subtitles--regular',
-        iconHue: 'sky',
+        icon: Annotation.IconAnnotation.get(Transcript.Transcript).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Transcript.Transcript).pipe(Option.getOrThrow).hue ?? 'white',
         // TODO(wittjosiah): Factor out. Artifact? Separate capability?
         getTextContent: async (transcript: Transcript.Transcript) => {
           const space = getSpace(transcript);
@@ -36,7 +38,7 @@ export const TranscriptionPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Transcript.Transcript] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

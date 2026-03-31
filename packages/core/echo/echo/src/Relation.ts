@@ -283,8 +283,8 @@ export type Mutable<T> = internal.Mutable<T>;
  * });
  *
  * // Mutate within Relation.change
- * Relation.change(worksFor, (r) => {
- *   r.role = 'Senior Engineer';
+ * Relation.change(worksFor, (obj) => {
+ *   obj.role = 'Senior Engineer';
  * });
  * ```
  *

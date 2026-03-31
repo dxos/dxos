@@ -71,11 +71,11 @@ describe('ClientPlugin startup', () => {
           mark('space.waitUntilReady', spaceStart);
 
           const flush1Start = performance.now();
-          yield* Effect.promise(() => space.db.flush({ indexes: true }));
+          yield* Effect.promise(() => space.db.flush());
           mark('db.flush (first)', flush1Start);
 
           const flush2Start = performance.now();
-          yield* Effect.promise(() => space.db.flush({ indexes: true }));
+          yield* Effect.promise(() => space.db.flush());
           mark('db.flush (second)', flush2Start);
 
           mark('onClientInitialized (total)', cbStart);

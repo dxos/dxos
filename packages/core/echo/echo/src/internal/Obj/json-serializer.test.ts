@@ -21,8 +21,8 @@ import { objectFromJSON, objectToJSON } from './json-serializer';
 describe('Object JSON serializer', () => {
   test('should serialize and deserialize object', async () => {
     const contact = makeObject(TestSchema.Person, { name: 'Alice' });
-    Obj.change(contact, (c) => {
-      getMetaChecked(c).keys.push({ id: '12345', source: 'example.com' });
+    Obj.change(contact, (obj) => {
+      getMetaChecked(obj).keys.push({ id: '12345', source: 'example.com' });
     });
 
     const task = createObject(TestSchema.Task, {

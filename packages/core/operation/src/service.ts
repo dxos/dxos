@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import type { Key } from '@dxos/echo';
 
-import type * as Operation from './operation';
+import type * as Operation from './Operation';
 
 /**
  * Options for operation invocation.
@@ -49,16 +49,6 @@ export interface OperationService {
     op: Operation.Definition<I, O>,
     ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ) => Promise<{ data?: O; error?: Error }>;
-
-  /**
-   * Synchronously invoke an operation.
-   * Only works for operations marked with `executionMode: 'sync'`.
-   * Throws if the operation is async or if the handler performs async work.
-   */
-  invokeSync: <I, O>(
-    op: Operation.Definition<I, O>,
-    ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
-  ) => { data?: O; error?: Error };
 }
 
 /**

@@ -43,9 +43,8 @@ export interface RefResolverOptions {
 }
 
 /**
- *
+ * Manages cross-space database interactions.
  */
-// TODO(burdon): Comment required.
 export interface Hypergraph extends Database.Queryable {
   get schemaRegistry(): SchemaRegistry.SchemaRegistry;
 
@@ -71,4 +70,10 @@ export interface Hypergraph extends Database.Queryable {
    */
   // TODO(dmaretskyi): Restructure API: Remove middleware.
   createRefResolver(options: RefResolverOptions): Ref.Resolver;
+
+  /**
+   * Get a database by space ID.
+   * @returns The database for the given space ID, or undefined if not found.
+   */
+  getDatabase(spaceId: Key.SpaceId): Database.Database | undefined;
 }

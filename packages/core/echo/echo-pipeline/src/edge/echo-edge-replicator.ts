@@ -28,7 +28,7 @@ import {
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { trace } from '@dxos/tracing';
-import { bufferToArray, setDeep } from '@dxos/util';
+import { bufferToArray, compositeKey, setDeep } from '@dxos/util';
 
 import {
   type AutomergeReplicator,
@@ -252,8 +252,9 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
     // This way automerge-repo will have separate sync states for every connection.
     // This is important because the previous connection might have had some messages that failed to deliver
     // abd if we don't clear the sync-state, automerge will not attempt to deliver them again.
-    this._remotePeerId = `${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}-${this._connectionId}`;
-    this._targetServiceId = `${EdgeService.AUTOMERGE_REPLICATOR}:${spaceId}`;
+    this._targetServiceId = compositeKey(EdgeService.AUTOMERGE_REPLICATOR, spaceId);
+    // TODO(wittjosiah): Use compositeKey.
+    this._remotePeerId = `${this._targetServiceId}-${this._connectionId}`;
     this._sharedPolicyEnabled = sharedPolicyEnabled;
     this._onRemoteConnected = onRemoteConnected;
     this._onRemoteDisconnected = onRemoteDisconnected;

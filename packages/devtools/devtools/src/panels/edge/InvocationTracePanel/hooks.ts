@@ -5,11 +5,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type Database, Filter, Obj } from '@dxos/echo';
-import { Function, Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { InvocationOutcome } from '@dxos/functions-runtime';
 import { type InvocationTraceEvent } from '@dxos/functions-runtime';
 import { createInvocationSpans } from '@dxos/functions-runtime';
 import { type DXN } from '@dxos/keys';
+import { Operation } from '@dxos/operation';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 
 import { getUuidFromDxn } from './utils';
@@ -18,7 +19,7 @@ import { getUuidFromDxn } from './utils';
  * Maps invocation target identifiers to readable script names.
  */
 export const useFunctionNameResolver = ({ db }: { db?: Database.Database }) => {
-  const functions = useQuery(db, Filter.type(Function.Function));
+  const functions = useQuery(db, Filter.type(Operation.PersistentOperation));
 
   return useCallback(
     (invocationTargetId: DXN | undefined) => {
@@ -36,7 +37,7 @@ export const useFunctionNameResolver = ({ db }: { db?: Database.Database }) => {
 
 export const useInvocationTargetsForScript = (target: Obj.Unknown | undefined) => {
   const db = Obj.instanceOf(Script.Script, target) ? Obj.getDatabase(target) : undefined;
-  const functions = useQuery(db, Filter.type(Function.Function));
+  const functions = useQuery(db, Filter.type(Operation.PersistentOperation));
 
   return useMemo(() => {
     if (!Obj.instanceOf(Script.Script, target)) {

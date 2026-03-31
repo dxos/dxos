@@ -14,10 +14,8 @@ import * as Schema from 'effect/Schema';
 
 // Define an operation
 const CreateSpace = Operation.make({
-  schema: {
-    input: Schema.Struct({ name: Schema.String }),
-    output: Schema.Struct({ id: Schema.String }),
-  },
+  input: Schema.Struct({ name: Schema.String }),
+  output: Schema.Struct({ id: Schema.String }),
   meta: {
     key: 'space.create',
     name: 'Create Space',

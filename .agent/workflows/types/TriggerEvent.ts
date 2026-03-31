@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Ref } from '@dxos/echo';
 
 // TODO(wittjosiah): Review this type.
 //   - Should be discriminated union.

@@ -3,13 +3,14 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
+import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps, useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/ui';
+import { type SurfaceComponentProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { type Project } from '@dxos/assistant-toolkit';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
@@ -47,7 +48,7 @@ export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
   const stackObjects = [...artifacts, ...inputQueueItems].filter(isNonNullable);
 
   return (
-    <Panel.Root className='dx-article'>
+    <Panel.Root className='dx-document'>
       <Panel.Content>
         {/* TODO(burdon): Factor out. */}
         {stackObjects.length === 0 && (
@@ -81,34 +82,44 @@ export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
 const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
   ({ data, location, debug }, forwardedRef) => {
     const objectMenuItems = useObjectMenuItems(data);
-    const handleNavigate = useObjectNavigate(data);
+    const icon = Function.pipe(
+      Obj.getSchema(data),
+      Option.fromNullable,
+      Option.flatMap(Annotation.IconAnnotation.get),
+      Option.map(({ icon }) => icon),
+      Option.getOrElse(() => 'ph--placeholder--regular'),
+    );
 
     return (
-      <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-        <Focus.Group asChild>
-          <Menu.Root>
+      <Menu.Root>
+        <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
+          <Focus.Item asChild>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
               <Card.Toolbar>
-                <Card.IconBlock></Card.IconBlock>
-                <Card.Title onClick={handleNavigate}>{Obj.getLabel(data)}</Card.Title>
+                <Card.IconBlock padding>
+                  <Card.Icon icon={icon} />
+                </Card.IconBlock>
+                <Card.Title>{Obj.getLabel(data)}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
-                  <Toolbar.IconButton
-                    iconOnly
-                    variant='ghost'
-                    icon='ph--dots-three-vertical--regular'
-                    label='Actions'
-                  />
-                </Menu.Trigger>
-                <Menu.Content items={objectMenuItems} />
+                <Card.IconBlock padding>
+                  <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+                    <Toolbar.IconButton
+                      iconOnly
+                      variant='ghost'
+                      icon='ph--dots-three-vertical--regular'
+                      label='Actions'
+                    />
+                  </Menu.Trigger>
+                  <Menu.Content items={objectMenuItems} />
+                </Card.IconBlock>
               </Card.Toolbar>
               <Card.Content>
                 <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
               </Card.Content>
             </Card.Root>
-          </Menu.Root>
-        </Focus.Group>
-      </Mosaic.Tile>
+          </Focus.Item>
+        </Mosaic.Tile>
+      </Menu.Root>
     );
   },
 );

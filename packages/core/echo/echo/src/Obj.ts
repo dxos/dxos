@@ -325,9 +325,9 @@ export type Mutable<T> = internal.Mutable<T>;
  * const person = Obj.make(Person, { name: 'John', age: 25 });
  *
  * // Mutate within Obj.change
- * Obj.change(person, (p) => {
- *   p.name = 'Jane';
- *   p.age = 30;
+ * Obj.change(person, (obj) => {
+ *   obj.name = 'Jane';
+ *   obj.age = 30;
  * });
  * // ONE notification fires here
  *
@@ -386,8 +386,8 @@ export const getValue = (obj: Unknown | Snapshot, path: readonly (string | numbe
  * ```ts
  * const person = Obj.make(Person, { name: 'John' });
  * // Person schema has: addresses: Schema.Array(Address)
- * Obj.change(person, (p) => {
- *   Obj.setValue(p, ['addresses', 0, 'street'], '123 Main St');
+ * Obj.change(person, (obj) => {
+ *   Obj.setValue(obj, ['addresses', 0, 'street'], '123 Main St');
  * });
  * // Creates: person.addresses = [{ street: '123 Main St' }]
  * ```
@@ -533,8 +533,8 @@ export type Meta = internal.Meta;
  * const meta = Obj.getMeta(person);  // ReadonlyMeta
  *
  * // Mutable access inside change callback
- * Obj.change(person, (p) => {
- *   const meta = Obj.getMeta(p);     // ObjectMeta (mutable)
+ * Obj.change(person, (obj) => {
+ *   const meta = Obj.getMeta(obj);     // ObjectMeta (mutable)
  *   meta.tags ??= [];
  *   meta.tags.push('important');
  * });
@@ -687,9 +687,12 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectTo
  *
  * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
  * @param options.dxn - Override object DXN. Changes the result of `Obj.getDXN`.
+ * @param options.database - Database to associate with the object.
  */
-export const fromJSON: (json: unknown, options?: { refResolver?: Ref.Resolver; dxn?: DXN }) => Promise<Unknown> =
-  objInternal.objectFromJSON as any;
+export const fromJSON: (
+  json: unknown,
+  options?: { refResolver?: Ref.Resolver; dxn?: DXN; database?: Database.Database },
+) => Promise<Unknown> = objInternal.objectFromJSON as any;
 
 /**
  * Comparator function type for sorting objects.

@@ -95,6 +95,7 @@ export const translations = [
         'tool error label': 'Tool call failed',
 
         'invocations label': 'Invocations',
+        'trace label': 'Trace',
 
         'assistant dialog title': 'Assistant',
         'open assistant label': 'Open assistant',
@@ -135,8 +136,7 @@ export const translations = [
         'trigger status idle label': 'Triggers idle',
         'trigger status running label': 'Trigger running',
         'trigger status error label': 'Trigger error',
-        'trigger runtime label': 'Trigger Runtime',
-        'trigger runtime description': 'Enable automatic trigger execution',
+        'trigger runtime label': 'Auto trigger execution',
         'trigger last invocation label': 'Last run',
         'trigger duration label': 'Duration',
       },

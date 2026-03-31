@@ -3,14 +3,15 @@
 ## IMPORTANT
 
 - When you start, the first thing you should do is tell the user if you understand these instructions and list the config files you are aware of.
-- ALWAYS test your work after each step.
 - If you are unsure about the best way to implement something, ask the user for clarification.
 - When asking the user a question; either make it yes/no, or provide numbered options.
+- ALWAYS test your work after each step.
 
 ## Dependencies
 
 - All dependency versions are managed in the default pnpm catalog.
 - To add a new dependency, run `pnpm add --filter "<project>" --save-catalog "<package>"`.
+- **IMPORTANT**: Any `@dxos` package that lives within this repo must be added as `workspace:*`, never from the catalog. The catalog is only for external (non-workspace) packages.
 
 ## Build, Test, Lint Commands
 
@@ -24,12 +25,18 @@
 - Check package tasks: see `moon.yml` in package directory.
 - **Expected warning**: `Auth token DEPOT_TOKEN does not exist` is a normal warning about remote caching and should be ignored. Filter out warnings from your output.
 
-## Important
+## Planning
 
-- Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
+- **IMPORTANT**: Do NOT cast values to fix build issues; instead create a refactoring plan and get permission.
+
+## Knowledge
+
+- **IMPORTANT**: Follow DXOS-specific rules in `.agents/sdk/*`.
+- Update these documents when you learn better patterns; or when the user asks you to correct your implementation.
 
 ## Code Style
 
+- Follow the DXOS SDK guide.
 - Use TypeScript with single quotes for strings.
 - Prefer functional programming and arrow functions.
 - Import order: builtin → external → @dxos → internal → parent → sibling (with blank lines between groups).
@@ -40,10 +47,20 @@
 - Remember to remove/update TODOs as you go.
 - Avoid single letter variable names.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
+- Use barrel imports whenever possible.
+
+### React
+
+- Import all required symbols from React — hooks, types, and utilities — as named imports (i.e., use `useMemo` not `React.useMemo`, use `type Ref` not `React.Ref`).
+- When using `forwardRef` use the variable name `forwardedRef`.
+
+## New Packages
+
+- **IMPORTANT**: Any new package created in this repo MUST have `"private": true` in its `package.json`. The `private` flag can only be removed manually once a trusted publisher has been configured for the package.
 
 ## Workflow
 
-- Never work on main; create a new git worktree for the branch you are working on.
+- Never work on main; if not already in a worktree, create a new git worktree for the branch you are working on.
 - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
 - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
 - Check `moon.yml` for available package tasks
@@ -64,24 +81,31 @@ Examples:
 - `refactor: simplify error handling in client SDK`
 - `docs: update API reference for Space class`
 
+## CI
+
+- **IMPORTANT**: After every `git push`, proactively check CI status using `gh run list --branch <branch> --limit 5 --workflow "Check"`. Do NOT rely solely on `pnpm -w gh-action --verify` — it only checks agent workflows, not the main **Check** workflow that runs build and tests.
+- If the Check workflow fails, inspect the failure with `gh run view <run-id>` and `gh run view <run-id> --log-failed`, identify the failing job/test, and fix it.
+- When the user asks "what is the CI status" or similar, always check the **Check** workflow specifically.
+
 ## Submitting PRs
 
 - When the user asks you to submit a PR:
-  - Use `gh` CLI to create and manage PRs
-  - Check `moon run :lint -- --fix` succeeds
-  - Check `moon run :test` succeeds
-  - Commit and push any pending changes
-  - Monitor CI: `pnpm -w gh-action --verify --watch`
-  - Address all PR review comments (fix or explain why not) and post a reply to all comments
+  - Use `gh` CLI to create and manage PRs.
+  - Merge `origin/main` in to current branch and resolve conflicts.
+  - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
+  - Check `moon run :test` succeeds.
+  - Commit and push any pending changes.
+  - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
+  - **IMPORTANT**: Address all PR review comments (fix or explain why not) and post a reply to all comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
-  - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123"
-  - After the CI succeeds, remove the local worktree and branch.
+  - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".
+  - **IMPORTANT**: DO NOT DELETE ANY BRANCHES OR WORKTREES THAT HAVE UNCOMMITTED CHANGES.
 
 ## Cursor Cloud specific instructions
 
 ### Toolchain
 
-This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.3. All are managed by **proto** (see `.prototools`). In the cloud VM, proto is installed at `~/.proto` and must be on PATH (`export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"`). Do **not** use nvm; proto shims must take precedence.
+This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4. All are managed by **proto** (see `.prototools`). In the cloud VM, proto is installed at `~/.proto` and must be on PATH (`export PROTO_HOME="$HOME/.proto" && export PATH="$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH"`). Do **not** use nvm; proto shims must take precedence.
 
 ### Running services
 

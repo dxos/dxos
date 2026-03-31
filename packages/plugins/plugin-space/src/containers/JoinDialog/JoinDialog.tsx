@@ -9,7 +9,7 @@ import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Trigger } from '@dxos/async';
 import { Graph } from '@dxos/plugin-graph';
-import { ObservabilityOperation } from '@dxos/plugin-observability/types';
+import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -77,7 +77,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
         ]);
       }
 
-      await onDone?.(result);
+      onDone?.(result);
 
       if (space) {
         await invokePromise(ObservabilityOperation.SendEvent, {
@@ -91,15 +91,18 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
     [invokePromise, client, graph, navigableCollections, onDone],
   );
 
+  // TODO(burdon): Move JoinHeading into Dialog.Heading.
   return (
     <Dialog.Content>
       <Dialog.Title classNames='sr-only'>{t('join space label', { ns: osTranslations })}</Dialog.Title>
-      <JoinPanel
-        {...props}
-        exitActionParent={<Dialog.Close asChild />}
-        doneActionParent={<Dialog.Close asChild />}
-        onDone={handleDone}
-      />
+      <Dialog.Body>
+        <JoinPanel
+          {...props}
+          exitActionParent={<Dialog.Close asChild />}
+          doneActionParent={<Dialog.Close asChild />}
+          onDone={handleDone}
+        />
+      </Dialog.Body>
     </Dialog.Content>
   );
 };

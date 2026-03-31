@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 export const Outline = Schema.Struct({
@@ -16,6 +16,10 @@ export const Outline = Schema.Struct({
   Type.object({
     typename: 'org.dxos.type.outline',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--tree-structure--regular',
+    hue: 'indigo',
   }),
 );
 

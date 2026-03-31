@@ -233,9 +233,11 @@ export class IndexQuerySource implements QuerySource {
       const refResolver = this._params.graph.createRefResolver({
         context: { space: result.spaceId as SpaceId, queue: queueDxn },
       });
+      const database = this._params.graph.getDatabase(result.spaceId as SpaceId);
       const object = await Obj.fromJSON(json, {
         refResolver,
         dxn: queueDxn.extend([result.id as ObjectId]),
+        database,
       });
       const queryResult: QueryResult.EntityEntry = {
         id: result.id,

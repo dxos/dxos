@@ -12,7 +12,8 @@ import { type Message as MessageType } from '@dxos/types';
 
 import { Message, type MessageHeaderProps, type ViewMode } from '../../components';
 import { useActorContact } from '../../hooks';
-import { InboxOperation, type Mailbox } from '../../types';
+import { InboxOperation } from '../../operations';
+import { type Mailbox } from '../../types';
 
 export type MessageArticleProps = SurfaceComponentProps<
   MessageType.Message,
@@ -42,19 +43,19 @@ export const MessageArticle = ({ role, subject: message, mailbox, attendableId }
 
   const handleReply = useCallback(() => {
     if (db) {
-      void invokePromise(InboxOperation.CreateDraft, { db, mode: 'reply', replyToMessage: message });
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply', replyToMessage: message });
     }
   }, [db, invokePromise, message]);
 
   const handleReplyAll = useCallback(() => {
     if (db) {
-      void invokePromise(InboxOperation.CreateDraft, { db, mode: 'reply-all', replyToMessage: message });
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'reply-all', replyToMessage: message });
     }
   }, [db, invokePromise, message]);
 
   const handleForward = useCallback(() => {
     if (db) {
-      void invokePromise(InboxOperation.CreateDraft, { db, mode: 'forward', replyToMessage: message });
+      void invokePromise(InboxOperation.DraftEmailAndOpen, { db, mode: 'forward', replyToMessage: message });
     }
   }, [db, invokePromise, message]);
 
@@ -68,14 +69,14 @@ export const MessageArticle = ({ role, subject: message, mailbox, attendableId }
       onReplyAll={handleReplyAll}
       onForward={handleForward}
     >
-      <Panel.Root role={role} className='dx-article'>
+      <Panel.Root role={role} className='dx-document'>
         <Panel.Toolbar asChild>
           <Message.Toolbar />
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Message.Viewport role={role}>
             <Message.Header onContactCreate={handleContactCreate} />
-            <Message.Content />
+            <Message.Body />
           </Message.Viewport>
         </Panel.Content>
       </Panel.Root>

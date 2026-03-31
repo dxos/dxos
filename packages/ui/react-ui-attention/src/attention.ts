@@ -4,7 +4,7 @@
 
 import { Atom, type Registry } from '@effect-atom/atom-react';
 
-import { ATTENDABLE_PATH_SEPARATOR, type Attention } from './types';
+import { type Attention } from './types';
 
 /**
  * Manages attention state for an application.
@@ -185,6 +185,8 @@ export type AttendableId = { attendableId?: string };
 
 export type Related = { related?: boolean };
 
+const ATTENDABLE_PATH_SEPARATOR = '~';
+
 /**
  * Decompose a qualified graph ID into progressive prefixes for ancestry tracking.
  * e.g. `root/a/b/c` yields `['root', 'root/a', 'root/a/b', 'root/a/b/c']`.
@@ -205,7 +207,11 @@ export const isSeparatorPrefixed = (qualifiedId: string): boolean => {
 /**
  * Get the parent qualified ID (everything before the last `/` segment).
  */
-export const getParentId = (qualifiedId: string): string | undefined => {
+export const getParentId = (qualifiedId: string | undefined): string | undefined => {
+  if (!qualifiedId) {
+    return undefined;
+  }
+
   const lastSlash = qualifiedId.lastIndexOf('/');
   return lastSlash > 0 ? qualifiedId.slice(0, lastSlash) : undefined;
 };

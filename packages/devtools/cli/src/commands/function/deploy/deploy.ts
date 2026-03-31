@@ -17,8 +17,9 @@ import { CommandConfig, Common, flushAndSync, spaceLayer } from '@dxos/cli-util'
 import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
-import { FUNCTIONS_META_KEY, Function } from '@dxos/functions';
+import { FUNCTIONS_META_KEY } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
+import { Operation } from '@dxos/operation';
 import { PublicKey } from '@dxos/keys';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
@@ -95,10 +96,10 @@ export const deploy = Command.make(
       }),
     );
 
-    let functionObject: Function.Function;
+    let functionObject: Operation.PersistentOperation;
     if (Option.isSome(existingObject)) {
       functionObject = existingObject.value;
-      Function.setFrom(functionObject, func);
+      Operation.setFrom(functionObject, func);
     } else if (Option.isSome(space)) {
       functionObject = yield* Database.add(func);
     } else {

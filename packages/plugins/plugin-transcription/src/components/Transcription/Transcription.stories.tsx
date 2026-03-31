@@ -10,12 +10,13 @@ import React, { type FC, useEffect, useMemo, useState } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Key } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { useMembers, useSpace } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { TestSchema } from '@dxos/schema/testing';
 import { type ContentBlock, type Message, Organization, Person } from '@dxos/types';
@@ -67,12 +68,15 @@ const TranscriptContainer: FC<
   );
 };
 
-type StoryProps = { messages?: Message.Message[] } & Pick<TranscriptionProps, 'ignoreAttention' | 'attendableId'>;
+type DefaultStoryProps = { messages?: Message.Message[] } & Pick<
+  TranscriptionProps,
+  'ignoreAttention' | 'attendableId'
+>;
 
 /**
  * Basic story mutates array of messages.
  */
-const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) => {
+const BasicStory = ({ messages: initialMessages = [], ...props }: DefaultStoryProps) => {
   const [reset, setReset] = useState({});
   const builder = useMemo(() => new MessageBuilder(), []);
   const model = useMemo(
@@ -134,7 +138,7 @@ const QueueStory = ({
   queueId,
   onReset,
   ...props
-}: StoryProps & { queueId: Key.ObjectId; onReset: () => void }) => {
+}: DefaultStoryProps & { queueId: Key.ObjectId; onReset: () => void }) => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
   const members = useMembers(space?.id).map((member) => member.identity);
@@ -173,7 +177,6 @@ const QueueStoryWrapper = () => {
 const meta = {
   title: 'plugins/plugin-transcription/components/Transcription',
   decorators: [
-    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
@@ -183,7 +186,7 @@ const meta = {
           types: [TestItem, TestSchema.DocumentType, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
+              yield* initializeIdentity(client);
             }),
         }),
 
@@ -199,7 +202,7 @@ const meta = {
 
 export default meta;
 
-const DefaultStory = (props: StoryProps) => {
+const DefaultStory = (props: DefaultStoryProps) => {
   const [messages, setMessages] = useState<Message.Message[]>([]);
   useEffect(() => {
     void Promise.all(Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage())).then(setMessages);

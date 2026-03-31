@@ -2,7 +2,6 @@
 // Copyright 2022 DXOS.org
 //
 
-import { join, resolve } from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 

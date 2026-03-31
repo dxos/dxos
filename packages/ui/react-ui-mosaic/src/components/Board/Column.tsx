@@ -19,7 +19,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -108,13 +108,14 @@ const BoardColumnRoot = BoardColumnRootInner as <TColumn = unknown>(
 
 const BOARD_COLUMN_HEADER_NAME = 'Board.Column.Header';
 
-type BoardColumnHeaderProps = ThemedClassName<{ label: string; dragHandleRef: ReactRef<HTMLButtonElement> }>;
+type BoardColumnHeaderProps = { label: string; dragHandleRef: ReactRef<HTMLButtonElement> };
 
-const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
-  ({ classNames, label, dragHandleRef }, forwardedRef) => {
+const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
+  ({ label, dragHandleRef, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { model } = useBoard(BOARD_COLUMN_HEADER_NAME);
     const column = useBoardColumn();
+    const { className, ...rest } = composableProps(props);
     const columnMenuItems = useMemo(
       () =>
         column != null && model.onColumnDelete
@@ -131,12 +132,13 @@ const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
     return (
       <Menu.Root>
         <Toolbar.Root
-          classNames={mx('border-b border-separator', classNames)}
+          {...rest}
+          className={mx('border-b border-separator', className)}
           data-testid='board-column-header'
           ref={forwardedRef}
         >
-          <Toolbar.DragHandle ref={dragHandleRef} />
-          <Toolbar.Text>{label}</Toolbar.Text>
+          <Toolbar.DragHandle ref={dragHandleRef} testId='mosaicBoard.columnDragHandle' />
+          <Toolbar.Text data-testid='mosaicBoard.columnTitle'>{label}</Toolbar.Text>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <Menu.Trigger asChild disabled={!columnMenuItems?.length}>
             <Toolbar.IconButton
@@ -166,28 +168,30 @@ type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> &
     Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
   };
 
-const BoardColumnBody = ({ data, eventHandler, Tile = BoardItem, debug }: BoardColumnBodyProps) => {
-  const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
-  const [viewport, setViewport] = useState<HTMLElement | null>(null);
-  const items = useAtomValue(model.items(data));
+const BoardColumnBody = composable<HTMLDivElement, BoardColumnBodyProps>(
+  ({ data, eventHandler, Tile = BoardItem, debug, ...props }, forwardedRef) => {
+    const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
+    const items = useAtomValue(model.items(data));
 
-  return (
-    <Mosaic.Container
-      asChild
-      withFocus
-      orientation='vertical'
-      autoScroll={viewport}
-      eventHandler={eventHandler}
-      debug={debug}
-    >
-      <ScrollArea.Root orientation='vertical' thin margin padding>
-        <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
-          <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
-    </Mosaic.Container>
-  );
-};
+    return (
+      <Mosaic.Container
+        asChild
+        withFocus
+        orientation='vertical'
+        autoScroll={viewport}
+        eventHandler={eventHandler}
+        debug={debug}
+      >
+        <ScrollArea.Root {...composableProps(props)} orientation='vertical' thin centered padding ref={forwardedRef}>
+          <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
+            <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Mosaic.Container>
+    );
+  },
+);
 
 BoardColumnBody.displayName = BOARD_COLUMN_BODY_NAME;
 

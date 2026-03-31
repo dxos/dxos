@@ -14,7 +14,7 @@ import { Obj, type Ref } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { Graph } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { isNonNullable } from '@dxos/util';
@@ -135,7 +135,7 @@ export const StackContainer = ({ attendableId, subject: collection }: StackConta
   );
 
   return (
-    <StackItem.Content toolbar classNames='dx-article overflow-hidden border-l border-r border-subdued-separator'>
+    <StackItem.Content toolbar classNames='dx-document'>
       <Toolbar.Root>
         <Toolbar.IconButton
           icon='ph--plus--regular'

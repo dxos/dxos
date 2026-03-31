@@ -4,11 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Capability } from '@dxos/app-framework';
-import { Operation } from '@dxos/operation';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space/types';
-
-import { meta } from '../meta';
 
 import { LocationAnnotationId } from './types';
 
@@ -20,7 +16,6 @@ export const CreateMap = Schema.Struct({
     TypeInputOptionsAnnotation.set({
       location: ['database', 'runtime'],
       kind: ['user'],
-      registered: ['registered', 'unregistered'],
     }),
     Schema.optional,
   ),
@@ -34,16 +29,3 @@ export const CreateMap = Schema.Struct({
 });
 
 export type CreateMap = Schema.Schema.Type<typeof CreateMap>;
-
-const MAP_OPERATION = `${meta.id}.operation`;
-
-export namespace MapOperation {
-  export const Toggle = Operation.make({
-    meta: { key: `${MAP_OPERATION}.toggle`, name: 'Toggle Map' },
-    services: [Capability.Service],
-    schema: {
-      input: Schema.Void,
-      output: Schema.Void,
-    },
-  });
-}

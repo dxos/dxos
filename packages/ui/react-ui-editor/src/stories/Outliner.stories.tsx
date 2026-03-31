@@ -13,11 +13,11 @@ import { type EditorController, type EditorMenuGroup, EditorMenuProvider } from 
 
 import { EditorStory } from './components';
 
-type StoryProps = {
+type DefaultStoryProps = {
   text?: string;
 };
 
-const DefaultStory = ({ text }: StoryProps) => {
+const DefaultStory = ({ text }: DefaultStoryProps) => {
   const [controller, setController] = useState<EditorController | null>(null);
 
   const extensions = useMemo(() => [outliner(), hashtag()], []);

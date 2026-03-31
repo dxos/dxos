@@ -50,7 +50,7 @@ const projectorTypes: Record<ProjectorType, Factory> = {
   relational: GraphRelationalProjector as Factory,
 };
 
-type StoryProps = GraphProps & {
+type DefaultStoryProps = GraphProps & {
   debug?: boolean;
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
@@ -73,13 +73,13 @@ const DefaultStory = ({
   projectorType: _projectorType = 'force',
   projectorOptions,
   ...props
-}: StoryProps) => {
+}: DefaultStoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
   const context = useRef<SVGContext>(null);
   const registry = useContext(RegistryContext);
 
   // Models.
-  const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => {
+  const [model, setModel] = useState<GraphModel.ReactiveGraphModel | undefined>(() => {
     const graph = _graph?.();
     return graph ? new TestGraphModel(registry, graph) : undefined;
   });
@@ -287,7 +287,7 @@ const Debug = ({
   onDelete,
   onPing,
 }: {
-  model?: GraphModel.GraphModel;
+  model?: GraphModel.ReactiveGraphModel;
   selection: SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;

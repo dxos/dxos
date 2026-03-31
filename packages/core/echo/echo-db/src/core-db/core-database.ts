@@ -533,7 +533,7 @@ export class CoreDatabase {
   }
 
   // TODO(wittjosiah): Handle RpcClosedError and TimeoutError during reconnection gracefully.
-  async flush({ disk = true, indexes = false, updates = false }: Database.FlushOptions = {}): Promise<void> {
+  async flush({ disk = true, indexes = true, updates = false }: Database.FlushOptions = {}): Promise<void> {
     log('flush', { disk, indexes, updates });
     // Wait for pending document creations to complete before flushing.
     await this._automergeDocLoader.waitForPendingCreations();
@@ -630,7 +630,7 @@ export class CoreDatabase {
   }
 
   /**
-   * @deprecated Use `flush({ indexes: true })`.
+   * @deprecated Use `flush()`.
    */
   async updateIndexes(): Promise<void> {
     await this._dataService.updateIndexes(undefined, { timeout: 0 });

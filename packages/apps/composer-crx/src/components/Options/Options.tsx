@@ -8,15 +8,21 @@ import browser from 'webextension-polyfill';
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
 import { SpaceId } from '@dxos/keys';
 import { Input, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { DEVELOPER_MODE_PROP, SPACE_ID_PROP, SPACE_MODE_PROP, getProp } from '../../config';
 import { translationKey } from '../../translations';
 
-const headerGrid = 'grid grid-cols-[8rem_2fr_1fr_8rem] p-4 overflow-hidden';
-const propertiesGrid =
-  'grid grid-cols-[8rem_1fr_1fr_8rem] p-4 overflow-hidden items-center [&_label]:m-0 [&_label]:text-base';
+// TODO(burdon): Use subgrid.
+const styles = {
+  headerGrid: 'grid grid-cols-[8rem_2fr_1fr_8rem] p-4 overflow-hidden',
+  propertiesGrid:
+    'grid grid-cols-[8rem_1fr_1fr_8rem] p-4 overflow-hidden items-center [&_label]:m-0 [&_label]:text-base',
+};
 
-export const Options = () => {
+export type OptionsProps = {};
+
+export const Options = composable<HTMLDivElement, OptionsProps>((props, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const [developerMode, setDeveloperMode] = useState(false);
   const [spaceMode, setSpaceMode] = useState(false);
@@ -56,9 +62,9 @@ export const Options = () => {
   };
 
   return (
-    <ScrollArea.Root orientation='vertical'>
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
       <ScrollArea.Viewport>
-        <div className={headerGrid}>
+        <div className={styles.headerGrid}>
           <a href='https://dxos.org/composer' target='_blank' rel='noreferrer' className='flex justify-end -me-4'>
             <Composer className='w-[8rem] h-[8rem]' />
           </a>
@@ -80,7 +86,7 @@ export const Options = () => {
           </div>
         </div>
 
-        <div className={propertiesGrid}>
+        <div className={styles.propertiesGrid}>
           <div />
           <Input.Root>
             <Input.Label>{t('settings.dev-mode.label')}</Input.Label>
@@ -89,7 +95,7 @@ export const Options = () => {
             </div>
           </Input.Root>
         </div>
-        <div className={propertiesGrid}>
+        <div className={styles.propertiesGrid}>
           <div />
           <Input.Root>
             <Input.Label>{t('settings.space-mode.label')}</Input.Label>
@@ -98,7 +104,7 @@ export const Options = () => {
             </div>
           </Input.Root>
         </div>
-        <div className={propertiesGrid}>
+        <div className={styles.propertiesGrid}>
           <div />
           <Input.Root>
             <Input.Label>{t('settings.space-id.label')}</Input.Label>
@@ -110,4 +116,6 @@ export const Options = () => {
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
+
+Options.displayName = 'Options';

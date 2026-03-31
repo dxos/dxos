@@ -8,10 +8,22 @@ import { type Node } from '@dxos/app-graph';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
+import { composable, composableProps, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { type ActionProperties } from '../../types';
+
+const fallbackIcon = 'ph--placeholder--regular';
+
+const fineActionButtonProps = {
+  size: 4 as const,
+  density: 'fine' as const,
+};
+
+const coarseActionButtonProps = {
+  size: 5 as const,
+  density: 'coarse' as const,
+};
 
 export type NavTreeItemActionMenuProps = ActionProperties & {
   parent: Node.Node;
@@ -21,51 +33,38 @@ export type NavTreeItemActionMenuProps = ActionProperties & {
   menuActions?: Node.Action[];
 };
 
-const fallbackIcon = 'ph--placeholder--regular';
+export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTreeItemActionMenuProps>(
+  ({ parent, path, label, icon, testId, menuActions, caller, ...props }, forwardedRef) => {
+    const { t } = useTranslation(meta.id);
+    const density = useDensityContext();
+    const runAction = useActionRunner();
+    const handleAction = useCallback(
+      (action: Node.Action, params: Node.InvokeProps = {}) => runAction(action, { ...params, path }),
+      [runAction, path],
+    );
 
-const fineActionButtonProps = {
-  size: 4 as const,
-  density: 'fine' as const,
-};
-const coarseActionButtonProps = {
-  size: 5 as const,
-  density: 'coarse' as const,
-};
+    return (
+      <Menu.Root caller={caller} onAction={handleAction}>
+        <Menu.Trigger asChild>
+          <IconButton
+            {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
+            {...composableProps(props)}
+            classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+            variant='ghost'
+            icon={icon ?? fallbackIcon}
+            iconOnly
+            label={toLocalizedString(label, t)}
+            data-testid={testId}
+            ref={forwardedRef}
+          />
+        </Menu.Trigger>
+        <Menu.Content group={parent} items={menuActions as MenuItem[]} />
+      </Menu.Root>
+    );
+  },
+);
 
-export const NavTreeItemActionDropdownMenu = ({
-  parent,
-  path,
-  label,
-  icon,
-  testId,
-  menuActions,
-  caller,
-}: NavTreeItemActionMenuProps) => {
-  const { t } = useTranslation(meta.id);
-  const density = useDensityContext();
-  const runAction = useActionRunner();
-  const handleAction = useCallback(
-    (action: Node.Action, params: Node.InvokeProps = {}) => runAction(action, { ...params, path }),
-    [runAction, path],
-  );
-
-  return (
-    <Menu.Root caller={caller} onAction={handleAction}>
-      <Menu.Trigger asChild>
-        <IconButton
-          {...(density === 'coarse' ? coarseActionButtonProps : fineActionButtonProps)}
-          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-          variant='ghost'
-          icon={icon ?? fallbackIcon}
-          iconOnly
-          label={toLocalizedString(label, t)}
-          data-testid={testId}
-        />
-      </Menu.Trigger>
-      <Menu.Content group={parent} items={menuActions as MenuItem[]} />
-    </Menu.Root>
-  );
-};
+NavTreeItemActionDropdownMenu.displayName = 'NavTreeItemActionDropdownMenu';
 
 export const NavTreeItemMonolithicAction = (
   props: Node.Action & {
@@ -113,6 +112,7 @@ export const NavTreeItemMonolithicAction = (
 export const NavTreeItemAction = ({
   monolithic,
   menuActions,
+  menuType,
   parent: node,
   path,
   ...props

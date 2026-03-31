@@ -36,18 +36,18 @@ const weights = new Map<IconWeight, ReactElement>([
   ],
 ]);
 
-export const Composer = forwardRef<SVGSVGElement, any>((props, ref) => {
+export const Composer = forwardRef<SVGSVGElement, any>((props, forwardedRef) => {
   const weight = props.weight || 'regular';
   const size = props.size || 256;
   return (
     <svg
-      ref={ref}
       {...props}
       width={size}
       height={size}
       viewBox='0 0 256 256'
       fill='currentColor'
       xmlns='http://www.w3.org/2000/svg'
+      ref={forwardedRef}
     >
       {weights.get(weight)}
     </svg>

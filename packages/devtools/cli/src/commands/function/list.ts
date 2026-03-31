@@ -11,8 +11,8 @@ import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { Database, Filter } from '@dxos/echo';
-import { Function } from '@dxos/functions';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
+import { Operation } from '@dxos/operation';
 
 import { getFunctionStatus, printFunction } from './util';
 
@@ -28,7 +28,7 @@ export const list = Command.make(
   Effect.fn(function* ({ remote }) {
     const { json } = yield* CommandConfig;
 
-    const dbFunctions = yield* Database.runQuery(Filter.type(Function.Function));
+    const dbFunctions = yield* Database.runQuery(Filter.type(Operation.PersistentOperation));
     const functions = remote
       ? yield* Effect.gen(function* () {
           const client = yield* ClientService;

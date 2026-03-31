@@ -72,15 +72,19 @@ export default Capability.makeModule(() =>
         role: ['article', 'section'],
         filter: (data): data is { subject: Event.Event; companionTo: Calendar.Calendar } =>
           Obj.instanceOf(Event.Event, data.subject) && Calendar.instanceOf(data.companionTo),
-        component: ({ data: { companionTo, subject }, role }) => {
-          return <EventArticle role={role} subject={subject} calendar={companionTo} />;
+        component: ({ data, role }) => {
+          if (!data?.subject || !data?.companionTo) return null;
+          return <EventArticle role={role} subject={data.subject} calendar={data.companionTo} />;
         },
       }),
       Surface.create({
         id: `${meta.id}.calendar`,
         role: ['article'],
-        filter: (data): data is { subject: Calendar.Calendar } => Calendar.instanceOf(data.subject),
-        component: ({ data, role }) => <CalendarArticle role={role} subject={data.subject} />,
+        filter: (data): data is { subject: Calendar.Calendar; attendableId?: string } =>
+          Calendar.instanceOf(data.subject),
+        component: ({ data, role }) => (
+          <CalendarArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
       }),
       Surface.create({
         id: `${meta.id}.message-card`,

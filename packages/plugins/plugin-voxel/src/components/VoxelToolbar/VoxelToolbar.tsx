@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Toolbar, type ToolbarRootProps } from '@dxos/react-ui';
-import { type Hue } from '@dxos/ui-theme';
+import { type Hue, composable, composableProps } from '@dxos/ui-theme';
 
 import { PALETTE_STYLES, type ToolMode } from '../VoxelEditor';
 
@@ -16,6 +16,8 @@ export type VoxelToolbarProps = ToolbarRootProps & {
   selectedHue: Hue;
   /** Whether the grid is visible. */
   showGrid: boolean;
+  /** Whether the life simulation is running. */
+  lifeRunning?: boolean;
   /** Called when tool mode changes. */
   onToolModeChange: (mode: ToolMode) => void;
   /** Called when hue selection changes. */
@@ -26,6 +28,10 @@ export type VoxelToolbarProps = ToolbarRootProps & {
   onClear?: () => void;
   /** Called when generate button is clicked. */
   onGenerate?: () => void;
+  /** Called to toggle the life simulation. */
+  onToggleLife?: () => void;
+  /** Called to seed a random life pattern. */
+  onSeedLife?: () => void;
 };
 
 const TOOL_OPTIONS: { value: ToolMode; icon: string; label: string }[] = [
@@ -35,65 +41,93 @@ const TOOL_OPTIONS: { value: ToolMode; icon: string; label: string }[] = [
 ];
 
 /** Toolbar for the voxel editor with tool mode, color palette, and clear button. */
-export const VoxelToolbar = ({
-  toolMode,
-  selectedHue,
-  showGrid,
-  onToolModeChange,
-  onHueChange,
-  onToggleGrid,
-  onClear,
-  onGenerate,
-  ...props
-}: VoxelToolbarProps) => {
-  return (
-    <Toolbar.Root {...props}>
-      <Toolbar.ToggleGroup
-        type='single'
-        value={toolMode}
-        onValueChange={(value) => value && onToolModeChange(value as ToolMode)}
-      >
-        {TOOL_OPTIONS.map((tool) => (
-          <Toolbar.ToggleGroupIconItem
-            key={tool.value}
-            value={tool.value}
-            icon={tool.icon}
+export const VoxelToolbar = composable<HTMLDivElement, VoxelToolbarProps>(
+  (
+    {
+      toolMode,
+      selectedHue,
+      showGrid,
+      lifeRunning,
+      onToolModeChange,
+      onHueChange,
+      onToggleGrid,
+      onClear,
+      onGenerate,
+      onToggleLife,
+      onSeedLife,
+      children,
+      ...props
+    },
+    forwardedRef,
+  ) => {
+    return (
+      <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+        <Toolbar.ToggleGroup
+          type='single'
+          value={toolMode}
+          onValueChange={(value) => value && onToolModeChange(value as ToolMode)}
+        >
+          {TOOL_OPTIONS.map((tool) => (
+            <Toolbar.ToggleGroupIconItem
+              key={tool.value}
+              value={tool.value}
+              icon={tool.icon}
+              iconOnly
+              label={tool.label}
+            />
+          ))}
+        </Toolbar.ToggleGroup>
+        <Toolbar.IconButton
+          icon={showGrid ? 'ph--grid-four--fill' : 'ph--grid-four--regular'}
+          iconOnly
+          variant='ghost'
+          label='Toggle grid'
+          onClick={onToggleGrid}
+        />
+        {onGenerate && (
+          <Toolbar.IconButton
+            icon='ph--shapes--regular'
             iconOnly
-            label={tool.label}
+            variant='ghost'
+            label='Generate shape'
+            onClick={onGenerate}
+          />
+        )}
+        {onClear && (
+          <Toolbar.IconButton icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />
+        )}
+        <Toolbar.Separator />
+        {onSeedLife && (
+          <Toolbar.IconButton
+            icon='ph--dna--regular'
+            iconOnly
+            variant='ghost'
+            label='Seed random life pattern'
+            onClick={onSeedLife}
+          />
+        )}
+        {onToggleLife && (
+          <Toolbar.IconButton
+            icon={lifeRunning ? 'ph--pause--fill' : 'ph--play--fill'}
+            iconOnly
+            variant='ghost'
+            label={lifeRunning ? 'Stop life' : 'Start life'}
+            onClick={onToggleLife}
+          />
+        )}
+        <Toolbar.Separator />
+        {PALETTE_STYLES.map((colorStyle) => (
+          <Toolbar.IconButton
+            key={colorStyle.hue}
+            icon={colorStyle.hue === selectedHue ? 'ph--square--fill' : 'ph--square--duotone'}
+            iconOnly
+            variant='ghost'
+            label={colorStyle.hue}
+            classNames={colorStyle.text}
+            onClick={() => onHueChange(colorStyle.hue)}
           />
         ))}
-      </Toolbar.ToggleGroup>
-      <Toolbar.IconButton
-        icon={showGrid ? 'ph--grid-four--fill' : 'ph--grid-four--regular'}
-        iconOnly
-        variant='ghost'
-        label='Toggle grid'
-        onClick={onToggleGrid}
-      />
-      {onGenerate && (
-        <Toolbar.IconButton
-          icon='ph--shapes--regular'
-          iconOnly
-          variant='ghost'
-          label='Generate shape'
-          onClick={onGenerate}
-        />
-      )}
-      {onClear && (
-        <Toolbar.IconButton icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />
-      )}
-      <Toolbar.Separator />
-      {PALETTE_STYLES.map((colorStyle) => (
-        <Toolbar.IconButton
-          key={colorStyle.hue}
-          icon={colorStyle.hue === selectedHue ? 'ph--square--fill' : 'ph--square--duotone'}
-          iconOnly
-          variant='ghost'
-          label={colorStyle.hue}
-          classNames={colorStyle.text}
-          onClick={() => onHueChange(colorStyle.hue)}
-        />
-      ))}
-    </Toolbar.Root>
-  );
-};
+      </Toolbar.Root>
+    );
+  },
+);

@@ -24,7 +24,7 @@ import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { loadEnabledPlugins } from '@dxos/plugin-registry/cli';
 
-import { chat, debug, dx, fn, hub, repl } from './commands';
+import { admin, chat, debug, dx, fn, hub, repl } from './commands';
 import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
 
 let filter = LogLevel.ERROR;
@@ -53,16 +53,15 @@ const program = Effect.gen(function* () {
     CliConfig.defaultConfig,
   )(dx.descriptor);
   const value = CommandDirective.isUserDefined(directive) ? Option.some(directive.value) : Option.none();
+  const profile = value.pipe(
+    Option.map(({ profile }) => profile),
+    Option.getOrElse(() => DEFAULT_PROFILE),
+  );
   const config = yield* value.pipe(
-    Option.map((v) => ConfigService.load(v)),
+    Option.map(({ config, profile }) => ConfigService.load({ config, profile })),
     Option.getOrElse(() => Effect.succeed(undefined)),
   );
 
-  // Get profile name from command value or use default
-  const profile: string = value.pipe(
-    Option.map((v) => (v as { profile?: string }).profile ?? DEFAULT_PROFILE),
-    Option.getOrElse(() => DEFAULT_PROFILE),
-  );
   const savedEnabled = yield* loadEnabledPlugins({ profile });
   const enabled = savedEnabled.length > 0 ? [...savedEnabled] : getDefaults();
 
@@ -79,6 +78,7 @@ const program = Effect.gen(function* () {
       fn,
 
       // TODO(burdon): Admin-only. Where should these commands live?
+      admin,
       debug,
       hub,
     ],

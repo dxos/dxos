@@ -15,12 +15,12 @@ import { ObjectId } from '@dxos/keys';
 import { Employer, Organization, Person } from '@dxos/types';
 
 import DatabaseBlueprint from './blueprint';
-import { DatabaseFunctions } from './functions';
+import { DatabaseHandlers } from './functions';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [...Object.values(DatabaseFunctions)],
+  operationHandlers: DatabaseHandlers,
   types: [Organization.Organization, Person.Person, Employer.Employer, Tag.Tag, Blueprint.Blueprint],
   tracing: 'pretty',
 });
@@ -90,6 +90,26 @@ describe('Database Blueprint', () => {
         });
         const orgs = yield* Database.runQuery(Query.type(Organization.Organization, { name: 'Cyberdyne Systems' }));
         expect(orgs).toHaveLength(1);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'object-create: create an object with a reference',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* addDatabaseBlueprint();
+        yield* AiConversationService.run({
+          prompt: 'Create a preson fullName="John Doe" with a reference to the organization "Cyberdyne Systems".',
+        });
+        const orgs = yield* Database.runQuery(Query.type(Organization.Organization, { name: 'Cyberdyne Systems' }));
+        const persons = yield* Database.runQuery(Query.type(Person.Person, { fullName: 'John Doe' }));
+        expect(orgs).toHaveLength(1);
+        expect(persons).toHaveLength(1);
+        expect(persons[0].organization.target).toBe(orgs[0]);
       },
       provideTestLayers,
       TestHelpers.provideTestContext,

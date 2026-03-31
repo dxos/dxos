@@ -12,12 +12,12 @@ import { type Density, type Elevation } from '@dxos/ui-types';
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 
-interface ButtonProps extends ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> {
+type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.button>> & {
   variant?: 'default' | 'primary' | 'outline' | 'ghost' | 'destructive';
   density?: Density;
   elevation?: Elevation;
   asChild?: boolean;
-}
+};
 
 type ButtonGroupContextValue = { inGroup?: boolean };
 
@@ -31,21 +31,13 @@ const [ButtonGroupProvider, useButtonGroupContext] = createContext<ButtonGroupCo
 const Button = memo(
   forwardRef<HTMLButtonElement, ButtonProps>(
     (
-      {
-        classNames,
-        children,
-        density: propsDensity,
-        elevation: propsElevation,
-        variant = 'default',
-        asChild,
-        ...props
-      },
+      { classNames, children, density: densityProp, elevation: elevationProp, variant = 'default', asChild, ...props },
       ref,
     ) => {
       const { inGroup } = useButtonGroupContext(BUTTON_NAME);
       const { tx } = useThemeContext();
-      const elevation = useElevationContext(propsElevation);
-      const density = useDensityContext(propsDensity);
+      const elevation = useElevationContext(elevationProp);
+      const density = useDensityContext(densityProp);
       const Comp = asChild ? Slot : Primitive.button;
       return (
         <Comp

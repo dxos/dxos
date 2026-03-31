@@ -30,7 +30,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.surface.document`,
         role: ['article', 'section', 'tabpanel'],
-        filter: (data): data is { attendableId: string; subject: Markdown.Document; variant: undefined } =>
+        filter: (data): data is { subject: Markdown.Document; attendableId: string; variant: undefined } =>
           typeof data.attendableId === 'string' && Obj.instanceOf(Markdown.Document, data.subject) && !data.variant,
         component: ({ data, role, ref }) => {
           return (
@@ -47,10 +47,18 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.surface.text`,
         role: ['article', 'section', 'tabpanel'],
-        filter: (data): data is { id: string; subject: Text.Text } =>
-          typeof data.id === 'string' && Obj.instanceOf(Text.Text, data.subject),
-        component: ({ data, role }) => {
-          return <Container id={data.id} subject={data.subject} role={role} />;
+        filter: (data): data is { attendableId: string; subject: Text.Text } =>
+          typeof data.attendableId === 'string' && Obj.instanceOf(Text.Text, data.subject),
+        component: ({ data, role, ref }) => {
+          return (
+            <Container
+              id={Obj.getDXN(data.subject).toString()}
+              attendableId={data.attendableId}
+              subject={data.subject}
+              role={role}
+              ref={ref}
+            />
+          );
         },
       }),
       Surface.create({

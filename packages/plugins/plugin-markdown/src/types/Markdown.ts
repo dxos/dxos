@@ -26,7 +26,7 @@ export const Document = Schema.Struct({
   DescriptionAnnotation.set('description'),
   Annotation.IconAnnotation.set({
     icon: 'ph--text-aa--regular',
-    hue: 'green',
+    hue: 'indigo',
   }),
 );
 

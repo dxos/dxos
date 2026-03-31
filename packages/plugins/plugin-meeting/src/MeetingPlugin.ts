@@ -2,16 +2,18 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Option from 'effect/Option';
+
 import { ActivationEvent, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Type } from '@dxos/echo';
+import { Annotation, Type } from '@dxos/echo';
 
 import {
   AppGraphBuilder,
   CallExtension,
   MeetingSettings,
   MeetingState,
-  OperationResolver,
+  OperationHandler,
   ReactSurface,
 } from './capabilities';
 import { meta } from './meta';
@@ -28,12 +30,12 @@ export const MeetingPlugin = Plugin.define(meta).pipe(
       id: Type.getTypename(Meeting.Meeting),
       metadata: {
         label: (object: Meeting.Meeting) => object.name || new Date(object.created).toLocaleString(),
-        icon: 'ph--note--regular',
-        iconHue: 'rose',
+        icon: Annotation.IconAnnotation.get(Meeting.Meeting).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Meeting.Meeting).pipe(Option.getOrThrow).hue ?? 'white',
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({ schema: [Meeting.Meeting], id: 'schemas' }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

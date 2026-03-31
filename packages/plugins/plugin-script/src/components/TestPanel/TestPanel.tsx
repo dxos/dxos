@@ -2,16 +2,16 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, useEffect, useRef, useState } from 'react';
+import React, { forwardRef, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-type State = 'pending' | 'responding';
+type State = 'pending';
 
 /**
  * Request or response.
@@ -24,200 +24,123 @@ type Message = {
 };
 
 export type TestPanelProps = ThemedClassName<{
-  functionUrl?: string;
+  onInvoke?: (input: unknown) => Promise<unknown>;
 }>;
 
-// TODO(burdon): Need persistent history (currently lost when switching tabs)..
-export const TestPanel = ({ classNames, functionUrl }: TestPanelProps) => {
-  const { t } = useTranslation(meta.id);
+// TODO(burdon): Need persistent history (currently lost when switching tabs).
+export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
+  ({ classNames, onInvoke, ...props }, forwardedRef) => {
+    const { t } = useTranslation(meta.id);
 
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [input, setInput] = useState('');
-  const [result, setResult] = useState('');
-  const [state, setState] = useState<State | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [input, setInput] = useState('');
+    const [state, setState] = useState<State | null>(null);
 
-  // TODO(burdon): Persistent history (thread).
-  const [history, setHistory] = useState<Message[]>([]);
+    // TODO(burdon): Persistent history (thread).
+    const [history, setHistory] = useState<Message[]>([]);
 
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const handleScroll = () => {
-    if (scrollerRef.current) {
-      scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
-    }
-  };
-
-  const controller = useRef<AbortController>(null);
-  useEffect(() => {
-    return () => {
-      handleStop();
+    const scrollerRef = useRef<HTMLDivElement>(null);
+    const handleScroll = () => {
+      if (scrollerRef.current) {
+        scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
+      }
     };
-  }, []);
 
-  const handleStop = () => {
-    controller.current?.abort('stop');
-    controller.current = null;
-  };
+    const handleClear = () => {
+      setInput('');
+      setHistory([]);
+      inputRef.current?.focus();
+    };
 
-  const handleClear = () => {
-    handleStop();
-    setInput('');
-    setResult('');
-    setHistory([]);
-    inputRef.current?.focus();
-  };
+    const handleResponse = ({
+      text,
+      data,
+      error,
+    }: {
+      text?: string;
+      data?: any;
+      error?: Error;
+    } = {}) => {
+      setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
+      setState(null);
+      handleScroll();
+    };
 
-  const handleResponse = ({
-    text,
-    data,
-    error,
-  }: {
-    text?: string;
-    data?: any;
-    error?: Error;
-  } = {}) => {
-    controller.current = null;
-    setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
-    setResult('');
-    setState(null);
-    handleScroll();
-  };
+    const handleRequest = async (input: string) => {
+      if (!onInvoke) {
+        handleResponse({ error: new Error('Function not deployed') });
+        return;
+      }
 
-  const handleRequest = async (input: string) => {
-    // Returns a promise that resolves when a value has been received.
-    try {
-      setState('pending');
-
-      let data = null;
-      // Detect JSON input.
+      let data: unknown = input;
+      let displayText = input;
       if (input.charAt(0) === '{') {
         try {
           const validJsonString = input.replace(/'/g, '"').replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
           data = JSON.parse(validJsonString);
-          input = JSON.stringify(data, null, 2);
+          displayText = JSON.stringify(data, null, 2);
         } catch (err) {
-          inputRef.current?.focus();
+          handleResponse({ error: new Error('Invalid JSON input') });
           return;
         }
       }
 
-      setInput('');
-      setResult('');
-      setHistory((history) => [...history, { type: 'request', text: input }]);
-      setTimeout(() => {
-        handleScroll();
-      });
+      try {
+        setState('pending');
+        setInput('');
+        setHistory((history) => [...history, { type: 'request', text: displayText }]);
+        setTimeout(handleScroll);
 
-      // Throws DOMException when aborted.
-      controller.current = new AbortController();
-      const response = await fetch(functionUrl!, {
-        signal: controller.current.signal,
-        method: 'POST',
-        body: input,
-        headers: {
-          'Content-Type': data ? 'application/json' : 'text/plain',
-        },
-      });
+        const result = await onInvoke(data);
 
-      // Check for error.
-      if (!response.ok) {
-        const text = await response.text();
-        handleResponse({
-          error: new Error(text || response.statusText || String(response.status)),
-        });
-        return;
-      }
-
-      // Check for JSON.
-      const contentType = response.headers.get('content-type');
-      if (contentType === 'application/json') {
-        const data = await response.json();
-        handleResponse({ data });
-        return;
-      }
-
-      // Text (including streaming).
-      setState('responding');
-      let text = '';
-      const reader = response.body!.getReader();
-      const pump = async ({ done, value }: ReadableStreamReadResult<Uint8Array>): Promise<void> => {
-        text = text + new TextDecoder().decode(value);
-        if (!controller.current || done) {
-          handleResponse({ text });
-          return;
+        if (typeof result === 'string') {
+          handleResponse({ text: result });
+        } else {
+          handleResponse({ data: result });
         }
-
-        setResult(text);
-        setTimeout(() => {
-          handleScroll();
-        });
-
-        return reader.read().then(pump);
-      };
-
-      void reader
-        .read()
-        .then(pump)
-        .catch((err) => {
-          if (err.name !== 'AbortError') {
-            log.catch(err);
-          }
-        });
-    } catch (err: any) {
-      if (err !== 'stop') {
-        const error = err instanceof Error ? err : new Error(err);
+      } catch (err: any) {
+        const error = err instanceof Error ? err : new Error(String(err));
         handleResponse({ error });
         log.catch(err);
-      } else {
-        handleResponse();
       }
-    }
-  };
+    };
 
-  return (
-    <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
-      {/* TODO(burdon): Replace with Thread. */}
-      <MessageThread ref={scrollerRef} state={state} result={result} history={history} />
-      {/* TODO(burdon): Replace with Form based on the function's input schema. */}
-      <Toolbar.Root>
-        <Input.Root>
-          <Input.TextInput
-            ref={inputRef}
-            autoFocus
-            placeholder={t('function request placeholder')}
-            value={input}
-            onChange={(ev) => setInput(ev.target.value)}
-            onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
-          />
-        </Input.Root>
-        <Toolbar.IconButton
-          icon='ph--play--regular'
-          size={4}
-          label='Execute'
-          iconOnly
-          onClick={() => handleRequest(input)}
-        />
-        <Toolbar.IconButton
-          icon={state ? 'ph--stop--regular' : 'ph--trash--regular'}
-          size={4}
-          label={state ? 'Stop' : 'Clear'}
-          iconOnly
-          onClick={() => (state ? handleStop() : handleClear())}
-        />
-      </Toolbar.Root>
-    </div>
-  );
-};
+    return (
+      <div
+        {...composableProps(props, { className: mx('flex flex-col h-full overflow-hidden', classNames) })}
+        ref={forwardedRef}
+      >
+        {/* TODO(burdon): Replace with Thread. */}
+        <MessageThread ref={scrollerRef} state={state} history={history} />
+        {/* TODO(burdon): Replace with Form based on the function's input schema. */}
+        <Toolbar.Root>
+          <Input.Root>
+            <Input.TextInput
+              ref={inputRef}
+              autoFocus
+              placeholder={t('function request placeholder')}
+              value={input}
+              onChange={(ev) => setInput(ev.target.value)}
+              onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
+            />
+          </Input.Root>
+          <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
+          <Toolbar.IconButton icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
+        </Toolbar.Root>
+      </div>
+    );
+  },
+);
 
 // TODO(burdon): Replace with thread?
 // TODO(burdon): Button to edit/re-run question.
 type MessageThreadProps = {
   state: State | null;
   history: Message[];
-  result: string;
 };
 
 const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
-  ({ state, history, result }: MessageThreadProps, forwardedRef) => {
+  ({ state, history }: MessageThreadProps, forwardedRef) => {
     return (
       <ScrollArea.Root orientation='vertical' classNames='h-full' ref={forwardedRef}>
         <ScrollArea.Viewport classNames='gap-6 p-2'>
@@ -230,15 +153,10 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
             </div>
           ))}
 
-          {result?.length > 0 && (
+          {state === 'pending' && (
             <div className='grid grid-cols-[2rem_1fr_2rem]'>
               <div className='p-1'>
-                {(state === 'pending' && <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />) || (
-                  <Icon icon='ph--robot--regular' size={6} classNames='animate-[pulse_1s_ease-in-out_infinite]' />
-                )}
-              </div>
-              <div className='overflow-auto'>
-                <MessageItem message={{ type: 'response', text: result }} />
+                <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />
               </div>
             </div>
           )}

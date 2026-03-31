@@ -159,10 +159,12 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
   }, [alternateTree, attended]);
 
   return (
-    <div className='flex w-full items-center border-b border-subdued-separator dx-app-drag dx-density-coarse pe-1'>
+    <div
+      data-tauri-drag-region
+      className='flex w-full items-center border-b border-subdued-separator dx-app-drag dx-density-coarse pe-1'
+    >
       {backCapableWorkspace ? (
         <IconButton
-          size={5}
           density='coarse'
           classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
@@ -173,9 +175,11 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
           onClick={() => onBack?.()}
         />
       ) : (
-        <div className='w-6' />
+        <div data-tauri-drag-region className='w-6' />
       )}
-      <h2 className='flex-1 truncate min-w-0'>{title}</h2>
+      <h2 data-tauri-drag-region className='flex-1 truncate min-w-0'>
+        {title}
+      </h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
       <div role='none' className='contents dx-app-no-drag'>
         {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled && (
@@ -193,7 +197,6 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
         )}
         {menuActions.length === 1 && (
           <IconButton
-            size={5}
             density='coarse'
             classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
@@ -208,7 +211,6 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
           <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
             <Menu.Trigger asChild>
               <IconButton
-                size={5}
                 density='coarse'
                 classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
                 variant='ghost'

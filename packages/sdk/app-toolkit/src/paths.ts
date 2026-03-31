@@ -5,13 +5,31 @@
 import { Node } from '@dxos/app-graph';
 import { Key, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ATTENDABLE_PATH_SEPARATOR } from '@dxos/react-ui-attention';
 
 /**
  * Prefix for companion node segment IDs (e.g., `~settings`, `~comments`).
- * A segment starting with this prefix identifies a companion panel child of its parent node.
+ * Chosen from RFC 1738's `safe` characters: http://www.faqs.org/rfcs/rfc1738.html
  */
-export const COMPANION_PREFIX = ATTENDABLE_PATH_SEPARATOR;
+export const COMPANION_PREFIX = '~';
+
+/**
+ * Build a companion segment ID for use as a node ID in graph extensions.
+ */
+export const companionSegment = (variant: string): string => `${COMPANION_PREFIX}${variant}`;
+
+/**
+ * Build a fully qualified companion node ID from a parent path and variant name.
+ */
+export const companionId = (parentPath: string, variant: string): string =>
+  `${parentPath}/${companionSegment(variant)}`;
+
+/**
+ * Check whether a qualified ID represents a companion node.
+ */
+export const isCompanion = (qualifiedId: string): boolean => {
+  const lastSegment = qualifiedId.split('/').pop() ?? '';
+  return lastSegment.startsWith(COMPANION_PREFIX);
+};
 
 /**
  * Extract the companion variant name from a qualified companion node ID.
@@ -21,6 +39,21 @@ export const getCompanionVariant = (qualifiedId: string): string => {
   const lastSegment = qualifiedId.split('/').pop() ?? '';
   return lastSegment.startsWith(COMPANION_PREFIX) ? lastSegment.slice(COMPANION_PREFIX.length) : lastSegment;
 };
+
+/**
+ * Prefix for pinned (non-space) workspace IDs in the graph.
+ */
+const PINNED_WORKSPACE_PREFIX = '!';
+
+/**
+ * Build a pinned workspace segment ID.
+ */
+export const pinnedWorkspaceId = (name: string): string => `${PINNED_WORKSPACE_PREFIX}${name}`;
+
+/**
+ * Build a qualified path to a pinned workspace.
+ */
+export const getPinnedWorkspacePath = (name: string): string => `${Node.RootId}/${pinnedWorkspaceId(name)}`;
 
 /**
  * Well-known local segment names for the canonical graph tree structure.
@@ -49,9 +82,12 @@ export const getTypesPath = (spaceId: string): string => `${Node.RootId}/${space
 
 /**
  * Canonical qualified path to a specific type's subtree within a space.
+ * Optional additional segments are appended (e.g. an object id for a view under that type).
  */
-export const getTypePath = (spaceId: string, typename: string): string =>
-  `${Node.RootId}/${spaceId}/${Segments.types}/${typename}`;
+export const getTypePath = (spaceId: string, typename: string, ...segments: string[]): string => {
+  const base = `${Node.RootId}/${spaceId}/${Segments.types}/${typename}`;
+  return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
+};
 
 /**
  * Canonical qualified path to a specific object node within a type's subtree.
@@ -73,8 +109,19 @@ export const getObjectPathFromObject = (object: Obj.Unknown): string => {
 
 /**
  * Canonical qualified path to the collections section of a space.
+ * Optional additional segments are appended (e.g. an object id for a collection under that section).
  */
-export const getCollectionsPath = (spaceId: string): string => `${Node.RootId}/${spaceId}/${Segments.collections}`;
+export const getCollectionsPath = (spaceId: string, ...segments: string[]): string => {
+  const base = `${Node.RootId}/${spaceId}/${Segments.collections}`;
+  return segments.length > 0 ? `${base}/${segments.join('/')}` : base;
+};
+
+/**
+ * Qualified path to a child object within a collection node.
+ * Appends the object ID to the collection's qualified path.
+ */
+export const getCollectionObjectPath = (collectionQualifiedId: string, objectId: string): string =>
+  `${collectionQualifiedId}/${objectId}`;
 
 //
 // URL routing helpers.
@@ -110,7 +157,8 @@ export const fromUrlPath = (pathname: string): string => {
  * Check whether a qualified workspace path represents a pinned (non-space) workspace.
  * Pinned workspaces have a `!`-prefixed segment immediately after `root/`.
  */
-export const isPinnedWorkspace = (qualifiedPath: string): boolean => qualifiedPath.startsWith(`${Node.RootId}/!`);
+export const isPinnedWorkspace = (qualifiedPath: string): boolean =>
+  qualifiedPath.startsWith(`${Node.RootId}/${PINNED_WORKSPACE_PREFIX}`);
 
 /**
  * Derive the workspace qualified path from any qualified graph ID.

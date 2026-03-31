@@ -43,6 +43,11 @@ export const translations = [
         'meeting notes label': 'Notes',
         'today label': 'Today',
 
+        'quick entry label': 'Add journal entry',
+        'quick entry dialog title': 'Quick Journal Entry',
+        'quick entry placeholder': 'Write something...',
+        'quick entry submit': 'Add Entry',
+
         // TODO(burdon): Move to plugin-task.
         'task action': 'Convert to task',
         'delete row': 'Delete row',

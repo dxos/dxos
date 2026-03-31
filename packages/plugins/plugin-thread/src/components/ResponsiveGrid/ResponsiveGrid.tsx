@@ -136,7 +136,7 @@ export const ResponsiveGrid = <T extends object = any>({
   );
 
   return (
-    <div ref={containerRef} className={mx('relative w-full h-full', classNames)}>
+    <div ref={containerRef} className={mx('dx-expander relative', classNames)}>
       {/* Placeholder elements to calculate layout. */}
       <div className='absolute inset-0 flex flex-col grow gap-2'>
         {/* Pinned item. */}

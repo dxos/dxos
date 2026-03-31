@@ -12,7 +12,7 @@ import { type OperationInvoker } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { Sheet } from '@dxos/plugin-sheet/types';
 import { Sketch } from '@dxos/plugin-sketch/types';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { faker } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -42,8 +42,6 @@ export const createGenerator = <S extends Type.AnyObj>(
     const staticSchema = client?.graph.schemaRegistry.query({ typename }).runSync()[0];
     if (!view && !staticSchema) {
       await invokePromise(SpaceOperation.AddSchema, { db: space.db, schema, show: false });
-    } else if (!view && staticSchema) {
-      await invokePromise(SpaceOperation.UseStaticSchema, { db: space.db, typename, show: false });
     }
 
     // Create objects.

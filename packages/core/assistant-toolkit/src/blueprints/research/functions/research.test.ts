@@ -18,20 +18,22 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { FunctionInvocationService, QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
+import { OperationHandlerSet } from '@dxos/operation';
 import { MarkdownBlueprint } from '@dxos/plugin-markdown/blueprints';
 import { Markdown } from '@dxos/plugin-markdown/types';
 import { HasSubject, type Message, Organization } from '@dxos/types';
 
 import ResearchBlueprint from '../blueprint';
+import { ResearchHandlers } from '../functions';
 import { ResearchDataTypes, ResearchGraph } from '../types';
+import { MarkdownHandlers } from '../../markdown';
 
-import { default as createDocument } from './document-create';
 import { default as research } from './research';
 
 ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
-  functions: [research, createDocument, ...MarkdownBlueprint.functions],
+  operationHandlers: OperationHandlerSet.merge(ResearchHandlers, MarkdownHandlers),
   types: [
     ...ResearchDataTypes,
     ResearchGraph.ResearchGraph,
@@ -52,7 +54,7 @@ describe('Research', () => {
             website: 'https://blueyard.com',
           }),
         );
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const result = yield* FunctionInvocationService.invokeFunction(research, {
           query: 'Founders and portfolio of BlueYard.',
         });
@@ -60,7 +62,7 @@ describe('Research', () => {
         console.log(inspect(result, { depth: null, colors: true }));
         console.log(JSON.stringify(result, null, 2));
 
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const researchGraph = yield* ResearchGraph.query();
         if (researchGraph) {
           const data = yield* Database.load(researchGraph.queue).pipe(
@@ -89,7 +91,7 @@ describe('Research', () => {
         const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
 
-        yield* Database.flush({ indexes: true });
+        yield* Database.flush();
         const researchBlueprint = yield* Database.add(Obj.clone(ResearchBlueprint.make()));
         const markdownBlueprint = yield* Database.add(Obj.clone(MarkdownBlueprint.make()));
         yield* Effect.promise(() =>
@@ -143,6 +145,7 @@ describe('Research', () => {
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
+      TestHelpers.taggedTest('flaky'),
     ),
     MemoizedAiService.isGenerationEnabled() ? 240_000 : 30_000,
   );

@@ -19,11 +19,11 @@ import { mermaid } from './mermaid-extension';
 
 const str = (...lines: string[]) => lines.join('\n');
 
-type StoryProps = {
+type DefaultStoryProps = {
   text?: string;
 };
 
-const DefaultStory = ({ text }: StoryProps) => {
+const DefaultStory = ({ text }: DefaultStoryProps) => {
   const { themeMode } = useThemeContext();
   const { parentRef, focusAttributes } = useTextEditor(
     () => ({

@@ -22,8 +22,8 @@ export const handler = Effect.fn(function* ({ name }: { name: Option.Option<stri
   yield* Effect.tryPromise(() => space.waitUntilReady());
 
   if (Option.isSome(name)) {
-    Obj.change(space.properties, (p) => {
-      p.name = Option.getOrUndefined(name);
+    Obj.change(space.properties, (obj) => {
+      obj.name = Option.getOrUndefined(name);
     });
   }
 
@@ -48,7 +48,7 @@ export const handler = Effect.fn(function* ({ name }: { name: Option.Option<stri
   }
 
   // Flush and sync before completion
-  yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
+  yield* Effect.tryPromise(() => space.db.flush());
   yield* waitForSync(space);
 });
 

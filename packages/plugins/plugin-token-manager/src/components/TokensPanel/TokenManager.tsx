@@ -15,21 +15,25 @@ export type TokenManagerProps = {
 };
 
 export const TokenManager = ({ tokens, onDelete }: TokenManagerProps) => {
-  return tokens.length > 0 ? (
-    <List classNames='space-y-2'>
+  if (!tokens.length) {
+    return null;
+  }
+
+  return (
+    <List>
       {tokens.map((token) => (
-        <TokenItem key={token.id} token={token} onDelete={onDelete} />
+        <TokenListItem key={token.id} token={token} onDelete={onDelete} />
       ))}
     </List>
-  ) : null;
+  );
 };
 
-type TokenItemProps = {
+type TokenListItemProps = {
   token: AccessToken.AccessToken;
   onDelete?: (token: AccessToken.AccessToken) => void;
 };
 
-const TokenItem = ({ token, onDelete }: TokenItemProps) => {
+const TokenListItem = ({ token, onDelete }: TokenListItemProps) => {
   const { t } = useTranslation(meta.id);
 
   const handleDelete = useCallback(() => {
@@ -38,10 +42,8 @@ const TokenItem = ({ token, onDelete }: TokenItemProps) => {
 
   return (
     <ListItem.Root>
-      <ListItem.Heading classNames='grow truncate'>
-        <div>{token.note}</div>
-        <div className='text-description text-sm truncate'>{token.source}</div>
-      </ListItem.Heading>
+      <ListItem.Heading classNames='grow truncate'>{token.note}</ListItem.Heading>
+      <div className='flex items-center text-description text-sm truncate'>{token.source}</div>
       <ListItem.Endcap>
         <IconButton iconOnly icon='ph--x--regular' variant='ghost' label={t('delete token')} onClick={handleDelete} />
       </ListItem.Endcap>

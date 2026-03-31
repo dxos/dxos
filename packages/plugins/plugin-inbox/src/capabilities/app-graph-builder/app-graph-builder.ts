@@ -7,15 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, createObjectNode } from '@dxos/app-toolkit';
+import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { type Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
-import { AutomationCapabilities, invokeFunctionWithTracing } from '@dxos/plugin-automation';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
@@ -23,9 +20,10 @@ import { type Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { MAILBOXES_SECTION_TYPE, MAILBOX_ALL_MAIL_TYPE, MAILBOX_DRAFTS_TYPE } from '../../constants';
-import { CalendarFunctions, GmailFunctions } from '../../functions';
 import { meta } from '../../meta';
-import { Calendar, InboxOperation, Mailbox } from '../../types';
+import { InboxOperation } from '../../operations';
+import { getAllMailId, getDraftsId, getMailboxesSectionId } from '../../paths';
+import { Calendar, Mailbox } from '../../types';
 
 const FILTER_TYPE = `${Mailbox.Mailbox.typename}-filter`;
 
@@ -60,7 +58,7 @@ export default Capability.makeModule(
 
           return Effect.succeed([
             {
-              id: 'mailboxes',
+              id: getMailboxesSectionId(),
               type: MAILBOXES_SECTION_TYPE,
               data: null,
               properties: {
@@ -102,7 +100,7 @@ export default Capability.makeModule(
                 },
                 nodes: [
                   {
-                    id: 'all-mail',
+                    id: getAllMailId(),
                     type: MAILBOX_ALL_MAIL_TYPE,
                     data: mailbox,
                     properties: {
@@ -113,7 +111,7 @@ export default Capability.makeModule(
                     },
                   },
                   {
-                    id: 'drafts',
+                    id: getDraftsId(),
                     type: MAILBOX_DRAFTS_TYPE,
                     data: null,
                     properties: {
@@ -194,7 +192,7 @@ export default Capability.makeModule(
             {
               id: 'create-draft',
               type: Node.ActionType,
-              data: () => Operation.invoke(InboxOperation.CreateDraft, { db, mailbox }),
+              data: () => Operation.invoke(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
               properties: {
                 label: ['create draft label', { ns: meta.id }],
                 icon: 'ph--plus--regular',
@@ -207,16 +205,17 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: `${meta.id}.mailbox-message`,
-        match: (node) => (Mailbox.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        connector: (mailbox, get) => {
+        match: (node) =>
+          Mailbox.instanceOf(node.data) ? Option.some({ mailbox: node.data, nodeId: node.id }) : Option.none(),
+        connector: (matched, get) => {
+          const mailbox = matched.mailbox;
           const db = Obj.getDatabase(mailbox);
           const feed = mailbox.feed ? (get(AtomRef.make(mailbox.feed)) as Feed.Feed | undefined) : undefined;
           if (!db || !feed) {
             return Effect.succeed([]);
           }
 
-          const nodeId = Obj.getDXN(mailbox).toString();
-          const messageId = get(selectedId(nodeId));
+          const messageId = get(selectedId(matched.nodeId));
           const message = get(
             AtomQuery.make<Message.Message>(
               db,
@@ -240,16 +239,17 @@ export default Capability.makeModule(
 
       GraphBuilder.createExtension({
         id: `${meta.id}.calendar-event`,
-        match: (node) => (Calendar.instanceOf(node.data) ? Option.some(node.data) : Option.none()),
-        connector: (calendar, get) => {
+        match: (node) =>
+          Calendar.instanceOf(node.data) ? Option.some({ calendar: node.data, nodeId: node.id }) : Option.none(),
+        connector: (matched, get) => {
+          const calendar = matched.calendar;
           const db = Obj.getDatabase(calendar);
           const feed = calendar.feed ? (get(AtomRef.make(calendar.feed)) as Feed.Feed | undefined) : undefined;
           if (!db || !feed) {
             return Effect.succeed([]);
           }
 
-          const nodeId = Obj.getDXN(calendar).toString();
-          const eventId = get(selectedId(nodeId));
+          const eventId = get(selectedId(matched.nodeId));
           const event = get(
             AtomQuery.make<Event.Event>(db, Query.select(eventId ? Filter.id(eventId) : Filter.nothing()).from(feed)),
           )[0];
@@ -275,30 +275,7 @@ export default Capability.makeModule(
           Effect.succeed([
             {
               id: 'sync',
-              data: Effect.fnUntraced(function* () {
-                const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-                const db = Obj.getDatabase(mailbox);
-                invariant(db);
-                const runtime = computeRuntime.getRuntime(db.spaceId);
-                yield* Effect.tryPromise(() =>
-                  runtime.runPromise(
-                    invokeFunctionWithTracing(GmailFunctions.Sync, {
-                      mailbox: Ref.make(mailbox),
-                    }),
-                  ),
-                ).pipe(
-                  Effect.catchAll((error) => {
-                    log.catch(error);
-                    return Operation.invoke(LayoutOperation.AddToast, {
-                      id: `${meta.id}/sync-mailbox-error`,
-                      icon: 'ph--warning--regular',
-                      duration: 5_000,
-                      title: ['sync mailbox error title', { ns: meta.id }],
-                      closeLabel: ['close label', { ns: meta.id }],
-                    });
-                  }),
-                );
-              }),
+              data: () => Operation.invoke(InboxOperation.SyncMailbox, { mailbox }),
               properties: {
                 label: ['sync mailbox label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',
@@ -315,30 +292,7 @@ export default Capability.makeModule(
           Effect.succeed([
             {
               id: 'sync',
-              data: Effect.fnUntraced(function* () {
-                const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-                const db = Obj.getDatabase(calendar);
-                invariant(db);
-                const runtime = computeRuntime.getRuntime(db.spaceId);
-                yield* Effect.tryPromise(() =>
-                  runtime.runPromise(
-                    invokeFunctionWithTracing(CalendarFunctions.Sync, {
-                      calendar: Ref.make(calendar),
-                    }),
-                  ),
-                ).pipe(
-                  Effect.catchAll((error) => {
-                    log.catch(error);
-                    return Operation.invoke(LayoutOperation.AddToast, {
-                      id: `${meta.id}/sync-calendar-error`,
-                      icon: 'ph--warning--regular',
-                      duration: 5_000,
-                      title: ['sync calendar error title', { ns: meta.id }],
-                      closeLabel: ['close label', { ns: meta.id }],
-                    });
-                  }),
-                );
-              }),
+              data: () => Operation.invoke(InboxOperation.SyncCalendar, { calendar }),
               properties: {
                 label: ['sync calendar label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',

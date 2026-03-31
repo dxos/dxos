@@ -13,10 +13,9 @@ import {
   CheckAppScheme,
   DeckSettings,
   DeckState,
-  LayoutOperationResolver,
+  OperationHandler,
   ReactRoot,
   ReactSurface,
-  Toolkit,
   UrlHandler,
 } from './capabilities';
 import { meta } from './meta';
@@ -30,7 +29,7 @@ setAutoFreeze(false);
 
 export const DeckPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addOperationResolverModule({ activate: LayoutOperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...stackTranslations] }),
   Plugin.addModule({
@@ -58,11 +57,6 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   //   activatesOn: Events.SetupArtifactDefinition,
   //   activate: Tools,
   // }),
-  Plugin.addModule({
-    // TODO(wittjosiah): Shouldn't use the startup event.
-    activatesOn: ActivationEvents.Startup,
-    activate: Toolkit,
-  }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, DeckEvents.StateReady),
     activate: UrlHandler,

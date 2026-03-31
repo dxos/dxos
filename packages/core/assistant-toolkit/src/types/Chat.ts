@@ -16,8 +16,6 @@ import { Queue } from '@dxos/echo-db';
 export const Chat = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   queue: Ref.Ref(Queue).pipe(FormInputAnnotation.set(false)),
-  // TODO(dmaretskyi): Eventually this and the message queue will be the same.
-  traceQueue: Ref.Ref(Queue).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.assistant.chat',
@@ -26,7 +24,7 @@ export const Chat = Schema.Struct({
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--atom--regular',
-    hue: 'blue',
+    hue: 'sky',
   }),
 );
 

@@ -13,42 +13,53 @@ import { CommandConfig } from '@dxos/cli-util';
 import { Filter, type Space } from '@dxos/client/echo';
 import { Database, Obj, Ref, type Type } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { Function, Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
+import { Script, getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
+import { Operation } from '@dxos/operation';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 
-export const DATA_TYPES: Type.AnyEntity[] = [Function.Function, Script.Script, Collection.Collection, Text.Text];
+export const DATA_TYPES: Type.AnyEntity[] = [
+  Operation.PersistentOperation,
+  Script.Script,
+  Collection.Collection,
+  Text.Text,
+];
 
-export const getNextVersion = (fnObject: Option.Option<Function.Function>) => {
+export const getNextVersion = (fnObject: Option.Option<Operation.PersistentOperation>) => {
   return Option.match(fnObject, {
     onNone: () => '0.0.1',
     onSome: (fnObject) => incrementSemverPatch(fnObject.version),
   });
 };
 
-export const loadFunctionObject: (space: Space, functionId: string) => Effect.Effect<Function.Function, Error, never> =
-  Effect.fn(function* (space: Space, functionId: string) {
-    // TODO(wittjosiah): Derive Database.Service from ClientService.
-    const functions = yield* Effect.tryPromise(() => space.db.query(Filter.type(Function.Function)).run());
-    const functionObject = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
-    if (!functionObject) {
-      return yield* Effect.fail(new Error(`Function ECHO object not found for ${functionId}`));
-    }
+export const loadFunctionObject: (
+  space: Space,
+  functionId: string,
+) => Effect.Effect<Operation.PersistentOperation, Error, never> = Effect.fn(function* (
+  space: Space,
+  functionId: string,
+) {
+  // TODO(wittjosiah): Derive Database.Service from ClientService.
+  const functions = yield* Effect.tryPromise(() => space.db.query(Filter.type(Operation.PersistentOperation)).run());
+  const functionObject = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === functionId);
+  if (!functionObject) {
+    return yield* Effect.fail(new Error(`Function ECHO object not found for ${functionId}`));
+  }
 
-    return functionObject;
-  });
+  return functionObject;
+});
 
 /**
  * @deprecated
  */
 export const upsertFunctionObject: (opts: {
   space: Space;
-  existingObject: Function.Function | undefined;
+  existingObject: Operation.PersistentOperation | undefined;
   uploadResult: UploadFunctionResponseBody;
   filePath: string;
   name?: string;
-}) => Effect.Effect<Function.Function, never, CommandConfig> = Effect.fn(function* ({
+}) => Effect.Effect<Operation.PersistentOperation, never, CommandConfig> = Effect.fn(function* ({
   space,
   existingObject,
   uploadResult,
@@ -60,19 +71,19 @@ export const upsertFunctionObject: (opts: {
   if (existingObject) {
     functionObject = existingObject;
   } else {
-    functionObject = Function.make({
+    functionObject = Obj.make(Operation.PersistentOperation, {
       name: path.basename(filePath, path.extname(filePath)),
       version: uploadResult.version,
     });
     space.db.add(functionObject);
   }
-  Obj.change(functionObject, (f) => {
-    f.key = uploadResult.meta.key ?? f.key;
-    f.name = name ?? uploadResult.meta.name ?? f.name;
-    f.version = uploadResult.version;
-    f.description = uploadResult.meta.description;
-    f.inputSchema = uploadResult.meta.inputSchema;
-    f.outputSchema = uploadResult.meta.outputSchema;
+  Obj.change(functionObject, (obj) => {
+    obj.key = uploadResult.meta.key ?? obj.key;
+    obj.name = name ?? uploadResult.meta.name ?? obj.name;
+    obj.version = uploadResult.version;
+    obj.description = uploadResult.meta.description;
+    obj.inputSchema = uploadResult.meta.inputSchema;
+    obj.outputSchema = uploadResult.meta.outputSchema;
   });
   Obj.change(functionObject, (fn) => setUserFunctionIdInMetadata(Obj.getMeta(fn), uploadResult.functionId));
   if (verbose) {
@@ -86,8 +97,8 @@ const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Ob
   if (collectionRef) {
     const collection = yield* Database.load(collectionRef);
     if (collection) {
-      Obj.change(collection, (c) => {
-        c.objects.push(Ref.make(obj));
+      Obj.change(collection, (obj) => {
+        obj.objects.push(Ref.make(obj));
       });
     }
   }
@@ -100,7 +111,7 @@ export const upsertComposerScript = Effect.fn(function* ({
   name,
 }: {
   space: Space;
-  functionObject: Function.Function;
+  functionObject: Operation.PersistentOperation;
   filePath: string;
   name?: string;
 }) {
@@ -110,9 +121,11 @@ export const upsertComposerScript = Effect.fn(function* ({
   const scriptFileName = name ?? path.basename(filePath, path.extname(filePath));
 
   if (functionObject.source) {
-    const script = yield* Effect.tryPromise(() => functionObject.source!.load());
-    const source = yield* Effect.tryPromise(() => script.source.load());
-    Obj.change(source, (s) => {
+    const script = (yield* Effect.tryPromise(
+      () => functionObject.source!.load() as Promise<Script.Script>,
+    )) as Script.Script;
+    const source = (yield* Effect.tryPromise(() => script.source!.load())) as Text.Text;
+    Obj.change(source, (s: Obj.Mutable<Text.Text>) => {
       s.content = scriptFileContent;
     });
     if (verbose) {
@@ -120,8 +133,8 @@ export const upsertComposerScript = Effect.fn(function* ({
     }
   } else {
     const obj = yield* Database.add(Script.make({ name: scriptFileName, source: scriptFileContent }));
-    Obj.change(functionObject, (f) => {
-      f.source = Ref.make(obj);
+    Obj.change(functionObject, (obj) => {
+      obj.source = Ref.make(obj);
     });
     yield* makeObjectNavigableInComposer(space, obj);
     if (verbose) {

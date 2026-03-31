@@ -16,10 +16,12 @@ export const OutlineContainer = ({ role, subject: outline }: SurfaceComponentPro
   }
 
   return (
-    <Panel.Root role={role} className='dx-article'>
-      <Panel.Content asChild>
-        <Outline id={outline.content.target.id} text={outline.content.target} />
-      </Panel.Content>
-    </Panel.Root>
+    <Outline.Root id={outline.content.target.id} text={outline.content.target}>
+      <Panel.Root role={role} className='dx-document'>
+        <Panel.Content asChild>
+          <Outline.Content />
+        </Panel.Content>
+      </Panel.Root>
+    </Outline.Root>
   );
 };

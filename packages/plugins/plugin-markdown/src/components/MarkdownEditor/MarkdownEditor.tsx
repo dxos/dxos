@@ -13,6 +13,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
+import { type ThemedClassName } from '@dxos/react-ui';
 import {
   EditorMenuProvider,
   type EditorToolbarState,
@@ -21,6 +22,7 @@ import {
   useEditorToolbar,
 } from '@dxos/react-ui-editor';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import {
@@ -95,6 +97,7 @@ const MarkdownEditorRoot = ({
   const [previewBlocks, setPreviewBlocks] = useState<PreviewBlock[]>([]);
   const previewOptions = useMemo<PreviewOptions>(
     () => ({
+      db: Obj.isObject(object) ? Obj.getDatabase(object) : undefined,
       addBlockContainer: (block) => {
         setPreviewBlocks((prev) => [...prev, block]);
       },
@@ -102,18 +105,14 @@ const MarkdownEditorRoot = ({
         setPreviewBlocks((prev) => prev.filter(({ link: prevLink }) => prevLink.dxn !== link.dxn));
       },
     }),
-    [],
+    [object],
   );
 
   // Toolbar state.
   const toolbarState = useEditorToolbar({ viewMode });
 
   // Context menu.
-  const menuOptions = useEditorMenuOptions({
-    editorView,
-    slashCommandGroups,
-    onLinkQuery,
-  });
+  const menuOptions = useEditorMenuOptions({ editorView, slashCommandGroups, onLinkQuery });
   const { extension: menuExtension, ...menuProps } = useEditorMenu(menuOptions);
 
   // Extensions.
@@ -161,7 +160,7 @@ const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
 
 type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
-const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
+const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(({ ...props }, _forwardedRef) => {
   const {
     id,
     attendableId,
@@ -176,7 +175,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   return (
     <EditorMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
       <NaturalMarkdownEditorContent
-        {...props}
+        {...composableProps(props)}
         id={id}
         attendableId={attendableId}
         viewMode={viewMode}
@@ -186,7 +185,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
       />
     </EditorMenuProvider>
   );
-};
+});
 
 MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
@@ -196,9 +195,8 @@ MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 
 const MARKDOWN_EDITOR_TOOLBAR_NAME = 'MarkdownEditor.Toolbar';
 
-type MarkdownEditorToolbarProps = Omit<
-  NaturalMarkdownToolbarProps,
-  'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'
+type MarkdownEditorToolbarProps = ThemedClassName<
+  Omit<NaturalMarkdownToolbarProps, 'state' | 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'id'>
 >;
 
 const MarkdownEditorToolbar = (props: MarkdownEditorToolbarProps) => {

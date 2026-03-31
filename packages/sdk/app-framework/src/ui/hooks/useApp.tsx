@@ -109,10 +109,12 @@ export const useApp = ({
     () => (safeMode ? [] : cacheEnabled && cached.length > 0 ? cached : defaults),
     [safeMode, cacheEnabled, cached, defaults],
   );
-  const manager = useMemo(
-    () => pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled }),
-    [pluginManager, pluginLoader, plugins, core, enabled],
-  );
+  const isExternalManager = !!pluginManager;
+  const manager = useMemo(() => {
+    const mgr = pluginManager ?? PluginManager.make({ pluginLoader, plugins, core, enabled });
+    log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
+    return mgr;
+  }, [pluginManager, pluginLoader, plugins, core, enabled]);
 
   useEffect(() => {
     if (!cacheEnabled) {
@@ -128,6 +130,8 @@ export const useApp = ({
   }, [manager]);
 
   useAsyncEffect(async () => {
+    log('useApp: effect mount');
+
     manager.capabilities.contribute({
       interface: Capabilities.PluginManager,
       implementation: manager,
@@ -184,10 +188,12 @@ export const useApp = ({
     }, timeout);
 
     return () => {
+      log('useApp: effect cleanup');
       clearTimeout(timeoutId);
       void runAndForwardErrors(Fiber.interrupt(fiber));
-      manager.capabilities.remove(Capabilities.PluginManager, manager);
-      manager.capabilities.remove(Capabilities.AtomRegistry, manager.registry);
+      if (!isExternalManager) {
+        void runAndForwardErrors(manager.shutdown());
+      }
     };
   }, [manager]);
 

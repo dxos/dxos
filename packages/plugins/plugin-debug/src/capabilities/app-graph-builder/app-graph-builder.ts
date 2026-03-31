@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -14,6 +13,7 @@ import { meta as spaceMeta } from '@dxos/plugin-space';
 
 import { meta } from '../../meta';
 import { Devtools } from '../../types';
+import { getParentId } from '@dxos/react-ui-attention';
 
 const DEVTOOLS_TYPE = `${meta.id}.devtools`;
 
@@ -61,7 +61,7 @@ export default Capability.makeModule(
                   {
                     id: 'app-graph',
                     type: `${meta.id}.app-graph`,
-                    data: { graph: graph?.graph, root: space ? space.id : Node.RootId },
+                    data: { graph: graph?.graph, root: node.id === Node.RootId ? node.id : getParentId(node.id) },
                     properties: {
                       label: ['debug app graph label', { ns: meta.id }],
                       icon: 'ph--graph--regular',

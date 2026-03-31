@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 
 export const File = Schema.Struct({
@@ -16,6 +16,10 @@ export const File = Schema.Struct({
   Type.object({
     typename: 'org.dxos.type.file',
     version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--file--regular',
+    hue: 'teal',
   }),
 );
 

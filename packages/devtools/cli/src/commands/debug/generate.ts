@@ -86,7 +86,7 @@ export const handler = Effect.fn(function* ({
   // Create objects
   for (let i = 0; i < objects; i++) {
     yield* Database.add(Obj.make(TestSchema.Expando, { type, title: faker.lorem.word() }));
-    yield* Database.flush({ indexes: true });
+    yield* Database.flush();
     yield* pause(interval, jitter);
   }
 
@@ -96,10 +96,10 @@ export const handler = Effect.fn(function* ({
   if (queriedObjects.length > 0) {
     for (let i = 0; i < mutations; i++) {
       const object = faker.helpers.arrayElement(queriedObjects);
-      Obj.change(object, (o) => {
-        o.title = faker.lorem.word();
+      Obj.change(object, (obj) => {
+        obj.title = faker.lorem.word();
       });
-      yield* Database.flush({ indexes: true });
+      yield* Database.flush();
       yield* pause(interval, jitter);
 
       // Create epoch if specified
@@ -108,7 +108,7 @@ export const handler = Effect.fn(function* ({
         const space = yield* getSpace(spaceIdValue);
         if (space) {
           yield* Effect.tryPromise(() => space.internal.createEpoch());
-          yield* Database.flush({ indexes: true });
+          yield* Database.flush();
         }
       }
     }

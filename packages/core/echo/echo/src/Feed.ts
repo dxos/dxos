@@ -19,6 +19,7 @@ import * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
 import * as Type from './Type';
+import * as Annotation from './Annotation';
 
 /**
  * Runtime schema for a Feed object.
@@ -33,12 +34,24 @@ export const Feed = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   /** Identifier for the feed's kind (e.g., plugin id). */
   kind: Schema.String.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
+
+  /**
+   * Feed namespace.
+   * Controls how feed data is stored and replicated.
+   * - `data`: Data feed (default).
+   * - `trace`: Trace feed.
+   */
+  namespace: Schema.optional(Schema.Literal('data', 'trace')),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.feed',
     version: '0.1.0',
   }),
   internal.SystemTypeAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--rows--regular',
+    hue: 'yellow',
+  }),
 );
 
 /**
@@ -49,12 +62,6 @@ export interface Feed extends Schema.Schema.Type<typeof Feed> {}
 //
 // Types
 //
-
-/**
- * Meta key source for storing the backing DXN bound to a feed object.
- */
-// TODO(dmaretskyi): Enforce that Feed ObjectId = feed storage ID. And remove this key.
-export const DXN_KEY = 'org.dxos.key.feed';
 
 /**
  * Opaque cursor for iterating over feed items.
@@ -89,14 +96,17 @@ export interface RetentionOptions {
 export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(Feed, props);
 
 /**
- * Reads the queue DXN from feed metadata.
+ * Derives the queue DXN from the feed object's DXN.
+ * Returns `undefined` when the feed is not stored in a space yet.
  *
- * @deprecated
+ * Used internally by the feed service layer.
  */
-// TODO(wittjosiah): Align backing feed dxn's with object DXN.
 export const getQueueDxn = (feed: Feed): DXN | undefined => {
-  const keys = Obj.getKeys(feed, DXN_KEY);
-  return keys.length === 0 ? undefined : DXN.parse(keys[0].id);
+  const self = Obj.getDXN(feed).asEchoDXN();
+  if (!self || !self.spaceId) {
+    return undefined;
+  }
+  return new DXN(DXN.kind.QUEUE, [feed.namespace ?? 'data', self.spaceId, self.echoId]);
 };
 
 //

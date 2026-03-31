@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
@@ -25,6 +25,10 @@ const GraphSchema = Schema.Struct({
   }),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(true),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--graph--regular',
+    hue: 'green',
+  }),
 );
 export interface Graph extends Schema.Schema.Type<typeof GraphSchema> {}
 export const Graph: Type.Obj<Graph> = GraphSchema as any;

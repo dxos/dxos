@@ -9,6 +9,7 @@ import { Format, Obj } from '@dxos/echo';
 import { Message, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { type Message as MessageType } from '@dxos/types';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -22,88 +23,92 @@ export type ComposeEmailPanelProps = {
   onSend?: (message: MessageType.Message) => Promise<void>;
 };
 
-export const ComposeEmailPanel = ({ draft, onSend }: ComposeEmailPanelProps) => {
-  const { t } = useTranslation(meta.id);
-  const [error, setError] = useState<string | null>(null);
+export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelProps>(
+  ({ draft, onSend, ...props }, forwardedRef) => {
+    const { t } = useTranslation(meta.id);
+    const [error, setError] = useState<string | null>(null);
 
-  const initialValues = useMemo<ComposeEmailForm>(() => {
-    const textBlock = draft.blocks.find((b) => b._tag === 'text');
-    return {
-      to: draft.properties?.to ?? '',
-      cc: draft.properties?.cc,
-      bcc: draft.properties?.bcc,
-      subject: draft.properties?.subject ?? '',
-      body: textBlock?.text ?? '',
-    };
-  }, [draft]);
+    const initialValues = useMemo<ComposeEmailForm>(() => {
+      const textBlock = draft.blocks.find((b) => b._tag === 'text');
+      return {
+        to: draft.properties?.to ?? '',
+        cc: draft.properties?.cc,
+        bcc: draft.properties?.bcc,
+        subject: draft.properties?.subject ?? '',
+        body: textBlock?.text ?? '',
+      };
+    }, [draft]);
 
-  const handleValuesChanged = useCallback(
-    (newValues: Partial<ComposeEmailForm>) => {
-      Obj.change(draft, (msg) => {
-        const properties = (msg.properties ??= {});
-        if (newValues.to !== undefined) {
-          properties.to = newValues.to;
-        }
-        if (newValues.cc !== undefined) {
-          properties.cc = newValues.cc;
-        }
-        if (newValues.bcc !== undefined) {
-          properties.bcc = newValues.bcc;
-        }
-        if (newValues.subject !== undefined) {
-          properties.subject = newValues.subject;
-        }
-        if (newValues.body !== undefined) {
-          const textBlock = msg.blocks.find((b) => b._tag === 'text');
-          if (textBlock && 'text' in textBlock) {
-            textBlock.text = newValues.body;
-          } else {
-            msg.blocks.push({ _tag: 'text', text: newValues.body });
+    const handleValuesChanged = useCallback(
+      (newValues: Partial<ComposeEmailForm>) => {
+        Obj.change(draft, (msg) => {
+          const properties = (msg.properties ??= {});
+          if (newValues.to !== undefined) {
+            properties.to = newValues.to;
           }
+          if (newValues.cc !== undefined) {
+            properties.cc = newValues.cc;
+          }
+          if (newValues.bcc !== undefined) {
+            properties.bcc = newValues.bcc;
+          }
+          if (newValues.subject !== undefined) {
+            properties.subject = newValues.subject;
+          }
+          if (newValues.body !== undefined) {
+            const textBlock = msg.blocks.find((b) => b._tag === 'text');
+            if (textBlock && 'text' in textBlock) {
+              textBlock.text = newValues.body;
+            } else {
+              msg.blocks.push({ _tag: 'text', text: newValues.body });
+            }
+          }
+        });
+      },
+      [draft],
+    );
+
+    const handleSendEmail = useCallback(
+      async (_data: ComposeEmailForm) => {
+        setError(null);
+        // Draft is already updated via onValuesChanged; just send it.
+        try {
+          await onSend?.(draft);
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : t('send email error unknown');
+          setError(errorMessage);
         }
-      });
-    },
-    [draft],
-  );
+      },
+      [t, onSend, draft],
+    );
 
-  const handleSendEmail = useCallback(
-    async (_data: ComposeEmailForm) => {
-      setError(null);
-      // Draft is already updated via onValuesChanged; just send it.
-      try {
-        await onSend?.(draft);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : t('send email error unknown');
-        setError(errorMessage);
-      }
-    },
-    [t, onSend, draft],
-  );
-
-  return (
-    <Form.Root
-      testId='compose-email-form'
-      autoFocus
-      schema={ComposeEmailForm}
-      defaultValues={initialValues}
-      onValuesChanged={handleValuesChanged}
-      onSave={handleSendEmail}
-    >
-      <Form.Viewport>
-        <Form.Content>
-          <Form.FieldSet />
-          {error && (
-            <Message.Root valence='error'>
-              <Message.Title>{t('send email error title')}</Message.Title>
-              <Message.Content>{error}</Message.Content>
-            </Message.Root>
-          )}
-          <Form.Submit icon='ph--paper-plane-right--regular' label={t('send email button label')} />
-        </Form.Content>
-      </Form.Viewport>
-    </Form.Root>
-  );
-};
+    return (
+      <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
+        <Form.Root
+          testId='compose-email-form'
+          autoFocus
+          schema={ComposeEmailForm}
+          defaultValues={initialValues}
+          onValuesChanged={handleValuesChanged}
+          onSave={handleSendEmail}
+        >
+          <Form.Viewport>
+            <Form.Content>
+              <Form.FieldSet />
+              {error && (
+                <Message.Root valence='error'>
+                  <Message.Title>{t('send email error title')}</Message.Title>
+                  <Message.Content>{error}</Message.Content>
+                </Message.Root>
+              )}
+              <Form.Submit icon='ph--paper-plane-right--regular' label={t('send email button label')} />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </div>
+    );
+  },
+);
 
 //
 // ComposeEmailForm

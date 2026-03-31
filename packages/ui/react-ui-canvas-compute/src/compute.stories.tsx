@@ -123,7 +123,7 @@ const DefaultStory = ({
   }
 
   return (
-    <div className='grid grid-cols-[1fr_360px] w-full h-full'>
+    <div className='grid grid-cols-[1fr_360px] h-full w-full'>
       <ComputeContext.Provider value={{ controller }}>
         <Container id={id} classNames={['flex grow overflow-hidden', !sidebar && 'col-span-2']}>
           <Editor.Root<ComputeShape>

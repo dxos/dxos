@@ -42,6 +42,7 @@ import { safeInstanceof } from '@dxos/util';
 import { EdgeAgentManager } from '../agents';
 import {
   type CreateIdentityOptions,
+  type Identity,
   IdentityManager,
   type IdentityManagerProps,
   type JoinIdentityProps,
@@ -231,33 +232,66 @@ export class ServiceContext extends Resource {
     log('opening...');
     log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
 
+    log('opening identityManager...');
     await this.identityManager.open(ctx);
+    log('identityManager opened', { hasIdentity: !!this.identityManager.identity });
 
-    await this._setNetworkIdentity();
+    log('setting network identity...');
+    await this._setNetworkIdentity({ identity: this.identityManager.identity });
+    log('network identity set');
 
+    log('opening edge connection...');
     await this._edgeConnection?.open();
-    await this.signalManager.open();
-    await this.networkManager.open();
+    log('edge connection opened');
 
+    log('opening signal manager...');
+    await this.signalManager.open();
+    log('signal manager opened');
+
+    log('opening network manager...');
+    await this.networkManager.open();
+    log('network manager opened');
+
+    log('opening echo host...');
     await this.echoHost.open(ctx);
+    log('echo host opened');
 
     if (this._meshReplicator) {
+      log('adding mesh replicator...');
       await this.echoHost.addReplicator(this._meshReplicator);
+      log('mesh replicator added');
     }
     if (this._echoEdgeReplicator) {
+      log('adding edge replicator...');
       await this.echoHost.addReplicator(this._echoEdgeReplicator);
+      log('edge replicator added');
     }
 
+    log('loading metadata store...');
     await this.metadataStore.load();
+    log('metadata store loaded');
+
+    log('opening space manager...');
     await this.spaceManager.open();
+    log('space manager opened');
 
     if (this.identityManager.identity) {
+      log('joining network...');
       await this.identityManager.identity.joinNetwork(ctx);
+      log('network joined');
+
+      log('initializing spaces...(calling _initialize)');
       await this._initialize(ctx);
+      log('spaces initialized');
+    } else {
+      log('no identity, skipping network join and space initialization');
     }
 
+    log('opening feed syncer...');
     await this._feedSyncer?.open();
+    log('feed syncer opened');
 
+    log('loading persistent invitations...');
     const loadedInvitations = await this.invitationsManager.loadPersistentInvitations(ctx);
     log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
@@ -288,16 +322,10 @@ export class ServiceContext extends Resource {
     log('closed');
   }
 
-  async createIdentity(params?: CreateIdentityOptions): Promise<ReturnType<IdentityManager['createIdentity']> extends Promise<infer T> ? T : never>;
-  async createIdentity(ctx: Context, params?: CreateIdentityOptions): Promise<ReturnType<IdentityManager['createIdentity']> extends Promise<infer T> ? T : never>;
-  async createIdentity(
-    arg1: Context | CreateIdentityOptions = Context.default(),
-    arg2: CreateIdentityOptions = {},
-  ) {
-    const ctx = arg1 instanceof Context ? arg1 : Context.default();
-    const params = arg1 instanceof Context ? arg2 : arg1;
-    const identity = await this.identityManager.createIdentity(params ?? {});
-    await this._setNetworkIdentity();
+  async createIdentity(params: CreateIdentityOptions = {}) {
+    const ctx = Context.default();
+    const identity = await this.identityManager.createIdentity(params);
+    await this._setNetworkIdentity({ identity });
     await identity.joinNetwork(ctx);
     await this._initialize(ctx);
     return identity;
@@ -324,7 +352,7 @@ export class ServiceContext extends Resource {
 
   private async _acceptIdentity(params: JoinIdentityProps) {
     const { identity, identityRecord } = await this.identityManager.prepareIdentity(params);
-    await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential! });
+    await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential!, identity });
     await identity.joinNetwork(this._ctx);
     await this.identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
     await this._initialize(new Context());
@@ -342,7 +370,7 @@ export class ServiceContext extends Resource {
   // Called when identity is created.
   @Trace.span()
   private async _initialize(ctx: Context): Promise<void> {
-    log('initializing spaces...');
+    log('_initialize: start');
     const identity = this.identityManager.identity ?? failUndefined();
     const signingContext: SigningContext = {
       credentialSigner: identity.getIdentityCredentialSigner(),
@@ -354,6 +382,7 @@ export class ServiceContext extends Resource {
       },
     };
 
+    log('_initialize: creating DataSpaceManager');
     this.dataSpaceManager = new DataSpaceManager({
       spaceManager: this.spaceManager,
       metadataStore: this.metadataStore,
@@ -369,7 +398,9 @@ export class ServiceContext extends Resource {
       runtimeProps: this._runtimeProps as DataSpaceManagerRuntimeProps,
       edgeFeatures: this._edgeFeatures,
     });
+    log('_initialize: opening DataSpaceManager...');
     await this.dataSpaceManager.open();
+    log('_initialize: DataSpaceManager opened');
 
     this.edgeAgentManager = new EdgeAgentManager(
       this._edgeFeatures,
@@ -377,13 +408,16 @@ export class ServiceContext extends Resource {
       this.dataSpaceManager,
       identity,
     );
+    log('_initialize: opening EdgeAgentManager...');
     await this.edgeAgentManager.open();
+    log('_initialize: EdgeAgentManager opened');
 
     this._handlerFactories.set(Invitation.Kind.SPACE, (invitation) => {
       invariant(this.dataSpaceManager, 'dataSpaceManager not initialized yet');
       return new SpaceInvitationProtocol(this.dataSpaceManager, signingContext, this.keyring, invitation.spaceKey);
     });
     this.initialized.wake();
+    log('_initialize: initialized.wake() called');
 
     this._deviceSpaceSync = {
       processCredential: async (credential: Credential) => {
@@ -419,33 +453,42 @@ export class ServiceContext extends Resource {
     await identity.space.spaceState.addCredentialProcessor(this._deviceSpaceSync);
   }
 
-  private async _setNetworkIdentity(params?: { deviceCredential: Credential }): Promise<void> {
+  private async _setNetworkIdentity(params?: { deviceCredential?: Credential; identity?: Identity }): Promise<void> {
+    log('_setNetworkIdentity: acquiring mutex...');
     using _ = await this._edgeIdentityUpdateMutex.acquire();
+    log('_setNetworkIdentity: mutex acquired');
 
     let edgeIdentity: EdgeIdentity;
-    const identity = this.identityManager.identity;
+    const identity = params?.identity;
     if (identity) {
-      log('setting identity on edge connection', {
+      log('_setNetworkIdentity: has identity', {
         identity: identity.identityKey.toHex(),
-        swarms: this.networkManager.topics,
+        hasDeviceCredential: !!params?.deviceCredential,
       });
 
       if (params?.deviceCredential) {
+        log('_setNetworkIdentity: creating chain edge identity with device credential...');
         edgeIdentity = await createChainEdgeIdentity(
           identity.signer,
           identity.identityKey,
           identity.deviceKey,
-          params?.deviceCredential && { credential: params.deviceCredential },
+          { credential: params.deviceCredential },
           [], // TODO(dmaretskyi): Service access credentials.
         );
+        log('_setNetworkIdentity: chain edge identity created');
       } else {
+        log('_setNetworkIdentity: waiting for identity.ready()...');
         // TODO: throw here or from identity if device chain can't be loaded, to avoid indefinite hangup
         await warnAfterTimeout(10_000, 'Waiting for identity to be ready for edge connection', async () => {
           await identity.ready();
         });
+        log('_setNetworkIdentity: identity.ready() resolved', {
+          hasDeviceCredentialChain: !!identity.deviceCredentialChain,
+        });
 
         invariant(identity.deviceCredentialChain);
 
+        log('_setNetworkIdentity: creating chain edge identity...');
         edgeIdentity = await createChainEdgeIdentity(
           identity.signer,
           identity.identityKey,
@@ -453,9 +496,12 @@ export class ServiceContext extends Resource {
           identity.deviceCredentialChain,
           [], // TODO(dmaretskyi): Service access credentials.
         );
+        log('_setNetworkIdentity: chain edge identity created');
       }
     } else {
+      log('_setNetworkIdentity: no identity, creating ephemeral edge identity...');
       edgeIdentity = await createEphemeralEdgeIdentity();
+      log('_setNetworkIdentity: ephemeral edge identity created');
     }
 
     this._edgeConnection?.setIdentity(edgeIdentity);
@@ -464,5 +510,6 @@ export class ServiceContext extends Resource {
       identityKey: edgeIdentity.identityKey,
       peerKey: edgeIdentity.peerKey,
     });
+    log('_setNetworkIdentity: done');
   }
 }

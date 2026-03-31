@@ -54,10 +54,10 @@ const seedData = async (client: Client) => {
         name: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
       }),
     );
-    Obj.change(expando, (e) => {
-      e.value.push(Ref.make(todo));
+    Obj.change(expando, (obj) => {
+      obj.value.push(Ref.make(todo));
     });
-    await space.db.flush({ indexes: true });
+    await space.db.flush();
   }
 
   {
@@ -82,7 +82,7 @@ const seedData = async (client: Client) => {
       object.name = 'Test';
       object.todo = Ref.make(Obj.make(Todo, { name: 'Test todo' }));
     });
-    await space.db.flush({ indexes: true });
+    await space.db.flush();
   }
   log.info('created spaces');
 };

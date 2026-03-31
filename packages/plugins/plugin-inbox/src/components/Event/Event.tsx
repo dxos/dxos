@@ -3,13 +3,13 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type ComponentPropsWithoutRef, type PropsWithChildren } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { type Database } from '@dxos/react-client/echo';
-import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { DateComponent } from '../DateComponent';
@@ -48,18 +48,18 @@ EventRoot.displayName = EVENT_ROOT_NAME;
 
 const EVENT_TOOLBAR_NAME = 'Event.Toolbar';
 
-type EventToolbarProps = ThemedClassName<UseEventToolbarActionsProps & ComponentPropsWithoutRef<typeof Menu.Root>>;
+type EventToolbarProps = UseEventToolbarActionsProps;
 
-const EventToolbar = ({ classNames, onNoteCreate, ...props }: EventToolbarProps) => {
+const EventToolbar = composable<HTMLDivElement, EventToolbarProps>(({ onNoteCreate, ...props }, forwardedRef) => {
   const { attendableId } = useEventContext(EVENT_TOOLBAR_NAME);
-  const actions = useEventToolbarActions({ onNoteCreate });
+  const menuActions = useEventToolbarActions({ onNoteCreate });
 
   return (
-    <Menu.Root {...props} {...actions} attendableId={attendableId}>
-      <Menu.Toolbar classNames={classNames} />
+    <Menu.Root {...menuActions} attendableId={attendableId}>
+      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
     </Menu.Root>
   );
-};
+});
 
 EventToolbar.displayName = EVENT_TOOLBAR_NAME;
 
@@ -69,15 +69,15 @@ EventToolbar.displayName = EVENT_TOOLBAR_NAME;
 
 const EVENT_VIEWPORT_NAME = 'Event.Viewport';
 
-type EventViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
+type EventViewportProps = {};
 
-const EventViewport = ({ classNames, children, ...props }: EventViewportProps) => {
+const EventViewport = composable<HTMLDivElement, EventViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...props} className={mx(classNames)}>
-      {children}
-    </div>
+    <ScrollArea.Root {...composableProps(props, { role: 'none' })} thin ref={forwardedRef}>
+      <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
-};
+});
 
 EventViewport.displayName = EVENT_VIEWPORT_NAME;
 

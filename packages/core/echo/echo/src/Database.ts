@@ -71,7 +71,7 @@ export type FlushOptions = {
 
   /**
    * Wait for pending index updates.
-   * @default false
+   * @default true
    */
   indexes?: boolean;
 

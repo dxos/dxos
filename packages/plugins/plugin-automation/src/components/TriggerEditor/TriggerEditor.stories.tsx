@@ -7,7 +7,8 @@ import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { Function, Trigger } from '@dxos/functions';
+import { Trigger } from '@dxos/functions';
+import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
@@ -40,7 +41,7 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
       return;
     }
 
-    const functions = await space.db.query(Filter.type(Function.Function)).run();
+    const functions = await space.db.query(Filter.type(Operation.PersistentOperation)).run();
     const fn = functions.find((fn) => fn.name === 'example.com/function/forex');
     invariant(fn);
     const trigger = space.db.add(
@@ -82,7 +83,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Tag.Tag, Function.Function, Trigger.Trigger, TestSchema.ContactType],
+      types: [Tag.Tag, Operation.PersistentOperation, Trigger.Trigger, TestSchema.ContactType],
       onCreateSpace: ({ space }) => {
         // Tags.
         ['Important', 'Investor', 'New'].forEach((label) => {
@@ -91,7 +92,7 @@ const meta = {
 
         // Functions.
         functions.forEach((fn) => {
-          space.db.add(Function.make(fn));
+          space.db.add(Obj.make(Operation.PersistentOperation, { ...fn, version: fn.version ?? '0.1.0' }));
         });
 
         // Objects.

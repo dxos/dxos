@@ -21,7 +21,7 @@ import { ViewAnnotation } from '@dxos/schema';
 import { createFilename, isNonNullable } from '@dxos/util';
 
 import { meta } from '../../../meta';
-import { SpaceOperation } from '../../../types';
+import { SpaceOperation } from '../../../operations';
 
 import {
   ADD_VIEW_TO_SCHEMA_LABEL,
@@ -88,10 +88,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
-        // Reactive subscription to database schema objects so the connector re-runs on schema changes.
-        get(AtomQuery.make(space.db, Filter.type(Type.PersistentType)));
-
-        const allSchemas = space.db.schemaRegistry.query({ location: ['runtime', 'database'] }).runSync();
+        const allSchemas = get(
+          AtomQuery.fromQuery(space.db.schemaRegistry.query({ location: ['database', 'runtime'] })),
+        );
 
         const userSchemas = allSchemas.filter((schema) => {
           if (getTypeAnnotation(schema)?.kind === EntityKind.Relation) {
@@ -112,6 +111,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         const viewIndex = buildViewIndex(get, space, allSchemas);
 
         const visibleSchemas = userSchemas.filter((schema) => {
+          if (Type.isMutable(schema)) {
+            return true;
+          }
           const typename = Type.getTypename(schema);
           const objects = get(AtomQuery.make(space.db, Filter.typename(typename)));
           return objects.length > 0 || viewIndex.typenamesWithViews.has(typename);
@@ -134,7 +136,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       },
       connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client?.graph.schemaRegistry.query({ location: ['runtime'] }).runSync() ?? [];
+        const schemas = client
+          ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
+          : [];
 
         const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.AnyObj) : schema.typename;
 
@@ -198,7 +202,12 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
                 droppable: false,
               });
             })
-            .filter(isNonNullable),
+            .filter(isNonNullable)
+            .toSorted((nodeA, nodeB) => {
+              const labelA = typeof nodeA.properties.label === 'string' ? nodeA.properties.label : '';
+              const labelB = typeof nodeB.properties.label === 'string' ? nodeB.properties.label : '';
+              return labelA.localeCompare(labelB);
+            }),
         );
       },
     }),
@@ -212,7 +221,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       },
       actions: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
-        const schemas = client?.graph.schemaRegistry.query({ location: ['runtime'] }).runSync() ?? [];
+        const schemas = client
+          ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
+          : [];
 
         const targetTypename = Type.getTypename(schema as Type.AnyObj);
         const viewIndex = buildViewIndex(get, space, schemas);
@@ -236,6 +247,16 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 // Helpers
 //
 
+/** Returns schemas keyed uniquely by typename, preferring later entries. */
+const uniqueSchemasByTypename = <TSchema extends Type.AnyEntity>(schemas: TSchema[]): TSchema[] => {
+  const uniqueSchemas = new Map<string, TSchema>();
+  for (const schema of schemas) {
+    uniqueSchemas.set(Type.getTypename(schema), schema);
+  }
+
+  return [...uniqueSchemas.values()];
+};
+
 /** Builds a graph node for a schema in the Types subtree. */
 const createSchemaNode = ({
   schema,
@@ -256,7 +277,7 @@ const createSchemaNode = ({
       const snapshot = get(AtomObj.make(persistentSchema));
       return {
         label: snapshot.name || ['object name placeholder', { ns: Type.PersistentType.typename }],
-        nodeId: persistentSchema.id,
+        nodeId: typename,
       };
     }),
     Match.orElse(() => ({
@@ -264,14 +285,16 @@ const createSchemaNode = ({
       nodeId: typename,
     })),
   );
+  const icon = Type.isMutable(schema) ? 'ph--cube--regular' : (metadata.icon ?? 'ph--placeholder--regular');
+  const iconHue = Type.isMutable(schema) ? 'neutral' : metadata.iconHue;
   return {
     id: nodeId,
     type: STATIC_SCHEMA_TYPE,
     data: schema,
     properties: {
       label,
-      icon: metadata.icon ?? 'ph--placeholder--regular',
-      iconHue: metadata.iconHue,
+      icon,
+      iconHue,
       role: 'branch',
       testId: `spacePlugin.schemaNode.${typename}`,
       selectable: false,
@@ -313,18 +336,13 @@ const createSchemaActions = ({
                   typename,
                 });
               } else {
-                const createdObject = yield* createObjectFn({}, { db: space.db }) as Effect.Effect<
-                  Obj.Unknown,
+                const result = yield* createObjectFn({}, { db: space.db, target: space.db }) as Effect.Effect<
+                  { subject: readonly string[] },
                   Error,
                   never
                 >;
-                const addResult = yield* Operation.invoke(SpaceOperation.AddObject, {
-                  target: space.db,
-                  hidden: true,
-                  object: createdObject,
-                });
-                if (addResult.subject) {
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: addResult.subject });
+                if (result.subject.length > 0) {
+                  yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
                 }
               }
             }),
@@ -375,16 +393,11 @@ const createSchemaActions = ({
       id: SpaceOperation.RemoveObjects.meta.key,
       type: Node.ActionType,
       data: () =>
-        Effect.sync(() => {
-          const index = space.properties.staticRecords.findIndex(
-            (typename: string) => typename === Type.getTypename(schema),
-          );
-          if (index > -1) {
-            Obj.change(space.properties, (props) => {
-              props.staticRecords.splice(index, 1);
-            });
-          }
-        }),
+        Type.isMutable(schema)
+          ? Operation.invoke(SpaceOperation.RemoveObjects, {
+              objects: [(schema as Type.RuntimeType).persistentSchema as Obj.Unknown],
+            })
+          : Effect.succeed(undefined),
       properties: {
         label: getDynamicLabel('delete object label', Type.getTypename(Type.PersistentType)),
         icon: 'ph--trash--regular',

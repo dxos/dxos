@@ -39,7 +39,6 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
             classNames='p-1 text-green-500'
             variant='ghost'
             icon='ph--play--regular'
-            size={4}
             label='run'
             iconOnly
             onDoubleClick={(ev) => ev.stopPropagation()}
@@ -57,7 +56,6 @@ export const Box = forwardRef<HTMLDivElement, BoxProps>(
               classNames='p-1'
               variant='ghost'
               icon={open ? 'ph--caret-up--regular' : 'ph--caret-down--regular'}
-              size={4}
               label={open ? 'close' : 'open'}
               iconOnly
               onClick={(ev) => {

@@ -2,16 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
-
-import { composableProps, mx } from '@dxos/ui-theme';
-import { Slot } from '@radix-ui/react-slot';
-import { SlottableProps } from '@dxos/ui-types';
 import { Primitive } from '@radix-ui/react-primitive';
+import { Slot } from '@radix-ui/react-slot';
+import React from 'react';
 
-export type ContainerProps = SlottableProps<HTMLDivElement>;
+import { composableProps, mx, slottable } from '@dxos/ui-theme';
 
-export const Container = forwardRef<HTMLDivElement, ContainerProps>(({ children, asChild, ...props }, forwardedRef) => {
+export const Container = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps<HTMLDivElement>(props, { role: 'none' });
   const Comp = asChild ? Slot : Primitive.div;
   return (

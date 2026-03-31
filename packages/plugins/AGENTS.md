@@ -11,11 +11,13 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - Primitive components should not use hooks from `@dxos/app-framework`.
 - Surface components are in `src/containers` and are referenced by `src/capabilities/react-surface`.
 - Surface components should define and export a `SurfaceComponentProps` properties type.
-- Surface components should not use classNames (other than tailwind functional styles like `@container`, `dx-article`, etc.) or implement custom styling; flag as an issue if you see this.
+- Surface components should not use classNames (other than tailwind functional styles like `@container`, `dx-document`, etc.) or implement custom styling; flag as an issue if you see this.
 - Surface components should have lazy exports.
 - Surface should implement appropriate `<Suspense>` boundaries.
 - Surface components should end with the following suffixes if there is an unambiguous matching role: Article, Card, Dialog, Popover, Settings.
 - `src/components` and `src/containers` should contain only index files and directories.
+- Capability modules in `src/capabilities/` should use lazy exports via `Capability.lazy()` in their `index.ts` (e.g., `export const MyCapability = Capability.lazy('MyCapability', () => import('./my-capability'));`).
+- All interfaces should be real-time reactive. ECHO objects must be subscribed to using appropriate hooks (e.g., `useQuery`, `useObject`, etc.) to receive live updates; use atoms, queries, and reactive patterns so that UI updates automatically when underlying data changes without manual refresh or polling.
 
 ### General Code style
 
@@ -133,6 +135,7 @@ components should add a `play` function that waits for the component to mount. S
 - Primitive subdirectory preservation: when a subdirectory contains both a surface component and primitives, only the surface file moves to `containers/`; primitives stay with an updated subdir `index.ts`.
 - Constants extraction: string constants for dialog/surface role IDs should live in `src/constants.ts`, not inline in `react-surface.tsx`.
 - The `Surface` component in app-framework provides the top-level `<Suspense>` boundary for all lazy containers; individual containers only need their own Suspense if they use `React.use()` or render lazy sub-components internally.
+- `addSchemaModule` should only register schemas **owned** by the plugin (e.g., `Board.Board` in `plugin-board`). Don't re-register schemas from other domains (e.g., `Trigger.Trigger`, `Operation.PersistentOperation`) — those are owned and registered by their respective plugins (`plugin-automation`). Schema contributions are deduplicated, so duplicates are harmless but add unnecessary coupling.
 
 ## Recommendations
 
