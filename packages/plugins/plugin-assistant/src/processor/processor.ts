@@ -33,7 +33,7 @@ import {
   type TracingService,
 } from '@dxos/functions';
 import { runAndForwardErrors } from '@dxos/effect';
-import { dbg, log } from '@dxos/log';
+import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
 import { updateName } from './update-name';
@@ -173,7 +173,7 @@ export class AiChatProcessor {
         yield* ephemeralStream.pipe(
           Stream.runForEach((event: Obj.Unknown) =>
             Effect.sync(() => {
-              dbg(event);
+              log.info('processor ephemeral event', { event: JSON.stringify(event).slice(0, 50) });
               if (Obj.instanceOf(Message.Message, event)) {
                 this.#handleEphemeralMessage(event);
               }

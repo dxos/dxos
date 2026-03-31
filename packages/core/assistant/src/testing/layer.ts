@@ -111,6 +111,7 @@ export const AssistantTestLayer = ({
         QueueService,
         AiService.AiService,
         OperationRegistry.Service,
+        Blueprint.RegistryService,
       ),
     ),
     Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(model), ToolExecutionServices)),
