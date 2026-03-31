@@ -20,6 +20,7 @@ import * as Queue from 'effect/Queue';
 import * as Ref from 'effect/Ref';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
+import { Performance } from '@dxos/effect';
 
 import { Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -280,7 +281,22 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
 
   /** Run process onSpawn. Called by ProcessManagerImpl after spawn. */
   runOnSpawn(): Effect.Effect<void> {
-    return this.#runHandler(() => this.#callbacks.onSpawn());
+    return this.#runHandler(() => this.#callbacks.onSpawn()).pipe(
+      Performance.addTrackEntry({
+        name: 'spawn',
+        detail: {
+          pid: this.pid,
+          key: this.key,
+          params: this.params,
+        },
+        devtools: {
+          dataType: 'track-entry',
+          track: 'Process',
+          trackGroup: 'Compute',
+          color: 'primary',
+        },
+      }),
+    );
   }
 
   submitInput(input: I): Effect.Effect<void> {
@@ -288,7 +304,23 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
       return Effect.void;
     }
     this.#inputCount++;
-    return this.#runHandler(() => this.#callbacks.onInput(input)).pipe(Effect.forkIn(this.#scope));
+    return this.#runHandler(() => this.#callbacks.onInput(input)).pipe(
+      Performance.addTrackEntry({
+        name: 'input',
+        detail: {
+          pid: this.pid,
+          key: this.key,
+          params: this.params,
+        },
+        devtools: {
+          dataType: 'track-entry',
+          track: 'Process',
+          trackGroup: 'Compute',
+          color: 'primary',
+        },
+      }),
+      Effect.forkIn(this.#scope),
+    );
   }
 
   subscribeOutputs(): Stream.Stream<O> {
@@ -375,7 +407,25 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     this.#alarmTimer = setTimeout(() => {
       this.#alarmTimer = null;
       if (!this.#finished) {
-        Effect.runFork(this.#runHandler(() => this.#callbacks.onAlarm()).pipe(this.#alarmSemaphore.withPermits(1)));
+        Effect.runFork(
+          this.#runHandler(() => this.#callbacks.onAlarm()).pipe(
+            Performance.addTrackEntry({
+              name: 'alarm',
+              detail: {
+                pid: this.pid,
+                key: this.key,
+                params: this.params,
+              },
+              devtools: {
+                dataType: 'track-entry',
+                track: 'Process',
+                trackGroup: 'Compute',
+                color: 'primary',
+              },
+            }),
+            this.#alarmSemaphore.withPermits(1),
+          ),
+        );
       }
     }, delay);
   }
@@ -386,7 +436,25 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   }
 
   requestChildEvent(event: Process.ChildEvent<unknown>): void {
-    Effect.runFork(this.#runHandler(() => this.#callbacks.onChildEvent(event)).pipe(Effect.forkIn(this.#scope)));
+    Effect.runFork(
+      this.#runHandler(() => this.#callbacks.onChildEvent(event)).pipe(
+        Performance.addTrackEntry({
+          name: 'alarm',
+          detail: {
+            pid: this.pid,
+            key: this.key,
+            params: this.params,
+          },
+          devtools: {
+            dataType: 'track-entry',
+            track: 'Process',
+            trackGroup: 'Compute',
+            color: 'primary',
+          },
+        }),
+        Effect.forkIn(this.#scope),
+      ),
+    );
   }
 
   #runHandler(fn: () => Effect.Effect<void, never, R | Process.BaseServices>): Effect.Effect<void> {
