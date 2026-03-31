@@ -730,3 +730,5 @@ peerDependencyRules:
 strictPeerDependencies: true
 
 trustPolicy: no-downgrade
+trustPolicyExclude:
+  - rollup@3.30.0
