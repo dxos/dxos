@@ -9,8 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { identities } from './identities';
-import { spaces } from './spaces';
+import { identity } from './identity';
+import { space } from './space';
 
 export const admin = Command.make('admin', {
   adminKey: Options.text('admin-key').pipe(
@@ -25,7 +25,7 @@ export const admin = Command.make('admin', {
   ),
 }).pipe(
   Command.withDescription('Edge admin commands.'),
-  Command.withSubcommands([spaces, identities]),
+  Command.withSubcommands([space, identity]),
   Command.provide(
     Effect.fnUntraced(function* ({ adminKey, edgeUrl }) {
       const parentProvider = yield* Effect.configProviderWith(Effect.succeed);
