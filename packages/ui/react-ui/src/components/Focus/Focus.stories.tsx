@@ -3,16 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { PropsWithChildren, useState } from 'react';
+import React, { type PropsWithChildren, useState } from 'react';
+
+import { mx } from '@dxos/ui-theme';
 
 import { withLayout, withTheme } from '../../testing';
 import { type ThemedClassName } from '../../util';
-import { mx } from '@dxos/ui-theme';
-
 import { Focus } from './Focus';
-
-// TODO(burdon): Create multi-level story (matrix).
-// TODO(burdon): Use tabster uniformly (remove custom ArrowUp/ArrowDown handlers).
 
 type Item = { id: string; label: string };
 
@@ -24,16 +21,18 @@ const ITEMS: Item[] = [
   { id: '5', label: 'Item 5' },
 ];
 
+const itemClassName = 'flex items-center gap-3 px-3 py-2 aria-current:bg-neutral-75 dark:aria-current:bg-neutral-800';
+
 const Container = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
   return (
-    <div className='dx-container grid grid-cols-[1fr_2fr_1fr] '>
-      <div className='border-e border-separator'></div>
+    <div className='dx-container grid grid-cols-[1fr_2fr_1fr]'>
+      <div className='border-e border-separator' />
       <div className='dx-expander grid grid-rows-[1fr_2fr_1fr]'>
         <div className='border-b border-separator' />
         <div className={mx('h-full flex flex-col gap-2', classNames)}>{children}</div>
         <div className='border-t border-separator' />
       </div>
-      <div className='border-s border-separator'></div>
+      <div className='border-s border-separator' />
     </div>
   );
 };
@@ -58,7 +57,7 @@ const DefaultStory = () => {
             key={item.id}
             current={current === item.id}
             onCurrentChange={() => setCurrent(item.id)}
-            className='flex items-center gap-3 px-3 py-2 aria-current:bg-neutral-75 dark:aria-current:bg-neutral-800'
+            className={itemClassName}
           >
             <span className='size-2 bg-primary-500 opacity-0 aria-[current]:opacity-100' />
             <span>{item.label}</span>
@@ -98,28 +97,94 @@ const HorizontalStory = () => {
 };
 
 //
-// Error state
+// Grid (demonstrates border prop and overflow-hidden clipping)
 //
 
-const ErrorStory = () => {
+const GridCell = ({ border, items }: { border?: boolean; items: Item[] }) => {
   const [current, setCurrent] = useState<string | undefined>();
-
   return (
-    <Container>
-      <Text>Focus.Group with an error state applied.</Text>
-      <Focus.Group classNames='h-full' data-focus-state='error'>
-        {ITEMS.slice(0, 3).map((item) => (
+    <div className='overflow-hidden bg-base-surface'>
+      <Focus.Group classNames='h-full' border={border}>
+        {items.map((item) => (
           <Focus.Item
             key={item.id}
             current={current === item.id}
             onCurrentChange={() => setCurrent(item.id)}
-            className='flex items-center gap-3 px-3 py-2 aria-current:bg-neutral-75 dark:aria-current:bg-neutral-800'
+            className={itemClassName}
           >
             <span>{item.label}</span>
           </Focus.Item>
         ))}
       </Focus.Group>
-    </Container>
+    </div>
+  );
+};
+
+const GridStory = () => {
+  return (
+    <div className='p-8 space-y-8'>
+      <Text>Tab between groups to compare. Each cell has overflow-hidden.</Text>
+
+      {/* Default vs border. */}
+      <div className='grid grid-cols-2 gap-4'>
+        <div className='space-y-2'>
+          <p className='text-xs font-mono text-subdued'>Default (invisible until focused)</p>
+          <div className='h-48'>
+            <GridCell items={ITEMS} />
+          </div>
+        </div>
+        <div className='space-y-2'>
+          <p className='text-xs font-mono text-subdued'>border (always visible)</p>
+          <div className='h-48'>
+            <GridCell border items={ITEMS} />
+          </div>
+        </div>
+      </div>
+
+      {/* Tight grid — border. */}
+      <p className='text-xs font-mono text-subdued'>Tight grid — border</p>
+      <div className='grid grid-cols-3'>
+        {[0, 1, 2].map((col) => (
+          <div key={col} className='overflow-hidden'>
+            <GridCell border items={ITEMS.slice(0, 3)} />
+          </div>
+        ))}
+      </div>
+
+      {/* Tight grid — default. */}
+      <p className='text-xs font-mono text-subdued'>Tight grid — default</p>
+      <div className='grid grid-cols-3'>
+        {[0, 1, 2].map((col) => (
+          <div key={col} className='overflow-hidden'>
+            <GridCell items={ITEMS.slice(0, 3)} />
+          </div>
+        ))}
+      </div>
+
+      {/* Item-level border. */}
+      <p className='text-xs font-mono text-subdued'>Item-level border</p>
+      <div className='h-48 overflow-hidden'>
+        <Focus.Group classNames='h-full'>
+          {ITEMS.slice(0, 3).map((item) => (
+            <Focus.Item key={item.id} border className={itemClassName}>
+              <span>{item.label}</span>
+            </Focus.Item>
+          ))}
+        </Focus.Group>
+      </div>
+
+      {/* Error state. */}
+      <p className='text-xs font-mono text-subdued'>Error state</p>
+      <div className='h-48 overflow-hidden'>
+        <Focus.Group classNames='h-full' data-focus-state='error'>
+          {ITEMS.slice(0, 3).map((item) => (
+            <Focus.Item key={item.id} className={itemClassName}>
+              <span>{item.label}</span>
+            </Focus.Item>
+          ))}
+        </Focus.Group>
+      </div>
+    </div>
   );
 };
 
@@ -159,18 +224,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  render: DefaultStory,
-};
-
-export const Horizontal: Story = {
-  render: HorizontalStory,
-};
-
-export const ErrorState: Story = {
-  render: ErrorStory,
-};
-
-export const AsChild: Story = {
-  render: AsChildStory,
-};
+export const Default: Story = { render: DefaultStory };
+export const Horizontal: Story = { render: HorizontalStory };
+export const Grid: Story = { render: GridStory };
+export const AsChild: Story = { render: AsChildStory };

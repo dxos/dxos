@@ -34,7 +34,7 @@
  * Container that fills the available space (extends dx-expander with overflow clipping).
  */
 @utility dx-container {
-  @apply dx-expander; /* overflow-hidden; */
+  @apply dx-expander overflow-hidden;
 }
 
 /**
