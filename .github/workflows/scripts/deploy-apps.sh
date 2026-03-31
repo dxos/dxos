@@ -8,7 +8,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/apps.sh"
 
-BRANCH=$(git rev-parse --abbrev-ref HEAD)
+BRANCH="${BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
 
 GREEN=4783872
 RED=16711680
