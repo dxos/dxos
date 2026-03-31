@@ -26,14 +26,14 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   return (
     <Card.Content>
       {snippet && (
-        <Card.Section className='px-2'>
+        <Card.Section className='px-1'>
           <MarkdownEditor.Root id={subject.id} viewMode='readonly' extensions={extensions}>
             <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'm-0' } }} />
           </MarkdownEditor.Root>
         </Card.Section>
       )}
       <Card.Section>
-        <Card.Text classNames='px-2.5 text-xs text-description'>
+        <Card.Text classNames='px-1.5 text-xs text-description'>
           {info.words} {t('words label', { count: info.words })}
         </Card.Text>
       </Card.Section>

@@ -25,10 +25,11 @@ export type EventListProps = ThemedClassName<{
   onSelect?: (contact: Event.Event) => void;
 }>;
 
+// TODO(burdon): Convert to mosaic with list management.
 export const EventList = ({ classNames, events = [], onSelect }: EventListProps) => {
   // TODO(burdon): Move ScrollArea into compound List object.
   return (
-    <ScrollArea.Root>
+    <ScrollArea.Root thin>
       <ScrollArea.Viewport>
         <List classNames={mx('@container w-full divide-y divide-separator', classNames)}>
           {events.map((event) => (

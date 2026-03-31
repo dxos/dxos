@@ -91,9 +91,9 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
     );
 
     return (
-      <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-        <Focus.Item asChild>
-          <Menu.Root>
+      <Menu.Root>
+        <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
+          <Focus.Item asChild>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
               <Card.Toolbar>
                 <Card.IconBlock padding>
@@ -117,9 +117,9 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
                 <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
               </Card.Content>
             </Card.Root>
-          </Menu.Root>
-        </Focus.Item>
-      </Mosaic.Tile>
+          </Focus.Item>
+        </Mosaic.Tile>
+      </Menu.Root>
     );
   },
 );
