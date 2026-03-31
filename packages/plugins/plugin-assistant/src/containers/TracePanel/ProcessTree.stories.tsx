@@ -7,9 +7,11 @@ import * as Option from 'effect/Option';
 import React from 'react';
 
 import { Process } from '@dxos/functions-runtime';
-import { withLayout } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ProcessTree } from './ProcessTree';
+
+import '@dxos-theme';
 
 const makeProcess = (
   overrides: Partial<Process.Info> & Pick<Process.Info, 'pid' | 'state'> & { name: string },
@@ -81,6 +83,7 @@ const meta: Meta<typeof ProcessTree> = {
       </div>
     ),
     withLayout({ layout: 'column' }),
+    withTheme(),
   ],
 } satisfies Meta<typeof ProcessTree>;
 
