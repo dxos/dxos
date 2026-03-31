@@ -5,9 +5,11 @@
 // @import-as-namespace
 
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import * as Pipeable from 'effect/Pipeable';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import { pipeArguments } from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 
 /**
@@ -98,3 +100,56 @@ export const layer = (kvStore: KeyValueStore.KeyValueStore, prefix: string): Con
       ),
   };
 };
+
+/**
+ * Typed key in a storage service.
+ */
+export interface Key<T> extends Pipeable.Pipeable {
+  readonly key: string;
+
+  get: Effect.Effect<Option.Option<T>, never, StorageService>;
+  set(value: T): Effect.Effect<void, never, StorageService>;
+  delete(): Effect.Effect<void, never, StorageService>;
+}
+
+/**
+ * Create a typed key in a storage service.
+ */
+export const key = <S extends Schema.Schema<any, string, any>>(schema: S, key: string): Key<Schema.Schema.Type<S>> => {
+  return {
+    key,
+    get: get(schema, key),
+    set: (value: Schema.Schema.Type<S>) => set(schema, key, value),
+    delete: () => deleteKey(key),
+    pipe(...args: any) {
+      return pipeArguments(this, arguments);
+    },
+  };
+};
+
+/**
+ * Typed key in a storage service with a default value.
+ */
+export interface KeyWithDefault<T, U> extends Pipeable.Pipeable {
+  readonly key: string;
+  get: Effect.Effect<T | U, never, StorageService>;
+  set(value: U): Effect.Effect<void, never, StorageService>;
+  delete(): Effect.Effect<void, never, StorageService>;
+}
+
+/**
+ * Assign a default value to a key if it is not present.
+ */
+export const withDefault =
+  <T>(getDefault: () => NoInfer<T>) =>
+  (key: Key<T>): KeyWithDefault<T, T> => {
+    return {
+      key: key.key,
+      get: key.get.pipe(Effect.map(Option.getOrElse(() => getDefault()))),
+      set: (value) => key.set(value),
+      delete: () => key.delete(),
+      pipe(...args: any) {
+        return pipeArguments(this, arguments);
+      },
+    };
+  };

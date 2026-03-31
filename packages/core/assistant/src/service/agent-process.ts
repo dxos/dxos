@@ -68,14 +68,15 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const queueDxn = DXN.parse(queueDxnStr);
         const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
-        let inputQueue: AgentEvent[] = [...(yield* loadEvents)];
-
+        let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
+        const synchronouslyReported = new Set<Process.ID>(yield* SubmittedResultKey.get); // Tool-calls that were reported synchronously.
+        const storageService = yield* StorageService.StorageService;
         return {
           onInput: Effect.fnUntraced(function* (prompt: string) {
             log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
             inputQueue.push({ _tag: 'prompt', content: prompt });
             log('agent onInput persisting queue', { depth: inputQueue.length });
-            yield* storeEvents(inputQueue);
+            yield* AgentEventsKey.set(inputQueue);
             log('agent onInput persisted', { depth: inputQueue.length });
             ctx.setAlarm();
             log('agent onInput alarm scheduled');
@@ -86,6 +87,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               const item = inputQueue.shift();
               if (!item) {
                 log('agent onAlarm empty queue', {});
+                return;
+              }
+
+              if (item._tag === 'tool_result' && synchronouslyReported.has(item.pid)) {
+                // Ignore tool results that were reported synchronously.
                 return;
               }
 
@@ -108,7 +114,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 system: options.systemPrompt,
               });
               log.info('end request');
-              yield* storeEvents(inputQueue);
+              yield* AgentEventsKey.set(inputQueue);
               if (inputQueue.length > 0) {
                 ctx.setAlarm();
               }
@@ -116,7 +122,16 @@ export const AgentProcess = (options: AgentProcessOptions) =>
             Effect.orDie,
             Effect.provide(
               Layer.mergeAll(
-                toolServices,
+                makeToolResolverFromOperations(),
+                ToolExecutionService({
+                  onResultReported: (pid, result) =>
+                    Effect.gen(function* () {
+                      log.info('marking as submitted', { pid });
+                      synchronouslyReported.add(pid);
+                      yield* SubmittedResultKey.set(Array.from(synchronouslyReported));
+                    }).pipe(Effect.provideService(StorageService.StorageService, storageService)),
+                }),
+                functionInvocationServiceFromOperations,
                 AsynchronousExectionToolkitLayer,
                 AiService.model(options.model ?? '@anthropic/claude-opus-4-6'),
               ).pipe(Layer.orDie),
@@ -147,7 +162,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               );
               inputQueue.push(result);
               log('agent onChildEvent persisted tool result', { depth: inputQueue.length, childPid: event.pid });
-              yield* storeEvents(inputQueue);
+              yield* AgentEventsKey.set(inputQueue);
               ctx.setAlarm();
               log('agent onChildEvent alarm scheduled', { depth: inputQueue.length });
             }
@@ -162,6 +177,8 @@ interface ToolExecutionServiceOptions {
    */
   // TODO(dmaretskyi): Tool annotation to never run in background.
   backgroundThreshold?: Duration.Duration;
+
+  onResultReported?: (pid: Process.ID, result: Exit.Exit<any>) => Effect.Effect<void>;
 }
 
 const AgentEvent = Schema.Union(
@@ -176,15 +193,21 @@ const AgentEvent = Schema.Union(
 );
 type AgentEvent = Schema.Schema.Type<typeof AgentEvent>;
 
-const loadEvents = StorageService.get(Schema.parseJson(Schema.Array(AgentEvent)), 'inputQueue').pipe(
-  Effect.flatten,
-  Effect.catchTag('NoSuchElementException', () => Effect.succeed([] as readonly AgentEvent[])),
-);
+const AgentEventsKey = StorageService.key(
+  Schema.parseJson(Schema.Array(AgentEvent).pipe(Schema.mutable)),
+  'inputQueue',
+).pipe(StorageService.withDefault(() => []));
 
-const storeEvents = (value: AgentEvent[]) =>
-  StorageService.set(Schema.parseJson(Schema.Array(AgentEvent)), 'inputQueue', value);
+// Id's of processes who's results were already submitted to the agent.
+const SubmittedResultKey = StorageService.key(
+  Schema.parseJson(Schema.Array(Process.ID).pipe(Schema.mutable)),
+  'submittedResults',
+).pipe(StorageService.withDefault(() => []));
 
-const ToolExecutionService = ({ backgroundThreshold = Duration.seconds(1) }: ToolExecutionServiceOptions = {}) =>
+const ToolExecutionService = ({
+  backgroundThreshold = Duration.seconds(1),
+  onResultReported,
+}: ToolExecutionServiceOptions = {}) =>
   Layer.unwrapEffect(
     Effect.gen(function* () {
       const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
@@ -197,6 +220,7 @@ const ToolExecutionService = ({ backgroundThreshold = Duration.seconds(1) }: Too
             log('invoked operation', { operationDef, input, fiber });
 
             const result = yield* fiber.await.pipe(
+              Effect.tap((result) => onResultReported?.(fiber.pid, result) ?? Effect.void),
               Effect.timeout(backgroundThreshold),
               Effect.catchTag('TimeoutException', () => Effect.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
             );
@@ -206,13 +230,6 @@ const ToolExecutionService = ({ backgroundThreshold = Duration.seconds(1) }: Too
       });
     }),
   );
-
-// Services to brige tool execution to runtime.
-const toolServices = Layer.mergeAll(
-  makeToolResolverFromOperations(),
-  ToolExecutionService(),
-  functionInvocationServiceFromOperations,
-);
 
 class AsynchronousExectionToolkit extends Toolkit.make(
   Tool.make('poll-tools', {
