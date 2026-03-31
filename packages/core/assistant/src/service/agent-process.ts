@@ -91,6 +91,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               }
 
               if (item._tag === 'tool_result' && synchronouslyReported.has(item.pid)) {
+                log.info('skip tool result that was reported synchronously', { pid: item.pid });
                 // Ignore tool results that were reported synchronously.
                 return;
               }
