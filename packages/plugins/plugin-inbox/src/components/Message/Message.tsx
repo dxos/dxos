@@ -3,10 +3,10 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type ComponentPropsWithoutRef, forwardRef, type PropsWithChildren, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useMemo, useState } from 'react';
 
 import { type DXN } from '@dxos/echo';
-import { ComposableProps, Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
@@ -17,7 +17,7 @@ import {
   decorateMarkdown,
   preview,
 } from '@dxos/ui-editor';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
@@ -82,9 +82,7 @@ MessageRoot.displayName = 'Message.Root';
 
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
-type MessageToolbarProps = ComposableProps;
-
-const MessageToolbar = forwardRef<HTMLDivElement, MessageToolbarProps>((props, forwardedRef) => {
+const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
   const { attendableId, viewMode, setViewMode, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
   const menuActions = useMessageToolbarActions({ viewMode, setViewMode, onReply, onReplyAll, onForward });
@@ -104,23 +102,27 @@ MessageToolbar.displayName = MESSAGE_TOOLBAR_NAME;
 
 const MESSAGE_VIEWPORT_NAME = 'Message.Viewport';
 
-type MessageViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
+type MessageViewportProps = ThemedClassName<PropsWithChildren>;
 
-const MessageViewport = ({ classNames, children, role, ...props }: MessageViewportProps) => {
-  return (
-    <div
-      role='none'
-      {...props}
-      className={mx(
-        'overflow-hidden grid',
-        role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
-        classNames,
-      )}
-    >
-      {children}
-    </div>
-  );
-};
+const MessageViewport = composable<HTMLDivElement, MessageViewportProps>(
+  ({ classNames, children, role, ...props }, forwardedRef) => {
+    return (
+      <div
+        {...composableProps(props, {
+          role: 'none',
+          className: mx(
+            'overflow-hidden grid',
+            role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
+            classNames,
+          ),
+        })}
+        ref={forwardedRef}
+      >
+        {children}
+      </div>
+    );
+  },
+);
 
 MessageViewport.displayName = MESSAGE_VIEWPORT_NAME;
 
@@ -174,9 +176,9 @@ MessageHeader.displayName = MESSAGE_HEADER_NAME;
 
 const MESSAGE_CONTENT_NAME = 'Message.Content';
 
-type MessageContentProps = ThemedClassName<{}>;
+type MessageBodyProps = ThemedClassName;
 
-const MessageContent = ({ classNames }: MessageContentProps) => {
+const MessageBody = ({ classNames }: MessageBodyProps) => {
   const { message, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
   const { themeMode } = useThemeContext();
 
@@ -215,7 +217,7 @@ const MessageContent = ({ classNames }: MessageContentProps) => {
   );
 };
 
-MessageContent.displayName = MESSAGE_CONTENT_NAME;
+MessageBody.displayName = MESSAGE_CONTENT_NAME;
 
 //
 // Message
@@ -227,7 +229,7 @@ export const Message = {
   Toolbar: MessageToolbar,
   Viewport: MessageViewport,
   Header: MessageHeader,
-  Content: MessageContent,
+  Body: MessageBody,
 };
 
-export type { MessageRootProps, MessageToolbarProps, MessageViewportProps, MessageHeaderProps, MessageContentProps };
+export type { MessageRootProps, MessageViewportProps, MessageHeaderProps, MessageBodyProps };

@@ -4,10 +4,17 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type PropsWithChildren, createContext, forwardRef, useContext } from 'react';
+import React, {
+  CSSProperties,
+  MouseEventHandler,
+  type PropsWithChildren,
+  createContext,
+  forwardRef,
+  useContext,
+} from 'react';
 
 import { composable, composableProps, iconSize, mx, slottable } from '@dxos/ui-theme';
-import { type Density, type SlottableProps } from '@dxos/ui-types';
+import { type Density } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { Column } from '../../primitives';
@@ -44,14 +51,14 @@ type CardRootOwnProps = {
   border?: boolean;
   fullWidth?: boolean;
   density?: Density;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
   tabIndex?: number;
-  onClick?: React.MouseEventHandler<HTMLDivElement>;
+  onClick?: MouseEventHandler<HTMLDivElement>;
   'data-selected'?: boolean;
   'data-testid'?: string;
 };
 
-type CardRootProps = SlottableProps<CardRootOwnProps>;
+type CardRootProps = CardRootOwnProps;
 
 const CardRoot = slottable<HTMLDivElement, CardRootOwnProps>(
   ({ children, id, asChild, role, border = true, fullWidth, density, ...props }, forwardedRef) => {

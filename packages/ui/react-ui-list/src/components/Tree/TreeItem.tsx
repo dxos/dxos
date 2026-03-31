@@ -129,6 +129,7 @@ const RawTreeItem = <T extends { id: string } = any>({
   const mode: ItemMode = last ? 'last-in-group' : open ? 'expanded' : 'standard';
   const canSelectItem = canSelect?.({ item, path }) ?? true;
   const data = { id, path, item } satisfies TreeData;
+  const shouldSeedNativeDragData = typeof document !== 'undefined' && document.body.hasAttribute('data-platform');
 
   const cancelExpand = useCallback(() => {
     if (cancelExpandRef.current) {
@@ -139,6 +140,7 @@ const RawTreeItem = <T extends { id: string } = any>({
 
   const isItemDraggable = draggableProp && itemDraggable !== false;
   const isItemDroppable = itemDroppable !== false;
+  const nativeDragText = id;
 
   useEffect(() => {
     if (!draggableProp) {
@@ -151,6 +153,12 @@ const RawTreeItem = <T extends { id: string } = any>({
       draggable({
         element: buttonRef.current!,
         getInitialData: () => data,
+        getInitialDataForExternal: () => {
+          if (!shouldSeedNativeDragData) {
+            return {};
+          }
+          return { 'text/plain': nativeDragText };
+        },
         onDragStart: () => {
           setState('dragging');
           if (open) {

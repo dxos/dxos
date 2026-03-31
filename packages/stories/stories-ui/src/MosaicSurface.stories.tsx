@@ -27,7 +27,7 @@ const generator = faker as any as ValueGenerator;
 
 faker.seed(999);
 
-type StoryProps = {
+type DefaultStoryProps = {
   columns?: number;
   debug?: boolean;
 };
@@ -50,7 +50,7 @@ const createColumns = (count: number, db: Database.Database) =>
     return col;
   });
 
-const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) => {
+const DefaultStory = ({ columns: columnsProp = 1, debug = false }: DefaultStoryProps) => {
   const [space] = useSpaces();
   const db = space.db;
   const registry = useContext(RegistryContext);

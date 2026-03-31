@@ -13,11 +13,11 @@ import { Chess } from '../../types';
 
 import { ChessArticle } from './ChessArticle';
 
-type StoryProps = {
+type DefaultStoryProps = {
   pgn?: string;
 };
 
-const DefaultStory = ({ pgn }: StoryProps) => {
+const DefaultStory = ({ pgn }: DefaultStoryProps) => {
   const game = useMemo(() => Chess.make(pgn ? { pgn } : undefined), [pgn]);
   return <ChessArticle role='article' subject={game} />;
 };

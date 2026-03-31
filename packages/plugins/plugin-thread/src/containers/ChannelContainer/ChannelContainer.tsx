@@ -3,7 +3,7 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { type ChangeEvent, forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
@@ -13,11 +13,11 @@ import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ComposableProps, ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { Menu, MenuRootProps, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
-import { composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Call } from '../../components';
 import { meta } from '../../meta';
@@ -203,13 +203,11 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
   return useMenuActions(creator);
 };
 
-type ChannelToolbarProps = ComposableProps<
-  Pick<MenuRootProps, 'attendableId'> & {
-    onJoinCall?: () => void;
-  }
->;
+type ChannelToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
+  onJoinCall?: () => void;
+};
 
-const ChannelToolbar = forwardRef<HTMLDivElement, ChannelToolbarProps>(
+const ChannelToolbar = composable<HTMLDivElement, ChannelToolbarProps>(
   ({ attendableId, role, onJoinCall, ...props }, forwardedRef) => {
     const menuActions = useChannelToolbarActions(onJoinCall);
 

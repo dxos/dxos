@@ -8,16 +8,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
-import React, {
-  type ComponentPropsWithoutRef,
-  type PropsWithChildren,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
@@ -25,14 +16,13 @@ import { type Database, Filter, Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Input, type ThemedClassName, useDynamicRef, useTranslation, ComposableProps } from '@dxos/react-ui';
+import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
-import { composableProps } from '@dxos/ui-theme';
 
 import { useChatToolbarActions } from '../../hooks';
 import { meta } from '../../meta';
@@ -173,15 +163,15 @@ ChatRoot.displayName = 'Chat.Root';
 
 const CHAT_VIEWPORT_NAME = 'Chat.Viewport';
 
-type ChatViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
+type ChatViewportProps = {};
 
-const ChatViewport = ({ classNames, children, ...props }: ChatViewportProps) => {
+const ChatViewport = composable<HTMLDivElement, ChatViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div role='none' {...props} className={mx('flex flex-col h-full w-full', classNames)}>
+    <div {...composableProps(props, { role: 'none', className: 'dx-expander flex flex-col' })} ref={forwardedRef}>
       {children}
     </div>
   );
-};
+});
 
 ChatViewport.displayName = CHAT_VIEWPORT_NAME;
 
@@ -436,13 +426,11 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = ComposableProps<
-  Pick<MenuRootProps, 'attendableId'> & {
-    companionTo?: Obj.Unknown;
-  }
->;
+type ChatToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
+  companionTo?: Obj.Unknown;
+};
 
-const ChatToolbar = forwardRef<HTMLDivElement, ChatToolbarProps>(
+const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
   ({ attendableId, companionTo, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
     const menuActions = useChatToolbarActions({ chat, companionTo });

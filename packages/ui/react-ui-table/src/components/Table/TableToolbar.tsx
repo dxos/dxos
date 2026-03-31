@@ -3,9 +3,8 @@
 //
 
 import { Atom, RegistryContext } from '@effect-atom/atom-react';
-import React, { forwardRef, useContext, useEffect, useMemo } from 'react';
+import React, { useContext, useEffect, useMemo } from 'react';
 
-import { ComposableProps } from '@dxos/react-ui';
 import {
   type ActionGraphEdges,
   type ActionGraphNodes,
@@ -17,7 +16,7 @@ import {
   createMenuAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
-import { composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -28,8 +27,6 @@ export type TableToolbarAction = MenuAction<TableToolbarActionProperties>;
 export type TableToolbarActionType = 'add-row' | 'comment' | 'save-view';
 
 type TableToolbarState = Partial<{ viewDirty: boolean }>;
-
-// TODO(burdon): Radix style layout.
 
 const createTableToolbarActions = ({
   stateAtom,
@@ -80,16 +77,14 @@ const createTableToolbarActions = ({
     };
   });
 
-export type TableToolbarProps = ComposableProps<
-  Pick<MenuRootProps, 'attendableId'> &
-    TableToolbarState & {
-      onAdd?: () => void;
-      onSave?: () => void;
-      customActions?: Atom.Atom<ActionGraphProps>;
-    }
->;
+export type TableToolbarProps = Pick<MenuRootProps, 'attendableId'> &
+  TableToolbarState & {
+    onAdd?: () => void;
+    onSave?: () => void;
+    customActions?: Atom.Atom<ActionGraphProps>;
+  };
 
-export const TableToolbar = forwardRef<HTMLDivElement, TableToolbarProps>(
+export const TableToolbar = composable<HTMLDivElement, TableToolbarProps>(
   ({ attendableId, viewDirty, onAdd, onSave, customActions, ...props }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const stateAtom = useMemo(() => Atom.make<TableToolbarState>({ viewDirty }), []);

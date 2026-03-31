@@ -54,10 +54,10 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <ScrollArea.Root margin padding thin>
+        <ScrollArea.Root thin padding>
           <ScrollArea.Viewport>
             <Mosaic.Stack
-              classNames='gap-1'
+              classNames='py-2 gap-2'
               draggable={false}
               items={allResults}
               getId={(result) => result.object!.id}
@@ -75,7 +75,7 @@ const SearchResultTile: MosaicStackTileComponent<SearchResult> = ({ data }) => {
 
   return (
     <Menu.Root>
-      <Card.Root key={data.id} fullWidth role='button' classNames='cursor-pointer'>
+      <Card.Root key={data.id} role='button' classNames='cursor-pointer'>
         <Card.Toolbar>
           <Card.DragHandle />
           <Card.Title>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>

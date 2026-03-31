@@ -22,6 +22,7 @@ import {
   useEditorToolbar,
 } from '@dxos/react-ui-editor';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import {
@@ -159,7 +160,7 @@ const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
 
 type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
-const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
+const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(({ ...props }, _forwardedRef) => {
   const {
     id,
     attendableId,
@@ -174,7 +175,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   return (
     <EditorMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
       <NaturalMarkdownEditorContent
-        {...props}
+        {...composableProps(props)}
         id={id}
         attendableId={attendableId}
         viewMode={viewMode}
@@ -184,7 +185,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
       />
     </EditorMenuProvider>
   );
-};
+});
 
 MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 

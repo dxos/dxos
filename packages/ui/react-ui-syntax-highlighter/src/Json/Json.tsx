@@ -26,7 +26,7 @@ export const Json = forwardRef<HTMLDivElement, JsonProps>((props, forwardedRef) 
   return (
     <SyntaxHighlighter
       language='json'
-      classNames={['w-full overflow-y-auto text-sm', classNames]}
+      classNames={['w-full py-1 px-2 overflow-y-auto text-sm', classNames]}
       data-testid={testId}
       ref={forwardedRef}
     >

@@ -6,7 +6,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React from 'react';
 
-import { composableProps, slottable } from '@dxos/ui-theme';
+import { composableProps, PanelStyleProps, slottable } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
 
@@ -44,16 +44,18 @@ Root.displayName = 'Panel.Root';
 // Toolbar
 //
 
-const Toolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-  const { tx } = useThemeContext();
-  return (
-    <Comp {...rest} data-slot='toolbar' className={tx('panel.toolbar', {}, className)} ref={forwardedRef}>
-      {children}
-    </Comp>
-  );
-});
+const Toolbar = slottable<HTMLDivElement, Pick<PanelStyleProps, 'size'>>(
+  ({ children, asChild, size, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
+    return (
+      <Comp {...rest} data-slot='toolbar' className={tx('panel.toolbar', { size }, className)} ref={forwardedRef}>
+        {children}
+      </Comp>
+    );
+  },
+);
 
 Toolbar.displayName = 'Panel.Toolbar';
 
@@ -78,16 +80,18 @@ Content.displayName = 'Panel.Content';
 // Statusbar
 //
 
-const Statusbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-  const { tx } = useThemeContext();
-  return (
-    <Comp {...rest} data-slot='statusbar' className={tx('panel.statusbar', {}, className)} ref={forwardedRef}>
-      {children}
-    </Comp>
-  );
-});
+const Statusbar = slottable<HTMLDivElement, Pick<PanelStyleProps, 'size'>>(
+  ({ children, asChild, size, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
+    return (
+      <Comp {...rest} data-slot='statusbar' className={tx('panel.statusbar', { size }, className)} ref={forwardedRef}>
+        {children}
+      </Comp>
+    );
+  },
+);
 
 Statusbar.displayName = 'Panel.Statusbar';
 
@@ -105,6 +109,6 @@ export const Panel = {
 import { type SlottableProps } from '@dxos/ui-types';
 
 export type PanelRootProps = SlottableProps;
-export type PanelToolbarProps = SlottableProps;
+export type PanelToolbarProps = SlottableProps & Pick<PanelStyleProps, 'size'>;
 export type PanelContentProps = SlottableProps;
-export type PanelStatusbarProps = SlottableProps;
+export type PanelStatusbarProps = SlottableProps & Pick<PanelStyleProps, 'size'>;

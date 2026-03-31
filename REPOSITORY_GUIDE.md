@@ -176,8 +176,8 @@ The filter consists of a series of filename pattern/level tuples separated by co
 
 ### Apps
 
-The script used to publish apps to a KUBE environment is [here](https://github.com/dxos/dxos/blob/main/.github/workflows/scripts/publish-apps.sh).
-In order to include a new app in the publish loop it needs to be added to the `APPS` list in this script.
+The apps published are defined in [`.github/workflows/scripts/apps.sh`](https://github.com/dxos/dxos/blob/main/.github/workflows/scripts/apps.sh).
+In order to include a new app in the publish loop it needs to be added to the `APPS` list in this file.
 
 ## Dependencies
 

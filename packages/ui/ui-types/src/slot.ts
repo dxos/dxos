@@ -40,6 +40,8 @@ export type ComposableProps<P extends object = {}> = ThemedClassName<P> & {
  * @see https://www.radix-ui.com/primitives/docs/guides/composition
  * @see slot.stories.tsx (@dxos/react-ui)
  */
-export type SlottableProps<P extends object = {}> = ComposableProps<P> & {
-  asChild?: boolean;
-};
+export type SlottableProps<P extends object = {}> = ComposableProps<
+  P & {
+    asChild?: boolean;
+  }
+>;

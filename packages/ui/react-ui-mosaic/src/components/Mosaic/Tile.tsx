@@ -20,19 +20,11 @@ import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, {
-  type CSSProperties,
-  type PropsWithChildren,
-  forwardRef,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type ComposableProps } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/react-ui';
+import { composableProps, slottable } from '@dxos/ui-theme';
 
 import { useMosaicContainerContext } from './Container';
 import { type LocationType, type MosaicTileData, getSourceData } from './types';
@@ -58,9 +50,9 @@ const [MosaicTileContextProvider, useMosaicTileContext] = createContext<MosaicTi
 // State attribute: data-[mosaic-tile-state=dragging]
 const MOSAIC_TILE_STATE_ATTR = 'mosaic-tile-state';
 
-type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps &
+type MosaicTileProps<TData = any, TLocation = LocationType> = ThemedClassName<
   PropsWithChildren<{
-    asChild?: boolean;
+    className?: string;
     dragHandle?: HTMLElement | null;
     allowedEdges?: Edge[];
     id: string;
@@ -68,9 +60,10 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = ComposableProps &
     location: TLocation;
     draggable?: boolean;
     debug?: boolean;
-  }>;
+  }>
+>;
 
-const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
+const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
   (
     {
       children,
@@ -83,10 +76,9 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
       draggable: draggableProp,
       debug: _,
       ...props
-    }: MosaicTileProps,
+    },
     forwardedRef,
   ) => {
-    const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = composeRefs<HTMLDivElement>(rootRef, forwardedRef);
@@ -203,6 +195,8 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
       setActiveLocation,
     ]);
 
+    const { className, ...rest } = composableProps(props, { className: 'relative outline-none' });
+
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).
     return (
@@ -213,7 +207,10 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
-          className={mx('relative', className)}
+          className={className}
+          // TODO(burdon): Option.
+          // tabIndex={0}
+          // {...focusableGroupAttrs}
           ref={composedRef}
         >
           {children}
@@ -227,14 +224,11 @@ const MosaicTile = forwardRef<HTMLDivElement, MosaicTileProps>(
                 // NOTE: Use to control appearance while dragging.
                 [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
               }}
-              // TODO(burdon): Configure drop animation.
-              className={mx('relative', className)}
-              style={
-                {
-                  width: `${state.rect.width}px`,
-                  height: `${state.rect.height}px`,
-                } as CSSProperties
-              }
+              className={className}
+              style={{
+                width: `${state.rect.width}px`,
+                height: `${state.rect.height}px`,
+              }}
             >
               {children}
             </Comp>,

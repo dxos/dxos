@@ -57,7 +57,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
         debug={debug}
         dragHandle={dragHandle}
       >
-        <Focus.Group asChild>
+        <Focus.Item asChild>
           <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
@@ -77,7 +77,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
               {projection && <Surface.Surface role='card--content' limit={1} data={{ subject: data, projection }} />}
             </Card.Content>
           </Card.Root>
-        </Focus.Group>
+        </Focus.Item>
       </Mosaic.Tile>
     </Menu.Root>
   );

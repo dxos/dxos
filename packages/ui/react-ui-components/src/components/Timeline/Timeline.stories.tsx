@@ -18,7 +18,7 @@ import { useExecutionGraph } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 
 import { research } from './testing';
-import { type Commit, Timeline } from './Timeline';
+import { type Commit, Timeline, TimelineProps } from './Timeline';
 
 faker.seed(1);
 
@@ -39,28 +39,6 @@ enum IconType {
   LINK = 'ph--link--regular',
   TOOL = 'ph--wrench--regular',
 }
-
-const generateCommits = (n: number): { commits: Commit[]; branches: string[] } => {
-  const commits = [];
-  const branches = ['main'];
-  let lastBranch = branches[0];
-  let lastCommit: string | undefined;
-  const closedBranches = new Set<string>();
-
-  for (let i = 0; i < n; i++) {
-    const { commit, branch } = generateCommit(commits, branches, lastBranch, lastCommit, closedBranches);
-    if (commit) {
-      commits.push(commit);
-      lastCommit = commit.id;
-    }
-    if (branch) {
-      branches.push(branch);
-      lastBranch = branch;
-    }
-  }
-
-  return { commits, branches };
-};
 
 const generateCommit = (
   commits: Commit[],
@@ -108,8 +86,8 @@ const generateCommit = (
   if (!commit) {
     commit = {
       id: faker.string.uuid(),
-      branch: lastBranch,
       timestamp: new Date(),
+      branch: lastBranch,
       icon: faker.helpers.arrayElement([
         IconType.WARN,
         IconType.CHECK,
@@ -135,6 +113,28 @@ const generateCommit = (
   }
 
   return { commit, branch };
+};
+
+const generateCommits = (n: number): Pick<TimelineProps, 'commits' | 'branches'> => {
+  const commits = [];
+  const branches = ['main'];
+  let lastBranch = branches[0];
+  let lastCommit: string | undefined;
+  const closedBranches = new Set<string>();
+
+  for (let i = 0; i < n; i++) {
+    const { commit, branch } = generateCommit(commits, branches, lastBranch, lastCommit, closedBranches);
+    if (commit) {
+      commits.push(commit);
+      lastCommit = commit.id;
+    }
+    if (branch) {
+      branches.push(branch);
+      lastBranch = branch;
+    }
+  }
+
+  return { commits, branches };
 };
 
 const meta = {
@@ -263,9 +263,7 @@ export const ExecutionGraph: Story = {
       const interval = setInterval(async () => {
         const obj = objects[i];
         await queue?.append([obj]);
-
-        i++;
-        if (i >= objects.length) {
+        if (++i >= objects.length) {
           clearInterval(interval);
         }
       }, 1000);
@@ -274,7 +272,7 @@ export const ExecutionGraph: Story = {
     }, [queue]);
     const { branches, commits } = useExecutionGraph(queue);
     log.info('execution graph', { branches, commits });
-    return <Timeline branches={branches} commits={commits} />;
+    return <Timeline branches={branches} commits={commits} showTimestamp />;
   },
 };
 
@@ -335,7 +333,7 @@ export const Streaming: Story = {
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content>
-          <Timeline ref={scrollerRef} branches={branches} commits={commits} />
+          <Timeline ref={scrollerRef} branches={branches} commits={commits} showTimestamp />
         </Panel.Content>
       </Panel.Root>
     );
@@ -411,6 +409,7 @@ const toolCalls = [
   }),
 ];
 
+// TODO(burdon): Not used.
 const testExecutionGraph = [
   Obj.make(AgentStatus, {
     created: '2025-09-25T19:51:39.014Z',

@@ -13,6 +13,7 @@ export * from './Card';
 export * from './Clipboard';
 export * from './Dialog';
 export * from './ErrorFallback';
+export * from './Focus';
 export * from './Icon';
 export * from './Image';
 export * from './Input';

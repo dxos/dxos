@@ -130,9 +130,9 @@ const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
   };
 };
 
-type StoryProps = { source: string };
+type DefaultStoryProps = { source: string };
 
-const DefaultStory = ({ source }: StoryProps) => {
+const DefaultStory = ({ source }: DefaultStoryProps) => {
   const pushVideoElement = useRef<HTMLVideoElement>(null);
   const pullVideoElement = useRef<HTMLVideoElement>(null);
   // Get video stream track.

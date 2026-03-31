@@ -25,7 +25,7 @@ type ScrollAreaContextType = {
   autoHide: boolean;
   /** Apply padding to opposite side of scrollbar. */
   // TODO(burdon): Rename `center`.
-  margin?: boolean;
+  centered?: boolean;
   /** Apply padding. */
   padding: boolean;
   /** Use thin scrollbars. */
@@ -42,19 +42,19 @@ const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaConte
 
 const SCROLLAREA_ROOT_NAME = 'ScrollArea.Root';
 
-type ScrollAreaRootProps = SlottableProps<Partial<ScrollAreaContextType>>;
+type ScrollAreaRootProps = Partial<ScrollAreaContextType>;
 
 /**
  * ScrollArea provides native scrollbars with custom styling.
  */
-const ScrollAreaRoot = slottable<HTMLDivElement, Partial<ScrollAreaContextType>>(
+const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
   (
     {
       children,
       asChild,
       orientation = 'vertical',
       autoHide = true,
-      margin = false,
+      centered = false,
       padding = false,
       thin = false,
       snap = false,
@@ -66,8 +66,8 @@ const ScrollAreaRoot = slottable<HTMLDivElement, Partial<ScrollAreaContextType>>
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const options = useMemo(
-      () => ({ orientation, autoHide, margin, padding, thin, snap }),
-      [orientation, autoHide, margin, padding, thin, snap],
+      () => ({ orientation, autoHide, centered, padding, thin, snap }),
+      [orientation, autoHide, centered, padding, thin, snap],
     );
 
     return (

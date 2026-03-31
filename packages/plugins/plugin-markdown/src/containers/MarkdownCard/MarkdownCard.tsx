@@ -5,8 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { Card, useTranslation } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 
 import { MarkdownEditor } from '../../components';
@@ -14,26 +13,22 @@ import { meta } from '../../meta';
 import { Markdown } from '../../types';
 import { getContentSnippet } from '../../util';
 
+import { snippet as snippetExtension } from './snippet';
+
 export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   const { t } = useTranslation(meta.id);
   const snippet = useMemo(() => getSnippet(subject), [subject]);
+  const extensions = useMemo(() => [snippetExtension({ height: 240, scale: 0.8 })], []);
   const info = getInfo(subject);
 
-  // TODO(burdon): Standardize px-1.
   return (
     <Card.Content>
       {snippet && (
         <Card.Section className='px-1'>
-          <MarkdownEditor.Root id={subject.id} viewMode='readonly'>
-            <MarkdownEditor.Content
-              initialValue={snippet}
-              classNames='bg-transparent'
-              slots={{
-                editor: { className: 'max-h-[240px]' },
-              }}
-            />
+          <MarkdownEditor.Root id={subject.id} viewMode='readonly' extensions={extensions}>
+            <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'm-0' } }} />
           </MarkdownEditor.Root>
         </Card.Section>
       )}

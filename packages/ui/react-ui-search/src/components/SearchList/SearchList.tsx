@@ -18,7 +18,6 @@ import React, {
 } from 'react';
 
 import {
-  type ComposableProps,
   type Density,
   type Elevation,
   Icon,
@@ -233,7 +232,7 @@ SearchListRoot.displayName = 'SearchList.Root';
 // Content
 //
 
-type SearchListContentProps = ComposableProps;
+type SearchListContentProps = {};
 
 const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
@@ -379,7 +378,7 @@ SearchListInput.displayName = 'SearchList.Input';
 // Viewport
 //
 
-type SearchListViewportProps = ComposableProps;
+type SearchListViewportProps = {};
 
 const SearchListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (

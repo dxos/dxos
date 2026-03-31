@@ -11,6 +11,7 @@ import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -59,10 +60,12 @@ type PipelineContentProps = PropsWithChildren<{
   model: BoardModel<Pipeline.Column, Obj.Unknown>;
 }>;
 
-const PipelineContent = ({ model, children, ...props }: PipelineContentProps) => (
-  <Board.Root {...props} model={model}>
-    {children}
-  </Board.Root>
+const PipelineContent = composable<HTMLDivElement, PipelineContentProps>(
+  ({ model, children, ...props }, forwardedRef) => (
+    <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
+      <Board.Root model={model}>{children}</Board.Root>
+    </div>
+  ),
 );
 
 PipelineContent.displayName = PIPELINE_CONTENT_NAME;
@@ -102,16 +105,16 @@ PipelineColumns.displayName = PIPELINE_COLUMNS_NAME;
 
 const PIPELINE_TOOLBAR_NAME = 'Pipeline.Toolbar';
 
-export const PipelineToolbar = (props: ToolbarRootProps) => {
+export const PipelineToolbar = composable<HTMLDivElement, ToolbarRootProps>(({ children, ...props }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const { onAddColumn } = usePipeline(PIPELINE_TOOLBAR_NAME);
 
   return (
-    <Toolbar.Root {...props}>
+    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
       <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('add column label')} onClick={onAddColumn} />
     </Toolbar.Root>
   );
-};
+});
 
 PipelineToolbar.displayName = PIPELINE_TOOLBAR_NAME;
 

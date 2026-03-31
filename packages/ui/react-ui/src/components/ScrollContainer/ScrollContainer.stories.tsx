@@ -14,9 +14,9 @@ import { Toolbar } from '../Toolbar';
 
 import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer';
 
-type StoryProps = ScrollContainerRootProps & { running?: boolean; initialLines?: number };
+type DefaultStoryProps = ScrollContainerRootProps & { running?: boolean; initialLines?: number };
 
-const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: StoryProps) => {
+const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: DefaultStoryProps) => {
   const [lines, setLines] = useState<string[]>([]);
   const [running, setRunning] = useState(runningProp);
   const scroller = useRef<ScrollController>(null);

@@ -61,17 +61,18 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       {
         const deck = yield* DeckCapabilities.getDeck();
         previouslyOpenIds = new Set<string>(deck.solo ? [deck.solo] : deck.active);
-        const next = deck.solo
-          ? [...input.subject]
-          : input.subject.reduce(
-              (acc, entryId) =>
-                openEntry(acc, entryId, {
-                  key: input.key,
-                  positioning: input.positioning ?? settings?.newPlankPositioning,
-                  pivotId: input.pivotId,
-                }),
-              deck.active,
-            );
+        const next =
+          deck.solo || !deck.initialized
+            ? [...input.subject]
+            : input.subject.reduce(
+                (acc, entryId) =>
+                  openEntry(acc, entryId, {
+                    key: input.key,
+                    positioning: input.positioning ?? settings?.newPlankPositioning,
+                    pivotId: input.pivotId,
+                  }),
+                deck.active,
+              );
 
         const { deckUpdates, toAttend: _toAttend } = computeActiveUpdates({ next, deck, attention });
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));

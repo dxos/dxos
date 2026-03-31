@@ -38,8 +38,15 @@
 }
 
 /**
+ * Fullscreen
+ */
+@utility dx-fullscreen {
+  @apply absolute inset-0;
+}
+
+/**
  * Visual warning to indicate incorrect usage of `slottable`.
  */
 @utility dx-slot-warning {
-  @apply border border-rose-500 border-dotted;
+  @apply border border-rose-500 border-dashed;
 }

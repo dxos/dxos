@@ -2,21 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
-import { ComposableProps, Icon, Input, Link, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { composableProps, getStyles, mx } from '@dxos/ui-theme';
+import { Icon, Input, Link, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps, getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
-export type PluginDetailProps = ComposableProps<{
+export type PluginDetailProps = {
   plugin: Plugin.Plugin;
   enabled?: boolean;
   onEnabledChange?: (enabled: boolean) => void;
-}>;
+};
 
-export const PluginDetail = forwardRef<HTMLDivElement, PluginDetailProps>(
+export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
   ({ plugin, enabled, onEnabledChange, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const {

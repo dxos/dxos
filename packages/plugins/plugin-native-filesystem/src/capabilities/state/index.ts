@@ -4,4 +4,4 @@
 
 import { Capability } from '@dxos/app-framework';
 
-export const Window = Capability.lazy('Window', () => import('./window'));
+export const State = Capability.lazy('State', () => import('./state'));

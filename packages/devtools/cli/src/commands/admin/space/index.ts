@@ -9,7 +9,7 @@ import { exportSpace } from './export';
 import { inspect } from './inspect';
 import { list } from './list';
 
-export const spaces: Command.Command<any, any, any, any> = Command.make('spaces').pipe(
+export const space: Command.Command<any, any, any, any> = Command.make('space').pipe(
   Command.withDescription('Manage Edge spaces.'),
   Command.withSubcommands([list, inspect, del, exportSpace]),
 );

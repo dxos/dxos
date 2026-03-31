@@ -134,6 +134,7 @@
     "@lezer/common": "catalog:",
     "@lezer/highlight": "catalog:",
     "@octokit/core": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
     "@typescript/vfs": "catalog:",
     "@valtown/codemirror-continue": "catalog:",
     "@valtown/codemirror-ts": "catalog:",

@@ -315,6 +315,7 @@ export const L0Menu = ({
 
   return (
     <Tabs.Tablist
+      data-tauri-drag-region
       classNames={[
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
         'grid grid-cols-[var(--dx-l0-size)] grid-rows-[var(--dx-rail-size)_1fr_min-content_var(--dx-l0-size)] dx-contain-layout',
@@ -334,7 +335,7 @@ export const L0Menu = ({
       </Menu.Root>
 
       {/* Space list. */}
-      <ScrollArea.Root margin thin orientation='vertical'>
+      <ScrollArea.Root centered thin orientation='vertical'>
         <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
           {topLevelItems.map((item) => (
             <L0Item

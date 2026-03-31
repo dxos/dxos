@@ -17,9 +17,9 @@ import React, {
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { ComposableProps, IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
 import { translationKey } from '../../translations';
@@ -108,9 +108,9 @@ const BoardColumnRoot = BoardColumnRootInner as <TColumn = unknown>(
 
 const BOARD_COLUMN_HEADER_NAME = 'Board.Column.Header';
 
-type BoardColumnHeaderProps = ComposableProps<{ label: string; dragHandleRef: ReactRef<HTMLButtonElement> }>;
+type BoardColumnHeaderProps = { label: string; dragHandleRef: ReactRef<HTMLButtonElement> };
 
-const BoardColumnHeader = forwardRef<HTMLDivElement, BoardColumnHeaderProps>(
+const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
   ({ label, dragHandleRef, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const { model } = useBoard(BOARD_COLUMN_HEADER_NAME);
@@ -163,14 +163,12 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
-type BoardColumnBodyProps = ComposableProps<
-  Pick<BoardColumnProps, 'data'> &
-    Pick<MosaicContainerProps, 'eventHandler' | 'debug'> & {
-      Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
-    }
->;
+type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> &
+  Pick<MosaicContainerProps, 'eventHandler' | 'debug'> & {
+    Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
+  };
 
-const BoardColumnBody = forwardRef<HTMLDivElement, BoardColumnBodyProps>(
+const BoardColumnBody = composable<HTMLDivElement, BoardColumnBodyProps>(
   ({ data, eventHandler, Tile = BoardItem, debug, ...props }, forwardedRef) => {
     const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -185,7 +183,7 @@ const BoardColumnBody = forwardRef<HTMLDivElement, BoardColumnBodyProps>(
         eventHandler={eventHandler}
         debug={debug}
       >
-        <ScrollArea.Root {...composableProps(props)} orientation='vertical' thin margin padding ref={forwardedRef}>
+        <ScrollArea.Root {...composableProps(props)} orientation='vertical' thin centered padding ref={forwardedRef}>
           <ScrollArea.Viewport classNames='snap-y md:snap-none' ref={setViewport}>
             <Mosaic.Stack items={items} getId={model.getItemId} Tile={Tile} />
           </ScrollArea.Viewport>

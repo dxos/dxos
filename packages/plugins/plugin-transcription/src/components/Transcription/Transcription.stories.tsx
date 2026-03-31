@@ -68,12 +68,15 @@ const TranscriptContainer: FC<
   );
 };
 
-type StoryProps = { messages?: Message.Message[] } & Pick<TranscriptionProps, 'ignoreAttention' | 'attendableId'>;
+type DefaultStoryProps = { messages?: Message.Message[] } & Pick<
+  TranscriptionProps,
+  'ignoreAttention' | 'attendableId'
+>;
 
 /**
  * Basic story mutates array of messages.
  */
-const BasicStory = ({ messages: initialMessages = [], ...props }: StoryProps) => {
+const BasicStory = ({ messages: initialMessages = [], ...props }: DefaultStoryProps) => {
   const [reset, setReset] = useState({});
   const builder = useMemo(() => new MessageBuilder(), []);
   const model = useMemo(
@@ -135,7 +138,7 @@ const QueueStory = ({
   queueId,
   onReset,
   ...props
-}: StoryProps & { queueId: Key.ObjectId; onReset: () => void }) => {
+}: DefaultStoryProps & { queueId: Key.ObjectId; onReset: () => void }) => {
   const [running, setRunning] = useState(true);
   const space = useSpace();
   const members = useMembers(space?.id).map((member) => member.identity);
@@ -199,7 +202,7 @@ const meta = {
 
 export default meta;
 
-const DefaultStory = (props: StoryProps) => {
+const DefaultStory = (props: DefaultStoryProps) => {
   const [messages, setMessages] = useState<Message.Message[]>([]);
   useEffect(() => {
     void Promise.all(Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage())).then(setMessages);

@@ -48,7 +48,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
           debug={debug}
           dragHandle={dragHandle}
         >
-          <Focus.Group asChild>
+          <Focus.Item asChild>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
               <Card.Toolbar>
                 <Card.DragHandle ref={dragHandleRef} />
@@ -72,7 +72,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
                 </Card.Section>
               </Card.Content>
             </Card.Root>
-          </Focus.Group>
+          </Focus.Item>
         </Mosaic.Tile>
       </Menu.Root>
     );

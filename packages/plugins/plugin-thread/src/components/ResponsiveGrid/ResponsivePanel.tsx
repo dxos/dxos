@@ -18,7 +18,7 @@ import { mx } from '@dxos/ui-theme';
 export const ResponsivePanel = ({ children }: PropsWithChildren) => {
   return (
     // Outer container that takes full size of parent.
-    <div role='none' className='relative flex w-full h-full'>
+    <div role='none' className='dx-expander relative flex'>
       {/* Absolute positioning layer for centering content. */}
       <div role='none' className='absolute inset-0 flex justify-center items-center'>
         {/* Content container that maintains given aspect ratio and proper scaling. */}
