@@ -69,8 +69,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
-        const synchronouslyReported = new Set<Process.ID>(yield* SubmittedResultKey.get); // Tool-calls that were reported synchronously.
         const storageService = yield* StorageService.StorageService;
+        const toolCallManager = new ToolCallManager(storageService);
+        yield* toolCallManager.load();
+
         return {
           onInput: Effect.fnUntraced(function* (prompt: string) {
             log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
@@ -90,7 +92,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 return;
               }
 
-              if (item._tag === 'tool_result' && synchronouslyReported.has(item.pid)) {
+              if (item._tag === 'tool_result' && toolCallManager.isReported(item.pid)) {
                 log.info('skip tool result that was reported synchronously', { pid: item.pid });
                 // Ignore tool results that were reported synchronously.
                 return;
@@ -125,12 +127,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               Layer.mergeAll(
                 makeToolResolverFromOperations(),
                 ToolExecutionService({
-                  onResultReported: (pid, result) =>
-                    Effect.gen(function* () {
-                      log.info('marking as submitted', { pid });
-                      synchronouslyReported.add(pid);
-                      yield* SubmittedResultKey.set(Array.from(synchronouslyReported));
-                    }).pipe(Effect.provideService(StorageService.StorageService, storageService)),
+                  toolCallManager,
                 }),
                 functionInvocationServiceFromOperations,
                 AsynchronousExectionToolkitLayer,
@@ -141,6 +138,11 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           onChildEvent: Effect.fnUntraced(function* (event) {
             log.info('childEvent', { event });
             if (event._tag === 'exited') {
+              if (!toolCallManager.isToolCall(event.pid)) {
+                log.verbose('childEvent ignored non-tool call', { pid: event.pid });
+                return;
+              }
+
               const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
               const fiber = yield* operationInvoker.attachFiber(event.pid).pipe(Effect.orDie);
               const result = yield* fiber.await.pipe(Effect.orDie).pipe(
@@ -179,7 +181,7 @@ interface ToolExecutionServiceOptions {
   // TODO(dmaretskyi): Tool annotation to never run in background.
   backgroundThreshold?: Duration.Duration;
 
-  onResultReported?: (pid: Process.ID, result: Exit.Exit<any>) => Effect.Effect<void>;
+  toolCallManager: ToolCallManager;
 }
 
 const AgentEvent = Schema.Union(
@@ -199,16 +201,67 @@ const AgentEventsKey = StorageService.key(
   'inputQueue',
 ).pipe(StorageService.withDefault(() => []));
 
+const ToolCallState = Schema.Struct({
+  activeCalls: Schema.Array(
+    Schema.Struct({
+      pid: Process.ID,
+      // Whether the result was reported to the agent.
+      reported: Schema.Boolean,
+    }).pipe(Schema.mutable),
+  ).pipe(Schema.mutable),
+});
+interface ToolCallState extends Schema.Schema.Type<typeof ToolCallState> {}
+
 // Id's of processes who's results were already submitted to the agent.
-const SubmittedResultKey = StorageService.key(
-  Schema.parseJson(Schema.Array(Process.ID).pipe(Schema.mutable)),
-  'submittedResults',
-).pipe(StorageService.withDefault(() => []));
+const ToolCallStateKey = StorageService.key(Schema.parseJson(ToolCallState.pipe(Schema.mutable)), 'toolCallState').pipe(
+  StorageService.withDefault(() => ({ activeCalls: [] })),
+);
+
+class ToolCallManager {
+  #storageService: StorageService.Service;
+  #state: ToolCallState = { activeCalls: [] };
+
+  constructor(storageService: StorageService.Service) {
+    this.#storageService = storageService;
+  }
+
+  load() {
+    return Effect.gen(this, function* () {
+      this.#state = yield* ToolCallStateKey.get;
+    }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
+  }
+
+  beginCall(pid: Process.ID) {
+    return Effect.gen(this, function* () {
+      this.#state.activeCalls.push({ pid, reported: false });
+      yield* ToolCallStateKey.set(this.#state);
+    }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
+  }
+
+  markAsReported(pid: Process.ID) {
+    return Effect.gen(this, function* () {
+      const call = this.#state.activeCalls.find((call) => call.pid === pid);
+      if (!call) {
+        return;
+      }
+      call.reported = true;
+      yield* ToolCallStateKey.set(this.#state);
+    }).pipe(Effect.provideService(StorageService.StorageService, this.#storageService));
+  }
+
+  isToolCall(pid: Process.ID): boolean {
+    return this.#state.activeCalls.some((call) => call.pid === pid);
+  }
+
+  isReported(pid: Process.ID) {
+    return this.#state.activeCalls.some((call) => call.pid === pid && call.reported);
+  }
+}
 
 const ToolExecutionService = ({
   backgroundThreshold = Duration.seconds(1),
-  onResultReported,
-}: ToolExecutionServiceOptions = {}) =>
+  toolCallManager,
+}: ToolExecutionServiceOptions) =>
   Layer.unwrapEffect(
     Effect.gen(function* () {
       const operationInvoker = yield* ProcessManager.ProcessOperationInvoker.Service;
@@ -218,10 +271,11 @@ const ToolExecutionService = ({
             const operationDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
             log('invoking operation', { operationDef, input });
             const fiber = yield* operationInvoker.invokeFiber(operationDef, input);
+            toolCallManager.beginCall(fiber.pid);
             log('invoked operation', { operationDef, input, fiber });
 
             const result = yield* fiber.await.pipe(
-              Effect.tap((result) => onResultReported?.(fiber.pid, result) ?? Effect.void),
+              Effect.tap(() => toolCallManager.markAsReported(fiber.pid)),
               Effect.timeout(backgroundThreshold),
               Effect.catchTag('TimeoutException', () => Effect.succeed(toolIsRunningInBackgroundResponse(fiber.pid))),
             );

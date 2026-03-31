@@ -12,36 +12,34 @@ import * as Option from 'effect/Option';
 import { pipeArguments } from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 
+export interface Service {
+  /** Read a value by key. Returns `None` if key does not exist. */
+  get<S extends Schema.Schema<any, string, any>>(
+    schema: S,
+    key: string,
+  ): Effect.Effect<Option.Option<Schema.Schema.Type<S>>, never, Schema.Schema.Context<S>>;
+
+  /** Write a value for the given key. */
+  set<S extends Schema.Schema<any, string, any>>(
+    schema: S,
+    key: string,
+    value: Schema.Schema.Type<S>,
+  ): Effect.Effect<void, never, Schema.Schema.Context<S>>;
+
+  /** Remove a key. */
+  delete(key: string): Effect.Effect<void>;
+
+  /** List all keys, optionally filtered by prefix. */
+  list(prefix?: string): Effect.Effect<readonly string[]>;
+
+  /** Remove all keys managed by this scoped store. */
+  clear(): Effect.Effect<void>;
+}
 /**
  * Scoped key-value storage service for processes.
  * Each process receives its own namespaced instance via the process manager.
  */
-export class StorageService extends Context.Tag('@dxos/functions-runtime/StorageService')<
-  StorageService,
-  {
-    /** Read a value by key. Returns `None` if key does not exist. */
-    get<S extends Schema.Schema<any, string, any>>(
-      schema: S,
-      key: string,
-    ): Effect.Effect<Option.Option<Schema.Schema.Type<S>>, never, Schema.Schema.Context<S>>;
-
-    /** Write a value for the given key. */
-    set<S extends Schema.Schema<any, string, any>>(
-      schema: S,
-      key: string,
-      value: Schema.Schema.Type<S>,
-    ): Effect.Effect<void, never, Schema.Schema.Context<S>>;
-
-    /** Remove a key. */
-    delete(key: string): Effect.Effect<void>;
-
-    /** List all keys, optionally filtered by prefix. */
-    list(prefix?: string): Effect.Effect<readonly string[]>;
-
-    /** Remove all keys managed by this scoped store. */
-    clear(): Effect.Effect<void>;
-  }
->() {}
+export class StorageService extends Context.Tag('@dxos/functions-runtime/StorageService')<StorageService, Service>() {}
 
 export const get = Effect.serviceFunctionEffect(StorageService, (_) => _.get);
 export const set = Effect.serviceFunctionEffect(StorageService, (_) => _.set);
