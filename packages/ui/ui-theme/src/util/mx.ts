@@ -126,11 +126,11 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
     }
 
     const result = render(props, forwardedRef);
-    if (!warn) {
-      return result;
+    if (warn) {
+      return createElement('div', { role: 'none', className: 'dx-slot-warning' }, result);
     }
 
-    return createElement('div', { className: 'dx-slot-warning border-2 border-rose-500', role: 'none' }, result);
+    return result;
   };
 
   const component = forwardRef(wrapped as any) as any;

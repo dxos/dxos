@@ -120,9 +120,9 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
     );
 
     return (
-      <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-        <Focus.Item asChild>
-          <Menu.Root>
+      <Menu.Root>
+        <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
+          <Focus.Item asChild>
             <Card.Root classNames={classNames} ref={composedRef}>
               <Card.Toolbar>
                 <Card.Icon icon={icon} />
@@ -144,9 +144,9 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
                 <Item {...itemProps} />
               </Card.Content>
             </Card.Root>
-          </Menu.Root>
-        </Focus.Item>
-      </Mosaic.Tile>
+          </Focus.Item>
+        </Mosaic.Tile>
+      </Menu.Root>
     );
   },
 );

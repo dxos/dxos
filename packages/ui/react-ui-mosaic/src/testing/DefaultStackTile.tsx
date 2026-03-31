@@ -25,10 +25,10 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   );
 
   return (
-    <Mosaic.Tile {...props} asChild>
-      <Focus.Item asChild>
-        <Card.Root className='dx-current dx-hover'>
-          <Menu.Root>
+    <Menu.Root>
+      <Mosaic.Tile {...props} asChild>
+        <Focus.Item asChild>
+          <Card.Root className='dx-current dx-hover'>
             <Card.Toolbar>
               <Card.DragHandle ref={dragHandleRef} />
               <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
@@ -37,15 +37,15 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
               </Menu.Trigger>
               <Menu.Content items={menuItems} />
             </Card.Toolbar>
-          </Menu.Root>
-          {open && (
-            <Card.Row>
-              <Json data={props.data} classNames='text-xs' />
-            </Card.Row>
-          )}
-        </Card.Root>
-      </Focus.Item>
-    </Mosaic.Tile>
+            {open && (
+              <Card.Row>
+                <Json data={props.data} classNames='text-xs' />
+              </Card.Row>
+            )}
+          </Card.Root>
+        </Focus.Item>
+      </Mosaic.Tile>
+    </Menu.Root>
   );
 };
 
