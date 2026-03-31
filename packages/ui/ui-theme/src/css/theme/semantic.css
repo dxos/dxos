@@ -76,8 +76,8 @@
   /* Separator */
 
   --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-subdued-separator: light-dark(var(--color-neutral-150), var(--color-neutral-850));
   --color-primary-separator: light-dark(var(--color-neutral-500), var(--color-neutral-700));
-  --color-subdued-separator: light-dark(var(--color-neutral-300), var(--color-neutral-900));
   --color-active-separator: light-dark(var(--color-blue-500), var(--color-blue-500));
 
   /* Scrollbar */

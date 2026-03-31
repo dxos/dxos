@@ -96,7 +96,6 @@ export const DynamicTable = <T extends Type.AnyEntity = Type.AnyEntity>({
     }
   }, [registry, model]);
 
-  // TODO(burdon): Do we need the outer divs?
   return (
     <div role='none' className={mx('dx-expander grid', classNames)}>
       <div role='none' className='grid min-h-0 overflow-hidden'>

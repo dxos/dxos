@@ -76,12 +76,12 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
       (padding
         ? centered
           ? thin
-            ? 'pt-[var(--gutter,8px)] pb-[calc(var(--gutter,8px)+4px)]'
-            : 'pt-[var(--gutter,16px)] pb-[calc(var(--gutter,16px)+8px)]'
+            ? 'pt-[12px] pb-[8px]'
+            : 'pt-[24px] pb-[16px]'
           : thin
-            ? 'pt-[var(--gutter,8px)] pb-[calc(var(--gutter,8px)-4px)]'
-            : 'pt-[var(--gutter,16px)] pb-[calc(var(--gutter,16px)-8px)]'
-        : centered && (thin ? 'pb-[4px]' : 'pb-[8px]')),
+            ? 'pb-[8px]'
+            : 'pb-[16px]'
+        : centered && (thin ? 'pt-[4px]' : 'pt-[8px]')),
 
     snap && [
       orientation === 'vertical' && 'snap-y snap-mandatory',
