@@ -182,7 +182,9 @@ export class AiChatProcessor {
           Effect.fork,
         );
 
+        log('chat processor submitting prompt', { length: requestProp.message.length });
         yield* session.submitPrompt(requestProp.message);
+        log('chat processor submitPrompt returned, waiting for agent', {});
         yield* session.waitForCompletion();
         log.info('session complete');
 

@@ -1,9 +1,9 @@
 ---
 name: logging
 description: >-
-  DXOS logging with @dxos/log (log, levels, dbg) and querying Composer NDJSON logs via
-  scripts/query-logs.mjs. Use when adding or reviewing logs, debugging from app.log, or
-  explaining log levels and vite-plugin-log output.
+  DXOS logging with @dxos/log (log, levels, dbg), LOG_FILTER for test stdout, and querying
+  Composer NDJSON logs via scripts/query-logs.mjs. Use when adding or reviewing logs,
+  debugging from app.log or tests, or explaining log levels and vite-plugin-log output.
 ---
 
 # DXOS logging (`@dxos/log`)
@@ -22,9 +22,11 @@ log.warn('plugin failed to activate', { pluginId, cause: err.message });
 
 ## Levels
 
+Use **`log('…', ctx)`** for DEBUG-level diagnostics. The callable `log` **is** `log.debug` (same level); prefer **`log(...)`** in new code and avoid writing **`log.debug`** so style stays consistent.
+
 | API | Role |
 |-----|------|
-| `log('…', ctx)` / `log.debug('…', ctx)` | **DEBUG** — verbose diagnostics; often **not** shown on the default browser console but still captured when a log sink (e.g. vite-plugin-log file) is attached. |
+| `log('…', ctx)` | **DEBUG** — default verbose diagnostics; often **not** shown on the default browser console but still captured when a log sink (e.g. vite-plugin-log `app.log`) is attached. |
 | `log.trace('…', ctx)` | **TRACE** — finest granularity; usually filtered out everywhere except explicit trace filters. |
 | `log.verbose('…', ctx)` | **VERBOSE** — between debug and info. |
 | `log.info('…', ctx)` | **INFO** — user-visible / product-level events; **shown on console** with typical filters. |
@@ -32,7 +34,7 @@ log.warn('plugin failed to activate', { pluginId, cause: err.message });
 | `log.error('…', ctx)` | **ERROR** — hard failures. |
 | `log.catch(err, ctx?, meta?)` | Log an **Error** at ERROR level (stack in processors). |
 
-Rule of thumb: **`log.info` and above** are what operators and users normally see in the **console**; **`log()` / `log.debug`** are for deep diagnosis and file buffers.
+Rule of thumb: **`log.info` and above** are what operators and users normally see in the **console**; **`log(...)`** is for deep diagnosis and file buffers.
 
 ## `dbg`
 
@@ -48,6 +50,16 @@ With **`@dxos/vite-plugin-log`** enabled in Composer, browser **`@dxos/log`** ou
 (from the repo root; path is relative to **process cwd** when the dev server runs, usually repo root → that file).
 
 Truncate/restart behavior is owned by the plugin (file cleared on dev server start).
+
+## Tests: `LOG_FILTER` (stdout)
+
+In **Node / vitest** runs, `@dxos/log` reads **`process.env.LOG_FILTER`** when building the default config (`packages/common/log/src/options.ts`). Set it to control **which levels and paths are printed to the test process stdout** (same filter string shape as **`query-logs -q`**: level name, `pathFragment:level`, comma-separated list, etc.).
+
+```bash
+LOG_FILTER=debug moon run assistant:test -- AgentService.test.ts
+```
+
+Use **`trace`** for maximum noise, **`info`** for quieter runs, or a path-scoped value (e.g. `AgentService:debug`, `functions-runtime:debug`) to narrow output. This does **not** write `app.log`; it only affects the **console processor** during that command.
 
 ## Querying logs: `scripts/query-logs.mjs`
 

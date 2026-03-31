@@ -72,16 +72,24 @@ export const AgentProcess = (options: AgentProcessOptions) =>
 
         return {
           onInput: Effect.fnUntraced(function* (prompt: string) {
+            log('agent onInput received', { promptLength: prompt.length, backlog: inputQueue.length });
             inputQueue.push({ _tag: 'prompt', content: prompt });
+            log('agent onInput persisting queue', { depth: inputQueue.length });
             yield* storeEvents(inputQueue);
+            log('agent onInput persisted', { depth: inputQueue.length });
             ctx.setAlarm();
+            log('agent onInput alarm scheduled');
           }),
           onAlarm: Effect.fnUntraced(
             function* () {
+              log('agent onAlarm fired', { pending: inputQueue.length });
               const item = inputQueue.shift();
               if (!item) {
+                log('agent onAlarm empty queue', {});
                 return;
               }
+
+              log('agent onAlarm handling', { tag: item._tag });
 
               const prompt = Match.value(item).pipe(
                 Match.tag('prompt', (item) => item.content),
@@ -138,8 +146,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 ),
               );
               inputQueue.push(result);
+              log('agent onChildEvent persisted tool result', { depth: inputQueue.length, childPid: event.pid });
               yield* storeEvents(inputQueue);
               ctx.setAlarm();
+              log('agent onChildEvent alarm scheduled', { depth: inputQueue.length });
             }
           }),
         };
