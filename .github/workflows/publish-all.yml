@@ -84,11 +84,33 @@ jobs:
         run: .github/workflows/scripts/publish.sh
         if: env.BRANCH == 'production' || env.BRANCH == 'staging' || github.event.inputs.publish_npm == 'true'
 
-      - name: Publish Apps
-        run: .github/workflows/scripts/publish-apps.sh
+      - name: Bundle Apps
+        run: .github/workflows/scripts/bundle-apps.sh
         env:
           NODE_ENV: production
           NODE_OPTIONS: '--max_old_space_size=12288'
+
+      - name: Upload Composer Source Maps to PostHog
+        if: env.POSTHOG_CLI_API_KEY != '' && env.COMPOSER_APP_POSTHOG_PROJECT_ID != ''
+        continue-on-error: true
+        env:
+          POSTHOG_CLI_HOST: https://eu.posthog.com
+        run: |
+          BUILD_DIR="packages/apps/composer-app/out/composer"
+          POSTHOG_CLI_PROJECT_ID="$COMPOSER_APP_POSTHOG_PROJECT_ID" pnpm -w exec posthog-cli sourcemap inject --directory "$BUILD_DIR"
+          POSTHOG_CLI_PROJECT_ID="$COMPOSER_APP_POSTHOG_PROJECT_ID" pnpm -w exec posthog-cli sourcemap upload --directory "$BUILD_DIR" \
+            --release-name composer \
+            --release-version "$GITHUB_SHA"
+
+      - name: Delete Source Maps
+        run: |
+          find packages/apps/composer-app/out/composer -name '*.map' -delete
+          echo "Deleted source maps before deploy"
+
+      - name: Deploy Apps
+        run: .github/workflows/scripts/deploy-apps.sh
+        env:
+          NODE_ENV: production
 
       - name: Bundle Devtools
         run: moon run devtools-extension:bundle

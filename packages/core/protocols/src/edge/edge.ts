@@ -563,7 +563,7 @@ export type InspectIdentityResponse = {
   routerDoId: string;
   agentDoId: string | null;
   ownedFunctions: { id: string; name: string; versionCount: number }[];
-  spaces: { spaceId: string; durableObjects: { type: string; doId: string }[] }[];
+  spaces: InspectSpaceResponse[];
 };
 
 /** Matches the SerializedSpace format from @dxos/echo-db, extended with spaceId. */
