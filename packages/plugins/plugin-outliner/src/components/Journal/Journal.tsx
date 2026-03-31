@@ -75,6 +75,8 @@ type JournalEntryProps = ThemedClassName<
 const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntryProps) => {
   const { t } = useTranslation(meta.id);
   const [entry] = useObject(entryRef);
+  // Subscribe to the content ref to trigger a re-render when the Text object loads.
+  useObject(entry?.content);
   const outlinerRef = useRef<OutlineController>(null);
   const [focused, setFocused] = useState(false);
 
