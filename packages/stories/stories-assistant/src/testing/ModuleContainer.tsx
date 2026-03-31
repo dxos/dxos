@@ -9,7 +9,7 @@ import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AiContextBinder } from '@dxos/assistant';
 import { Blueprint } from '@dxos/blueprints';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant/types';
 import { useSpace } from '@dxos/react-client/echo';
@@ -53,7 +53,13 @@ export const ModuleContainer = ({ modules: modulesProp, blueprints = [], showCon
       })
       .filter(isNonNullable);
 
-    const binder = new AiContextBinder({ queue: await chat.queue.load(), registry: atomRegistry });
+    const feedTarget = await chat.feed.load();
+    const queueDxn = Feed.getQueueDxn(feedTarget);
+    if (!queueDxn) {
+      return;
+    }
+    const queue = space.queues.get(queueDxn);
+    const binder = new AiContextBinder({ queue, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 

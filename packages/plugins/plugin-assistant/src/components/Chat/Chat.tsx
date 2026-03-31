@@ -23,7 +23,7 @@ import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Queue, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Input, type ThemedClassName, useDynamicRef, useTranslation, ComposableProps } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
@@ -72,18 +72,19 @@ export const [ChatContextProvider, useChatContext] = createContext<ChatContextVa
 
 type ChatRootProps = PropsWithChildren<
   Pick<ChatContextValue, 'db' | 'chat' | 'processor'> & {
+    queue?: Queue;
     onEvent?: (event: ChatEvent) => void;
   }
 >;
 
-const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProps) => {
+const ChatRoot = ({ children, chat, queue, processor, onEvent, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
   const pending = useAtomValue(processor.messages);
   const streaming = useAtomValue(processor.streaming);
   const lastPrompt = useRef<string | undefined>(undefined);
 
   // Messages.
-  const storedMessages = useQuery(chat?.queue?.target, Filter.type(Message.Message));
+  const storedMessages = useQuery(queue, Filter.type(Message.Message));
   const messages = useMemo(() => {
     return Array.dedupeWith([...storedMessages, ...pending], ({ id: a }, { id: b }) => a === b);
   }, [storedMessages, pending]);

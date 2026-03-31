@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiContextService } from '@dxos/assistant';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { FunctionInvocationService, TracingService, TriggerEvent } from '@dxos/functions';
+import { FunctionInvocationService, QueueService, TracingService, TriggerEvent } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
 import { Project } from '../../../types';
@@ -29,6 +29,7 @@ export const Agent = Operation.make({
     AiService.AiService,
     Database.Service,
     FunctionInvocationService,
+    QueueService,
     // TODO(dmaretskyi): Consider making TracingService a default to all operations.
     TracingService,
     // TODO(dmaretskyi): Handle those within session/conversation context.
