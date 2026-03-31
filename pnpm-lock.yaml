@@ -7880,6 +7880,9 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.94.4(effect@3.20.0)
+      '@tauri-apps/api':
+        specifier: 'catalog:'
+        version: 2.10.1
       effect:
         specifier: 3.20.0
         version: 3.20.0

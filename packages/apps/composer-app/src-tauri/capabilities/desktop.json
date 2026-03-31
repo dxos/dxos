@@ -34,6 +34,7 @@
         }
       ]
     },
-    "updater:default"
+    "updater:default",
+    "macos-passkey:default"
   ]
 }

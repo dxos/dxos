@@ -84,8 +84,12 @@ jobs:
           # Initialize NEW_VERSION with current config version
           NEW_VERSION="$CONFIG_VERSION"
 
+          # If no prior releases exist in this channel, bump to prerelease
+          if [ "$LATEST_VERSION" = "null" ] || [ -z "$LATEST_VERSION" ]; then
+            echo "No prior releases found in channel, bumping config version to prerelease"
+            NEW_VERSION=$(echo $CONFIG_VERSION | xargs semver -i prerelease)
           # Check if latest version is a prerelease
-          if [[ "$LATEST_VERSION" == *"-"* ]]; then
+          elif [[ "$LATEST_VERSION" == *"-"* ]]; then
             echo "Latest version is a prerelease: $LATEST_VERSION"
 
             # Check if config version is one version behind the latest core version
