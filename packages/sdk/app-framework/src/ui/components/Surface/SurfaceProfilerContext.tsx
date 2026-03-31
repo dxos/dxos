@@ -7,8 +7,8 @@ import React, {
   type PropsWithChildren,
   type ProfilerOnRenderCallback,
   createContext,
-  useCallback,
   useContext,
+  useMemo,
   useRef,
   useSyncExternalStore,
 } from 'react';
@@ -125,10 +125,13 @@ export const SurfaceProfilerProvider = ({ children }: PropsWithChildren) => {
  * Returns a stable onRender callback for use with React Profiler.
  */
 export const useSurfaceProfilerCallback = (): ProfilerOnRenderCallback | undefined => {
-  const context = useContext(SurfaceProfilerContext);
-  return useCallback<ProfilerOnRenderCallback>(
-    (id, phase, actualDuration, baseDuration, startTime, commitTime) => {
-      context?.store.record({
+  const store = useContext(SurfaceProfilerContext)?.store;
+  return useMemo<ProfilerOnRenderCallback | undefined>(() => {
+    if (!store) {
+      return undefined;
+    }
+    return (id, phase, actualDuration, baseDuration, startTime, commitTime) => {
+      store.record({
         id,
         phase,
         actualDuration,
@@ -137,9 +140,8 @@ export const useSurfaceProfilerCallback = (): ProfilerOnRenderCallback | undefin
         commitTime,
         timestamp: Date.now(),
       });
-    },
-    [context?.store],
-  );
+    };
+  }, [store]);
 };
 
 /**
@@ -196,9 +198,10 @@ export const useSurfaceProfilerStats = (): SurfaceProfilerStats[] => {
  * Clears all collected profiler entries.
  */
 export const useSurfaceProfilerClear = (): (() => void) | undefined => {
-  const context = useContext(SurfaceProfilerContext);
-  return useCallback(() => context?.store.clear(), [context?.store]);
+  const store = useContext(SurfaceProfilerContext)?.store;
+  return useMemo(() => (store ? () => store.clear() : undefined), [store]);
 };
 
 const noop = () => () => {};
-const emptySnapshot = () => [] as readonly SurfaceProfilerEntry[];
+const EMPTY_SNAPSHOT: readonly SurfaceProfilerEntry[] = [];
+const emptySnapshot = () => EMPTY_SNAPSHOT;

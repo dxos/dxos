@@ -144,7 +144,7 @@ const SurfaceContextProvider = memo(
             <div role='none' className='contents' data-id={id} data-role={role}>
               <SurfaceContext.Provider value={contextValue}>
                 <SurfaceInfo ref={forwardedRef}>
-                  {onProfilerRender && !profilerId.includes('devtools') ? (
+                  {onProfilerRender && !profilerId.includes('org.dxos.plugin.debug') ? (
                     <Profiler id={profilerId} onRender={onProfilerRender}>
                       <Component id={id} role={role} data={data} limit={limit} {...rest} />
                     </Profiler>

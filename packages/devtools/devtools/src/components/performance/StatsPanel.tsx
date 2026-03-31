@@ -2,14 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
 import { getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import { Icon, ScrollArea, Toggle } from '@dxos/react-ui';
 
 import { type Stats, removeEmpty } from '../../hooks';
 
-import { Panel, type PanelProps } from './Panel';
+import { Panel } from './Panel';
 import {
   DatabasePanel,
   EdgePanel,
@@ -93,15 +93,11 @@ export const StatsPanel = ({
   const syncState = useSyncState();
   const syncSummary = getSyncSummary(syncState);
 
-  const props = (id: PanelKey) =>
-    useMemo(
-      () => ({
-        id,
-        open: panelState[id],
-        onToggle: handleToggle,
-      }),
-      [id, panelState, handleToggle],
-    );
+  const props = (id: PanelKey) => ({
+    id,
+    open: panelState[id],
+    onToggle: handleToggle,
+  });
 
   // Store in local storage.
   const [panelState, setPanelState] = useState<Record<PanelKey, boolean | undefined>>(() =>
@@ -111,8 +107,8 @@ export const StatsPanel = ({
     }, {} as PanelMap),
   );
 
-  const handleToggle: PanelProps['onToggle'] = useCallback(
-    (id, open) => {
+  const handleToggle = useCallback(
+    (id: string, open: boolean) => {
       setPanelState({ ...panelState, [id]: open });
       localStorage?.setItem(`${LOCAL_STORAGE_KEY}/${id}`, String(open));
     },

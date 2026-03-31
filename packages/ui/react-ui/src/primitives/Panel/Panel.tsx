@@ -109,6 +109,6 @@ export const Panel = {
 import { type SlottableProps } from '@dxos/ui-types';
 
 export type PanelRootProps = SlottableProps;
-export type PanelToolbarProps = SlottableProps;
+export type PanelToolbarProps = SlottableProps & Pick<PanelStyleProps, 'size'>;
 export type PanelContentProps = SlottableProps;
-export type PanelStatusbarProps = SlottableProps;
+export type PanelStatusbarProps = SlottableProps & Pick<PanelStyleProps, 'size'>;
