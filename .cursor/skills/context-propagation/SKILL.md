@@ -238,3 +238,7 @@ Each `@trace.span()` method reads the parent span ID from the incoming ctx, crea
 ## ESLint enforcement
 
 The `dxos-plugin/require-context-param` rule warns on class methods missing `ctx: Context` as the first parameter. Configured in `eslint.config.mjs` for core SDK packages with exemptions for public API classes.
+
+## Audit
+
+See [AUDIT.md](./AUDIT.md) for a detailed review of context propagation compliance across the codebase, including known gaps and prioritized recommendations.
