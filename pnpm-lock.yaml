@@ -1941,6 +1941,9 @@ importers:
       '@dxos/vite-plugin-import-source':
         specifier: workspace:*
         version: link:tools/vite-plugin-import-source
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:tools/vite-plugin-log
       '@effect/language-service':
         specifier: 'catalog:'
         version: 0.73.1
@@ -2609,6 +2612,9 @@ importers:
       '@dxos/vite-plugin-import-source':
         specifier: workspace:*
         version: link:../../../tools/vite-plugin-import-source
+      '@dxos/vite-plugin-log':
+        specifier: workspace:*
+        version: link:../../../tools/vite-plugin-log
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.73.2(@effect/platform@0.94.4(effect@3.20.0))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
@@ -19321,6 +19327,18 @@ importers:
       '@types/minimatch':
         specifier: 'catalog:'
         version: 5.1.2
+
+  tools/vite-plugin-log:
+    devDependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../packages/common/log
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../packages/common/util
+      vite:
+        specifier: '>=7.1.11'
+        version: 7.3.1(@types/node@22.10.2)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   tools/vscode-file-templates:
     devDependencies:

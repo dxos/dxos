@@ -1135,6 +1135,11 @@
         },
         {
           "type": "json",
+          "path": "tools/vite-plugin-log/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "tools/x/package.json",
           "jsonpath": "$.version"
         },

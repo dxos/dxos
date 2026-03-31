@@ -62,6 +62,7 @@
     "@dxos/toolbox": "workspace:*",
     "@dxos/typings": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
+    "@dxos/vite-plugin-log": "workspace:*",
     "@effect/language-service": "catalog:",
     "@effect/vitest": "catalog:",
     "@moonrepo/cli": "catalog:",
