@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { GenericToolkit } from '@dxos/ai';
+import { AiService, GenericToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AgentService, ToolExecutionServices } from '@dxos/assistant';
@@ -109,6 +109,8 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               GenericToolkit.GenericToolkitProvider,
               QueueService,
               OperationRegistry.Service,
+              AiService.AiService,
+              CredentialsService,
             ),
           ),
           Layer.provideMerge(OperationRegistry.layer),
