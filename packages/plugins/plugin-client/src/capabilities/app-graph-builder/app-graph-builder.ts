@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, NOT_FOUND_NODE_ID, NOT_FOUND_NODE_TYPE } from '@dxos/app-toolkit';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { CreateAtom, GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { ConnectionState } from '@dxos/react-client/mesh';
@@ -16,102 +16,82 @@ import { ClientOperation } from '../../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
-        id: meta.id,
-        match: NodeMatcher.whenRoot,
-        actions: () =>
-          Effect.succeed([
-            {
-              id: `${meta.id}.open-user-account`,
-              data: () => Operation.invoke(ClientOperation.ShareIdentity),
-              properties: {
-                label: ['open user account label', { ns: meta.id }],
-                icon: 'ph--user--regular',
-                disposition: 'menu',
-                keyBinding: {
-                  macos: 'meta+shift+.',
-                  // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
-                  windows: 'alt+shift+.',
-                  linux: 'alt+shift+>',
-                },
+    const extensions = yield* GraphBuilder.createExtension({
+      id: meta.id,
+      match: NodeMatcher.whenRoot,
+      actions: () =>
+        Effect.succeed([
+          {
+            id: `${meta.id}.open-user-account`,
+            data: () => Operation.invoke(ClientOperation.ShareIdentity),
+            properties: {
+              label: ['open user account label', { ns: meta.id }],
+              icon: 'ph--user--regular',
+              disposition: 'menu',
+              keyBinding: {
+                macos: 'meta+shift+.',
+                // TODO(wittjosiah): Test on windows to see if it behaves the same as linux.
+                windows: 'alt+shift+.',
+                linux: 'alt+shift+>',
               },
             },
-          ]),
-        connector: Effect.fnUntraced(function* (node, get) {
-          const client = yield* Capability.get(ClientCapabilities.Client);
-          const identity = get(CreateAtom.fromObservable(client.halo.identity));
-          const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
+          },
+        ]),
+      connector: Effect.fnUntraced(function* (node, get) {
+        const client = yield* Capability.get(ClientCapabilities.Client);
+        const identity = get(CreateAtom.fromObservable(client.halo.identity));
+        const status = get(CreateAtom.fromObservable(client.mesh.networkStatus));
 
-          return [
-            {
-              id: Account.id,
-              type: meta.id,
-              properties: {
-                label: ['account label', { ns: meta.id }],
-                icon: 'ph--user--regular',
-                disposition: 'user-account',
-                testId: 'clientPlugin.account',
-                // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
-                userId: identity?.identityKey.toHex(),
-                hue: identity?.profile?.data?.hue,
-                emoji: identity?.profile?.data?.emoji,
-                status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
-              },
-              nodes: [
-                {
-                  id: Account.Profile,
-                  data: Account.Profile,
-                  type: meta.id,
-                  properties: {
-                    label: ['profile label', { ns: meta.id }],
-                    icon: 'ph--user--regular',
-                  },
-                },
-                {
-                  id: Account.Devices,
-                  data: Account.Devices,
-                  type: meta.id,
-                  properties: {
-                    label: ['devices label', { ns: meta.id }],
-                    icon: 'ph--devices--regular',
-                    testId: 'clientPlugin.devices',
-                  },
-                },
-                {
-                  id: Account.Security,
-                  data: Account.Security,
-                  type: meta.id,
-                  properties: {
-                    label: ['security label', { ns: meta.id }],
-                    icon: 'ph--key--regular',
-                  },
-                },
-              ],
+        return [
+          {
+            id: Account.id,
+            type: meta.id,
+            properties: {
+              label: ['account label', { ns: meta.id }],
+              icon: 'ph--user--regular',
+              disposition: 'user-account',
+              testId: 'clientPlugin.account',
+              // NOTE: This currently needs to be the identity key because the fallback is generated from hex.
+              userId: identity?.identityKey.toHex(),
+              hue: identity?.profile?.data?.hue,
+              emoji: identity?.profile?.data?.emoji,
+              status: status.swarm === ConnectionState.OFFLINE ? 'error' : 'active',
             },
-          ];
-        }),
+            nodes: [
+              {
+                id: Account.Profile,
+                data: Account.Profile,
+                type: meta.id,
+                properties: {
+                  label: ['profile label', { ns: meta.id }],
+                  icon: 'ph--user--regular',
+                },
+              },
+              {
+                id: Account.Devices,
+                data: Account.Devices,
+                type: meta.id,
+                properties: {
+                  label: ['devices label', { ns: meta.id }],
+                  icon: 'ph--devices--regular',
+                  testId: 'clientPlugin.devices',
+                },
+              },
+              {
+                id: Account.Security,
+                data: Account.Security,
+                type: meta.id,
+                properties: {
+                  label: ['security label', { ns: meta.id }],
+                  icon: 'ph--key--regular',
+                },
+              },
+            ],
+          },
+        ];
       }),
+    });
 
-      GraphBuilder.createExtension({
-        id: `${meta.id}.not-found`,
-        match: NodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed([
-            {
-              id: NOT_FOUND_NODE_ID,
-              type: NOT_FOUND_NODE_TYPE,
-              data: null,
-              properties: {
-                label: ['not found label', { ns: meta.id }],
-                icon: 'ph--warning--regular',
-                disposition: 'hidden',
-              },
-            },
-          ]),
-      }),
-    ]);
-
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

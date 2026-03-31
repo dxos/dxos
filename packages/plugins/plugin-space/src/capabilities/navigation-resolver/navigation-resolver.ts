@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, getObjectPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
-import { Database, Entity } from '@dxos/echo';
+import { AppCapabilities, Segments, getObjectPath, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
+import { Database, Entity, Key } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '../../meta';
@@ -55,6 +55,27 @@ export default Capability.makeModule(
         ];
       })) as AppCaps.NavigationTargetResolver;
 
-    return Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver);
+    // Resolve canonical object paths (root/<spaceId>/types/<typename>/all/<objectId>) to DXNs.
+    const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) =>
+      Effect.succeed((() => {
+        const segments = qualifiedPath.split('/');
+        const spaceId = getSpaceIdFromPath(qualifiedPath);
+        const objectId = segments[segments.length - 1];
+        if (
+          spaceId &&
+          objectId &&
+          Key.ObjectId.isValid(objectId) &&
+          segments.includes(Segments.types) &&
+          segments.includes('all')
+        ) {
+          return DXN.fromSpaceAndObjectId(spaceId, objectId as Key.ObjectId);
+        }
+        return undefined;
+      })());
+
+    return [
+      Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver),
+      Capability.contributes(AppCapabilities.NavigationPathResolver, pathResolver),
+    ];
   }),
 );

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, NOT_FOUND_NODE_ID, NOT_FOUND_NODE_TYPE } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
@@ -15,10 +15,29 @@ import { DeckCapabilities } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const extensions = yield* GraphBuilder.createExtension({
-      id: meta.id,
-      match: NodeMatcher.whenRoot,
-      actions: (_node, get) =>
+    const extensions = yield* Effect.all([
+      GraphBuilder.createExtension({
+        id: `${meta.id}.not-found`,
+        match: NodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            {
+              id: NOT_FOUND_NODE_ID,
+              type: NOT_FOUND_NODE_TYPE,
+              data: null,
+              properties: {
+                label: ['not found heading', { ns: 'org.dxos.i18n.os' }],
+                icon: 'ph--warning--regular',
+                disposition: 'hidden',
+              },
+            },
+          ]),
+      }),
+
+      GraphBuilder.createExtension({
+        id: meta.id,
+        match: NodeMatcher.whenRoot,
+        actions: (_node, get) =>
         Effect.gen(function* () {
           // NOTE(Zan): This is currently disabled.
           // TODO(Zan): Fullscreen needs to know the active node and provide that to the layout part.
@@ -112,8 +131,9 @@ export default Capability.makeModule(
 
           return !deck?.solo ? [closeCurrent, closeOthers, closeAll, toggleSidebar] : [toggleSidebar];
         }),
-    });
+      }),
+    ]);
 
-    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions);
+    return Capability.contributes(AppCapabilities.AppGraphBuilder, extensions.flat());
   }),
 );

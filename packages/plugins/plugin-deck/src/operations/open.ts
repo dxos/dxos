@@ -32,6 +32,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
 
       // Validate navigation targets, redirecting to 404 if not found.
+      const capabilities = yield* Capability.Service;
+      const pathResolvers = capabilities.getAll(AppCapabilities.NavigationPathResolver);
       const checkRemoteExistence = yield* Capability.get(ClientCapabilities.Client).pipe(
         Effect.map((client) =>
           createEdgeExistenceChecker(
@@ -41,11 +43,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         Effect.catchAll(() => Effect.succeed(undefined)),
       );
 
-      const validatedSubjects = yield* Effect.promise(() =>
-        Promise.all(
-          input.subject.map((subjectId) =>
-            validateNavigationTarget({ graph, subjectId, checkRemoteExistence }),
-          ),
+      const validatedSubjects = yield* Effect.all(
+        input.subject.map((subjectId) =>
+          validateNavigationTarget({ graph, subjectId, pathResolvers, checkRemoteExistence }),
         ),
       );
       input = { ...input, subject: validatedSubjects };

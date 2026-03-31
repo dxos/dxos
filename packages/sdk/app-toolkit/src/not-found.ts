@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Graph, Node } from '@dxos/app-graph';
@@ -9,7 +10,8 @@ import { DXN, Filter, Key, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { expandAttendableId } from '@dxos/react-ui-attention';
 
-import { getSpaceIdFromPath, isCompanion, isPinnedWorkspace } from './paths';
+import { type AppCapabilities } from './capabilities';
+import { isCompanion, isPinnedWorkspace } from './paths';
 
 export const NOT_FOUND_NODE_ID = 'not-found';
 export const NOT_FOUND_NODE_TYPE = 'org.dxos.type.not-found';
@@ -17,9 +19,9 @@ export const NOT_FOUND_PATH = `${Node.RootId}/${NOT_FOUND_NODE_ID}`;
 
 /**
  * Callback to check if an object exists on a remote service (e.g., edge).
- * Takes a DXN string identifying the object. Returns true if the object exists remotely.
+ * Takes a DXN identifying the object. Returns an Effect resolving to true if the object exists remotely.
  */
-export type RemoteExistenceChecker = (dxn: DXN) => Promise<boolean>;
+export type RemoteExistenceChecker = (dxn: DXN) => Effect.Effect<boolean>;
 
 /**
  * Expand a qualified graph path by expanding each ancestor prefix.
@@ -36,16 +38,20 @@ export const expandPath = (graph: Graph.ExpandableGraph, qualifiedId: string): v
  * Validate a navigation target by expanding the graph path and checking existence.
  * Returns the original subjectId if valid, or NOT_FOUND_PATH if the target doesn't exist.
  *
+ * Path resolvers (NavigationPathResolver) are used to determine if the path is valid
+ * and to extract a DXN for remote validation. If no resolver recognizes the path, it's 404.
+ *
  * When a remote existence checker is provided (e.g., backed by edge), objects that exist
  * remotely but haven't replicated locally will be considered valid (replication will load them).
  * Without a checker (offline), objects not in the local graph are treated as not found.
  */
-export const validateNavigationTarget = async (params: {
+export const validateNavigationTarget = (params: {
   graph: Graph.ExpandableGraph;
   subjectId: string;
+  pathResolvers: AppCapabilities.NavigationPathResolver[];
   checkRemoteExistence?: RemoteExistenceChecker;
-}): Promise<string> => {
-  const { graph, subjectId, checkRemoteExistence } = params;
+}): Effect.Effect<string> => {
+  const { graph, subjectId, pathResolvers, checkRemoteExistence } = params;
 
   // Skip validation for system paths.
   if (
@@ -54,7 +60,7 @@ export const validateNavigationTarget = async (params: {
     isCompanion(subjectId) ||
     isPinnedWorkspace(subjectId)
   ) {
-    return subjectId;
+    return Effect.succeed(subjectId);
   }
 
   // Expand the graph path to trigger loading.
@@ -62,32 +68,41 @@ export const validateNavigationTarget = async (params: {
 
   // Check if node exists after expansion.
   if (Option.isSome(Graph.getNode(graph, subjectId))) {
-    return subjectId;
+    return Effect.succeed(subjectId);
   }
 
-  // Node not found locally. Check remote if available.
-  const spaceId = getSpaceIdFromPath(subjectId);
-  const objectId = subjectId.split('/').pop();
-  if (!spaceId || !objectId || !Key.ObjectId.isValid(objectId)) {
-    log('cannot validate navigation target without valid space/object ID', { subjectId });
-    return NOT_FOUND_PATH;
-  }
+  // Node not found locally. Ask path resolvers to identify the DXN for this path.
+  return Effect.gen(function* () {
+    let dxn: DXN | undefined;
+    for (const resolver of pathResolvers) {
+      dxn = yield* resolver(subjectId).pipe(Effect.catchAll(() => Effect.succeed(undefined)));
+      if (dxn) {
+        break;
+      }
+    }
 
-  if (checkRemoteExistence) {
-    try {
-      const dxn = DXN.fromSpaceAndObjectId(spaceId, objectId as Key.ObjectId);
-      const exists = await checkRemoteExistence(dxn);
+    if (!dxn) {
+      log('no resolver recognized path, treating as not found', { subjectId });
+      return NOT_FOUND_PATH;
+    }
+
+    // Path is valid. Check remote existence if available.
+    if (checkRemoteExistence) {
+      const exists = yield* checkRemoteExistence(dxn).pipe(
+        Effect.catchAll(() => {
+          log.warn('remote existence check failed, treating as not found', { subjectId });
+          return Effect.succeed(false);
+        }),
+      );
       if (exists) {
         log('object exists remotely, waiting for replication', { subjectId });
         return subjectId;
       }
-    } catch (error) {
-      log.warn('remote existence check failed, treating as not found', { subjectId, error });
     }
-  }
 
-  log('navigation target not found', { subjectId });
-  return NOT_FOUND_PATH;
+    log('navigation target not found', { subjectId });
+    return NOT_FOUND_PATH;
+  });
 };
 
 /**
@@ -97,16 +112,20 @@ export const validateNavigationTarget = async (params: {
 export const createEdgeExistenceChecker = (
   execQuery: (spaceId: Key.SpaceId, body: { query: string; reactivity: number }) => Promise<{ results?: unknown[] }>,
 ): RemoteExistenceChecker => {
-  return async (dxn) => {
+  return (dxn) => {
     const echoDxn = dxn.asEchoDXN();
     if (!echoDxn?.spaceId || !echoDxn.echoId) {
-      return false;
+      return Effect.succeed(false);
     }
     const queryAst = Query.select(Filter.id(echoDxn.echoId)).from({ spaceIds: [echoDxn.spaceId] }).ast;
-    const response = await execQuery(echoDxn.spaceId, {
-      query: JSON.stringify(queryAst),
-      reactivity: 0,
-    });
-    return (response.results?.length ?? 0) > 0;
+    return Effect.tryPromise(() =>
+      execQuery(echoDxn.spaceId!, {
+        query: JSON.stringify(queryAst),
+        reactivity: 0,
+      }),
+    ).pipe(
+      Effect.map((response) => (response.results?.length ?? 0) > 0),
+      Effect.catchAll(() => Effect.succeed(false)),
+    );
   };
 };

@@ -190,4 +190,17 @@ export namespace AppCapabilities {
   export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
     'org.dxos.app-framework.capability.navigation-target-resolver',
   );
+
+  /**
+   * Resolves a qualified graph path to a DXN.
+   * Each plugin recognizes its own path patterns and returns the corresponding DXN.
+   * Returns undefined if the path is not recognized by this resolver.
+   * Used to validate navigation targets against remote services (e.g., edge).
+   * @category Capability
+   */
+  export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<DXN | undefined>;
+
+  export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
+    'org.dxos.app-framework.capability.navigation-path-resolver',
+  );
 }

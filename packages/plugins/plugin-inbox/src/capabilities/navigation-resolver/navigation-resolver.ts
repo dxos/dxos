@@ -5,12 +5,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
-import { Database } from '@dxos/echo';
+import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
+import { Database, Key } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import { meta } from '../../meta';
-import { getMailboxAllMailPath } from '../../paths';
+import { getMailboxAllMailPath, getMailboxesSectionId } from '../../paths';
 import { Mailbox } from '../../types';
 
 const SETTINGS_ID = '!dxos:settings';
@@ -19,7 +19,7 @@ const SETTINGS_KEY = 'settings';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // TODO(wittjosiah): Remove cast once NavigationTargetResolver type includes Database.Service.
-    const resolver: AppCaps.NavigationTargetResolver = ((query) =>
+    const resolver: AppCapabilities.NavigationTargetResolver = ((query) =>
       Effect.gen(function* () {
         if (!query?.dxn) {
           return [
@@ -50,8 +50,24 @@ export default Capability.makeModule(
             type: Mailbox.Mailbox.typename,
           },
         ];
-      })) as AppCaps.NavigationTargetResolver;
+      })) as AppCapabilities.NavigationTargetResolver;
 
-    return Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver);
+    // Resolve mailbox paths (root/<spaceId>/mailboxes/<mailboxId>/...) to DXNs.
+    const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) =>
+      Effect.succeed((() => {
+        const segments = qualifiedPath.split('/');
+        const spaceId = getSpaceIdFromPath(qualifiedPath);
+        const mailboxesIdx = segments.indexOf(getMailboxesSectionId());
+        const mailboxId = mailboxesIdx >= 0 ? segments[mailboxesIdx + 1] : undefined;
+        if (spaceId && mailboxId && Key.ObjectId.isValid(mailboxId)) {
+          return DXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
+        }
+        return undefined;
+      })());
+
+    return [
+      Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver),
+      Capability.contributes(AppCapabilities.NavigationPathResolver, pathResolver),
+    ];
   }),
 );

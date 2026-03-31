@@ -22,6 +22,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const id = input.subject[0];
 
       // Validate navigation target, redirecting to 404 if not found.
+      const capabilities = yield* Capability.Service;
+      const pathResolvers = capabilities.getAll(AppCapabilities.NavigationPathResolver);
       const checkRemoteExistence = yield* Capability.get(ClientCapabilities.Client).pipe(
         Effect.map((client) =>
           createEdgeExistenceChecker(
@@ -31,9 +33,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         Effect.catchAll(() => Effect.succeed(undefined)),
       );
 
-      const validatedId = yield* Effect.promise(() =>
-        validateNavigationTarget({ graph, subjectId: id, checkRemoteExistence }),
-      );
+      const validatedId = yield* validateNavigationTarget({ graph, subjectId: id, pathResolvers, checkRemoteExistence });
 
       updateState((state) => {
         const newHistory = state.active ? [...state.history, state.active] : state.history;
