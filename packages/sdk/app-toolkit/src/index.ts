@@ -8,6 +8,7 @@ export * from './collaboration';
 export * from './file';
 export * from './graph';
 export * from './object-node';
+export * from './not-found';
 export * from './operations';
 export * from './paths';
 export * from './plugin';

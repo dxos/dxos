@@ -29,6 +29,8 @@ export const os = (appName?: string) => ({
   'open apps directory label': 'Open apps directory',
   'pending label': 'Pending',
   'more options label': 'More options',
+  'not found heading': 'Not Found',
+  'not found description': 'This object doesn\'t exist or is no longer available.',
   'empty space message': 'Nobody else is in this space… yet.',
   'space members label': 'Members',
   'go to space label': 'Done',

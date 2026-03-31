@@ -12,6 +12,7 @@ const pluginTranslations = [
     'en-US': {
       [meta.id]: {
         'account label': 'User profile',
+        'not found label': 'Not found',
         'profile label': 'Profile',
         'profile description': 'You can adjust how your user settings here.',
         'devices label': 'Devices',

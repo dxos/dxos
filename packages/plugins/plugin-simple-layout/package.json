@@ -32,6 +32,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
@@ -48,7 +49,6 @@
   },
   "devDependencies": {
     "@dxos/app-graph": "workspace:*",
-    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

@@ -6,10 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  LayoutOperation,
+  createEdgeExistenceChecker,
+  validateNavigationTarget,
+} from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
@@ -24,6 +30,25 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
       const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+
+      // Validate navigation targets, redirecting to 404 if not found.
+      const checkRemoteExistence = yield* Capability.get(ClientCapabilities.Client).pipe(
+        Effect.map((client) =>
+          createEdgeExistenceChecker(
+            (spaceId, body) => client.edge.http.execQuery(spaceId, body),
+          ),
+        ),
+        Effect.catchAll(() => Effect.succeed(undefined)),
+      );
+
+      const validatedSubjects = yield* Effect.promise(() =>
+        Promise.all(
+          input.subject.map((subjectId) =>
+            validateNavigationTarget({ graph, subjectId, checkRemoteExistence }),
+          ),
+        ),
+      );
+      input = { ...input, subject: validatedSubjects };
 
       {
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
@@ -81,6 +106,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           });
         }
       }
+
+      return validatedSubjects;
     }),
   ),
 );
