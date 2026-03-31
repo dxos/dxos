@@ -1058,6 +1058,7 @@ export namespace ProcessOperationInvoker {
     const pubsub = Effect.runSync(PubSub.unbounded<OperationInvoker.InvocationEvent>());
     const pendingCount = Effect.runSync(Ref.make(0));
     const pendingFibers = new Set<Fiber.RuntimeFiber<any>>();
+    const fiberCache = new Map<Process.ID, OperationFiber<any>>();
 
     const invokeFiber = <I, O>(
       op: Operation.Definition<I, O>,
@@ -1076,14 +1077,22 @@ export namespace ProcessOperationInvoker {
 
         yield* handle.submitInput(input);
         log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
-        return yield* fiberFromProcess(handle);
+        const fiber = yield* fiberFromProcess(handle);
+        fiberCache.set(handle.pid, fiber);
+        return fiber;
       });
 
     const attachFiber = <T>(pid: Process.ID): Effect.Effect<OperationFiber<T>> =>
       Effect.gen(function* () {
         log('lifecycle: attach to operation process', { pid });
         const handle = yield* opts.manager.attach<any, T>(pid);
-        return yield* fiberFromProcess(handle);
+        const fiber = fiberCache.get(pid);
+        if (fiber) {
+          return fiber;
+        }
+        const newFiber = yield* fiberFromProcess(handle);
+        fiberCache.set(pid, newFiber);
+        return newFiber;
       });
 
     const invoke: Operation.OperationService['invoke'] = <I, O>(
