@@ -681,7 +681,7 @@ overrides:
   '@types/react': 'catalog:'
   '@types/react-dom': 'catalog:'
   ajv@8: '>=8.18.0'
-  axios: '>=1.13.5'
+  axios: 1.14.0
   base-x@4: 4.0.1
   cookie: '>=0.7.0'
   d3-color: '>=3.1.0'
