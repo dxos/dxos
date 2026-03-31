@@ -6,8 +6,7 @@ import { completionKeymap } from '@codemirror/autocomplete';
 import { defaultKeymap, indentWithTab } from '@codemirror/commands';
 import { jsonLanguage } from '@codemirror/lang-json';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { xml } from '@codemirror/lang-xml';
-import { LanguageDescription, syntaxHighlighting } from '@codemirror/language';
+import { foldNodeProp, syntaxHighlighting } from '@codemirror/language';
 import { languages } from '@codemirror/language-data';
 import { type Extension } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
@@ -56,6 +55,10 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
         // GFM provided by default.
         markdownTagsExtensions,
         ...(options.extensions ?? defaultExtensions()),
+        // Disable folding for fenced code blocks by overriding foldNodeProp.
+        // Note: returning null from foldService does not prevent syntaxFolding fallback,
+        // so we must override the node prop directly on the FencedCode node type.
+        noFencedCodeFolding,
       ],
     }),
 
@@ -77,12 +80,20 @@ export const createMarkdownExtensions = (options: MarkdownBundleOptions = {}): E
   ];
 };
 
-const xmlLanguageDesc = LanguageDescription.of({
-  name: 'xml',
-  alias: ['html', 'xhtml'],
-  extensions: ['xml', 'xhtml'],
-  load: async () => xml(),
-});
+/**
+ * Disables folding for fenced code blocks.
+ *
+ * foldService cannot block folding because returning null just defers to the next service,
+ * and CodeMirror always falls back to syntaxFolding (which reads foldNodeProp).
+ * The only reliable fix is to override foldNodeProp on FencedCode to return null.
+ */
+const noFencedCodeFolding: MarkdownConfig = {
+  props: [
+    foldNodeProp.add({
+      FencedCode: () => null,
+    }),
+  ],
+};
 
 /**
  * Default customizations.
