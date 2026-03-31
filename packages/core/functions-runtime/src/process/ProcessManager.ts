@@ -246,6 +246,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     };
     this.statusAtom = Atom.make<Status>(this.#currentStatus);
     this.#registry.mount(this.statusAtom);
+    log('lifecycle: created', { parentId, key, params });
   }
 
   snapshotStatus(): Status {
@@ -281,6 +282,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
 
   /** Run process onSpawn. Called by ProcessManagerImpl after spawn. */
   runOnSpawn(): Effect.Effect<void> {
+    log('lifecycle: onspawn');
     return this.#runHandler(() => this.#callbacks.onSpawn()).pipe(
       Performance.addTrackEntry({
         name: 'spawn',
@@ -304,6 +306,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
       return Effect.void;
     }
     this.#inputCount++;
+    log('lifecycle: input', { n: this.#inputCount });
     return this.#runHandler(() => this.#callbacks.onInput(input)).pipe(
       Performance.addTrackEntry({
         name: 'input',
@@ -351,8 +354,10 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   terminate(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       if (this.#finished) {
+        log('lifecycle: terminate skipped (already finished)');
         return;
       }
+      log('lifecycle: terminating');
       this.#finished = true;
       this.#setStatus(Process.State.TERMINATING);
       yield* this.#cleanup();
@@ -404,6 +409,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     if (this.#finished) return;
     this.#clearAlarm();
     const delay = timeout ?? 0;
+    log('lifecycle: alarm scheduled', { delayMs: delay });
     this.#alarmTimer = setTimeout(() => {
       this.#alarmTimer = null;
       if (!this.#finished) {
@@ -436,6 +442,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   }
 
   requestChildEvent(event: Process.ChildEvent<unknown>): void {
+    log('lifecycle: child event', { tag: event._tag, childPid: event.pid });
     Effect.runFork(
       this.#runHandler(() => this.#callbacks.onChildEvent(event)).pipe(
         Performance.addTrackEntry({
@@ -458,57 +465,64 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   }
 
   #runHandler(fn: () => Effect.Effect<void, never, R | Process.BaseServices>): Effect.Effect<void> {
-    this.#activeHandlers++;
-    this.#setStatus(Process.State.RUNNING);
-    const t0 = performance.now();
-    const recordWall = () => {
-      this.#wallTimeMs += performance.now() - t0;
-    };
-    return fn().pipe(
-      Effect.provide(this.#services),
-      Effect.tap(() => Effect.sync(recordWall)),
-      Effect.tap(() => this.#handlerCompleted()),
-      Effect.catchAllCause((cause) =>
-        Effect.gen(this, function* () {
-          recordWall();
-          yield* this.#handleError(cause);
-        }),
-      ),
+    return Effect.uninterruptibleMask((restore) =>
+      Effect.gen(this, function* () {
+        this.#activeHandlers++;
+        this.#setStatus(Process.State.RUNNING);
+        log('begin handler', { pid: this.pid, state: this.#currentStatus.state, activeHandlers: this.#activeHandlers });
+        const t0 = performance.now();
+        const recordWall = () => {
+          this.#wallTimeMs += performance.now() - t0;
+        };
+        return restore(fn()).pipe(
+          Effect.provide(this.#services),
+          Effect.tap(() => Effect.sync(recordWall)),
+          Effect.tap(() => this.#handlerCompleted()),
+          Effect.catchAllCause((cause) =>
+            Effect.gen(this, function* () {
+              recordWall();
+              yield* this.#handleError(cause);
+            }),
+          ),
+        );
+      }),
     );
   }
 
   #handlerCompleted(): Effect.Effect<void> {
-    this.#activeHandlers--;
+    return Effect.gen(this, function* () {
+      this.#activeHandlers--;
+      log('handler completed', { pid: this.pid, activeHandlers: this.#activeHandlers, finished: this.#finished });
 
-    if (this.#finished) return Effect.void;
+      if (this.#finished) return;
 
-    if (this.#failError !== null && this.#activeHandlers === 0) {
-      this.#finished = true;
-      const error = this.#failError;
-      return this.#cleanup().pipe(
-        Effect.tap(() => this.#setStatus(Process.State.FAILED, Exit.die(error))),
-        Effect.tap(() => this.#onFinished?.(Process.State.FAILED, Cause.die(error)) ?? Effect.void),
-      );
-    }
-
-    if (this.#succeedRequested && this.#activeHandlers === 0) {
-      this.#finished = true;
-      return this.#cleanup().pipe(
-        Effect.tap(() => this.#setStatus(Process.State.SUCCEEDED, Exit.void)),
-        Effect.tap(() => this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void),
-      );
-    }
-
-    if (this.#activeHandlers === 0) {
-      const hybernating = this.#alarmTimer !== null || this.#hasRunningChildren();
-      this.#setStatus(hybernating ? Process.State.HYBERNATING : Process.State.IDLE);
-    }
-    return Effect.void;
+      if (this.#failError !== null && this.#activeHandlers === 0) {
+        this.#finished = true;
+        const error = this.#failError;
+        yield* this.#cleanup().pipe(
+          Effect.tap(() => this.#setStatus(Process.State.FAILED, Exit.die(error))),
+          Effect.tap(() => this.#onFinished?.(Process.State.FAILED, Cause.die(error)) ?? Effect.void),
+        );
+      } else if (this.#succeedRequested && this.#activeHandlers === 0) {
+        this.#finished = true;
+        yield* this.#cleanup().pipe(
+          Effect.tap(() => this.#setStatus(Process.State.SUCCEEDED, Exit.void)),
+          Effect.tap(() => this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void),
+        );
+      } else if (this.#activeHandlers === 0) {
+        const hybernating = this.#alarmTimer !== null || this.#hasRunningChildren();
+        this.#setStatus(hybernating ? Process.State.HYBERNATING : Process.State.IDLE);
+      }
+    });
   }
 
   #handleError(cause: Cause.Cause<never>): Effect.Effect<void> {
     this.#activeHandlers--;
-    if (this.#finished) return Effect.void;
+    if (this.#finished) {
+      log('lifecycle: failure ignored (already finished)');
+      return Effect.void;
+    }
+    log('lifecycle: failed', { cause: Cause.pretty(cause) });
     this.#finished = true;
     return this.#cleanup().pipe(
       Effect.tap(() => this.#setStatus(Process.State.FAILED, Exit.failCause(cause))),
@@ -518,6 +532,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
 
   #cleanup(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
+      log('lifecycle: cleanup');
       this.#clearAlarm();
       Queue.unsafeOffer(this.#outputQueue, Option.none());
       for (const queue of this.#ephemeralSubscribers) {
@@ -537,7 +552,9 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   }
 
   #setStatus(state: Process.State, exit?: Exit.Exit<void>) {
-    log('setStatus', { pid: this.pid, state });
+    if (state !== this.#currentStatus.state) {
+      log('lifecycle: state', { state, previous: this.#currentStatus.state });
+    }
     const isTerminal =
       state === Process.State.SUCCEEDED || state === Process.State.TERMINATED || state === Process.State.FAILED;
     this.#currentStatus = {
@@ -546,6 +563,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
       startedAt: this.#currentStatus.startedAt,
       completedAt: isTerminal ? Option.some(new Date()) : Option.none(),
     };
+    log('state updated', { pid: this.pid, state });
     this.#registry.set(this.statusAtom, this.#currentStatus);
     this.#onStatusChanged?.();
   }
@@ -620,15 +638,19 @@ export class ProcessManagerImpl implements Manager {
   // TODO(dmaretskyi): Make it so that the ProcessManager is durable, then this will not terminate processes. just stop scheduling callbacks.
   shutdown(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
-      if (this.#handles.size === 0) {
+      const handleCount = this.#handles.size;
+      if (handleCount === 0) {
+        log('lifecycle: manager shutdown skipped');
         return;
       }
+      log('lifecycle: manager shutting down', { handleCount, pids: [...this.#handles.keys()] });
       const order = this.#shutdownTerminationOrder();
       for (const handle of order) {
         yield* handle.terminate();
       }
       this.#handles.clear();
       this.#refreshProcessTree();
+      log('lifecycle: manager shutdown complete', { terminated: order.length });
     });
   }
 
@@ -671,7 +693,12 @@ export class ProcessManagerImpl implements Manager {
   spawn<I, O>(definition: Process.Process<I, O, any>, options?: SpawnOptions): Effect.Effect<Handle<I, O>> {
     return Effect.gen(this, function* () {
       const id = this.#idGenerator();
-      log.info('spawn', { pid: id, parentPid: options?.parentProcessId });
+      log('lifecycle: spawn', {
+        pid: id,
+        key: definition.key,
+        parentPid: options?.parentProcessId,
+        name: options?.name,
+      });
       const scope = yield* Scope.make();
       const outputQueue = yield* Queue.unbounded<OutputItem<O>>();
 
@@ -766,18 +793,21 @@ export class ProcessManagerImpl implements Manager {
 
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen(this, function* () {
-          log.info('onFinished', { pid: handle.pid });
+          log('lifecycle: ended', { pid: handle.pid, state });
           if (handle.parentId !== null) {
             const parentHandle = this.#handles.get(handle.parentId);
             if (parentHandle) {
-              log.info('requesting child event', { pid: handle.parentId });
+              log('lifecycle: notify parent', { parentPid: handle.parentId, childPid: handle.pid });
               parentHandle.requestChildEvent({
                 _tag: 'exited',
                 pid: handle.pid,
                 result: cause ? Exit.failCause(cause) : Exit.succeed(undefined),
               });
             } else {
-              log.warn('parent handle not found', { pid: handle.parentId });
+              log.warn('lifecycle: parent missing for child exit', {
+                parentPid: handle.parentId,
+                childPid: handle.pid,
+              });
             }
           }
 
@@ -809,6 +839,7 @@ export class ProcessManagerImpl implements Manager {
       this.#refreshProcessTree();
 
       yield* handle.runOnSpawn();
+      log('lifecycle: started', { pid: id, key: definition.key });
 
       return handle;
     });
@@ -849,8 +880,10 @@ export class ProcessManagerImpl implements Manager {
     return Effect.gen(this, function* () {
       const handle = this.#handles.get(id);
       if (!handle) {
+        log('lifecycle: attach failed (not found)', { pid: id });
         return yield* Effect.die(new Error(`Process not found: ${id}`));
       }
+      log('lifecycle: attached', { key: handle.key, state: handle.snapshotStatus().state });
       return handle as unknown as Handle<I, O>;
     });
   }
@@ -876,7 +909,9 @@ export class ProcessManagerImpl implements Manager {
 
   runAllProcessesToCompletion(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
-      yield* Effect.forEach(this.#handles.values(), (handle) => handle.runToCompletion(), {
+      const handles = [...this.#handles.values()];
+      log('lifecycle: await all processes', { count: handles.length });
+      yield* Effect.forEach(handles, (handle) => handle.runToCompletion(), {
         concurrency: 'unbounded',
         discard: true,
       });
@@ -1041,7 +1076,7 @@ export namespace ProcessOperationInvoker {
         Effect.catchTag('NoSuchElementException', () => Effect.dieMessage(`Operation produced no output`)),
         Effect.fork,
       );
-      log('subscribed to outputs', { handle });
+      log('lifecycle: subscribed to outputs', { handle });
       return {
         pid: handle.pid,
         await: outputFiber.await,
@@ -1077,15 +1112,16 @@ export namespace ProcessOperationInvoker {
           tracing: tracingOptions,
           name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
         });
-        log('spawned process', { op, input, handle });
+        log('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
 
         yield* handle.submitInput(input);
-        log('submitted input', { op, input, handle });
+        log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
         return yield* fiberFromProcess(handle);
       });
 
     const attachFiber = <T>(pid: Process.ID): Effect.Effect<OperationFiber<T>> =>
       Effect.gen(function* () {
+        log('lifecycle: attach to operation process', { pid });
         const handle = yield* opts.manager.attach<any, T>(pid);
         return yield* fiberFromProcess(handle);
       });

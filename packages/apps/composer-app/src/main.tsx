@@ -40,6 +40,9 @@ declare global {
   interface ImportMetaEnv {
     DEV: string;
   }
+
+  // Debug hook: run `downloadLogs()` from devtools to save buffered logs (same as Reset dialog).
+  var downloadLogs: () => void;
 }
 
 const main = async () => {
@@ -59,6 +62,24 @@ const main = async () => {
 
   const logBuffer = new LogBuffer();
   log.addProcessor(logBuffer.logProcessor);
+
+  // Mirrors `useFileDownload` from `@dxos/react-ui` (used by `ResetDialog`).
+  const downloadFile = (data: Blob | string, filename: string) => {
+    const url = typeof data === 'string' ? data : URL.createObjectURL(data);
+    const element = document.createElement('a');
+    element.setAttribute('href', url);
+    element.setAttribute('download', filename);
+    element.setAttribute('target', 'download');
+    element.click();
+  };
+
+  // TODO(dmaretskyi): Hookup to a button in the sidebar/devtools.
+  globalThis.downloadLogs = () => {
+    const ndjson = logBuffer.serialize();
+    const file = new Blob([ndjson], { type: 'application/x-ndjson' });
+    const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
+    downloadFile(file, fileName);
+  };
 
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
