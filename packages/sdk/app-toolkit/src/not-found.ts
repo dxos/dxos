@@ -73,22 +73,20 @@ export const validateNavigationTarget = (params: {
 
   // Node not found locally. Ask path resolvers to identify the DXN for this path.
   return Effect.gen(function* () {
-    let dxn: DXN | undefined;
-    for (const resolver of pathResolvers) {
-      dxn = yield* resolver(subjectId).pipe(Effect.catchAll(() => Effect.succeed(undefined)));
-      if (dxn) {
-        break;
-      }
-    }
+    const dxn = yield* Effect.reduce(pathResolvers, Option.none<DXN>(), (acc, resolver) =>
+      Option.isSome(acc)
+        ? Effect.succeed(acc)
+        : resolver(subjectId).pipe(Effect.catchAll(() => Effect.succeed(Option.none<DXN>()))),
+    );
 
-    if (!dxn) {
+    if (Option.isNone(dxn)) {
       log('no resolver recognized path, treating as not found', { subjectId });
       return NOT_FOUND_PATH;
     }
 
     // Path is valid. Check remote existence if available.
     if (checkRemoteExistence) {
-      const exists = yield* checkRemoteExistence(dxn).pipe(
+      const exists = yield* checkRemoteExistence(dxn.value).pipe(
         Effect.catchAll(() => {
           log.warn('remote existence check failed, treating as not found', { subjectId });
           return Effect.succeed(false);

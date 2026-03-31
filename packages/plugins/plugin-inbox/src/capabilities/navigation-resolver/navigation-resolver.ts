@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
@@ -53,19 +54,16 @@ export default Capability.makeModule(
       })) as AppCapabilities.NavigationTargetResolver;
 
     // Resolve mailbox paths (root/<spaceId>/mailboxes/<mailboxId>/...) to DXNs.
-    const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) =>
-      Effect.succeed(
-        (() => {
-          const segments = qualifiedPath.split('/');
-          const spaceId = getSpaceIdFromPath(qualifiedPath);
-          const mailboxesIdx = segments.indexOf(getMailboxesSectionId());
-          const mailboxId = mailboxesIdx >= 0 ? segments[mailboxesIdx + 1] : undefined;
-          if (spaceId && mailboxId && Key.ObjectId.isValid(mailboxId)) {
-            return DXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
-          }
-          return undefined;
-        })(),
-      );
+    const pathResolver: AppCaps.NavigationPathResolver = (qualifiedPath) => {
+      const segments = qualifiedPath.split('/');
+      const spaceId = getSpaceIdFromPath(qualifiedPath);
+      const mailboxesIdx = segments.indexOf(getMailboxesSectionId());
+      const mailboxId = mailboxesIdx >= 0 ? segments[mailboxesIdx + 1] : undefined;
+      if (spaceId && mailboxId && Key.ObjectId.isValid(mailboxId)) {
+        return Effect.succeed(Option.some(DXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId)));
+      }
+      return Effect.succeed(Option.none());
+    };
 
     return [
       Capability.contributes(AppCapabilities.NavigationTargetResolver, resolver),
