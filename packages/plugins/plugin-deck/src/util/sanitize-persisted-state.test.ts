@@ -14,9 +14,7 @@ const makeState = (decks: Record<string, Partial<DeckState>>): DeckStateProps =>
   complementarySidebarPanel: undefined,
   activeDeck: Object.keys(decks)[0] ?? 'default',
   previousDeck: 'default',
-  decks: Object.fromEntries(
-    Object.entries(decks).map(([id, overrides]) => [id, { ...defaultDeck, ...overrides }]),
-  ),
+  decks: Object.fromEntries(Object.entries(decks).map(([id, overrides]) => [id, { ...defaultDeck, ...overrides }])),
   previousMode: {},
 });
 
