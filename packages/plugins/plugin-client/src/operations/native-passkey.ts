@@ -49,7 +49,7 @@ export const createNativePasskey = async (params: {
   username: string;
   userId: Uint8Array;
 }): Promise<NativePasskeyRegistrationResult> => {
-  log.info('creating native passkey', { domain: PASSKEY_DOMAIN, username: params.username });
+  log('creating native passkey', { domain: PASSKEY_DOMAIN, username: params.username });
   const { invoke } = await import('@tauri-apps/api/core');
   const result = await invoke<NativePasskeyRegistrationResult>('plugin:macos-passkey|register_passkey', {
     domain: PASSKEY_DOMAIN,
@@ -58,7 +58,7 @@ export const createNativePasskey = async (params: {
     userId: Array.from(params.userId),
     salt: [],
   });
-  log.info('native passkey registration result', {
+  log('native passkey registration result', {
     id: result.id,
     rawIdLength: result.raw_id?.length,
     attestationObjectLength: result.attestation_object?.length,
@@ -73,14 +73,14 @@ export const createNativePasskey = async (params: {
 export const loginNativePasskey = async (params: {
   challenge: Uint8Array;
 }): Promise<NativePasskeyLoginResult> => {
-  log.info('authenticating with native passkey', { domain: PASSKEY_DOMAIN });
+  log('authenticating with native passkey', { domain: PASSKEY_DOMAIN });
   const { invoke } = await import('@tauri-apps/api/core');
   const result = await invoke<NativePasskeyLoginResult>('plugin:macos-passkey|login_passkey', {
     domain: PASSKEY_DOMAIN,
     challenge: Array.from(params.challenge),
     salt: [],
   });
-  log.info('native passkey login result', {
+  log('native passkey login result', {
     id: result.id,
     userHandleLength: result.user_handle?.length,
     signatureLength: result.signature?.length,
@@ -95,7 +95,7 @@ export const loginNativePasskey = async (params: {
  * the credential public key in COSE_Key format starting at byte offset 55 + credIdLen.
  */
 export const extractPublicKeyFromAttestation = (attestationObjectEncoded: string): { publicKey: Uint8Array; algorithm: number } => {
-  log.info('extracting public key from attestation', {
+  log('extracting public key from attestation', {
     encodedLength: attestationObjectEncoded.length,
     prefix: attestationObjectEncoded.slice(0, 40),
     isBase64: /^[A-Za-z0-9+/=]+$/.test(attestationObjectEncoded),
@@ -110,14 +110,14 @@ export const extractPublicKeyFromAttestation = (attestationObjectEncoded: string
     const b64 = attestationObjectEncoded.replace(/-/g, '+').replace(/_/g, '/');
     const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
     attestationBytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
-    log.info('decoded attestation as base64', { decodedLength: attestationBytes.length });
+    log('decoded attestation as base64', { decodedLength: attestationBytes.length });
   } catch (err) {
     log.warn('base64 decode failed, trying hex', { error: String(err) });
     // Fallback: try hex decoding.
     attestationBytes = new Uint8Array(
       attestationObjectEncoded.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)),
     );
-    log.info('decoded attestation as hex', { decodedLength: attestationBytes.length });
+    log('decoded attestation as hex', { decodedLength: attestationBytes.length });
   }
 
   // The authData is inside the CBOR-encoded attestation object.
