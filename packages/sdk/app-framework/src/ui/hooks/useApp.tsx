@@ -171,6 +171,8 @@ export const useApp = ({
                 clearTimeout(timeoutId);
                 setReady(true);
                 readyRef.current = true;
+                // Trigger startup profiler dump if available.
+                (globalThis as any).composer?.profiler?.dump();
               }
               if (error$ && !readyRef.current) {
                 setError(error$);

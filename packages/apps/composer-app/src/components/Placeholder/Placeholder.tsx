@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 
 import { type StartupProgress } from '@dxos/app-framework/ui';
 import { Composer } from '@dxos/brand';
@@ -14,15 +14,6 @@ export const Placeholder = ({ stage = 1, progress }: { stage?: number; progress?
   if (location.search === '?throw') {
     throw new Error('Test error');
   }
-
-  const dumped = useRef(false);
-  useEffect(() => {
-    if (stage >= 2 && !dumped.current) {
-      dumped.current = true;
-      // Dump startup profile when app becomes ready.
-      (window as any).composer?.profiler?.dump();
-    }
-  }, [stage]);
 
   const hasProgress = progress && progress.total > 0;
 
