@@ -197,10 +197,7 @@ export const useApp = ({
                 clearInterval(progressInterval);
                 setReady(true);
                 readyRef.current = true;
-                // Trigger startup profiler dump if available.
-                if (DEBUG) {
-                  (globalThis as any).composer.profiler.dump();
-                }
+                (globalThis as any).composer.profiler?.dump();
               }
               if (error$ && !readyRef.current) {
                 setError(error$);

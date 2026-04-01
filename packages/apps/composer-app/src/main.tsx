@@ -66,19 +66,22 @@ const main = async () => {
   log.addProcessor(logBuffer.logProcessor);
 
   profiler?.mark('dynamic-imports:start');
+
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
   const { Migrations } = await import('@dxos/migrations');
   const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
+
   profiler?.mark('dynamic-imports:end');
   profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
-
-  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
 
   // Namespace for global Composer test & debug hooks.
   (window as any).composer = { profiler };
 
+  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
+
   profiler?.mark('config:start');
+
   let config = await setupConfig();
   if (
     !config.values.runtime?.client?.storage?.dataStore &&
@@ -146,6 +149,7 @@ const main = async () => {
   const useSingleClientMode = isTauri && isMobile;
 
   profiler?.mark('services:start');
+
   const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
   const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
   const services = await createClientServices(config, {
@@ -184,6 +188,7 @@ const main = async () => {
   profiler?.measure('services', 'services:start', 'services:end');
 
   profiler?.mark('plugins:start');
+
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
