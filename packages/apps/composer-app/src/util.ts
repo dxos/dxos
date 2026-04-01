@@ -52,6 +52,7 @@ export const queryAllCredentials = (client: Client) => {
     spaceKey: identitySpace,
     noTail: true,
   });
+
   return new Promise<Credential[]>((resolve, reject) => {
     const credentials: Credential[] = [];
     stream?.subscribe(
