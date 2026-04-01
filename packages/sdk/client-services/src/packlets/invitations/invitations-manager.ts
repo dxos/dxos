@@ -125,7 +125,6 @@ export class InvitationsManager {
     }
   }
 
-  @trace.span({ showInBrowserTimeline: true })
   acceptInvitation(_ctx: Context, request: AcceptInvitationRequest): AuthenticatingInvitation {
     const options = request.invitation;
     const existingInvitation = this._acceptInvitations.get(options.invitationId);
@@ -266,7 +265,7 @@ export class InvitationsManager {
         void invitationCtx.dispose();
       },
     });
-    ctx.onDispose(() => {
+    invitationCtx.onDispose(() => {
       log('complete', { ...handler.toJSON() });
       stream.complete();
     });
@@ -275,7 +274,7 @@ export class InvitationsManager {
       subscriber: stream.observable,
       onCancel: async () => {
         stream.next({ ...invitation, state: Invitation.State.CANCELLED });
-        await ctx.dispose();
+        await invitationCtx.dispose();
       },
     });
     return { ctx: invitationCtx, stream, observableInvitation };

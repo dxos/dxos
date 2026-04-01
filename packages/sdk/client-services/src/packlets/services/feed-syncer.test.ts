@@ -105,7 +105,7 @@ const createFeedSyncHarness = async ({
   const syncServer = new SyncServer({
     peerId: 'server',
     feedStore: serverFeedStore,
-    sendMessage: (message) =>
+    sendMessage: (_ctx, message) =>
       Effect.promise(async () => {
         const routerMessage = createBuf(MessageSchema, {
           source: {
