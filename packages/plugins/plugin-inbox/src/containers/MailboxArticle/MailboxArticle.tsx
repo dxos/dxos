@@ -119,10 +119,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   const [isEmpty, setEmpty] = useState<boolean>(false);
   useEffect(() => {
     const t = setTimeout(() => {
-      setEmpty(messagesWithTags.length === 0);
+      setEmpty(sortedMessages.length === 0);
     }, 1_000);
     return () => clearTimeout(t);
-  }, [messagesWithTags]);
+  }, [sortedMessages]);
 
   const handleAction = useCallback<MailboxActionHandler>(
     (action) => {
