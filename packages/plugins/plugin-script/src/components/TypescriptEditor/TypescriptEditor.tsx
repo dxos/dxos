@@ -104,10 +104,7 @@ export const TypescriptEditor = composable<HTMLDivElement, TypescriptEditorProps
     );
 
     return (
-      <div
-        {...composableProps(props, { classNames, ...focusAttributes })}
-        ref={composeRefs(parentRef, forwardedRef)}
-      />
+      <div {...composableProps(props, { classNames, ...focusAttributes })} ref={composeRefs(parentRef, forwardedRef)} />
     );
   },
 );
