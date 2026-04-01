@@ -6,12 +6,8 @@
 
 export type Profiler = {
   mark: (name: string) => void;
+  measure: (name: string, startMark: string, endMark: string) => void;
   dump: () => void;
-};
-
-const noop: Profiler = {
-  mark: () => {},
-  dump: () => {},
 };
 
 /**
@@ -19,14 +15,12 @@ const noop: Profiler = {
  * Tree-shaken in production when VITE_DEBUG is not set.
  */
 export const startupProfiler = (): Profiler => {
-  if (!import.meta.env.VITE_DEBUG) {
-    return noop;
-  }
-
   performance.mark('startup:main:start');
 
   return {
     mark: (name: string) => performance.mark(`startup:${name}`),
+    measure: (name: string, startMark: string, endMark: string) =>
+      performance.measure(`startup:${name}`, `startup:${startMark}`, `startup:${endMark}`),
     dump: () => {
       performance.mark('startup:ready');
       performance.measure('startup:total', 'startup:main:start', 'startup:ready');
