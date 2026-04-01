@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Keyring } from '@dxos/keyring';
 import { type PublicKey } from '@dxos/keys';
-import { AdmittedFeed, type Chain, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, type Chain, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { createCredential, verifyCredential } from '../credentials';
 
@@ -30,6 +30,7 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceGenesis',
             spaceKey: space,
+            membershipPolicy: MembershipPolicy.INVITE,
           },
           signer: keyring,
         }),
@@ -130,6 +131,7 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceGenesis',
             spaceKey: space,
+            membershipPolicy: MembershipPolicy.INVITE,
           },
           signer: keyring,
         }),
@@ -230,6 +232,7 @@ describe('SpaceStateMachine', () => {
             '@type': 'dxos.halo.credentials.SpaceGenesis',
             spaceKey: space,
             tags: ['personal', 'test'],
+            membershipPolicy: MembershipPolicy.INVITE,
           },
           signer: keyring,
         }),
@@ -254,6 +257,7 @@ describe('SpaceStateMachine', () => {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceGenesis',
           spaceKey: space,
+          membershipPolicy: MembershipPolicy.INVITE,
         },
         signer: keyring,
       }),
@@ -282,6 +286,7 @@ describe('SpaceStateMachine', () => {
           assertion: {
             '@type': 'dxos.halo.credentials.SpaceGenesis',
             spaceKey: haloSpace,
+            membershipPolicy: MembershipPolicy.INVITE,
           },
           signer: keyring,
         }),
@@ -390,5 +395,188 @@ describe('SpaceStateMachine', () => {
     });
 
     expect(await verifyCredential(credential)).toEqual({ kind: 'pass' });
+  });
+
+  test('space genesis with membership policy', async () => {
+    const keyring = new Keyring();
+    const space = await keyring.createKey();
+    const feed = await keyring.createKey();
+
+    const spaceState = new SpaceStateMachine(space);
+
+    await spaceState.process(
+      await createCredential({
+        issuer: space,
+        subject: space,
+        assertion: {
+          '@type': 'dxos.halo.credentials.SpaceGenesis',
+          spaceKey: space,
+          membershipPolicy: MembershipPolicy.LOCKED,
+        },
+        signer: keyring,
+      }),
+      { sourceFeed: feed },
+    );
+
+    expect(spaceState.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
+  });
+
+  test('space genesis without membership policy defaults to INVITE', async () => {
+    const keyring = new Keyring();
+    const space = await keyring.createKey();
+    const feed = await keyring.createKey();
+
+    const spaceState = new SpaceStateMachine(space);
+
+    await spaceState.process(
+      await createCredential({
+        issuer: space,
+        subject: space,
+        assertion: {
+          '@type': 'dxos.halo.credentials.SpaceGenesis',
+          spaceKey: space,
+          membershipPolicy: MembershipPolicy.INVITE,
+        },
+        signer: keyring,
+      }),
+      { sourceFeed: feed },
+    );
+
+    expect(spaceState.membershipPolicy).toEqual(MembershipPolicy.INVITE);
+  });
+
+  test('locked space rejects new members', async ({ expect }) => {
+    const keyring = new Keyring();
+    const space = await keyring.createKey();
+    const identity = await keyring.createKey();
+    const identity2 = await keyring.createKey();
+    const feed = await keyring.createKey();
+
+    const spaceState = new SpaceStateMachine(space);
+
+    await spaceState.process(
+      await createCredential({
+        issuer: space,
+        subject: space,
+        assertion: {
+          '@type': 'dxos.halo.credentials.SpaceGenesis',
+          spaceKey: space,
+          membershipPolicy: MembershipPolicy.LOCKED,
+        },
+        signer: keyring,
+      }),
+      { sourceFeed: feed },
+    );
+
+    await spaceState.process(
+      await createCredential({
+        issuer: space,
+        subject: identity,
+        assertion: {
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey: space,
+          role: SpaceMember.Role.OWNER,
+          genesisFeedKey: feed,
+        },
+        signer: keyring,
+      }),
+      { sourceFeed: feed },
+    );
+
+    // Attempt to add a second member — should be rejected.
+    expect(
+      await spaceState.process(
+        await createCredential({
+          issuer: space,
+          subject: identity2,
+          assertion: {
+            '@type': 'dxos.halo.credentials.SpaceMember',
+            spaceKey: space,
+            role: SpaceMember.Role.EDITOR,
+            genesisFeedKey: feed,
+          },
+          signer: keyring,
+        }),
+        { sourceFeed: feed },
+      ),
+    ).toEqual(false);
+
+    expect(spaceState.members.size).toEqual(1);
+  });
+
+  test('locked space allows admitted feeds for existing members', async ({ expect }) => {
+    const keyring = new Keyring();
+    const space = await keyring.createKey();
+    const identity = await keyring.createKey();
+    const device = await keyring.createKey();
+    const feed = await keyring.createKey();
+    const newFeed = await keyring.createKey();
+
+    const spaceState = new SpaceStateMachine(space);
+
+    await spaceState.process(
+      await createCredential({
+        issuer: space,
+        subject: space,
+        assertion: {
+          '@type': 'dxos.halo.credentials.SpaceGenesis',
+          spaceKey: space,
+          membershipPolicy: MembershipPolicy.LOCKED,
+        },
+        signer: keyring,
+      }),
+      { sourceFeed: feed },
+    );
+
+    await spaceState.process(
+      await createCredential({
+        issuer: space,
+        subject: identity,
+        assertion: {
+          '@type': 'dxos.halo.credentials.SpaceMember',
+          spaceKey: space,
+          role: SpaceMember.Role.OWNER,
+          genesisFeedKey: feed,
+        },
+        signer: keyring,
+      }),
+      { sourceFeed: feed },
+    );
+
+    const chain: Chain = {
+      credential: await createCredential({
+        assertion: {
+          '@type': 'dxos.halo.credentials.AuthorizedDevice',
+          deviceKey: device,
+          identityKey: identity,
+        },
+        subject: device,
+        issuer: identity,
+        signer: keyring,
+      }),
+    };
+
+    // AdmittedFeed should still work on locked space.
+    expect(
+      await spaceState.process(
+        await createCredential({
+          issuer: identity,
+          subject: newFeed,
+          assertion: {
+            '@type': 'dxos.halo.credentials.AdmittedFeed',
+            spaceKey: space,
+            identityKey: identity,
+            deviceKey: device,
+            designation: AdmittedFeed.Designation.CONTROL,
+          },
+          signer: keyring,
+          signingKey: device,
+          chain,
+        }),
+        { sourceFeed: feed },
+      ),
+    ).toEqual(true);
+
+    expect(spaceState.feeds.size).toEqual(1);
   });
 });

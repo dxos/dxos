@@ -13,6 +13,7 @@ import { verifyPresentation } from '@dxos/credentials';
 import { type PublicKey } from '@dxos/keys';
 import { MemorySignalManagerContext } from '@dxos/messaging';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { isNode } from '@dxos/util';
 
@@ -38,7 +39,7 @@ describe('ClientServicesHost', () => {
     onTestFinished(() => host.close());
 
     await host.services.IdentityService!.createIdentity({});
-    const { spaceKey } = await host.services.SpacesService!.createSpace({});
+    const { spaceKey } = await host.services.SpacesService!.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
 
     const stream = host.services.SpacesService!.queryCredentials({ spaceKey });
     const [done, tick] = latch({ count: 3 });

@@ -13,6 +13,7 @@ import { CommandConfig, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { ClientOperation } from '../../../../operations';
 import { printIdentity } from '../util';
@@ -41,7 +42,9 @@ export const handler = Effect.fn(function* ({
 
   // Create personal space for the CLI identity.
   const { PERSONAL_SPACE_TAG, setPersonalSpace } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
-  const space = yield* Effect.promise(() => client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG] }));
+  const space = yield* Effect.promise(() =>
+    client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
+  );
   yield* Effect.promise(() => space.waitUntilReady());
   setPersonalSpace(space);
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
