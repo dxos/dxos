@@ -195,7 +195,7 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       setActiveLocation,
     ]);
 
-    const { className, ...rest } = composableProps(props, { className: 'relative outline-none' });
+    const { className, ...rest } = composableProps(props, { classNames: 'relative outline-none' });
 
     // NOTE: Ensure no gaps between cells (prevent drop indicators flickering).
     // NOTE: Ensure padding doesn't change position of cursor when dragging (no margins).

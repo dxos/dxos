@@ -110,10 +110,10 @@ const MessageViewport = composable<HTMLDivElement, MessageViewportProps>(
       <div
         {...composableProps(props, {
           role: 'none',
-          className: mx(
+          classNames: [
             'overflow-hidden grid',
             role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
-          ),
+          ],
         })}
         ref={forwardedRef}
       >
