@@ -24,7 +24,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { CancelledError, SystemError } from '@dxos/protocols';
+import { CancelledError, type FeedProtocol, SystemError } from '@dxos/protocols';
 import {
   type CreateEpochRequest,
   type Space as SpaceProto,
@@ -369,7 +369,7 @@ export class DataSpace {
    * Get all feeds and their blocks for this space.
    * Used for space archive export.
    */
-  async getAllFeeds() {
+  async getAllFeeds(): Promise<Array<{ feedId: string; feedNamespace: string; blocks: FeedProtocol.Block[] }>> {
     return this._echoHost.getAllFeedsForSpace(this.id);
   }
 
