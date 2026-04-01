@@ -54,6 +54,9 @@ message SpaceMetadata {
   /// Space key.
   dxos.keys.PublicKey key = 1;
 
+  /// Immutable tags assigned at space creation time.
+  repeated string tags = 12;
+
   /// ACTIVE, INACTIVE, etc.
   optional dxos.client.services.SpaceState state = 10;
 
@@ -77,7 +80,6 @@ message SpaceMetadata {
   optional SpaceCache cache = 9;
 
   optional EdgeReplicationSetting edge_replication = 11;
-  repeated string tags = 12;
 }
 
 enum EdgeReplicationSetting {

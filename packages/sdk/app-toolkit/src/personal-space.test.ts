@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { hasTag, isPersonalSpace } from './personal-space';
+import { hasTag, isPersonalSpace, PERSONAL_SPACE_TAG } from './personal-space';
 
 describe('personal-space', () => {
   test('hasTag returns true when tag is present', ({ expect }) => {
@@ -24,7 +24,7 @@ describe('personal-space', () => {
   });
 
   test('isPersonalSpace returns true for space with personal tag', ({ expect }) => {
-    const space = { tags: ['personal'], properties: {} } as any;
+    const space = { tags: [PERSONAL_SPACE_TAG], properties: {} } as any;
     expect(isPersonalSpace(space)).toBe(true);
   });
 
@@ -39,13 +39,13 @@ describe('personal-space', () => {
   });
 
   test('isPersonalSpace prefers tags over properties', ({ expect }) => {
-    const space = { tags: ['personal'], properties: {} } as any;
+    const space = { tags: [PERSONAL_SPACE_TAG], properties: {} } as any;
     expect(isPersonalSpace(space)).toBe(true);
   });
 
   test('isPersonalSpace returns true for closed space with personal tag', ({ expect }) => {
     const space = {
-      tags: ['personal'],
+      tags: [PERSONAL_SPACE_TAG],
       get properties(): never {
         throw new Error('Space is not initialized.');
       },
