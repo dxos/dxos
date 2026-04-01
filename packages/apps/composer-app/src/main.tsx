@@ -24,6 +24,8 @@ import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
+import { observabilityTranslations } from '@dxos/plugin-observability';
+
 import { Placeholder, ResetDialog } from './components';
 import { initializeObservability, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
@@ -201,7 +203,7 @@ const main = async () => {
     }, [services]);
 
     return (
-      <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+      <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
         <Tooltip.Provider>
           <ResetDialog
             error={error}
