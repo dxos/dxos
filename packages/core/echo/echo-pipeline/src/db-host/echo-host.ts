@@ -338,14 +338,14 @@ export class EchoHost extends Resource {
    * Install data replicator.
    */
   async addReplicator(replicator: AutomergeReplicator): Promise<void> {
-    await this._automergeHost.addReplicator(this._ctx, replicator);
+    await this._automergeHost.addReplicator(replicator);
   }
 
   /**
    * Remove data replicator.
    */
   async removeReplicator(replicator: AutomergeReplicator): Promise<void> {
-    await this._automergeHost.removeReplicator(this._ctx, replicator);
+    await this._automergeHost.removeReplicator(replicator);
   }
 
   /**

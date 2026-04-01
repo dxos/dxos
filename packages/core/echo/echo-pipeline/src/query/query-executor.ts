@@ -7,7 +7,7 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import type * as Effect from 'effect/Effect';
 import * as Runtime from 'effect/Runtime';
 
-import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
+import { ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import type { Obj } from '@dxos/echo';
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import {
