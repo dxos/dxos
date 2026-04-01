@@ -14,6 +14,7 @@ import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
@@ -25,14 +26,13 @@ faker.seed(0);
 
 const PERSON_COUNT = 100;
 
-const StorybookRecordArticle = () => {
+const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
   const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
   const org = organizations[0];
-
   if (!org) {
-    return null;
+    return <Loading />;
   }
 
   return <RecordArticle role='article' subject={org} />;
@@ -40,9 +40,9 @@ const StorybookRecordArticle = () => {
 
 const meta = {
   title: 'plugins/plugin-space/containers/RecordArticle',
-  component: StorybookRecordArticle,
-  render: () => <StorybookRecordArticle />,
+  render: DefaultStory,
   decorators: [
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
       plugins: [

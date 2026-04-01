@@ -4,39 +4,33 @@
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
-import { VirtuosoMasonry } from '@virtuoso.dev/masonry';
-import React, {
-  type ComponentPropsWithRef,
-  type ComponentType,
-  type ForwardedRef,
-  type JSX,
-  type PropsWithChildren,
-  type Ref,
-  forwardRef,
-  useMemo,
-  useRef,
-} from 'react';
+import { VirtuosoMasonry, type VirtuosoMasonryProps } from '@virtuoso.dev/masonry';
+import React, { type ComponentType, type JSX, type PropsWithChildren, type Ref, useMemo, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type ThemedClassName, usePx } from '@dxos/react-ui';
-import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
-import { mx } from '@dxos/ui-theme';
+import { ScrollArea, usePx } from '@dxos/react-ui';
+import { cardMaxInlineSize, cardMinInlineSize, composable, composableProps, scrollbar } from '@dxos/ui-theme';
 
 //
 // Context
 //
 
-const MASONRY_NAME = 'Masonry';
-
 type MasonryContextValue = {
+  /** Render component for each masonry item. */
   Tile: ComponentType<{ data: any; index: number }>;
-  columnWidthPx: number;
-  maxColumnWidthPx: number;
-  columnGutterPx: number;
-  rowGutterPx: number;
-  columnCount?: number;
-  maxColumnCount?: number;
+  /** Override auto-calculated column count. */
+  columns: number | undefined;
+  /** Upper bound on number of columns. */
+  maxColumns: number | undefined;
+  /** Minimum column width in rem. */
+  minColumnWidth: number;
+  /** Maximum column width in rem. */
+  maxColumnWidth: number;
+  /** Space between columns and rows in rem. */
+  gutter: number;
 };
+
+const MASONRY_NAME = 'Masonry';
 
 const [MasonryProvider, useMasonryContext] = createContext<MasonryContextValue>(MASONRY_NAME);
 
@@ -44,65 +38,28 @@ const [MasonryProvider, useMasonryContext] = createContext<MasonryContextValue>(
 // Root
 //
 
-type MasonryRootProps = PropsWithChildren<{
-  /** Render component for each masonry item. */
-  Tile: ComponentType<{ data: any; index: number }>;
-  /** Minimum column width in rem. */
-  columnWidth?: number;
-  /** Maximum column width in rem. */
-  maxColumnWidth?: number;
-  /** Horizontal space between columns in rem. */
-  columnGutter?: number;
-  /** Vertical space between rows in rem. Defaults to columnGutter. */
-  rowGutter?: number;
-  /** Override auto-calculated column count. */
-  columnCount?: number;
-  /** Upper bound on number of columns. */
-  maxColumnCount?: number;
-}>;
-
-/** Converts rem layout props to px values. */
-const useRemToPx = (remProps: Record<string, number | undefined>) => {
-  const remInPx = usePx(1);
-  return useMemo(() => {
-    return Object.fromEntries(
-      Object.entries(remProps)
-        .filter(([_, value]) => Number.isFinite(value))
-        .map(([key, value]) => [key, (value as number) * remInPx]),
-    );
-  }, [remProps, remInPx]);
-};
+type MasonryRootProps = PropsWithChildren<Partial<MasonryContextValue>>;
 
 const MasonryRoot = ({
-  Tile,
-  columnWidth = cardMinInlineSize,
-  maxColumnWidth = cardMaxInlineSize,
-  columnGutter = 1,
-  rowGutter,
-  columnCount,
-  maxColumnCount,
   children,
-}: MasonryRootProps) => {
-  const remProps = useMemo(
-    () => ({ columnWidth, maxColumnWidth, columnGutter, rowGutter: rowGutter ?? columnGutter }),
-    [columnWidth, maxColumnWidth, columnGutter, rowGutter],
-  );
-  const pxProps = useRemToPx(remProps);
-
-  return (
-    <MasonryProvider
-      Tile={Tile}
-      columnWidthPx={pxProps.columnWidth ?? 0}
-      maxColumnWidthPx={pxProps.maxColumnWidth ?? 0}
-      columnGutterPx={pxProps.columnGutter ?? 0}
-      rowGutterPx={pxProps.rowGutter ?? 0}
-      columnCount={columnCount}
-      maxColumnCount={maxColumnCount}
-    >
-      {children}
-    </MasonryProvider>
-  );
-};
+  Tile,
+  columns = undefined,
+  maxColumns = undefined,
+  minColumnWidth = cardMinInlineSize,
+  maxColumnWidth = cardMaxInlineSize,
+  gutter = 0.75,
+}: MasonryRootProps) => (
+  <MasonryProvider
+    Tile={Tile ?? (() => null)}
+    columns={columns}
+    maxColumns={maxColumns}
+    minColumnWidth={minColumnWidth}
+    maxColumnWidth={maxColumnWidth}
+    gutter={gutter}
+  >
+    {children}
+  </MasonryProvider>
+);
 
 MasonryRoot.displayName = 'Masonry.Root';
 
@@ -110,86 +67,117 @@ MasonryRoot.displayName = 'Masonry.Root';
 // Content
 //
 
-type MasonryContentProps<Item> = ThemedClassName<ComponentPropsWithRef<'div'>> & {
+type MasonryContentProps<Item> = {
   /** Items to render in the masonry grid. */
   items: Item[];
   /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
   getId?: (data: Item) => string;
 };
 
-/** Compute column count from container width and column constraints. */
-const useColumnCount = (
-  containerWidth: number,
-  columnWidthPx: number,
-  maxColumnWidthPx: number,
-  columnGutterPx: number,
-  explicitColumnCount?: number,
-  maxColumnCount?: number,
-) => {
-  return useMemo(() => {
-    if (explicitColumnCount != null) {
-      return explicitColumnCount;
-    }
-    if (containerWidth <= 0 || columnWidthPx <= 0) {
-      return 1;
-    }
-    let cols = Math.floor((containerWidth + columnGutterPx) / (columnWidthPx + columnGutterPx));
-    if (maxColumnWidthPx > 0) {
-      const effectiveColWidth = (containerWidth - (cols - 1) * columnGutterPx) / cols;
-      if (effectiveColWidth > maxColumnWidthPx) {
-        cols = Math.ceil((containerWidth + columnGutterPx) / (maxColumnWidthPx + columnGutterPx));
-      }
-    }
-    const clamped = maxColumnCount != null ? Math.min(cols, maxColumnCount) : cols;
-    return Math.max(1, clamped);
-  }, [containerWidth, columnWidthPx, maxColumnWidthPx, columnGutterPx, explicitColumnCount, maxColumnCount]);
-};
+const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>(
+  ({ items, getId, ...props }, forwardedRef) => {
+    const rootRef = useRef<HTMLDivElement | null>(null);
+    const composedRef = useComposedRefs(rootRef, forwardedRef);
+    const { width = 0 } = useResizeDetector({ targetRef: rootRef });
 
-const MasonryContentImpl = <Item,>(
-  { items, getId, classNames, ...props }: MasonryContentProps<Item>,
-  forwardedRef: ForwardedRef<HTMLDivElement>,
-) => {
-  const { Tile, columnWidthPx, maxColumnWidthPx, columnGutterPx, rowGutterPx, columnCount, maxColumnCount } =
-    useMasonryContext('Masonry.Content');
-
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const ref = useComposedRefs(rootRef, forwardedRef);
-  const { width = 0 } = useResizeDetector({ targetRef: rootRef });
-  const cols = useColumnCount(width, columnWidthPx, maxColumnWidthPx, columnGutterPx, columnCount, maxColumnCount);
-
-  const TileAdapter = useMemo(() => {
-    const Adapter = ({ data, index }: { data: Item; index: number }) => (
-      <div style={{ padding: `${rowGutterPx / 2}px ${columnGutterPx / 2}px` }}>
-        <Tile data={data} index={index} />
-      </div>
+    const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter } = useMasonryContext('Masonry.Content');
+    const columnCount = useColumnCount(
+      width - (scrollbar.thin.size + scrollbar.thin.padding),
+      columns,
+      maxColumns,
+      minColumnWidth,
+      maxColumnWidth,
+      gutter,
     );
-    Adapter.displayName = 'Masonry.TileAdapter';
-    return Adapter;
-  }, [Tile, rowGutterPx, columnGutterPx]);
 
-  return (
-    <div className={mx('relative h-full w-full', classNames)} {...props} ref={ref}>
-      {width > 0 && (
-        <div className='absolute inset-0'>
-          <VirtuosoMasonry
-            data={items}
-            columnCount={cols}
-            ItemContent={TileAdapter as any}
-            style={{ height: '100%' }}
-          />
-        </div>
-      )}
-    </div>
-  );
-};
+    const TileAdapter = useMemo(() => {
+      const Adapter = ({ data, index }: { data: any; index: number }) => {
+        return (
+          <div role='listitem' style={{ paddingBottom: `${gutter}rem` }}>
+            <Tile index={index} data={data} />
+          </div>
+        );
+      };
+      Adapter.displayName = 'Masonry.TileAdapter';
+      return Adapter;
+    }, [Tile, gutter]);
 
-const MasonryContent = forwardRef(MasonryContentImpl) as <Item>(
+    // TODO(burdon): Masonry currently doesn't support an external scroller.
+    //  https://github.com/petyosi/react-virtuoso/issues/1305
+    if (columns === 1) {
+      return <VirtuosoMasonry data={items} columnCount={1} ItemContent={TileAdapter} useWindowScroll />;
+    }
+
+    return (
+      <ScrollArea.Root {...composableProps(props, { role: 'none' })} thin padding ref={composedRef}>
+        <ScrollArea.Viewport asChild>
+          {width > 0 && (
+            <ComposableVirtuosoMasonry
+              style={{ gap: `${gutter}rem` }}
+              data={items}
+              columnCount={columnCount}
+              ItemContent={TileAdapter}
+            />
+          )}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    );
+  },
+);
+
+const ComposableVirtuosoMasonry = composable<HTMLDivElement, VirtuosoMasonryProps<any, any>>(({ ...props }) => {
+  return <VirtuosoMasonry {...props} />;
+});
+
+MasonryContentInner.displayName = 'Masonry.Content';
+
+const MasonryContent = MasonryContentInner as <Item>(
   props: MasonryContentProps<Item> & {
     ref?: Ref<HTMLDivElement | null>;
   },
 ) => JSX.Element;
 
-(MasonryContent as any).displayName = 'Masonry.Content';
+/** Compute column count from container width and column constraints. */
+const useColumnCount = (
+  width: number,
+  columns: number | undefined,
+  maxColumns: number | undefined,
+  minColumnWidth: number,
+  maxColumnWidth: number,
+  gutter: number,
+) => {
+  const remInPx = usePx(1);
+  return useMemo(() => {
+    if (columns != null) {
+      return columns;
+    }
+
+    const minColumnWidthPx = minColumnWidth * remInPx;
+    const maxColumnWidthPx = maxColumnWidth * remInPx;
+    const gutterPx = gutter * remInPx;
+
+    if (width <= 0 || minColumnWidthPx <= 0) {
+      return 1;
+    }
+
+    // Each tile has paddingRight: gutter, so every slot (including the last) occupies
+    // (colWidth + gutterPx). The container therefore fits floor(containerWidth / (colWidth + gutterPx)) columns.
+    let cols = Math.max(1, Math.floor(width / (minColumnWidthPx + gutterPx)));
+    if (maxColumnWidthPx > 0) {
+      const effectiveColWidth = width / cols - gutterPx;
+      if (effectiveColWidth > maxColumnWidthPx) {
+        // Try to add columns to keep cards below maxColumnWidth, but never violate minColumnWidth.
+        const maxCols = Math.ceil(width / (maxColumnWidthPx + gutterPx));
+        if (width / maxCols - gutterPx >= minColumnWidthPx) {
+          cols = maxCols;
+        }
+      }
+    }
+
+    const clamped = maxColumns != null ? Math.min(cols, maxColumns) : cols;
+    return Math.max(1, clamped);
+  }, [remInPx, width, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter]);
+};
 
 //
 // Masonry

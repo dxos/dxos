@@ -10,12 +10,20 @@ import { Obj } from '@dxos/echo';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { AccessToken } from '@dxos/types';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { InboxOperation } from '../../operations';
 import { type Mailbox } from '../../types';
 
-export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
+export type NewMailboxProps = {
+  mailbox: Mailbox.Mailbox;
+};
+
+/**
+ * Empty state for the mailbox: guides the user through connecting an integration or syncing.
+ */
+export const NewMailbox = composable<HTMLDivElement, NewMailboxProps>(({ mailbox, ...props }, forwardedRef) => {
   const db = Obj.getDatabase(mailbox);
   const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
   const { t } = useTranslation(meta.id);
@@ -51,7 +59,7 @@ export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
 
     if (hasAuthSurface) {
       return (
-        <div className='flex flex-col items-center gap-4 p-8'>
+        <div {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })} ref={forwardedRef}>
           <p className='text-description'>{t('no integrations label')}</p>
           <Surface.Surface role='integration--auth' data={authSurfaceData} limit={1} />
         </div>
@@ -59,7 +67,7 @@ export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
     }
 
     return (
-      <div className='flex flex-col items-center gap-4 p-8'>
+      <div {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })} ref={forwardedRef}>
         <p className='text-description'>{t('no integrations label')}</p>
         <Button onClick={openSpaceSettings}>{t('manage integrations button label')}</Button>
       </div>
@@ -67,11 +75,13 @@ export const MailboxEmpty = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
   }
 
   return (
-    <div className='flex flex-col items-center gap-4 p-8'>
+    <div {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })} ref={forwardedRef}>
       <p className='text-description'>{t('empty mailbox message')}</p>
       <Button onClick={handleSync} disabled={syncing}>
         {t('sync mailbox label')}
       </Button>
     </div>
   );
-};
+});
+
+NewMailbox.displayName = 'NewMailbox';

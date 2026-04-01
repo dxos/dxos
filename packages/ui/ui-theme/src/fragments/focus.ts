@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+// Remove and replace with direct `dx-focus-ring` classes.
 export const focusRing = 'dx-focus-ring';
 
 export const subduedFocus =

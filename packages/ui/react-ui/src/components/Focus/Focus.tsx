@@ -141,7 +141,7 @@ const Item = slottable<HTMLDivElement, ItemProps>(
     const Comp = asChild ? Slot : Primitive.div;
     // Tell tabster's groupper to ignore Enter so it doesn't move focus into the group.
     const focusableGroupAttrs = useFocusableGroup({ ignoreDefaultKeydown: { Enter: true } });
-    const { groupHasFocus } = useFocus();
+    useFocus();
     const [focused, setFocused] = useState(false);
 
     const handleClick = useCallback(
@@ -177,9 +177,9 @@ const Item = slottable<HTMLDivElement, ItemProps>(
       [onBlur],
     );
 
-    // When navigating (group has focus), only the focused item is current.
-    // When the group loses focus, fall back to the controlled `current` prop.
-    const isCurrent = groupHasFocus ? focused : (current ?? focused);
+    // Controlled `current` prop takes precedence (e.g., virtualized items that scroll back into view).
+    // Otherwise fall back to DOM focus state.
+    const isCurrent = current ?? focused;
 
     return (
       <Comp

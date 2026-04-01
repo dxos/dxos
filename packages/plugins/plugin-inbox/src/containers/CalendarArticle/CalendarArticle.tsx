@@ -16,9 +16,11 @@ import { useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
-import { CalendarEmpty, EventList } from '../../components';
+import { EventStack, type EventStackActionHandler } from '../../components';
 import { meta } from '../../meta';
 import { type Calendar } from '../../types';
+
+import { NewCalendar } from './NewCalendar';
 
 const byDate =
   (direction = -1) =>
@@ -32,7 +34,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
   const id = attendableId ?? Obj.getDXN(calendar).toString();
-  const selected = useSelected(id, 'single');
+  const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(calendar);
 
   // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
@@ -43,23 +45,31 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
     feed ? Query.select(Filter.type(Event.Event)).from(feed) : Query.select(Filter.nothing()),
   ).toSorted(byDate());
 
-  const handleSelect = useCallback(
-    (event: Event.Event) => {
-      void invokePromise(AttentionOperation.Select, {
-        contextId: id,
-        selection: { mode: 'single', id: event.id },
-      });
+  // TODO(burdon): Actual test should be if we have synced; not number of messages.
+  const isEmpty = objects.length === 0;
 
-      const companion = companionSegment('event');
-      if (layout.mode === 'simple') {
-        void invokePromise(LayoutOperation.UpdateComplementary, {
-          subject: companion,
-          state: 'expanded',
-        });
-      } else {
-        void invokePromise(DeckOperation.ChangeCompanion, {
-          companion,
-        });
+  const handleAction = useCallback<EventStackActionHandler>(
+    (action) => {
+      switch (action.type) {
+        case 'current': {
+          void invokePromise(AttentionOperation.Select, {
+            contextId: id,
+            selection: { mode: 'single', id: action.eventId },
+          });
+
+          const companion = companionSegment('event');
+          if (layout.mode === 'simple') {
+            void invokePromise(LayoutOperation.UpdateComplementary, {
+              subject: companion,
+              state: 'expanded',
+            });
+          } else {
+            void invokePromise(DeckOperation.ChangeCompanion, {
+              companion,
+            });
+          }
+          break;
+        }
       }
     },
     [id, invokePromise, layout.mode],
@@ -82,14 +92,18 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
-              <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
+              {!isEmpty && (
+                <>
+                  <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
+                </>
+              )}
             </Toolbar.Root>
           </Panel.Toolbar>
-          <Panel.Content>
-            {objects.length <= 0 ? (
-              <CalendarEmpty calendar={calendar} />
+          <Panel.Content asChild>
+            {isEmpty ? (
+              <NewCalendar calendar={calendar} />
             ) : (
-              <EventList events={objects} selected={selected} onSelect={handleSelect} />
+              <EventStack id={id} events={objects} currentId={currentId} onAction={handleAction} />
             )}
           </Panel.Content>
         </Panel.Root>
