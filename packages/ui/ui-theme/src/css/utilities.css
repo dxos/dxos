@@ -52,8 +52,16 @@
 }
 
 /**
- * Pseudo-element overlay scaffold for focus/current ring indicators.
- * Creates an `::after` overlay that can be styled with `after:ring-*` variants.
+ * Pseudo-element overlay for ring indicators (focus, current, etc.).
+ *
+ * A standard CSS `box-shadow` ring is painted behind child content, so children with
+ * opaque backgrounds (e.g., cards, avatars) obscure it. By painting the ring on an
+ * absolutely-positioned `::after` pseudo-element that sits above the element's children
+ * in stacking order, the ring is always visible regardless of child backgrounds.
+ *
+ * The pseudo-element inherits `border-radius` from its parent and is `pointer-events-none`
+ * so it doesn't interfere with interactions. The ring starts transparent; consumers
+ * activate it conditionally (e.g., `focus:after:ring-*`, `aria-[current=true]:after:ring-*`).
  */
 @utility dx-ring-pseudo {
   @apply relative after:content-[""] after:absolute after:inset-0 after:rounded-[inherit]
