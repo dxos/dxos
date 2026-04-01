@@ -15,10 +15,9 @@
   }
 
   .dx-current {
-    @apply relative after:content-[""] after:absolute after:inset-0 after:rounded-[inherit]
-      after:pointer-events-none after:ring after:ring-inset after:ring-transparent
+    @apply dx-focus-pseudo
       aria-[current=true]:bg-highlight-surface aria-[current=true]:text-highlight-surface-text
-      aria-[current=true]:after:ring-active-separator;
+      aria-[current=true]:after:ring-active-separator!;
   }
 
   .dx-selected {
