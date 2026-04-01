@@ -66,7 +66,7 @@ export class OnboardingManager {
     this._invokePromise = invokePromise;
     this._client = client;
     this._hubUrl = hubUrl;
-    this._skipAuth = ['main', 'labs'].includes(client.config.values.runtime?.app?.env?.DX_ENVIRONMENT) || !this._hubUrl;
+    this._skipAuth = !this._hubUrl;
     this._token = token;
     this._tokenType = tokenType;
     this._recoverIdentity = recoverIdentity || false;
