@@ -7,6 +7,8 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
+import { type Context as OtelContext, propagation } from '@opentelemetry/api';
+
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -44,6 +46,7 @@ import {
   type QueryRequest as QueryRequestProto,
   type QueryResponse as QueryResponseProto,
 } from '@dxos/protocols/proto/dxos/echo/query';
+import { TRACE_PROCESSOR, TRACE_SPAN_ATTRIBUTE } from '@dxos/tracing';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -449,6 +452,8 @@ export class EdgeHttpClient {
     const shouldRetry = createRetryHandler(args);
     log('fetch', { url, request: args.body });
 
+    const traceHeaders = getTraceHeaders(ctx);
+
     let handledAuth = false;
     const tryCount = 1;
     while (true) {
@@ -461,7 +466,7 @@ export class EdgeHttpClient {
           }
         }
 
-        const request = createRequest(args, this._authHeader);
+        const request = createRequest(args, this._authHeader, traceHeaders);
         log('call edge', { url, tryCount, authHeader: !!this._authHeader });
         const response = await fetch(url, request);
 
@@ -519,6 +524,7 @@ export class EdgeHttpClient {
 const createRequest = (
   { method, body, json = true }: EdgeHttpRequestArgs,
   authHeader: string | undefined,
+  traceHeaders?: Record<string, string>,
 ): RequestInit => {
   let requestBody: BodyInit | undefined;
   const headers: HeadersInit = {};
@@ -538,11 +544,34 @@ const createRequest = (
     headers['Authorization'] = authHeader;
   }
 
+  if (traceHeaders) {
+    Object.assign(headers, traceHeaders);
+  }
+
   return {
     method,
     body: requestBody,
     headers,
   };
+};
+
+/**
+ * Extract W3C Trace Context headers (traceparent/tracestate) from a DXOS Context.
+ */
+const getTraceHeaders = (ctx: Context): Record<string, string> | undefined => {
+  const spanId = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE);
+  const otlpContext =
+    typeof spanId === 'number'
+      ? (TRACE_PROCESSOR.remoteTracing.getSpanContext(spanId) as OtelContext | undefined)
+      : undefined;
+
+  if (!otlpContext) {
+    return undefined;
+  }
+
+  const headers: Record<string, string> = {};
+  propagation.inject(otlpContext, headers);
+  return Object.keys(headers).length > 0 ? headers : undefined;
 };
 
 /**

@@ -135,13 +135,13 @@ These areas are properly wired:
 
 ## Recommendations for follow-up
 
-1. **P0: Inject trace headers in `EdgeHttpClient._call` `fetch` requests.** This is the biggest gap — all HTTP-based EDGE interactions have no trace propagation. Also add EDGE URLs to the fetch auto-instrumentation `ignoreUrls` to prevent the auto-instrumentation from overwriting manually injected headers.
+1. ~~**P0: Inject trace headers in `EdgeHttpClient._call` `fetch` requests.**~~ **RESOLVED** — `_call` now extracts the OTEL context from the DXOS `ctx` via `getTraceHeaders()` and injects `traceparent`/`tracestate` as HTTP headers on every fetch request. EDGE URLs are also added to the fetch auto-instrumentation `ignoreUrls` (derived from `config.runtime.services.edge.url`) to prevent the auto-instrumentation from overwriting manually injected headers.
 
 2. ~~**P1: Fix `ServiceContext._acceptIdentity` to use `this._ctx` instead of `new Context()`.**~~ **RESOLVED** — Changed to `this._ctx`.
 
 3. ~~**P1: Forward `ctx` to `EchoHost.openSpaceRoot` `loadDoc` call** instead of `Context.default()`.~~ **RESOLVED** — Added `ctx` parameter to `openSpaceRoot` and `createSpaceRoot`; all callers updated. Also fixed `DataSpace._onNewAutomergeRoot` to pass `this._ctx` instead of `Context.default()` to `loadDoc`.
 
-4. **P2: Evaluate `AutomergeHost.flush(ctx)` — either use ctx for cancellation or remove the parameter** to avoid confusion.
+4. ~~**P2: Evaluate `AutomergeHost.flush(ctx)` — either use ctx for cancellation or remove the parameter.**~~ **RESOLVED** — `ctx` is consumed by the `@trace.span()` decorator which creates a child span from it. The parameter is required for correct trace hierarchy even though the method body doesn't reference `ctx` directly.
 
 5. **P3: Clean up unused `_ctx` parameters** (`Connection.signal`, `SignalClient.join/leave/sendMessage`) — either wire them or rename to `_` to signal intentional non-use.
 

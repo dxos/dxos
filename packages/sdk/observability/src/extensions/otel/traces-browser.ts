@@ -86,20 +86,9 @@ export class OtelTraces {
     registerInstrumentations({
       instrumentations: [
         getWebAutoInstrumentations({
-          '@opentelemetry/instrumentation-fetch': {
-            ignoreUrls: [
-              /localhost/,
-              /api\.ipdata\.co/,
-              /ingest\..*\.signoz\.cloud/,
-              /\.hot-update\./,
-              /\/@vite\//,
-              /\/node_modules\/.vite\//,
-            ],
-          },
+          '@opentelemetry/instrumentation-fetch': { enabled: false },
           '@opentelemetry/instrumentation-document-load': { enabled: false },
-          '@opentelemetry/instrumentation-xml-http-request': {
-            ignoreUrls: [/ingest\..*\.signoz\.cloud/],
-          },
+          '@opentelemetry/instrumentation-xml-http-request': { enabled: false },
         }),
       ],
     });
