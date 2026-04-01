@@ -6,24 +6,16 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  LayoutOperation,
-  getPersonalSpace,
-  getSpacePath,
-  isPersonalSpace,
-  setPersonalSpace,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getPersonalSpace, getSpacePath, setPersonalSpace } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
-import { SPACE_ID_LENGTH, SpaceState, parseId } from '@dxos/react-client/echo';
+import { type Space, SPACE_ID_LENGTH, SpaceState, parseId } from '@dxos/react-client/echo';
 import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
@@ -36,6 +28,34 @@ const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
 
 // E.g., dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
 const ECHO_DXN_LENGTH = 3 + 1 + 4 + 1 + 33 + 1 + 26;
+
+/**
+ * Resolve the personal space, migrating from legacy DefaultSpace credential if needed.
+ * Returns undefined for new users who haven't created an identity yet.
+ */
+const resolvePersonalSpace = (client: {
+  spaces: { get(): Space[]; get(id: any): Space | undefined };
+  halo: { queryCredentials(options: { type: string }): any[] };
+}): Space | undefined => {
+  // Check for personal space via tags or __DEFAULT__ property.
+  const found = getPersonalSpace(client);
+  if (found) {
+    return found;
+  }
+
+  // Migration: read the legacy DefaultSpace credential from HALO.
+  const defaultSpaceCredential = client.halo.queryCredentials({
+    type: 'dxos.halo.credentials.DefaultSpace',
+  })[0];
+  if (!defaultSpaceCredential) {
+    // New user — no credential, no personal space yet.
+    return undefined;
+  }
+
+  const defaultSpaceId = defaultSpaceCredential.subject.assertion.spaceId;
+  const space = client.spaces.get(defaultSpaceId);
+  return space;
+};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -51,47 +71,64 @@ export default Capability.makeModule(
     const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
     const client = yield* Capability.get(ClientCapabilities.Client);
 
-    // Resolve the personal space.
-    // For existing users: the DefaultSpace HALO credential identifies the space; tag it if needed.
-    // For new users: identity-created already tagged the space via setPersonalSpace().
-    let personalSpace = getPersonalSpace(client);
-    if (!personalSpace) {
-      // Migration: read the legacy DefaultSpace credential from HALO.
-      const defaultSpaceCredential = client.halo.queryCredentials({
-        type: 'dxos.halo.credentials.DefaultSpace',
-      })[0];
-      invariant(defaultSpaceCredential, 'Personal space not available.');
-      const defaultSpaceId = defaultSpaceCredential.subject.assertion.spaceId;
-      personalSpace = client.spaces.get(defaultSpaceId);
-      invariant(personalSpace, 'Personal space not available.');
-      yield* Effect.tryPromise(() => personalSpace!.waitUntilReady());
+    //
+    // Personal space initialization — deferred until found.
+    //
+
+    let personalSpaceInitialized = false;
+    const initializePersonalSpace = async (personalSpace: Space) => {
+      if (personalSpaceInitialized) {
+        return;
+      }
+      personalSpaceInitialized = true;
+
+      await personalSpace.waitUntilReady();
+
+      // Ensure the personal space has the __DEFAULT__ property set (migration for legacy users).
       setPersonalSpace(personalSpace);
+
+      // Check if deck state indicates we should switch to default space.
+      const layout = registry.get(layoutAtom);
+      if (layout.workspace === 'default') {
+        await invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(personalSpace.id) }).pipe(
+          Effect.runPromise,
+        );
+      }
+
+      // Initialize space sharing lock in personal space.
+      if (typeof personalSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
+        Obj.change(personalSpace.properties, (obj) => {
+          obj[COMPOSER_SPACE_LOCK] = true;
+        });
+      }
+
+      const queryResults = await personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run();
+      const spacesOrder = queryResults[0];
+      if (!spacesOrder) {
+        // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
+        //  Instead, we store order as an array of space ids.
+        personalSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
+      }
+    };
+
+    // Try to find the personal space now, or subscribe to find it later.
+    const found = resolvePersonalSpace(client);
+    if (found) {
+      yield* Effect.tryPromise(() => initializePersonalSpace(found));
     } else {
-      yield* Effect.tryPromise(() => personalSpace!.waitUntilReady());
+      subscriptions.add(
+        client.spaces.subscribe((spaces) => {
+          const found = resolvePersonalSpace(client);
+          if (found) {
+            void initializePersonalSpace(found);
+          }
+        }).unsubscribe,
+      );
     }
 
-    // Check if deck state indicates we should switch to default space.
-    const layout = registry.get(layoutAtom);
-    if (layout.workspace === 'default') {
-      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(personalSpace.id) });
-    }
-
-    // Initialize space sharing lock in personal space.
-    if (typeof personalSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
-      Obj.change(personalSpace.properties, (obj) => {
-        obj[COMPOSER_SPACE_LOCK] = true;
-      });
-    }
-
-    const queryResults = yield* Effect.tryPromise(() =>
-      personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run(),
-    );
-    const spacesOrder = queryResults[0];
-    if (!spacesOrder) {
-      // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
-      //  Instead, we store order as an array of space ids.
-      personalSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
-    }
+    //
+    // Space subscriptions — set up immediately, do not depend on personal space.
+    //
 
     // Await missing objects - subscribe to layout atom changes.
     // NOTE: Use immediate: true to check initial state (URL handler may have already set active).
@@ -133,6 +170,7 @@ export default Capability.makeModule(
     subscriptions.add(
       client.spaces.subscribe(async (spaces) => {
         // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
+        const personalSpace = getPersonalSpace(client);
         if (personalSpace && personalSpace.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
           await personalSpace.internal.migrate();
         }

@@ -221,6 +221,7 @@ export const createAdmissionCredentials = async (
   membershipChainHeads: PublicKey[] = [],
   profile?: ProfileDocument,
   invitationCredentialId?: PublicKey,
+  tags?: string[],
 ): Promise<FeedMessage.Payload[]> => {
   const credentials = await Promise.all([
     await signer.createCredential({
@@ -233,6 +234,7 @@ export const createAdmissionCredentials = async (
         profile,
         genesisFeedKey,
         invitationCredentialId,
+        tags: tags ?? [],
       },
     }),
   ]);

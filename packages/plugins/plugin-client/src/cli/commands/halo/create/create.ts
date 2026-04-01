@@ -40,9 +40,8 @@ export const handler = Effect.fn(function* ({
   }
 
   // Create personal space for the CLI identity.
-  // TODO: Use space tags to mark as personal space.
   const { setPersonalSpace } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
-  const space = yield* Effect.promise(() => client.spaces.create());
+  const space = yield* Effect.promise(() => client.spaces.create({}, { tags: ['personal'] }));
   yield* Effect.promise(() => space.waitUntilReady());
   setPersonalSpace(space);
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
