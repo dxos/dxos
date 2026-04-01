@@ -39,9 +39,12 @@ export const handler = Effect.fn(function* ({
     yield* invoke(ClientOperation.CreateAgent);
   }
 
-  yield* Effect.promise(() => client.spaces.waitUntilReady());
-  yield* Effect.promise(() => client.spaces.default.waitUntilReady());
-  const space = client.spaces.default;
+  // Create personal space for the CLI identity.
+  // TODO: Use space tags to mark as personal space.
+  const { setPersonalSpace } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
+  const space = yield* Effect.promise(() => client.spaces.create());
+  yield* Effect.promise(() => space.waitUntilReady());
+  setPersonalSpace(space);
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
 
   if (json) {

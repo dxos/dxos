@@ -6251,6 +6251,9 @@ importers:
 
   packages/devtools/cli-util:
     dependencies:
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -14083,6 +14086,9 @@ importers:
       '@dxos/blueprints':
         specifier: workspace:*
         version: link:../../core/blueprints
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../client
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo

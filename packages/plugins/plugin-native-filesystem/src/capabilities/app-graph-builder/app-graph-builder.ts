@@ -11,7 +11,8 @@ import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { getPersonalSpace } from '@dxos/app-toolkit';
 import { SHARED } from '@dxos/plugin-space/types';
 import { Expando, Text } from '@dxos/schema';
 
@@ -130,16 +131,15 @@ export default Capability.makeModule(
 
           const state: NativeFilesystemState = get(stateAtom);
           const client = capabilities.get(ClientCapabilities.Client);
-          const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
-          const isReady = get(isReadyAtom);
+          const personalSpace = getPersonalSpace(client);
 
-          if (!state.workspaces.length || !isReady) {
+          if (!state.workspaces.length || !personalSpace) {
             return Effect.succeed([]);
           }
 
           let spacesOrder: Obj.Any | undefined;
           let orderMap = new Map<string, number>();
-          const [order] = get(AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })));
+          const [order] = get(AtomQuery.make(personalSpace.db, Filter.type(Expando.Expando, { key: SHARED })));
           if (order) {
             const snapshot = get(AtomObj.make(order)) as { order?: string[] } | undefined;
             const orderArray: string[] = snapshot?.order ?? [];

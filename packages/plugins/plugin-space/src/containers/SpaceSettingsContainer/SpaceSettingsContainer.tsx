@@ -17,8 +17,9 @@ import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
 import { meta } from '../../meta';
-import { SpaceCapabilities, SpaceForm } from '../../types';
 import { SpaceOperation } from '../../operations';
+import { SpaceCapabilities, SpaceForm } from '../../types';
+import { getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
 
 const SpaceFormSchema = SpaceForm.pipe(
   Schema.extend(
@@ -78,9 +79,12 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
       if (changed['archived']) {
         if (newValues.archived && !archived) {
           void invokePromise(SpaceOperation.Close, { space });
-          void invokePromise(LayoutOperation.SwitchWorkspace, {
-            subject: getSpacePath(client.spaces.default.id),
-          });
+          const personalSpace = getPersonalSpace(client);
+          if (personalSpace) {
+            void invokePromise(LayoutOperation.SwitchWorkspace, {
+              subject: getSpacePath(personalSpace.id),
+            });
+          }
         } else if (!newValues.archived && archived) {
           void invokePromise(SpaceOperation.Open, { space });
         }
@@ -154,7 +158,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         return (
           <Settings.ItemInput title={label} description={t('archive space description')}>
             <Button
-              disabled={space === client.spaces.default}
+              disabled={isPersonalSpace(space)}
               variant={getValue() ? 'default' : 'destructive'}
               onClick={handleChange}
             >
@@ -164,7 +168,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         );
       },
     }),
-    [t, space, client],
+    [t, space],
   );
 
   const download = useFileDownload();
@@ -175,7 +179,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
 
   const repairs = useCapabilities(SpaceCapabilities.Repair);
   const handleRepair = useCallback(async () => {
-    await Promise.all(repairs.map((repair) => repair({ space, isDefault: client.spaces.default === space })));
+    await Promise.all(repairs.map((repair) => repair({ space, isDefault: isPersonalSpace(space) })));
   }, [client, space, repairs]);
 
   return (

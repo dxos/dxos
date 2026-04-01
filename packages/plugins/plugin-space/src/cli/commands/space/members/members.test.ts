@@ -31,16 +31,18 @@ describe('space members', () => {
       // name might be undefined if identity has no displayName
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 
-  it('should list default space members when spaceId is not provided', () =>
+  it('should list space members when spaceId is provided explicitly', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
-      yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
-      yield* handler({ spaceId: Option.none() });
+      const space = yield* Effect.tryPromise(() => client.spaces.create());
+      yield* Effect.tryPromise(() => space.waitUntilReady());
+      yield* handler({ spaceId: Option.some(space.id) });
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);
       const parsed = TestConsole.parseJson<Array<{ key: string; presence: string }>>(logs[0]);
       expect(Array.isArray(parsed)).toBe(true);
+      expect(parsed.length).toBeGreaterThan(0);
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });

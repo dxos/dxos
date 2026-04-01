@@ -9,7 +9,7 @@ import React, { useCallback, useState } from 'react';
 import { Annotation, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
-import { useClient } from '@dxos/react-client';
+import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -84,8 +84,8 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   ...props
 }: DefaultStoryProps<T>) => {
   const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
-  const client = useClient();
-  const space = client.spaces.default;
+  const spaces = useSpaces();
+  const space = spaces[0];
 
   const handleSave = useCallback<NonNullable<FormRootProps<T>['onSave']>>((values) => {
     log.info('save', { values, meta });
@@ -133,8 +133,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       types: [Tag.Tag, Organization, Person],
-      onCreateIdentity: ({ client }) => {
-        const space = client.spaces.default;
+      onCreateSpace: ({ space }) => {
         [
           ...Array.from({ length: 3 }).map((_, i) => Obj.make(Tag.Tag, { label: `Tag ${i}` })),
           ...Array.from({ length: 50 }).map((_, i) => Obj.make(Organization, { name: `Organization ${i}` })),

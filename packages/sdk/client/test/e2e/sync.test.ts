@@ -45,8 +45,11 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
     await client.initialize();
     await client.halo.createIdentity();
 
+    const space = await client.spaces.create();
+    await space.waitUntilReady();
+
     log.info('client initialized', {
-      spaceId: client.spaces.default.id,
+      spaceId: space.id,
     });
 
     setInterval(async () => {
@@ -59,31 +62,26 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
       );
     }, 2000);
 
-    await client.spaces.default.waitUntilReady();
-    await client.spaces.default.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
+    await space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
     console.log('\n### Creating object');
-    const obj = client.spaces.default.db.add(Obj.make(TestSchema.Expando, { counter: 1 }));
+    const obj = space.db.add(Obj.make(TestSchema.Expando, { counter: 1 }));
     const dxn = Obj.getDXN(obj);
-    await waitForSync(client.spaces.default.db);
+    await waitForSync(space.db);
 
     for (let i = 0; i < ITERATIONS; i++) {
       console.log('\n### Iteration', i);
-      const obj = await client.spaces.default.db.makeRef(dxn).load();
+      const obj = await space.db.makeRef(dxn).load();
       for (let j = 0; j < BURST_SIZE; j++) {
         obj.counter++;
         await sleep(20);
       }
-      await client.spaces.default.db.flush();
-      await waitForSync(client.spaces.default.db); // its likely that this could miss the mutation and stil report that the sync has completed
+      await space.db.flush();
+      await waitForSync(space.db); // its likely that this could miss the mutation and stil report that the sync has completed
 
       if (RESTART_CLIENT) {
         await client.destroy();
         await client.initialize();
-        if (!client.spaces.isReady.get()) {
-          await client.spaces.isReady.wait();
-        }
-        await client.spaces.default.waitUntilReady();
       }
     }
   });

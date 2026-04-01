@@ -12,6 +12,7 @@ import { createSignal } from 'solid-js';
 import { AiService, DEFAULT_EDGE_MODEL, DEFAULT_LMSTUDIO_MODEL, DEFAULT_OLLAMA_MODEL, ModelName } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { getPersonalSpace } from '@dxos/app-toolkit';
 import { type AiConversation } from '@dxos/assistant';
 import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -95,11 +96,7 @@ export const chat = Command.make(
       const [conversation, setConversation] = createSignal<AiConversation | undefined>(undefined);
 
       invariant(client.halo.identity);
-      const space = yield* Effect.promise(async () => {
-        // TODO(burdon): Hangs if identity is not ready.
-        await client.spaces.waitUntilReady();
-        return client.spaces.default;
-      });
+      const space = getPersonalSpace(client) ?? client.spaces.get()[0];
 
       const handleChatLoad = async () => {
         const chats = await space.db.query(Filter.type(Assistant.Chat)).run();

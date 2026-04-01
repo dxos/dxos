@@ -9,6 +9,7 @@ import { useMemo } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { type Key } from '@dxos/echo';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { getPersonalSpace } from '@dxos/app-toolkit';
 import { useClient } from '@dxos/react-client';
 
 import { type AiChatServices } from '../processor';
@@ -25,10 +26,13 @@ export const useChatServices = ({
   id,
 }: UseChatServicesProps): (() => Promise<Runtime.Runtime<AiChatServices>>) | undefined => {
   const client = useClient();
-  id ??= client.spaces.default.id;
+  id ??= getPersonalSpace(client)?.id;
 
   const runtimeResolver = useCapability(AutomationCapabilities.ComputeRuntime);
   return useMemo(() => {
+    if (!id) {
+      return undefined;
+    }
     const runtime = runtimeResolver.getRuntime(id);
     return () => runtime.runPromise(Effect.runtime<AiChatServices>());
   }, [id]);

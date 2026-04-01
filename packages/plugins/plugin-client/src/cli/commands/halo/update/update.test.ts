@@ -16,7 +16,6 @@ describe('halo update', () => {
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
-      yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
       yield* handler({ displayName: 'Updated Name' });
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;

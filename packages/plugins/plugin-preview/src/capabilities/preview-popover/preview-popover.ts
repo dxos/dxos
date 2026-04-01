@@ -52,7 +52,7 @@ export default Capability.makeModule(
       const [layoutAtom] = capabilities.getAll(AppCapabilities.Layout);
       const layout = registry.get(layoutAtom);
       const spaceId = getSpaceIdFromPath(layout.workspace);
-      const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
+      const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.get()[0];
       const result = await handlePreviewLookup(client, space, { dxn, label });
       if (!result) {
         return;

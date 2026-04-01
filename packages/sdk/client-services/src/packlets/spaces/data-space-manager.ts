@@ -3,7 +3,7 @@
 //
 
 import { type Doc } from '@automerge/automerge';
-import { type AutomergeUrl, type DocHandle, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
+import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
 import { SpaceProperties } from '@dxos/client-protocol';
@@ -16,7 +16,6 @@ import {
   getCredentialAssertion,
 } from '@dxos/credentials';
 import { Type } from '@dxos/echo';
-import { getSchemaDXN } from '@dxos/echo/internal';
 import {
   AuthStatus,
   CredentialServerExtension,
@@ -31,18 +30,12 @@ import {
   type SpaceProtocolSession,
   findInlineObjectOfType,
 } from '@dxos/echo-pipeline';
-import {
-  type DatabaseDirectory,
-  EncodedReference,
-  type ObjectStructure,
-  SpaceDocVersion,
-  createIdFromSpaceKey,
-} from '@dxos/echo-protocol';
+import { type DatabaseDirectory, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import type { EdgeConnection, EdgeHttpClient } from '@dxos/edge-client';
 import { type FeedStore, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
-import { ObjectId, PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
@@ -56,7 +49,7 @@ import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { type Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, deferFunction, forEachAsync, setDeep } from '@dxos/util';
+import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
 
 import { createAuthProvider } from '../identity';
 import { type InvitationsManager } from '../invitations';
@@ -66,9 +59,6 @@ import { spaceGenesis } from './genesis';
 
 const PRESENCE_ANNOUNCE_INTERVAL = 10_000;
 const PRESENCE_OFFLINE_TIMEOUT = 20_000;
-
-// Space properties key for default metadata.
-const DEFAULT_SPACE_KEY = '__DEFAULT__';
 
 export interface SigningContext {
   identityKey: PublicKey;
@@ -348,68 +338,6 @@ export class DataSpaceManager extends Resource {
 
     this.updated.emit();
     return space;
-  }
-
-  async isDefaultSpace(space: DataSpace): Promise<boolean> {
-    if (!space.databaseRoot) {
-      return false;
-    }
-    switch (space.databaseRoot.getVersion()) {
-      case SpaceDocVersion.CURRENT: {
-        if (!space.databaseRoot.handle.isReady()) {
-          log.warn('waiting for space root to be ready', { spaceId: space.id });
-          await space.databaseRoot.handle.whenReady();
-        }
-
-        const [_, properties] =
-          findInlineObjectOfType(space.databaseRoot.doc()!, Type.getTypename(SpaceProperties)) ?? [];
-        return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
-      }
-
-      case SpaceDocVersion.LEGACY: {
-        throw new Error('Legacy space version is not supported');
-      }
-
-      default:
-        log.warn('unknown space version', { version: space.databaseRoot.getVersion(), spaceId: space.id });
-        return false;
-    }
-  }
-
-  async createDefaultSpace(): Promise<DataSpace> {
-    const space = await this.createSpace();
-    const document = await this._getSpaceRootDocument(space);
-
-    // TODO(dmaretskyi): Better API for low-level data access.
-    const properties: ObjectStructure = {
-      system: {
-        type: EncodedReference.fromDXN(getSchemaDXN(SpaceProperties)!),
-      },
-      data: {
-        [DEFAULT_SPACE_KEY]: this._signingContext.identityKey.toHex(),
-      },
-      meta: {
-        keys: [],
-      },
-    };
-
-    const propertiesId = ObjectId.random();
-    document.change((doc: DatabaseDirectory) => {
-      setDeep(doc, ['objects', propertiesId], properties);
-    });
-
-    await this._echoHost.flush();
-    return space;
-  }
-
-  private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<DatabaseDirectory>> {
-    const automergeIndex = space.automergeSpaceState.rootUrl;
-    invariant(automergeIndex);
-    const document = await this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), automergeIndex as any, {
-      fetchFromNetwork: true,
-    });
-    await document.whenReady();
-    return document;
   }
 
   // TODO(burdon): Rename join space.

@@ -34,7 +34,7 @@ const meta: Meta<typeof NotebookContainer> = {
   component: NotebookContainer,
   render: (args) => {
     const client = useClient();
-    const space = client.spaces.default;
+    const space = client.spaces.get()[0];
     const notebooks = useQuery(space?.db, Filter.type(Notebook.Notebook));
     return <NotebookContainer {...args} subject={notebooks[0]} attendableId='test' />;
   },

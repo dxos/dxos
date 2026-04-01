@@ -16,6 +16,7 @@ import { Operation, type OperationInvoker } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { DECK_COMPANION_TYPE, PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
+import { getPersonalSpace } from '@dxos/app-toolkit';
 import { getActiveSpace } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Query } from '@dxos/react-client/echo';
@@ -64,7 +65,10 @@ export default Capability.makeModule(
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
                 const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-                const space = getActiveSpace(capabilities) ?? client.spaces.default;
+                const space = getActiveSpace(capabilities) ?? getPersonalSpace(client);
+                if (!space) {
+                  return;
+                }
                 const chat = yield* Effect.tryPromise(() => getOrCreateChat(operationInvoker.invokePromise, space.db));
                 if (!chat) {
                   return;
@@ -93,7 +97,10 @@ export default Capability.makeModule(
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
-                const space = getActiveSpace(capabilities) ?? client.spaces.default;
+                const space = getActiveSpace(capabilities) ?? getPersonalSpace(client);
+                if (!space) {
+                  return;
+                }
                 const blueprints = yield* Effect.tryPromise(() =>
                   space.db.query(Query.type(Blueprint.Blueprint)).run(),
                 );

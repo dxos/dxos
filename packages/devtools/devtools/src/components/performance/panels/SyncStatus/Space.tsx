@@ -26,7 +26,7 @@ export const SpaceRowContainer = ({ spaceId, state }: SpaceRowContainerProps) =>
     return null;
   }
 
-  const spaceName = getSpaceDisplayName(space, { personal: space === client.spaces.default });
+  const spaceName = getSpaceDisplayName(space, { personal: space === client.spaces.get()[0] });
 
   return <SpaceRow spaceId={spaceId} spaceName={spaceName} state={state} />;
 };

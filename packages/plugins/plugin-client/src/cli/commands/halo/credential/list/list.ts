@@ -9,7 +9,7 @@ import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { CommandConfig, Common, FormBuilder, getSpace, printList, spaceIdWithDefault } from '@dxos/cli-util';
+import { CommandConfig, Common, FormBuilder, getSpace, printList } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import type { Credential } from '@dxos/client/halo';
 import { type Key } from '@dxos/echo';
@@ -47,14 +47,11 @@ export const handler = Effect.fn(function* ({
 }) {
   const { json } = yield* CommandConfig;
   const client = yield* ClientService;
-  yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
-
   let credentials: Credential[];
 
-  const resolvedSpaceId = yield* spaceIdWithDefault(spaceId as Option.Option<Key.SpaceId>);
   if (Option.isSome(spaceId)) {
-    // If space ID was provided, get credentials from that space
-    const space = yield* getSpace(resolvedSpaceId);
+    // If space ID was provided, get credentials from that space.
+    const space = yield* getSpace(spaceId.value as Key.SpaceId);
     credentials = yield* Effect.tryPromise(() => space.internal.getCredentials());
   } else {
     // Get credentials from HALO

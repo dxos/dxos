@@ -297,7 +297,7 @@ export class AgentManagerClient implements AgentHostingProviderClient {
   }
 
   public async _queryCredentials(type?: string, predicate?: (value: Credential) => boolean): Promise<Credential[]> {
-    // assumes all credentials are already loaded. should client.spaces.waitUntilReady()?
+    // Assumes all credentials are already loaded.
     const haloCredentials = this._halo.credentials.get();
 
     return haloCredentials.filter((cred) => {

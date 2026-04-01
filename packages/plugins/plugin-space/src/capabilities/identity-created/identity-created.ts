@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { setPersonalSpace } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
@@ -13,13 +14,13 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* Capability.get(ClientCapabilities.Client);
-    yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
 
-    const defaultSpace = client.spaces.default;
-    yield* Effect.tryPromise(() => defaultSpace.waitUntilReady());
+    const personalSpace = yield* Effect.tryPromise(() => client.spaces.create());
+    yield* Effect.tryPromise(() => personalSpace.waitUntilReady());
 
-    // Create root collection structure.
-    Obj.change(defaultSpace.properties, (properties) => {
+    // Flag as personal space and create root collection structure.
+    setPersonalSpace(personalSpace);
+    Obj.change(personalSpace.properties, (properties) => {
       properties[Collection.Collection.typename] = Ref.make(Collection.make());
       if (Migrations.versionProperty) {
         properties[Migrations.versionProperty] = Migrations.targetVersion;

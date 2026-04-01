@@ -44,9 +44,10 @@ export default Capability.makeModule(
       });
     });
 
-    // TODO(burdon): The callback isn't called?
-    const subscription = client.spaces.isReady.subscribe(async (ready) => {
-      if (ready) {
+    let spacesReadyFired = false;
+    const subscription = client.spaces.subscribe(async () => {
+      if (!spacesReadyFired) {
+        spacesReadyFired = true;
         await Effect.gen(function* () {
           yield* Plugin.activate(ClientEvents.SpacesReady);
           if (onSpacesReady) {

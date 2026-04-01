@@ -158,7 +158,7 @@ describe('Index queries', () => {
     {
       const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
       onTestFinished(() => client.destroy());
-      await asyncTimeout(client.spaces.waitUntilReady(), 5000);
+      await expect.poll(() => client.spaces.get(spaceKey), { timeout: 5000 }).toBeTruthy();
       const space = client.spaces.get(spaceKey)!;
       await space.waitUntilReady();
 
@@ -192,7 +192,7 @@ describe('Index queries', () => {
     {
       const client = await initClient(builder.createLocalClientServices({ sqlitePath }));
       onTestFinished(() => client.destroy());
-      await asyncTimeout(client.spaces.waitUntilReady(), TIMEOUT);
+      await expect.poll(() => client.spaces.get(spaceKey), { timeout: TIMEOUT }).toBeTruthy();
       const space = client.spaces.get(spaceKey)!;
       await asyncTimeout(space.waitUntilReady(), TIMEOUT);
 

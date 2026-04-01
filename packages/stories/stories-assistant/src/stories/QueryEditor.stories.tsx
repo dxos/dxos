@@ -71,7 +71,7 @@ const meta: Meta<typeof QueryEditor> = {
       types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
       createIdentity: true,
       onCreateIdentity: async ({ client }) => {
-        const space = client.spaces.default;
+        const space = client.spaces.get()[0];
         const createObjects = createObjectFactory(space.db, generator);
         const objects = await createObjects([
           { type: Organization.Organization, count: 30 },

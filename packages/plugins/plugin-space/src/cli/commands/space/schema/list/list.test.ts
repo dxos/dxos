@@ -27,12 +27,13 @@ describe('space schema list', () => {
       expect(Array.isArray(parsed)).toBe(true);
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 
-  it('should list default space schemas when spaceId is not provided', () =>
+  it('should list space schemas when spaceId is provided explicitly', () =>
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
-      yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
-      yield* handler({ spaceId: Option.none(), typename: Option.none() });
+      const space = yield* Effect.tryPromise(() => client.spaces.create());
+      yield* Effect.tryPromise(() => space.waitUntilReady());
+      yield* handler({ spaceId: Option.some(space.id), typename: Option.none() });
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;
       expect(logs).toHaveLength(1);

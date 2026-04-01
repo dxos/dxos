@@ -116,12 +116,8 @@ const buildPluginManagerOptions = ({
           }
 
           yield* Effect.promise(() => client.halo.createIdentity());
-          yield* Effect.promise(() => client.spaces.waitUntilReady());
 
-          const space = client.spaces.default;
-          // TODO(burdon): Should not require this.
-          //  ERROR: invariant violation: Database was not initialized with root object.
-          // TODO(burdon): onSpacesReady is never called.
+          const space = yield* Effect.promise(() => client.spaces.create());
           yield* Effect.promise(() => space.waitUntilReady());
 
           // Add tokens.
@@ -288,7 +284,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const space = client.spaces.default;
+      const space = client.spaces.get()[0];
 
       // Ensure workspace is set.
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });

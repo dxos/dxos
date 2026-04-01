@@ -78,7 +78,6 @@ export class EdgeReplicant {
     invariant(this._client, 'no client');
     const identity = await this._client.halo.createIdentity();
     this._identity = identity;
-    await this._client.spaces.waitUntilReady();
     return identity;
   }
 

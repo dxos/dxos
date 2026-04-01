@@ -43,7 +43,7 @@ export const SyncBench = () => {
 
   const spaceId = useAtomValue(spaceIdAtom) as SpaceId | undefined;
   const setSpaceId = useAtomSet(spaceIdAtom);
-  const space = spaceId ? client.spaces.get(spaceId) : client.spaces.default;
+  const space = spaceId ? client.spaces.get(spaceId) : client.spaces.get()[0];
 
   const [syncState, setSyncState] = useState<SpaceSyncState>();
   useEffect(() => {

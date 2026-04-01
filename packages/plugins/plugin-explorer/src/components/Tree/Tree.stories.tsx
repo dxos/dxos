@@ -23,7 +23,7 @@ type ComponentProps = ClientRepeatedComponentProps & { type?: TreeComponentProps
 
 const Component = ({ type }: ComponentProps) => {
   const client = useClient();
-  const space = client.spaces.default;
+  const space = client.spaces.get()[0];
   const [object, setObject] = useState<TreeType>();
   useEffect(() => {
     setTimeout(() => {

@@ -85,7 +85,7 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
   const handleRemove = useCallback(async () => {
     await invokePromise(NativeFilesystemOperation.CloseDirectory, { id: workspace.id });
     await invokePromise(LayoutOperation.SwitchWorkspace, {
-      subject: getSpacePath(client.spaces.default.id),
+      subject: getSpacePath(client.spaces.get()[0]?.id),
     });
   }, [workspace.id, invokePromise, client]);
 

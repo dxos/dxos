@@ -25,6 +25,7 @@ import {
   type Metadata,
 } from '../../components';
 import { meta } from '../../meta';
+import { getPersonalSpace } from '@dxos/app-toolkit';
 
 export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
 
@@ -144,7 +145,7 @@ export const CreateObjectDialog = ({
           target={target}
           typename={typename}
           initialFormValues={initialFormValues}
-          defaultSpaceId={client.spaces.default.id}
+          defaultSpaceId={getPersonalSpace(client)?.id ?? client.spaces.get()[0]?.id}
           resolve={resolve}
           onCreateObject={handleCreateObject}
           onTargetChange={setTarget}
