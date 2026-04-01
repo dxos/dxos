@@ -38,6 +38,8 @@ These methods accept `ctx` / `_ctx` to satisfy interface contracts but don't use
 
 | Method                                                   | Interface                     |
 | -------------------------------------------------------- | ----------------------------- |
+| `Connection.signal(_ctx)`                                | Inbound signal path           |
+| `Peer.onOffer(_ctx)` / `Peer.onSignal(ctx)`              | Inbound signal path           |
 | `SignalClient.join/leave/sendMessage(_ctx)`              | `SignalMethods`               |
 | `MemorySignalManager.join/leave/query/sendMessage(_ctx)` | `SignalMethods`               |
 | Various `Resource._open/_close(ctx)` overrides           | `Resource` lifecycle contract |
@@ -53,7 +55,7 @@ These areas are properly wired:
 - **Browser OTEL setup** → auto-instrumentation disabled (fetch, XHR, document-load). All trace propagation is explicit via `ctx`. `W3CTraceContextPropagator` registered for `propagation.inject`.
 - **EdgeSignalManager** → `join`, `leave`, `query`, `sendMessage` forward `ctx` to `this._edgeConnection.send(ctx, ...)`.
 - **Messenger.sendMessage(ctx)** → `_encodeAndSend(ctx)` → `signalManager.sendMessage(ctx)`.
-- **SwarmMessenger** → `signal`, `offer` forward `ctx` on the outbound path; `receiveMessage` forwards `ctx` to `_handleOffer` for sending answers. Inbound callbacks (`onOffer`, `onSignal`) do not receive `ctx` since the inbound chain has no `@trace.span()` or network call.
+- **SwarmMessenger** → `signal`, `offer`, `receiveMessage` forward `ctx` through callbacks.
 - **NetworkManager.joinSwarm(ctx)** → `signalConnection.join(ctx)` → `signalManager.join(ctx)`.
 - **AutomergeHost bundle path** → `_handleCollectionSync(ctx)` → `_pushInBundles(ctx)` → `_pushBundle(ctx)` → adapter → `EdgeHttpClient.importBundle(ctx)`.
 - **EchoEdgeReplicator.connectToSpace(ctx)** — `@trace.span()`, forwards ctx.
@@ -67,6 +69,7 @@ These areas are properly wired:
 - **SpaceList.\_open(ctx)** / `_close(ctx)` → `@trace.span()` with `ctx` first parameter.
 - **ServiceHost.close(ctx)** → `@Trace.span()` with `ctx` first parameter.
 - **ControlPipeline.start(ctx)** → passes caller's `ctx` to `_consumePipeline`.
+- **Swarm.onOffer(ctx)** → forwards `ctx` to `Peer.onOffer(ctx, message)`.
 - **IdentityManager.createIdentity/prepareIdentity** → accept optional `ctx`, forward to `identity.open(ctx)`.
 - **AutomergeHost.waitUntilHeadsReplicated(ctx)** → forwards `ctx` to `loadDoc(ctx)`.
 - **QueryExecutor.\_loadFromAutomerge/\_loadFromDXN** → use `this._ctx` (Resource lifecycle) for `loadDoc`.
@@ -90,28 +93,28 @@ These areas are properly wired:
 
 ## Resolved in this PR
 
-| Item                                                                            | Resolution                                                                                                                                                                                                                                              |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `EdgeHttpClient._call` missing trace headers                                    | Added `getTraceHeaders(ctx)` — injects `traceparent`/`tracestate` into fetch requests.                                                                                                                                                                  |
-| `StackContextManager` async limitation                                          | Removed. DXOS relies on explicit `ctx` passing, not OTEL `ContextManager`.                                                                                                                                                                              |
-| Fetch/XHR/document-load auto-instrumentation                                    | Disabled — all three produce orphaned root spans without a context manager.                                                                                                                                                                             |
-| `ServiceContext._acceptIdentity` using `new Context()`                          | Changed to `this._ctx`.                                                                                                                                                                                                                                 |
-| `EchoHost.openSpaceRoot` / `createSpaceRoot` missing `ctx`                      | Added `ctx` as first parameter; all callers updated.                                                                                                                                                                                                    |
-| `DataSpace._onNewAutomergeRoot` using `Context.default()` for `loadDoc`         | Changed to `this._ctx`.                                                                                                                                                                                                                                 |
-| `devices-service.test.ts` passing `Context.default()` to `createIdentity`       | Fixed — `createIdentity` takes `CreateIdentityOptions`, not `Context`.                                                                                                                                                                                  |
-| `SpaceList._open/_close` missing `ctx`                                          | Added `ctx: Context` first parameter; threaded through `ClientRuntime`.                                                                                                                                                                                 |
-| `ServiceHost.close()` missing `ctx`                                             | Added `ctx: Context` first parameter; all callers updated.                                                                                                                                                                                              |
-| `ControlPipeline.start` passing `this._ctx` to `_consumePipeline`               | Changed to pass caller's `ctx`.                                                                                                                                                                                                                         |
-| `Swarm.onOffer` / `onSignal` inbound path excessive propagation                 | Reverted — inbound signal chain (`SwarmMessenger` callbacks → `Swarm.onOffer/onSignal` → `Peer.onOffer/onSignal` → `Connection.signal`) does not reach any `@trace.span()` or outbound network call. `ctx` removed from callbacks and receiver methods. |
-| `AutomergeHost.addReplicator/removeReplicator` excessive propagation            | Reverted — `ctx` was unused (no `@trace.span()`, not forwarded). Removed `ctx` parameter from both methods and their callers in `EchoHost`.                                                                                                             |
-| `IdentityManager.createIdentity/prepareIdentity` using `new Context()`          | Added optional `ctx` parameter; callers pass `ctx` when available.                                                                                                                                                                                      |
-| `DataSpaceManager._getSpaceRootDocument` using `Context.default()`              | Added `ctx` parameter; `createDefaultSpace(ctx)` passes it through.                                                                                                                                                                                     |
-| `DataSpaceManager` trace.diagnostic `loadDoc(Context.default())`                | Changed to `this._ctx`.                                                                                                                                                                                                                                 |
-| `DocumentsSynchronizer.addDocuments` using `Context.default()`                  | Changed to `this._ctx` (Resource lifecycle).                                                                                                                                                                                                            |
-| `AutomergeHost.waitUntilHeadsReplicated` using `Context.default()`              | Added `ctx` parameter; RPC handler passes `Context.default()`.                                                                                                                                                                                          |
-| `QueryExecutor._loadFromAutomerge/_loadFromDXN` using `Context.default()`       | Changed to `this._ctx` (Resource lifecycle).                                                                                                                                                                                                            |
-| `IdentityServiceImpl._createDefaultSpace` using `Context.default()`             | Added `ctx` parameter; callers pass `this._ctx`.                                                                                                                                                                                                        |
-| `IdentityServiceImpl._fixIdentityWithoutDefaultSpace` using `Context.default()` | Changed to `this._ctx` for `space.open` and `initializeDataPipeline`.                                                                                                                                                                                   |
+| Item                                                                            | Resolution                                                                                                                                  |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `EdgeHttpClient._call` missing trace headers                                    | Added `getTraceHeaders(ctx)` — injects `traceparent`/`tracestate` into fetch requests.                                                      |
+| `StackContextManager` async limitation                                          | Removed. DXOS relies on explicit `ctx` passing, not OTEL `ContextManager`.                                                                  |
+| Fetch/XHR/document-load auto-instrumentation                                    | Disabled — all three produce orphaned root spans without a context manager.                                                                 |
+| `ServiceContext._acceptIdentity` using `new Context()`                          | Changed to `this._ctx`.                                                                                                                     |
+| `EchoHost.openSpaceRoot` / `createSpaceRoot` missing `ctx`                      | Added `ctx` as first parameter; all callers updated.                                                                                        |
+| `DataSpace._onNewAutomergeRoot` using `Context.default()` for `loadDoc`         | Changed to `this._ctx`.                                                                                                                     |
+| `devices-service.test.ts` passing `Context.default()` to `createIdentity`       | Fixed — `createIdentity` takes `CreateIdentityOptions`, not `Context`.                                                                      |
+| `SpaceList._open/_close` missing `ctx`                                          | Added `ctx: Context` first parameter; threaded through `ClientRuntime`.                                                                     |
+| `ServiceHost.close()` missing `ctx`                                             | Added `ctx: Context` first parameter; all callers updated.                                                                                  |
+| `ControlPipeline.start` passing `this._ctx` to `_consumePipeline`               | Changed to pass caller's `ctx`.                                                                                                             |
+| `Swarm.onOffer` dropping `ctx` before `Peer.onOffer`                            | Added `ctx` to `Peer.onOffer` signature; `Swarm.onOffer` now forwards it.                                                                   |
+| `AutomergeHost.addReplicator/removeReplicator` excessive propagation            | Reverted — `ctx` was unused (no `@trace.span()`, not forwarded). Removed `ctx` parameter from both methods and their callers in `EchoHost`. |
+| `IdentityManager.createIdentity/prepareIdentity` using `new Context()`          | Added optional `ctx` parameter; callers pass `ctx` when available.                                                                          |
+| `DataSpaceManager._getSpaceRootDocument` using `Context.default()`              | Added `ctx` parameter; `createDefaultSpace(ctx)` passes it through.                                                                         |
+| `DataSpaceManager` trace.diagnostic `loadDoc(Context.default())`                | Changed to `this._ctx`.                                                                                                                     |
+| `DocumentsSynchronizer.addDocuments` using `Context.default()`                  | Changed to `this._ctx` (Resource lifecycle).                                                                                                |
+| `AutomergeHost.waitUntilHeadsReplicated` using `Context.default()`              | Added `ctx` parameter; RPC handler passes `Context.default()`.                                                                              |
+| `QueryExecutor._loadFromAutomerge/_loadFromDXN` using `Context.default()`       | Changed to `this._ctx` (Resource lifecycle).                                                                                                |
+| `IdentityServiceImpl._createDefaultSpace` using `Context.default()`             | Added `ctx` parameter; callers pass `this._ctx`.                                                                                            |
+| `IdentityServiceImpl._fixIdentityWithoutDefaultSpace` using `Context.default()` | Changed to `this._ctx` for `space.open` and `initializeDataPipeline`.                                                                       |
 
 ---
 

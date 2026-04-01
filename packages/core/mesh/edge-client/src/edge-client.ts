@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context as OtelContext, context as otelContext, propagation } from '@opentelemetry/api';
+import { type Context as OtelContext, propagation } from '@opentelemetry/api';
 
 import {
   Event,

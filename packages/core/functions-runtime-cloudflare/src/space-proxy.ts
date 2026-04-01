@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Context, Resource } from '@dxos/context';
+import { Resource } from '@dxos/context';
 import { type Database } from '@dxos/echo';
 import { type CoreDatabase, type EchoClient, type EchoDatabaseImpl } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
