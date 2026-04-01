@@ -223,6 +223,13 @@ jobs:
             exit 1
           fi
 
+      - name: Install macOS Provisioning Profile
+        if: matrix.os == 'depot-macos-latest'
+        env:
+          MACOS_PROVISION_PROFILE: ${{ secrets.MACOS_PROVISION_PROFILE }}
+        run: |
+          echo "$MACOS_PROVISION_PROFILE" | base64 --decode > packages/apps/composer-app/src-tauri/embedded.provisionprofile
+
       - name: Build Tauri app
         run: moon run composer-app:tauri-build
         env:
