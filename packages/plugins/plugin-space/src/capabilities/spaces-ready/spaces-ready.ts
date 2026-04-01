@@ -21,7 +21,7 @@ import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
 import { SpaceCapabilities } from '../../types';
 import { SpaceOperation } from '../../operations';
-import { COMPOSER_SPACE_LOCK, SHARED } from '../../util';
+import { SHARED } from '../../util';
 
 const ACTIVE_NODE_BROADCAST_INTERVAL = 30_000;
 const WAIT_FOR_OBJECT_TIMEOUT = 5_000;
@@ -96,13 +96,6 @@ export default Capability.makeModule(
         await invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(personalSpace.id) }).pipe(
           Effect.runPromise,
         );
-      }
-
-      // Initialize space sharing lock in personal space.
-      if (typeof personalSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
-        Obj.change(personalSpace.properties, (obj) => {
-          obj[COMPOSER_SPACE_LOCK] = true;
-        });
       }
 
       const queryResults = await personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run();

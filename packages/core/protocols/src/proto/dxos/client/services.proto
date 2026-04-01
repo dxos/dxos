@@ -333,6 +333,7 @@ message Space {
   optional dxos.error.Error error = 4;
   optional dxos.echo.metadata.EdgeReplicationSetting edge_replication = 6;
   repeated string tags = 7;
+  dxos.halo.credentials.MembershipPolicy membership_policy = 8;
 
   repeated SpaceMember members = 10;
   optional dxos.keys.PublicKey creator = 11;
@@ -345,6 +346,7 @@ message Space {
 
 message CreateSpaceRequest {
   repeated string tags = 1;
+  dxos.halo.credentials.MembershipPolicy membership_policy = 2;
 }
 
 message UpdateSpaceRequest {
