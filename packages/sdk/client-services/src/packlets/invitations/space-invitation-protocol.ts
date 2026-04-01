@@ -187,6 +187,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       genesisFeedKey: assertion.genesisFeedKey,
       controlTimeframe,
       dataTimeframe,
+      tags: assertion.tags,
     });
 
     await this._signingContext.recordCredential(credential);

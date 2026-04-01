@@ -84,6 +84,9 @@ export type AcceptSpaceOptions = {
    * We will try to catch up to this timeframe before initializing the database.
    */
   dataTimeframe?: Timeframe;
+
+  /** Tags assigned to the space member. */
+  tags?: string[];
 };
 
 export type AdmitMemberOptions = {
@@ -92,6 +95,7 @@ export type AdmitMemberOptions = {
   role: SpaceMember.Role;
   profile?: ProfileDocument;
   delegationCredentialId?: PublicKey;
+  tags?: string[];
 };
 
 export type DataSpaceManagerProps = {
@@ -125,6 +129,7 @@ export type DataSpaceManagerRuntimeProps = {
 export type CreateSpaceOptions = {
   rootUrl?: AutomergeUrl;
   documents?: Record<DocumentId, Uint8Array>;
+  tags?: string[];
 };
 
 @trackLeaks('open', 'close')
@@ -272,6 +277,7 @@ export class DataSpaceManager extends Resource {
       controlFeedKey,
       dataFeedKey,
       state: SpaceState.SPACE_ACTIVE,
+      tags: options.tags ?? [],
     };
 
     log('creating space...', { spaceId, spaceKey });
@@ -325,7 +331,7 @@ export class DataSpaceManager extends Resource {
 
     log('adding space...', { spaceKey });
 
-    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url);
+    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url, options.tags);
     await this._metadataStore.addSpace(metadata);
 
     const memberCredential = credentials[1];
@@ -352,6 +358,7 @@ export class DataSpaceManager extends Resource {
       genesisFeedKey: opts.genesisFeedKey,
       controlTimeframe: opts.controlTimeframe,
       dataTimeframe: opts.dataTimeframe,
+      tags: opts.tags ?? [],
     };
 
     const space = await this._constructSpace(metadata);
@@ -381,6 +388,7 @@ export class DataSpaceManager extends Resource {
       space.spaceState.membershipChainHeads,
       options.profile,
       options.delegationCredentialId,
+      space.spaceState.tags,
     );
 
     // TODO(dmaretskyi): Refactor.
@@ -531,6 +539,7 @@ export class DataSpaceManager extends Resource {
         },
       },
       cache: metadata.cache,
+      tags: metadata.tags,
       edgeConnection: this._edgeConnection,
       edgeHttpClient: this._edgeHttpClient,
       edgeFeatures: this._edgeFeatures,

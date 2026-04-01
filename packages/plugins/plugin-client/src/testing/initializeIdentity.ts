@@ -18,9 +18,8 @@ export const initializeIdentity = (
 ): Effect.Effect<{ identity: Identity; defaultSpace: Space }, never, never> =>
   Effect.gen(function* () {
     const identity = yield* Effect.promise(() => client.halo.createIdentity());
-    const defaultSpace = yield* Effect.promise(() => client.spaces.create());
+    const defaultSpace = yield* Effect.promise(() => client.spaces.create({}, { tags: ['personal'] }));
     yield* Effect.promise(() => defaultSpace.waitUntilReady());
-    // TODO: Use space tags to mark as personal space.
     setPersonalSpace(defaultSpace);
     return { identity, defaultSpace };
   });
