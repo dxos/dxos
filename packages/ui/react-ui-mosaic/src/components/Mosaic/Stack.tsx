@@ -215,7 +215,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
               ref={virtualizer.measureElement}
             >
               {data ? (
-                <Tile id={getId(data)} data={data} location={location} debug={debug} />
+                <Tile id={getId(data)} data={data} location={location} draggable={draggable} debug={debug} />
               ) : (
                 <InternalPlaceholder orientation={orientation} location={location} />
               )}

@@ -237,12 +237,19 @@ export const Mailbox = composable<HTMLDivElement, MailboxProps>(
       if (activeEl !== document.body && !stackRef.current.contains(activeEl)) return;
       const tile = stackRef.current.querySelector<HTMLElement>(`[data-message-id="${CSS.escape(id)}"]`);
       if (!tile || tile.contains(activeEl)) return;
-      const focusable = tile.querySelector<HTMLElement>('[tabindex]:not([tabindex="-1"])') ?? tile;
+      const focusable =
+        tile.querySelector<HTMLElement>(
+          'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? tile;
       focusable.focus({ preventScroll: true });
     }, [focusNonce]);
 
     // onChange fires when the virtualizer scrolls; schedule a focus-restoration pass.
-    const handleChange = useCallback(() => setFocusNonce((prev) => prev + 1), []);
+    const handleChange = useCallback(() => {
+      if (focusedMessageId.current) {
+        setFocusNonce((prev) => prev + 1);
+      }
+    }, []);
 
     const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Enter') {
