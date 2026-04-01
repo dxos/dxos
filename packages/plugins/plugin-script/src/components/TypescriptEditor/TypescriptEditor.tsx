@@ -26,7 +26,7 @@ import {
   createThemeExtensions,
   defaultStyles,
 } from '@dxos/ui-editor';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = ThemedClassName<
@@ -105,7 +105,7 @@ export const TypescriptEditor = composable<HTMLDivElement, TypescriptEditorProps
 
     return (
       <div
-        {...composableProps(props, { className: mx(classNames), ...focusAttributes })}
+        {...composableProps(props, { classNames, ...focusAttributes })}
         ref={composeRefs(parentRef, forwardedRef)}
       />
     );

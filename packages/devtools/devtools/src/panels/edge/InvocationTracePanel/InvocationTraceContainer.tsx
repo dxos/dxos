@@ -157,7 +157,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     );
 
     return (
-      <div {...composableProps(props, { className: mx('h-full', classNames) })} ref={forwardedRef}>
+      <div {...composableProps(props, { classNames: ['h-full', classNames] })} ref={forwardedRef}>
         <PanelContainer
           toolbar={
             showSpaceSelector ? (

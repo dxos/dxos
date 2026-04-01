@@ -58,10 +58,9 @@ type MosaicStackProps<TData = any> = ThemedClassName<
  */
 const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
   (
-    { role = 'list', getId, orientation: orientationProp = 'vertical', items, Tile, draggable = true, debug, ...props },
+    { getId, orientation: orientationProp = 'vertical', items, Tile, draggable = true, debug, ...props },
     forwardedRef,
   ) => {
-    const { className, ...rest } = composableProps(props);
     invariant(Tile);
     const { id, orientation = orientationProp, dragging } = useMosaicContainerContext(MOSAIC_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
@@ -69,14 +68,14 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
 
     return (
       <div
-        {...rest}
-        role={role}
-        className={mx(
-          'flex',
-          orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
-          orientation === 'vertical' && 'flex-col',
-          className,
-        )}
+        {...composableProps(props, {
+          role: 'list',
+          classNames: [
+            'flex',
+            orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
+            orientation === 'vertical' && 'flex-col',
+          ],
+        })}
         ref={forwardedRef}
       >
         {draggable && <InternalPlaceholder orientation={orientation} location={0.5} />}
@@ -106,13 +105,12 @@ const MOSAIC_VIRTUAL_STACK_NAME = 'MosaicVirtualStack';
 type MosaicVirtualStackProps<TData = any> = MosaicStackProps<TData> &
   Pick<
     ReactVirtualizerOptions<HTMLElement, HTMLDivElement>,
-    'estimateSize' | 'getScrollElement' | 'overscan' | 'onChange'
+    'estimateSize' | 'gap' | 'getScrollElement' | 'overscan' | 'onChange'
   >;
 
 const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackProps>(
   (
     {
-      role = 'list',
       orientation = 'vertical',
       items,
       getId,
@@ -120,6 +118,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
       estimateSize,
       getScrollElement,
       overscan = 8,
+      gap,
       onChange,
       draggable = true,
       debug,
@@ -127,30 +126,58 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     },
     forwardedRef,
   ) => {
-    const { className, ...rest } = composableProps(props);
     invariant(Tile);
     const { id, dragging } = useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
+    // In draggable mode virtual indices alternate: even=placeholder, odd=tile.
+    // Wrap estimateSize so placeholders get 0 (their actual negligible height) and
+    // tile slots receive the caller's estimate at the correct tile index.
+    // This keeps getTotalSize() stable as items are measured → no scrollbar drift.
+    const wrappedEstimateSize = draggable
+      ? (index: number) => (index % 2 === 0 ? 0 : estimateSize(Math.floor(index / 2)))
+      : estimateSize;
+
     const virtualizer = useVirtualizer({
-      count: visibleItems.length * 2 + 1,
-      estimateSize,
+      // NOTE: When draggable we double the number of items to allow for placeholders.
+      count: draggable ? visibleItems.length * 2 + 1 : visibleItems.length,
+      estimateSize: wrappedEstimateSize,
+      gap,
+      // Key measurements by stable item ID so the size cache survives scrolling;
+      // without this, measurements are indexed by position and are lost when items reorder.
+      getItemKey: draggable
+        ? (index) => (index % 2 === 0 ? `ph-${index}` : getId(visibleItems![Math.floor(index / 2)]))
+        : (index) => getId(visibleItems![index]),
       getScrollElement,
       overscan,
       onChange,
     });
 
     const virtualItems = virtualizer.getVirtualItems();
+    const getData = (index: number): { data?: any; location: number } => {
+      if (draggable) {
+        if (index % 2 === 0) {
+          return { location: Math.floor(index / 2) + 0.5 };
+        } else {
+          return { data: visibleItems![Math.floor(index / 2)], location: Math.floor(index / 2) + 1 };
+        }
+      } else {
+        return { data: visibleItems![index], location: index + 1 };
+      }
+    };
 
     return (
       <div
-        {...rest}
-        role={role}
-        className={mx(
-          'flex',
-          orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
-          orientation === 'vertical' && 'flex-col',
-          className,
-        )}
+        {...composableProps(props, {
+          role: 'list',
+          classNames: [
+            // shrink-0 is required: this div sets an explicit height via inline style (getTotalSize).
+            // Without it, a parent flex container (e.g. ScrollArea.Viewport) would shrink this div
+            // to the viewport height, collapsing the scroll content and causing scrollbar drift.
+            'flex shrink-0',
+            orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
+            orientation === 'vertical' && 'flex-col',
+          ],
+        })}
         style={{
           position: 'relative',
           ...(orientation === 'vertical'
@@ -165,12 +192,12 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
         }}
         ref={forwardedRef}
       >
-        {virtualItems.map((virtualItem) => {
-          const data = visibleItems![Math.floor(virtualItem.index / 2)];
+        {virtualItems.map(({ key, index, start }) => {
+          const { data, location } = getData(index);
           return (
             <div
-              key={virtualItem.key}
-              data-index={virtualItem.index}
+              key={key}
+              data-index={index}
               style={{
                 position: 'absolute',
                 top: 0,
@@ -178,19 +205,19 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
                 ...(orientation === 'vertical'
                   ? {
                       width: '100%',
-                      transform: `translateY(${virtualItem.start}px)`,
+                      transform: `translateY(${start}px)`,
                     }
                   : {
                       height: '100%',
-                      transform: `translateX(${virtualItem.start}px)`,
+                      transform: `translateX(${start}px)`,
                     }),
               }}
               ref={virtualizer.measureElement}
             >
-              {draggable && virtualItem.index % 2 === 0 ? (
-                <InternalPlaceholder orientation={orientation} location={Math.floor(virtualItem.index / 2) + 0.5} />
+              {data ? (
+                <Tile id={getId(data)} data={data} location={location} debug={debug} />
               ) : (
-                <Tile id={getId(data)} data={data} location={Math.floor(virtualItem.index / 2) + 1} debug={debug} />
+                <InternalPlaceholder orientation={orientation} location={location} />
               )}
             </div>
           );
