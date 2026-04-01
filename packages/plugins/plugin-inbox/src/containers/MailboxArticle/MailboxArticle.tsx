@@ -117,6 +117,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     });
   }, [sortedMessages, messageTagsMap]);
 
+  // TODO(burdon): Actual test should be if we have synced; not number of messages.
   // Delay showing empty state to prevent flicker as messages are loaded.
   const [isEmpty, setEmpty] = useState<boolean>(false);
   useEffect(() => {
@@ -190,34 +191,36 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     <Panel.Root>
       <Panel.Toolbar>
         {/* TODO(burdon): Factor out menu. */}
-        <ElevationProvider elevation='positioned'>
-          <Menu.Root {...menuActions} attendableId={id}>
-            <Menu.Toolbar>
-              <QueryEditor
-                ref={filterEditorRef}
-                classNames='grow min-w-0 ps-1'
-                db={db}
-                tags={tagMap}
-                value={filterText}
-                onChange={setFilterText}
-              />
-              <IconButton
-                ref={filterSaveButtonRef}
-                disabled={!filter}
-                label={t('mailbox toolbar save button label')}
-                icon='ph--folder-plus--regular'
-                iconOnly
-                onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
-              />
-              <IconButton
-                label={t('mailbox toolbar clear button label')}
-                icon='ph--x--regular'
-                iconOnly
-                onClick={() => handleClear()}
-              />
-            </Menu.Toolbar>
-          </Menu.Root>
-        </ElevationProvider>
+        {!isEmpty && (
+          <ElevationProvider elevation='positioned'>
+            <Menu.Root {...menuActions} attendableId={id}>
+              <Menu.Toolbar>
+                <QueryEditor
+                  ref={filterEditorRef}
+                  classNames='grow min-w-0 ps-1'
+                  db={db}
+                  tags={tagMap}
+                  value={filterText}
+                  onChange={setFilterText}
+                />
+                <IconButton
+                  ref={filterSaveButtonRef}
+                  disabled={!filter}
+                  label={t('mailbox toolbar save button label')}
+                  icon='ph--folder-plus--regular'
+                  iconOnly
+                  onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
+                />
+                <IconButton
+                  label={t('mailbox toolbar clear button label')}
+                  icon='ph--x--regular'
+                  iconOnly
+                  onClick={() => handleClear()}
+                />
+              </Menu.Toolbar>
+            </Menu.Root>
+          </ElevationProvider>
+        )}
       </Panel.Toolbar>
 
       <Panel.Content asChild>

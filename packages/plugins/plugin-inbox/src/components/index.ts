@@ -3,7 +3,7 @@
 //
 
 export * from './Actor';
-export * from './CalendarEmpty';
+
 export * from './ComposeEmailPanel';
 export * from './DateComponent';
 export * from './Event';

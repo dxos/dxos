@@ -16,9 +16,11 @@ import { useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
-import { CalendarEmpty, EventStack } from '../../components';
+import { EventStack } from '../../components';
 import { meta } from '../../meta';
 import { type Calendar } from '../../types';
+
+import { NewCalendar } from './NewCalendar';
 
 const byDate =
   (direction = -1) =>
@@ -42,6 +44,9 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
     db,
     feed ? Query.select(Filter.type(Event.Event)).from(feed) : Query.select(Filter.nothing()),
   ).toSorted(byDate());
+
+  // TODO(burdon): Actual test should be if we have synced; not number of messages.
+  const isEmpty = objects.length === 0;
 
   const handleSelect = useCallback(
     (event: Event.Event) => {
@@ -82,12 +87,16 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
-              <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
+              {!isEmpty && (
+                <>
+                  <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
+                </>
+              )}
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content>
-            {objects.length <= 0 ? (
-              <CalendarEmpty calendar={calendar} />
+            {isEmpty ? (
+              <NewCalendar calendar={calendar} />
             ) : (
               <EventStack events={objects} selected={selected} onSelect={handleSelect} />
             )}

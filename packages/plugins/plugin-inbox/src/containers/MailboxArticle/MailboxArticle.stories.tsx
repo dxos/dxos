@@ -22,7 +22,11 @@ import { Mailbox } from '../../types';
 
 import { MailboxArticle } from './MailboxArticle';
 
-const DefaultStory = () => {
+type DefaultStoryProps = {
+  count?: number;
+};
+
+const DefaultStory = (_: DefaultStoryProps) => {
   const db = useDatabase();
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   const mailbox = mailboxes[0];
@@ -38,7 +42,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
-    withPluginManager({
+    withPluginManager<DefaultStoryProps>(({ args: { count = 0 } }) => ({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -46,7 +50,7 @@ const meta = {
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => initializeMailbox(defaultSpace, 30));
+              yield* Effect.promise(() => initializeMailbox(defaultSpace, count));
               yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
             }),
         }),
@@ -55,7 +59,7 @@ const meta = {
         InboxPlugin(),
         PreviewPlugin(),
       ],
-    }),
+    })),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -67,5 +71,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    count: 100,
+  },
+};
+
+export const Empty: Story = {
+  args: {
+    count: 0,
+  },
 };
