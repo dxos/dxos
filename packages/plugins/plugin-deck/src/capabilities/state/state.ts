@@ -19,6 +19,7 @@ import {
   defaultDeck,
   getMode,
 } from '../../types';
+import { sanitizePersistedState } from '../../util';
 
 /** Default persisted state. */
 const defaultDeckState: DeckStateProps = {
@@ -62,20 +63,11 @@ export default Capability.makeModule(
     // Ephemeral state (not persisted, but kept alive to prevent GC resets).
     const ephemeralAtom = Atom.make<DeckEphemeralStateProps>({ ...defaultDeckEphemeralState }).pipe(Atom.keepAlive);
 
-    // Don't allow fullscreen mode to be persisted to prevent getting stuck in it.
+    // Sanitize persisted state on startup (see sanitizePersistedState for details).
     const currentState = registry.get(stateAtom);
-    const currentDeck = currentState.decks[currentState.activeDeck];
-    if (currentDeck?.fullscreen) {
-      registry.set(stateAtom, {
-        ...currentState,
-        decks: {
-          ...currentState.decks,
-          [currentState.activeDeck]: {
-            ...currentDeck,
-            fullscreen: false,
-          },
-        },
-      });
+    const sanitizedState = sanitizePersistedState(currentState);
+    if (sanitizedState !== currentState) {
+      registry.set(stateAtom, sanitizedState);
     }
 
     // Create derived layout atom (read-only) from both state atoms.

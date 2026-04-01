@@ -24,7 +24,6 @@ type ScrollAreaContextType = {
   /** Hide scrollbars when not scrolling. */
   autoHide: boolean;
   /** Apply padding to opposite side of scrollbar. */
-  // TODO(burdon): Rename `center`.
   centered?: boolean;
   /** Apply padding. */
   padding: boolean;

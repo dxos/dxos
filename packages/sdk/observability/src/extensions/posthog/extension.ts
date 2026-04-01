@@ -152,9 +152,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
               return;
             }
 
-            let debugLogDumpKey: string | undefined;
+            let debugLogDumpKey: string | null = null;
             if (form.includeLogs !== false && logBuffer.size > 0) {
-              debugLogDumpKey = await uploadLogs(logBuffer.serialize());
+              debugLogDumpKey = (await uploadLogs(logBuffer.serialize())) ?? 'failed';
             }
 
             // https://posthog.com/docs/surveys/implementing-custom-surveys
@@ -163,7 +163,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
               $survey_id: survey.id,
               $survey_questions: [{ id: question.id, question: question.question }],
               [`$survey_response_${question.id}`]: form.message,
-              ...(debugLogDumpKey ? { debug_log_dump_key: debugLogDumpKey } : {}),
+              debug_log_dump_key: debugLogDumpKey,
             });
           });
         },

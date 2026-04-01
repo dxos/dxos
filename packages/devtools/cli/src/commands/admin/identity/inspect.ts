@@ -40,7 +40,13 @@ export const inspect = Command.make(
       if (result.spaces.length > 0) {
         yield* Console.log(`  Spaces (${result.spaces.length}):`);
         for (const space of result.spaces) {
-          yield* Console.log(`    ${space.spaceId}`);
+          const status = space.metadata?.status ?? 'unknown';
+          const members = space.members.count;
+          const objects = space.echo.objectCount;
+          yield* Console.log(`    ${space.spaceId}  ${status}  ${members} members  ${objects} objects`);
+          if (space.usageInLast30Days) {
+            yield* Console.log(`      Usage (30d): ${space.usageInLast30Days.totalEvents} events`);
+          }
           for (const dobj of space.durableObjects) {
             yield* Console.log(`      ${dobj.type}: ${dobj.doId}`);
           }

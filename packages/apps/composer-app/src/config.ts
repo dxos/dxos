@@ -12,6 +12,7 @@ import { type LogBuffer } from '@dxos/log';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
 import { getHostPlatform } from '@dxos/util';
 
+export const PARAM_PROFILER = 'profiler';
 export const PARAM_SAFE_MODE = 'safe';
 export const PARAM_LOG_LEVEL = 'log';
 

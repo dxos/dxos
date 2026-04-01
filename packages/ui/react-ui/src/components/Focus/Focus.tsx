@@ -42,12 +42,34 @@ const FocusContext = createContext<ContextValue>({});
 
 const useFocus = () => useContext(FocusContext);
 
+/**
+ * Focus ring styles shared by Group and Item.
+ * Uses a `::after` pseudo-element overlay so the ring paints above child content
+ * (inset box-shadow alone is obscured by children with backgrounds).
+ * The pseudo-element is `pointer-events-none` and absolutely positioned over the element.
+ * When `border` is true, a subdued CSS border is always visible (e.g., for grid cell edges).
+ */
+const focusRingStyles = (border: boolean) =>
+  mx(
+    // Base: relative for pseudo-element positioning, suppress default outline.
+    'relative outline-hidden',
+    // Optional always-visible border.
+    border && 'border border-separator',
+    // Pseudo-element overlay for focus ring.
+    'after:content-[""] after:absolute after:inset-0 after:rounded-[inherit] after:pointer-events-none after:ring after:ring-inset after:ring-transparent',
+    'focus:after:ring-neutral-focus-indicator',
+    'data-[focus-state=active]:after:ring-neutral-focus-indicator',
+    'data-[focus-state=error]:after:ring-rose-500',
+  );
+
 //
 // Group
 //
 
 type GroupProps = {
   orientation?: Axis;
+  /** Show a subdued ring when unfocused (e.g., as a cell border). */
+  border?: boolean;
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
 };
 
@@ -58,7 +80,7 @@ type GroupProps = {
 // TODO(wittjosiah): Consider how this could integrate with with react-ui-attention.
 //   Perhaps react-ui-attention comes under the mosaic umbrella as it supports selection?
 const Group = slottable<HTMLDivElement, GroupProps>(
-  ({ children, asChild, orientation = 'vertical', ...props }, forwardedRef) => {
+  ({ children, asChild, orientation = 'vertical', border = false, ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
     const rootRef = useRef<HTMLDivElement>(null);
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
@@ -75,26 +97,16 @@ const Group = slottable<HTMLDivElement, GroupProps>(
       }
     }, []);
 
-    // TODO(burdon): Ring (box-shadow) requires a margin.
     return (
       <FocusContext.Provider value={{ setFocus: setState, groupHasFocus }}>
         <Comp
-          {...composableProps(props, {
-            tabIndex: 0,
-            className: mx([
-              'ring-0 outline-hidden border border-separator rounded-xs',
-              // Focus (e.g., via tabster).
-              'focus:border-neutral-focus-indicator',
-              // Active (e.g., drop target).
-              'data-[focus-state=active]:border-neutral-focus-indicator',
-              // Error
-              'data-[focus-state=error]:border-rose-500',
-            ]),
-          })}
+          {...composableProps(props, { tabIndex: 0, classNames: focusRingStyles(border) })}
           {...tabsterAttrs}
-          {...(state && { [`data-${FOCUS_STATE_ATTR}`]: state })}
-          onFocus={handleFocusIn}
+          {...(state && {
+            [`data-${FOCUS_STATE_ATTR}`]: state,
+          })}
           onBlur={handleFocusOut}
+          onFocus={handleFocusIn}
           ref={useComposedRefs<HTMLDivElement>(rootRef, forwardedRef)}
         >
           {children}
@@ -110,6 +122,8 @@ const Group = slottable<HTMLDivElement, GroupProps>(
 
 type ItemProps = {
   current?: boolean;
+  /** Show a subdued ring when unfocused (e.g., as a cell border). */
+  border?: boolean;
   onCurrentChange?: () => void;
 };
 
@@ -120,7 +134,10 @@ type ItemProps = {
  * Supports controlled (`current` prop) and uncontrolled (focus-driven) `aria-current`.
  */
 const Item = slottable<HTMLDivElement, ItemProps>(
-  ({ children, asChild, current, onCurrentChange, onClick, onFocus, onBlur, ...props }, forwardedRef) => {
+  (
+    { children, asChild, current, border = false, onCurrentChange, onClick, onFocus, onBlur, ...props },
+    forwardedRef,
+  ) => {
     const Comp = asChild ? Slot : Primitive.div;
     // Tell tabster's groupper to ignore Enter so it doesn't move focus into the group.
     const focusableGroupAttrs = useFocusableGroup({ ignoreDefaultKeydown: { Enter: true } });
@@ -166,7 +183,7 @@ const Item = slottable<HTMLDivElement, ItemProps>(
 
     return (
       <Comp
-        {...composableProps(props, { tabIndex: 0, className: 'outline-hidden' })}
+        {...composableProps(props, { tabIndex: 0, classNames: focusRingStyles(border) })}
         {...focusableGroupAttrs}
         aria-current={isCurrent || undefined}
         onClick={handleClick}

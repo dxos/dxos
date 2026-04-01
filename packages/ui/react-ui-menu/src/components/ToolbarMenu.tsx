@@ -213,7 +213,7 @@ export const ToolbarMenu = composable<HTMLDivElement, MenuScopedProps<ToolbarMen
 
     return (
       <NaturalToolbar.Root
-        {...composableProps(props, { className: attendableId })}
+        {...composableProps(props, { classNames: attendableId })}
         disabled={!alwaysActive && !hasAttention}
         ref={forwardedRef}
       >
