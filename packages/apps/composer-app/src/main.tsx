@@ -71,7 +71,11 @@ const startupProfiler = () => {
       console.group('Startup Profile');
 
       // eslint-disable-next-line no-console
-      console.log('Total startup time:', Math.round(entries.find((entry) => entry.name === 'startup:total')?.duration ?? 0), 'ms');
+      console.log(
+        'Total startup time:',
+        Math.round(entries.find((entry) => entry.name === 'startup:total')?.duration ?? 0),
+        'ms',
+      );
 
       // eslint-disable-next-line no-console
       console.table(
