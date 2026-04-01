@@ -85,4 +85,3 @@ export const NewMailbox = composable<HTMLDivElement, NewMailboxProps>(({ mailbox
 });
 
 NewMailbox.displayName = 'NewMailbox';
-

@@ -81,7 +81,14 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
         {draggable && <InternalPlaceholder orientation={orientation} location={0.5} />}
         {visibleItems?.map((item, index) => (
           <Fragment key={getId(item)}>
-            <Tile id={getId(item)} data={item} location={index + 1} draggable={draggable} current={getId(item) === currentId} debug={debug} />
+            <Tile
+              id={getId(item)}
+              data={item}
+              location={index + 1}
+              draggable={draggable}
+              current={getId(item) === currentId}
+              debug={debug}
+            />
             {draggable && <InternalPlaceholder orientation={orientation} location={index + 1.5} />}
           </Fragment>
         ))}
@@ -215,7 +222,14 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
               ref={virtualizer.measureElement}
             >
               {data ? (
-                <Tile id={getId(data)} data={data} location={location} draggable={draggable} current={getId(data) === currentId} debug={debug} />
+                <Tile
+                  id={getId(data)}
+                  data={data}
+                  location={location}
+                  draggable={draggable}
+                  current={getId(data) === currentId}
+                  debug={debug}
+                />
               ) : (
                 <InternalPlaceholder orientation={orientation} location={location} />
               )}

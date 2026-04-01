@@ -13,6 +13,7 @@
 ### Task 1: Add `current`/`setCurrent` to `Mosaic.Container` context
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-mosaic/src/components/Mosaic/Container.tsx`
 
 - [ ] **Step 1: Add `current` and `onCurrentChange` to props and context types**
@@ -82,10 +83,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
 Create a stable `setCurrent` callback:
 
 ```typescript
-    const setCurrent = useCallback(
-      (id: string | undefined) => onCurrentChange?.(id),
-      [onCurrentChange],
-    );
+const setCurrent = useCallback((id: string | undefined) => onCurrentChange?.(id), [onCurrentChange]);
 ```
 
 Add `useCallback` to the React import at the top of the file.
@@ -124,6 +122,7 @@ git commit -m "feat(react-ui-mosaic): add current/setCurrent to Container contex
 ### Task 2: Add `current` prop to `MosaicTileProps` and pass it from Stack/VirtualStack
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-mosaic/src/components/Mosaic/Tile.tsx`
 - Modify: `packages/ui/react-ui-mosaic/src/components/Mosaic/Stack.tsx`
 
@@ -221,11 +220,20 @@ const { id, dragging, current } = useMosaicContainerContext(MOSAIC_VIRTUAL_STACK
 And update the Tile rendering inside the virtualItems map:
 
 ```tsx
-{data ? (
-  <Tile id={getId(data)} data={data} location={location} draggable={draggable} current={getId(data) === current} debug={debug} />
-) : (
-  <InternalPlaceholder orientation={orientation} location={location} />
-)}
+{
+  data ? (
+    <Tile
+      id={getId(data)}
+      data={data}
+      location={location}
+      draggable={draggable}
+      current={getId(data) === current}
+      debug={debug}
+    />
+  ) : (
+    <InternalPlaceholder orientation={orientation} location={location} />
+  );
+}
 ```
 
 - [ ] **Step 4: Build and verify**
@@ -245,6 +253,7 @@ git commit -m "feat(react-ui-mosaic): pass current boolean to Tile components fr
 ### Task 3: Simplify `MessageStack` and `MessageTile`
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-inbox/src/components/MessageStack/MessageStack.tsx`
 
 - [ ] **Step 1: Update imports**
@@ -403,6 +412,7 @@ MessageTile.displayName = 'MessageTile';
 ```
 
 Key changes:
+
 - `MessageTileProps` now picks `'current'` in addition to `'location' | 'data'`.
 - Reads `setCurrent` from `useMosaicContainer` instead of `useMessageStackContext`.
 - `current` comes from the prop (passed by VirtualStack) instead of comparing against context `currentMessageId`.
@@ -476,6 +486,7 @@ MessageStack.displayName = 'MessageStack';
 ```
 
 Key removals:
+
 - `MessageStackProvider` wrapper — gone.
 - `stackRef`, `focusedItemId`, `focusNonce` refs — gone.
 - `useEffect` for focus/blur tracking — gone.
@@ -501,6 +512,7 @@ Expected: No errors.
 
 Run: `moon run storybook-react:serve`
 Open the MessageStack story and verify:
+
 - Messages render in a scrollable virtualized list.
 - Clicking a tile highlights it (aria-current).
 - Arrow keys navigate between tiles.
@@ -518,6 +530,7 @@ git commit -m "refactor(plugin-inbox): use Mosaic.Container current-item trackin
 ### Task 4: Update TASKS.md checkboxes
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-inbox/src/TASKS.md`
 
 - [ ] **Step 1: Mark Phase 1 items as complete**
