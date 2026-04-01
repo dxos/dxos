@@ -84,10 +84,12 @@ jobs:
           # Initialize NEW_VERSION with current config version
           NEW_VERSION="$CONFIG_VERSION"
 
-          # If no prior releases exist in this channel, bump to prerelease
+          # If no prior releases exist in this channel, create a prerelease using the run number
+          # to ensure unique versions across retries (drafts from failed builds aren't listed).
           if [ "$LATEST_VERSION" = "null" ] || [ -z "$LATEST_VERSION" ]; then
-            echo "No prior releases found in channel, bumping config version to prerelease"
-            NEW_VERSION=$(echo $CONFIG_VERSION | xargs semver -i prerelease)
+            echo "No prior releases found in channel, creating prerelease with run number"
+            NEXT_PATCH=$(echo $CONFIG_VERSION | xargs semver -i patch)
+            NEW_VERSION="${NEXT_PATCH}-${{ github.run_number }}"
           # Check if latest version is a prerelease
           elif [[ "$LATEST_VERSION" == *"-"* ]]; then
             echo "Latest version is a prerelease: $LATEST_VERSION"
