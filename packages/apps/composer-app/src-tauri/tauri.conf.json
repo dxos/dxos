@@ -39,13 +39,13 @@
     },
     "targets": "all"
   },
-  "identifier": "org.dxos.composer.dev",
+  "identifier": "org.dxos.composer",
   "plugins": {
     "updater": {
       "endpoints": ["https://cdn.crabnebula.app/update/dxos/composer/{{target}}-{{arch}}/{{current_version}}"],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY2QjhEODU3Rjk5RDhENzAKUldSd2paMzVWOWk0OWxrYVlEVmFnYnFvY2JHekpNTXkxaWpKaGRJSEFmQ1N5SzZwUG93R204RWcK"
     }
   },
-  "productName": "Composer Dev",
+  "productName": "Composer",
   "version": "0.8.3"
 }
