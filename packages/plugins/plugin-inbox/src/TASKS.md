@@ -58,11 +58,11 @@ Both currently use the same `focusRingStyles(border)` call, so initially they ca
 
 `Focus.tsx` would then import `focusTheme` and use `tx('focus.group', { border }, className)` / `tx('focus.item', { border }, className)` like other themed components.
 
-- [ ] Create `ui-theme/src/theme/components/focus.ts` with `FocusStyleProps` and `focusTheme`.
-- [ ] Export from `ui-theme/src/theme/components/index.ts`.
-- [ ] Register in the theme (check how other components register — likely in `ui-theme/src/theme/index.ts`).
-- [ ] Update `Focus.tsx` to use `tx('focus.group', ...)` and `tx('focus.item', ...)` instead of `focusRingStyles`.
-- [ ] Remove `focusRingStyles` from `Focus.tsx`.
+- [x] Create `ui-theme/src/theme/components/focus.ts` with `FocusStyleProps` and `focusTheme`.
+- [x] Export from `ui-theme/src/theme/components/index.ts`.
+- [x] Register in the theme (`ui-theme/src/theme/theme.ts`).
+- [x] Update `Focus.tsx` to use `tx('focus.group', ...)` and `tx('focus.item', ...)` instead of `focusRingStyles`.
+- [x] Remove `focusRingStyles` from `Focus.tsx`.
 
 ### 3b. Delete `fragments/focus.ts`
 
@@ -74,11 +74,12 @@ Both currently use the same `focusRingStyles(border)` call, so initially they ca
 
 Replace all usages with CSS class references.
 
-- [ ] Replace `focusRing` usages with `'dx-focus-ring'` in: `link.ts`, `list.ts`, `popover.ts`, `toast.ts`, `react-ui-thread/Message.tsx`, `shell/InvitationListItem.tsx`.
-- [ ] Create `.dx-focus-subdued` class in `focus-ring.css` equivalent to `subduedFocus` value; use in `input.ts` and `menu.ts`.
-- [ ] Create `.dx-focus-static` class in `focus-ring.css` equivalent to `staticFocusRing` value; use in `input.ts`.
-- [ ] Delete `fragments/focus.ts`.
-- [ ] Remove `focus` re-export from `fragments/index.ts`.
+- [x] Replace `focusRing` usages with `'dx-focus-ring'` in: `link.ts`, `list.ts`, `popover.ts`, `toast.ts`, `react-ui-thread/Message.tsx`, `shell/InvitationListItem.tsx`.
+- [x] Create `.dx-focus-subdued` class in `focus.css` equivalent to `subduedFocus` value; use in `input.ts` and `menu.ts`.
+- [x] Create `.dx-focus-static` class in `focus.css` equivalent to `staticFocusRing` value; use in `input.ts`.
+- [x] Delete `fragments/focus.ts`.
+- [x] Remove `focus` re-export from `fragments/index.ts`.
+- [x] Rename `focus-ring.css` to `focus.css`.
 
 ### 3c. Use-case taxonomy (recommendations)
 
