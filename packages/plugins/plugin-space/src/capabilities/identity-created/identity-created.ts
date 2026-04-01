@@ -15,7 +15,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const client = yield* Capability.get(ClientCapabilities.Client);
 
-    const personalSpace = yield* Effect.tryPromise(() => client.spaces.create());
+    const personalSpace = yield* Effect.tryPromise(() => client.spaces.create({}, { tags: ['personal'] }));
     yield* Effect.tryPromise(() => personalSpace.waitUntilReady());
 
     // Flag as personal space and create root collection structure.

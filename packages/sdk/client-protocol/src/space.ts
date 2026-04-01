@@ -94,6 +94,12 @@ export interface Space extends Messenger {
   get isOpen(): boolean;
 
   /**
+   * Immutable tags assigned at space creation time.
+   * Available on closed spaces.
+   */
+  get tags(): string[];
+
+  /**
    * Current state of the space.
    * The database is ready to be used in `SpaceState.SPACE_READY` state.
    * Presence is available in `SpaceState.SPACE_CONTROL_ONLY` state.

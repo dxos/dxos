@@ -211,6 +211,58 @@ describe('SpaceStateMachine', () => {
     expect(spaceState.credentials).toHaveLength(3);
   });
 
+  test('space genesis with tags', async () => {
+    const keyring = new Keyring();
+    const space = await keyring.createKey();
+    const identity = await keyring.createKey();
+    const feed = await keyring.createKey();
+
+    const spaceState = new SpaceStateMachine(space);
+
+    expect(spaceState.tags).toEqual([]);
+
+    expect(
+      await spaceState.process(
+        await createCredential({
+          issuer: space,
+          subject: space,
+          assertion: {
+            '@type': 'dxos.halo.credentials.SpaceGenesis',
+            spaceKey: space,
+            tags: ['personal', 'test'],
+          },
+          signer: keyring,
+        }),
+        { sourceFeed: feed },
+      ),
+    ).toEqual(true);
+
+    expect(spaceState.tags).toEqual(['personal', 'test']);
+  });
+
+  test('space genesis without tags returns empty array', async () => {
+    const keyring = new Keyring();
+    const space = await keyring.createKey();
+    const feed = await keyring.createKey();
+
+    const spaceState = new SpaceStateMachine(space);
+
+    await spaceState.process(
+      await createCredential({
+        issuer: space,
+        subject: space,
+        assertion: {
+          '@type': 'dxos.halo.credentials.SpaceGenesis',
+          spaceKey: space,
+        },
+        signer: keyring,
+      }),
+      { sourceFeed: feed },
+    );
+
+    expect(spaceState.tags).toEqual([]);
+  });
+
   test('storing device credentials and building a chain', async () => {
     const keyring = new Keyring();
     const haloSpace = await keyring.createKey();

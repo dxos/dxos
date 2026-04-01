@@ -9,14 +9,13 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, getPersonalSpace, getSpacePath } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
-import { SPACE_ID_LENGTH, SpaceState, parseId } from '@dxos/react-client/echo';
+import { type Space, SPACE_ID_LENGTH, SpaceState, parseId } from '@dxos/react-client/echo';
 import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
@@ -44,32 +43,61 @@ export default Capability.makeModule(
     const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
     const client = yield* Capability.get(ClientCapabilities.Client);
 
-    const personalSpace = getPersonalSpace(client);
-    invariant(personalSpace, 'Personal space not available.');
-    yield* Effect.tryPromise(() => personalSpace.waitUntilReady());
+    //
+    // Personal space initialization — deferred until found.
+    //
 
-    // Check if deck state indicates we should switch to default space.
-    const layout = registry.get(layoutAtom);
-    if (layout.workspace === 'default') {
-      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(personalSpace.id) });
+    let personalSpaceInitialized = false;
+    const initializePersonalSpace = async (personalSpace: Space) => {
+      if (personalSpaceInitialized) {
+        return;
+      }
+      personalSpaceInitialized = true;
+
+      await personalSpace.waitUntilReady();
+
+      // Check if deck state indicates we should switch to default space.
+      const layout = registry.get(layoutAtom);
+      if (layout.workspace === 'default') {
+        await invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(personalSpace.id) }).pipe(
+          Effect.runPromise,
+        );
+      }
+
+      // Initialize space sharing lock in personal space.
+      if (typeof personalSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
+        Obj.change(personalSpace.properties, (obj) => {
+          obj[COMPOSER_SPACE_LOCK] = true;
+        });
+      }
+
+      const queryResults = await personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run();
+      const spacesOrder = queryResults[0];
+      if (!spacesOrder) {
+        // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
+        //  Instead, we store order as an array of space ids.
+        personalSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
+      }
+    };
+
+    // Try to find the personal space now, or subscribe to find it later.
+    const found = getPersonalSpace(client);
+    if (found) {
+      yield* Effect.tryPromise(() => initializePersonalSpace(found));
+    } else {
+      subscriptions.add(
+        client.spaces.subscribe((spaces) => {
+          const found = getPersonalSpace({ spaces: { get: () => spaces } });
+          if (found) {
+            void initializePersonalSpace(found);
+          }
+        }).unsubscribe,
+      );
     }
 
-    // Initialize space sharing lock in personal space.
-    if (typeof personalSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
-      Obj.change(personalSpace.properties, (obj) => {
-        obj[COMPOSER_SPACE_LOCK] = true;
-      });
-    }
-
-    const queryResults = yield* Effect.tryPromise(() =>
-      personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run(),
-    );
-    const spacesOrder = queryResults[0];
-    if (!spacesOrder) {
-      // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
-      //  Instead, we store order as an array of space ids.
-      personalSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
-    }
+    //
+    // Space subscriptions — set up immediately, do not depend on personal space.
+    //
 
     // Await missing objects - subscribe to layout atom changes.
     // NOTE: Use immediate: true to check initial state (URL handler may have already set active).
@@ -111,6 +139,7 @@ export default Capability.makeModule(
     subscriptions.add(
       client.spaces.subscribe(async (spaces) => {
         // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
+        const personalSpace = getPersonalSpace(client);
         if (personalSpace && personalSpace.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
           await personalSpace.internal.migrate();
         }
