@@ -50,6 +50,7 @@ const focusRingStyles = (border: boolean) =>
 ```
 
 This should become a `focusTheme` in `ui-theme/src/theme/components/focus.ts` with:
+
 - `focus.group` — styles for `Focus.Group`.
 - `focus.item` — styles for `Focus.Item`.
 
@@ -66,15 +67,16 @@ Both currently use the same `focusRingStyles(border)` call, so initially they ca
 ### 3b. Delete `fragments/focus.ts`
 
 `fragments/focus.ts` exports three string constants:
+
 - `focusRing = 'dx-focus-ring'` — used in 5 internal theme components + 2 external files.
 - `subduedFocus` — used in 2 internal theme components (`input.ts`, `menu.ts`).
 - `staticFocusRing` — used only in `input.ts`.
 
-These are trivial indirections. Replace all usages with the literal class strings.
+Replace all usages with CSS class references.
 
 - [ ] Replace `focusRing` usages with `'dx-focus-ring'` in: `link.ts`, `list.ts`, `popover.ts`, `toast.ts`, `react-ui-thread/Message.tsx`, `shell/InvitationListItem.tsx`.
-- [ ] Inline `subduedFocus` value in `input.ts` and `menu.ts`.
-- [ ] Inline `staticFocusRing` value in `input.ts`.
+- [ ] Create `.dx-focus-subdued` class in `focus-ring.css` equivalent to `subduedFocus` value; use in `input.ts` and `menu.ts`.
+- [ ] Create `.dx-focus-static` class in `focus-ring.css` equivalent to `staticFocusRing` value; use in `input.ts`.
 - [ ] Delete `fragments/focus.ts`.
 - [ ] Remove `focus` re-export from `fragments/index.ts`.
 
@@ -82,14 +84,15 @@ These are trivial indirections. Replace all usages with the literal class string
 
 Four distinct visual states, each with a clear mechanism:
 
-| State | Attribute/Mechanism | CSS Class | When |
-|-------|-------------------|-----------|------|
-| **Keyboard focus** | `:focus-visible` | `dx-focus-ring` (focus-ring.css) | Element receives keyboard focus. |
-| **Current/active** | `aria-current="true"` | `dx-current` (selected.css) | Item is the active item in a navigable list (e.g., arrow keys). |
-| **Selected** | `aria-selected="true"` | `dx-selected` (selected.css) | Item is part of a multi-selection. |
-| **Hover** | `:hover` | `dx-hover` (selected.css) | Mouse hover. |
+| State              | Attribute/Mechanism    | CSS Class                        | When                                                            |
+| ------------------ | ---------------------- | -------------------------------- | --------------------------------------------------------------- |
+| **Keyboard focus** | `:focus-visible`       | `dx-focus-ring` (focus-ring.css) | Element receives keyboard focus.                                |
+| **Current/active** | `aria-current="true"`  | `dx-current` (selected.css)      | Item is the active item in a navigable list (e.g., arrow keys). |
+| **Selected**       | `aria-selected="true"` | `dx-selected` (selected.css)     | Item is part of a multi-selection.                              |
+| **Hover**          | `:hover`               | `dx-hover` (selected.css)        | Mouse hover.                                                    |
 
 Recommendations:
+
 - These four states are orthogonal and should remain separate CSS classes.
 - `dx-focus-ring` handles keyboard focus via `:focus-visible` — well-established, 106 usages, no change needed.
 - `dx-current` handles current/active via `aria-current` — set by `Focus.Item`, styled in `selected.css`.
