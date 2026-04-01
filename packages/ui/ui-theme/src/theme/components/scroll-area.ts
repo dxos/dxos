@@ -68,8 +68,8 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
             ? 'pl-[calc(var(--gutter,8px)+4px)] pr-[var(--gutter,8px)]'
             : 'pl-[calc(var(--gutter,16px)+8px)] pr-[var(--gutter,16px)]'
           : thin
-            ? 'pl-[var(--gutter,8px)] pr-[calc(var(--gutter,8px)-4px)]'
-            : 'pl-[var(--gutter,16px)] pr-[calc(var(--gutter,16px)-8px)]'
+            ? 'pl-[var(--gutter,0)] pr-[calc(var(--gutter,8px)-4px)]'
+            : 'pl-[var(--gutter,0)] pr-[calc(var(--gutter,16px)-8px)]'
         : centered && (thin ? 'pl-[4px]' : 'pl-[8px]')),
 
     (orientation === 'horizontal' || orientation === 'all') &&
