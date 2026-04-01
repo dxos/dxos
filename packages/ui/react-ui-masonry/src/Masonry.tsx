@@ -9,7 +9,7 @@ import React, { type ComponentType, type JSX, type PropsWithChildren, type Ref, 
 import { useResizeDetector } from 'react-resize-detector';
 
 import { ScrollArea, usePx } from '@dxos/react-ui';
-import { cardMaxInlineSize, cardMinInlineSize, composable, composableProps } from '@dxos/ui-theme';
+import { cardMaxInlineSize, cardMinInlineSize, composable, composableProps, scrollbar } from '@dxos/ui-theme';
 
 //
 // Context
@@ -81,7 +81,14 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>
     const { width = 0 } = useResizeDetector({ targetRef: rootRef });
 
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter } = useMasonryContext('Masonry.Content');
-    const columnCount = useColumnCount(width, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter);
+    const columnCount = useColumnCount(
+      width - (scrollbar.thin.size + scrollbar.thin.padding),
+      columns,
+      maxColumns,
+      minColumnWidth,
+      maxColumnWidth,
+      gutter,
+    );
 
     const TileAdapter = useMemo(() => {
       const Adapter = ({ data, index }: { data: any; index: number }) => {
@@ -95,21 +102,25 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>
       return Adapter;
     }, [Tile, gutter]);
 
+    // TODO(burdon): Masonry currently doesn't support an external scroller.
+    //  https://github.com/petyosi/react-virtuoso/issues/1305
+    if (columns === 1) {
+      return <VirtuosoMasonry data={items} columnCount={1} ItemContent={TileAdapter} useWindowScroll />;
+    }
+
     return (
-      <div {...composableProps(props, { role: 'none', classNames: 'dx-expander' })} ref={composedRef}>
-        {width > 0 && (
-          <ScrollArea.Root thin padding>
-            <ScrollArea.Viewport asChild>
-              <ComposableVirtuosoMasonry
-                style={{ gap: `${gutter}rem` }}
-                data={items}
-                columnCount={columnCount}
-                ItemContent={TileAdapter}
-              />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        )}
-      </div>
+      <ScrollArea.Root {...composableProps(props, { role: 'none', classNames: 'w-' })} thin padding ref={composedRef}>
+        <ScrollArea.Viewport asChild>
+          {width > 0 && (
+            <ComposableVirtuosoMasonry
+              style={{ gap: `${gutter}rem` }}
+              data={items}
+              columnCount={columnCount}
+              ItemContent={TileAdapter}
+            />
+          )}
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     );
   },
 );
@@ -128,7 +139,7 @@ const MasonryContent = MasonryContentInner as <Item>(
 
 /** Compute column count from container width and column constraints. */
 const useColumnCount = (
-  containerWidth: number,
+  width: number,
   columns: number | undefined,
   maxColumns: number | undefined,
   minColumnWidth: number,
@@ -145,19 +156,19 @@ const useColumnCount = (
     const maxColumnWidthPx = maxColumnWidth * remInPx;
     const gutterPx = gutter * remInPx;
 
-    if (containerWidth <= 0 || minColumnWidthPx <= 0) {
+    if (width <= 0 || minColumnWidthPx <= 0) {
       return 1;
     }
 
     // Each tile has paddingRight: gutter, so every slot (including the last) occupies
     // (colWidth + gutterPx). The container therefore fits floor(containerWidth / (colWidth + gutterPx)) columns.
-    let cols = Math.floor(containerWidth / (minColumnWidthPx + gutterPx));
+    let cols = Math.floor(width / (minColumnWidthPx + gutterPx));
     if (maxColumnWidthPx > 0) {
-      const effectiveColWidth = containerWidth / cols - gutterPx;
+      const effectiveColWidth = width / cols - gutterPx;
       if (effectiveColWidth > maxColumnWidthPx) {
         // Try to add columns to keep cards below maxColumnWidth, but never violate minColumnWidth.
-        const maxCols = Math.ceil(containerWidth / (maxColumnWidthPx + gutterPx));
-        if (containerWidth / maxCols - gutterPx >= minColumnWidthPx) {
+        const maxCols = Math.ceil(width / (maxColumnWidthPx + gutterPx));
+        if (width / maxCols - gutterPx >= minColumnWidthPx) {
           cols = maxCols;
         }
       }
@@ -165,7 +176,7 @@ const useColumnCount = (
 
     const clamped = maxColumns != null ? Math.min(cols, maxColumns) : cols;
     return Math.max(1, clamped);
-  }, [remInPx, containerWidth, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter]);
+  }, [remInPx, width, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter]);
 };
 
 //
