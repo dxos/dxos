@@ -7,6 +7,9 @@ import { Obj } from '@dxos/echo';
 
 // TODO(DX-891): Remove legacy fallback once all existing personal spaces have been migrated.
 
+/** Space tag for the personal space. */
+export const PERSONAL_SPACE_TAG = 'org.dxos.space.personal';
+
 /** Space properties key for personal space metadata (legacy). */
 const DEFAULT_SPACE_KEY = '__DEFAULT__';
 
@@ -15,7 +18,7 @@ export const hasTag = (space: Pick<Space, 'tags'>, tag: string): boolean => spac
 
 /** Check if a space is the personal space. */
 export const isPersonalSpace = (space: Pick<Space, 'tags' | 'properties'>): boolean => {
-  if (hasTag(space, 'personal')) {
+  if (hasTag(space, PERSONAL_SPACE_TAG)) {
     return true;
   }
 
@@ -29,7 +32,7 @@ export const isPersonalSpace = (space: Pick<Space, 'tags' | 'properties'>): bool
 
 /**
  * Mark a space as the personal space.
- * @deprecated Use `tags: ['personal']` when creating the space instead.
+ * @deprecated Use `tags: [PERSONAL_SPACE_TAG]` when creating the space instead.
  */
 export const setPersonalSpace = (space: Space): void => {
   Obj.change(space.properties, (properties) => {
