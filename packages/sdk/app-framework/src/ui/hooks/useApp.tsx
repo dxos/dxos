@@ -165,15 +165,34 @@ export const useApp = ({
       module: 'org.dxos.app-framework.atom-registry',
     });
 
-    let activatedCount = 0;
+    // Poll manager atoms for progress (avoids PubSub subscription race).
+    const progressInterval = setInterval(() => {
+      if (readyRef.current) {
+        clearInterval(progressInterval);
+        return;
+      }
+      const active = manager.getActive();
+      const modules = manager.getModules();
+      const total = modules.length;
+      const activated = active.length;
+      const lastModule = active.length > 0 ? active[active.length - 1] : undefined;
+      setStartupProgress({
+        activated,
+        total,
+        progress: total > 0 ? activated / total : 0,
+        status: lastModule ? humanizeModuleId(lastModule) : undefined,
+      });
+    }, 100);
+
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
       const listener = yield* Effect.forkDaemon(
         Queue.take(queue).pipe(
-          Effect.tap(({ event, state, module: moduleId, error: error$ }) =>
+          Effect.tap(({ event, state, error: error$ }) =>
             Effect.sync(() => {
               if (event === ActivationEvents.Startup.id && state === 'activated') {
                 clearTimeout(timeoutId);
+                clearInterval(progressInterval);
                 setReady(true);
                 readyRef.current = true;
                 // Trigger startup profiler dump if available.
@@ -182,28 +201,6 @@ export const useApp = ({
               if (error$ && !readyRef.current) {
                 setError(error$);
                 errorRef.current = error$;
-              }
-
-              // Track module activation progress.
-              if (moduleId && !readyRef.current) {
-                if (state === 'activating') {
-                  const total = manager.getModules().length;
-                  setStartupProgress({
-                    activated: activatedCount,
-                    total,
-                    progress: total > 0 ? activatedCount / total : 0,
-                    status: humanizeModuleId(moduleId),
-                  });
-                } else if (state === 'activated') {
-                  activatedCount++;
-                  const total = manager.getModules().length;
-                  setStartupProgress({
-                    activated: activatedCount,
-                    total,
-                    progress: total > 0 ? activatedCount / total : 0,
-                    status: humanizeModuleId(moduleId),
-                  });
-                }
               }
             }),
           ),
@@ -236,6 +233,7 @@ export const useApp = ({
     return () => {
       log('useApp: effect cleanup');
       clearTimeout(timeoutId);
+      clearInterval(progressInterval);
       void runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
         void runAndForwardErrors(manager.shutdown());
