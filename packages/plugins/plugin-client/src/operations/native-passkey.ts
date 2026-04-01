@@ -77,8 +77,20 @@ export const loginNativePasskey = async (params: {
  * The attestation object is CBOR-encoded with an `authData` field that contains
  * the credential public key in COSE_Key format starting at byte offset 55 + credIdLen.
  */
-export const extractPublicKeyFromAttestation = (attestationObjectBase64: string): { publicKey: Uint8Array; algorithm: number } => {
-  const attestationBytes = Uint8Array.from(atob(attestationObjectBase64), (c) => c.charCodeAt(0));
+export const extractPublicKeyFromAttestation = (attestationObjectEncoded: string): { publicKey: Uint8Array; algorithm: number } => {
+  // The plugin may return base64, URL-safe base64, or hex. Try to decode appropriately.
+  let attestationBytes: Uint8Array;
+  try {
+    // Standard base64: replace URL-safe chars and add padding if needed.
+    const b64 = attestationObjectEncoded.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+    attestationBytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+  } catch {
+    // Fallback: try hex decoding.
+    attestationBytes = new Uint8Array(
+      attestationObjectEncoded.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)),
+    );
+  }
 
   // The authData is inside the CBOR-encoded attestation object.
   // We need to decode CBOR to get authData. Use a minimal inline decoder
