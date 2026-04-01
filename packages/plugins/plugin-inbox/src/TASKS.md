@@ -103,7 +103,11 @@ Recommendations:
 - `focus-ring.css` should remain the single source for element-level keyboard focus rings.
 - `selected.css` should remain the single source for state-driven visual feedback (current, selected, hover).
 
-## Phase 4 (Selection)
+## Phase 4
+
+- [ ] In `CalendarArticle` when clicking on a date in the `NaturalCalendar.Grid` we should scroll into view the first event that matches that date in `EventStack`
+
+## Phase 5 (Selection)
 
 - [ ] Review remaining ui-theme fragments.
 - [ ] Review `useSelected` and `AttentionOperation.Select` (currently conflates active and selected).

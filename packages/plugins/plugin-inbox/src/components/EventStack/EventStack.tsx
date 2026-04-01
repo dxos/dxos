@@ -113,9 +113,9 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
                 classNames='my-2'
                 gap={8}
                 items={items}
+                draggable={false}
                 getId={(item) => item.event.id}
                 getScrollElement={() => viewport}
-                draggable={false}
                 estimateSize={() => 100}
               />
             </ScrollArea.Viewport>

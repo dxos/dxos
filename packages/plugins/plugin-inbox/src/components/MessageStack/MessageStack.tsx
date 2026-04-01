@@ -202,9 +202,9 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                 classNames='my-2'
                 gap={8}
                 items={items}
+                draggable={false}
                 getId={(item) => item.message.id}
                 getScrollElement={() => viewport}
-                draggable={false}
                 estimateSize={() => 150}
               />
             </ScrollArea.Viewport>

@@ -207,6 +207,7 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
         <Comp
           {...rest}
           {...{
+            'data-mosaic-tile-id': id,
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'

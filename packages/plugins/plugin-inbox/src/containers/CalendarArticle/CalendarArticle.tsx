@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { isSameDay } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -48,6 +49,19 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
   const isEmpty = objects.length === 0;
 
+  const handleDateSelect = useCallback(
+    ({ date }: { date: Date }) => {
+      const match = objects.find((event) => isSameDay(new Date(event.startDate), date));
+      if (match) {
+        void invokePromise(AttentionOperation.Select, {
+          contextId: id,
+          selection: { mode: 'single', id: match.id },
+        });
+      }
+    },
+    [objects, id, invokePromise],
+  );
+
   const handleAction = useCallback<EventStackActionHandler>(
     (action) => {
       switch (action.type) {
@@ -84,7 +98,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
               <NaturalCalendar.Toolbar />
             </Panel.Toolbar>
             <Panel.Content asChild>
-              <NaturalCalendar.Grid />
+              <NaturalCalendar.Grid onSelect={handleDateSelect} />
             </Panel.Content>
           </NaturalCalendar.Root>
         </Panel.Root>
