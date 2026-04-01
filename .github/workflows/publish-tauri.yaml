@@ -66,11 +66,14 @@ jobs:
         id: bump-version
         run: |
           # TODO(wittjosiah): Switch to production.
-          # Determine channel argument: omit for labs, use branch name otherwise
-          if [ "${{ steps.extract_branch.outputs.branch }}" = "labs" ]; then
+          # Determine channel argument: omit for labs, use branch name otherwise.
+          # Replace slashes with dashes to match the channel name used by cn-channel action.
+          BRANCH="${{ steps.extract_branch.outputs.branch }}"
+          CHANNEL=$(echo "$BRANCH" | sed 's|/|-|g')
+          if [ "$BRANCH" = "labs" ]; then
             CHANNEL_ARG=""
           else
-            CHANNEL_ARG="--channel ${{ steps.extract_branch.outputs.branch }}"
+            CHANNEL_ARG="--channel $CHANNEL"
           fi
 
           RELEASE_DATA=$(cn release list dxos/composer $CHANNEL_ARG --format json)
@@ -84,12 +87,10 @@ jobs:
           # Initialize NEW_VERSION with current config version
           NEW_VERSION="$CONFIG_VERSION"
 
-          # If no prior releases exist in this channel, create a prerelease using the run number
-          # to ensure unique versions across retries (drafts from failed builds aren't listed).
+          # If no prior releases exist in this channel, bump to prerelease.
           if [ "$LATEST_VERSION" = "null" ] || [ -z "$LATEST_VERSION" ]; then
-            echo "No prior releases found in channel, creating prerelease with run number"
-            NEXT_PATCH=$(echo $CONFIG_VERSION | xargs semver -i patch)
-            NEW_VERSION="${NEXT_PATCH}-${{ github.run_number }}"
+            echo "No prior releases found in channel, bumping config version to prerelease"
+            NEW_VERSION=$(echo $CONFIG_VERSION | xargs semver -i prerelease)
           # Check if latest version is a prerelease
           elif [[ "$LATEST_VERSION" == *"-"* ]]; then
             echo "Latest version is a prerelease: $LATEST_VERSION"
