@@ -33,6 +33,11 @@ We have multiple ways to visually represet focused/current/selected items, inclu
 
 - [ ] Consider moving the definitions in `fragments/focus.ts` to equivalent classes in `focus-ring.css`; update all usages.
 - [ ] Similar to other `react-ui` components, move the current focus styles from `Focus.tsx` into `ui-theme/src/theme/components/focus.ts`.
+- [ ] Consider the different use cases (below) covered by the cases above; make recommendations for further simplification/unification.
+  - Keyboard focus
+  - Current/active item (for navigation)
+  - Selected (e.g., could be multi-selected)
+  - Hover
 
 ## Phase 4 (Selection)
 
