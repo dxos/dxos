@@ -191,12 +191,12 @@ const BoardContainer = composable<HTMLDivElement, BoardContainerProps>(
     return (
       <div
         {...composableProps(props, {
-          className: mx(
+          classNames: [
             'flex items-center justify-center overflow-auto scrollbar-none overscroll-x-contain',
             'opacity-0 transition-opacity duration-1000',
             mounted && 'opacity-100',
             classNames,
-          ),
+          ],
         })}
         ref={composeRefs(containerRef, forwardedRef)}
         style={{

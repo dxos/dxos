@@ -56,7 +56,7 @@ export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
 
     return (
       <div
-        {...composableProps(props, { className: 'dx-container' })}
+        {...composableProps(props, { classNames: 'dx-container' })}
         ref={parentRef}
         data-popover-collision-boundary={true /* TODO(thure): Make this a constant and document it. */}
       />

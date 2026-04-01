@@ -107,7 +107,7 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
 
     return (
       <div
-        {...composableProps(props, { className: mx('flex flex-col h-full overflow-hidden', classNames) })}
+        {...composableProps(props, { classNames: ['flex flex-col h-full overflow-hidden', classNames] })}
         ref={forwardedRef}
       >
         {/* TODO(burdon): Replace with Thread. */}

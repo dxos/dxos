@@ -100,7 +100,7 @@ const Group = slottable<HTMLDivElement, GroupProps>(
     return (
       <FocusContext.Provider value={{ setFocus: setState, groupHasFocus }}>
         <Comp
-          {...composableProps(props, { tabIndex: 0, className: focusRingStyles(border) })}
+          {...composableProps(props, { tabIndex: 0, classNames: focusRingStyles(border) })}
           {...tabsterAttrs}
           {...(state && {
             [`data-${FOCUS_STATE_ATTR}`]: state,
@@ -183,7 +183,7 @@ const Item = slottable<HTMLDivElement, ItemProps>(
 
     return (
       <Comp
-        {...composableProps(props, { tabIndex: 0, className: focusRingStyles(border) })}
+        {...composableProps(props, { tabIndex: 0, classNames: focusRingStyles(border) })}
         {...focusableGroupAttrs}
         aria-current={isCurrent || undefined}
         onClick={handleClick}

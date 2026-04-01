@@ -119,7 +119,7 @@ const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(({ clas
     <div
       {...composableProps(props, {
         role: 'none',
-        className: mx('shrink-0 grid grid-cols-3 items-center bg-toolbar-surface', classNames),
+        classNames: ['shrink-0 grid grid-cols-3 items-center bg-toolbar-surface', classNames],
       })}
       ref={forwardedRef}
       style={{ width: defaultWidth }}
@@ -264,7 +264,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
       <div
         {...composableProps(props, {
           role: 'none',
-          className: mx('flex flex-col h-full w-full justify-center overflow-hidden', classNames),
+          classNames: ['flex flex-col h-full w-full justify-center overflow-hidden', classNames],
         })}
         ref={forwardedRef}
       >
