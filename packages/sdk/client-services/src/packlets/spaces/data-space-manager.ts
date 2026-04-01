@@ -185,7 +185,7 @@ export class DataSpaceManager extends Resource {
           Array.from(this._spaces.values()).map(async (space) => {
             const rootUrl = space.automergeSpaceState.rootUrl;
             const rootHandle = rootUrl
-              ? await this._echoHost.loadDoc<Doc<DatabaseDirectory>>(Context.default(), rootUrl as AutomergeUrl)
+              ? await this._echoHost.loadDoc<Doc<DatabaseDirectory>>(this._ctx, rootUrl as AutomergeUrl)
               : undefined;
             await rootHandle?.whenReady();
             const rootDoc = rootHandle?.doc();
@@ -380,7 +380,7 @@ export class DataSpaceManager extends Resource {
 
   async createDefaultSpace(ctx: Context): Promise<DataSpace> {
     const space = await this.createSpace(ctx, {});
-    const document = await this._getSpaceRootDocument(space);
+    const document = await this._getSpaceRootDocument(ctx, space);
 
     // TODO(dmaretskyi): Better API for low-level data access.
     const properties: ObjectStructure = {
@@ -404,10 +404,10 @@ export class DataSpaceManager extends Resource {
     return space;
   }
 
-  private async _getSpaceRootDocument(space: DataSpace): Promise<DocHandle<DatabaseDirectory>> {
+  private async _getSpaceRootDocument(ctx: Context, space: DataSpace): Promise<DocHandle<DatabaseDirectory>> {
     const automergeIndex = space.automergeSpaceState.rootUrl;
     invariant(automergeIndex);
-    const document = await this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), automergeIndex as any, {
+    const document = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, automergeIndex as any, {
       fetchFromNetwork: true,
     });
     await document.whenReady();

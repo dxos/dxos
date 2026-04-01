@@ -9,89 +9,26 @@ Rules: [SKILL.md](./SKILL.md). Out of scope: RPC client-service boundary.
 
 The PR wires `ctx: Context` through most of the networking and space lifecycle stack. The OTEL bridge maps DXOS span IDs to OpenTelemetry contexts and propagates `traceparent` in both WebSocket messages and HTTP requests. Browser auto-instrumentation (fetch, XHR, document-load) is disabled — all trace propagation is explicit via `ctx`.
 
-Remaining issues fall into four categories below, ordered by severity.
+Three remaining items require interface-level changes and are deferred.
 
 ---
 
-## P1 — Broken trace hierarchy
+## Remaining — requires interface changes
 
-### 1. `SpaceList._open()` / `_close()` — `@trace.span()` without `ctx` parameter
-
-**Location:** `packages/sdk/client/src/echo/space-list.ts:106, 281`
-
-Both methods have `@trace.span()` but no `ctx: Context` first parameter. The decorator reads `args[0]` as `ctx` — without it, the span has no parent and becomes an orphaned root.
-
-```typescript
-@trace.span()
-async _open(): Promise<void> { ... }  // VIOLATION
-
-@trace.span()
-async _close(): Promise<void> { ... } // VIOLATION
-```
-
-### 2. `ServiceHost.close()` — `@trace.span()` without `ctx` parameter
-
-**Location:** `packages/sdk/client-services/src/packlets/services/service-host.ts:425`
-
-`open(ctx)` correctly takes `ctx`. `close()` has `@Trace.span()` but no `ctx` — orphaned span.
-
-```typescript
-@Trace.span()
-async close(): Promise<void> { ... } // VIOLATION — should be close(ctx: Context)
-```
-
-### 3. `ControlPipeline.start(ctx)` passes `this._ctx` instead of caller's `ctx` to `_consumePipeline`
-
-**Location:** `packages/core/echo/echo-pipeline/src/space/control-pipeline.ts:132-133`
-
-```typescript
-setTimeout(async () => {
-  void this._consumePipeline(this._ctx); // should be ctx
-});
-```
-
-`_consumePipeline` is a direct downstream async path for processing the pipeline. Using `this._ctx` detaches it from the caller's trace tree. The `setTimeout` wrapper is fine (detached work), but the context should still be the caller's `ctx` for trace parentage.
-
-### 4. `Swarm.onOffer(_ctx)` drops context — `Peer.onOffer` has no `ctx` parameter
-
-**Location:** `packages/core/mesh/network-manager/src/swarm/swarm.ts:208`, `peer.ts`
-
-`Swarm.onOffer(_ctx, message)` receives `ctx` from `SwarmMessenger` but calls `peer.onOffer(message)` without forwarding it. `Peer.onOffer` does not accept `ctx` at all, breaking the trace chain from inbound offer → peer → connection.
-
-### 5. `IdentityManager.createIdentity` / `prepareIdentity` — `identity.open(new Context())`
-
-**Location:** `packages/sdk/client-services/src/packlets/identity/identity-manager.ts:156, 259`
-
-Both methods call `identity.open(new Context())`. The callers (`ServiceContext.createIdentity(ctx)`, `_acceptIdentity`) have `ctx` in scope. `new Context()` creates an orphaned root with no parent span.
+| Location | Method | Issue |
+|----------|--------|-------|
+| `automerge-data-source.ts:98` | `getChangedObjects()` | Uses `Context.default()` for `loadDoc` inside Effect pipeline. `AutomergeDataSource` does not extend `Resource` and the `IndexDataSource` interface has no `Context` parameter. Requires adding `ctx` to the `IndexDataSource` interface. |
+| `echo-edge-replicator.ts:78` | `connect()` | Assigns `Context.default()` as lifecycle context for the connection. `AutomergeReplicatorContext` interface does not carry `@dxos/context` `Context`. Legitimate lifecycle context creation — low priority. |
+| `queue-query-context.ts:59` | `start()` | Creates `Context.default()` as a run-scoped context. `start()` takes no arguments; caller `QueryResultImpl._start()` has no `ctx`. Legitimate run-scoped lifecycle context — low priority. |
 
 ---
 
-## P2 — `Context.default()` in intermediate methods
+## P2 — `this._ctx` vs caller `ctx` (reviewed, kept)
 
-Per rules, `Context.default()` belongs only at public API entry points and RPC service methods. These intermediate methods should receive `ctx` from their callers.
-
-| Location | Method | Called from (has ctx) |
-|----------|--------|----------------------|
-| `data-space-manager.ts:410` | `_getSpaceRootDocument()` → `loadDoc(Context.default(), ...)` | `createDefaultSpace(ctx)` |
-| `identity-service.ts:60` | `_createDefaultSpace()` → `Context.default()` | Called from `createIdentity` RPC |
-| `identity-service.ts:156,163` | `_fixIdentityWithoutDefaultSpace()` → `Context.default()` | Called from `_open` lifecycle |
-| `query-executor.ts:1265` | `_loadFromAutomerge()` → `Context.default()` | Internal query pipeline |
-| `query-executor.ts:1332` | `_loadFromDXN()` → `Context.default()` | Internal query pipeline |
-| `documents-synchronizer.ts:64` | `addDocuments()` → `loadDoc(Context.default(), ...)` | Pipeline lifecycle |
-| `automerge-host.ts:402` | `waitUntilHeadsReplicated()` → `loadDoc(Context.default(), ...)` | Sync/replication path |
-| `echo-edge-replicator.ts:78` | `connect()` → assigns `Context.default()` for lifecycle | Replicator setup |
-| `queue-query-context.ts:59` | `start()` → `Context.default()` | Reactive query lifecycle |
-| `automerge-data-source.ts:98` | `getChangedObjects()` → `Effect.gen` with `Context.default()` | Indexer pipeline |
-| `data-space-manager.ts:188` | `trace.diagnostic` callback → `Context.default()` | Diagnostic fetch |
-
----
-
-## P2 — `this._ctx` vs caller `ctx` conflicts
-
-| Location | Issue |
-|----------|-------|
-| `SpaceProxy._initializeDb(_ctx)` | `cancelWithContext(this._ctx, ...)` for property wait. Cancellation of the current operation should use caller's `_ctx`, not the proxy's lifecycle context. |
-| `DataSpace._createWritableFeeds` | `notarize({ ctx: this._ctx })` inside `initializeDataPipeline(ctx)` chain. Should forward `ctx`. |
+| Location | Pattern | Rationale |
+|----------|---------|-----------|
+| `SpaceProxy._initializeDb(_ctx)` | `cancelWithContext(this._ctx, ...)` and `scheduleMicroTask(this._ctx, ...)` | Lifecycle-scoped cancellation: property wait and microtasks should abort when the proxy is disposed, not when the initialization caller is disposed. `_ctx` is consumed by `@trace.span()` for trace hierarchy. |
+| `DataSpace._createWritableFeeds` | `notarize({ ctx: this._ctx })` inside `initializeDataPipeline(ctx)` chain | Notarization must survive beyond the initialization context. `this._ctx` ensures cancellation only when the space itself is disposed. |
 
 ---
 
@@ -129,6 +66,18 @@ These areas are properly wired:
 - **RemoteTracing** → maps DXOS span IDs ↔ OTEL contexts, passes `parentContext`, provides `wrapExecution`.
 - **@trace.span() decorator** → extracts `ctx` from `args[0]`, derives child ctx, wraps execution in OTEL context.
 - **TraceContext proto** on `Message` for WS-level distributed tracing.
+- **SpaceList._open(ctx)** / `_close(ctx)` → `@trace.span()` with `ctx` first parameter.
+- **ServiceHost.close(ctx)** → `@Trace.span()` with `ctx` first parameter.
+- **ControlPipeline.start(ctx)** → passes caller's `ctx` to `_consumePipeline`.
+- **Swarm.onOffer(ctx)** → forwards `ctx` to `Peer.onOffer(ctx, message)`.
+- **IdentityManager.createIdentity/prepareIdentity** → accept optional `ctx`, forward to `identity.open(ctx)`.
+- **AutomergeHost.waitUntilHeadsReplicated(ctx)** → forwards `ctx` to `loadDoc(ctx)`.
+- **QueryExecutor._loadFromAutomerge/_loadFromDXN** → use `this._ctx` (Resource lifecycle) for `loadDoc`.
+- **DocumentsSynchronizer.addDocuments** → uses `this._ctx` (Resource lifecycle) for `loadDoc`.
+- **IdentityServiceImpl._createDefaultSpace(ctx)** → forwards `ctx` to `createDefaultSpace(ctx)`.
+- **IdentityServiceImpl._fixIdentityWithoutDefaultSpace** → uses `this._ctx` for `space.open` and `initializeDataPipeline`.
+- **DataSpaceManager._getSpaceRootDocument(ctx)** → forwards `ctx` to `loadDoc(ctx)`.
+- **DataSpaceManager trace.diagnostic callback** → uses `this._ctx` for `loadDoc`.
 
 ---
 
@@ -153,6 +102,18 @@ These areas are properly wired:
 | `EchoHost.openSpaceRoot` / `createSpaceRoot` missing `ctx` | Added `ctx` as first parameter; all callers updated. |
 | `DataSpace._onNewAutomergeRoot` using `Context.default()` for `loadDoc` | Changed to `this._ctx`. |
 | `devices-service.test.ts` passing `Context.default()` to `createIdentity` | Fixed — `createIdentity` takes `CreateIdentityOptions`, not `Context`. |
+| `SpaceList._open/_close` missing `ctx` | Added `ctx: Context` first parameter; threaded through `ClientRuntime`. |
+| `ServiceHost.close()` missing `ctx` | Added `ctx: Context` first parameter; all callers updated. |
+| `ControlPipeline.start` passing `this._ctx` to `_consumePipeline` | Changed to pass caller's `ctx`. |
+| `Swarm.onOffer` dropping `ctx` before `Peer.onOffer` | Added `ctx` to `Peer.onOffer` signature; `Swarm.onOffer` now forwards it. |
+| `IdentityManager.createIdentity/prepareIdentity` using `new Context()` | Added optional `ctx` parameter; callers pass `ctx` when available. |
+| `DataSpaceManager._getSpaceRootDocument` using `Context.default()` | Added `ctx` parameter; `createDefaultSpace(ctx)` passes it through. |
+| `DataSpaceManager` trace.diagnostic `loadDoc(Context.default())` | Changed to `this._ctx`. |
+| `DocumentsSynchronizer.addDocuments` using `Context.default()` | Changed to `this._ctx` (Resource lifecycle). |
+| `AutomergeHost.waitUntilHeadsReplicated` using `Context.default()` | Added `ctx` parameter; RPC handler passes `Context.default()`. |
+| `QueryExecutor._loadFromAutomerge/_loadFromDXN` using `Context.default()` | Changed to `this._ctx` (Resource lifecycle). |
+| `IdentityServiceImpl._createDefaultSpace` using `Context.default()` | Added `ctx` parameter; callers pass `this._ctx`. |
+| `IdentityServiceImpl._fixIdentityWithoutDefaultSpace` using `Context.default()` | Changed to `this._ctx` for `space.open` and `initializeDataPipeline`. |
 
 ---
 
@@ -187,6 +148,7 @@ These areas are properly wired:
 - `packages/core/echo/echo-pipeline/src/space/control-pipeline.ts`
 - `packages/core/echo/echo-pipeline/src/space/space.ts`
 - `packages/core/echo/echo-pipeline/src/edge/echo-edge-replicator.ts`
+- `packages/core/echo/echo-pipeline/src/query/query-executor.ts`
 - `packages/core/echo/echo-db/src/core-db/core-database.ts`
 - `packages/core/echo/echo-db/src/queue/queue-query-context.ts`
 - `packages/core/echo/echo-db/src/client/index-query-source-provider.ts`
@@ -202,6 +164,8 @@ These areas are properly wired:
 - `packages/sdk/client-services/src/packlets/spaces/notarization-plugin.ts`
 - `packages/sdk/client/src/echo/space-proxy.ts`
 - `packages/sdk/client/src/echo/space-list.ts`
+- `packages/sdk/client/src/client/client.ts`
+- `packages/sdk/client/src/client/client-runtime.ts`
 - `packages/sdk/observability/src/extensions/otel/traces-browser.ts`
 - `packages/sdk/observability/src/extensions/otel/extension.ts`
 - `packages/common/tracing/src/remote/tracing.ts`

@@ -1262,7 +1262,7 @@ export class QueryExecutor extends Resource {
       return null;
     }
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(
-      Context.default(),
+      this._ctx,
       meta.documentId as DocumentId,
       {
         fetchFromNetwork: true,
@@ -1329,7 +1329,7 @@ export class QueryExecutor extends Resource {
           return null;
         }
 
-        const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl, {
+        const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
           fetchFromNetwork: true,
         });
         const doc = handle.doc();

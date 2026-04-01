@@ -52,12 +52,12 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
   async createIdentity(request: CreateIdentityRequest): Promise<IdentityProto> {
     await this._createIdentity({ profile: request.profile, deviceProfile: request.deviceProfile });
     const dataSpaceManager = this._dataSpaceManagerProvider();
-    await this._createDefaultSpace(dataSpaceManager);
+    await this._createDefaultSpace(this._ctx, dataSpaceManager);
     return this._getIdentity()!;
   }
 
-  private async _createDefaultSpace(dataSpaceManager: DataSpaceManager): Promise<void> {
-    const space = await dataSpaceManager!.createDefaultSpace(Context.default());
+  private async _createDefaultSpace(ctx: Context, dataSpaceManager: DataSpaceManager): Promise<void> {
+    const space = await dataSpaceManager!.createDefaultSpace(ctx);
     const identity = this._identityManager.identity;
     invariant(identity);
     await identity.updateDefaultSpace(space.id);
@@ -153,14 +153,14 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
       dataSpaceManager.spaces.values(),
       async (space) => {
         if (space.state === SpaceState.SPACE_CLOSED) {
-          await space.open(Context.default());
+          await space.open(this._ctx);
 
           // Wait until the space is either READY or REQUIRES_MIGRATION.
           // NOTE: Space could potentially never initialize if the space data is corrupted.
           const requiresMigration = space.stateUpdate.waitForCondition(
             () => space.state === SpaceState.SPACE_REQUIRES_MIGRATION,
           );
-          await Promise.race([space.initializeDataPipeline(Context.default()), requiresMigration]);
+          await Promise.race([space.initializeDataPipeline(this._ctx), requiresMigration]);
         }
         if (await dataSpaceManager.isDefaultSpace(space)) {
           if (foundDefaultSpace) {
@@ -184,7 +184,7 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     await Promise.race([allProcessed, recordedDefaultSpaceTrigger.wait(), sleep(DEFAULT_SPACE_SEARCH_TIMEOUT)]);
 
     if (!recodedDefaultSpace) {
-      await this._createDefaultSpace(dataSpaceManager);
+      await this._createDefaultSpace(this._ctx, dataSpaceManager);
     }
   }
 }

@@ -61,7 +61,7 @@ export class DocumentsSynchronizer extends Resource {
               try {
                 log('loading document', { documentId });
                 const doc = await this._params.automergeHost.loadDoc<DatabaseDirectory>(
-                  Context.default(),
+                  this._ctx,
                   documentId as DocumentId,
                   { fetchFromNetwork: true },
                 );

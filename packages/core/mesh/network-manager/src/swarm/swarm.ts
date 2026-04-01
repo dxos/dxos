@@ -205,7 +205,7 @@ export class Swarm {
   }
 
   @synchronized
-  async onOffer(_ctx: Context, message: OfferMessage): Promise<Answer> {
+  async onOffer(ctx: Context, message: OfferMessage): Promise<Answer> {
     log('offer', { message });
     if (this._ctx.disposed) {
       log('ignored for disposed swarm');
@@ -224,7 +224,7 @@ export class Swarm {
     }
 
     const peer = this._getOfferSenderPeer(message.author);
-    const answer = await peer.onOffer(message);
+    const answer = await peer.onOffer(ctx, message);
     this._topology.update();
     return answer;
   }

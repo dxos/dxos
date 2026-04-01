@@ -380,7 +380,7 @@ export class AutomergeHost extends Resource {
     }
   }
 
-  async waitUntilHeadsReplicated(heads: DocHeadsList): Promise<void> {
+  async waitUntilHeadsReplicated(ctx: Context, heads: DocHeadsList): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const entries = heads.entries;
     if (!entries?.length) {
@@ -399,7 +399,7 @@ export class AutomergeHost extends Resource {
     if (headsToWait.length > 0) {
       await Promise.all(
         headsToWait.map(async (entry) => {
-          const handle = await this.loadDoc<DatabaseDirectory>(Context.default(), entry.documentId as DocumentId);
+          const handle = await this.loadDoc<DatabaseDirectory>(ctx, entry.documentId as DocumentId);
           await waitForHeads(handle, entry.heads!);
         }),
       );

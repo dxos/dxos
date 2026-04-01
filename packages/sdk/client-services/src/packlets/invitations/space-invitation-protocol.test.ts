@@ -162,7 +162,7 @@ describe('services/space-invitations-protocol', () => {
       timeout: 100,
     });
     const invitation = hostInvitation.get();
-    await host.close();
+    await host.close(Context.default());
 
     const guestTimeout = new Trigger();
     const guestInvitation = await acceptInvitation(guest, invitation);

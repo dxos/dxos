@@ -106,7 +106,7 @@ export class Peer {
   /**
    * Respond to remote offer.
    */
-  async onOffer(message: OfferMessage): Promise<Answer> {
+  async onOffer(_ctx: Context, message: OfferMessage): Promise<Answer> {
     const remote = message.author;
 
     if (

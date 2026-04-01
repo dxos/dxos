@@ -324,7 +324,7 @@ export class ServiceContext extends Resource {
 
   async createIdentity(params: CreateIdentityOptions = {}) {
     const ctx = Context.default();
-    const identity = await this.identityManager.createIdentity(params);
+    const identity = await this.identityManager.createIdentity(params, ctx);
     await this._setNetworkIdentity({ identity });
     await identity.joinNetwork(ctx);
     await this._initialize(ctx);
@@ -351,7 +351,7 @@ export class ServiceContext extends Resource {
   }
 
   private async _acceptIdentity(params: JoinIdentityProps) {
-    const { identity, identityRecord } = await this.identityManager.prepareIdentity(params);
+    const { identity, identityRecord } = await this.identityManager.prepareIdentity(params, this._ctx);
     await this._setNetworkIdentity({ deviceCredential: params.authorizedDeviceCredential!, identity });
     await identity.joinNetwork(this._ctx);
     await this.identityManager.acceptIdentity(identity, identityRecord, params.deviceProfile);
