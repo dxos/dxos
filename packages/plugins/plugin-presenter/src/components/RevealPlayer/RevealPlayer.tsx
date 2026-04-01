@@ -150,7 +150,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
     return (
       <div
         {...composableProps(props, {
-          className: `dx-container grid place-items-center bg-black ${fullscreen ? 'absolute inset-0' : ''}`,
+          classNames: ['dx-container grid place-items-center bg-black', fullscreen && 'absolute inset-0'],
         })}
         ref={forwardedRef}
       >
