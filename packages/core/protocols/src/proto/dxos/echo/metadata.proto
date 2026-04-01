@@ -54,6 +54,9 @@ message SpaceMetadata {
   /// Space key.
   dxos.keys.PublicKey key = 1;
 
+  /// Immutable tags assigned at space creation time.
+  repeated string tags = 12;
+
   /// ACTIVE, INACTIVE, etc.
   optional dxos.client.services.SpaceState state = 10;
 
