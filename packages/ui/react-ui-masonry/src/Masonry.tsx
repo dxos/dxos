@@ -50,7 +50,7 @@ const MasonryRoot = ({
   gutter = 0.75,
 }: MasonryRootProps) => (
   <MasonryProvider
-    Tile={Tile!}
+    Tile={Tile ?? (() => null)}
     columns={columns}
     maxColumns={maxColumns}
     minColumnWidth={minColumnWidth}
@@ -109,7 +109,7 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps<any>>
     }
 
     return (
-      <ScrollArea.Root {...composableProps(props, { role: 'none', classNames: 'w-' })} thin padding ref={composedRef}>
+      <ScrollArea.Root {...composableProps(props, { role: 'none' })} thin padding ref={composedRef}>
         <ScrollArea.Viewport asChild>
           {width > 0 && (
             <ComposableVirtuosoMasonry
@@ -162,7 +162,7 @@ const useColumnCount = (
 
     // Each tile has paddingRight: gutter, so every slot (including the last) occupies
     // (colWidth + gutterPx). The container therefore fits floor(containerWidth / (colWidth + gutterPx)) columns.
-    let cols = Math.floor(width / (minColumnWidthPx + gutterPx));
+    let cols = Math.max(1, Math.floor(width / (minColumnWidthPx + gutterPx)));
     if (maxColumnWidthPx > 0) {
       const effectiveColWidth = width / cols - gutterPx;
       if (effectiveColWidth > maxColumnWidthPx) {

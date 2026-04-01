@@ -94,13 +94,15 @@ const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...pr
   const options = useScrollAreaContext(SCROLLAREA_VIEWPORT_NAME);
   const density = options.thin ? scrollbar.thin : scrollbar.coarse;
   const { className, ...rest } = composableProps(props);
+  const { style, ...restWithoutStyle } = rest as { style?: CSSProperties; [key: string]: any };
   const Comp = asChild ? Slot : Primitive.div;
 
   return (
     <Comp
-      {...rest}
+      {...restWithoutStyle}
       style={
         {
+          ...style,
           '--scroll-width': `${density.size}px`,
           '--scroll-padding': `${density.padding}px`,
         } as CSSProperties
