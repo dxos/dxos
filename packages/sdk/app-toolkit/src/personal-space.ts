@@ -10,7 +10,6 @@ import { Obj } from '@dxos/echo';
 /** Space tag for the personal space. */
 export const PERSONAL_SPACE_TAG = 'org.dxos.space.personal';
 
-
 /** Space properties key for personal space metadata (legacy). */
 const DEFAULT_SPACE_KEY = '__DEFAULT__';
 
