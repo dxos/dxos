@@ -15,7 +15,7 @@
   }
 
   .dx-current {
-    @apply border-transparent aria-[current=true]:bg-highlight-surface! aria-[current=true]:text-highlight-surface-text! 
+    @apply border-transparent aria-[current=true]:bg-highlight-surface aria-[current=true]:text-highlight-surface-text 
       aria-[current=true]:border-active-separator!;
   }
 

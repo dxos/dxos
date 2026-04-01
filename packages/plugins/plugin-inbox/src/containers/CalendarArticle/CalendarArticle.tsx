@@ -16,7 +16,7 @@ import { useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
-import { EventStack } from '../../components';
+import { EventStack, type EventStackActionHandler } from '../../components';
 import { meta } from '../../meta';
 import { type Calendar } from '../../types';
 
@@ -34,7 +34,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
   const id = attendableId ?? Obj.getDXN(calendar).toString();
-  const selected = useSelected(id, 'single');
+  const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(calendar);
 
   // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
@@ -48,23 +48,28 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
   const isEmpty = objects.length === 0;
 
-  const handleSelect = useCallback(
-    (event: Event.Event) => {
-      void invokePromise(AttentionOperation.Select, {
-        contextId: id,
-        selection: { mode: 'single', id: event.id },
-      });
+  const handleAction = useCallback<EventStackActionHandler>(
+    (action) => {
+      switch (action.type) {
+        case 'current': {
+          void invokePromise(AttentionOperation.Select, {
+            contextId: id,
+            selection: { mode: 'single', id: action.eventId },
+          });
 
-      const companion = companionSegment('event');
-      if (layout.mode === 'simple') {
-        void invokePromise(LayoutOperation.UpdateComplementary, {
-          subject: companion,
-          state: 'expanded',
-        });
-      } else {
-        void invokePromise(DeckOperation.ChangeCompanion, {
-          companion,
-        });
+          const companion = companionSegment('event');
+          if (layout.mode === 'simple') {
+            void invokePromise(LayoutOperation.UpdateComplementary, {
+              subject: companion,
+              state: 'expanded',
+            });
+          } else {
+            void invokePromise(DeckOperation.ChangeCompanion, {
+              companion,
+            });
+          }
+          break;
+        }
       }
     },
     [id, invokePromise, layout.mode],
@@ -94,11 +99,11 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
               )}
             </Toolbar.Root>
           </Panel.Toolbar>
-          <Panel.Content>
+          <Panel.Content asChild>
             {isEmpty ? (
               <NewCalendar calendar={calendar} />
             ) : (
-              <EventStack events={objects} selected={selected} onSelect={handleSelect} />
+              <EventStack id={id} events={objects} currentId={currentId} onAction={handleAction} />
             )}
           </Panel.Content>
         </Panel.Root>

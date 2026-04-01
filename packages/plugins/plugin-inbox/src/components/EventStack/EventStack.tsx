@@ -2,57 +2,128 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { List, ListItem, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { Card, ScrollArea } from '@dxos/react-ui';
+import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { ActorList } from '../Actor';
 import { DateComponent } from '../DateComponent';
 
-// TODO(burdon): Event/Message Articles (in companion); with cards (1-UP).
 // TODO(burdon): Common Actor reference (lookup on demand).
 // TODO(burdon): Modes: e.g., itinerary (with day markers).
 // TODO(burdon): Show upcoming events vs. past.
 
-const EventComponent = ({ event }: { event: Event.Event }) => {
-  return (
-    <div
-      className="
-        flex flex-col w-full gap-2 overflow-hidden
-        @xl:grid @xl:grid-cols-[1fr_20rem] @xl:grid-rows-[auto_1fr]
-        @xl:[grid-template-areas:'left-top_right''left-main_right']
-        @xl:gap-x-4
-      "
-    >
-      <div className='[grid-area:left-top] overflow-hidden'>{event.title}</div>
-      <div role='none' className='[grid-area:left-main] overflow-hidden'>
-        <DateComponent icon start={new Date(event.startDate)} end={new Date(event.endDate)} />
-      </div>
-      <ActorList classNames='[grid-area:right] overflow-hidden' actors={event.attendees} />
-    </div>
-  );
+//
+// EventTile
+//
+
+export type EventStackAction = { type: 'current'; eventId: string };
+
+export type EventStackActionHandler = (action: EventStackAction) => void;
+
+type EventTileData = {
+  event: Event.Event;
+  onAction?: EventStackActionHandler;
 };
 
-export type EventStackProps = ThemedClassName<{
+type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'location' | 'data'> & { current?: boolean };
+
+const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, current }, forwardedRef) => {
+  const { event, onAction } = data;
+  const { setCurrentId } = useMosaicContainer('EventTile');
+
+  const handleCurrentChange = useCallback(() => {
+    setCurrentId(event.id);
+    onAction?.({ type: 'current', eventId: event.id });
+  }, [event.id, setCurrentId, onAction]);
+
+  return (
+    <Mosaic.Tile asChild classNames='dx-hover dx-current' id={event.id} data={data} location={location}>
+      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+        <Card.Root ref={forwardedRef}>
+          <Card.Content>
+            <Card.Row>
+              <Card.Text>{event.title}</Card.Text>
+            </Card.Row>
+            <Card.Row icon='ph--calendar--regular'>
+              <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
+            </Card.Row>
+            {event.attendees && event.attendees.length > 0 && (
+              <Card.Row icon='ph--users--regular'>
+                <ActorList actors={event.attendees} />
+              </Card.Row>
+            )}
+          </Card.Content>
+        </Card.Root>
+      </Focus.Item>
+    </Mosaic.Tile>
+  );
+});
+
+EventTile.displayName = 'EventTile';
+
+//
+// EventStack
+//
+
+export type EventStackProps = {
+  id: string;
   events?: Event.Event[];
-  selected?: string;
-  onSelect?: (contact: Event.Event) => void;
-}>;
-
-export const EventStack = ({ classNames, events = [], onSelect }: EventStackProps) => {
-  return (
-    <ScrollArea.Root thin>
-      <ScrollArea.Viewport>
-        <List classNames={mx('@container w-full divide-y divide-separator', classNames)}>
-          {events.map((event) => (
-            <ListItem.Root key={event.id} classNames='p-2 hover:bg-hover-overlay' onClick={() => onSelect?.(event)}>
-              <EventComponent event={event} />
-            </ListItem.Root>
-          ))}
-        </List>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
-  );
+  currentId?: string;
+  onAction?: EventStackActionHandler;
 };
+
+export const EventStack = composable<HTMLDivElement, EventStackProps>(
+  ({ events = [], currentId, onAction, ...props }, forwardedRef) => {
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
+    const items = useMemo(() => events.map((event) => ({ event, onAction })), [events, onAction]);
+
+    const handleCurrentChange = useCallback(
+      (id: string | undefined) => {
+        if (id) {
+          onAction?.({ type: 'current', eventId: id });
+        }
+      },
+      [onAction],
+    );
+
+    const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        (document.activeElement as HTMLElement | null)?.click();
+      }
+    }, []);
+
+    return (
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+        <Mosaic.Container
+          asChild
+          withFocus
+          autoScroll={viewport}
+          currentId={currentId}
+          onCurrentChange={handleCurrentChange}
+        >
+          <ScrollArea.Root orientation='vertical' padding centered>
+            <ScrollArea.Viewport ref={setViewport}>
+              <Mosaic.VirtualStack
+                Tile={EventTile}
+                classNames='my-2'
+                gap={8}
+                items={items}
+                getId={(item) => item.event.id}
+                getScrollElement={() => viewport}
+                draggable={false}
+                estimateSize={() => 100}
+              />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Mosaic.Container>
+      </Focus.Group>
+    );
+  },
+);
+
+EventStack.displayName = 'EventStack';

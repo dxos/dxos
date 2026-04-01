@@ -141,7 +141,7 @@ const Item = slottable<HTMLDivElement, ItemProps>(
     const Comp = asChild ? Slot : Primitive.div;
     // Tell tabster's groupper to ignore Enter so it doesn't move focus into the group.
     const focusableGroupAttrs = useFocusableGroup({ ignoreDefaultKeydown: { Enter: true } });
-    const { groupHasFocus } = useFocus();
+    const { groupHasFocus } = useFocus(); // TODO(burdon): Not used.
     const [focused, setFocused] = useState(false);
 
     const handleClick = useCallback(

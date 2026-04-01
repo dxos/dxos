@@ -225,8 +225,8 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         ) : (
           <MessageStack
             id={id}
-            currentId={currentId}
             messages={messagesWithTags}
+            currentId={currentId}
             labels={mergedLabels}
             onAction={handleAction}
           />

@@ -7,14 +7,15 @@ import React, { useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
 import { createEvents } from '../../testing';
 
 import { EventStack, type EventStackProps } from './EventStack';
 
-const EventStackStory = (props: Omit<EventStackProps, 'events'>) => {
+const EventStackStory = (props: Omit<EventStackProps, 'id' | 'events'>) => {
   const events = useMemo(() => createEvents(100), []);
-  return <EventStack events={events} {...props} />;
+  return <EventStack id='story' events={events} {...props} />;
 };
 
 const meta: Meta<typeof EventStackStory> = {
@@ -30,9 +31,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention()],
+  decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],
 };
 
 export const Responsive: Story = {
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[30rem]' }), withAttention()],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[30rem]' }), withAttention(), withMosaic()],
 };
