@@ -44,10 +44,18 @@ export const make = (...handlers: Operation.WithHandler<Operation.Definition.Any
 export const async = (
   getHandlers: () => Promise<Operation.WithHandler<Operation.Definition.Any>[]>,
 ): OperationHandlerSet => {
+  // NOTE: Re-runing async module imports has a big performance penalty in Chrome.
+  let promise: Promise<Operation.WithHandler<Operation.Definition.Any>[]> | null = null;
+  const getHandlersCached = () => {
+    if (!promise) {
+      promise = getHandlers();
+    }
+    return promise;
+  };
   return {
     [TypeId]: TypeId,
     getHandlers,
-    handlers: Effect.promise(getHandlers),
+    handlers: Effect.promise(getHandlersCached),
   };
 };
 
