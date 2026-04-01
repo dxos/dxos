@@ -31,6 +31,7 @@ import { initializeObservability, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
+import { startupProfiler } from './profiler';
 import { translations } from './translations';
 import { defaultStorageIsEmpty, isFalse, isTrue } from './util';
 

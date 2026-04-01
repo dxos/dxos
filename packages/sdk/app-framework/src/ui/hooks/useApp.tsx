@@ -21,6 +21,8 @@ import { PluginManagerContext } from '../../context';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core';
 import { App, PluginManagerProvider } from '../components';
 
+const DEBUG = import.meta.env.VITE_DEBUG;
+
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
 
 export type StartupProgress = {
@@ -196,7 +198,9 @@ export const useApp = ({
                 setReady(true);
                 readyRef.current = true;
                 // Trigger startup profiler dump if available.
-                (globalThis as any).composer?.profiler?.dump();
+                if (DEBUG) {
+                  (globalThis as any).composer.profiler.dump();
+                }
               }
               if (error$ && !readyRef.current) {
                 setError(error$);

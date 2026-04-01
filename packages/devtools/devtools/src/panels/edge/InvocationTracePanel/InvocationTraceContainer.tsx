@@ -253,33 +253,33 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
           {span.error && <Tabs.Tab value='failure'>Failure</Tabs.Tab>}
           {contents === 'execution-graph' && <Tabs.Tab value='execution-graph'>Execution Graph</Tabs.Tab>}
         </Tabs.Tablist>
-        <Tabs.Tabpanel value='input'>
+        <Tabs.Panel value='input'>
           <SyntaxHighlighter language='json'>{JSON.stringify(span.input, null, 2)}</SyntaxHighlighter>
-        </Tabs.Tabpanel>
+        </Tabs.Panel>
         {isLogQueue && (
-          <Tabs.Tabpanel value='logs'>
+          <Tabs.Panel value='logs'>
             <LogPanel objects={objects} />
-          </Tabs.Tabpanel>
+          </Tabs.Panel>
         )}
         {isLogQueue && (
-          <Tabs.Tabpanel value='errors'>
+          <Tabs.Panel value='errors'>
             <ExceptionPanel objects={objects} />
-          </Tabs.Tabpanel>
+          </Tabs.Panel>
         )}
         {isLogQueue && (
-          <Tabs.Tabpanel value='raw' classNames='min-h-0 min-w-0 w-full overflow-auto'>
+          <Tabs.Panel value='raw' classNames='min-h-0 min-w-0 w-full overflow-auto'>
             <RawDataPanel classNames='text-xs' span={span} objects={objects} />
-          </Tabs.Tabpanel>
+          </Tabs.Panel>
         )}
         {span.error && (
-          <Tabs.Tabpanel value='failure'>
+          <Tabs.Panel value='failure'>
             <SpanErrorPanel exception={span.error} />
-          </Tabs.Tabpanel>
+          </Tabs.Panel>
         )}
         {contents === 'execution-graph' && (
-          <Tabs.Tabpanel value='execution-graph'>
+          <Tabs.Panel value='execution-graph'>
             <ExecutionGraphPanel queue={queue} />
-          </Tabs.Tabpanel>
+          </Tabs.Panel>
         )}
       </Tabs.Root>
     </div>
