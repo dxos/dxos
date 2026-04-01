@@ -2,10 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
+/* eslint-disable no-console */
+
+export type Profiler = {
+  mark: (name: string) => void;
+  dump: () => void;
+};
+
+const noop: Profiler = {
+  mark: () => {},
+  dump: () => {},
+};
+
 /**
  * Collects performance marks/measures from plugin-manager and dumps a startup timeline.
+ * Tree-shaken in production when VITE_DEBUG is not set.
  */
-export const startupProfiler = () => {
+export const startupProfiler = (): Profiler => {
+  if (!import.meta.env.VITE_DEBUG) {
+    return noop;
+  }
+
   performance.mark('startup:main:start');
 
   return {
@@ -25,17 +42,14 @@ export const startupProfiler = () => {
         .filter((entry) => entry.name.startsWith('startup:'))
         .sort((first, second) => first.startTime - second.startTime);
 
-      // eslint-disable-next-line no-console
       console.group('Startup Profile');
 
-      // eslint-disable-next-line no-console
       console.log(
         'Total startup time:',
         Math.round(entries.find((entry) => entry.name === 'startup:total')?.duration ?? 0),
         'ms',
       );
 
-      // eslint-disable-next-line no-console
       console.table(
         startupEntries.map((entry) => ({
           Phase: entry.name.replace('startup:', ''),
@@ -44,9 +58,7 @@ export const startupProfiler = () => {
         })),
       );
 
-      // eslint-disable-next-line no-console
       console.log(`\nActivation Events (${eventEntries.length}):`);
-      // eslint-disable-next-line no-console
       console.table(
         eventEntries.map((entry) => ({
           Event: entry.name.replace('event:', ''),
@@ -55,9 +67,7 @@ export const startupProfiler = () => {
         })),
       );
 
-      // eslint-disable-next-line no-console
       console.log(`\nSlowest Modules (top 20 of ${moduleEntries.length}):`);
-      // eslint-disable-next-line no-console
       console.table(
         moduleEntries.slice(0, 20).map((entry) => ({
           Module: entry.name.replace('module:', ''),
@@ -66,7 +76,6 @@ export const startupProfiler = () => {
         })),
       );
 
-      // eslint-disable-next-line no-console
       console.groupEnd();
     },
   };
