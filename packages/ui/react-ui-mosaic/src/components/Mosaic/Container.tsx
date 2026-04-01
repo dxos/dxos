@@ -14,6 +14,7 @@ import React, {
   type CSSProperties,
   type PropsWithChildren,
   type ReactNode,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -54,6 +55,11 @@ type MosaicContainerContextValue<TData = any, Location = LocationType> = {
   /** Active drop location. */
   activeLocation?: Location;
   setActiveLocation: (location: Location | undefined) => void;
+
+  /** ID of the current (aria-current) item. */
+  current?: string;
+  /** Set the current item by ID. */
+  setCurrent: (id: string | undefined) => void;
 };
 
 const [MosaicContainerContextProvider, useMosaicContainerContext] =
@@ -73,6 +79,10 @@ type MosaicContainerProps = PropsWithChildren<
     asChild?: boolean;
     autoScroll?: HTMLElement | null;
     withFocus?: boolean;
+    /** Controlled current-item ID. */
+    current?: string;
+    /** Called when a tile requests to become current. */
+    onCurrentChange?: (id: string | undefined) => void;
     debug?: () => ReactNode;
   }
 >;
@@ -87,6 +97,8 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
       asChild,
       autoScroll: autoscrollElement,
       withFocus,
+      current,
+      onCurrentChange,
       debug,
       ...props
     },
@@ -111,6 +123,10 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     const [state, setState] = useState<MosaicContainerState>({ type: 'idle' });
     const [activeLocation, setActiveLocation] = useState<LocationType | undefined>();
     const [scrolling, setScrolling] = useState(false);
+    const setCurrent = useCallback(
+      (id: string | undefined) => onCurrentChange?.(id),
+      [onCurrentChange],
+    );
 
     // Focus container.
     const { setFocus } = useFocus();
@@ -253,6 +269,8 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
         scrolling={scrolling}
         activeLocation={activeLocation}
         setActiveLocation={setActiveLocation}
+        current={current}
+        setCurrent={setCurrent}
       >
         <Comp
           className={mx('h-full', className)}
