@@ -95,30 +95,10 @@ export const loginNativePasskey = async (params: {
  * the credential public key in COSE_Key format starting at byte offset 55 + credIdLen.
  */
 export const extractPublicKeyFromAttestation = (attestationObjectEncoded: string): { publicKey: Uint8Array; algorithm: number } => {
-  log('extracting public key from attestation', {
-    encodedLength: attestationObjectEncoded.length,
-    prefix: attestationObjectEncoded.slice(0, 40),
-    isBase64: /^[A-Za-z0-9+/=]+$/.test(attestationObjectEncoded),
-    isUrlSafeBase64: /^[A-Za-z0-9_-]+=*$/.test(attestationObjectEncoded),
-    isHex: /^[0-9a-fA-F]+$/.test(attestationObjectEncoded),
-  });
-
-  // The plugin may return base64, URL-safe base64, or hex. Try to decode appropriately.
-  let attestationBytes: Uint8Array;
-  try {
-    // Standard base64: replace URL-safe chars and add padding if needed.
-    const b64 = attestationObjectEncoded.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
-    attestationBytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
-    log('decoded attestation as base64', { decodedLength: attestationBytes.length });
-  } catch (err) {
-    log.warn('base64 decode failed, trying hex', { error: String(err) });
-    // Fallback: try hex decoding.
-    attestationBytes = new Uint8Array(
-      attestationObjectEncoded.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)),
-    );
-    log('decoded attestation as hex', { decodedLength: attestationBytes.length });
-  }
+  // The plugin returns URL-safe base64. Normalize to standard base64 and decode.
+  const b64 = attestationObjectEncoded.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+  const attestationBytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
 
   // The authData is inside the CBOR-encoded attestation object.
   // We need to decode CBOR to get authData. Use a minimal inline decoder
