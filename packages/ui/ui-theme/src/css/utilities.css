@@ -55,7 +55,7 @@
  * Pseudo-element overlay scaffold for focus/current ring indicators.
  * Creates an `::after` overlay that can be styled with `after:ring-*` variants.
  */
-@utility dx-focus-pseudo {
+@utility dx-ring-pseudo {
   @apply relative after:content-[""] after:absolute after:inset-0 after:rounded-[inherit]
     after:pointer-events-none after:ring after:ring-inset after:ring-transparent;
 }

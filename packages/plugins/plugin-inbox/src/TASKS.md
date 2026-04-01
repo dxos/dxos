@@ -105,4 +105,5 @@ Recommendations:
 
 ## Phase 4 (Selection)
 
+- [ ] Review remaining ui-theme fragments.
 - [ ] Review `useSelected` and `AttentionOperation.Select` (currently conflates active and selected).

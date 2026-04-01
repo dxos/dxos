@@ -15,7 +15,7 @@
   }
 
   .dx-current {
-    @apply dx-focus-pseudo
+    @apply dx-ring-pseudo
       aria-[current=true]:bg-highlight-surface aria-[current=true]:text-highlight-surface-text
       aria-[current=true]:after:ring-active-separator!;
   }
