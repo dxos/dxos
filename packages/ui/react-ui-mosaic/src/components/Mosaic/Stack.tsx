@@ -62,7 +62,7 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, orientation = orientationProp, dragging } = useMosaicContainerContext(MOSAIC_STACK_NAME);
+    const { id, orientation = orientationProp, dragging, current } = useMosaicContainerContext(MOSAIC_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     invariant(orientation === 'vertical' || orientation === 'horizontal', `Invalid orientation: ${orientation}`);
 
@@ -81,7 +81,7 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
         {draggable && <InternalPlaceholder orientation={orientation} location={0.5} />}
         {visibleItems?.map((item, index) => (
           <Fragment key={getId(item)}>
-            <Tile id={getId(item)} data={item} location={index + 1} draggable={draggable} debug={debug} />
+            <Tile id={getId(item)} data={item} location={index + 1} draggable={draggable} current={getId(item) === current} debug={debug} />
             {draggable && <InternalPlaceholder orientation={orientation} location={index + 1.5} />}
           </Fragment>
         ))}
@@ -127,7 +127,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, dragging } = useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
+    const { id, dragging, current } = useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     // In draggable mode virtual indices alternate: even=placeholder, odd=tile.
     // Wrap estimateSize so placeholders get 0 (their actual negligible height) and
@@ -215,7 +215,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
               ref={virtualizer.measureElement}
             >
               {data ? (
-                <Tile id={getId(data)} data={data} location={location} draggable={draggable} debug={debug} />
+                <Tile id={getId(data)} data={data} location={location} draggable={draggable} current={getId(data) === current} debug={debug} />
               ) : (
                 <InternalPlaceholder orientation={orientation} location={location} />
               )}

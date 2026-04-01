@@ -59,6 +59,8 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = ThemedClassName<
     data: TData;
     location: TLocation;
     draggable?: boolean;
+    /** Whether this tile is the current (aria-current) item. */
+    current?: boolean;
     debug?: boolean;
   }>
 >;
@@ -74,6 +76,7 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       id,
       data: dataProp,
       draggable: draggableProp,
+      current: _current,
       debug: _,
       ...props
     },
@@ -208,9 +211,6 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
           }}
           role='listitem'
           className={className}
-          // TODO(burdon): Option.
-          // tabIndex={0}
-          // {...focusableGroupAttrs}
           ref={composedRef}
         >
           {children}
