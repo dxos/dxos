@@ -23,14 +23,14 @@ import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
-
 import { observabilityTranslations } from '@dxos/plugin-observability';
 
 import { Placeholder, ResetDialog } from './components';
-import { initializeObservability, setupConfig } from './config';
+import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
+import { startupProfiler } from './profiler';
 import { translations } from './translations';
 import { defaultStorageIsEmpty, isFalse, isTrue } from './util';
 
@@ -44,84 +44,16 @@ declare global {
   }
 }
 
-/**
- * Collects performance marks/measures from plugin-manager and dumps a startup timeline.
- */
-const startupProfiler = () => {
-  performance.mark('startup:main:start');
-
-  return {
-    mark: (name: string) => performance.mark(`startup:${name}`),
-    dump: () => {
-      performance.mark('startup:ready');
-      performance.measure('startup:total', 'startup:main:start', 'startup:ready');
-
-      const entries = performance.getEntriesByType('measure');
-      const eventEntries = entries
-        .filter((entry) => entry.name.startsWith('event:'))
-        .sort((first, second) => first.startTime - second.startTime);
-      const moduleEntries = entries
-        .filter((entry) => entry.name.startsWith('module:'))
-        .sort((first, second) => second.duration - first.duration);
-      const startupEntries = entries
-        .filter((entry) => entry.name.startsWith('startup:'))
-        .sort((first, second) => first.startTime - second.startTime);
-
-      // eslint-disable-next-line no-console
-      console.group('Startup Profile');
-
-      // eslint-disable-next-line no-console
-      console.log(
-        'Total startup time:',
-        Math.round(entries.find((entry) => entry.name === 'startup:total')?.duration ?? 0),
-        'ms',
-      );
-
-      // eslint-disable-next-line no-console
-      console.table(
-        startupEntries.map((entry) => ({
-          Phase: entry.name.replace('startup:', ''),
-          'Duration (ms)': Math.round(entry.duration),
-          'Start (ms)': Math.round(entry.startTime),
-        })),
-      );
-
-      // eslint-disable-next-line no-console
-      console.log(`\nActivation Events (${eventEntries.length}):`);
-      // eslint-disable-next-line no-console
-      console.table(
-        eventEntries.map((entry) => ({
-          Event: entry.name.replace('event:', ''),
-          'Duration (ms)': Math.round(entry.duration),
-          'Start (ms)': Math.round(entry.startTime),
-        })),
-      );
-
-      // eslint-disable-next-line no-console
-      console.log(`\nSlowest Modules (top 20 of ${moduleEntries.length}):`);
-      // eslint-disable-next-line no-console
-      console.table(
-        moduleEntries.slice(0, 20).map((entry) => ({
-          Module: entry.name.replace('module:', ''),
-          'Duration (ms)': Math.round(entry.duration),
-          'Start (ms)': Math.round(entry.startTime),
-        })),
-      );
-
-      // eslint-disable-next-line no-console
-      console.groupEnd();
-    },
-  };
-};
-
 const main = async () => {
-  const profiler = startupProfiler();
   const url = new URL(window.location.href);
   const safeMode = isTrue(url.searchParams.get(PARAM_SAFE_MODE), false);
   if (safeMode) {
     log.info('SAFE MODE');
     setSafeModeUrl(false);
   }
+
+  const profiler = isTrue(url.searchParams.get(PARAM_PROFILER), false) ? startupProfiler() : undefined;
+
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
   if (logLevel) {
     const level = LogLevel[logLevel.toUpperCase() as keyof typeof LogLevel];
@@ -133,21 +65,23 @@ const main = async () => {
   const logBuffer = new LogBuffer();
   log.addProcessor(logBuffer.logProcessor);
 
-  profiler.mark('dynamic-imports:start');
+  profiler?.mark('dynamic-imports:start');
+
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
   const { Migrations } = await import('@dxos/migrations');
   const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
-  profiler.mark('dynamic-imports:end');
-  performance.measure('startup:dynamic-imports', 'startup:dynamic-imports:start', 'startup:dynamic-imports:end');
+
+  profiler?.mark('dynamic-imports:end');
+  profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
+
+  // Namespace for global Composer test & debug hooks.
+  (window as any).composer = { profiler };
 
   Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
 
-  // Namespace for global Composer test & debug hooks.
-  (window as any).composer = {};
-  (window as any).composer.profiler = profiler;
+  profiler?.mark('config:start');
 
-  profiler.mark('config:start');
   let config = await setupConfig();
   if (
     !config.values.runtime?.client?.storage?.dataStore &&
@@ -165,8 +99,8 @@ const main = async () => {
     config = await setupConfig();
   }
 
-  profiler.mark('config:end');
-  performance.measure('startup:config', 'startup:config:start', 'startup:config:end');
+  profiler?.mark('config:end');
+  profiler?.measure('config', 'config:start', 'config:end');
 
   const isTauri = isTauri$();
   if (isTauri) {
@@ -214,7 +148,8 @@ const main = async () => {
   // tauri-plugin-localhost which serves from http://localhost, giving SharedWorker a proper origin.
   const useSingleClientMode = isTauri && isMobile;
 
-  profiler.mark('services:start');
+  profiler?.mark('services:start');
+
   const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
   const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
   const services = await createClientServices(config, {
@@ -249,10 +184,11 @@ const main = async () => {
     signalTelemetryEnabled: !observabilityDisabled,
   });
 
-  profiler.mark('services:end');
-  performance.measure('startup:services', 'startup:services:start', 'startup:services:end');
+  profiler?.mark('services:end');
+  profiler?.measure('services', 'services:start', 'services:end');
 
-  profiler.mark('plugins:start');
+  profiler?.mark('plugins:start');
+
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
@@ -273,8 +209,9 @@ const main = async () => {
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
-  profiler.mark('plugins:end');
-  performance.measure('startup:plugins-init', 'startup:plugins:start', 'startup:plugins:end');
+
+  profiler?.mark('plugins:end');
+  profiler?.measure('plugins-init', 'plugins:start', 'plugins:end');
 
   const Fallback = ({ error }: { error: Error }) => {
     const {
