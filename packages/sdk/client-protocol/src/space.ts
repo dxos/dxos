@@ -22,7 +22,7 @@ import {
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
-import { type Credential, type Epoch } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, type Epoch, type MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type CancellableInvitation } from './invitations';
 import { type SpaceProperties } from './types';
@@ -98,6 +98,12 @@ export interface Space extends Messenger {
    * Available on closed spaces.
    */
   get tags(): string[];
+
+  /**
+   * Immutable membership policy assigned at space creation time.
+   * Available on closed spaces.
+   */
+  get membershipPolicy(): MembershipPolicy;
 
   /**
    * Current state of the space.

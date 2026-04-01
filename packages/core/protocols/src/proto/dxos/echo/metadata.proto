@@ -80,7 +80,6 @@ message SpaceMetadata {
   optional SpaceCache cache = 9;
 
   optional EdgeReplicationSetting edge_replication = 11;
-  repeated string tags = 12;
 }
 
 enum EdgeReplicationSetting {

@@ -10,6 +10,7 @@ import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type Client } from '../client';
 import { createInitializedClientsWithContext, testSpaceAutomerge, waitForSpace } from '../testing';
@@ -96,6 +97,21 @@ describe('Spaces/invitations', () => {
       charlie.spaces.join(observableInvitation.get());
       await waitForSpace(charlie, space.key!, { ready: true });
     });
+  });
+
+  test('locked space prevents sharing', async () => {
+    const [client1] = await createInitializedClients(1);
+
+    const space = await client1.spaces.create({}, { membershipPolicy: MembershipPolicy.LOCKED });
+    expect(space.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
+
+    // The internal state machine should report no membership management permission.
+    const credentials = await space.internal.getCredentials();
+    const genesisCredential = credentials.find(
+      (c) => c.subject.assertion['@type'] === 'dxos.halo.credentials.SpaceGenesis',
+    );
+    expect(genesisCredential).toBeDefined();
+    expect(genesisCredential!.subject.assertion.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
   });
 
   const createInvitationTracker = (peer: Client) => {
