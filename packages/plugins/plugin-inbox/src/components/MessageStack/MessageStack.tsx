@@ -2,7 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
+import React, {
+  type KeyboardEvent,
+  type MouseEvent,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card, ScrollArea } from '@dxos/react-ui';
@@ -37,12 +45,12 @@ type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'location' | 'dat
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
   const { message, labels, onAction } = data;
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), true);
-  const { setCurrent } = useMosaicContainer('MessageTile');
+  const { setCurrentId } = useMosaicContainer('MessageTile');
 
   const handleCurrentChange = useCallback(() => {
-    setCurrent(message.id);
+    setCurrentId(message.id);
     onAction?.({ type: 'current', messageId: message.id });
-  }, [message.id, setCurrent, onAction]);
+  }, [message.id, setCurrentId, onAction]);
 
   const handleAvatarClick = useCallback(
     (event: MouseEvent) => {
@@ -74,6 +82,12 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       }))
       .filter((item) => item.label);
   }, [labels, message.properties?.labels]);
+
+  useEffect(() => {
+    if (current) {
+      console.log('===', message.id);
+    }
+  }, [current]);
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={message.id} data={data} location={location}>
@@ -139,8 +153,8 @@ MessageTile.displayName = 'MessageTile';
 export type MessageStackProps = {
   id: string;
   messages: Message.Message[];
+  currentId?: string;
   labels?: MailboxType.Labels;
-  currentMessageId?: string;
   ignoreAttention?: boolean;
   onAction?: MessageStackActionHandler;
 };
@@ -149,7 +163,7 @@ export type MessageStackProps = {
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ messages, labels, currentMessageId, onAction, ...props }, forwardedRef) => {
+  ({ messages, labels, currentId, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useMemo(
       () => messages.map((message) => ({ message, labels, onAction })),
@@ -174,7 +188,13 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
 
     return (
       <Focus.Group {...composableProps(props)} asChild onKeyDown={handleKeyDown} ref={forwardedRef}>
-        <Mosaic.Container asChild withFocus autoScroll={viewport} current={currentMessageId} onCurrentChange={handleCurrentChange}>
+        <Mosaic.Container
+          asChild
+          withFocus
+          autoScroll={viewport}
+          currentId={currentId}
+          onCurrentChange={handleCurrentChange}
+        >
           <ScrollArea.Root orientation='vertical' padding>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack

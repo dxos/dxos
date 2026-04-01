@@ -17,5 +17,11 @@ It contains some complex logic to detect and track the current focus and restore
 
 ## Phase 2
 
-- [ ] in `plugin-inbox` `MessageStack` uses `Mosaic.VirtualStack`;
-  - `EventStack` should follow the same structure where `EventComponent` becomes `EventTile` simlilar to `MessageTile`
+In `plugin-inbox` `MessageStack` uses `Mosaic.VirtualStack`;
+
+- [ ] `EventStack` should follow the same structure and `EventComponent` should become `EventTile` simlilar to `MessageTile`
+- [ ] `EventArticle` should similarly track the currentItem via `useSelected`.
+
+## Phase n
+
+- [ ] Review `useSelected` and `AttentionOperation.Select` (currently conflates active and selected).

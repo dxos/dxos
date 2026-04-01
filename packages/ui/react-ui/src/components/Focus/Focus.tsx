@@ -177,9 +177,9 @@ const Item = slottable<HTMLDivElement, ItemProps>(
       [onBlur],
     );
 
-    // When navigating (group has focus), only the focused item is current.
-    // When the group loses focus, fall back to the controlled `current` prop.
-    const isCurrent = groupHasFocus ? focused : (current ?? focused);
+    // Controlled `current` prop takes precedence (e.g., virtualized items that scroll back into view).
+    // Otherwise fall back to DOM focus state.
+    const isCurrent = current ?? focused;
 
     return (
       <Comp

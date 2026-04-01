@@ -39,26 +39,20 @@ export type MailboxArticleProps = SurfaceComponentProps<
 
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
+  const { invokePromise } = useOperationInvoker();
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const db = Obj.getDatabase(mailbox);
+
+  // TODO(burdon): Review.
+  const currentId = useSelected(id, 'single');
 
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   useObject(mailbox);
   const feed = mailbox.feed?.target as Feed.Feed | undefined;
 
-  const { invokePromise } = useOperationInvoker();
-  const layout = useLayout();
-  const currentMessageId = useSelected(id, 'single');
-
-  const filterEditorRef = useRef<EditorController>(null);
-  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
-
   // Menu state.
   const sortDescending = useAtomState(true);
-  const menuActions = useMailboxActions({
-    db,
-    sortDescending: sortDescending.atom,
-  });
+  const menuActions = useMailboxActions({ db, sortDescending: sortDescending.atom });
 
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any>();
@@ -126,6 +120,10 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     }, 1_000);
     return () => clearTimeout(t);
   }, [sortedMessages]);
+
+  const layout = useLayout();
+  const filterEditorRef = useRef<EditorController>(null);
+  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
@@ -222,14 +220,13 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
           </ElevationProvider>
         )}
       </Panel.Toolbar>
-
       <Panel.Content asChild>
         {isEmpty ? (
           <NewMailbox mailbox={mailbox} />
         ) : (
           <MessageStack
             id={id}
-            currentMessageId={currentMessageId}
+            currentId={currentId}
             messages={messagesWithTags}
             labels={mergedLabels}
             onAction={handleAction}

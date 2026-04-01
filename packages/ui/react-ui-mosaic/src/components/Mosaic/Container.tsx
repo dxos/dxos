@@ -57,9 +57,9 @@ type MosaicContainerContextValue<TData = any, Location = LocationType> = {
   setActiveLocation: (location: Location | undefined) => void;
 
   /** ID of the current (aria-current) item. */
-  current?: string;
+  currentId?: string;
   /** Set the current item by ID. */
-  setCurrent: (id: string | undefined) => void;
+  setCurrentId: (id: string | undefined) => void;
 };
 
 const [MosaicContainerContextProvider, useMosaicContainerContext] =
@@ -80,7 +80,7 @@ type MosaicContainerProps = PropsWithChildren<
     autoScroll?: HTMLElement | null;
     withFocus?: boolean;
     /** Controlled current-item ID. */
-    current?: string;
+    currentId?: string;
     /** Called when a tile requests to become current. */
     onCurrentChange?: (id: string | undefined) => void;
     debug?: () => ReactNode;
@@ -97,7 +97,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
       asChild,
       autoScroll: autoscrollElement,
       withFocus,
-      current,
+      currentId,
       onCurrentChange,
       debug,
       ...props
@@ -123,10 +123,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     const [state, setState] = useState<MosaicContainerState>({ type: 'idle' });
     const [activeLocation, setActiveLocation] = useState<LocationType | undefined>();
     const [scrolling, setScrolling] = useState(false);
-    const setCurrent = useCallback(
-      (id: string | undefined) => onCurrentChange?.(id),
-      [onCurrentChange],
-    );
+    const setCurrentId = useCallback((id: string | undefined) => onCurrentChange?.(id), [onCurrentChange]);
 
     // Focus container.
     const { setFocus } = useFocus();
@@ -269,8 +266,8 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
         scrolling={scrolling}
         activeLocation={activeLocation}
         setActiveLocation={setActiveLocation}
-        current={current}
-        setCurrent={setCurrent}
+        currentId={currentId}
+        setCurrentId={setCurrentId}
       >
         <Comp
           className={mx('h-full', className)}

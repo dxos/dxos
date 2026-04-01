@@ -13,37 +13,9 @@ import { DateComponent } from '../DateComponent';
 
 // TODO(burdon): Event/Message Articles (in companion); with cards (1-UP).
 // TODO(burdon): Common Actor reference (lookup on demand).
-
-// TODO(burdon): Common virtualized list for Event/Message.
-// TODO(burdon): Virtualize (and reuse for email).
 // TODO(burdon): Modes: e.g., itinerary (with day markers).
 // TODO(burdon): Show upcoming events vs. past.
 
-export type EventStackProps = ThemedClassName<{
-  events?: Event.Event[];
-  selected?: string;
-  onSelect?: (contact: Event.Event) => void;
-}>;
-
-// TODO(burdon): Convert to mosaic with list management.
-export const EventStack = ({ classNames, events = [], onSelect }: EventStackProps) => {
-  // TODO(burdon): Move ScrollArea into compound List object.
-  return (
-    <ScrollArea.Root thin>
-      <ScrollArea.Viewport>
-        <List classNames={mx('@container w-full divide-y divide-separator', classNames)}>
-          {events.map((event) => (
-            <ListItem.Root key={event.id} classNames='p-2 hover:bg-hover-overlay' onClick={() => onSelect?.(event)}>
-              <EventComponent event={event} />
-            </ListItem.Root>
-          ))}
-        </List>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
-  );
-};
-
-// TODO(wittjosiah): Reconcile with EventCard.
 const EventComponent = ({ event }: { event: Event.Event }) => {
   return (
     <div
@@ -60,5 +32,27 @@ const EventComponent = ({ event }: { event: Event.Event }) => {
       </div>
       <ActorList classNames='[grid-area:right] overflow-hidden' actors={event.attendees} />
     </div>
+  );
+};
+
+export type EventStackProps = ThemedClassName<{
+  events?: Event.Event[];
+  selected?: string;
+  onSelect?: (contact: Event.Event) => void;
+}>;
+
+export const EventStack = ({ classNames, events = [], onSelect }: EventStackProps) => {
+  return (
+    <ScrollArea.Root thin>
+      <ScrollArea.Viewport>
+        <List classNames={mx('@container w-full divide-y divide-separator', classNames)}>
+          {events.map((event) => (
+            <ListItem.Root key={event.id} classNames='p-2 hover:bg-hover-overlay' onClick={() => onSelect?.(event)}>
+              <EventComponent event={event} />
+            </ListItem.Root>
+          ))}
+        </List>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 };

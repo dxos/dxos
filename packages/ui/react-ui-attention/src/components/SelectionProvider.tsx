@@ -23,9 +23,7 @@ type SelectionContextValue = {
   selection: SelectionManager;
 };
 
-const [SelectionContextProvider, useSelectionContext] = createContext<SelectionContextValue>(SELECTION_NAME, {
-  selection: undefined as unknown as SelectionManager,
-});
+const [SelectionContextProvider, useSelectionContext] = createContext<SelectionContextValue>(SELECTION_NAME);
 
 /**
  * Manages selection state across the app for multiple contexts.
