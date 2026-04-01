@@ -164,6 +164,7 @@ const getExecutionGraph = (
     (_) =>
       Atom.make((get) => {
         const invocations = get(_);
+        dbg(invocations);
         // Two alternating branches for subevents to save horizontal space.
         const branches: string[] = ['invocations'];
         const commits: Commit[] = [];

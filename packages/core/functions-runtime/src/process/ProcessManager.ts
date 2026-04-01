@@ -586,7 +586,7 @@ export class ProcessManagerImpl implements Manager {
   }
 
   #refreshProcessTree(): void {
-    log('refresh process tree');
+    log.info('refresh process tree');
     this.#registry.set(this.#processTreeAtom, this.#buildProcessTreeSnapshot());
   }
 
@@ -693,12 +693,40 @@ export class ProcessManagerImpl implements Manager {
       const traceContext = yield* this.#buildTraceContext(id, options);
       this.#traceContexts.set(id, traceContext);
 
+      const isRoot = !options?.parentProcessId;
+
+      // Trace invocation start for root processes (no parent).
+      let invocationTrace: TracingService.InvocationTraceData | undefined;
+      if (isRoot) {
+        invocationTrace = yield* this.#tracingService.traceInvocationStart({
+          payload: {
+            process: {
+              pid: id,
+              key: definition.key,
+              name: params.name ?? undefined,
+              target: params.target ?? undefined,
+            },
+          },
+        });
+        this.#traceContexts.set(id, { ...traceContext, currentInvocation: invocationTrace });
+      }
+
       // Create TracingService scoped to this process's trace context.
+      log.info('process trace config', { pid: id, invocationTrace });
+      const invocationTracingService = invocationTrace?.invocationTraceQueue
+        ? yield* TracingService.pipe(
+            Effect.provide(
+              TracingService.layerInvocation(invocationTrace).pipe(
+                Layer.provide(Layer.succeed(TracingService, this.#tracingService)),
+              ),
+            ),
+          )
+        : this.#tracingService;
       const processTracingService: Context.Tag.Service<TracingService> = {
         getTraceContext: () => traceContext,
         write: (event, traceCtx) => {
-          log('trace event', { pid: id, event: JSON.stringify(event), traceCtx: JSON.stringify(traceCtx) });
-          this.#tracingService.write(event, traceCtx);
+          log.info('trace event', { pid: id, event: JSON.stringify(event), traceCtx: JSON.stringify(traceCtx) });
+          invocationTracingService.write(event, traceCtx);
         },
         ephemeral: (event, traceCtx) => {
           log('ephemeral trace event', {
@@ -708,8 +736,8 @@ export class ProcessManagerImpl implements Manager {
           });
           handleRef?.pushEphemeral(event);
         },
-        traceInvocationStart: (opts) => this.#tracingService.traceInvocationStart(opts),
-        traceInvocationEnd: (opts) => this.#tracingService.traceInvocationEnd(opts),
+        traceInvocationStart: (opts) => invocationTracingService.traceInvocationStart(opts),
+        traceInvocationEnd: (opts) => invocationTracingService.traceInvocationEnd(opts),
       };
 
       let builtinCtx = Context.empty().pipe(
@@ -746,17 +774,6 @@ export class ProcessManagerImpl implements Manager {
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
 
       const callbacks = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
-
-      const isRoot = !options?.parentProcessId;
-
-      // Trace invocation start for root processes (no parent).
-      let invocationTrace: TracingService.InvocationTraceData | undefined;
-      if (isRoot) {
-        invocationTrace = yield* this.#tracingService.traceInvocationStart({
-          payload: { data: { processId: id } },
-        });
-        this.#traceContexts.set(id, { ...traceContext, currentInvocation: invocationTrace });
-      }
 
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen(this, function* () {

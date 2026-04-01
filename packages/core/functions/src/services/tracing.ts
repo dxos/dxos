@@ -172,6 +172,24 @@ export namespace TracingService {
       kind: Trigger.Kind;
     };
     chat?: Ref.Ref<Obj.Unknown>;
+    process?: {
+      pid: string;
+      parentPid?: string;
+      /**
+       * Key of the executable.
+       */
+      key: string;
+
+      /**
+       * Process name.
+       */
+      name?: string;
+
+      /**
+       * Target object that the process is assigned to.
+       */
+      target?: string;
+    };
   }
 }
 

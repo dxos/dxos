@@ -16,6 +16,7 @@ import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ErrorCodec, FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
 import { Message } from '@dxos/types';
+import { Process } from './process';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',
@@ -51,6 +52,12 @@ export const InvocationTraceStartEvent = Schema.Struct({
    * Invocation id, the same for invocation start and end events.
    */
   invocationId: ObjectId,
+
+  /**
+   * Id of the parent invocation.
+   */
+  parentInvocationId: Schema.optional(ObjectId),
+
   /**
    * Event generation time.
    */
@@ -58,10 +65,10 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * Data passed to function / workflow as an argument.
    */
-  // TODO(burdon): Input schema?
-  input: Schema.Object,
+  input: Schema.Unknown,
   /**
-   * Queue  for function/workflow invocation events.
+   * Queue for function/workflow invocation events.
+   * If missing, events are assumed to be in the same Feed.
    */
   invocationTraceQueue: Schema.optional(Ref.Ref(Queue)),
   /**
@@ -77,6 +84,29 @@ export const InvocationTraceStartEvent = Schema.Struct({
    * For invocations resulting from submitting a prompt in a chat thread.
    */
   chat: Schema.optional(Ref.Ref(Obj.Unknown)),
+  /**
+   * Process-specific metadata.
+   */
+  process: Schema.optional(
+    Schema.Struct({
+      pid: Process.ID,
+      parentPid: Schema.optional(Process.ID),
+      /**
+       * Key of the executable.
+       */
+      key: Schema.String,
+
+      /**
+       * Process name.
+       */
+      name: Schema.optional(Schema.String),
+
+      /**
+       * Target object that the process is assigned to.
+       */
+      target: Schema.optional(Schema.String),
+    }),
+  ),
   /**
    * Runtime executing the function.
    */
@@ -149,7 +179,7 @@ export type InvocationSpan = {
   timestamp: number;
   duration: number;
   outcome: InvocationOutcome;
-  input: object;
+  input: unknown;
   invocationTraceQueue?: Ref.Ref<Queue>;
   invocationTarget?: Ref.Ref<Obj.Unknown>;
   trigger?: Ref.Ref<Trigger.Trigger>;
@@ -289,6 +319,15 @@ export namespace TracingServiceExt {
                 invocationTarget: target ? Ref.fromDXN(target) : undefined,
                 trigger: payload.trigger ? Ref.fromDXN(DXN.fromLocalObjectId(payload.trigger.id)) : undefined,
                 chat: payload.chat,
+                process: !payload.process
+                  ? undefined
+                  : {
+                      pid: payload.process.pid as Process.ID,
+                      parentPid: payload.process.parentPid as Process.ID | undefined,
+                      key: payload.process.key,
+                      name: payload.process.name,
+                      target: payload.process.target,
+                    },
               });
               yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);
 
