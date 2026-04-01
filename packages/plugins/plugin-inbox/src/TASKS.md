@@ -19,12 +19,12 @@ It contains some complex logic to detect and track the current focus and restore
 
 In `plugin-inbox` `MessageStack` uses `Mosaic.VirtualStack`;
 
-- [x] `EventStack` should follow the same structure and `EventComponent` should become `EventTile` simlilar to `MessageTile`
+- [x] `EventStack` should follow the same structure and `EventComponent` should become `EventTile` similar to `MessageTile`
 - [x] `EventArticle` should similarly track the currentItem via `useSelected`.
 
 ## Phase 3 (Focus)
 
-We have multiple ways to visually represet focused/current/selected items, including:
+We have multiple ways to visually represent focused/current/selected items, including:
 
 1. Specific focus styles: `focusRingStyles` in `Focus.tsx` (ui-theme)
 2. Custom fragments: `fragments/focus.ts` (react-ui)

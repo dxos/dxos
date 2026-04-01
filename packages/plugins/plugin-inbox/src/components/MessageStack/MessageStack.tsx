@@ -2,15 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, {
-  type KeyboardEvent,
-  type MouseEvent,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card, ScrollArea } from '@dxos/react-ui';
@@ -82,12 +74,6 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       }))
       .filter((item) => item.label);
   }, [labels, message.properties?.labels]);
-
-  useEffect(() => {
-    if (current) {
-      console.log('===', message.id);
-    }
-  }, [current]);
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={message.id} data={data} location={location}>
