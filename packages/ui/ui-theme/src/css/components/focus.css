@@ -233,4 +233,12 @@
       }
     }
   }
+
+  .dx-focus-subdued {
+    @apply focus:outline-hidden focus-visible:outline-hidden focus:ring-0 ring-0 focus:border-0 border-0;
+  }
+
+  .dx-focus-static {
+    @apply ring-2 ring-offset-0 ring-primary-350 ring-offset-white dark:ring-primary-450 dark:ring-offset-black;
+  }
 }
