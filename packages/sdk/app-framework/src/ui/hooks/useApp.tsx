@@ -41,22 +41,6 @@ export type PlaceholderProps = {
   progress?: StartupProgress;
 };
 
-export type StartupProgress = {
-  /** Number of modules that have been activated. */
-  activated: number;
-  /** Total number of modules registered. */
-  total: number;
-  /** Fractional progress (0-1). */
-  progress: number;
-  /** Human-readable label for the currently activating module. */
-  status?: string;
-};
-
-export type PlaceholderProps = {
-  stage?: number;
-  progress?: StartupProgress;
-};
-
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
