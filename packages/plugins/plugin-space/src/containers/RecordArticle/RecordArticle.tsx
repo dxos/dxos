@@ -49,14 +49,16 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
             {related.length > 0 && (
               <div
                 role='none'
-                className={mx('flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
+                className={mx(
+                  'flex min-h-0 flex-1 flex-col gap-form-gap',
+                  singleColumn ? 'dx-card-max-width' : 'w-full',
+                )}
               >
                 <Input.Root>
                   <Input.Label>{t('related objects label')}</Input.Label>
                 </Input.Root>
                 <Masonry.Root Tile={ObjectCard} columnCount={singleColumn ? 1 : undefined}>
-                  <label className='mt-2 shrink-0 text-sm text-description'>{t('related objects label')}</label>
-                  <Masonry.Content items={related} />
+                  <Masonry.Content classNames='min-h-0 flex-1' items={related} />
                 </Masonry.Root>
               </div>
             )}
@@ -155,5 +157,5 @@ const useRelatedObjects = (
         // TODO(burdon): Hack to filter out chat objects.
         .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.assistant.chat')
     );
-  }, [record, objects]);
+  }, [record, objects, options.references, options.relations]);
 };
