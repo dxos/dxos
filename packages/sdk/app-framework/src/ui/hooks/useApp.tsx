@@ -34,6 +34,11 @@ export type StartupProgress = {
   status?: string;
 };
 
+export type PlaceholderProps = {
+  stage?: number;
+  progress?: StartupProgress;
+};
+
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
@@ -50,7 +55,7 @@ export type UseAppOptions = {
   debounce?: number;
   timeout?: number;
   fallback?: FC<FallbackProps>;
-  placeholder?: FC<{ stage: number; progress?: StartupProgress }>;
+  placeholder?: FC<PlaceholderProps>;
 };
 
 /**
@@ -244,7 +249,13 @@ export const useApp = ({
         <PluginManagerProvider value={manager}>
           <ContextProtocolProvider value={manager} context={PluginManagerContext}>
             <RegistryContext.Provider value={manager.registry}>
-              <App placeholder={placeholder} ready={ready} error={error} debounce={debounce} progress={startupProgress} />
+              <App
+                placeholder={placeholder}
+                ready={ready}
+                error={error}
+                debounce={debounce}
+                progress={startupProgress}
+              />
             </RegistryContext.Provider>
           </ContextProtocolProvider>
         </PluginManagerProvider>
