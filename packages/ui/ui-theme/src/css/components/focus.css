@@ -187,7 +187,6 @@
 
         &:hover {
           @apply outline-hidden;
-
           .dark & {
             @apply outline-hidden;
           }
@@ -234,11 +233,16 @@
     }
   }
 
+  .dx-focus-ring-pseudo {
+    @apply relative after:content-[""] after:absolute after:inset-0 after:rounded-[inherit]
+      after:pointer-events-none after:ring after:ring-inset after:ring-transparent;
+  }
+
   .dx-focus-subdued {
     @apply focus:outline-hidden focus-visible:outline-hidden focus:ring-0 ring-0 focus:border-0 border-0;
   }
 
   .dx-focus-static {
-    @apply ring-2 ring-offset-0 ring-primary-350 ring-offset-white dark:ring-primary-450 dark:ring-offset-black;
+    @apply ring-2 ring-offset-0 ring-primary-300 ring-offset-white dark:ring-primary-400 dark:ring-offset-black;
   }
 }

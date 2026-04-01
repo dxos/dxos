@@ -19,12 +19,12 @@ export type FocusStyleProps = {
  */
 const focusRing: ComponentFunction<FocusStyleProps> = ({ border }, ...etc) =>
   mx(
-    'relative outline-hidden',
-    border && 'border border-separator',
-    'after:content-[""] after:absolute after:inset-0 after:rounded-[inherit] after:pointer-events-none after:ring after:ring-inset after:ring-transparent',
+    'outline-hidden dx-focus-ring-pseudo',
     'focus:after:ring-neutral-focus-indicator',
     'data-[focus-state=active]:after:ring-neutral-focus-indicator',
     'data-[focus-state=error]:after:ring-rose-500',
+
+    border && 'border border-separator',
     ...etc,
   );
 
