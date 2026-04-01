@@ -188,7 +188,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
   return (
     <Panel.Root>
       <Panel.Toolbar>
-        {/* TODO(burdon): Factor out menu. */}
         {!isEmpty && (
           <ElevationProvider elevation='positioned'>
             <Menu.Root {...menuActions} attendableId={id}>
