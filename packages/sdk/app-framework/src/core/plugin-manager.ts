@@ -37,7 +37,13 @@ export type ManagerOptions = {
   registry?: Registry.Registry;
 };
 
-type ActivationMessage = { event: string; state: 'activating' | 'activated' | 'error'; error?: Error };
+export type ActivationMessage = {
+  event: string;
+  state: 'activating' | 'activated' | 'error';
+  /** Module ID when the message pertains to a specific module activation. */
+  module?: string;
+  error?: Error;
+};
 
 /**
  * Interface for the Plugin Manager.
@@ -578,6 +584,7 @@ class ManagerImpl implements PluginManager {
       yield* Ref.update(this._activatingModules, (activating) => Array.appendAll(activating, activatingModuleIds));
 
       log('activating modules', { key, modules: activatingModuleIds });
+      performance.mark(`event:${key}:start`);
       yield* PubSub.publish(this.activation, { event: key, state: 'activating' });
 
       yield* this._activateRelatedEvents(key, this._getBeforeEvents(modules, activatingEvents), 'before');
@@ -591,6 +598,8 @@ class ManagerImpl implements PluginManager {
         this._update(this._eventsFiredAtom, (events) => [...events, key]);
       }
 
+      performance.mark(`event:${key}:end`);
+      performance.measure(`event:${key}`, `event:${key}:start`, `event:${key}:end`);
       yield* PubSub.publish(this.activation, { event: key, state: 'activated' });
       log('activated', { key });
 
@@ -745,6 +754,8 @@ class ManagerImpl implements PluginManager {
 
         const loadEffect = Effect.gen(this, function* () {
           log('loading module', { module: module.id });
+          performance.mark(`module:${module.id}:start`);
+          yield* PubSub.publish(this.activation, { event: '', state: 'activating', module: module.id });
           const [duration, capabilities] = yield* module
             .activate()
             .pipe(
@@ -753,9 +764,13 @@ class ManagerImpl implements PluginManager {
               Effect.timed,
             );
           const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
+          const elapsed = Duration.toMillis(duration);
+          performance.mark(`module:${module.id}:end`);
+          performance.measure(`module:${module.id}`, `module:${module.id}:start`, `module:${module.id}:end`);
+          yield* PubSub.publish(this.activation, { event: '', state: 'activated', module: module.id });
           log('loaded module', {
             module: module.id,
-            elapsed: Duration.toMillis(duration),
+            elapsed,
             failed: false,
           });
           return normalized as Capability.Any[];
