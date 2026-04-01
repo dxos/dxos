@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 
 import { CreatePasskey } from './definitions';
-import { supportsNativePasskeys, createNativePasskey, extractPublicKeyFromAttestation } from './native-passkey';
+import { supportsNativePasskeys, createNativePasskey, extractPublicKeyFromAttestation } from './util';
 
 import { ClientCapabilities } from '../types';
 

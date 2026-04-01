@@ -10,7 +10,7 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 
 import { RedeemPasskey } from './definitions';
-import { supportsNativePasskeys, loginNativePasskey } from './native-passkey';
+import { supportsNativePasskeys, loginNativePasskey } from './util';
 
 import { ClientCapabilities } from '../types';
 
