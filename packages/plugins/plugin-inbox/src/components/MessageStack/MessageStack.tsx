@@ -30,19 +30,19 @@ import { getMessageProps } from '../../util';
 // Context
 //
 
-const MAILBOX_NAME = 'Mailbox';
+const MESSAGE_STACK_NAME = 'MessageStack';
 
-type MailboxContextValue = { currentMessageId?: string };
+type MessageStackContextValue = { currentMessageId?: string };
 
-const [MailboxProvider, useMailboxContext] = createContext<MailboxContextValue>(MAILBOX_NAME);
+const [MessageStackProvider, useMessageStackContext] = createContext<MessageStackContextValue>(MESSAGE_STACK_NAME);
 
-export type MailboxAction =
+export type MessageStackAction =
   | { type: 'current'; messageId: string }
   | { type: 'select'; messageId: string }
   | { type: 'select-tag'; label: string }
   | { type: 'save'; filter: string };
 
-export type MailboxActionHandler = (action: MailboxAction) => void;
+export type MessageStackActionHandler = (action: MessageStackAction) => void;
 
 //
 // MessageTile
@@ -51,14 +51,14 @@ export type MailboxActionHandler = (action: MailboxAction) => void;
 type MessageTileData = {
   message: Message.Message;
   labels?: MailboxType.Labels;
-  onAction?: MailboxActionHandler;
+  onAction?: MessageStackActionHandler;
 };
 
 type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'location' | 'data'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location }, forwardedRef) => {
   const { message, labels, onAction } = data;
-  const { currentMessageId } = useMailboxContext('MessageTile');
+  const { currentMessageId } = useMessageStackContext('MessageTile');
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), true);
 
   const isCurrent = currentMessageId ? currentMessageId === message.id : undefined;
@@ -156,22 +156,22 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 MessageTile.displayName = 'MessageTile';
 
 //
-// Mailbox
+// MessageStack
 //
 
-export type MailboxProps = {
+export type MessageStackProps = {
   id: string;
   messages: Message.Message[];
   labels?: MailboxType.Labels;
   currentMessageId?: string;
   ignoreAttention?: boolean;
-  onAction?: MailboxActionHandler;
+  onAction?: MessageStackActionHandler;
 };
 
 /**
- * Card-based mailbox component using mosaic layout.
+ * Card-based message stack component using mosaic layout.
  */
-export const Mailbox = composable<HTMLDivElement, MailboxProps>(
+export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
   ({ messages, labels, currentMessageId, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useMemo(
@@ -259,7 +259,7 @@ export const Mailbox = composable<HTMLDivElement, MailboxProps>(
     }, []);
 
     return (
-      <MailboxProvider currentMessageId={currentMessageId}>
+      <MessageStackProvider currentMessageId={currentMessageId}>
         <Focus.Group {...composableProps(props)} asChild onKeyDown={handleKeyDown} ref={forwardedRef}>
           <Mosaic.Container asChild withFocus autoScroll={viewport}>
             <ScrollArea.Root orientation='vertical' padding>
@@ -280,9 +280,9 @@ export const Mailbox = composable<HTMLDivElement, MailboxProps>(
             </ScrollArea.Root>
           </Mosaic.Container>
         </Focus.Group>
-      </MailboxProvider>
+      </MessageStackProvider>
     );
   },
 );
 
-Mailbox.displayName = 'Mailbox';
+MessageStack.displayName = 'MessageStack';

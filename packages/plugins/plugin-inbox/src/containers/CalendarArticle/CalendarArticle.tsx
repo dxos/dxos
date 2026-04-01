@@ -16,7 +16,7 @@ import { useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
-import { CalendarEmpty, EventList } from '../../components';
+import { CalendarEmpty, EventStack } from '../../components';
 import { meta } from '../../meta';
 import { type Calendar } from '../../types';
 
@@ -89,7 +89,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
             {objects.length <= 0 ? (
               <CalendarEmpty calendar={calendar} />
             ) : (
-              <EventList events={objects} selected={selected} onSelect={handleSelect} />
+              <EventStack events={objects} selected={selected} onSelect={handleSelect} />
             )}
           </Panel.Content>
         </Panel.Root>

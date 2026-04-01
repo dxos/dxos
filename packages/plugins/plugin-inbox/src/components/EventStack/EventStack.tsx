@@ -19,14 +19,14 @@ import { DateComponent } from '../DateComponent';
 // TODO(burdon): Modes: e.g., itinerary (with day markers).
 // TODO(burdon): Show upcoming events vs. past.
 
-export type EventListProps = ThemedClassName<{
+export type EventStackProps = ThemedClassName<{
   events?: Event.Event[];
   selected?: string;
   onSelect?: (contact: Event.Event) => void;
 }>;
 
 // TODO(burdon): Convert to mosaic with list management.
-export const EventList = ({ classNames, events = [], onSelect }: EventListProps) => {
+export const EventStack = ({ classNames, events = [], onSelect }: EventStackProps) => {
   // TODO(burdon): Move ScrollArea into compound List object.
   return (
     <ScrollArea.Root thin>

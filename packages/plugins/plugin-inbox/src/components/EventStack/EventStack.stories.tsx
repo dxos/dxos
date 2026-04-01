@@ -10,16 +10,16 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 
 import { createEvents } from '../../testing';
 
-import { EventList, type EventListProps } from './EventList';
+import { EventStack, type EventStackProps } from './EventStack';
 
-const EventListStory = (props: Omit<EventListProps, 'events'>) => {
+const EventStackStory = (props: Omit<EventStackProps, 'events'>) => {
   const events = useMemo(() => createEvents(100), []);
-  return <EventList events={events} {...props} />;
+  return <EventStack events={events} {...props} />;
 };
 
-const meta: Meta<typeof EventListStory> = {
-  title: 'plugins/plugin-inbox/components/EventList',
-  component: EventListStory,
+const meta: Meta<typeof EventStackStory> = {
+  title: 'plugins/plugin-inbox/components/EventStack',
+  component: EventStackStory,
   parameters: {
     layout: 'fullscreen',
   },

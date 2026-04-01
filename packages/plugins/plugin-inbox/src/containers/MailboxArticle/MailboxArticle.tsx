@@ -20,12 +20,14 @@ import { type EditorController } from '@dxos/react-ui-editor';
 import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
-import { type MailboxActionHandler, Mailbox as MailboxComponent, MailboxEmpty } from '../../components';
+import { type MessageStackActionHandler, MessageStack } from '../../components';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
 import { InboxOperation } from '../../operations';
 import { type Mailbox } from '../../types';
 import { sortByCreated } from '../../util';
+
+import { NewMailbox } from './NewMailbox';
 
 export type MailboxArticleProps = SurfaceComponentProps<
   Mailbox.Mailbox,
@@ -124,7 +126,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     return () => clearTimeout(t);
   }, [sortedMessages]);
 
-  const handleAction = useCallback<MailboxActionHandler>(
+  const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
       switch (action.type) {
         case 'current': {
@@ -218,11 +220,11 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
         </ElevationProvider>
       </Panel.Toolbar>
 
-      <Panel.Content>
+      <Panel.Content asChild>
         {isEmpty ? (
-          <MailboxEmpty mailbox={mailbox} />
+          <NewMailbox mailbox={mailbox} />
         ) : (
-          <MailboxComponent
+          <MessageStack
             id={id}
             currentMessageId={currentMessageId}
             messages={messagesWithTags}
@@ -339,7 +341,6 @@ const useMailboxActions = ({
 };
 
 // TODO(wittjosiah): Factor out.
-
 type AtomState<T> = {
   atom: Atom.Writable<T>;
   value: T;

@@ -13,7 +13,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
-import { Loading } from '@dxos/react-ui/testing';
+import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message, Person } from '@dxos/types';
 
 import { InboxPlugin } from '../../InboxPlugin';
@@ -26,7 +26,6 @@ const DefaultStory = () => {
   const db = useDatabase();
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));
   const mailbox = mailboxes[0];
-
   if (!db || !mailbox) {
     return <Loading data={{ db: !!db, mailbox: !!mailbox }} />;
   }
@@ -38,6 +37,7 @@ const meta = {
   title: 'plugins/plugin-inbox/containers/MailboxArticle',
   render: DefaultStory,
   decorators: [
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
         ...corePlugins(),
