@@ -40,7 +40,7 @@ export const startupProfiler = (): Profiler => {
 
       console.log(
         'Total startup time:',
-        Math.round(entries.find((entry) => entry.name === 'startup:total')?.duration ?? 0),
+        Math.round(entries.findLast((entry) => entry.name === 'startup:total')?.duration ?? 0),
         'ms',
       );
 
