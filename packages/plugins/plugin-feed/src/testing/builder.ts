@@ -97,7 +97,7 @@ export class Builder {
 
     const isAtom = !parsed.rss;
     this._feedUrl = url;
-    this._feedName = (isAtom ? channel.title?.['#text'] ?? channel.title : channel.title) ?? this._feedName;
+    this._feedName = (isAtom ? (channel.title?.['#text'] ?? channel.title) : channel.title) ?? this._feedName;
     this._feedDescription = (isAtom ? channel.subtitle : channel.description) ?? '';
 
     const items: any[] = (isAtom ? channel.entry : channel.item) ?? [];
@@ -105,8 +105,10 @@ export class Builder {
 
     for (const item of itemList) {
       const link = isAtom
-        ? (Array.isArray(item.link) ? item.link.find((link: any) => link['@_rel'] === 'alternate')?.['@_href'] : item.link?.['@_href']) ?? ''
-        : item.link ?? '';
+        ? ((Array.isArray(item.link)
+            ? item.link.find((link: any) => link['@_rel'] === 'alternate')?.['@_href']
+            : item.link?.['@_href']) ?? '')
+        : (item.link ?? '');
 
       this._posts.push(
         Subscription.makePost({
