@@ -30,10 +30,19 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-atom"
+    },
+    {
+      "path": "../../core/operation"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/react-client"
@@ -58,6 +67,9 @@
     },
     {
       "path": "../plugin-deck"
+    },
+    {
+      "path": "../plugin-graph"
     },
     {
       "path": "../plugin-space"
