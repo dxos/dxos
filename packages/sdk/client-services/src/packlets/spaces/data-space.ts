@@ -268,7 +268,7 @@ export class DataSpace {
     await this._close(ctx);
   }
 
-  private async _close(_ctx: Context): Promise<void> {
+  private async _close(ctx: Context): Promise<void> {
     await this._callbacks.beforeClose?.();
 
     await this.preClose.callSerial();
@@ -286,7 +286,7 @@ export class DataSpace {
 
     await this.authVerifier.close();
 
-    await this._inner.close();
+    await this._inner.close(ctx);
     await this._inner.spaceState.removeCredentialProcessor(this._automergeSpaceState);
     await this._automergeSpaceState.close();
     await this._inner.spaceState.removeCredentialProcessor(this._notarizationPlugin);

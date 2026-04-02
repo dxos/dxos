@@ -209,7 +209,7 @@ export class EchoHost extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     log('echo-host: opening automerge host...');
-    await this._automergeHost.open();
+    await this._automergeHost.open(ctx);
     log('echo-host: automerge host opened');
 
     log('echo-host: opening query service...');

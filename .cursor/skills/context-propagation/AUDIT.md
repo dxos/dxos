@@ -81,13 +81,58 @@ These areas are properly wired:
 
 ---
 
+## Resource open/close context audit
+
+Resources with `@trace.resource()` **and** `@trace.span()` methods. Only these need `this._ctx` trace-awareness (rule is soft).
+
+### Correctly propagated
+
+| Class                         | File                                         | Notes                                                                                                                          |
+| ----------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `Space`                       | `echo-pipeline/.../space.ts`                 | `_open` has `@trace.span()`, forwards `ctx` to `_controlPipeline.start(ctx)`. `_close` forwards `ctx` to `protocol.stop(ctx)`. |
+| `Identity`                    | `client-services/.../identity.ts`            | `open`/`close` have `@trace.span()`, forward `ctx` to `space.open(ctx)` / `space.close(ctx)`.                                  |
+| `DataSpaceManager`            | `client-services/.../data-space-manager.ts`  | `createSpace`/`acceptSpace` have `@trace.span()`, forward `ctx` to `_constructSpace`, `open`, pipelines.                       |
+| `AutomergeDocumentLoaderImpl` | `echo-db/.../automerge-doc-loader.ts`        | `loadSpaceRootDocHandle(ctx)` forwards to `_initDocHandle(ctx)`.                                                               |
+| `InvitationsManager`          | `client-services/.../invitations-manager.ts` | `createInvitation(ctx)` propagates through.                                                                                    |
+| `ControlPipeline`             | `echo-pipeline/.../control-pipeline.ts`      | `start(ctx)` passes `ctx` into `_consumePipeline(ctx)`.                                                                        |
+
+### Fixed in this pass
+
+| Class                 | File                                  | Fix                                                                       |
+| --------------------- | ------------------------------------- | ------------------------------------------------------------------------- |
+| `AutomergeHost._open` | `echo-pipeline/.../automerge-host.ts` | Now passes `ctx` to `_collectionSynchronizer.open(ctx)` and `close(ctx)`. |
+| `DataSpace._close`    | `client-services/.../data-space.ts`   | Now passes `ctx` to `_inner.close(ctx)` (was calling without ctx).        |
+| `EchoHost._open`      | `echo-pipeline/.../echo-host.ts`      | Now passes `ctx` to `_automergeHost.open(ctx)` (was calling without ctx). |
+
+### Accepted patterns (no change needed)
+
+| Class                         | File                                        | Pattern                                                                 | Rationale                                                                                                                               |
+| ----------------------------- | ------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `SpaceList._open`             | `client/.../space-list.ts`                  | Creates `this._ctx = new Context()` (ignores `ctx` param for lifecycle) | Client-side class; `this._ctx` is for detached stream subscriptions / microtasks. `@trace.span()` on `_open` covers the span hierarchy. |
+| `SpaceList._close`            | `client/.../space-list.ts`                  | `ctx` param unused in body                                              | Close disposes `this._ctx` and tears down streams; no downstream methods that need caller ctx.                                          |
+| `SpaceProxy._initializeDb`    | `client/.../space-proxy.ts`                 | `_ctx` param unused; uses `this._ctx` for `cancelWithContext`           | Lifecycle-scoped cancellation for property waits. Documented in P2.                                                                     |
+| `EchoEdgeReplicator`          | `echo-pipeline/.../echo-edge-replicator.ts` | `connectToSpace(ctx)` underuses `ctx` in body                           | Uses mutex + internal state; lifecycle `this._ctx` for reconnect logic.                                                                 |
+| `AutomergeHost#0.flush` (RPC) | `echo-pipeline/.../data-service.ts`         | Called with `Context.default()` from RPC handler                        | RPC boundary — accepted trace root.                                                                                                     |
+
+### Design note: Resource base class and `this._ctx`
+
+`Resource.#internalCtx` (`this._ctx`) is now recreated in `#open()` with `parent: #parentCtx`. This gives `getAttribute('dxos.trace-span')` access to the caller's trace span ID via the parent chain. Background/lifecycle work using `this._ctx` as `parentCtx` now becomes a child of the opening caller's span instead of an orphaned root.
+
+This does NOT create disposal linkage — the `parent` field is only used for attribute lookup by `Context.getAttribute()`. `#internalCtx` is still disposed independently by `Resource.#close()`.
+
+**Impact:** `QueryServiceImpl._executeQueries`, `CoreDatabase._emitDbUpdateEvents`, `CollectionSynchronizer` manual spans, and other `this._ctx`-based background work now appear as children of their opening caller span in OTEL traces.
+
+---
+
 ## OTEL bridge edge cases
 
-1. **Parent span already ended.** If a parent `TracingSpan` has ended and been removed from `_idToSpan` before its child starts, `parentContext` is `undefined`. The child becomes an orphaned root in OTEL even though the DXOS span tree has the correct `parentId`.
+1. **Parent span already ended.** ~~If a parent `TracingSpan` has ended and been removed from `_idToSpan` before its child starts, `parentContext` is `undefined`. The child becomes an orphaned root in OTEL even though the DXOS span tree has the correct `parentId`.~~ **Fixed**: `RemoteTracing._endedSpanContexts` preserves OTEL contexts after spans end (bounded to 10k entries). `getSpanContext` falls back to ended contexts.
 
-2. **`markError` + `markSuccess` double flush.** On error, `catch` calls `markError` and `finally` calls `markSuccess`. Both set `endTs` and trigger `_flushSpan`. Second flush is a no-op on the remote side but causes redundant serialization.
+2. **Spans created before `registerProcessor`.** ~~Early startup spans were silently dropped.~~ **Fixed**: `RemoteTracing._pendingFlushes` buffers flush calls; replayed on registration.
 
-3. **`sanitizeClassName` over-truncation.** Strips trailing digits: `Peer2` → `Peer`. Cosmetic issue for span names.
+3. **`markError` + `markSuccess` double flush.** On error, `catch` calls `markError` and `finally` calls `markSuccess`. Both set `endTs` and trigger `_flushSpan`. Second flush is a no-op on the remote side but causes redundant serialization.
+
+4. **`sanitizeClassName` over-truncation.** Strips trailing digits: `Peer2` → `Peer`. Cosmetic issue for span names.
 
 ---
 
@@ -115,6 +160,13 @@ These areas are properly wired:
 | `QueryExecutor._loadFromAutomerge/_loadFromDXN` using `Context.default()`       | Changed to `this._ctx` (Resource lifecycle).                                                                                                |
 | `IdentityServiceImpl._createDefaultSpace` using `Context.default()`             | Added `ctx` parameter; callers pass `this._ctx`.                                                                                            |
 | `IdentityServiceImpl._fixIdentityWithoutDefaultSpace` using `Context.default()` | Changed to `this._ctx` for `space.open` and `initializeDataPipeline`.                                                                       |
+| `RemoteTracing` ended spans losing OTEL context                                 | Added `_endedSpanContexts` map; `getSpanContext` falls back to ended contexts. Bounded to 10k entries.                                      |
+| `RemoteTracing` pre-registration spans silently dropped                         | Added `_pendingFlushes` buffer; replayed in order when `registerProcessor` is called.                                                       |
+| `AutomergeHost._open` not passing `ctx` to `CollectionSynchronizer.open/close`  | Now passes `ctx` to `open(ctx)` and `close(ctx)`.                                                                                           |
+| `DataSpace._close` not passing `ctx` to `inner.close()`                         | Now passes `ctx` to `this._inner.close(ctx)`.                                                                                               |
+| `Resource.#internalCtx` has no trace parent                                     | `#open()` now recreates `#internalCtx` with `parent: #parentCtx` for attribute lookup. Background work gets caller's span as parent.        |
+| `CoreDatabase._ctx` has no trace parent                                         | `open(ctx)` now sets `this._ctx = new Context({ parent: ctx })`. `_emitDbUpdateEvents` gets caller's span as parent.                        |
+| `EchoHost._open` not passing `ctx` to `AutomergeHost.open()`                    | Now passes `ctx` to `this._automergeHost.open(ctx)`.                                                                                        |
 
 ---
 
@@ -173,3 +225,4 @@ These areas are properly wired:
 - `packages/common/tracing/src/api.ts`
 - `packages/common/tracing/src/trace-processor.ts`
 - `packages/common/context/src/context.ts`
+- `packages/common/context/src/resource.ts`

@@ -261,13 +261,13 @@ export class AutomergeHost extends Resource {
     });
 
     await this._echoNetworkAdapter.open();
-    await this._collectionSynchronizer.open();
+    await this._collectionSynchronizer.open(ctx);
     await this._echoNetworkAdapter.open();
     await this._echoNetworkAdapter.whenConnected();
   }
 
   protected override async _close(ctx: Context): Promise<void> {
-    await this._collectionSynchronizer.close();
+    await this._collectionSynchronizer.close(ctx);
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
     this._syncTask = undefined;

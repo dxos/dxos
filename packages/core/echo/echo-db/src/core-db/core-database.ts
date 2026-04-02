@@ -163,6 +163,7 @@ export class CoreDatabase {
     }
     this._state = CoreDatabaseState.OPENING;
 
+    this._ctx = new Context({ parent: ctx });
     this._updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(this._ctx), {
       maxFrequency: THROTTLED_UPDATE_FREQUENCY,
     });
