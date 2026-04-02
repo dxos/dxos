@@ -8772,6 +8772,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
