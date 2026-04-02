@@ -130,7 +130,6 @@ export const makeToolResolverFromOperations = <R = never>({
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
             const toolkit = GenericToolkit.merge(extraToolkit, toolkitProvider.getToolkit());
-            log.info('provided tools', { tools: Record.keys(toolkit.toolkit.tools) });
 
             const tool = toolkit.toolkit.tools[id];
             if (tool) {
