@@ -7,7 +7,12 @@ import { Obj, Type } from '@dxos/echo';
 import { Filter, type SerializedSpace, Serializer, decodeDXNFromJSON } from '@dxos/echo-db';
 import { type EchoDatabase } from '@dxos/echo-db';
 
-export const importSpace = async (db: EchoDatabase, data: SerializedSpace) => {
+export type ImportSpaceOptions = {
+  /** Type names to filter out during import (e.g., SpaceProperties typename). */
+  ignoreTypes?: string[];
+};
+
+export const importSpace = async (db: EchoDatabase, data: SerializedSpace, options?: ImportSpaceOptions) => {
   const [properties] = await db
     .query(Filter.or(Filter.type(SpaceProperties), Filter.type(LegacySpaceProperties)))
     .run();
@@ -17,6 +22,11 @@ export const importSpace = async (db: EchoDatabase, data: SerializedSpace) => {
       const { '@type': typeEncoded, ...data } = object;
       const typeDXN = decodeDXNFromJSON(typeEncoded);
       const typename = typeDXN?.asTypeDXN()?.type;
+
+      if (typename && options?.ignoreTypes?.includes(typename)) {
+        return false;
+      }
+
       // Handle Space Properties.
       if (
         properties &&
