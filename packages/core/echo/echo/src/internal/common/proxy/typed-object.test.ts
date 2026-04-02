@@ -101,7 +101,7 @@ describe('EchoObjectSchema class DSL', () => {
         meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
       }).pipe(
         EchoObjectSchema({
-          typename: 'org.dxos.type.function-trigger',
+          typename: 'org.dxos.type.functionTrigger',
           version: '0.1.0',
         }),
       );

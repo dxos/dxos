@@ -16,6 +16,7 @@ import {
 } from '@dxos/async';
 import {
   type ClientServicesProvider,
+  LegacySpaceProperties,
   SPACE_TAG,
   type Space,
   type SpaceInternal,
@@ -60,6 +61,7 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import {
   type Credential,
   type Epoch,
+  MembershipPolicy,
   SpaceMember as HaloSpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -205,6 +207,10 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   get tags(): string[] {
     return this._data.tags ?? [];
+  }
+
+  get membershipPolicy(): MembershipPolicy {
+    return this._data.membershipPolicy ?? MembershipPolicy.INVITE;
   }
 
   get db(): EchoDatabase {
@@ -420,19 +426,21 @@ export class SpaceProxy implements Space, CustomInspectable {
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const unsubscribe = this._db.query(Filter.type(SpaceProperties)).subscribe(
-        (query) => {
-          if (query.results.length === 1) {
-            this._properties = query.results[0];
-            propertiesAvailable.wake();
-            this._stateUpdate.emit(this._currentState);
-            scheduleMicroTask(this._ctx, () => {
-              unsubscribe();
-            });
-          }
-        },
-        { fire: true },
-      );
+      const unsubscribe = this._db
+        .query(Filter.or(Filter.type(SpaceProperties), Filter.type(LegacySpaceProperties)))
+        .subscribe(
+          (query) => {
+            if (query.results.length === 1) {
+              this._properties = query.results[0];
+              propertiesAvailable.wake();
+              this._stateUpdate.emit(this._currentState);
+              scheduleMicroTask(this._ctx, () => {
+                unsubscribe();
+              });
+            }
+          },
+          { fire: true },
+        );
     }
     await warnAfterTimeout(5_000, 'Finding properties for a space', () =>
       cancelWithContext(this._ctx, propertiesAvailable.wait()),

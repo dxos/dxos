@@ -2,7 +2,7 @@
 // Copyright 2021 DXOS.org
 //
 
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, onTestFinished, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { performInvitation } from '@dxos/client-services/testing';
@@ -10,12 +10,13 @@ import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { Invitation, QueryInvitationsResponse } from '@dxos/protocols/proto/dxos/client/services';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type Client } from '../client';
 import { createInitializedClientsWithContext, testSpaceAutomerge, waitForSpace } from '../testing';
 
 describe('Spaces/invitations', () => {
-  test('creates a space and invites a peer', async () => {
+  test('creates a space and invites a peer', async ({ expect }) => {
     const [client1, client2] = await createInitializedClients(2);
     await Promise.all([client1, client2].map((c) => c.addTypes([TestSchema.Expando])));
 
@@ -37,7 +38,7 @@ describe('Spaces/invitations', () => {
   });
 
   describe('delegated', () => {
-    test('single-use', async () => {
+    test('single-use', async ({ expect }) => {
       const clients = await createInitializedClients(3);
       const [alice, bob, fred] = clients;
 
@@ -67,7 +68,7 @@ describe('Spaces/invitations', () => {
       await fredInvitations.waitEmpty();
     });
 
-    test('multi-use', async () => {
+    test('multi-use', async ({ expect }) => {
       const clients = await createInitializedClients(4);
       const [alice, bob, fred, charlie] = clients;
 
@@ -96,6 +97,20 @@ describe('Spaces/invitations', () => {
       charlie.spaces.join(observableInvitation.get());
       await waitForSpace(charlie, space.key!, { ready: true });
     });
+  });
+
+  test('locked space stores membership policy correctly', async ({ expect }) => {
+    const [client1] = await createInitializedClients(1);
+
+    const space = await client1.spaces.create({}, { membershipPolicy: MembershipPolicy.LOCKED });
+    expect(space.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
+
+    const credentials = await space.internal.getCredentials();
+    const genesisCredential = credentials.find(
+      (c) => c.subject.assertion['@type'] === 'dxos.halo.credentials.SpaceGenesis',
+    );
+    expect(genesisCredential).toBeDefined();
+    expect(genesisCredential!.subject.assertion.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
   });
 
   const createInvitationTracker = (peer: Client) => {

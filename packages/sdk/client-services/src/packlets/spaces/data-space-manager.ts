@@ -6,7 +6,7 @@ import { type Doc } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { SpaceProperties } from '@dxos/client-protocol';
+import { LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   type CredentialSigner,
@@ -42,7 +42,12 @@ import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/servic
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type Credential, type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  type Credential,
+  MembershipPolicy,
+  type ProfileDocument,
+  SpaceMember,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { type Teleport } from '@dxos/teleport';
@@ -130,6 +135,7 @@ export type CreateSpaceOptions = {
   rootUrl?: AutomergeUrl;
   documents?: Record<DocumentId, Uint8Array>;
   tags?: string[];
+  membershipPolicy?: MembershipPolicy;
 };
 
 @trackLeaks('open', 'close')
@@ -185,7 +191,10 @@ export class DataSpaceManager extends Resource {
             await rootHandle?.whenReady();
             const rootDoc = rootHandle?.doc();
 
-            const properties = rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
+            const properties =
+              rootDoc &&
+              (findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties)) ??
+                findInlineObjectOfType(rootDoc, Type.getTypename(LegacySpaceProperties)));
 
             return {
               key: space.key.toHex(),
@@ -335,7 +344,14 @@ export class DataSpaceManager extends Resource {
 
     log('adding space...', { spaceKey });
 
-    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url, tags);
+    const credentials = await spaceGenesis(
+      this._keyring,
+      this._signingContext,
+      space.inner,
+      root.url,
+      tags,
+      options.membershipPolicy,
+    );
     await this._metadataStore.addSpace(metadata);
 
     const memberCredential = credentials[1];

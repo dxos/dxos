@@ -103,38 +103,44 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     [space.properties.name, space.properties.icon, space.properties.hue, edgeReplication, archived],
   );
 
+  const personal = isPersonalSpace(space);
+
   const fieldMap = useMemo<FormFieldMap>(
     () => ({
-      name: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback(
-          ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),
-          [onValueChange, type],
-        );
-        return (
-          <Settings.ItemInput title={label} description={t('display name description')}>
-            <Input.TextInput
-              value={getValue()}
-              onChange={handleChange}
-              placeholder={t('display name input placeholder')}
-              classNames='min-w-64'
-            />
-          </Settings.ItemInput>
-        );
-      },
-      icon: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
-        const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
-        return (
-          <Settings.Item title={label} description={t('icon description')}>
-            <IconPicker
-              value={getValue()}
-              onChange={handleChange}
-              onReset={handleReset}
-              classNames='justify-self-end'
-            />
-          </Settings.Item>
-        );
-      },
+      name: personal
+        ? () => null
+        : ({ type, label, getValue, onValueChange }) => {
+            const handleChange = useCallback(
+              ({ target: { value } }: ChangeEvent<HTMLInputElement>) => onValueChange(type, value),
+              [onValueChange, type],
+            );
+            return (
+              <Settings.ItemInput title={label} description={t('display name description')}>
+                <Input.TextInput
+                  value={getValue()}
+                  onChange={handleChange}
+                  placeholder={t('display name input placeholder')}
+                  classNames='min-w-64'
+                />
+              </Settings.ItemInput>
+            );
+          },
+      icon: personal
+        ? () => null
+        : ({ type, label, getValue, onValueChange }) => {
+            const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
+            const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
+            return (
+              <Settings.Item title={label} description={t('icon description')}>
+                <IconPicker
+                  value={getValue()}
+                  onChange={handleChange}
+                  onReset={handleReset}
+                  classNames='justify-self-end'
+                />
+              </Settings.Item>
+            );
+          },
       hue: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
@@ -152,22 +158,20 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           </Settings.ItemInput>
         );
       },
-      archived: ({ type, label, getValue, onValueChange }) => {
-        const handleChange = useCallback(() => onValueChange(type, !getValue()), [onValueChange, type, getValue]);
-        return (
-          <Settings.ItemInput title={label} description={t('archive space description')}>
-            <Button
-              disabled={isPersonalSpace(space)}
-              variant={getValue() ? 'default' : 'destructive'}
-              onClick={handleChange}
-            >
-              {getValue() ? t('unarchive space label') : t('archive space label')}
-            </Button>
-          </Settings.ItemInput>
-        );
-      },
+      archived: personal
+        ? () => null
+        : ({ type, label, getValue, onValueChange }) => {
+            const handleChange = useCallback(() => onValueChange(type, !getValue()), [onValueChange, type, getValue]);
+            return (
+              <Settings.ItemInput title={label} description={t('archive space description')}>
+                <Button variant={getValue() ? 'default' : 'destructive'} onClick={handleChange}>
+                  {getValue() ? t('unarchive space label') : t('archive space label')}
+                </Button>
+              </Settings.ItemInput>
+            );
+          },
     }),
-    [t, space],
+    [t, space, personal],
   );
 
   const download = useFileDownload();
