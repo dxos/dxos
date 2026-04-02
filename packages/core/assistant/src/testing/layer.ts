@@ -35,8 +35,8 @@ import {
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { Message } from '@dxos/types';
 
-import { Blueprint } from '@dxos/blueprints';
-import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
+import { Blueprint, Prompt } from '@dxos/blueprints';
+import { Operation, OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 import * as LanguageModel from '@effect/ai/LanguageModel';
 import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { ToolExecutionServices } from '../functions';
@@ -118,6 +118,8 @@ export const AssistantTestLayer = ({
   const operationHandlersSet = Array.isArray(operationHandlers)
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
+  types.push(Blueprint.Blueprint, Prompt.Prompt, Operation.PersistentOperation, Feed.Feed);
+
   return Layer.empty.pipe(
     Layer.provideMerge(AgentService.layer({ systemPrompt })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),

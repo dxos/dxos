@@ -21,6 +21,7 @@ import { Operation, OperationRegistry } from '@dxos/operation';
 import * as Option from 'effect/Option';
 
 import { RefFromLLM } from '../types';
+import { log } from '@dxos/log';
 
 /**
  * Constructs a `ToolResolverService` whose `resolve(id)` looks up tools in the following order:
@@ -127,6 +128,7 @@ export const makeToolResolverFromOperations = (): Layer.Layer<
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
             const toolkit = toolkitProvider.getToolkit();
+            log.info('provided tools', { tools: Record.keys(toolkit.toolkit.tools) });
 
             const tool = toolkit.toolkit.tools[id];
             if (tool) {

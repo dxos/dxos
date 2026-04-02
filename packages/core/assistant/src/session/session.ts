@@ -147,6 +147,7 @@ export class AiSession {
       Array.reverse,
       Array.takeWhile((_) => _.sender.role === 'assistant'),
       Array.flatMap((_) => _.blocks.filter(ContentBlock.is('toolCall')).map((block) => ({ block, message: _ }))),
+      Array.filter((_) => !_.block.providerExecuted),
     );
 
   /**
@@ -222,7 +223,7 @@ export class AiSession {
             Effect.gen(this, function* () {
               if (block.pending) {
                 currentMessageId ??= Obj.ID.random();
-                log.info('emit ephemeral message', { id: currentMessageId, type: block._tag });
+                log('emit ephemeral message', { id: currentMessageId, type: block._tag });
                 yield* TracingService.emitEphemeralMessage(
                   Obj.make(Message.Message, {
                     id: currentMessageId,
@@ -236,7 +237,7 @@ export class AiSession {
                 currentMessageId ??= Obj.ID.random();
                 const id = currentMessageId;
                 currentMessageId = null;
-                log.info('emit complete message', { id, type: block._tag });
+                log('emit complete message', { id, type: block._tag });
                 const message = Obj.make(Message.Message, {
                   id,
                   created: new Date().toISOString(),

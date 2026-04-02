@@ -110,13 +110,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 Match.exhaustive,
               );
 
-              log.info('begin request');
+              log('begin request', { prompt });
               yield* conversation.createRequest({
                 prompt,
                 toolkit: AsynchronousExectionToolkit,
                 system: options.systemPrompt,
               });
-              log.info('end request');
+              log('end request');
               yield* AgentEventsKey.set(inputQueue);
               if (inputQueue.length > 0) {
                 ctx.setAlarm();

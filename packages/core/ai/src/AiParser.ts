@@ -135,7 +135,7 @@ export const parseResponse =
         ) {
           yield* onBlock({ ...contentBlock } as ContentBlock.Any);
           if (emitPartial) {
-            log.info('emit partial content block', { type: contentBlock._tag });
+            log('emit partial content block', { type: contentBlock._tag });
             out.push({ ...contentBlock } as ContentBlock.Any);
           }
           blocks++;
@@ -175,11 +175,8 @@ export const parseResponse =
           }
         });
 
-        const handlePart = Effect.fnUntraced(function* (
-          part: Response.StreamPart<Tools>,
-          out: ContentBlock.Any[],
-        ) {
-          log.info('part', { type: part.type });
+        const handlePart = Effect.fnUntraced(function* (part: Response.StreamPart<Tools>, out: ContentBlock.Any[]) {
+          log('part', { type: part.type });
           yield* onPart(part);
           switch (part.type) {
             case 'text-start': {

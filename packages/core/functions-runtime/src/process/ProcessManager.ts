@@ -690,7 +690,6 @@ export class ProcessManagerImpl implements Manager {
   }
 
   #refreshProcessTree(): void {
-    log.info('refresh process tree');
     this.#registry.set(this.#processTreeAtom, this.#buildProcessTreeSnapshot());
   }
 
@@ -846,7 +845,7 @@ export class ProcessManagerImpl implements Manager {
       const processTracingService: Context.Tag.Service<TracingService> = {
         getTraceContext: () => traceContext,
         write: (event, traceCtx) => {
-          log.info('trace event', { pid: id, event: JSON.stringify(event), traceCtx: JSON.stringify(traceCtx) });
+          log('trace event', { pid: id, event: JSON.stringify(event), traceCtx: JSON.stringify(traceCtx) });
           invocationTracingService.write(event, traceCtx);
         },
         ephemeral: (event, traceCtx) => {
