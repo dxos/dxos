@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -18,30 +18,29 @@ type FeedArticleStoryProps = {
 };
 
 const useFeedData = (feedUrl?: string): BuildResult | undefined => {
-  const fakeData = useMemo(() => new Builder().createPosts(50).build(), []);
-  const [rssData, setRssData] = useState<BuildResult>();
+  const [data, setData] = useState<BuildResult>();
 
   useEffect(() => {
-    if (!feedUrl) {
-      return;
-    }
-
     let cancelled = false;
-    new Builder()
-      .fromRss(feedUrl)
-      .then((builder) => {
-        if (!cancelled) {
-          setRssData(builder.build());
-        }
-      })
-      .catch(() => {});
+    const load = async () => {
+      const builder = new Builder();
+      if (feedUrl) {
+        await builder.fromRss(feedUrl);
+      } else {
+        builder.createPosts(50);
+      }
+      if (!cancelled) {
+        setData(builder.build());
+      }
+    };
+    void load().catch(() => {});
 
     return () => {
       cancelled = true;
     };
   }, [feedUrl]);
 
-  return feedUrl ? rssData : fakeData;
+  return data;
 };
 
 /** Standalone FeedArticle story that renders PostStack with generated or real RSS data. */
