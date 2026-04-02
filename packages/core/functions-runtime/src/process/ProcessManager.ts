@@ -21,6 +21,7 @@ import * as Ref from 'effect/Ref';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import { Performance } from '@dxos/effect';
+import type { SpaceId } from '@dxos/keys';
 
 import { DXN, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -53,6 +54,11 @@ export interface Handle<I, O> {
    * Parameters of the process.
    */
   readonly params: Process.Params;
+
+  /**
+   * Environment influences what services are available to the process.
+   */
+  readonly environment: Environment;
 
   submitInput(input: I): Effect.Effect<void>;
   subscribeOutputs(): Stream.Stream<O>;
@@ -93,6 +99,14 @@ export namespace Handle {
 }
 
 /**
+ * Environment influences what services are available to the process.
+ */
+export interface Environment {
+  readonly space?: SpaceId;
+  readonly conversation?: DXN.String;
+}
+
+/**
  * Tracing metadata attached to a process spawn.
  */
 export interface TracingOptions {
@@ -128,6 +142,8 @@ export interface SpawnOptions {
 
   /** Tracing metadata for this invocation. */
   readonly tracing?: TracingOptions;
+
+  readonly environment?: Environment;
 }
 
 export interface ListOptions {
@@ -200,6 +216,7 @@ type OutputItem<O> = Option.Option<O>;
 class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   readonly statusAtom: Atom.Writable<Status>;
   readonly parentId: Process.ID | null;
+  readonly environment: Environment;
 
   #currentStatus: Status;
   #activeHandlers = 0;
@@ -239,6 +256,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     storage: Context.Tag.Service<typeof StorageService.StorageService>,
     key: string,
     params: Process.Params,
+    environment: Environment,
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
     onStatusChanged?: () => void,
     hasRunningChildren?: () => boolean,
@@ -246,6 +264,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     this.parentId = parentId;
     this.key = key;
     this.params = params;
+    this.environment = environment;
     this.#callbacks = callbacks;
     this.#scope = scope;
     this.#services = services;
@@ -384,7 +403,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     return Stream.unwrap(
       Effect.gen(this, function* () {
         // Make sure we dont miss any outputs.
-        const outputs = this.subscribeOutputs().pipe(Stream.interruptWhen(this.#runAndExitInterruptEffect()));;
+        const outputs = this.subscribeOutputs().pipe(Stream.interruptWhen(this.#runAndExitInterruptEffect()));
         yield* Effect.forEach(inputs, (input) => this.submitInput(input));
         yield* this.#assertRunAndExitProcessActive();
         return outputs;
@@ -750,6 +769,19 @@ export class ProcessManagerImpl implements Manager {
 
       const parentOption = Option.fromNullable(options?.parentProcessId);
 
+      const parentHandle =
+        options?.parentProcessId !== undefined ? this.#handles.get(options.parentProcessId) : undefined;
+      const environment: Environment = {
+        ...(parentHandle !== undefined ? parentHandle.environment : {}),
+        ...options?.environment,
+      };
+
+      const resolutionContext: ServiceResolver.ResolutionContext = {
+        space: environment.space,
+        conversation: environment.conversation,
+        process: id,
+      };
+
       let handleRef: ProcessHandleImpl<I, O, any> | null = null;
 
       const params: Process.Params = {
@@ -857,7 +889,7 @@ export class ProcessManagerImpl implements Manager {
 
       let serviceCtx: Context.Context<never> = Context.empty() as Context.Context<never>;
       if (externalServices.length > 0) {
-        serviceCtx = yield* this.#serviceResolver.resolve(externalServices).pipe(Effect.orDie);
+        serviceCtx = yield* this.#serviceResolver.resolve(externalServices, resolutionContext).pipe(Effect.orDie);
       }
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
@@ -903,6 +935,7 @@ export class ProcessManagerImpl implements Manager {
         storage,
         definition.key,
         params,
+        environment,
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),

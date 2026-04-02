@@ -8,8 +8,10 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import type { DXN, SpaceId } from '@dxos/keys';
 
 import { ServiceNotAvailableError } from '../errors';
+import * as Process from './Process';
 
 const ServiceResolverTypeId = '~@dxos/functions/ServiceResolver' as const;
 type ServiceResolverTypeId = typeof ServiceResolverTypeId;
@@ -21,7 +23,10 @@ export interface ServiceResolver {
    * Resolve a set of services identified by their tags.
    * Returns a Context containing all requested services, or fails with ServiceNotAvailableError.
    */
-  resolve(tags: readonly Context.Tag<any, any>[]): Effect.Effect<Context.Context<never>, ServiceNotAvailableError>;
+  resolve(
+    tags: readonly Context.Tag<any, any>[],
+    context: ResolutionContext,
+  ): Effect.Effect<Context.Context<never>, ServiceNotAvailableError>;
 }
 
 /**
@@ -30,11 +35,37 @@ export interface ServiceResolver {
 export const ServiceResolver = Context.GenericTag<ServiceResolver>('@dxos/functions/ServiceResolver');
 
 /**
+ * Provides context for service resolution.
+ */
+export interface ResolutionContext {
+  /**
+   * Under which identity the process is running.
+   */
+  readonly identity?: string;
+
+  /**
+   * Under which space the process is running.
+   */
+  readonly space?: SpaceId;
+
+  /**
+   * DXN of the conversation feed the process is running in.
+   */
+  readonly conversation?: DXN.String;
+
+  /**
+   * Under which process the process is running.
+   */
+  readonly process?: Process.ID;
+}
+
+/**
  * Create a ServiceResolver from a custom resolution function.
  */
 export const fromResolveFn = (
   resolveFn: (
     tags: readonly Context.Tag<any, any>[],
+    context: ResolutionContext,
   ) => Effect.Effect<Context.Context<never>, ServiceNotAvailableError>,
 ): ServiceResolver => ({
   [ServiceResolverTypeId]: ServiceResolverTypeId,
@@ -46,15 +77,13 @@ export const fromResolveFn = (
  * Tags present in the context are resolved; missing tags fail with ServiceNotAvailableError.
  */
 export const fromContext = (ctx: Context.Context<any>): ServiceResolver =>
-  fromResolveFn((tags) =>
+  fromResolveFn((tags, _context) =>
     Effect.sync(() => {
       let result: Context.Context<never> = Context.empty() as Context.Context<never>;
       for (const tag of tags) {
         const service = Context.getOption(ctx, tag);
         if (Option.isNone(service)) {
-          return Effect.fail(
-            new ServiceNotAvailableError(`Service not available: ${String((tag as any).key ?? tag)}`),
-          );
+          return Effect.fail(new ServiceNotAvailableError(`Service not available: ${String((tag as any).key ?? tag)}`));
         }
         result = Context.add(result, tag, service.value) as Context.Context<never>;
       }
@@ -71,7 +100,7 @@ export const fromRequirements = <const Tags extends readonly Context.Tag<any, an
 ): Effect.Effect<ServiceResolver, never, Context.Tag.Identifier<Tags[number]>> =>
   Effect.contextWith((parentCtx: Context.Context<any>) => {
     const available = new Set(tags.map((tag) => tag.key));
-    return fromResolveFn((requestedTags) =>
+    return fromResolveFn((requestedTags, _context) =>
       Effect.sync(() => {
         let result: Context.Context<never> = Context.empty() as Context.Context<never>;
         for (const tag of requestedTags) {
@@ -102,7 +131,7 @@ export const layerRequirements = <const Tags extends readonly Context.Tag<any, a
  * the first resolver that can satisfy a tag wins.
  */
 export const compose = (...resolvers: readonly ServiceResolver[]): ServiceResolver =>
-  fromResolveFn((tags) =>
+  fromResolveFn((tags, context) =>
     Effect.gen(function* () {
       let result: Context.Context<never> = Context.empty() as Context.Context<never>;
       const remaining = [...tags];
@@ -111,7 +140,7 @@ export const compose = (...resolvers: readonly ServiceResolver[]): ServiceResolv
         if (remaining.length === 0) break;
 
         const stillNeeded = [...remaining];
-        const resolved = yield* resolver.resolve(stillNeeded).pipe(
+        const resolved = yield* resolver.resolve(stillNeeded, context).pipe(
           Effect.map(Option.some),
           Effect.catchAll(() => Effect.succeed(Option.none<Context.Context<never>>())),
         );
@@ -124,7 +153,7 @@ export const compose = (...resolvers: readonly ServiceResolver[]): ServiceResolv
 
         const resolved1by1: Context.Tag<any, any>[] = [];
         for (const tag of stillNeeded) {
-          const single = yield* resolver.resolve([tag]).pipe(
+          const single = yield* resolver.resolve([tag], context).pipe(
             Effect.map(Option.some),
             Effect.catchAll(() => Effect.succeed(Option.none<Context.Context<never>>())),
           );
@@ -152,7 +181,7 @@ export const compose = (...resolvers: readonly ServiceResolver[]): ServiceResolv
 /**
  * An empty resolver that fails for any requested service.
  */
-export const empty: ServiceResolver = fromResolveFn((tags) => {
+export const empty: ServiceResolver = fromResolveFn((tags, _context) => {
   if (tags.length === 0) {
     return Effect.succeed(Context.empty() as Context.Context<never>);
   }
