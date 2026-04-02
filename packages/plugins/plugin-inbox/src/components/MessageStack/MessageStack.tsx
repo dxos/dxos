@@ -41,8 +41,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(message.id);
-    onAction?.({ type: 'current', messageId: message.id });
-  }, [message.id, setCurrentId, onAction]);
+  }, [message.id, setCurrentId]);
 
   const handleAvatarClick = useCallback(
     (event: MouseEvent) => {
@@ -188,9 +187,9 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
                 classNames='my-2'
                 gap={8}
                 items={items}
+                draggable={false}
                 getId={(item) => item.message.id}
                 getScrollElement={() => viewport}
-                draggable={false}
                 estimateSize={() => 150}
               />
             </ScrollArea.Viewport>

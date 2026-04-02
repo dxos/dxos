@@ -17,7 +17,7 @@ import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import { createEvents } from '../../testing';
+import { Builder } from '../../testing';
 import { Calendar } from '../../types';
 
 import { CalendarArticle } from './CalendarArticle';
@@ -58,7 +58,7 @@ const meta = {
               // Populate the calendar's feed with events.
               const feed = yield* Effect.tryPromise(() => calendar.feed!.tryLoad());
               if (feed) {
-                const events = createEvents(count);
+                const { events } = new Builder().createEvents(count).build();
                 yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(defaultSpace.queues)));
               }
 

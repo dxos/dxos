@@ -12,10 +12,6 @@ import { composable, composableProps } from '@dxos/ui-theme';
 import { ActorList } from '../Actor';
 import { DateComponent } from '../DateComponent';
 
-// TODO(burdon): Common Actor reference (lookup on demand).
-// TODO(burdon): Modes: e.g., itinerary (with day markers).
-// TODO(burdon): Show upcoming events vs. past.
-
 //
 // EventTile
 //
@@ -32,13 +28,12 @@ type EventTileData = {
 type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'location' | 'data'> & { current?: boolean };
 
 const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, current }, forwardedRef) => {
-  const { event, onAction } = data;
+  const { event } = data;
   const { setCurrentId } = useMosaicContainer('EventTile');
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(event.id);
-    onAction?.({ type: 'current', eventId: event.id });
-  }, [event.id, setCurrentId, onAction]);
+  }, [event.id, setCurrentId]);
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={event.id} data={data} location={location}>
@@ -52,7 +47,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
               <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
             </Card.Row>
             {event.attendees && event.attendees.length > 0 && (
-              <Card.Row icon='ph--users--regular'>
+              <Card.Row>
                 <ActorList actors={event.attendees} />
               </Card.Row>
             )}
@@ -113,9 +108,9 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
                 classNames='my-2'
                 gap={8}
                 items={items}
+                draggable={false}
                 getId={(item) => item.event.id}
                 getScrollElement={() => viewport}
-                draggable={false}
                 estimateSize={() => 100}
               />
             </ScrollArea.Viewport>

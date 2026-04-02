@@ -4,7 +4,7 @@
 
 import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
 
-import { densityBlockSize, focusRing, ghostHover } from '../../fragments';
+import { densityBlockSize, ghostHover } from '../../fragments';
 import { getSize, mx } from '../../util';
 
 export type ListStyleProps = Partial<{
@@ -27,7 +27,7 @@ export const listItemDragHandleIcon: ComponentFunction<ListStyleProps> = (_props
   mx(getSize(5), 'mt-2.5', ...etc);
 
 export const listItemOpenTrigger: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
-  mx('w-5 rounded-sm flex justify-center items-center', densityBlockSize(density), ghostHover, focusRing, ...etc);
+  mx('w-5 rounded-sm flex justify-center items-center', densityBlockSize(density), ghostHover, 'dx-focus-ring', ...etc);
 
 export const listItemOpenTriggerIcon: ComponentFunction<ListStyleProps> = (_props, ...etc) => {
   return mx(getSize(5), ...etc);

@@ -2,19 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
-import { addMinutes, roundToNearestMinutes } from 'date-fns';
 import * as Effect from 'effect/Effect';
 
-import { Feed, Obj, Ref } from '@dxos/echo';
+import { Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
-import { IdentityDid, ObjectId } from '@dxos/keys';
-import { faker } from '@dxos/random';
+import { ObjectId } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
-import { Event, Message, Person } from '@dxos/types';
 
 import { Mailbox } from '../types';
-import { sortByCreated } from '../util';
+
+import { Builder } from './builder';
 
 export const LABELS: Mailbox.Labels = {
   [ObjectId.random().toString()]: 'important',
@@ -25,112 +23,17 @@ export const LABELS: Mailbox.Labels = {
   [ObjectId.random().toString()]: 'personal',
 };
 
-type CreateOptions = {
-  paragraphs: number;
-  links: number;
-};
-
-//
-// Create event
-//
-
-export const createEvents = (count: number, space?: Space, options?: CreateOptions) => {
-  return faker.helpers.multiple(() => createEvent(space, options), { count }).sort(sortByCreated('startDate'));
-};
-
-export const createEvent = (space?: Space, options: CreateOptions = { paragraphs: 5, links: 5 }): Event.Event => {
-  const createActor = () => ({ email: faker.internet.email() });
-  const owner = createActor();
-  const startDate = roundToNearestMinutes(faker.date.recent(), { nearestTo: 30 });
-  const endDate = addMinutes(startDate, faker.number.int({ min: 1, max: 10 }) * 15);
-
-  return Event.make({
-    title: faker.lorem.sentence(8),
-    owner,
-    attendees: [owner, ...faker.helpers.multiple(() => createActor(), { count: faker.number.int({ min: 1, max: 5 }) })],
-    startDate: startDate.toISOString(),
-    endDate: endDate.toISOString(),
-  });
-};
-
-//
-// Create message
-//
-
-export const createMessages = (count: number, space?: Space, options?: CreateOptions) => {
-  return faker.helpers
-    .multiple(() => createMessage(space, options), { count })
-    .sort(sortByCreated('created'))
-    .reverse();
-};
-
 /**
- * Creates a message with plain and enriched content blocks, where the enriched version
- * contains links to contacts and the plain version has the same content with links stripped.
+ * Initializes a mailbox with linked messages in the given space.
  */
-export const createMessage = (space?: Space, options: CreateOptions = { paragraphs: 5, links: 5 }): Message.Message => {
-  let text = faker.helpers
-    .multiple(() => faker.lorem.paragraph(faker.number.int(3)), {
-      count: options.paragraphs || 1,
-    })
-    .join('\n\n');
-
-  let enrichedText = text;
-  if (space) {
-    const words = text.split(' ');
-
-    // Links.
-    if (options.links) {
-      const linkCount = Math.floor(Math.random() * options.links) + 1;
-      for (let i = 0; i < linkCount; i++) {
-        const fullName = faker.person.fullName();
-        const obj = space.db.add(Obj.make(Person.Person, { fullName }));
-        const dxn = Ref.make(obj).dxn.toString();
-        const position = Math.floor(Math.random() * words.length);
-        words.splice(position, 0, `[${fullName}](${dxn})`);
-      }
-    }
-
-    // First create the enriched text with links.
-    enrichedText = words.join(' ');
-
-    // Then create plain text by stripping out the [label][dxn] syntax but keeping the label text itself.
-    text = enrichedText.replace(/\[(.*?)\]\[.*?\]/g, '$1');
-  }
-
-  return Obj.make(Message.Message, {
-    created: faker.date.recent().toISOString(),
-    sender: {
-      identityDid: IdentityDid.random(),
-      email: faker.internet.email(),
-      name: faker.person.fullName(),
-    },
-    // First block plain text (with links stripped), second block enriched text (with links).
-    blocks: [
-      { _tag: 'text', text },
-      { _tag: 'text', text: enrichedText },
-    ],
-    properties: {
-      subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(8),
-      snippet: text,
-      labels: faker.helpers.randomSubset(Object.keys(LABELS), { min: 0, max: Object.keys(LABELS).length }),
-    },
-  });
-};
-
-/**
- * Initializes a mailbox with messages in the given space.
- */
-export const initializeMailbox = async (space: Space, count = 20) => {
+export const initializeMailbox = async (space: Space, count = 0) => {
   const mailbox = space.db.add(Mailbox.make());
-
   const feed = await mailbox.feed?.tryLoad();
   if (!feed) {
     throw new Error('Mailbox missing backing feed');
   }
 
-  const messages = createMessages(count, space);
+  const { messages } = new Builder().createLinkedMessages(count, space).build();
   await runAndForwardErrors(Feed.append(feed, messages).pipe(Effect.provide(createFeedServiceLayer(space.queues))));
-
   return mailbox;
 };

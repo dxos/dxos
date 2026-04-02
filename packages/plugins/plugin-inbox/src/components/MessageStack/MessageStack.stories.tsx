@@ -22,14 +22,13 @@ import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Message, Person } from '@dxos/types';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import { LABELS, createMessages } from '../../testing';
-import { initializeMailbox } from '../../testing';
+import { Builder, LABELS, initializeMailbox } from '../../testing';
 import { Mailbox } from '../../types';
 
 import { MessageStack as MessageStackComponent } from './MessageStack';
 
 const DefaultStory = () => {
-  const [messages] = useState(() => createMessages(100));
+  const [messages] = useState(() => new Builder().createMessages(100).build().messages);
   return <MessageStackComponent id='story' messages={messages} ignoreAttention labels={LABELS} />;
 };
 

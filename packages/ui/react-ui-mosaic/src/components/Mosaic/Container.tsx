@@ -60,6 +60,9 @@ type MosaicContainerContextValue<TData = any, Location = LocationType> = {
   currentId?: string;
   /** Set the current item by ID. */
   setCurrentId: (id: string | undefined) => void;
+
+  /** Register a scroll-to-item callback (provided by Stack/VirtualStack). */
+  registerScrollTo: (fn: ((id: string) => void) | undefined) => void;
 };
 
 const [MosaicContainerContextProvider, useMosaicContainerContext] =
@@ -77,6 +80,7 @@ let counter = 0;
 type MosaicContainerProps = PropsWithChildren<
   Partial<Pick<MosaicContainerContextValue, 'eventHandler' | 'orientation'>> & {
     asChild?: boolean;
+    /** Support autoscrolling container when dragging. */
     autoScroll?: HTMLElement | null;
     withFocus?: boolean;
     /** Controlled current-item ID. */
@@ -124,6 +128,19 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     const [activeLocation, setActiveLocation] = useState<LocationType | undefined>();
     const [scrolling, setScrolling] = useState(false);
     const setCurrentId = useCallback((id: string | undefined) => onCurrentChange?.(id), [onCurrentChange]);
+
+    // Scroll-to-item: Stack/VirtualStack registers its implementation.
+    const scrollToRef = useRef<((id: string) => void) | undefined>(undefined);
+    const registerScrollTo = useCallback((fn: ((id: string) => void) | undefined) => {
+      scrollToRef.current = fn;
+    }, []);
+
+    // When currentId changes, scroll the matching item into view.
+    useEffect(() => {
+      if (currentId) {
+        scrollToRef.current?.(currentId);
+      }
+    }, [currentId]);
 
     // Focus container.
     const { setFocus } = useFocus();
@@ -268,6 +285,7 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
         setActiveLocation={setActiveLocation}
         currentId={currentId}
         setCurrentId={setCurrentId}
+        registerScrollTo={registerScrollTo}
       >
         <Comp
           className={mx('h-full', className)}

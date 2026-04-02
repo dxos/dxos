@@ -102,9 +102,9 @@ const ScrollAreaViewport = slottable<HTMLDivElement>(({ children, asChild, ...pr
       {...restWithoutStyle}
       style={
         {
-          ...style,
           '--scroll-width': `${density.size}px`,
           '--scroll-padding': `${density.padding}px`,
+          ...style,
         } as CSSProperties
       }
       className={tx('scrollArea.viewport', options, className)}

@@ -9,12 +9,12 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
-import { createEvents } from '../../testing';
+import { Builder } from '../../testing';
 
 import { EventStack, type EventStackProps } from './EventStack';
 
 const EventStackStory = (props: Omit<EventStackProps, 'id' | 'events'>) => {
-  const events = useMemo(() => createEvents(100), []);
+  const { events } = useMemo(() => new Builder().createEvents(100).build(), []);
   return <EventStack id='story' events={events} {...props} />;
 };
 
