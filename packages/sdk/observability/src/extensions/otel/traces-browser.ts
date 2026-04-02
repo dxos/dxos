@@ -83,7 +83,9 @@ export class OtelTraces {
     registerInstrumentations({
       instrumentations: [
         getWebAutoInstrumentations({
-          '@opentelemetry/instrumentation-fetch': { enabled: false },
+          // Fetch is disabled in favor of explicit ctx on our call sites; if re-enabled, keep noisy
+          // third-party URLs out of traces (matches prior browser tracing setup).
+          '@opentelemetry/instrumentation-fetch': { enabled: false, ignoreUrls: [/api\.ipdata\.co/] },
           '@opentelemetry/instrumentation-document-load': { enabled: false },
           '@opentelemetry/instrumentation-xml-http-request': { enabled: false },
         }),

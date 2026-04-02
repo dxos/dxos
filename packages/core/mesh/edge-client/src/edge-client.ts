@@ -146,6 +146,9 @@ export class EdgeClient extends Resource implements EdgeConnection {
       throw new EdgeIdentityChangedError();
     }
 
+    // Same W3C Trace Context flow as EdgeHttpClient.getTraceHeaders: resolve OTEL context from the
+    // DXOS span id, then propagation.inject into a carrier. Here the carrier is the protobuf field
+    // (WebSocket cannot set HTTP headers on the browser API).
     const spanId = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE);
     const otlpContext =
       typeof spanId === 'number'
