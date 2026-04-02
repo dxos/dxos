@@ -62,7 +62,7 @@ const MapRoot = composable<HTMLDivElement, MapRootProps>(({ children, onChange, 
       <div
         {...composableProps(props, {
           role: 'none',
-          className: 'dx-container grid dx-focus-ring-inset',
+          classNames: 'dx-container grid dx-focus-ring-inset',
         })}
         ref={forwardedRef}
       >

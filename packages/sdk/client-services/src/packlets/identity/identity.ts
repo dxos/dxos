@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { AUTH_TIMEOUT, LOAD_CONTROL_FEEDS_TIMEOUT } from '@dxos/client-protocol';
-import { type Context } from '@dxos/context';
+import { type Context as DxosContext } from '@dxos/context';
 import {
   type CredentialSigner,
   DeviceStateMachine,
@@ -106,7 +106,7 @@ export class Identity {
   }
 
   @trace.span()
-  async open(ctx: Context): Promise<void> {
+  async open(ctx: DxosContext): Promise<void> {
     await this._presence?.open();
     await this.space.spaceState.addCredentialProcessor(this._deviceStateMachine);
     await this.space.spaceState.addCredentialProcessor(this._profileStateMachine);
@@ -116,13 +116,13 @@ export class Identity {
     await this.space.open(ctx);
   }
 
-  public async joinNetwork(): Promise<void> {
-    await this.space.startProtocol();
+  public async joinNetwork(ctx: DxosContext): Promise<void> {
+    await this.space.startProtocol(ctx);
     await this._edgeFeedReplicator?.open();
   }
 
   @trace.span()
-  async close(ctx: Context): Promise<void> {
+  async close(ctx: DxosContext): Promise<void> {
     await this._presence?.close();
     await this.authVerifier.close();
     await this.space.spaceState.removeCredentialProcessor(this._profileStateMachine);
@@ -134,7 +134,7 @@ export class Identity {
 
     await this._edgeFeedReplicator?.close();
 
-    await this.space.close();
+    await this.space.close(ctx);
   }
 
   async ready(): Promise<void> {

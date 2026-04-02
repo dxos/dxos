@@ -31,9 +31,9 @@ const DefaultStory = ({ orientation }: TabsRootProps) => {
         </Tabs.Tablist>
         <div className='dx-container'>
           {Object.entries(content).map(([id, { panel }]) => (
-            <Tabs.Tabpanel key={id} value={id}>
+            <Tabs.Panel key={id} value={id}>
               <p className='px-1'>{panel}</p>
-            </Tabs.Tabpanel>
+            </Tabs.Panel>
           ))}
         </div>
       </Tabs.Viewport>

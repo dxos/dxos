@@ -97,6 +97,10 @@ export const chat = Command.make(
 
       invariant(client.halo.identity);
       const space = getPersonalSpace(client) ?? client.spaces.get()[0];
+      if (!space) {
+        log.error('no space available for chat');
+        return;
+      }
 
       const handleChatLoad = async () => {
         const chats = await space.db.query(Filter.type(Assistant.Chat)).run();

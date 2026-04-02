@@ -41,7 +41,7 @@ const L1Panel$ = ({ open, path, item, isCurrent, onBack }: L1PanelProps) => {
   const shouldRenderContent = isCurrent || isActivated;
 
   return (
-    <Tabs.Tabpanel
+    <Tabs.Panel
       key={item.id}
       value={item.id}
       classNames={[
@@ -56,7 +56,7 @@ const L1Panel$ = ({ open, path, item, isCurrent, onBack }: L1PanelProps) => {
       {...(!open && { inert: true })}
     >
       {shouldRenderContent && <L1PanelContent open={open} path={path} item={item} onBack={onBack} />}
-    </Tabs.Tabpanel>
+    </Tabs.Panel>
   );
 };
 

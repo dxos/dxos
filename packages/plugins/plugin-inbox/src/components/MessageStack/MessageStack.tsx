@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type KeyboardEvent, MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
+import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { ScrollArea } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
-import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Card, ScrollArea } from '@dxos/react-ui';
+import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
 import { composable, composableProps, getHashStyles } from '@dxos/ui-theme';
 
@@ -15,32 +14,34 @@ import { GoogleMail } from '../../apis';
 import { type Mailbox as MailboxType } from '../../types';
 import { getMessageProps } from '../../util';
 
-export type MailboxAction =
+export type MessageStackAction =
   | { type: 'current'; messageId: string }
   | { type: 'select'; messageId: string }
   | { type: 'select-tag'; label: string }
   | { type: 'save'; filter: string };
 
-export type MailboxActionHandler = (action: MailboxAction) => void;
+export type MessageStackActionHandler = (action: MessageStackAction) => void;
+
+//
+// MessageTile
+//
 
 type MessageTileData = {
   message: Message.Message;
   labels?: MailboxType.Labels;
-  currentMessageId?: string;
-  onAction?: MailboxActionHandler;
+  onAction?: MessageStackActionHandler;
 };
 
-type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'location' | 'data'>;
+type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'location' | 'data'> & { current?: boolean };
 
-const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location }, forwardedRef) => {
-  const { message, labels, currentMessageId, onAction } = data;
+const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
+  const { message, labels, onAction } = data;
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), true);
-
-  const isCurrent = currentMessageId ? currentMessageId === message.id : undefined;
+  const { setCurrentId } = useMosaicContainer('MessageTile');
 
   const handleCurrentChange = useCallback(() => {
-    onAction?.({ type: 'current', messageId: message.id });
-  }, [message.id, onAction]);
+    setCurrentId(message.id);
+  }, [message.id, setCurrentId]);
 
   const handleAvatarClick = useCallback(
     (event: MouseEvent) => {
@@ -75,8 +76,8 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={message.id} data={data} location={location}>
-      <Focus.Item asChild current={isCurrent} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef}>
+      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+        <Card.Root ref={forwardedRef} data-message-id={message.id}>
           <Card.Toolbar>
             <Card.IconBlock>
               <DxAvatar
@@ -130,51 +131,66 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
 MessageTile.displayName = 'MessageTile';
 
-export type MailboxProps = {
+//
+// MessageStack
+//
+
+export type MessageStackProps = {
   id: string;
   messages: Message.Message[];
+  currentId?: string;
   labels?: MailboxType.Labels;
-  currentMessageId?: string;
   ignoreAttention?: boolean;
-  onAction?: MailboxActionHandler;
+  onAction?: MessageStackActionHandler;
 };
 
 /**
- * Card-based mailbox component using mosaic layout.
+ * Card-based message stack component using mosaic layout.
  */
-export const Mailbox = composable<HTMLDivElement, MailboxProps>(
-  ({ messages, labels, currentMessageId, onAction, ...props }, forwardedRef) => {
+export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
+  ({ messages, labels, currentId, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useMemo(
-      () =>
-        messages.map((message) => ({
-          message,
-          labels,
-          currentMessageId,
-          onAction,
-        })),
-      [messages, labels, currentMessageId, onAction],
+      () => messages.map((message) => ({ message, labels, onAction })),
+      [messages, labels, onAction],
+    );
+
+    const handleCurrentChange = useCallback(
+      (id: string | undefined) => {
+        if (id) {
+          onAction?.({ type: 'current', messageId: id });
+        }
+      },
+      [onAction],
     );
 
     const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Enter') {
-        console.log('click');
         event.preventDefault();
         (document.activeElement as HTMLElement | null)?.click();
       }
     }, []);
 
     return (
-      <Focus.Group {...composableProps(props)} asChild onKeyDown={handleKeyDown} ref={forwardedRef}>
-        <Mosaic.Container asChild withFocus autoScroll={viewport}>
-          <ScrollArea.Root orientation='vertical' padding>
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+        <Mosaic.Container
+          asChild
+          withFocus
+          autoScroll={viewport}
+          currentId={currentId}
+          onCurrentChange={handleCurrentChange}
+        >
+          <ScrollArea.Root orientation='vertical' padding centered>
             <ScrollArea.Viewport ref={setViewport}>
-              <Mosaic.Stack
-                classNames='py-1 gap-1'
-                items={items}
-                getId={(item) => item.message.id}
-                draggable={false}
+              <Mosaic.VirtualStack
                 Tile={MessageTile}
+                classNames='my-2'
+                gap={8}
+                items={items}
+                draggable={false}
+                getId={(item) => item.message.id}
+                getScrollElement={() => viewport}
+                estimateSize={() => 150}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
@@ -184,4 +200,4 @@ export const Mailbox = composable<HTMLDivElement, MailboxProps>(
   },
 );
 
-Mailbox.displayName = 'Mailbox';
+MessageStack.displayName = 'MessageStack';

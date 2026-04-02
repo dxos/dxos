@@ -4,7 +4,6 @@
 
 import React from 'react';
 
-import { useClient } from '@dxos/react-client';
 import { type PeerSyncState, type Space, type SpaceId, SpaceState, useSpace } from '@dxos/react-client/echo';
 import { mx } from '@dxos/ui-theme';
 
@@ -20,13 +19,12 @@ export const getSpaceDisplayName = (space: Space, { personal }: { personal?: boo
 export type SpaceRowContainerProps = Omit<SpaceRowProps, 'spaceName'>;
 
 export const SpaceRowContainer = ({ spaceId, state }: SpaceRowContainerProps) => {
-  const client = useClient();
   const space = useSpace(spaceId);
   if (!space) {
     return null;
   }
 
-  const spaceName = getSpaceDisplayName(space, { personal: space === client.spaces.get()[0] });
+  const spaceName = getSpaceDisplayName(space);
 
   return <SpaceRow spaceId={spaceId} spaceName={spaceName} state={state} />;
 };

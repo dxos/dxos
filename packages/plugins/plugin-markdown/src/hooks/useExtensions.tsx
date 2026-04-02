@@ -47,8 +47,9 @@ export type ExtensionsOptions = {
   id: string;
   object?: DocumentType;
   settings?: Markdown.Settings;
-  selectionManager?: SelectionManager;
+  compact?: boolean;
   viewMode?: EditorViewMode;
+  selectionManager?: SelectionManager;
   editorStateStore?: EditorStateStore;
   previewOptions?: PreviewOptions;
   platform?: 'mobile' | 'desktop';
@@ -61,8 +62,9 @@ export const useExtensions = ({
   id,
   object,
   settings,
-  selectionManager,
+  compact,
   viewMode,
+  selectionManager,
   editorStateStore,
   previewOptions,
   onSelectObject,
@@ -89,8 +91,9 @@ export const useExtensions = ({
         id,
         object,
         settings,
-        selectionManager,
+        compact,
         viewMode,
+        selectionManager,
         previewOptions,
         onSelectObject,
         platform,
@@ -98,7 +101,9 @@ export const useExtensions = ({
     [
       id,
       object,
+      compact,
       viewMode,
+      selectionManager,
       previewOptions,
       onSelectObject,
       settings,
@@ -108,7 +113,6 @@ export const useExtensions = ({
       settings?.numberedHeadings,
       platform,
       settings?.typewriter,
-      selectionManager,
     ],
   );
 
@@ -148,15 +152,16 @@ const createBaseExtensions = ({
   object,
   onSelectObject,
   settings,
-  selectionManager,
+  compact,
   viewMode,
+  selectionManager,
   previewOptions,
   platform,
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     selectionManager && selectionChange(selectionManager),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
-    settings?.folding && platform !== 'mobile' && folding(),
+    settings?.folding && !compact && platform !== 'mobile' && folding(),
   ].filter(isTruthy);
 
   //

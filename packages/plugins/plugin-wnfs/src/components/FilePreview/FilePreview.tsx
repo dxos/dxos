@@ -16,7 +16,7 @@ export const FilePreview = composable<HTMLElement, FilePreviewProps>(
     if (type.startsWith('image/')) {
       return (
         <img
-          {...composableProps(props, { className: 'h-full w-full object-contain' })}
+          {...composableProps(props, { classNames: 'h-full w-full object-contain' })}
           src={url}
           ref={forwardedRef as ForwardedRef<HTMLImageElement>}
         />
@@ -24,7 +24,7 @@ export const FilePreview = composable<HTMLElement, FilePreviewProps>(
     } else if (type.startsWith('video/')) {
       return (
         <video
-          {...composableProps(props, { className: 'h-full w-full object-contain' })}
+          {...composableProps(props, { classNames: 'h-full w-full object-contain' })}
           src={url}
           controls
           ref={forwardedRef as ForwardedRef<HTMLVideoElement>}
@@ -33,7 +33,7 @@ export const FilePreview = composable<HTMLElement, FilePreviewProps>(
     } else {
       return (
         <iframe
-          {...composableProps(props, { className: 'h-full w-full overflow-auto' })}
+          {...composableProps(props, { classNames: 'h-full w-full overflow-auto' })}
           src={url}
           ref={forwardedRef as ForwardedRef<HTMLIFrameElement>}
         />

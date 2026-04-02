@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 
+import { PERSONAL_SPACE_TAG } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
-import { PERSONAL_SPACE_TAG } from '@dxos/app-toolkit';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
 
 /**
@@ -15,10 +15,10 @@ import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
  */
 export const initializeIdentity = (
   client: Client,
-): Effect.Effect<{ identity: Identity; defaultSpace: Space }, never, never> =>
+): Effect.Effect<{ identity: Identity; personalSpace: Space }, never, never> =>
   Effect.gen(function* () {
     const identity = yield* Effect.promise(() => client.halo.createIdentity());
-    const defaultSpace = yield* Effect.promise(() => client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG] }));
-    yield* Effect.promise(() => defaultSpace.waitUntilReady());
-    return { identity, defaultSpace };
+    const personalSpace = yield* Effect.promise(() => client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG] }));
+    yield* Effect.promise(() => personalSpace.waitUntilReady());
+    return { identity, personalSpace };
   });

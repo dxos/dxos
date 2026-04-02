@@ -41,7 +41,7 @@ export const handler = Effect.fn(function* ({
   delay,
 }: {
   type: Option.Option<string>;
-  spaceId: Option.Option<string>;
+  spaceId: Option.Option<Key.SpaceId>;
   timeout: number;
   delay: number;
 }) {
@@ -51,7 +51,7 @@ export const handler = Effect.fn(function* ({
 
   if (Option.isSome(spaceId)) {
     // If space ID was provided, get credentials from that space.
-    const space = yield* getSpace(spaceId.value as Key.SpaceId);
+    const space = yield* getSpace(spaceId.value);
     credentials = yield* Effect.tryPromise(() => space.internal.getCredentials());
   } else {
     // Get credentials from HALO
