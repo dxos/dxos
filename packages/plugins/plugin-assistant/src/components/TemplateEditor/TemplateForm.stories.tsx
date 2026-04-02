@@ -7,6 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import { Blueprint, Template } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -30,6 +31,7 @@ const DefaultStory = () => {
   const client = useClient();
   const [blueprint] = useState(() => {
     const space = client.spaces.get()[0];
+    invariant(space, 'TemplateForm story requires at least one space');
     return space.db.add(
       Blueprint.make({
         key: 'example.com/blueprint/test',

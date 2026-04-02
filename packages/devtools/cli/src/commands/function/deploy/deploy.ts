@@ -15,6 +15,7 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { FUNCTIONS_META_KEY } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
@@ -79,7 +80,7 @@ export const deploy = Command.make(
 
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
     const func = yield* Effect.tryPromise(() =>
-      functionsServiceClient.deploy({
+      functionsServiceClient.deploy(Context.default(), {
         functionId,
         ownerPublicKey: PublicKey.fromHex(ownerPublicKey),
         name,

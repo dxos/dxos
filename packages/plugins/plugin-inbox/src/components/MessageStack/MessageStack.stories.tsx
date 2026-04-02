@@ -22,15 +22,14 @@ import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Message, Person } from '@dxos/types';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import { LABELS, createMessages } from '../../testing';
-import { initializeMailbox } from '../../testing';
+import { Builder, LABELS, initializeMailbox } from '../../testing';
 import { Mailbox } from '../../types';
 
-import { Mailbox as MailboxComponent } from './Mailbox';
+import { MessageStack as MessageStackComponent } from './MessageStack';
 
 const DefaultStory = () => {
-  const [messages] = useState(() => createMessages(100));
-  return <MailboxComponent id='story' messages={messages} ignoreAttention labels={LABELS} />;
+  const [messages] = useState(() => new Builder().createMessages(100).build().messages);
+  return <MessageStackComponent id='story' messages={messages} ignoreAttention labels={LABELS} />;
 };
 
 const CompanionStory = () => {
@@ -63,8 +62,8 @@ const CompanionStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-inbox/components/Mailbox',
-  component: MailboxComponent as any,
+  title: 'plugins/plugin-inbox/components/MessageStack',
+  component: MessageStackComponent as any,
   render: DefaultStory,
   decorators: [withLayout({ layout: 'column' }), withAttention(), withMosaic()],
   parameters: {
@@ -91,9 +90,9 @@ export const WithCompanion: Story = {
           types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
+              const { personalSpace } = yield* initializeIdentity(client);
               // TODO(wittjosiah): Share message builder with transcription stories. Factor out to @dxos/schema/testing.
-              yield* Effect.promise(() => initializeMailbox(defaultSpace));
+              yield* Effect.promise(() => initializeMailbox(personalSpace));
             }),
         }),
 

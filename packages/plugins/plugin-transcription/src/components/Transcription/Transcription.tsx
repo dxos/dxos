@@ -13,7 +13,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  editorSlots,
+  documentSlots,
   preview,
 } from '@dxos/ui-editor';
 import { composable, composableProps } from '@dxos/ui-theme';
@@ -45,7 +45,7 @@ export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
         extensions: [
           createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
           createMarkdownExtensions(),
-          createThemeExtensions({ themeMode, slots: editorSlots }),
+          createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
           preview(),
           transcription({ model, started: object?.started ? new Date(object.started) : undefined }),
@@ -56,7 +56,7 @@ export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
 
     return (
       <div
-        {...composableProps(props, { className: 'dx-container' })}
+        {...composableProps(props, { classNames: 'dx-container' })}
         ref={parentRef}
         data-popover-collision-boundary={true /* TODO(thure): Make this a constant and document it. */}
       />

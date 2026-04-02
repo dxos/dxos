@@ -47,6 +47,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.surface.text`,
         role: ['article', 'section', 'tabpanel'],
+        // TODO(burdon): Why is attendableId required? See EventArticle.tsx
         filter: (data): data is { attendableId: string; subject: Text.Text } =>
           typeof data.attendableId === 'string' && Obj.instanceOf(Text.Text, data.subject),
         component: ({ data, role, ref }) => {

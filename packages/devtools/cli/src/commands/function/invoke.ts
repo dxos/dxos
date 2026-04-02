@@ -12,6 +12,7 @@ import * as Schema from 'effect/Schema';
 
 import { CommandConfig, print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { createEdgeClient, getDeployedFunctions, invokeFunction } from '@dxos/functions-runtime/edge';
 
 import { printInvokeResult } from './util';
@@ -38,7 +39,7 @@ export const invoke = Command.make(
     const client = yield* ClientService;
 
     // Produce normalized in-memory FunctionType objects for display.
-    const fns = yield* Effect.promise(() => getDeployedFunctions(client));
+    const fns = yield* Effect.promise(() => getDeployedFunctions(Context.default(), client));
 
     // We take the last deployment under a given key.
     // TODO(dmaretskyi): Should we make the keys unique?
@@ -49,7 +50,7 @@ export const invoke = Command.make(
 
     const edgeClient = createEdgeClient(client);
     const result = yield* Effect.promise(() =>
-      invokeFunction(edgeClient, fn, data, {
+      invokeFunction(Context.default(), edgeClient, fn, data, {
         cpuTimeLimit: cpuTimeLimit.pipe(Option.getOrUndefined),
         subrequestsLimit: subrequestsLimit.pipe(Option.getOrUndefined),
       }),

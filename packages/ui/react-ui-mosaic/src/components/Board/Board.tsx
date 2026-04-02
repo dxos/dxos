@@ -106,7 +106,7 @@ const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
     const items = useAtomValue(model.columns);
 
     return (
-      <div {...composableProps(props, { role: 'none', className: 'dx-container' })} ref={forwardedRef}>
+      <div {...composableProps(props, { role: 'none', classNames: 'dx-container' })} ref={forwardedRef}>
         <Focus.Group asChild orientation='horizontal'>
           <Mosaic.Container
             asChild
@@ -116,7 +116,7 @@ const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
             eventHandler={eventHandler}
             debug={debugHandler}
           >
-            <ScrollArea.Root orientation='horizontal' classNames='md:pt-3' centered padding>
+            <ScrollArea.Root orientation='horizontal' centered padding>
               <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
                 <Mosaic.Stack items={items} getId={model.getColumnId} Tile={Tile} debug={debug} />
               </ScrollArea.Viewport>

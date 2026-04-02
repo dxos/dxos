@@ -7,7 +7,7 @@ import type * as SqlClient from '@effect/sql/SqlClient';
 import type * as Effect from 'effect/Effect';
 import * as Runtime from 'effect/Runtime';
 
-import { Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
+import { ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
 import type { Obj } from '@dxos/echo';
 import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/echo/internal';
 import {
@@ -1261,13 +1261,9 @@ export class QueryExecutor extends Resource {
     if (!meta.documentId) {
       return null;
     }
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(
-      Context.default(),
-      meta.documentId as DocumentId,
-      {
-        fetchFromNetwork: true,
-      },
-    );
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
+      fetchFromNetwork: true,
+    });
     const doc = handle.doc();
     if (!doc) {
       return null;
@@ -1329,7 +1325,7 @@ export class QueryExecutor extends Resource {
           return null;
         }
 
-        const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), link as AutomergeUrl, {
+        const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
           fetchFromNetwork: true,
         });
         const doc = handle.doc();

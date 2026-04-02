@@ -53,11 +53,11 @@ const meta: Meta<typeof NotebookContainer> = {
           types: [...DataTypes, Notebook.Notebook, Operation.PersistentOperation, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
+              const { personalSpace } = yield* initializeIdentity(client);
 
-              defaultSpace.db.add(createNotebook());
-              defaultSpace.db.add(Markdown.make({ content: '# Hello World' }));
-              defaultSpace.db.add(Operation.serialize(AgentPrompt));
+              personalSpace.db.add(createNotebook());
+              personalSpace.db.add(Markdown.make({ content: '# Hello World' }));
+              personalSpace.db.add(Operation.serialize(AgentPrompt));
             }),
         }),
         AssistantPlugin(),

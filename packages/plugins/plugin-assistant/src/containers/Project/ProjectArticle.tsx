@@ -64,7 +64,7 @@ export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
         )}
 
         {stackObjects.length > 0 && (
-          <Focus.Group asChild>
+          <Focus.Group asChild border>
             <Mosaic.Container asChild withFocus autoScroll={viewport}>
               <ScrollArea.Root orientation='vertical'>
                 <ScrollArea.Viewport classNames='p-2' ref={setViewport}>

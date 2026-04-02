@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { getPersonalSpace, getSpacePath, isPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
@@ -19,7 +19,6 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { meta } from '../../meta';
 import { SpaceOperation } from '../../operations';
 import { SpaceCapabilities, SpaceForm } from '../../types';
-import { getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
 
 const SpaceFormSchema = SpaceForm.pipe(
   Schema.extend(
@@ -184,7 +183,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   const repairs = useCapabilities(SpaceCapabilities.Repair);
   const handleRepair = useCallback(async () => {
     await Promise.all(repairs.map((repair) => repair({ space, isDefault: isPersonalSpace(space) })));
-  }, [client, space, repairs]);
+  }, [space, repairs]);
 
   return (
     <Settings.Root>

@@ -158,7 +158,7 @@ const GlobeRoot = composable<HTMLDivElement, GlobeRootProps>(
           setRotation,
         }}
       >
-        <div {...composableProps(props, { className: 'relative dx-container' })} ref={composedRef}>
+        <div {...composableProps(props, { classNames: 'relative dx-container' })} ref={composedRef}>
           {children}
         </div>
       </GlobeContext.Provider>

@@ -239,7 +239,7 @@ const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, fo
     <div
       {...composableProps(props, {
         role: 'none',
-        className:
+        classNames:
           'flex flex-col min-h-0 [.dx-column_&]:col-span-full [.dx-column_&]:grid [.dx-column_&]:grid-cols-subgrid [.dx-column_&]:[&>:not(.dx-container)]:col-start-2',
       })}
       ref={forwardedRef}

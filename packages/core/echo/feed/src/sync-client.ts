@@ -12,6 +12,7 @@ import { type FeedProtocol } from '@dxos/protocols';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 import type { FeedStore } from './feed-store';
+import { Context } from '@dxos/context';
 
 type AppendResponse = FeedProtocol.AppendResponse;
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
@@ -30,7 +31,7 @@ export type SyncClientOptions = {
   serverPeerId?: string;
   feedStore: FeedStore;
   /** Send a protocol message to the server. Returns Effect. */
-  sendMessage: (message: RequestMessage) => Effect.Effect<void, unknown, never>;
+  sendMessage: (ctx: Context, message: RequestMessage) => Effect.Effect<void, unknown, never>;
 };
 
 /**
@@ -83,11 +84,14 @@ export class SyncClient {
     return Effect.andThen(Deferred.succeed(deferred, message), () => Effect.void);
   }
 
-  pull(opts: {
-    spaceId: SpaceId;
-    feedNamespace: string;
-    limit?: number;
-  }): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
+  pull(
+    ctx: Context,
+    opts: {
+      spaceId: SpaceId;
+      feedNamespace: string;
+      limit?: number;
+    },
+  ): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
     const self = this;
     return Effect.gen(function* () {
       const lastPulledPosition = yield* self.#feedStore.getSyncState({
@@ -105,7 +109,7 @@ export class SyncClient {
         position: lastPulledPosition,
         limit: opts.limit,
       };
-      yield* self.#sendMessage(self.#withPeerIds(request));
+      yield* self.#sendMessage(ctx, self.#withPeerIds(request));
       const message = yield* Deferred.await(deferred);
       const response = yield* self.#expectResponse<QueryResponse>(requestId, message, 'QueryResponse');
       if (response.blocks.length === 0) {
@@ -132,11 +136,14 @@ export class SyncClient {
     });
   }
 
-  push(opts: {
-    spaceId: SpaceId;
-    feedNamespace: string;
-    limit?: number;
-  }): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
+  push(
+    ctx: Context,
+    opts: {
+      spaceId: SpaceId;
+      feedNamespace: string;
+      limit?: number;
+    },
+  ): Effect.Effect<{ done: boolean }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
     const self = this;
     return Effect.gen(function* () {
       const unpositioned = yield* self.#feedStore.query({
@@ -158,7 +165,7 @@ export class SyncClient {
         feedNamespace: opts.feedNamespace,
         blocks: unpositioned.blocks,
       };
-      yield* self.#sendMessage(self.#withPeerIds(request));
+      yield* self.#sendMessage(ctx, self.#withPeerIds(request));
       const message = yield* Deferred.await(deferred);
       const response = yield* self.#expectResponse<AppendResponse>(requestId, message, 'AppendResponse');
       yield* self.#feedStore.setPosition({

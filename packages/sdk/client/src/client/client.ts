@@ -482,7 +482,7 @@ export class Client {
     log('client._open: status trigger resolved');
 
     log('client._open: opening runtime...');
-    await this._runtime.open();
+    await this._runtime.open(this._ctx);
     log('client._open: runtime opened');
 
     // TODO(wittjosiah): Factor out iframe manager and proxy into shell manager.
@@ -542,7 +542,7 @@ export class Client {
     log.info('client._close: closing...');
     this._statusTimeout && clearTimeout(this._statusTimeout);
     await this._statusStream?.close();
-    await this._runtime?.close();
+    await this._runtime?.close(this._ctx);
     await this._echoClient.close(this._ctx);
     log.info('client._close: closing services...');
     await this._services?.close();

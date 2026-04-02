@@ -113,9 +113,9 @@ const meta = {
           types: [TestColumn, TestItem, Organization.Organization, Person.Person, Pipeline.Pipeline],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
+              const { personalSpace } = yield* initializeIdentity(client);
 
-              const factory = createObjectFactory(defaultSpace.db, generator);
+              const factory = createObjectFactory(personalSpace.db, generator);
               yield* Effect.promise(() =>
                 factory([
                   { type: Organization.Organization, count: 20 },

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AsyncTask, scheduleTask } from '@dxos/async';
-import { Resource } from '@dxos/context';
+import { Context, Resource } from '@dxos/context';
 import { type EdgeConnection, MessageSchema } from '@dxos/edge-client';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore, SyncClient } from '@dxos/feed';
@@ -176,17 +176,20 @@ export class FeedSyncer extends Resource {
   /**
    * Performs queue sync and blocks until there are no pending sync batches.
    */
-  async syncBlocking({
-    spaceId,
-    subspaceTag,
-    shouldPush = true,
-    shouldPull = true,
-  }: {
-    spaceId: SpaceId;
-    subspaceTag: string;
-    shouldPush?: boolean;
-    shouldPull?: boolean;
-  }): Promise<void> {
+  async syncBlocking(
+    ctx: Context,
+    {
+      spaceId,
+      subspaceTag,
+      shouldPush = true,
+      shouldPull = true,
+    }: {
+      spaceId: SpaceId;
+      subspaceTag: string;
+      shouldPush?: boolean;
+      shouldPull?: boolean;
+    },
+  ): Promise<void> {
     invariant(SpaceId.isValid(spaceId));
     invariant(FeedProtocol.isWellKnownNamespace(subspaceTag));
     if (!shouldPush && !shouldPull) {
@@ -200,7 +203,7 @@ export class FeedSyncer extends Resource {
         while (!done) {
           done = true;
           if (shouldPull) {
-            const pullResult = yield* this.#syncClient.pull({
+            const pullResult = yield* this.#syncClient.pull(ctx, {
               spaceId,
               feedNamespace: subspaceTag,
               limit: this.#messageBlocksLimit,
@@ -209,7 +212,7 @@ export class FeedSyncer extends Resource {
           }
 
           if (shouldPush) {
-            const pushResult = yield* this.#syncClient.push({
+            const pushResult = yield* this.#syncClient.push(ctx, {
               spaceId,
               feedNamespace: subspaceTag,
               limit: this.#messageBlocksLimit,
@@ -233,11 +236,15 @@ export class FeedSyncer extends Resource {
     this.#lastFullPoll = Date.now();
   }
 
-  #sendMessage(message: FeedProtocol.QueryRequest | FeedProtocol.AppendRequest): Effect.Effect<void, unknown, never> {
+  #sendMessage(
+    ctx: Context,
+    message: FeedProtocol.QueryRequest | FeedProtocol.AppendRequest,
+  ): Effect.Effect<void, unknown, never> {
     return Effect.gen(this, function* () {
       const encoded = encoder.encode(message);
       yield* Effect.tryPromise(async () =>
         this.#edgeClient.send(
+          ctx,
           createBuf(MessageSchema, {
             source: {
               identityKey: this.#edgeClient.identityKey,
@@ -266,7 +273,7 @@ export class FeedSyncer extends Resource {
           Effect.gen(this, function* () {
             let doneForAllNamespaces = true;
             for (const feedNamespace of this.#syncNamespaces) {
-              const { done } = yield* this.#syncClient.pull({
+              const { done } = yield* this.#syncClient.pull(this._ctx, {
                 spaceId,
                 feedNamespace,
                 limit: this.#messageBlocksLimit,
@@ -309,7 +316,7 @@ export class FeedSyncer extends Resource {
           Effect.gen(this, function* () {
             let doneForAllNamespaces = true;
             for (const feedNamespace of this.#syncNamespaces) {
-              const { done } = yield* this.#syncClient.push({
+              const { done } = yield* this.#syncClient.push(this._ctx, {
                 spaceId,
                 feedNamespace,
                 limit: this.#messageBlocksLimit,

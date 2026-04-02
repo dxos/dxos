@@ -103,7 +103,7 @@ export const ChatContainer = composable<HTMLDivElement, ChatContainerProps>(
     return (
       <ThreadComponent.Root
         {...composableProps(props, {
-          className: 'dx-container grid-rows-[1fr_min-content_min-content]',
+          classNames: 'dx-container grid-rows-[1fr_min-content_min-content]',
         })}
         id={id}
         current={current}

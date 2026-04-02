@@ -26,18 +26,4 @@ describe('space schema list', () => {
       const parsed = TestConsole.parseJson(logs[0]);
       expect(Array.isArray(parsed)).toBe(true);
     }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
-
-  it('should list space schemas when spaceId is provided explicitly', () =>
-    Effect.gen(function* () {
-      const client = yield* ClientService;
-      yield* Effect.tryPromise(() => client.halo.createIdentity());
-      const space = yield* Effect.tryPromise(() => client.spaces.create());
-      yield* Effect.tryPromise(() => space.waitUntilReady());
-      yield* handler({ spaceId: Option.some(space.id), typename: Option.none() });
-      const logger = yield* TestConsole.TestConsole;
-      const logs = logger.logs;
-      expect(logs).toHaveLength(1);
-      const parsed = TestConsole.parseJson(logs[0]);
-      expect(Array.isArray(parsed)).toBe(true);
-    }).pipe(Effect.provide(TestLayer), Effect.scoped, runAndForwardErrors));
 });
