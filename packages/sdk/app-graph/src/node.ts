@@ -15,17 +15,17 @@ export const RootId = 'root';
 /**
  * Root node type.
  */
-export const RootType = 'org.dxos.type.graph-root';
+export const RootType = 'org.dxos.type.graphRoot';
 
 /**
  * Action node type.
  */
-export const ActionType = 'org.dxos.type.graph-action';
+export const ActionType = 'org.dxos.type.graphAction';
 
 /**
  * Action group node type.
  */
-export const ActionGroupType = 'org.dxos.type.graph-action-group';
+export const ActionGroupType = 'org.dxos.type.graphActionGroup';
 
 /**
  * Represents a node in the graph.
