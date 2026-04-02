@@ -5,14 +5,12 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
-import { type Space } from '@dxos/client-protocol';
-import { LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
+import { type Space, LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
-import { defineObjectMigration } from '@dxos/echo-db';
+import { defineObjectMigration, getObjectCore } from '@dxos/echo-db';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
-import { getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -608,30 +606,24 @@ describe('Spaces', () => {
     const migration = defineObjectMigration({
       from: SpaceProperties,
       to: LegacySpaceProperties,
-      transform: async (from) => {
-        const { id, ...rest } = from as any;
-        return rest;
-      },
+      transform: async (from) => ({ ...from }),
       onMigration: async () => {},
     });
-    await (space.db as any).runMigrations([migration]);
+    await space.internal.db.runMigrations([migration]);
 
     // Verify typename was changed to legacy.
     const legacy = await space.db.query(Filter.type(LegacySpaceProperties)).run();
     expect(legacy).to.have.length(1);
     expect(legacy[0].name).to.eq('Test Space');
 
-    // Now run the real migration (new -> legacy is reversed, legacy -> new).
+    // Now run the real migration (legacy -> new).
     const forwardMigration = defineObjectMigration({
       from: LegacySpaceProperties,
       to: SpaceProperties,
-      transform: async (from) => {
-        const { id, ...rest } = from as any;
-        return rest;
-      },
+      transform: async (from) => ({ ...from }),
       onMigration: async () => {},
     });
-    await (space.db as any).runMigrations([forwardMigration]);
+    await space.internal.db.runMigrations([forwardMigration]);
 
     // Verify the migration worked.
     const migrated = await space.db.query(Filter.type(SpaceProperties)).run();
