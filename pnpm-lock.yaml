@@ -1015,7 +1015,7 @@ catalogs:
       specifier: ^0.2.2
       version: 0.2.2
     date-fns:
-      specifier: ^3.3.1
+      specifier: ^3.6.0
       version: 3.6.0
     debounce:
       specifier: ^2.2.0
@@ -8781,6 +8781,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      date-fns:
+        specifier: 'catalog:'
+        version: 3.6.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*

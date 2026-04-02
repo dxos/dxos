@@ -52,7 +52,8 @@
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/schema": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "date-fns": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",
