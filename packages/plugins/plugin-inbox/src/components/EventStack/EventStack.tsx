@@ -12,13 +12,70 @@ import { composable, composableProps } from '@dxos/ui-theme';
 import { ActorList } from '../Actor';
 import { DateComponent } from '../DateComponent';
 
-//
-// EventTile
-//
-
 export type EventStackAction = { type: 'current'; eventId: string };
 
 export type EventStackActionHandler = (action: EventStackAction) => void;
+
+//
+// EventStack
+//
+
+export type EventStackProps = {
+  id: string;
+  events?: Event.Event[];
+  currentId?: string;
+  onAction?: EventStackActionHandler;
+};
+
+export const EventStack = composable<HTMLDivElement, EventStackProps>(
+  ({ events = [], currentId, onAction, ...props }, forwardedRef) => {
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
+    const items = useMemo(() => events.map((event) => ({ event, onAction })), [events, onAction]);
+
+    const handleCurrentChange = useCallback(
+      (id: string | undefined) => {
+        if (id) {
+          onAction?.({ type: 'current', eventId: id });
+        }
+      },
+      [onAction],
+    );
+
+    const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        (document.activeElement as HTMLElement | null)?.click();
+      }
+    }, []);
+
+    return (
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+        <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
+          <ScrollArea.Root orientation='vertical' padding centered>
+            <ScrollArea.Viewport ref={setViewport}>
+              <Mosaic.VirtualStack
+                Tile={EventTile}
+                classNames='my-2'
+                gap={8}
+                items={items}
+                draggable={false}
+                getId={(item) => item.event.id}
+                getScrollElement={() => viewport}
+                estimateSize={() => 100}
+              />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Mosaic.Container>
+      </Focus.Group>
+    );
+  },
+);
+
+EventStack.displayName = 'EventStack';
+
+//
+// EventTile
+//
 
 type EventTileData = {
   event: Event.Event;
@@ -59,66 +116,3 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
 });
 
 EventTile.displayName = 'EventTile';
-
-//
-// EventStack
-//
-
-export type EventStackProps = {
-  id: string;
-  events?: Event.Event[];
-  currentId?: string;
-  onAction?: EventStackActionHandler;
-};
-
-export const EventStack = composable<HTMLDivElement, EventStackProps>(
-  ({ events = [], currentId, onAction, ...props }, forwardedRef) => {
-    const [viewport, setViewport] = useState<HTMLElement | null>(null);
-    const items = useMemo(() => events.map((event) => ({ event, onAction })), [events, onAction]);
-
-    const handleCurrentChange = useCallback(
-      (id: string | undefined) => {
-        if (id) {
-          onAction?.({ type: 'current', eventId: id });
-        }
-      },
-      [onAction],
-    );
-
-    const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        (document.activeElement as HTMLElement | null)?.click();
-      }
-    }, []);
-
-    return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
-        <Mosaic.Container
-          asChild
-          withFocus
-          autoScroll={viewport}
-          currentId={currentId}
-          onCurrentChange={handleCurrentChange}
-        >
-          <ScrollArea.Root orientation='vertical' padding centered>
-            <ScrollArea.Viewport ref={setViewport}>
-              <Mosaic.VirtualStack
-                Tile={EventTile}
-                classNames='my-2'
-                gap={8}
-                items={items}
-                draggable={false}
-                getId={(item) => item.event.id}
-                getScrollElement={() => viewport}
-                estimateSize={() => 100}
-              />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Mosaic.Container>
-      </Focus.Group>
-    );
-  },
-);
-
-EventStack.displayName = 'EventStack';
