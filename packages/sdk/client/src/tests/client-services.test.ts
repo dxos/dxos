@@ -41,7 +41,7 @@ describe('Client services', () => {
 
     const peer = testBuilder.createClientServicesHost();
     await peer.open(new Context());
-    onTestFinished(() => peer.close());
+    onTestFinished(() => peer.close(Context.default()));
 
     const [client, server] = testBuilder.createClientServer(peer);
     void server.open();
@@ -60,7 +60,7 @@ describe('Client services', () => {
     {
       const peer1 = testBuilder.createClientServicesHost();
       await peer1.open(new Context());
-      onTestFinished(() => peer1.close());
+      onTestFinished(() => peer1.close(Context.default()));
 
       {
         const [client1a, server1a] = testBuilder.createClientServer(peer1);
@@ -91,7 +91,7 @@ describe('Client services', () => {
     {
       const peer2 = testBuilder.createClientServicesHost();
       await peer2.open(new Context());
-      onTestFinished(() => peer2.close());
+      onTestFinished(() => peer2.close(Context.default()));
 
       {
         const [client2a, server2a] = testBuilder.createClientServer(peer2);
@@ -172,7 +172,7 @@ describe('Client services', () => {
     // Ensure peer2 shows up as offline to peer1.
     await client2.destroy();
     await server2.close();
-    await peer2.close();
+    await peer2.close(Context.default());
 
     await expect
       .poll(() => client1.halo.devices.get().find((device) => device?.kind === DeviceKind.TRUSTED)?.presence, {
@@ -210,12 +210,12 @@ describe('Client services', () => {
     onTestFinished(async () => {
       await client1.destroy();
       await server1.close();
-      await peer1.close();
+      await peer1.close(Context.default());
     });
     onTestFinished(async () => {
       await client2.destroy();
       await server2.close();
-      await peer2.close();
+      await peer2.close(Context.default());
     });
 
     const hostSpace = await client1.spaces.create();

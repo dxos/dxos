@@ -65,6 +65,7 @@ export const initializeObservability = async (config: Config, isTauri: boolean, 
         environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
         config,
         logs: true,
+        traces: true,
       }),
     ),
     Observability.addExtension(

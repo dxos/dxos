@@ -7,6 +7,7 @@ import {
   createDelegatedSpaceInvitationCredential,
   getCredentialAssertion,
 } from '@dxos/credentials';
+import { Context } from '@dxos/context';
 import { writeMessages } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
@@ -182,7 +183,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     }
 
     // Create local space.
-    await this._spaceManager.acceptSpace({
+    await this._spaceManager.acceptSpace(Context.default(), {
       spaceKey: assertion.spaceKey,
       genesisFeedKey: assertion.genesisFeedKey,
       controlTimeframe,

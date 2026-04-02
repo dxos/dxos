@@ -58,7 +58,7 @@ export type EchoHostProps = {
   /**
    * Callback to run blocking queue sync.
    */
-  syncQueue?: (request: SyncQueueRequest) => Promise<void>;
+  syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
 };
 
 /**
@@ -209,7 +209,7 @@ export class EchoHost extends Resource {
 
   protected override async _open(ctx: Context): Promise<void> {
     log('echo-host: opening automerge host...');
-    await this._automergeHost.open();
+    await this._automergeHost.open(ctx);
     log('echo-host: automerge host opened');
 
     log('echo-host: opening query service...');
@@ -266,8 +266,8 @@ export class EchoHost extends Resource {
   /**
    * Flush all pending writes to the underlying storage.
    */
-  async flush(): Promise<void> {
-    await this._automergeHost.flush();
+  async flush(ctx: Context): Promise<void> {
+    await this._automergeHost.flush(ctx);
   }
 
   /**
@@ -286,8 +286,8 @@ export class EchoHost extends Resource {
     return await this._automergeHost.loadDoc(ctx, documentId, opts);
   }
 
-  async exportDoc(ctx: Context, id: AnyDocumentId): Promise<Uint8Array> {
-    return await this._automergeHost.exportDoc(ctx, id);
+  async exportDoc(id: AnyDocumentId): Promise<Uint8Array> {
+    return await this._automergeHost.exportDoc(id);
   }
 
   /**
@@ -300,7 +300,7 @@ export class EchoHost extends Resource {
   /**
    * Create new space root.
    */
-  async createSpaceRoot(spaceKey: PublicKey): Promise<DatabaseRoot> {
+  async createSpaceRoot(ctx: Context, spaceKey: PublicKey): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     const spaceId = await createIdFromSpaceKey(spaceKey);
 
@@ -313,15 +313,15 @@ export class EchoHost extends Resource {
       links: {},
     });
 
-    await this._automergeHost.flush({ documentIds: [automergeRoot.documentId] });
+    await this._automergeHost.flush(ctx, { documentIds: [automergeRoot.documentId] });
 
-    return await this.openSpaceRoot(spaceId, automergeRoot.url);
+    return await this.openSpaceRoot(ctx, spaceId, automergeRoot.url);
   }
 
   // TODO(dmaretskyi): Change to document id.
-  async openSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
+  async openSpaceRoot(ctx: Context, spaceId: SpaceId, automergeUrl: AutomergeUrl): Promise<DatabaseRoot> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(Context.default(), automergeUrl, {
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
       fetchFromNetwork: true,
     });
     await handle.whenReady();
@@ -337,8 +337,8 @@ export class EchoHost extends Resource {
   /**
    * Install data replicator.
    */
-  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
-    await this._automergeHost.addReplicator(replicator);
+  async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
+    await this._automergeHost.addReplicator(ctx, replicator);
   }
 
   /**
@@ -377,7 +377,7 @@ export class EchoHost extends Resource {
     {
       performance.mark('indexEngine.update.automerge:start');
       const { updated, done } = await this._indexEngine
-        .update(this._automergeDataSource, { spaceId: null, limit: 50 })
+        .update(this._ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
         .pipe(RuntimeProvider.runPromise(this._runtime));
       totalUpdated += updated;
       totalDone &&= done;
@@ -398,7 +398,7 @@ export class EchoHost extends Resource {
     {
       performance.mark('indexEngine.update.queue:start');
       const { updated, done } = await this._indexEngine
-        .update(this._queueDataSource, { spaceId: null, limit: 50 })
+        .update(this._ctx, this._queueDataSource, { spaceId: null, limit: 50 })
         .pipe(RuntimeProvider.runPromise(this._runtime));
       totalUpdated += updated;
       totalDone &&= done;

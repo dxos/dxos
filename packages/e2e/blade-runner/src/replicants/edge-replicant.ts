@@ -139,7 +139,7 @@ export class EdgeReplicant {
     }
 
     const result = await asyncTimeout(
-      uploadWorkerFunction({
+      uploadWorkerFunction(Context.default(), {
         client: this._client!,
         ownerPublicKey: this._identity!.identityKey,
         version: '0.0.1',

@@ -46,6 +46,7 @@
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/api-logs": "catalog:",
     "@opentelemetry/auto-instrumentations-web": "catalog:",
+    "@opentelemetry/core": "catalog:",
     "@opentelemetry/exporter-logs-otlp-http": "catalog:",
     "@opentelemetry/exporter-metrics-otlp-http": "catalog:",
     "@opentelemetry/exporter-trace-otlp-http": "catalog:",
@@ -60,13 +61,13 @@
     "js-yaml": "catalog:",
     "localforage": "catalog:",
     "posthog-js": "catalog:",
-    "uuid": "catalog:"
+    "uuid": "catalog:",
+    "zone.js": "catalog:"
   },
   "devDependencies": {
     "@effect/platform": "catalog:",
     "@types/debug": "catalog:",
-    "@types/js-yaml": "catalog:",
-    "zone.js": "catalog:"
+    "@types/js-yaml": "catalog:"
   },
   "peerDependencies": {
     "@effect/platform": "catalog:",

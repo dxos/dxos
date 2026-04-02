@@ -106,7 +106,7 @@ describe('open', () => {
     const serviceContext = await createServiceContext();
     await serviceContext.open(new Context());
     const identity = await serviceContext.createIdentity();
-    const space = await serviceContext.dataSpaceManager!.createDefaultSpace();
+    const space = await serviceContext.dataSpaceManager!.createDefaultSpace(new Context());
     const identityService = createIdentityService(serviceContext);
     expect(identity.defaultSpaceId).to.be.undefined;
     await identityService.open();

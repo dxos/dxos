@@ -103,7 +103,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @internal
    */
   @trace.span()
-  async _open(): Promise<void> {
+  async _open(ctx: Context): Promise<void> {
     log.trace('dxos.sdk.echo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({
       onError: (error) => {
@@ -207,7 +207,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
 
         // Process space update in a separate task, also initializing the space if necessary.
         scheduleMicroTask(this._ctx, async () => {
-          await spaceProxy!._processSpaceUpdate(space);
+          await spaceProxy!._processSpaceUpdate(this._ctx, space);
         });
       }
 
@@ -278,7 +278,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @internal
    */
   @trace.span()
-  async _close(): Promise<void> {
+  async _close(ctx: Context): Promise<void> {
     this._streamSubscriptions.clear();
     await this._ctx.dispose();
     await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));

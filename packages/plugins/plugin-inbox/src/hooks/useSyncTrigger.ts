@@ -5,6 +5,7 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { type Client } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { DXN, type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { Trigger } from '@dxos/functions';
@@ -23,7 +24,7 @@ const ensureFunction = async (
   db: Database.Database,
   functionKey: string,
 ): Promise<Operation.PersistentOperation | undefined> => {
-  const deployed = await getDeployedFunctions(client, true);
+  const deployed = await getDeployedFunctions(Context.default(), client, true);
   const match = deployed.find((fn) => fn.key === functionKey);
   if (!match) {
     return undefined;
