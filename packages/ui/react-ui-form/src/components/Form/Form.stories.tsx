@@ -72,7 +72,7 @@ const Person = Schema.Struct({
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}
 
-type StoryProps<T extends AnyProperties> = {
+type DefaultStoryProps<T extends AnyProperties> = {
   debug?: boolean;
   schema: Schema.Schema<T>;
 } & FormRootProps<T>;
@@ -82,7 +82,7 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
   schema,
   values: valuesProp,
   ...props
-}: StoryProps<T>) => {
+}: DefaultStoryProps<T>) => {
   const [values, setValues] = useState<Partial<T>>(valuesProp ?? {});
   const client = useClient();
   const space = client.spaces.default;
@@ -146,11 +146,11 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<StoryProps<any>>;
+} satisfies Meta<DefaultStoryProps<any>>;
 
 export default meta;
 
-type Story<T extends AnyProperties> = StoryObj<StoryProps<T>>;
+type Story<T extends AnyProperties> = StoryObj<DefaultStoryProps<T>>;
 
 const values: Partial<Person> = {
   name: 'Alice',

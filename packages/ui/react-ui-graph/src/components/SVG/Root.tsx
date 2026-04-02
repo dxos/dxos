@@ -14,7 +14,7 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composableProps, mx } from '@dxos/ui-theme';
 
 import { SVGContext, type SVGContextOptions, SVGContextProvider } from '../../hooks';
 
@@ -24,7 +24,7 @@ export type RootProps = ThemedClassName<PropsWithChildren<SVGContextOptions & Co
  * Makes the SVG context available to child nodes.
  * Automatically resizes the SVG element, which expands to fit the container.
  */
-export const Root = forwardRef<SVGContext, RootProps>(({ classNames, children, scale, centered, ...props }, ref) => {
+export const Root = forwardRef<SVGContext, RootProps>(({ children, scale, centered, ...props }, ref) => {
   const { ref: containerRef, width = 0, height = 0 } = useResizeDetector({ refreshRate: 200 });
 
   const context = useMemo<SVGContext>(() => {
@@ -48,7 +48,7 @@ export const Root = forwardRef<SVGContext, RootProps>(({ classNames, children, s
 
   return (
     <SVGContextProvider value={context}>
-      <div {...props} ref={containerRef} className={mx('grid grow overflow-hidden', classNames)}>
+      <div {...composableProps(props, { classNames: 'dx-expander' })} ref={containerRef}>
         <svg
           xmlns='http://www.w3.org/2000/svg'
           ref={context.ref}

@@ -6,13 +6,11 @@ import * as Schema from 'effect/Schema';
 
 import { meta } from '../meta';
 
-import * as File from './File';
-
 export namespace WnfsAction {
   export const UploadAnnotationId = Symbol.for(`${meta.id}.annotation.upload`);
 
   export const UploadFileSchema = Schema.Struct({
-    file: Schema.instanceOf(File.File).annotations({
+    file: Schema.instanceOf(File).annotations({
       [UploadAnnotationId]: {
         // Accept file types.
         'image/*': ['.jpg', '.jpeg', '.png', '.gif'],

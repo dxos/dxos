@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './admin';
 export * from './chat';
 export * from './debug';
 export * from './dx';

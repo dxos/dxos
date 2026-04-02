@@ -14,7 +14,7 @@ import { ScrollArea } from '../ScrollArea';
 
 import { Dialog, type DialogContentProps } from './Dialog';
 
-type StoryProps = Pick<DialogContentProps, 'size'> &
+type DefaultStoryProps = Pick<DialogContentProps, 'size'> &
   Partial<{
     title: string;
     description: string;
@@ -27,7 +27,7 @@ type StoryProps = Pick<DialogContentProps, 'size'> &
  * Standard Dialog with non-scrolling content in Dialog.Body.
  * Dialog.Body delegates to Column.Content, which applies gutter padding via `px-[var(--gutter)]`.
  */
-const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryProps) => {
+const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: DefaultStoryProps) => {
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
@@ -66,7 +66,7 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
  * The ScrollArea breaks out of Body's gutter padding via `--gutter-offset`
  * and applies its own asymmetric padding (accounting for scrollbar width).
  */
-const ScrollingStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: StoryProps) => {
+const ScrollingStory = ({ size, title, description, openTrigger, closeTrigger, blockAlign }: DefaultStoryProps) => {
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>

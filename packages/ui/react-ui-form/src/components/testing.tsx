@@ -12,7 +12,7 @@ type TestLayoutProps = ThemedClassName<PropsWithChildren<{ json?: any }>>;
 
 export const TestLayout = ({ classNames, children, json }: TestLayoutProps) => {
   return (
-    <div className='w-full h-full grid grid-cols-[1fr_1fr] p-4 gap-4 overflow-hidden'>
+    <div className='h-full w-full grid grid-cols-[1fr_1fr] p-4 gap-4 overflow-hidden'>
       <TestPanel classNames={['dx-container', classNames]}>
         <Column.Root classNames='dx-container' gutter='sm'>
           {children}

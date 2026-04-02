@@ -2,86 +2,74 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Option from 'effect/Option';
-import React, { forwardRef, useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
-import { useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { Graph, type Node } from '@dxos/plugin-graph';
-import { useClient } from '@dxos/react-client';
+import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
+import { useLayout } from '@dxos/app-toolkit/ui';
+import { Entity, Obj, Query } from '@dxos/echo';
+import { useActiveSpace } from '@dxos/plugin-space';
 import { Filter, useQuery } from '@dxos/react-client/echo';
-import { Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { SearchList } from '@dxos/react-ui-searchlist';
-import { mx } from '@dxos/ui-theme';
+import { Dialog, useTranslation } from '@dxos/react-ui';
+import { SearchList } from '@dxos/react-ui-search';
+import { Text } from '@dxos/schema';
 
-import { useSearchResults } from '../../hooks';
+import { useGlobalSearch, useGlobalSearchResults } from '../../hooks';
 import { meta } from '../../meta';
-
-type SearchListResultProps = {
-  node: Node.Node;
-  onSelect?: (nodeId: string) => void;
-};
-
-const SearchListResult = forwardRef<HTMLDivElement, SearchListResultProps>(({ node, onSelect }, forwardedRef) => {
-  const { t } = useTranslation(meta.id);
-  const label = toLocalizedString(node?.properties.label ?? 'never', t);
-  const handleSelect = useCallback(() => {
-    onSelect?.(node!.id);
-  }, [node, onSelect]);
-  return (
-    <SearchList.Item
-      value={node!.id}
-      label={label}
-      icon={node?.properties.icon}
-      classNames='flex gap-2 items-center px-2'
-      onSelect={handleSelect}
-      ref={forwardedRef}
-    />
-  );
-});
+import { type SearchResult } from '../../types';
 
 export type SearchDialogProps = {
-  pivotId: string;
+  pivotId?: string;
 };
 
-export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
+export const SearchDialog = ({ pivotId: pivotIdProp }: SearchDialogProps) => {
   const { t } = useTranslation(meta.id);
-  const { graph } = useAppGraph();
   const layout = useLayout();
-  const closed = (Array.isArray(layout.inactive) ? layout.inactive : [layout.inactive])
-    .map((id) => (graph ? Graph.getNode(graph, id) : Option.none()))
-    .filter(Boolean);
-  const [queryString, setQueryString] = useState('');
-  const client = useClient();
-  const dangerouslyLoadAllObjects = useQuery(client.spaces, Filter.everything());
-  const [pending, results] = useSearchResults(queryString, dangerouslyLoadAllObjects);
-  const resultObjects = Array.from(results.keys());
+  const pivotId = pivotIdProp ?? layout.active[layout.active.length - 1];
   const { invokePromise } = useOperationInvoker();
+  const { setMatch } = useGlobalSearch();
+  const [query, setQuery] = useState<string>();
 
-  const handleSelect = useCallback(
-    async (nodeId: string) => {
-      await invokePromise(LayoutOperation.UpdateDialog, { state: false });
-
-      // If node is already present in the active parts, scroll to it and close the dialog.
-      const index = layout.active.findIndex((id) => id === nodeId);
-      if (index !== -1) {
-        await invokePromise(LayoutOperation.ScrollIntoView, { subject: nodeId });
-      } else {
-        await invokePromise(LayoutOperation.Open, {
-          subject: [nodeId],
-          pivotId,
-          positioning: 'end',
-        });
-      }
-    },
-    [pivotId, invokePromise, layout],
+  const space = useActiveSpace();
+  const objects = useQuery(
+    space?.db,
+    query === undefined
+      ? Query.select(Filter.nothing())
+      : Query.all(
+          Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
+          Query.select(Filter.text(query, { type: 'full-text' }))
+            .select(Filter.type(Text.Text))
+            .referencedBy('org.dxos.type.document', 'content'),
+        ),
   );
 
-  const handleSearch = useCallback((query: string) => {
-    setQueryString(query);
-  }, []);
+  const results = useGlobalSearchResults(objects);
+  const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
+
+  const handleSearch = useCallback(
+    (text: string) => {
+      setQuery(text);
+      setMatch?.(text);
+    },
+    [setMatch],
+  );
+
+  const handleSelect = useCallback(
+    async (result: SearchResult) => {
+      if (!result.object || !Obj.isObject(result.object)) {
+        return;
+      }
+
+      const qualifiedPath = getObjectPathFromObject(result.object);
+      await invokePromise(LayoutOperation.UpdateDialog, { state: false });
+      await invokePromise(LayoutOperation.Open, {
+        subject: [qualifiedPath],
+        pivotId,
+        positioning: 'end',
+      });
+    },
+    [pivotId, invokePromise],
+  );
 
   return (
     <Dialog.Content>
@@ -94,27 +82,19 @@ export const SearchDialog = ({ pivotId }: SearchDialogProps) => {
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch}>
           <SearchList.Content classNames='max-h-[24rem]'>
-            <SearchList.Input placeholder={t('search placeholder')} />
+            <SearchList.Input placeholder={t('search placeholder')} autoFocus />
             <SearchList.Viewport>
-              {queryString.length > 0 ? (
-                resultObjects.length > 0 ? (
-                  resultObjects
-                    .map((object) => Graph.getNode(graph, Obj.getDXN(object).toString()))
-                    .filter(Option.isSome)
-                    .map((node) => <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />)
-                ) : (
-                  <p className='px-1'>{t(pending ? 'pending results message' : 'empty results message')}</p>
-                )
-              ) : (
-                <>
-                  {closed.length > 0 && (
-                    <h2 className={mx('my-1', 'text-description')}>{t('recently closed heading')}</h2>
-                  )}
-                  {closed.filter(Option.isSome).map((node) => (
-                    <SearchListResult key={node.value.id} node={node.value} onSelect={handleSelect} />
-                  ))}
-                </>
-              )}
+              {allResults.map((result) => (
+                <SearchList.Item
+                  key={result.id}
+                  value={result.id}
+                  label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
+                  icon={result.icon}
+                  onSelect={() => void handleSelect(result)}
+                  classNames='flex gap-2 items-center'
+                />
+              ))}
+              {query && allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
             </SearchList.Viewport>
           </SearchList.Content>
         </SearchList.Root>

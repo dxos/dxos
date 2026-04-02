@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import React from 'react';
+import React, { PropsWithChildren } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
-import { Panel as DxPanel, Flex, type FlexProps } from '@dxos/react-ui';
+import { Panel as DxPanel, Flex } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
@@ -62,4 +62,4 @@ export const SketchContainer = ({ role, attendableId, subject: sketch, settings 
   );
 };
 
-const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-square' />;
+const Container = (props: PropsWithChildren) => <Flex {...props} classNames='aspect-square' />;

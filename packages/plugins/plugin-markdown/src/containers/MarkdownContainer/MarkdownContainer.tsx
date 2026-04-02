@@ -43,7 +43,6 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
     const initialValue = docContent ?? textContent;
 
     // Extensions from other plugins.
-    // TODO(burdon): Document MarkdownPluginState.extensionProviders
     const otherExtensionProviders = useCapabilities(MarkdownCapabilities.Extensions);
     const extensions = useMemo<Extension[]>(() => {
       if (!Obj.instanceOf(Markdown.Document, object) && !Obj.instanceOf(Text.Text, object)) {
@@ -109,6 +108,7 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
         id={id}
         attendableId={attendableId}
         object={object}
+        compact={role !== 'article'}
         extensions={extensions}
         settings={settings}
         onAction={runAction}
@@ -123,8 +123,8 @@ export const MarkdownContainer = forwardRef<HTMLDivElement, MarkdownContainerPro
               <MarkdownEditor.Toolbar classNames='dx-document' customActions={customActions} />
             </Panel.Toolbar>
           )}
-          <Panel.Content className='pt-2'>
-            <MarkdownEditor.Content initialValue={initialValue} scrollPastEnd={role === 'article'} />
+          <Panel.Content>
+            <MarkdownEditor.Content initialValue={initialValue} />
             <MarkdownEditor.Blocks />
           </Panel.Content>
         </Panel.Root>

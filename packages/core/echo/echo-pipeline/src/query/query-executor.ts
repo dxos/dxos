@@ -30,6 +30,7 @@ import type { AutomergeHost } from '../automerge';
 import type { SpaceStateManager } from '../db-host';
 import { filterMatchObject, filterMatchObjectJSON } from '../filter';
 
+import { QueryError } from './errors';
 import type { QueryPlan } from './plan';
 import { QueryPlanner } from './query-planner';
 
@@ -481,6 +482,38 @@ export class QueryExecutor extends Resource {
         break;
       }
 
+      case 'TimestampSelector': {
+        const beginIndexQuery = performance.now();
+        const queueIds = extractQueueIds(queues);
+        const metas = await this._runInRuntime(
+          this._indexEngine.queryByTimeRange({
+            spaceIds: spaces,
+            updatedAfter: step.selector.updatedAfter,
+            updatedBefore: step.selector.updatedBefore,
+            createdAfter: step.selector.createdAfter,
+            createdBefore: step.selector.createdBefore,
+            includeAllQueues: allQueuesFromSpaces,
+            queueIds,
+          }),
+        );
+        trace.indexHits = metas.length;
+        trace.indexQueryTime += performance.now() - beginIndexQuery;
+
+        if (this._ctx.disposed) {
+          return { workingSet, trace };
+        }
+
+        const documentLoadStart = performance.now();
+        const results = await this._loadDocumentsAfterSqlQuery(metas);
+        trace.documentsLoaded += results.length;
+        trace.documentLoadTime += performance.now() - documentLoadStart;
+
+        workingSet.push(...results.filter(isNonNullable));
+        trace.objectCount = workingSet.length;
+
+        break;
+      }
+
       case 'TextSelector': {
         // TODO(dmaretskyi): type + FTS queries would be very common so we should support those, maybe chunk the fts index.
         // TODO(dmaretskyi): nice to have matched text snippets/highlighting.
@@ -595,6 +628,19 @@ export class QueryExecutor extends Resource {
   }
 
   private async _execFilterStep(step: QueryPlan.FilterStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
+    const timestampParams = extractTimestampParams(step.filter);
+    if (timestampParams !== null) {
+      return this._execTimestampFilterStep(step, workingSet, timestampParams);
+    }
+
+    if (filterContainsTimestamp(step.filter)) {
+      throw new QueryError({
+        message:
+          'Timestamp filter in unsupported composition (not, or). Use Filter.updated/Filter.created with explicit range instead.',
+        context: {},
+      });
+    }
+
     const result = workingSet.filter((item) => {
       if (item.doc) {
         return filterMatchObject(step.filter, {
@@ -615,6 +661,33 @@ export class QueryExecutor extends Resource {
         ...ExecutionTrace.makeEmpty(),
         name: 'Filter',
         details: JSON.stringify(step.filter),
+        objectCount: result.length,
+      },
+    };
+  }
+
+  private async _execTimestampFilterStep(
+    step: QueryPlan.FilterStep,
+    workingSet: QueryItem[],
+    params: { updatedAfter?: number; updatedBefore?: number; createdAfter?: number; createdBefore?: number },
+  ): Promise<StepExecutionResult> {
+    const spaces = [...new Set(workingSet.map((item) => item.spaceId).filter(isNonNullable))];
+    const metas = await this._runInRuntime(
+      this._indexEngine.queryByTimeRange({
+        spaceIds: spaces,
+        ...params,
+        includeAllQueues: false,
+        queueIds: [],
+      }),
+    );
+    const matchingIds = new Set(metas.map((m) => m.objectId));
+    const result = workingSet.filter((item) => matchingIds.has(item.objectId));
+    return {
+      workingSet: result,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'Filter(timestamp)',
+        details: JSON.stringify(params),
         objectCount: result.length,
       },
     };
@@ -1376,6 +1449,8 @@ const prettyFilter = (filter: QueryAST.Filter): string => {
       return filter.searchKind
         ? `Filter.textSearch(${JSON.stringify(filter.text)}, ${JSON.stringify(filter.searchKind)})`
         : `Filter.textSearch(${JSON.stringify(filter.text)})`;
+    case 'timestamp':
+      return `Filter.${filter.field}.${filter.operator}(${filter.value})`;
     case 'not':
       return `Filter.not(${prettyFilter(filter.filter)})`;
     case 'and':
@@ -1467,3 +1542,53 @@ const extractQueueIds = (queues: readonly DXN.String[]): ObjectId[] | null => {
   }
   return queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[];
 };
+
+/**
+ * Extract timestamp parameters from a filter AST node.
+ * Returns null if the filter doesn't contain timestamp nodes.
+ */
+const extractTimestampParams = (
+  filter: QueryAST.Filter,
+): { updatedAfter?: number; updatedBefore?: number; createdAfter?: number; createdBefore?: number } | null => {
+  const collect = (f: QueryAST.Filter): QueryAST.FilterTimestamp[] => {
+    if (f.type === 'timestamp') {
+      return [f];
+    }
+    if (f.type === 'and') {
+      return f.filters.flatMap(collect);
+    }
+    return [];
+  };
+
+  const timestamps = collect(filter);
+  if (timestamps.length === 0) {
+    return null;
+  }
+
+  const params: { updatedAfter?: number; updatedBefore?: number; createdAfter?: number; createdBefore?: number } = {};
+  for (const ts of timestamps) {
+    if (ts.field === 'updatedAt' && (ts.operator === 'gt' || ts.operator === 'gte')) {
+      params.updatedAfter = ts.value;
+    } else if (ts.field === 'updatedAt' && (ts.operator === 'lt' || ts.operator === 'lte')) {
+      params.updatedBefore = ts.value;
+    } else if (ts.field === 'createdAt' && (ts.operator === 'gt' || ts.operator === 'gte')) {
+      params.createdAfter = ts.value;
+    } else if (ts.field === 'createdAt' && (ts.operator === 'lt' || ts.operator === 'lte')) {
+      params.createdBefore = ts.value;
+    }
+  }
+  return params;
+};
+
+function filterContainsTimestamp(filter: QueryAST.Filter): boolean {
+  if (filter.type === 'timestamp') {
+    return true;
+  }
+  if (filter.type === 'and' || filter.type === 'or') {
+    return filter.filters.some(filterContainsTimestamp);
+  }
+  if (filter.type === 'not') {
+    return filterContainsTimestamp(filter.filter);
+  }
+  return false;
+}

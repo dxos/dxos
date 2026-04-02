@@ -27,7 +27,6 @@ import { useResizeDetector } from 'react-resize-detector';
 import { type Topology } from 'topojson-specification';
 
 import {
-  ComposableProps,
   type ThemeMode,
   type ThemedClassName,
   useComposedRefs,
@@ -35,7 +34,7 @@ import {
   useDynamicRef,
   useThemeContext,
 } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { GlobeContext, type GlobeContextType, type Point, type Vector, useGlobeContext } from '../../hooks';
 import {
@@ -129,12 +128,9 @@ const getProjection = (type: GlobeCanvasProps['projection'] = 'orthographic'): G
 // Root
 //
 
-type GlobeRootProps = ComposableProps<
-  HTMLDivElement,
-  ThemedClassName<PropsWithChildren<Partial<Pick<GlobeContextType, 'center' | 'zoom' | 'translation' | 'rotation'>>>>
->;
+type GlobeRootProps = Partial<Pick<GlobeContextType, 'center' | 'zoom' | 'translation' | 'rotation'>>;
 
-const GlobeRoot = forwardRef<HTMLDivElement, GlobeRootProps>(
+const GlobeRoot = composable<HTMLDivElement, GlobeRootProps>(
   (
     { children, center: centerProp, zoom: zoomProp, translation: translationProp, rotation: rotationProp, ...props },
     forwardedRef,
@@ -162,7 +158,7 @@ const GlobeRoot = forwardRef<HTMLDivElement, GlobeRootProps>(
           setRotation,
         }}
       >
-        <div {...composableProps(props, { className: 'relative dx-container' })} ref={composedRef}>
+        <div {...composableProps(props, { classNames: 'relative dx-container' })} ref={composedRef}>
           {children}
         </div>
       </GlobeContext.Provider>

@@ -2,10 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
 import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { translationKey } from '../translations';
@@ -204,18 +205,17 @@ const ToggleGroupToolbarItem = ({
   }
 };
 
-export const ToolbarMenu = forwardRef<HTMLDivElement, MenuScopedProps<ToolbarMenuProps>>(
-  ({ __menuScope, classNames, children, ...props }, forwardRef) => {
+export const ToolbarMenu = composable<HTMLDivElement, MenuScopedProps<ToolbarMenuProps>>(
+  ({ __menuScope, children, ...props }, forwardedRef) => {
     const items = useMenuItems(undefined, undefined, 'ToolbarMenu', __menuScope);
     const { attendableId, alwaysActive } = useMenuScoped('ToolbarMenu', __menuScope);
     const { hasAttention } = useAttention(attendableId);
 
     return (
       <NaturalToolbar.Root
-        {...props}
-        classNames={[attendableId, classNames]}
+        {...composableProps(props, { classNames: attendableId })}
         disabled={!alwaysActive && !hasAttention}
-        ref={forwardRef}
+        ref={forwardedRef}
       >
         {items?.map((item: MenuItem) => (
           <ToolbarMenuItem key={item.id} __menuScope={__menuScope} item={item} />

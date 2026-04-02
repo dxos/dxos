@@ -13,7 +13,7 @@ import { Flex } from '../Flex';
 
 const List = () => {
   return (
-    <ScrollArea.Root margin role='list'>
+    <ScrollArea.Root centered>
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
           <Input.Root key={i}>
@@ -102,7 +102,7 @@ export const WithScrollArea = {
       <Column.Row center>
         <h2 className='py-3'>Header</h2>
       </Column.Row>
-      <ScrollArea.Root padding margin orientation='vertical' classNames='col-span-full'>
+      <ScrollArea.Root padding centered orientation='vertical' classNames='col-span-full'>
         <ScrollArea.Viewport>
           <InputList items={30} />
         </ScrollArea.Viewport>

@@ -12,11 +12,11 @@ import { Voxel } from '../../types';
 
 import { VoxelArticle } from './VoxelArticle';
 
-type StoryProps = {
+type DefaultStoryProps = {
   voxels?: Voxel.VoxelData[];
 };
 
-const DefaultStory = ({ voxels }: StoryProps) => {
+const DefaultStory = ({ voxels }: DefaultStoryProps) => {
   const world = useMemo(() => Voxel.make(voxels ? { voxels } : undefined), [voxels]);
   return <VoxelArticle subject={world} />;
 };

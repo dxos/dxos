@@ -49,6 +49,11 @@
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 - Use barrel imports whenever possible.
 
+### React
+
+- Import all required symbols from React — hooks, types, and utilities — as named imports (i.e., use `useMemo` not `React.useMemo`, use `type Ref` not `React.Ref`).
+- When using `forwardRef` use the variable name `forwardedRef`.
+
 ## New Packages
 
 - **IMPORTANT**: Any new package created in this repo MUST have `"private": true` in its `package.json`. The `private` flag can only be removed manually once a trusted publisher has been configured for the package.
@@ -76,16 +81,21 @@ Examples:
 - `refactor: simplify error handling in client SDK`
 - `docs: update API reference for Space class`
 
+## CI
+
+- **IMPORTANT**: After every `git push`, proactively check CI status using `gh run list --branch <branch> --limit 5 --workflow "Check"`. Do NOT rely solely on `pnpm -w gh-action --verify` — it only checks agent workflows, not the main **Check** workflow that runs build and tests.
+- If the Check workflow fails, inspect the failure with `gh run view <run-id>` and `gh run view <run-id> --log-failed`, identify the failing job/test, and fix it.
+- When the user asks "what is the CI status" or similar, always check the **Check** workflow specifically.
+
 ## Submitting PRs
 
 - When the user asks you to submit a PR:
   - Use `gh` CLI to create and manage PRs.
   - Merge `origin/main` in to current branch and resolve conflicts.
-  - Format code with `pnpm format`
-  - Check `moon run :lint -- --fix` succeeds.
+  - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
   - Check `moon run :test` succeeds.
   - Commit and push any pending changes.
-  - Monitor CI (every 5 minutes): `pnpm -w gh-action --verify --watch`
+  - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
   - **IMPORTANT**: Address all PR review comments (fix or explain why not) and post a reply to all comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
   - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".

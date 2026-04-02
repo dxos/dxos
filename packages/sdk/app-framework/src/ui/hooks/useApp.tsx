@@ -23,6 +23,22 @@ import { App, PluginManagerProvider } from '../components';
 
 const ENABLED_KEY = 'org.dxos.app-framework.enabled';
 
+export type StartupProgress = {
+  /** Number of modules that have been activated. */
+  activated: number;
+  /** Total number of modules registered. */
+  total: number;
+  /** Fractional progress (0-1). */
+  progress: number;
+  /** Human-readable label for the currently activating module. */
+  status?: string;
+};
+
+export type PlaceholderProps = {
+  stage?: number;
+  progress?: StartupProgress;
+};
+
 export type UseAppOptions = {
   pluginManager?: PluginManager.PluginManager;
   pluginLoader?: PluginManager.ManagerOptions['pluginLoader'];
@@ -39,7 +55,7 @@ export type UseAppOptions = {
   debounce?: number;
   timeout?: number;
   fallback?: FC<FallbackProps>;
-  placeholder?: FC<{ stage: number }>;
+  placeholder?: FC<PlaceholderProps>;
 };
 
 /**
@@ -103,6 +119,11 @@ export const useApp = ({
   const [ready, setReady] = useState(false);
   const errorRef = useRef<unknown>(null);
   const [error, setError] = useState<unknown>(null);
+  const [startupProgress, setStartupProgress] = useState<StartupProgress>({
+    activated: 0,
+    total: 0,
+    progress: 0,
+  });
   // TODO(wittjosiah): Migrate to Atom.kvs for isomorphic storage.
   const cached: string[] = useMemo(() => JSON.parse(localStorage.getItem(ENABLED_KEY) ?? '[]'), []);
   const enabled = useMemo(
@@ -144,6 +165,25 @@ export const useApp = ({
       module: 'org.dxos.app-framework.atom-registry',
     });
 
+    // Poll manager atoms for progress (avoids PubSub subscription race).
+    const progressInterval = setInterval(() => {
+      if (readyRef.current) {
+        clearInterval(progressInterval);
+        return;
+      }
+      const active = manager.getActive();
+      const modules = manager.getModules();
+      const total = modules.length;
+      const activated = active.length;
+      const lastModule = active.length > 0 ? active[active.length - 1] : undefined;
+      setStartupProgress({
+        activated,
+        total,
+        progress: total > 0 ? activated / total : 0,
+        status: lastModule ? humanizeModuleId(lastModule) : undefined,
+      });
+    }, 100);
+
     const fiber = Effect.gen(function* () {
       const queue = yield* PubSub.subscribe(manager.activation);
       const listener = yield* Effect.forkDaemon(
@@ -152,8 +192,11 @@ export const useApp = ({
             Effect.sync(() => {
               if (event === ActivationEvents.Startup.id && state === 'activated') {
                 clearTimeout(timeoutId);
+                clearInterval(progressInterval);
                 setReady(true);
                 readyRef.current = true;
+                // Trigger startup profiler dump if available.
+                (globalThis as any).composer?.profiler?.dump();
               }
               if (error$ && !readyRef.current) {
                 setError(error$);
@@ -190,6 +233,7 @@ export const useApp = ({
     return () => {
       log('useApp: effect cleanup');
       clearTimeout(timeoutId);
+      clearInterval(progressInterval);
       void runAndForwardErrors(Fiber.interrupt(fiber));
       if (!isExternalManager) {
         void runAndForwardErrors(manager.shutdown());
@@ -203,7 +247,13 @@ export const useApp = ({
         <PluginManagerProvider value={manager}>
           <ContextProtocolProvider value={manager} context={PluginManagerContext}>
             <RegistryContext.Provider value={manager.registry}>
-              <App placeholder={placeholder} ready={ready} error={error} debounce={debounce} />
+              <App
+                placeholder={placeholder}
+                ready={ready}
+                error={error}
+                debounce={debounce}
+                progress={startupProgress}
+              />
             </RegistryContext.Provider>
           </ContextProtocolProvider>
         </PluginManagerProvider>
@@ -216,4 +266,25 @@ export const useApp = ({
 const setupDevtools = (manager: PluginManager.PluginManager) => {
   (globalThis as any).composer ??= {};
   (globalThis as any).composer.manager = manager;
+};
+
+/**
+ * Extracts a human-readable label from a module ID.
+ * E.g., "org.dxos.plugin.markdown.module.ReactSurface" → "Markdown".
+ */
+const humanizeModuleId = (moduleId: string): string => {
+  // Extract plugin name from pattern: org.dxos.plugin.<name>.module.<capability>
+  const pluginMatch = moduleId.match(/\.plugin\.([^.]+)\./);
+  if (pluginMatch) {
+    const name = pluginMatch[1];
+    // Convert kebab-case to title case.
+    return name
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  // Fallback: use the last segment.
+  const parts = moduleId.split('.');
+  return parts[parts.length - 1];
 };

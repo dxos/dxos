@@ -10,8 +10,10 @@ import React, { type PropsWithChildren, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { Surface } from '@dxos/app-framework/ui';
+import { Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
+import { type ThemedClassName } from '@dxos/react-ui';
 import {
   EditorMenuProvider,
   type EditorToolbarState,
@@ -19,8 +21,8 @@ import {
   useEditorMenu,
   useEditorToolbar,
 } from '@dxos/react-ui-editor';
-import { type ThemedClassName } from '@dxos/react-ui';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import {
@@ -39,7 +41,6 @@ import {
   MarkdownEditorToolbar as NaturalMarkdownToolbar,
   type MarkdownEditorToolbarProps as NaturalMarkdownToolbarProps,
 } from './MarkdownEditorToolbar';
-import { Obj } from '@dxos/echo';
 
 //
 // Context
@@ -53,7 +54,7 @@ type MarkdownEditorContextValue = {
   previewBlocks: PreviewBlock[];
   toolbarState: Atom.Writable<EditorToolbarState>;
   popoverMenu: Omit<UseEditorMenu, 'extension'>;
-} & (Pick<ExtensionsOptions, 'viewMode'> &
+} & (Pick<ExtensionsOptions, 'compact' | 'viewMode'> &
   Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'>);
 
 const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
@@ -69,7 +70,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
     extensions?: Extension[];
   } & Pick<
     MarkdownEditorContextValue,
-    'id' | 'attendableId' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'
+    'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
   > &
     Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
     Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>
@@ -80,10 +81,11 @@ const MarkdownEditorRoot = ({
   id,
   attendableId,
   object,
-  editorStateStore,
-  selectionManager,
   settings,
+  compact,
   viewMode,
+  selectionManager,
+  editorStateStore,
   extensions: extensionsProp,
   slashCommandGroups,
   onLinkQuery,
@@ -111,22 +113,19 @@ const MarkdownEditorRoot = ({
   const toolbarState = useEditorToolbar({ viewMode });
 
   // Context menu.
-  const menuOptions = useEditorMenuOptions({
-    editorView,
-    slashCommandGroups,
-    onLinkQuery,
-  });
+  const menuOptions = useEditorMenuOptions({ editorView, slashCommandGroups, onLinkQuery });
   const { extension: menuExtension, ...menuProps } = useEditorMenu(menuOptions);
 
   // Extensions.
   const coreExtensions = useExtensions({
     id,
     object,
+    compact,
+    viewMode,
+    selectionManager,
     editorStateStore,
     previewOptions,
-    selectionManager,
     settings,
-    viewMode,
     onSelectObject,
   });
 
@@ -139,6 +138,7 @@ const MarkdownEditorRoot = ({
     <MarkdownEditorContextProvider
       id={id}
       attendableId={attendableId}
+      compact={compact}
       editorView={editorView}
       setEditorView={setEditorView}
       extensions={extensions}
@@ -163,10 +163,11 @@ const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
 
 type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
-const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
+const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(({ ...props }, _forwardedRef) => {
   const {
     id,
     attendableId,
+    compact,
     editorView,
     setEditorView,
     viewMode,
@@ -178,9 +179,10 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   return (
     <EditorMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
       <NaturalMarkdownEditorContent
-        {...props}
+        {...composableProps(props)}
         id={id}
         attendableId={attendableId}
+        compact={compact}
         viewMode={viewMode}
         toolbarState={toolbarState}
         extensions={extensions}
@@ -188,7 +190,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
       />
     </EditorMenuProvider>
   );
-};
+});
 
 MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 

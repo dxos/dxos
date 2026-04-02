@@ -17,6 +17,7 @@ export const folding = (): Extension => {
       placeholderDOM: () => Domino.of('span').root,
     }),
     foldGutter({
+      // NOTE: We can't animate since the element is remounted on state change.
       markerDOM: (open) => {
         return Domino.of('div')
           .classNames('flex h-full justify-center items-center')
@@ -30,24 +31,6 @@ export const folding = (): Extension => {
               ),
           ).root;
       },
-      // TODO(burdon): markerDOM is called either way, defeating the animation: transition-transform duration-200
-      // domEventHandlers: {
-      //   click: (view, line: BlockInfo, event) => {
-      //     event.preventDefault();
-      //     event.stopPropagation();
-      //     const range = foldable(view.state, line.from, line.to);
-      //     if (range) {
-      //       view.dispatch({ effects: foldEffect.of(range) });
-      //       (event.target as HTMLElement)?.classList.add('rotate-90');
-      //     } else {
-      //       foldedRanges(view.state).between(line.from, line.to, (from, to) => {
-      //         view.dispatch({ effects: unfoldEffect.of({ from, to }) });
-      //         (event.target as HTMLElement)?.classList.remove('rotate-90');
-      //       });
-      //     }
-      //     return true;
-      //   },
-      // },
     }),
     EditorView.theme({
       '.cm-foldGutter': {

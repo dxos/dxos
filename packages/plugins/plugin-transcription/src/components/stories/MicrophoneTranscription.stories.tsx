@@ -49,7 +49,7 @@ const RECORDER_CONFIG = {
   interval: 200,
 };
 
-type StoryProps = {
+type DefaultStoryProps = {
   detectSpeaking?: boolean;
   transcriberConfig: TranscriberProps['config'];
   recorderConfig: MediaStreamRecorderProps['config'];
@@ -63,7 +63,7 @@ const DefaultStory = ({
   transcriberConfig,
   recorderConfig,
   audioConstraints,
-}: StoryProps) => {
+}: DefaultStoryProps) => {
   const [running, setRunning] = useState(false);
 
   // Audio.

@@ -17,11 +17,11 @@ const createItem = () => ({ id: `t-${Math.floor(Math.random() * 1000)}`, text: f
 
 type TestItem = { id: string; text: string };
 
-type StoryProps = Partial<ProgressBarProps> & {
+type DefaultStoryProps = Partial<ProgressBarProps> & {
   items?: TestItem[];
 };
 
-const DefaultStory = ({ items, ...props }: StoryProps) => {
+const DefaultStory = ({ items, ...props }: DefaultStoryProps) => {
   const [running, setRunning] = useState(false);
   const [nodes, setNodes] = useState<TestItem[]>(items ?? []);
   const lines = useMemo(() => nodes.map((item) => item.text), [nodes]);

@@ -22,13 +22,25 @@ export default Capability.makeModule(
     // Get the ManagedRuntime capability (should be available since we activate after ManagedRuntimeReady).
     const managedRuntime = yield* Capability.get(Capabilities.ManagedRuntime);
 
+    // Cache the merged handler promise to prevent concurrent module loading.
+    // Multiple Effects can invoke getHandlers simultaneously; without caching each
+    // creates a new merge() which triggers parallel dynamic imports that race in
+    // WebKit's module evaluator, causing TDZ errors on export default bindings.
+    let cachedSets: readonly OperationHandlerSet.OperationHandlerSet[] | undefined;
+    let cachedHandlers: ReturnType<OperationHandlerSet.OperationHandlerSet['getHandlers']> | undefined;
+
     const invoker = OperationInvoker.make(
       () =>
         Effect.gen(function* () {
           yield* Plugin.activate(ActivationEvents.SetupOperationHandler);
           const sets = yield* Capability.getAll(Capabilities.OperationHandler);
-          const merged = OperationHandlerSet.merge(...sets);
-          return yield* merged.handlers;
+
+          if (sets !== cachedSets) {
+            cachedSets = sets;
+            cachedHandlers = OperationHandlerSet.merge(...sets).getHandlers();
+          }
+
+          return yield* Effect.promise(() => cachedHandlers!);
         }).pipe(
           Effect.provideService(Capability.Service, capabilityManager),
           Effect.provideService(Plugin.Service, pluginManager),

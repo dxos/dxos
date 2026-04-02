@@ -11,7 +11,7 @@ import { Keyboard, keySymbols } from '@dxos/keyboard';
 import { Graph, Node, useActionRunner } from '@dxos/plugin-graph';
 import { useActions } from '@dxos/plugin-graph';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { SearchList, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { osTranslations } from '@dxos/ui-theme';
 import { getHostPlatform } from '@dxos/util';
 
@@ -40,11 +40,10 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
       Graph.traverse(graph, {
         relation: ['child', 'action'],
         visitor: (node, path) => {
-          if (
-            (Node.isAction(node) || Node.isActionGroup(node)) &&
-            !actionMap.has(node.id) &&
-            current.startsWith(path.slice(0, -1).join('/'))
-          ) {
+          const isActionLike = Node.isAction(node) || Node.isActionGroup(node);
+          const parentId = path.at(-2) ?? '';
+          const matches = current === parentId || current.startsWith(parentId + '/');
+          if (isActionLike && !actionMap.has(node.id) && matches) {
             actionMap.add(node.id);
             actions.push(node);
           }
@@ -102,11 +101,8 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
 
                         void invokePromise(LayoutOperation.UpdateDialog, { state: false });
                         setTimeout(() => {
-                          const node = Graph.getConnections(
-                            graph,
-                            group?.id ?? action.id,
-                            Node.childRelation('inbound'),
-                          )[0];
+                          const lookupId = group?.id ?? action.id;
+                          const node = Graph.getConnections(graph, lookupId, Node.actionRelation('inbound'))[0];
                           if (node && Node.isAction(action)) {
                             void runAction(action, { parent: node, caller: KEY_BINDING });
                           }

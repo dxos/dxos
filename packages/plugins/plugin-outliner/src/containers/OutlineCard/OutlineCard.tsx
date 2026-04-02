@@ -16,8 +16,10 @@ export const OutlineCard = ({ subject }: SurfaceComponentProps<OutlineType.Outli
   }
 
   return (
-    <Card.Root id={subject.id} classNames='p-2'>
-      <Outline id={subject.content.target.id} text={subject.content.target} />
-    </Card.Root>
+    <Outline.Root id={subject.content.target.id} text={subject.content.target}>
+      <Card.Root id={subject.id} classNames='p-2'>
+        <Outline.Content />
+      </Card.Root>
+    </Outline.Root>
   );
 };

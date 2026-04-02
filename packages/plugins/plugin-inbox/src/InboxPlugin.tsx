@@ -16,7 +16,13 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Event, Message } from '@dxos/types';
 
 import { CalendarBlueprint, InboxBlueprint } from './blueprints';
-import { AppGraphBuilder, BlueprintDefinition, OperationHandler, ReactSurface } from './capabilities';
+import {
+  AppGraphBuilder,
+  BlueprintDefinition,
+  NavigationResolver,
+  OperationHandler,
+  ReactSurface,
+} from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { InboxOperation } from './operations';
@@ -30,6 +36,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activate: AppGraphBuilder,
   }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addMetadataModule({
     metadata: [
       {

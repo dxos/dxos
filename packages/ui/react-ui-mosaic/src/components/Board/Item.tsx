@@ -64,12 +64,12 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
           location={location}
           debug={debug}
         >
-          <Focus.Group asChild>
+          <Focus.Item asChild>
             <Card.Root
               classNames={classNames}
               data-testid='board-item'
-              onClick={() => rootRef.current?.focus()}
               ref={composedRef}
+              onClick={(event) => event.currentTarget.focus()}
             >
               <Card.Toolbar>
                 <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
@@ -97,7 +97,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
                 )}
               </Card.Row>
             </Card.Root>
-          </Focus.Group>
+          </Focus.Item>
         </Mosaic.Tile>
       </Menu.Root>
     );

@@ -148,6 +148,7 @@ export const PlankHeading = memo(
 
     return (
       <StackItem.Heading
+        data-tauri-drag-region
         data-plank-heading
         style={iconSize(5)}
         classNames={[
@@ -165,7 +166,7 @@ export const PlankHeading = memo(
       >
         {companions && isCompanionNode ? (
           /* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */
-          <div role='none' className='flex-1 min-w-0 overflow-x-auto scrollbar-none flex gap-1'>
+          <div data-tauri-drag-region role='none' className='flex-1 min-w-0 overflow-x-auto scrollbar-none flex gap-1'>
             {companions.map(({ id, properties: { icon, label } }) => (
               <IconButton
                 key={id}
@@ -201,6 +202,7 @@ export const PlankHeading = memo(
             </ActionRoot>
             <TextTooltip text={label} onlyWhenTruncating>
               <StackItem.HeadingLabel
+                data-tauri-drag-region
                 attendableId={attendableId}
                 related={part === 'complementary'}
                 {...(pending && { classNames: 'text-description' })}

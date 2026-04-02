@@ -28,13 +28,13 @@ import { config, getDecorators } from '../testing';
 
 const panelClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden';
 
-type StoryProps = {
+type DefaultStoryProps = {
   modules: FC<ComponentProps>[][];
   blueprints?: string[];
   showContext?: boolean;
 };
 
-const DefaultStory = ({ modules, showContext, blueprints = [] }: StoryProps) => {
+const DefaultStory = ({ modules, showContext, blueprints = [] }: DefaultStoryProps) => {
   const blueprintsDefinitions = useCapabilities(AppCapabilities.BlueprintDefinition);
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
 

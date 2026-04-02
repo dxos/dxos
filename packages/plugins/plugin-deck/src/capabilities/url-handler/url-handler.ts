@@ -33,7 +33,7 @@ export default Capability.makeModule(
       registry.set(stateAtom, fn(getState()));
     };
 
-    const handleNavigation = () => {
+    const handleNavigation = async () => {
       const pathname = window.location.pathname;
       const state = getState();
       if (pathname === '/reset') {
@@ -51,19 +51,29 @@ export default Capability.makeModule(
       const qualifiedId = fromUrlPath(pathname);
       const workspace = getWorkspaceFromPath(qualifiedId);
       if (workspace !== Node.RootId && workspace !== state.activeDeck) {
-        void invokePromise(LayoutOperation.SwitchWorkspace, { subject: workspace });
+        await invokePromise(LayoutOperation.SwitchWorkspace, { subject: workspace });
       }
 
       const deck = getDeck();
       const activeId = qualifiedId !== workspace ? qualifiedId : undefined;
-      if (activeId && activeId !== deck.solo) {
-        void invokePromise(LayoutOperation.SetLayoutMode, { subject: activeId, mode: 'solo' });
-      } else if (!activeId && deck.solo) {
-        void invokePromise(LayoutOperation.SetLayoutMode, { mode: 'deck' });
+      if (activeId) {
+        // Ensure the object referenced by the URL is open in the deck.
+        await invokePromise(LayoutOperation.Open, { subject: [activeId] });
+        // If not already in solo mode, switch to solo for the target object.
+        if (!deck.solo) {
+          await invokePromise(LayoutOperation.SetLayoutMode, { subject: activeId, mode: 'solo' });
+        }
+      } else if (deck.solo) {
+        // Stay in solo mode; redirect URL to reflect the current solo item.
+        // Do not switch to deck mode here — only explicit user action should change layout mode.
+        const path = toUrlPath(deck.solo);
+        if (window.location.pathname !== path) {
+          history.replaceState(null, '', `${path}${window.location.search}`);
+        }
       }
     };
 
-    yield* Effect.sync(() => handleNavigation());
+    yield* Effect.promise(() => handleNavigation());
     window.addEventListener('popstate', handleNavigation);
 
     // Subscribe to state changes to update the URL.
