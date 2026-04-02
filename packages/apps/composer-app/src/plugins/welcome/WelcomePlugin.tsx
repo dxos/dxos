@@ -41,7 +41,7 @@ export const WelcomePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: `${meta.id}.module.default-content`,
-    activatesOn: SpaceEvents.DefaultSpaceReady,
+    activatesOn: SpaceEvents.PersonalSpaceReady,
     activate: DefaultContent,
   }),
   Plugin.make,

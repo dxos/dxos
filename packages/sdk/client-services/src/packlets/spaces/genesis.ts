@@ -16,6 +16,7 @@ export const spaceGenesis = async (
   signingContext: SigningContext,
   space: Space,
   automergeRoot?: string,
+  tags?: string[],
 ) => {
   // TODO(dmaretskyi): Find a way to reconcile with credential generator.
   const credentials = [
@@ -26,6 +27,7 @@ export const spaceGenesis = async (
       assertion: {
         '@type': 'dxos.halo.credentials.SpaceGenesis',
         spaceKey: space.key,
+        tags: tags ?? [],
       },
     }),
 
@@ -39,6 +41,7 @@ export const spaceGenesis = async (
         role: SpaceMember.Role.OWNER,
         profile: signingContext.getProfile(),
         genesisFeedKey: space.controlFeedKey ?? failUndefined(),
+        tags: tags ?? [],
       },
     }),
 

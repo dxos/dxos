@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { setPersonalSpace } from '@dxos/app-toolkit';
+import { PERSONAL_SPACE_TAG } from '@dxos/app-toolkit';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client-protocol';
 import { type Identity } from '@dxos/protocols/proto/dxos/client/services';
@@ -18,9 +18,7 @@ export const initializeIdentity = (
 ): Effect.Effect<{ identity: Identity; personalSpace: Space }, never, never> =>
   Effect.gen(function* () {
     const identity = yield* Effect.promise(() => client.halo.createIdentity());
-    const personalSpace = yield* Effect.promise(() => client.spaces.create());
+    const personalSpace = yield* Effect.promise(() => client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG] }));
     yield* Effect.promise(() => personalSpace.waitUntilReady());
-    // TODO: Use space tags to mark as personal space.
-    setPersonalSpace(personalSpace);
     return { identity, personalSpace };
   });

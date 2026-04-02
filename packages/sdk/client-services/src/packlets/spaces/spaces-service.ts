@@ -46,6 +46,7 @@ import {
   type SpacesService,
   type SubscribeMessagesRequest,
   type UpdateMemberRoleRequest,
+  type CreateSpaceRequest,
   type UpdateSpaceRequest,
   type WriteCredentialsRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
@@ -67,10 +68,10 @@ export class SpacesServiceImpl implements SpacesService {
     private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
   ) {}
 
-  async createSpace(): Promise<Space> {
+  async createSpace(request: CreateSpaceRequest): Promise<Space> {
     this._requireIdentity();
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = await dataSpaceManager.createSpace(Context.default());
+    const space = await dataSpaceManager.createSpace(new Context(), { tags: request?.tags });
     await this._updateMetrics();
     return this._serializeSpace(space);
   }
@@ -326,6 +327,7 @@ export class SpacesServiceImpl implements SpacesService {
       dataSpace = await dataSpaceManager.acceptSpace(Context.default(), {
         spaceKey: assertion.spaceKey,
         genesisFeedKey: assertion.genesisFeedKey,
+        tags: assertion.tags,
       });
       await myIdentity.controlPipeline.writer.write({ credential: { credential } });
     }
@@ -378,6 +380,7 @@ export class SpacesServiceImpl implements SpacesService {
         }),
       ),
       creator: space.inner.spaceState.creator?.key,
+      tags: space.tags,
       cache: space.cache,
       metrics: space.metrics,
       edgeReplication: space.getEdgeReplicationSetting(),

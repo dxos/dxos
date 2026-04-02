@@ -203,6 +203,10 @@ export class SpaceProxy implements Space, CustomInspectable {
     return this._data.spaceKey;
   }
 
+  get tags(): string[] {
+    return this._data.tags ?? [];
+  }
+
   get db(): EchoDatabase {
     return this._db;
   }

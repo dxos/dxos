@@ -24,6 +24,7 @@ export interface SpaceState {
   readonly feeds: ReadonlyMap<PublicKey, FeedInfo>;
   readonly credentials: Credential[];
   readonly genesisCredential: Credential | undefined;
+  readonly tags: string[];
   readonly creator: MemberInfo | undefined;
   readonly invitations: ReadonlyMap<PublicKey, DelegateSpaceInvitation>;
 
@@ -61,6 +62,7 @@ export class SpaceStateMachine implements SpaceState {
   private readonly _processedCredentials = new ComplexSet<PublicKey>(PublicKey.hash);
 
   private _genesisCredential: Credential | undefined;
+  private _tags: string[] = [];
   private _credentialProcessors: CredentialConsumer<any>[] = [];
 
   readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
@@ -102,6 +104,10 @@ export class SpaceStateMachine implements SpaceState {
 
   get genesisCredential(): Credential | undefined {
     return this._genesisCredential;
+  }
+
+  get tags(): string[] {
+    return this._tags;
   }
 
   get invitations(): ReadonlyMap<PublicKey, DelegateSpaceInvitation> {
@@ -180,6 +186,7 @@ export class SpaceStateMachine implements SpaceState {
           return false;
         }
         this._genesisCredential = credential;
+        this._tags = assertion.tags ?? [];
         break;
       }
 

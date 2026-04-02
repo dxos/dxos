@@ -83,6 +83,7 @@ export type DataSpaceProps = {
   signingContext: SigningContext;
   callbacks?: DataSpaceCallbacks;
   cache?: SpaceCache;
+  tags?: string[];
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
@@ -119,6 +120,9 @@ export class DataSpace {
   private readonly _epochProcessingMutex = new Mutex();
 
   private _state = SpaceState.SPACE_CLOSED;
+
+  /** Immutable tags from space metadata, available immediately. */
+  readonly tags: string[];
 
   private _databaseRoot: DatabaseRoot | null = null;
 
@@ -167,6 +171,7 @@ export class DataSpace {
     });
 
     this._cache = params.cache;
+    this.tags = params.tags ?? [];
 
     if (params.edgeConnection && params.edgeFeatures?.feedReplicator) {
       this._edgeFeedReplicator = new EdgeFeedReplicator({ messenger: params.edgeConnection, spaceId: this.id });
