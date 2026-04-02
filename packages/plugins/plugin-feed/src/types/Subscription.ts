@@ -81,3 +81,14 @@ export interface Post extends Schema.Schema.Type<typeof Post> {}
 
 /** Creates a Subscription.Post object. */
 export const makePost = (props: Obj.MakeProps<typeof Post> = {}): Post => Obj.make(Post, props);
+
+/** Schema for the create-feed dialog form. */
+export const CreateFeedSchema = Schema.Struct({
+  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  url: Schema.optional(
+    Schema.String.annotations({
+      title: 'URL',
+      description: 'RSS or Atom feed URL.',
+    }),
+  ),
+});

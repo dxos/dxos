@@ -2,18 +2,27 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { ActivationEvent, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Annotation } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
+import { AttentionEvents } from '@dxos/plugin-attention';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { ReactSurface } from './capabilities';
+import { AppGraphBuilder, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Subscription } from './types';
 
 export const FeedPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({
+    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
+    activate: AppGraphBuilder,
+  }),
   AppPlugin.addMetadataModule({
     metadata: [
       {
@@ -21,6 +30,17 @@ export const FeedPlugin = Plugin.define(meta).pipe(
         metadata: {
           icon: Annotation.IconAnnotation.get(Subscription.Feed).pipe(Option.getOrThrow).icon,
           iconHue: Annotation.IconAnnotation.get(Subscription.Feed).pipe(Option.getOrThrow).hue ?? 'white',
+          inputSchema: Subscription.CreateFeedSchema,
+          createObject: ((props, options) =>
+            Effect.gen(function* () {
+              const object = Subscription.makeFeed(props);
+              return yield* Operation.invoke(SpaceOperation.AddObject, {
+                object,
+                target: options.target,
+                hidden: true,
+                targetNodeId: options.targetNodeId,
+              });
+            })) satisfies CreateObject,
         },
       },
       {
@@ -32,6 +52,7 @@ export const FeedPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [Subscription.Feed, Subscription.Post],
   }),
