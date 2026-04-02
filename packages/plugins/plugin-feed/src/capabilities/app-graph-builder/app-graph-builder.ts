@@ -11,12 +11,14 @@ import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
 import { type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
+import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
 
 import { meta } from '../../meta';
+import { FeedOperation } from '../../operations';
 import { Subscription } from '../../types';
 
 const whenSpace = (node: Node.Node): Option.Option<Space> =>
@@ -93,6 +95,25 @@ export default Capability.makeModule(
             },
           ]);
         },
+      }),
+
+      // Sync action on each Subscription.Feed node.
+      GraphBuilder.createExtension({
+        id: `${meta.id}.sync-feed`,
+        match: (node) =>
+          Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Feed) : Option.none(),
+        actions: (feed) =>
+          Effect.succeed([
+            {
+              id: 'sync',
+              data: () => Operation.invoke(FeedOperation.SyncFeed, { feed }),
+              properties: {
+                label: ['sync feed label', { ns: meta.id }],
+                icon: 'ph--arrows-clockwise--regular',
+                disposition: 'list-item',
+              },
+            },
+          ]),
       }),
     ]);
 
