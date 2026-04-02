@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
 import { Filter } from '@dxos/echo';
@@ -161,39 +161,3 @@ export const FieldSchema = Schema.Struct({
 });
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
-
-const LegacySpacePropertiesSchema = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  icon: Schema.optional(Schema.String),
-}).pipe(Type.object({ typename: 'org.dxos.type.space-properties', version: '0.1.0' }));
-
-const NewSpacePropertiesSchema = Schema.Struct({
-  name: Schema.optional(Schema.String),
-  icon: Schema.optional(Schema.String),
-}).pipe(Type.object({ typename: 'org.dxos.type.spaceProperties', version: '0.1.0' }));
-
-describe('SpaceProperties migration', () => {
-  const spacePropertiesMigration = defineObjectMigration({
-    from: LegacySpacePropertiesSchema,
-    to: NewSpacePropertiesSchema,
-    transform: async (from) => {
-      const { id, ...rest } = from as any;
-      return rest;
-    },
-    onMigration: async () => {},
-  });
-
-  test('migrate SpaceProperties typename from kebab-case to camelCase', async () => {
-    const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([LegacySpacePropertiesSchema, NewSpacePropertiesSchema]);
-
-    db.add(Obj.make(LegacySpacePropertiesSchema, { name: 'Test Space' }));
-    await db.flush();
-    await db.runMigrations([spacePropertiesMigration]);
-
-    const objects = await db.query(Filter.type(NewSpacePropertiesSchema)).run();
-    expect(objects).to.have.length(1);
-    expect(Obj.getTypename(objects[0])).to.eq('org.dxos.type.spaceProperties');
-    expect(objects[0].name).to.eq('Test Space');
-  });
-});

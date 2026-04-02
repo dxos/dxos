@@ -250,7 +250,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
     activate: SpacesReady,
   }),
   Plugin.addModule({
-    activatesOn: ClientEvents.SpacesReady,
+    activatesOn: ClientEvents.SetupMigration,
     activate: Migrations,
   }),
   Plugin.addModule({
