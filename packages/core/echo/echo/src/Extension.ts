@@ -3,11 +3,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import { dual } from 'effect/Function';
 import * as Schema from 'effect/Schema';
-import { pipe } from 'effect/Function';
-import type { Mutable } from 'effect/Types';
+import type * as Types from 'effect/Types';
 
 // @import-as-namespace
 
@@ -90,7 +89,7 @@ export interface Values extends Schema.Schema.Type<typeof Values> {}
 export const get: {
   <T>(extension: Extension<T>): (values: Values) => Option.Option<T>;
   <T>(values: Values, extension: Extension<T>): Option.Option<T>;
-} = dual<
+} = Function.dual<
   <T>(extension: Extension<T>) => (values: Values) => Option.Option<T>,
   <T>(values: Values, extension: Extension<T>) => Option.Option<T>
 >(2, (values, extension) => {
@@ -98,7 +97,7 @@ export const get: {
     return Option.none();
   }
 
-  return pipe(values[extension.key], Schema.decodeUnknownSync(extension.valueSchema), Option.some);
+  return Function.pipe(values[extension.key], Schema.decodeUnknownSync(extension.valueSchema), Option.some);
 });
 
 /**
@@ -114,10 +113,10 @@ export const get: {
  */
 export const set: {
   <T>(extension: Extension<T>, value: T): (values: Values) => void;
-  <T>(values: Mutable<Values>, extension: Extension<T>, value: T): void;
-} = dual<
+  <T>(values: Types.Mutable<Values>, extension: Extension<T>, value: T): void;
+} = Function.dual<
   <T>(extension: Extension<T>, value: T) => (values: Values) => void,
-  <T>(values: Mutable<Values>, extension: Extension<T>, value: T) => void
+  <T>(values: Types.Mutable<Values>, extension: Extension<T>, value: T) => void
 >(3, (values, extension, value) => {
   values[extension.key] = Schema.encodeSync(extension.valueSchema)(value);
 });
