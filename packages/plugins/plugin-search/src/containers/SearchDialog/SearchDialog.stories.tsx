@@ -84,10 +84,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  args: {
-    pivotId: 'storybook',
-  },
+export const Default: Story = {};
+
+export const Test: Story = {
   play: async () => {
     const body = within(document.body);
 
