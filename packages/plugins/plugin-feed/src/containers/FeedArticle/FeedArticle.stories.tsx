@@ -11,26 +11,33 @@ import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
 import { PostStack, type PostStackAction } from '../../components';
-import { type BuildResult, Builder } from '../../testing';
+import { generateFeed, generatePosts } from '../../testing';
+import { type Subscription } from '../../types';
 
 type FeedArticleStoryProps = {
   feedUrl?: string;
 };
 
-const useFeedData = (feedUrl?: string): BuildResult | undefined => {
-  const [data, setData] = useState<BuildResult>();
+const useFeedData = (
+  feedUrl?: string,
+): { feed: Subscription.Feed; posts: Subscription.Post[] } | undefined => {
+  const [data, setData] = useState<{ feed: Subscription.Feed; posts: Subscription.Post[] }>();
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const builder = new Builder();
       if (feedUrl) {
-        await builder.fromRss(feedUrl, { corsProxy: '/api/rss?url=' });
+        const { fetchRss } = await import('../../util/fetch-rss');
+        const result = await fetchRss(feedUrl, { corsProxy: '/api/rss?url=' });
+        if (!cancelled) {
+          setData(result);
+        }
       } else {
-        builder.createPosts(50);
-      }
-      if (!cancelled) {
-        setData(builder.build());
+        const feed = generateFeed();
+        const posts = generatePosts(50);
+        if (!cancelled) {
+          setData({ feed, posts });
+        }
       }
     };
 
@@ -44,8 +51,7 @@ const useFeedData = (feedUrl?: string): BuildResult | undefined => {
   return data;
 };
 
-/** Standalone FeedArticle story that renders PostStack with generated or real RSS data. */
-const FeedArticleStory = ({ feedUrl }: FeedArticleStoryProps) => {
+const DefaultStory = ({ feedUrl }: FeedArticleStoryProps) => {
   const data = useFeedData(feedUrl);
   const [currentPostId, setCurrentPostId] = useState<string>();
 
@@ -75,9 +81,9 @@ const FeedArticleStory = ({ feedUrl }: FeedArticleStoryProps) => {
   );
 };
 
-const meta: Meta<typeof FeedArticleStory> = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-feed/containers/FeedArticle',
-  component: FeedArticleStory,
+  component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],
   parameters: {
     layout: 'fullscreen',

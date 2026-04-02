@@ -9,17 +9,18 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
-import { Builder } from '../../testing';
+import { generatePosts } from '../../testing';
+
 import { PostStack, type PostStackProps } from './PostStack';
 
-const PostStackStory = (props: Omit<PostStackProps, 'id' | 'posts'>) => {
-  const { posts } = useMemo(() => new Builder().createPosts(100).build(), []);
+const DefaultStory = (props: Omit<PostStackProps, 'id' | 'posts'>) => {
+  const posts = useMemo(() => generatePosts(100), []);
   return <PostStack id='story' posts={posts} {...props} />;
 };
 
-const meta: Meta<typeof PostStackStory> = {
+const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-feed/components/PostStack',
-  component: PostStackStory,
+  component: DefaultStory,
   parameters: {
     layout: 'fullscreen',
   },
