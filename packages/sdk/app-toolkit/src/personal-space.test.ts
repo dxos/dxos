@@ -24,42 +24,12 @@ describe('personal-space', () => {
   });
 
   test('isPersonalSpace returns true for space with personal tag', ({ expect }) => {
-    const space = { tags: [PERSONAL_SPACE_TAG], properties: {} } as any;
-    expect(isPersonalSpace(space)).toBe(true);
-  });
-
-  test('isPersonalSpace returns true for space with legacy __DEFAULT__ property', ({ expect }) => {
-    const space = { tags: [], properties: { __DEFAULT__: true } } as any;
+    const space = { tags: [PERSONAL_SPACE_TAG] } as any;
     expect(isPersonalSpace(space)).toBe(true);
   });
 
   test('isPersonalSpace returns false for regular space', ({ expect }) => {
-    const space = { tags: [], properties: {} } as any;
-    expect(isPersonalSpace(space)).toBe(false);
-  });
-
-  test('isPersonalSpace prefers tags over conflicting properties', ({ expect }) => {
-    const space = { tags: [PERSONAL_SPACE_TAG], properties: { __DEFAULT__: false } } as any;
-    expect(isPersonalSpace(space)).toBe(true);
-  });
-
-  test('isPersonalSpace returns true for closed space with personal tag', ({ expect }) => {
-    const space = {
-      tags: [PERSONAL_SPACE_TAG],
-      get properties(): never {
-        throw new Error('Space is not initialized.');
-      },
-    } as any;
-    expect(isPersonalSpace(space)).toBe(true);
-  });
-
-  test('isPersonalSpace returns false for closed space without personal tag', ({ expect }) => {
-    const space = {
-      tags: [],
-      get properties(): never {
-        throw new Error('Space is not initialized.');
-      },
-    } as any;
+    const space = { tags: [] } as any;
     expect(isPersonalSpace(space)).toBe(false);
   });
 });

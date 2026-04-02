@@ -20,30 +20,6 @@ export const TranscriptSegment = Schema.Struct({
 
 export type TranscriptSegment = Schema.Schema.Type<typeof TranscriptSegment>;
 
-/** @deprecated Use YouTubeVideo instead. */
-export const LegacyYouTubeVideo = Schema.Struct({
-  title: Schema.String,
-  videoId: Schema.String,
-  description: Schema.String.pipe(Schema.optional),
-  url: Schema.String,
-  thumbnailUrl: Schema.String.pipe(Schema.optional),
-  channelTitle: Schema.String.pipe(Schema.optional),
-  publishedAt: Schema.String,
-  duration: Schema.String.pipe(Schema.optional),
-  viewCount: Schema.Number.pipe(Schema.optional),
-  likeCount: Schema.Number.pipe(Schema.optional),
-  transcript: Schema.String.pipe(Schema.optional),
-  transcriptSegments: Schema.Array(TranscriptSegment).pipe(Schema.optional),
-  transcriptFetched: Schema.Boolean.pipe(Schema.optional),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.youtube-video',
-    version: '0.1.0',
-  }),
-);
-
-export interface LegacyYouTubeVideo extends Schema.Schema.Type<typeof LegacyYouTubeVideo> {}
-
 /**
  * YouTubeVideo schema representing a video from a YouTube channel.
  */

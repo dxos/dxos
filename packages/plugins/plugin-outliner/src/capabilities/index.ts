@@ -3,6 +3,5 @@
 //
 
 export * from './app-graph-builder';
-export * from './migrations';
 export * from './operation-handler';
 export * from './react-surface';

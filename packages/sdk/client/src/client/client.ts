@@ -12,7 +12,6 @@ import {
   type Echo,
   type Halo,
   STATUS_TIMEOUT,
-  LegacySpaceProperties,
   SpaceProperties,
   clientServiceBundle,
 } from '@dxos/client-protocol';
@@ -147,7 +146,7 @@ export class Client {
     // TODO(wittjosiah): This is ill-advised.
     //   However, it seems to work okay for now since the runtime registry operates synchronously despite the interface.
     //   Moving this to `initialize` causes issues with re-initialization.
-    void this._echoClient.graph.schemaRegistry.register([SpaceProperties, LegacySpaceProperties]);
+    void this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
     if (this._options.types) {
       void this.addTypes(this._options.types);
     }

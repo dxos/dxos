@@ -6,7 +6,7 @@ import { type Doc } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   type CredentialSigner,
@@ -192,9 +192,7 @@ export class DataSpaceManager extends Resource {
             const rootDoc = rootHandle?.doc();
 
             const properties =
-              rootDoc &&
-              (findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties)) ??
-                findInlineObjectOfType(rootDoc, Type.getTypename(LegacySpaceProperties)));
+              rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
 
             return {
               key: space.key.toHex(),

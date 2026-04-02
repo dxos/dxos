@@ -12,21 +12,6 @@ import { Text } from '@dxos/schema';
 
 import { getDateString, parseDateString } from './util';
 
-/** @deprecated Use JournalEntry instead. */
-export const LegacyJournalEntry = Schema.Struct({
-  id: Schema.String,
-  date: Schema.String,
-  content: Ref.Ref(Text.Text),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.journal-entry',
-    version: '0.1.0',
-  }),
-  SystemTypeAnnotation.set(true),
-);
-
-export interface LegacyJournalEntry extends Schema.Schema.Type<typeof LegacyJournalEntry> {}
-
 export const JournalEntry = Schema.Struct({
   id: Schema.String,
   date: Schema.String,

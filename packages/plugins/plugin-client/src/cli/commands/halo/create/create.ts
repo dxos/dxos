@@ -42,13 +42,12 @@ export const handler = Effect.fn(function* ({
   }
 
   // Create personal space for the CLI identity.
-  const { PERSONAL_SPACE_TAG, setPersonalSpace } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
+  const { PERSONAL_SPACE_TAG } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
   const space = yield* Effect.promise(() =>
     client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
   );
   yield* Effect.promise(() => space.waitUntilReady());
   yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
-  setPersonalSpace(space);
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
 
   if (json) {

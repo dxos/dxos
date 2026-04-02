@@ -34,7 +34,6 @@ import {
   AppGraphBuilder,
   AppGraphSerializer,
   IdentityCreated,
-  Migrations,
   NavigationResolver,
   OperationHandler,
   UndoMappings,
@@ -248,10 +247,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       ClientEvents.SpacesReady,
     ),
     activate: SpacesReady,
-  }),
-  Plugin.addModule({
-    activatesOn: ClientEvents.SetupMigration,
-    activate: Migrations,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,

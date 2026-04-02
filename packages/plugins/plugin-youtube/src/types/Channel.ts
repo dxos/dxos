@@ -11,23 +11,6 @@ import { AccessToken } from '@dxos/types';
 
 // @import-as-namespace
 
-/** @deprecated Use YouTubeChannel instead. */
-export const LegacyYouTubeChannel = Schema.Struct({
-  name: Schema.String.pipe(Schema.optional),
-  channelId: Schema.String.pipe(Schema.optional),
-  channelUrl: Schema.String.pipe(Schema.optional),
-  feed: Ref.Ref(Feed.Feed),
-  lastSyncedAt: Schema.String.pipe(Schema.optional),
-  accessToken: Schema.optional(Ref.Ref(AccessToken.AccessToken)),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.youtube-channel',
-    version: '0.1.0',
-  }),
-);
-
-export interface LegacyYouTubeChannel extends Schema.Schema.Type<typeof LegacyYouTubeChannel> {}
-
 /**
  * YouTubeChannel schema representing a YouTube channel to sync videos from.
  */

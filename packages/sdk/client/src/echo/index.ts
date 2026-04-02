@@ -9,7 +9,6 @@ export {
   type Space,
   SpaceSchema,
   SpaceProperties,
-  LegacySpaceProperties,
 } from '@dxos/client-protocol';
 export { compareForeignKeys, createQueueDXN, type ObjectMeta, Ref, RefArray } from '@dxos/echo/internal';
 export { Entity, Relation, Type, Database } from '@dxos/echo';

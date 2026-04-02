@@ -8,7 +8,6 @@ export * from './blueprint-definition';
 export * from './edge-model-resolver';
 export * from './local-model-resolver';
 export * from './markdown';
-export * from './migrations';
 export * from './operation-handler';
 export * from './react-surface';
 export * from './settings';

@@ -11,19 +11,6 @@ import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { ContextQueueService, QueueService } from '@dxos/functions';
 
-/** @deprecated Use ResearchGraph instead. */
-export const LegacyResearchGraph = Schema.Struct({
-  queue: Ref.Ref(Queue),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.research-graph',
-    version: '0.1.0',
-  }),
-  SystemTypeAnnotation.set(true),
-);
-
-export interface LegacyResearchGraph extends Schema.Schema.Type<typeof LegacyResearchGraph> {}
-
 /**
  * Container for a set of ephemeral research results.
  */

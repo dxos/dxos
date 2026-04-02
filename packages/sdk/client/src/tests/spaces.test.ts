@@ -5,13 +5,13 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
-import { type Space, LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
+import { type Space, SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
-import { Serializer, defineObjectMigration, getObjectCore } from '@dxos/echo-db';
+import { Serializer, getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -723,49 +723,6 @@ describe('Spaces', () => {
 
     const space = await client.spaces.create();
     expect(space.membershipPolicy).toEqual(MembershipPolicy.INVITE);
-  });
-
-  test('migrates SpaceProperties from legacy typename to new typename', async () => {
-    const [client] = await createInitializedClients(1, { storage: true });
-
-    const space = await client.spaces.create({ name: 'Test Space' });
-    await space.waitUntilReady();
-
-    // Verify properties exist with new typename.
-    expect(space.properties.name).to.eq('Test Space');
-    expect(Obj.getTypename(space.properties)).to.eq('org.dxos.type.spaceProperties');
-
-    // Manually set the type back to legacy typename to simulate old data.
-    const legacyProperties = await space.db.query(Filter.type(SpaceProperties)).run();
-    expect(legacyProperties).to.have.length(1);
-
-    const migration = defineObjectMigration({
-      from: SpaceProperties,
-      to: LegacySpaceProperties,
-      transform: async (from) => ({ ...from }),
-      onMigration: async () => {},
-    });
-    await space.internal.db.runMigrations([migration]);
-
-    // Verify typename was changed to legacy.
-    const legacy = await space.db.query(Filter.type(LegacySpaceProperties)).run();
-    expect(legacy).to.have.length(1);
-    expect(legacy[0].name).to.eq('Test Space');
-
-    // Now run the real migration (legacy -> new).
-    const forwardMigration = defineObjectMigration({
-      from: LegacySpaceProperties,
-      to: SpaceProperties,
-      transform: async (from) => ({ ...from }),
-      onMigration: async () => {},
-    });
-    await space.internal.db.runMigrations([forwardMigration]);
-
-    // Verify the migration worked.
-    const migrated = await space.db.query(Filter.type(SpaceProperties)).run();
-    expect(migrated).to.have.length(1);
-    expect(Obj.getTypename(migrated[0])).to.eq('org.dxos.type.spaceProperties');
-    expect(migrated[0].name).to.eq('Test Space');
   });
 
   const createInitializedClients = async (
