@@ -246,7 +246,6 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       SpaceEvents.StateReady,
       ClientEvents.SpacesReady,
     ),
-    activatesAfter: [SpaceEvents.PersonalSpaceReady],
     activate: SpacesReady,
   }),
   Plugin.addModule({

@@ -12,6 +12,7 @@ import {
   createEdgeExistenceChecker,
   validateNavigationTarget,
 } from '@dxos/app-toolkit';
+import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -36,7 +37,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const pathResolvers = capabilities.getAll(AppCapabilities.NavigationPathResolver);
       const checkRemoteExistence = yield* Capability.get(ClientCapabilities.Client).pipe(
         Effect.map((client) =>
-          createEdgeExistenceChecker((spaceId, body) => client.edge.http.execQuery(spaceId, body)),
+          createEdgeExistenceChecker((spaceId, body) => client.edge.http.execQuery(new Context(), spaceId, body)),
         ),
         Effect.catchAll(() => Effect.succeed(undefined)),
       );

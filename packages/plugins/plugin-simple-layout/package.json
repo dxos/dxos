@@ -29,6 +29,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
