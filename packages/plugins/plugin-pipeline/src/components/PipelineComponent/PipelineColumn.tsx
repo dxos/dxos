@@ -11,7 +11,7 @@ import React, { forwardRef, useMemo, useRef, useState } from 'react';
 import { Annotation, JsonSchema, Obj, Query, Type } from '@dxos/echo';
 import { resolveSchemaWithRegistry } from '@dxos/plugin-space';
 import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
-import { Toolbar, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
@@ -70,27 +70,37 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
     return new ProjectionModel({ view, baseSchema: jsonSchema, change });
   }, [schema, view]);
 
-  const Tile = useMemo(() => {
+  const PipelineTile = useMemo(() => {
     return forwardRef<HTMLDivElement, Pick<MosaicTileProps<Obj.Unknown>, 'classNames' | 'location' | 'data' | 'debug'>>(
-      (props, ref) => <ItemTile {...props} ref={ref} itemProps={{ item: props.data, projectionModel }} />,
+      (props, ref) => <ItemTile {...props} itemProps={{ item: props.data, projectionModel }} ref={ref} />,
     );
-  }, [Item, projectionModel]);
+  }, [projectionModel]);
 
   if (!view) {
     return null;
   }
 
   return (
-    <Board.Column.Root
-      data={column}
-      location={location}
-      classNames={['group/column grid h-full overflow-hidden grid-rows-[var(--dx-rail-action)_1fr]', classNames]}
-      debug={debug}
-      dragHandleRef={dragHandleRef}
-    >
-      <Board.Column.Header label={column.name || t('untitled view title')} dragHandleRef={dragHandleRef} />
-      <Board.Column.Body data={column} Tile={Tile} />
-    </Board.Column.Root>
+    <Panel.Root asChild>
+      <Board.Column.Root
+        debug={debug}
+        data={column}
+        location={location}
+        classNames={classNames}
+        dragHandleRef={dragHandleRef}
+      >
+        <Panel.Toolbar asChild>
+          <Board.Column.Header
+            classNames='_opacity-10'
+            label={column.name || t('untitled view title')}
+            dragHandleRef={dragHandleRef}
+          />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <Board.Column.Body data={column} Tile={PipelineTile} />
+        </Panel.Content>
+      </Board.Column.Root>
+    </Panel.Root>
   );
 };
 

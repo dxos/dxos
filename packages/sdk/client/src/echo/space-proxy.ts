@@ -76,7 +76,7 @@ const EPOCH_CREATION_TIMEOUT = 60_000;
 export class SpaceProxy implements Space, CustomInspectable {
   readonly [SPACE_TAG] = true as const;
 
-  private _ctx = new Context();
+  private _ctx = Context.default();
 
   /**
    * Sent whenever any space data changes.
@@ -302,7 +302,7 @@ export class SpaceProxy implements Space, CustomInspectable {
    * @internal Package-private.
    */
   @synchronized
-  async _processSpaceUpdate(space: SpaceData): Promise<void> {
+  async _processSpaceUpdate(ctx: Context, space: SpaceData): Promise<void> {
     // During reconnection, if we're waiting for the backend to re-initialize,
     // ignore all updates until it reaches READY (or REQUIRES_MIGRATION) again.
     if (this._awaitingBackendReady) {
@@ -341,9 +341,9 @@ export class SpaceProxy implements Space, CustomInspectable {
     this._data = space;
 
     if (isFirstTimeInitializing) {
-      await this._initialize();
+      await this._initialize(ctx);
     } else if (isReopening) {
-      await this._initializeDb();
+      await this._initializeDb(ctx);
     } else if (shouldReset) {
       await this._reset();
     }
@@ -374,7 +374,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
   }
 
-  private async _initialize(): Promise<void> {
+  private async _initialize(ctx: Context): Promise<void> {
     if (this._initializing || this._initialized) {
       return;
     }
@@ -382,7 +382,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     log('initializing...', { space: this.key });
     this._initializing = true;
     await this._invitationsProxy.open();
-    await this._initializeDb();
+    await this._initializeDb(ctx);
 
     this._initialized = true;
     this._initializing = false;
@@ -393,7 +393,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _initializeDb(): Promise<void> {
+  private async _initializeDb(_ctx: Context): Promise<void> {
     this._databaseOpen = true;
 
     {
@@ -447,7 +447,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   private async _reset(): Promise<void> {
     log('destroying...');
     await this._ctx.dispose();
-    this._ctx = new Context();
+    this._ctx = Context.default();
     await this._invitationsProxy.close();
     await this._db.close();
     this._initializationComplete.reset();

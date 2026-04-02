@@ -17,7 +17,7 @@ export const Layout = composable<HTMLDivElement, LayoutProps>(
   ({ children, topLeft, topRight, bottomLeft, bottomRight, ...props }, forwardedRef) => {
     return (
       <div
-        {...composableProps(props, { className: 'flex grow relative overflow-hidden bg-attention-surface' })}
+        {...composableProps(props, { classNames: 'flex grow relative overflow-hidden bg-attention-surface' })}
         ref={forwardedRef}
       >
         <div className='flex flex-col grow overflow-hidden'>{children}</div>

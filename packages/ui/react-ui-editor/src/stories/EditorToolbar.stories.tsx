@@ -18,7 +18,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  editorSlots,
+  documentSlots,
   formattingKeymap,
   formattingListener,
 } from '@dxos/ui-editor';
@@ -61,7 +61,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder }: DefaultStoryProp
         createThemeExtensions({
           themeMode,
           syntaxHighlighting: true,
-          slots: editorSlots,
+          slots: documentSlots,
         }),
         createMarkdownExtensions(),
         viewMode === 'source' ? [] : decorateMarkdown(),

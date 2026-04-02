@@ -27,6 +27,7 @@ import {
   type Message as RouterMessage,
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { trace } from '@dxos/tracing';
 import { bufferToArray, compositeKey, setDeep } from '@dxos/util';
 
 import {
@@ -53,6 +54,7 @@ export type EchoEdgeReplicatorProps = {
   disableSharePolicy?: boolean;
 };
 
+@trace.resource()
 export class EchoEdgeReplicator implements AutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
   private readonly _edgeHttpClient: EdgeHttpClient;
@@ -70,10 +72,10 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
     this._sharePolicyEnabled = !disableSharePolicy;
   }
 
-  async connect(context: AutomergeReplicatorContext): Promise<void> {
+  async connect(ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
     log('connecting...', { peerId: context.peerId, connectedSpaces: this._connectedSpaces.size });
     this._context = context;
-    this._ctx = Context.default();
+    this._ctx = ctx.derive();
     this._ctx.onDispose(
       this._edgeConnection.onReconnected(() => {
         this._ctx && scheduleMicroTask(this._ctx, () => this._handleReconnect());
@@ -107,7 +109,8 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
     this._connections.clear();
   }
 
-  async connectToSpace(spaceId: SpaceId): Promise<void> {
+  @trace.span({ showInBrowserTimeline: true })
+  async connectToSpace(ctx: Context, spaceId: SpaceId): Promise<void> {
     log('connectToSpace', { spaceId });
     using _guard = await this._mutex.acquire();
 
@@ -166,7 +169,7 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
 
         restartScheduled = true;
         scheduleTask(
-          this._ctx,
+          this._ctx!,
           async () => {
             using _guard = await this._mutex.acquire();
             if (this._connections.get(spaceId) !== connection) {
@@ -267,7 +270,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
       write: async (message: AutomergeProtocolMessage, controller) => {
         await this._requestLimiter.rateLimit(message);
 
-        await this._sendMessage(message);
+        await this._sendMessage(this._ctx, message);
       },
     });
   }
@@ -300,7 +303,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
     await this._onRemoteConnected();
   }
 
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     log('closing...');
     this._readableStreamController.close();
 
@@ -368,7 +371,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
     return true;
   }
 
-  async pushBundle(bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
+  async pushBundle(ctx: Context, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
     const request: ImportBundleRequest = {
       bundle: bundle.map(({ documentId, data, heads }) => ({
         documentId,
@@ -376,12 +379,12 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
         heads,
       })),
     };
-    await this._edgeHttpClient.importBundle(this._spaceId, request);
+    await this._edgeHttpClient.importBundle(ctx, this._spaceId, request);
   }
 
-  async pullBundle(docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>> {
+  async pullBundle(ctx: Context, docHeads: Record<DocumentId, Heads>): Promise<Record<DocumentId, Uint8Array>> {
     const request: ExportBundleRequest = { docHeads };
-    const response = await this._edgeHttpClient.exportBundle(this._spaceId, request);
+    const response = await this._edgeHttpClient.exportBundle(ctx, this._spaceId, request);
     return Object.fromEntries(response.bundle.map((doc) => [doc.documentId, DocumentCodec.decode(doc.mutation)]));
   }
 
@@ -400,7 +403,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
     this._readableStreamController.enqueue(message);
   }
 
-  private async _sendMessage(message: AutomergeProtocolMessage): Promise<void> {
+  private async _sendMessage(ctx: Context, message: AutomergeProtocolMessage): Promise<void> {
     // Fix the peer id.
     (message as any).targetId = this._targetServiceId as PeerId;
 
@@ -417,6 +420,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
 
     try {
       await this._edgeConnection.send(
+        ctx,
         buf.create(RouterMessageSchema, {
           serviceId: this._targetServiceId,
           source: {

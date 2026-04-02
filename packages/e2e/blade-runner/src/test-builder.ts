@@ -142,7 +142,7 @@ export class TestPeer {
         peerId: this.peerId.toHex(),
       }),
     );
-    await this.signalManager.join({ topic, peerId: this.peerId });
+    await this.signalManager.join(Context.default(), { topic, peerId: this.peerId });
   }
 
   async leaveTopic(topic: PublicKey): Promise<void> {
@@ -154,7 +154,7 @@ export class TestPeer {
         peerId: this.peerId.toHex(),
       }),
     );
-    await this.signalManager.leave({ topic, peerId: this.peerId });
+    await this.signalManager.leave(Context.default(), { topic, peerId: this.peerId });
   }
 
   async sendMessage(to: PublicKey): Promise<void> {
@@ -176,7 +176,7 @@ export class TestPeer {
         message: Buffer.from(message.payload.value).toString('hex'),
       }),
     );
-    await this.signalManager.sendMessage(message);
+    await this.signalManager.sendMessage(Context.default(), message);
   }
 }
 

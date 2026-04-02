@@ -24,7 +24,7 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { CancelledError, SystemError } from '@dxos/protocols';
+import { CancelledError, type FeedProtocol, SystemError } from '@dxos/protocols';
 import {
   type CreateEpochRequest,
   type Space as SpaceProto,
@@ -229,13 +229,14 @@ export class DataSpace {
   }
 
   @synchronized
-  async open(): Promise<void> {
+  @trace.span({ showInBrowserTimeline: true })
+  async open(ctx: Context): Promise<void> {
     if (this._state === SpaceState.SPACE_CLOSED) {
-      await this._open();
+      await this._open(ctx);
     }
   }
 
-  private async _open(): Promise<void> {
+  private async _open(ctx: Context): Promise<void> {
     await this._presence.open();
     await this._gossip.open();
     await this._notarizationPlugin.open();
@@ -247,8 +248,8 @@ export class DataSpace {
       this.inner.protocol.feedAdded.append(this._onFeedAdded);
     }
 
-    await this._inner.open(new Context());
-    await this._inner.startProtocol();
+    await this._inner.open(ctx);
+    await this._inner.startProtocol(ctx);
 
     await this._edgeFeedReplicator?.open();
 
@@ -262,11 +263,12 @@ export class DataSpace {
   }
 
   @synchronized
-  async close(): Promise<void> {
-    await this._close();
+  @trace.span({ showInBrowserTimeline: true })
+  async close(ctx: Context): Promise<void> {
+    await this._close(ctx);
   }
 
-  private async _close(): Promise<void> {
+  private async _close(ctx: Context): Promise<void> {
     await this._callbacks.beforeClose?.();
 
     await this.preClose.callSerial();
@@ -284,7 +286,7 @@ export class DataSpace {
 
     await this.authVerifier.close();
 
-    await this._inner.close();
+    await this._inner.close(ctx);
     await this._inner.spaceState.removeCredentialProcessor(this._automergeSpaceState);
     await this._automergeSpaceState.close();
     await this._inner.spaceState.removeCredentialProcessor(this._notarizationPlugin);
@@ -309,7 +311,7 @@ export class DataSpace {
     scheduleTask(this._ctx, async () => {
       try {
         this.metrics.pipelineInitBegin = new Date();
-        await this.initializeDataPipeline();
+        await this.initializeDataPipeline(this._ctx);
       } catch (err) {
         if (err instanceof CancelledError || err instanceof ContextDisposedError) {
           log('data pipeline initialization cancelled', err);
@@ -328,7 +330,7 @@ export class DataSpace {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  async initializeDataPipeline(): Promise<void> {
+  async initializeDataPipeline(ctx: Context): Promise<void> {
     if (this._state !== SpaceState.SPACE_CONTROL_ONLY) {
       throw new SystemError({ message: 'Invalid operation' });
     }
@@ -337,7 +339,7 @@ export class DataSpace {
     log('new state', { state: SpaceState[this._state] });
 
     log('initializing control pipeline');
-    await this._initializeAndReadControlPipeline();
+    await this._initializeAndReadControlPipeline(ctx);
 
     // Allow other tasks to run before loading the data pipeline.
     await sleep(1);
@@ -360,9 +362,17 @@ export class DataSpace {
     yield [this._databaseRoot.documentId, root];
 
     for (const documentUrl of this._databaseRoot.getAllLinkedDocuments()) {
-      const data = await this._echoHost.exportDoc(Context.default(), documentUrl);
+      const data = await this._echoHost.exportDoc(documentUrl);
       yield [documentUrl.replace(/^automerge:/, ''), data];
     }
+  }
+
+  /**
+   * Get all feeds and their blocks for this space.
+   * Used for space archive export.
+   */
+  async getAllFeeds(): Promise<Array<{ feedId: string; feedNamespace: string; blocks: FeedProtocol.Block[] }>> {
+    return this._echoHost.getAllFeedsForSpace(this.id);
   }
 
   private async _enterReadyState(): Promise<void> {
@@ -376,9 +386,9 @@ export class DataSpace {
   }
 
   @trace.span({ showInBrowserTimeline: true })
-  private async _initializeAndReadControlPipeline(): Promise<void> {
+  private async _initializeAndReadControlPipeline(ctx: Context): Promise<void> {
     await this._inner.controlPipeline.state.waitUntilReachedTargetTimeframe({
-      ctx: this._ctx,
+      ctx,
       timeout: 10_000,
       breakOnStall: false,
     });
@@ -473,7 +483,7 @@ export class DataSpace {
         await warnAfterTimeout(5_000, 'Automerge root doc load timeout (DataSpace)', async () => {
           handle = await cancelWithContext(
             this._ctx,
-            this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), rootUrl as AutomergeUrl, {
+            this._echoHost.loadDoc<DatabaseDirectory>(this._ctx, rootUrl as AutomergeUrl, {
               fetchFromNetwork: true,
             }),
           );
@@ -496,7 +506,7 @@ export class DataSpace {
 
         // TODO(dmaretskyi): Close roots.
         // TODO(dmaretskyi): How do we handle changing to the next EPOCH?
-        const root = await this._echoHost.openSpaceRoot(this.id, handle.url);
+        const root = await this._echoHost.openSpaceRoot(this._ctx, this.id, handle.url);
 
         // NOTE: Make sure this assignment happens synchronously together with the state change.
         this._databaseRoot = root;
@@ -573,25 +583,24 @@ export class DataSpace {
   }
 
   @synchronized
-  async activate(): Promise<void> {
+  async activate(ctx: Context): Promise<void> {
     if (![SpaceState.SPACE_CLOSED, SpaceState.SPACE_INACTIVE].includes(this._state)) {
       return;
     }
 
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_ACTIVE);
-    await this._open();
+    await this._open(ctx);
     this.initializeDataPipelineAsync();
   }
 
   @synchronized
-  async deactivate(): Promise<void> {
+  async deactivate(ctx: Context): Promise<void> {
     if (this._state === SpaceState.SPACE_INACTIVE) {
       return;
     }
-    // Unregister from data service.
     await this._metadataStore.setSpaceState(this.key, SpaceState.SPACE_INACTIVE);
     if (this._state !== SpaceState.SPACE_CLOSED) {
-      await this._close();
+      await this._close(ctx);
     }
     this._state = SpaceState.SPACE_INACTIVE;
     log('new state', { state: SpaceState[this._state] });

@@ -20,9 +20,9 @@ interface OfferRecord {
 }
 
 export type SwarmMessengerOptions = {
-  sendMessage: (params: Message) => Promise<void>;
-  onOffer: (message: OfferMessage) => Promise<Answer>;
-  onSignal: (message: SignalMessage) => Promise<void>;
+  sendMessage: (ctx: Context, params: Message) => Promise<void>;
+  onOffer: (ctx: Context, message: OfferMessage) => Promise<Answer>;
+  onSignal: (ctx: Context, message: SignalMessage) => Promise<void>;
   topic: PublicKey;
 };
 
@@ -32,11 +32,9 @@ const SwarmMessage = schema.getCodecForType('dxos.mesh.swarm.SwarmMessage');
  * Adds offer/answer and signal interfaces.
  */
 export class SwarmMessenger implements SignalMessenger {
-  private readonly _ctx = new Context();
-
-  private readonly _sendMessage: (msg: Message) => Promise<void>;
-  private readonly _onSignal: (message: SignalMessage) => Promise<void>;
-  private readonly _onOffer: (message: OfferMessage) => Promise<Answer>;
+  private readonly _sendMessage: SwarmMessengerOptions['sendMessage'];
+  private readonly _onSignal: SwarmMessengerOptions['onSignal'];
+  private readonly _onOffer: SwarmMessengerOptions['onOffer'];
   private readonly _topic: PublicKey;
 
   private readonly _offerRecords: ComplexMap<PublicKey, OfferRecord> = new ComplexMap((key) => key.toHex());
@@ -48,15 +46,18 @@ export class SwarmMessenger implements SignalMessenger {
     this._topic = topic;
   }
 
-  async receiveMessage({
-    author,
-    recipient,
-    payload,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    payload: Any;
-  }): Promise<void> {
+  async receiveMessage(
+    ctx: Context,
+    {
+      author,
+      recipient,
+      payload,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      payload: Any;
+    },
+  ): Promise<void> {
     if (payload.type_url !== 'dxos.mesh.swarm.SwarmMessage') {
       // Ignore not swarm messages.
       return;
@@ -71,35 +72,35 @@ export class SwarmMessenger implements SignalMessenger {
     log('received', { from: author, to: recipient, msg: message });
 
     if (message.data?.offer) {
-      await this._handleOffer({ author, recipient, message });
+      await this._handleOffer(ctx, { author, recipient, message });
     } else if (message.data?.answer) {
       await this._resolveAnswers(message);
     } else if (message.data?.signal) {
-      await this._handleSignal({ author, recipient, message });
+      await this._handleSignal(ctx, { author, recipient, message });
     } else if (message.data?.signalBatch) {
-      await this._handleSignal({ author, recipient, message });
+      await this._handleSignal(ctx, { author, recipient, message });
     } else {
       log.warn('unknown message', { message });
     }
   }
 
-  async signal(message: SignalMessage): Promise<void> {
+  async signal(ctx: Context, message: SignalMessage): Promise<void> {
     invariant(message.data?.signal || message.data?.signalBatch, 'Invalid message');
-    await this._sendReliableMessage({
+    await this._sendReliableMessage(ctx, {
       author: message.author,
       recipient: message.recipient,
       message,
     });
   }
 
-  async offer(message: OfferMessage): Promise<Answer> {
+  async offer(ctx: Context, message: OfferMessage): Promise<Answer> {
     const networkMessage: SwarmMessage = {
       ...message,
       messageId: PublicKey.random(),
     };
     return new Promise<Answer>((resolve, reject) => {
       this._offerRecords.set(networkMessage.messageId!, { resolve });
-      this._sendReliableMessage({
+      this._sendReliableMessage(ctx, {
         author: message.author,
         recipient: message.recipient,
         message: networkMessage,
@@ -107,15 +108,18 @@ export class SwarmMessenger implements SignalMessenger {
     });
   }
 
-  private async _sendReliableMessage({
-    author,
-    recipient,
-    message,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    message: MakeOptional<SwarmMessage, 'messageId'>;
-  }): Promise<void> {
+  private async _sendReliableMessage(
+    ctx: Context,
+    {
+      author,
+      recipient,
+      message,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      message: MakeOptional<SwarmMessage, 'messageId'>;
+    },
+  ): Promise<void> {
     const networkMessage: SwarmMessage = {
       ...message,
       // Setting unique message_id if it not specified yet.
@@ -123,7 +127,7 @@ export class SwarmMessenger implements SignalMessenger {
     };
 
     log('sending', { from: author, to: recipient, msg: networkMessage });
-    await this._sendMessage({
+    await this._sendMessage(ctx, {
       author,
       recipient,
       payload: {
@@ -144,15 +148,18 @@ export class SwarmMessenger implements SignalMessenger {
     }
   }
 
-  private async _handleOffer({
-    author,
-    recipient,
-    message,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    message: SwarmMessage;
-  }): Promise<void> {
+  private async _handleOffer(
+    ctx: Context,
+    {
+      author,
+      recipient,
+      message,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      message: SwarmMessage;
+    },
+  ): Promise<void> {
     invariant(message.data.offer, 'No offer');
     const offerMessage: OfferMessage = {
       author,
@@ -160,10 +167,10 @@ export class SwarmMessenger implements SignalMessenger {
       ...message,
       data: { offer: message.data.offer },
     };
-    const answer = await this._onOffer(offerMessage);
+    const answer = await this._onOffer(ctx, offerMessage);
     answer.offerMessageId = message.messageId;
     try {
-      await this._sendReliableMessage({
+      await this._sendReliableMessage(ctx, {
         author: recipient,
         recipient: author,
         message: {
@@ -181,15 +188,18 @@ export class SwarmMessenger implements SignalMessenger {
     }
   }
 
-  private async _handleSignal({
-    author,
-    recipient,
-    message,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    message: SwarmMessage;
-  }): Promise<void> {
+  private async _handleSignal(
+    ctx: Context,
+    {
+      author,
+      recipient,
+      message,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      message: SwarmMessage;
+    },
+  ): Promise<void> {
     invariant(message.messageId);
     invariant(message.data.signal || message.data.signalBatch, 'Invalid message');
     const signalMessage: SignalMessage = {
@@ -202,6 +212,6 @@ export class SwarmMessenger implements SignalMessenger {
       },
     };
 
-    await this._onSignal(signalMessage);
+    await this._onSignal(ctx, signalMessage);
   }
 }

@@ -206,8 +206,8 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
         <Panel.Content asChild>
           <ScrollArea.Root thin>
             <ScrollArea.Viewport>
-              <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
-              <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
+              <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
+              <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Content>

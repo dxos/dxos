@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { type LogBuffer } from '@dxos/log';
 import { type Observability } from '@dxos/observability';
@@ -70,7 +70,16 @@ export const ResetDialog = ({
   const error = propsError && parseError(t, propsError);
   const [showStack, setShowStack] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false);
   const download = useFileDownload();
+
+  useEffect(() => {
+    if (!feedbackSent) {
+      return;
+    }
+    const timeout = setTimeout(() => setFeedbackSent(false), 3_000);
+    return () => clearTimeout(timeout);
+  }, [feedbackSent]);
 
   const handleCopyError = useCallback(() => {
     void navigator.clipboard.writeText(JSON.stringify(error));
@@ -92,6 +101,7 @@ export const ResetDialog = ({
       const observability = await observabilityProp;
       observability.feedback.captureUserFeedback(values);
       setFeedbackOpen(false);
+      setFeedbackSent(true);
     },
     [observabilityProp],
   );
@@ -184,21 +194,25 @@ export const ResetDialog = ({
             )}
 
             <div role='none' className='flex-grow' />
-            {observabilityProp && isNotMobile && (
-              <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-                <Popover.Trigger asChild>
-                  <IconButton icon='ph--paper-plane-tilt--regular' label={t('feedback label')} />
-                </Popover.Trigger>
-                <Popover.Portal>
-                  <Popover.Content>
-                    <Popover.Viewport>
-                      <FeedbackForm onSave={handleSaveFeedback} />
-                    </Popover.Viewport>
-                    <Popover.Arrow />
-                  </Popover.Content>
-                </Popover.Portal>
-              </Popover.Root>
-            )}
+            {observabilityProp &&
+              isNotMobile &&
+              (feedbackSent ? (
+                <IconButton icon='ph--check--regular' label={t('feedback sent label')} disabled />
+              ) : (
+                <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+                  <Popover.Trigger asChild>
+                    <IconButton icon='ph--paper-plane-tilt--regular' label={t('feedback label')} />
+                  </Popover.Trigger>
+                  <Popover.Portal>
+                    <Popover.Content>
+                      <Popover.Viewport>
+                        <FeedbackForm onSave={handleSaveFeedback} />
+                      </Popover.Viewport>
+                      <Popover.Arrow />
+                    </Popover.Content>
+                  </Popover.Portal>
+                </Popover.Root>
+              ))}
             <IconButton
               icon='ph--arrow-clockwise--regular'
               label={t(needRefresh ? 'update and reload page label' : 'reload page label')}

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
+import { Context as DxosContext } from '@dxos/context';
 import { Database, Feed } from '@dxos/echo';
 import { CredentialsService, FunctionInvocationService, type InvocationServices, QueueService } from '@dxos/functions';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
@@ -29,7 +30,11 @@ export const FunctionInvocationServiceLayer = Layer.effect(
       ): Effect.Effect<O, never, InvocationServices> =>
         Effect.gen(function* () {
           if (functionDef.meta?.deployedId) {
-            return yield* remoteExecutionService.callFunction<I, O>(functionDef.meta.deployedId, input);
+            return yield* remoteExecutionService.callFunction<I, O>(
+              DxosContext.default(),
+              functionDef.meta.deployedId,
+              input,
+            );
           }
 
           return yield* localExecutionService.invokeFunction(functionDef, input);

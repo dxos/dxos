@@ -17,16 +17,19 @@ import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { InboxPlugin } from '../../InboxPlugin';
-import { createEvents } from '../../testing';
+import { Builder } from '../../testing';
 import { Calendar } from '../../types';
 
 import { CalendarArticle } from './CalendarArticle';
 
-const DefaultStory = () => {
+type DefaultStoryProps = {
+  count?: number;
+};
+
+const DefaultStory = (_: DefaultStoryProps) => {
   const db = useDatabase();
   const calendars = useQuery(db, Filter.type(Calendar.Calendar));
   const calendar = calendars[0];
-
   if (!db || !calendar) {
     return <Loading data={{ db: !!db, calendar: !!calendar }} />;
   }
@@ -39,7 +42,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager({
+    withPluginManager<DefaultStoryProps>(({ args: { count = 0 } }) => ({
       plugins: [
         ...corePlugins(),
         ClientPlugin({
@@ -55,7 +58,7 @@ const meta = {
               // Populate the calendar's feed with events.
               const feed = yield* Effect.tryPromise(() => calendar.feed!.tryLoad());
               if (feed) {
-                const events = createEvents(10);
+                const { events } = new Builder().createEvents(count).build();
                 yield* Feed.append(feed, events).pipe(Effect.provide(createFeedServiceLayer(personalSpace.queues)));
               }
 
@@ -67,7 +70,7 @@ const meta = {
         InboxPlugin(),
         PreviewPlugin(),
       ],
-    }),
+    })),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -79,5 +82,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    count: 30,
+  },
+};
+
+export const Empty: Story = {
+  args: {
+    count: 0,
+  },
 };

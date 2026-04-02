@@ -49,7 +49,7 @@ export const PipelineContainer = ({ role, subject: pipeline, attendableId }: Pip
           <PipelineComponent.Toolbar disabled={!hasAttention} />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <PipelineComponent.Content model={model}>
+          <PipelineComponent.Content asChild model={model}>
             <PipelineComponent.Columns pipeline={pipeline} />
           </PipelineComponent.Content>
         </Panel.Content>
