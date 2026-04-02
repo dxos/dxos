@@ -4,7 +4,16 @@
 
 import { type ReactVirtualizerOptions, useVirtualizer } from '@tanstack/react-virtual';
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, { type FC, forwardRef, Fragment, type ReactElement, type Ref, useCallback, useEffect, useRef } from 'react';
+import React, {
+  type FC,
+  forwardRef,
+  Fragment,
+  type ReactElement,
+  type Ref,
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react';
 
 import { invariant } from '@dxos/invariant';
 import { type Axis, type ThemedClassName } from '@dxos/react-ui';
@@ -63,19 +72,21 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, orientation = orientationProp, dragging, currentId, registerScrollTo } =
-      useMosaicContainerContext(MOSAIC_STACK_NAME);
+    const {
+      id,
+      orientation = orientationProp,
+      dragging,
+      currentId,
+      registerScrollTo,
+    } = useMosaicContainerContext(MOSAIC_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     invariant(orientation === 'vertical' || orientation === 'horizontal', `Invalid orientation: ${orientation}`);
 
     const rootRef = useRef<HTMLDivElement>(null);
-    const scrollToId = useCallback(
-      (targetId: string) => {
-        const el = rootRef.current?.querySelector<HTMLElement>(`[data-mosaic-tile-id="${CSS.escape(targetId)}"]`);
-        el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-      },
-      [],
-    );
+    const scrollToId = useCallback((targetId: string) => {
+      const el = rootRef.current?.querySelector<HTMLElement>(`[data-mosaic-tile-id="${CSS.escape(targetId)}"]`);
+      el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }, []);
 
     useEffect(() => {
       registerScrollTo(scrollToId);

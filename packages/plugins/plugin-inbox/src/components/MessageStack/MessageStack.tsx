@@ -2,14 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, {
-  type KeyboardEvent,
-  type MouseEvent,
-  forwardRef,
-  useCallback,
-  useMemo,
-  useState,
-} from 'react';
+import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card, ScrollArea } from '@dxos/react-ui';

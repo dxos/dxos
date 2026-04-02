@@ -55,8 +55,8 @@ export type BuildResult = {
 // Constants
 //
 
-const WORK_START_MINUTES = 9 * 60;  // 09:00
-const WORK_END_MINUTES = 17 * 60;   // 17:00
+const WORK_START_MINUTES = 9 * 60; // 09:00
+const WORK_END_MINUTES = 17 * 60; // 17:00
 
 //
 // Builder
@@ -221,7 +221,8 @@ export class Builder {
         sender: this._randomActor(),
         blocks: [{ _tag: 'text', text }],
         properties: {
-          subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(faker.number.int({ min: 4, max: 8 })),
+          subject:
+            faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(faker.number.int({ min: 4, max: 8 })),
           snippet: text.slice(0, 120),
           labels: faker.helpers.randomSubset(Object.keys(LABELS), {
             min: 0,
@@ -288,7 +289,8 @@ export class Builder {
           { _tag: 'text', text: enrichedText },
         ],
         properties: {
-          subject: faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(faker.number.int({ min: 4, max: 8 })),
+          subject:
+            faker.helpers.arrayElement(['', 'Re: ']) + faker.lorem.sentence(faker.number.int({ min: 4, max: 8 })),
           snippet: text.slice(0, 120),
           labels: faker.helpers.randomSubset(Object.keys(LABELS), {
             min: 0,

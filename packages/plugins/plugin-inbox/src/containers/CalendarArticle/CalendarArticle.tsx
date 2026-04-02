@@ -98,7 +98,10 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
               <NaturalCalendar.Toolbar />
             </Panel.Toolbar>
             <Panel.Content asChild>
-              <NaturalCalendar.Grid dates={events.map((event) => new Date(event.startDate))} onSelect={handleDateSelect} />
+              <NaturalCalendar.Grid
+                dates={events.map((event) => new Date(event.startDate))}
+                onSelect={handleDateSelect}
+              />
             </Panel.Content>
           </NaturalCalendar.Root>
         </Panel.Root>
