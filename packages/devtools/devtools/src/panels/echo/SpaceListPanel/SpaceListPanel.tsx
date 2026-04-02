@@ -158,12 +158,11 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
 
   const handleImportIntoSpace = useCallback(
     async (backup: File) => {
-      if (!importTargetSpace) {
-        return;
-      }
       try {
-        await importTargetSpace.waitUntilReady();
-        await importData(importTargetSpace, backup, { ignoreTypes: [Type.getTypename(SpaceProperties)] });
+        if (importTargetSpace) {
+          await importTargetSpace.waitUntilReady();
+          await importData(importTargetSpace, backup, { ignoreTypes: [Type.getTypename(SpaceProperties)] });
+        }
       } catch (err) {
         log.catch(err);
       } finally {
