@@ -20,7 +20,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   debugTree,
-  editorSlots,
+  documentSlots,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
@@ -100,7 +100,7 @@ const EditorComponent = forwardRef<EditorController, EditorStoryProps>(
       scrollTo,
       selection,
       extensions,
-      slots = editorSlots,
+      slots = documentSlots,
       onReady,
     },
     forwardedRef,

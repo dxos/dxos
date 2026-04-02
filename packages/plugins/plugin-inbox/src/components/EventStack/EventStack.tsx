@@ -12,10 +12,6 @@ import { composable, composableProps } from '@dxos/ui-theme';
 import { ActorList } from '../Actor';
 import { DateComponent } from '../DateComponent';
 
-// TODO(burdon): Common Actor reference (lookup on demand).
-// TODO(burdon): Modes: e.g., itinerary (with day markers).
-// TODO(burdon): Show upcoming events vs. past.
-
 //
 // EventTile
 //
@@ -51,7 +47,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
               <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
             </Card.Row>
             {event.attendees && event.attendees.length > 0 && (
-              <Card.Row icon='ph--users--regular'>
+              <Card.Row>
                 <ActorList actors={event.attendees} />
               </Card.Row>
             )}
