@@ -28,3 +28,4 @@ export * as Type from './Type';
 export * as Collection from './Collection';
 export * as View from './View';
 export * as Dataset from './Dataset';
+export * as Extension from './Extension';
