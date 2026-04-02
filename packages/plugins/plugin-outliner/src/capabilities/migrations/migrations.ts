@@ -10,7 +10,7 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { Journal } from '../../types';
 
-const identityTransform = async (from: any) => from;
+const identityTransform = async (from: any) => ({ ...from });
 const noopCallback = async () => {};
 
 const migrations = [

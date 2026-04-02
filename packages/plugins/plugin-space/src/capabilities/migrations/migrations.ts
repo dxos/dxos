@@ -10,7 +10,7 @@ import { defineObjectMigration } from '@dxos/client/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { AccessToken, AnchoredTo, HasConnection, HasRelationship, HasSubject } from '@dxos/types';
 
-const identityTransform = async (from: any) => from;
+const identityTransform = async (from: any) => ({ ...from });
 const noopCallback = async () => {};
 
 const migrations = [

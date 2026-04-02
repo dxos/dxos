@@ -9,7 +9,7 @@ import { Chat, ResearchGraph } from '@dxos/assistant-toolkit';
 import { defineObjectMigration } from '@dxos/client/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-const identityTransform = async (from: any) => from;
+const identityTransform = async (from: any) => ({ ...from });
 const noopCallback = async () => {};
 
 const migrations = [
