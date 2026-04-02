@@ -10,6 +10,7 @@ import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Thread } from '@dxos/types';
 
+// TODO(burdon): What is the difference between Thread and Channel.
 export const Channel = Schema.Struct({
   name: Schema.optional(Schema.String),
   defaultThread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false)),
