@@ -50,9 +50,7 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
           return Subscription.makePost({
             title: isAtom ? (item.title?.['#text'] ?? item.title) : item.title,
             link,
-            description: isAtom
-              ? (item.summary ?? item.content?.['#text'] ?? item.content)
-              : (item.description ?? ''),
+            description: isAtom ? (item.summary ?? item.content?.['#text'] ?? item.content) : (item.description ?? ''),
             author: isAtom ? (item.author?.name ?? item.author) : (item['dc:creator'] ?? item.author),
             published: item.pubDate ?? item.published ?? item.updated,
             guid: isAtom ? item.id : (item.guid?.['#text'] ?? item.guid ?? link),

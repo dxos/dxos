@@ -1,7 +1,8 @@
 # Feed Plugin
 
-We will create a new FeedPlugin to manage and display feeds incl. RSS, BlueSky and other open protocols.
-Use this document to record and design issues or implementation details.
+- We will create a new FeedPlugin to manage and display feeds incl. RSS, BlueSky and other open protocols.
+- Use this document to record and design issues or implementation details.
+- Track any complex issues that were not obvious to implement or where you needed additional instructions.
 
 ## Issues
 
@@ -21,7 +22,19 @@ Use this document to record and design issues or implementation details.
 - [x] Create a storybook for FeedArticle that uses the testing utility.
 - [x] Configure the plugin with `composer-app`.
 
-## Phase 2
+## Phase 2 (Sync feeds)
+
+- [x] Create SubscriptionArticle which should show a stack of `Subscription.Feed` objects from an ECHO query.
+  - [ ] Each SubscriptionTile component should have a menu option to delete the feed.
+  - [ ] The SubscriptionArticle Toolbar should have a button to create a new feed.
+    - [ ] This should open a dialog to enter the feed URL via a simple `Form` (react-ui-form).
+    - [ ] On Save create a new `Subscription.Feed`; or Cancel.
+- [x] When selecting a feed, display the FeedArticle as a companion (similar to plugin-inbox MailboxAricle/MessageArticle).
+- [x] Create a storybook for SubscriptionArticle.
+- [x] Create a sync operation to fetch and sync posts for a given feed.
+  - [x] Write the posts to the `Subscription.Feed`'s ECHO Feed.
+
+## Phase 3 (BlueSky)
 
 - [ ] Research other feed protocols (BlueSky, etc.)
 

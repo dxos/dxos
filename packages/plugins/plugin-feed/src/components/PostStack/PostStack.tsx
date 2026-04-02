@@ -4,11 +4,11 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, ScrollArea } from '@dxos/react-ui';
+import { Card, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { type Subscription } from '../../types';
+import { Subscription } from '../../types';
 
 //
 // PostTile
@@ -28,6 +28,7 @@ type PostTileProps = Pick<MosaicTileProps<PostTileData>, 'location' | 'data'> & 
 const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, current }, forwardedRef) => {
   const { post } = data;
   const { setCurrentId } = useMosaicContainer('PostTile');
+  const { t } = useTranslation(Subscription.Post.typename);
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(post.id);
@@ -41,21 +42,21 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
         <Card.Root ref={forwardedRef}>
           <Card.Content>
             <Card.Row>
-              <Card.Text>{post.title ?? 'Untitled'}</Card.Text>
+              <Card.Text classNames='truncate'>{post.title ?? t('post title placeholder')}</Card.Text>
             </Card.Row>
             {post.author && (
               <Card.Row icon='ph--user--regular'>
-                <Card.Text classNames='text-xs text-description truncate'>{post.author}</Card.Text>
+                <Card.Text variant='description'>{post.author}</Card.Text>
               </Card.Row>
             )}
             {published && (
               <Card.Row icon='ph--calendar--regular'>
-                <Card.Text classNames='text-xs text-description'>{published}</Card.Text>
+                <Card.Text variant='description'>{published}</Card.Text>
               </Card.Row>
             )}
             {post.description && (
               <Card.Row>
-                <Card.Text classNames='text-xs text-description line-clamp-2'>{post.description}</Card.Text>
+                <Card.Html variant='description' html={post.description} />
               </Card.Row>
             )}
           </Card.Content>

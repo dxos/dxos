@@ -36,8 +36,7 @@ export default Capability.makeModule(() =>
           attendableId?: string;
           subject: Subscription.Post;
           companionTo: Subscription.Feed;
-        } =>
-          Obj.instanceOf(Subscription.Post, data.subject) && Subscription.instanceOf(data.companionTo),
+        } => Obj.instanceOf(Subscription.Post, data.subject) && Subscription.instanceOf(data.companionTo),
         component: ({ data, role }) => (
           <FeedArticle role={role} subject={data.companionTo} attendableId={data.attendableId} />
         ),
