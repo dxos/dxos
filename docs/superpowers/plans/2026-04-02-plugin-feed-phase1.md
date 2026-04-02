@@ -13,6 +13,7 @@
 ### Task 1: Scaffold the plugin package
 
 **Files:**
+
 - Create: `packages/plugins/plugin-feed/package.json`
 - Create: `packages/plugins/plugin-feed/moon.yml`
 - Create: `packages/plugins/plugin-feed/tsconfig.json`
@@ -65,18 +66,11 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "meta": [
-        "dist/types/src/meta.d.ts"
-      ],
-      "types": [
-        "dist/types/src/types/index.d.ts"
-      ]
+      "meta": ["dist/types/src/meta.d.ts"],
+      "types": ["dist/types/src/types/index.d.ts"]
     }
   },
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
@@ -135,23 +129,12 @@ tasks:
 
 ```json
 {
-  "extends": [
-    "../../../tsconfig.base.json"
-  ],
+  "extends": ["../../../tsconfig.base.json"],
   "compilerOptions": {
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "exclude": [
-    "*.t.ts",
-    "vite.config.ts"
-  ],
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/*.ts"
-  ],
+  "exclude": ["*.t.ts", "vite.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/*.ts"],
   "references": [
     {
       "path": "../../common/random"
@@ -236,6 +219,7 @@ export const translations = [
 - [ ] **Step 6: Create stub barrel files**
 
 `src/types/index.ts`:
+
 ```typescript
 //
 // Copyright 2025 DXOS.org
@@ -243,6 +227,7 @@ export const translations = [
 ```
 
 `src/components/index.ts`:
+
 ```typescript
 //
 // Copyright 2025 DXOS.org
@@ -250,6 +235,7 @@ export const translations = [
 ```
 
 `src/containers/index.ts`:
+
 ```typescript
 //
 // Copyright 2025 DXOS.org
@@ -257,6 +243,7 @@ export const translations = [
 ```
 
 `src/capabilities/react-surface/react-surface.tsx`:
+
 ```typescript
 //
 // Copyright 2025 DXOS.org
@@ -270,12 +257,11 @@ import { Surface } from '@dxos/app-framework/ui';
 
 import { meta } from '../../meta';
 
-export default Capability.makeModule(() =>
-  Effect.succeed(Capability.contributes(Capabilities.ReactSurface, [])),
-);
+export default Capability.makeModule(() => Effect.succeed(Capability.contributes(Capabilities.ReactSurface, [])));
 ```
 
 `src/capabilities/react-surface/index.ts`:
+
 ```typescript
 //
 // Copyright 2025 DXOS.org
@@ -285,6 +271,7 @@ export { default as ReactSurface } from './react-surface';
 ```
 
 `src/capabilities/index.ts`:
+
 ```typescript
 //
 // Copyright 2025 DXOS.org
@@ -343,6 +330,7 @@ git commit -m "feat(plugin-feed): scaffold plugin package with stub files"
 ### Task 2: Define Subscription.Feed and Subscription.Post schemas
 
 **Files:**
+
 - Create: `packages/plugins/plugin-feed/src/types/Subscription.ts`
 - Modify: `packages/plugins/plugin-feed/src/types/index.ts`
 - Modify: `packages/plugins/plugin-feed/src/translations.ts`
@@ -552,6 +540,7 @@ git commit -m "feat(plugin-feed): add Subscription.Feed and Subscription.Post EC
 ### Task 3: Create PostStack component
 
 **Files:**
+
 - Create: `packages/plugins/plugin-feed/src/components/PostStack/PostStack.tsx`
 - Create: `packages/plugins/plugin-feed/src/components/PostStack/index.ts`
 - Modify: `packages/plugins/plugin-feed/src/components/index.ts`
@@ -731,6 +720,7 @@ git commit -m "feat(plugin-feed): add PostStack component for virtual scrolling 
 ### Task 4: Create FeedArticle container and wire to react-surface
 
 **Files:**
+
 - Create: `packages/plugins/plugin-feed/src/containers/FeedArticle/FeedArticle.tsx`
 - Create: `packages/plugins/plugin-feed/src/containers/FeedArticle/index.ts`
 - Modify: `packages/plugins/plugin-feed/src/containers/index.ts`
@@ -857,6 +847,7 @@ git commit -m "feat(plugin-feed): add FeedArticle container with react-surface b
 ### Task 5: Create testing Builder utility
 
 **Files:**
+
 - Create: `packages/plugins/plugin-feed/src/testing/builder.ts`
 - Create: `packages/plugins/plugin-feed/src/testing/index.ts`
 
@@ -864,7 +855,7 @@ git commit -m "feat(plugin-feed): add FeedArticle container with react-surface b
 
 A chainable builder (modeled on plugin-inbox's `Builder`) that generates fake `Subscription.Post` objects and optionally a `Subscription.Feed`.
 
-```typescript
+````typescript
 //
 // Copyright 2025 DXOS.org
 //
@@ -959,7 +950,7 @@ export class Builder {
     return { feed, posts: sortedPosts };
   }
 }
-```
+````
 
 - [ ] **Step 2: Create `src/testing/index.ts`**
 
@@ -995,6 +986,7 @@ git commit -m "feat(plugin-feed): add test Builder utility for generating fake f
 ### Task 6: Create PostStack storybook
 
 **Files:**
+
 - Create: `packages/plugins/plugin-feed/src/components/PostStack/PostStack.stories.tsx`
 
 - [ ] **Step 1: Create `src/components/PostStack/PostStack.stories.tsx`**
@@ -1058,6 +1050,7 @@ git commit -m "feat(plugin-feed): add PostStack storybook stories"
 ### Task 7: Create FeedArticle storybook
 
 **Files:**
+
 - Create: `packages/plugins/plugin-feed/src/containers/FeedArticle/FeedArticle.stories.tsx`
 
 - [ ] **Step 1: Create `src/containers/FeedArticle/FeedArticle.stories.tsx`**
@@ -1138,6 +1131,7 @@ git commit -m "feat(plugin-feed): add FeedArticle storybook story"
 ### Task 8: Register plugin with composer-app
 
 **Files:**
+
 - Modify: `packages/apps/composer-app/package.json`
 - Modify: `packages/apps/composer-app/src/plugin-defs.tsx`
 - Modify: `packages/apps/composer-app/tsconfig.json`
@@ -1145,6 +1139,7 @@ git commit -m "feat(plugin-feed): add FeedArticle storybook story"
 - [ ] **Step 1: Add dependency to `packages/apps/composer-app/package.json`**
 
 Add to `dependencies` (alphabetically, after `@dxos/plugin-explorer`):
+
 ```json
 "@dxos/plugin-feed": "workspace:*",
 ```
@@ -1152,16 +1147,19 @@ Add to `dependencies` (alphabetically, after `@dxos/plugin-explorer`):
 - [ ] **Step 2: Update `packages/apps/composer-app/src/plugin-defs.tsx`**
 
 Add import (alphabetically, after `ExplorerPlugin` import on line 22):
+
 ```typescript
 import { FeedPlugin } from '@dxos/plugin-feed';
 ```
 
 Add to `getDefaults()` function in the labs section (after line 143, inside the `(isDev || isLabs) && [` block):
+
 ```typescript
 FeedPlugin.meta.id,
 ```
 
 Add to `getPlugins()` return array (alphabetically, after `ExplorerPlugin()` on line 191):
+
 ```typescript
 FeedPlugin(),
 ```
@@ -1169,6 +1167,7 @@ FeedPlugin(),
 - [ ] **Step 3: Update `packages/apps/composer-app/tsconfig.json`**
 
 Add reference (alphabetically, in the references array):
+
 ```json
 {
   "path": "../../plugins/plugin-feed"
@@ -1194,6 +1193,7 @@ git commit -m "feat(plugin-feed): register FeedPlugin with composer-app"
 ### Task 9: Lint, final build check, and update PLAN.md
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-feed/PLAN.md`
 
 - [ ] **Step 1: Run linter**

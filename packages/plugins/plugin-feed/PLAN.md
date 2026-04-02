@@ -37,26 +37,34 @@
 - [x] Create app-graph-builder with feed listing under spaces, companion resolution, and sync action.
 - [x] Register `OperationHandler` capability with `FeedOperationHandlerSet`.
 
+### Review 2.1
+
+- [ ] It seems that the subtasks of the "Create SubscriptionArticle" have not been addressed.
+
 ## Implementation Notes
 
 ### Namespace Disambiguation
+
 - The `Subscription` namespace (`src/types/Subscription.ts`) disambiguates from the infrastructure `Feed` in `@dxos/echo`.
 - `Subscription.Feed` = application-level RSS subscription (typename: `org.dxos.type.subscription.feed`).
 - `Subscription.Post` = individual feed entry (typename: `org.dxos.type.subscription.post`).
 - Each `Subscription.Feed` has a backing `Feed.Feed` (ECHO feed) referenced via `Ref.Ref`.
 
 ### SyncFeed Operation
+
 - The `SyncFeed` operation uses `db.add(post)` to add posts as regular space objects rather than `Feed.append()`, because the `Feed.Service` Effect layer is not available in the operation handler context.
 - Deduplication by guid is not yet implemented — this requires querying existing posts from the feed, which also needs `Feed.Service`.
 - Feed metadata (name, description) is updated from the RSS channel on first sync if not already set.
 - RSS/Atom parsing uses `fast-xml-parser` (dynamic import to keep it out of the main bundle).
 
 ### CORS for RSS Fetching
+
 - Browser-based RSS fetching (storybooks) requires a CORS proxy. A Vite dev server proxy is configured in `tools/storybook-react/.storybook/main.ts` at `/api/rss?url=`.
 - The `Builder.fromRss()` method accepts `{ corsProxy }` option for browser usage.
 - The `SyncFeed` operation runs server-side/in the app context where CORS is not an issue.
 
 ### Companion Pattern
+
 - Selecting a feed in `SubscriptionArticle` uses `AttentionOperation.Select` + `companionSegment('feed')`.
 - The app-graph-builder creates a `PLANK_COMPANION_TYPE` node that resolves the selected post.
 - Two surfaces: main view (`SubscriptionArticle`, no `companionTo`) and companion view (`FeedArticle`, with `companionTo`).

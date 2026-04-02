@@ -46,7 +46,7 @@ const cardHeading: ComponentFunction<CardStyleProps> = ({ variant = 'default' },
 
 const cardText: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate: _truncate }, ...etc) =>
   mx(
-    'dx-card__text flex overflow-hidden',
+    'dx-card__text items-center overflow-hidden',
     variant === 'default' && 'py-1',
     variant === 'description' && 'py-1.5',
     ...etc,
