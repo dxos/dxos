@@ -71,7 +71,7 @@ export class SpacesServiceImpl implements SpacesService {
   async createSpace(request: CreateSpaceRequest): Promise<Space> {
     this._requireIdentity();
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = await dataSpaceManager.createSpace({ tags: request?.tags });
+    const space = await dataSpaceManager.createSpace(new Context(), { tags: request?.tags });
     await this._updateMetrics();
     return this._serializeSpace(space);
   }

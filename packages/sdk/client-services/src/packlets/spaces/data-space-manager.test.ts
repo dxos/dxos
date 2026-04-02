@@ -156,7 +156,7 @@ describe('DataSpaceManager', () => {
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
-    const space = await peer.dataSpaceManager.createSpace({ tags: ['personal', 'test'] });
+    const space = await peer.dataSpaceManager.createSpace(new Context(), { tags: ['personal', 'test'] });
     await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
 
     expect(space.inner.spaceState.tags).toEqual(['personal', 'test']);
@@ -169,7 +169,7 @@ describe('DataSpaceManager', () => {
     await peer.createIdentity();
     await openAndClose(peer.echoHost, peer.dataSpaceManager);
 
-    const space = await peer.dataSpaceManager.createSpace();
+    const space = await peer.dataSpaceManager.createSpace(new Context());
     await space.inner.controlPipeline.state.waitUntilTimeframe(space.inner.controlPipeline.state.endTimeframe);
 
     expect(space.inner.spaceState.tags).toEqual([]);
@@ -183,9 +183,9 @@ describe('DataSpaceManager', () => {
     await peer2.createIdentity();
 
     await openAndClose(peer1.echoHost, peer1.dataSpaceManager, peer2.echoHost, peer2.dataSpaceManager);
-    await Promise.all([peer1, peer2].map((peer) => peer.echoHost.addReplicator(peer.meshEchoReplicator)));
+    await connectReplicators([peer1, peer2]);
 
-    const space1 = await peer1.dataSpaceManager.createSpace({ tags: ['personal'] });
+    const space1 = await peer1.dataSpaceManager.createSpace(new Context(), { tags: ['personal'] });
     await space1.inner.controlPipeline.state.waitUntilTimeframe(space1.inner.controlPipeline.state.endTimeframe);
 
     // Admit peer2 to space1.
@@ -204,7 +204,7 @@ describe('DataSpaceManager', () => {
       ),
     );
 
-    const space2 = await peer2.dataSpaceManager.acceptSpace({
+    const space2 = await peer2.dataSpaceManager.acceptSpace(new Context(), {
       spaceKey: space1.key,
       genesisFeedKey: space1.inner.genesisFeedKey,
       tags: space1.inner.spaceState.tags,
