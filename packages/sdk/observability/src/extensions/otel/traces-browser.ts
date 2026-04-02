@@ -13,6 +13,7 @@ import {
   ParentBasedSampler,
   type ReadableSpan,
   type SpanProcessor,
+  TraceIdRatioBasedSampler,
 } from '@opentelemetry/sdk-trace-base';
 import { WebTracerProvider } from '@opentelemetry/sdk-trace-web';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
@@ -52,7 +53,9 @@ export class OtelTraces {
 
     const tracerProvider = new WebTracerProvider({
       resource: this.options.resource,
-      ...(forceTraceAll ? { sampler: new ParentBasedSampler({ root: new AlwaysOnSampler() }) } : {}),
+      sampler: new ParentBasedSampler({
+        root: forceTraceAll ? new AlwaysOnSampler() : new TraceIdRatioBasedSampler(0.3),
+      }),
       spanProcessors: [
         new TagInjectorSpanProcessor(this.options.getTags),
         new BatchSpanProcessor(
