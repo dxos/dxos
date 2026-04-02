@@ -15,6 +15,7 @@ import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
 
 import { meta } from '../../meta';
@@ -97,9 +98,9 @@ export default Capability.makeModule(
         },
       }),
 
-      // Sync action on each Subscription.Feed node.
+      // Actions on each Subscription.Feed node.
       GraphBuilder.createExtension({
-        id: `${meta.id}.sync-feed`,
+        id: `${meta.id}.feed-actions`,
         match: (node) =>
           Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Feed) : Option.none(),
         actions: (feed) =>
@@ -110,6 +111,15 @@ export default Capability.makeModule(
               properties: {
                 label: ['sync feed label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',
+                disposition: 'list-item',
+              },
+            },
+            {
+              id: 'delete',
+              data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [feed] }),
+              properties: {
+                label: ['delete object label', { ns: Subscription.Feed.typename }],
+                icon: 'ph--trash--regular',
                 disposition: 'list-item',
               },
             },

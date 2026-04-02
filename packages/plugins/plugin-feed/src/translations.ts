@@ -34,6 +34,7 @@ export const translations = [
         'feed companion label': 'Feed',
         'sync feed label': 'Sync feed',
         'sync feed error title': 'Failed to sync feed',
+        'add feed label': 'Add feed',
       },
     },
   },
