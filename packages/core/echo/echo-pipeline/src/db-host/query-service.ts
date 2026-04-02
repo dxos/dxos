@@ -164,7 +164,7 @@ export class QueryServiceImpl extends Resource implements QueryService {
     return queryEntry;
   }
 
-  @trace.span({ showInBrowserTimeline: true })
+  @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   private async _executeQueries(_ctx: Context) {
     // TODO(dmaretskyi): How do we integrate this tracing info into the tracing API.
     const begin = performance.now();

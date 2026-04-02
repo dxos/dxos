@@ -68,6 +68,8 @@ const mark = (name: string) => {
 
 export type SpanOptions = {
   showInBrowserTimeline?: boolean;
+  /** When false the span is not exported to remote OTLP collectors. Defaults to true. */
+  showInRemoteTracing?: boolean;
   op?: string;
   attributes?: Record<string, any>;
 };
@@ -76,7 +78,7 @@ export type SpanOptions = {
  * Decorator that creates a span for the execution duration of the decorated method.
  */
 const span =
-  ({ showInBrowserTimeline = false, op, attributes }: SpanOptions = {}) =>
+  ({ showInBrowserTimeline = false, showInRemoteTracing = true, op, attributes }: SpanOptions = {}) =>
   (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<(...args: any) => any>) => {
     const method = descriptor.value!;
 
@@ -88,6 +90,7 @@ const span =
         methodName: propertyKey,
         instance: this,
         showInBrowserTimeline,
+        showInRemoteTracing,
         op,
         attributes,
       });

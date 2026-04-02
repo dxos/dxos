@@ -82,6 +82,10 @@ export class RemoteTracing {
   }
 
   flushSpan(span: TracingSpan): void {
+    if (!span.showInRemoteTracing) {
+      return;
+    }
+
     if (!this._tracing) {
       this._pendingFlushes?.push({ span, isEnd: !!span.endTs });
       return;

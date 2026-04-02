@@ -37,6 +37,7 @@ export type TraceSpanProps = {
   methodName: string;
   parentCtx: Context | null;
   showInBrowserTimeline: boolean;
+  showInRemoteTracing?: boolean;
   op?: string;
   attributes?: Record<string, any>;
 };
@@ -377,6 +378,7 @@ export class TracingSpan {
   error: SerializedError | null = null;
 
   private _showInBrowserTimeline: boolean;
+  private _showInRemoteTracing: boolean;
   private readonly _ctx: Context;
 
   constructor(
@@ -388,15 +390,14 @@ export class TracingSpan {
     this.resourceId = _traceProcessor.getResourceId(params.instance);
     this.startTs = performance.now();
     this._showInBrowserTimeline = params.showInBrowserTimeline;
+    this._showInRemoteTracing = params.showInRemoteTracing ?? true;
     this.op = params.op;
     this.attributes = params.attributes ?? {};
 
     const baseCtx = params.parentCtx ?? new Context();
-    this._ctx = baseCtx.derive({
-      attributes: {
-        [TRACE_SPAN_ATTRIBUTE]: this.id,
-      },
-    });
+    this._ctx = this._showInRemoteTracing
+      ? baseCtx.derive({ attributes: { [TRACE_SPAN_ATTRIBUTE]: this.id } })
+      : baseCtx.derive();
     if (params.parentCtx) {
       const parentId = params.parentCtx.getAttribute(TRACE_SPAN_ATTRIBUTE);
       if (typeof parentId === 'number') {
@@ -418,6 +419,10 @@ export class TracingSpan {
 
   get ctx(): Context {
     return this._ctx;
+  }
+
+  get showInRemoteTracing(): boolean {
+    return this._showInRemoteTracing;
   }
 
   markSuccess(): void {
