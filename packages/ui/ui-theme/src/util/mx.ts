@@ -143,6 +143,9 @@ export function slottable<E extends HTMLElement, P extends object = {}>(
  * Consumers see only `ComposableProps<P>` — a narrow type exposing `classNames`, `className`,
  * `children`, and the custom props `P`.
  *
+ * For generic components, use `any` for the type parameter inside `composable` and
+ * cast the result to restore the generic signature for consumers.
+ *
  * @example
  * ```tsx
  * const Leaf = composable<HTMLButtonElement>(({ children, ...props }, forwardedRef) => {

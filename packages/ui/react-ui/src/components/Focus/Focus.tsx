@@ -22,7 +22,9 @@ import React, {
 } from 'react';
 
 import { type Axis } from '@dxos/ui-types';
-import { composableProps, mx, slottable } from '@dxos/ui-theme';
+import { composableProps, slottable } from '@dxos/ui-theme';
+
+import { useThemeContext } from '../../hooks';
 
 //
 // Context
@@ -41,26 +43,6 @@ type ContextValue = {
 const FocusContext = createContext<ContextValue>({});
 
 const useFocus = () => useContext(FocusContext);
-
-/**
- * Focus ring styles shared by Group and Item.
- * Uses a `::after` pseudo-element overlay so the ring paints above child content
- * (inset box-shadow alone is obscured by children with backgrounds).
- * The pseudo-element is `pointer-events-none` and absolutely positioned over the element.
- * When `border` is true, a subdued CSS border is always visible (e.g., for grid cell edges).
- */
-const focusRingStyles = (border: boolean) =>
-  mx(
-    // Base: relative for pseudo-element positioning, suppress default outline.
-    'relative outline-hidden',
-    // Optional always-visible border.
-    border && 'border border-separator',
-    // Pseudo-element overlay for focus ring.
-    'after:content-[""] after:absolute after:inset-0 after:rounded-[inherit] after:pointer-events-none after:ring after:ring-inset after:ring-transparent',
-    'focus:after:ring-neutral-focus-indicator',
-    'data-[focus-state=active]:after:ring-neutral-focus-indicator',
-    'data-[focus-state=error]:after:ring-rose-500',
-  );
 
 //
 // Group
@@ -82,6 +64,7 @@ type GroupProps = {
 const Group = slottable<HTMLDivElement, GroupProps>(
   ({ children, asChild, orientation = 'vertical', border = false, ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
     const rootRef = useRef<HTMLDivElement>(null);
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: orientation, memorizeCurrent: true });
@@ -97,10 +80,13 @@ const Group = slottable<HTMLDivElement, GroupProps>(
       }
     }, []);
 
+    const { className, ...rest } = composableProps(props);
     return (
       <FocusContext.Provider value={{ setFocus: setState, groupHasFocus }}>
         <Comp
-          {...composableProps(props, { tabIndex: 0, classNames: focusRingStyles(border) })}
+          {...rest}
+          tabIndex={0}
+          className={tx('focus.group', { border }, className)}
           {...tabsterAttrs}
           {...(state && {
             [`data-${FOCUS_STATE_ATTR}`]: state,
@@ -139,9 +125,9 @@ const Item = slottable<HTMLDivElement, ItemProps>(
     forwardedRef,
   ) => {
     const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
     // Tell tabster's groupper to ignore Enter so it doesn't move focus into the group.
     const focusableGroupAttrs = useFocusableGroup({ ignoreDefaultKeydown: { Enter: true } });
-    const { groupHasFocus } = useFocus();
     const [focused, setFocused] = useState(false);
 
     const handleClick = useCallback(
@@ -177,13 +163,16 @@ const Item = slottable<HTMLDivElement, ItemProps>(
       [onBlur],
     );
 
-    // When navigating (group has focus), only the focused item is current.
-    // When the group loses focus, fall back to the controlled `current` prop.
-    const isCurrent = groupHasFocus ? focused : (current ?? focused);
+    // Controlled `current` prop takes precedence (e.g., virtualized items that scroll back into view).
+    // Otherwise fall back to DOM focus state.
+    const isCurrent = current ?? focused;
 
+    const { className, ...rest } = composableProps(props);
     return (
       <Comp
-        {...composableProps(props, { tabIndex: 0, classNames: focusRingStyles(border) })}
+        {...rest}
+        tabIndex={0}
+        className={tx('focus.item', { border }, className)}
         {...focusableGroupAttrs}
         aria-current={isCurrent || undefined}
         onClick={handleClick}

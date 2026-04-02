@@ -13,7 +13,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
-  editorSlots,
+  documentSlots,
   preview,
 } from '@dxos/ui-editor';
 import { composable, composableProps } from '@dxos/ui-theme';
@@ -45,7 +45,7 @@ export const Transcription = composable<HTMLDivElement, TranscriptionProps>(
         extensions: [
           createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
           createMarkdownExtensions(),
-          createThemeExtensions({ themeMode, slots: editorSlots }),
+          createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
           preview(),
           transcription({ model, started: object?.started ? new Date(object.started) : undefined }),

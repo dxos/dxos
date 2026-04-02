@@ -15,8 +15,9 @@
   }
 
   .dx-current {
-    @apply aria-[current=true]:bg-highlight-surface! aria-[current=true]:text-highlight-surface-text! 
-      aria-[current=true]:border-active-separator!;
+    @apply dx-ring-pseudo
+      aria-[current=true]:bg-highlight-surface aria-[current=true]:text-highlight-surface-text
+      aria-[current=true]:after:ring-active-separator!;
   }
 
   .dx-selected {

@@ -8,7 +8,7 @@ import React, { type ComponentPropsWithRef, type ComponentPropsWithoutRef, forwa
 import { Avatar, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import { keymap, listener } from '@dxos/ui-editor';
-import { focusRing, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { hexToEmoji, hexToHue, isTruthy } from '@dxos/util';
 
 import { translationKey } from '../translations';
@@ -167,7 +167,7 @@ export const MessageTextbox = ({
       <div
         role='none'
         ref={parentRef}
-        className={mx('py-0.5 me-1 rounded-xs', focusRing, disabled && 'opacity-50')}
+        className={mx('py-0.5 me-1 rounded-xs dx-focus-ring', disabled && 'opacity-50')}
         {...focusAttributes}
       />
     </MessageRoot>
