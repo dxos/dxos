@@ -30,6 +30,7 @@ import {
   SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
@@ -245,11 +246,17 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     return this.get();
   }
 
-  async create(meta?: SpaceProperties): Promise<Space> {
+  async create(
+    meta?: SpaceProperties,
+    options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
+  ): Promise<Space> {
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
     const traceId = PublicKey.random().toHex();
     log.trace('dxos.sdk.echo-proxy.create-space', Trace.begin({ id: traceId }));
-    const space = await this._serviceProvider.services.SpacesService.createSpace(undefined, { timeout: RPC_TIMEOUT });
+    const space = await this._serviceProvider.services.SpacesService.createSpace(
+      { tags: options?.tags ?? [], membershipPolicy: options?.membershipPolicy ?? MembershipPolicy.INVITE },
+      { timeout: RPC_TIMEOUT },
+    );
 
     await this._spaceCreated.waitForCondition(() => {
       return this.get().some(({ key }) => key.equals(space.spaceKey));

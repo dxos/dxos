@@ -6,7 +6,7 @@ import { type Doc } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { SpaceProperties } from '@dxos/client-protocol';
+import { LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   type CredentialSigner,
@@ -42,7 +42,12 @@ import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/servic
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
 import { EdgeReplicationSetting, type SpaceMetadata } from '@dxos/protocols/proto/dxos/echo/metadata';
-import { type Credential, type ProfileDocument, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import {
+  type Credential,
+  MembershipPolicy,
+  type ProfileDocument,
+  SpaceMember,
+} from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type PeerState } from '@dxos/protocols/proto/dxos/mesh/presence';
 import { type Teleport } from '@dxos/teleport';
@@ -84,6 +89,9 @@ export type AcceptSpaceOptions = {
    * We will try to catch up to this timeframe before initializing the database.
    */
   dataTimeframe?: Timeframe;
+
+  /** Tags assigned to the space member. */
+  tags?: string[];
 };
 
 export type AdmitMemberOptions = {
@@ -92,6 +100,7 @@ export type AdmitMemberOptions = {
   role: SpaceMember.Role;
   profile?: ProfileDocument;
   delegationCredentialId?: PublicKey;
+  tags?: string[];
 };
 
 export type DataSpaceManagerProps = {
@@ -125,6 +134,8 @@ export type DataSpaceManagerRuntimeProps = {
 export type CreateSpaceOptions = {
   rootUrl?: AutomergeUrl;
   documents?: Record<DocumentId, Uint8Array>;
+  tags?: string[];
+  membershipPolicy?: MembershipPolicy;
 };
 
 @trackLeaks('open', 'close')
@@ -180,7 +191,10 @@ export class DataSpaceManager extends Resource {
             await rootHandle?.whenReady();
             const rootDoc = rootHandle?.doc();
 
-            const properties = rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
+            const properties =
+              rootDoc &&
+              (findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties)) ??
+                findInlineObjectOfType(rootDoc, Type.getTypename(LegacySpaceProperties)));
 
             return {
               key: space.key.toHex(),
@@ -262,6 +276,8 @@ export class DataSpaceManager extends Resource {
     );
 
     assertState(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
+
+    const tags = options.tags ? Array.from(options.tags) : [];
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
@@ -274,6 +290,7 @@ export class DataSpaceManager extends Resource {
       controlFeedKey,
       dataFeedKey,
       state: SpaceState.SPACE_ACTIVE,
+      tags,
     };
 
     log('creating space...', { spaceId, spaceKey });
@@ -327,7 +344,14 @@ export class DataSpaceManager extends Resource {
 
     log('adding space...', { spaceKey });
 
-    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url);
+    const credentials = await spaceGenesis(
+      this._keyring,
+      this._signingContext,
+      space.inner,
+      root.url,
+      tags,
+      options.membershipPolicy,
+    );
     await this._metadataStore.addSpace(metadata);
 
     const memberCredential = credentials[1];
@@ -355,11 +379,13 @@ export class DataSpaceManager extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     invariant(!this._spaces.has(opts.spaceKey), 'Space already exists.');
 
+    const tags = opts.tags ? Array.from(opts.tags) : [];
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,
       controlTimeframe: opts.controlTimeframe,
       dataTimeframe: opts.dataTimeframe,
+      tags,
     };
 
     const space = await this._constructSpace(ctx, metadata);
@@ -389,6 +415,7 @@ export class DataSpaceManager extends Resource {
       space.spaceState.membershipChainHeads,
       options.profile,
       options.delegationCredentialId,
+      space.spaceState.tags,
     );
 
     // TODO(dmaretskyi): Refactor.
@@ -543,6 +570,7 @@ export class DataSpaceManager extends Resource {
         },
       },
       cache: metadata.cache,
+      tags: metadata.tags,
       edgeConnection: this._edgeConnection,
       edgeHttpClient: this._edgeHttpClient,
       edgeFeatures: this._edgeFeatures,

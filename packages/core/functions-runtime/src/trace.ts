@@ -83,7 +83,7 @@ export const InvocationTraceStartEvent = Schema.Struct({
   runtime: Schema.optional(FunctionRuntimeKind),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.invocation-trace-start',
+    typename: 'org.dxos.type.invocationTraceStart',
     version: '0.1.0',
   }),
 );
@@ -111,7 +111,7 @@ export const InvocationTraceEndEvent = Schema.Struct({
   error: Schema.optional(SerializedError),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.invocation-trace-end',
+    typename: 'org.dxos.type.invocationTraceEnd',
     version: '0.1.0',
   }),
 );
@@ -136,7 +136,7 @@ export const TraceEvent = Schema.Struct({
   ingestionTimestamp: Schema.Number,
   logs: Schema.Array(TraceEventLog),
   exceptions: Schema.Array(TraceEventException),
-}).pipe(Type.object({ typename: 'org.dxos.type.trace-event', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'org.dxos.type.traceEvent', version: '0.1.0' }));
 
 export type TraceEvent = Schema.Schema.Type<typeof TraceEvent>;
 

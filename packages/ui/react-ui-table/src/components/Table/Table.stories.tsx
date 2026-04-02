@@ -251,7 +251,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.contact-with-array-of-emails',
+    typename: 'org.dxos.type.contactWithArrayOfEmails',
     version: '0.1.0',
   }),
 );

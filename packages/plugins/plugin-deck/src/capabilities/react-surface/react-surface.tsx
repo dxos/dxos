@@ -7,7 +7,8 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, NOT_FOUND_PATH } from '@dxos/app-toolkit';
+import { NotFoundArticle } from '@dxos/app-toolkit/ui';
 
 import { Banner, DeckSettings } from '../../containers';
 import { meta } from '../../meta';
@@ -32,6 +33,12 @@ export default Capability.makeModule(() =>
         component: ({ data }: { data: { variant?: 'topbar' | 'sidebar' } }) => {
           return <Banner variant={data.variant} />;
         },
+      }),
+      Surface.create({
+        id: `${meta.id}.not-found`,
+        role: 'article',
+        filter: (data): data is { attendableId: string } => data.attendableId === NOT_FOUND_PATH,
+        component: () => <NotFoundArticle />,
       }),
     ]),
   ),

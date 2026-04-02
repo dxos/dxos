@@ -106,34 +106,6 @@ export namespace SpaceOperation {
     output: Schema.instanceOf(CancellableInvitationObservable),
   });
 
-  // TODO(wittjosiah): This appears to be unused.
-  export const Lock = Operation.make({
-    meta: {
-      key: `${SPACE_OPERATION}.lock`,
-      name: 'Lock Space',
-      description: 'Lock a space to prevent modifications.',
-    },
-    services: [Capability.Service],
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  });
-
-  // TODO(wittjosiah): This appears to be unused.
-  export const Unlock = Operation.make({
-    meta: {
-      key: `${SPACE_OPERATION}.unlock`,
-      name: 'Unlock Space',
-      description: 'Unlock a space to allow modifications.',
-    },
-    services: [Capability.Service],
-    input: Schema.Struct({
-      space: SpaceSchema,
-    }),
-    output: Schema.Void,
-  });
-
   export const OpenSettings = Operation.make({
     meta: {
       key: `${SPACE_OPERATION}.open-settings`,
