@@ -6,7 +6,14 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, getPersonalSpace, getSpacePath } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  LayoutOperation,
+  getPersonalSpace,
+  getSpacePath,
+  isPersonalSpace,
+  setPersonalSpace,
+} from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -44,9 +51,24 @@ export default Capability.makeModule(
     const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
     const client = yield* Capability.get(ClientCapabilities.Client);
 
-    const personalSpace = getPersonalSpace(client);
-    invariant(personalSpace, 'Personal space not available.');
-    yield* Effect.tryPromise(() => personalSpace.waitUntilReady());
+    // Resolve the personal space.
+    // For existing users: the DefaultSpace HALO credential identifies the space; tag it if needed.
+    // For new users: identity-created already tagged the space via setPersonalSpace().
+    let personalSpace = getPersonalSpace(client);
+    if (!personalSpace) {
+      // Migration: read the legacy DefaultSpace credential from HALO.
+      const defaultSpaceCredential = client.halo.queryCredentials({
+        type: 'dxos.halo.credentials.DefaultSpace',
+      })[0];
+      invariant(defaultSpaceCredential, 'Personal space not available.');
+      const defaultSpaceId = defaultSpaceCredential.subject.assertion.spaceId;
+      personalSpace = client.spaces.get(defaultSpaceId);
+      invariant(personalSpace, 'Personal space not available.');
+      yield* Effect.tryPromise(() => personalSpace!.waitUntilReady());
+      setPersonalSpace(personalSpace);
+    } else {
+      yield* Effect.tryPromise(() => personalSpace!.waitUntilReady());
+    }
 
     // Check if deck state indicates we should switch to default space.
     const layout = registry.get(layoutAtom);
