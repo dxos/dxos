@@ -61,7 +61,8 @@
     "js-yaml": "catalog:",
     "localforage": "catalog:",
     "posthog-js": "catalog:",
-    "uuid": "catalog:"
+    "uuid": "catalog:",
+    "zone.js": "catalog:"
   },
   "devDependencies": {
     "@effect/platform": "catalog:",
