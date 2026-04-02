@@ -9,6 +9,20 @@ import * as Schema from 'effect/Schema';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { Format, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 
+/** @deprecated Use AccessToken instead. */
+export const LegacyAccessToken = Schema.Struct({
+  note: Schema.optional(Schema.String),
+  source: Schema.String,
+  token: Schema.String,
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.access-token',
+    version: '0.1.0',
+  }),
+);
+
+export interface LegacyAccessToken extends Schema.Schema.Type<typeof LegacyAccessToken> {}
+
 export const AccessToken = Schema.Struct({
   note: Schema.optional(
     Schema.String.annotations({
@@ -27,7 +41,7 @@ export const AccessToken = Schema.Struct({
   }),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.access-token',
+    typename: 'org.dxos.type.accessToken',
     version: '0.1.0',
   }),
   Schema.annotations({
