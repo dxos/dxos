@@ -16,6 +16,7 @@ import {
 } from '@dxos/async';
 import {
   type ClientServicesProvider,
+  LegacySpaceProperties,
   SPACE_TAG,
   type Space,
   type SpaceInternal,
@@ -416,7 +417,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     //   This is needed to ensure reactivity for newly created spaces.
     // TODO(wittjosiah): Transfer subscriptions from cached properties to the new properties object.
     {
-      const unsubscribe = this._db.query(Filter.type(SpaceProperties)).subscribe(
+      const unsubscribe = this._db.query(Filter.or(Filter.type(SpaceProperties), Filter.type(LegacySpaceProperties))).subscribe(
         (query) => {
           if (query.results.length === 1) {
             this._properties = query.results[0];

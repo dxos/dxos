@@ -6,7 +6,7 @@ import { type Doc } from '@automerge/automerge';
 import { type AutomergeUrl, type DocHandle, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { SpaceProperties } from '@dxos/client-protocol';
+import { LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   type CredentialSigner,
@@ -189,7 +189,10 @@ export class DataSpaceManager extends Resource {
             await rootHandle?.whenReady();
             const rootDoc = rootHandle?.doc();
 
-            const properties = rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
+            const properties = rootDoc && (
+              findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties)) ??
+              findInlineObjectOfType(rootDoc, Type.getTypename(LegacySpaceProperties))
+            );
 
             return {
               key: space.key.toHex(),
@@ -362,7 +365,8 @@ export class DataSpaceManager extends Resource {
         }
 
         const [_, properties] =
-          findInlineObjectOfType(space.databaseRoot.doc()!, Type.getTypename(SpaceProperties)) ?? [];
+          findInlineObjectOfType(space.databaseRoot.doc()!, Type.getTypename(SpaceProperties)) ??
+          findInlineObjectOfType(space.databaseRoot.doc()!, Type.getTypename(LegacySpaceProperties)) ?? [];
         return properties?.data?.[DEFAULT_SPACE_KEY] === this._signingContext.identityKey.toHex();
       }
 
