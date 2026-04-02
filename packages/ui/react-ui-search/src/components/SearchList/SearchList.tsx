@@ -358,7 +358,6 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
       <Input.Root>
         <Input.TextInput
           {...props}
-          classNames='p-0 px-2'
           variant='subdued'
           autoFocus={props.autoFocus && !hasIosKeyboard}
           placeholder={placeholder ?? defaultPlaceholder}
@@ -483,12 +482,13 @@ SearchListItem.displayName = 'SearchList.Item';
 // Empty
 //
 
-type SearchListEmptyProps = ThemedClassName<PropsWithChildren<{}>>;
+type SearchListEmptyProps = ThemedClassName;
 
-const SearchListEmpty = ({ classNames, children }: SearchListEmptyProps) => {
+const SearchListEmpty = ({ classNames }: SearchListEmptyProps) => {
+  const { t } = useTranslation(translationKey);
   return (
-    <div role='status' className={mx('flex flex-col w-full px-2 py-1', classNames)}>
-      {children}
+    <div role='status' className={mx(classNames)}>
+      {t('empty results message')}
     </div>
   );
 };

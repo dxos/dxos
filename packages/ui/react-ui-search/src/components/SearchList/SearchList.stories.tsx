@@ -59,7 +59,7 @@ const DefaultStory = ({ items = defaultItems }: DefaultStoryProps) => {
                   />
                 ))
               ) : (
-                <SearchList.Empty>No results found</SearchList.Empty>
+                <SearchList.Empty />
               )}
             </SearchList.Viewport>
           </SearchList.Content>
@@ -214,17 +214,7 @@ const WithEmptyStory = () => {
         </Panel.Toolbar>
         <Panel.Content asChild>
           <SearchList.Content>
-            {hasSearched ? (
-              <SearchList.Empty classNames='text-center text-description p-4'>
-                <div className='text-lg'>🔍</div>
-                <div>No results found</div>
-                <div className='text-xs'>Try a different search term</div>
-              </SearchList.Empty>
-            ) : (
-              <SearchList.Empty classNames='text-center text-description p-4'>
-                <div>Start typing to search</div>
-              </SearchList.Empty>
-            )}
+            <SearchList.Empty />
           </SearchList.Content>
         </Panel.Content>
       </Panel.Root>
@@ -491,7 +481,7 @@ const WithGroupsStory = () => {
                   ))}
                 </SearchList.Group>
               ))}
-              {results.length === 0 && <SearchList.Empty>No results found</SearchList.Empty>}
+              {results.length === 0 && <SearchList.Empty />}
             </SearchList.Viewport>
           </SearchList.Content>
         </Panel.Content>

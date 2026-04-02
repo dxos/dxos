@@ -6,8 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
+import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { SpacePlugin } from '@dxos/plugin-space';
 import { corePlugins, StorybookPlugin } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Dialog } from '@dxos/react-ui';
@@ -15,10 +19,10 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization, Person } from '@dxos/types';
 
+import { SearchContextProvider } from '../../hooks';
 import { translations } from '../../translations';
 
 import { SearchDialog } from './SearchDialog';
-import { SearchContextProvider } from '../../hooks';
 
 faker.seed(0);
 
@@ -39,18 +43,18 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
+      capabilities: [Capability.contributes(AppCapabilities.Translations, translations)],
       plugins: [
         ...corePlugins(),
         StorybookPlugin({}),
+        SpacePlugin({}),
         ClientPlugin({
           types: [Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              const space = yield* Effect.promise(() => client.spaces.create());
-              yield* Effect.promise(() => space.waitUntilReady());
+              const { personalSpace } = yield* initializeIdentity(client);
 
-              const factory = createObjectFactory(space.db, faker as any);
+              const factory = createObjectFactory(personalSpace.db, faker as any);
               yield* Effect.promise(() =>
                 factory([
                   { type: Organization.Organization, count: 10 },
@@ -64,7 +68,6 @@ const meta = {
   ],
   parameters: {
     layout: 'fullscreen',
-    translations,
   },
 } satisfies Meta<typeof SearchDialog>;
 

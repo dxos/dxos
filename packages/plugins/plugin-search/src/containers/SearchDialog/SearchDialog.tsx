@@ -82,7 +82,7 @@ export const SearchDialog = ({ pivotId: pivotIdProp }: SearchDialogProps) => {
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch}>
           <SearchList.Content classNames='max-h-[24rem]'>
-            <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+            <SearchList.Input autoFocus placeholder={t('search placeholder')} />
             <SearchList.Viewport>
               {allResults.map((result) => (
                 <SearchList.Item
@@ -94,7 +94,7 @@ export const SearchDialog = ({ pivotId: pivotIdProp }: SearchDialogProps) => {
                   onSelect={() => void handleSelect(result)}
                 />
               ))}
-              {query && allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
+              {query && allResults.length === 0 && <SearchList.Empty />}
             </SearchList.Viewport>
           </SearchList.Content>
         </SearchList.Root>
