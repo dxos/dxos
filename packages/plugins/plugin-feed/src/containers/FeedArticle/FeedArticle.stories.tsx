@@ -25,7 +25,7 @@ const useFeedData = (feedUrl?: string): BuildResult | undefined => {
     const load = async () => {
       const builder = new Builder();
       if (feedUrl) {
-        await builder.fromRss(feedUrl);
+        await builder.fromRss(feedUrl, { corsProxy: 'https://api.allorigins.win/raw?url=' });
       } else {
         builder.createPosts(50);
       }
@@ -33,6 +33,7 @@ const useFeedData = (feedUrl?: string): BuildResult | undefined => {
         setData(builder.build());
       }
     };
+
     void load().catch(() => {});
 
     return () => {

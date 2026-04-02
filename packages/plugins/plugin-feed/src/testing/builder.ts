@@ -83,8 +83,9 @@ export class Builder {
    * Fetches and parses an RSS/Atom feed URL, populating the builder with real posts.
    * Sets the feed name, URL, and description from the channel metadata.
    */
-  async fromRss(url: string): Promise<this> {
-    const response = await fetch(url);
+  async fromRss(url: string, { corsProxy }: { corsProxy?: string } = {}): Promise<this> {
+    const fetchUrl = corsProxy ? `${corsProxy}${encodeURIComponent(url)}` : url;
+    const response = await fetch(fetchUrl);
     const xml = await response.text();
     const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
     const parsed = parser.parse(xml);
