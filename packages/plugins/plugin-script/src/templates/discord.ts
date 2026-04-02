@@ -60,7 +60,7 @@ export default defineFunction({
   handler: ({ data: { channelId, queueId, after = DEFAULT_AFTER, pageSize = 5 }, context: { space } }: any) =>
     Effect.gen(function* () {
       const { token } = yield* Effect.tryPromise({
-        try: () => space.db.query(Filter.typename('org.dxos.type.access-token', { source: 'discord.com' })).first(),
+        try: () => space.db.query(Filter.typename('org.dxos.type.accessToken', { source: 'discord.com' })).first(),
         catch: (e: any) => e,
       });
       const { objects } = yield* Effect.tryPromise({
