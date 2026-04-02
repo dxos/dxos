@@ -8,18 +8,22 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Query } from '@dxos/echo';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { Card, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Card, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
 
 import { useGlobalSearch, useGlobalSearchResults, useWebSearch } from '../../hooks';
-import { meta } from '../../meta';
 import { type SearchResult } from '../../types';
 
-export const SearchMain = ({ space }: { space?: Space }) => {
-  const { t } = useTranslation(meta.id);
+export type SearchMainProps = {
+  space?: Space;
+};
+
+export const SearchMain = ({ space }: SearchMainProps) => {
+  const [viewport, setViewport] = useState<HTMLElement | null>(null);
+
   const { setMatch } = useGlobalSearch();
   const [query, setQuery] = useState<string>();
   // TODO(burdon): Option to search across spaces.
@@ -51,17 +55,21 @@ export const SearchMain = ({ space }: { space?: Space }) => {
     [setMatch],
   );
 
+  // TODO(burdon): Factor out into SearchList (rename SearchStack). Consider mobile variant (search position).
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <ScrollArea.Root thin padding>
-          <ScrollArea.Viewport>
-            <Mosaic.Stack
-              classNames='py-2 gap-2'
-              draggable={false}
-              items={allResults}
-              getId={(result) => result.object!.id}
+        <ScrollArea.Root thin padding centered>
+          <ScrollArea.Viewport ref={setViewport}>
+            <Mosaic.VirtualStack
               Tile={SearchResultTile}
+              classNames='my-2'
+              gap={8}
+              items={allResults}
+              draggable={false}
+              getId={(item) => item.object.id}
+              getScrollElement={() => viewport}
+              estimateSize={() => 150}
             />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
@@ -70,8 +78,9 @@ export const SearchMain = ({ space }: { space?: Space }) => {
   );
 };
 
+// TODO(burdon): Implement Tile.
 const SearchResultTile: MosaicStackTileComponent<SearchResult> = ({ data }) => {
-  const objectMenuItems = useObjectMenuItems(data.object);
+  const menuItems = useObjectMenuItems(data.object);
 
   return (
     <Menu.Root>
@@ -80,10 +89,10 @@ const SearchResultTile: MosaicStackTileComponent<SearchResult> = ({ data }) => {
           <Card.DragHandle />
           <Card.Title>{data.label ?? (data.object && Entity.getLabel(data.object))}</Card.Title>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-          <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
+          <Menu.Trigger asChild disabled={!menuItems?.length}>
             <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
           </Menu.Trigger>
-          <Menu.Content items={objectMenuItems} />
+          <Menu.Content items={menuItems} />
         </Card.Toolbar>
         <Surface.Surface role='card--content' data={{ subject: data.object }} limit={1} />
       </Card.Root>
