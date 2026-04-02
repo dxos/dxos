@@ -9,11 +9,12 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Plugin } from '@dxos/app-framework';
-import { setPersonalSpace } from '@dxos/app-toolkit';
 import { CommandConfig, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { invariant } from '@dxos/invariant';
+import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { ClientOperation } from '../../../../operations';
 import { printIdentity } from '../util';
@@ -41,9 +42,12 @@ export const handler = Effect.fn(function* ({
   }
 
   // Create personal space for the CLI identity.
-  // TODO: Use space tags to mark as personal space.
-  const space = yield* Effect.promise(() => client.spaces.create());
+  const { PERSONAL_SPACE_TAG, setPersonalSpace } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
+  const space = yield* Effect.promise(() =>
+    client.spaces.create({}, { tags: [PERSONAL_SPACE_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
+  );
   yield* Effect.promise(() => space.waitUntilReady());
+  yield* Effect.promise(() => space.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED));
   setPersonalSpace(space);
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
 

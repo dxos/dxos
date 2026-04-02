@@ -8,6 +8,7 @@ import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { type Space } from '@dxos/client-protocol';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Context } from '@dxos/context';
 import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
@@ -708,6 +709,21 @@ describe('Spaces', () => {
     const importedObj = await targetSpace.internal.db.query(Filter.id(obj.id)).first();
     expect(importedObj).toBeDefined();
     expect(importedObj.name).toEqual('old-format-obj');
+  });
+
+  test('creates a space with locked membership policy', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+
+    const space = await client.spaces.create({}, { membershipPolicy: MembershipPolicy.LOCKED });
+    expect(space.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
+    expect(space.members.get()).to.have.length(1);
+  });
+
+  test('space membership policy defaults to INVITE', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+
+    const space = await client.spaces.create();
+    expect(space.membershipPolicy).toEqual(MembershipPolicy.INVITE);
   });
 
   const createInitializedClients = async (
