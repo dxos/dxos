@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { AiService, GenericToolkit, type ModelName } from '@dxos/ai';
-import { Database, DXN } from '@dxos/echo';
+import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { QueueService, TracingService } from '@dxos/functions';
 import { Process, ProcessManager, StorageService } from '@dxos/functions-runtime';
 import { Operation, OperationRegistry } from '@dxos/operation';
@@ -61,12 +61,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     },
     (ctx) =>
       Effect.gen(function* () {
-        const queueDxnStr = ctx.params.target;
-        if (queueDxnStr == null) {
+        const feedDxn = ctx.params.target;
+        if (feedDxn == null) {
           return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
-        const queueDxn = DXN.parse(queueDxnStr);
-        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
+        const feed = yield* Database.resolve(DXN.parse(feedDxn), Feed.Feed).pipe(Effect.orDie);
+        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(Feed.getQueueDxn(feed)!);
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
         const storageService = yield* StorageService.StorageService;
@@ -128,6 +128,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 makeToolResolverFromOperations(),
                 ToolExecutionService({
                   toolCallManager,
+                  feed,
                 }),
                 functionInvocationServiceFromOperations,
                 AsynchronousExectionToolkitLayer,
@@ -182,6 +183,7 @@ interface ToolExecutionServiceOptions {
   backgroundThreshold?: Duration.Duration;
 
   toolCallManager: ToolCallManager;
+  feed: Feed.Feed;
 }
 
 const AgentEvent = Schema.Union(
@@ -261,6 +263,7 @@ class ToolCallManager {
 const ToolExecutionService = ({
   backgroundThreshold = Duration.seconds(1),
   toolCallManager,
+  feed,
 }: ToolExecutionServiceOptions) =>
   Layer.unwrapEffect(
     Effect.gen(function* () {
@@ -270,7 +273,11 @@ const ToolExecutionService = ({
           Effect.gen(function* () {
             const operationDef = getOperationFromTool(tool).pipe(Option.getOrThrow);
             log('invoking operation', { operationDef, input });
-            const fiber = yield* operationInvoker.invokeFiber(operationDef, input);
+            const fiber = yield* operationInvoker.invokeFiber(operationDef, input, {
+              environment: {
+                conversation: Obj.getDXN(feed).toString(),
+              },
+            });
             toolCallManager.beginCall(fiber.pid);
             log('invoked operation', { operationDef, input, fiber });
 

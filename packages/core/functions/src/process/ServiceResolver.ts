@@ -12,6 +12,8 @@ import type { DXN, SpaceId } from '@dxos/keys';
 
 import { ServiceNotAvailableError } from '../errors';
 import * as Process from './Process';
+import * as Scope from 'effect/Scope';
+import * as Either from 'effect/Either';
 
 const ServiceResolverTypeId = '~@dxos/functions/ServiceResolver' as const;
 type ServiceResolverTypeId = typeof ServiceResolverTypeId;
@@ -23,16 +25,30 @@ export interface ServiceResolver {
    * Resolve a set of services identified by their tags.
    * Returns a Context containing all requested services, or fails with ServiceNotAvailableError.
    */
-  resolve(
-    tags: readonly Context.Tag<any, any>[],
+  resolve<Tag extends Context.Tag<any, any>>(
+    tag: Tag,
     context: ResolutionContext,
-  ): Effect.Effect<Context.Context<never>, ServiceNotAvailableError>;
+  ): Effect.Effect<Context.Tag.Service<Tag>, ServiceNotAvailableError, Scope.Scope>;
 }
 
 /**
  * Tag for the ServiceResolver service.
  */
 export const ServiceResolver = Context.GenericTag<ServiceResolver>('@dxos/functions/ServiceResolver');
+
+export const resolve = Effect.serviceFunctionEffect(ServiceResolver, (_) => _.resolve);
+
+export const resolveAll = <const Tags extends readonly Context.Tag<any, any>[]>(
+  tags: Tags,
+  context: ResolutionContext,
+): Effect.Effect<Context.Context<Tags[number]>, ServiceNotAvailableError, Scope.Scope | ServiceResolver> =>
+  Effect.gen(function* () {
+    const serviceResolver = yield* ServiceResolver;
+    const services = yield* Effect.forEach(tags, (tag) =>
+      resolve(tag, context).pipe(Effect.map((service) => Context.make(tag, service))),
+    );
+    return Context.mergeAll(...services);
+  });
 
 /**
  * Provides context for service resolution.
@@ -59,14 +75,27 @@ export interface ResolutionContext {
   readonly process?: Process.ID;
 }
 
+export const succeed = <I, S>(
+  tag: Context.Tag<I, S>,
+  getService: (context: ResolutionContext) => Effect.Effect<S, ServiceNotAvailableError, Scope.Scope>,
+): ServiceResolver => {
+  return make((tag1, context) => {
+    if (tag1.key !== tag.key) {
+      return Effect.fail(new ServiceNotAvailableError(`Service not available: ${String(tag.key ?? tag)}`));
+    }
+    const service = getService(context);
+    return service as any;
+  });
+};
+
 /**
  * Create a ServiceResolver from a custom resolution function.
  */
-export const fromResolveFn = (
-  resolveFn: (
-    tags: readonly Context.Tag<any, any>[],
+export const make = (
+  resolveFn: <I, S>(
+    tag: Context.Tag<I, S>,
     context: ResolutionContext,
-  ) => Effect.Effect<Context.Context<never>, ServiceNotAvailableError>,
+  ) => Effect.Effect<S, ServiceNotAvailableError, Scope.Scope>,
 ): ServiceResolver => ({
   [ServiceResolverTypeId]: ServiceResolverTypeId,
   resolve: resolveFn,
@@ -77,18 +106,16 @@ export const fromResolveFn = (
  * Tags present in the context are resolved; missing tags fail with ServiceNotAvailableError.
  */
 export const fromContext = (ctx: Context.Context<any>): ServiceResolver =>
-  fromResolveFn((tags, _context) =>
-    Effect.sync(() => {
-      let result: Context.Context<never> = Context.empty() as Context.Context<never>;
-      for (const tag of tags) {
-        const service = Context.getOption(ctx, tag);
-        if (Option.isNone(service)) {
-          return Effect.fail(new ServiceNotAvailableError(`Service not available: ${String((tag as any).key ?? tag)}`));
-        }
-        result = Context.add(result, tag, service.value) as Context.Context<never>;
+  make((tag, context) =>
+    Effect.gen(function* () {
+      const service = Context.getOption(ctx, tag);
+      if (Option.isNone(service)) {
+        return yield* Effect.fail(
+          new ServiceNotAvailableError(`Service not available: ${String((tag as any).key ?? tag)}`),
+        );
       }
-      return Effect.succeed(result);
-    }).pipe(Effect.flatten),
+      return service.value;
+    }),
   );
 
 /**
@@ -100,21 +127,18 @@ export const fromRequirements = <const Tags extends readonly Context.Tag<any, an
 ): Effect.Effect<ServiceResolver, never, Context.Tag.Identifier<Tags[number]>> =>
   Effect.contextWith((parentCtx: Context.Context<any>) => {
     const available = new Set(tags.map((tag) => tag.key));
-    return fromResolveFn((requestedTags, _context) =>
-      Effect.sync(() => {
+    return make((tag, context) =>
+      Effect.gen(function* () {
         let result: Context.Context<never> = Context.empty() as Context.Context<never>;
-        for (const tag of requestedTags) {
-          if (!available.has(tag.key)) {
-            return Effect.fail(new ServiceNotAvailableError(`Service not available: ${String(tag.key ?? tag)}`));
-          }
-          const service = Context.getOption(parentCtx, tag);
-          if (Option.isNone(service)) {
-            return Effect.fail(new ServiceNotAvailableError(`Service not available: ${String(tag.key ?? tag)}`));
-          }
-          result = Context.add(result, tag, service.value) as Context.Context<never>;
+        if (!available.has(tag.key)) {
+          return yield* Effect.fail(new ServiceNotAvailableError(`Service not available: ${String(tag.key ?? tag)}`));
         }
-        return Effect.succeed(result);
-      }).pipe(Effect.flatten),
+        const service = Context.getOption(parentCtx, tag);
+        if (Option.isNone(service)) {
+          return yield* Effect.fail(new ServiceNotAvailableError(`Service not available: ${String(tag.key ?? tag)}`));
+        }
+        return service.value;
+      }),
     );
   });
 
@@ -131,60 +155,22 @@ export const layerRequirements = <const Tags extends readonly Context.Tag<any, a
  * the first resolver that can satisfy a tag wins.
  */
 export const compose = (...resolvers: readonly ServiceResolver[]): ServiceResolver =>
-  fromResolveFn((tags, context) =>
+  make((tag, context) =>
     Effect.gen(function* () {
-      let result: Context.Context<never> = Context.empty() as Context.Context<never>;
-      const remaining = [...tags];
-
       for (const resolver of resolvers) {
-        if (remaining.length === 0) break;
-
-        const stillNeeded = [...remaining];
-        const resolved = yield* resolver.resolve(stillNeeded, context).pipe(
-          Effect.map(Option.some),
-          Effect.catchAll(() => Effect.succeed(Option.none<Context.Context<never>>())),
-        );
-
-        if (Option.isSome(resolved)) {
-          result = Context.merge(result, resolved.value) as Context.Context<never>;
-          remaining.length = 0;
-          break;
-        }
-
-        const resolved1by1: Context.Tag<any, any>[] = [];
-        for (const tag of stillNeeded) {
-          const single = yield* resolver.resolve([tag], context).pipe(
-            Effect.map(Option.some),
-            Effect.catchAll(() => Effect.succeed(Option.none<Context.Context<never>>())),
-          );
-          if (Option.isSome(single)) {
-            result = Context.merge(result, single.value) as Context.Context<never>;
-            resolved1by1.push(tag);
-          }
-        }
-
-        for (const tag of resolved1by1) {
-          const idx = remaining.findIndex((remainingTag) => remainingTag.key === tag.key);
-          if (idx !== -1) remaining.splice(idx, 1);
+        const single = yield* resolver.resolve(tag, context).pipe(Effect.either);
+        if (Either.isRight(single)) {
+          return single.right;
         }
       }
 
-      if (remaining.length > 0) {
-        const names = remaining.map((tag) => tag.key ?? String(tag)).join(', ');
-        return yield* Effect.fail(new ServiceNotAvailableError(`Service not available: ${names}`));
-      }
-
-      return result;
+      return yield* Effect.fail(new ServiceNotAvailableError(`Service not available: ${String(tag.key ?? tag)}`));
     }),
   );
 
 /**
  * An empty resolver that fails for any requested service.
  */
-export const empty: ServiceResolver = fromResolveFn((tags, _context) => {
-  if (tags.length === 0) {
-    return Effect.succeed(Context.empty() as Context.Context<never>);
-  }
-  const names = tags.map((tag) => (tag as any).key ?? String(tag)).join(', ');
-  return Effect.fail(new ServiceNotAvailableError(`Service not available: ${names}`));
+export const empty: ServiceResolver = make((tag, context) => {
+  return Effect.fail(new ServiceNotAvailableError(`Service not available: ${String(tag.key ?? tag)}`));
 });

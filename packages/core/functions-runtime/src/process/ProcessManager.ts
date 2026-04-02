@@ -889,7 +889,11 @@ export class ProcessManagerImpl implements Manager {
 
       let serviceCtx: Context.Context<never> = Context.empty() as Context.Context<never>;
       if (externalServices.length > 0) {
-        serviceCtx = yield* this.#serviceResolver.resolve(externalServices, resolutionContext).pipe(Effect.orDie);
+        serviceCtx = yield* ServiceResolver.resolveAll(externalServices, resolutionContext).pipe(
+          Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
+          Effect.provideService(Scope.Scope, scope),
+          Effect.orDie,
+        );
       }
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
@@ -1160,7 +1164,7 @@ export namespace ProcessOperationInvoker {
     invokeFiber: <I, O>(
       op: Operation.Definition<I, O>,
       input: I,
-      tracingOptions?: TracingOptions,
+      options?: Pick<SpawnOptions, 'tracing' | 'environment'>,
     ) => Effect.Effect<OperationFiber<O>>;
 
     /**
@@ -1210,14 +1214,14 @@ export namespace ProcessOperationInvoker {
     const invokeFiber = <I, O>(
       op: Operation.Definition<I, O>,
       input: I,
-      tracingOptions?: TracingOptions,
+      options?: Pick<SpawnOptions, 'tracing' | 'environment'>,
     ): Effect.Effect<OperationFiber<O>> =>
       Effect.gen(function* () {
         const executable = Process.fromOperation(op, opts.handlerSet);
 
         const handle = yield* opts.manager.spawn(executable, {
+          ...options,
           parentProcessId: opts.parentProcessId,
-          tracing: tracingOptions,
           name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
         });
         log('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
@@ -1250,7 +1254,7 @@ export namespace ProcessOperationInvoker {
       const options = args[1] as Operation.InvokeOptions | undefined;
       const tracing = options?.tracing as TracingOptions | undefined;
       return Effect.gen(function* () {
-        const fiber = yield* invokeFiber(op, input, tracing);
+        const fiber = yield* invokeFiber(op, input, { tracing, environment: { space: options?.spaceId } });
         const output = yield* fiber.await.pipe(Effect.flatten);
 
         yield* PubSub.publish(pubsub, {

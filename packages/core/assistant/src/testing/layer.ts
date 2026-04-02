@@ -6,35 +6,52 @@ import { Registry } from '@effect-atom/atom';
 import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 
-import { AiService, type ModelName, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/ai';
+import {
+  AiService,
+  GenericToolkit,
+  type ModelName,
+  type ToolExecutionService,
+  type ToolResolverService,
+} from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { Database, Feed, type Type } from '@dxos/echo';
+import { Database, DXN, Feed, type Type } from '@dxos/echo';
+import { acquireReleaseResource } from '@dxos/effect';
 import {
   CredentialsService,
   type FunctionInvocationService,
   QueueService,
   type ServiceCredential,
+  ServiceNotAvailableError,
   TracingService,
 } from '@dxos/functions';
 import {
+  type Process,
   ProcessManager,
   ServiceResolver,
   TracingServiceExt,
   TriggerDispatcher,
   TriggerStateStore,
-  type Process,
 } from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
+import { Message } from '@dxos/types';
 
-import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
-import { ToolExecutionServices } from '../functions';
 import { Blueprint } from '@dxos/blueprints';
-import { AgentService } from '../service';
-import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 import * as LanguageModel from '@effect/ai/LanguageModel';
+import * as KeyValueStore from '@effect/platform/KeyValueStore';
+import { ToolExecutionServices } from '../functions';
+import { AgentService } from '../service';
 
 import type { TestContextService } from '@dxos/effect/testing';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import {
+  AiContextBinder,
+  AiContextService,
+  AiConversation,
+  AiConversationService,
+  type ContextBinding,
+} from '../conversation';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
@@ -105,13 +122,58 @@ export const AssistantTestLayer = ({
     Layer.provideMerge(AgentService.layer({ systemPrompt })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
     Layer.provideMerge(
-      ServiceResolver.layerRequirements(
-        Database.Service,
-        GenericToolkit.GenericToolkitProvider,
-        QueueService,
-        AiService.AiService,
-        OperationRegistry.Service,
-        Blueprint.RegistryService,
+      Layer.effect(
+        ServiceResolver.ServiceResolver,
+        Effect.gen(function* () {
+          const services = yield* Effect.context<Database.Service | QueueService>().pipe(
+            Effect.map(Context.pick(Database.Service, QueueService)),
+            Effect.map(Layer.succeedContext),
+          );
+          // AiContextBinder.
+          return ServiceResolver.compose(
+            ServiceResolver.succeed(AiContextService, (context) =>
+              Effect.gen(function* () {
+                if (!context.conversation) {
+                  return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
+                }
+                const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
+                const queue = yield* QueueService.getQueue(Feed.getQueueDxn(feed)!);
+                const binder = yield* acquireReleaseResource(
+                  () =>
+                    new AiContextBinder({
+                      queue,
+                    }),
+                );
+                return { binder };
+              }).pipe(Effect.provide(services)),
+            ),
+            // AiConversationService.
+            ServiceResolver.succeed(AiConversationService, (context) =>
+              Effect.gen(function* () {
+                if (!context.conversation) {
+                  return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
+                }
+                const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
+                const queue = yield* QueueService.getQueue<ContextBinding | Message.Message>(Feed.getQueueDxn(feed)!);
+                const conversation = yield* acquireReleaseResource(
+                  () =>
+                    new AiConversation({
+                      queue,
+                    }),
+                );
+                return conversation;
+              }).pipe(Effect.provide(services)),
+            ),
+            yield* ServiceResolver.fromRequirements(
+              Database.Service,
+              GenericToolkit.GenericToolkitProvider,
+              QueueService,
+              AiService.AiService,
+              OperationRegistry.Service,
+              Blueprint.RegistryService,
+            ),
+          );
+        }),
       ),
     ),
     Layer.provideMerge(Layer.mergeAll(OperationRegistry.layer, AiService.model(model), ToolExecutionServices)),

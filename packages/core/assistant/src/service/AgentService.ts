@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Database, Feed, type Obj } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -119,8 +119,7 @@ export const layer = (opts?: {
               return cached;
             }
 
-            const queueDxn = Feed.getQueueDxn(feed) ?? failedInvariant();
-            const target = queueDxn.toString();
+            const target = Obj.getDXN(feed).toString();
             const executable = AgentProcess({ systemPrompt: opts?.systemPrompt });
             const processes = yield* processManager.list({ target, key: executable.key });
 
