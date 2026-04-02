@@ -24,6 +24,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
 import { Message } from '@dxos/types';
+import * as Record from 'effect/Record';
 
 import {
   AiSession,
@@ -45,7 +46,6 @@ export interface AiConversationRunProps<Tools extends Record<string, Tool.Any>> 
 
 export type AiConversationOptions = {
   queue: Queue<Message.Message | ContextBinding>;
-  toolkit?: Toolkit.Any;
   registry?: Registry.Registry;
 };
 
@@ -70,7 +70,6 @@ export class AiConversation extends Resource {
   public constructor(options: AiConversationOptions) {
     super();
     this._queue = options.queue;
-    this._toolkit = options.toolkit;
     invariant(this._queue);
     this._binder = new AiContextBinder({ queue: this._queue, registry: options.registry });
   }
@@ -140,10 +139,11 @@ export class AiConversation extends Resource {
         const currentBlueprints = this.context.getBlueprints();
         const mcps = yield* connectMcpServers(currentBlueprints);
         const toolkit = yield* createToolkit({
-          toolkit: this._toolkit,
+          toolkit: params.toolkit,
           blueprints: currentBlueprints,
           genericToolkits: mcps,
         });
+        log.info('toolkit', { tools: Record.keys(toolkit.tools) });
         const system = yield* formatSystemPrompt({
           system: params.system,
           blueprints: currentBlueprints,

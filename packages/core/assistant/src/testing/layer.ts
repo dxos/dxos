@@ -14,7 +14,7 @@ import {
   type ToolResolverService,
 } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { Database, DXN, Feed, type Type } from '@dxos/echo';
+import { Database, DXN, Feed, Type } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import {
   CredentialsService,
@@ -52,6 +52,7 @@ import {
   AiConversationService,
   type ContextBinding,
 } from '../conversation';
+import * as Array from 'effect/Array';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
@@ -119,6 +120,7 @@ export const AssistantTestLayer = ({
     ? OperationHandlerSet.merge(...operationHandlers)
     : operationHandlers;
   types.push(Blueprint.Blueprint, Prompt.Prompt, Operation.PersistentOperation, Feed.Feed);
+  types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
     Layer.provideMerge(AgentService.layer({ systemPrompt })),

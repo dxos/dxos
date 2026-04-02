@@ -113,7 +113,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('begin request', { prompt });
               yield* conversation.createRequest({
                 prompt,
-                toolkit: AsynchronousExectionToolkit,
+                // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
+                // toolkit: AsynchronousExectionToolkit,
                 system: options.systemPrompt,
               });
               log('end request');
@@ -319,6 +320,7 @@ class AsynchronousExectionToolkit extends Toolkit.make(
   }),
 ) {}
 
+// TODO(dmaretskyi): Currently broken: polling a completed process returns interruped error.
 const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(
   Effect.gen(function* () {
     const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
@@ -348,7 +350,8 @@ const AsynchronousExectionToolkitLayer = AsynchronousExectionToolkit.toLayer(
  * Instructs model that the tool is running in the background.
  */
 const toolIsRunningInBackgroundResponse = (pid: Process.ID) =>
-  `Tool is running in the background id=${pid}; use ${AsynchronousExectionToolkit.tools['poll-tools'].name} to get the result.`;
+  `Tool is running in the background id=${pid}; wait for the completion notification to get the result.`;
+// `Tool is running in the background id=${pid}; use ${AsynchronousExectionToolkit.tools['poll-tools'].name} to get the result.`;
 
 const toolResultResponse = (pid: string, value: unknown) => `<result pid=${pid}>${JSON.stringify(value)}</result>`;
 

@@ -832,7 +832,7 @@ export class ProcessManagerImpl implements Manager {
       }
 
       // Create TracingService scoped to this process's trace context.
-      log.info('process trace config', { pid: id, invocationTrace });
+      log('process trace config', { pid: id, invocationTrace });
       const invocationTracingService = invocationTrace?.invocationTraceQueue
         ? yield* TracingService.pipe(
             Effect.provide(

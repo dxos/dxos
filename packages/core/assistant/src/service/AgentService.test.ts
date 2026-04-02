@@ -142,7 +142,6 @@ describe('Agent Executable', () => {
         yield* agent.waitForCompletion();
       },
       Effect.provide(TestLayer),
-      Effect.scoped,
       TestHelpers.provideTestContext,
     ),
     { timeout: 120_000 },

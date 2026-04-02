@@ -322,3 +322,40 @@ describe('ProcessManagerImpl', () => {
     );
   });
 });
+
+describe('ProcessOperationInvoker', () => {
+  it.effect(
+    'spawns a process and produces output',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      const fiber = yield* invoker.invokeFiber(Double, { value: 5 });
+      const output = yield* fiber.await;
+      expect(output).toEqual(Exit.succeed(10));
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'attaches to a running process and produces output',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      const fiber1 = yield* invoker.invokeFiber(Double, { value: 5 });
+
+      const fiber2 = yield* invoker.attachFiber(fiber1.pid);
+      const output = yield* fiber2.await;
+      expect(output).toEqual(Exit.succeed(10));
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'attaches to a completedprocess and produces output',
+    Effect.fn(function* ({ expect }) {
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      const fiber1 = yield* invoker.invokeFiber(Double, { value: 5 });
+      yield* fiber1.await;
+
+      const fiber2 = yield* invoker.attachFiber(fiber1.pid);
+      const output = yield* fiber2.await;
+      expect(output).toEqual(Exit.succeed(10));
+    }, Effect.provide(TestLayer)),
+  );
+});

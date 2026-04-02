@@ -114,10 +114,12 @@ export const makeToolExecutionServiceFromFunctions = (): Layer.Layer<
   );
 };
 
-export const makeToolResolverFromOperations = (): Layer.Layer<
+export const makeToolResolverFromOperations = <R = never>({
+  toolkit: extraToolkit = GenericToolkit.empty,
+}: { toolkit?: GenericToolkit.GenericToolkit<never, never, R> } = {}): Layer.Layer<
   ToolResolverService,
   never,
-  GenericToolkit.GenericToolkitProvider | OperationRegistry.Service
+  GenericToolkit.GenericToolkitProvider | OperationRegistry.Service | R
 > => {
   return Layer.effect(
     ToolResolverService,
@@ -127,7 +129,7 @@ export const makeToolResolverFromOperations = (): Layer.Layer<
       return {
         resolve: (id): Effect.Effect<Tool.Any, AiToolNotFoundError> =>
           Effect.gen(function* () {
-            const toolkit = toolkitProvider.getToolkit();
+            const toolkit = GenericToolkit.merge(extraToolkit, toolkitProvider.getToolkit());
             log.info('provided tools', { tools: Record.keys(toolkit.toolkit.tools) });
 
             const tool = toolkit.toolkit.tools[id];
