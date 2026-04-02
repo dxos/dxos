@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { SpaceProperties } from '@dxos/client/echo';
+import { Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -57,6 +58,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       return {
         id: space.id.toString(),
         name: space.isOpen ? space.properties.name : undefined,
+        tags: space.tags.join(', '),
         objects: -1, // TODO(dmaretskyi): Fix this.
         members: space.members.get().length,
         startup: open && ready ? ready.getTime() - open.getTime() : -1,
@@ -161,7 +163,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       }
       try {
         await importTargetSpace.waitUntilReady();
-        await importData(importTargetSpace, backup, { intoExistingSpace: true });
+        await importData(importTargetSpace, backup, { ignoreTypes: [Type.getTypename(SpaceProperties)] });
       } catch (err) {
         log.catch(err);
       } finally {
@@ -175,6 +177,7 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
     () => [
       { name: 'id', format: Format.TypeFormat.DID },
       { name: 'name', format: Format.TypeFormat.String },
+      { name: 'tags', format: Format.TypeFormat.String },
       { name: 'objects', format: Format.TypeFormat.Number, size: 120 },
       { name: 'members', format: Format.TypeFormat.Number, size: 120 },
       { name: 'startup', format: Format.TypeFormat.Number, size: 120 },
@@ -204,16 +207,23 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
   return (
     <PanelContainer classNames='overflow-auto flex-1'>
       {/* TODO(burdon): This should not be a dialog. */}
-      <DialogRestoreSpace handleFile={handleImport} />
       <DialogRestoreSpace
-        open={importTargetSpaceId !== null}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) {
-            setImportTargetSpaceId(null);
-          }
-        }}
-        spaceName={importTargetSpace?.isOpen ? (importTargetSpace.properties.name ?? importTargetSpace.id) : undefined}
-        handleFile={handleImportIntoSpace}
+        {...(importTargetSpaceId !== null
+          ? {
+              open: true,
+              onOpenChange: (nextOpen: boolean) => {
+                if (!nextOpen) {
+                  setImportTargetSpaceId(null);
+                }
+              },
+              spaceName: importTargetSpace?.isOpen
+                ? (importTargetSpace.properties.name ?? importTargetSpace.id)
+                : undefined,
+              handleFile: handleImportIntoSpace,
+            }
+          : {
+              handleFile: handleImport,
+            })}
       />
       <DynamicTable
         properties={properties}

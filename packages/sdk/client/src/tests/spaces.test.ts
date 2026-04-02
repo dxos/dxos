@@ -605,7 +605,7 @@ describe('Spaces', () => {
     await targetSpace.waitUntilReady();
 
     // Import into existing space, skipping SpaceProperties.
-    await importSpace(targetSpace.internal.db, exported, { skipSpaceProperties: true });
+    await importSpace(targetSpace.internal.db, exported, { ignoreTypes: [Type.getTypename(SpaceProperties)] });
 
     // Verify objects imported.
     const importedObj = await targetSpace.internal.db.query(Filter.id(obj.id)).first();
@@ -651,7 +651,7 @@ describe('Spaces', () => {
     await targetSpace.waitUntilReady();
 
     // Import ECHO objects.
-    await importSpace(targetSpace.internal.db, exported, { skipSpaceProperties: true });
+    await importSpace(targetSpace.internal.db, exported, { ignoreTypes: [Type.getTypename(SpaceProperties)] });
 
     // Verify ECHO objects imported.
     const importedObj = await targetSpace.internal.db.query(Filter.id(obj.id)).first();
@@ -702,7 +702,7 @@ describe('Spaces', () => {
     // Import into existing space.
     const targetSpace = await client.spaces.create({ name: 'Target' });
     await targetSpace.waitUntilReady();
-    await importSpace(targetSpace.internal.db, exported, { skipSpaceProperties: true });
+    await importSpace(targetSpace.internal.db, exported, { ignoreTypes: [Type.getTypename(SpaceProperties)] });
 
     // Verify objects imported without errors.
     const importedObj = await targetSpace.internal.db.query(Filter.id(obj.id)).first();

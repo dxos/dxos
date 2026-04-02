@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { importSpace } from '@dxos/client/echo';
+import { importSpace, type ImportSpaceOptions } from '@dxos/client/echo';
 import { Feed, Obj } from '@dxos/echo';
 import { Filter, type SerializedFeed, type SerializedSpace, Serializer } from '@dxos/echo-db';
 import { log } from '@dxos/log';
@@ -19,19 +19,14 @@ export const exportData = async (space: Space): Promise<Blob> => {
   return new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
 };
 
-export type ImportDataOptions = {
-  /** When true, skip SpaceProperties (for import into existing space). */
-  intoExistingSpace?: boolean;
-};
+export type ImportDataOptions = ImportSpaceOptions;
 
 export const importData = async (space: Space, backup: Blob, options?: ImportDataOptions) => {
   try {
     const backupString = await backup.text();
     const data = JSON.parse(backupString) as SerializedSpace;
 
-    await importSpace(space.internal.db, data, {
-      skipSpaceProperties: options?.intoExistingSpace,
-    });
+    await importSpace(space.internal.db, data, options);
 
     if (data.feeds?.length) {
       await importFeedData(space, data.feeds);

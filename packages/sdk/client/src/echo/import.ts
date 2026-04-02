@@ -8,8 +8,8 @@ import { Filter, type SerializedSpace, Serializer, decodeDXNFromJSON } from '@dx
 import { type EchoDatabase } from '@dxos/echo-db';
 
 export type ImportSpaceOptions = {
-  /** Skip SpaceProperties objects entirely (for import-into-existing-space). */
-  skipSpaceProperties?: boolean;
+  /** Type names to filter out during import (e.g., SpaceProperties typename). */
+  ignoreTypes?: string[];
 };
 
 export const importSpace = async (db: EchoDatabase, data: SerializedSpace, options?: ImportSpaceOptions) => {
@@ -20,21 +20,21 @@ export const importSpace = async (db: EchoDatabase, data: SerializedSpace, optio
       const { '@type': typeEncoded, ...data } = object;
       const typeDXN = decodeDXNFromJSON(typeEncoded);
       const typename = typeDXN?.asTypeDXN()?.type;
+
+      if (typename && options?.ignoreTypes?.includes(typename)) {
+        return false;
+      }
+
       // Handle Space Properties.
-      if (typename === Type.getTypename(SpaceProperties)) {
-        if (options?.skipSpaceProperties) {
-          return false;
-        }
-        if (properties) {
-          Obj.change(properties, (props: any) => {
-            Object.entries(data).forEach(([name, value]) => {
-              if (!name.startsWith('@')) {
-                props[name] = value;
-              }
-            });
+      if (properties && typename === Type.getTypename(SpaceProperties)) {
+        Obj.change(properties, (props: any) => {
+          Object.entries(data).forEach(([name, value]) => {
+            if (!name.startsWith('@')) {
+              props[name] = value;
+            }
           });
-          return false;
-        }
+        });
+        return false;
       }
       return true;
     },
