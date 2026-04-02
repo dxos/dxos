@@ -8778,12 +8778,21 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
+      '@dxos/plugin-deck':
+        specifier: workspace:*
+        version: link:../plugin-deck
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -8803,9 +8812,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic
@@ -16031,6 +16037,9 @@ importers:
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
+      dompurify:
+        specifier: '>=3.2.4'
+        version: 3.3.1
       error-stack-parser:
         specifier: 'catalog:'
         version: 2.1.4
