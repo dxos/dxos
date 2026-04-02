@@ -6,13 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import {
-  AppCapabilities,
-  LayoutOperation,
-  getPersonalSpace,
-  getSpacePath,
-  setPersonalSpace,
-} from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getPersonalSpace, getSpacePath, setPersonalSpace } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
