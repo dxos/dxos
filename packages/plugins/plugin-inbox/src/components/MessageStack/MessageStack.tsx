@@ -7,7 +7,6 @@ import React, {
   type MouseEvent,
   forwardRef,
   useCallback,
-  useEffect,
   useMemo,
   useState,
 } from 'react';
@@ -49,8 +48,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(message.id);
-    onAction?.({ type: 'current', messageId: message.id });
-  }, [message.id, setCurrentId, onAction]);
+  }, [message.id, setCurrentId]);
 
   const handleAvatarClick = useCallback(
     (event: MouseEvent) => {
@@ -82,12 +80,6 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
       }))
       .filter((item) => item.label);
   }, [labels, message.properties?.labels]);
-
-  useEffect(() => {
-    if (current) {
-      console.log('===', message.id);
-    }
-  }, [current]);
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={message.id} data={data} location={location}>

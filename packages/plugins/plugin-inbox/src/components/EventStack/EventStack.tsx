@@ -32,13 +32,12 @@ type EventTileData = {
 type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'location' | 'data'> & { current?: boolean };
 
 const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, current }, forwardedRef) => {
-  const { event, onAction } = data;
+  const { event } = data;
   const { setCurrentId } = useMosaicContainer('EventTile');
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(event.id);
-    onAction?.({ type: 'current', eventId: event.id });
-  }, [event.id, setCurrentId, onAction]);
+  }, [event.id, setCurrentId]);
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={event.id} data={data} location={location}>
