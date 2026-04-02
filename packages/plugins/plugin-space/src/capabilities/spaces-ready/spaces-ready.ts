@@ -11,7 +11,6 @@ import {
   LayoutOperation,
   getPersonalSpace,
   getSpacePath,
-  isPersonalSpace,
   setPersonalSpace,
 } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
