@@ -50,7 +50,7 @@ export const AppBar = composable<HTMLDivElement, AppBarProps>(
       <Toolbar.Root
         {...composableProps(props, {
           role: 'banner',
-          className: 'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-fine',
+          classNames: 'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-fine',
         })}
         ref={forwardedRef}
       >

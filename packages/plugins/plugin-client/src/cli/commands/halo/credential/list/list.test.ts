@@ -17,7 +17,6 @@ describe('halo credential list', () => {
     Effect.gen(function* () {
       const client = yield* ClientService;
       yield* Effect.tryPromise(() => client.halo.createIdentity());
-      yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
       yield* handler({ type: Option.none(), spaceId: Option.none(), timeout: 500, delay: 250 });
       const logger = yield* TestConsole.TestConsole;
       const logs = logger.logs;

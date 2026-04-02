@@ -126,7 +126,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
 
       guardedState.set(this, Invitation.State.CONNECTING);
 
-      const response = await this._joinSpaceByInvitation(guardedState, spaceId, {
+      const response = await this._joinSpaceByInvitation(ctx, guardedState, spaceId, {
         identityKey: admissionRequest.identityKey.toHex(),
         invitationId: guardedState.current.invitationId,
       });
@@ -153,13 +153,14 @@ export class EdgeInvitationHandler implements FlowLockHolder {
   }
 
   private async _joinSpaceByInvitation(
+    ctx: Context,
     guardedState: GuardedInvitationState,
     spaceId: SpaceId,
     request: JoinSpaceRequest,
   ): Promise<JoinSpaceResponseBody> {
     invariant(this._client);
     try {
-      return await this._client.joinSpaceByInvitation(spaceId, request);
+      return await this._client.joinSpaceByInvitation(ctx, spaceId, request);
     } catch (error: any) {
       if (error instanceof EdgeAuthChallengeError) {
         const publicKey = guardedState.current.guestKeypair?.publicKey;
@@ -168,7 +169,7 @@ export class EdgeInvitationHandler implements FlowLockHolder {
           throw error;
         }
         const signature = sign(Buffer.from(error.challenge, 'base64'), privateKey);
-        return this._client.joinSpaceByInvitation(spaceId, {
+        return this._client.joinSpaceByInvitation(ctx, spaceId, {
           ...request,
           signature: Buffer.from(signature).toString('base64'),
         });

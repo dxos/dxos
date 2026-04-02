@@ -4,6 +4,7 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
+import { Slot } from '@radix-ui/react-slot';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -11,7 +12,7 @@ import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps, slottable } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -60,12 +61,17 @@ type PipelineContentProps = PropsWithChildren<{
   model: BoardModel<Pipeline.Column, Obj.Unknown>;
 }>;
 
-const PipelineContent = composable<HTMLDivElement, PipelineContentProps>(
-  ({ model, children, ...props }, forwardedRef) => (
-    <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
-      <Board.Root model={model}>{children}</Board.Root>
-    </div>
-  ),
+const PipelineContent = slottable<HTMLDivElement, PipelineContentProps>(
+  ({ asChild, model, children, ...props }, forwardedRef) => {
+    const Comp = asChild ? Slot : 'div';
+    return (
+      <Board.Root model={model}>
+        <Comp {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
+          {children}
+        </Comp>
+      </Board.Root>
+    );
+  },
 );
 
 PipelineContent.displayName = PIPELINE_CONTENT_NAME;
@@ -80,7 +86,7 @@ type PipelineColumnsProps = {
   pipeline: Pipeline.Pipeline;
 };
 
-const PipelineColumns = ({ pipeline }: PipelineColumnsProps) => {
+const PipelineColumns = composable<HTMLDivElement, PipelineColumnsProps>(({ pipeline, ...props }) => {
   const { model } = useBoard(PIPELINE_COLUMNS_NAME);
   const columns = useAtomValue(model.columns);
   const eventHandler = useEventHandlerAdapter<Pipeline.Column, Obj.Unknown>({
@@ -94,8 +100,8 @@ const PipelineColumns = ({ pipeline }: PipelineColumnsProps) => {
     onChange: (mutate) => Obj.change(pipeline, (obj) => mutate(obj.columns)),
   });
 
-  return <Board.Content id='pipeline' eventHandler={eventHandler} Tile={PipelineColumn} />;
-};
+  return <Board.Content {...props} id='pipeline' eventHandler={eventHandler} Tile={PipelineColumn} />;
+});
 
 PipelineColumns.displayName = PIPELINE_COLUMNS_NAME;
 

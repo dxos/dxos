@@ -22,7 +22,9 @@ import React, {
 } from 'react';
 
 import { type Axis } from '@dxos/ui-types';
-import { composableProps, mx, slottable } from '@dxos/ui-theme';
+import { composableProps, slottable } from '@dxos/ui-theme';
+
+import { useThemeContext } from '../../hooks';
 
 //
 // Context
@@ -48,6 +50,8 @@ const useFocus = () => useContext(FocusContext);
 
 type GroupProps = {
   orientation?: Axis;
+  /** Show a subdued ring when unfocused (e.g., as a cell border). */
+  border?: boolean;
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
 };
 
@@ -58,8 +62,9 @@ type GroupProps = {
 // TODO(wittjosiah): Consider how this could integrate with with react-ui-attention.
 //   Perhaps react-ui-attention comes under the mosaic umbrella as it supports selection?
 const Group = slottable<HTMLDivElement, GroupProps>(
-  ({ children, asChild, orientation = 'vertical', ...props }, forwardedRef) => {
+  ({ children, asChild, orientation = 'vertical', border = false, ...props }, forwardedRef) => {
     const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
     const rootRef = useRef<HTMLDivElement>(null);
     const focusableGroupAttrs = useFocusableGroup({ tabBehavior: 'limited-trap-focus' });
     const arrowNavigationAttrs = useArrowNavigationGroup({ axis: orientation, memorizeCurrent: true });
@@ -75,26 +80,19 @@ const Group = slottable<HTMLDivElement, GroupProps>(
       }
     }, []);
 
-    // TODO(burdon): Ring (box-shadow) requires a margin.
+    const { className, ...rest } = composableProps(props);
     return (
       <FocusContext.Provider value={{ setFocus: setState, groupHasFocus }}>
         <Comp
-          {...composableProps(props, {
-            tabIndex: 0,
-            className: mx([
-              'ring-0 outline-hidden border border-separator rounded-xs',
-              // Focus (e.g., via tabster).
-              'focus:border-neutral-focus-indicator',
-              // Active (e.g., drop target).
-              'data-[focus-state=active]:border-neutral-focus-indicator',
-              // Error
-              'data-[focus-state=error]:border-rose-500',
-            ]),
-          })}
+          {...rest}
+          tabIndex={0}
+          className={tx('focus.group', { border }, className)}
           {...tabsterAttrs}
-          {...(state && { [`data-${FOCUS_STATE_ATTR}`]: state })}
-          onFocus={handleFocusIn}
+          {...(state && {
+            [`data-${FOCUS_STATE_ATTR}`]: state,
+          })}
           onBlur={handleFocusOut}
+          onFocus={handleFocusIn}
           ref={useComposedRefs<HTMLDivElement>(rootRef, forwardedRef)}
         >
           {children}
@@ -110,6 +108,8 @@ const Group = slottable<HTMLDivElement, GroupProps>(
 
 type ItemProps = {
   current?: boolean;
+  /** Show a subdued ring when unfocused (e.g., as a cell border). */
+  border?: boolean;
   onCurrentChange?: () => void;
 };
 
@@ -120,11 +120,14 @@ type ItemProps = {
  * Supports controlled (`current` prop) and uncontrolled (focus-driven) `aria-current`.
  */
 const Item = slottable<HTMLDivElement, ItemProps>(
-  ({ children, asChild, current, onCurrentChange, onClick, onFocus, onBlur, ...props }, forwardedRef) => {
+  (
+    { children, asChild, current, border = false, onCurrentChange, onClick, onFocus, onBlur, ...props },
+    forwardedRef,
+  ) => {
     const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
     // Tell tabster's groupper to ignore Enter so it doesn't move focus into the group.
     const focusableGroupAttrs = useFocusableGroup({ ignoreDefaultKeydown: { Enter: true } });
-    const { groupHasFocus } = useFocus();
     const [focused, setFocused] = useState(false);
 
     const handleClick = useCallback(
@@ -160,13 +163,16 @@ const Item = slottable<HTMLDivElement, ItemProps>(
       [onBlur],
     );
 
-    // When navigating (group has focus), only the focused item is current.
-    // When the group loses focus, fall back to the controlled `current` prop.
-    const isCurrent = groupHasFocus ? focused : (current ?? focused);
+    // Controlled `current` prop takes precedence (e.g., virtualized items that scroll back into view).
+    // Otherwise fall back to DOM focus state.
+    const isCurrent = current ?? focused;
 
+    const { className, ...rest } = composableProps(props);
     return (
       <Comp
-        {...composableProps(props, { tabIndex: 0, className: 'outline-hidden' })}
+        {...rest}
+        tabIndex={0}
+        className={tx('focus.item', { border }, className)}
         {...focusableGroupAttrs}
         aria-current={isCurrent || undefined}
         onClick={handleClick}

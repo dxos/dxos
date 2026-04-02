@@ -105,16 +105,15 @@ const MESSAGE_VIEWPORT_NAME = 'Message.Viewport';
 type MessageViewportProps = ThemedClassName<PropsWithChildren>;
 
 const MessageViewport = composable<HTMLDivElement, MessageViewportProps>(
-  ({ classNames, children, role, ...props }, forwardedRef) => {
+  ({ children, role, ...props }, forwardedRef) => {
     return (
       <div
         {...composableProps(props, {
           role: 'none',
-          className: mx(
+          classNames: [
             'overflow-hidden grid',
             role === 'section' ? 'grid-rows-[min-content_min-content]' : 'grid-rows-[min-content_1fr]',
-            classNames,
-          ),
+          ],
         })}
         ref={forwardedRef}
       >

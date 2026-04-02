@@ -72,7 +72,6 @@ export const withSnapshot = async (
   const tmp = copySnapshotToTmp(snapshot);
   const client = new Client({ config: createConfig({ dataRoot: tmp }) });
   await asyncTimeout(client.initialize(), 2_000);
-  await client.spaces.waitUntilReady();
 
   try {
     await callback(client, expectedData);

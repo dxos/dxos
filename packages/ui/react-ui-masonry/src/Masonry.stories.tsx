@@ -9,12 +9,12 @@ import { Filter } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Card } from '@dxos/react-ui';
+import { Card, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
 
-import { Masonry } from './Masonry';
+import { Masonry, MasonryRootProps } from './Masonry';
 
 const StoryItem = ({ data: { image, name, description } }: { data: Organization.Organization }) => {
   return (
@@ -33,12 +33,14 @@ const StoryItem = ({ data: { image, name, description } }: { data: Organization.
   );
 };
 
-const DefaultStory = () => {
+type DefaultStoryProps = MasonryRootProps;
+
+const DefaultStory = (props: DefaultStoryProps) => {
   const { space } = useClientStory();
   const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
 
   return (
-    <Masonry.Root Tile={StoryItem}>
+    <Masonry.Root {...props} Tile={StoryItem}>
       <Masonry.Content items={organizations} />
     </Masonry.Root>
   );
@@ -46,6 +48,7 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'ui/react-ui-masonry/Masonry',
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -68,6 +71,22 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  render: DefaultStory,
+export const Default: Story = {};
+
+// TODO(burdon): Masonry currently doesn't support an external scroller.
+export const Single: Story = {
+  render: (props) => {
+    return (
+      <div className='dx-container flex justify-center'>
+        <ScrollArea.Root className='dx-card-max-width' thin padding>
+          <ScrollArea.Viewport>
+            <DefaultStory {...props} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </div>
+    );
+  },
+  args: {
+    columns: 1,
+  },
 };

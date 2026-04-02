@@ -13,6 +13,7 @@ export const meta: Plugin.Meta = {
     and feeding them to an AI agent. Runs on a configurable schedule (default 9 PM).
   `,
   icon: 'ph--calendar-check--regular',
-  iconHue: 'amber',
+  iconHue: 'sky',
+  tags: ['labs'],
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-daily-summary',
 };

@@ -6,14 +6,15 @@ import React, { type PropsWithChildren } from 'react';
 
 import { Capabilities } from '../../../common';
 import { topologicalSort } from '../../../helpers';
-import { LoadingState, type UseAppOptions, useCapabilities, useLoading } from '../../hooks';
+import { LoadingState, type StartupProgress, type UseAppOptions, useCapabilities, useLoading } from '../../hooks';
 
 export type AppProps = Pick<UseAppOptions, 'placeholder' | 'debounce'> & {
   ready: boolean;
   error: unknown;
+  progress?: StartupProgress;
 };
 
-export const App = ({ placeholder: Placeholder, ready, error, debounce }: AppProps) => {
+export const App = ({ placeholder: Placeholder, ready, error, debounce, progress }: AppProps) => {
   const reactContexts = useCapabilities(Capabilities.ReactContext);
   const reactRoots = useCapabilities(Capabilities.ReactRoot);
   const stage = useLoading(ready, debounce);
@@ -29,7 +30,7 @@ export const App = ({ placeholder: Placeholder, ready, error, debounce }: AppPro
       return null;
     }
 
-    return <Placeholder stage={stage} />;
+    return <Placeholder stage={stage} progress={progress} />;
   }
 
   const ComposedContext = composeContexts(reactContexts);

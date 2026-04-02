@@ -17,7 +17,7 @@ import {
   createThemeExtensions,
   decorateMarkdown,
 } from '@dxos/ui-editor';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
@@ -66,7 +66,7 @@ export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
       <div
         {...composableProps(props, {
           role: 'none',
-          className: mx('h-full overflow-hidden', classNames),
+          classNames: ['h-full overflow-hidden', classNames],
         })}
         ref={composeRefs(parentRef, forwardedRef)}
       />

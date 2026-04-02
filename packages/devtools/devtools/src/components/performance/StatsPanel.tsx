@@ -117,7 +117,7 @@ export const StatsPanel = ({
 
   return (
     <ScrollArea.Root thin>
-      <ScrollArea.Viewport classNames='border-y border-separator divide-y divide-separator'>
+      <ScrollArea.Viewport classNames='divide-y divide-separator'>
         <Panel
           id='main'
           icon='ph--chart-bar--regular'

@@ -12,7 +12,7 @@ import {
 } from '@automerge/automerge-repo';
 
 import { Event, Trigger, synchronized } from '@dxos/async';
-import { LifecycleState } from '@dxos/context';
+import { type Context, LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -136,13 +136,13 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
+  async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this.peerId);
     invariant(!this._replicators.has(replicator));
 
     this._replicators.add(replicator);
-    await replicator.connect({
+    await replicator.connect(ctx, {
       peerId: this.peerId,
       onConnectionOpen: this._onConnectionOpen.bind(this),
       onConnectionClosed: this._onConnectionClosed.bind(this),
@@ -222,20 +222,20 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     return connection.connection.bundleSyncEnabled;
   }
 
-  async pushBundle(peerId: PeerId, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
+  async pushBundle(ctx: Context, peerId: PeerId, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
     const connection = this._connections.get(peerId);
     if (!connection) {
       throw new Error('Connection not found.');
     }
-    return connection.connection.pushBundle!(bundle);
+    return connection.connection.pushBundle!(ctx, bundle);
   }
 
-  async pullBundle(peerId: PeerId, docHeads: Record<DocumentId, Heads>) {
+  async pullBundle(ctx: Context, peerId: PeerId, docHeads: Record<DocumentId, Heads>) {
     const connection = this._connections.get(peerId);
     if (!connection) {
       throw new Error('Connection not found.');
     }
-    return connection.connection.pullBundle!(docHeads);
+    return connection.connection.pullBundle!(ctx, docHeads);
   }
 
   private _send(message: Message): void {

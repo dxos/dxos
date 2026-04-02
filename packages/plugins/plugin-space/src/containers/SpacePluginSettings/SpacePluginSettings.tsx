@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { useClient } from '@dxos/react-client';
+import { isPersonalSpace } from '@dxos/app-toolkit';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
@@ -22,7 +22,6 @@ export type SpacePluginSettingsComponentProps = {
 
 export const SpacePluginSettings = ({ settings, onSettingsChange }: SpacePluginSettingsComponentProps) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const spaces = useSpaces({ all: settings.showHidden });
   const { invokePromise } = useOperationInvoker();
 
@@ -46,7 +45,7 @@ export const SpacePluginSettings = ({ settings, onSettingsChange }: SpacePluginS
                 <ListItem.Heading classNames='grow truncate min-h-0!'>
                   {toLocalizedString(
                     getSpaceDisplayName(space, {
-                      personal: space === client.spaces.default,
+                      personal: isPersonalSpace(space),
                     }),
                     t,
                   )}

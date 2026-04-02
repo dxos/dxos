@@ -19,11 +19,12 @@ import {
   type EditorStateStore,
   type EditorViewMode,
   type ThemeExtensionsOptions,
+  compactSlots,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
   dropFile,
-  editorSlots,
+  documentSlots,
   formattingListener,
   processEditorPayload,
   stackItemContentEditorClassNames,
@@ -40,8 +41,8 @@ export type MarkdownEditorContentProps = ThemedClassName<{
   id: string;
   attendableId?: string;
   role?: string;
+  compact?: boolean;
   viewMode?: EditorViewMode;
-  scrollPastEnd?: boolean;
   slashCommandGroups?: EditorMenuGroup[];
   editorStateStore?: EditorStateStore;
   toolbarState?: Atom.Writable<EditorToolbarState>;
@@ -58,13 +59,13 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
       id,
       attendableId,
       role,
+      compact,
       viewMode,
       initialValue,
       editorStateStore,
       toolbarState,
       extensions,
-      scrollPastEnd,
-      slots = editorSlots,
+      slots,
       onFileUpload,
     },
     forwardedRef,
@@ -86,6 +87,8 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     // Restore last selection and scroll point.
     const { scrollTo, selection } = useMemo<EditorSelectionState>(() => editorStateStore?.getState(id) ?? {}, [id]);
 
+    console.log(slots, compact, compactSlots);
+
     const {
       parentRef,
       view: editorView,
@@ -105,12 +108,12 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
           createBasicExtensions({
             readOnly: viewMode === 'readonly',
             placeholder: t('editor placeholder'),
-            scrollPastEnd: scrollPastEnd && role !== 'section',
+            scrollPastEnd: !compact,
             search: true,
           }),
           createThemeExtensions({
             themeMode,
-            slots,
+            slots: slots ?? (compact ? compactSlots : documentSlots),
             syntaxHighlighting: true,
           }),
           createMarkdownExtensions(),

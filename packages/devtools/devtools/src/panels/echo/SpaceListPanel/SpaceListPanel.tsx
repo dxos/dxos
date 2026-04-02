@@ -51,7 +51,6 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
         objects: -1, // TODO(dmaretskyi): Fix this.
         members: space.members.get().length,
         startup: open && ready ? ready.getTime() - open.getTime() : -1,
-        isDefault: client.spaces.default === space,
         isOpen: space.isOpen,
       };
     });
@@ -153,7 +152,6 @@ export const SpaceListPanel = ({ onSelect }: { onSelect?: (space: SpaceData | un
       { name: 'objects', format: Format.TypeFormat.Number, size: 120 },
       { name: 'members', format: Format.TypeFormat.Number, size: 120 },
       { name: 'startup', format: Format.TypeFormat.Number, size: 120 },
-      { name: 'isDefault', format: Format.TypeFormat.Boolean, title: 'default?', size: 120 },
       { name: 'isOpen', format: Format.TypeFormat.Boolean, title: 'open?', size: 120 },
     ],
     [],

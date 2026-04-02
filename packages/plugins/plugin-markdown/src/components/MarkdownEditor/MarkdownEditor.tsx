@@ -54,7 +54,7 @@ type MarkdownEditorContextValue = {
   previewBlocks: PreviewBlock[];
   toolbarState: Atom.Writable<EditorToolbarState>;
   popoverMenu: Omit<UseEditorMenu, 'extension'>;
-} & (Pick<ExtensionsOptions, 'viewMode'> &
+} & (Pick<ExtensionsOptions, 'compact' | 'viewMode'> &
   Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'>);
 
 const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
@@ -70,7 +70,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
     extensions?: Extension[];
   } & Pick<
     MarkdownEditorContextValue,
-    'id' | 'attendableId' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'
+    'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
   > &
     Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
     Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>
@@ -81,10 +81,11 @@ const MarkdownEditorRoot = ({
   id,
   attendableId,
   object,
-  editorStateStore,
-  selectionManager,
   settings,
+  compact,
   viewMode,
+  selectionManager,
+  editorStateStore,
   extensions: extensionsProp,
   slashCommandGroups,
   onLinkQuery,
@@ -119,11 +120,12 @@ const MarkdownEditorRoot = ({
   const coreExtensions = useExtensions({
     id,
     object,
+    compact,
+    viewMode,
+    selectionManager,
     editorStateStore,
     previewOptions,
-    selectionManager,
     settings,
-    viewMode,
     onSelectObject,
   });
 
@@ -136,6 +138,7 @@ const MarkdownEditorRoot = ({
     <MarkdownEditorContextProvider
       id={id}
       attendableId={attendableId}
+      compact={compact}
       editorView={editorView}
       setEditorView={setEditorView}
       extensions={extensions}
@@ -164,6 +167,7 @@ const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentPr
   const {
     id,
     attendableId,
+    compact,
     editorView,
     setEditorView,
     viewMode,
@@ -178,6 +182,7 @@ const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentPr
         {...composableProps(props)}
         id={id}
         attendableId={attendableId}
+        compact={compact}
         viewMode={viewMode}
         toolbarState={toolbarState}
         extensions={extensions}

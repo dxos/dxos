@@ -12,4 +12,5 @@ export * from './not-found';
 export * from './operations';
 export * from './paths';
 export * from './plugin';
+export * from './personal-space';
 export * from './translations';

@@ -211,7 +211,6 @@ export const DeckMain = () => {
               <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
             )}
             <Stack
-              ref={deckRef}
               orientation='horizontal'
               size='contain'
               itemsCount={itemsCount - 1}
@@ -221,6 +220,7 @@ export const DeckMain = () => {
               ]}
               style={padding}
               onScroll={handleScroll}
+              ref={deckRef}
             >
               {active.map((entryId) => (
                 <Fragment key={entryId}>

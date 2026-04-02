@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type Context } from '@dxos/context';
 import type { CollectionId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey, type SpaceId } from '@dxos/keys';
@@ -44,7 +45,7 @@ export class MeshEchoReplicator implements AutomergeReplicator {
 
   private _context: AutomergeReplicatorContext | null = null;
 
-  async connect(context: AutomergeReplicatorContext): Promise<void> {
+  async connect(_ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
     this._context = context;
   }
 
