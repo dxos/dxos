@@ -7,6 +7,7 @@ import { Registry } from '@effect-atom/atom';
 import { describe, it } from '@effect/vitest';
 import * as Chunk from 'effect/Chunk';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -125,6 +126,41 @@ describe('ProcessManagerImpl', () => {
 
       const outputs = yield* Fiber.join(outputFiber);
       expect(Chunk.toReadonlyArray(outputs)).toEqual([10]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runAndExit submits inputs and completes the stream at IDLE or SUCCEEDED',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.ProcessManagerService;
+      const handle = yield* manager.spawn(Process.fromOperation(Double, handlers));
+      const outputs = yield* handle.runAndExit({ inputs: [{ value: 7 }] }).pipe(Stream.runCollect);
+      expect(Chunk.toReadonlyArray(outputs)).toEqual([14]);
+      const status = yield* handle.status();
+      expect(status.state).toEqual(Process.State.SUCCEEDED);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runAndExit completes at IDLE for processes that stay alive after output',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.ProcessManagerService;
+      const handle = yield* manager.spawn(makeSumAggregator());
+      const outputs = yield* handle.runAndExit({ inputs: [4] }).pipe(Stream.runCollect);
+      expect(Chunk.toReadonlyArray(outputs)).toEqual([4]);
+      const status = yield* handle.status();
+      expect(status.state).toEqual(Process.State.IDLE);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'runAndExit fails when the process is TERMINATED',
+    Effect.fn(function* ({ expect }) {
+      const manager = yield* ProcessManager.ProcessManagerService;
+      const handle = yield* manager.spawn(makeSumAggregator());
+      yield* handle.terminate();
+      const exit = yield* handle.runAndExit({ inputs: [1] }).pipe(Stream.runCollect, Effect.exit);
+      expect(Exit.isFailure(exit)).toEqual(true);
     }, Effect.provide(TestLayer)),
   );
 

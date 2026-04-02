@@ -350,8 +350,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
             : functionDef.meta.key,
         });
 
-        yield* handle.submitInput(inputData);
-        return yield* handle.subscribeOutputs().pipe(
+        return yield* handle.runAndExit({ inputs: [inputData] }).pipe(
           Stream.runCollect,
           Effect.map(Chunk.head),
           Effect.flatten,

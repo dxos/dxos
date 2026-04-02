@@ -78,6 +78,14 @@ export interface Handle<I, O> {
    * If the process fails, this effect throws a defect.
    */
   runToCompletion(): Effect.Effect<void>;
+
+  /**
+   * Submits each input in order, then streams outputs until the process reaches {@link Process.State.IDLE}
+   * or {@link Process.State.SUCCEEDED}. While {@link Process.State.HYBERNATING}, keeps waiting for outputs
+   * or a terminal state. The stream fails with a defect if the process reaches {@link Process.State.FAILED}
+   * or {@link Process.State.TERMINATED}.
+   */
+  runAndExit(options: { readonly inputs: readonly I[] }): Stream.Stream<O>;
 }
 
 export namespace Handle {
@@ -362,6 +370,69 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
                 Option.getOrElse(() => 'Process failed with unknown error'),
               );
               return Effect.runSync(Deferred.die(deferred, error));
+          }
+        },
+        { immediate: true },
+      );
+      yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribe()));
+      yield* Deferred.await(deferred);
+    }).pipe(Effect.scoped);
+  }
+
+  runAndExit(options: { readonly inputs: readonly I[] }): Stream.Stream<O> {
+    const { inputs } = options;
+    return Stream.unwrap(
+      Effect.gen(this, function* () {
+        // Make sure we dont miss any outputs.
+        const outputs = this.subscribeOutputs().pipe(Stream.interruptWhen(this.#runAndExitInterruptEffect()));;
+        yield* Effect.forEach(inputs, (input) => this.submitInput(input));
+        yield* this.#assertRunAndExitProcessActive();
+        return outputs;
+      }),
+    );
+  }
+
+  #assertRunAndExitProcessActive(): Effect.Effect<void> {
+    const { state, exit } = this.#currentStatus;
+    if (state === Process.State.TERMINATED) {
+      return Effect.dieMessage('Process was terminated');
+    }
+    if (state === Process.State.FAILED) {
+      const message = exit.pipe(
+        Option.flatMap(Exit.causeOption),
+        Option.map(Cause.pretty),
+        Option.getOrElse(() => 'Process failed with unknown error'),
+      );
+      return Effect.die(message);
+    }
+    return Effect.void;
+  }
+
+  /**
+   * Completes when the process becomes IDLE or SUCCEEDED (interrupt output stream). Defects on FAILED or TERMINATED.
+   */
+  #runAndExitInterruptEffect(): Effect.Effect<void, never, never> {
+    return Effect.gen(this, function* () {
+      const deferred = yield* Deferred.make<void>();
+      const unsubscribe = this.#registry.subscribe(
+        this.statusAtom,
+        (state) => {
+          switch (state.state) {
+            case Process.State.IDLE:
+            case Process.State.SUCCEEDED:
+              return Effect.runSync(Deferred.succeed(deferred, undefined));
+            case Process.State.FAILED: {
+              const error = state.exit.pipe(
+                Option.flatMap(Exit.causeOption),
+                Option.map(Cause.pretty),
+                Option.getOrElse(() => 'Process failed with unknown error'),
+              );
+              return Effect.runSync(Deferred.die(deferred, error));
+            }
+            case Process.State.TERMINATED:
+              return Effect.runSync(Deferred.die(deferred, 'Process was terminated'));
+            default:
+              return Effect.void;
           }
         },
         { immediate: true },
