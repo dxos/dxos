@@ -337,8 +337,8 @@ export class EchoHost extends Resource {
   /**
    * Install data replicator.
    */
-  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
-    await this._automergeHost.addReplicator(replicator);
+  async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
+    await this._automergeHost.addReplicator(ctx, replicator);
   }
 
   /**
@@ -377,7 +377,7 @@ export class EchoHost extends Resource {
     {
       performance.mark('indexEngine.update.automerge:start');
       const { updated, done } = await this._indexEngine
-        .update(this._automergeDataSource, { spaceId: null, limit: 50 })
+        .update(this._ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
         .pipe(RuntimeProvider.runPromise(this._runtime));
       totalUpdated += updated;
       totalDone &&= done;
@@ -398,7 +398,7 @@ export class EchoHost extends Resource {
     {
       performance.mark('indexEngine.update.queue:start');
       const { updated, done } = await this._indexEngine
-        .update(this._queueDataSource, { spaceId: null, limit: 50 })
+        .update(this._ctx, this._queueDataSource, { spaceId: null, limit: 50 })
         .pipe(RuntimeProvider.runPromise(this._runtime));
       totalUpdated += updated;
       totalDone &&= done;

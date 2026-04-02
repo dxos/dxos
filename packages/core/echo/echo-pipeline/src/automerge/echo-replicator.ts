@@ -14,7 +14,7 @@ export interface AutomergeReplicator {
   /**
    * Called on when replicator is added to EchoHost.
    */
-  connect(context: AutomergeReplicatorContext): Promise<void>;
+  connect(ctx: Context, context: AutomergeReplicatorContext): Promise<void>;
 
   /**
    * Called on when replicator is removed from EchoHost.

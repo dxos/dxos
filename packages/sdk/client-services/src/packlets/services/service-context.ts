@@ -258,12 +258,12 @@ export class ServiceContext extends Resource {
 
     if (this._meshReplicator) {
       log('adding mesh replicator...');
-      await this.echoHost.addReplicator(this._meshReplicator);
+      await this.echoHost.addReplicator(ctx, this._meshReplicator);
       log('mesh replicator added');
     }
     if (this._echoEdgeReplicator) {
       log('adding edge replicator...');
-      await this.echoHost.addReplicator(this._echoEdgeReplicator);
+      await this.echoHost.addReplicator(ctx, this._echoEdgeReplicator);
       log('edge replicator added');
     }
 

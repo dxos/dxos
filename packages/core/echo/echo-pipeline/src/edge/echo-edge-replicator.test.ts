@@ -83,7 +83,7 @@ describe('EchoEdgeReplicator', () => {
   const connectReplicator = async (client: EdgeClient, context: AutomergeReplicatorContext) => {
     // EdgeHttpClient functionality is not tested here.
     const replicator = new EchoEdgeReplicator({ edgeConnection: client, edgeHttpClient: {} as EdgeHttpClient });
-    await replicator.connect(context);
+    await replicator.connect(Context.default(), context);
     onTestFinished(() => replicator.disconnect());
     return replicator;
   };

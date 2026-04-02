@@ -72,10 +72,10 @@ export class EchoEdgeReplicator implements AutomergeReplicator {
     this._sharePolicyEnabled = !disableSharePolicy;
   }
 
-  async connect(context: AutomergeReplicatorContext): Promise<void> {
+  async connect(ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
     log('connecting...', { peerId: context.peerId, connectedSpaces: this._connectedSpaces.size });
     this._context = context;
-    this._ctx = Context.default();
+    this._ctx = ctx.derive();
     this._ctx.onDispose(
       this._edgeConnection.onReconnected(() => {
         this._ctx && scheduleMicroTask(this._ctx, () => this._handleReconnect());

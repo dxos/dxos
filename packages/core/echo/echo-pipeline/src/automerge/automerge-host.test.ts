@@ -137,8 +137,8 @@ describe('AutomergeHost', () => {
     const host2 = await setupAutomergeHost({ level: level2 });
 
     const network = await new TestReplicationNetwork().open();
-    await host1.addReplicator(await network.createReplicator());
-    await host2.addReplicator(await network.createReplicator());
+    await host1.addReplicator(Context.default(), await network.createReplicator());
+    await host2.addReplicator(Context.default(), await network.createReplicator());
 
     const collectionId = 'test-collection';
     await host1.updateLocalCollectionState(collectionId, documentIds);

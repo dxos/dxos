@@ -287,9 +287,9 @@ export class AutomergeHost extends Resource {
     return this._repo.handles;
   }
 
-  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
+  async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
-    await this._echoNetworkAdapter.addReplicator(replicator);
+    await this._echoNetworkAdapter.addReplicator(ctx, replicator);
   }
 
   async removeReplicator(replicator: AutomergeReplicator): Promise<void> {

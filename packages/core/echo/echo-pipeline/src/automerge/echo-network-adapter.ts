@@ -136,13 +136,13 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   @synchronized
-  async addReplicator(replicator: AutomergeReplicator): Promise<void> {
+  async addReplicator(ctx: Context, replicator: AutomergeReplicator): Promise<void> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
     invariant(this.peerId);
     invariant(!this._replicators.has(replicator));
 
     this._replicators.add(replicator);
-    await replicator.connect({
+    await replicator.connect(ctx, {
       peerId: this.peerId,
       onConnectionOpen: this._onConnectionOpen.bind(this),
       onConnectionClosed: this._onConnectionClosed.bind(this),

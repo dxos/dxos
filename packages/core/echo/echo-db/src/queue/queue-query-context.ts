@@ -18,6 +18,7 @@ import { type QueueImpl } from './queue';
 
 export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implements QueryContext<T> {
   readonly #queue: QueueImpl;
+  readonly #parentCtx: Context;
   #runCtx: Context | null = null;
 
   // Extracted from query.
@@ -25,8 +26,9 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
 
   readonly changed = new Event();
 
-  constructor(queue: QueueImpl<T>) {
+  constructor(queue: QueueImpl<T>, parentCtx: Context) {
     this.#queue = queue;
+    this.#parentCtx = parentCtx;
   }
 
   /**
@@ -56,7 +58,7 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
    * Start reactive query.
    */
   start(): void {
-    this.#runCtx = Context.default();
+    this.#runCtx = this.#parentCtx.derive();
     this.#runCtx.onDispose(this.#queue.beginPolling());
     this.#queue.updated.on(this.#runCtx, () => {
       this.changed.emit();

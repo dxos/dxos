@@ -7,6 +7,7 @@ import { Redis, type RedisOptions } from 'ioredis';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { type TaggedType } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { EchoTestBuilder, TestReplicator, TestReplicatorConnection, createDataAssertion } from '@dxos/echo-db/testing';
 import { PublicKey } from '@dxos/keys';
 import { type TYPES } from '@dxos/protocols';
@@ -131,8 +132,8 @@ describe.skip('Redis', () => {
 
     await using alice = await builder.createPeer();
     await using bob = await builder.createPeer();
-    await alice.host.addReplicator(aliceReplicator);
-    await bob.host.addReplicator(bobReplicator);
+    await alice.host.addReplicator(Context.default(), aliceReplicator);
+    await bob.host.addReplicator(Context.default(), bobReplicator);
 
     await using db1 = await alice.createDatabase(spaceKey);
     await dataAssertion.seed(db1);
