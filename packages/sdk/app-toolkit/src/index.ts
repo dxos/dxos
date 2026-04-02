@@ -11,4 +11,5 @@ export * from './object-node';
 export * from './operations';
 export * from './paths';
 export * from './plugin';
+export * from './personal-space';
 export * from './translations';

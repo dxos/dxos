@@ -7,6 +7,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { type Space, LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { defineObjectMigration, getObjectCore } from '@dxos/echo-db';
@@ -29,14 +30,10 @@ import {
 } from '../testing';
 
 describe('Spaces', () => {
-  test.skip('creates a default space', async () => {
+  test('no default space after identity creation', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
 
-    await expect.poll(() => client.spaces.get()).toBeDefined();
-    const space = client.spaces.default;
-    await testSpaceAutomerge(expect, space.db);
-
-    expect(space.members.get()).to.be.length(1);
+    expect(client.spaces.get()).to.have.length(0);
   });
 
   test('creates a space', async () => {
@@ -64,7 +61,7 @@ describe('Spaces', () => {
 
     const host = testBuilder.createClientServicesHost();
     await host.open(new Context());
-    onTestFinished(() => host.close());
+    onTestFinished(() => host.close(Context.default()));
     const [client, server] = testBuilder.createClientServer(host);
     void server.open();
     onTestFinished(() => server.close());
@@ -86,8 +83,7 @@ describe('Spaces', () => {
 
     let objectId: string;
     {
-      await client.spaces.waitUntilReady();
-      const space = client.spaces.default;
+      const space = await client.spaces.create();
       ({ objectId } = await testSpaceAutomerge(expect, space.db));
       expect(space.members.get()).to.be.length(1);
       await space.db.flush();
@@ -381,7 +377,8 @@ describe('Spaces', () => {
     const [alice, bob] = await createInitializedClients(3);
     [alice, bob].forEach(registerTypes);
 
-    const bobPersonalDoc = bob.spaces.get()[0].db.add(createDocument());
+    const bobPersonalSpace = await bob.spaces.create();
+    const bobPersonalDoc = bobPersonalSpace.db.add(createDocument());
 
     const [aliceSharedSpace, bobSharedSpace] = await createSharedSpace(alice, bob);
     const sharedDoc = bobSharedSpace.db.add(createDocument());
@@ -587,6 +584,21 @@ describe('Spaces', () => {
     const importedSpace = await client2.spaces.import(archive);
     expect(importedSpace.id).not.toEqual(space.id);
     expect((await importedSpace.db.query(Filter.id(doc1.id)).first()).title).toEqual(doc1.title);
+  });
+
+  test('creates a space with locked membership policy', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+
+    const space = await client.spaces.create({}, { membershipPolicy: MembershipPolicy.LOCKED });
+    expect(space.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
+    expect(space.members.get()).to.have.length(1);
+  });
+
+  test('space membership policy defaults to INVITE', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+
+    const space = await client.spaces.create();
+    expect(space.membershipPolicy).toEqual(MembershipPolicy.INVITE);
   });
 
   test('migrates SpaceProperties from legacy typename to new typename', async () => {

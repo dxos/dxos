@@ -7,6 +7,7 @@ import React from 'react';
 import { waitForCondition } from '@dxos/async';
 import { type Space, type SpaceId } from '@dxos/client/echo';
 import { DeviceType } from '@dxos/client/halo';
+import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { IconButton, Toolbar } from '@dxos/react-ui';
@@ -35,7 +36,7 @@ export const TestingPanel = ({ onSpaceCreate, onScriptPluginOpen }: TestingPanel
     }
 
     try {
-      const response = await client.edge.http.createSpace({ agentKey });
+      const response = await client.edge.http.createSpace(Context.default(), { agentKey });
       log.info('space created', { response });
       const space = await waitForCondition({
         condition: () => client.spaces.get(response.spaceId as SpaceId),

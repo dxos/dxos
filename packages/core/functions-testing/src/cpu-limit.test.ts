@@ -5,6 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { configPreset } from '@dxos/config';
+import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 import { FunctionRuntimeKind } from '@dxos/protocols';
@@ -26,6 +27,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       FunctionRuntimeKind.enums.WORKERS_FOR_PLATFORMS,
     );
     const result = await functionsServiceClient.invoke(
+      Context.default(),
       func,
       {
         iterations: 100,
@@ -54,7 +56,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
       }),
     );
     await sync(space);
-    const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+    const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
     console.log(result);
   });
 
@@ -76,12 +78,12 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
     );
     await sync(space);
     {
-      const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+      const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
       console.log(result);
     }
 
     {
-      const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+      const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
       console.log(result);
     }
 
@@ -90,7 +92,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('CPU limit',
         obj.input!.iterations = 100;
       });
       await sync(space);
-      const result = await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+      const result = await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
       console.log(result);
     }
   });

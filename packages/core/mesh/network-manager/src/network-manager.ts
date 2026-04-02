@@ -3,6 +3,7 @@
 //
 
 import { Event, synchronized } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -21,7 +22,7 @@ import { type WireProtocolProvider } from './wire-protocol';
  * Represents a single connection to a remote peer.
  */
 export type SwarmConnection = {
-  close(): Promise<void>;
+  close(ctx: Context): Promise<void>;
 };
 
 // TODO(burdon): Add timeout.
@@ -91,8 +92,8 @@ export class SwarmNetworkManager {
     this._signalManager.swarmEvent.on((event) => this._swarms.get(event.topic)?.onSwarmEvent(event));
     this._messenger = new Messenger({ signalManager: this._signalManager });
     this._signalConnection = {
-      join: (opts) => this._signalManager.join(opts),
-      leave: (opts) => this._signalManager.leave(opts),
+      join: (ctx, opts) => this._signalManager.join(ctx, opts),
+      leave: (ctx, opts) => this._signalManager.leave(ctx, opts),
     };
     this._peerInfo = peerInfo;
 
@@ -136,9 +137,9 @@ export class SwarmNetworkManager {
     log.trace('dxos.mesh.network-manager.open', trace.end({ id: this._instanceId }));
   }
 
-  async close(): Promise<void> {
+  async close(ctx: Context): Promise<void> {
     for (const topic of this._swarms.keys()) {
-      await this.leaveSwarm(topic).catch((err) => {
+      await this.leaveSwarm(ctx, topic).catch((err) => {
         log(err);
       });
     }
@@ -151,12 +152,15 @@ export class SwarmNetworkManager {
    * Join the swarm.
    */
   @synchronized
-  async joinSwarm({
-    topic, //
-    topology,
-    protocolProvider: protocol,
-    label,
-  }: SwarmOptions): Promise<SwarmConnection> {
+  async joinSwarm(
+    ctx: Context,
+    {
+      topic, //
+      topology,
+      protocolProvider: protocol,
+      label,
+    }: SwarmOptions,
+  ): Promise<SwarmConnection> {
     invariant(PublicKey.isPublicKey(topic));
     invariant(topology);
     invariant(this._peerInfo);
@@ -187,14 +191,14 @@ export class SwarmNetworkManager {
     // Open before joining.
     await swarm.open();
 
-    this._signalConnection.join({ topic, peer: this._peerInfo }).catch((error) => log.catch(error));
+    this._signalConnection.join(ctx, { topic, peer: this._peerInfo }).catch((error) => log.catch(error));
 
     this.topicsUpdated.emit();
     this._connectionLog?.joinedSwarm(swarm);
     log('joined', { topic: PublicKey.from(topic), count: this._swarms.size });
 
     return {
-      close: () => this.leaveSwarm(topic),
+      close: (ctx: Context) => this.leaveSwarm(ctx, topic),
     };
   }
 
@@ -202,7 +206,7 @@ export class SwarmNetworkManager {
    * Close the connection.
    */
   @synchronized
-  async leaveSwarm(topic: PublicKey): Promise<void> {
+  async leaveSwarm(ctx: Context, topic: PublicKey): Promise<void> {
     if (!this._swarms.has(topic)) {
       // log.warn('swarm not open', { topic: PublicKey.from(topic).truncate() });
       return;
@@ -210,7 +214,7 @@ export class SwarmNetworkManager {
 
     log('leaving', { topic: PublicKey.from(topic) });
     const swarm = this._swarms.get(topic)!;
-    await this._signalConnection.leave({ topic, peer: swarm.ownPeer });
+    await this._signalConnection.leave(ctx, { topic, peer: swarm.ownPeer });
 
     const map = this._mappers.get(topic)!;
     map.destroy();

@@ -196,8 +196,8 @@ const meta = {
           types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => seedTestData(defaultSpace));
+              const { personalSpace } = yield* initializeIdentity(client);
+              yield* Effect.promise(() => seedTestData(personalSpace));
             }),
         }),
 

@@ -4,6 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
+import { Context } from '@dxos/context';
+
 import { type Script } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { Panel } from '@dxos/react-ui';
@@ -28,7 +30,7 @@ export const TestContainer = ({ role, script }: TestContainerProps) => {
       if (!fn) {
         throw new Error('Function not deployed');
       }
-      return functionsClient.invoke(fn, input, { spaceId: space?.id });
+      return functionsClient.invoke(Context.default(), fn, input, { spaceId: space?.id });
     },
     [fn, functionsClient, space?.id],
   );

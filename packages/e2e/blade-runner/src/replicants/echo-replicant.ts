@@ -195,7 +195,7 @@ export class EchoReplicant {
         }
       },
     });
-    await this._testPeer?.host.addReplicator(this._replicator);
+    await this._testPeer?.host.addReplicator(Context.default(), this._replicator);
     invariant(this._replicator?.context, 'Replicator not connected.');
     return { peerId: this._replicator.context.peerId };
   }

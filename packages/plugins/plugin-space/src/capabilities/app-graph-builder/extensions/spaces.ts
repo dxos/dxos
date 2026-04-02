@@ -19,6 +19,8 @@ import { getActiveSpace } from '../../../hooks';
 import { meta } from '../../../meta';
 import { SPACE_TYPE, SpaceCapabilities } from '../../../types';
 import { SpaceOperation } from '../../../operations';
+import { getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
+
 import { SHARED, getSpaceDisplayName } from '../../../util';
 
 import {
@@ -73,8 +75,10 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenMembers.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(capabilities) ?? client.spaces.default;
-              yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
+              const space = getActiveSpace(capabilities) ?? getPersonalSpace(client);
+              if (space) {
+                yield* Operation.invoke(SpaceOperation.OpenMembers, { space });
+              }
             }),
             properties: {
               label: ['share space label', { ns: meta.id }],
@@ -90,8 +94,10 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
             id: SpaceOperation.OpenSettings.meta.key,
             data: Effect.fnUntraced(function* () {
               const client = yield* Capability.get(ClientCapabilities.Client);
-              const space = getActiveSpace(capabilities) ?? client.spaces.default;
-              yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
+              const space = getActiveSpace(capabilities) ?? getPersonalSpace(client);
+              if (space) {
+                yield* Operation.invoke(SpaceOperation.OpenSettings, { space });
+              }
             }),
             properties: {
               label: ['open current space settings label', { ns: meta.id }],
@@ -113,12 +119,11 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         const stateAtom = capabilities.get(SpaceCapabilities.State);
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
         const spacesAtom = CreateAtom.fromObservable(client.spaces);
-        const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
 
         const spaces = get(spacesAtom);
-        const isReady = get(isReadyAtom);
+        const personalSpace = getPersonalSpace(client);
 
-        if (!spaces || !isReady) {
+        if (!spaces || !personalSpace) {
           return Effect.succeed([]);
         }
 
@@ -128,9 +133,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
         const ephemeralState = get(ephemeralAtom);
 
         try {
-          const [spacesOrder] = get(
-            AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })),
-          );
+          const [spacesOrder] = get(AtomQuery.make(personalSpace.db, Filter.type(Expando.Expando, { key: SHARED })));
           const { graph } = capabilities.get(AppCapabilities.AppGraph);
 
           const spacesOrderSnapshot = spacesOrder ? get(AtomObj.make(spacesOrder)) : undefined;
@@ -157,7 +160,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
                 constructSpaceNode({
                   space,
                   navigable: ephemeralState.navigableCollections,
-                  personal: space === client.spaces.default,
+                  personal: isPersonalSpace(space),
                   namesCache: state.spaceNames,
                   graph,
                   spacesOrder,
@@ -266,6 +269,7 @@ const constructSpaceNode = ({
           label: SETTINGS_PANEL_LABEL,
           icon: 'ph--faders--regular',
           disposition: 'alternate-tree',
+          space,
         },
       },
     ],

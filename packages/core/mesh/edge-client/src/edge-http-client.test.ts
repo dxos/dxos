@@ -16,7 +16,8 @@ describe.skipIf(process.env.CI)('EdgeHttpClient', () => {
     const identity = await createEphemeralEdgeIdentity();
     client.setIdentity(identity);
 
-    const result = await client.getStatus();
+    const { Context } = await import('@dxos/context');
+    const result = await client.getStatus(Context.default());
     expect(result).toBeDefined();
   });
 });

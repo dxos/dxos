@@ -3,6 +3,7 @@
 //
 
 import { type Event } from '@dxos/async';
+import { type Context } from '@dxos/context';
 import { type Entity, type QueryResult } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -19,7 +20,7 @@ export interface QueryContext<T extends AnyProperties = AnyProperties, O extends
   /**
    * One-shot query.
    */
-  run(query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.EntityEntry<O>[]>;
+  run(ctx: Context, query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.EntityEntry<O>[]>;
 
   /**
    * Set the filter and trigger continuous updates.

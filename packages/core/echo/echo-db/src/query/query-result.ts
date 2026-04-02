@@ -3,6 +3,7 @@
 //
 
 import { type CleanupFn, Event } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Entity, type QueryResult } from '@dxos/echo';
 import { type Query } from '@dxos/echo';
@@ -68,7 +69,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * Does not subscribe to updates.
    */
   async run(opts?: { timeout?: number }): Promise<T[]> {
-    const filteredResults = await this._queryContext.run(this._query.ast, {
+    const filteredResults = await this._queryContext.run(Context.default(), this._query.ast, {
       timeout: opts?.timeout ?? 30_000,
     });
     return this._uniqueObjects(filteredResults);
@@ -79,7 +80,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * Does not subscribe to updates.
    */
   async runEntries(opts?: { timeout?: number }): Promise<QueryResult.EntityEntry<T>[]> {
-    const filteredResults = await this._queryContext.run(this._query.ast, {
+    const filteredResults = await this._queryContext.run(Context.default(), this._query.ast, {
       timeout: opts?.timeout ?? 30_000,
     });
     return filteredResults;

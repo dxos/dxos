@@ -115,7 +115,7 @@ export class TestBuilder {
     });
 
     this._ctx.onDispose(() => runtime.dispose());
-    this._ctx.onDispose(() => services.close());
+    this._ctx.onDispose(() => services.close(this._ctx));
     return services;
   }
 

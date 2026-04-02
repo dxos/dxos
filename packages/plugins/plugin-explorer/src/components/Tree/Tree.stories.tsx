@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
+import { invariant } from '@dxos/invariant';
 import { faker } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
 import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
@@ -23,7 +24,8 @@ type ComponentProps = ClientRepeatedComponentProps & { type?: TreeComponentProps
 
 const Component = ({ type }: ComponentProps) => {
   const client = useClient();
-  const space = client.spaces.default;
+  const space = client.spaces.get()[0];
+  invariant(space, 'Tree story requires at least one space');
   const [object, setObject] = useState<TreeType>();
   useEffect(() => {
     setTimeout(() => {
