@@ -6,6 +6,11 @@
  * Native passkey bridge for Tauri on macOS.
  * Calls tauri-plugin-macos-passkey via Tauri invoke, providing the same
  * create/get semantics as the WebAuthn browser API.
+ *
+ * TODO(wittjosiah): Add iOS support. The same ASAuthorization APIs exist on iOS 15+ but
+ *   tauri-plugin-macos-passkey is macOS-only. iOS needs a separate Tauri mobile plugin
+ *   using the standard Swift Plugin architecture (not swift-rs FFI). The iOS entitlements
+ *   file also needs webcredentials:composer.space and a deployment target bump to 16.0+.
  */
 
 import { log } from '@dxos/log';
