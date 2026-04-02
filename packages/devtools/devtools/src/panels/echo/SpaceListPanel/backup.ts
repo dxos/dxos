@@ -19,9 +19,7 @@ export const exportData = async (space: Space): Promise<Blob> => {
   return new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
 };
 
-export type ImportDataOptions = ImportSpaceOptions;
-
-export const importData = async (space: Space, backup: Blob, options?: ImportDataOptions) => {
+export const importData = async (space: Space, backup: Blob, options?: ImportSpaceOptions) => {
   try {
     const backupString = await backup.text();
     const data = JSON.parse(backupString) as SerializedSpace;
