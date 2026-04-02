@@ -167,7 +167,6 @@ export class ControlPipeline {
     await this._metadata.setSpaceControlPipelineSnapshot(this._spaceKey, snapshot);
   }
 
-  @trace.span()
   private async _consumePipeline(ctx: Context): Promise<void> {
     for await (const msg of this._pipeline.consume()) {
       const span = this._usage.beginRecording();

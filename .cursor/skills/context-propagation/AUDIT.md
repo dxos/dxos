@@ -167,6 +167,7 @@ This does NOT create disposal linkage — the `parent` field is only used for at
 | `Resource.#internalCtx` has no trace parent                                     | `#open()` now recreates `#internalCtx` with `parent: #parentCtx` for attribute lookup. Background work gets caller's span as parent.        |
 | `CoreDatabase._ctx` has no trace parent                                         | `open(ctx)` now sets `this._ctx = new Context({ parent: ctx })`. `_emitDbUpdateEvents` gets caller's span as parent.                        |
 | `EchoHost._open` not passing `ctx` to `AutomergeHost.open()`                    | Now passes `ctx` to `this._automergeHost.open(ctx)`.                                                                                        |
+| `ControlPipeline._consumePipeline` infinite-loop span never exports             | Removed `@trace.span()`. `for await` loop runs indefinitely so OTEL never exports the span. `_processMessage` now child of `start` span.    |
 
 ---
 
