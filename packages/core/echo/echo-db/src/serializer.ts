@@ -87,8 +87,7 @@ export const decodeDXNFromJSON = (encoded?: EncodedReference | string): DXN | un
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
     return EncodedRef.toDXN(encoded);
   } else if (typeof encoded === 'string') {
-    // TODO(mykola): Never reached?
-    return DXN.fromTypename(encoded);
+    return DXN.tryParse(encoded) ?? DXN.fromTypename(encoded);
   }
 };
 
