@@ -267,6 +267,8 @@ export class DataSpaceManager extends Resource {
     );
 
     assertState(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
+
+    const tags = options.tags ? Array.from(options.tags) : [];
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
@@ -279,7 +281,7 @@ export class DataSpaceManager extends Resource {
       controlFeedKey,
       dataFeedKey,
       state: SpaceState.SPACE_ACTIVE,
-      tags: options.tags ?? [],
+      tags,
     };
 
     log('creating space...', { spaceId, spaceKey });
@@ -333,7 +335,7 @@ export class DataSpaceManager extends Resource {
 
     log('adding space...', { spaceKey });
 
-    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url, options.tags);
+    const credentials = await spaceGenesis(this._keyring, this._signingContext, space.inner, root.url, tags);
     await this._metadataStore.addSpace(metadata);
 
     const memberCredential = credentials[1];
@@ -361,12 +363,13 @@ export class DataSpaceManager extends Resource {
     invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     invariant(!this._spaces.has(opts.spaceKey), 'Space already exists.');
 
+    const tags = opts.tags ? Array.from(opts.tags) : [];
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,
       controlTimeframe: opts.controlTimeframe,
       dataTimeframe: opts.dataTimeframe,
-      tags: opts.tags ?? [],
+      tags,
     };
 
     const space = await this._constructSpace(ctx, metadata);

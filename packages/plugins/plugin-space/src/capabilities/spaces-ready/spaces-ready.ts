@@ -80,9 +80,9 @@ export default Capability.makeModule(
       if (personalSpaceInitialized) {
         return;
       }
-      personalSpaceInitialized = true;
 
       await personalSpace.waitUntilReady();
+      personalSpaceInitialized = true;
 
       // Only set the __DEFAULT__ property when migrating from the legacy credential.
       // Spaces created with the personal tag don't need it.
@@ -115,9 +115,10 @@ export default Capability.makeModule(
     };
 
     // Try to find the personal space now, or subscribe to find it later.
+    // Initialization is async (non-blocking) so subscriptions wire immediately.
     const resolved = resolvePersonalSpace(client);
     if (resolved) {
-      yield* Effect.tryPromise(() => initializePersonalSpace(resolved.space, resolved));
+      void initializePersonalSpace(resolved.space, resolved);
     } else {
       subscriptions.add(
         client.spaces.subscribe(() => {
@@ -173,8 +174,9 @@ export default Capability.makeModule(
     subscriptions.add(
       client.spaces.subscribe(async (spaces) => {
         // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
-        const personalSpace = getPersonalSpace(client);
-        if (personalSpace && personalSpace.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
+        const resolved = resolvePersonalSpace(client);
+        if (resolved?.space && resolved.space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
+          const personalSpace = resolved.space;
           await personalSpace.internal.migrate();
         }
 
