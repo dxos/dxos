@@ -8772,6 +8772,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

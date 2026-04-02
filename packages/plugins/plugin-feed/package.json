@@ -50,6 +50,7 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
