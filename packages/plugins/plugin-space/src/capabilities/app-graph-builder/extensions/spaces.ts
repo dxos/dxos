@@ -269,6 +269,7 @@ const constructSpaceNode = ({
           label: SETTINGS_PANEL_LABEL,
           icon: 'ph--faders--regular',
           disposition: 'alternate-tree',
+          space,
         },
       },
     ],

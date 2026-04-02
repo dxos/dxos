@@ -71,7 +71,10 @@ export class SpacesServiceImpl implements SpacesService {
   async createSpace(request: CreateSpaceRequest): Promise<Space> {
     this._requireIdentity();
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = await dataSpaceManager.createSpace(new Context(), { tags: request?.tags });
+    const space = await dataSpaceManager.createSpace(new Context(), {
+      tags: request?.tags,
+      membershipPolicy: request?.membershipPolicy,
+    });
     await this._updateMetrics();
     return this._serializeSpace(space);
   }
@@ -381,6 +384,7 @@ export class SpacesServiceImpl implements SpacesService {
       ),
       creator: space.inner.spaceState.creator?.key,
       tags: space.tags,
+      membershipPolicy: space.membershipPolicy,
       cache: space.cache,
       metrics: space.metrics,
       edgeReplication: space.getEdgeReplicationSetting(),

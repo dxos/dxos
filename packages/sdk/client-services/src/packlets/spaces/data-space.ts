@@ -37,6 +37,7 @@ import {
   AdmittedFeed,
   type Credential,
   type Epoch,
+  MembershipPolicy,
   type ProfileDocument,
   SpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
@@ -215,6 +216,11 @@ export class DataSpace {
 
   get cache() {
     return this._cache;
+  }
+
+  /** Membership policy from the genesis credential, defaults to INVITE. */
+  get membershipPolicy(): MembershipPolicy {
+    return this._inner.spaceState.genesisCredential ? this._inner.spaceState.membershipPolicy : MembershipPolicy.INVITE;
   }
 
   get automergeSpaceState() {

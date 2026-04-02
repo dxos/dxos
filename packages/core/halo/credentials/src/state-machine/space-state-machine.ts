@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type TypedMessage } from '@dxos/protocols/proto';
-import { type Credential, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { type Credential, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type DelegateSpaceInvitation } from '@dxos/protocols/proto/dxos/halo/invitations';
 import { type AsyncCallback, Callback, ComplexMap, ComplexSet } from '@dxos/util';
 
@@ -25,6 +25,7 @@ export interface SpaceState {
   readonly credentials: Credential[];
   readonly genesisCredential: Credential | undefined;
   readonly tags: string[];
+  readonly membershipPolicy: MembershipPolicy;
   readonly creator: MemberInfo | undefined;
   readonly invitations: ReadonlyMap<PublicKey, DelegateSpaceInvitation>;
 
@@ -63,6 +64,7 @@ export class SpaceStateMachine implements SpaceState {
 
   private _genesisCredential: Credential | undefined;
   private _tags: string[] = [];
+  private _membershipPolicy: MembershipPolicy = MembershipPolicy.INVITE;
   private _credentialProcessors: CredentialConsumer<any>[] = [];
 
   readonly onCredentialProcessed = new Callback<AsyncCallback<Credential>>();
@@ -108,6 +110,10 @@ export class SpaceStateMachine implements SpaceState {
 
   get tags(): string[] {
     return this._tags;
+  }
+
+  get membershipPolicy(): MembershipPolicy {
+    return this._membershipPolicy;
   }
 
   get invitations(): ReadonlyMap<PublicKey, DelegateSpaceInvitation> {
@@ -187,6 +193,7 @@ export class SpaceStateMachine implements SpaceState {
         }
         this._genesisCredential = credential;
         this._tags = assertion.tags ?? [];
+        this._membershipPolicy = assertion.membershipPolicy ?? MembershipPolicy.INVITE;
         break;
       }
 
@@ -267,6 +274,11 @@ export class SpaceStateMachine implements SpaceState {
   }
 
   private _canInviteNewMembers(key: PublicKey): boolean {
+    if (this._membershipPolicy === MembershipPolicy.LOCKED) {
+      // When locked, only the space key can add the initial owner during genesis.
+      // Once a member exists, no new members can be added.
+      return key.equals(this._spaceKey) && this._members.members.size === 0;
+    }
     return (
       key.equals(this._spaceKey) ||
       this._members.getRole(key) === SpaceMember.Role.ADMIN ||

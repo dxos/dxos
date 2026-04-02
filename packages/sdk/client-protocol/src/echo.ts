@@ -6,6 +6,7 @@ import type { MulticastObservable } from '@dxos/async';
 import type { Database } from '@dxos/echo';
 import type { PublicKey, SpaceId } from '@dxos/keys';
 import type { Invitation, SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
+import type { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import type { AuthenticatingInvitation } from './invitations';
 import type { Space } from './space';
@@ -37,7 +38,7 @@ export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
    */
   create(
     props?: Pick<SpaceProperties, 'name' | 'hue' | 'icon' | 'invocationTraceQueue'>,
-    options?: { tags?: string[] },
+    options?: { tags?: string[]; membershipPolicy?: MembershipPolicy },
   ): Promise<Space>;
 
   /**

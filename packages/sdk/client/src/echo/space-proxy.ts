@@ -60,6 +60,7 @@ import { type SpaceSnapshot } from '@dxos/protocols/proto/dxos/echo/snapshot';
 import {
   type Credential,
   type Epoch,
+  MembershipPolicy,
   SpaceMember as HaloSpaceMember,
 } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
@@ -205,6 +206,10 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   get tags(): string[] {
     return this._data.tags ?? [];
+  }
+
+  get membershipPolicy(): MembershipPolicy {
+    return this._data.membershipPolicy ?? MembershipPolicy.INVITE;
   }
 
   get db(): EchoDatabase {

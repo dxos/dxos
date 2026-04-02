@@ -6,7 +6,7 @@ import { createCredential } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type Space } from '@dxos/echo-pipeline';
 import { type Keyring } from '@dxos/keyring';
-import { AdmittedFeed, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
+import { AdmittedFeed, MembershipPolicy, SpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Timeframe } from '@dxos/timeframe';
 
 import { type SigningContext } from './data-space-manager';
@@ -17,6 +17,7 @@ export const spaceGenesis = async (
   space: Space,
   automergeRoot?: string,
   tags?: string[],
+  membershipPolicy?: MembershipPolicy,
 ) => {
   // TODO(dmaretskyi): Find a way to reconcile with credential generator.
   const credentials = [
@@ -28,6 +29,7 @@ export const spaceGenesis = async (
         '@type': 'dxos.halo.credentials.SpaceGenesis',
         spaceKey: space.key,
         tags: tags ?? [],
+        membershipPolicy: membershipPolicy ?? MembershipPolicy.INVITE,
       },
     }),
 
