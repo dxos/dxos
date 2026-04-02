@@ -4,15 +4,7 @@
 
 import { inspect } from 'node:util';
 
-import {
-  Event,
-  MulticastObservable,
-  PushStream,
-  SubscriptionList,
-  Trigger,
-  asyncTimeout,
-  scheduleMicroTask,
-} from '@dxos/async';
+import { Event, MulticastObservable, PushStream, SubscriptionList, Trigger, scheduleMicroTask } from '@dxos/async';
 import {
   CREATE_SPACE_TIMEOUT,
   type ClientServicesProvider,
@@ -23,7 +15,6 @@ import {
 } from '@dxos/client-protocol';
 import { type Config } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined, inspectObject } from '@dxos/debug';
 import { Obj } from '@dxos/echo';
 import { type Database } from '@dxos/echo';
@@ -39,24 +30,17 @@ import {
   SpaceState,
 } from '@dxos/protocols/proto/dxos/client/services';
 import { type IndexConfig } from '@dxos/protocols/proto/dxos/echo/indexing';
-import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { trace } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
-import { type HaloProxy } from '../halo/halo-proxy';
 import { InvitationsProxy } from '../invitations';
 
 import { SpaceProxy } from './space-proxy';
-
-const IDENTITY_WAIT_TIMEOUT = 1_000;
 
 @trace.resource()
 export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   private _ctx!: Context;
   private _invitationProxy?: InvitationsProxy;
-  private _defaultSpaceId?: SpaceId;
-  private readonly _defaultSpaceAvailable = new PushStream<boolean>();
-  private readonly _isReady = new MulticastObservable(this._defaultSpaceAvailable.observable, false);
   private readonly _spacesStream: PushStream<Space[]>;
   private readonly _spaceCreated = new Event<PublicKey>();
   private readonly _instanceId = PublicKey.random().toHex();
@@ -64,16 +48,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   /** Subscriptions for RPC streams that need to be re-established on reconnect. */
   private readonly _streamSubscriptions = new SubscriptionList();
 
-  @trace.info()
-  private get _isReadyState() {
-    return this._isReady.get();
-  }
-
   constructor(
     private readonly _config: Config | undefined,
     private readonly _serviceProvider: ClientServicesProvider,
     private readonly _echoClient: EchoClient,
-    private readonly _halo: HaloProxy,
     /**
      * @internal
      */
@@ -103,20 +81,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @internal
    */
   @trace.span()
-  async _open(): Promise<void> {
+  async _open(ctx: Context): Promise<void> {
     log.trace('dxos.sdk.echo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
     this._ctx = new Context({
       onError: (error) => {
         log.catch(error);
       },
     });
-
-    const credentialsSubscription = this._halo.credentials.subscribe(() => {
-      if (this._updateAndOpenDefaultSpace()) {
-        credentialsSubscription.unsubscribe();
-      }
-    });
-    this._ctx.onDispose(() => credentialsSubscription.unsubscribe());
 
     // Register reconnection callback to re-establish streams.
     this._serviceProvider.onReconnect?.(async () => {
@@ -198,16 +169,12 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
           newSpaces.push(spaceProxy);
           this._spaceCreated.emit(spaceProxy.key);
 
-          if (this._defaultSpaceId && spaceProxy.id === this._defaultSpaceId) {
-            this._defaultSpaceAvailable.next(true);
-          }
-
           emitUpdate = true;
         }
 
         // Process space update in a separate task, also initializing the space if necessary.
         scheduleMicroTask(this._ctx, async () => {
-          await spaceProxy!._processSpaceUpdate(space);
+          await spaceProxy!._processSpaceUpdate(this._ctx, space);
         });
       }
 
@@ -225,36 +192,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     this._streamSubscriptions.add(() => spacesStream.close());
   }
 
-  private _updateAndOpenDefaultSpace(): boolean {
-    const defaultSpaceCredential: Credential | undefined = this._halo.queryCredentials({
-      type: 'dxos.halo.credentials.DefaultSpace',
-    })[0];
-    const defaultSpaceAssertion = defaultSpaceCredential && getCredentialAssertion(defaultSpaceCredential);
-    if (defaultSpaceAssertion?.['@type'] !== 'dxos.halo.credentials.DefaultSpace') {
-      return false;
-    }
-    if (!SpaceId.isValid(defaultSpaceAssertion.spaceId)) {
-      return false;
-    }
-
-    this._defaultSpaceId = defaultSpaceAssertion.spaceId;
-    const defaultSpace = this._spaces.find((space) => space.id === defaultSpaceAssertion.spaceId);
-    log('defaultSpaceKey read from a credential', {
-      spaceExists: defaultSpace != null,
-      spaceOpen: defaultSpace?.isOpen,
-      spaceId: this._defaultSpaceId,
-    });
-
-    if (defaultSpace) {
-      if (defaultSpace.state.get() === SpaceState.SPACE_CLOSED) {
-        this._openSpaceAsync(defaultSpace);
-      }
-      this._defaultSpaceAvailable.next(true);
-    }
-
-    return true;
-  }
-
   private _openSpaceAsync(spaceProxy: Space): void {
     void spaceProxy.open().catch((err) => log.catch(err));
   }
@@ -263,11 +200,9 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     if (this._ctx.disposed || space.state === SpaceState.SPACE_INACTIVE) {
       return false;
     }
-    if (!this._config?.values?.runtime?.client?.lazySpaceOpen) {
-      return true;
-    }
-    // Only open the default space if lazySpaceOpen is set.
-    return space.id === this._defaultSpaceId;
+    // When lazySpaceOpen is set, no spaces are opened automatically.
+    // The app opens them on demand via navigation.
+    return !this._config?.values?.runtime?.client?.lazySpaceOpen;
   }
 
   async setConfig(config: IndexConfig): Promise<void> {
@@ -278,31 +213,13 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
    * @internal
    */
   @trace.span()
-  async _close(): Promise<void> {
+  async _close(ctx: Context): Promise<void> {
     this._streamSubscriptions.clear();
     await this._ctx.dispose();
     await Promise.all(this.get().map((space) => (space as SpaceProxy)._destroy()));
     this._spacesStream.next([]);
     await this._invitationProxy?.close();
     this._invitationProxy = undefined;
-    this._defaultSpaceAvailable.next(false);
-    this._defaultSpaceId = undefined;
-  }
-
-  get isReady() {
-    return this._isReady;
-  }
-
-  async waitUntilReady(): Promise<void> {
-    await asyncTimeout(this._halo._waitForIdentity(), IDENTITY_WAIT_TIMEOUT);
-    return new Promise((resolve) => {
-      const subscription = this._isReady.subscribe((isReady) => {
-        if (isReady) {
-          subscription.unsubscribe();
-          resolve();
-        }
-      });
-    });
   }
 
   override get(): Space[];
@@ -326,17 +243,6 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   @trace.info()
   private get _spaces() {
     return this.get();
-  }
-
-  get default(): Space {
-    if (!this._defaultSpaceId) {
-      throw new ApiError({
-        message: 'Default space ID not set. Is identity initialized and `spaces.waitUntilReady()` called?',
-      });
-    }
-    const space = this.get().find((space) => space.id === this._defaultSpaceId);
-    invariant(space, 'Default space is not yet available. Use `client.spaces.isReady` to wait for the default space.');
-    return space;
   }
 
   async create(meta?: SpaceProperties): Promise<Space> {

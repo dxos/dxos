@@ -30,6 +30,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/app-toolkit": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",

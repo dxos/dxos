@@ -35,9 +35,9 @@ export const Root = () => {
         const deviceInvitationCode = searchProps.get('deviceInvitationCode');
         if (!client.halo.identity.get() && !deviceInvitationCode) {
           await client.halo.createIdentity();
-          await client.spaces.waitUntilReady();
-          await client.spaces.default.waitUntilReady();
-          createTodoList(client.spaces.default);
+          const space = await client.spaces.create();
+          await space.waitUntilReady();
+          createTodoList(space);
         }
 
         const spaceInvitationCode = searchProps.get('spaceInvitationCode');

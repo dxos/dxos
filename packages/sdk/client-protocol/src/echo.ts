@@ -17,12 +17,6 @@ import type { SpaceProperties } from './types';
 // TODO(wittjosiah): Rename Database (not product name).
 export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   /**
-   * Observable which indicates when the default space is available.
-   */
-  // TODO(wittjosiah): Remove. Ensure default space is always available.
-  get isReady(): MulticastObservable<boolean>;
-
-  /**
    * Returns the list of spaces.
    */
   get(): Space[];
@@ -37,16 +31,6 @@ export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
    * @deprecated Use `get(id: SpaceId)`.
    */
   get(spaceKey: PublicKey): Space | undefined;
-
-  /**
-   * Returns the default space.
-   */
-  get default(): Space;
-
-  /**
-   * Resolves when the default space is available.
-   */
-  waitUntilReady(): Promise<void>;
 
   /**
    * Creates a new space.

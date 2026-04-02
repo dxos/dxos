@@ -203,7 +203,7 @@ const meta = {
           types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
+              const { personalSpace } = yield* initializeIdentity(client);
               // TODO(mykola): Make API easier to use.
               // TODO(mykola): Delete after enabling vector indexing by default.
               // Enable vector indexing.
@@ -219,7 +219,7 @@ const meta = {
                 }),
               );
               yield* Effect.promise(() => client.services.services.QueryService!.reindex());
-              yield* Effect.promise(() => seedTestData(defaultSpace));
+              yield* Effect.promise(() => seedTestData(personalSpace));
             }),
         }),
 

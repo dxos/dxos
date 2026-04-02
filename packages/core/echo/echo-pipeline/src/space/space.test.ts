@@ -49,7 +49,7 @@ describe('space/space', () => {
       const space = await agent.createSpace(agent.identityKey);
 
       await space.open(Context.default());
-      await space.startProtocol();
+      await space.startProtocol(Context.default());
       expect(space.isOpen).toBeTruthy();
       onTestFinished(async () => {
         await space.close();
@@ -71,7 +71,7 @@ describe('space/space', () => {
       const space = await agent.createSpace(agent.identityKey, space1.key, space1.genesisFeedKey, undefined, true);
 
       await space.open(Context.default());
-      await space.startProtocol();
+      await space.startProtocol(Context.default());
       expect(space.isOpen).toBeTruthy();
       onTestFinished(async () => {
         await space.close();

@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getPersonalSpace, getSpacePath, setPersonalSpace } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -43,30 +44,46 @@ export default Capability.makeModule(
     const ephemeralAtom = yield* Capability.get(SpaceCapabilities.EphemeralState);
     const client = yield* Capability.get(ClientCapabilities.Client);
 
-    const defaultSpace = client.spaces.default;
-    yield* Effect.tryPromise(() => defaultSpace.waitUntilReady());
+    // Resolve the personal space.
+    // For existing users: the DefaultSpace HALO credential identifies the space; tag it if needed.
+    // For new users: identity-created already tagged the space via setPersonalSpace().
+    let personalSpace = getPersonalSpace(client);
+    if (!personalSpace) {
+      // Migration: read the legacy DefaultSpace credential from HALO.
+      const defaultSpaceCredential = client.halo.queryCredentials({
+        type: 'dxos.halo.credentials.DefaultSpace',
+      })[0];
+      invariant(defaultSpaceCredential, 'Personal space not available.');
+      const defaultSpaceId = defaultSpaceCredential.subject.assertion.spaceId;
+      personalSpace = client.spaces.get(defaultSpaceId);
+      invariant(personalSpace, 'Personal space not available.');
+      yield* Effect.tryPromise(() => personalSpace!.waitUntilReady());
+      setPersonalSpace(personalSpace);
+    } else {
+      yield* Effect.tryPromise(() => personalSpace!.waitUntilReady());
+    }
 
     // Check if deck state indicates we should switch to default space.
     const layout = registry.get(layoutAtom);
     if (layout.workspace === 'default') {
-      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(defaultSpace.id) });
+      yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(personalSpace.id) });
     }
 
-    // Initialize space sharing lock in default space.
-    if (typeof defaultSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
-      Obj.change(defaultSpace.properties, (obj) => {
+    // Initialize space sharing lock in personal space.
+    if (typeof personalSpace.properties[COMPOSER_SPACE_LOCK] !== 'boolean') {
+      Obj.change(personalSpace.properties, (obj) => {
         obj[COMPOSER_SPACE_LOCK] = true;
       });
     }
 
     const queryResults = yield* Effect.tryPromise(() =>
-      defaultSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run(),
+      personalSpace.db.query(Filter.type(Expando.Expando, { key: SHARED })).run(),
     );
     const spacesOrder = queryResults[0];
     if (!spacesOrder) {
       // TODO(wittjosiah): Cannot be a Folder because Spaces are not TypedObjects so can't be saved in the database.
       //  Instead, we store order as an array of space ids.
-      defaultSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
+      personalSpace.db.add(Obj.make(Expando.Expando, { key: SHARED, order: [] }));
     }
 
     // Await missing objects - subscribe to layout atom changes.
@@ -108,9 +125,9 @@ export default Capability.makeModule(
     // Cache space names.
     subscriptions.add(
       client.spaces.subscribe(async (spaces) => {
-        // TODO(wittjosiah): Remove. This is a hack to be able to migrate the default space properties.
-        if (defaultSpace.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
-          await defaultSpace.internal.migrate();
+        // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
+        if (personalSpace && personalSpace.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION) {
+          await personalSpace.internal.migrate();
         }
 
         spaces

@@ -10,6 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useState } from 'react';
 
+import { Context } from '@dxos/context';
 import { type Key, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { withAuthorization } from '@dxos/functions';
@@ -155,7 +156,7 @@ export const useOAuth = ({ spaceId, onAddAccessToken }: UseOAuthOptions) => {
           ),
         );
       } else {
-        const { authUrl } = await edgeClient.initiateOAuthFlow({
+        const { authUrl } = await edgeClient.initiateOAuthFlow(Context.default(), {
           provider: preset.provider,
           scopes: preset.scopes,
           spaceId,

@@ -6,6 +6,7 @@ import { type PeerId, cbor } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, sleep, waitForCondition } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type SyncMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/automerge';
@@ -113,7 +114,7 @@ describe('EchoNetworkAdapter', () => {
     onTestFinished(async () => {
       await adapter.close();
     });
-    await adapter.addReplicator(replicator);
+    await adapter.addReplicator(Context.default(), replicator);
     return adapter;
   };
 

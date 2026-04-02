@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, companionSegment, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, companionSegment, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
@@ -64,7 +64,10 @@ export default Capability.makeModule(
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
                 const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-                const space = getActiveSpace(capabilities) ?? client.spaces.default;
+                const space = getActiveSpace(capabilities) ?? getPersonalSpace(client);
+                if (!space) {
+                  return;
+                }
                 const chat = yield* Effect.tryPromise(() => getOrCreateChat(operationInvoker.invokePromise, space.db));
                 if (!chat) {
                   return;
@@ -93,7 +96,10 @@ export default Capability.makeModule(
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
                 const client = yield* Capability.get(ClientCapabilities.Client);
-                const space = getActiveSpace(capabilities) ?? client.spaces.default;
+                const space = getActiveSpace(capabilities) ?? getPersonalSpace(client);
+                if (!space) {
+                  return;
+                }
                 const blueprints = yield* Effect.tryPromise(() =>
                   space.db.query(Query.type(Blueprint.Blueprint)).run(),
                 );

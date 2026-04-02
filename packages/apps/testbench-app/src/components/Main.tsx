@@ -26,8 +26,7 @@ import { StatusBar } from './status';
 
 export const Main = () => {
   const client = useClient();
-  // Filter default so that the first space visible is the shared space.
-  const spaces = useSpaces({ all: true }).filter((space) => space !== client.spaces.default);
+  const spaces = useSpaces({ all: true });
   const [space, setSpace] = useState<Space>();
   useEffect(() => {
     if (!space && spaces.length) {

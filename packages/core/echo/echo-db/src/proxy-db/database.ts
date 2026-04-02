@@ -179,7 +179,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   @synchronized
   protected override async _open(): Promise<void> {
     if (this._rootUrl !== undefined) {
-      await this._coreDatabase.open({ rootUrl: this._rootUrl });
+      await this._coreDatabase.open(this._ctx, { rootUrl: this._rootUrl });
     }
 
     await this._schemaRegistry.open();
@@ -198,9 +198,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     this._rootUrl = rootUrl;
     if (this._lifecycleState === LifecycleState.OPEN) {
       if (firstTime) {
-        await this._coreDatabase.open({ rootUrl });
+        await this._coreDatabase.open(this._ctx, { rootUrl });
       } else {
-        await this._coreDatabase.updateSpaceState({ rootUrl });
+        await this._coreDatabase.updateSpaceState(this._ctx, { rootUrl });
       }
     }
   }

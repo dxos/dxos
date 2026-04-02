@@ -30,14 +30,10 @@ import {
 } from '../testing';
 
 describe('Spaces', () => {
-  test.skip('creates a default space', async () => {
+  test('no default space after identity creation', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
 
-    await expect.poll(() => client.spaces.get()).toBeDefined();
-    const space = client.spaces.default;
-    await testSpaceAutomerge(expect, space.db);
-
-    expect(space.members.get()).to.be.length(1);
+    expect(client.spaces.get()).to.have.length(0);
   });
 
   test('creates a space', async () => {
@@ -65,7 +61,7 @@ describe('Spaces', () => {
 
     const host = testBuilder.createClientServicesHost();
     await host.open(new Context());
-    onTestFinished(() => host.close());
+    onTestFinished(() => host.close(Context.default()));
     const [client, server] = testBuilder.createClientServer(host);
     void server.open();
     onTestFinished(() => server.close());
@@ -87,8 +83,7 @@ describe('Spaces', () => {
 
     let objectId: string;
     {
-      await client.spaces.waitUntilReady();
-      const space = client.spaces.default;
+      const space = await client.spaces.create();
       ({ objectId } = await testSpaceAutomerge(expect, space.db));
       expect(space.members.get()).to.be.length(1);
       await space.db.flush();
@@ -382,7 +377,8 @@ describe('Spaces', () => {
     const [alice, bob] = await createInitializedClients(3);
     [alice, bob].forEach(registerTypes);
 
-    const bobPersonalDoc = bob.spaces.get()[0].db.add(createDocument());
+    const bobPersonalSpace = await bob.spaces.create();
+    const bobPersonalDoc = bobPersonalSpace.db.add(createDocument());
 
     const [aliceSharedSpace, bobSharedSpace] = await createSharedSpace(alice, bob);
     const sharedDoc = bobSharedSpace.db.add(createDocument());

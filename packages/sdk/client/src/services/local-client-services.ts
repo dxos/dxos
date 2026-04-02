@@ -236,7 +236,7 @@ export class LocalClientServices implements ClientServicesProvider {
       return;
     }
 
-    await this._host?.close();
+    await this._host?.close(this._ctx);
 
     log('local-client-services: terminated effect runtime', { runtimePresent: !!this._runtime });
     await this._runtime?.dispose();
