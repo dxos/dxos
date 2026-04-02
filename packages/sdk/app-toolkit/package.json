@@ -49,6 +49,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
@@ -61,7 +62,6 @@
     "@effect/cli": "catalog:"
   },
   "devDependencies": {
-    "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",

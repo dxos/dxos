@@ -299,7 +299,7 @@ export namespace LayoutOperation {
         ),
       ),
     }),
-    output: Schema.Void,
+    output: Schema.Array(Schema.String).annotations({ description: 'The resolved navigation paths that were opened.' }),
   });
 
   export const Close = Operation.make({

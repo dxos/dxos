@@ -5,7 +5,7 @@
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
-export const SECTION_IDENTIFIER = 'org.dxos.type.stack-section';
+export const SECTION_IDENTIFIER = 'org.dxos.type.stackSection';
 
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.stack',

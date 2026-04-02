@@ -39,14 +39,14 @@ describe('QuerySandbox', () => {
     const ast = sandbox.eval(trim`
       Query.select(Filter.type('org.dxos.type.person', { jobTitle: 'investor' }))
         .reference('organization')
-        .targetOf('org.dxos.relation.has-subject')
+        .targetOf('org.dxos.relation.hasSubject')
         .source()
     `);
 
     expect(ast).toEqual(
       Query.select(Filter.type('org.dxos.type.person', { jobTitle: 'investor' }))
         .reference('organization')
-        .targetOf('org.dxos.relation.has-subject')
+        .targetOf('org.dxos.relation.hasSubject')
         .source().ast,
     );
   });
