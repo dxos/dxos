@@ -65,7 +65,7 @@ const FeedArticleStory = ({ feedUrl }: FeedArticleStoryProps) => {
     <Panel.Root role='article' className='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <h2 className='text-lg font-medium'>{feed.name}</h2>
+          <Toolbar.Text>{feed.name}</Toolbar.Text>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
