@@ -1,5 +1,5 @@
 fn main() {
-    // Link Swift runtime libraries for tauri-plugin-macos-passkey.
+    // TODO(wittjosiah): This shouldn't be necessary, but the app crashes without it.
     #[cfg(target_os = "macos")]
     {
         let swift_lib_path = std::process::Command::new("xcrun")

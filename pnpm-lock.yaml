@@ -14095,6 +14095,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/operation':
         specifier: workspace:*
         version: link:../../core/operation
@@ -14125,10 +14128,10 @@ importers:
       '@effect/cli':
         specifier: 'catalog:'
         version: 0.73.2(@effect/platform@0.94.4(effect@3.20.0))(@effect/printer-ansi@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(@effect/printer@0.47.0(@effect/typeclass@0.38.0(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)
+      '@tauri-apps/api':
+        specifier: 'catalog:'
+        version: 2.10.1
     devDependencies:
-      '@dxos/log':
-        specifier: workspace:*
-        version: link:../../common/log
       '@dxos/react-ui-syntax-highlighter':
         specifier: workspace:*
         version: link:../../ui/react-ui-syntax-highlighter

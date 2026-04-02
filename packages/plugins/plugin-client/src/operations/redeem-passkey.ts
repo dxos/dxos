@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Match from 'effect/Match';
 
 import { Capability } from '@dxos/app-framework';
 import { PublicKey } from '@dxos/client';
@@ -10,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 
 import { RedeemPasskey } from './definitions';
-import { supportsNativePasskeys, loginNativePasskey } from './util';
+import { supportsNativePasskeys, loginNativePasskey } from '@dxos/app-toolkit';
 
 import { ClientCapabilities } from '../types';
 
@@ -23,34 +24,42 @@ const handler: Operation.WithHandler<typeof RedeemPasskey> = RedeemPasskey.pipe(
         client.services.services.IdentityService!.requestRecoveryChallenge(),
       );
 
-      let lookupKey: PublicKey;
-      let signature: Buffer;
-      let clientDataJson: Buffer;
-      let authenticatorData: Buffer;
-
-      if (supportsNativePasskeys()) {
-        const result = yield* Effect.promise(() =>
-          loginNativePasskey({ challenge: Uint8Array.from(Buffer.from(challenge, 'base64')) }),
-        );
-        lookupKey = PublicKey.from(Uint8Array.from(atob(result.user_handle), (c) => c.charCodeAt(0)));
-        signature = Buffer.from(atob(result.signature), 'latin1');
-        clientDataJson = Buffer.from(atob(result.client_data_json), 'latin1');
-        authenticatorData = Buffer.from(atob(result.authenticator_data), 'latin1');
-      } else {
-        const credential = yield* Effect.promise(() =>
-          navigator.credentials.get({
-            publicKey: {
-              challenge: Buffer.from(challenge, 'base64'),
-              rpId: location.hostname,
-              userVerification: 'required',
-            },
+      const { lookupKey, signature, clientDataJson, authenticatorData } = yield* Match.value(
+        supportsNativePasskeys(),
+      ).pipe(
+        Match.when(true, () =>
+          Effect.gen(function* () {
+            const result = yield* Effect.promise(() =>
+              loginNativePasskey({ challenge: Uint8Array.from(Buffer.from(challenge, 'base64')) }),
+            );
+            return {
+              lookupKey: PublicKey.from(Uint8Array.from(atob(result.user_handle), (c) => c.charCodeAt(0))),
+              signature: Buffer.from(atob(result.signature), 'latin1'),
+              clientDataJson: Buffer.from(atob(result.client_data_json), 'latin1'),
+              authenticatorData: Buffer.from(atob(result.authenticator_data), 'latin1'),
+            };
           }),
-        );
-        lookupKey = PublicKey.from(new Uint8Array((credential as any).response.userHandle));
-        signature = Buffer.from((credential as any).response.signature);
-        clientDataJson = Buffer.from((credential as any).response.clientDataJSON);
-        authenticatorData = Buffer.from((credential as any).response.authenticatorData);
-      }
+        ),
+        Match.orElse(() =>
+          Effect.gen(function* () {
+            const credential = yield* Effect.promise(() =>
+              navigator.credentials.get({
+                publicKey: {
+                  challenge: Buffer.from(challenge, 'base64'),
+                  rpId: location.hostname,
+                  userVerification: 'required',
+                },
+              }),
+            );
+            return {
+              lookupKey: PublicKey.from(new Uint8Array((credential as any).response.userHandle)),
+              signature: Buffer.from((credential as any).response.signature),
+              clientDataJson: Buffer.from((credential as any).response.clientDataJSON),
+              authenticatorData: Buffer.from((credential as any).response.authenticatorData),
+            };
+          }),
+        ),
+      );
 
       yield* Effect.promise(() =>
         client.services.services.IdentityService!.recoverIdentity(

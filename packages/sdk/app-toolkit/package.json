@@ -48,6 +48,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
@@ -57,10 +58,10 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@effect/cli": "catalog:"
+    "@effect/cli": "catalog:",
+    "@tauri-apps/api": "catalog:"
   },
   "devDependencies": {
-    "@dxos/log": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
