@@ -25,17 +25,10 @@ export type SearchArticleProps = {
 export const SearchArticle = ({ space }: SearchArticleProps) => {
   // TODO(burdon): Option to query across spaces.
   const [query, setQuery] = useState<string>();
+  // TODO(burdon): Re-enable full-text search when indexer is available in all environments.
   const objects = useQuery(
     space?.db,
-    query === undefined
-      ? Query.select(Filter.nothing())
-      : // TODO(dmaretskyi): Final version would walk the ancestry of the object until we find a non-system type.
-        Query.all(
-          Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
-          Query.select(Filter.text(query, { type: 'full-text' }))
-            .select(Filter.type(Text.Text))
-            .referencedBy('org.dxos.type.document', 'content'),
-        ),
+    query === undefined ? Query.select(Filter.nothing()) : Query.select(Filter.not(Filter.type(Text.Text))),
   );
 
   const { setMatch } = useGlobalSearch();
