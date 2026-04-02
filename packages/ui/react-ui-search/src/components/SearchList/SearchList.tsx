@@ -266,12 +266,9 @@ type SearchListInputProps = ThemedClassName<
 >;
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
-  (
-    { classNames, density: propsDensity, elevation: propsElevation, variant, placeholder, onChange, ...props },
-    forwardedRef,
-  ) => {
+  ({ density: propsDensity, elevation: propsElevation, variant, placeholder, onChange, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { hasIosKeyboard, tx } = useThemeContext();
+    const { hasIosKeyboard } = useThemeContext();
     const { query, onQueryChange, selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       useSearchListInputContext('SearchList.Input');
     const density = useDensityContext(propsDensity);

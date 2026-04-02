@@ -82,7 +82,7 @@ export const SearchDialog = ({ pivotId: pivotIdProp }: SearchDialogProps) => {
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch}>
           <SearchList.Content classNames='max-h-[24rem]'>
-            <SearchList.Input autoFocus placeholder={t('search placeholder')} />
+            <SearchList.Input classNames='px-0' autoFocus placeholder={t('search placeholder')} />
             <SearchList.Viewport>
               {allResults.map((result) => (
                 <SearchList.Item
