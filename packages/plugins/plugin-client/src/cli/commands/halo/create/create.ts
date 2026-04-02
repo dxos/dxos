@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Plugin } from '@dxos/app-framework';
+import { setPersonalSpace } from '@dxos/app-toolkit';
 import { CommandConfig, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { print } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
@@ -39,9 +40,11 @@ export const handler = Effect.fn(function* ({
     yield* invoke(ClientOperation.CreateAgent);
   }
 
-  yield* Effect.promise(() => client.spaces.waitUntilReady());
-  yield* Effect.promise(() => client.spaces.default.waitUntilReady());
-  const space = client.spaces.default;
+  // Create personal space for the CLI identity.
+  // TODO: Use space tags to mark as personal space.
+  const space = yield* Effect.promise(() => client.spaces.create());
+  yield* Effect.promise(() => space.waitUntilReady());
+  setPersonalSpace(space);
   yield* flushAndSync({ indexes: true }).pipe(Effect.provide(spaceLayer(Option.some(space.id))));
 
   if (json) {

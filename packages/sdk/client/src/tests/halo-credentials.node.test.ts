@@ -41,7 +41,7 @@ describe('Halo', () => {
       let credentials: Credential[] = [];
       client.halo.credentials.subscribe((creds) => {
         credentials = creds.filter(({ subject }) => subject.assertion['@type'] === 'dxos.halo.credentials.SpaceMember');
-        if (credentials.length >= 2) {
+        if (credentials.length >= 1) {
           trigger.wake();
         }
       });
@@ -53,7 +53,7 @@ describe('Halo', () => {
         ids: credentials.map(({ id }) => id!),
         nonce: new Uint8Array([0, 0, 0, 0]),
       });
-      expect(presentation.credentials?.length).to.equal(2);
+      expect(presentation.credentials?.length).to.equal(1);
       expect(await verifyPresentation(presentation)).to.deep.equal({ kind: 'pass' });
       expect(presentation.proofs![0].nonce).to.deep.equal(nonce);
     }

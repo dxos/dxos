@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, getPersonalSpace } from '@dxos/app-toolkit';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { type LogBuffer, log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -60,7 +60,12 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
     download(file, fileName);
 
     if (upload) {
-      const info = await upload(client.spaces.default.db, new File([file], fileName));
+      const personalSpace = getPersonalSpace(client);
+      if (!personalSpace) {
+        log.error('no personal space available for upload');
+        return;
+      }
+      const info = await upload(personalSpace.db, new File([file], fileName));
       if (!info) {
         log.error('diagnostics failed to upload to IPFS');
         return;

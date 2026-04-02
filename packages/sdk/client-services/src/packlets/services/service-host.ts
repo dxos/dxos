@@ -345,7 +345,6 @@ export class ClientServicesHost {
       this._serviceContext.identityManager,
       this._serviceContext.recoveryManager,
       this._serviceContext.keyring,
-      () => this._serviceContext.dataSpaceManager!,
       (params) => this._createIdentity(params),
       (profile) => this._serviceContext.broadcastProfileUpdate(profile),
     );
