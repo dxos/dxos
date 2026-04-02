@@ -41,17 +41,17 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
   // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
   useObject(calendar);
   const feed = calendar.feed?.target as Feed.Feed | undefined;
-  const objects = useQuery(
+  const events = useQuery(
     db,
     feed ? Query.select(Filter.type(Event.Event)).from(feed) : Query.select(Filter.nothing()),
   ).toSorted(byDate());
 
   // TODO(burdon): Actual test should be if we have synced; not number of messages.
-  const isEmpty = objects.length === 0;
+  const isEmpty = events.length === 0;
 
   const handleDateSelect = useCallback(
     ({ date }: { date: Date }) => {
-      const match = objects.find((event) => isSameDay(new Date(event.startDate), date));
+      const match = events.find((event) => isSameDay(new Date(event.startDate), date));
       if (match) {
         void invokePromise(AttentionOperation.Select, {
           contextId: id,
@@ -59,7 +59,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
         });
       }
     },
-    [objects, id, invokePromise],
+    [events, id, invokePromise],
   );
 
   const handleAction = useCallback<EventStackActionHandler>(
@@ -98,7 +98,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
               <NaturalCalendar.Toolbar />
             </Panel.Toolbar>
             <Panel.Content asChild>
-              <NaturalCalendar.Grid onSelect={handleDateSelect} />
+              <NaturalCalendar.Grid dates={events.map((event) => new Date(event.startDate))} onSelect={handleDateSelect} />
             </Panel.Content>
           </NaturalCalendar.Root>
         </Panel.Root>
@@ -117,7 +117,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
             {isEmpty ? (
               <NewCalendar calendar={calendar} />
             ) : (
-              <EventStack id={id} events={objects} currentId={currentId} onAction={handleAction} />
+              <EventStack id={id} events={events} currentId={currentId} onAction={handleAction} />
             )}
           </Panel.Content>
         </Panel.Root>

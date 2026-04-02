@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import { type Day, addDays, differenceInWeeks, format, startOfWeek } from 'date-fns';
+import { type Day, addDays, differenceInWeeks, format, startOfDay, startOfWeek } from 'date-fns';
 import React, {
   type Dispatch,
   type PropsWithChildren,
@@ -20,7 +20,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { List, type ListProps, type ListRowRenderer } from 'react-virtualized';
 
 import { Event } from '@dxos/async';
-import { Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
@@ -152,16 +152,23 @@ const CALENDAR_GRID_NAME = 'CalendarGrid';
 
 type CalendarGridProps = {
   rows?: number;
+  /** Dates to highlight on the grid. Each date that appears in this array receives a border indicator. */
+  dates?: Date[];
   onSelect?: (event: { date: Date }) => void;
 };
 
 const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
-  ({ classNames, rows, onSelect, ...props }, forwardedRef) => {
+  ({ classNames, rows, dates = [], onSelect, ...props }, forwardedRef) => {
     const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CALENDAR_GRID_NAME);
     const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
     const maxHeight = rows ? rows * size : undefined;
     const listRef = useRef<List>(null);
     const today = useMemo(() => new Date(), []);
+
+    // Build a set of ISO date strings (YYYY-MM-DD) for O(1) per-cell lookup.
+    const dateSet = useMemo(() => new Set(dates.map((date) => startOfDay(date).toISOString())), [dates]);
+
+    const hasDate = useCallback((date: Date) => dateSet.has(startOfDay(date).toISOString()), [dateSet]);
 
     const [initialized, setInitialized] = useState(false);
     useEffect(() => {
@@ -190,11 +197,6 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
     }, []);
 
     // TODO(burdon): Get info by range.
-    // TODO(burdon): Border marker for "all day events?"
-    const getNumAppointments = useCallback((_date: Date) => {
-      // return Math.floor(Math.random() * 10);
-      return 0;
-    }, []);
 
     const handleDaySelect = useCallback(
       (date: Date) => {
@@ -220,12 +222,13 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
             >
               {Array.from({ length: 7 }).map((_, i) => {
                 const date = getDate(start, index, i, weekStartsOn);
-                const num = getNumAppointments(date);
                 const border = isSameDay(date, selected)
                   ? 'border-primary-500'
                   : isSameDay(date, today)
                     ? 'border-amber-500'
-                    : undefined;
+                    : hasDate(date)
+                      ? 'border-neutral-700 border-dashed'
+                      : undefined;
 
                 return (
                   <div
@@ -238,18 +241,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                     {!border && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
                     )}
-                    {border && (
-                      <div
-                        role='none'
-                        className={mx('absolute top-0 left-0 h-full w-full border-2 rounded-full', border)}
-                      />
-                    )}
-                    {num > 0 && (
-                      <Icon
-                        classNames='absolute bottom-0'
-                        icon={num > 3 ? 'ph--dots-three--regular' : 'ph--dot--regular'}
-                      />
-                    )}
+                    {border && <div role='none' className={mx('absolute inset-1 border-2 rounded-full', border)} />}
                   </div>
                 );
               })}
@@ -257,7 +249,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           </div>
         );
       },
-      [handleDaySelect, getNumAppointments, selected, weekStartsOn],
+      [handleDaySelect, hasDate, selected, weekStartsOn],
     );
 
     return (
