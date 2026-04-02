@@ -223,11 +223,7 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
   Schema.Schema.Type<Opts['output']>,
   Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
 > => {
-  assertArgument(
-    /^[a-z0-9]([a-z0-9.\-/]*[a-z0-9])?$/i.test(opts.key),
-    'key',
-    'Invalid key',
-  );
+  assertArgument(/^[a-z0-9]([a-z0-9.\-/]*[a-z0-9])?$/i.test(opts.key), 'key', 'Invalid key');
   return {
     [ProcessTypeId]: {} as any,
     ...opts,
