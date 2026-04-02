@@ -22,6 +22,7 @@ export const LegacyJournalEntry = Schema.Struct({
     typename: 'org.dxos.type.journal-entry',
     version: '0.1.0',
   }),
+  SystemTypeAnnotation.set(true),
 );
 
 export interface LegacyJournalEntry extends Schema.Schema.Type<typeof LegacyJournalEntry> {}

@@ -19,6 +19,7 @@ export const LegacyResearchGraph = Schema.Struct({
     typename: 'org.dxos.type.research-graph',
     version: '0.1.0',
   }),
+  SystemTypeAnnotation.set(true),
 );
 
 export interface LegacyResearchGraph extends Schema.Schema.Type<typeof LegacyResearchGraph> {}

@@ -19,6 +19,7 @@ export const LegacyAccessToken = Schema.Struct({
     typename: 'org.dxos.type.access-token',
     version: '0.1.0',
   }),
+  SystemTypeAnnotation.set(true),
 );
 
 export interface LegacyAccessToken extends Schema.Schema.Type<typeof LegacyAccessToken> {}
