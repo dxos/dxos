@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
@@ -35,6 +35,7 @@ const SETTINGS_TYPE = `${meta.id}.settings`;
 const GENERAL_TYPE = `${meta.id}.general`;
 const DIRECTORY_TYPE = `${meta.id}.directory`;
 const IMAGE_TYPE = `${meta.id}.image`;
+const MARKDOWN_PENDING_TYPE = `${meta.id}.markdown-pending`;
 
 const workspaceRearrangeCache = new Map<string, (nextOrder: (FilesystemWorkspace | unknown)[]) => void>();
 
@@ -57,7 +58,9 @@ export const createFilesystemEntryExtensions = (
         const state: NativeFilesystemState = get(stateAtom);
         const workspace = state.workspaces.find((item) => item.id === workspaceId);
         return Effect.succeed(
-          workspace ? workspace.children.map((entry) => constructEntryNode(entry, nativeMarkdownDocs)) : [],
+          workspace
+            ? workspace.children.map((entry) => constructEntryNode(entry, nativeMarkdownDocs, workspaceId, get))
+            : [],
         );
       },
     }),
@@ -74,9 +77,13 @@ export const createFilesystemEntryExtensions = (
 
         const directoryId = (node.data as FilesystemDirectory).id;
         const state: NativeFilesystemState = get(stateAtom);
-        const directory = findDirectoryById(state.workspaces, directoryId);
+        const result = findDirectoryById(state.workspaces, directoryId);
         return Effect.succeed(
-          directory ? directory.children.map((entry) => constructEntryNode(entry, nativeMarkdownDocs)) : [],
+          result
+            ? result.directory.children.map((entry) =>
+                constructEntryNode(entry, nativeMarkdownDocs, result.workspaceId, get),
+              )
+            : [],
         );
       },
     }),
@@ -242,6 +249,8 @@ export default Capability.makeModule(
 const constructEntryNode = (
   entry: FilesystemEntry,
   nativeMarkdownDocs: NativeMarkdownDocumentsService,
+  workspaceId: string,
+  get: Atom.Context,
 ): Node.NodeArg<any> => {
   if (isFilesystemDirectory(entry)) {
     return {
@@ -258,18 +267,33 @@ const constructEntryNode = (
 
   const file = entry as FilesystemFile;
   if (file.type === 'markdown') {
-    const text = nativeMarkdownDocs.getOrCreate(file);
+    void get(nativeMarkdownDocs.markdownBindingAtom(file.id));
+    const text = nativeMarkdownDocs.getByFileId(file.id);
+    if (text) {
+      return {
+        id: file.id,
+        type: Text.Text.typename,
+        data: text,
+        properties: {
+          label: file.name,
+          icon: 'ph--file-text--regular',
+          modified: file.modified,
+          nativeFilesystemFileId: file.id,
+          nativeFilesystemPath: file.path,
+        },
+      };
+    }
+
     return {
       id: file.id,
-      type: Text.Text.typename,
-      data: text,
+      type: MARKDOWN_PENDING_TYPE,
+      data: null,
       properties: {
         label: file.name,
         icon: 'ph--file-text--regular',
         modified: file.modified,
         nativeFilesystemFileId: file.id,
         nativeFilesystemPath: file.path,
-        persistenceClass: 'memory',
       },
     };
   }
@@ -285,11 +309,14 @@ const constructEntryNode = (
   };
 };
 
-const findDirectoryById = (workspaces: FilesystemWorkspace[], directoryId: string): FilesystemDirectory | undefined => {
+const findDirectoryById = (
+  workspaces: FilesystemWorkspace[],
+  directoryId: string,
+): { directory: FilesystemDirectory; workspaceId: string } | undefined => {
   for (const workspace of workspaces) {
     const directory = findDirectoryInEntries(workspace.children, directoryId);
     if (directory) {
-      return directory;
+      return { directory, workspaceId: workspace.id };
     }
   }
 

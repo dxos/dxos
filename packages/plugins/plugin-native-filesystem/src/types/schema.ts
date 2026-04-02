@@ -64,6 +64,8 @@ export type FilesystemWorkspace = {
 export type NativeFilesystemState = {
   workspaces: FilesystemWorkspace[];
   currentFile?: FilesystemFile;
+  /** Set to true after xattr/filemap restore finishes for a workspace (forkDaemon background restore). */
+  markdownRestoreCompleteByWorkspaceId?: Record<string, boolean>;
 };
 
 /**

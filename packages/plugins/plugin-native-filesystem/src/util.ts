@@ -10,10 +10,12 @@ import { isTauri } from '@dxos/util';
 
 import type { FilesystemDirectory, FilesystemEntry, FilesystemFile, FilesystemWorkspace } from './types';
 
-type ComposerConfig = { icon?: string; hue?: string };
+export type ComposerConfig = { icon?: string; hue?: string; spaceId?: string };
 
 const COMPOSER_CONFIG_DIR = '.composer';
 const COMPOSER_CONFIG_FILE = 'meta.json';
+const FILEMAP_FILE = 'filemap.json';
+const XATTR_DXN_NAME = 'org.dxos.dxn';
 
 type DirEntry = { name: string; isDirectory: boolean; isFile: boolean; isSymlink: boolean };
 
@@ -45,7 +47,8 @@ const isImageFile = (name: string): boolean => {
 };
 
 const isSupportedFile = (name: string): boolean => {
-  return isMarkdownFile(name) || isImageFile(name);
+  // TODO: Add image/PDF support.
+  return isMarkdownFile(name);
 };
 
 const createFileId = (path: string): string => {
@@ -204,6 +207,7 @@ export const readComposerConfig = (workspacePath: string): Effect.Effect<Compose
     return {
       icon: typeof parsed.icon === 'string' ? parsed.icon : undefined,
       hue: typeof parsed.hue === 'string' ? parsed.hue : undefined,
+      spaceId: typeof parsed.spaceId === 'string' ? parsed.spaceId : undefined,
     };
   });
 };
@@ -239,6 +243,93 @@ export const writeComposerConfig = (workspacePath: string, config: ComposerConfi
 
     const configPath = pathJoin(workspacePath, COMPOSER_CONFIG_DIR, COMPOSER_CONFIG_FILE);
     return yield* writeFileContent(configPath, JSON.stringify(config, null, 2) + '\n');
+  });
+
+//
+// xattr helpers
+//
+
+/** Read the DXN stored as an extended attribute on a file. */
+export const getFileXattrDxn = (filePath: string): Effect.Effect<string | undefined> => {
+  if (!isTauriAvailable()) {
+    return Effect.succeed(undefined);
+  }
+
+  return Effect.tryPromise(async () => {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return invoke<string | null>('get_xattr', { path: filePath, name: XATTR_DXN_NAME });
+  }).pipe(
+    Effect.map((value) => value ?? undefined),
+    Effect.catchAll((error) =>
+      Effect.sync(() => {
+        log.warn('Failed to read xattr', { filePath, error });
+        return undefined;
+      }),
+    ),
+  );
+};
+
+/** Write a DXN as an extended attribute on a file. */
+export const setFileXattrDxn = (filePath: string, dxn: string): Effect.Effect<void> => {
+  if (!isTauriAvailable()) {
+    return Effect.void;
+  }
+
+  return Effect.tryPromise(async () => {
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('set_xattr', { path: filePath, name: XATTR_DXN_NAME, value: dxn });
+  }).pipe(
+    Effect.catchAll((error) =>
+      Effect.sync(() => {
+        log.warn('Failed to set xattr', { filePath, error });
+      }),
+    ),
+  );
+};
+
+//
+// filemap.json helpers
+//
+
+export type FileMapEntry = { relativePath: string; objectDxn: string };
+export type FileMap = { files: FileMapEntry[] };
+
+/** Read `.composer/filemap.json` from a workspace directory. */
+export const readFileMap = (workspacePath: string): Effect.Effect<FileMap> => {
+  const mapPath = pathJoin(workspacePath, COMPOSER_CONFIG_DIR, FILEMAP_FILE);
+  return Effect.gen(function* () {
+    const content = yield* readFileContent(mapPath);
+    if (content === undefined) {
+      return { files: [] };
+    }
+
+    const parsed = yield* Effect.sync(() => {
+      try {
+        return JSON.parse(content);
+      } catch {
+        log.warn('Failed to parse filemap', { mapPath });
+        return undefined;
+      }
+    });
+
+    if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.files)) {
+      return { files: [] };
+    }
+
+    return { files: parsed.files } as FileMap;
+  });
+};
+
+/** Write `.composer/filemap.json` to a workspace directory. */
+export const writeFileMap = (workspacePath: string, fileMap: FileMap): Effect.Effect<boolean> =>
+  Effect.gen(function* () {
+    const dirCreated = yield* ensureComposerDir(workspacePath);
+    if (!dirCreated) {
+      return false;
+    }
+
+    const mapPath = pathJoin(workspacePath, COMPOSER_CONFIG_DIR, FILEMAP_FILE);
+    return yield* writeFileContent(mapPath, JSON.stringify(fileMap, null, 2) + '\n');
   });
 
 /**

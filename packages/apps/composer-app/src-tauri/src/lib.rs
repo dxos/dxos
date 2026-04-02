@@ -4,6 +4,7 @@
 mod oauth;
 #[cfg(desktop)]
 mod window_state;
+mod xattr_cmd;
 #[cfg(target_os = "macos")]
 mod menubar;
 #[cfg(target_os = "macos")]
@@ -92,12 +93,19 @@ pub fn run() {
         oauth::stop_oauth_server,
         oauth::get_oauth_result,
         oauth::initiate_oauth_flow,
+        xattr_cmd::get_xattr,
+        xattr_cmd::set_xattr,
+        xattr_cmd::remove_xattr,
         #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,
     ]);
 
     #[cfg(mobile)]
-    let builder = builder.invoke_handler(tauri::generate_handler![]);
+    let builder = builder.invoke_handler(tauri::generate_handler![
+        xattr_cmd::get_xattr,
+        xattr_cmd::set_xattr,
+        xattr_cmd::remove_xattr,
+    ]);
 
     #[cfg(desktop)]
     let builder = builder.manage(OAuthServerState::new());

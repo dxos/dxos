@@ -46,6 +46,13 @@ export default NativeFilesystemOperation.OpenDirectory.pipe(
       const dirWatcher = yield* Capability.get(NativeFilesystemCapabilities.DirectoryWatcher);
       yield* dirWatcher.startWatching(workspace);
 
+      // Ensure a mirror space exists for this workspace.
+      const mirrorSpaceManager = yield* Capability.get(NativeFilesystemCapabilities.MirrorSpaceManager);
+      yield* mirrorSpaceManager.getOrCreateSpace(workspace);
+
+      const nativeMarkdownDocuments = yield* Capability.get(NativeFilesystemCapabilities.NativeMarkdownDocuments);
+      yield* nativeMarkdownDocuments.syncMarkdownFilesFromDisk(workspace);
+
       return { id: workspace.id, subject: [workspace.id] };
     }),
   ),

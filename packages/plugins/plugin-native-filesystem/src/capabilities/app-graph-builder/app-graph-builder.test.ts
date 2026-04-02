@@ -8,7 +8,6 @@ import { describe, test } from 'vitest';
 
 import { qualifyId } from '@dxos/app-graph';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import { createObject } from '@dxos/echo-db';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { Text } from '@dxos/schema';
 
@@ -154,9 +153,10 @@ const setupNativeFilesystemGraphBuilder = ({
   registry: Registry.Registry;
   stateAtom: Atom.Writable<NativeFilesystemState>;
 }) => {
+  const initialState = registry.get(stateAtom);
   const rootExtensions = Effect.runSync(createWorkspaceRootExtensions(stateAtom));
   const stateCapabilitiesAtom = Atom.make([stateAtom]);
-  const nativeMarkdownDocsCapabilitiesAtom = Atom.make([createMarkdownDocumentsStub()]);
+  const nativeMarkdownDocsCapabilitiesAtom = Atom.make([createMarkdownDocumentsStub(initialState)]);
   const entryExtensions = Effect.runSync(
     createFilesystemEntryExtensions(stateCapabilitiesAtom, nativeMarkdownDocsCapabilitiesAtom),
   );
@@ -181,23 +181,40 @@ const createWorkspaceRootExtensions = (stateAtom: Atom.Writable<NativeFilesystem
       ),
   });
 
-const createMarkdownDocumentsStub = (): NativeMarkdownDocumentsService => {
+const createMarkdownDocumentsStub = (state: NativeFilesystemState): NativeMarkdownDocumentsService => {
   const documents = new Map<string, Text.Text>();
+  const markdownBindingGeneration = Atom.family((fileId: string) => Atom.make(0).pipe(Atom.keepAlive));
+
+  const seedMarkdownFiles = (entries: FilesystemEntry[]) => {
+    for (const entry of entries) {
+      if ('children' in entry) {
+        seedMarkdownFiles(entry.children);
+      } else if (entry.type === 'markdown') {
+        documents.set(entry.id, Text.make(entry.text ?? ''));
+      }
+    }
+  };
+  for (const workspace of state.workspaces) {
+    seedMarkdownFiles(workspace.children);
+  }
 
   return {
-    getOrCreate: (file) => {
+    markdownBindingAtom: (fileId: string) => markdownBindingGeneration(fileId),
+    ensureDocumentForFile: (file, _workspaceId) => {
       const existing = documents.get(file.id);
       if (existing) {
         return existing;
       }
 
-      const document = createObject(Text.make(file.text ?? ''));
+      const document = Text.make(file.text ?? '');
       documents.set(file.id, document);
       return document;
     },
     getByFileId: (fileId) => documents.get(fileId),
     getWriteTargetByDxn: () => undefined,
     getDxnForFileId: () => undefined,
+    restoreWorkspaceDocuments: () => Effect.void,
+    syncMarkdownFilesFromDisk: () => Effect.void,
     evictForWorkspace: () => {},
   };
 };
