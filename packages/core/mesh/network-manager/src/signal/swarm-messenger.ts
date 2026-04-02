@@ -49,14 +49,14 @@ export class SwarmMessenger implements SignalMessenger {
   async receiveMessage(
     ctx: Context,
     {
-    author,
-    recipient,
-    payload,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    payload: Any;
-  },
+      author,
+      recipient,
+      payload,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      payload: Any;
+    },
   ): Promise<void> {
     if (payload.type_url !== 'dxos.mesh.swarm.SwarmMessage') {
       // Ignore not swarm messages.
@@ -151,14 +151,14 @@ export class SwarmMessenger implements SignalMessenger {
   private async _handleOffer(
     ctx: Context,
     {
-    author,
-    recipient,
-    message,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    message: SwarmMessage;
-  },
+      author,
+      recipient,
+      message,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      message: SwarmMessage;
+    },
   ): Promise<void> {
     invariant(message.data.offer, 'No offer');
     const offerMessage: OfferMessage = {
@@ -191,14 +191,14 @@ export class SwarmMessenger implements SignalMessenger {
   private async _handleSignal(
     ctx: Context,
     {
-    author,
-    recipient,
-    message,
-  }: {
-    author: PeerInfo;
-    recipient: PeerInfo;
-    message: SwarmMessage;
-  },
+      author,
+      recipient,
+      message,
+    }: {
+      author: PeerInfo;
+      recipient: PeerInfo;
+      message: SwarmMessage;
+    },
   ): Promise<void> {
     invariant(message.messageId);
     invariant(message.data.signal || message.data.signalBatch, 'Invalid message');

@@ -1261,13 +1261,9 @@ export class QueryExecutor extends Resource {
     if (!meta.documentId) {
       return null;
     }
-    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(
-      this._ctx,
-      meta.documentId as DocumentId,
-      {
-        fetchFromNetwork: true,
-      },
-    );
+    const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
+      fetchFromNetwork: true,
+    });
     const doc = handle.doc();
     if (!doc) {
       return null;

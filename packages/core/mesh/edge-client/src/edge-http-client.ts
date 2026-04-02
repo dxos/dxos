@@ -376,11 +376,9 @@ export class EdgeHttpClient {
   //
 
   public async getCronTriggers(ctx: Context, spaceId: SpaceId): Promise<GetCronTriggersResponse> {
-    return this._call<GetCronTriggersResponse>(
-      ctx,
-      new URL(`/functions/${spaceId}/triggers/crons`, this.baseUrl),
-      { method: 'GET' },
-    );
+    return this._call<GetCronTriggersResponse>(ctx, new URL(`/functions/${spaceId}/triggers/crons`, this.baseUrl), {
+      method: 'GET',
+    });
   }
 
   public async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {

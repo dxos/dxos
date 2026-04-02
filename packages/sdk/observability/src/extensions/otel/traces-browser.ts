@@ -2,13 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import {
-  type Context,
-  type Tracer,
-  context as otelContext,
-  propagation,
-  trace,
-} from '@opentelemetry/api';
+import { type Context, type Tracer, context as otelContext, propagation, trace } from '@opentelemetry/api';
 import { getWebAutoInstrumentations } from '@opentelemetry/auto-instrumentations-web';
 import { W3CTraceContextPropagator } from '@opentelemetry/core';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
