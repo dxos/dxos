@@ -11,14 +11,14 @@ We will create a new FeedPlugin to manage and display feeds incl. RSS, BlueSky a
 
 ## Phase 1 (Basic RSS)
 
-- [ ] Create the base structure for the plugin.
-- [ ] Create a new echo Schemas for `Feed` and `Post` under the `Subscription` namespace.
-- [ ] Create a SubscriptionStack component based off of EventStack; this will be used to display the list of subscribed feeds (i.e., `Subscription.Feed` objects).
-- [ ] Create a PostStack component based off of EventRecordStack; this will be used to display the entries for a given feed (i.e., `Subscription.Post` objects).
-- [ ] Create a FeedArticle container that instantiates a PostStack and is passed a `Subcription.Feed` object (bound to a `react-surface` definition).
-- [ ] Create a testing utility that can read a given RSS feed and create a `Subscription.Feed` object and `Subscription.Post` objects.
-- [ ] Create a storybook for FeedArticle that uses the testing utility.
-- [ ] Configure the plugin with `composer-app`.
+- [x] Create the base structure for the plugin.
+- [x] Create a new echo Schemas for `Feed` and `Post` under the `Subscription` namespace.
+- [x] Create a SubscriptionStack component based off of EventStack; this will be used to display the list of subscribed feeds (i.e., `Subscription.Feed` objects).
+- [x] Create a PostStack component based off of EventRecordStack; this will be used to display the entries for a given feed (i.e., `Subscription.Post` objects).
+- [x] Create a FeedArticle container that instantiates a PostStack and is passed a `Subcription.Feed` object (bound to a `react-surface` definition).
+- [x] Create a testing utility that can read a given RSS feed and create a `Subscription.Feed` object and `Subscription.Post` objects.
+- [x] Create a storybook for FeedArticle that uses the testing utility.
+- [x] Configure the plugin with `composer-app`.
 
 ## Phase 2
 
