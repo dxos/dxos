@@ -224,7 +224,7 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeProcessOpts
   Context.Tag.Identifier<NonNullable<Opts['services']>[number]>
 > => {
   assertArgument(
-    /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$/i.test(opts.key),
+    /^[a-z0-9]([a-z0-9.\-/]*[a-z0-9])?$/i.test(opts.key),
     'key',
     'Invalid key',
   );

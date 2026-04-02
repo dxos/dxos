@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom';
 import { Registry } from '@effect-atom/atom';
 import * as Array from 'effect/Array';
-import * as Cause from 'effect/Cause';
+import * as Chunk from 'effect/Chunk';
 import * as Context from 'effect/Context';
 import * as Cron from 'effect/Cron';
 import * as Duration from 'effect/Duration';
@@ -18,18 +18,22 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 import * as Schedule from 'effect/Schedule';
+import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
 import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
-import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
+import { QueueService, TracingService } from '@dxos/functions';
 import { Trigger, type TriggerEvent } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
+import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
-import { FeedProtocol, type ObjectId } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 
+import * as Process from '../process/Process';
+import * as ProcessManager from '../process/ProcessManager';
 import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
 
@@ -90,7 +94,7 @@ interface ScheduledTrigger {
 
 // TODO(dmaretskyi): Refactor service management.
 type TriggerDispatcherServices =
-  | FunctionInvocationService
+  | ProcessManager.ProcessManagerService
   // TODO(dmaretskyi): Move those into layer deps.
   | TriggerStateStore
   | TracingService
@@ -287,21 +291,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       const { trigger, event } = options;
       log('running trigger', { triggerId: trigger.id, spec: trigger.spec, event });
 
-      const tracer = yield* TracingService;
-      const trace = yield* tracer.traceInvocationStart({
-        target: trigger.function?.dxn,
-        payload: {
-          trigger: {
-            id: trigger.id,
-            // TODO(dmaretskyi): Is `spec` always there>
-            kind: trigger.spec!.kind,
-          },
-          data: event,
-        },
-      });
-
+      const invocationId = ObjectId.random();
       const invocation: InvocationsState = {
-        invocationId: trace.invocationId,
+        invocationId,
         trigger,
         function: null,
         event,
@@ -342,9 +334,32 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
         // Prepare input data
         const inputData = this._prepareInputData(trigger, event);
 
-        // Invoke the function
-        return yield* FunctionInvocationService.invokeFunction(functionDef, inputData).pipe(
-          Effect.provide(TracingService.layerInvocation(trace)),
+        const manager = yield* ProcessManager.ProcessManagerService;
+        const executable = Process.fromOperation(functionDef, manager.operationHandlerSet);
+        const handle = yield* manager.spawn(executable, {
+          tracing: {
+            invocationPayload: {
+              trigger: {
+                id: trigger.id,
+                kind: trigger.spec!.kind,
+              },
+              data: event,
+            },
+            invocationTarget: trigger.function?.dxn,
+          },
+          name: functionDef.meta.name
+            ? `${functionDef.meta.name} (${functionDef.meta.key})`
+            : functionDef.meta.key,
+        });
+
+        yield* handle.submitInput(inputData);
+        return yield* handle.subscribeOutputs().pipe(
+          Stream.runCollect,
+          Effect.map(Chunk.head),
+          Effect.flatten,
+          Effect.catchTag('NoSuchElementException', () =>
+            Effect.dieMessage('Trigger invocation produced no output'),
+          ),
         );
       }).pipe(Effect.exit);
 
@@ -362,11 +377,6 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
           error: causeToError(result.cause),
         });
       }
-      yield* tracer.traceInvocationEnd({
-        trace,
-        // TODO(dmaretskyi): Might miss errors.
-        exception: Exit.isFailure(result) ? Cause.prettyErrors(result.cause)[0] : undefined,
-      });
       this._registry.update(
         this._state,
         Struct.evolve({

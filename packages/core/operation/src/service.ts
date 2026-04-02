@@ -15,6 +15,8 @@ import type * as Operation from './Operation';
 export interface InvokeOptions {
   /** Space ID to provide database context for the handler. */
   spaceId?: Key.SpaceId;
+  /** Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired). */
+  tracing?: unknown;
 }
 
 /**

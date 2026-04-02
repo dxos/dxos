@@ -3,51 +3,70 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { describe, it } from '@effect/vitest';
 import { Registry } from '@effect-atom/atom';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Fn from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { CredentialsService, QueueService } from '@dxos/functions';
-import { ExampleHandlers, Reply, Trigger } from '@dxos/functions';
+import {
+  CredentialsService,
+  ExampleHandlers,
+  QueueService,
+  Reply,
+  TracingService,
+  Trigger,
+} from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Person, Task } from '@dxos/types';
 
-import { FunctionInvocationServiceLayerTestMocked } from '../services';
+import * as ProcessManager from '../process/ProcessManager';
+import * as ServiceResolver from '../process/ServiceResolver';
 import { TestDatabaseLayer } from '../testing';
-import { TracingServiceExt } from '../trace';
 
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 
-const TestLayer = Fn.pipe(
-  Layer.mergeAll(TriggerStateStore.layerMemory, Registry.layer),
+/**
+ * Database + queue live in the outer merge so test bodies and triggers see them; ProcessManager stack matches
+ * {@link ProcessManager.test.ts} but without duplicating TestDatabaseLayer inside the pipe.
+ */
+const TestLayer = Layer.mergeAll(
+  TriggerStateStore.layerMemory,
+  Layer.mergeAll(
+    AiService.notAvailable,
+    CredentialsService.layerConfig([]),
+    FetchHttpClient.layer,
+    TestDatabaseLayer({
+      types: [Operation.PersistentOperation, Trigger.Trigger, Person.Person, Task.Task],
+    }),
+  ),
+).pipe(
   Layer.provideMerge(
-    Layer.mergeAll(
-      AiService.notAvailable,
-      CredentialsService.layerConfig([]),
-      FunctionInvocationServiceLayerTestMocked({ functions: ExampleHandlers }).pipe(
-        Layer.provideMerge(TracingServiceExt.layerLogInfo()),
-      ),
-      FetchHttpClient.layer,
-      TestDatabaseLayer({
-        types: [Operation.PersistentOperation, Trigger.Trigger, Person.Person, Task.Task],
-      }),
+    ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator }).pipe(
+      Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
+      Layer.provide(KeyValueStore.layerMemory),
+      Layer.provide(OperationHandlerSet.provide(ExampleHandlers)),
+      Layer.provide(TracingService.layerNoop),
+      Layer.provideMerge(Registry.layer),
     ),
   ),
 );
 
-const TestTriggerDispatcherLayer = Layer.provideMerge(
-  TriggerDispatcher.layer({ timeControl: 'manual', startingTime: new Date('2025-09-05T15:01:00.000Z') }),
-  TestLayer,
-);
+/** Full environment for trigger tests; cast so `it.effect` accepts the provided service union. */
+const makeTestTriggerDispatcherLayer = (options: { timeControl: 'natural' } | { timeControl: 'manual'; startingTime: Date }) =>
+  Layer.provideMerge(TriggerDispatcher.layer(options), TestLayer) as Layer.Layer<any>;
+
+const TestTriggerDispatcherLayer = makeTestTriggerDispatcherLayer({
+  timeControl: 'manual',
+  startingTime: new Date('2025-09-05T15:01:00.000Z'),
+});
 
 describe('TriggerDispatcher', () => {
   describe('Time Control', () => {
@@ -310,7 +329,7 @@ describe('TriggerDispatcher', () => {
           yield* dispatcher.start();
           yield* dispatcher.stop();
         },
-        Effect.provide(Layer.provideMerge(TriggerDispatcher.layer({ timeControl: 'natural' }), TestLayer)),
+        Effect.provide(makeTestTriggerDispatcherLayer({ timeControl: 'natural' })),
       ),
     );
   });

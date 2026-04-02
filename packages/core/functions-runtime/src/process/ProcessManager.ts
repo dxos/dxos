@@ -22,7 +22,7 @@ import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 import { Performance } from '@dxos/effect';
 
-import { Obj } from '@dxos/echo';
+import { DXN, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -94,6 +94,13 @@ export interface TracingOptions {
   readonly message?: ObjectId;
   /** Tool call ID for trace context. */
   readonly toolCallId?: string;
+  /**
+   * Merged into {@link TracingService.traceInvocationStart} payload for root processes
+   * (e.g. trigger id/kind and event data), together with built-in `process` metadata.
+   */
+  readonly invocationPayload?: Partial<TracingService.FunctionInvocationPayload>;
+  /** Invoked function/workflow DXN (trace target). */
+  readonly invocationTarget?: DXN;
 }
 
 /**
@@ -164,6 +171,11 @@ export interface Manager {
    * Terminates all spawned processes (e.g. when tearing down the manager layer).
    */
   shutdown(): Effect.Effect<void>;
+
+  /**
+   * Operation handlers supplied at construction (same set used for nested {@link Operation.Service} in processes).
+   */
+  readonly operationHandlerSet: OperationHandlerSet.OperationHandlerSet;
 }
 
 /**
@@ -569,6 +581,10 @@ export class ProcessManagerImpl implements Manager {
     return this.#monitor;
   }
 
+  get operationHandlerSet(): OperationHandlerSet.OperationHandlerSet {
+    return this.#handlerSet ?? OperationHandlerSet.empty;
+  }
+
   #hasNonTerminalChildren(parentPid: Process.ID): boolean {
     for (const handle of this.#handles.values()) {
       if (handle.parentId === parentPid) {
@@ -698,15 +714,19 @@ export class ProcessManagerImpl implements Manager {
       // Trace invocation start for root processes (no parent).
       let invocationTrace: TracingService.InvocationTraceData | undefined;
       if (isRoot) {
+        const processPayload = {
+          pid: id,
+          key: definition.key,
+          name: params.name ?? undefined,
+          target: params.target != null ? String(params.target) : undefined,
+        };
+        const mergedPayload: TracingService.FunctionInvocationPayload = {
+          ...options?.tracing?.invocationPayload,
+          process: processPayload,
+        };
         invocationTrace = yield* this.#tracingService.traceInvocationStart({
-          payload: {
-            process: {
-              pid: id,
-              key: definition.key,
-              name: params.name ?? undefined,
-              target: params.target ?? undefined,
-            },
-          },
+          payload: mergedPayload,
+          target: options?.tracing?.invocationTarget,
         });
         this.#traceContexts.set(id, { ...traceContext, currentInvocation: invocationTrace });
       }
@@ -1125,9 +1145,10 @@ export namespace ProcessOperationInvoker {
       ...args: any[]
     ): Effect.Effect<O> => {
       const input = args[0] as I;
-      const options = args[1] as (Operation.InvokeOptions & { tracing?: TracingOptions }) | undefined;
+      const options = args[1] as Operation.InvokeOptions | undefined;
+      const tracing = options?.tracing as TracingOptions | undefined;
       return Effect.gen(function* () {
-        const fiber = yield* invokeFiber(op, input, options?.tracing);
+        const fiber = yield* invokeFiber(op, input, tracing);
         const output = yield* fiber.await.pipe(Effect.flatten);
 
         yield* PubSub.publish(pubsub, {
