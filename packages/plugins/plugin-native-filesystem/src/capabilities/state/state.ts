@@ -17,6 +17,7 @@ import { DXN, Obj } from '@dxos/echo';
 import { updateText } from '@dxos/echo-db';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Text } from '@dxos/schema';
 
 import { meta } from '../../meta';
@@ -120,10 +121,7 @@ const workspaceContainsPath = (entries: FilesystemEntry[], targetPath: string): 
  * Uses sync resolution first (`getObjectById`, `makeRef` sync target); falls back to
  * `ref.tryLoad()` because objects in linked documents may not be hydrated until async load.
  */
-const resolveTextObjectFromStoredDxnAsync = async (
-  client: Client,
-  dxnStr: string,
-): Promise<Text.Text | undefined> => {
+const resolveTextObjectFromStoredDxnAsync = async (client: Client, dxnStr: string): Promise<Text.Text | undefined> => {
   const parsed = DXN.tryParse(dxnStr);
   if (!parsed) {
     return undefined;
@@ -168,9 +166,7 @@ const createNativeMarkdownDocumentsService = (
   const watchStartPending = new Set<string>();
   const serviceRef: { current?: NativeMarkdownDocumentsService } = {};
 
-  const markdownBindingGeneration = Atom.family((fileId: string) =>
-    Atom.make(0).pipe(Atom.keepAlive),
-  );
+  const markdownBindingGeneration = Atom.family((fileId: string) => Atom.make(0).pipe(Atom.keepAlive));
 
   const bumpMarkdownBinding = (fileId: string): void => {
     registry.update(markdownBindingGeneration(fileId), (generation) => generation + 1);
@@ -382,7 +378,12 @@ const createNativeMarkdownDocumentsService = (
           }
 
           if (!target || !Obj.instanceOf(Text.Text, target)) {
-            log.warn('Failed to restore object for file', { fileId: file.id, path: file.path, dxn: dxnStr, found: !!target });
+            log.warn('Failed to restore object for file', {
+              fileId: file.id,
+              path: file.path,
+              dxn: dxnStr,
+              found: !!target,
+            });
             continue;
           }
 
@@ -417,7 +418,9 @@ const createNativeMarkdownDocumentsService = (
 
         // Persist updated filemap if changed.
         if (fileMapDirty) {
-          const updatedFileMap = { files: Array.from(fileMapByPath.entries()).map(([rp, dxn]) => ({ relativePath: rp, objectDxn: dxn })) };
+          const updatedFileMap = {
+            files: Array.from(fileMapByPath.entries()).map(([rp, dxn]) => ({ relativePath: rp, objectDxn: dxn })),
+          };
           yield* writeFileMap(workspace.path, updatedFileMap);
         }
       }),
@@ -475,9 +478,7 @@ const createNativeMarkdownDocumentsService = (
   return service;
 };
 
-const createMirrorSpaceManagerService = (
-  client: { spaces: { get(): Space[]; create(props?: any, options?: { tags?: string[] }): Promise<Space> } },
-): MirrorSpaceManagerService => {
+const createMirrorSpaceManagerService = (client: Client): MirrorSpaceManagerService => {
   const spaceByWorkspaceId = new Map<string, Space>();
 
   const getOrCreateSpace = (workspace: FilesystemWorkspace): Effect.Effect<Space> =>
@@ -497,14 +498,16 @@ const createMirrorSpaceManagerService = (
         }
 
         // Stale spaceId — space no longer exists. Clear it from config.
-        log.warn('Mirror space not found, creating new one', { workspaceId: workspace.id, staleSpaceId: config.spaceId });
+        log.warn('Mirror space not found, creating new one', {
+          workspaceId: workspace.id,
+          staleSpaceId: config.spaceId,
+        });
         yield* writeComposerConfig(workspace.path, { ...config, spaceId: undefined });
       }
 
-      // Create a new mirror space.
-      // TODO(wittjosiah): Lock mirror spaces on creation once space locking lands.
+      // Create a new locked mirror space.
       const space = yield* Effect.promise(() =>
-        client.spaces.create({}, { tags: [FILESYSTEM_MIRROR_TAG] }),
+        client.spaces.create({}, { tags: [FILESYSTEM_MIRROR_TAG], membershipPolicy: MembershipPolicy.LOCKED }),
       );
       yield* Effect.promise(() => space.waitUntilReady());
 

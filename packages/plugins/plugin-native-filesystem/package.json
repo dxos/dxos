@@ -43,6 +43,7 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-pickers": "workspace:*",
