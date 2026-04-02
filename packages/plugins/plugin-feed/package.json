@@ -53,7 +53,8 @@
     "@dxos/react-client": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/util": "workspace:*",
-    "date-fns": "catalog:"
+    "date-fns": "catalog:",
+    "fast-xml-parser": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

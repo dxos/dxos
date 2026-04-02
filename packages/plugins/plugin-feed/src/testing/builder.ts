@@ -3,6 +3,7 @@
 //
 
 import { subDays } from 'date-fns';
+import { XMLParser } from 'fast-xml-parser';
 
 import { faker } from '@dxos/random';
 
@@ -37,6 +38,7 @@ export class Builder {
   private readonly _postRange: Required<DateRange>;
   private _feedName: string;
   private _feedUrl: string;
+  private _feedDescription: string = '';
 
   constructor({ posts }: BuilderOptions = {}) {
     const now = new Date();
@@ -77,12 +79,56 @@ export class Builder {
     return this;
   }
 
+  /**
+   * Fetches and parses an RSS/Atom feed URL, populating the builder with real posts.
+   * Sets the feed name, URL, and description from the channel metadata.
+   */
+  async fromRss(url: string): Promise<this> {
+    const response = await fetch(url);
+    const xml = await response.text();
+    const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
+    const parsed = parser.parse(xml);
+
+    // Support RSS 2.0 and Atom.
+    const channel = parsed.rss?.channel ?? parsed.feed;
+    if (!channel) {
+      throw new Error('Unrecognized feed format');
+    }
+
+    const isAtom = !parsed.rss;
+    this._feedUrl = url;
+    this._feedName = (isAtom ? channel.title?.['#text'] ?? channel.title : channel.title) ?? this._feedName;
+    this._feedDescription = (isAtom ? channel.subtitle : channel.description) ?? '';
+
+    const items: any[] = (isAtom ? channel.entry : channel.item) ?? [];
+    const itemList = Array.isArray(items) ? items : [items];
+
+    for (const item of itemList) {
+      const link = isAtom
+        ? (Array.isArray(item.link) ? item.link.find((link: any) => link['@_rel'] === 'alternate')?.['@_href'] : item.link?.['@_href']) ?? ''
+        : item.link ?? '';
+
+      this._posts.push(
+        Subscription.makePost({
+          title: isAtom ? (item.title?.['#text'] ?? item.title) : item.title,
+          link,
+          description: isAtom ? (item.summary ?? item.content?.['#text'] ?? item.content) : (item.description ?? ''),
+          author: isAtom ? (item.author?.name ?? item.author) : (item['dc:creator'] ?? item.author),
+          published: item.pubDate ?? item.published ?? item.updated,
+          guid: isAtom ? item.id : (item.guid?.['#text'] ?? item.guid ?? link),
+        }),
+      );
+    }
+
+    return this;
+  }
+
   /** Builds the result: a feed and sorted posts. */
   build(): BuildResult {
     const feed = Subscription.makeFeed({
       name: this._feedName,
       url: this._feedUrl,
-      description: faker.lorem.sentence(),
+      description: this._feedDescription || faker.lorem.sentence(),
     });
 
     const sortedPosts = [...this._posts].sort((postA, postB) =>

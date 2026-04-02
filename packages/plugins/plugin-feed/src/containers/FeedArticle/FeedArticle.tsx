@@ -30,13 +30,8 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
 
   return (
     <Panel.Root role={role} className='dx-document'>
-      <Panel.Content>
-        <PostStack
-          id={subject.id}
-          posts={posts}
-          currentId={currentPostId}
-          onAction={handleAction}
-        />
+      <Panel.Content asChild>
+        <PostStack id={subject.id} posts={posts} currentId={currentPostId} onAction={handleAction} />
       </Panel.Content>
     </Panel.Root>
   );

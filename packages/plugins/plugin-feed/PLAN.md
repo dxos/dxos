@@ -1,6 +1,7 @@
 # Feed Plugin
 
 We will create a new FeedPlugin to manage and display feeds incl. RSS, BlueSky and other open protocols.
+Use this document to record and design issues or implementation details.
 
 ## Issues
 
