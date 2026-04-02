@@ -83,7 +83,7 @@ type SearchTileData = {
   onAction?: SearchStackActionHandler;
 };
 
-type SearchTileProps = Pick<MosaicTileProps<SearchTileData>, 'location' | 'data'> & { current?: boolean };
+type SearchTileProps = Pick<MosaicTileProps<SearchTileData>, 'location' | 'data' | 'current'>;
 
 /**
  * Default search result tile with a simple Card header.

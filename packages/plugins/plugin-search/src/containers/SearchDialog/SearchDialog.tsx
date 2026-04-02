@@ -87,11 +87,11 @@ export const SearchDialog = ({ pivotId: pivotIdProp }: SearchDialogProps) => {
               {allResults.map((result) => (
                 <SearchList.Item
                   key={result.id}
+                  classNames='flex gap-2 items-center'
                   value={result.id}
                   label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
                   icon={result.icon}
                   onSelect={() => void handleSelect(result)}
-                  classNames='flex gap-2 items-center'
                 />
               ))}
               {query && allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}

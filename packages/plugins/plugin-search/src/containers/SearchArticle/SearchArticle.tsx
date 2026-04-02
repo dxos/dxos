@@ -109,7 +109,7 @@ type SearchResultTileData = {
   result: SearchResult;
 };
 
-type SearchResultTileProps = Pick<MosaicTileProps<SearchResultTileData>, 'location' | 'data'> & { current?: boolean };
+type SearchResultTileProps = Pick<MosaicTileProps<SearchResultTileData>, 'location' | 'data' | 'current'>;
 
 /**
  * Search result tile that uses Surface to render object content.
