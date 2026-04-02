@@ -9,17 +9,17 @@ Rules: [SKILL.md](./SKILL.md). Out of scope: RPC client-service boundary.
 
 The PR wires `ctx: Context` through most of the networking and space lifecycle stack. The OTEL bridge maps DXOS span IDs to OpenTelemetry contexts and propagates `traceparent` in both WebSocket messages and HTTP requests. Browser auto-instrumentation (fetch, XHR, document-load) is disabled — all trace propagation is explicit via `ctx`.
 
-Three remaining items require interface-level changes and are deferred.
+All interface-level changes have been resolved.
 
 ---
 
-## Remaining — requires interface changes
+## Resolved — interface changes completed
 
-| Location                      | Method                | Issue                                                                                                                                                                                                                                     |
-| ----------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `automerge-data-source.ts:98` | `getChangedObjects()` | Uses `Context.default()` for `loadDoc` inside Effect pipeline. `AutomergeDataSource` does not extend `Resource` and the `IndexDataSource` interface has no `Context` parameter. Requires adding `ctx` to the `IndexDataSource` interface. |
-| `echo-edge-replicator.ts:78`  | `connect()`           | Assigns `Context.default()` as lifecycle context for the connection. `AutomergeReplicatorContext` interface does not carry `@dxos/context` `Context`. Legitimate lifecycle context creation — low priority.                               |
-| `queue-query-context.ts:59`   | `start()`             | Creates `Context.default()` as a run-scoped context. `start()` takes no arguments; caller `QueryResultImpl._start()` has no `ctx`. Legitimate run-scoped lifecycle context — low priority.                                                |
+| Location                   | Method                | Resolution                                                                                                                                                                                                   |
+| -------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `automerge-data-source.ts` | `getChangedObjects()` | Added `ctx: Context` as first parameter to `IndexDataSource` interface, `IndexEngine.update()`, `IndexEngine.#update()`. `AutomergeDataSource` now forwards caller ctx to `loadDoc()`.                       |
+| `echo-edge-replicator.ts`  | `connect()`           | Added `ctx: Context` as first parameter to `AutomergeReplicator.connect()`. `EchoEdgeReplicator` now derives lifecycle context from caller ctx via `ctx.derive()` instead of `Context.default()`.            |
+| `queue-query-context.ts`   | `start()`             | `QueueQueryContext` now receives parent lifecycle ctx via constructor from `QueueImpl._ctx`. `start()` derives run-scoped context from parent via `this.#parentCtx.derive()` instead of `Context.default()`. |
 
 ---
 
