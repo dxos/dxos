@@ -92,6 +92,7 @@
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
+    "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/react-client": "workspace:*",

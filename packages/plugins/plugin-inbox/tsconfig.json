@@ -177,6 +177,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-settings"
+    },
+    {
       "path": "../plugin-space"
     },
     {

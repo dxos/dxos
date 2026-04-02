@@ -9087,6 +9087,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
+      '@dxos/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -12117,6 +12120,9 @@ importers:
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
+      '@dxos/plugin-settings':
+        specifier: workspace:*
+        version: link:../plugin-settings
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar

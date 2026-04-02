@@ -9,13 +9,11 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { Database, Key } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
 
 import { meta } from '../../meta';
 import { getMailboxAllMailPath, getMailboxesSectionId } from '../../paths';
 import { Mailbox } from '../../types';
-
-const SETTINGS_ID = '!dxos:settings';
-const SETTINGS_KEY = 'settings';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
