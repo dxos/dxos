@@ -6,7 +6,6 @@ export * from './errors';
 export * from './example';
 export * as Process from './process/Process';
 export * as ServiceResolver from './process/ServiceResolver';
-export type { ResolutionContext } from './process/resolution-context';
 export * from './process/StorageService';
 export * from './sdk';
 export * from './services';

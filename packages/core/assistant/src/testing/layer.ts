@@ -126,6 +126,7 @@ export const AssistantTestLayer = ({
     Layer.provideMerge(AgentService.layer({ systemPrompt })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
     Layer.provideMerge(
+      // TODO(dmaretskyi): Refactor to be able to merge resovler layers, also consider service mesh achitecture.
       Layer.effect(
         ServiceResolver.ServiceResolver,
         Effect.gen(function* () {
