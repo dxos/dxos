@@ -36,11 +36,11 @@ const ECHO_DXN_LENGTH = 3 + 1 + 4 + 1 + 33 + 1 + 26;
 const resolvePersonalSpace = (client: {
   spaces: { get(): Space[]; get(id: any): Space | undefined };
   halo: { queryCredentials(options: { type: string }): any[] };
-}): Space | undefined => {
+}): { space: Space; fromCredential: boolean } | undefined => {
   // Check for personal space via tags or __DEFAULT__ property.
   const found = getPersonalSpace(client);
   if (found) {
-    return found;
+    return { space: found, fromCredential: false };
   }
 
   // Migration: read the legacy DefaultSpace credential from HALO.
@@ -54,7 +54,7 @@ const resolvePersonalSpace = (client: {
 
   const defaultSpaceId = defaultSpaceCredential.subject.assertion.spaceId;
   const space = client.spaces.get(defaultSpaceId);
-  return space;
+  return space ? { space, fromCredential: true } : undefined;
 };
 
 export default Capability.makeModule(
@@ -76,7 +76,7 @@ export default Capability.makeModule(
     //
 
     let personalSpaceInitialized = false;
-    const initializePersonalSpace = async (personalSpace: Space) => {
+    const initializePersonalSpace = async (personalSpace: Space, { fromCredential }: { fromCredential: boolean }) => {
       if (personalSpaceInitialized) {
         return;
       }
@@ -84,8 +84,11 @@ export default Capability.makeModule(
 
       await personalSpace.waitUntilReady();
 
-      // Ensure the personal space has the __DEFAULT__ property set (migration for legacy users).
-      setPersonalSpace(personalSpace);
+      // Only set the __DEFAULT__ property when migrating from the legacy credential.
+      // Spaces created with the personal tag don't need it.
+      if (fromCredential) {
+        setPersonalSpace(personalSpace);
+      }
 
       // Check if deck state indicates we should switch to default space.
       const layout = registry.get(layoutAtom);
@@ -112,15 +115,15 @@ export default Capability.makeModule(
     };
 
     // Try to find the personal space now, or subscribe to find it later.
-    const found = resolvePersonalSpace(client);
-    if (found) {
-      yield* Effect.tryPromise(() => initializePersonalSpace(found));
+    const resolved = resolvePersonalSpace(client);
+    if (resolved) {
+      yield* Effect.tryPromise(() => initializePersonalSpace(resolved.space, resolved));
     } else {
       subscriptions.add(
-        client.spaces.subscribe((spaces) => {
-          const found = resolvePersonalSpace(client);
-          if (found) {
-            void initializePersonalSpace(found);
+        client.spaces.subscribe(() => {
+          const resolved = resolvePersonalSpace(client);
+          if (resolved) {
+            void initializePersonalSpace(resolved.space, resolved);
           }
         }).unsubscribe,
       );
