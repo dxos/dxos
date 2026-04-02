@@ -25,7 +25,7 @@ const useFeedData = (feedUrl?: string): BuildResult | undefined => {
     const load = async () => {
       const builder = new Builder();
       if (feedUrl) {
-        await builder.fromRss(feedUrl, { corsProxy: 'https://api.allorigins.win/raw?url=' });
+        await builder.fromRss(feedUrl, { corsProxy: '/api/rss?url=' });
       } else {
         builder.createPosts(50);
       }
