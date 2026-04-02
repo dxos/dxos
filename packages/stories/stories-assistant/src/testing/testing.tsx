@@ -285,6 +285,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
       const client = yield* Capability.get(ClientCapabilities.Client);
       const space = client.spaces.get()[0];
+      invariant(space, 'No space available after initialization.');
 
       // Ensure workspace is set.
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });

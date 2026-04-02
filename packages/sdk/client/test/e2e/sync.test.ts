@@ -45,7 +45,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
     await client.initialize();
     await client.halo.createIdentity();
 
-    const space = await client.spaces.create();
+    let space = await client.spaces.create();
     await space.waitUntilReady();
 
     log.info('client initialized', {
@@ -82,6 +82,7 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))('sync', { timeout
       if (RESTART_CLIENT) {
         await client.destroy();
         await client.initialize();
+        space = client.spaces.get()[0]!;
       }
     }
   });

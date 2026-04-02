@@ -45,9 +45,9 @@ const meta = {
           types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
-              yield* Effect.promise(() => initializeMailbox(defaultSpace, 30));
-              yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+              const { personalSpace } = yield* initializeIdentity(client);
+              yield* Effect.promise(() => initializeMailbox(personalSpace, 30));
+              yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
 
