@@ -24,14 +24,12 @@ import { Performance } from '@dxos/effect';
 
 import { DXN, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { TracingService } from '@dxos/functions';
+import { Process, ServiceResolver, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
 
 import { ProcessNotFoundError } from '../errors';
-import * as Process from './Process';
-import * as ServiceResolver from './ServiceResolver';
 import * as StorageService from './StorageService';
 
 export interface Status {

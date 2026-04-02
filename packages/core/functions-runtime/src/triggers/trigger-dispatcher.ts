@@ -24,15 +24,13 @@ import * as Struct from 'effect/Struct';
 import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
-import { QueueService, TracingService } from '@dxos/functions';
-import { Trigger, type TriggerEvent } from '@dxos/functions';
+import { Process, QueueService, TracingService, Trigger, type TriggerEvent } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { FeedProtocol } from '@dxos/protocols';
 
-import * as Process from '../process/Process';
 import * as ProcessManager from '../process/ProcessManager';
 import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';

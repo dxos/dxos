@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// @import-as-namspace
+// @import-as-namespace
 
 /*
  - Termination notification.
@@ -17,7 +17,7 @@ import * as Context from 'effect/Context';
 import type * as Types from 'effect/Types';
 
 import { Operation, OperationHandlerSet } from '@dxos/operation';
-import type { TracingService } from '@dxos/protocols/proto/dxos/tracing';
+import type { TracingService } from '../services/tracing';
 import * as Option from 'effect/Option';
 import type { Atom } from '@effect-atom/atom';
 import type { ObjectId } from '@dxos/protocols';
@@ -149,7 +149,7 @@ export interface Params {
 // Executable.
 //
 
-export const ProcessTypeId = '~@dxos/functions-runtime/Process' as const;
+export const ProcessTypeId = '~@dxos/functions/Process' as const;
 export type ProcessTypeId = typeof ProcessTypeId;
 
 /**
@@ -318,7 +318,7 @@ export interface Monitor {
   processTreeAtom: Atom.Atom<readonly Info[]>;
 }
 
-export class ProcessMonitorService extends Context.Tag('@dxos/functions-runtime/ProcessMonitorService')<
+export class ProcessMonitorService extends Context.Tag('@dxos/functions/ProcessMonitorService')<
   ProcessMonitorService,
   Monitor
 >() {}

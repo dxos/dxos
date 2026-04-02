@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Process from './Process';
+export { Process, ServiceResolver } from '@dxos/functions';
 export * as ProcessManager from './ProcessManager';
-export * as ServiceResolver from './ServiceResolver';
 export * as StorageService from './StorageService';

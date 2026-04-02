@@ -19,6 +19,7 @@ import {
   ExampleHandlers,
   QueueService,
   Reply,
+  ServiceResolver,
   TracingService,
   Trigger,
 } from '@dxos/functions';
@@ -27,7 +28,6 @@ import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Person, Task } from '@dxos/types';
 
 import * as ProcessManager from '../process/ProcessManager';
-import * as ServiceResolver from '../process/ServiceResolver';
 import { TestDatabaseLayer } from '../testing';
 
 import { TriggerDispatcher } from './trigger-dispatcher';

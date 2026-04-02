@@ -13,14 +13,12 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { Database } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
+import { Process, ServiceResolver, TracingService } from '@dxos/functions';
 import { Operation, OperationHandlerSet } from '@dxos/operation';
 import { Organization } from '@dxos/types';
 
 import { TestDatabaseLayer } from '../testing';
-import * as Process from './Process';
 import * as ProcessManager from './ProcessManager';
-import * as ServiceResolver from './ServiceResolver';
 import * as StorageService from './StorageService';
 import { log } from '@dxos/log';
 
