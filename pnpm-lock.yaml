@@ -2377,6 +2377,9 @@ importers:
       '@dxos/plugin-explorer':
         specifier: workspace:*
         version: link:../../plugins/plugin-explorer
+      '@dxos/plugin-feed':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-feed
       '@dxos/plugin-files':
         specifier: workspace:*
         version: link:../../plugins/plugin-files
