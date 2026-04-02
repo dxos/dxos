@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
+import { Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations';
@@ -40,24 +41,30 @@ const DefaultStory = ({ items = defaultItems }: DefaultStoryProps) => {
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='h-[400px]'>
-        <SearchList.Input placeholder='Search items...' autoFocus />
-        <SearchList.Viewport>
-          {results.length > 0 ? (
-            results.map((item) => (
-              <SearchList.Item
-                key={item.id}
-                value={item.id}
-                label={item.label}
-                icon={item.icon}
-                onSelect={() => console.log('[SearchList.Item.onSelect]', item.id, item.label)}
-              />
-            ))
-          ) : (
-            <SearchList.Empty>No results found</SearchList.Empty>
-          )}
-        </SearchList.Viewport>
-      </SearchList.Content>
+      <Panel.Root>
+        <Panel.Toolbar>
+          <SearchList.Input placeholder='Search items...' autoFocus />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchList.Content>
+            <SearchList.Viewport>
+              {results.length > 0 ? (
+                results.map((item) => (
+                  <SearchList.Item
+                    key={item.id}
+                    value={item.id}
+                    label={item.label}
+                    icon={item.icon}
+                    onSelect={() => console.log('[SearchList.Item.onSelect]', item.id, item.label)}
+                  />
+                ))
+              ) : (
+                <SearchList.Empty>No results found</SearchList.Empty>
+              )}
+            </SearchList.Viewport>
+          </SearchList.Content>
+        </Panel.Content>
+      </Panel.Root>
     </SearchList.Root>
   );
 };
@@ -85,28 +92,34 @@ const ControlledStory = ({ items = defaultItems }: DefaultStoryProps) => {
   };
 
   return (
-    <div className='w-full h-[400px] flex flex-col gap-2'>
-      <div className='text-sm text-description'>Controlled query: &quot;{query}&quot;</div>
-      <SearchList.Root onSearch={handleSearch} value={query}>
-        <SearchList.Input placeholder='Controlled search...' onChange={(e) => handleQueryChange(e.target.value)} />
-        <SearchList.Content>
-          <SearchList.Viewport>
-            {results.map((item) => (
-              <SearchList.Item
-                key={item.id}
-                value={item.id}
-                label={item.label}
-                icon={item.icon}
-                onSelect={() => console.log('[SearchList.Item.onSelect]', item.id)}
-              />
-            ))}
-          </SearchList.Viewport>
-        </SearchList.Content>
-      </SearchList.Root>
-      <button className='px-2 py-1 rounded-sm bg-accent-surface text-accent-text' onClick={() => handleQueryChange('')}>
-        Clear Query
-      </button>
-    </div>
+    <SearchList.Root onSearch={handleSearch} value={query}>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <SearchList.Input placeholder='Controlled search...' onChange={(e) => handleQueryChange(e.target.value)} />
+            <Toolbar.Button onClick={() => handleQueryChange('')}>Clear Query</Toolbar.Button>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content>
+          <SearchList.Content>
+            <SearchList.Viewport>
+              {results.map((item) => (
+                <SearchList.Item
+                  key={item.id}
+                  value={item.id}
+                  label={item.label}
+                  icon={item.icon}
+                  onSelect={() => console.log('[SearchList.Item.onSelect]', item.id)}
+                />
+              ))}
+            </SearchList.Viewport>
+          </SearchList.Content>
+        </Panel.Content>
+        <Panel.Statusbar>
+          <div className='flex p-2 items-center text-sm text-description'>Controlled query: &quot;{query}&quot;</div>
+        </Panel.Statusbar>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
@@ -157,24 +170,28 @@ const CustomRenderingStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='w-full h-[400px] flex flex-col'>
-      <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Input placeholder='Search with custom rendering...' autoFocus />
-        <SearchList.Content>
-          <SearchList.Viewport>
-            {results.map((item) => (
-              <CustomItem
-                key={item.id}
-                value={item.id}
-                label={item.label}
-                description={`ID: ${item.id}`}
-                onSelect={() => console.log('[CustomItem.onSelect]', item.id, item.label)}
-              />
-            ))}
-          </SearchList.Viewport>
-        </SearchList.Content>
-      </SearchList.Root>
-    </div>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root>
+        <Panel.Toolbar>
+          <SearchList.Input placeholder='Search with custom rendering...' autoFocus />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchList.Content>
+            <SearchList.Viewport>
+              {results.map((item) => (
+                <CustomItem
+                  key={item.id}
+                  value={item.id}
+                  label={item.label}
+                  description={`ID: ${item.id}`}
+                  onSelect={() => console.log('[CustomItem.onSelect]', item.id, item.label)}
+                />
+              ))}
+            </SearchList.Viewport>
+          </SearchList.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
@@ -190,24 +207,28 @@ const WithEmptyStory = () => {
   };
 
   return (
-    <div className='w-full h-[400px] flex flex-col'>
-      <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Input placeholder='Try searching for anything...' />
-        <SearchList.Content>
-          {hasSearched ? (
-            <SearchList.Empty classNames='text-center text-description p-4'>
-              <div className='text-lg'>🔍</div>
-              <div>No results found</div>
-              <div className='text-xs'>Try a different search term</div>
-            </SearchList.Empty>
-          ) : (
-            <SearchList.Empty classNames='text-center text-description p-4'>
-              <div>Start typing to search</div>
-            </SearchList.Empty>
-          )}
-        </SearchList.Content>
-      </SearchList.Root>
-    </div>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root>
+        <Panel.Toolbar>
+          <SearchList.Input placeholder='Try searching for anything...' />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchList.Content>
+            {hasSearched ? (
+              <SearchList.Empty classNames='text-center text-description p-4'>
+                <div className='text-lg'>🔍</div>
+                <div>No results found</div>
+                <div className='text-xs'>Try a different search term</div>
+              </SearchList.Empty>
+            ) : (
+              <SearchList.Empty classNames='text-center text-description p-4'>
+                <div>Start typing to search</div>
+              </SearchList.Empty>
+            )}
+          </SearchList.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
@@ -219,22 +240,26 @@ const WithoutViewportStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='w-full h-[300px] flex flex-col'>
-      <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Input placeholder='Search without viewport (no scroll)...' classNames='shrink-0' />
-        <SearchList.Content>
-          {results.map((item) => (
-            <SearchList.Item
-              key={item.id}
-              value={item.id}
-              label={item.label}
-              icon={item.icon}
-              onSelect={() => console.log('[SearchList.Item.onSelect]', item.id)}
-            />
-          ))}
-        </SearchList.Content>
-      </SearchList.Root>
-    </div>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root>
+        <Panel.Toolbar>
+          <SearchList.Input placeholder='Search without viewport (no scroll)...' />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchList.Content>
+            {results.map((item) => (
+              <SearchList.Item
+                key={item.id}
+                value={item.id}
+                label={item.label}
+                icon={item.icon}
+                onSelect={() => console.log('[SearchList.Item.onSelect]', item.id)}
+              />
+            ))}
+          </SearchList.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
@@ -252,22 +277,26 @@ const iconsItems: StoryItem[] = [
 
 const WithIconsStory = () => {
   return (
-    <div className='w-full flex flex-col'>
-      <SearchList.Root>
-        <SearchList.Input placeholder='Search items with icons...' />
-        <SearchList.Content>
-          {iconsItems.map((item) => (
-            <SearchList.Item
-              key={item.id}
-              value={item.id}
-              label={item.label}
-              icon={item.icon}
-              onSelect={() => console.log('[SearchList.Item.onSelect]', item.id)}
-            />
-          ))}
-        </SearchList.Content>
-      </SearchList.Root>
-    </div>
+    <SearchList.Root>
+      <Panel.Root>
+        <Panel.Toolbar>
+          <SearchList.Input placeholder='Search items with icons...' />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchList.Content>
+            {iconsItems.map((item) => (
+              <SearchList.Item
+                key={item.id}
+                value={item.id}
+                label={item.label}
+                icon={item.icon}
+                onSelect={() => console.log('[SearchList.Item.onSelect]', item.id)}
+              />
+            ))}
+          </SearchList.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
@@ -329,21 +358,18 @@ const CustomInput = () => {
   };
 
   return (
-    <div className='flex gap-2 items-center p-2 bg-input rounded-sm'>
-      <input
-        type='text'
-        value={query}
-        onChange={(ev) => onQueryChange(ev.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder='Custom input...'
-        className='bg-transparent outline-hidden grow'
-      />
-      {query && (
-        <button onClick={() => onQueryChange('')} className='text-description hover:text-base-surface-text'>
-          ✕
-        </button>
-      )}
-    </div>
+    <Toolbar.Root>
+      <Input.Root>
+        <Input.TextInput
+          type='text'
+          value={query}
+          placeholder='Custom input...'
+          onChange={(ev) => onQueryChange(ev.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+      </Input.Root>
+      {query && <Toolbar.IconButton icon='ph--x--regular' iconOnly label='Clear' onClick={() => onQueryChange('')} />}
+    </Toolbar.Root>
   );
 };
 
@@ -351,24 +377,28 @@ const CustomInputStory = ({ items = defaultItems }: DefaultStoryProps) => {
   const { results, handleSearch } = useSearchListResults({ items });
 
   return (
-    <div className='w-full h-[400px] flex flex-col border border-separator'>
-      <SearchList.Root onSearch={handleSearch}>
-        <CustomInput />
-        <SearchList.Content>
-          <SearchList.Viewport>
-            {results.map((item) => (
-              <SearchList.Item
-                key={item.id}
-                value={item.id}
-                label={item.label}
-                icon={item.icon}
-                onSelect={() => console.log('[SearchList.Item.onSelect]', item.id)}
-              />
-            ))}
-          </SearchList.Viewport>
-        </SearchList.Content>
-      </SearchList.Root>
-    </div>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root>
+        <Panel.Toolbar>
+          <CustomInput />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchList.Content>
+            <SearchList.Viewport>
+              {results.map((item) => (
+                <SearchList.Item
+                  key={item.id}
+                  value={item.id}
+                  label={item.label}
+                  icon={item.icon}
+                  onSelect={() => console.log('[SearchList.Item.onSelect]', item.id)}
+                />
+              ))}
+            </SearchList.Viewport>
+          </SearchList.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
@@ -386,23 +416,27 @@ const disabledItems: StoryItem[] = [
 
 const WithDisabledItemsStory = () => {
   return (
-    <div className='w-full flex flex-col'>
-      <SearchList.Root>
-        <SearchList.Input placeholder='Arrow keys skip disabled items...' autoFocus />
-        <SearchList.Content>
-          {disabledItems.map((item, index) => (
-            <SearchList.Item
-              key={item.id}
-              value={item.id}
-              label={item.label}
-              icon={item.icon}
-              disabled={index === 1 || index === 3}
-              onSelect={() => console.log('[SearchList.Item.onSelect]', item.id)}
-            />
-          ))}
-        </SearchList.Content>
-      </SearchList.Root>
-    </div>
+    <SearchList.Root>
+      <Panel.Root>
+        <Panel.Toolbar>
+          <SearchList.Input placeholder='Arrow keys skip disabled items...' autoFocus />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchList.Content>
+            {disabledItems.map((item, index) => (
+              <SearchList.Item
+                key={item.id}
+                value={item.id}
+                label={item.label}
+                icon={item.icon}
+                disabled={index === 1 || index === 3}
+                onSelect={() => console.log('[SearchList.Item.onSelect]', item.id)}
+              />
+            ))}
+          </SearchList.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 
@@ -436,29 +470,33 @@ const WithGroupsStory = () => {
   );
 
   return (
-    <div className='w-full h-[400px] flex flex-col'>
-      <SearchList.Root onSearch={handleSearch}>
-        <SearchList.Input placeholder='Search grouped items...' autoFocus />
-        <SearchList.Content>
-          <SearchList.Viewport>
-            {Object.entries(grouped).map(([category, items]) => (
-              <SearchList.Group key={category} heading={category}>
-                {items.map((item) => (
-                  <SearchList.Item
-                    key={item.id}
-                    value={item.id}
-                    label={item.label}
-                    icon={item.icon}
-                    onSelect={() => console.log('[SearchList.Item.onSelect]', item.id, item.label)}
-                  />
-                ))}
-              </SearchList.Group>
-            ))}
-            {results.length === 0 && <SearchList.Empty>No results found</SearchList.Empty>}
-          </SearchList.Viewport>
-        </SearchList.Content>
-      </SearchList.Root>
-    </div>
+    <SearchList.Root onSearch={handleSearch}>
+      <Panel.Root>
+        <Panel.Toolbar>
+          <SearchList.Input placeholder='Search grouped items...' autoFocus />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SearchList.Content>
+            <SearchList.Viewport>
+              {Object.entries(grouped).map(([category, items]) => (
+                <SearchList.Group key={category} heading={category}>
+                  {items.map((item) => (
+                    <SearchList.Item
+                      key={item.id}
+                      value={item.id}
+                      label={item.label}
+                      icon={item.icon}
+                      onSelect={() => console.log('[SearchList.Item.onSelect]', item.id, item.label)}
+                    />
+                  ))}
+                </SearchList.Group>
+              ))}
+              {results.length === 0 && <SearchList.Empty>No results found</SearchList.Empty>}
+            </SearchList.Viewport>
+          </SearchList.Content>
+        </Panel.Content>
+      </Panel.Root>
+    </SearchList.Root>
   );
 };
 

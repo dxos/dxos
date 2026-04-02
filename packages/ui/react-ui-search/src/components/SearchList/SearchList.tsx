@@ -240,7 +240,7 @@ const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, fo
       {...composableProps(props, {
         role: 'none',
         classNames:
-          'flex flex-col min-h-0 [.dx-column_&]:col-span-full [.dx-column_&]:grid [.dx-column_&]:grid-cols-subgrid [.dx-column_&]:[&>:not(.dx-container)]:col-start-2',
+          'dx-expander [.dx-column_&]:col-span-full [.dx-column_&]:grid [.dx-column_&]:grid-cols-subgrid [.dx-column_&]:[&>:not(.dx-container)]:col-start-2',
       })}
       ref={forwardedRef}
     >
@@ -461,7 +461,8 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         tabIndex={-1}
         className={mx(
           'flex gap-2 items-center',
-          'py-1 px-2 rounded-xs select-none cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay',
+          'py-1 px-2 rounded-xs select-none',
+          'cursor-pointer data-[selected=true]:bg-hover-overlay hover:bg-hover-overlay', // TODO(burdon): Replace with classes.
           disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent data-[selected=true]:bg-transparent',
           classNames,
         )}
