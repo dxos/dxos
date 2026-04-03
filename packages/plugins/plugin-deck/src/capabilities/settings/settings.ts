@@ -20,7 +20,7 @@ export default Capability.makeModule(() =>
         showHints: false,
         enableDeck: false,
         enableStatusbar: false,
-        enableNativeRedirect: false,
+        enableNativeRedirect: true,
         newPlankPositioning: 'start' as const,
         overscroll: 'none' as const,
         encapsulatedPlanks: false,

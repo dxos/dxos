@@ -5,41 +5,37 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { isTauri } from '@dxos/util';
 
 import { DeckCapabilities } from '../../types';
 
-const APP_SCHEME = 'composer://';
+/** Identifier for the native redirect dialog surface (defined in welcome plugin). */
+const NATIVE_REDIRECT_DIALOG = 'org.dxos.plugin.welcome.component.native-redirect-dialog';
 
-/**
- * Attempts to redirect from the web app to the native desktop app using a custom URL scheme.
- * Creates a hidden iframe that navigates to the custom scheme URL (e.g., composer://workspace/123).
- * If the native app is installed and handles the scheme, the user will be redirected.
- * The iframe is automatically removed after 3 seconds or when the page is hidden.
- */
-// TODO(mjamesderocher): Factor out as part of NavigationPlugin.
-const checkAppScheme = (url: string) => {
-  const iframe = document.createElement('iframe');
-  iframe.style.display = 'none';
-  document.body.appendChild(iframe);
-
-  iframe.src = url + window.location.pathname.replace(/^\/+/, '') + window.location.search;
-
-  const timer = setTimeout(() => {
-    document.body.removeChild(iframe);
-  }, 3000);
-
-  window.addEventListener('pagehide', (event) => {
-    clearTimeout(timer);
-    document.body.removeChild(iframe);
-  });
+const isSafari = (): boolean => {
+  const ua = navigator.userAgent;
+  return ua.includes('Safari') && !ua.includes('Chrome') && !ua.includes('Chromium');
 };
 
+/**
+ * When running in a web browser (not Tauri) with native redirect enabled,
+ * shows a dialog offering to open the page in the native Composer app.
+ * In Safari, universal links handle this natively so the dialog is skipped.
+ */
+// TODO(mjamesderocher): Factor out as part of NavigationPlugin.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
     const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
-    if (!isTauri() && settings?.enableNativeRedirect) {
-      checkAppScheme(APP_SCHEME);
+    if (!isTauri() && !isSafari() && settings?.enableNativeRedirect) {
+      yield* Effect.promise(() =>
+        invokePromise(LayoutOperation.UpdateDialog, {
+          subject: NATIVE_REDIRECT_DIALOG,
+          type: 'alert',
+          overlayClasses: 'dark bg-neutral-950!',
+        }),
+      );
     }
   }),
 );

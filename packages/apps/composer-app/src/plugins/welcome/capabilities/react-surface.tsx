@@ -6,11 +6,19 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
-import { ABOUT_DIALOG, AboutDialog, WELCOME_SCREEN, WelcomeScreen } from '../components';
+import {
+  ABOUT_DIALOG,
+  AboutDialog,
+  NATIVE_REDIRECT_DIALOG,
+  NativeRedirectDialog,
+  WELCOME_SCREEN,
+  WelcomeScreen,
+} from '../components';
 import { meta } from '../meta';
 
 export default Capability.makeModule(() =>
@@ -25,6 +33,19 @@ export default Capability.makeModule(() =>
           const hubUrl = client.config.values?.runtime?.app?.env?.DX_HUB_URL;
           invariant(hubUrl, 'Hub URL not found');
           return <WelcomeScreen hubUrl={hubUrl} />;
+        },
+      }),
+      Surface.create({
+        id: `${meta.id}.native-redirect`,
+        role: 'dialog',
+        filter: (data): data is any => data.component === NATIVE_REDIRECT_DIALOG,
+        component: () => {
+          const { invokePromise } = useOperationInvoker();
+          return (
+            <NativeRedirectDialog
+              onOpenHere={() => void invokePromise(LayoutOperation.UpdateDialog, { state: false })}
+            />
+          );
         },
       }),
       Surface.create({
