@@ -37,14 +37,13 @@ echo ""
 echo "Undefined Keys ($UNDEFINED_COUNT)"
 echo ""
 {
-  echo "FILE KEY NAMESPACE"
+  echo "FILE KEY"
   echo "$UNDEFINED" | while IFS= read -r line; do
     [ -z "$line" ] && continue
     file=$(echo "$line" | cut -d: -f1)
     lineno=$(echo "$line" | cut -d: -f2)
     key=$(echo "$line" | sed 's/.*Translation key "//;s/" is not.*//')
-    ns=$(echo "$line" | sed 's/.*namespace "//;s/".*//')
-    echo "$file:$lineno $key $ns"
+    echo "$file:$lineno $key"
   done
 } | column -t
 
