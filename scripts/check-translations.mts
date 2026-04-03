@@ -11,6 +11,7 @@ import { join, relative, dirname, basename } from 'node:path';
 
 const ROOT = join(import.meta.dirname, '..');
 const PLUGINS_DIR = join(ROOT, 'packages/plugins');
+const UI_DIR = join(ROOT, 'packages/ui');
 
 // --- Step 1: Collect defined translation keys from translations.ts files ---
 
@@ -38,6 +39,17 @@ function resolveMetaId(pluginDir: string): string | null {
   return match ? match[1] : null;
 }
 
+/** Resolve translationKey for a UI package from its translations.ts. */
+function resolveTranslationKey(packageDir: string): string | null {
+  const translationsPath = join(packageDir, 'src/translations.ts');
+  if (!existsSync(translationsPath)) {
+    return null;
+  }
+  const content = readFileSync(translationsPath, 'utf-8');
+  const match = content.match(/export\s+const\s+translationKey\s*=\s*['"]([^'"]+)['"]/);
+  return match ? match[1] : null;
+}
+
 /** Walk directory tree yielding file paths matching a filter. */
 function* walkFiles(dir: string, filter: (path: string) => boolean): Generator<string> {
   if (!existsSync(dir)) {
@@ -57,13 +69,11 @@ function* walkFiles(dir: string, filter: (path: string) => boolean): Generator<s
 }
 
 /** Extract defined keys from a translations.ts file. */
-function extractDefinedKeys(filePath: string, pluginDir: string): DefinedKey[] {
+function extractDefinedKeys(filePath: string, packageDir: string, namespace: string | null): DefinedKey[] {
   const content = readFileSync(filePath, 'utf-8');
-  const metaId = resolveMetaId(pluginDir);
   const keys: DefinedKey[] = [];
 
-  // Match namespace blocks: [meta.id]: { ... } or [SomeType.typename]: { ... } or 'literal': { ... }
-  // We use a simple approach: find lines that look like namespace headers, then collect keys until closing brace.
+  // Match namespace blocks: [meta.id]: { ... } or [translationKey]: { ... } or [SomeType.typename]: { ... } or 'literal': { ... }
 
   const lines = content.split('\n');
   let currentNamespace: string | null = null;
@@ -74,9 +84,9 @@ function extractDefinedKeys(filePath: string, pluginDir: string): DefinedKey[] {
     const trimmed = line.trim();
 
     // Detect namespace header patterns.
-    // Pattern 1: [meta.id]: {
-    if (trimmed.match(/\[meta\.id\]\s*:\s*\{/)) {
-      currentNamespace = metaId;
+    // Pattern 1: [meta.id]: { or [translationKey]: {
+    if (trimmed.match(/\[meta\.id\]\s*:\s*\{/) || trimmed.match(/\[translationKey\]\s*:\s*\{/)) {
+      currentNamespace = namespace;
       inNamespaceBlock = true;
       braceDepth = 1;
       continue;
@@ -134,7 +144,7 @@ function extractDefinedKeys(filePath: string, pluginDir: string): DefinedKey[] {
 }
 
 /** Extract used translation keys from source files. */
-function extractUsedKeys(filePath: string, metaId: string | null): UsedKey[] {
+function extractUsedKeys(filePath: string, packageNamespace: string | null): UsedKey[] {
   const content = readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
   const keys: UsedKey[] = [];
@@ -142,9 +152,9 @@ function extractUsedKeys(filePath: string, metaId: string | null): UsedKey[] {
   // Determine namespace from useTranslation call.
   let defaultNamespace: string | null = null;
 
-  // Check for useTranslation(meta.id).
-  if (content.includes('useTranslation(meta.id)')) {
-    defaultNamespace = metaId;
+  // Check for useTranslation(meta.id) or useTranslation(translationKey).
+  if (content.includes('useTranslation(meta.id)') || content.includes('useTranslation(translationKey)')) {
+    defaultNamespace = packageNamespace;
   }
 
   // Check for useTranslation('literal') or useTranslation("literal").
@@ -185,8 +195,8 @@ function extractUsedKeys(filePath: string, metaId: string | null): UsedKey[] {
       let namespace: string | null = match[2];
 
       // Resolve known variable names.
-      if (namespace === 'meta.id' || namespace === 'meta') {
-        namespace = metaId;
+      if (namespace === 'meta.id' || namespace === 'meta' || namespace === 'translationKey') {
+        namespace = packageNamespace;
       } else if (namespace === 'osTranslations') {
         namespace = 'org.dxos.i18n.os';
       } else {
@@ -352,34 +362,57 @@ function checkPlurals(definedKeys: DefinedKey[]): { namespace: string; baseKey: 
 // --- Main ---
 
 function main() {
-  console.log('Translation Key Checker (prototype)\n');
-  console.log('Scanning packages/plugins/...\n');
+  console.log('Translation Key Checker\n');
+  console.log('Scanning packages/plugins/ and packages/ui/...\n');
 
   const allDefinedKeys: DefinedKey[] = [];
   const allUsedKeys: UsedKey[] = [];
 
+  // --- Scan plugins ---
   const pluginDirs = readdirSync(PLUGINS_DIR, { withFileTypes: true })
     .filter((d) => d.isDirectory() && d.name.startsWith('plugin-'))
     .map((d) => join(PLUGINS_DIR, d.name));
 
   for (const pluginDir of pluginDirs) {
-    const pluginName = basename(pluginDir);
     const metaId = resolveMetaId(pluginDir);
 
-    // Collect defined keys from translations.ts.
     for (const file of walkFiles(join(pluginDir, 'src'), (p) => basename(p) === 'translations.ts')) {
-      const keys = extractDefinedKeys(file, pluginDir);
+      const keys = extractDefinedKeys(file, pluginDir, metaId);
       allDefinedKeys.push(...keys);
     }
 
-    // Collect used keys from source files.
     for (const file of walkFiles(join(pluginDir, 'src'), (p) => /\.(tsx?|jsx?)$/.test(p) && !p.includes('.test.') && !p.includes('.stories.'))) {
       const keys = extractUsedKeys(file, metaId);
       allUsedKeys.push(...keys);
     }
   }
 
-  console.log(`Found ${allDefinedKeys.length} defined translation keys across ${pluginDirs.length} plugins.`);
+  // --- Scan UI packages ---
+  const uiDirs = existsSync(UI_DIR)
+    ? readdirSync(UI_DIR, { withFileTypes: true })
+        .filter((d) => d.isDirectory())
+        .map((d) => join(UI_DIR, d.name))
+    : [];
+
+  for (const uiDir of uiDirs) {
+    const translationKey = resolveTranslationKey(uiDir);
+    if (!translationKey) {
+      continue;
+    }
+
+    for (const file of walkFiles(join(uiDir, 'src'), (p) => basename(p) === 'translations.ts')) {
+      const keys = extractDefinedKeys(file, uiDir, translationKey);
+      allDefinedKeys.push(...keys);
+    }
+
+    for (const file of walkFiles(join(uiDir, 'src'), (p) => /\.(tsx?|jsx?)$/.test(p) && !p.includes('.test.') && !p.includes('.stories.'))) {
+      const keys = extractUsedKeys(file, translationKey);
+      allUsedKeys.push(...keys);
+    }
+  }
+
+  const totalPackages = pluginDirs.length + uiDirs.filter((d) => resolveTranslationKey(d)).length;
+  console.log(`Found ${allDefinedKeys.length} defined translation keys across ${totalPackages} packages.`);
   console.log(`Found ${allUsedKeys.length} translation key usages in source files.\n`);
 
   // Build defined key set (only for meta.id namespaces, skip dynamic typename namespaces).
@@ -495,7 +528,7 @@ function main() {
   console.log(`\n${'='.repeat(60)}`);
   console.log('SUMMARY');
   console.log('='.repeat(60));
-  console.log(`  Plugins scanned:      ${pluginDirs.length}`);
+  console.log(`  Packages scanned:     ${totalPackages}`);
   console.log(`  Defined keys:         ${allDefinedKeys.length}`);
   console.log(`  Used keys:            ${allUsedKeys.length}`);
   console.log(`  Missing keys:         ${missingKeys.length}`);

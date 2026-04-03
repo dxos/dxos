@@ -92,12 +92,12 @@ const toDotNotation = (key) => {
 const pluginCache = new Map();
 
 /**
- * Walk up from a file path to find the plugin root (directory containing meta.ts in src/).
+ * Walk up from a file path to find the package root (directory containing src/translations.ts).
  */
-const findPluginDir = (filePath) => {
+const findPackageDir = (filePath) => {
   let dir = dirname(filePath);
   for (let i = 0; i < 10; i++) {
-    if (existsSync(join(dir, 'src/meta.ts'))) {
+    if (existsSync(join(dir, 'src/translations.ts'))) {
       return dir;
     }
     const parent = dirname(dir);
@@ -110,43 +110,65 @@ const findPluginDir = (filePath) => {
 };
 
 /**
- * Read meta.id from a plugin's meta.ts.
+ * Resolve the namespace identifier for a package.
+ * Plugins use meta.id from src/meta.ts.
+ * UI packages use translationKey from src/translations.ts.
  */
-const readMetaId = (pluginDir) => {
-  const metaPath = join(pluginDir, 'src/meta.ts');
-  if (!existsSync(metaPath)) {
-    return null;
+const resolveNamespace = (packageDir) => {
+  // Try plugin pattern: src/meta.ts with id field.
+  const metaPath = join(packageDir, 'src/meta.ts');
+  if (existsSync(metaPath)) {
+    const content = readFileSync(metaPath, 'utf-8');
+    const match = content.match(/id:\s*['"]([^'"]+)['"]/);
+    if (match) {
+      return { namespace: match[1], source: 'meta.id' };
+    }
   }
-  const content = readFileSync(metaPath, 'utf-8');
-  const match = content.match(/id:\s*['"]([^'"]+)['"]/);
-  return match ? match[1] : null;
+
+  // Try UI package pattern: export const translationKey = '...'.
+  const translationsPath = join(packageDir, 'src/translations.ts');
+  if (existsSync(translationsPath)) {
+    const content = readFileSync(translationsPath, 'utf-8');
+    const match = content.match(/export\s+const\s+translationKey\s*=\s*['"]([^'"]+)['"]/);
+    if (match) {
+      return { namespace: match[1], source: 'translationKey' };
+    }
+  }
+
+  return null;
 };
 
 /**
- * Extract translation keys for the meta.id namespace from a translations.ts file.
+ * Extract translation keys for the primary namespace from a translations.ts file.
+ * Handles both [meta.id]: { ... } and [translationKey]: { ... } patterns.
  */
-const readTranslationKeys = (pluginDir, metaId) => {
+const readTranslationKeys = (packageDir, nsSource) => {
   const keys = new Set();
-  const translationsPath = join(pluginDir, 'src/translations.ts');
+  const translationsPath = join(packageDir, 'src/translations.ts');
   if (!existsSync(translationsPath)) {
     return keys;
   }
 
   const content = readFileSync(translationsPath, 'utf-8');
   const lines = content.split('\n');
-  let inMetaBlock = false;
+  let inBlock = false;
   let braceDepth = 0;
+
+  // Match the namespace block header based on the source pattern.
+  const blockPattern = nsSource === 'meta.id'
+    ? /\[meta\.id\]\s*:\s*\{/
+    : /\[translationKey\]\s*:\s*\{/;
 
   for (const line of lines) {
     const trimmed = line.trim();
 
-    if (trimmed.match(/\[meta\.id\]\s*:\s*\{/)) {
-      inMetaBlock = true;
+    if (!inBlock && trimmed.match(blockPattern)) {
+      inBlock = true;
       braceDepth = 1;
       continue;
     }
 
-    if (inMetaBlock) {
+    if (inBlock) {
       for (const ch of trimmed) {
         if (ch === '{') {
           braceDepth++;
@@ -162,7 +184,7 @@ const readTranslationKeys = (pluginDir, metaId) => {
       }
 
       if (braceDepth <= 0) {
-        inMetaBlock = false;
+        inBlock = false;
       }
     }
   }
@@ -171,27 +193,27 @@ const readTranslationKeys = (pluginDir, metaId) => {
 };
 
 /**
- * Get plugin info (metaId + valid keys) for a file, with caching.
+ * Get package info (namespace + valid keys) for a file, with caching.
  */
-const getPluginInfo = (filePath) => {
-  const pluginDir = findPluginDir(filePath);
-  if (!pluginDir) {
+const getPackageInfo = (filePath) => {
+  const packageDir = findPackageDir(filePath);
+  if (!packageDir) {
     return null;
   }
 
-  if (pluginCache.has(pluginDir)) {
-    return pluginCache.get(pluginDir);
+  if (pluginCache.has(packageDir)) {
+    return pluginCache.get(packageDir);
   }
 
-  const metaId = readMetaId(pluginDir);
-  if (!metaId) {
-    pluginCache.set(pluginDir, null);
+  const nsInfo = resolveNamespace(packageDir);
+  if (!nsInfo) {
+    pluginCache.set(packageDir, null);
     return null;
   }
 
-  const keys = readTranslationKeys(pluginDir, metaId);
-  const info = { metaId, keys };
-  pluginCache.set(pluginDir, info);
+  const keys = readTranslationKeys(packageDir, nsInfo.source);
+  const info = { namespace: nsInfo.namespace, nsSource: nsInfo.source, keys };
+  pluginCache.set(packageDir, info);
   return info;
 };
 
@@ -229,13 +251,13 @@ export default {
     const suffixes = options.suffixes || VALID_SUFFIXES;
     const filename = context.filename || (context.getFilename && context.getFilename()) || context.physicalFilename || '';
 
-    // Resolve plugin info for this file.
-    const pluginInfo = getPluginInfo(filename);
-
     // Check source text once to determine if this is a translation-aware file.
     const sourceText = (context.sourceCode || context.getSourceCode()).text;
     const usesTranslation = sourceText.includes('useTranslation');
-    const usesMetaNamespace = sourceText.includes('useTranslation(meta.id)');
+    const usesStaticNamespace = sourceText.includes('useTranslation(meta.id)') || sourceText.includes('useTranslation(translationKey)');
+
+    // Resolve package info for this file (works for both plugins and UI packages).
+    const packageInfo = getPackageInfo(filename);
 
     /**
      * Check a string literal node that represents a translation key.
@@ -266,19 +288,19 @@ export default {
     };
 
     /**
-     * Check that a key exists in the plugin's translations.
+     * Check that a key exists in the package's translations.
      */
     const checkKeyExists = (node, key, hasNsOverride) => {
-      // Only check if we resolved the plugin and the file uses meta.id namespace.
-      if (!pluginInfo || !usesMetaNamespace || hasNsOverride) {
+      // Only check if we resolved the package and the file uses a static namespace.
+      if (!packageInfo || !usesStaticNamespace || hasNsOverride) {
         return;
       }
 
-      if (!pluginInfo.keys.has(key)) {
+      if (!packageInfo.keys.has(key)) {
         context.report({
           node,
           messageId: 'undefinedKey',
-          data: { key, namespace: pluginInfo.metaId },
+          data: { key, namespace: packageInfo.namespace },
         });
       }
     };
