@@ -8827,6 +8827,12 @@ importers:
         specifier: '>=5.3.6'
         version: 5.3.7
     devDependencies:
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../plugin-testing
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random

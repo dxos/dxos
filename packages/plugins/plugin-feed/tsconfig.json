@@ -72,6 +72,9 @@
       "path": "../plugin-attention"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-deck"
     },
     {
@@ -79,6 +82,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }
