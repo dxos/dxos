@@ -80,6 +80,28 @@ export type MarkdownDocuments = {
   evictForWorkspace: (workspace: FilesystemWorkspace) => void;
 };
 
+/**
+ * Manages the bidirectional mapping between on-disk markdown files and ECHO
+ * Text objects.
+ *
+ * Key data structures (all keyed by filesystem file id):
+ *  - `documentsByFileId`  — the canonical file-id → Text object lookup.
+ *  - `writeTargetByDxn`   — reverse lookup: DXN string → { path, fileId }.
+ *                           Used by the editor save path to resolve where to
+ *                           write a given ECHO document back to disk.
+ *  - `unwatchByFileId`    — teardown handles for per-file Tauri watchers that
+ *                           push external edits into ECHO.
+ *  - `watchStartPending`  — guards against duplicate watcher setup while the
+ *                           async Tauri watch call is in-flight.
+ *
+ * Lifecycle (per workspace):
+ *  1. `syncFromDisk` is the entry point. It waits for the mirror space, then
+ *     runs `restoreWorkspaceDocuments` to reconnect files that already have a
+ *     stored DXN (via xattr or filemap), and finally calls
+ *     `ensureDocumentForFile` for any remaining unmapped files.
+ *  2. `evictForWorkspace` tears down watchers and clears all maps for a
+ *     workspace's files (called on close or before refresh).
+ */
 export const createMarkdownDocuments = (
   registry: Registry.Registry,
   stateAtom: Atom.Writable<NativeFilesystemState>,
@@ -91,23 +113,36 @@ export const createMarkdownDocuments = (
   const unwatchByFileId = new Map<string, () => void>();
   const watchStartPending = new Set<string>();
 
+  // Atom family producing a per-file generation counter. Graph connectors
+  // subscribe to these atoms so nodes re-render when a file's binding changes.
   const markdownBindingGeneration = Atom.family((fileId: string) => Atom.make(0).pipe(Atom.keepAlive));
 
   const bumpMarkdownBinding = (fileId: string): void => {
     registry.update(markdownBindingGeneration(fileId), (generation) => generation + 1);
   };
 
+  /** Update both forward (fileId→doc) and reverse (dxn→writeTarget) maps. */
   const updateMapsForDocument = (fileId: string, path: string, doc: Text.Text): void => {
     const dxn = Obj.getDXN(doc).toString();
     documentsByFileId.set(fileId, doc);
     writeTargetByDxn.set(dxn, { path, fileId });
   };
 
+  /** Update maps and bump the reactive generation so graph nodes re-render. */
   const indexDocument = (fileId: string, path: string, doc: Text.Text): void => {
     updateMapsForDocument(fileId, path, doc);
     bumpMarkdownBinding(fileId);
   };
 
+  //
+  // --- File watching: external editor → ECHO ---
+  //
+
+  /**
+   * Called by a per-file Tauri watcher when the file changes on disk.
+   * Reads the new content, updates the atom state (marks not-modified), and
+   * pushes the text into the ECHO Text object via `updateText`.
+   */
   const applyExternalDiskText = (fileId: string, path: string): Effect.Effect<void> =>
     Effect.gen(function* () {
       const doc = documentsByFileId.get(fileId);
@@ -120,6 +155,7 @@ export const createMarkdownDocuments = (
         return;
       }
 
+      // Sync the file name if it changed on disk (e.g. rename).
       const state = registry.get(stateAtom);
       const fileResult = findFileById(state.workspaces, fileId);
       if (fileResult && doc.name !== fileResult.file.name) {
@@ -150,12 +186,18 @@ export const createMarkdownDocuments = (
       updateText(doc, ['content'], diskText);
     });
 
+  /**
+   * Start a Tauri file watcher for a single markdown file. If the document
+   * was evicted before the async setup completes, the watcher is torn down
+   * immediately.
+   */
   const startFileWatcher = (file: FilesystemFile): Effect.Effect<void> =>
     Effect.gen(function* () {
       const unwatch = yield* watchMarkdownFile(file.path, () => applyExternalDiskText(file.id, file.path));
       if (!unwatch) {
         return;
       }
+      // Document may have been evicted while the watcher was being set up.
       if (!documentsByFileId.has(file.id)) {
         unwatch();
         return;
@@ -169,6 +211,7 @@ export const createMarkdownDocuments = (
       ),
     );
 
+  /** Idempotent: starts a watcher only if one isn't already running or pending. */
   const ensureFileWatcher = (file: FilesystemFile): void => {
     if (unwatchByFileId.has(file.id) || watchStartPending.has(file.id)) {
       return;
@@ -178,6 +221,16 @@ export const createMarkdownDocuments = (
     void Effect.runFork(startFileWatcher(file));
   };
 
+  //
+  // --- Identity persistence: file ↔ ECHO DXN ---
+  //
+
+  /**
+   * Persist the file→DXN mapping in two places so it survives across sessions:
+   *  1. macOS extended attribute on the file itself (fast, per-file lookup).
+   *  2. `.composer/filemap.json` in the workspace root (portable fallback for
+   *     filesystems that don't support xattr, or after file moves).
+   */
   const persistFileIdentity = (file: FilesystemFile, workspaceId: string, dxn: string): void => {
     const state = registry.get(stateAtom);
     const workspace = state.workspaces.find((ws) => ws.id === workspaceId);
@@ -203,6 +256,16 @@ export const createMarkdownDocuments = (
     );
   };
 
+  //
+  // --- Document creation and restoration ---
+  //
+
+  /**
+   * Get or create a Text object for a markdown file. If one already exists in
+   * `documentsByFileId`, re-index it (the path may have changed) and ensure its
+   * watcher is running. Otherwise, create a new Text in the mirror space, index
+   * it, and persist the DXN identity.
+   */
   const ensureDocumentForFile = (file: FilesystemFile, workspaceId: string): Text.Text => {
     const existing = documentsByFileId.get(file.id);
     if (existing) {
@@ -230,6 +293,18 @@ export const createMarkdownDocuments = (
     return doc;
   };
 
+  /**
+   * Attempt to reconnect on-disk markdown files with their previously-created
+   * ECHO Text objects. For each file:
+   *  1. Look up a stored DXN — first from the file's xattr, then from filemap.
+   *  2. Resolve the DXN to a Text object via the client's space database.
+   *  3. Index the restored document and attach a file watcher.
+   *  4. If disk content diverges from the ECHO object, push the disk version.
+   *  5. Ensure xattr and filemap are up to date.
+   *
+   * Files without a stored DXN are skipped here and handled later by
+   * `ensureDocumentForFile` in `syncFromDisk`.
+   */
   const restoreWorkspaceDocuments = (workspace: FilesystemWorkspace): Effect.Effect<void> =>
     Effect.gen(function* () {
       const files = collectMarkdownFiles(workspace.children);
@@ -244,6 +319,7 @@ export const createMarkdownDocuments = (
       let fileIndex = 0;
       for (const file of files) {
         fileIndex++;
+        // Yield periodically so large workspaces don't block the UI.
         if (fileIndex % RESTORE_YIELD_EVERY_N_FILES === 0) {
           yield* Effect.promise(() => new Promise<void>((resolve) => setTimeout(resolve, 0)));
         }
@@ -252,6 +328,7 @@ export const createMarkdownDocuments = (
           continue;
         }
 
+        // Try xattr first, fall back to filemap.
         let dxnStr = yield* getFileXattrDxn(file.path);
 
         if (!dxnStr) {
@@ -295,14 +372,17 @@ export const createMarkdownDocuments = (
           });
         }
 
+        // Disk is authoritative: overwrite the ECHO content if it diverged.
         const diskText = file.text ?? (yield* readFileContent(file.path)) ?? '';
         const persistedText = target.content ?? '';
         if (diskText !== persistedText) {
           updateText(target, ['content'], diskText);
         }
 
+        // Ensure xattr is set (may have been restored from filemap only).
         yield* setFileXattrDxn(file.path, dxnStr);
 
+        // Keep filemap in sync.
         const relPath = relativePath(workspace.path, file.path);
         const existingMapDxn = fileMapByPath.get(relPath);
         if (existingMapDxn !== dxnStr) {
@@ -319,6 +399,10 @@ export const createMarkdownDocuments = (
       }
     });
 
+  //
+  // --- Public API ---
+  //
+
   const service: MarkdownDocuments = {
     markdownBindingAtom: (fileId: string) => markdownBindingGeneration(fileId),
 
@@ -330,6 +414,11 @@ export const createMarkdownDocuments = (
       return writeTargetByDxn.get(dxn);
     },
 
+    /**
+     * Full sync: wait for the mirror space to be ready, restore documents that
+     * have a persisted DXN, then create new Text objects for any remaining
+     * unmapped files.
+     */
     syncFromDisk: (workspace: FilesystemWorkspace): Effect.Effect<void> =>
       Effect.gen(function* () {
         const space = getSpaceForWorkspace(workspace.id);
@@ -344,6 +433,7 @@ export const createMarkdownDocuments = (
             }),
           ),
         );
+        // Create fresh Text objects for any files that weren't restored above.
         for (const file of collectMarkdownFiles(workspace.children)) {
           if (service.getByFileId(file.id)) {
             continue;
@@ -356,6 +446,7 @@ export const createMarkdownDocuments = (
         }
       }),
 
+    /** Tear down watchers and clear all maps for files belonging to this workspace. */
     evictForWorkspace: (workspace: FilesystemWorkspace): void => {
       const fileIds = collectMarkdownFileIds(workspace.children);
       for (const fileId of fileIds) {
@@ -371,6 +462,7 @@ export const createMarkdownDocuments = (
           const dxn = Obj.getDXN(doc).toString();
           writeTargetByDxn.delete(dxn);
         }
+        // Bump so graph nodes notice the document is gone.
         bumpMarkdownBinding(fileId);
       }
     },
