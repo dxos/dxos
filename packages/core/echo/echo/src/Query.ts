@@ -389,6 +389,14 @@ class QueryClass implements Any {
       if (typename === 'org.dxos.type.collection') {
         throw new Error('Query.from(collection) is not yet supported.');
       }
+      // Validate that the items are Feed.Feed instances.
+      for (const item of items) {
+        if (!Obj.instanceOf(Feed.Feed, item)) {
+          throw new TypeError(
+            `Query.from() expects Feed objects (org.dxos.type.feed), but received an object with typename '${typename ?? 'unknown'}'.`,
+          );
+        }
+      }
     }
 
     const feeds = items as Feed.Feed[];

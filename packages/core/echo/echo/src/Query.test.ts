@@ -566,7 +566,7 @@ describe('query api', () => {
       const feedDxn = DXN.parse(`dxn:echo:${spaceId}:${feedId}`);
       const feed = (await Obj.fromJSON(
         {
-          '@type': 'dxn:type:dxos.org/type/Feed:0.1.0',
+          '@type': 'dxn:type:org.dxos.type.feed:0.1.0',
           id: feedId,
           name: 'test-feed',
         },
@@ -593,6 +593,14 @@ describe('query api', () => {
           },
         },
       });
+    });
+
+    test('Query.from(non-feed) throws TypeError', () => {
+      const person = Obj.make(TestSchema.Person, { name: 'Fred' });
+      expect(() => Query.select(Filter.type(TestSchema.Person)).from(person as any)).toThrow(TypeError);
+      expect(() => Query.select(Filter.type(TestSchema.Person)).from(person as any)).toThrow(
+        /Query\.from\(\) expects Feed objects/,
+      );
     });
 
     test.skip('chain', () => {
