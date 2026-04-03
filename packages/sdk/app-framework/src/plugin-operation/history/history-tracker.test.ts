@@ -250,7 +250,7 @@ describe('HistoryTracker', () => {
     Effect.gen(function* () {
       // Dynamic message that depends on input/output.
       const dynamicMessage = (input: { value: number }, output: { value: number }): [string, { ns: string }] => [
-        `computed ${input.value} to ${output.value}`,
+        `computed-${input.value}-to-${output.value}`,
         { ns: 'test' },
       ];
       const undoMapping = UndoMapping.make({
@@ -289,7 +289,7 @@ describe('HistoryTracker', () => {
       yield* waitUntil(() => showUndoWasCalled);
       expect(showUndoWasCalled).toBe(true);
       // Compute 2 * 2 = 4, so message should be 'computed 2 to 4'.
-      expect(showUndoMessage).toEqual(['computed 2 to 4', { ns: 'test' }]);
+      expect(showUndoMessage).toEqual(['computed-2-to-4', { ns: 'test' }]);
     }),
   );
 

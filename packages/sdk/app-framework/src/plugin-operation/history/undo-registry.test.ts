@@ -59,11 +59,11 @@ describe('resolveMessage', () => {
 
   test('calls function message with input and output', ({ expect }) => {
     const messageFunc = (input: { value: number }, output: { value: number }): [string, { ns: string }] => [
-      `input: ${input.value}, output: ${output.value}`,
+      `input-${input.value}-output-${output.value}`,
       { ns: 'test' },
     ];
     const result = UndoMapping.resolveMessage(messageFunc, { value: 5 }, { value: 10 });
-    expect(result).toEqual(['input: 5, output: 10', { ns: 'test' }]);
+    expect(result).toEqual(['input-5-output-10', { ns: 'test' }]);
   });
 
   test('returns string label as-is', ({ expect }) => {
