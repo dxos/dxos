@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AiConversation } from '@dxos/assistant';
 import { Feed, Obj } from '@dxos/echo';
-import { TracingService } from '@dxos/functions';
+import { Trace, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
@@ -37,7 +37,12 @@ const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pip
       const runtime = yield* Effect.promise(() =>
         runtimeResolver
           .getRuntime(db.spaceId)
-          .runPromise(Effect.runtime<AiChatServices>().pipe(Effect.provide(TracingService.layerNoop))),
+          .runPromise(
+            Effect.runtime<AiChatServices>().pipe(
+              Effect.provide(TracingService.layerNoop),
+              Effect.provide(Trace.writerLayerNoop),
+            ),
+          ),
       );
 
       yield* Effect.promise(() =>

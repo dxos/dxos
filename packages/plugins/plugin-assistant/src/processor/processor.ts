@@ -30,6 +30,7 @@ import {
   type CredentialsService,
   type FunctionInvocationService,
   type QueueService,
+  type Trace,
   type TracingService,
 } from '@dxos/functions';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -51,7 +52,8 @@ export type AiChatServices =
   | AiService.AiService
   | ToolExecutionService
   | ToolResolverService
-  | TracingService;
+  | TracingService
+  | Trace.TraceService;
 
 export type AiChatProcessorOptions = {
   model?: ModelName;
