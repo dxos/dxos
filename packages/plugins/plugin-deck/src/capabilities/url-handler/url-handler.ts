@@ -18,7 +18,7 @@ export default Capability.makeModule(
     const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(DeckCapabilities.State);
-    const navigationHandlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
+    const managedRuntime = yield* Capability.get(Capabilities.ManagedRuntime);
 
     const getState = () => registry.get(stateAtom);
 
@@ -33,9 +33,15 @@ export default Capability.makeModule(
       registry.set(stateAtom, fn(getState()));
     };
 
-    /** Dispatch URL to all registered NavigationHandler contributions. */
+    /** Dispatch URL to all registered NavigationHandler contributions. Resolves handlers fresh each time. */
     const dispatchNavigationHandlers = (url: URL) => {
-      void Promise.allSettled(navigationHandlers.map((handler) => handler(url)));
+      void managedRuntime.runPromise(
+        Effect.gen(function* () {
+          const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
+          log.info('[UrlHandler] Dispatching to navigation handlers', { count: handlers.length, url: url.toString() });
+          yield* Effect.promise(() => Promise.allSettled(handlers.map((handler) => handler(url))));
+        }),
+      );
     };
 
     const handleNavigation = async (url?: URL) => {

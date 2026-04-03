@@ -21,11 +21,16 @@ import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapabilit
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-    const navigationHandlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
+    const managedRuntime = yield* Capability.get(Capabilities.ManagedRuntime);
 
-    /** Dispatch URL to all registered NavigationHandler contributions. */
+    /** Dispatch URL to all registered NavigationHandler contributions. Resolves handlers fresh each time. */
     const dispatchNavigationHandlers = (url: URL) => {
-      void Promise.allSettled(navigationHandlers.map((handler) => handler(url)));
+      void managedRuntime.runPromise(
+        Effect.gen(function* () {
+          const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
+          yield* Effect.promise(() => Promise.allSettled(handlers.map((handler) => handler(url))));
+        }),
+      );
     };
 
     /**
