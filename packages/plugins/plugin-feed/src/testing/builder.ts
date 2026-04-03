@@ -28,7 +28,9 @@ export const generatePosts = (count: number): Subscription.Post[] => {
 };
 
 /** Generates a random subscription feed. */
-export const generateFeed = (props: Partial<{ name: string; url: string; description: string }> = {}): Subscription.Feed =>
+export const generateFeed = (
+  props: Partial<{ name: string; url: string; description: string }> = {},
+): Subscription.Feed =>
   Subscription.makeFeed({
     name: props.name ?? faker.company.name() + ' Blog',
     url: props.url ?? faker.internet.url(),

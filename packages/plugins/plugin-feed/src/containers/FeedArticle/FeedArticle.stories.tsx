@@ -18,9 +18,7 @@ type FeedArticleStoryProps = {
   feedUrl?: string;
 };
 
-const useFeedData = (
-  feedUrl?: string,
-): { feed: Subscription.Feed; posts: Subscription.Post[] } | undefined => {
+const useFeedData = (feedUrl?: string): { feed: Subscription.Feed; posts: Subscription.Post[] } | undefined => {
   const [data, setData] = useState<{ feed: Subscription.Feed; posts: Subscription.Post[] }>();
 
   useEffect(() => {

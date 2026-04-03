@@ -51,9 +51,7 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: `${meta.id}.subscription-feed-companion`,
         match: (node) =>
-          Subscription.instanceOf(node.data)
-            ? Option.some(node.data as Subscription.Feed)
-            : Option.none(),
+          Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Feed) : Option.none(),
         connector: (subscriptionFeed) => {
           return Effect.succeed([
             {
