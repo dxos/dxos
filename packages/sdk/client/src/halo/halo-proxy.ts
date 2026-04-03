@@ -7,6 +7,7 @@ import { inspect } from 'node:util';
 import { Event, MulticastObservable, SubscriptionList, Trigger, asyncTimeout } from '@dxos/async';
 import { AUTH_TIMEOUT, type ClientServicesProvider, type Halo } from '@dxos/client-protocol';
 import type { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
@@ -166,7 +167,7 @@ export class HaloProxy implements Halo {
       {
         spaceKey: identity.spaceKey!,
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
     this._haloCredentialStream.subscribe((data) => {
       this._credentialsChanged.emit([...this._credentials.get(), data]);
@@ -191,6 +192,7 @@ export class HaloProxy implements Halo {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identityStream = this._serviceProvider.services.IdentityService.queryIdentity(undefined, {
       timeout: RPC_TIMEOUT,
+      ctx: Context.default(),
     });
     identityStream.subscribe((data) => {
       // Set tracing identity. For early stage debugging.
@@ -205,6 +207,7 @@ export class HaloProxy implements Halo {
 
     const contactsStream = this._serviceProvider.services.ContactsService!.queryContacts(undefined, {
       timeout: RPC_TIMEOUT,
+      ctx: Context.default(),
     });
     contactsStream.subscribe((data) => {
       this._contactsChanged.emit(data.contacts ?? []);
@@ -214,6 +217,7 @@ export class HaloProxy implements Halo {
     invariant(this._serviceProvider.services.DevicesService, 'DevicesService not available');
     const devicesStream = this._serviceProvider.services.DevicesService.queryDevices(undefined, {
       timeout: RPC_TIMEOUT,
+      ctx: Context.default(),
     });
     devicesStream.subscribe((data) => {
       if (data.devices) {
@@ -269,7 +273,7 @@ export class HaloProxy implements Halo {
         profile,
         deviceProfile: deviceProfileWithDefaults,
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
     this._identityChanged.emit(identity);
     return identity;
@@ -279,6 +283,7 @@ export class HaloProxy implements Halo {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.recoverIdentity(args, {
       timeout: RPC_TIMEOUT,
+      ctx: Context.default(),
     });
     this._identityChanged.emit(identity);
     return identity;
@@ -288,6 +293,7 @@ export class HaloProxy implements Halo {
     invariant(this._serviceProvider.services.IdentityService, 'IdentityService not available');
     const identity = await this._serviceProvider.services.IdentityService.updateProfile(profile, {
       timeout: RPC_TIMEOUT,
+      ctx: Context.default(),
     });
     this._identityChanged.emit(identity);
     return identity;
@@ -356,7 +362,7 @@ export class HaloProxy implements Halo {
         spaceKey: identity.spaceKey!,
         credentials,
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
   }
 
@@ -389,7 +395,7 @@ export class HaloProxy implements Halo {
         },
         nonce,
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
   }
 }

@@ -5,6 +5,7 @@
 import type { AutomergeUrl } from '@automerge/automerge-repo';
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
+import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
 import {
@@ -68,10 +69,11 @@ export class SpacesServiceImpl implements SpacesService {
     private readonly _getDataSpaceManager: Provider<Promise<DataSpaceManager>>,
   ) {}
 
-  async createSpace(request: CreateSpaceRequest): Promise<Space> {
+  async createSpace(request: CreateSpaceRequest, options?: RequestOptions): Promise<Space> {
     this._requireIdentity();
+    const ctx = options?.ctx ?? new Context();
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = await dataSpaceManager.createSpace(new Context(), {
+    const space = await dataSpaceManager.createSpace(ctx, {
       tags: request?.tags,
       membershipPolicy: request?.membershipPolicy,
     });
@@ -79,18 +81,19 @@ export class SpacesServiceImpl implements SpacesService {
     return this._serializeSpace(space);
   }
 
-  async updateSpace({ spaceKey, state, edgeReplication }: UpdateSpaceRequest): Promise<void> {
+  async updateSpace({ spaceKey, state, edgeReplication }: UpdateSpaceRequest, options?: RequestOptions): Promise<void> {
+    const ctx = options?.ctx ?? Context.default();
     const dataSpaceManager = await this._getDataSpaceManager();
     const space = dataSpaceManager.spaces.get(spaceKey) ?? raise(new SpaceNotFoundError(spaceKey));
 
     if (state) {
       switch (state) {
         case SpaceState.SPACE_ACTIVE:
-          await space.activate(Context.default());
+          await space.activate(ctx);
           break;
 
         case SpaceState.SPACE_INACTIVE:
-          await space.deactivate(Context.default());
+          await space.deactivate(ctx);
           break;
         default:
           throw new ApiError({ message: 'Invalid space state' });
@@ -98,7 +101,7 @@ export class SpacesServiceImpl implements SpacesService {
     }
 
     if (edgeReplication !== undefined) {
-      await dataSpaceManager.setSpaceEdgeReplicationSetting(Context.default(), spaceKey, edgeReplication);
+      await dataSpaceManager.setSpaceEdgeReplicationSetting(ctx, spaceKey, edgeReplication);
     }
   }
 
@@ -267,10 +270,11 @@ export class SpacesServiceImpl implements SpacesService {
     });
   }
 
-  async joinBySpaceKey({ spaceKey }: JoinBySpaceKeyRequest): Promise<JoinSpaceResponse> {
+  async joinBySpaceKey({ spaceKey }: JoinBySpaceKeyRequest, options?: RequestOptions): Promise<JoinSpaceResponse> {
+    const ctx = options?.ctx ?? Context.default();
     const dataSpaceManager = await this._getDataSpaceManager();
-    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(Context.default(), spaceKey);
-    return this._joinByAdmission({ credential });
+    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(ctx, spaceKey);
+    return this._joinByAdmission(ctx, { credential });
   }
 
   async exportSpace(request: ExportSpaceRequest): Promise<ExportSpaceResponse> {
@@ -306,11 +310,12 @@ export class SpacesServiceImpl implements SpacesService {
     return { archive };
   }
 
-  async importSpace(request: ImportSpaceRequest): Promise<ImportSpaceResponse> {
+  async importSpace(request: ImportSpaceRequest, options?: RequestOptions): Promise<ImportSpaceResponse> {
+    const ctx = options?.ctx ?? Context.default();
     const dataSpaceManager = await this._getDataSpaceManager();
     const extracted = await extractSpaceArchive(request.archive);
     invariant(extracted.metadata.echo?.currentRootUrl, 'Space archive does not contain a root URL');
-    const space = await dataSpaceManager.createSpace(Context.default(), {
+    const space = await dataSpaceManager.createSpace(ctx, {
       documents: extracted.documents,
       rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
     });
@@ -318,7 +323,7 @@ export class SpacesServiceImpl implements SpacesService {
     return { newSpaceId: space.id };
   }
 
-  private async _joinByAdmission({ credential }: ContactAdmission): Promise<JoinSpaceResponse> {
+  private async _joinByAdmission(ctx: Context, { credential }: ContactAdmission): Promise<JoinSpaceResponse> {
     const assertion = getCredentialAssertion(credential);
     invariant(assertion['@type'] === 'dxos.halo.credentials.SpaceMember', 'Invalid credential');
     const myIdentity = this._identityManager.identity;
@@ -327,7 +332,7 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     let dataSpace = dataSpaceManager.spaces.get(assertion.spaceKey);
     if (!dataSpace) {
-      dataSpace = await dataSpaceManager.acceptSpace(Context.default(), {
+      dataSpace = await dataSpaceManager.acceptSpace(ctx, {
         spaceKey: assertion.spaceKey,
         genesisFeedKey: assertion.genesisFeedKey,
         tags: assertion.tags,

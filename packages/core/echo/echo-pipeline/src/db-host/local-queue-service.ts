@@ -11,6 +11,8 @@ import { EchoFeedCodec } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { type FeedStore } from '@dxos/feed';
 import { assertArgument, invariant } from '@dxos/invariant';
+import { type RequestOptions } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import {
@@ -22,7 +24,6 @@ import {
   type SyncQueueRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
-import { Context } from '@dxos/context';
 
 /**
  * Writes queue data to a local FeedStore.
@@ -120,7 +121,7 @@ export class LocalQueueServiceImpl implements QueueService {
     );
   }
 
-  async syncQueue(request: SyncQueueRequest): Promise<void> {
-    await this.#syncQueue?.(Context.default(), request);
+  async syncQueue(request: SyncQueueRequest, options?: RequestOptions): Promise<void> {
+    await this.#syncQueue?.(options?.ctx ?? Context.default(), request);
   }
 }

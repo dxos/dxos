@@ -473,7 +473,7 @@ export class SpaceProxy implements Space, CustomInspectable {
   async open(): Promise<void> {
     await this._clientServices.services.SpacesService!.updateSpace(
       { spaceKey: this.key, state: SpaceState.SPACE_ACTIVE },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
   }
 
@@ -483,7 +483,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     }
     await this._clientServices.services.SpacesService!.updateSpace(
       { spaceKey: this.key, state: SpaceState.SPACE_INACTIVE },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
   }
 
@@ -509,7 +509,7 @@ export class SpaceProxy implements Space, CustomInspectable {
           '@type': message['@type'] || 'google.protobuf.Struct',
         },
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
   }
 
@@ -520,7 +520,7 @@ export class SpaceProxy implements Space, CustomInspectable {
     invariant(this._clientServices.services.SpacesService, 'SpacesService not available');
     const stream = this._clientServices.services.SpacesService.subscribeMessages(
       { spaceKey: this.key, channel },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
     stream.subscribe(callback);
     return () => stream.close();
@@ -536,11 +536,14 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   async admitContact(contact: Contact): Promise<void> {
-    await this._clientServices.services.SpacesService!.admitContact({
-      spaceKey: this.key,
-      role: HaloSpaceMember.Role.ADMIN,
-      contact,
-    });
+    await this._clientServices.services.SpacesService!.admitContact(
+      {
+        spaceKey: this.key,
+        role: HaloSpaceMember.Role.ADMIN,
+        contact,
+      },
+      { ctx: Context.default() },
+    );
   }
 
   /**
@@ -548,11 +551,14 @@ export class SpaceProxy implements Space, CustomInspectable {
    */
   updateMemberRole(request: Omit<UpdateMemberRoleRequest, 'spaceKey'>): Promise<void> {
     this._throwIfNotInitialized();
-    return this._clientServices.services.SpacesService!.updateMemberRole({
-      spaceKey: this.key,
-      memberKey: request.memberKey,
-      newRole: request.newRole,
-    });
+    return this._clientServices.services.SpacesService!.updateMemberRole(
+      {
+        spaceKey: this.key,
+        memberKey: request.memberKey,
+        newRole: request.newRole,
+      },
+      { ctx: Context.default() },
+    );
   }
 
   /**
@@ -564,11 +570,14 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   private async _removeMember(memberKey: PublicKey): Promise<void> {
-    return this._clientServices.services.SpacesService!.updateMemberRole({
-      spaceKey: this.key,
-      memberKey,
-      newRole: HaloSpaceMember.Role.REMOVED,
-    });
+    return this._clientServices.services.SpacesService!.updateMemberRole(
+      {
+        spaceKey: this.key,
+        memberKey,
+        newRole: HaloSpaceMember.Role.REMOVED,
+      },
+      { ctx: Context.default() },
+    );
   }
 
   private async _createEpoch({
@@ -585,7 +594,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         migration,
         automergeRootUrl,
       },
-      { timeout: EPOCH_CREATION_TIMEOUT },
+      { timeout: EPOCH_CREATION_TIMEOUT, ctx: Context.default() },
     );
 
     if (targetTimeframe) {
@@ -599,10 +608,13 @@ export class SpaceProxy implements Space, CustomInspectable {
   }
 
   private async _getCredentials(): Promise<Credential[]> {
-    const stream = this._clientServices.services.SpacesService?.queryCredentials({
-      spaceKey: this.key,
-      noTail: true,
-    });
+    const stream = this._clientServices.services.SpacesService?.queryCredentials(
+      {
+        spaceKey: this.key,
+        noTail: true,
+      },
+      { ctx: Context.default() },
+    );
     invariant(stream, 'SpacesService not available');
     return await Stream.consumeData(stream);
   }
@@ -633,7 +645,7 @@ export class SpaceProxy implements Space, CustomInspectable {
         spaceKey: this.key,
         edgeReplication: setting,
       },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
     // TODO(dmaretskyi): Might cause a race-condition if the property is updated multiple times.
     await asyncTimeout(
@@ -704,9 +716,10 @@ export class SpaceProxy implements Space, CustomInspectable {
 
   private async _export(): Promise<SpaceArchive> {
     await this._db.flush();
-    const { archive } = await this._clientServices.services.SpacesService!.exportSpace({
-      spaceId: this.id,
-    });
+    const { archive } = await this._clientServices.services.SpacesService!.exportSpace(
+      { spaceId: this.id },
+      { ctx: Context.default() },
+    );
     return archive;
   }
 }

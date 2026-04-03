@@ -2,7 +2,9 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import { type EdgeConnection } from '@dxos/edge-client';
 import { EdgeAgentStatus } from '@dxos/protocols';
 import {
@@ -11,7 +13,6 @@ import {
   QueryAgentStatusResponse,
   type QueryEdgeStatusResponse,
 } from '@dxos/protocols/proto/dxos/client/services';
-import { Context } from '@dxos/context';
 import { type EdgeAgentManager } from './edge-agent-manager';
 
 // TODO(wittjosiah): This service is not currently exposed on the client api, it must be called directly.
@@ -43,8 +44,8 @@ export class EdgeAgentServiceImpl implements EdgeAgentService {
     });
   }
 
-  async createAgent(): Promise<void> {
-    return (await this._agentManagerProvider()).createAgent(Context.default());
+  async createAgent(_request: void, options?: RequestOptions): Promise<void> {
+    return (await this._agentManagerProvider()).createAgent(options?.ctx ?? Context.default());
   }
 
   queryAgentStatus(): Stream<QueryAgentStatusResponse> {

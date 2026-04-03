@@ -342,7 +342,7 @@ export class Client {
     }
 
     {
-      await this._services?.services.QueryService?.reindex(undefined, { timeout: 30_000 });
+      await this._services?.services.QueryService?.reindex(undefined, { timeout: 30_000, ctx: Context.default() });
     }
 
     log.info('Repair succeeded', { repairSummary });
@@ -454,7 +454,10 @@ export class Client {
 
     invariant(this._services.services.SystemService, 'SystemService is not available.');
     log('client._open: subscribing to system status...');
-    this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 });
+    this._statusStream = this._services.services.SystemService.queryStatus(
+      { interval: 3_000 },
+      { ctx: this._ctx },
+    );
     this._statusStream.subscribe(
       async ({ status }) => {
         log('client._open: status received', { status });
@@ -560,7 +563,10 @@ export class Client {
    */
   async resumeHostServices(): Promise<void> {
     invariant(this.services.services.SystemService, 'SystemService is not available.');
-    await this.services.services.SystemService.updateStatus({ status: SystemStatus.ACTIVE });
+    await this.services.services.SystemService.updateStatus(
+      { status: SystemStatus.ACTIVE },
+      { ctx: Context.default() },
+    );
   }
 
   /**
@@ -577,7 +583,7 @@ export class Client {
     log('resetting...');
     this._resetting = true;
     invariant(this._services?.services.SystemService, 'SystemService is not available.');
-    await this._services?.services.SystemService.reset();
+    await this._services?.services.SystemService.reset(undefined, { ctx: Context.default() });
     await this._close();
 
     // TODO(wittjosiah): Re-open after reset.

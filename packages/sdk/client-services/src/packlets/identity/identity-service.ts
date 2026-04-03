@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type RequestOptions } from '@dxos/codec-protobuf';
 import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
@@ -71,17 +72,18 @@ export class IdentityServiceImpl extends Resource implements IdentityService {
     return this._recoveryManager.createRecoveryCredential(request);
   }
 
-  async requestRecoveryChallenge() {
-    return this._recoveryManager.requestRecoveryChallenge(Context.default());
+  async requestRecoveryChallenge(_request: void, options?: RequestOptions) {
+    return this._recoveryManager.requestRecoveryChallenge(options?.ctx ?? Context.default());
   }
 
-  async recoverIdentity(request: RecoverIdentityRequest): Promise<IdentityProto> {
+  async recoverIdentity(request: RecoverIdentityRequest, options?: RequestOptions): Promise<IdentityProto> {
+    const ctx = options?.ctx ?? Context.default();
     if (request.recoveryCode) {
-      await this._recoveryManager.recoverIdentity(Context.default(), { recoveryCode: request.recoveryCode });
+      await this._recoveryManager.recoverIdentity(ctx, { recoveryCode: request.recoveryCode });
     } else if (request.external) {
-      await this._recoveryManager.recoverIdentityWithExternalSignature(Context.default(), request.external);
+      await this._recoveryManager.recoverIdentityWithExternalSignature(ctx, request.external);
     } else if (request.token) {
-      await this._recoveryManager.recoverIdentityWithToken(Context.default(), { token: request.token });
+      await this._recoveryManager.recoverIdentityWithToken(ctx, { token: request.token });
     } else {
       throw new Error('Invalid request.');
     }

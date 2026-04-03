@@ -144,7 +144,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     let isFirstDataAfterReconnect = isReconnect;
 
     invariant(this._serviceProvider.services.SpacesService, 'SpacesService is not available.');
-    const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(undefined, { timeout: RPC_TIMEOUT });
+    const spacesStream = this._serviceProvider.services.SpacesService.querySpaces(undefined, {
+      timeout: RPC_TIMEOUT,
+      ctx: this._ctx,
+    });
     spacesStream.subscribe((data) => {
       let emitUpdate = false;
       const newSpaces = this.get() as SpaceProxy[];
@@ -207,7 +210,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   async setConfig(config: IndexConfig): Promise<void> {
-    await this._serviceProvider.services.QueryService?.setConfig(config, { timeout: 20_000 }); // TODO(dmaretskyi): Set global timeout instead.
+    await this._serviceProvider.services.QueryService?.setConfig(config, {
+      timeout: 20_000,
+      ctx: Context.default(),
+    }); // TODO(dmaretskyi): Set global timeout instead.
   }
 
   /**
@@ -255,7 +261,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     log.trace('dxos.sdk.echo-proxy.create-space', Trace.begin({ id: traceId }));
     const space = await this._serviceProvider.services.SpacesService.createSpace(
       { tags: options?.tags ?? [], membershipPolicy: options?.membershipPolicy ?? MembershipPolicy.INVITE },
-      { timeout: RPC_TIMEOUT },
+      { timeout: RPC_TIMEOUT, ctx: Context.default() },
     );
 
     await this._spaceCreated.waitForCondition(() => {
@@ -279,7 +285,7 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
     invariant(this._serviceProvider.services.SpacesService, 'SpaceService is not available.');
     const { newSpaceId } = await this._serviceProvider.services.SpacesService.importSpace(
       { archive },
-      { timeout: IMPORT_SPACE_TIMEOUT },
+      { timeout: IMPORT_SPACE_TIMEOUT, ctx: Context.default() },
     );
     invariant(SpaceId.isValid(newSpaceId), 'Invalid space ID');
     await this._spaceCreated.waitForCondition(() => {
@@ -301,7 +307,10 @@ export class SpaceList extends MulticastObservable<Space[]> implements Echo {
   }
 
   async joinBySpaceKey(spaceKey: PublicKey): Promise<Space> {
-    const response = await this._serviceProvider.services.SpacesService!.joinBySpaceKey({ spaceKey });
+    const response = await this._serviceProvider.services.SpacesService!.joinBySpaceKey(
+      { spaceKey },
+      { ctx: Context.default() },
+    );
     return this._findProxy(response.space);
   }
 

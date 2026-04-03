@@ -94,18 +94,18 @@ export class DataServiceImpl implements DataService {
     return { documentId: handle.documentId };
   }
 
-  async update(request: UpdateRequest): Promise<void> {
+  async update(request: UpdateRequest, options?: RequestOptions): Promise<void> {
     if (!request.updates) {
       return;
     }
     const synchronizer = this._subscriptions.get(request.subscriptionId);
     invariant(synchronizer, 'Subscription not found');
 
-    await synchronizer.update(Context.default(), request.updates);
+    await synchronizer.update(options?.ctx ?? Context.default(), request.updates);
   }
 
-  async flush(request: FlushRequest): Promise<void> {
-    await this._automergeHost.flush(Context.default(), request);
+  async flush(request: FlushRequest, options?: RequestOptions): Promise<void> {
+    await this._automergeHost.flush(options?.ctx ?? Context.default(), request);
   }
 
   async getDocumentHeads(request: GetDocumentHeadsRequest): Promise<GetDocumentHeadsResponse> {
@@ -125,7 +125,7 @@ export class DataServiceImpl implements DataService {
     request: WaitUntilHeadsReplicatedRequest,
     options?: RequestOptions | undefined,
   ): Promise<void> {
-    await this._automergeHost.waitUntilHeadsReplicated(Context.default(), request.heads);
+    await this._automergeHost.waitUntilHeadsReplicated(options?.ctx ?? Context.default(), request.heads);
   }
 
   async reIndexHeads(request: ReIndexHeadsRequest, options?: RequestOptions): Promise<void> {
