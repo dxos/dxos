@@ -12,7 +12,7 @@ import { withTheme } from '../../testing';
 
 import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar';
 
-type StoryProps = PropsWithChildren<{
+type DefaultStoryProps = PropsWithChildren<{
   id?: string;
   imgSrc?: string;
   fallbackText?: string;
@@ -25,7 +25,7 @@ type StoryProps = PropsWithChildren<{
   hue?: ChromaticPalette;
 }>;
 
-const DefaultStory = (props: StoryProps) => {
+const DefaultStory = (props: DefaultStoryProps) => {
   const {
     id = '20970b563fc49b5bb194a6ffdff376031a3a11f9481360c071c3fed87874106b',
     status,

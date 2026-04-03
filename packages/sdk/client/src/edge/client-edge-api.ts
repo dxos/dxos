@@ -3,6 +3,7 @@
 //
 
 import { Event } from '@dxos/async';
+import { type Context } from '@dxos/context';
 import { type Database, type Entity, Filter, type Hypergraph, Query, type QueryResult } from '@dxos/echo';
 import { type QueryContext, QueryResultImpl } from '@dxos/echo-db';
 import { QueryAST } from '@dxos/echo-protocol';
@@ -85,12 +86,16 @@ export class RemoteEdgeQueryContext<T extends Entity.Unknown = Entity.Unknown> i
     return [];
   }
 
-  async run(query: QueryAST.Query, opts?: QueryResult.RunOptions): Promise<QueryResult.EntityEntry<T>[]> {
+  async run(
+    _ctx: Context,
+    query: QueryAST.Query,
+    opts?: QueryResult.RunOptions,
+  ): Promise<QueryResult.EntityEntry<T>[]> {
     const start = Date.now();
 
     log('executing edge query', { spaceId: this._params.spaceId, query });
 
-    const response = await this._params.edgeClient.execQuery(this._params.spaceId, {
+    const response = await this._params.edgeClient.execQuery(_ctx, this._params.spaceId, {
       query: JSON.stringify(query),
       reactivity: QueryReactivity.ONE_SHOT,
     });

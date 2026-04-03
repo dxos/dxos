@@ -4,12 +4,11 @@
 
 import { createContext } from '@radix-ui/react-context';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import React, { ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, useCallback } from 'react';
+import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, useCallback } from 'react';
 
 import {
   Button,
   type ButtonProps,
-  ComposableProps,
   Icon,
   Popover,
   type PopoverArrowProps,
@@ -17,7 +16,7 @@ import {
   type PopoverVirtualTriggerProps,
 } from '@dxos/react-ui';
 import { useId } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import {
   SearchList,
@@ -25,7 +24,6 @@ import {
   type SearchListInputProps,
   type SearchListItemProps,
   type SearchListRootProps,
-  type SearchListViewportProps,
 } from '../SearchList';
 
 const COMBOBOX_NAME = 'Combobox';
@@ -102,9 +100,9 @@ const ComboboxRoot = ({
 // ContentProps
 //
 
-type ComboboxContentProps = ComposableProps<HTMLDivElement, SearchListRootProps & PopoverContentProps>;
+type ComboboxContentProps = SearchListRootProps & PopoverContentProps;
 
-const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
+const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
   ({ children, value, defaultValue, debounceMs, onSearch, ...props }, forwardedRef) => {
     const { modalId } = useComboboxContext(COMBOBOX_CONTENT_NAME);
 
@@ -194,7 +192,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(({ classN
 // List
 //
 
-type ComboboxListProps = SearchListViewportProps;
+type ComboboxListProps = PropsWithChildren<{ classNames?: string | string[] }>;
 
 const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(({ classNames, ...props }, forwardedRef) => {
   return <SearchList.Viewport {...props} classNames={['py-form-chrome', classNames]} ref={forwardedRef} />;

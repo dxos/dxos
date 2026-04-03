@@ -3,20 +3,21 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
+import { translations as searchTranslations } from '@dxos/react-ui-search';
 
 import { meta } from './meta';
 
 export const translations = [
+  ...searchTranslations,
   {
     'en-US': {
       [meta.id]: {
         'plugin name': 'Search',
         'search action label': 'Search spaces',
         'search placeholder': 'Search…',
-        'search dialog title': 'Open',
+        'search dialog title': 'Search',
         'recently closed heading': 'Recently closed',
         'pending results message': 'Searching…',
-        'empty results message': 'No matching objects',
         'search label': 'Search',
       },
     },

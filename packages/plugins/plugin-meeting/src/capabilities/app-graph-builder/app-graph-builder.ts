@@ -15,9 +15,9 @@ import { Operation } from '@dxos/operation';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
-import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
@@ -50,7 +50,7 @@ export default Capability.makeModule(
         actions: (channel, get) => {
           const space = getSpace(channel);
           const state = space && get(CreateAtom.fromObservable(space.state));
-          if (!space || state !== SpaceState.SPACE_READY || space.properties[COMPOSER_SPACE_LOCK]) {
+          if (!space || state !== SpaceState.SPACE_READY || space.membershipPolicy === MembershipPolicy.LOCKED) {
             return Effect.succeed([]);
           }
           return Effect.succeed([

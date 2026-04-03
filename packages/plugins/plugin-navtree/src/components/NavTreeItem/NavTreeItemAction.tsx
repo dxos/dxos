@@ -2,27 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { forwardRef, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
 import { type Node } from '@dxos/app-graph';
 import { useActionRunner } from '@dxos/plugin-graph';
-import { ComposableProps, IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
+import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import { composableProps, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
+import { composable, composableProps, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { type ActionProperties } from '../../types';
-
-export type NavTreeItemActionMenuProps = ComposableProps<
-  HTMLButtonElement,
-  ActionProperties & {
-    parent: Node.Node;
-    path?: string[];
-    caller?: string;
-    monolithic?: boolean;
-    menuActions?: Node.Action[];
-  }
->;
 
 const fallbackIcon = 'ph--placeholder--regular';
 
@@ -30,12 +19,21 @@ const fineActionButtonProps = {
   size: 4 as const,
   density: 'fine' as const,
 };
+
 const coarseActionButtonProps = {
   size: 5 as const,
   density: 'coarse' as const,
 };
 
-export const NavTreeItemActionDropdownMenu = forwardRef<HTMLButtonElement, NavTreeItemActionMenuProps>(
+export type NavTreeItemActionMenuProps = ActionProperties & {
+  parent: Node.Node;
+  path?: string[];
+  caller?: string;
+  monolithic?: boolean;
+  menuActions?: Node.Action[];
+};
+
+export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTreeItemActionMenuProps>(
   ({ parent, path, label, icon, testId, menuActions, caller, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const density = useDensityContext();

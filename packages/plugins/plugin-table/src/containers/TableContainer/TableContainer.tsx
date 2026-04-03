@@ -159,7 +159,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     );
 
     return (
-      <TableComponent.Root>
+      <TableComponent.Root ref={tableRef}>
         <Panel.Root role={role} ref={forwardedRef}>
           <Panel.Toolbar asChild>
             <TableComponent.Toolbar
@@ -171,10 +171,9 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
             />
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <TableComponent.Main
+            <TableComponent.Content
               classNames='border-t border-separator'
               key={attendableId}
-              ref={tableRef}
               model={model}
               presentation={presentation}
               schema={schema}

@@ -6,7 +6,6 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
 import { IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
@@ -16,20 +15,20 @@ import { MeetingOperation } from '../../operations';
 
 export type MeetingContainerProps = SurfaceComponentProps<Meeting.Meeting>;
 
-export const MeetingContainer = ({ role, subject: meeting }: MeetingContainerProps) => {
+export const MeetingContainer = ({ attendableId, role, subject: meeting }: MeetingContainerProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const notes = meeting.notes?.target;
   const summary = meeting.summary?.target;
-  const notesData = useMemo(() => ({ id: Obj.getDXN(meeting).toString(), subject: notes }), [notes]);
+  const notesData = useMemo(() => ({ attendableId, subject: notes }), [attendableId, notes]);
   const summaryData = useMemo(
     () =>
       summary &&
       summary.content.length > 0 && {
-        id: Obj.getDXN(meeting).toString(),
+        attendableId,
         subject: summary,
       },
-    [summary, summary?.content],
+    [attendableId, summary, summary?.content],
   );
 
   const handleGenerateSummary = useCallback(async () => {

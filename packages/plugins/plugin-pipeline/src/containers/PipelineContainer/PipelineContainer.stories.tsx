@@ -71,7 +71,7 @@ const meta = {
             Message.Message,
           ],
           onClientInitialized: Effect.fnUntraced(function* ({ client }) {
-            const { defaultSpace } = yield* initializeIdentity(client);
+            const { personalSpace } = yield* initializeIdentity(client);
 
             yield* Effect.gen(function* () {
               const tag = yield* Database.add(Tag.make({ label: 'important', hue: 'green' }));
@@ -193,7 +193,7 @@ const meta = {
               }
 
               // Generate sample Contacts.
-              const factory = createObjectFactory(defaultSpace.db, faker as any);
+              const factory = createObjectFactory(personalSpace.db, faker as any);
               yield* Effect.promise(() => factory([{ type: Person.Person, count: 12 }]));
 
               // Generate sample Projects.
@@ -206,7 +206,9 @@ const meta = {
                 );
               }
             }).pipe(
-              Effect.provide(Layer.merge(Database.layer(defaultSpace.db), createFeedServiceLayer(defaultSpace.queues))),
+              Effect.provide(
+                Layer.merge(Database.layer(personalSpace.db), createFeedServiceLayer(personalSpace.queues)),
+              ),
             );
           }),
         }),

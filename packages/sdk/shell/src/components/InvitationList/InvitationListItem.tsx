@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+
 import { formatDistanceToNow } from 'date-fns';
 import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
 
@@ -22,7 +23,7 @@ import {
   useThemeContext,
   useTranslation,
 } from '@dxos/react-ui';
-import { focusRing, getSize, mx } from '@dxos/ui-theme';
+import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
 import { translationKey } from '../../translations';
@@ -166,7 +167,7 @@ export const InvitationListItemImpl = ({
             status={avatarStatus}
             fallback={hexToEmoji(invitationId)}
             tabIndex={0}
-            classNames={[focusRing, 'relative rounded-full place-self-center']}
+            classNames={['dx-focus-ring', 'relative rounded-full place-self-center']}
           />
         </Tooltip.Trigger>
       </Avatar.Root>

@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
+import { getPersonalSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Filter } from '@dxos/react-client/echo';
@@ -23,7 +24,10 @@ const handler: Operation.WithHandler<typeof QuickJournalEntry> = QuickJournalEnt
 
       const client = yield* Capability.get(ClientCapabilities.Client);
       yield* Effect.tryPromise(async () => {
-        const space = client.spaces.default;
+        const space = getPersonalSpace(client);
+        if (!space) {
+          return;
+        }
         await space.waitUntilReady();
 
         const journals = await space.db.query(Filter.type(Journal.Journal)).run();

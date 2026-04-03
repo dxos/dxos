@@ -5,17 +5,26 @@
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 
-import { OperationHandler, ReactRoot, ReactSurface, SpotlightDismiss, State, UrlHandler } from './capabilities';
+import {
+  AppGraphBuilder,
+  OperationHandler,
+  ReactRoot,
+  ReactSurface,
+  SpotlightDismiss,
+  State,
+  UrlHandler,
+} from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { SimpleLayoutEvents } from './types';
 
 export type SimpleLayoutPluginOptions = {
-  /** Whether running in popover window context (hides mobile-specific UI). */
+  /** Determines if running in popover window context (hides mobile-specific UI). */
   isPopover?: boolean;
 };
 
 export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta).pipe(
+  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ isPopover = false }) => ({

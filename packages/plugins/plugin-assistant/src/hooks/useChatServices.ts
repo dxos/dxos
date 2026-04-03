@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import { useCapability } from '@dxos/app-framework/ui';
 import { type Key } from '@dxos/echo';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { getPersonalSpace } from '@dxos/app-toolkit';
 import { useClient } from '@dxos/react-client';
 
 export type UseChatServicesProps = {
@@ -18,8 +19,8 @@ export type UseChatServicesProps = {
  */
 export const useChatServices = ({ id }: UseChatServicesProps) => {
   const client = useClient();
-  id ??= client.spaces.default.id;
+  id ??= getPersonalSpace(client)?.id;
 
   const runtimeResolver = useCapability(AutomationCapabilities.ComputeRuntime);
-  return useMemo(() => runtimeResolver.getRuntime(id), [id]);
+  return useMemo(() => (!id ? undefined : runtimeResolver.getRuntime(id)), [id]);
 };

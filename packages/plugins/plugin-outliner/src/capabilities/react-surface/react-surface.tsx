@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
         role: ['article', 'section'],
         filter: (data): data is { subject: Journal.Journal } => Obj.instanceOf(Journal.Journal, data.subject),
         component: ({ role, data }) => (
-          <JournalContainer role={role as SurfaceComponentProps['role']} subject={data.subject} />
+          <JournalContainer role={role as SurfaceComponentProps['role']} subject={data.subject} showCalendar />
         ),
       }),
       Surface.create({

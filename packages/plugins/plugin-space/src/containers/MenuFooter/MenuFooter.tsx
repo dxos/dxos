@@ -4,9 +4,9 @@
 
 import React from 'react';
 
+import { isPersonalSpace } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { type Obj } from '@dxos/echo';
-import { useClient } from '@dxos/react-client';
 import { DropdownMenu, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
@@ -14,9 +14,8 @@ import { getSpaceDisplayName } from '../../util';
 
 export const MenuFooter = ({ object }: { object: Obj.Unknown }) => {
   const { t } = useTranslation(meta.id);
-  const client = useClient();
   const space = getSpace(object);
-  const spaceName = space ? getSpaceDisplayName(space, { personal: client.spaces.default === space }) : '';
+  const spaceName = space ? getSpaceDisplayName(space, { personal: isPersonalSpace(space) }) : '';
   return space ? (
     <>
       <DropdownMenu.Separator />

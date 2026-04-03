@@ -5,20 +5,20 @@
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
-import { type Space } from '@dxos/client-protocol';
-import { SpaceProperties } from '@dxos/client-protocol';
+import { type Space, LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
 import { performInvitation } from '@dxos/client-services/testing';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { Context } from '@dxos/context';
-import { Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
-import { getObjectCore } from '@dxos/echo-db';
+import { Serializer, defineObjectMigration, getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
 import { Client } from '../client';
-import { SpaceState, getSpace } from '../echo';
+import { SpaceState, getSpace, importSpace } from '../echo';
 import { CreateEpochRequest } from '../halo';
 import { TestSchema } from '../testing';
 import {
@@ -30,14 +30,10 @@ import {
 } from '../testing';
 
 describe('Spaces', () => {
-  test.skip('creates a default space', async () => {
+  test('no default space after identity creation', async () => {
     const [client] = await createInitializedClients(1, { storage: true });
 
-    await expect.poll(() => client.spaces.get()).toBeDefined();
-    const space = client.spaces.default;
-    await testSpaceAutomerge(expect, space.db);
-
-    expect(space.members.get()).to.be.length(1);
+    expect(client.spaces.get()).to.have.length(0);
   });
 
   test('creates a space', async () => {
@@ -65,7 +61,7 @@ describe('Spaces', () => {
 
     const host = testBuilder.createClientServicesHost();
     await host.open(new Context());
-    onTestFinished(() => host.close());
+    onTestFinished(() => host.close(Context.default()));
     const [client, server] = testBuilder.createClientServer(host);
     void server.open();
     onTestFinished(() => server.close());
@@ -87,8 +83,7 @@ describe('Spaces', () => {
 
     let objectId: string;
     {
-      await client.spaces.waitUntilReady();
-      const space = client.spaces.default;
+      const space = await client.spaces.create();
       ({ objectId } = await testSpaceAutomerge(expect, space.db));
       expect(space.members.get()).to.be.length(1);
       await space.db.flush();
@@ -382,7 +377,8 @@ describe('Spaces', () => {
     const [alice, bob] = await createInitializedClients(3);
     [alice, bob].forEach(registerTypes);
 
-    const bobPersonalDoc = bob.spaces.get()[0].db.add(createDocument());
+    const bobPersonalSpace = await bob.spaces.create();
+    const bobPersonalDoc = bobPersonalSpace.db.add(createDocument());
 
     const [aliceSharedSpace, bobSharedSpace] = await createSharedSpace(alice, bob);
     const sharedDoc = bobSharedSpace.db.add(createDocument());
@@ -549,6 +545,30 @@ describe('Spaces', () => {
     expect(archive.contents.length).to.be.greaterThan(0);
   });
 
+  test('export space archive with feeds', { timeout: 5_000 }, async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
+
+    const space = await client.spaces.create();
+    space.db.add(createDocument());
+    await space.db.flush();
+
+    const queue = space.queues.create();
+    await queue.append([createObject({ name: 'queue-item-1' }), createObject({ name: 'queue-item-2' })]);
+
+    const archive = await space.internal.export();
+    expect(archive.contents.length).to.be.greaterThan(0);
+
+    const { extractSpaceArchive } = await import('@dxos/client-services');
+    const extracted = await extractSpaceArchive(archive);
+    expect(Object.keys(extracted.feeds).length).to.be.greaterThan(0);
+
+    const feedIds = Object.keys(extracted.feeds);
+    const feed = extracted.feeds[feedIds[0]];
+    expect(feed.metadata.namespace).toBe('data');
+    expect(feed.blocks.length).toBe(2);
+  });
+
   test('import space archive', { timeout: 3_000, retry: 1 }, async () => {
     const [client1, client2] = await createInitializedClients(2, {
       storage: true,
@@ -564,6 +584,188 @@ describe('Spaces', () => {
     const importedSpace = await client2.spaces.import(archive);
     expect(importedSpace.id).not.toEqual(space.id);
     expect((await importedSpace.db.query(Filter.id(doc1.id)).first()).title).toEqual(doc1.title);
+  });
+
+  test('import JSON into existing space', { timeout: 5_000 }, async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
+
+    // Create source space with objects.
+    const sourceSpace = await client.spaces.create({ name: 'Source' });
+    await sourceSpace.waitUntilReady();
+    const obj = sourceSpace.db.add(createObject({ name: 'test-object' }));
+    await sourceSpace.db.flush();
+
+    // Export source space.
+    const serializer = new Serializer();
+    const exported = await serializer.export(sourceSpace.internal.db);
+
+    // Create target space with its own properties.
+    const targetSpace = await client.spaces.create({ name: 'Target' });
+    await targetSpace.waitUntilReady();
+
+    // Import into existing space, skipping SpaceProperties.
+    await importSpace(targetSpace.internal.db, exported, { ignoreTypes: [Type.getTypename(SpaceProperties)] });
+
+    // Verify objects imported.
+    const importedObj = await targetSpace.internal.db.query(Filter.id(obj.id)).first();
+    expect(importedObj).toBeDefined();
+    expect(importedObj.name).toEqual('test-object');
+
+    // Verify target SpaceProperties unchanged.
+    expect(targetSpace.properties.name).toEqual('Target');
+  });
+
+  test('import JSON with feed data into existing space', { timeout: 10_000 }, async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
+
+    // Create source space with Feed + queue messages.
+    const sourceSpace = await client.spaces.create({ name: 'Source' });
+    await sourceSpace.waitUntilReady();
+    const obj = sourceSpace.db.add(createObject({ name: 'doc-in-source' }));
+    const feedObj = sourceSpace.db.add(Feed.make({ name: 'test-feed', namespace: 'data' }));
+    await sourceSpace.db.flush();
+
+    const feedQueueDxn = Feed.getQueueDxn(feedObj);
+    expect(feedQueueDxn).toBeDefined();
+    const sourceQueue = sourceSpace.queues.get(feedQueueDxn!);
+    await sourceQueue.append([createObject({ name: 'msg-1' }), createObject({ name: 'msg-2' })]);
+
+    // Export: ECHO objects + feed data.
+    const serializer = new Serializer();
+    const exported = await serializer.export(sourceSpace.internal.db);
+
+    // Read queue messages for export.
+    const queueMessages = await sourceQueue.queryObjects();
+    exported.feeds = [
+      {
+        feedObjectId: feedObj.id,
+        namespace: feedObj.namespace ?? 'data',
+        messages: queueMessages.map((msg) => Obj.toJSON(msg as Obj.Any)),
+      },
+    ];
+
+    // Create target space.
+    const targetSpace = await client.spaces.create({ name: 'Target' });
+    await targetSpace.waitUntilReady();
+
+    // Import ECHO objects.
+    await importSpace(targetSpace.internal.db, exported, { ignoreTypes: [Type.getTypename(SpaceProperties)] });
+
+    // Verify ECHO objects imported.
+    const importedObj = await targetSpace.internal.db.query(Filter.id(obj.id)).first();
+    expect(importedObj).toBeDefined();
+    expect(importedObj.name).toEqual('doc-in-source');
+
+    // Verify Feed object imported.
+    const importedFeed = await targetSpace.internal.db.query(Filter.id(feedObj.id)).first();
+    expect(importedFeed).toBeDefined();
+
+    // Import feed messages.
+    const targetFeedQueueDxn = Feed.getQueueDxn(importedFeed as Feed.Feed);
+    expect(targetFeedQueueDxn).toBeDefined();
+    const targetQueue = targetSpace.queues.get(targetFeedQueueDxn!);
+
+    const refResolver = targetSpace.internal.db.graph.createRefResolver({
+      context: { space: targetSpace.internal.db.spaceId },
+    });
+    const hydratedMessages = await Promise.all(
+      exported.feeds![0].messages.map((msg) => Obj.fromJSON(msg, { refResolver })),
+    );
+    await targetQueue.append(hydratedMessages);
+
+    // Verify queue messages restored.
+    const restoredMessages = await targetQueue.queryObjects();
+    expect(restoredMessages.length).toEqual(2);
+
+    // Verify target SpaceProperties unchanged.
+    expect(targetSpace.properties.name).toEqual('Target');
+  });
+
+  test('import JSON without feeds field (backward compat)', { timeout: 5_000 }, async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
+
+    // Create source space.
+    const sourceSpace = await client.spaces.create({ name: 'Source' });
+    await sourceSpace.waitUntilReady();
+    const obj = sourceSpace.db.add(createObject({ name: 'old-format-obj' }));
+    await sourceSpace.db.flush();
+
+    // Export without feeds (old format).
+    const serializer = new Serializer();
+    const exported = await serializer.export(sourceSpace.internal.db);
+    // Ensure no feeds field.
+    delete exported.feeds;
+
+    // Import into existing space.
+    const targetSpace = await client.spaces.create({ name: 'Target' });
+    await targetSpace.waitUntilReady();
+    await importSpace(targetSpace.internal.db, exported, { ignoreTypes: [Type.getTypename(SpaceProperties)] });
+
+    // Verify objects imported without errors.
+    const importedObj = await targetSpace.internal.db.query(Filter.id(obj.id)).first();
+    expect(importedObj).toBeDefined();
+    expect(importedObj.name).toEqual('old-format-obj');
+  });
+
+  test('creates a space with locked membership policy', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+
+    const space = await client.spaces.create({}, { membershipPolicy: MembershipPolicy.LOCKED });
+    expect(space.membershipPolicy).toEqual(MembershipPolicy.LOCKED);
+    expect(space.members.get()).to.have.length(1);
+  });
+
+  test('space membership policy defaults to INVITE', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+
+    const space = await client.spaces.create();
+    expect(space.membershipPolicy).toEqual(MembershipPolicy.INVITE);
+  });
+
+  test('migrates SpaceProperties from legacy typename to new typename', async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+
+    const space = await client.spaces.create({ name: 'Test Space' });
+    await space.waitUntilReady();
+
+    // Verify properties exist with new typename.
+    expect(space.properties.name).to.eq('Test Space');
+    expect(Obj.getTypename(space.properties)).to.eq('org.dxos.type.spaceProperties');
+
+    // Manually set the type back to legacy typename to simulate old data.
+    const legacyProperties = await space.db.query(Filter.type(SpaceProperties)).run();
+    expect(legacyProperties).to.have.length(1);
+
+    const migration = defineObjectMigration({
+      from: SpaceProperties,
+      to: LegacySpaceProperties,
+      transform: async (from) => ({ ...from }),
+      onMigration: async () => {},
+    });
+    await space.internal.db.runMigrations([migration]);
+
+    // Verify typename was changed to legacy.
+    const legacy = await space.db.query(Filter.type(LegacySpaceProperties)).run();
+    expect(legacy).to.have.length(1);
+    expect(legacy[0].name).to.eq('Test Space');
+
+    // Now run the real migration (legacy -> new).
+    const forwardMigration = defineObjectMigration({
+      from: LegacySpaceProperties,
+      to: SpaceProperties,
+      transform: async (from) => ({ ...from }),
+      onMigration: async () => {},
+    });
+    await space.internal.db.runMigrations([forwardMigration]);
+
+    // Verify the migration worked.
+    const migrated = await space.db.query(Filter.type(SpaceProperties)).run();
+    expect(migrated).to.have.length(1);
+    expect(Obj.getTypename(migrated[0])).to.eq('org.dxos.type.spaceProperties');
+    expect(migrated[0].name).to.eq('Test Space');
   });
 
   const createInitializedClients = async (
@@ -595,7 +797,7 @@ describe('Spaces', () => {
   };
 
   const registerTypes = async (client: Client) => {
-    await client.addTypes([TestSchema$.Expando, TestSchema.DocumentType, TestSchema.TextV0Type]);
+    await client.addTypes([TestSchema$.Expando, TestSchema.DocumentType, TestSchema.TextV0Type, Feed.Feed]);
   };
 
   const createDocument = (): TestSchema.DocumentType => {

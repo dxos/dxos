@@ -2,22 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { type ComposableProps } from '@dxos/react-ui';
-import { composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { Form, type FormFieldMap, SelectField, omitId } from '@dxos/react-ui-form';
 
 import { Sequence } from '../../types';
 import { BRAINWAVE_PRESETS, SAMPLE_URLS } from '../../generator';
 
-export type SoundProps = ComposableProps<HTMLDivElement> & {
+export type SoundProps = {
   sequence: Sequence.Sequence;
   onUpdate: (sequence: Sequence.Sequence) => void;
 };
 
 /** Form editor for a single sequence layer. */
-export const Sound = forwardRef<HTMLDivElement, SoundProps>(({ sequence, onUpdate, ...props }, forwardedRef) => {
+export const Sound = composable<HTMLDivElement, SoundProps>(({ sequence, onUpdate, ...props }, forwardedRef) => {
   const schema = useMemo(() => omitId(Sequence.Sequence), []);
 
   // Custom field map to render the source.type discriminator as a select.
@@ -75,7 +74,7 @@ export const Sound = forwardRef<HTMLDivElement, SoundProps>(({ sequence, onUpdat
   );
 
   return (
-    <div {...composableProps<HTMLDivElement>(props)} ref={forwardedRef}>
+    <div {...composableProps(props)} ref={forwardedRef}>
       <Form.Root<Omit<Sequence.Sequence, 'id'>>
         key={`${sequence.id}-${sequence.source.type}-${sequence.source.type === 'generator' ? sequence.source.preset : sequence.source.sample}`}
         schema={schema}

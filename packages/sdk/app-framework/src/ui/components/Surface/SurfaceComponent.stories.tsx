@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react';
 
 import { faker } from '@dxos/random';
-import { List, ListItem, Toolbar } from '@dxos/react-ui';
+import { List, ListItem, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 
@@ -105,13 +105,15 @@ const DefaultStory = () => {
   }, [ref]);
 
   return (
-    <div className='flex flex-col h-full overflow-hidden'>
-      <Toolbar.Root>
-        <Toolbar.Button onClick={handleAdd}>Add</Toolbar.Button>
-        <Toolbar.Button onClick={handleSelect}>Pick</Toolbar.Button>
-        <Toolbar.Button onClick={handleError}>Error</Toolbar.Button>
-      </Toolbar.Root>
-      <div className='grid grid-cols-2 h-full gap-4 overflow-hidden'>
+    <Panel.Root>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <Toolbar.Button onClick={handleAdd}>Add</Toolbar.Button>
+          <Toolbar.Button onClick={handleSelect}>Pick</Toolbar.Button>
+          <Toolbar.Button onClick={handleError}>Error</Toolbar.Button>
+        </Toolbar.Root>
+      </Panel.Toolbar>
+      <Panel.Content className='grid grid-cols-2 h-full gap-4 overflow-hidden'>
         <SurfaceComponent role='item' data={selected ? { id: selected } : undefined} limit={1} ref={ref} />
         <div className='overflow-y-auto h-full'>
           <List>
@@ -122,8 +124,8 @@ const DefaultStory = () => {
             ))}
           </List>
         </div>
-      </div>
-    </div>
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

@@ -50,7 +50,7 @@ const projectorTypes: Record<ProjectorType, Factory> = {
   relational: GraphRelationalProjector as Factory,
 };
 
-type StoryProps = GraphProps & {
+type DefaultStoryProps = GraphProps & {
   debug?: boolean;
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
@@ -73,7 +73,7 @@ const DefaultStory = ({
   projectorType: _projectorType = 'force',
   projectorOptions,
   ...props
-}: StoryProps) => {
+}: DefaultStoryProps) => {
   const graphRef = useRef<GraphController | null>(null);
   const context = useRef<SVGContext>(null);
   const registry = useContext(RegistryContext);

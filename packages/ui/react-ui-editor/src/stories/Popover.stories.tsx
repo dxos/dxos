@@ -44,9 +44,9 @@ const placeholder = (trigger: string[]) => {
   return Domino.of('div').children(pressEl, ...triggerEls, forCommandsEl).root;
 };
 
-type StoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
+type DefaultStoryProps = Omit<UseEditorMenuProps, 'viewRef'> & { text: string };
 
-const DefaultStory = ({ text, ...props }: StoryProps) => {
+const DefaultStory = ({ text, ...props }: DefaultStoryProps) => {
   const [controller, setController] = useState<EditorController | null>(null);
   const { groupsRef, extension, ...menuProps } = useEditorMenu(props);
 
@@ -57,7 +57,7 @@ const DefaultStory = ({ text, ...props }: StoryProps) => {
   );
 };
 
-const LinkStory = (args: StoryProps) => {
+const LinkStory = (args: DefaultStoryProps) => {
   const { space } = useClientStory();
 
   const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(

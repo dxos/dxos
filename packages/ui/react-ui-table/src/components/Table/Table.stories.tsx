@@ -119,7 +119,7 @@ const DefaultStory = () => {
 
   return (
     <div className='grow grid grid-cols-[1fr_350px]'>
-      <TableComponent.Root>
+      <TableComponent.Root ref={tableRef}>
         <Panel.Root>
           <Panel.Toolbar asChild>
             <TableComponent.Toolbar
@@ -129,8 +129,7 @@ const DefaultStory = () => {
             />
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <TableComponent.Main
-              ref={tableRef}
+            <TableComponent.Content
               schema={schema}
               model={model}
               presentation={presentation}
@@ -152,7 +151,7 @@ const DefaultStory = () => {
   );
 };
 
-type StoryProps = { rows?: number };
+type DefaultStoryProps = { rows?: number };
 
 //
 // Story definitions.
@@ -252,7 +251,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
   ),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.contact-with-array-of-emails',
+    typename: 'org.dxos.type.contactWithArrayOfEmails',
     version: '0.1.0',
   }),
 );
@@ -287,7 +286,7 @@ export const ArrayOfObjects: StoryObj = {
   },
 };
 
-export const Tags: Meta<StoryProps> = {
+export const Tags: Meta<DefaultStoryProps> = {
   title: 'ui/react-ui-table/Table',
   render: DefaultStory,
   decorators: [

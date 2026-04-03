@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, forwardRef } from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import {
   Button,
   type ButtonProps,
-  ComposableProps,
   Input,
   type Label,
   ScrollArea,
@@ -15,7 +14,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -40,16 +39,14 @@ const styles = {
 // Root
 //
 
-type SettingsRootProps = ComposableProps<HTMLDivElement>;
-
-const SettingsRoot = forwardRef<HTMLDivElement, SettingsRootProps>(({ children, ...props }, forwardedRef) => {
+const SettingsRoot = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { className, ...composedProps } = composableProps(props);
   return (
     <ScrollArea.Root
       {...composedProps}
       className={mx('dx-document', className)}
       orientation='vertical'
-      margin
+      centered
       ref={forwardedRef}
     >
       <ScrollArea.Viewport classNames='p-trim-md'>{children}</ScrollArea.Viewport>
@@ -124,7 +121,7 @@ SettingsGroup.displayName = SETTINGS_GROUP_NAME;
 //
 
 const SettingsFrame = ({ children }: SettingsGroupProps) => (
-  <div role='none' className='p-trim-md border border-separator rounded-md'>
+  <div role='none' className='flex flex-col gap-3 p-trim-md border border-separator rounded-md'>
     {children}
   </div>
 );

@@ -76,7 +76,7 @@ export const MessageArticle = ({ role, subject: message, mailbox, attendableId }
         <Panel.Content asChild>
           <Message.Viewport role={role}>
             <Message.Header onContactCreate={handleContactCreate} />
-            <Message.Content />
+            <Message.Body />
           </Message.Viewport>
         </Panel.Content>
       </Panel.Root>

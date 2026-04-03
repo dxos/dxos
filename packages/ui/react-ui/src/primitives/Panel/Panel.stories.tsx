@@ -5,14 +5,16 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Input, ScrollArea, Toolbar } from '../../components';
+import { composable, composableProps } from '@dxos/ui-theme';
+
+import { Input, ScrollArea, ScrollAreaRootProps, Toolbar } from '../../components';
 import { withLayout, withTheme } from '../../testing';
 
 import { Panel } from './Panel';
 
-const List = () => {
+const List = composable<HTMLDivElement, ScrollAreaRootProps>((props, forwardedRef) => {
   return (
-    <ScrollArea.Root margin role='list'>
+    <ScrollArea.Root centered {...composableProps(props, { role: 'list' })} ref={forwardedRef}>
       <ScrollArea.Viewport>
         {Array.from({ length: 100 }).map((_, i) => (
           <div key={i} role='listitem' className='p-1 hover:bg-hover-surface'>
@@ -22,7 +24,7 @@ const List = () => {
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
-};
+});
 
 const DefaultStory = () => {
   return (

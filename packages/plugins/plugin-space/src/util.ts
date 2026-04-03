@@ -19,9 +19,7 @@ const PERSONAL_SPACE_LABEL: Label = ['personal space label', META_NS];
 const UNNAMED_SPACE_LABEL: Label = ['unnamed space label', META_NS];
 
 export const SPACES = `${meta.id}-spaces`;
-export const COMPOSER_SPACE_LOCK = `${meta.id}.lock`;
-// TODO(wittjosiah): Remove.
-export const SHARED = 'shared-spaces';
+export { SHARED } from './types';
 
 //
 // Helpers

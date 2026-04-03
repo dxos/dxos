@@ -19,6 +19,7 @@ import {
   getSchemaDXN,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
+import { Context } from '@dxos/context';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -262,7 +263,7 @@ describe('Reactive Object with ECHO database', () => {
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
     const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-    const root = await peer.host.createSpaceRoot(spaceKey);
+    const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
     await peer.client.graph.schemaRegistry.register([TestSchema.Example]);
 
     let id: string;
@@ -296,7 +297,7 @@ describe('Reactive Object with ECHO database', () => {
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
     const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-    const root = await peer.host.createSpaceRoot(spaceKey);
+    const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
     let id: string;
     {
@@ -728,7 +729,7 @@ describe('Reactive Object with ECHO database', () => {
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-      const root = await peer.host.createSpaceRoot(spaceKey);
+      const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
       let id: string;
       {

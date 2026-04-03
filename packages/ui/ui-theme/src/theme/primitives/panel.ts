@@ -6,41 +6,35 @@ import { type ComponentFunction } from '@dxos/ui-types';
 
 import { mx } from '../../util';
 
-export type PanelStyleProps = {};
+type Size = 'lg' | 'md' | 'sm';
+
+export type PanelStyleProps = {
+  size?: Size;
+};
+
+const sizes: Record<Size, string> = {
+  lg: 'h-(--dx-topbar-size)',
+  md: 'h-(--dx-toolbar-size)',
+  sm: 'h-(--dx-statusbar-size)',
+};
 
 const panelRoot: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
   mx(
     // prettier-ignore
-    'h-full w-full grid grid-cols-[100%] overflow-hidden',
+    'dx-container grid grid-cols-[100%] overflow-hidden',
     // Add uncategorized children to content slot.
     '[&>*:not([data-slot])]:[grid-area:content]',
     ...etc,
   );
 
-const panelToolbar: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
-  mx(
-    // prettier-ignore
-    '[grid-area:toolbar]',
-    'h-(--dx-toolbar-size)', // TODO(burdon): Option.
-    '[.dx-main-mobile-layout_&]:px-3',
-    // 'border-b border-subdued-separator relative',
-    ...etc,
-  );
+const panelToolbar: ComponentFunction<PanelStyleProps> = ({ size = 'md' }, ...etc) =>
+  mx('[grid-area:toolbar]', 'flex shrink-0', sizes[size], ...etc);
 
 const panelContent: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
-  mx(
-    // prettier-ignore
-    '[grid-area:content] overflow-hidden min-h-0',
-    ...etc,
-  );
+  mx('[grid-area:content] overflow-hidden min-h-0', ...etc);
 
-const panelStatusbar: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
-  mx(
-    // prettier-ignore
-    '[grid-area:statusbar]',
-    'h-(--dx-statusbar-size)', // TODO(burdon): Option.
-    ...etc,
-  );
+const panelStatusbar: ComponentFunction<PanelStyleProps> = ({ size = 'md' }, ...etc) =>
+  mx('[grid-area:statusbar]', 'flex shrink-0', sizes[size], ...etc);
 
 export const panelTheme = {
   root: panelRoot,

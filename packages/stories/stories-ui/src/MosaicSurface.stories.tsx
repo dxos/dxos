@@ -27,7 +27,7 @@ const generator = faker as any as ValueGenerator;
 
 faker.seed(999);
 
-type StoryProps = {
+type DefaultStoryProps = {
   columns?: number;
   debug?: boolean;
 };
@@ -50,7 +50,7 @@ const createColumns = (count: number, db: Database.Database) =>
     return col;
   });
 
-const DefaultStory = ({ columns: columnsProp = 1, debug = false }: StoryProps) => {
+const DefaultStory = ({ columns: columnsProp = 1, debug = false }: DefaultStoryProps) => {
   const [space] = useSpaces();
   const db = space.db;
   const registry = useContext(RegistryContext);
@@ -113,9 +113,9 @@ const meta = {
           types: [TestColumn, TestItem, Organization.Organization, Person.Person, Pipeline.Pipeline],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
+              const { personalSpace } = yield* initializeIdentity(client);
 
-              const factory = createObjectFactory(defaultSpace.db, generator);
+              const factory = createObjectFactory(personalSpace.db, generator);
               yield* Effect.promise(() =>
                 factory([
                   { type: Organization.Organization, count: 20 },
