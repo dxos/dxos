@@ -353,7 +353,7 @@ catalog:
   d3-force: ~3.0.0
   d3-geo-projection: ^4.0.0
   d3-hexbin: ^0.2.2
-  date-fns: ^3.3.1
+  date-fns: ^3.6.0
   debounce: ^2.2.0
   debug: ^4.3.4
   deep-equal: ^2.2.3
@@ -486,6 +486,7 @@ catalog:
   once: ^1.4.0
   openapi-types: ^12.1.3
   oxc-resolver: ^11.6.0
+  papaparse: ^5.5.3
   parjs: ^1.3.9
   parsimmon: ^1.18.1
   partykit: ^0.0.103
@@ -633,7 +634,7 @@ catalog:
   ws: ^8.17.1
   wtfnode: ^0.10.0
   xstate: ^4.37.0
-  yaml: ^2.7.0
+  yaml: ^2.8.2
   yargs: ~16.2.0
   youtube-caption-extractor: ^1.9.1
   youtube-transcript: ^1.2.1
