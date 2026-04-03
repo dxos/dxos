@@ -19,7 +19,7 @@ export default InstallFunction.pipe(
       const functionsService = FunctionsServiceClient.fromClient(client);
       const deployed = yield* Effect.promise(() => functionsService.query(Context.default()));
 
-      const fn = deployed.findLast((fn) => fn.key === key);
+      const fn = deployed.findLast((entry) => entry.key === key);
       if (!fn) {
         return yield* Effect.fail(new Error(`No deployed function found with key: ${key}`));
       }
@@ -35,16 +35,19 @@ export default InstallFunction.pipe(
         space.db.query(Query.type(Operation.PersistentOperation, { key })).run(),
       );
 
+      let installed: Operation.PersistentOperation;
       if (existingFunctions.length > 0) {
+        installed = existingFunctions[0];
         for (const existing of existingFunctions) {
           Operation.setFrom(existing, fn);
         }
       } else {
-        space.db.add(Obj.clone(fn));
+        installed = Obj.clone(fn);
+        space.db.add(installed);
       }
 
       return {
-        key: fn.key,
+        function: Obj.getDXN(installed).toString(),
         name: fn.name ?? 'Unnamed function',
         version: fn.version ?? '0.0.0',
       };

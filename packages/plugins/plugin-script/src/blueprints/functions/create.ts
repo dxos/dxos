@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Obj } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { Script } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { CollectionModel } from '@dxos/schema';
@@ -23,11 +23,19 @@ export default Create.pipe(
         }
       }
 
-      const object = Script.make({ name, source: scriptSource });
-      yield* CollectionModel.add({ object });
+      const script = Script.make({ name, source: scriptSource });
+      const { db } = yield* Database.Service;
+      db.add(script);
+
+      const fn = Obj.make(Operation.PersistentOperation, {
+        name,
+        version: '0.0.0',
+        source: Ref.make(script),
+      });
+      yield* CollectionModel.add({ object: fn });
 
       return {
-        id: Obj.getDXN(object).toString(),
+        function: Obj.getDXN(fn).toString(),
       };
     }),
   ),

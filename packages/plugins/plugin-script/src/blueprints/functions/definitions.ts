@@ -14,6 +14,10 @@ const FunctionRef = Ref.Ref(Operation.PersistentOperation).annotations({
   description: 'The ID of the function.',
 });
 
+const FunctionId = Schema.String.annotations({
+  description: 'The ID of the function. Can be passed as the function parameter to other operations.',
+});
+
 const AVAILABLE_PACKAGES = trim`
   Scripts run in an Edge runtime (Cloudflare Workers) with the following pre-bundled packages:
 
@@ -55,23 +59,21 @@ export const Create = Operation.make({
   meta: {
     key: 'org.dxos.function.script.create',
     name: 'Create',
-    description: `Creates a new script with TypeScript source code and adds it to the space. ${AVAILABLE_PACKAGES}`,
+    description: `Creates a new function with TypeScript source code and adds it to the space. ${AVAILABLE_PACKAGES}`,
   },
   input: Schema.Struct({
     name: Schema.String.annotations({
-      description: 'Name of the script.',
+      description: 'Name of the function.',
     }),
     source: Schema.optional(Schema.String).annotations({
-      description: 'TypeScript source code for the script.',
+      description: 'TypeScript source code for the function.',
     }),
     templateId: Schema.optional(Schema.String).annotations({
       description: 'ID of a template to use as the initial source.',
     }),
   }),
   output: Schema.Struct({
-    id: Schema.String.annotations({
-      description: 'The DXN of the created script.',
-    }),
+    function: FunctionId,
   }),
   services: [Database.Service],
 });
@@ -80,7 +82,7 @@ export const Read = Operation.make({
   meta: {
     key: 'org.dxos.function.script.read',
     name: 'Read',
-    description: 'Reads the source code and metadata of a script.',
+    description: 'Reads the source code and metadata of a function.',
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -95,7 +97,7 @@ export const Read = Operation.make({
 
 const Edit = Schema.Struct({
   oldString: Schema.String.annotations({
-    description: 'The text to find in the script source.',
+    description: 'The text to find in the source.',
   }),
   newString: Schema.String.annotations({
     description: 'The text to replace it with.',
@@ -109,24 +111,22 @@ export const Update = Operation.make({
   meta: {
     key: 'org.dxos.function.script.update',
     name: 'Update',
-    description: 'Updates the source code or metadata of a script.',
+    description: 'Updates the source code or metadata of a function.',
   },
   input: Schema.Struct({
     function: FunctionRef,
     name: Schema.optional(Schema.String).annotations({
-      description: 'New name for the script.',
+      description: 'New name for the function.',
     }),
     description: Schema.optional(Schema.String).annotations({
-      description: 'New description for the script.',
+      description: 'New description for the function.',
     }),
     edits: Schema.optional(Schema.Array(Edit)).annotations({
-      description: 'Edits to apply to the script source. Each edit finds oldString and replaces it with newString.',
+      description: 'Edits to apply to the source. Each edit finds oldString and replaces it with newString.',
     }),
   }),
   output: Schema.Struct({
-    id: Schema.String.annotations({
-      description: 'The DXN of the updated script.',
-    }),
+    function: FunctionId,
   }),
   services: [Database.Service],
 });
@@ -135,7 +135,7 @@ export const Delete = Operation.make({
   meta: {
     key: 'org.dxos.function.script.delete',
     name: 'Delete',
-    description: 'Deletes a script from the space.',
+    description: 'Deletes a function and its source from the space.',
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -148,15 +148,13 @@ export const Deploy = Operation.make({
   meta: {
     key: 'org.dxos.function.script.deploy',
     name: 'Deploy',
-    description: 'Deploys a script to the Edge runtime.',
+    description: 'Deploys a function to the Edge runtime.',
   },
   input: Schema.Struct({
     function: FunctionRef,
   }),
   output: Schema.Struct({
-    functionId: Schema.String.annotations({
-      description: 'The ID of the deployed function.',
-    }),
+    function: FunctionId,
     functionUrl: Schema.optional(Schema.String).annotations({
       description: 'The URL of the deployed function.',
     }),
@@ -209,7 +207,7 @@ export const InspectInvocations = Operation.make({
   meta: {
     key: 'org.dxos.function.script.inspect-invocations',
     name: 'InspectInvocations',
-    description: 'Queries the invocation trace feed for a deployed script, returning its invocation history.',
+    description: 'Queries the invocation trace feed for a function, returning its invocation history.',
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -219,10 +217,10 @@ export const InspectInvocations = Operation.make({
   }),
   output: Schema.Struct({
     invocations: Schema.Array(InvocationSpanSchema).annotations({
-      description: 'List of invocation spans for the script, most recent first.',
+      description: 'List of invocation spans, most recent first.',
     }),
     total: Schema.Number.annotations({
-      description: 'Total number of invocations found for this script.',
+      description: 'Total number of invocations found.',
     }),
   }),
   services: [Database.Service, QueueService],
@@ -230,7 +228,7 @@ export const InspectInvocations = Operation.make({
 
 const DeployedFunctionSchema = Schema.Struct({
   key: Schema.optional(Schema.String).annotations({
-    description: 'Unique key identifying the function.',
+    description: 'Unique key identifying the function. Pass to InstallFunction to install it.',
   }),
   name: Schema.String.annotations({
     description: 'Display name of the function.',
@@ -250,7 +248,7 @@ export const QueryDeployedFunctions = Operation.make({
   meta: {
     key: 'org.dxos.function.script.query-deployed',
     name: 'QueryDeployedFunctions',
-    description: 'Lists all functions deployed to the EDGE runtime.',
+    description: 'Lists all functions deployed to the EDGE runtime. Use InstallFunction to add one to the space.',
   },
   input: Schema.Void,
   output: Schema.Struct({
@@ -266,17 +264,15 @@ export const InstallFunction = Operation.make({
     key: 'org.dxos.function.script.install',
     name: 'InstallFunction',
     description:
-      'Installs a deployed EDGE function into the current space by key. Updates the function if it already exists.',
+      'Installs a deployed EDGE function into the current space by key. The returned function ID can be passed directly to Invoke.',
   },
   input: Schema.Struct({
     key: Schema.String.annotations({
-      description: 'The unique key of the deployed function to install.',
+      description: 'The unique key of the deployed function to install (from QueryDeployedFunctions).',
     }),
   }),
   output: Schema.Struct({
-    key: Schema.optional(Schema.String).annotations({
-      description: 'Key of the installed function.',
-    }),
+    function: FunctionId,
     name: Schema.String.annotations({
       description: 'Name of the installed function.',
     }),

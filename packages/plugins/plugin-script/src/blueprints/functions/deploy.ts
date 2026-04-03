@@ -58,11 +58,11 @@ export default Deploy.pipe(
         draft.changed = false;
       });
 
-      const functionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));
+      const edgeFunctionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));
       return {
-        functionId: functionId ?? '',
-        functionUrl: functionId
-          ? `${client.config.values.runtime?.services?.edge?.url ?? ''}/functions/${functionId}`
+        function: Obj.getDXN(loaded).toString(),
+        functionUrl: edgeFunctionId
+          ? `${client.config.values.runtime?.services?.edge?.url ?? ''}/functions/${edgeFunctionId}`
           : undefined,
       };
     }),
