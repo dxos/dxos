@@ -21,10 +21,11 @@ catalog:
   '@atlaskit/pragmatic-drag-and-drop-hitbox': 1.1.0
   '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator': 3.2.10
   '@automerge/automerge': 3.2.3
-  '@automerge/automerge-repo': 2.6.0-subduction.4
-  '@automerge/automerge-repo-network-broadcastchannel': 2.5.1
-  '@automerge/automerge-repo-network-websocket': 2.5.1
-  '@automerge/automerge-repo-storage-indexeddb': 2.5.1
+  '@automerge/automerge-repo': 2.6.0-subduction.8
+  '@automerge/automerge-subduction': 0.6.4
+  '@automerge/automerge-repo-network-broadcastchannel': 2.6.0-subduction.8
+  '@automerge/automerge-repo-network-websocket': 2.6.0-subduction.8
+  '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.8
   '@babel/core': ^7.18.13
   '@babel/runtime': ^7.9.6
   '@bufbuild/buf': 1.65.0
@@ -713,7 +714,6 @@ overrides:
   ws: '>=8.17.1'
 
 patchedDependencies:
-  '@automerge/automerge-repo@2.5.1': patches/@automerge__automerge-repo@2.5.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
 

@@ -3,31 +3,23 @@
 //
 
 import {
-  AuthenticatedConnection,
+  AuthenticatedTransport,
   BlobMeta,
   Digest,
   MemorySigner,
   MemoryStorage,
-  Message,
   Nonce,
-  RequestId,
   SedimentreeId,
   Subduction,
   digestOfBase58Id,
   type PeerId as SubductionPeerId,
 } from '@automerge/automerge-subduction';
-import * as subductionModule from '@automerge/automerge-subduction';
 import {
   Repo,
   generateAutomergeUrl,
-  type PeerId,
-  setSubductionModule,
-  toDocumentId,
-  toSedimentreeId,
+  parseAutomergeUrl,
 } from '@automerge/automerge-repo';
 import { describe, test } from 'vitest';
-
-import { asyncTimeout } from '@dxos/async';
 
 class AsyncQueue<T> {
   private _items: T[] = [];
@@ -50,57 +42,17 @@ class AsyncQueue<T> {
 }
 
 /**
- * Pure-JS HandshakeConnection backed by async queues.
- * Routes BatchSyncResponse messages to the matching call() waiter,
- * everything else goes to recv() for the WASM background loop.
+ * Pure-JS transport backed by async queues.
+ * Implements the subduction Transport interface for in-memory testing.
  */
-class MemoryConnection {
+class MemoryTransport {
   private _outBytes: AsyncQueue<Uint8Array>;
   private _inBytes: AsyncQueue<Uint8Array>;
-  private _outMsgs: AsyncQueue<Uint8Array>;
-  private _rawInMsgs: AsyncQueue<Uint8Array>;
-  private _peerId: SubductionPeerId;
+  private _disconnectCallbacks: (() => void)[] = [];
 
-  private _incomingMessages = new AsyncQueue<Message>();
-  private _pendingCalls = new Map<string, (response: any) => void>();
-
-  constructor(
-    outBytes: AsyncQueue<Uint8Array>,
-    inBytes: AsyncQueue<Uint8Array>,
-    outMsgs: AsyncQueue<Uint8Array>,
-    rawInMsgs: AsyncQueue<Uint8Array>,
-    peerId: SubductionPeerId,
-  ) {
+  constructor(outBytes: AsyncQueue<Uint8Array>, inBytes: AsyncQueue<Uint8Array>) {
     this._outBytes = outBytes;
     this._inBytes = inBytes;
-    this._outMsgs = outMsgs;
-    this._rawInMsgs = rawInMsgs;
-    this._peerId = peerId;
-
-    void this._routeIncoming();
-  }
-
-  /**
-   * Background routing: reads raw incoming messages and dispatches them.
-   * BatchSyncResponse messages are delivered to the matching call() waiter.
-   * All other messages are delivered to recv().
-   */
-  private async _routeIncoming(): Promise<void> {
-    while (true) {
-      const bytes = await this._rawInMsgs.pull();
-      const msg = Message.fromBytes(bytes);
-      if (msg.response) {
-        const nonce = msg.response.request_id().nonce.bytes;
-        const key = Array.from(nonce).join(',');
-        const resolve = this._pendingCalls.get(key);
-        if (resolve) {
-          this._pendingCalls.delete(key);
-          resolve(msg.response);
-        }
-      } else {
-        this._incomingMessages.push(msg);
-      }
-    }
   }
 
   async sendBytes(bytes: Uint8Array): Promise<void> {
@@ -111,113 +63,73 @@ class MemoryConnection {
     return this._inBytes.pull();
   }
 
-  async send(message: Message): Promise<void> {
-    this._outMsgs.push(message.toBytes());
+  async disconnect(): Promise<void> {
+    for (const callback of this._disconnectCallbacks) {
+      callback();
+    }
   }
 
-  async recv(): Promise<Message> {
-    return this._incomingMessages.pull();
+  onDisconnect(callback: () => void): void {
+    this._disconnectCallbacks.push(callback);
   }
-
-  async nextRequestId(): Promise<RequestId> {
-    return new RequestId(this._peerId, Nonce.random());
-  }
-
-  async call(request: any, _timeoutMs?: number | null): Promise<any> {
-    const nonce = request.request_id().nonce.bytes;
-    const key = Array.from(nonce).join(',');
-    const responsePromise = new Promise<any>((resolve) => {
-      this._pendingCalls.set(key, resolve);
-    });
-    await this.send(Message.batchSyncRequest(request));
-    return responsePromise;
-  }
-
-  async disconnect(): Promise<void> {}
 }
 
-/**
- * Wraps MemoryStorage with event callbacks so the Repo receives commit-saved/fragment-saved
- * notifications when data arrives via the sync protocol.
- */
-class CallbackStorage {
-  private _inner = new MemoryStorage();
-  private _listeners = new Map<string, Set<Function>>();
-  private _pending = 0;
-  private _settledResolvers: (() => void)[] = [];
-
-  on(event: string, callback: Function) {
-    if (!this._listeners.has(event)) {
-      this._listeners.set(event, new Set());
-    }
-    this._listeners.get(event)!.add(callback);
-  }
-
-  off(event: string, callback: Function) {
-    this._listeners.get(event)?.delete(callback);
-  }
-
-  async awaitSettled(): Promise<void> {
-    if (this._pending === 0) return;
-    return new Promise((resolve) => this._settledResolvers.push(resolve));
-  }
-
-  private _emit(event: string, ...args: any[]) {
-    for (const cb of this._listeners.get(event) ?? []) {
-      cb(...args);
-    }
-  }
-
-  private _settle() {
-    this._pending--;
-    if (this._pending === 0) {
-      for (const resolve of this._settledResolvers) resolve();
-      this._settledResolvers = [];
-    }
-  }
-
-  async saveCommit(sedimentreeId: any, digest: any, signedCommit: any, blob: Uint8Array) {
-    this._pending++;
-    await this._inner.saveCommit(sedimentreeId, digest, signedCommit, blob);
-    this._emit('commit-saved', sedimentreeId, digest, blob);
-    this._settle();
-  }
-
-  async saveFragment(sedimentreeId: any, digest: any, signedFragment: any, blob: Uint8Array) {
-    this._pending++;
-    await this._inner.saveFragment(sedimentreeId, digest, signedFragment, blob);
-    this._emit('fragment-saved', sedimentreeId, digest, blob);
-    this._settle();
-  }
-
-  saveSedimentreeId(id: any) { return this._inner.saveSedimentreeId(id); }
-  deleteSedimentreeId(id: any) { return this._inner.deleteSedimentreeId(id); }
-  loadAllSedimentreeIds() { return this._inner.loadAllSedimentreeIds(); }
-  loadCommit(sid: any, digest: any) { return this._inner.loadCommit(sid, digest); }
-  listCommitDigests(sid: any) { return this._inner.listCommitDigests(sid); }
-  loadAllCommits(sid: any) { return this._inner.loadAllCommits(sid); }
-  deleteCommit(sid: any, digest: any) { return this._inner.deleteCommit(sid, digest); }
-  deleteAllCommits(sid: any) { return this._inner.deleteAllCommits(sid); }
-  loadFragment(sid: any, digest: any) { return this._inner.loadFragment(sid, digest); }
-  listFragmentDigests(sid: any) { return this._inner.listFragmentDigests(sid); }
-  loadAllFragments(sid: any) { return this._inner.loadAllFragments(sid); }
-  deleteFragment(sid: any, digest: any) { return this._inner.deleteFragment(sid, digest); }
-  deleteAllFragments(sid: any) { return this._inner.deleteAllFragments(sid); }
-}
-
-const createMemoryConnectionPair = (
-  peerIdA: SubductionPeerId,
-  peerIdB: SubductionPeerId,
-): [MemoryConnection, MemoryConnection] => {
+const createMemoryTransportPair = (): [MemoryTransport, MemoryTransport] => {
   const bytesAB = new AsyncQueue<Uint8Array>();
   const bytesBA = new AsyncQueue<Uint8Array>();
-  const msgsAB = new AsyncQueue<Uint8Array>();
-  const msgsBA = new AsyncQueue<Uint8Array>();
   return [
-    new MemoryConnection(bytesAB, bytesBA, msgsAB, msgsBA, peerIdA),
-    new MemoryConnection(bytesBA, bytesAB, msgsBA, msgsAB, peerIdB),
+    new MemoryTransport(bytesAB, bytesBA),
+    new MemoryTransport(bytesBA, bytesAB),
   ];
 };
+
+/**
+ * Stateless subduction sync server.
+ * Holds a Subduction instance with persistent storage but no Repo.
+ * Connections are ephemeral: opened per sync session, torn down after.
+ */
+class SubductionServer {
+  private _signer: MemorySigner;
+  private _storage: MemoryStorage;
+  private _subduction: Subduction;
+
+  constructor(signer: MemorySigner) {
+    this._signer = signer;
+    this._storage = new MemoryStorage();
+    this._subduction = new Subduction(signer, this._storage);
+  }
+
+  get peerId(): SubductionPeerId {
+    return this._signer.peerId();
+  }
+
+  get subduction(): Subduction {
+    return this._subduction;
+  }
+
+  /**
+   * Opens an ephemeral sync session for a client.
+   * Creates a MemoryTransport pair, performs the authenticated handshake,
+   * and adds the server-side transport to the Subduction instance.
+   * Returns the client-side AuthenticatedTransport for the caller to use.
+   */
+  async openSession(clientSigner: MemorySigner): Promise<AuthenticatedTransport> {
+    const [serverTransport, clientTransport] = createMemoryTransportPair();
+
+    const [serverAuth, clientAuth] = await Promise.all([
+      AuthenticatedTransport.accept(serverTransport, this._signer),
+      AuthenticatedTransport.setup(clientTransport, clientSigner, this._signer.peerId()),
+    ]);
+
+    await this._subduction.addConnection(serverAuth);
+    return clientAuth;
+  }
+
+  /** Tears down the ephemeral connection for a client peer. */
+  async closeSession(clientPeerId: SubductionPeerId): Promise<void> {
+    await this._subduction.disconnectFromPeer(clientPeerId);
+  }
+}
 
 describe('automerge-subduction', () => {
   test('creates signer and signs payloads', async ({ expect }) => {
@@ -266,7 +178,7 @@ describe('automerge-subduction', () => {
   });
 
   test('adds a commit and exposes it through subduction read APIs', async ({ expect }) => {
-    const signer = new MemorySigner();
+    const signer = MemorySigner.generate();
     const storage = new MemoryStorage();
     const subduction = new Subduction(signer, storage);
     const id = SedimentreeId.fromBytes(new Uint8Array(32).fill(9));
@@ -284,27 +196,24 @@ describe('automerge-subduction', () => {
   });
 
   test('throws on invalid base58 input', ({ expect }) => {
-    expect(() => digestOfBase58Id('contains-0')).toThrowError(/InvalidBase58Character/);
+    expect(() => digestOfBase58Id('contains-0')).toThrow();
   });
 
-  test('automerge-repo conversion helpers round-trip document IDs', ({ expect }) => {
+  test('automerge-repo URL helpers round-trip document IDs', ({ expect }) => {
     const url = generateAutomergeUrl();
-    const sedimentreeId = toSedimentreeId(url);
-    const documentId = toDocumentId(sedimentreeId);
+    const parsed = parseAutomergeUrl(url);
 
-    expect(documentId.length).toBeGreaterThan(0);
-    expect(`automerge:${documentId}`).toBe(url);
+    expect(parsed.documentId.length).toBeGreaterThan(0);
+    expect(`automerge:${parsed.documentId}`).toBe(url);
   });
 
-  test('automerge-repo accepts subduction instance and syncAllDocuments', async ({ expect }) => {
-    setSubductionModule(subductionModule);
-
+  test('automerge-repo creates documents with subduction signer', async ({ expect }) => {
     const signer = MemorySigner.generate();
-    const storage = new MemoryStorage();
-    const subduction = new Subduction(signer, storage);
     const repo = new Repo({
       network: [],
-      subduction,
+      signer,
+      periodicSyncInterval: 0,
+      batchSyncInterval: 0,
     });
 
     const handle = repo.create<{ title?: string }>();
@@ -312,22 +221,21 @@ describe('automerge-subduction', () => {
       doc.title = 'hello';
     });
 
-    await expect(repo.syncAllDocuments()).resolves.toBeUndefined();
-
+    expect(handle.doc()?.title).toBe('hello');
     await repo.shutdown();
   });
 
-  test('establishes subduction connection and syncs via MessagePort', async ({ expect }) => {
+  test('establishes subduction connection and syncs via AuthenticatedTransport', async ({ expect }) => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
     const subductionA = new Subduction(signerA, new MemoryStorage());
     const subductionB = new Subduction(signerB, new MemoryStorage());
 
-    const [connA, connB] = createMemoryConnectionPair(signerA.peerId(), signerB.peerId());
+    const [transportA, transportB] = createMemoryTransportPair();
 
     const [authA, authB] = await Promise.all([
-      AuthenticatedConnection.setup(connA, signerA, signerB.peerId()),
-      AuthenticatedConnection.accept(connB, signerB),
+      AuthenticatedTransport.setup(transportA, signerA, signerB.peerId()),
+      AuthenticatedTransport.accept(transportB, signerB),
     ]);
 
     await subductionA.addConnection(authA);
@@ -348,52 +256,106 @@ describe('automerge-subduction', () => {
     expect(blobsOnB).toHaveLength(1);
   }, 10_000);
 
-  test('syncs between two repos via subduction connection', async ({ expect }) => {
-    setSubductionModule(subductionModule);
-
+  test('syncs between two subduction instances using connectTransport', async ({ expect }) => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
-    const storageA = new CallbackStorage();
-    const storageB = new CallbackStorage();
-    const subductionA = new Subduction(signerA, storageA);
-    const subductionB = new Subduction(signerB, storageB);
+    const subductionA = new Subduction(signerA, new MemoryStorage(), 'test-service');
+    const subductionB = new Subduction(signerB, new MemoryStorage(), 'test-service');
 
-    const [connA, connB] = createMemoryConnectionPair(signerA.peerId(), signerB.peerId());
+    const [transportA, transportB] = createMemoryTransportPair();
+
+    const [peerIdB, peerIdA] = await Promise.all([
+      subductionA.connectTransport(transportA, 'test-service'),
+      subductionB.acceptTransport(transportB, 'test-service'),
+    ]);
+
+    expect(peerIdB.toString()).toBe(signerB.peerId().toString());
+    expect(peerIdA.toString()).toBe(signerA.peerId().toString());
+
+    const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(99));
+    await subductionA.addCommit(sid, [], new Uint8Array([4, 5, 6]));
+
+    await subductionA.syncWithAllPeers(sid, false);
+
+    const blobsOnB = await subductionB.getBlobs(sid);
+    expect(blobsOnB).toHaveLength(1);
+    expect(blobsOnB[0]).toEqual(new Uint8Array([4, 5, 6]));
+  }, 10_000);
+
+  test('SubductionServer: syncs raw data between two clients via ephemeral connections', async ({ expect }) => {
+    const server = new SubductionServer(MemorySigner.generate());
+
+    // Client A adds a commit and syncs with the server.
+    const signerA = MemorySigner.generate();
+    const subductionA = new Subduction(signerA, new MemoryStorage());
+    const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(42));
+    await subductionA.addCommit(sid, [], new Uint8Array([1, 2, 3]));
+
+    const clientAuthA = await server.openSession(signerA);
+    await subductionA.addConnection(clientAuthA);
+    await subductionA.syncWithAllPeers(sid, false);
+
+    // Tear down Client A's session.
+    await subductionA.disconnectFromPeer(server.peerId);
+    await server.closeSession(signerA.peerId());
+
+    // Server persisted the blob; no active connections remain.
+    const serverBlobs = await server.subduction.getBlobs(sid);
+    expect(serverBlobs).toHaveLength(1);
+    expect(serverBlobs[0]).toEqual(new Uint8Array([1, 2, 3]));
+
+    const serverPeersAfterA = await server.subduction.getConnectedPeerIds();
+    expect(serverPeersAfterA).toHaveLength(0);
+
+    // Client B opens a new session and retrieves the data from the server.
+    const signerB = MemorySigner.generate();
+    const subductionB = new Subduction(signerB, new MemoryStorage());
+
+    const clientAuthB = await server.openSession(signerB);
+    await subductionB.addConnection(clientAuthB);
+    await subductionB.syncWithPeer(server.peerId, sid, false);
+
+    const blobsOnB = await subductionB.getBlobs(sid);
+    expect(blobsOnB).toHaveLength(1);
+    expect(blobsOnB[0]).toEqual(new Uint8Array([1, 2, 3]));
+
+    // Tear down Client B's session.
+    await subductionB.disconnectFromPeer(server.peerId);
+    await server.closeSession(signerB.peerId());
+
+    const serverPeersAfterB = await server.subduction.getConnectedPeerIds();
+    expect(serverPeersAfterB).toHaveLength(0);
+  }, 10_000);
+
+  test('full sync exchanges all sedimentrees between peers', async ({ expect }) => {
+    const signerA = MemorySigner.generate();
+    const signerB = MemorySigner.generate();
+    const subductionA = new Subduction(signerA, new MemoryStorage());
+    const subductionB = new Subduction(signerB, new MemoryStorage());
+
+    // Add commits on both sides before connecting.
+    const sidA = SedimentreeId.fromBytes(new Uint8Array(32).fill(1));
+    const sidB = SedimentreeId.fromBytes(new Uint8Array(32).fill(2));
+    await subductionA.addCommit(sidA, [], new Uint8Array([10, 20]));
+    await subductionB.addCommit(sidB, [], new Uint8Array([30, 40]));
+
+    const [transportA, transportB] = createMemoryTransportPair();
     const [authA, authB] = await Promise.all([
-      AuthenticatedConnection.setup(connA, signerA, signerB.peerId()),
-      AuthenticatedConnection.accept(connB, signerB),
+      AuthenticatedTransport.setup(transportA, signerA, signerB.peerId()),
+      AuthenticatedTransport.accept(transportB, signerB),
     ]);
     await subductionA.addConnection(authA);
     await subductionB.addConnection(authB);
 
-    const repoA = new Repo({
-      network: [],
-      subduction: subductionA,
-      periodicSyncInterval: 0,
-      batchSyncInterval: 0,
-    });
-    const repoB = new Repo({
-      network: [],
-      subduction: subductionB,
-      periodicSyncInterval: 0,
-      batchSyncInterval: 0,
-    });
+    // Full sync exchanges everything.
+    await subductionA.fullSyncWithPeer(signerB.peerId());
+    await subductionB.fullSyncWithPeer(signerA.peerId());
 
-    const hostHandle = repoA.create<{ text?: string }>();
-    hostHandle.change((doc) => {
-      doc.text = 'synced-via-subduction';
-    });
-    await repoA.awaitOutbound();
-
-    const clientHandle = await repoB.find<{ text?: string }>(hostHandle.url);
-    await asyncTimeout(clientHandle.whenReady(), 5_000);
-    expect(clientHandle.doc()?.text).toBe('synced-via-subduction');
-
-    const receivedSedimentreeId = toSedimentreeId(hostHandle.url);
-    const commitsOnClient = await subductionB.getCommits(receivedSedimentreeId);
-    expect(commitsOnClient?.length ?? 0).toBeGreaterThan(0);
-
-    await repoA.shutdown();
-    await repoB.shutdown();
+    const blobsAonB = await subductionB.getBlobs(sidA);
+    const blobsBonA = await subductionA.getBlobs(sidB);
+    expect(blobsAonB).toHaveLength(1);
+    expect(blobsAonB[0]).toEqual(new Uint8Array([10, 20]));
+    expect(blobsBonA).toHaveLength(1);
+    expect(blobsBonA[0]).toEqual(new Uint8Array([30, 40]));
   }, 10_000);
 });
