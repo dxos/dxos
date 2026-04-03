@@ -22,6 +22,7 @@ import * as Option from 'effect/Option';
 import type { Atom } from '@effect-atom/atom';
 import type { ObjectId } from '@dxos/protocols';
 import { assertArgument } from '@dxos/invariant';
+import * as Trace from '../Trace';
 
 //
 // Process.
@@ -83,7 +84,7 @@ export interface Callbacks<I, O, R> {
 /**
  * Services that are always available to all processes.
  */
-export type BaseServices = TracingService;
+export type BaseServices = TracingService | Trace.TraceService;
 
 export type ChildEvent<T> =
   | {
@@ -373,6 +374,24 @@ export interface Info {
     readonly outputCount: number;
   };
 }
+
+/**
+ * New process is spawned.
+ */
+export const SpawnedEvent = Trace.EventType('process.spawned', {
+  schema: Schema.Void,
+  isEphemeral: false,
+});
+
+/**
+ * Process has reached a terminal state.
+ */
+export const ExitedEvent = Trace.EventType('process.exited', {
+  schema: Schema.Struct({
+    outcome: Schema.Literal('succeeded', 'failed', 'terminated'),
+  }),
+  isEphemeral: false,
+});
 
 /**
  * Renders spawned processes as a forest: top-level rows use "- ", nested rows use ├── / └── / │.

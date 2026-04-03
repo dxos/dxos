@@ -22,6 +22,7 @@ import { TestDatabaseLayer } from '../testing';
 import * as ProcessManager from './ProcessManager';
 import * as StorageService from './StorageService';
 import { log } from '@dxos/log';
+import { Trace } from '@dxos/functions';
 
 //
 // Test services (for unit tests without full ECHO stack).
@@ -107,6 +108,7 @@ const TestLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
   Layer.provide(OperationHandlerSet.provide(handlers)),
   Layer.provide(TracingService.layerNoop),
   Layer.provideMerge(Registry.layer),
+  Layer.provide(Trace.layerNoop),
 );
 
 describe('ProcessManagerImpl', () => {

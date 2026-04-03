@@ -11,3 +11,4 @@ export * from './sdk';
 export * from './services';
 export * from './types';
 export * from './protocol';
+export * as Trace from './Trace';

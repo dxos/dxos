@@ -24,7 +24,7 @@ import {
 } from '@dxos/ai';
 import { type Blueprint } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
-import { type FunctionInvocationService, TracingService } from '@dxos/functions';
+import { type FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 
@@ -33,6 +33,7 @@ import { type AiAssistantError } from '../errors';
 import { formatSystemPrompt, formatUserPrompt } from './format';
 import { GenerationObserver } from './observer';
 import { pipe } from 'effect/Function';
+import { CompleteBlock, PartialBlock } from '../tracing';
 
 export type AiSessionRunError = AiError.AiError | PromptPreprocessingError | AiToolNotFoundError | AiAssistantError;
 
@@ -41,7 +42,8 @@ export type AiSessionRunRequirements =
   | ToolExecutionService
   | ToolResolverService
   | TracingService
-  | FunctionInvocationService;
+  | FunctionInvocationService
+  | Trace.TraceService;
 
 export type AiSessionOptions = {
   /**
@@ -132,11 +134,17 @@ export class AiSession {
     return this._pending;
   }
 
-  private _submitMessage = (message: Message.Message): Effect.Effect<Message.Message, never, TracingService> =>
+  private _submitMessage = (message: Message.Message): Effect.Effect<Message.Message, never, Trace.TraceService> =>
     Effect.gen(this, function* () {
       this._pending.push(message);
       yield* this._observer.onMessage(message);
-      yield* TracingService.emitConverationMessage(message as any);
+      for (const block of message.blocks) {
+        yield* Trace.write(CompleteBlock, {
+          messageId: message.id,
+          role: message.sender.role!,
+          block,
+        });
+      }
       yield* this._onOutput(message);
       return message;
     });
@@ -224,14 +232,11 @@ export class AiSession {
               if (block.pending) {
                 currentMessageId ??= Obj.ID.random();
                 log('emit ephemeral message', { id: currentMessageId, type: block._tag });
-                yield* TracingService.emitEphemeralMessage(
-                  Obj.make(Message.Message, {
-                    id: currentMessageId,
-                    created: new Date().toISOString(),
-                    sender: { role: 'assistant' },
-                    blocks: [block],
-                  }),
-                );
+                yield* Trace.write(PartialBlock, {
+                  messageId: currentMessageId,
+                  role: 'assistant',
+                  block,
+                });
                 return Option.none();
               } else {
                 currentMessageId ??= Obj.ID.random();
@@ -244,7 +249,6 @@ export class AiSession {
                   sender: { role: 'assistant' },
                   blocks: [block],
                 });
-                yield* TracingService.emitEphemeralMessage(message);
                 return Option.some(yield* this._submitMessage(message));
               }
             }),

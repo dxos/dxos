@@ -25,7 +25,7 @@ import type { SpaceId } from '@dxos/keys';
 
 import { DXN, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { Process, ServiceResolver, TracingService } from '@dxos/functions';
+import { Process, ServiceResolver, Trace, TracingService } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Operation, OperationHandlerSet, type OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
@@ -64,11 +64,11 @@ export interface Handle<I, O> {
   subscribeOutputs(): Stream.Stream<O>;
 
   /**
-   * Subscribe to ephemeral trace events for this process.
+   * Subscribe to ephemeral trace messages for this process.
    * Replays buffered events, then streams new ones as they arrive.
    * The stream completes when the process reaches a terminal state.
    */
-  subscribeEphemeral(): Stream.Stream<Obj.Unknown>;
+  subscribeEphemeral(): Stream.Stream<Trace.Message>;
 
   terminate(): Effect.Effect<void>;
   status(): Effect.Effect<Status>;
@@ -237,9 +237,10 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
   readonly #registry: Registry.Registry;
   readonly #outputQueue: Queue.Queue<OutputItem<O>>;
   readonly #storage: Context.Tag.Service<typeof StorageService.StorageService>;
+  readonly #traceSink: Trace.Sink;
 
   readonly #ephemeralBuffer = new EphemralTraceBuffer();
-  readonly #ephemeralSubscribers: Queue.Queue<Option.Option<Obj.Unknown>>[] = [];
+  readonly #ephemeralSubscribers: Queue.Queue<Option.Option<Trace.Message>>[] = [];
 
   readonly #onFinished: ((state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>) | undefined;
   readonly #onStatusChanged: (() => void) | undefined;
@@ -257,6 +258,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     key: string,
     params: Process.Params,
     environment: Environment,
+    traceSink: Trace.Sink,
     onFinished?: (state: Process.State, cause?: Cause.Cause<never>) => Effect.Effect<void>,
     onStatusChanged?: () => void,
     hasRunningChildren?: () => boolean,
@@ -270,6 +272,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     this.#services = services;
     this.#registry = registry;
     this.#outputQueue = outputQueue;
+    this.#traceSink = traceSink;
     this.#storage = storage;
     this.#onFinished = onFinished;
     this.#onStatusChanged = onStatusChanged;
@@ -336,18 +339,18 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
     return Stream.fromQueue(this.#outputQueue).pipe(Stream.takeWhile(Option.isSome), Stream.map(Option.getOrThrow));
   }
 
-  pushEphemeral(event: Obj.Unknown): void {
+  pushEphemeral(event: Trace.Message): void {
     this.#ephemeralBuffer.push(event);
     for (const queue of this.#ephemeralSubscribers) {
       Queue.unsafeOffer(queue, Option.some(event));
     }
   }
 
-  subscribeEphemeral(): Stream.Stream<Obj.Unknown> {
+  subscribeEphemeral(): Stream.Stream<Trace.Message> {
     return Stream.unwrap(
       Effect.gen(this, function* () {
         const snapshot = [...this.#ephemeralBuffer.buffer];
-        const queue = yield* Queue.unbounded<Option.Option<Obj.Unknown>>();
+        const queue = yield* Queue.unbounded<Option.Option<Trace.Message>>();
         this.#ephemeralSubscribers.push(queue);
         return Stream.concat(
           Stream.fromIterable(snapshot),
@@ -630,6 +633,7 @@ class ProcessHandleImpl<I, O, R> implements Handle<I, O> {
 export interface ProcessManagerImplOpts {
   registry: Registry.Registry;
   kvStore: KeyValueStore.KeyValueStore;
+  traceSink: Trace.Sink;
   serviceResolver?: ServiceResolver.ServiceResolver;
   tracingService?: Context.Tag.Service<TracingService>;
   handlerSet?: OperationHandlerSet.OperationHandlerSet;
@@ -645,6 +649,7 @@ export class ProcessManagerImpl implements Manager {
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
   readonly #tracingService: Context.Tag.Service<TracingService>;
   readonly #handlerSet: OperationHandlerSet.OperationHandlerSet | undefined;
+  readonly #traceSink: Trace.Sink;
 
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
@@ -656,7 +661,7 @@ export class ProcessManagerImpl implements Manager {
     this.#serviceResolver = opts.serviceResolver ?? ServiceResolver.empty;
     this.#tracingService = opts.tracingService ?? TracingService.noop;
     this.#handlerSet = opts.handlerSet;
-
+    this.#traceSink = opts.traceSink;
     this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
     this.#registry.mount(this.#processTreeAtom);
     this.#monitor = {
@@ -849,12 +854,12 @@ export class ProcessManagerImpl implements Manager {
           invocationTracingService.write(event, traceCtx);
         },
         ephemeral: (event, traceCtx) => {
-          log('ephemeral trace event', {
+          log('ephemeral trace event (deprecated)', {
             pid: id,
             event: JSON.stringify(event).slice(0, 50),
             traceCtx: JSON.stringify(traceCtx),
           });
-          handleRef?.pushEphemeral(event);
+          // handleRef?.pushEphemeral(event);
         },
         traceInvocationStart: (opts) => invocationTracingService.traceInvocationStart(opts),
         traceInvocationEnd: (opts) => invocationTracingService.traceInvocationEnd(opts),
@@ -864,6 +869,30 @@ export class ProcessManagerImpl implements Manager {
         Context.add(StorageService.StorageService, storage),
         Context.add(Scope.Scope, scope),
         Context.add(TracingService, processTracingService),
+        Context.add(Trace.TraceService, {
+          write: (event, data) => {
+            // TODO(dmaretskyi): Batching.
+            const message = Obj.make(Trace.Message, {
+              meta: {
+                pid: id,
+                parentPid: options?.parentProcessId,
+              },
+              isEphemeral: event.isEphemeral,
+              events: [
+                {
+                  type: event.key,
+                  timestamp: Date.now(),
+                  data,
+                },
+              ],
+            });
+            if (message.isEphemeral) {
+              handleRef?.pushEphemeral(message);
+            } else {
+              this.#traceSink.write(message);
+            }
+          },
+        }),
       );
 
       // Provide Operation.Service that spawns child processes with parentProcessId set.
@@ -939,6 +968,7 @@ export class ProcessManagerImpl implements Manager {
         definition.key,
         params,
         environment,
+        this.#traceSink,
         onFinished,
         () => this.#refreshProcessTree(),
         () => this.#hasNonTerminalChildren(id),
@@ -1062,6 +1092,7 @@ export const layer = (opts?: {
   | TracingService
   | OperationHandlerSet.OperationHandlerProvider
   | Registry.AtomRegistry
+  | Trace.TraceSink
 > =>
   Layer.scopedContext(
     Effect.gen(function* () {
@@ -1071,10 +1102,12 @@ export const layer = (opts?: {
 
       const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
       const registry = yield* Registry.AtomRegistry;
+      const traceSink = yield* Trace.TraceSink;
 
       const manager = new ProcessManagerImpl({
         registry,
         kvStore,
+        traceSink,
         serviceResolver,
         tracingService,
         handlerSet,
@@ -1095,17 +1128,17 @@ export const layer = (opts?: {
  */
 class EphemralTraceBuffer {
   #maxLength: number;
-  #buffer: Obj.Unknown[] = [];
+  #buffer: Trace.Message[] = [];
 
   constructor(maxLength: number = 25) {
     this.#maxLength = maxLength;
   }
 
-  get buffer(): readonly Obj.Unknown[] {
+  get buffer(): readonly Trace.Message[] {
     return this.#buffer;
   }
 
-  push(event: Obj.Unknown): void {
+  push(event: Trace.Message): void {
     const id = typeof event.id === 'string' ? event.id : undefined;
     const buf = this.#buffer;
     if (id !== undefined) {

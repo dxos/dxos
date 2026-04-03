@@ -4,17 +4,18 @@
 
 // @import-as-namespace
 
-import * as Context from 'effect/Context';
-import * as Schema from 'effect/Schema';
-import * as Process from './process/Process';
 import { Annotation, Type } from '@dxos/echo';
+import * as Layer from 'effect/Layer';
+import * as Context from 'effect/Context';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 /**
  * Writes ephemeral or persistent events to the trace.
  * Exposed to processes and operations to record events to the trace.
  */
 export interface TraceWriter {
-  write<T>(eventType: EventType<T>, payload: T): void;
+  write<T>(eventType: EventType<T>, payload: NoInfer<T>): void;
 }
 
 /**
@@ -24,15 +25,24 @@ export interface TraceWriter {
 export class TraceService extends Context.Tag('@dxos/functions/TraceService')<TraceService, TraceWriter>() {}
 
 /**
+ * Writes an event to the trace.
+ */
+export const write: <T>(eventType: EventType<T>, payload: NoInfer<T>) => Effect.Effect<void, never, TraceService> =
+  Effect.serviceFunction(TraceService, (_) => _.write);
+
+/**
  * Defines an event type for the trace.
  */
 export interface EventType<T> {
   readonly key: string;
-  readonly schema: Schema.Schema<T>;
+  readonly schema: Schema.Schema<T, any>;
   readonly isEphemeral: boolean;
 }
 
-export const EventType = <T>(key: string, opts: { schema: Schema.Schema<T>; isEphemeral: boolean }): EventType<T> => {
+export const EventType = <T>(
+  key: string,
+  opts: { schema: Schema.Schema<T, any>; isEphemeral: boolean },
+): EventType<T> => {
   return {
     key,
     schema: opts.schema,
@@ -48,12 +58,28 @@ export const Event = Schema.Struct({
 export interface Event extends Schema.Schema.Type<typeof Event> {}
 
 /**
+ * Checks if an event is of a given type.
+ */
+export const isOfType = <T>(eventType: EventType<T>, event: Event): event is Event & { data: T } => {
+  return event.type === eventType.key;
+};
+
+/**
+ * Metadata on the context of a trace message.
+ */
+// TODO(dmaretskyi): Expand on this: conversation id, tool call id, etc.
+export const Meta = Schema.Struct({
+  pid: Schema.String, // NOTE: Not Process.ID to avoid circular dependency.
+  parentPid: Schema.optional(Schema.String),
+  processName: Schema.optional(Schema.String),
+});
+export interface Meta extends Schema.Schema.Type<typeof Meta> {}
+
+/**
  * Envelope for a set of events.
  */
 export const MessageData = Schema.Struct({
-  // TODO(dmaretskyi): Expand on this: conversation id, etc..
-  pid: Process.ID,
-  parentPid: Schema.optional(Process.ID),
+  meta: Meta,
 
   isEphemeral: Schema.Boolean,
   events: Schema.Array(Event),
@@ -84,3 +110,13 @@ export interface Sink {
  * The Process Manager forwards trace messages to it.
  */
 export class TraceSink extends Context.Tag('@dxos/functions/TraceSink')<TraceSink, Sink>() {}
+
+export const layerNoop: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
+  write: () => {},
+});
+
+export const layerConsole: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
+  write: (message) => {
+    console.log(message);
+  },
+});

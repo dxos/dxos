@@ -16,6 +16,7 @@ import type { Trigger } from '../types';
 /**
  * Provides a way for compute primitives (functions, workflows, tools)
  * to emit an execution trace as a series of structured ECHO objects.
+ * @deprecated Use Trace.TraceService instead.
  */
 export class TracingService extends Context.Tag('@dxos/functions/TracingService')<
   TracingService,

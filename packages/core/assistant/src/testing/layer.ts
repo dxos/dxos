@@ -8,6 +8,7 @@ import * as Match from 'effect/Match';
 
 import {
   AiService,
+  ConsolePrinter,
   GenericToolkit,
   type ModelName,
   type ToolExecutionService,
@@ -22,10 +23,11 @@ import {
   QueueService,
   type ServiceCredential,
   ServiceNotAvailableError,
+  Trace,
   TracingService,
 } from '@dxos/functions';
 import {
-  type Process,
+  Process,
   ProcessManager,
   ServiceResolver,
   TracingServiceExt,
@@ -53,6 +55,7 @@ import {
   type ContextBinding,
 } from '../conversation';
 import * as Array from 'effect/Array';
+import { CompleteBlock } from '../tracing';
 
 interface TestLayerOptions {
   aiServicePreset?: 'direct' | 'edge-local' | 'edge-remote';
@@ -206,6 +209,12 @@ export const AssistantTestLayer = ({
           ),
           Match.exhaustive,
         ),
+        Match.value(tracing).pipe(
+          Match.when('noop', () => Trace.layerNoop),
+          Match.when('console', () => Trace.layerConsole),
+          Match.when('pretty', () => TraceSinkPretty()),
+          Match.exhaustive,
+        ),
       ),
     ),
     Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
@@ -231,3 +240,20 @@ export const AssistantTestLayerWithTriggers = (
     ),
     TriggerStateStore.layerMemory,
   ) as any;
+
+const TraceSinkPretty = () =>
+  Layer.succeed(Trace.TraceSink, {
+    write: (message) => {
+      for (const event of message.events) {
+        if (Trace.isOfType(CompleteBlock, event)) {
+          const tag = message.meta.processName ?? `[${message.meta.pid}]`;
+          console.log(`[${tag}] ${event.data.role.toUpperCase()}`);
+          new ConsolePrinter({ tag }).printContentBlock(event.data.block);
+        } else if (Trace.isOfType(Process.SpawnedEvent, event)) {
+          console.log(`[${message.meta.pid}] Process spawned: ${message.meta.processName}`);
+        } else if (Trace.isOfType(Process.ExitedEvent, event)) {
+          console.log(`[${message.meta.pid}] Process exited: ${event.data.outcome}`);
+        }
+      }
+    },
+  });
