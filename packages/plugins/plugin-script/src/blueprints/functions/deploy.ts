@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 
 import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
@@ -14,6 +13,7 @@ import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-ru
 import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { getSpace } from '@dxos/react-client/echo';
+import { isNode } from '@dxos/util';
 
 import { Deploy } from './definitions';
 
@@ -32,7 +32,10 @@ export default Deploy.pipe(
         return yield* Effect.fail(new Error('Script source or space not available'));
       }
 
-      yield* Effect.promise(() => initializeBundler({ wasmUrl }));
+      if (!isNode()) {
+        const { default: wasmUrl } = yield* Effect.promise(() => import('esbuild-wasm/esbuild.wasm?url'));
+        yield* Effect.promise(() => initializeBundler({ wasmUrl }));
+      }
       const buildResult = yield* Effect.promise(() => bundleFunction({ source: script.source!.target!.content }));
       if ('error' in buildResult) {
         return yield* Effect.fail(buildResult.error ?? new Error('Bundle creation failed'));
