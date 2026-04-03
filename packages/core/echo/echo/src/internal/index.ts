@@ -12,6 +12,6 @@ export * from './Format';
 export * from './JsonSchema';
 // TODO(wittjosiah): Required to ensure types are portable (need to export all types required for downstream inference).
 export * from './Obj';
-export * from './Pretty';
+export * from './Query';
 export * from './Ref';
 export * from './Type';
