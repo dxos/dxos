@@ -3,7 +3,7 @@
 // Prototype: Translation key checker for DXOS plugins.
 // Scans packages/plugins/ to find missing and unused translation keys.
 //
-// Usage: npx tsx scripts/check-translations.mts
+// Usage: npx tsx scripts/check-translations.mts [--fail-on-missing] [--fail-on-unused]
 //
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
@@ -504,6 +504,22 @@ function main() {
   console.log(`  Missing suffix:       ${missingSuffixIssues.length}`);
   console.log(`  Non-hierarchical:     ${nonHierarchicalIssues.length}`);
   console.log(`  Unresolved usages:    ${unresolvedUsages.length}`);
+
+  // --- CI exit codes ---
+  const args = process.argv.slice(2);
+  const failOnMissing = args.includes('--fail-on-missing');
+  const failOnUnused = args.includes('--fail-on-unused');
+
+  let exitCode = 0;
+  if (failOnMissing && missingKeys.length > 0) {
+    console.log(`\nFailing: ${missingKeys.length} missing keys found.`);
+    exitCode = 1;
+  }
+  if (failOnUnused && unusedKeys.length > 0) {
+    console.log(`\nFailing: ${unusedKeys.length} unused keys found.`);
+    exitCode = 1;
+  }
+  process.exit(exitCode);
 }
 
 main();

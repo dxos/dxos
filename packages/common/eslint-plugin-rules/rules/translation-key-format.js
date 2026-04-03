@@ -4,6 +4,9 @@
 
 'use strict';
 
+import { readFileSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+
 /**
  * Valid type suffixes for translation keys.
  */
@@ -83,18 +86,129 @@ const toDotNotation = (key) => {
   return `${kebab}${pluralSuffix}`;
 };
 
+// --- Key validation: resolve meta.id and load translations ---
+
+/** Cache: pluginDir → { metaId, keys } */
+const pluginCache = new Map();
+
+/**
+ * Walk up from a file path to find the plugin root (directory containing meta.ts in src/).
+ */
+const findPluginDir = (filePath) => {
+  let dir = dirname(filePath);
+  for (let i = 0; i < 10; i++) {
+    if (existsSync(join(dir, 'src/meta.ts'))) {
+      return dir;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      break;
+    }
+    dir = parent;
+  }
+  return null;
+};
+
+/**
+ * Read meta.id from a plugin's meta.ts.
+ */
+const readMetaId = (pluginDir) => {
+  const metaPath = join(pluginDir, 'src/meta.ts');
+  if (!existsSync(metaPath)) {
+    return null;
+  }
+  const content = readFileSync(metaPath, 'utf-8');
+  const match = content.match(/id:\s*['"]([^'"]+)['"]/);
+  return match ? match[1] : null;
+};
+
+/**
+ * Extract translation keys for the meta.id namespace from a translations.ts file.
+ */
+const readTranslationKeys = (pluginDir, metaId) => {
+  const keys = new Set();
+  const translationsPath = join(pluginDir, 'src/translations.ts');
+  if (!existsSync(translationsPath)) {
+    return keys;
+  }
+
+  const content = readFileSync(translationsPath, 'utf-8');
+  const lines = content.split('\n');
+  let inMetaBlock = false;
+  let braceDepth = 0;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (trimmed.match(/\[meta\.id\]\s*:\s*\{/)) {
+      inMetaBlock = true;
+      braceDepth = 1;
+      continue;
+    }
+
+    if (inMetaBlock) {
+      for (const ch of trimmed) {
+        if (ch === '{') {
+          braceDepth++;
+        }
+        if (ch === '}') {
+          braceDepth--;
+        }
+      }
+
+      const keyMatch = trimmed.match(/^['"]([^'"]+)['"]\s*:/);
+      if (keyMatch && braceDepth >= 1) {
+        keys.add(keyMatch[1]);
+      }
+
+      if (braceDepth <= 0) {
+        inMetaBlock = false;
+      }
+    }
+  }
+
+  return keys;
+};
+
+/**
+ * Get plugin info (metaId + valid keys) for a file, with caching.
+ */
+const getPluginInfo = (filePath) => {
+  const pluginDir = findPluginDir(filePath);
+  if (!pluginDir) {
+    return null;
+  }
+
+  if (pluginCache.has(pluginDir)) {
+    return pluginCache.get(pluginDir);
+  }
+
+  const metaId = readMetaId(pluginDir);
+  if (!metaId) {
+    pluginCache.set(pluginDir, null);
+    return null;
+  }
+
+  const keys = readTranslationKeys(pluginDir, metaId);
+  const info = { metaId, keys };
+  pluginCache.set(pluginDir, info);
+  return info;
+};
+
 export default {
   meta: {
     type: 'suggestion',
     fixable: 'code',
     docs: {
-      description: 'Enforce translation key format: dot.kebab-case with required type suffix.',
+      description: 'Enforce translation key format: dot.kebab-case with required type suffix. Validates keys exist in translations.',
     },
     messages: {
       missingSuffix:
         'Translation key "{{key}}" must end with a type suffix: {{suffixes}}.',
       useDotsNotSpaces:
         'Translation key "{{key}}" should use dot.kebab-case format. Suggested: "{{suggested}}".',
+      undefinedKey:
+        'Translation key "{{key}}" is not defined in translations for namespace "{{namespace}}".',
     },
     schema: [
       {
@@ -113,11 +227,18 @@ export default {
   create(context) {
     const options = context.options[0] || {};
     const suffixes = options.suffixes || VALID_SUFFIXES;
+    const filename = context.filename || context.getFilename();
+
+    // Resolve plugin info for this file.
+    const pluginInfo = getPluginInfo(filename);
+
+    // Track whether this file uses useTranslation(meta.id).
+    let usesMetaNamespace = false;
 
     /**
      * Check a string literal node that represents a translation key.
      */
-    const checkKey = (node, key) => {
+    const checkKeyFormat = (node, key) => {
       const base = stripPluralSuffix(key);
 
       // Check 1: Must use dot notation (no spaces).
@@ -129,7 +250,7 @@ export default {
           data: { key, suggested },
           fix: (fixer) => fixer.replaceText(node, `'${suggested}'`),
         });
-        return; // Only report one issue per key.
+        return;
       }
 
       // Check 2: Must end with a valid suffix.
@@ -142,24 +263,70 @@ export default {
       }
     };
 
+    /**
+     * Check that a key exists in the plugin's translations.
+     */
+    const checkKeyExists = (node, key, hasNsOverride) => {
+      // Only check if we resolved the plugin and the file uses meta.id namespace.
+      if (!pluginInfo || !usesMetaNamespace || hasNsOverride) {
+        return;
+      }
+
+      if (!pluginInfo.keys.has(key)) {
+        context.report({
+          node,
+          messageId: 'undefinedKey',
+          data: { key, namespace: pluginInfo.metaId },
+        });
+      }
+    };
+
     return {
-      // t('some key') — CallExpression where callee is `t`.
-      CallExpression(node) {
+      // Detect useTranslation(meta.id) in the file.
+      'CallExpression[callee.name="useTranslation"]'(node) {
         if (
-          node.callee.type === 'Identifier' &&
-          node.callee.name === 't' &&
           node.arguments.length >= 1 &&
-          node.arguments[0].type === 'Literal' &&
-          typeof node.arguments[0].value === 'string'
+          node.arguments[0].type === 'MemberExpression' &&
+          node.arguments[0].object.type === 'Identifier' &&
+          node.arguments[0].object.name === 'meta' &&
+          node.arguments[0].property.type === 'Identifier' &&
+          node.arguments[0].property.name === 'id'
         ) {
-          checkKey(node.arguments[0], node.arguments[0].value);
+          usesMetaNamespace = true;
         }
       },
 
-      // 'some key' in translation definition objects (Property key as string literal).
-      // Matches: { 'some key': 'value' } inside translations.ts files.
+      // t('some key') or t('some key', { ns: ... }).
+      CallExpression(node) {
+        if (
+          node.callee.type !== 'Identifier' ||
+          node.callee.name !== 't' ||
+          node.arguments.length < 1 ||
+          node.arguments[0].type !== 'Literal' ||
+          typeof node.arguments[0].value !== 'string'
+        ) {
+          return;
+        }
+
+        const key = node.arguments[0].value;
+
+        // Check format.
+        checkKeyFormat(node.arguments[0], key);
+
+        // Check if there's an ns override in the second argument.
+        let hasNsOverride = false;
+        if (node.arguments.length >= 2 && node.arguments[1].type === 'ObjectExpression') {
+          hasNsOverride = node.arguments[1].properties.some(
+            (prop) => prop.key && ((prop.key.type === 'Identifier' && prop.key.name === 'ns') || (prop.key.type === 'Literal' && prop.key.value === 'ns')),
+          );
+        }
+
+        // Check existence.
+        checkKeyExists(node.arguments[0], key, hasNsOverride);
+      },
+
+      // Property keys in translations.ts files.
       Property(node) {
-        const filename = context.filename || context.getFilename();
         if (!filename.includes('translations')) {
           return;
         }
@@ -170,7 +337,7 @@ export default {
           node.value.type === 'Literal' &&
           typeof node.value.value === 'string'
         ) {
-          checkKey(node.key, node.key.value);
+          checkKeyFormat(node.key, node.key.value);
         }
       },
     };
