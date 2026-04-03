@@ -96,7 +96,11 @@ export const makePost = (props: Obj.MakeProps<typeof Post> = {}): Post => Obj.ma
 
 /** Schema for the create-feed dialog form. */
 export const CreateFeedSchema = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
+  name: Schema.optional(
+    Schema.String.annotations({
+      title: 'Name',
+    }),
+  ),
   url: Schema.optional(
     Schema.String.annotations({
       title: 'URL',
