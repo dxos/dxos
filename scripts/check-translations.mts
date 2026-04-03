@@ -227,6 +227,7 @@ const VALID_SUFFIXES = [
   'name',
   'value',
   'icon',
+  'menu',
 ] as const;
 
 /** Plural suffixes appended by i18next. */

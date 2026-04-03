@@ -10,7 +10,7 @@ import { join, dirname } from 'node:path';
 /**
  * Valid type suffixes for translation keys.
  */
-const VALID_SUFFIXES = ['label', 'message', 'placeholder', 'title', 'description', 'heading', 'alt', 'button', 'name', 'value', 'icon'];
+const VALID_SUFFIXES = ['label', 'message', 'placeholder', 'title', 'description', 'heading', 'alt', 'button', 'name', 'value', 'icon', 'menu'];
 
 /**
  * Plural suffixes appended by i18next.
