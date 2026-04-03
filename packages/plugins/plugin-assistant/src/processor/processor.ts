@@ -22,15 +22,16 @@ import {
   createSystemPrompt,
   formatSystemPrompt,
   AgentService,
+  PartialBlock,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/blueprints';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import {
+  Trace,
   type CredentialsService,
   type FunctionInvocationService,
   type QueueService,
-  type Trace,
   type TracingService,
 } from '@dxos/functions';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -173,11 +174,12 @@ export class AiChatProcessor {
 
         const ephemeralStream = session.subscribeEphemeral();
         yield* ephemeralStream.pipe(
-          Stream.runForEach((event: Obj.Unknown) =>
+          Stream.runForEach((message) =>
             Effect.sync(() => {
-              log.info('processor ephemeral event', { event: JSON.stringify(event).slice(0, 50) });
-              if (Obj.instanceOf(Message.Message, event)) {
-                this.#handleEphemeralMessage(event);
+              for (const event of message.events) {
+                if (Trace.isOfType(PartialBlock, event)) {
+                  this.#handleEphemeralMessage(event.data);
+                }
               }
             }),
           ),
@@ -256,15 +258,21 @@ export class AiChatProcessor {
    * against messages already written to the feed queue to handle the race between
    * ephemeral delivery and feed replication.
    */
-  #handleEphemeralMessage(message: Message.Message) {
-    const isPending = message.blocks.some((block) => block.pending);
+  #handleEphemeralMessage(event: Trace.PayloadType<typeof PartialBlock>) {
+    const isPending = event.block.pending;
+    const message = Obj.make(Message.Message, {
+      id: event.messageId,
+      created: new Date().toISOString(),
+      sender: { role: event.role },
+      blocks: [event.block],
+    });
 
     if (isPending) {
-      if (this.#finalizedIds.has(message.id)) {
+      if (this.#finalizedIds.has(event.messageId)) {
         return;
       }
       this.#registry.update(this.#streaming, (streaming) => {
-        const idx = streaming.findIndex((existing) => existing.id === message.id);
+        const idx = streaming.findIndex((existing) => existing.id === event.messageId);
         if (idx >= 0) {
           const updated = [...streaming];
           updated[idx] = message;
@@ -273,7 +281,7 @@ export class AiChatProcessor {
         return [...streaming, message];
       });
     } else {
-      this.#finalizedIds.add(message.id);
+      this.#finalizedIds.add(event.messageId);
       this.#registry.update(this.#streaming, (streaming) => streaming.filter((existing) => existing.id !== message.id));
       this.#registry.update(this.#pending, (pending) => {
         if (pending.some((existing) => existing.id === message.id)) {

@@ -50,6 +50,11 @@ export const EventType = <T>(
   };
 };
 
+/**
+ * Extracts the payload type from an event type.
+ */
+export type PayloadType<E extends EventType<any>> = E extends EventType<infer T> ? T : never;
+
 export const Event = Schema.Struct({
   timestamp: Schema.Number,
   type: Schema.String,
