@@ -22,7 +22,7 @@ import {
   jsonTransformShape,
   notShape,
   orShape,
-  queueShape,
+  feedShape,
   randomShape,
   reducerShape,
   scopeShape,
@@ -82,7 +82,7 @@ export const computeShapes: { title: string; shapes: ShapeDef[] }[] = [
     shapes: [
       //
       jsonShape,
-      queueShape,
+      feedShape,
       threadShape,
       textShape,
       surfaceShape,

@@ -5,18 +5,10 @@
 import { XMLParser } from 'fast-xml-parser';
 
 import { Subscription } from '../types';
-
-export type FetchRssOptions = {
-  corsProxy?: string;
-};
-
-export type FetchRssResult = {
-  feed: Subscription.Feed;
-  posts: Subscription.Post[];
-};
+import { type FeedFetcher, type FetchOptions, type FetchResult } from './feed-fetcher';
 
 /** Fetches and parses an RSS/Atom feed URL into Subscription objects. */
-export const fetchRss = async (url: string, { corsProxy }: FetchRssOptions = {}): Promise<FetchRssResult> => {
+export const fetchRss: FeedFetcher = async (url: string, { corsProxy }: FetchOptions = {}): Promise<FetchResult> => {
   const fetchUrl = corsProxy ? `${corsProxy}${encodeURIComponent(url)}` : url;
   const response = await fetch(fetchUrl);
   const xml = await response.text();

@@ -78,9 +78,75 @@
 - The app-graph-builder creates a `PLANK_COMPANION_TYPE` node that resolves the selected post.
 - Two surfaces: main view (`SubscriptionArticle`, no `companionTo`) and companion view (`FeedArticle`, with `companionTo`).
 
-## Phase 3 (BlueSky)
+### FeedFetcher Abstraction
 
-- [ ] Research other feed protocols (BlueSky, etc.)
+- `FeedFetcher` is a type alias: `(url: string, options?) => Promise<FetchResult>`.
+- `fetchRss` handles RSS and Atom XML feeds via `fast-xml-parser`.
+- `fetchAtproto` handles AT Protocol feeds via the public XRPC API (`public.api.bsky.app`).
+- The sync operation dispatches based on `Subscription.Feed.type` field.
+- AT Protocol posts map: `record.text` → description, `post.uri` → guid, `post.author.displayName` → author, `record.createdAt` → published, embedded links → link.
+
+## Phase 2.5 (AT Protocol / Bluesky)
+
+- [x] Abstract fetcher into `FeedFetcher` type with `fetchRss` and `fetchAtproto` implementations.
+- [x] Add `type` field (`'rss' | 'atproto'`) to `Subscription.Feed` schema.
+- [x] Implement `fetchAtproto` using public XRPC `app.bsky.feed.getAuthorFeed` endpoint.
+- [x] Update `sync-feed.ts` to dispatch to correct fetcher based on feed type.
+- [x] Create unit tests for both `fetchRss` and `fetchAtproto`.
+- [x] Document Phase 3 (full AT Proto with auth) in TASKS.md.
+
+## Phase 3 (Full AT Protocol)
+
+Phase 2.5 added public, unauthenticated Bluesky feed reading via `app.bsky.feed.getAuthorFeed`.
+Phase 3 adds authenticated AT Protocol support using the `@atproto/api` SDK.
+
+### 3.1 — Authentication and Session Management
+
+- [ ] Add `@atproto/api` dependency.
+- [ ] Create `AtprotoSession` service (Effect layer) managing login, token refresh, and session expiry.
+  - Login via identifier (handle or email) + app password.
+  - Store session tokens using DXOS credential storage (not localStorage).
+- [ ] Add settings panel for managing AT Protocol credentials (connect/disconnect).
+- [ ] Update `fetchAtproto` to accept an optional authenticated agent, falling back to public API.
+
+### 3.2 — DID Resolution and Identity
+
+- [ ] Resolve handles → DIDs via `com.atproto.identity.resolveHandle`.
+- [ ] Cache DID ↔ handle mappings on `Subscription.Feed` to avoid repeated lookups.
+- [ ] Support both `did:plc` and `did:web` methods.
+
+### 3.3 — Rich Post Content
+
+- [ ] Map embedded images (`app.bsky.embed.images`) → post image metadata.
+- [ ] Map embedded links/cards (`app.bsky.embed.external`) → post link + description.
+- [ ] Map quote posts (`app.bsky.embed.record`) → inline quoted content.
+- [ ] Handle reply threads — link parent/root post references.
+- [ ] Extend `Subscription.Post` schema if needed (e.g., `imageUrls`, `quotedPost` ref).
+
+### 3.4 — Timeline and Custom Feeds
+
+- [ ] Fetch authenticated user's home timeline (`app.bsky.feed.getTimeline`).
+- [ ] Subscribe to custom/algorithmic feeds (`app.bsky.feed.getFeed` with feed URI).
+- [ ] Add feed source selector in create dialog (author feed vs. timeline vs. custom feed).
+
+### 3.5 — Cursor-based Pagination
+
+- [ ] Use AT Protocol cursor from paginated XRPC responses for incremental sync.
+- [ ] Store cursor in `Subscription.Feed.cursor` (already supports opaque strings).
+- [ ] Handle cursor invalidation gracefully (full re-fetch on stale cursor).
+
+### 3.6 — Write Operations (Future)
+
+- [ ] Like posts (`app.bsky.feed.like`).
+- [ ] Repost (`app.bsky.feed.repost`).
+- [ ] Create posts (`com.atproto.repo.createRecord`).
+- [ ] These require authenticated sessions and careful UX design.
+
+### References
+
+- AT Protocol specification: https://atproto.com
+- Bluesky API reference: https://docs.bsky.app
+- `@atproto/api` SDK: https://github.com/bluesky-social/atproto/tree/main/packages/api
 
 ## Notes
 
@@ -95,5 +161,3 @@ The main contenders in this space are ActivityPub, AT Protocol (Bluesky), and No
   https://en.wikipedia.org/wiki/AT_Protocol
 - Nostr — focuses on simple, portable events that anyone can publish and anyone can subscribe to. Werd Extremely minimal: just keypairs, relays, and JSON event envelopes. Growing developer traction particularly in the crypto/privacy space.
 - JSON Feed — a modern, developer-friendly alternative to RSS/Atom using JSON instead of XML. Straightforwardly maps to the same "list of items with metadata" model but much easier to produce and consume programmatically. Worth considering given your TypeScript-first stack.
-
-### Bluesky

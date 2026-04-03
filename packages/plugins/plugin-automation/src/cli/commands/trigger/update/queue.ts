@@ -32,7 +32,6 @@ export const queue = Command.make(
   (options) =>
     Effect.gen(function* () {
       const { json } = yield* CommandConfig;
-
       const triggerId = yield* Option.match(options.id, {
         onNone: () => selectTrigger('queue'),
         onSome: (id) => Effect.succeed(id),

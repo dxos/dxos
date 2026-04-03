@@ -406,7 +406,7 @@ describe('TriggerDispatcher', () => {
             queue: queue.dxn.toString(),
           },
           input: {
-            instructions: 'Please process the queue item.',
+            instructions: 'Please process the feed item.',
             input: '{{event.item}}',
             triggerId: '{{trigger.id}}',
           },

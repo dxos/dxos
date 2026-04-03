@@ -10,12 +10,18 @@ import { Annotation, Feed as EchoFeed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 
-/** Subscription feed schema — an RSS/Atom subscription. */
+/** Feed protocol type. */
+export const FeedType = Schema.Literal('rss', 'atproto');
+export type FeedType = Schema.Schema.Type<typeof FeedType>;
+
+/** Subscription feed schema — an RSS/Atom/AT Protocol subscription. */
 export const Feed = Schema.Struct({
   /** User-facing title of the feed. */
   name: Schema.String.pipe(Schema.optional),
-  /** The URL of the RSS/Atom feed. */
+  /** The URL of the RSS/Atom feed or AT Protocol handle/DID. */
   url: Schema.String.pipe(Schema.optional),
+  /** Protocol type — determines which fetcher is used for sync. */
+  type: FeedType.pipe(Schema.optional),
   /** Description of the feed. */
   description: Schema.String.pipe(Schema.optional),
   /** URL of the feed's associated website. */
@@ -90,7 +96,13 @@ export const CreateFeedSchema = Schema.Struct({
   url: Schema.optional(
     Schema.String.annotations({
       title: 'URL',
-      description: 'RSS or Atom feed URL.',
+      description: 'RSS/Atom feed URL or Bluesky handle.',
+    }),
+  ),
+  type: Schema.optional(
+    FeedType.annotations({
+      title: 'Type',
+      description: 'Feed protocol type.',
     }),
   ),
 });
