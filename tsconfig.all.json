@@ -316,6 +316,9 @@
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-feed/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-files/tsconfig.json"
     },
     {

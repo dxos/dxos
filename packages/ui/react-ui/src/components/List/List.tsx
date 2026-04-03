@@ -91,7 +91,7 @@ const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
         className={tx('list.item.heading', { density }, classNames)}
         ref={forwardedRef}
       >
-        {children}
+        <span>{children}</span>
       </ListPrimitiveItemHeading>
     );
   },

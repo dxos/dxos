@@ -58,7 +58,7 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
               </List>
             </Settings.FrameItem>
             {createInvitationUrl && (
-              <Settings.FrameItem title='Add device'>
+              <Settings.FrameItem title={t('add device label')}>
                 <DeviceInvitation createInvitationUrl={createInvitationUrl} />
               </Settings.FrameItem>
             )}

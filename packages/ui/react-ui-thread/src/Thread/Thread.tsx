@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ComponentPropsWithRef, forwardRef } from 'react';
+import React, { ComponentPropsWithRef, forwardRef, PropsWithChildren } from 'react';
 
 import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
@@ -17,7 +17,11 @@ export const threadLayout = 'w-full place-self-start grid grid-cols-[var(--dx-ra
 // Root
 //
 
-type ThreadRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & ThreadEntity & { current?: boolean };
+type ThreadRootProps = ThemedClassName<
+  PropsWithChildren<
+    ThreadEntity & { current?: boolean } & Pick<ComponentPropsWithRef<'div'>, 'onClickCapture' | 'onFocusCapture'>
+  >
+>;
 
 const ThreadRoot = forwardRef<HTMLDivElement, ThreadRootProps>(
   ({ current, children, classNames, ...props }, forwardedRef) => {
@@ -45,7 +49,7 @@ const ThreadRoot = forwardRef<HTMLDivElement, ThreadRootProps>(
 // Heading
 //
 
-type ThreadHeaderProps = ComponentPropsWithRef<'div'> & { detached?: boolean };
+type ThreadHeaderProps = PropsWithChildren<{ detached?: boolean }>;
 
 const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
   ({ children, detached, ...props }, forwardedRef) => {
@@ -74,7 +78,7 @@ const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
 // Status
 //
 
-type ThreadStatusProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
+type ThreadStatusProps = ThemedClassName<PropsWithChildren> & {
   activity?: boolean;
 };
 

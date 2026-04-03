@@ -82,7 +82,7 @@ export const CommentsThread = ({
   const handleThreadDelete = useCallback(() => onThreadDelete?.(anchor), [onThreadDelete, anchor]);
   const handleAcceptProposal = useCallback((id: string) => onAcceptProposal?.(anchor, id), [onAcceptProposal, anchor]);
 
-  const handleComment: MessageTextboxProps['onSend'] = useCallback(() => {
+  const handleComment = useCallback<NonNullable<MessageTextboxProps['onSend']>>(() => {
     if (!messageRef.current) {
       return false;
     }
