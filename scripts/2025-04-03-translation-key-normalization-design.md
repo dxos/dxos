@@ -2,7 +2,7 @@
 
 ## Status
 
-Prototype complete. Ready for incremental rollout.
+ESLint rule and migration script ready. Tested on `plugin-chess`.
 
 ## Problem
 
@@ -27,9 +27,31 @@ typename.label_other
 - Dots separate hierarchical segments; segments use camelCase.
 - `plugin name` keys become `plugin.label`.
 
-## Checker Script
+## Tools
 
-`scripts/check-translations.mts` — reports:
+### 1. ESLint Rule (ongoing enforcement)
+
+`packages/common/eslint-plugin-rules/rules/translation-key-format.js`
+
+Registered in `.oxlintrc.json` as `@dxos/eslint-plugin-rules/translation-key-format` (currently `warn`).
+
+**Checks:**
+- `useDotsNotSpaces` — flags space-separated keys, suggests dot.camelCase, auto-fixable.
+- `missingSuffix` — flags keys missing a valid type suffix (not auto-fixable, needs human decision).
+
+**Catches violations in:**
+- `t('key')` calls in source files.
+- Property keys in `translations.ts` files (string literal keys with string literal values).
+
+**Auto-fix:** `moon run plugin-name:lint -- --fix` rewrites both definitions and usages.
+
+**Promote to error** once migration is complete to prevent regressions.
+
+### 2. Checker Script (bulk analysis)
+
+`scripts/check-translations.mts` — run via `npx tsx scripts/check-translations.mts`.
+
+Reports:
 
 | Check | Current Count |
 |---|---|
@@ -39,32 +61,29 @@ typename.label_other
 | Missing suffix | 135 |
 | Non-hierarchical (space-separated) | 1,326 |
 
+Use this for bulk analysis, migration planning, and tracking progress.
+
 ## Migration Plan
 
-### Step 1: Refine normalizer
+### Step 1: Fix known edge cases in normalizer
 
-Fix `toDotNotation()` edge cases:
-- Multi-word suffixes (`mark read` → keep as `markRead` not split on `read`).
-- Noun words (`key`, `name`, `count`, `period`) are not suffixes — append `.label` when no valid suffix present.
-- `plugin name` → `plugin.label`.
+- `plugin name` → `plugin.label` (special case).
+- Keys ending in nouns (`key`, `name`, `count`, `period`) that aren't valid suffixes need a suffix appended.
 
-### Step 2: Generate migration map
+### Step 2: Migrate incrementally with `--fix`
 
-Produce `{ namespace, oldKey, newKey }[]` JSON. Review before applying.
+Per plugin: `moon run plugin-name:lint -- --fix`, then verify with `moon run plugin-name:lint`.
 
-### Step 3: Auto-apply renames
+Start with small plugins (`plugin-chess`, `plugin-template`), then batch the rest.
 
-Two passes per plugin:
-- **A:** Rewrite keys in `translations.ts`.
-- **B:** Rewrite `t('old key')` and `['old key', { ns }]` in source files.
+### Step 3: Validate
 
-### Step 4: Validate
+- Re-run checker script to confirm counts decrease.
+- Build + test the migrated plugins.
 
-Re-run checker: zero missing-suffix, zero new mismatches. Build + lint.
+### Step 4: Promote to error
 
-### Step 5: Incremental rollout
-
-One plugin at a time. Start with `plugin-template` or `plugin-chess` (small surface area), then batch the rest.
+Change `.oxlintrc.json` from `"warn"` to `"error"` once all plugins are clean.
 
 ## Out of Scope
 
