@@ -13,11 +13,19 @@ import { QueryPlan } from './plan';
 /**
  * Creates a QueryError with "Query too complex" message and includes the prettified query in the context.
  */
-const queryTooComplexError = (query: QueryAST.Query): QueryError =>
-  new QueryError({
-    message: `Query too complex: ${Query.pretty(Query.fromAst(query))}`,
-    context: { query, prettyQuery: Query.pretty(Query.fromAst(query)) },
+const queryTooComplexError = (query: QueryAST.Query | null): QueryError => {
+  if (query === null) {
+    return new QueryError({
+      message: 'Query too complex',
+      context: { query: null },
+    });
+  }
+  const prettyQuery = Query.pretty(Query.fromAst(query));
+  return new QueryError({
+    message: `Query too complex: ${prettyQuery}`,
+    context: { query, prettyQuery },
   });
+};
 
 export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;
