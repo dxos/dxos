@@ -40,28 +40,33 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
     <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef}>
-          <Card.Content>
-            <Card.Row>
-              <Card.Text classNames='truncate'>{post.title ?? t('post title placeholder')}</Card.Text>
-              {post.link && (
+          <Card.Toolbar>
+            <Card.IconBlock>
+              <Card.Icon icon='ph--dot-outline--regular' />
+            </Card.IconBlock>
+            <Card.Text classNames='truncate'>{post.title ?? t('post title placeholder')}</Card.Text>
+            {post.link && (
+              <Card.IconBlock>
                 <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>
                   <Icon icon='ph--arrow-square-out--regular' size={4} />
                 </a>
-              )}
-            </Card.Row>
+              </Card.IconBlock>
+            )}
+          </Card.Toolbar>
+          <Card.Content>
             {post.author && (
               <Card.Row icon='ph--user--regular'>
                 <Card.Text variant='description'>{post.author}</Card.Text>
               </Card.Row>
             )}
-            {published && (
-              <Card.Row icon='ph--calendar--regular'>
-                <Card.Text variant='description'>{published}</Card.Text>
-              </Card.Row>
-            )}
             {post.description && (
               <Card.Row>
                 <Card.Html variant='description' html={post.description} />
+              </Card.Row>
+            )}
+            {published && (
+              <Card.Row icon='ph--calendar--regular'>
+                <Card.Text variant='description'>{published}</Card.Text>
               </Card.Row>
             )}
           </Card.Content>

@@ -12,7 +12,7 @@ import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
-import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '../../components';
@@ -88,9 +88,7 @@ export const SubscriptionsArticle = ({ role, subject, attendableId }: Subscripti
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Toolbar.Text>{t('plugin name')}</Toolbar.Text>
-          <span role='none' className='grow' />
-          <IconButton label={t('add feed label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
+          <Toolbar.IconButton label={t('add feed label')} icon='ph--plus--regular' iconOnly onClick={handleCreate} />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

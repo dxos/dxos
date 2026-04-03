@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 import { Entity, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { PostStack, type PostStackAction } from '../../components';
 import { meta } from '../../meta';
@@ -47,8 +47,13 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Text>{Entity.getLabel(subject)}</Toolbar.Text>
-          <span role='none' className='grow' />
-          <IconButton label={t('sync feed label')} icon='ph--arrows-clockwise--regular' iconOnly onClick={handleSync} />
+          <Toolbar.Separator />
+          <Toolbar.IconButton
+            label={t('sync feed label')}
+            icon='ph--arrows-clockwise--regular'
+            iconOnly
+            onClick={handleSync}
+          />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

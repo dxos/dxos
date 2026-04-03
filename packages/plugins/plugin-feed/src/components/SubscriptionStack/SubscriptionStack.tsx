@@ -55,13 +55,13 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
               <Card.Menu items={menuItems} />
             </Card.Toolbar>
             <Card.Content>
-              {feed.url && (
+              {/* {feed.url && (
                 <Card.Row>
                   <Card.Text classNames='truncate' variant='description'>
                     {feed.url}
                   </Card.Text>
                 </Card.Row>
-              )}
+              )} */}
               {feed.description && (
                 <Card.Row>
                   <Card.Text variant='description'>{feed.description}</Card.Text>

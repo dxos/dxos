@@ -48,7 +48,7 @@ const cardText: ComponentFunction<CardStyleProps> = ({ variant = 'default', trun
   mx(
     'dx-card__text items-center overflow-hidden',
     variant === 'default' && 'py-1',
-    variant === 'description' && 'py-1.5',
+    variant === 'description' && 'py-1.5 text-description',
     ...etc,
   );
 
