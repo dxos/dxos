@@ -9,6 +9,7 @@ import { type FeedProtocol } from '@dxos/protocols';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
 import type { FeedStore } from './feed-store';
+import { Context } from '@dxos/context';
 
 type AppendRequest = FeedProtocol.AppendRequest;
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
@@ -20,7 +21,7 @@ export type SyncServerOptions = {
   peerId: string;
   feedStore: FeedStore;
   /** Send a protocol message to a client. Receives full message (recipient is set by server). Returns Effect. */
-  sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
+  sendMessage: (ctx: Context, message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
 };
 
 /**
@@ -30,7 +31,7 @@ export type SyncServerOptions = {
 export class SyncServer {
   readonly #peerId: string;
   readonly #feedStore: FeedStore;
-  readonly #sendMessage: (message: ProtocolMessage) => Effect.Effect<void, unknown, never>;
+  readonly #sendMessage: SyncServerOptions['sendMessage'];
 
   constructor(options: SyncServerOptions) {
     this.#peerId = options.peerId;
@@ -42,6 +43,7 @@ export class SyncServer {
    * Receive a message from a client. Handles QueryRequest and AppendRequest; sends response via sendMessage with correct peer ids.
    */
   handleMessage(
+    ctx: Context,
     message: ProtocolMessage,
   ): Effect.Effect<void, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
     const self = this;
@@ -57,10 +59,11 @@ export class SyncServer {
         const req = message as QueryRequest;
         return Effect.gen(function* () {
           const response: QueryResponse = yield* self.#feedStore.query(req);
-          yield* self.#sendMessage(withPeerIds({ _tag: 'QueryResponse', ...response }));
+          yield* self.#sendMessage(ctx, withPeerIds({ _tag: 'QueryResponse', ...response }));
         }).pipe(
           Effect.catchAll((err: unknown) =>
             self.#sendMessage(
+              ctx,
               withPeerIds({
                 _tag: 'Error',
                 message: err instanceof Error ? err.message : String(err),
@@ -73,10 +76,11 @@ export class SyncServer {
         const req = message as AppendRequest;
         return Effect.gen(function* () {
           const response = yield* self.#feedStore.append(req);
-          yield* self.#sendMessage(withPeerIds({ _tag: 'AppendResponse', ...response }));
+          yield* self.#sendMessage(ctx, withPeerIds({ _tag: 'AppendResponse', ...response }));
         }).pipe(
           Effect.catchAll((err: unknown) =>
             self.#sendMessage(
+              ctx,
               withPeerIds({
                 _tag: 'Error',
                 message: err instanceof Error ? err.message : String(err),

@@ -9,7 +9,7 @@ import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj, Query } from '@dxos/echo';
 import { useActiveSpace } from '@dxos/plugin-space';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
@@ -20,9 +20,10 @@ import { type SearchResult } from '../../types';
 
 export type SearchDialogProps = {
   pivotId?: string;
+  space?: Space;
 };
 
-export const SearchDialog = ({ pivotId: pivotIdProp }: SearchDialogProps) => {
+export const SearchDialog = ({ pivotId: pivotIdProp, space: spaceProp }: SearchDialogProps) => {
   const { t } = useTranslation(meta.id);
   const layout = useLayout();
   const pivotId = pivotIdProp ?? layout.active[layout.active.length - 1];
@@ -30,17 +31,12 @@ export const SearchDialog = ({ pivotId: pivotIdProp }: SearchDialogProps) => {
   const { setMatch } = useGlobalSearch();
   const [query, setQuery] = useState<string>();
 
-  const space = useActiveSpace();
+  const activeSpace = useActiveSpace();
+  const space = spaceProp ?? activeSpace;
+  // TODO(burdon): Re-enable full-text search when indexer is available in all environments.
   const objects = useQuery(
     space?.db,
-    query === undefined
-      ? Query.select(Filter.nothing())
-      : Query.all(
-          Query.select(Filter.text(query, { type: 'full-text' })).select(Filter.not(Filter.type(Text.Text))),
-          Query.select(Filter.text(query, { type: 'full-text' }))
-            .select(Filter.type(Text.Text))
-            .referencedBy('org.dxos.type.document', 'content'),
-        ),
+    query === undefined ? Query.select(Filter.nothing()) : Query.select(Filter.not(Filter.type(Text.Text))),
   );
 
   const results = useGlobalSearchResults(objects);
@@ -82,19 +78,19 @@ export const SearchDialog = ({ pivotId: pivotIdProp }: SearchDialogProps) => {
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch}>
           <SearchList.Content classNames='max-h-[24rem]'>
-            <SearchList.Input placeholder={t('search placeholder')} autoFocus />
+            <SearchList.Input classNames='px-0' autoFocus placeholder={t('search placeholder')} />
             <SearchList.Viewport>
               {allResults.map((result) => (
                 <SearchList.Item
                   key={result.id}
+                  classNames='flex gap-2 items-center'
                   value={result.id}
                   label={result.label ?? (result.object ? Entity.getLabel(result.object) : undefined) ?? result.id}
                   icon={result.icon}
                   onSelect={() => void handleSelect(result)}
-                  classNames='flex gap-2 items-center'
                 />
               ))}
-              {query && allResults.length === 0 && <SearchList.Empty>{t('empty results message')}</SearchList.Empty>}
+              {query && allResults.length === 0 && <SearchList.Empty />}
             </SearchList.Viewport>
           </SearchList.Content>
         </SearchList.Root>

@@ -5,6 +5,7 @@
 import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { type Entity, Filter, Obj, Ref } from '@dxos/echo';
 import { Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
@@ -107,7 +108,7 @@ describe('CoreDatabase', () => {
       const newRootDocHandle = await createTestRootDoc(db.coreDatabase._repo);
       const beforeUpdate = await db.query(Query.type(TestSchema.Expando, { id: oldObject.id })).first();
       expect(beforeUpdate).not.to.be.undefined;
-      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
       const afterUpdate = db.getObjectById(oldObject.id);
       expect(afterUpdate).to.be.undefined;
     });
@@ -123,7 +124,7 @@ describe('CoreDatabase', () => {
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(
         getDocHandles(db).spaceRootHandle.doc().links?.[beforeUpdate.id].toString(),
       );
-      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
       expect(getObjectDocHandle(beforeUpdate).url).to.eq(newRootDocHandle.doc().links?.[beforeUpdate.id].toString());
     });
 
@@ -182,7 +183,7 @@ describe('CoreDatabase', () => {
         newDoc.objects[ids[2]] = getObjectDocHandle(db.getObjectById(ids[2])).doc()?.objects?.[ids[2]];
       });
 
-      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
 
       expect((db.getObjectById(ids[0]) as any).content).to.eq(contents[0]);
       for (const id of ids) {
@@ -207,7 +208,7 @@ describe('CoreDatabase', () => {
       newRootDocHandle.change((newDoc: any) => {
         newDoc.objects = getObjectDocHandle(obj).doc().objects;
       });
-      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
 
       const afterUpdate = addObjectToDoc(oldRootDocHandle, { id: id2, title: 'test2' });
       expect(db.getObjectById(afterUpdate.id)).to.be.undefined;
@@ -228,7 +229,7 @@ describe('CoreDatabase', () => {
       const beforeUpdate = db.getObjectById(obj.id);
       expect(beforeUpdate).to.be.undefined;
 
-      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
 
       await db.query(Filter.id(obj.id)).first();
     });
@@ -266,7 +267,7 @@ describe('CoreDatabase', () => {
       for (const obj of partiallyLoadedLinks) {
         db.getObjectById(obj.id);
       }
-      await db.coreDatabase.updateSpaceState({ rootUrl: newRootDocHandle.url });
+      await db.coreDatabase.updateSpaceState(Context.default(), { rootUrl: newRootDocHandle.url });
 
       for (const obj of linksToRemove) {
         expect(db.getObjectById(obj.id)).to.be.undefined;
@@ -330,7 +331,7 @@ describe('CoreDatabase', () => {
         let coreDb: CoreDatabase;
         {
           // Create db.
-          const root = await peer.host.createSpaceRoot(spaceKey);
+          const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
           // NOTE: Client closes the database when it is closed.
           const spaceId = await createIdFromSpaceKey(spaceKey);
           const db = peer.client.constructDatabase({ spaceId, spaceKey });
@@ -338,7 +339,7 @@ describe('CoreDatabase', () => {
           coreDb = db.coreDatabase;
         }
         expect(coreDb.getAllObjectIds()).to.deep.eq([]);
-        void coreDb.open({ rootUrl: fakeUrl });
+        void coreDb.open(Context.default(), { rootUrl: fakeUrl });
         const barrier = new Trigger();
         setTimeout(() => barrier.wake());
         await barrier.wait();

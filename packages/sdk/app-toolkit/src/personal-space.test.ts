@@ -38,8 +38,8 @@ describe('personal-space', () => {
     expect(isPersonalSpace(space)).toBe(false);
   });
 
-  test('isPersonalSpace prefers tags over properties', ({ expect }) => {
-    const space = { tags: [PERSONAL_SPACE_TAG], properties: {} } as any;
+  test('isPersonalSpace prefers tags over conflicting properties', ({ expect }) => {
+    const space = { tags: [PERSONAL_SPACE_TAG], properties: { __DEFAULT__: false } } as any;
     expect(isPersonalSpace(space)).toBe(true);
   });
 

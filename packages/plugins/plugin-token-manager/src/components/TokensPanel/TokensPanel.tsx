@@ -63,7 +63,9 @@ export const TokensPanel = ({
         ) : (
           <Settings.Frame>
             <TokenManager tokens={tokens} onDelete={onDelete} />
-            <NewTokenSelector spaceId={spaceId} onAddAccessToken={onAddAccessToken} onCustomToken={onNew} />
+            <div role='none'>
+              <NewTokenSelector spaceId={spaceId} onAddAccessToken={onAddAccessToken} onCustomToken={onNew} />
+            </div>
           </Settings.Frame>
         )}
       </Settings.Section>

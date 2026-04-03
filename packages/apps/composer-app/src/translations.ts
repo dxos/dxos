@@ -19,6 +19,7 @@ export const translations = [
         'copy error label': 'Copy this error',
         'download logs label': 'Download logs',
         'feedback label': 'Feedback',
+        'feedback sent label': 'Feedback sent',
         'update and reload page label': 'Update',
         'reload page label': 'Reload',
         'safe mode label': 'Safe mode',

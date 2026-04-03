@@ -4,6 +4,7 @@
 mod oauth;
 #[cfg(desktop)]
 mod window_state;
+#[cfg(desktop)]
 mod xattr_cmd;
 #[cfg(target_os = "macos")]
 mod menubar;
@@ -101,11 +102,7 @@ pub fn run() {
     ]);
 
     #[cfg(mobile)]
-    let builder = builder.invoke_handler(tauri::generate_handler![
-        xattr_cmd::get_xattr,
-        xattr_cmd::set_xattr,
-        xattr_cmd::remove_xattr,
-    ]);
+    let builder = builder.invoke_handler(tauri::generate_handler![]);
 
     #[cfg(desktop)]
     let builder = builder.manage(OAuthServerState::new());

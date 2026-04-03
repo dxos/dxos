@@ -97,6 +97,10 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
     setValues(valuesProp ?? {});
   }, []);
 
+  if (!space) {
+    return <></>;
+  }
+
   return (
     <Tooltip.Provider>
       <TestLayout json={{ values, schema: schema.ast }}>

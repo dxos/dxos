@@ -15,6 +15,7 @@ const pluginTranslations = [
         'profile label': 'Profile',
         'profile description': 'You can adjust how your user settings here.',
         'devices label': 'Devices',
+        'add device label': 'Add device',
         'devices verbose label': 'Manage devices',
         'add device description':
           'Authenticating another device is a two-step process. To get started, create a code using the button below.',

@@ -94,7 +94,8 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-toolbar-surface dx-contain-layout dx-app-drag',
           )}
         >
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto!'>
+          {/* TODO(burdon): ScrollArea. */}
+          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto'>
             {companions.map((companion) => (
               <Tabs.Tab key={getCompanionVariant(companion.id)} value={getCompanionVariant(companion.id)} asChild>
                 <IconButton
@@ -107,7 +108,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                     activeId === getCompanionVariant(companion.id)
                       ? state.complementarySidebarState === 'expanded'
                         ? 'primary'
-                        : 'default'
+                        : 'ghost'
                       : 'ghost'
                   }
                   onClick={handleTabClick}
@@ -130,7 +131,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
         </div>
         {activeId &&
           companions.map((companion) => (
-            <Tabs.Tabpanel
+            <Tabs.Panel
               key={getCompanionVariant(companion.id)}
               value={getCompanionVariant(companion.id)}
               classNames={[
@@ -145,7 +146,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 data={data}
                 hoistStatusbar={hoistStatusbar}
               />
-            </Tabs.Tabpanel>
+            </Tabs.Panel>
           ))}
       </Tabs.Root>
     </Main.ComplementarySidebar>
@@ -172,7 +173,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
   return (
     <Panel.Root>
       <Panel.Toolbar asChild size='lg'>
-        <Toolbar.Root classNames='bg-modal-surface'>
+        <Toolbar.Root classNames='bg-modal-surface border-b border-subdued-separator'>
           <IconButton
             label={toLocalizedString(companion.properties.label, t)}
             icon={companion.properties.icon}
@@ -187,7 +188,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
           </div>
         </Toolbar.Root>
       </Panel.Toolbar>
-      <Panel.Content>
+      <Panel.Content classNames='bg-base-surface'>
         <Surface.Surface
           role={`deck-companion--${getCompanionVariant(companion.id)}`}
           data={data}

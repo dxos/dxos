@@ -78,12 +78,12 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
                     '[&_[role="tabpanel"]]:min-h-0 [&_[role="tabpanel"]]:px-form-chrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden',
                   )}
                 >
-                  <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
+                  <Tabs.Panel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
                     <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
-                  </Tabs.Tabpanel>
-                  <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset px-0!'>
+                  </Tabs.Panel>
+                  <Tabs.Panel value='model' tabIndex={-1} classNames='dx-focus-ring-inset px-0!'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
-                  </Tabs.Tabpanel>
+                  </Tabs.Panel>
                   <Tabs.Tablist classNames='justify-center p-form-chrome border-y border-subdued-separator order-last'>
                     <Tabs.IconTab
                       value='blueprints'

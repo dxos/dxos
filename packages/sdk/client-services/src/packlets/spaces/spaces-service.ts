@@ -6,6 +6,7 @@ import type { AutomergeUrl } from '@automerge/automerge-repo';
 
 import { SubscriptionList, UpdateScheduler, scheduleTask } from '@dxos/async';
 import { Stream } from '@dxos/codec-protobuf/stream';
+import { Context } from '@dxos/context';
 import {
   type CredentialProcessor,
   createAdmissionCredentials,
@@ -70,7 +71,7 @@ export class SpacesServiceImpl implements SpacesService {
   async createSpace(request: CreateSpaceRequest): Promise<Space> {
     this._requireIdentity();
     const dataSpaceManager = await this._getDataSpaceManager();
-    const space = await dataSpaceManager.createSpace({
+    const space = await dataSpaceManager.createSpace(new Context(), {
       tags: request?.tags,
       membershipPolicy: request?.membershipPolicy,
     });
@@ -85,11 +86,11 @@ export class SpacesServiceImpl implements SpacesService {
     if (state) {
       switch (state) {
         case SpaceState.SPACE_ACTIVE:
-          await space.activate();
+          await space.activate(Context.default());
           break;
 
         case SpaceState.SPACE_INACTIVE:
-          await space.deactivate();
+          await space.deactivate(Context.default());
           break;
         default:
           throw new ApiError({ message: 'Invalid space state' });
@@ -97,7 +98,7 @@ export class SpacesServiceImpl implements SpacesService {
     }
 
     if (edgeReplication !== undefined) {
-      await dataSpaceManager.setSpaceEdgeReplicationSetting(spaceKey, edgeReplication);
+      await dataSpaceManager.setSpaceEdgeReplicationSetting(Context.default(), spaceKey, edgeReplication);
     }
   }
 
@@ -268,7 +269,7 @@ export class SpacesServiceImpl implements SpacesService {
 
   async joinBySpaceKey({ spaceKey }: JoinBySpaceKeyRequest): Promise<JoinSpaceResponse> {
     const dataSpaceManager = await this._getDataSpaceManager();
-    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(spaceKey);
+    const credential = await dataSpaceManager.requestSpaceAdmissionCredential(Context.default(), spaceKey);
     return this._joinByAdmission({ credential });
   }
 
@@ -287,6 +288,20 @@ export class SpacesServiceImpl implements SpacesService {
       await writer.writeDocument(documentId, data);
     }
 
+    const feeds = await space.getAllFeeds();
+    for (const feed of feeds) {
+      const archiveBlocks = feed.blocks.map((block) => ({
+        actorId: block.actorId,
+        sequence: block.sequence,
+        prevActorId: block.prevActorId,
+        prevSequence: block.prevSequence,
+        position: block.position,
+        timestamp: block.timestamp,
+        data: Buffer.from(block.data).toString('base64'),
+      }));
+      await writer.writeFeed(feed.feedId, feed.feedNamespace, archiveBlocks);
+    }
+
     const archive = await writer.finish();
     return { archive };
   }
@@ -295,7 +310,7 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     const extracted = await extractSpaceArchive(request.archive);
     invariant(extracted.metadata.echo?.currentRootUrl, 'Space archive does not contain a root URL');
-    const space = await dataSpaceManager.createSpace({
+    const space = await dataSpaceManager.createSpace(Context.default(), {
       documents: extracted.documents,
       rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
     });
@@ -312,7 +327,7 @@ export class SpacesServiceImpl implements SpacesService {
     const dataSpaceManager = await this._getDataSpaceManager();
     let dataSpace = dataSpaceManager.spaces.get(assertion.spaceKey);
     if (!dataSpace) {
-      dataSpace = await dataSpaceManager.acceptSpace({
+      dataSpace = await dataSpaceManager.acceptSpace(Context.default(), {
         spaceKey: assertion.spaceKey,
         genesisFeedKey: assertion.genesisFeedKey,
         tags: assertion.tags,

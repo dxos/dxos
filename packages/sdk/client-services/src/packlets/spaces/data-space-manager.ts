@@ -6,7 +6,7 @@ import { type Doc } from '@automerge/automerge';
 import { type AutomergeUrl, type DocumentId, interpretAsDocumentId } from '@automerge/automerge-repo';
 
 import { Event, synchronized, trackLeaks } from '@dxos/async';
-import { SpaceProperties } from '@dxos/client-protocol';
+import { LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
 import { Context, LifecycleState, Resource, cancelWithContext } from '@dxos/context';
 import {
   type CredentialSigner,
@@ -139,6 +139,7 @@ export type CreateSpaceOptions = {
 };
 
 @trackLeaks('open', 'close')
+@trace.resource()
 export class DataSpaceManager extends Resource {
   public readonly updated = new Event();
 
@@ -185,12 +186,15 @@ export class DataSpaceManager extends Resource {
           Array.from(this._spaces.values()).map(async (space) => {
             const rootUrl = space.automergeSpaceState.rootUrl;
             const rootHandle = rootUrl
-              ? await this._echoHost.loadDoc<Doc<DatabaseDirectory>>(Context.default(), rootUrl as AutomergeUrl)
+              ? await this._echoHost.loadDoc<Doc<DatabaseDirectory>>(this._ctx, rootUrl as AutomergeUrl)
               : undefined;
             await rootHandle?.whenReady();
             const rootDoc = rootHandle?.doc();
 
-            const properties = rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
+            const properties =
+              rootDoc &&
+              (findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties)) ??
+                findInlineObjectOfType(rootDoc, Type.getTypename(LegacySpaceProperties)));
 
             return {
               key: space.key.toHex(),
@@ -227,7 +231,7 @@ export class DataSpaceManager extends Resource {
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
         log('load space', { spaceMetadata });
-        const space = await this._constructSpace(spaceMetadata);
+        const space = await this._constructSpace(this._ctx, spaceMetadata);
         // Track spaces that were previously active for auto-activation (used in dedicated worker mode).
         if (this._runtimeProps?.autoActivateSpaces && spaceMetadata.state === SpaceState.SPACE_ACTIVE) {
           spacesToActivate.push(space);
@@ -240,7 +244,7 @@ export class DataSpaceManager extends Resource {
     // Auto-activate spaces that were previously active (used in dedicated worker mode after leader changeover).
     for (const space of spacesToActivate) {
       log('auto-activating space', { spaceKey: space.key });
-      space.activate().catch((err) => {
+      space.activate(this._ctx).catch((err) => {
         log.error('Error auto-activating space', { spaceKey: space.key, err });
       });
     }
@@ -251,10 +255,10 @@ export class DataSpaceManager extends Resource {
   }
 
   @synchronized
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     log('close');
     for (const space of this._spaces.values()) {
-      await space.close();
+      await space.close(ctx);
     }
     this._spaces.clear();
   }
@@ -263,7 +267,8 @@ export class DataSpaceManager extends Resource {
    * Creates a new space writing the genesis credentials to the control feed.
    */
   @synchronized
-  async createSpace(options: CreateSpaceOptions = {}): Promise<DataSpace> {
+  @trace.span({ showInBrowserTimeline: true })
+  async createSpace(ctx: Context, options: CreateSpaceOptions = {}): Promise<DataSpace> {
     assertArgument(
       !!options.rootUrl === !!options.documents,
       'options',
@@ -271,6 +276,8 @@ export class DataSpaceManager extends Resource {
     );
 
     assertState(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
+
+    const tags = options.tags ? Array.from(options.tags) : [];
     const spaceKey = await this._keyring.createKey();
     const controlFeedKey = await this._keyring.createKey();
     const dataFeedKey = await this._keyring.createKey();
@@ -283,7 +290,7 @@ export class DataSpaceManager extends Resource {
       controlFeedKey,
       dataFeedKey,
       state: SpaceState.SPACE_ACTIVE,
-      tags: options.tags ?? [],
+      tags,
     };
 
     log('creating space...', { spaceId, spaceKey });
@@ -321,19 +328,19 @@ export class DataSpaceManager extends Resource {
     let root: DatabaseRoot;
     if (options.rootUrl) {
       const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
-      const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(Context.default(), newRootDocId);
+      const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
       DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
 
-      root = await this._echoHost.openSpaceRoot(spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
+      root = await this._echoHost.openSpaceRoot(ctx, spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
     } else {
-      root = await this._echoHost.createSpaceRoot(spaceKey);
+      root = await this._echoHost.createSpaceRoot(ctx, spaceKey);
     }
-    await this._echoHost.flush();
+    await this._echoHost.flush(ctx);
 
     log('constructing space...', { spaceKey });
 
-    const space = await this._constructSpace(metadata);
-    await space.open();
+    const space = await this._constructSpace(ctx, metadata);
+    await space.open(ctx);
 
     log('adding space...', { spaceKey });
 
@@ -342,7 +349,7 @@ export class DataSpaceManager extends Resource {
       this._signingContext,
       space.inner,
       root.url,
-      options.tags,
+      tags,
       options.membershipPolicy,
     );
     await this._metadataStore.addSpace(metadata);
@@ -351,7 +358,7 @@ export class DataSpaceManager extends Resource {
     invariant(getCredentialAssertion(memberCredential)['@type'] === 'dxos.halo.credentials.SpaceMember');
     await this._signingContext.recordCredential(memberCredential);
 
-    await space.initializeDataPipeline();
+    await space.initializeDataPipeline(ctx);
 
     log('space ready.', { spaceId, spaceKey });
 
@@ -359,23 +366,30 @@ export class DataSpaceManager extends Resource {
     return space;
   }
 
+  /**
+   * Accepts an existing space by joining its swarm and initializing the data pipeline.
+   * @param ctx - Caller context for cancellation and tracing.
+   * @param opts - Space keys and optional timeframes for catch-up.
+   */
   // TODO(burdon): Rename join space.
   @synchronized
-  async acceptSpace(opts: AcceptSpaceOptions): Promise<DataSpace> {
+  @trace.span({ showInBrowserTimeline: true })
+  async acceptSpace(ctx: Context, opts: AcceptSpaceOptions): Promise<DataSpace> {
     log('accept space', { opts });
     invariant(this._lifecycleState === LifecycleState.OPEN, 'Not open.');
     invariant(!this._spaces.has(opts.spaceKey), 'Space already exists.');
 
+    const tags = opts.tags ? Array.from(opts.tags) : [];
     const metadata: SpaceMetadata = {
       key: opts.spaceKey,
       genesisFeedKey: opts.genesisFeedKey,
       controlTimeframe: opts.controlTimeframe,
       dataTimeframe: opts.dataTimeframe,
-      tags: opts.tags ?? [],
+      tags,
     };
 
-    const space = await this._constructSpace(metadata);
-    await space.open();
+    const space = await this._constructSpace(ctx, metadata);
+    await space.open(ctx);
     await this._metadataStore.addSpace(metadata);
     space.initializeDataPipelineAsync();
 
@@ -428,8 +442,8 @@ export class DataSpaceManager extends Resource {
     );
   }
 
-  public async requestSpaceAdmissionCredential(spaceKey: PublicKey): Promise<Credential> {
-    return this._spaceManager.requestSpaceAdmissionCredential({
+  public async requestSpaceAdmissionCredential(ctx: Context, spaceKey: PublicKey): Promise<Credential> {
+    return this._spaceManager.requestSpaceAdmissionCredential(ctx, {
       spaceKey,
       identityKey: this._signingContext.identityKey,
       timeout: 15_000,
@@ -442,7 +456,11 @@ export class DataSpaceManager extends Resource {
     });
   }
 
-  async setSpaceEdgeReplicationSetting(spaceKey: PublicKey, setting: EdgeReplicationSetting): Promise<void> {
+  async setSpaceEdgeReplicationSetting(
+    ctx: Context,
+    spaceKey: PublicKey,
+    setting: EdgeReplicationSetting,
+  ): Promise<void> {
     const space = this._spaces.get(spaceKey);
     invariant(space, 'Space not found.');
 
@@ -454,7 +472,7 @@ export class DataSpaceManager extends Resource {
           await this._echoEdgeReplicator?.disconnectFromSpace(space.id);
           break;
         case EdgeReplicationSetting.ENABLED:
-          await this._echoEdgeReplicator?.connectToSpace(space.id);
+          await this._echoEdgeReplicator?.connectToSpace(ctx, space.id);
           break;
       }
     }
@@ -462,7 +480,7 @@ export class DataSpaceManager extends Resource {
     space.stateUpdate.emit();
   }
 
-  private async _constructSpace(metadata: SpaceMetadata): Promise<DataSpace> {
+  private async _constructSpace(ctx: Context, metadata: SpaceMetadata): Promise<DataSpace> {
     log('construct space', { metadata });
     const gossip = new Gossip({
       localPeerId: this._signingContext.deviceKey,
@@ -561,7 +579,7 @@ export class DataSpaceManager extends Resource {
     dataSpace.postOpen.append(async () => {
       const setting = dataSpace.getEdgeReplicationSetting();
       if (!setting || setting === EdgeReplicationSetting.ENABLED) {
-        await this._echoEdgeReplicator?.connectToSpace(dataSpace.id);
+        await this._echoEdgeReplicator?.connectToSpace(ctx, dataSpace.id);
       } else if (this._echoEdgeReplicator) {
         log('not connecting EchoEdgeReplicator because of EdgeReplicationSetting', { spaceId: dataSpace.id });
       }
@@ -658,7 +676,7 @@ export class DataSpaceManager extends Resource {
     invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
   ): Promise<void> {
     const tasks = invitations.map(([credentialId, invitation]) => {
-      return this._invitationsManager.createInvitation({
+      return this._invitationsManager.createInvitation(this._ctx, {
         type: Invitation.Type.DELEGATED,
         kind: Invitation.Kind.SPACE,
         spaceKey: space.key,

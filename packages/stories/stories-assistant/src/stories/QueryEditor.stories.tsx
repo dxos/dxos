@@ -70,8 +70,8 @@ const meta: Meta<typeof QueryEditor> = {
     withClientProvider({
       types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
       createIdentity: true,
-      onCreateIdentity: async ({ client }) => {
-        const space = client.spaces.get()[0];
+      createSpace: true,
+      onCreateSpace: async ({ space }) => {
         const createObjects = createObjectFactory(space.db, generator);
         const objects = await createObjects([
           { type: Organization.Organization, count: 30 },

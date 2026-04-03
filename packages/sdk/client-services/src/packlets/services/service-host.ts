@@ -147,7 +147,7 @@ export class ClientServicesHost {
             void this.open(new Context());
           }
         },
-        onRelease: () => this.close(),
+        onRelease: () => this.close(Context.default()),
       });
     }
 
@@ -421,7 +421,7 @@ export class ClientServicesHost {
 
   @synchronized
   @Trace.span()
-  async close(): Promise<void> {
+  async close(ctx: Context): Promise<void> {
     if (!this._open) {
       return;
     }

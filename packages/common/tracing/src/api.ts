@@ -68,6 +68,8 @@ const mark = (name: string) => {
 
 export type SpanOptions = {
   showInBrowserTimeline?: boolean;
+  /** When false the span is not exported to remote OTLP collectors. Defaults to true. */
+  showInRemoteTracing?: boolean;
   op?: string;
   attributes?: Record<string, any>;
 };
@@ -76,30 +78,35 @@ export type SpanOptions = {
  * Decorator that creates a span for the execution duration of the decorated method.
  */
 const span =
-  ({ showInBrowserTimeline = false, op, attributes }: SpanOptions = {}) =>
+  ({ showInBrowserTimeline = false, showInRemoteTracing = true, op, attributes }: SpanOptions = {}) =>
   (target: any, propertyKey: string, descriptor: TypedPropertyDescriptor<(...args: any) => any>) => {
     const method = descriptor.value!;
 
     descriptor.value = async function (this: any, ...args: any) {
-      const parentCtx = args[0] instanceof Context ? args[0] : null;
+      const explicitCtx = args[0] instanceof Context ? args[0] : null;
+
       const span = TRACE_PROCESSOR.traceSpan({
-        parentCtx,
+        parentCtx: explicitCtx,
         methodName: propertyKey,
         instance: this,
         showInBrowserTimeline,
+        showInRemoteTracing,
         op,
         attributes,
       });
 
-      const callArgs = span.ctx ? [span.ctx, ...args.slice(1)] : args;
-      try {
-        return await method.apply(this, callArgs);
-      } catch (err) {
-        span.markError(err);
-        throw err;
-      } finally {
-        span.markSuccess();
-      }
+      const callArgs = explicitCtx ? [span.ctx, ...args.slice(1)] : args;
+
+      return TRACE_PROCESSOR.remoteTracing.wrapExecution(span, async () => {
+        try {
+          return await method.apply(this, callArgs);
+        } catch (err) {
+          span.markError(err);
+          throw err;
+        } finally {
+          span.markSuccess();
+        }
+      });
     };
   };
 

@@ -22,7 +22,7 @@ import { Toolbar, type ToolbarProps } from './Toolbar';
 type CallRootProps = PropsWithChildren<ThemedClassName>;
 
 const CallRoot: FC<CallRootProps> = ({ children }) => {
-  return <div className='relative flex flex-col grow overflow-hidden'>{children}</div>;
+  return <div className='relative dx-container flex flex-col'>{children}</div>;
 };
 
 CallRoot.displayName = 'CallRoot';

@@ -39,6 +39,7 @@ export class CredentialGenerator {
     spaceKey: PublicKey,
     controlKey: PublicKey,
     creatorProfile?: ProfileDocument,
+    membershipPolicy: MembershipPolicy = MembershipPolicy.INVITE,
   ): Promise<Credential[]> {
     return [
       await createCredential({
@@ -48,7 +49,7 @@ export class CredentialGenerator {
         assertion: {
           '@type': 'dxos.halo.credentials.SpaceGenesis',
           spaceKey,
-          membershipPolicy: MembershipPolicy.INVITE,
+          membershipPolicy,
         },
       }),
 
