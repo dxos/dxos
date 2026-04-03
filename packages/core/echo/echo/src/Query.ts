@@ -333,6 +333,10 @@ class QueryClass implements Any {
       | 'all-accessible-spaces',
     options?: { includeFeeds?: boolean },
   ): Any {
+    if (arg == null) {
+      throw new TypeError('Query.from() requires a valid data source argument (database, feed, query, scope, or "all-accessible-spaces").');
+    }
+
     if (is(arg)) {
       return new QueryClass({
         type: 'from',

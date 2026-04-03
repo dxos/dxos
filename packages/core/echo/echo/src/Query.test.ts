@@ -603,6 +603,20 @@ describe('query api', () => {
       );
     });
 
+    test('Query.from(undefined) throws TypeError', () => {
+      expect(() => Query.select(Filter.type(TestSchema.Person)).from(undefined as any)).toThrow(TypeError);
+      expect(() => Query.select(Filter.type(TestSchema.Person)).from(undefined as any)).toThrow(
+        /Query\.from\(\) requires a valid data source argument/,
+      );
+    });
+
+    test('Query.from(null) throws TypeError', () => {
+      expect(() => Query.select(Filter.type(TestSchema.Person)).from(null as any)).toThrow(TypeError);
+      expect(() => Query.select(Filter.type(TestSchema.Person)).from(null as any)).toThrow(
+        /Query\.from\(\) requires a valid data source argument/,
+      );
+    });
+
     test.skip('chain', () => {
       // NOTE: Can't support props without type since they can't be inferred.
       // const f1: Filter<Person> = Filter.props({ name: 'Fred' });
