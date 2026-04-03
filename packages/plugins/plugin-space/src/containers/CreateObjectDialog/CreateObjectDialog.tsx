@@ -25,7 +25,6 @@ import {
   type Metadata,
 } from '../../components';
 import { meta } from '../../meta';
-import { getPersonalSpace } from '@dxos/app-toolkit';
 
 export const CREATE_OBJECT_DIALOG = `${meta.id}.CreateObjectDialog`;
 
