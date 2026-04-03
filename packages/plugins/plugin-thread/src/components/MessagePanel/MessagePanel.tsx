@@ -108,7 +108,7 @@ export const MessagePanel = ({
               variant='ghost'
               icon='ph--check--regular'
               iconOnly
-              label={t('accept-proposal.label')}
+              label={t('accept proposal label')}
               classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleAcceptProposal}
             />
@@ -119,7 +119,7 @@ export const MessagePanel = ({
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
-              label={t('delete-message.label')}
+              label={t('delete message label')}
               classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleDelete}
             />

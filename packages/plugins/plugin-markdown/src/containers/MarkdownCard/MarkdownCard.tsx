@@ -34,7 +34,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
       )}
       <Card.Section>
         <Card.Text classNames='px-1.5 text-xs text-description'>
-          {info.words} {t('words.label', { count: info.words })}
+          {info.words} {t('words label', { count: info.words })}
         </Card.Text>
       </Card.Section>
     </Card.Content>

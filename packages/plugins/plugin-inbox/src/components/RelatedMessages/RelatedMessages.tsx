@@ -24,7 +24,7 @@ export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesPro
   return (
     <>
       <Card.Row>
-        <Card.Heading variant='subtitle'>{t('related-messages.title')}</Card.Heading>
+        <Card.Heading variant='subtitle'>{t('related messages title')}</Card.Heading>
       </Card.Row>
       {messages.map((message) => (
         <Card.Action

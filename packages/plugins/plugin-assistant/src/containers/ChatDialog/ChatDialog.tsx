@@ -59,7 +59,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   return (
     <Chat.Root chat={chat} processor={processor} onEvent={handleEvent}>
       <NaturalChatDialog.Root open={open} expanded={expanded} onOpenChange={setOpen}>
-        <NaturalChatDialog.Header title={t('assistant-dialog.title')} />
+        <NaturalChatDialog.Header title={t('assistant dialog title')} />
         <NaturalChatDialog.Content>
           <Chat.Thread />
         </NaturalChatDialog.Content>

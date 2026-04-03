@@ -195,14 +195,14 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
         <Toolbar.Root disabled={!hasAttention}>
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <IconButton icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
+              <IconButton icon='ph--plus--regular' iconOnly label={t('notebook cell insert label')} />
             </DropdownMenu.Trigger>
             <NotebookMenu onCellInsert={handleCellInsert} />
           </DropdownMenu.Root>
           <Toolbar.IconButton
             icon='ph--play--fill'
             iconOnly
-            label={t('compute.label')}
+            label={t('compute label')}
             classNames='text-success-text'
             onClick={handleCompute}
           />

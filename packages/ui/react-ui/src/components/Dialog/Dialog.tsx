@@ -158,7 +158,7 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
     return (
       <IconButton
         {...props}
-        label={label ?? t('close-dialog.label')}
+        label={label ?? t('close dialog label')}
         icon='ph--x--regular'
         iconOnly
         size={4}

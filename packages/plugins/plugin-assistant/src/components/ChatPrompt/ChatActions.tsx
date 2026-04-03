@@ -31,7 +31,7 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
         variant='ghost'
         icon='ph--x--regular'
         iconOnly
-        label={t('cancel-processing.button')}
+        label={t('cancel processing button')}
         onClick={() => onEvent?.({ type: 'cancel' })}
       />
 
@@ -43,7 +43,7 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
           icon='ph--microphone--regular'
           iconOnly
           noTooltip
-          label={t('microphone.button')}
+          label={t('microphone button')}
           onMouseDown={() => onEvent?.({ type: 'record-start' })}
           onMouseUp={() => onEvent?.({ type: 'record-stop' })}
           onTouchStart={() => onEvent?.({ type: 'record-start' })}
@@ -55,7 +55,7 @@ export const ChatActions = ({ classNames, children, microphone, recording, proce
         variant='ghost'
         icon='ph--wrench--regular'
         iconOnly
-        label={t('debug.button')}
+        label={t('debug button')}
         onClick={() => onEvent?.({ type: 'toggle-debug' })}
       />
     </div>

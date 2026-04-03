@@ -31,7 +31,7 @@ export const ToggleSidebarButton = ({
       icon='ph--sidebar--regular'
       iconOnly
       size={4}
-      label={t('open-navigation-sidebar.label')}
+      label={t('open navigation sidebar label')}
       onClick={handleClick}
       classNames={classNames}
     />
@@ -52,7 +52,7 @@ export const CloseSidebarButton = () => {
       icon='ph--caret-line-left--regular'
       iconOnly
       size={4}
-      label={t('close-navigation-sidebar.label')}
+      label={t('close navigation sidebar label')}
       onClick={handleClick}
       classNames='rounded-none px-1 dx-focus-ring-inset pe-[max(.5rem,env(safe-area-inset-left))]'
     />
@@ -85,7 +85,7 @@ export const ToggleComplementarySidebarButton = ({
       classNames={['[&>svg]:-scale-x-100', classNames]}
       icon='ph--sidebar-simple--regular'
       iconOnly
-      label={t('open-complementary-sidebar.label')}
+      label={t('open complementary sidebar label')}
       tooltipSide={inR0 ? 'left' : undefined}
       onClick={handleClick}
     />

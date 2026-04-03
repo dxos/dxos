@@ -152,7 +152,7 @@ export const RefField = (props: RefFieldProps) => {
       <div>
         {readonly ? (
           !item ? (
-            <p className={mx('text-description', 'mb-2')}>{t('empty-readonly-ref-field.label')}</p>
+            <p className={mx('text-description', 'mb-2')}>{t('empty readonly ref field label')}</p>
           ) : (
             <DxAnchor key={item.id} dxn={item.id} rootclassname='me-1'>
               {item.label}
@@ -170,7 +170,7 @@ export const RefField = (props: RefFieldProps) => {
               ) : (
                 <Button classNames='w-full text-start gap-form-gap'>
                   <div role='none' className='grow overflow-hidden'>
-                    <span className='flex truncate text-description'>{placeholder ?? t('ref-field.placeholder')}</span>
+                    <span className='flex truncate text-description'>{placeholder ?? t('ref field placeholder')}</span>
                   </div>
                   <Icon size={3} icon='ph--caret-down--bold' />
                 </Button>

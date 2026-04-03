@@ -20,9 +20,9 @@ export const PresenterSettings = ({ settings, onSettingsChange }: PresenterSetti
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('settings.title', { ns: meta.id })}>
+      <Settings.Section title={t('settings title', { ns: meta.id })}>
         <Settings.Group>
-          <Settings.ItemInput title={t('present-collections.label')}>
+          <Settings.ItemInput title={t('present collections label')}>
             <Input.Switch
               checked={settings.presentCollections}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, presentCollections: !!checked }))}

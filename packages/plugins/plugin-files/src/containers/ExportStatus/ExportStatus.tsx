@@ -23,7 +23,7 @@ export const ExportStatus = ({ running, lastExport }: ExportStatusProps) => {
           variant='ghost'
           icon='ph--arrows-clockwise--regular'
           iconOnly
-          label={t('currently-exporting.label')}
+          label={t('currently exporting label')}
         />
       ) : (
         <IconButton
@@ -32,7 +32,7 @@ export const ExportStatus = ({ running, lastExport }: ExportStatusProps) => {
           iconOnly
           label={
             lastExport
-              ? t('last-export-at.label', {
+              ? t('last export at label', {
                   value: new Date(lastExport),
                   formatProps: {
                     value: {
@@ -44,7 +44,7 @@ export const ExportStatus = ({ running, lastExport }: ExportStatusProps) => {
                     },
                   },
                 })
-              : t('no-previous-exports.label')
+              : t('no previous exports label')
           }
         />
       )}

@@ -55,7 +55,7 @@ export const ChatContainer = composable<HTMLDivElement, ChatContainerProps>(
     const messageRef = useRef('');
     const extensions = useMemo(
       () => [
-        createBasicExtensions({ placeholder: t('message.placeholder') }),
+        createBasicExtensions({ placeholder: t('message placeholder') }),
         createThemeExtensions({ themeMode }),
         listener({ onChange: ({ text }) => (messageRef.current = text) }),
         command,
@@ -123,7 +123,7 @@ export const ChatContainer = composable<HTMLDivElement, ChatContainerProps>(
         </ScrollArea.Root>
 
         <MessageTextbox extensions={extensions} autoFocus={autoFocus} onSend={handleCreate} {...textboxMetadata} />
-        <ThreadComponent.Status activity={activity}>{t('activity.message')}</ThreadComponent.Status>
+        <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
       </ThreadComponent.Root>
     );
   },

@@ -30,21 +30,21 @@ export const ScriptPluginSettings = ({ settings, onSettingsChange }: ScriptPlugi
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('settings.title', { ns: meta.id })}>
+      <Settings.Section title={t('settings title', { ns: meta.id })}>
         <Settings.Group>
           {/* TODO(wittjosiah): Hide outside of dev environments. */}
-          <Settings.ItemInput title={t('authenticate-action.label')}>
-            <Button onClick={handleAuthenticate}>{t('authenticate-button.label')}</Button>
+          <Settings.ItemInput title={t('authenticate action label')}>
+            <Button onClick={handleAuthenticate}>{t('authenticate button label')}</Button>
           </Settings.ItemInput>
 
-          <Settings.ItemInput title={t('editor-input-mode.label')}>
+          <Settings.ItemInput title={t('editor input mode label')}>
             <Select.Root
               value={settings.editorInputMode ?? 'default'}
               onValueChange={(value) => {
                 onSettingsChange((s) => ({ ...s, editorInputMode: value as EditorInputMode }));
               }}
             >
-              <Select.TriggerButton placeholder={t('select-editor-input-mode.placeholder')} />
+              <Select.TriggerButton placeholder={t('select editor input mode placeholder')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>

@@ -48,7 +48,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
-              label={t('close-info.button')}
+              label={t('close info button')}
               size={4}
               onClick={onClose}
             />
@@ -77,7 +77,7 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
               classNames={mx('transition duration-200 ease-linear', orientation === 'white' && 'rotate-180')}
               icon='ph--arrows-clockwise--regular'
               iconOnly
-              label={t('flip-board.button')}
+              label={t('flip board button')}
               size={4}
               onClick={() => onOrientationChange(orientation === 'white' ? 'black' : 'white')}
             />
@@ -116,12 +116,12 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
   const moveIndex = useAtomValue(model.moveIndex);
   const label = model.game.isGameOver()
     ? model.game.isCheckmate()
-      ? t('game.checkmate.label')
+      ? t('game.checkmate label')
       : model.game.isStalemate()
-        ? t('game.stalemate.label')
-        : t('game.draw.label')
+        ? t('game.stalemate label')
+        : t('game.draw label')
     : model.game.isCheck()
-      ? t('game.check.label')
+      ? t('game.check label')
       : undefined;
 
   const history = model.game.history();
@@ -231,7 +231,7 @@ const PlayerSelector = ({ value, onValueChange, members }: PlayerSelectorProps) 
   const { t } = useTranslation(meta.id);
   return (
     <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.TriggerButton placeholder={t('select-player.button')} />
+      <Select.TriggerButton placeholder={t('select player button')} />
       <Select.Portal>
         <Select.Content>
           <Select.Viewport>

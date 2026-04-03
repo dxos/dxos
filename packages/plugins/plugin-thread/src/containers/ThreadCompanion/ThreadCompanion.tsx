@@ -195,10 +195,10 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
           <Toolbar.Root>
             <Tabs.Tablist classNames='p-0'>
               <Tabs.Tab classNames='text-sm' value='unresolved'>
-                {t('show-unresolved.label')}
+                {t('show unresolved label')}
               </Tabs.Tab>
               <Tabs.Tab classNames='text-sm' value='all'>
-                {t('show-all.label')}
+                {t('show all label')}
               </Tabs.Tab>
             </Tabs.Tablist>
           </Toolbar.Root>

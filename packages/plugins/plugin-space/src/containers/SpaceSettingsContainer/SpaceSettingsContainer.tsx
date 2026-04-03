@@ -115,11 +115,11 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
               [onValueChange, type],
             );
             return (
-              <Settings.ItemInput title={label} description={t('display-name.description')}>
+              <Settings.ItemInput title={label} description={t('display name description')}>
                 <Input.TextInput
                   value={getValue()}
                   onChange={handleChange}
-                  placeholder={t('display-name-input.placeholder')}
+                  placeholder={t('display name input placeholder')}
                   classNames='min-w-64'
                 />
               </Settings.ItemInput>
@@ -131,7 +131,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
             const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
             const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
             return (
-              <Settings.Item title={label} description={t('icon.description')}>
+              <Settings.Item title={label} description={t('icon description')}>
                 <IconPicker
                   value={getValue()}
                   onChange={handleChange}
@@ -145,7 +145,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Settings.Item title={label} description={t('hue.description')}>
+          <Settings.Item title={label} description={t('hue description')}>
             <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
           </Settings.Item>
         );
@@ -153,7 +153,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
-          <Settings.ItemInput title={label} description={t('edge-replication.description')}>
+          <Settings.ItemInput title={label} description={t('edge replication description')}>
             <Input.Switch checked={getValue()} onCheckedChange={handleChange} classNames='justify-self-end' />
           </Settings.ItemInput>
         );
@@ -163,9 +163,9 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         : ({ type, label, getValue, onValueChange }) => {
             const handleChange = useCallback(() => onValueChange(type, !getValue()), [onValueChange, type, getValue]);
             return (
-              <Settings.ItemInput title={label} description={t('archive-space.description')}>
+              <Settings.ItemInput title={label} description={t('archive space description')}>
                 <Button variant={getValue() ? 'default' : 'destructive'} onClick={handleChange}>
-                  {getValue() ? t('unarchive-space.label') : t('archive-space.label')}
+                  {getValue() ? t('unarchive space label') : t('archive space label')}
                 </Button>
               </Settings.ItemInput>
             );
@@ -188,8 +188,8 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
   return (
     <Settings.Root>
       <Settings.Section
-        title={t('space-properties-settings-verbose.label')}
-        description={t('space-properties-settings.description', { ns: meta.id })}
+        title={t('space properties settings verbose label')}
+        description={t('space properties settings description', { ns: meta.id })}
       >
         <Form.Root
           key={space.id}
@@ -201,12 +201,12 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
           <Form.FieldSet />
         </Form.Root>
       </Settings.Section>
-      <Settings.Section title={t('space-controls.title')} description={t('space-controls.description')}>
-        <Settings.ItemInput title={t('backup-space.title')} description={t('backup-space.description')}>
-          <Button onClick={handleBackup}>{t('download-backup.label')}</Button>
+      <Settings.Section title={t('space controls title')} description={t('space controls description')}>
+        <Settings.ItemInput title={t('backup space title')} description={t('backup space description')}>
+          <Button onClick={handleBackup}>{t('download backup label')}</Button>
         </Settings.ItemInput>
-        <Settings.ItemInput title={t('repair-space.title')} description={t('repair-space.description')}>
-          <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
+        <Settings.ItemInput title={t('repair space title')} description={t('repair space description')}>
+          <Button onClick={handleRepair}>{t('repair space label')}</Button>
         </Settings.ItemInput>
       </Settings.Section>
     </Settings.Root>

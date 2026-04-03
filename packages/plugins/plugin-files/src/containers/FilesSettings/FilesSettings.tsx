@@ -24,49 +24,49 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('settings.title', { ns: meta.id })}>
+      <Settings.Section title={t('settings title', { ns: meta.id })}>
         <Message.Root valence='warning'>
-          <Message.Content>{t('save-files-to-directory.description')}</Message.Content>
+          <Message.Content>{t('save files to directory description')}</Message.Content>
         </Message.Root>
         <Settings.Group>
           <Settings.ItemInput
-            title={t('save-files-to-directory.label')}
+            title={t('save files to directory label')}
             {...(state.rootHandle && { description: state.rootHandle.name })}
           >
             <IconButton
               classNames='ms-2'
               icon='ph--folder--regular'
               iconOnly
-              label={t('save-files-to-directory.label')}
+              label={t('save files to directory label')}
               onClick={() => invokePromise(FilesOperation.SelectRoot)}
             />
           </Settings.ItemInput>
-          <Settings.ItemInput title={t('trigger-export.label')}>
+          <Settings.ItemInput title={t('trigger export label')}>
             <IconButton
               classNames='ms-2'
               icon='ph--floppy-disk--regular'
               iconOnly
-              label={t('trigger-export.label')}
+              label={t('trigger export label')}
               onClick={() => invokePromise(FilesOperation.Export)}
             />
           </Settings.ItemInput>
-          <Settings.ItemInput title={t('trigger-import.label')}>
+          <Settings.ItemInput title={t('trigger import label')}>
             <IconButton
               classNames='ms-2'
               icon='ph--folder-open--regular'
               iconOnly
-              label={t('trigger-import.label')}
+              label={t('trigger import label')}
               onClick={() => invokePromise(FilesOperation.Import, {})}
             />
           </Settings.ItemInput>
-          <Settings.ItemInput title={t('auto-export.label')}>
+          <Settings.ItemInput title={t('auto export label')}>
             <Input.Switch
               disabled={!state.rootHandle}
               checked={state.rootHandle ? settings.autoExport : false}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, autoExport: !!checked }))}
             />
           </Settings.ItemInput>
-          <Settings.ItemInput title={t('auto-export-interval.label')}>
+          <Settings.ItemInput title={t('auto export interval label')}>
             <Input.TextInput
               type='number'
               min={1}
@@ -76,7 +76,7 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
               }
             />
           </Settings.ItemInput>
-          <Settings.ItemInput title={t('open-local-files.label')}>
+          <Settings.ItemInput title={t('open local files label')}>
             <Input.Switch
               checked={settings.openLocalFiles}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, openLocalFiles: !!checked }))}

@@ -64,7 +64,7 @@ export const EmojiPickerToolbarButton = ({
       <Popover.Trigger asChild>
         <Toolbar.IconButton
           icon='ph--user-circle--regular'
-          label={t('select-emoji.label')}
+          label={t('select emoji label')}
           iconOnly
           tooltipSide='bottom'
           disabled={disabled}
@@ -129,7 +129,7 @@ export const EmojiPickerBlock = ({
       <Popover.Root open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
         <Popover.Trigger asChild>
           <Button variant={triggerVariant} classNames='grow gap-2 text-2xl py-1' disabled={disabled}>
-            <span className='sr-only'>{t('select-emoji.label')}</span>
+            <span className='sr-only'>{t('select emoji label')}</span>
             <span>{emojiValue}</span>
             <Icon icon='ph--caret-down--bold' size={3} />
           </Button>
@@ -162,7 +162,7 @@ export const EmojiPickerBlock = ({
       <IconButton
         icon='ph--arrow-counter-clockwise--regular'
         iconOnly
-        label={t('clear.label')}
+        label={t('clear label')}
         tooltipSide='right'
         variant={triggerVariant}
         onClick={onClickClear}

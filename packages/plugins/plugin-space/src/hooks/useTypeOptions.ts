@@ -17,7 +17,7 @@ export const useTypeOptions = ({ space, annotation }: { space?: Space; annotatio
       typenames
         .map((typename) => ({
           value: typename,
-          label: t('typename.label', { ns: typename, defaultValue: typename }),
+          label: t('typename label', { ns: typename, defaultValue: typename }),
         }))
         .toSorted((a, b) => a.label.localeCompare(b.label)),
     [t, typenames],

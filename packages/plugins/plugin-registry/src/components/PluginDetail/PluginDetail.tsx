@@ -60,14 +60,14 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 <div className='flex gap-2'>
                   {homePage && (
                     <Link href={homePage} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
-                      {t('home-page.label')}
+                      {t('home page label')}
                       <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
                     </Link>
                   )}
 
                   {source && (
                     <Link href={source} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
-                      {t('source.label')}
+                      {t('source label')}
                       <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
                     </Link>
                   )}

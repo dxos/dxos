@@ -28,7 +28,7 @@ export const IconPicker = ({ ...props }: ThemedClassName<IconPickerProps>) => {
   return (
     <PickerButton
       Component={IconPreview}
-      label={t('select-icon.label')}
+      label={t('select icon label')}
       icon='ph--selection--regular'
       values={iconValues}
       {...props}

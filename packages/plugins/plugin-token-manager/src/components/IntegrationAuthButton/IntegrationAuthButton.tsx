@@ -47,5 +47,5 @@ export const IntegrationAuthButton = ({ source, db }: IntegrationAuthButtonProps
     return null;
   }
 
-  return <Button onClick={handleClick}>{t('connect-integration.label', { provider: preset.label })}</Button>;
+  return <Button onClick={handleClick}>{t('connect integration label', { provider: preset.label })}</Button>;
 };

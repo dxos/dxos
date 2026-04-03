@@ -23,7 +23,7 @@ export const HuePicker = (props: ThemedClassName<HuePickerProps>) => {
   return (
     <PickerButton
       Component={HuePreview}
-      label={t('select-hue.label')}
+      label={t('select hue label')}
       icon='ph--palette--regular'
       values={hues}
       {...props}

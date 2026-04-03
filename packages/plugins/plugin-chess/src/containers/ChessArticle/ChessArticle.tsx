@@ -33,7 +33,7 @@ export const ChessArticle = ({ role, subject: game }: ChessArticleProps) => {
             <Toolbar.IconButton
               icon='ph--info--regular'
               iconOnly
-              label={t('toggle-info.button')}
+              label={t('toggle info button')}
               disabled={showInfo}
               classNames={mx('invisible @3xl:visible')}
               onClick={() => setShowInfo((open) => !open)}

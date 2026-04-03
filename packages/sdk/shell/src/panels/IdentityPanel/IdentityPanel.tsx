@@ -108,11 +108,11 @@ const IdentityHeading = ({
         </Avatar.Label>
 
         <Input.Root>
-          <Input.Label srOnly>{t('display-name-input.label')}</Input.Label>
+          <Input.Label srOnly>{t('display name input label')}</Input.Label>
           <Input.TextInput
             variant='subdued'
             data-testid='display-name-input'
-            placeholder={t('display-name-input.placeholder')}
+            placeholder={t('display name input placeholder')}
             classNames='mt-2 text-center font-light text-xl'
             value={displayName}
             onChange={({ target: { value } }) => setDisplayName(value)}
@@ -131,13 +131,13 @@ const IdentityHeading = ({
           <Clipboard.IconButton
             classNames='h-(--dx-rail-action)'
             data-testid='update-profile-form-copy-key'
-            label={t('copy-self-did.label')}
+            label={t('copy self did label')}
             value={identity.did}
           />
           {onManageCredentials && (
             <Toolbar.IconButton
               icon='ph--identification-card--regular'
-              label={t('manage-credentials.label')}
+              label={t('manage credentials label')}
               iconOnly
               tooltipSide='bottom'
               classNames='h-(--dx-rail-action)'
@@ -179,9 +179,9 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
   const title = useMemo(() => {
     switch (activeView) {
       case 'device invitation manager':
-        return t('choose-add-device.label');
+        return t('choose add device label');
       default:
-        return t('identity.heading');
+        return t('identity heading');
     }
   }, [activeView, t]);
 

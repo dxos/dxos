@@ -164,16 +164,16 @@ const DisplayNameMissing = () => {
 
   return (
     <Settings.Group classNames='p-4 place-content-center'>
-      <Settings.ItemInput title={t('display-name.label')} description={t('display-name.description')}>
+      <Settings.ItemInput title={t('display name label')} description={t('display name description')}>
         <Input.TextInput
           value={displayName}
           onChange={handleChange}
-          placeholder={t('display-name-input.placeholder')}
+          placeholder={t('display name input placeholder')}
           classNames='md:min-w-64'
         />
       </Settings.ItemInput>
       <Settings.GroupButton disabled={!displayName} onClick={handleSave}>
-        {t('set-display-name.label')}
+        {t('set display name label')}
       </Settings.GroupButton>
     </Settings.Group>
   );

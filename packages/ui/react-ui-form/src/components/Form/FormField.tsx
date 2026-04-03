@@ -126,7 +126,7 @@ export const FormField = (props: FormFieldProps) => {
 
   const label = useMemo(() => title ?? String.capitalize(name), [title, name]);
   const placeholder = useMemo(
-    () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
+    () => (examples?.length ? `${t('example placeholder')}: ${examples[0]}` : (description ?? label)),
     [examples, description, label],
   );
 

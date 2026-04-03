@@ -10,8 +10,8 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'search.placeholder': 'Search...',
-        'empty-results.message': 'No matching objects',
+        'search placeholder': 'Search...',
+        'empty results message': 'No matching objects',
       },
     },
   },

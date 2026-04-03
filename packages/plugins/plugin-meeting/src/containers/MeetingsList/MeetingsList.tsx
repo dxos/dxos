@@ -48,7 +48,7 @@ const MeetingItem = ({
       <div className='flex flex-col truncate'>
         <List.ItemTitle classNames='truncate'>{getLabel(meeting)}</List.ItemTitle>
       </div>
-      <Button onClick={handleSelectMeeting}>{t('select-meeting.label')}</Button>
+      <Button onClick={handleSelectMeeting}>{t('select meeting label')}</Button>
     </List.Item>
   );
 };
@@ -100,7 +100,7 @@ export const MeetingsList = ({ channel }: MeetingsListProps) => {
   return (
     <div>
       <div className='px-2 min-h-[3rem] flex justify-end items-center'>
-        <Button onClick={handleCreateMeeting}>{t('create-meeting.label')}</Button>
+        <Button onClick={handleCreateMeeting}>{t('create meeting label')}</Button>
       </div>
       <List.Root<Meeting.Meeting> items={sortedMeetings} isItem={Schema.is(Meeting.Meeting)} getId={getId}>
         {({ items }) => (

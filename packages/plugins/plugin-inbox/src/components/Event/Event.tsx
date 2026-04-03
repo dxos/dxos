@@ -105,7 +105,7 @@ const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
           <Icon icon='ph--check--regular' />
         </div>
         <div role='none' className='flex flex-col gap-1 overflow-hidden'>
-          <h2 className='text-lg line-clamp-2'>{event.title ?? t('event-untitled.label')}</h2>
+          <h2 className='text-lg line-clamp-2'>{event.title ?? t('event untitled label')}</h2>
         </div>
       </div>
 

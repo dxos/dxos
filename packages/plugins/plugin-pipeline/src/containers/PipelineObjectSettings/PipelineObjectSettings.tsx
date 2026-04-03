@@ -162,7 +162,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
 
   return (
     <div role='none' className={mx('py-form-padding overflow-y-auto', classNames)}>
-      <h2 className='text-sm text-description py-1'>{t('views.label')}</h2>
+      <h2 className='text-sm text-description py-1'>{t('views label')}</h2>
 
       <List.Root<Pipeline.Column>
         items={columns}
@@ -183,10 +183,10 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
                   <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-xs cursor-pointer min-h-10')}>
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleToggleField(column)}>
-                      {column.name || t('untitled-view.title')}
+                      {column.name || t('untitled view title')}
                     </List.ItemTitle>
                     <List.ItemDeleteButton
-                      label={t('delete-view.label')}
+                      label={t('delete view label')}
                       autoHide={false}
                       onClick={() => handleDelete(column)}
                       data-testid='view.delete'
@@ -194,7 +194,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
                     <IconButton
                       iconOnly
                       variant='ghost'
-                      label={t('toggle-expand.label', { ns: osTranslations })}
+                      label={t('toggle expand label', { ns: osTranslations })}
                       icon={
                         expandedId === column.view.dxn.toString()
                           ? 'ph--caret-down--regular'
@@ -236,7 +236,7 @@ export const PipelineObjectSettings = ({ classNames, pipeline }: PipelineObjectS
       </List.Root>
 
       <div role='none' className='my-form-padding'>
-        <IconButton icon='ph--plus--regular' label={t('add-view.label')} onClick={handleAdd} classNames='w-full' />
+        <IconButton icon='ph--plus--regular' label={t('add view label')} onClick={handleAdd} classNames='w-full' />
       </div>
     </div>
   );

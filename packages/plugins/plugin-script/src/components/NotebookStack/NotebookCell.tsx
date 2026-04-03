@@ -98,7 +98,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
             extensions={extensions}
             env={env}
             options={{
-              placeholder: t('notebook-cell.placeholder'),
+              placeholder: t('notebook cell placeholder'),
               highlightActiveLine: false,
               lineNumbers: false,
             }}
@@ -201,7 +201,7 @@ const NotebookTextEditor = ({
   const extensions = useMemo(() => {
     return [
       createBasicExtensions({
-        placeholder: t('notebook-markdown.placeholder'),
+        placeholder: t('notebook markdown placeholder'),
         readOnly,
       }),
       createThemeExtensions({ themeMode, syntaxHighlighting: true }),

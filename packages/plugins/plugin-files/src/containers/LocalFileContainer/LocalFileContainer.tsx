@@ -51,7 +51,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
       <Panel.Content asChild>
         <div role='none' className='overflow-auto p-8 grid place-items-center'>
           <p role='alert' className={mx(descriptionMessage, 'break-words rounded-md p-8')}>
-            {t('missing-file-permissions')}
+            {t('missing file permissions')}
             {action && node && Node.isAction(action) && (
               <Button onClick={() => void runAction(action, { parent: node })}>
                 {toLocalizedString(action.properties.label, t)}

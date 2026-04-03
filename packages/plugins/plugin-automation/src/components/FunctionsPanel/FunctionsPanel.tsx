@@ -96,14 +96,14 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
                     <IconButton
                       icon='ph--arrow-square-out--regular'
                       iconOnly
-                      label={t('show-source-button.label')}
+                      label={t('show source button label')}
                       onClick={() => handleGoToScript(func)}
                     />
                   )) || <div />}
                   <IconButton
                     icon='ph--trash--regular'
                     iconOnly
-                    label={t('delete-function-button.label')}
+                    label={t('delete function button label')}
                     onClick={() => handleDelete(func)}
                   />
                 </List.Item>
@@ -113,7 +113,7 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
         </List.Root>
       )}
 
-      {functions.length === 0 && <div className='text-center py-4 text-description'>{t('no-functions-found')}</div>}
+      {functions.length === 0 && <div className='text-center py-4 text-description'>{t('no functions found')}</div>}
     </Settings.Container>
   );
 };

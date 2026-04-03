@@ -13,9 +13,9 @@ export const StatusPanel = ({ titleId }: { titleId?: string }) => {
   return (
     <div className='grid place-items-center p-2 gap-2'>
       <p id={titleId} className='font-medium text-center'>
-        {t('resetting.message')}
+        {t('resetting message')}
       </p>
-      <Status indeterminate>{t('resetting.message')}</Status>
+      <Status indeterminate>{t('resetting message')}</Status>
     </div>
   );
 };

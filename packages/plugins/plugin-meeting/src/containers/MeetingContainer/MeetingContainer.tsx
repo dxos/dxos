@@ -46,7 +46,7 @@ export const MeetingContainer = ({ attendableId, role, subject: meeting }: Meeti
           <StackItem.Root item={notes} role='section'>
             <StackItem.Heading>
               <StackItem.HeadingStickyContent>
-                <StackItem.Sigil icon='ph--note--regular' triggerLabel={t('notes.label')} />
+                <StackItem.Sigil icon='ph--note--regular' triggerLabel={t('notes label')} />
               </StackItem.HeadingStickyContent>
             </StackItem.Heading>
             <StackItem.Content>
@@ -56,13 +56,13 @@ export const MeetingContainer = ({ attendableId, role, subject: meeting }: Meeti
           <StackItem.Root item={summary} role='section'>
             <StackItem.Heading>
               <StackItem.HeadingStickyContent>
-                <StackItem.Sigil icon='ph--list-bullets--regular' triggerLabel={t('summary.label')} />
+                <StackItem.Sigil icon='ph--list-bullets--regular' triggerLabel={t('summary label')} />
                 {summaryData && (
                   <IconButton
                     iconOnly
                     variant='ghost'
                     icon='ph--book-open-text--regular'
-                    label={t('regenerate-summary.label')}
+                    label={t('regenerate summary label')}
                     onClick={handleGenerateSummary}
                     tooltipSide='right'
                     classNames='w-full'
@@ -77,7 +77,7 @@ export const MeetingContainer = ({ attendableId, role, subject: meeting }: Meeti
                 <div className='grid place-items-center min-h-32'>
                   <IconButton
                     icon='ph--book-open-text--regular'
-                    label={t('generate-summary.label')}
+                    label={t('generate summary label')}
                     onClick={handleGenerateSummary}
                   />
                 </div>

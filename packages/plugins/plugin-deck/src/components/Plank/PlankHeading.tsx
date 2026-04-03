@@ -62,7 +62,7 @@ export const PlankHeading = memo(
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
     const label = pending
-      ? t('pending.heading')
+      ? t('pending heading')
       : toLocalizedString(node?.properties?.label ?? ['plank heading fallback label', { ns: meta.id }], t);
 
     const isCompanionNode = node?.type === PLANK_COMPANION_TYPE;
@@ -187,7 +187,7 @@ export const PlankHeading = memo(
                   icon={icon}
                   related={part === 'complementary'}
                   attendableId={attendableId}
-                  triggerLabel={t('actions-menu.label')}
+                  triggerLabel={t('actions menu label')}
                   actions={sigilActions}
                   onAction={handleAction}
                 >

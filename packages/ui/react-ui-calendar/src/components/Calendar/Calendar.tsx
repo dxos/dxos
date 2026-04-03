@@ -130,7 +130,7 @@ const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(({ clas
           icon='ph--calendar--regular'
           iconOnly
           classNames='aspect-square'
-          label={t('today.button')}
+          label={t('today button')}
           onClick={handleToday}
         />
       </div>

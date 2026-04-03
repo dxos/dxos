@@ -64,7 +64,7 @@ export const NewMailbox = composable<HTMLDivElement, NewMailboxProps>(({ mailbox
           ref={forwardedRef}
           {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })}
         >
-          <p className='text-description'>{t('no-integrations.label')}</p>
+          <p className='text-description'>{t('no integrations label')}</p>
           <Surface.Surface role='integration--auth' data={authSurfaceData} limit={1} />
         </div>
       );
@@ -76,8 +76,8 @@ export const NewMailbox = composable<HTMLDivElement, NewMailboxProps>(({ mailbox
         ref={forwardedRef}
         {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })}
       >
-        <p className='text-description'>{t('no-integrations.label')}</p>
-        <Button onClick={openSpaceSettings}>{t('manage-integrations-button.label')}</Button>
+        <p className='text-description'>{t('no integrations label')}</p>
+        <Button onClick={openSpaceSettings}>{t('manage integrations button label')}</Button>
       </div>
     );
   }
@@ -88,9 +88,9 @@ export const NewMailbox = composable<HTMLDivElement, NewMailboxProps>(({ mailbox
       ref={forwardedRef}
       {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })}
     >
-      <p className='text-description'>{t('empty-mailbox.message')}</p>
+      <p className='text-description'>{t('empty mailbox message')}</p>
       <Button onClick={handleSync} disabled={syncing}>
-        {t('sync-mailbox.label')}
+        {t('sync mailbox label')}
       </Button>
     </div>
   );

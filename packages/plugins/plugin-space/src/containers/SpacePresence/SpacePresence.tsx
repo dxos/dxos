@@ -249,7 +249,7 @@ export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPr
   const { t } = useTranslation(meta.id);
 
   return (
-    <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>
+    <Tooltip.Trigger asChild content={t('presence label', { count })} side='bottom'>
       <AttentionGlyph
         attended={attended}
         containsAttended={containsAttended}

@@ -20,7 +20,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('schema-verbose.label')} description={t('schema.description')}>
+      <Settings.Section title={t('schema verbose label')} description={t('schema description')}>
         <div
           role='none'
           className={mx([
@@ -29,7 +29,7 @@ export const SchemaContainer = ({ space }: SchemaPanelProps) => {
             'border border-separator rounded-md',
           ])}
         >
-          {schemas.length === 0 && <div className='text-center py-4'>{t('no-schemas-found.message')}</div>}
+          {schemas.length === 0 && <div className='text-center py-4'>{t('no schemas found message')}</div>}
           {schemas.map((schema) => (
             <div role='none' key={schema.id}>
               {schema.typename}

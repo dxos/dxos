@@ -273,7 +273,7 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
       useSearchListInputContext('SearchList.Input');
     const density = useDensityContext(propsDensity);
     const elevation = useElevationContext(propsElevation);
-    const defaultPlaceholder = t('search.placeholder');
+    const defaultPlaceholder = t('search placeholder');
 
     const handleChange = useCallback(
       (event: ChangeEvent<HTMLInputElement>) => {
@@ -485,7 +485,7 @@ const SearchListEmpty = ({ classNames }: SearchListEmptyProps) => {
   const { t } = useTranslation(translationKey);
   return (
     <div role='status' className={mx(classNames)}>
-      {t('empty-results.message')}
+      {t('empty results message')}
     </div>
   );
 };

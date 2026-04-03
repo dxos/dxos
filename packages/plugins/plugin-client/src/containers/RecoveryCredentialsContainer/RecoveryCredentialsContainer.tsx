@@ -24,19 +24,19 @@ export const RecoveryCredentialsContainer = () => {
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('recovery-setup-dialog.title')} description={t('recovery-setup-dialog.description')}>
+      <Settings.Section title={t('recovery setup dialog title')} description={t('recovery setup dialog description')}>
         <Settings.Group>
-          <Settings.Item title={t('create-passkey.label')} description={t('create-passkey.description')}>
+          <Settings.Item title={t('create passkey label')} description={t('create passkey description')}>
             <IconButton
-              label={t('create-passkey.label')}
+              label={t('create passkey label')}
               icon='ph--key--duotone'
               variant='primary'
               onClick={() => invokePromise(ClientOperation.CreatePasskey)}
             />
           </Settings.Item>
-          <Settings.Item title={t('create-recovery-code.label')} description={t('create-recovery-code.description')}>
+          <Settings.Item title={t('create recovery code label')} description={t('create recovery code description')}>
             <IconButton
-              label={t('create-recovery-code.label')}
+              label={t('create recovery code label')}
               icon='ph--receipt--duotone'
               variant='default'
               onClick={() => invokePromise(ClientOperation.CreateRecoveryCode)}
@@ -44,11 +44,11 @@ export const RecoveryCredentialsContainer = () => {
           </Settings.Item>
         </Settings.Group>
       </Settings.Section>
-      <Settings.Section title={t('credentials-list.label')}>
+      <Settings.Section title={t('credentials list label')}>
         {recoveryCredentials.length < 1 ? (
           <Message.Root valence='error'>
-            <Message.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Message.Title>
-            <Message.Content>{t('no-credentials.message')}</Message.Content>
+            <Message.Title icon='ph--shield-warning--duotone'>{t('no credentials title')}</Message.Title>
+            <Message.Content>{t('no credentials message')}</Message.Content>
           </Message.Root>
         ) : (
           <List>

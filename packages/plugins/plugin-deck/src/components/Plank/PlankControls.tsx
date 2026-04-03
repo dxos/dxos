@@ -51,7 +51,7 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompliment
     return (
       <div ref={forwardedRef} className='contents dx-app-no-drag'>
         <PlankControl
-          label={t('close-companion.label')}
+          label={t('close companion label')}
           variant='ghost'
           icon='ph--x--regular'
           onClick={handleCloseCompanion}
@@ -84,7 +84,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
               <>
                 {layoutMode === 'solo' && (
                   <PlankControl
-                    label={t('show-fullscreen-plank.label')}
+                    label={t('show fullscreen plank label')}
                     classNames={buttonClassNames}
                     icon='ph--corners-out--regular'
                     onClick={() => onClick?.('solo--fullscreen')}
@@ -114,14 +114,14 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
             {!layoutIsAnySolo && (
               <>
                 <PlankControl
-                  label={t('increment-start.label')}
+                  label={t('increment start label')}
                   disabled={!capabilities.incrementStart}
                   classNames={buttonClassNames}
                   icon='ph--caret-left--regular'
                   onClick={() => onClick?.('increment-start')}
                 />
                 <PlankControl
-                  label={t('increment-end.label')}
+                  label={t('increment end label')}
                   disabled={!capabilities.incrementEnd}
                   classNames={buttonClassNames}
                   icon='ph--caret-right--regular'
@@ -159,7 +159,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
 
         {capabilities.companion && (
           <PlankControl
-            label={t('open-companion.label')}
+            label={t('open companion label')}
             classNames={buttonClassNames}
             data-testid='plankHeading.companion'
             icon='ph--square-split-horizontal--regular'

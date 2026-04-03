@@ -65,17 +65,17 @@ export const AwaitingObject = ({ id }: { id: string }) => {
           {found ? (
             <>
               <Icon icon='ph--check-circle--regular' />
-              <span>{t('found-object.label')}</span>
+              <span>{t('found object label')}</span>
             </>
           ) : waiting ? (
             <>
               <Icon icon='ph--circle-notch--regular' classNames='animate-spin' />
-              <span>{t('waiting-for-object.label')}</span>
+              <span>{t('waiting for object label')}</span>
             </>
           ) : (
             <>
               <Icon icon='ph--circle-dashed--regular' />
-              <span>{t('object-not-found.label')}</span>
+              <span>{t('object not found label')}</span>
             </>
           )}
         </Toast.Title>
@@ -92,13 +92,13 @@ export const AwaitingObject = ({ id }: { id: string }) => {
       <Toast.Actions>
         {found ? (
           <>
-            <Toast.Action altText={t('go-to-object.alt')} asChild>
+            <Toast.Action altText={t('go to object alt')} asChild>
               <Button variant='primary' onClick={handleNavigate}>
-                {t('go-to-object.label')}
+                {t('go to object label')}
               </Button>
             </Toast.Action>
             <Toast.Close asChild>
-              <Button onClick={handleClose}>{t('close.label', { ns: osTranslations })}</Button>
+              <Button onClick={handleClose}>{t('close label', { ns: osTranslations })}</Button>
             </Toast.Close>
           </>
         ) : (

@@ -39,7 +39,7 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
   const syncing = connectedToEdge && edgeSyncEnabled && syncState && syncState.missingOnLocal > 0;
 
   return (
-    <Tooltip.Trigger asChild content={t('syncing.label')} side='bottom'>
+    <Tooltip.Trigger asChild content={t('syncing label')} side='bottom'>
       <AttentionGlyph
         syncing={syncing}
         attended={attended}

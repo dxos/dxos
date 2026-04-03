@@ -10,10 +10,10 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'button-center': 'Center board',
-        'button-zoom': 'Toggle zoom',
-        'button-add': 'Add object',
-        'button-delete': 'Remove object',
+        'button center': 'Center board',
+        'button zoom': 'Toggle zoom',
+        'button add': 'Add object',
+        'button delete': 'Remove object',
       },
     },
   },

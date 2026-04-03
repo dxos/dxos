@@ -70,7 +70,7 @@ export const SearchDialog = ({ pivotId: pivotIdProp, space: spaceProp }: SearchD
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('search-dialog.title')}</Dialog.Title>
+        <Dialog.Title>{t('search dialog title')}</Dialog.Title>
         <Dialog.Close asChild>
           <Dialog.CloseIconButton />
         </Dialog.Close>
@@ -78,7 +78,7 @@ export const SearchDialog = ({ pivotId: pivotIdProp, space: spaceProp }: SearchD
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch}>
           <SearchList.Content classNames='max-h-[24rem]'>
-            <SearchList.Input classNames='px-0' autoFocus placeholder={t('search.placeholder')} />
+            <SearchList.Input classNames='px-0' autoFocus placeholder={t('search placeholder')} />
             <SearchList.Viewport>
               {allResults.map((result) => (
                 <SearchList.Item

@@ -20,9 +20,9 @@ export const MeetingSettings = ({ settings, onSettingsChange }: MeetingSettingsC
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('settings.title', { ns: meta.id })}>
+      <Settings.Section title={t('settings title', { ns: meta.id })}>
         <Settings.Group>
-          <Settings.ItemInput title={t('entity-extraction.label')} description={t('entity-extraction.description')}>
+          <Settings.ItemInput title={t('entity extraction label')} description={t('entity extraction description')}>
             <Input.Switch
               checked={!!settings.entityExtraction}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, entityExtraction: checked }))}

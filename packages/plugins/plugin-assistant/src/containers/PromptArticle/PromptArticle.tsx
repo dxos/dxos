@@ -48,7 +48,7 @@ export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProp
     <Panel.Root role={role} className='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} onClick={handleRun}>
-          <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run-prompt.label')} onClick={handleRun} />
+          <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run prompt label')} onClick={handleRun} />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

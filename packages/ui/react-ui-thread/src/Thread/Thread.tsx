@@ -102,7 +102,7 @@ const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
         <span className='truncate min-w-0' aria-live='polite'>
           {activity ? children : null}
         </span>
-        <span className={mx('text-end', hoverableControlItem)}>{t('enter-to-send.message')}</span>
+        <span className={mx('text-end', hoverableControlItem)}>{t('enter to send message')}</span>
       </div>
     );
   },

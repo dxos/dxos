@@ -70,11 +70,11 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
 
     return (
       <Dialog.Content ref={forwardedRef}>
-        <Dialog.Title srOnly>{t('commands-dialog.title', { ns: meta.id })}</Dialog.Title>
+        <Dialog.Title srOnly>{t('commands dialog title', { ns: meta.id })}</Dialog.Title>
         <Dialog.Body>
           <SearchList.Root onSearch={handleSearch}>
             <SearchList.Content>
-              <SearchList.Input placeholder={t('command-list-input.placeholder')} />
+              <SearchList.Input placeholder={t('command list input placeholder')} />
               <SearchList.Viewport>
                 {results.map((action) => {
                   const shortcut =
@@ -122,7 +122,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
         </Dialog.Body>
         <Dialog.ActionBar>
           <Dialog.Close asChild>
-            <Button classNames='w-full'>{t('close.label', { ns: osTranslations })}</Button>
+            <Button classNames='w-full'>{t('close label', { ns: osTranslations })}</Button>
           </Dialog.Close>
         </Dialog.ActionBar>
       </Dialog.Content>

@@ -106,7 +106,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   if (trigger) {
     return (
-      <Settings.Item title={t('trigger-editor.title')} description={t('trigger-editor.description')}>
+      <Settings.Item title={t('trigger editor title')} description={t('trigger editor description')}>
         <TriggerEditor
           db={space.db}
           trigger={trigger}
@@ -147,7 +147,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
       )}
 
       {filteredTriggers.length > 0 && <Separator classNames='my-4' />}
-      <IconButton icon='ph--plus--regular' label={t('new-trigger.label')} onClick={handleAdd} />
+      <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
     </Settings.Container>
   );
 };

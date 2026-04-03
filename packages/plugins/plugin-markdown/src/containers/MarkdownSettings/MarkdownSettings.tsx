@@ -22,9 +22,9 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
     <Settings.Root>
-      <Settings.Section title={t('settings.title', { ns: meta.id })}>
+      <Settings.Section title={t('settings title', { ns: meta.id })}>
         <Settings.Group>
-          <Settings.ItemInput title={t('default-view-mode.label')}>
+          <Settings.ItemInput title={t('default view mode label')}>
             <Select.Root
               value={settings.defaultViewMode}
               onValueChange={(value) => {
@@ -47,14 +47,14 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
             </Select.Root>
           </Settings.ItemInput>
 
-          <Settings.ItemInput title={t('editor-input-mode.label')}>
+          <Settings.ItemInput title={t('editor input mode label')}>
             <Select.Root
               value={settings.editorInputMode ?? 'default'}
               onValueChange={(value) => {
                 onSettingsChange((s) => ({ ...s, editorInputMode: value as EditorInputMode }));
               }}
             >
-              <Select.TriggerButton placeholder={t('select-editor-input-mode.placeholder')} />
+              <Select.TriggerButton placeholder={t('select editor input mode placeholder')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
@@ -70,35 +70,35 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
             </Select.Root>
           </Settings.ItemInput>
 
-          <Settings.ItemInput title={t('settings-toolbar.label')}>
+          <Settings.ItemInput title={t('settings toolbar label')}>
             <Input.Switch
               checked={settings.toolbar}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, toolbar: !!checked }))}
             />
           </Settings.ItemInput>
 
-          <Settings.ItemInput title={t('settings-numbered-headings.label')}>
+          <Settings.ItemInput title={t('settings numbered headings label')}>
             <Input.Switch
               checked={settings.numberedHeadings}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, numberedHeadings: !!checked }))}
             />
           </Settings.ItemInput>
 
-          <Settings.ItemInput title={t('settings-folding.label')}>
+          <Settings.ItemInput title={t('settings folding label')}>
             <Input.Switch
               checked={settings.folding}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, folding: !!checked }))}
             />
           </Settings.ItemInput>
 
-          <Settings.ItemInput title={t('settings-experimental.label')}>
+          <Settings.ItemInput title={t('settings experimental label')}>
             <Input.Switch
               checked={settings.experimental}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, experimental: !!checked }))}
             />
           </Settings.ItemInput>
 
-          <Settings.ItemInput title={t('settings-debug.label')}>
+          <Settings.ItemInput title={t('settings debug label')}>
             <Input.Switch
               checked={settings.debug}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, debug: !!checked }))}
@@ -106,12 +106,12 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
           </Settings.ItemInput>
 
           {settings.debug && (
-            <Settings.ItemInput title={t('settings-debug-textarea.label', { ns: meta.id })}>
+            <Settings.ItemInput title={t('settings debug textarea label', { ns: meta.id })}>
               <Input.TextArea
                 rows={5}
                 value={settings.typewriter}
                 onChange={({ target: { value } }) => onSettingsChange((s) => ({ ...s, typewriter: value }))}
-                placeholder={t('settings-debug.placeholder')}
+                placeholder={t('settings debug placeholder')}
               />
             </Settings.ItemInput>
           )}

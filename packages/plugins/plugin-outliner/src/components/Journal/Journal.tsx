@@ -52,7 +52,7 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
       <ScrollArea.Viewport>
         {entryRefs.length === 0 && (
           <div className='p-2'>
-            <IconButton label={t('create-entry.label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
+            <IconButton label={t('create entry label')} icon='ph--plus--regular' onClick={handleCreateEntry} />
           </div>
         )}
         {entryRefs.map(({ dateKey, ref }, i) => (
@@ -110,7 +110,7 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
           onClick={handleFocus}
         />
         {isRecent && date && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
-        {isToday && <div className='text-xs'>{t('today.label')}</div>}
+        {isToday && <div className='text-xs'>{t('today label')}</div>}
       </div>
       <Outline.Root
         ref={outlinerRef}

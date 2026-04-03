@@ -58,27 +58,27 @@ export const StackSection = ({
                     {view.collapsed ? (
                       <DropdownMenu.Item onClick={() => onNavigate(id)} data-testid='section.navigate-to'>
                         <Icon icon='ph--arrow-right--regular' />
-                        <span className='ms-2 grow'>{t('navigate-to-section.label')}</span>
+                        <span className='ms-2 grow'>{t('navigate to section label')}</span>
                       </DropdownMenu.Item>
                     ) : (
                       <CollapsiblePrimitive.Trigger asChild>
                         <DropdownMenu.Item>
                           <CaretDownUp className={getSize(5)} />
-                          <span className='ms-2 grow'>{t('collapse.label')}</span>
+                          <span className='ms-2 grow'>{t('collapse label')}</span>
                         </DropdownMenu.Item>
                       </CollapsiblePrimitive.Trigger>
                     )}
                     <DropdownMenu.Item onClick={() => onAdd(id, 'before')} data-testid='section.add-before'>
                       <Icon icon='ph--arrow-line-up--regular' />
-                      <span className='ms-2 grow'>{t('add-section-before.label')}</span>
+                      <span className='ms-2 grow'>{t('add section before label')}</span>
                     </DropdownMenu.Item>
                     <DropdownMenu.Item onClick={() => onAdd(id, 'after')} data-testid='section.add-after'>
                       <Icon icon='ph--arrow-line-down--regular' />
-                      <span className='ms-2 grow'>{t('add-section-after.label')}</span>
+                      <span className='ms-2 grow'>{t('add section after label')}</span>
                     </DropdownMenu.Item>
                     <DropdownMenu.Item onClick={() => onDelete(id)} data-testid='section.remove'>
                       <Icon icon='ph--trash--regular' />
-                      <span className='ms-2 grow'>{t('remove-section.label')}</span>
+                      <span className='ms-2 grow'>{t('remove section label')}</span>
                     </DropdownMenu.Item>
                   </DropdownMenu.Viewport>
                   <DropdownMenu.Arrow />
@@ -90,7 +90,7 @@ export const StackSection = ({
                 <IconButton
                   iconOnly
                   variant='ghost'
-                  label={t('expand.label')}
+                  label={t('expand label')}
                   icon='ph--caret-up-down--regular'
                   classNames={sectionActionDimensions}
                 />
@@ -100,7 +100,7 @@ export const StackSection = ({
                 iconOnly
                 variant='ghost'
                 onClick={() => onNavigate(id)}
-                label={t('navigate-to-section.label')}
+                label={t('navigate to section label')}
                 icon='ph--arrow-right--regular'
                 data-testid='section.navigate-to'
                 classNames={sectionActionDimensions}

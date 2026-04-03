@@ -49,7 +49,7 @@ export const DeviceListItem = forwardRef<
     const fallbackValue = keyToFallback(device.deviceKey);
     const labelId = useId('identityListItem__label');
     const displayName = device.profile
-      ? t('device-name.placeholder', { os: device.profile.os, platform: device.profile.platform })
+      ? t('device name placeholder', { os: device.profile.os, platform: device.profile.platform })
       : generateName(device.deviceKey.toHex());
     const isCurrent = device.kind === DeviceKind.CURRENT;
     return (
@@ -90,7 +90,7 @@ export const DeviceListItem = forwardRef<
               : { fallback: fallbackValue.emoji })}
           />
           <Avatar.Label classNames='flex-1 text-sm truncate'>{displayName}</Avatar.Label>
-          {isCurrent && <Tag color='primary'>{t('current-device-tag.label')}</Tag>}
+          {isCurrent && <Tag color='primary'>{t('current device tag label')}</Tag>}
           {/* TODO(wittjosiah): EDGE agents cannot current be turned off. */}
           {/* {device.profile?.type === DeviceType.AGENT_MANAGED && (
             <Tooltip.Root>
@@ -120,7 +120,7 @@ export const DeviceListItem = forwardRef<
                   classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid={`device-list-item${isCurrent ? '-current' : ''}.options`}
                 >
-                  <span className='sr-only'>{t('more-options.label')}</span>
+                  <span className='sr-only'>{t('more options label')}</span>
                   <Icon icon='ph--dots-three--regular' />
                 </Button>
               </DropdownMenu.Trigger>
@@ -136,19 +136,19 @@ export const DeviceListItem = forwardRef<
                       onClick={onClickJoinExisting}
                     >
                       <Icon icon='ph--share-fat--regular' />
-                      {t('choose-join-new-identity.label')}
+                      {t('choose join new identity label')}
                     </DropdownMenu.Item>
                   )}
                   {onClickRecover && (
                     <DropdownMenu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
                       <Icon icon='ph--first-aid-kit--regular' />
-                      {t('choose-recover-identity.label')}
+                      {t('choose recover identity label')}
                     </DropdownMenu.Item>
                   )}
                   {onClickReset && (
                     <DropdownMenu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
                       <Icon icon='ph--power--regular' />
-                      {t('reset-device.label')}
+                      {t('reset device label')}
                     </DropdownMenu.Item>
                   )}
                 </DropdownMenu.Viewport>

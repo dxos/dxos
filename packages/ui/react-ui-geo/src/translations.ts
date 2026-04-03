@@ -10,10 +10,10 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'zoom-in-icon.button': 'Zoom in',
-        'zoom-out-icon.button': 'Zoom out',
-        'start-icon.button': 'Start',
-        'toggle-icon.button': 'Toggle',
+        'zoom in icon button': 'Zoom in',
+        'zoom out icon button': 'Zoom out',
+        'start icon button': 'Start',
+        'toggle icon button': 'Toggle',
       },
     },
   },

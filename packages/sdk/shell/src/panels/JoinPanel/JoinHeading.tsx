@@ -32,7 +32,7 @@ export const JoinHeading = forwardRef(
         data-testid='join-exit'
       >
         <Icon icon='ph--x--bold' size={4} />
-        <span className='sr-only'>{t('exit.label')}</span>
+        <span className='sr-only'>{t('exit label')}</span>
       </Button>
     );
 

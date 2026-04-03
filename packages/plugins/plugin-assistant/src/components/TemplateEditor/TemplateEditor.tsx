@@ -48,7 +48,7 @@ export const TemplateEditor = composable<HTMLDivElement, TemplateEditorProps>(
             bracketMatching: false,
             lineNumbers,
             lineWrapping: true,
-            placeholder: t('template.placeholder'),
+            placeholder: t('template placeholder'),
           }),
           createThemeExtensions({ themeMode }),
           createMarkdownExtensions(),

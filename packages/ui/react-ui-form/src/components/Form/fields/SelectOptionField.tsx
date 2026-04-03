@@ -154,11 +154,11 @@ export const SelectOptionField = ({
                       {selected === item.id && (
                         <div className='flex flex-col p-form-padding gap-form-gap dx-density-fine'>
                           {/* 16px to match drag handle width. */}
-                          <Input.Label classNames='text-xs'>{t('select-option.label')}</Input.Label>
+                          <Input.Label classNames='text-xs'>{t('select option label')}</Input.Label>
                           <div className='grid grid-cols-[1fr_min-content_min-content] gap-form-gap'>
                             <Input.TextInput
                               disabled={!!readonly}
-                              placeholder={t('select-option-label.placeholder')}
+                              placeholder={t('select option label placeholder')}
                               ref={selected === item.id ? inputRef : undefined}
                               value={item.title}
                               onChange={handleTitleChange(item.id)}
@@ -170,7 +170,7 @@ export const SelectOptionField = ({
                               disabled={!!readonly}
                               icon='ph--trash--fill'
                               iconOnly
-                              label={t('select-option-delete')}
+                              label={t('select option delete')}
                               onClick={() => handleDelete(item.id)}
                             />
                           </div>
@@ -182,7 +182,7 @@ export const SelectOptionField = ({
                 <IconButton
                   variant='ghost'
                   icon='ph--plus--regular'
-                  label={t('select-option-add')}
+                  label={t('select option add')}
                   onClick={handleAdd}
                   disabled={!!readonly}
                   classNames='w-full'

@@ -127,7 +127,7 @@ const TriggerStatusPopover = ({
       <Input.Root>
         <div className='flex items-center gap-2'>
           <Input.Switch checked={isRunning} onCheckedChange={onToggle} />
-          <Input.Label>{t('trigger-runtime.label')}</Input.Label>
+          <Input.Label>{t('trigger runtime label')}</Input.Label>
         </div>
       </Input.Root>
 

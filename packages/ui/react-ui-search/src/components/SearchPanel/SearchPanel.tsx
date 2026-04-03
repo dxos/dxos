@@ -24,7 +24,7 @@ export const SearchPanel = ({ children, ...props }: SearchPanelProps) => {
         </Panel.Content>
         <Panel.Statusbar asChild>
           <Toolbar.Root>
-            <SearchList.Input placeholder={t('search.placeholder')} autoFocus={autoFocus} />
+            <SearchList.Input placeholder={t('search placeholder')} autoFocus={autoFocus} />
           </Toolbar.Root>
         </Panel.Statusbar>
       </Panel.Root>

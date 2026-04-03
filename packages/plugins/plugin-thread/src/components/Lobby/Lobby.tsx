@@ -69,7 +69,7 @@ const LobbyPreview: FC<LobbyPreviewProps> = () => {
               classNames,
             )}
           />
-        )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera-off.label')}</div>}
+        )) || <div className='p-4 outline outline-separator rounded-md'>{t('camera off label')}</div>}
       </ResponsivePanel>
     </div>
   );

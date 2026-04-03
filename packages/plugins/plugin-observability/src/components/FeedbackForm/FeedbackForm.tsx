@@ -25,7 +25,7 @@ export const FeedbackForm = ({ onSave, disabled }: FeedbackFormProps) => {
       <Form.Viewport>
         <Form.Content>
           <Form.FieldSet />
-          <Form.Submit icon='ph--paper-plane-tilt--regular' label={t('send-feedback.label')} disabled={disabled} />
+          <Form.Submit icon='ph--paper-plane-tilt--regular' label={t('send feedback label')} disabled={disabled} />
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

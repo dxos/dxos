@@ -34,7 +34,7 @@ export const NewTokenSelector = ({ spaceId, onAddAccessToken, onCustomToken }: N
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <IconButton icon='ph--plus--regular' label={t('add-token')} />
+        <IconButton icon='ph--plus--regular' label={t('add token')} />
       </DropdownMenu.Trigger>
 
       <DropdownMenu.Portal>
@@ -57,7 +57,7 @@ const TokenMenuItem = ({ preset, onSelect }: { preset?: OAuthPreset; onSelect: (
   const handleSelect = useCallback(() => onSelect(preset), [preset, onSelect]);
   return (
     <DropdownMenu.Item key={preset?.label} onClick={handleSelect}>
-      {preset?.label ?? t('add-custom-token')}
+      {preset?.label ?? t('add custom token')}
     </DropdownMenu.Item>
   );
 };

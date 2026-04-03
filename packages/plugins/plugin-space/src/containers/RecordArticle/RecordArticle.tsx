@@ -36,7 +36,7 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
             {/* TODO(burdon): Prompts and related should both be surfaces. */}
             <div role='none' className='flex flex-col gap-form-gap'>
               <Input.Root>
-                <Input.Label>{t('related-actions.label')}</Input.Label>
+                <Input.Label>{t('related actions label')}</Input.Label>
               </Input.Root>
 
               <Surface.Surface role='prompts' data={{ subject }} limit={1} />
@@ -48,7 +48,7 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
                 className={mx('dx-expander flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
               >
                 <Input.Root>
-                  <Input.Label>{t('related-objects.label')}</Input.Label>
+                  <Input.Label>{t('related objects label')}</Input.Label>
                 </Input.Root>
                 <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined}>
                   <Masonry.Content items={related} />

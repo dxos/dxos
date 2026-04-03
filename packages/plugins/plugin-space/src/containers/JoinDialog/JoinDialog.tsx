@@ -94,7 +94,7 @@ export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialo
   // TODO(burdon): Move JoinHeading into Dialog.Heading.
   return (
     <Dialog.Content>
-      <Dialog.Title classNames='sr-only'>{t('join-space.label', { ns: osTranslations })}</Dialog.Title>
+      <Dialog.Title classNames='sr-only'>{t('join space label', { ns: osTranslations })}</Dialog.Title>
       <Dialog.Body>
         <JoinPanel
           {...props}

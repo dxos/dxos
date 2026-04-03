@@ -64,7 +64,7 @@ export const NewCalendar = composable<HTMLDivElement, NewCalendarProps>(({ calen
           ref={forwardedRef}
           {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })}
         >
-          <p className='text-description'>{t('no-integrations.label')}</p>
+          <p className='text-description'>{t('no integrations label')}</p>
           <Surface.Surface role='integration--auth' data={authSurfaceData} limit={1} />
         </div>
       );
@@ -76,8 +76,8 @@ export const NewCalendar = composable<HTMLDivElement, NewCalendarProps>(({ calen
         ref={forwardedRef}
         {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })}
       >
-        <p className='text-description'>{t('no-integrations.label')}</p>
-        <Button onClick={openSpaceSettings}>{t('manage-integrations-button.label')}</Button>
+        <p className='text-description'>{t('no integrations label')}</p>
+        <Button onClick={openSpaceSettings}>{t('manage integrations button label')}</Button>
       </div>
     );
   }
@@ -88,9 +88,9 @@ export const NewCalendar = composable<HTMLDivElement, NewCalendarProps>(({ calen
       ref={forwardedRef}
       {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })}
     >
-      <p className='text-description'>{t('empty-calendar.message')}</p>
+      <p className='text-description'>{t('empty calendar message')}</p>
       <Button onClick={handleSync} disabled={syncing}>
-        {t('sync-calendar.label')}
+        {t('sync calendar label')}
       </Button>
     </div>
   );

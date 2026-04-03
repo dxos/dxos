@@ -44,7 +44,7 @@ const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {
         <div className='text-description text-sm truncate'>{forignKey.id}</div>
       </ListItem.Heading>
       <ListItem.Endcap>
-        <IconButton iconOnly icon='ph--x--regular' variant='ghost' label={t('delete-key')} onClick={handleDelete} />
+        <IconButton iconOnly icon='ph--x--regular' variant='ghost' label={t('delete key')} onClick={handleDelete} />
       </ListItem.Endcap>
     </ListItem.Root>
   );

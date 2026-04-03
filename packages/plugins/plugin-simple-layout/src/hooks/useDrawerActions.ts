@@ -64,7 +64,7 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
             type: Node.ActionType,
             properties: {
               icon: isExpanded ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular',
-              label: isExpanded ? t('collapse-drawer.label') : t('expand-drawer.label'),
+              label: isExpanded ? t('collapse drawer label') : t('expand drawer label'),
               iconOnly: true,
             },
             data: () =>
@@ -80,7 +80,7 @@ export const useDrawerActions = (consumerName: string): DrawerActions => {
           type: Node.ActionType,
           properties: {
             icon: 'ph--x--regular',
-            label: t('close-drawer.label'),
+            label: t('close drawer label'),
             iconOnly: true,
           },
           data: () =>

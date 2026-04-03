@@ -74,7 +74,7 @@ export type MessageAuthorNameProps = Pick<MessageMetadata, 'authorName'>;
 export const MessageAuthorName = ({ authorName }: MessageAuthorNameProps) => {
   const { t } = useTranslation(translationKey);
   return (
-    <Avatar.Label classNames='block truncate text-sm text-subdued'>{authorName ?? t('anonymous.label')}</Avatar.Label>
+    <Avatar.Label classNames='block truncate text-sm text-subdued'>{authorName ?? t('anonymous label')}</Avatar.Label>
   );
 };
 

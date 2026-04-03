@@ -18,9 +18,9 @@ export const ScriptProperties = ({ object }: ScriptPropertiesProps) => {
   const { t } = useTranslation(meta.id);
   return (
     <Input.Root>
-      <Input.Label>{t('description.label')}</Input.Label>
+      <Input.Label>{t('description label')}</Input.Label>
       <Input.TextInput
-        placeholder={t('description.placeholder')}
+        placeholder={t('description placeholder')}
         value={object.description ?? ''}
         onChange={(event) => {
           Obj.change(object, (obj) => {

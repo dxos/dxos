@@ -37,18 +37,18 @@ export const CalendarSettings = ({ subject }: SurfaceComponentProps<Calendar.Cal
 
   return (
     <div className='flex flex-col gap-4'>
-      <h2>{t('calendar-sync.label')}</h2>
+      <h2>{t('calendar sync label')}</h2>
       <div className='p-1 flex flex-row gap-1'>
         <ButtonGroup>
           <Button onClick={handleToggleSync} disabled={pending}>
             {pending
-              ? t('enabling-background-sync.label')
+              ? t('enabling background sync label')
               : syncEnabled
-                ? t('disable-background-sync.label')
-                : t('enable-background-sync.label')}
+                ? t('disable background sync label')
+                : t('enable background sync label')}
           </Button>
           {syncTrigger && (
-            <IconButton iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
+            <IconButton iconOnly icon='ph--gear--regular' label={t('view trigger label')} onClick={handleViewTrigger} />
           )}
         </ButtonGroup>
       </div>

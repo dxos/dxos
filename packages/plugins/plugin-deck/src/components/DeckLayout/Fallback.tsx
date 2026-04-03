@@ -17,7 +17,7 @@ export const Fallback = () => {
         role='alert'
         className='flex items-center justify-center p-8 font-normal text-lg text-error-text border border-rose-fill rounded-md'
       >
-        {t('plugin-error.message')}
+        {t('plugin error message')}
       </p>
     </div>
   );

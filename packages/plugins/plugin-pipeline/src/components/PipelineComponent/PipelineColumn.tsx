@@ -92,7 +92,7 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
         <Panel.Toolbar asChild>
           <Board.Column.Header
             classNames='_opacity-10'
-            label={column.name || t('untitled-view.title')}
+            label={column.name || t('untitled view title')}
             dragHandleRef={dragHandleRef}
           />
         </Panel.Toolbar>

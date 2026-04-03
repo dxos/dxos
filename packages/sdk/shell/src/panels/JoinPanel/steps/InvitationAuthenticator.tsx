@@ -56,12 +56,12 @@ export const InvitationAuthenticator = ({
         >
           {authMethod === Invitation.AuthMethod.SHARED_SECRET ? (
             <Input.Label asChild>
-              <InputLabel>{t('auth-code-input.label')}</InputLabel>
+              <InputLabel>{t('auth code input label')}</InputLabel>
             </Input.Label>
           ) : (
             <>
               <Input.Label>
-                <InputLabel classNames='text-description'>{t('authenticating.label')}</InputLabel>
+                <InputLabel classNames='text-description'>{t('authenticating label')}</InputLabel>
               </Input.Label>
               <div role='none' className='grow' />
             </>
@@ -85,14 +85,14 @@ export const InvitationAuthenticator = ({
           )}
           {failed && (
             <Input.DescriptionAndValidation classNames='text-center'>
-              <Input.Validation>{t('failed-to-authenticate.message')}</Input.Validation>
+              <Input.Validation>{t('failed to authenticate message')}</Input.Validation>
             </Input.DescriptionAndValidation>
           )}
         </Input.Root>
 
         {invitationId && authMethod === Invitation.AuthMethod.SHARED_SECRET && (
           <>
-            <Label>{t('auth-other-device-emoji.message')}</Label>
+            <Label>{t('auth other device emoji message')}</Label>
             <div className='flex justify-center'>
               <Emoji text={hexToEmoji(invitationId)} />
             </div>
@@ -106,7 +106,7 @@ export const InvitationAuthenticator = ({
           onClick={() => onInvitationCancel?.()}
           data-testid={`${invitationType}-invitation-authenticator-cancel`}
         >
-          {t('cancel.label')}
+          {t('cancel label')}
         </Action>
         <Action
           variant='primary'
@@ -115,7 +115,7 @@ export const InvitationAuthenticator = ({
           data-autofocus-pinlength={invitationType}
           data-testid={`${invitationType}-invitation-authenticator-next`}
         >
-          {t('next.label')}
+          {t('next label')}
         </Action>
       </ActionBar>
     </>

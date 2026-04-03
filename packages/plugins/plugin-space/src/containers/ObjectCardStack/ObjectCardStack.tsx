@@ -48,7 +48,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
       <Panel.Content>
         {selectedObjects.length === 0 ? (
           <Message.Root>
-            <Message.Title>{t('row-details-no-selection.label')}</Message.Title>
+            <Message.Title>{t('row details no selection label')}</Message.Title>
           </Message.Root>
         ) : (
           <Mosaic.Root>

@@ -34,9 +34,9 @@ export const ObjectRenamePopover = ({ object }: { object: Obj.Unknown }) => {
     <div role='none' className='p-2 flex gap-2'>
       <div role='none' className='flex-1'>
         <Input.Root>
-          <Input.Label srOnly>{t('object-name.label')}</Input.Label>
+          <Input.Label srOnly>{t('object name label')}</Input.Label>
           <Input.TextInput
-            placeholder={t('object.placeholder')}
+            placeholder={t('object placeholder')}
             value={name}
             data-testid='spacePlugin.renameObject.input'
             onChange={({ target: { value } }) => setName(value)}
@@ -45,7 +45,7 @@ export const ObjectRenamePopover = ({ object }: { object: Obj.Unknown }) => {
         </Input.Root>
       </div>
       <Button ref={doneButton} classNames='self-stretch' onClick={handleDone}>
-        {t('done.label', { ns: osTranslations })}
+        {t('done label', { ns: osTranslations })}
       </Button>
     </div>
   );

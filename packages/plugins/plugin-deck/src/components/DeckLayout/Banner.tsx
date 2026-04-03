@@ -23,7 +23,7 @@ export const Banner = ({ variant, classNames }: ThemedClassName<{ variant?: 'top
       )}
     >
       {variant === 'sidebar' ? <CloseSidebarButton /> : <ToggleSidebarButton />}
-      <span className='self-center grow ms-1'>{t('current-app.name', { ns: osTranslations })}</span>
+      <span className='self-center grow ms-1'>{t('current app name', { ns: osTranslations })}</span>
       {variant === 'topbar' && (
         <div role='none' className='absolute inset-0 pointer-events-none'>
           <div role='none' className='grid h-full pointer-fine:p-1 max-w-md mx-auto pointer-events-auto'>

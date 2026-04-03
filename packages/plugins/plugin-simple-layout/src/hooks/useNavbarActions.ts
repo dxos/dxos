@@ -62,7 +62,7 @@ export const useNavbarActions = (): NavbarActions => {
           variant: 'dropdownMenu',
           icon: 'ph--list--regular',
           iconOnly: true,
-          label: t('main-menu.label'),
+          label: t('main menu label'),
           testId: 'simpleLayoutPlugin.addSpace',
         });
         nodes.push(mainMenuGroup);

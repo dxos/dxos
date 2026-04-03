@@ -85,7 +85,7 @@ export const CreateObjectDialog = ({
         .filter((entry) => (views === true ? viewTypenames.has(entry.id) : true))
         .map((entry) => ({
           id: entry.id,
-          label: t('typename.label', { ns: entry.id, defaultValue: entry.id }),
+          label: t('typename label', { ns: entry.id, defaultValue: entry.id }),
           icon: entry.metadata?.icon,
         })),
     [manager, views, viewTypenames, t],
@@ -129,8 +129,8 @@ export const CreateObjectDialog = ({
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>
-          {t('create-object-dialog.title', {
-            object: t('typename.label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
+          {t('create object dialog title', {
+            object: t('typename label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
           })}
         </Dialog.Title>
         <Dialog.Close asChild>

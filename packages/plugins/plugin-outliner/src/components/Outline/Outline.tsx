@@ -153,7 +153,7 @@ const OutlineContent = composable<HTMLDivElement, OutlineContentProps>(({ childr
         items: [
           {
             id: 'delete-row',
-            label: t('delete-row'),
+            label: t('delete row'),
             onSelect: ({ view }) => {
               // TODO(burdon): Timeout hack since menu steals focus.
               setTimeout(() => {

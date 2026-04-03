@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin.name': 'Transformers',
+        'plugin name': 'Transformers',
       },
     },
   },

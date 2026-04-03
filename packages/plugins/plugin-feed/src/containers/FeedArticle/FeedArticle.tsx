@@ -49,7 +49,7 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
           <Toolbar.Text>{Entity.getLabel(subject)}</Toolbar.Text>
           <Toolbar.Separator />
           <Toolbar.IconButton
-            label={t('sync-feed.label')}
+            label={t('sync feed label')}
             icon='ph--arrows-clockwise--regular'
             iconOnly
             onClick={handleSync}
