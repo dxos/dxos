@@ -289,7 +289,7 @@ describe('HistoryTracker', () => {
       yield* waitUntil(() => showUndoWasCalled);
       expect(showUndoWasCalled).toBe(true);
       // Compute 2 * 2 = 4, so message should be 'computed 2 to 4'.
-      expect(showUndoMessage).toEqual(['computed-2-to-4', { ns: 'test' }]);
+      expect(showUndoMessage).toEqual(['computed 2 to 4', { ns: 'test' }]);
     }),
   );
 
