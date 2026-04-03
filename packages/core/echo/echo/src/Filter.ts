@@ -18,7 +18,7 @@ import * as Ref from './Ref';
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Filter': { value: Types.Contravariant<T> };
+  '~Filter': { value: Types.Covariant<T> };
 
   ast: QueryAST.Filter;
 }
@@ -64,7 +64,7 @@ export const everything = (): FilterClass => {
 /**
  * Filter that matches no objects.
  */
-export const nothing = (): FilterClass => {
+export const nothing = (): Filter<never> => {
   return new FilterClass({
     type: 'not',
     filter: {

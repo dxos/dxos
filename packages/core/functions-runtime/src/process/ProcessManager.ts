@@ -140,8 +140,16 @@ export interface SpawnOptions {
    */
   readonly target?: ObjectId;
 
-  /** Tracing metadata for this invocation. */
+  /**
+   * Tracing metadata for this invocation.
+   * @deprecated use `traceMeta` instead.
+   */
   readonly tracing?: TracingOptions;
+
+  /**
+   * Tracing metadata for this invocation.
+   */
+  readonly traceMeta?: Trace.Meta;
 
   readonly environment?: Environment;
 }
@@ -874,8 +882,10 @@ export class ProcessManagerImpl implements Manager {
             // TODO(dmaretskyi): Batching.
             const message = Obj.make(Trace.Message, {
               meta: {
+                ...(options?.traceMeta ?? {}),
                 pid: id,
                 parentPid: options?.parentProcessId,
+                processName: params.name ?? undefined,
               },
               isEphemeral: event.isEphemeral,
               events: [

@@ -36,6 +36,8 @@ interface AgentProcessOptions {
   model?: ModelName;
 }
 
+export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
+
 /**
  * Hosts a persistent, suspendible AiAgent that can process a number of prompts.
  * The process target is a queue DXN string.
@@ -43,7 +45,7 @@ interface AgentProcessOptions {
 export const AgentProcess = (options: AgentProcessOptions) =>
   Process.make(
     {
-      key: 'org.dxos.testing.process.agent',
+      key: AGENT_PROCESS_KEY,
       input: Schema.String,
       output: Schema.Void,
       services: [

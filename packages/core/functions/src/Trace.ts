@@ -65,7 +65,7 @@ export interface Event extends Schema.Schema.Type<typeof Event> {}
 /**
  * Checks if an event is of a given type.
  */
-export const isOfType = <T>(eventType: EventType<T>, event: Event): event is Event & { data: T } => {
+export const isOfType = <T, E extends Event>(eventType: EventType<T>, event: E): event is E & { data: T } => {
   return event.type === eventType.key;
 };
 
@@ -77,6 +77,15 @@ export const Meta = Schema.Struct({
   pid: Schema.optional(Schema.String), // NOTE: Not Process.ID to avoid circular dependency.
   parentPid: Schema.optional(Schema.String),
   processName: Schema.optional(Schema.String),
+  /**
+   * ID of the conversation feed object if present.
+   */
+  conversationId: Schema.optional(Obj.ID),
+
+  /**
+   * ID of the trigger object if invocation resulted from a trigger.
+   */
+  triggerId: Schema.optional(Obj.ID),
 });
 export interface Meta extends Schema.Schema.Type<typeof Meta> {}
 
