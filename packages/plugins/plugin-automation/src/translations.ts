@@ -41,7 +41,7 @@ export const translations = [
         'trigger type websocket': 'Websocket',
         'trigger type subscription': 'Subscription',
         'trigger type email': 'Email',
-        'trigger type feed': 'Feed',
+        'trigger type queue': 'Feed',
 
         'trigger copy url': 'Copy URL',
         'trigger copy email': 'Copy Email',
