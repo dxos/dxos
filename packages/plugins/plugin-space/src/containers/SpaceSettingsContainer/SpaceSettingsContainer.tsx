@@ -92,7 +92,7 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
     [space, client, archived, invokePromise, toggleEdgeReplication],
   );
 
-  const values = useMemo(
+  const defaultValues = useMemo(
     () => ({
       name: space.properties.name,
       icon: space.properties.icon,
@@ -191,7 +191,13 @@ export const SpaceSettingsContainer = ({ space }: SpaceSettingsContainerProps) =
         title={t('space properties settings verbose label')}
         description={t('space properties settings description', { ns: meta.id })}
       >
-        <Form.Root fieldMap={fieldMap} schema={SpaceFormSchema} values={values} onValuesChanged={handleValuesChanged}>
+        <Form.Root
+          key={space.id}
+          fieldMap={fieldMap}
+          schema={SpaceFormSchema}
+          defaultValues={defaultValues}
+          onValuesChanged={handleValuesChanged}
+        >
           <Form.FieldSet />
         </Form.Root>
       </Settings.Section>

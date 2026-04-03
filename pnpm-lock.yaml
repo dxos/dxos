@@ -11634,6 +11634,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -18253,6 +18256,12 @@ importers:
 
   packages/ui/react-ui-search:
     dependencies:
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/react-ui-mosaic':
+        specifier: workspace:*
+        version: link:../react-ui-mosaic
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -18278,6 +18287,9 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../react-ui-attention
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
@@ -38510,7 +38522,7 @@ snapshots:
       '@atlaskit/platform-feature-flags': 1.1.2(react@19.2.3)
       '@babel/runtime': 7.27.1
       '@babel/traverse': 7.28.5
-      '@babel/types': 7.28.5
+      '@babel/types': 7.29.0
       bind-event-listener: 3.0.0
       react: 19.2.3
     transitivePeerDependencies:
@@ -46435,16 +46447,16 @@ snapshots:
 
   '@types/babel__generator@7.6.4':
     dependencies:
-      '@babel/types': 7.28.5
+      '@babel/types': 7.29.0
 
   '@types/babel__template@7.4.1':
     dependencies:
       '@babel/parser': 7.28.5
-      '@babel/types': 7.28.5
+      '@babel/types': 7.29.0
 
   '@types/babel__traverse@7.28.0':
     dependencies:
-      '@babel/types': 7.28.5
+      '@babel/types': 7.29.0
 
   '@types/base16@1.0.2': {}
 
@@ -48673,7 +48685,7 @@ snapshots:
       '@babel/core': 7.28.0
       '@babel/helper-module-imports': 7.18.6
       '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.28.0)
-      '@babel/types': 7.28.5
+      '@babel/types': 7.29.0
       html-entities: 2.3.3
       parse5: 7.3.0
 
@@ -53922,7 +53934,7 @@ snapshots:
   magicast@0.3.5:
     dependencies:
       '@babel/parser': 7.28.5
-      '@babel/types': 7.28.5
+      '@babel/types': 7.29.0
       source-map-js: 1.2.1
 
   magicast@0.5.2:

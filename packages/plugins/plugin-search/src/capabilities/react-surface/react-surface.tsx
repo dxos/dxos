@@ -11,7 +11,7 @@ import { useActiveSpace } from '@dxos/plugin-space';
 import { type Space, isSpace } from '@dxos/react-client/echo';
 
 import { SEARCH_DIALOG } from '../../constants';
-import { SearchDialog, type SearchDialogProps, SearchMain } from '../../containers';
+import { SearchArticle, SearchDialog, type SearchDialogProps } from '../../containers';
 import { SearchContextProvider } from '../../hooks';
 
 export default Capability.makeModule(() =>
@@ -35,7 +35,7 @@ export default Capability.makeModule(() =>
 
           return (
             <SearchContextProvider>
-              <SearchMain space={space} />
+              <SearchArticle space={space} />
             </SearchContextProvider>
           );
         },
@@ -52,7 +52,7 @@ export default Capability.makeModule(() =>
 
           return (
             <SearchContextProvider>
-              <SearchMain space={space} />
+              <SearchArticle space={space} />
             </SearchContextProvider>
           );
         },
