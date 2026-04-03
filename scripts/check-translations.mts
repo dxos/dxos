@@ -12,6 +12,7 @@ import { join, relative, dirname, basename } from 'node:path';
 const ROOT = join(import.meta.dirname, '..');
 const PLUGINS_DIR = join(ROOT, 'packages/plugins');
 const UI_DIR = join(ROOT, 'packages/ui');
+const SDK_DIR = join(ROOT, 'packages/sdk');
 
 // --- Step 1: Collect defined translation keys from translations.ts files ---
 
@@ -413,7 +414,31 @@ function main() {
     }
   }
 
-  const totalPackages = pluginDirs.length + uiDirs.filter((d) => resolveTranslationKey(d)).length;
+  // --- Scan SDK packages ---
+  const sdkDirs = existsSync(SDK_DIR)
+    ? readdirSync(SDK_DIR, { withFileTypes: true })
+        .filter((d) => d.isDirectory())
+        .map((d) => join(SDK_DIR, d.name))
+    : [];
+
+  for (const sdkDir of sdkDirs) {
+    const translationKey = resolveTranslationKey(sdkDir);
+    if (!translationKey) {
+      continue;
+    }
+
+    for (const file of walkFiles(join(sdkDir, 'src'), (p) => basename(p) === 'translations.ts')) {
+      const keys = extractDefinedKeys(file, sdkDir, translationKey);
+      allDefinedKeys.push(...keys);
+    }
+
+    for (const file of walkFiles(join(sdkDir, 'src'), (p) => /\.(tsx?|jsx?)$/.test(p) && !p.includes('.test.') && !p.includes('.stories.'))) {
+      const keys = extractUsedKeys(file, translationKey);
+      allUsedKeys.push(...keys);
+    }
+  }
+
+  const totalPackages = pluginDirs.length + uiDirs.filter((d) => resolveTranslationKey(d)).length + sdkDirs.filter((d) => resolveTranslationKey(d)).length;
   console.log(`Found ${allDefinedKeys.length} defined translation keys across ${totalPackages} packages.`);
   console.log(`Found ${allUsedKeys.length} translation key usages in source files.\n`);
 

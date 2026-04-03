@@ -324,7 +324,9 @@ export default {
         return;
       }
 
-      if (!packageInfo.keys.has(key)) {
+      // Check exact key, then check plural variants (i18next resolves 'foo.label' with { count } to 'foo.label_one'/'foo.label_other').
+      const hasPluralVariant = PLURAL_SUFFIXES.some((suffix) => packageInfo.keys.has(key + suffix));
+      if (!packageInfo.keys.has(key) && !hasPluralVariant) {
         context.report({
           node,
           messageId: 'undefinedKey',

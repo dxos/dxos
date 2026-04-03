@@ -12,6 +12,7 @@ import { join, relative, dirname, basename } from 'node:path';
 const ROOT = join(import.meta.dirname, '..');
 const PLUGINS_DIR = join(ROOT, 'packages/plugins');
 const UI_DIR = join(ROOT, 'packages/ui');
+const SDK_DIR = join(ROOT, 'packages/sdk');
 const DRY_RUN = process.argv.includes('--dry-run');
 
 // --- Reused from check-translations.mts ---
@@ -264,6 +265,20 @@ function main() {
       .map((d) => join(UI_DIR, d.name));
 
     for (const dir of uiDirs) {
+      const ns = resolveTranslationKey(dir);
+      if (ns) {
+        packages.push({ dir, namespace: ns, nsSource: 'translationKey', translationsPath: join(dir, 'src/translations.ts') });
+      }
+    }
+  }
+
+  // Collect SDK packages (e.g., shell).
+  if (existsSync(SDK_DIR)) {
+    const sdkDirs = readdirSync(SDK_DIR, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => join(SDK_DIR, d.name));
+
+    for (const dir of sdkDirs) {
       const ns = resolveTranslationKey(dir);
       if (ns) {
         packages.push({ dir, namespace: ns, nsSource: 'translationKey', translationsPath: join(dir, 'src/translations.ts') });
