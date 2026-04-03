@@ -417,3 +417,8 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
     Match.orElse((value) => eq(value).ast),
   );
 };
+
+/**
+ * Returns a human-readable string representation of a Filter AST.
+ */
+export const pretty = (filter: Any): string => internal.prettyFilter(filter.ast);
