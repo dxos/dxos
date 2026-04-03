@@ -11,7 +11,7 @@ import { Script } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
-import { Button, IconButton, useTranslation } from '@dxos/react-ui';
+import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { ghostHover, mx } from '@dxos/ui-theme';
@@ -83,20 +83,26 @@ export const FunctionsPanel = ({ space }: FunctionsPanelProps) => {
                 <List.Item<Operation.PersistentOperation>
                   key={func.id}
                   item={func}
-                  classNames={mx('grid grid-cols-[1fr_auto] min-h-[2.5rem] min-h-[3rem] px-2 items-center', ghostHover)}
+                  classNames={mx(
+                    'grid grid-cols-[1fr_min-content_auto] min-h-[2.5rem] min-h-[3rem] px-2 items-center',
+                    ghostHover,
+                  )}
                 >
                   <div className='flex flex-col truncate'>
                     <List.ItemTitle classNames='truncate'>{func.name}</List.ItemTitle>
-                    {getScriptName(func) && (
-                      <div className='text-xs text-description truncate'>{getScriptName(func)}</div>
-                    )}
+                    {getScriptName(func) && <p className='text-xs text-description truncate'>{getScriptName(func)}</p>}
                   </div>
-                  {functionToScriptMap[func.id] && (
-                    <Button onClick={() => handleGoToScript(func)}>{t('go to function source button label')}</Button>
-                  )}
+                  {(functionToScriptMap[func.id] && (
+                    <IconButton
+                      icon='ph--arrow-square-out--regular'
+                      iconOnly
+                      label={t('show source button label')}
+                      onClick={() => handleGoToScript(func)}
+                    />
+                  )) || <div />}
                   <IconButton
-                    iconOnly
                     icon='ph--trash--regular'
+                    iconOnly
                     label={t('delete function button label')}
                     onClick={() => handleDelete(func)}
                   />

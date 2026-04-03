@@ -11,7 +11,9 @@ import React, {
   createContext,
   forwardRef,
   useContext,
+  useMemo,
 } from 'react';
+import DOMPurify from 'dompurify';
 
 import { composable, composableProps, iconSize, mx, slottable } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
@@ -288,6 +290,31 @@ const CardText = slottable<HTMLDivElement, CardTextProps>(
 );
 
 //
+// Html
+//
+
+type CardHtmlProps = { html: string; variant?: 'default' | 'description' };
+
+/**
+ * Renders sanitized HTML content inside a card text slot.
+ * Uses DOMPurify to prevent XSS from untrusted markup (e.g. RSS feed content).
+ */
+const CardHtml = ({ html, variant = 'default', ...props }: CardHtmlProps & ThemedClassName<object>) => {
+  const { tx } = useThemeContext();
+  const sanitized = useMemo(() => DOMPurify.sanitize(html), [html]);
+
+  return (
+    <div
+      {...props}
+      role='none'
+      className={tx('card.text', { variant })}
+      // eslint-disable-next-line react/no-danger
+      dangerouslySetInnerHTML={{ __html: sanitized }}
+    />
+  );
+};
+
+//
 // Poster
 //
 
@@ -379,6 +406,7 @@ export const Card = {
   Section: CardSection,
   Heading: CardHeading,
   Text: CardText,
+  Html: CardHtml,
   Poster: CardPoster,
   Action: CardAction,
   Link: CardLink,

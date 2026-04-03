@@ -157,9 +157,9 @@ const setup = async () => {
   }
   space.db.add(
     Obj.make(AccessToken.AccessToken, {
-      note: 'Email read access.',
       source: 'google.com',
       token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
+      note: 'Email read access.',
     }),
   );
 
