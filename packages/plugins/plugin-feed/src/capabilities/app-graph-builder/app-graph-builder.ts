@@ -54,7 +54,7 @@ export default Capability.makeModule(
               id: 'feeds',
               type: 'feeds', // TODO(burdon): Const.
               data: 'feeds-root', // TODO(burdon): Const.
-              properties: { label: 'Feeds', icon: 'ph--rss--regular', disposition: 'branch' },
+              properties: { label: 'Feeds', icon: 'ph--rss--regular', disposition: 'branch', position: 'hoist' },
               nodes: feeds
                 .map((feed: Subscription.Feed) =>
                   createObjectNode({
