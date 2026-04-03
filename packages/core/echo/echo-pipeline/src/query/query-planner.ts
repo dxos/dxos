@@ -2,13 +2,22 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Order } from '@dxos/echo';
+import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import type { DXN } from '@dxos/keys';
 
 import { QueryError } from './errors';
 import { QueryPlan } from './plan';
+
+/**
+ * Creates a QueryError with "Query too complex" message and includes the prettified query in the context.
+ */
+const queryTooComplexError = (query: QueryAST.Query): QueryError =>
+  new QueryError({
+    message: `Query too complex: ${Query.pretty(Query.fromAst(query))}`,
+    context: { query, prettyQuery: Query.pretty(Query.fromAst(query)) },
+  });
 
 export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;
@@ -126,10 +135,7 @@ export class QueryPlanner {
           ]);
         }
         if (context.selectionInverted) {
-          throw new QueryError({
-            message: 'Query too complex',
-            context: { query: context.originalQuery },
-          });
+          throw queryTooComplexError(context.originalQuery);
         }
 
         // Try to utilize indexes during selection, prioritizing selecting by id, then by typename.
@@ -242,11 +248,11 @@ export class QueryPlanner {
 
       // Compare
       case 'compare':
-        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+        throw queryTooComplexError(context.originalQuery);
       case 'in':
-        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+        throw queryTooComplexError(context.originalQuery);
       case 'range':
-        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+        throw queryTooComplexError(context.originalQuery);
 
       // Boolean
       case 'not':
@@ -309,7 +315,7 @@ export class QueryPlanner {
           });
         }
 
-        throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+        throw queryTooComplexError(context.originalQuery);
       }
       case 'or':
         // Optimized case
@@ -336,7 +342,7 @@ export class QueryPlanner {
             },
           ]);
         } else {
-          throw new QueryError({ message: 'Query too complex', context: { query: context.originalQuery } });
+          throw queryTooComplexError(context.originalQuery);
         }
 
       default:

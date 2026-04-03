@@ -617,6 +617,22 @@ describe('query api', () => {
       );
     });
 
+    test('Query.pretty returns human-readable query string', () => {
+      const query = Query.select(Filter.type(TestSchema.Person, { name: 'Fred' }));
+      const pretty = Query.pretty(query);
+      expect(pretty).toContain('Query.select');
+      expect(pretty).toContain('Filter.type');
+      expect(pretty).toContain('com.example.type.person');
+    });
+
+    test('Query.pretty handles complex queries', () => {
+      const query = Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.id(ObjectId.random()))).limit(10);
+      const pretty = Query.pretty(query);
+      expect(pretty).toContain('Query.select');
+      expect(pretty).toContain('Filter.and');
+      expect(pretty).toContain('limit(10)');
+    });
+
     test.skip('chain', () => {
       // NOTE: Can't support props without type since they can't be inferred.
       // const f1: Filter<Person> = Filter.props({ name: 'Fred' });
@@ -657,6 +673,26 @@ describe('query api', () => {
       const filter = Filter.or(Filter.typename('com.example.type.person'));
       // TODO(dmaretskyi): Give vitest type-tests a try.
       const _isAssignable: Obj.Unknown = null as any as Filter.Type<typeof filter>;
+    });
+
+    test('Filter.pretty returns human-readable filter string', () => {
+      const filter = Filter.type(TestSchema.Person, { name: 'Fred' });
+      const pretty = Filter.pretty(filter);
+      expect(pretty).toContain('Filter.type');
+      expect(pretty).toContain('com.example.type.person');
+    });
+
+    test('Filter.pretty handles complex filters', () => {
+      const filter = Filter.and(Filter.type(TestSchema.Person), Filter.id(ObjectId.random()));
+      const pretty = Filter.pretty(filter);
+      expect(pretty).toContain('Filter.and');
+      expect(pretty).toContain('Filter.type');
+    });
+
+    test('Filter.pretty handles or filters', () => {
+      const filter = Filter.or(Filter.type(TestSchema.Person), Filter.type(TestSchema.Organization));
+      const pretty = Filter.pretty(filter);
+      expect(pretty).toContain('Filter.or');
     });
   });
 });

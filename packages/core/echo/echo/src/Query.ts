@@ -532,3 +532,8 @@ const _isScope = (value: unknown): value is QueryAST.Scope => {
   }
   return Object.keys(value).every((key) => SCOPE_KEYS.has(key));
 };
+
+/**
+ * Returns a human-readable string representation of a Query AST.
+ */
+export const pretty = (query: Any): string => internal.prettyQuery(query.ast);
