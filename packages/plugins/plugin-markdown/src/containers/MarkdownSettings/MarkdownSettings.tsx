@@ -106,12 +106,12 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSetting
           </Settings.ItemInput>
 
           {settings.debug && (
-            <Settings.ItemInput title={t('settings-debug-textarea.label', { ns: meta.id })}>
+            <Settings.ItemInput title={t('settings-debug-typewriter.label', { ns: meta.id })}>
               <Input.TextArea
                 rows={5}
                 value={settings.typewriter}
                 onChange={({ target: { value } }) => onSettingsChange((s) => ({ ...s, typewriter: value }))}
-                placeholder={t('settings-debug.placeholder')}
+                placeholder={t('settings-debug-typewriter.placeholder')}
               />
             </Settings.ItemInput>
           )}

@@ -19,6 +19,8 @@ export const translations = [
         're-open-directory.label': 'Re-open directory',
         'save.label': 'Save',
         'save-as.label': 'Save as',
+        'close.label': 'Close',
+        're-open.label': 'Re-open',
         'close-file.label': 'Close file',
         'close-directory.label': 'Close directory',
         'export.label': 'Export',
@@ -35,8 +37,6 @@ export const translations = [
         // https://www.i18next.com/translation-function/formatting#datetime
         'last-export-at.label': 'Last export at {{value, datetime}}',
         'no-previous-exports.label': 'No previous exports',
-        'close.label': '',
-        're-open.label': '',
       },
     },
   },

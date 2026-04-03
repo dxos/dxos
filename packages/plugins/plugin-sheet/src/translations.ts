@@ -48,7 +48,7 @@ export const translations = [
         'col-dropped.label': 'Deleted a column',
         'row-dropped.label': 'Deleted a row',
         'align.label': 'Text align',
-        'axis-dropped.label': '',
+        'axis-dropped.label': 'Drop axis', // TODO(burdon): What does this mean?
       },
     },
   },

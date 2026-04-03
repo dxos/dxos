@@ -34,10 +34,12 @@ export const translations = [
         'meeting-list.label': 'Meetings',
         'create-meeting.label': 'Start New Meeting',
         'select-meeting.label': 'Set Active',
+        'share-call-link.label': 'Share call link',
 
         'meeting-companion.label': 'Meeting Notes',
         'notes.label': 'Notes',
         'stats.label': 'Stats',
+        'summary.label': 'Summary',
         'regenerate-summary.label': 'Regenerate Summary',
         'generate-summary.label': 'Generate Summary',
 
@@ -46,8 +48,6 @@ export const translations = [
         'entity-extraction.label': 'Entity extraction',
         'entity-extraction.description':
           'While transcribing, use the Assistant to detect and annotate mentions of known objects such as people or organizations.',
-        'summary.label': '',
-        'share-call-link.label': '',
       },
     },
   },

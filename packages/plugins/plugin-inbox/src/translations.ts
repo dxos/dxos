@@ -81,6 +81,7 @@ export const translations = [
         'view-trigger.label': 'View trigger',
 
         'event-untitled.label': 'Untitled',
+        'event-toolbar.menu': 'Actions',
         'event-toolbar-create-note.menu': 'Create note',
 
         'message-toolbar.label': 'Message toolbar',
@@ -121,10 +122,9 @@ export const translations = [
         'draft-body.label': 'Body',
         'draft-body.placeholder': 'Write your message...',
 
-        'open-calendar.button': '',
-        'open-profile.button': '',
-        'saved-filter-name.label': '',
-        'event-toolbar.label': '',
+        'open-calendar.button': 'Open calendar',
+        'open-profile.button': 'Open profile',
+        'saved-filter-name.label': 'Filter name',
       },
     },
   },

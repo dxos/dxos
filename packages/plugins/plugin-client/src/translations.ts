@@ -7,6 +7,7 @@ import { translations as shellTranslations } from '@dxos/shell/react';
 
 import { meta } from './meta';
 
+// TODO(burdon): Disambiguate with sdk/shell
 const pluginTranslations = [
   {
     'en-US': {
@@ -66,15 +67,15 @@ const pluginTranslations = [
           'It is your private key for recovering DXOS data. Anyone with this key will be able to gain access to your account.',
         'recovery-code-confirmation.label': 'Please confirm you have saved the code.',
         'continue.label': 'Continue',
-        'auth-code.message': '',
-        'auth-other-device-emoji.message': '',
-        'cancel.label': '',
-        'join-new-identity.label': '',
+        'auth-code.message': 'Authorization code',
+        'auth-other-device-emoji.message': 'Authorization icon',
+        'cancel.label': 'Cancel',
+        'join-new-identity.label': 'Join an existing identity',
         'qr.label': 'QR Code',
-        'recover-identity.label': '',
-        'reset-device.label': '',
-        'reset-dialog.description': '',
-        'reset-dialog.title': '',
+        'recover-identity.label': 'Use a recovery code',
+        'reset-device.label': 'Reset storage',
+        'reset-dialog.description': 'Reset storage',
+        'reset-dialog.title': 'Reset storage',
       },
     },
   },

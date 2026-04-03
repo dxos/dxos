@@ -9,7 +9,7 @@ import { Event, Message, Organization, Person, Pipeline, Task } from '@dxos/type
 
 import { meta } from './meta';
 
-// TODO(burdon): Change to single Resource?
+// TODO(burdon): Disambiguate with sdk/shell.
 export const translations = [
   {
     'en-US': {
@@ -143,6 +143,7 @@ export const translations = [
         'duplicate-object.label': 'Duplicate object',
         'object-deleted.label': 'Object deleted',
         'objects-deleted.label': 'Objects deleted',
+        'go-to-object.alt': 'Open',
         'go-to-object.label': 'Open object',
         'found-object.label': 'Ready.',
         'found-object.description': 'The requested object is now available.',
@@ -270,19 +271,20 @@ export const translations = [
         'type-collection-all.label': 'All',
 
         'search.placeholder': 'Search…',
-        'auth-code.message': '',
-        'auth-other-device-emoji.message': '',
-        'cancel.label': '',
+        'auth-code.message': 'Authorization code',
+        'auth-other-device-emoji.message': 'Authorization icon',
+        'cancel.label': 'Cancel',
         'delete-key.button': 'Delete token',
-        'go-to-object.alt': '',
+
+        'invite-one.label': 'Create single-use invitation',
+        'invite-one.description': 'One-time link',
+        'invite-many.label': 'Create multi-use invitation',
         'invite-many.description': 'Anyone with the link can join.',
-        'invite-many.label': '',
-        'invite-one.description': '',
-        'invite-one.label': '',
-        'presence.label': '',
-        'qr.label': '',
-        'typename.label': '',
-        'unnamed-collection.label': '',
+
+        'presence.label': 'Online activity',
+        'qr.label': 'QR Code',
+        'typename.label': 'Typename',
+        'unnamed-collection.label': 'Unnamed',
       },
     },
   },

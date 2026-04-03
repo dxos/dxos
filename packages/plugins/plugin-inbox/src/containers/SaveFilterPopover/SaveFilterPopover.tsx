@@ -25,7 +25,6 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
     void invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
   }, [mailbox, name, filter, invokePromise]);
 
-  // TODO(thure): Why does the input value need to be uncontrolled to work?
   return (
     <div role='none' className='p-2 flex gap-2'>
       <div role='none' className='flex-1'>
