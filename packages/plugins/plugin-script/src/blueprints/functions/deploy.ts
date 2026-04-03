@@ -3,12 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import wasmUrl from 'esbuild-wasm/esbuild.wasm?url';
 
 import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { getUserFunctionIdInMetadata, type Script } from '@dxos/functions';
-import { bundleFunction } from '@dxos/functions-runtime/bundler';
+import { bundleFunction, initializeBundler } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
@@ -31,6 +32,7 @@ export default Deploy.pipe(
         return yield* Effect.fail(new Error('Script source or space not available'));
       }
 
+      yield* Effect.promise(() => initializeBundler({ wasmUrl }));
       const buildResult = yield* Effect.promise(() =>
         bundleFunction({ source: script.source!.target!.content }),
       );
