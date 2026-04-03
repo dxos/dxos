@@ -18,6 +18,46 @@ const FunctionId = Schema.String.annotations({
   description: 'The ID of the function. Can be passed as the function parameter to other operations.',
 });
 
+const FUNCTION_FORMAT = trim`
+  IMPORTANT: Every function MUST follow this exact pattern — define an Operation, then export default the handler:
+
+  \`\`\`typescript
+  import * as Effect from 'effect/Effect';
+  import * as Schema from 'effect/Schema';
+
+  import { Operation } from '@dxos/operation';
+
+  const MyFunction = Operation.make({
+    meta: {
+      key: 'org.dxos.script.my-function',
+      name: 'My Function',
+    },
+    input: Schema.Struct({
+      city: Schema.String.annotations({ description: 'City name' }),
+    }),
+    output: Schema.Any,
+  });
+
+  export default MyFunction.pipe(
+    Operation.withHandler(
+      Effect.fn(function* ({ city }) {
+        const res = yield* Effect.promise(() =>
+          fetch(\`https://wttr.in/\${city}?format=j1\`)
+        );
+        const data = yield* Effect.promise(() => res.json());
+        return data;
+      }),
+    ),
+  );
+  \`\`\`
+
+  Key rules:
+  - The file MUST have a single \`export default\` of Operation.pipe(Operation.withHandler(...)).
+  - Use \`Effect.fn(function* (...) { ... })\` for the handler body.
+  - Wrap async calls with \`yield* Effect.promise(() => ...)\`.
+  - Do NOT use top-level await; do NOT export named functions; do NOT use module.exports.
+`;
+
 const AVAILABLE_PACKAGES = trim`
   Scripts run in an Edge runtime (Cloudflare Workers) with the following pre-bundled packages:
 
@@ -59,7 +99,7 @@ export const Create = Operation.make({
   meta: {
     key: 'org.dxos.function.script.create',
     name: 'Create',
-    description: `Creates a new function with TypeScript source code and adds it to the space. ${AVAILABLE_PACKAGES}`,
+    description: `Creates a new function with TypeScript source code and adds it to the space. ${FUNCTION_FORMAT} ${AVAILABLE_PACKAGES}`,
   },
   input: Schema.Struct({
     name: Schema.String.annotations({
@@ -111,7 +151,7 @@ export const Update = Operation.make({
   meta: {
     key: 'org.dxos.function.script.update',
     name: 'Update',
-    description: 'Updates the source code or metadata of a function.',
+    description: `Updates the source code or metadata of a function. ${FUNCTION_FORMAT}`,
   },
   input: Schema.Struct({
     function: FunctionRef,
@@ -148,7 +188,7 @@ export const Deploy = Operation.make({
   meta: {
     key: 'org.dxos.function.script.deploy',
     name: 'Deploy',
-    description: 'Deploys a function to the Edge runtime.',
+    description: `Deploys a function to the Edge runtime. The function source must follow the required format: a single export default of Operation.pipe(Operation.withHandler(Effect.fn(function* (...) { ... }))). See the Create operation description for a full example.`,
   },
   input: Schema.Struct({
     function: FunctionRef,
