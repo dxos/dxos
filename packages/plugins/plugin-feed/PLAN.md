@@ -40,6 +40,10 @@
 ### Review 2.1
 
 - [ ] It seems that the subtasks of the "Create SubscriptionArticle" have not been addressed.
+- [ ] Handle Atom as well as RSS feeds.
+- [ ] Auto sync immediately after creating feed.
+- [ ] FeedArticle should show any errors.
+- [ ] FeedArtiles's Toolbar should have sync button.
 
 ## Implementation Notes
 

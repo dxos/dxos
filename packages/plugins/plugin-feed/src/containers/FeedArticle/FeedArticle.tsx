@@ -5,9 +5,9 @@
 import React, { useCallback, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Entity, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { PostStack, type PostStackAction } from '../../components';
 import { Subscription } from '../../types';
@@ -20,7 +20,12 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
   const feed = subject.feed?.target;
   const posts = useQuery(
     Obj.getDatabase(subject),
-    feed ? Query.select(Filter.type(Subscription.Post)).from(feed) : Query.select(Filter.nothing()),
+    feed
+      ? Query.select(
+          Filter.everything(),
+          // Filter.type(Subscription.Post)
+        ).from(feed)
+      : Query.select(Filter.nothing()),
   );
 
   const handleAction = useCallback((action: PostStackAction) => {
@@ -29,8 +34,14 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
     }
   }, []);
 
+  // TODO(burdon): Add sync button.
   return (
     <Panel.Root role={role} className='dx-document'>
+      <Panel.Toolbar asChild>
+        <Toolbar.Root>
+          <h2 className='p-1 truncate'>{Entity.getLabel(subject)}</h2>
+        </Toolbar.Root>
+      </Panel.Toolbar>
       <Panel.Content asChild>
         <PostStack id={subject.id} posts={posts} currentId={currentPostId} onAction={handleAction} />
       </Panel.Content>
