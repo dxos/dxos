@@ -128,7 +128,7 @@ export class DataServiceImpl implements DataService {
     await this._automergeHost.waitUntilHeadsReplicated(options?.ctx ?? Context.default(), request.heads);
   }
 
-  async reIndexHeads(request: ReIndexHeadsRequest, options?: RequestOptions): Promise<void> {
+  async reIndexHeads(request: ReIndexHeadsRequest, _options?: RequestOptions): Promise<void> {
     await this._automergeHost.reIndexHeads((request.documentIds ?? []) as DocumentId[]);
   }
 
