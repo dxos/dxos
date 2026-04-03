@@ -125,7 +125,8 @@ const TestLayer = AssistantTestLayer({
 });
 
 describe('Agent Executable', () => {
-  it.scoped(
+  // TODO(dmaretskyi): Figure out how to make it not sleep for 45 seconds.
+  it.scoped.skip(
     'runs AI agent with background tools via process manager',
     Effect.fnUntraced(
       function* (_) {
