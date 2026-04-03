@@ -17,7 +17,7 @@ import { useBreakpoints } from '../../hooks';
 import { meta } from '../../meta';
 import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
 import { DeckOperation } from '../../operations';
-import { soloInlinePadding } from '../fragments';
+import { soloInlinePadding } from '../DeckMain/fragments';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 

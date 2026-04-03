@@ -10,7 +10,7 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities, NOT_FOUND_PATH } from '@dxos/app-toolkit';
 import { NotFoundArticle } from '@dxos/app-toolkit/ui';
 
-import { Banner, DeckSettings } from '../../containers';
+import { DeckSettings } from '../../containers';
 import { meta } from '../../meta';
 import { type DeckSettingsProps } from '../../types';
 
@@ -25,13 +25,6 @@ export default Capability.makeModule(() =>
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<DeckSettingsProps>(subject.atom);
           return <DeckSettings settings={settings} onSettingsChange={updateSettings} />;
-        },
-      }),
-      Surface.create({
-        id: `${meta.id}.banner`,
-        role: 'banner',
-        component: ({ data }: { data: { variant?: 'topbar' | 'sidebar' } }) => {
-          return <Banner variant={data.variant} />;
         },
       }),
       Surface.create({

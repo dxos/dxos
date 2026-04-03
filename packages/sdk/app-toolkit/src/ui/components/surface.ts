@@ -5,7 +5,7 @@
 import { type Obj } from '@dxos/echo';
 import { Space } from '@dxos/client/echo';
 
-// TODO(burdon): Standardize PluginSettings and ObjectProperties.
+// TODO(burdon): attendableId => id ("attentable" is the valence)
 
 export type SurfaceRole =
   | 'item'
@@ -14,13 +14,24 @@ export type SurfaceRole =
   | 'section'
   | 'card--content';
 
-// TODO(burdon): attendableId => id ("attentable" is the valence)
+/**
+ * Generic type for surface components that are anchored to a space.
+ */
+export type SpaceSurfaceProps = {
+  space?: Space;
+
+  /** Surface role (superset of WAI-ARIA role). */
+  role?: string;
+
+  /** Path-based ID inherited from the surface data for attention tracking and graph action lookup. */
+  attendableId?: string;
+};
 
 /**
- * Base type for surface components.
+ * Generic type for surface components that have a subject.
  * NOTE: These properties are passed from `Plank`.
  */
-export type SurfaceComponentProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
+export type ObjectSurfaceProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
   /** Surface role (superset of WAI-ARIA role). */
   role?: string;
 
@@ -34,12 +45,10 @@ export type SurfaceComponentProps<Subject extends Obj.Unknown | undefined = Obj.
   subject: Subject;
 } & Props;
 
-export type SurfaceThingProps = {
-  space?: Space;
-
-  /** Surface role (superset of WAI-ARIA role). */
-  role?: string;
-
-  /** Path-based ID inherited from the surface data for attention tracking and graph action lookup. */
-  attendableId?: string;
+/**
+ * Generic type for surface components that are anchored to settings.
+ */
+export type SettingsSurfaceProps<T extends {}> = {
+  settings: T;
+  onSettingsChange?: (cb: (current: T) => T) => void;
 };

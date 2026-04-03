@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 
-import { DeckLayout } from '../../components';
+import { DeckLayout } from '../../containers';
 import { useDeckState } from '../../hooks';
 import { meta } from '../../meta';
 

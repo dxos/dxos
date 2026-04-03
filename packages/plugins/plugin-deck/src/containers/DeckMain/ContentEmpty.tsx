@@ -9,7 +9,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useBreakpoints, useDeckState } from '../../hooks';
 import { getMode } from '../../types';
 import { layoutAppliesTopbar } from '../../util';
-import { fixedSidebarToggleStyles } from '../fragments';
+import { fixedSidebarToggleStyles } from './fragments';
 import { ToggleSidebarButton } from '../Sidebar';
 
 export const ContentEmpty = () => {

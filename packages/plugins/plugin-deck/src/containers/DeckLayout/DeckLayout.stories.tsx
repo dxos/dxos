@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
@@ -32,7 +31,6 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
 const meta = {
   title: 'plugins/plugin-deck/components/DeckLayout',
   component: DeckLayout,
-  render: (args) => <DeckLayout {...args} />,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({

@@ -4,8 +4,7 @@
 
 import React, { Fragment, type UIEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Main, type MainContentProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
@@ -14,16 +13,26 @@ import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
 import { useBreakpoints, useDeckState, useHoistStatusbar } from '../../hooks';
 import { DeckCapabilities, getMode } from '../../types';
 import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
-import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from '../fragments';
+import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from './fragments';
 import { Plank } from '../Plank';
 import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 import { ContentEmpty } from './ContentEmpty';
 import { StatusBar } from './StatusBar';
-import { Topbar } from './Topbar';
+import { Banner } from './Banner';
 
-export const DeckMain = () => {
-  const { invokePromise } = useOperationInvoker();
+/**
+ * Request to change the layout mode.
+ * Either set a specific mode (with optional subject), or revert to the previous mode.
+ */
+export type LayoutChangeRequest = { subject?: string; mode: string } | { revert: true };
+
+export type DeckMainProps = {
+  /** Callback invoked when the layout mode needs to change. */
+  onLayoutChange: (request: LayoutChangeRequest) => void;
+};
+
+export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
   const settings = useAtomCapability(DeckCapabilities.Settings);
   const { state, deck, updateState } = useDeckState();
   const { sidebarState, complementarySidebarState, complementarySidebarPanel } = state;
@@ -62,20 +71,20 @@ export const DeckMain = () => {
       const attended = attention.getCurrent();
 
       shouldRevert.current = true;
-      void invokePromise(LayoutOperation.SetLayoutMode, { subject: attended[0], mode: 'solo' });
+      onLayoutChange({ subject: attended[0], mode: 'solo' });
     } else if (isNotMobile && layoutMode === 'solo' && shouldRevert.current) {
-      void invokePromise(LayoutOperation.SetLayoutMode, { revert: true });
+      onLayoutChange({ revert: true });
     }
     // NOTE: Using `layoutMode` instead of `deck` to avoid infinite loops caused by object reference changes.
-  }, [isNotMobile, layoutMode, invokePromise]);
+  }, [isNotMobile, layoutMode, onLayoutChange]);
 
   // When deck is disabled in settings, set to solo mode if the current layout mode is deck.
   // TODO(thure): Applying this as an effect should be avoided over emitting the operation only when the setting changes.
   useEffect(() => {
     if (!settings?.enableDeck && layoutMode === 'deck') {
-      void invokePromise(LayoutOperation.SetLayoutMode, { subject: active[0], mode: 'solo' });
+      onLayoutChange({ subject: active[0], mode: 'solo' });
     }
-  }, [settings?.enableDeck, invokePromise, active, layoutMode]);
+  }, [settings?.enableDeck, onLayoutChange, active, layoutMode]);
 
   /**
    * Clear scroll restoration state if the window is resized.
@@ -269,7 +278,7 @@ export const DeckMain = () => {
       )}
 
       {/* Topbar. */}
-      {topbar && <Topbar />}
+      {topbar && <Banner variant='topbar' />}
 
       {/* Status bar. */}
       {hoistStatusbar && <StatusBar showHints={settings?.showHints} />}

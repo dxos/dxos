@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { type Script } from '@dxos/functions';
@@ -17,7 +17,7 @@ import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '../
 import { useDeployState, useToolbarState } from '../../hooks';
 import { type ScriptSettings } from '../../types';
 
-export type ScriptEditorProps = SurfaceComponentProps<
+export type ScriptEditorProps = ObjectSurfaceProps<
   Script.Script,
   {
     settings?: ScriptSettings;

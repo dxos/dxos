@@ -41,25 +41,12 @@ export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path
   companionVariant?: string;
 };
 
-// TODO(burdon): Factor out conditional rendering.
-//   Remove this wrapper component and render the entire set of planks in the deck with conditional visibility
-//   to obviate mounting and unmounting when switching between solo and companion mode?
-// NOTE(thure, in reply): Whether any surface should be rendered and hidden is a performance matter — remember that
-//  article surfaces contain full experiences, so being able to unmount them will yield relatively large performance
-//  benefits. I think where we anticipate users will definitely want to quickly switch between showing and hiding entire
-//  articles, over the (again probably large) performance benefit that unmounting them would confer, we can mount and
-//  hide them, but I think that scenario in its most unambiguous form is probably rare. You could extrapolate
-//  the scenario to include all "potential" planks such as companions, which we could keep mounted and hidden, but I
-//  don't think the resulting performance would be acceptable. I think the real issue is "perceived performance" which
-//  has mitigations that are in between mounting and un-mounting since both of those have tradeoffs; we may need one or more
-//  "partially-mounted" experiences, like loading skeletons at the simple end, or screenshots of "sleeping" planks at
-//  the advanced end.
-
 /**
  * A Plank is the main container for surfaces within a Deck.
  * It may be paired with a companion plank that enables the user to select one of multiple companion surfaces.
  */
 export const Plank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: PlankProps) => {
+  // TODO(burdon): Pass in graph and node.
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const companions = useCompanions(id);

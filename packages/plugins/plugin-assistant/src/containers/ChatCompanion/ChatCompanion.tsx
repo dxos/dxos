@@ -24,7 +24,7 @@ import { AssistantOperation } from '../../operations';
 import ChatContainer from '../ChatContainer';
 
 // TODO(burdon): Use definition.
-// export type ChatCompanionProps = SurfaceComponentProps<Chat.Chat>;
+// export type ChatCompanionProps = ObjectSurfaceProps<Chat.Chat>;
 
 export type ChatCompanionProps = {
   role?: string;

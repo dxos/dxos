@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -38,7 +38,7 @@ const INCLUDE_BLUEPRINTS = [
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
-export type NotebookContainerProps = SurfaceComponentProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
+export type NotebookContainerProps = ObjectSurfaceProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
 
 export const NotebookContainer = ({ role, subject: notebook, attendableId, env }: NotebookContainerProps) => {
   const { t } = useTranslation(meta.id);

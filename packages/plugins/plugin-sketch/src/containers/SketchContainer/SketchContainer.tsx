@@ -4,7 +4,7 @@
 
 import React, { PropsWithChildren } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
@@ -15,7 +15,7 @@ import { isTauri } from '@dxos/util';
 import { Sketch } from '../../components';
 import { type Sketch as SketchNs, type SketchSettingsProps } from '../../types';
 
-export type SketchContainerProps = SurfaceComponentProps<
+export type SketchContainerProps = ObjectSurfaceProps<
   SketchNs.Sketch,
   {
     settings: SketchSettingsProps;

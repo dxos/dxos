@@ -23,8 +23,6 @@ import { Menu } from '@dxos/react-ui-menu';
 import { useDeckState } from '../../hooks';
 import { meta } from '../../meta';
 
-export type DeckPopoverRootProps = PropsWithChildren<{}>;
-
 const DEBOUNCE_DELAY = 40;
 
 type DeckPopoverContextValue = {
@@ -33,7 +31,9 @@ type DeckPopoverContextValue = {
 
 const [DeckPopoverProvider, useDeckPopoverContext] = createContext<DeckPopoverContextValue>('DeckPopover');
 
-export const PopoverRoot = ({ children }: DeckPopoverRootProps) => {
+export type PopoverRootProps = PropsWithChildren;
+
+export const PopoverRoot = ({ children }: PopoverRootProps) => {
   const { state } = useDeckState();
   const virtualRef = useRef<HTMLButtonElement | null>(null);
   const [virtualIter, setVirtualIter] = useState(0);
