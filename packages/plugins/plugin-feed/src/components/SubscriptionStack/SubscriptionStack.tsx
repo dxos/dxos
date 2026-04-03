@@ -10,10 +10,6 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type Subscription } from '../../types';
 
-//
-// SubscriptionTile
-//
-
 export type SubscriptionStackAction =
   | { type: 'current'; feedId: string }
   | { type: 'sync'; feedId: string }
@@ -21,12 +17,81 @@ export type SubscriptionStackAction =
 
 export type SubscriptionStackActionHandler = (action: SubscriptionStackAction) => void;
 
+//
+// SubscriptionStack
+//
+
+export type SubscriptionStackProps = {
+  id: string;
+  feeds?: Subscription.Feed[];
+  currentId?: string;
+  onAction?: SubscriptionStackActionHandler;
+};
+
+export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackProps>(
+  ({ feeds = [], currentId, onAction, ...props }, forwardedRef) => {
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
+
+    // TODO(burdon): Either sort or make draggable.
+    const items = useMemo(() => feeds.map((feed) => ({ feed, onAction })), [feeds, onAction]);
+
+    const handleCurrentChange = useCallback(
+      (id: string | undefined) => {
+        if (id) {
+          onAction?.({ type: 'current', feedId: id });
+        }
+      },
+      [onAction],
+    );
+
+    const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        (document.activeElement as HTMLElement | null)?.click();
+      }
+    }, []);
+
+    return (
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+        <Mosaic.Container
+          asChild
+          withFocus
+          autoScroll={viewport}
+          currentId={currentId}
+          onCurrentChange={handleCurrentChange}
+        >
+          <ScrollArea.Root orientation='vertical' padding centered>
+            <ScrollArea.Viewport ref={setViewport}>
+              <Mosaic.VirtualStack
+                Tile={SubscriptionTile}
+                classNames='my-2'
+                gap={8}
+                items={items}
+                draggable={false}
+                getId={(item) => item.feed.id}
+                getScrollElement={() => viewport}
+                estimateSize={() => 100}
+              />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Mosaic.Container>
+      </Focus.Group>
+    );
+  },
+);
+
+SubscriptionStack.displayName = 'SubscriptionStack';
+
+//
+// SubscriptionTile
+//
+
 type SubscriptionTileData = {
   feed: Subscription.Feed;
   onAction?: SubscriptionStackActionHandler;
 };
 
-type SubscriptionTileProps = Pick<MosaicTileProps<SubscriptionTileData>, 'location' | 'data'> & { current?: boolean };
+type SubscriptionTileProps = Pick<MosaicTileProps<SubscriptionTileData>, 'data' | 'location' | 'current'>;
 
 const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
   ({ data, location, current }, forwardedRef) => {
@@ -76,66 +141,3 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
 );
 
 SubscriptionTile.displayName = 'SubscriptionTile';
-
-//
-// SubscriptionStack
-//
-
-export type SubscriptionStackProps = {
-  id: string;
-  feeds?: Subscription.Feed[];
-  currentId?: string;
-  onAction?: SubscriptionStackActionHandler;
-};
-
-export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackProps>(
-  ({ feeds = [], currentId, onAction, ...props }, forwardedRef) => {
-    const [viewport, setViewport] = useState<HTMLElement | null>(null);
-    const items = useMemo(() => feeds.map((feed) => ({ feed, onAction })), [feeds, onAction]);
-
-    const handleCurrentChange = useCallback(
-      (id: string | undefined) => {
-        if (id) {
-          onAction?.({ type: 'current', feedId: id });
-        }
-      },
-      [onAction],
-    );
-
-    const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        (document.activeElement as HTMLElement | null)?.click();
-      }
-    }, []);
-
-    return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
-        <Mosaic.Container
-          asChild
-          withFocus
-          autoScroll={viewport}
-          currentId={currentId}
-          onCurrentChange={handleCurrentChange}
-        >
-          <ScrollArea.Root orientation='vertical' padding centered>
-            <ScrollArea.Viewport ref={setViewport}>
-              <Mosaic.VirtualStack
-                Tile={SubscriptionTile}
-                classNames='my-2'
-                gap={8}
-                items={items}
-                draggable={false}
-                getId={(item) => item.feed.id}
-                getScrollElement={() => viewport}
-                estimateSize={() => 100}
-              />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Mosaic.Container>
-      </Focus.Group>
-    );
-  },
-);
-
-SubscriptionStack.displayName = 'SubscriptionStack';

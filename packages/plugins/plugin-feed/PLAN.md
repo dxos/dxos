@@ -25,10 +25,10 @@
 ## Phase 2 (Sync feeds)
 
 - [x] Create SubscriptionArticle which should show a stack of `Subscription.Feed` objects from an ECHO query.
-  - [ ] Each SubscriptionTile component should have a menu option to delete the feed.
-  - [ ] The SubscriptionArticle Toolbar should have a button to create a new feed.
-    - [ ] This should open a dialog to enter the feed URL via a simple `Form` (react-ui-form).
-    - [ ] On Save create a new `Subscription.Feed`; or Cancel.
+  - [x] Each SubscriptionTile component should have a menu option to delete the feed.
+  - [x] The SubscriptionArticle Toolbar should have a button to create a new feed.
+    - [x] This should open a dialog to enter the feed URL via a simple `Form` (react-ui-form).
+    - [x] On Save create a new `Subscription.Feed`; or Cancel.
 - [x] When selecting a feed, display the FeedArticle as a companion (similar to plugin-inbox MailboxArticle/MessageArticle).
 - [x] Create a storybook for SubscriptionArticle.
 - [x] Create a sync operation to fetch and sync posts for a given feed.

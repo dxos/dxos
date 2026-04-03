@@ -48,7 +48,7 @@ type SubscriptionTileData = {
   onAction?: SubscriptionStackActionHandler;
 };
 
-type SubscriptionTileProps = Pick<MosaicTileProps<SubscriptionTileData>, 'location' | 'data'> & { current?: boolean };
+type SubscriptionTileProps = Pick<MosaicTileProps<SubscriptionTileData>, 'data' | 'location' | 'current'>;
 
 const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
   ({ data, location, current }, forwardedRef) => {

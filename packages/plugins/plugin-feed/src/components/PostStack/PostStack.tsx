@@ -10,73 +10,9 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Subscription } from '../../types';
 
-//
-// PostTile
-//
-
 export type PostStackAction = { type: 'current'; postId: string };
 
 export type PostStackActionHandler = (action: PostStackAction) => void;
-
-type PostTileData = {
-  post: Subscription.Post;
-  onAction?: PostStackActionHandler;
-};
-
-type PostTileProps = Pick<MosaicTileProps<PostTileData>, 'location' | 'data'> & { current?: boolean };
-
-const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, current }, forwardedRef) => {
-  const { post } = data;
-  const { setCurrentId } = useMosaicContainer('PostTile');
-  const { t } = useTranslation(Subscription.Post.typename);
-
-  const handleCurrentChange = useCallback(() => {
-    setCurrentId(post.id);
-  }, [post.id, setCurrentId]);
-
-  const published = post.published ? new Date(post.published).toLocaleDateString() : undefined;
-
-  return (
-    <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
-      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef}>
-          <Card.Toolbar>
-            <Card.IconBlock>
-              <Card.Icon icon='ph--dot-outline--regular' />
-            </Card.IconBlock>
-            <Card.Text classNames='truncate'>{post.title ?? t('post title placeholder')}</Card.Text>
-            {post.link && (
-              <Card.IconBlock>
-                <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>
-                  <Icon icon='ph--arrow-square-out--regular' size={4} />
-                </a>
-              </Card.IconBlock>
-            )}
-          </Card.Toolbar>
-          <Card.Content>
-            {post.author && (
-              <Card.Row icon='ph--user--regular'>
-                <Card.Text variant='description'>{post.author}</Card.Text>
-              </Card.Row>
-            )}
-            {post.description && (
-              <Card.Row>
-                <Card.Html variant='description' html={post.description} />
-              </Card.Row>
-            )}
-            {published && (
-              <Card.Row icon='ph--calendar--regular'>
-                <Card.Text variant='description'>{published}</Card.Text>
-              </Card.Row>
-            )}
-          </Card.Content>
-        </Card.Root>
-      </Focus.Item>
-    </Mosaic.Tile>
-  );
-});
-
-PostTile.displayName = 'PostTile';
 
 //
 // PostStack
@@ -140,3 +76,67 @@ export const PostStack = composable<HTMLDivElement, PostStackProps>(
 );
 
 PostStack.displayName = 'PostStack';
+
+//
+// PostTile
+//
+
+type PostTileData = {
+  post: Subscription.Post;
+  onAction?: PostStackActionHandler;
+};
+
+type PostTileProps = Pick<MosaicTileProps<PostTileData>, 'data' | 'location' | 'current'>;
+
+const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, current }, forwardedRef) => {
+  const { post } = data;
+  const { setCurrentId } = useMosaicContainer('PostTile');
+  const { t } = useTranslation(Subscription.Post.typename);
+
+  const handleCurrentChange = useCallback(() => {
+    setCurrentId(post.id);
+  }, [post.id, setCurrentId]);
+
+  const published = post.published ? new Date(post.published).toLocaleDateString() : undefined;
+
+  return (
+    <Mosaic.Tile asChild classNames='dx-hover dx-current' id={post.id} data={data} location={location}>
+      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+        <Card.Root ref={forwardedRef}>
+          <Card.Toolbar>
+            <Card.IconBlock>
+              <Card.Icon icon='ph--dot-outline--regular' />
+            </Card.IconBlock>
+            <Card.Text classNames='truncate'>{post.title ?? t('post title placeholder')}</Card.Text>
+            {post.link && (
+              <Card.IconBlock>
+                <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>
+                  <Icon icon='ph--arrow-square-out--regular' size={4} />
+                </a>
+              </Card.IconBlock>
+            )}
+          </Card.Toolbar>
+          <Card.Content>
+            {post.author && (
+              <Card.Row icon='ph--user--regular'>
+                <Card.Text variant='description'>{post.author}</Card.Text>
+              </Card.Row>
+            )}
+            {post.description && (
+              <Card.Row>
+                <Card.Html variant='description' html={post.description} />
+              </Card.Row>
+            )}
+            {published && (
+              <Card.Row icon='ph--calendar--regular'>
+                <Card.Text variant='description'>{published}</Card.Text>
+              </Card.Row>
+            )}
+          </Card.Content>
+        </Card.Root>
+      </Focus.Item>
+    </Mosaic.Tile>
+  );
+});
+
+PostTile.displayName = 'PostTile';

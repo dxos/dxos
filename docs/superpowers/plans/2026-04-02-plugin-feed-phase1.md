@@ -575,7 +575,7 @@ type PostTileData = {
   onAction?: PostStackActionHandler;
 };
 
-type PostTileProps = Pick<MosaicTileProps<PostTileData>, 'location' | 'data'> & { current?: boolean };
+type PostTileProps = Pick<MosaicTileProps<PostTileData>, 'data' | 'location' | 'current'>;
 
 const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, current }, forwardedRef) => {
   const { post } = data;

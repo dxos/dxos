@@ -82,7 +82,7 @@ type EventTileData = {
   onAction?: EventStackActionHandler;
 };
 
-type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'location' | 'data'> & { current?: boolean };
+type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'data' | 'location' | 'current'>;
 
 const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, current }, forwardedRef) => {
   const { event } = data;
