@@ -227,13 +227,15 @@ export default {
   create(context) {
     const options = context.options[0] || {};
     const suffixes = options.suffixes || VALID_SUFFIXES;
-    const filename = context.filename || context.getFilename();
+    const filename = context.filename || (context.getFilename && context.getFilename()) || context.physicalFilename || '';
 
     // Resolve plugin info for this file.
     const pluginInfo = getPluginInfo(filename);
 
-    // Track whether this file uses useTranslation(meta.id).
-    let usesMetaNamespace = false;
+    // Check source text once to determine if this is a translation-aware file.
+    const sourceText = (context.sourceCode || context.getSourceCode()).text;
+    const usesTranslation = sourceText.includes('useTranslation');
+    const usesMetaNamespace = sourceText.includes('useTranslation(meta.id)');
 
     /**
      * Check a string literal node that represents a translation key.
@@ -282,23 +284,11 @@ export default {
     };
 
     return {
-      // Detect useTranslation(meta.id) in the file.
-      'CallExpression[callee.name="useTranslation"]'(node) {
-        if (
-          node.arguments.length >= 1 &&
-          node.arguments[0].type === 'MemberExpression' &&
-          node.arguments[0].object.type === 'Identifier' &&
-          node.arguments[0].object.name === 'meta' &&
-          node.arguments[0].property.type === 'Identifier' &&
-          node.arguments[0].property.name === 'id'
-        ) {
-          usesMetaNamespace = true;
-        }
-      },
-
       // t('some key') or t('some key', { ns: ... }).
+      // Only fires in files that use useTranslation.
       CallExpression(node) {
         if (
+          !usesTranslation ||
           node.callee.type !== 'Identifier' ||
           node.callee.name !== 't' ||
           node.arguments.length < 1 ||
@@ -326,8 +316,9 @@ export default {
       },
 
       // Property keys in translations.ts files.
+      // Guard: only check files whose source contains the translations export pattern.
       Property(node) {
-        if (!filename.includes('translations')) {
+        if (!sourceText.includes('satisfies Resource[]')) {
           return;
         }
 
