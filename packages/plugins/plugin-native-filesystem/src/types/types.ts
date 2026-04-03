@@ -27,6 +27,7 @@ export type FilesystemWorkspace = {
   children: FilesystemEntry[];
   icon?: string;
   hue?: string;
+  spaceId?: string;
 };
 
 export type NativeFilesystemState = {

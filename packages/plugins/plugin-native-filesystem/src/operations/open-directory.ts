@@ -41,8 +41,8 @@ export default OpenDirectory.pipe(
         return { ...current, workspaces: [...current.workspaces, workspace] };
       });
 
-      yield* filesystemManager.persistState();
       yield* filesystemManager.activateWorkspace(workspace);
+      yield* filesystemManager.persistState();
 
       return { id: workspace.id, subject: [workspace.id] };
     }),

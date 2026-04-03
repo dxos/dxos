@@ -37,6 +37,7 @@
     "@dxos/echo-atom": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

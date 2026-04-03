@@ -116,7 +116,12 @@ class FilesystemManagerImpl implements FilesystemManager {
   persistState(): Effect.Effect<void> {
     return Effect.gen(this, function* () {
       const state = this._registry.get(this._stateAtom);
-      yield* Effect.promise(() => localforage.setItem(STORAGE_KEY, state.workspaces));
+      yield* Effect.tryPromise(() => localforage.setItem(STORAGE_KEY, state.workspaces)).pipe(
+        Effect.catchAll((error) => {
+          log.warn('Failed to persist workspace state', { error });
+          return Effect.void;
+        }),
+      );
     });
   }
 }

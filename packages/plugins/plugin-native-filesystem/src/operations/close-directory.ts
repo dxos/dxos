@@ -25,11 +25,11 @@ export default CloseDirectory.pipe(
         workspaces: current.workspaces.filter((ws) => ws.id !== id),
       }));
 
-      yield* filesystemManager.persistState();
-
       if (workspace) {
         yield* filesystemManager.deactivateWorkspace(workspace);
       }
+
+      yield* filesystemManager.persistState();
     }),
   ),
 );

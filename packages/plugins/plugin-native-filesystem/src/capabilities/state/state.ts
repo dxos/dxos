@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { NativeFilesystemCapabilities, type NativeFilesystemState } from '../../types';
@@ -47,7 +48,14 @@ export default Capability.makeModule(
     const currentWorkspacesForRestore = registry.get(stateAtom).workspaces;
     yield* Effect.forEach(
       currentWorkspacesForRestore,
-      (workspace) => mirrorSpaceManager.getOrCreateSpace(workspace).pipe(Effect.asVoid),
+      (workspace) =>
+        mirrorSpaceManager.getOrCreateSpace(workspace).pipe(
+          Effect.asVoid,
+          Effect.catchAllCause((cause) => {
+            log.warn('Failed to restore mirror space for workspace', { workspaceId: workspace.id, cause });
+            return Effect.void;
+          }),
+        ),
       { discard: true, concurrency: 'unbounded' },
     );
 
@@ -98,7 +106,12 @@ export default Capability.makeModule(
             return;
           }
           yield* markdownDocuments.syncFromDisk(workspace);
-        }),
+        }).pipe(
+          Effect.catchAllCause((cause) => {
+            log.warn('Failed to restore markdown documents for workspace', { workspaceId: workspace.id, cause });
+            return Effect.void;
+          }),
+        ),
       { discard: true, concurrency: 'unbounded' },
     );
 

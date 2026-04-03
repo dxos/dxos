@@ -4,7 +4,7 @@
 mod oauth;
 #[cfg(desktop)]
 mod window_state;
-#[cfg(desktop)]
+#[cfg(all(desktop, unix))]
 mod xattr_cmd;
 #[cfg(target_os = "macos")]
 mod menubar;
@@ -94,8 +94,11 @@ pub fn run() {
         oauth::stop_oauth_server,
         oauth::get_oauth_result,
         oauth::initiate_oauth_flow,
+        #[cfg(unix)]
         xattr_cmd::get_xattr,
+        #[cfg(unix)]
         xattr_cmd::set_xattr,
+        #[cfg(unix)]
         xattr_cmd::remove_xattr,
         #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,

@@ -10,6 +10,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { DXN, Obj } from '@dxos/echo';
 import { updateText } from '@dxos/echo-db';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 
@@ -280,9 +281,7 @@ export const createMarkdownDocuments = (
     }
 
     const space = getSpaceForWorkspace(workspaceId);
-    if (Option.isNone(space)) {
-      throw new Error(`Mirror space not available for workspace ${workspaceId}`);
-    }
+    invariant(Option.isSome(space), `Mirror space not available for workspace ${workspaceId}`);
     const doc = space.value.db.add(Obj.make(Text.Text, { content: file.text ?? '', name: file.name }));
     indexDocument(file.id, file.path, doc);
     ensureFileWatcher(file);
@@ -440,8 +439,8 @@ export const createMarkdownDocuments = (
           }
           try {
             ensureDocumentForFile(file, workspace.id);
-          } catch {
-            // Mirror space missing.
+          } catch (error) {
+            log.warn('Failed to create document for file', { fileId: file.id, workspaceId: workspace.id, error });
           }
         }
       }),

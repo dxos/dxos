@@ -307,6 +307,7 @@ export const loadWorkspace = (path: string): Effect.Effect<FilesystemWorkspace |
       children,
       icon: config.icon,
       hue: config.hue,
+      spaceId: config.spaceId,
     };
   }).pipe(
     Effect.catchAllCause((cause) =>
