@@ -34,10 +34,14 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
       yield* Effect.tryPromise(async () => {
         const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
         const { feed: feedMeta, posts } = await fetchRss(url, { corsProxy });
+        const cursor = subscriptionFeed.cursor;
 
-        // Append posts to the ECHO feed queue.
-        if (posts.length > 0) {
-          const postObjects = posts.map((post) =>
+        // Filter posts newer than the cursor.
+        const newPosts = cursor ? posts.filter((post) => post.guid !== cursor) : posts;
+
+        // Append new posts to the ECHO feed queue.
+        if (newPosts.length > 0) {
+          const postObjects = newPosts.map((post) =>
             Obj.make(Subscription.Post, {
               title: post.title,
               link: post.link,
@@ -49,6 +53,14 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
           );
           const queue = space.queues.get(feedDxn);
           await queue.append(postObjects);
+        }
+
+        // Advance cursor to the newest post.
+        const newestGuid = posts[0]?.guid;
+        if (newestGuid) {
+          Obj.change(subscriptionFeed, (obj) => {
+            obj.cursor = newestGuid;
+          });
         }
 
         // Update feed metadata from channel if not already set.

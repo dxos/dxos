@@ -22,6 +22,8 @@ export const Feed = Schema.Struct({
   link: Schema.String.pipe(Schema.optional),
   /** URL of the feed's icon/image. */
   iconUrl: Schema.String.pipe(Schema.optional),
+  /** Opaque sync cursor — protocol-specific. */
+  cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   /** Backing ECHO feed for posts. */
   feed: Ref.Ref(EchoFeed.Feed).pipe(FormInputAnnotation.set(false)),
 }).pipe(
