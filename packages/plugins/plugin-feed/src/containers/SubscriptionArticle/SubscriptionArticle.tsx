@@ -60,9 +60,9 @@ export const SubscriptionArticle = ({ role, subject, attendableId }: Subscriptio
         }
 
         case 'delete': {
-          const feed = feeds.find((feed) => feed.id === action.feedId);
-          if (feed) {
-            void invokePromise(SpaceOperation.RemoveObjects, { objects: [feed] });
+          const feedToDelete = feeds.find((feed) => feed.id === action.feedId);
+          if (feedToDelete) {
+            Obj.getDatabase(feedToDelete)?.remove(feedToDelete);
           }
           break;
         }

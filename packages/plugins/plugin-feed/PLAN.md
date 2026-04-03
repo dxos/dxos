@@ -63,6 +63,11 @@
 - The `Builder.fromRss()` method accepts `{ corsProxy }` option for browser usage.
 - The `SyncFeed` operation runs server-side/in the app context where CORS is not an issue.
 
+### Object Deletion
+
+- Use `Obj.getDatabase(obj)?.remove(obj)` directly for deleting feed objects from components. `SpaceOperation.RemoveObjects` requires full space context (collection hierarchy) which may not be available in all contexts.
+- `useQuery(db, Filter.type(X))` from `@dxos/echo-react` is reactive — it updates automatically when objects are added or removed via `db.remove()`.
+
 ### Companion Pattern
 
 - Selecting a feed in `SubscriptionArticle` uses `AttentionOperation.Select` + `companionSegment('feed')`.
