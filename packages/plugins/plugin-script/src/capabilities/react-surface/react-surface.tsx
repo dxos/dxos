@@ -11,23 +11,25 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
+import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type AccessToken } from '@dxos/types';
 
+import { ScriptPluginSettings } from '../../components';
 import { DEPLOYMENT_DIALOG } from '../../constants';
 import {
   DeploymentDialog,
   NotebookContainer,
   ScriptContainer,
   ScriptObjectSettings,
-  ScriptPluginSettings,
   ScriptProperties,
   TestContainer,
 } from '../../containers';
 import { useCompiler } from '../../hooks';
 import { meta } from '../../meta';
 import { Notebook, ScriptCapabilities, type ScriptSettings } from '../../types';
+import { getAccessCredential } from '../../util';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -39,7 +41,19 @@ export default Capability.makeModule(() =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<ScriptSettings>(subject.atom);
-          return <ScriptPluginSettings settings={settings} onSettingsChange={updateSettings} />;
+          const client = useClient();
+          // TODO(burdon): Check token.
+          const handleAuthenticate = async () => {
+            const { identityKey } = client.halo.identity.get()!;
+            await client.halo.writeCredentials([getAccessCredential(identityKey)]);
+          };
+          return (
+            <ScriptPluginSettings
+              settings={settings}
+              onSettingsChange={updateSettings}
+              onAuthenticate={handleAuthenticate}
+            />
+          );
         },
       }),
       Surface.create({

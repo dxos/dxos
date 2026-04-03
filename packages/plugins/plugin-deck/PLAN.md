@@ -1,8 +1,9 @@
 # Deck Refactor
 
-This is a complex refactor. Think deeply about these tasks and create a plan.
-Use this document to track progress to the user.
-Work only on the section of the document/plan that you are directed to work on.
+- This is a complex refactor. Think deeply about these tasks and create a plan.
+- Use this document to track progress to the user.
+- Work only on the section of the document/plan that you are directed to work on.
+- Format, lint, commit and push after each step.
 
 ## Phase 1
 
@@ -39,3 +40,9 @@ Work only on the section of the document/plan that you are directed to work on.
 | plugin-sketch        | SketchSettings        | yes                    | yes       | yes      |
 | plugin-space         | SpacePluginSettings   | yes                    | yes       | yes      |
 | plugin-thread        | ThreadSettings        | yes                    | yes       | n/a      |
+
+## Review
+
+- [x] Settings components should be in ./components
+- [x] All settings props should be defined in ./types/Settings.ts
+- [x] Settings components should not use useOperationInvoker; instead rely on the SettingsSurfaceProps callback

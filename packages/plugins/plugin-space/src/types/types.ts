@@ -14,6 +14,8 @@ import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '../meta';
 
+export { SpaceSettingsSchema, type SpaceSettingsProps } from './Settings';
+
 export const SPACE_DIRECTORY_HANDLE = `${meta.id}.directory`;
 
 export const SPACE_TYPE = 'org.dxos.type.space';
@@ -91,17 +93,6 @@ export type PluginState = {
   // TODO(wittjosiah): Systematic way to handle migrations of state outside of spaces.
   enabledEdgeReplication: boolean;
 };
-
-export const SpaceSettingsSchema = Schema.mutable(
-  Schema.Struct({
-    /**
-     * Show closed spaces.
-     */
-    showHidden: Schema.Boolean,
-  }),
-);
-
-export type SpaceSettingsProps = Schema.Schema.Type<typeof SpaceSettingsSchema>;
 
 // TODO(wittjosiah): Reconcile with graph export serializers.
 

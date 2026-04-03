@@ -9,7 +9,7 @@ import { Capability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
 import { type Observability } from '@dxos/observability';
 
-import { type ObservabilitySettingsProps } from '../containers';
+import { type ObservabilitySettingsProps } from './Settings';
 import { meta } from '../meta';
 
 export namespace ObservabilityCapabilities {

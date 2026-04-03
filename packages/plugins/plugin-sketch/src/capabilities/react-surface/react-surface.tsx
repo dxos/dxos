@@ -9,7 +9,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { SketchContainer, SketchSettings } from '../../containers';
+import { SketchSettings } from '../../components';
+import { SketchContainer } from '../../containers';
 import { meta } from '../../meta';
 import { Sketch, SketchCapabilities, type SketchSettingsProps } from '../../types';
 

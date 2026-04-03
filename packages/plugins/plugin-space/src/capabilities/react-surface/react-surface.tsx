@@ -8,18 +8,19 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Database, Obj, type Ref } from '@dxos/echo';
 import { Collection, type View } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
-import { type Space, SpaceState, getSpace, isSpace, useSpace } from '@dxos/react-client/echo';
+import { type Space, SpaceState, getSpace, isSpace, useSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { ViewAnnotation } from '@dxos/schema';
 import { type JoinPanelProps } from '@dxos/shell/react';
 
+import { SpacePluginSettings } from '../../components';
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
@@ -43,7 +44,6 @@ import {
   RecordArticle,
   SchemaContainer,
   SmallPresenceLive,
-  SpacePluginSettings,
   SpacePresence,
   SpaceRenamePopover,
   SpaceSettingsContainer,
@@ -52,6 +52,7 @@ import {
 } from '../../containers';
 import { useActiveSpace, useTypeOptions } from '../../hooks';
 import { meta } from '../../meta';
+import { SpaceOperation } from '../../operations';
 import {
   HueAnnotationId,
   IconAnnotationId,
@@ -90,7 +91,16 @@ export default Capability.makeModule(
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<SpaceSettingsProps>(subject.atom);
-          return <SpacePluginSettings settings={settings} onSettingsChange={updateSettings} />;
+          const spaces = useSpaces({ all: settings.showHidden });
+          const { invokePromise } = useOperationInvoker();
+          return (
+            <SpacePluginSettings
+              settings={settings}
+              onSettingsChange={updateSettings}
+              spaces={spaces}
+              onOpenSpaceSettings={(space: Space) => invokePromise(SpaceOperation.OpenSettings, { space })}
+            />
+          );
         },
       }),
       Surface.create({

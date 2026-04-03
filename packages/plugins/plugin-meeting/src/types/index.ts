@@ -6,3 +6,4 @@
 export * as Meeting from './Meeting';
 
 export * from './capabilities';
+export * from './Settings';

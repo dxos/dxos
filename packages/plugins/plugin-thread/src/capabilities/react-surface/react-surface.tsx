@@ -13,14 +13,8 @@ import { Obj, type Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Thread } from '@dxos/types';
 
-import {
-  CallDebugPanel,
-  CallSidebar,
-  ChannelContainer,
-  ChatContainer,
-  ThreadCompanion,
-  ThreadSettings,
-} from '../../containers';
+import { ThreadSettings } from '../../components';
+import { CallDebugPanel, CallSidebar, ChannelContainer, ChatContainer, ThreadCompanion } from '../../containers';
 import { meta } from '../../meta';
 import { Channel, ThreadCapabilities, type ThreadSettingsProps } from '../../types';
 

@@ -6,11 +6,14 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { HelpContainer, ObservabilitySettings, type ObservabilitySettingsProps } from '../../containers';
+import { ObservabilitySettings } from '../../components';
+import { HelpContainer } from '../../containers';
 import { meta } from '../../meta';
+import { ObservabilityOperation } from '../../operations';
+import { type ObservabilitySettingsProps } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -22,7 +25,14 @@ export default Capability.makeModule(() =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<ObservabilitySettingsProps>(subject.atom);
-          return <ObservabilitySettings settings={settings} onSettingsChange={updateSettings} />;
+          const { invokePromise } = useOperationInvoker();
+          return (
+            <ObservabilitySettings
+              settings={settings}
+              onSettingsChange={updateSettings}
+              onToggle={(state: boolean) => invokePromise(ObservabilityOperation.Toggle, { state })}
+            />
+          );
         },
       }),
       Surface.create({

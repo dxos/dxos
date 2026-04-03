@@ -12,12 +12,8 @@ import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown/types';
 
-import {
-  CollectionPresenterContainer,
-  DocumentPresenterContainer,
-  MarkdownSlide,
-  PresenterSettings,
-} from '../../containers';
+import { PresenterSettings } from '../../components';
+import { CollectionPresenterContainer, DocumentPresenterContainer, MarkdownSlide } from '../../containers';
 import { meta } from '../../meta';
 import { type PresenterSettingsProps } from '../../types';
 

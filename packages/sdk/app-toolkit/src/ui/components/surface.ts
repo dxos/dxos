@@ -17,7 +17,7 @@ export type SurfaceRole =
 /**
  * Generic type for surface components that are anchored to a space.
  */
-export type SpaceSurfaceProps = {
+export type SpaceSurfaceProps<Props extends {} = {}> = {
   space?: Space;
 
   /** Surface role (superset of WAI-ARIA role). */
@@ -25,11 +25,10 @@ export type SpaceSurfaceProps = {
 
   /** Path-based ID inherited from the surface data for attention tracking and graph action lookup. */
   attendableId?: string;
-};
+} & Props;
 
 /**
  * Generic type for surface components that have a subject.
- * NOTE: These properties are passed from `Plank`.
  */
 export type ObjectSurfaceProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
   /** Surface role (superset of WAI-ARIA role). */
@@ -48,7 +47,10 @@ export type ObjectSurfaceProps<Subject extends Obj.Unknown | undefined = Obj.Unk
 /**
  * Generic type for surface components that are anchored to settings.
  */
-export type SettingsSurfaceProps<T extends {}> = {
+export type SettingsSurfaceProps<T extends {}, Props extends {} = {}> = {
+  /** Reactive settings. */
   settings: T;
+
+  /** Callback to update settings. */
   onSettingsChange?: (cb: (current: T) => T) => void;
-};
+} & Props;

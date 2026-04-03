@@ -20,9 +20,10 @@ import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
-import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps, MarkdownSettings } from '../../containers';
+import { MarkdownSettings } from '../../components';
+import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps } from '../../containers';
 import { meta } from '../../meta';
-import { Markdown, MarkdownCapabilities } from '../../types';
+import { Markdown, MarkdownCapabilities, type MarkdownSettingsProps } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -68,7 +69,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
+          const { settings, updateSettings } = useSettingsState<MarkdownSettingsProps>(subject.atom);
           return <MarkdownSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),

@@ -48,10 +48,10 @@ import { useActiveSpace } from '@dxos/plugin-space';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
+import { DebugSettings } from '../../components';
 import {
   DebugGraph,
   DebugObjectPanel,
-  DebugSettings,
   DebugSpaceObjectsPanel,
   DebugStatus,
   DevtoolsOverviewContainer,
