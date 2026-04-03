@@ -38,7 +38,7 @@ const lastTextFromMessages = (messages: Message.Message[]): string | undefined =
   return undefined;
 };
 
-export default AgentPrompt.pipe(
+const handler: Operation.WithHandler<typeof AgentPrompt> = AgentPrompt.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (data) {
       log.info('processing input', { input: data.input });
@@ -65,6 +65,14 @@ export default AgentPrompt.pipe(
       const objects = yield* Function.pipe(
         prompt.context,
         Array.appendAll(systemPrompt?.context ?? []),
+        Effect.forEach(Database.loadOption),
+        Effect.map(Array.filter(Option.isSome)),
+        Effect.map(Array.map((option) => option.value)),
+      );
+
+      const subPrompts = yield* Function.pipe(
+        prompt.prompts ?? [],
+        Array.appendAll(systemPrompt?.prompts ?? []),
         Effect.forEach(Database.loadOption),
         Effect.map(Array.filter(Option.isSome)),
         Effect.map(Array.map((option) => option.value)),
@@ -108,7 +116,7 @@ export default AgentPrompt.pipe(
         };
       }
 
-      const toolkit = yield* createToolkit({ blueprints });
+      const toolkit = yield* createToolkit({ blueprints, prompts: subPrompts });
 
       const session = new AiSession({ observer });
       const result = yield* session
@@ -127,3 +135,5 @@ export default AgentPrompt.pipe(
     }, Effect.scoped),
   ),
 );
+
+export default handler;
