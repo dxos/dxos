@@ -3931,6 +3931,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../util
+      '@opentelemetry/api':
+        specifier: 'catalog:'
+        version: 1.9.0
 
   packages/common/typings: {}
 
@@ -5656,6 +5659,9 @@ importers:
       '@dxos/codec-protobuf':
         specifier: workspace:*
         version: link:../../../common/codec-protobuf
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../../common/context
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../../common/debug
@@ -15046,6 +15052,9 @@ importers:
       '@dxos/rpc-tunnel':
         specifier: workspace:*
         version: link:../../core/mesh/rpc-tunnel
+      '@dxos/tracing':
+        specifier: workspace:*
+        version: link:../../common/tracing
       '@dxos/ui-types':
         specifier: workspace:*
         version: link:../../ui/ui-types

@@ -45,6 +45,9 @@ export class RemoteTracing {
    */
   private _endedSpanContexts = new Map<number, unknown>();
 
+  /** Negative counter for virtual span IDs that don't collide with real TracingSpan IDs. */
+  private _nextVirtualSpanId = -1;
+
   /**
    * Buffers flushSpan calls that arrive before a processor is registered,
    * so early startup spans are not silently dropped.
@@ -70,6 +73,18 @@ export class RemoteTracing {
       return this._spanMap.get(tracingSpan)?.spanContext;
     }
     return this._endedSpanContexts.get(spanId);
+  }
+
+  /**
+   * Registers an external (remote) OTEL context as a virtual parent span.
+   * Returns a virtual span ID that can be placed on a DXOS Context so child
+   * `@trace.span()` methods create properly-parented OTEL spans.
+   */
+  registerRemoteParent(otelContext: unknown): number {
+    const virtualId = this._nextVirtualSpanId--;
+    this._endedSpanContexts.set(virtualId, otelContext);
+    this._evictEndedContexts();
+    return virtualId;
   }
 
   /** Wraps execution so that the remote span is active as parent context. */

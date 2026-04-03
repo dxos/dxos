@@ -13,6 +13,7 @@ import {
   ShellLayout,
 } from '@dxos/protocols/proto/dxos/iframe';
 import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
+import { getTraceContext } from '@dxos/tracing';
 
 /**
  * Endpoint that handles shell services.
@@ -107,6 +108,7 @@ export class ShellRuntimeImpl implements ShellRuntime {
         },
       },
       port: this._port,
+      injectTraceContext: getTraceContext,
     });
 
     await this._appRpc.open();

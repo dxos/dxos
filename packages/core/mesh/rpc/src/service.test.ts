@@ -5,7 +5,8 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { latch, sleep } from '@dxos/async';
-import { Stream } from '@dxos/codec-protobuf/stream';
+import { type RequestOptions, Stream } from '@dxos/codec-protobuf';
+import { Context } from '@dxos/context';
 import { schema } from '@dxos/protocols/proto';
 import {
   type TestRpcResponse,
@@ -583,5 +584,51 @@ describe('Protobuf service', () => {
       { timeout: 1 },
     );
     await expect(promise).rejects.toThrow(/Timeout/);
+  });
+
+  test('W3C trace context propagates to handler options', async ({ expect }) => {
+    const [alicePort, bobPort] = createLinkedPorts();
+    const traceparent = '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01';
+    let receivedCtx: Context | undefined;
+
+    const server = createProtoRpcPeer({
+      exposed: {
+        TestService: schema.getService('example.testing.rpc.TestService'),
+      },
+      handlers: {
+        TestService: {
+          testCall: async (req: any, options?: RequestOptions) => {
+            receivedCtx = options?.ctx;
+            return { data: 'responseData' };
+          },
+          voidCall: async () => {},
+        },
+      },
+      port: alicePort,
+      extractTraceContext: (traceContext) => {
+        expect(traceContext.traceparent).toEqual(traceparent);
+        return new Context({ attributes: { rpcTraceTest: true } });
+      },
+    });
+
+    const callerCtx = new Context({ attributes: { testSpan: 42 } });
+
+    const client = createProtoRpcPeer({
+      requested: {
+        TestService: schema.getService('example.testing.rpc.TestService'),
+      },
+      port: bobPort,
+      injectTraceContext: (ctx) => {
+        expect(ctx.getAttribute('testSpan')).toEqual(42);
+        return { traceparent };
+      },
+    });
+
+    await Promise.all([server.open(), client.open()]);
+
+    await client.rpc.TestService.testCall({ data: 'requestData' }, { ctx: callerCtx });
+
+    expect(receivedCtx).toBeInstanceOf(Context);
+    expect(receivedCtx!.getAttribute('rpcTraceTest')).toBe(true);
   });
 });

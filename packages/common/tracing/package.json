@@ -38,7 +38,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/util": "workspace:*"
+    "@dxos/util": "workspace:*",
+    "@opentelemetry/api": "catalog:"
   },
   "publishConfig": {
     "access": "public"

@@ -29,11 +29,18 @@ message RpcMessage {
   }
 }
 
+/// W3C trace context carried across RPC boundaries.
+message TraceContext {
+  string traceparent = 1;
+  optional string tracestate = 2;
+}
+
 message Request {
   int32 id = 1;
   string method = 2;
   google.protobuf.Any payload = 3;
   bool stream = 4;
+  optional TraceContext trace_context = 5;
 }
 
 message Response {

@@ -4,12 +4,13 @@
 
 import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { type Any, type ProtoCodec, type RequestOptions, Stream } from '@dxos/codec-protobuf';
+import { type Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
-import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
+import { type Request, type Response, type RpcMessage, type TraceContext } from '@dxos/protocols/proto/dxos/rpc';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { decodeRpcError } from './errors';
@@ -41,6 +42,12 @@ export interface RpcPeerOptions {
    * What options get passed to the `callHandler` and `streamHandler`.
    */
   handlerRpcOptions?: RequestOptions;
+
+  /** Extract W3C trace context from {@link Context} for outgoing RPC requests. */
+  injectTraceContext?: (ctx: Context) => TraceContext | undefined;
+
+  /** Reconstruct {@link Context} from W3C trace context on incoming RPC requests. */
+  extractTraceContext?: (traceContext: TraceContext) => Context;
 }
 
 /**
@@ -385,6 +392,9 @@ export class RpcPeer {
         this._outgoingRequests.set(id, new PendingRpcRequest(resolve, reject, false));
       });
 
+      const traceContext =
+        options?.ctx && this._params.injectTraceContext ? this._params.injectTraceContext(options.ctx) : undefined;
+
       // Send request call.
       const sending = this._sendMessage({
         request: {
@@ -392,6 +402,7 @@ export class RpcPeer {
           method,
           payload: request,
           stream: false,
+          ...(traceContext ? { traceContext } : {}),
         },
       });
 
@@ -460,12 +471,16 @@ export class RpcPeer {
 
       this._outgoingRequests.set(id, new PendingRpcRequest(onResponse, closeStream, true));
 
+      const traceContext =
+        options?.ctx && this._params.injectTraceContext ? this._params.injectTraceContext(options.ctx) : undefined;
+
       this._sendMessage({
         request: {
           id,
           method,
           payload: request,
           stream: true,
+          ...(traceContext ? { traceContext } : {}),
         },
       }).catch((err) => {
         close(err);
@@ -487,13 +502,21 @@ export class RpcPeer {
     await this._params.port.send(getRpcMessageCodec().encode(message, { preserveAny: true }), timeout);
   }
 
+  private _getHandlerRpcOptions(req: Request): RequestOptions | undefined {
+    const handlerOptions: RequestOptions = { ...this._params.handlerRpcOptions };
+    if (req.traceContext && this._params.extractTraceContext) {
+      handlerOptions.ctx = this._params.extractTraceContext(req.traceContext);
+    }
+    return Object.keys(handlerOptions).length > 0 ? handlerOptions : undefined;
+  }
+
   private async _callHandler(req: Request): Promise<Response> {
     try {
       invariant(typeof req.id === 'number');
       invariant(req.payload);
       invariant(req.method);
 
-      const response = await this._params.callHandler(req.method, req.payload, this._params.handlerRpcOptions);
+      const response = await this._params.callHandler(req.method, req.payload, this._getHandlerRpcOptions(req));
       return {
         id: req.id,
         payload: response,
@@ -513,7 +536,7 @@ export class RpcPeer {
       invariant(req.payload);
       invariant(req.method);
 
-      const responseStream = this._params.streamHandler(req.method, req.payload, this._params.handlerRpcOptions);
+      const responseStream = this._params.streamHandler(req.method, req.payload, this._getHandlerRpcOptions(req));
       responseStream.onReady(() => {
         callback({
           id: req.id,

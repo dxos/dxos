@@ -19,6 +19,7 @@ import {
 } from '@dxos/protocols/proto/dxos/iframe';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
+import { getTraceContext } from '@dxos/tracing';
 
 import { RPC_TIMEOUT } from '../common';
 
@@ -119,6 +120,7 @@ export class ShellManager {
         },
       },
       port,
+      injectTraceContext: getTraceContext,
     });
 
     await this._shellRpc.open();
