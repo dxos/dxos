@@ -66,7 +66,7 @@ import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { steps } from './help';
 import { WelcomePlugin } from './plugins';
 
-const APP_LINK_ORIGIN = `https://${APP_DOMAIN}`;
+const APP_LINK_ORIGIN = new URL('https://' + APP_DOMAIN).origin;
 
 export type State = {
   appKey: string;
