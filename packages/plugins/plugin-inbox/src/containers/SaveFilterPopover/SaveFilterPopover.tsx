@@ -30,10 +30,10 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
     <div role='none' className='p-2 flex gap-2'>
       <div role='none' className='flex-1'>
         <Input.Root>
-          <Input.Label srOnly>{t('saved filter name label')}</Input.Label>
+          <Input.Label srOnly>{t('saved-filter-name.label')}</Input.Label>
           <Input.TextInput
             defaultValue={name}
-            placeholder={t('save filter placeholder')}
+            placeholder={t('save-filter.placeholder')}
             onChange={({ target: { value } }) => setName(value)}
             // TODO(wittjosiah): Ideally this should access the popover context to close the popover.
             //   Currently this is not possible because Radix does not expose the popover context.
@@ -43,7 +43,7 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
       </div>
       <Popover.Close asChild>
         <Button ref={doneButton} classNames='self-stretch' disabled={!name} onClick={handleDone}>
-          {t('save filter button')}
+          {t('save-filter.button')}
         </Button>
       </Popover.Close>
     </div>

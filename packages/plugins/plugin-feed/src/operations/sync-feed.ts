@@ -91,7 +91,7 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
             id: `${meta.id}/sync-feed-error`,
             icon: 'ph--warning--regular',
             duration: 5_000,
-            title: ['sync feed error title', { ns: meta.id }],
+            title: ['sync-feed-error.title', { ns: meta.id }],
           });
         }),
       );

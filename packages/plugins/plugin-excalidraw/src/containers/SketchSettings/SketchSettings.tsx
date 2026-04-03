@@ -20,15 +20,15 @@ export const SketchSettings = ({ settings, onSettingsChange }: SketchSettingsCom
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('settings title', { ns: meta.id })}>
+      <Settings.Section title={t('settings.title', { ns: meta.id })}>
         <Settings.Group>
-          <Settings.ItemInput title={t('settings hover tools label')}>
+          <Settings.ItemInput title={t('settings-hover-tools.label')}>
             <Input.Switch
               checked={settings.autoHideControls}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, autoHideControls: !!checked }))}
             />
           </Settings.ItemInput>
-          <Settings.ItemInput title={t('settings grid type label')}>
+          <Settings.ItemInput title={t('settings-grid-type.label')}>
             <Input.Switch
               checked={settings.gridType === 'dotted'}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, gridType: checked ? 'dotted' : 'mesh' }))}

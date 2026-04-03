@@ -52,7 +52,7 @@ describe('resolveMessage', () => {
   });
 
   test('returns static label as-is', ({ expect }) => {
-    const staticMessage: [string, { ns: string }] = ['test message', { ns: 'test' }];
+    const staticMessage: [string, { ns: string }] = ['test.message', { ns: 'test' }];
     const result = UndoMapping.resolveMessage(staticMessage, { value: 1 }, { value: 2 });
     expect(result).toEqual(staticMessage);
   });
@@ -63,7 +63,7 @@ describe('resolveMessage', () => {
       { ns: 'test' },
     ];
     const result = UndoMapping.resolveMessage(messageFunc, { value: 5 }, { value: 10 });
-    expect(result).toEqual(['input: 5, output: 10', { ns: 'test' }]);
+    expect(result).toEqual(['input:-5,-output:-10', { ns: 'test' }]);
   });
 
   test('returns string label as-is', ({ expect }) => {

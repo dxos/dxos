@@ -27,9 +27,9 @@ export const SpacePluginSettings = ({ settings, onSettingsChange }: SpacePluginS
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('space settings label')} description={t('space settings description')}>
+      <Settings.Section title={t('space-settings.label')} description={t('space-settings.description')}>
         <Settings.Group>
-          <Settings.ItemInput title={t('show hidden spaces label')}>
+          <Settings.ItemInput title={t('show-hidden-spaces.label')}>
             <Input.Switch
               checked={settings.showHidden}
               onCheckedChange={(checked) => onSettingsChange((state) => ({ ...state, showHidden: !!checked }))}
@@ -53,7 +53,7 @@ export const SpacePluginSettings = ({ settings, onSettingsChange }: SpacePluginS
                 <IconButton
                   icon='ph--faders--regular'
                   onClick={() => invokePromise(SpaceOperation.OpenSettings, { space })}
-                  label={t('open space settings label')}
+                  label={t('open-space-settings.label')}
                 />
               </ListItem.Root>
             ))}

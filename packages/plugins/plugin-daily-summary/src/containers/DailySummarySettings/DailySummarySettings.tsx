@@ -53,12 +53,12 @@ export const DailySummarySettings = ({ space }: DailySummarySettingsProps) => {
 
   return (
     <div className='flex flex-col gap-4 p-4'>
-      <h2 className='text-lg font-medium'>{t('plugin name')}</h2>
-      <p className='text-sm text-description'>{t('create trigger description')}</p>
+      <h2 className='text-lg font-medium'>{t('plugin.name')}</h2>
+      <p className='text-sm text-description'>{t('create-trigger.description')}</p>
       <div>
         <IconButton
           icon={existingTrigger ? 'ph--check--regular' : 'ph--plus--regular'}
-          label={t('create trigger label')}
+          label={t('create-trigger.label')}
           onClick={handleCreateTrigger}
           disabled={!!existingTrigger}
         />

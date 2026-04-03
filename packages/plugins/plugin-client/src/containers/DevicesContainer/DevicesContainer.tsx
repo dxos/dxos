@@ -46,11 +46,11 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
     <Clipboard.Provider>
       <Settings.Root>
         <Settings.Section
-          title={t('devices verbose label', { ns: meta.id })}
-          description={t('devices description', { ns: meta.id })}
+          title={t('devices-verbose.label', { ns: meta.id })}
+          description={t('devices.description', { ns: meta.id })}
         >
           <Settings.Frame>
-            <Settings.FrameItem title={t('devices label', { ns: meta.id })}>
+            <Settings.FrameItem title={t('devices.label', { ns: meta.id })}>
               <List>
                 {devices.map((device: Device) => (
                   <DeviceListItem key={device.deviceKey.toHex()} device={device} connectionState={connectionState} />
@@ -58,36 +58,36 @@ export const DevicesContainer = ({ createInvitationUrl }: DevicesContainerProps)
               </List>
             </Settings.FrameItem>
             {createInvitationUrl && (
-              <Settings.FrameItem title={t('add device label')}>
+              <Settings.FrameItem title={t('add-device.label')}>
                 <DeviceInvitation createInvitationUrl={createInvitationUrl} />
               </Settings.FrameItem>
             )}
           </Settings.Frame>
         </Settings.Section>
         <Settings.Section
-          title={t('danger zone title', { ns: meta.id })}
-          description={t('danger zone description', { ns: meta.id })}
+          title={t('danger-zone.title', { ns: meta.id })}
+          description={t('danger-zone.description', { ns: meta.id })}
         >
           <Settings.Group>
-            <Settings.Item title={t('reset device label')} description={t('reset device description', { ns: meta.id })}>
+            <Settings.Item title={t('reset-device.label')} description={t('reset-device.description', { ns: meta.id })}>
               <Button variant='destructive' onClick={handleResetStorage} data-testid='devicesContainer.reset'>
-                {t('reset device label')}
+                {t('reset-device.label')}
               </Button>
             </Settings.Item>
             <Settings.Item
-              title={t('recover identity label')}
-              description={t('recover identity description', { ns: meta.id })}
+              title={t('recover-identity.label')}
+              description={t('recover-identity.description', { ns: meta.id })}
             >
               <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
-                {t('recover identity label')}
+                {t('recover-identity.label')}
               </Button>
             </Settings.Item>
             <Settings.Item
-              title={t('join new identity label')}
-              description={t('join new identity description', { ns: meta.id })}
+              title={t('join-new-identity.label')}
+              description={t('join-new-identity.description', { ns: meta.id })}
             >
               <Button variant='destructive' onClick={handleJoinNewIdentity} data-testid='devicesContainer.joinExisting'>
-                {t('join new identity label')}
+                {t('join-new-identity.label')}
               </Button>
             </Settings.Item>
           </Settings.Group>
@@ -179,10 +179,10 @@ const InvitationSection = ({
 
   return activeView === 'init' ? (
     <>
-      <p className='text-description mb-2'>{t('add device description')}</p>
+      <p className='text-description mb-2'>{t('add-device.description')}</p>
       <IconButton
         icon='ph--plus--regular'
-        label={t('create device invitation label')}
+        label={t('create-device-invitation.label')}
         disabled={state >= 0}
         classNames='w-full'
         data-testid='devicesContainer.createInvitation'
@@ -215,7 +215,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr code description', { ns: meta.id })}</p>
+      <p className='text-description'>{t('qr-code.description', { ns: meta.id })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content]'>
         <div className='flex justify-center py-4'>
           <div role='none' className='w-full md:max-w-80 aspect-square relative text-description'>
@@ -235,7 +235,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
           </div>
         </div>
         <span id={qrLabel} className='sr-only'>
-          {t('qr label')}
+          {t('qr.label')}
         </span>
       </div>
       {/* TODO(burdon): Factor out button bar */}
@@ -243,7 +243,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         <div className='flex gap-2'>
           <Clipboard.Button value={url ?? 'never'} />
           <Button variant='ghost' onClick={onCancel}>
-            {t('cancel label')}
+            {t('cancel.label')}
           </Button>
         </div>
       </div>
@@ -257,12 +257,12 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
   return (
     <>
-      <p className='text-description'>{t('auth other device emoji message')}</p>
+      <p className='text-description'>{t('auth-other-device-emoji.message')}</p>
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
-      <p className='text-description'>{t('auth code message')}</p>
+      <p className='text-description'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
       <Button variant='ghost' onClick={onCancel}>
-        {t('cancel label')}
+        {t('cancel.label')}
       </Button>
     </>
   );

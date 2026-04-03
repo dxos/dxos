@@ -45,7 +45,7 @@ const createTableToolbarActions = ({
       const add = createMenuAction<TableToolbarActionProperties>('add-row', onAdd, {
         type: 'add-row' as const,
         icon: 'ph--plus--regular',
-        label: ['add row label', { ns: translationKey }],
+        label: ['add-row.label', { ns: translationKey }],
         testId: 'table.toolbar.add-row',
       });
       nodes.push(add);
@@ -55,7 +55,7 @@ const createTableToolbarActions = ({
       const save = createMenuAction<TableToolbarActionProperties>('save-view', onSave, {
         type: 'save-view' as const,
         icon: 'ph--floppy-disk--regular',
-        label: ['save view label', { ns: translationKey }],
+        label: ['save-view.label', { ns: translationKey }],
         testId: 'table.toolbar.save-view',
         iconOnly: false,
         hidden: !state.viewDirty,

@@ -30,16 +30,16 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('settings title', { ns: meta.id })}>
+      <Settings.Section title={t('settings.title', { ns: meta.id })}>
         <Settings.Group>
-          <Settings.ItemInput title={t('settings custom prompts label')}>
+          <Settings.ItemInput title={t('settings-custom-prompts.label')}>
             <Input.Switch
               checked={!!settings.customPrompts}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, customPrompts: checked }))}
             />
           </Settings.ItemInput>
 
-          <Settings.ItemInput title={t('settings llm provider label')}>
+          <Settings.ItemInput title={t('settings-llm-provider.label')}>
             <Select.Root
               value={settings.llmProvider ?? 'edge'}
               onValueChange={(value) => {
@@ -49,11 +49,11 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
                 }));
               }}
             >
-              <Select.TriggerButton placeholder={t('settings llm provider label')} />
+              <Select.TriggerButton placeholder={t('settings-llm-provider.label')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
-                    <Select.Option value={DEFAULT_VALUE}>{t('settings default label')}</Select.Option>
+                    <Select.Option value={DEFAULT_VALUE}>{t('settings-default.label')}</Select.Option>
                     {LLM_PROVIDERS.map((model) => (
                       <Select.Option key={model} value={model}>
                         {LLM_PROVIDER_LABELS[model]}
@@ -66,18 +66,18 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
             </Select.Root>
           </Settings.ItemInput>
 
-          <Settings.ItemInput title={t('settings edge llm model label')}>
+          <Settings.ItemInput title={t('settings-edge-llm-model.label')}>
             <Select.Root
               value={settings.edgeModel ?? DEFAULT_VALUE}
               onValueChange={(value) => {
                 onSettingsChange((s) => ({ ...s, edgeModel: value === DEFAULT_VALUE ? undefined : value }));
               }}
             >
-              <Select.TriggerButton placeholder={t('settings default llm model label')} />
+              <Select.TriggerButton placeholder={t('settings-default-llm-model.label')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
-                    <Select.Option value={DEFAULT_VALUE}>{t('settings default label')}</Select.Option>
+                    <Select.Option value={DEFAULT_VALUE}>{t('settings-default.label')}</Select.Option>
                     {DEFAULT_EDGE_MODELS.map((model) => (
                       <Select.Option key={model} value={model}>
                         {model}
@@ -90,18 +90,18 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
             </Select.Root>
           </Settings.ItemInput>
 
-          <Settings.ItemInput title={t('settings ollama llm model label')}>
+          <Settings.ItemInput title={t('settings-ollama-llm-model.label')}>
             <Select.Root
               value={settings.ollamaModel ?? DEFAULT_VALUE}
               onValueChange={(value) => {
                 onSettingsChange((s) => ({ ...s, ollamaModel: value === DEFAULT_VALUE ? undefined : value }));
               }}
             >
-              <Select.TriggerButton placeholder={t('settings default llm model label')} />
+              <Select.TriggerButton placeholder={t('settings-default-llm-model.label')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
-                    <Select.Option value={DEFAULT_VALUE}>{t('settings default label')}</Select.Option>
+                    <Select.Option value={DEFAULT_VALUE}>{t('settings-default.label')}</Select.Option>
                     {DEFAULT_OLLAMA_MODELS.map((model) => (
                       <Select.Option key={model} value={model}>
                         {model}

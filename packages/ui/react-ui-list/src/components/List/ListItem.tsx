@@ -242,7 +242,7 @@ export const ListItemDeleteButton = ({
       disabled={isDisabled}
       icon={icon}
       iconOnly
-      label={label ?? t('delete label')}
+      label={label ?? t('delete.label')}
       classNames={[classNames, autoHide && disabled && 'hidden']}
     />
   );
@@ -257,7 +257,7 @@ export const ListItemDragHandle = ({ disabled }: Pick<IconButtonProps, 'disabled
       disabled={disabled}
       icon='ph--dots-six-vertical--regular'
       iconOnly
-      label={t('drag handle label')}
+      label={t('drag-handle.label')}
       ref={dragHandleRef}
     />
   );

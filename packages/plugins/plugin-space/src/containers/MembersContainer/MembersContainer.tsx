@@ -67,8 +67,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   const inviteActions = useMemo(
     (): Record<string, ActionMenuItem> => ({
       inviteOne: {
-        label: t('invite one label', { ns: shellTranslationKey }),
-        description: t('invite one description', { ns: shellTranslationKey }),
+        label: t('invite-one.label', { ns: shellTranslationKey }),
+        description: t('invite-one.description', { ns: shellTranslationKey }),
         icon: 'ph--user-plus--regular',
         testId: 'membersContainer.inviteOne',
         onClick: async () => {
@@ -87,8 +87,8 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
         },
       },
       inviteMany: {
-        label: t('invite many label', { ns: shellTranslationKey }),
-        description: t('invite many description', { ns: shellTranslationKey }),
+        label: t('invite-many.label', { ns: shellTranslationKey }),
+        description: t('invite-many.description', { ns: shellTranslationKey }),
         icon: 'ph--users-three--regular',
         testId: 'membersContainer.inviteMany',
         onClick: async () => {
@@ -121,16 +121,16 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   return (
     <Clipboard.Provider>
       <Settings.Root>
-        <Settings.Section title={t('members verbose label')} description={t('members description')}>
+        <Settings.Section title={t('members-verbose.label')} description={t('members.description')}>
           <Settings.Frame>
-            <Settings.FrameItem title={t('members label')}>
+            <Settings.FrameItem title={t('members.label')}>
               <SpaceMemberList spaceKey={space.key} includeSelf />
             </Settings.FrameItem>
-            <Settings.FrameItem title={t('invitations label')}>
+            <Settings.FrameItem title={t('invitations.label')}>
               {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
               {!selectedInvitation && (
                 <>
-                  <p className='text-description mb-2'>{t('space invitation description')}</p>
+                  <p className='text-description mb-2'>{t('space-invitation.description')}</p>
                   <InvitationList
                     className='mb-2'
                     send={handleSend}
@@ -205,7 +205,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr code description', { ns: meta.id })}</p>
+      <p className='text-description'>{t('qr-code.description', { ns: meta.id })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
         <div role='none' className='w-full aspect-square relative text-description'>
           <QR
@@ -223,12 +223,12 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
           </Centered>
         </div>
         <span id={qrLabel} className='sr-only'>
-          {t('qr label')}
+          {t('qr.label')}
         </span>
         <Clipboard.Button value={url ?? 'never'} />
       </div>
       <Button variant='ghost' onClick={onCancel}>
-        {t('cancel label')}
+        {t('cancel.label')}
       </Button>
     </>
   );
@@ -240,12 +240,12 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
   return (
     <>
-      <p className='text-description'>{t('auth other device emoji message')}</p>
+      <p className='text-description'>{t('auth-other-device-emoji.message')}</p>
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
-      <p className='text-description'>{t('auth code message')}</p>
+      <p className='text-description'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
       <Button variant='ghost' onClick={onCancel}>
-        {t('cancel label')}
+        {t('cancel.label')}
       </Button>
     </>
   );

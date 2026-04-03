@@ -31,7 +31,7 @@ export const FormCard = ({ subject, projection }: SurfaceComponentProps & { proj
   }, []);
 
   if (!schema) {
-    return <p className={mx(descriptionMessage)}>{t('unable to create preview message')}</p>;
+    return <p className={mx(descriptionMessage)}>{t('unable-to-create-preview.message')}</p>;
   }
 
   return (

@@ -83,7 +83,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: selectedFeed ?? 'feed',
               properties: {
-                label: ['feed companion label', { ns: meta.id }],
+                label: ['feed-companion.label', { ns: meta.id }],
                 icon: 'ph--article--regular',
                 disposition: 'hidden',
               },
@@ -103,7 +103,7 @@ export default Capability.makeModule(
               id: 'sync',
               data: () => Operation.invoke(FeedOperation.SyncFeed, { feed }),
               properties: {
-                label: ['sync feed label', { ns: meta.id }],
+                label: ['sync-feed.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },
@@ -112,7 +112,7 @@ export default Capability.makeModule(
               id: 'delete',
               data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [feed] }),
               properties: {
-                label: ['delete object label', { ns: Subscription.Feed.typename }],
+                label: ['delete-object.label', { ns: Subscription.Feed.typename }],
                 icon: 'ph--trash--regular',
                 disposition: 'list-item',
               },

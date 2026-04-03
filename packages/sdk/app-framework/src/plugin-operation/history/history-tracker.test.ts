@@ -206,7 +206,7 @@ describe('HistoryTracker', () => {
 
   it.effect('fires ShowUndo operation when undoable operation is tracked', () =>
     Effect.gen(function* () {
-      const testMessage: [string, { ns: string }] = ['test undo message', { ns: 'test' }];
+      const testMessage: [string, { ns: string }] = ['test-undo.message', { ns: 'test' }];
       const undoMapping = UndoMapping.make({
         operation: Compute,
         inverse: HalveCompute,
@@ -289,7 +289,7 @@ describe('HistoryTracker', () => {
       yield* waitUntil(() => showUndoWasCalled);
       expect(showUndoWasCalled).toBe(true);
       // Compute 2 * 2 = 4, so message should be 'computed 2 to 4'.
-      expect(showUndoMessage).toEqual(['computed 2 to 4', { ns: 'test' }]);
+      expect(showUndoMessage).toEqual(['computed-2-to-4', { ns: 'test' }]);
     }),
   );
 

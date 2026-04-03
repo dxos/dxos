@@ -44,7 +44,7 @@ export default Capability.makeModule(
               id: AssistantOperation.UpdateChatName.meta.key,
               data: () => Operation.invoke(AssistantOperation.UpdateChatName, { chat }),
               properties: {
-                label: ['chat update name label', { ns: meta.id }],
+                label: ['chat-update-name.label', { ns: meta.id }],
                 icon: 'ph--magic-wand--regular',
                 disposition: 'list-item',
               },
@@ -81,7 +81,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['open assistant label', { ns: meta.id }],
+                label: ['open-assistant.label', { ns: meta.id }],
                 icon: 'ph--sparkle--regular',
                 disposition: 'pin-end',
                 position: 'hoist',
@@ -109,7 +109,7 @@ export default Capability.makeModule(
                 yield* Database.flush();
               }),
               properties: {
-                label: ['reset blueprints label', { ns: meta.id }],
+                label: ['reset-blueprints.label', { ns: meta.id }],
                 icon: 'ph--arrow-clockwise--regular',
               },
             },
@@ -132,7 +132,7 @@ export default Capability.makeModule(
                   type: PLANK_COMPANION_TYPE,
                   data: 'assistant-chat',
                   properties: {
-                    label: ['assistant chat label', { ns: meta.id }],
+                    label: ['assistant-chat.label', { ns: meta.id }],
                     icon: 'ph--sparkle--regular',
                     position: 'hoist',
                     disposition: 'hidden',
@@ -154,7 +154,7 @@ export default Capability.makeModule(
                 type: PLANK_COMPANION_TYPE,
                 data: Obj.isObject(currentChat) ? currentChat : 'assistant-chat',
                 properties: {
-                  label: ['assistant chat label', { ns: meta.id }],
+                  label: ['assistant-chat.label', { ns: meta.id }],
                   icon: 'ph--sparkle--regular',
                   position: 'hoist',
                   disposition: 'hidden',
@@ -177,7 +177,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: 'invocations',
               properties: {
-                label: ['invocations label', { ns: meta.id }],
+                label: ['invocations.label', { ns: meta.id }],
                 icon: 'ph--clock-countdown--regular',
                 disposition: 'hidden',
               },
@@ -195,7 +195,7 @@ export default Capability.makeModule(
               type: DECK_COMPANION_TYPE,
               data: 'trace' as const,
               properties: {
-                label: ['trace label', { ns: meta.id }],
+                label: ['trace.label', { ns: meta.id }],
                 icon: 'ph--line-segments--regular',
                 disposition: 'hidden',
                 position: 'fallback',

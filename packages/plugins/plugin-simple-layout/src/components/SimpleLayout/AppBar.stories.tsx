@@ -21,15 +21,15 @@ const buildEmptyActions = (): ActionGraphProps => ({ nodes: [], edges: [] });
 const buildDefaultActions = (): ActionGraphProps => {
   const result: ActionGraphProps = { nodes: [], edges: [] };
   const actions = [
-    createMenuAction('action-edit', () => console.log('Edit'), {
+    createMenuAction('action-edit.menu', () => console.log('Edit'), {
       icon: 'ph--pencil--regular',
       label: 'Edit',
     }),
-    createMenuAction('action-share', () => console.log('Share'), {
+    createMenuAction('action-share.menu', () => console.log('Share'), {
       icon: 'ph--share--regular',
       label: 'Share',
     }),
-    createMenuAction('action-delete', () => console.log('Delete'), {
+    createMenuAction('action-delete.menu', () => console.log('Delete'), {
       icon: 'ph--trash--regular',
       label: 'Delete',
     }),

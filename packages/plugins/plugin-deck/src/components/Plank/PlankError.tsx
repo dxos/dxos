@@ -71,7 +71,7 @@ export const PlankErrorFallback = ({ error }: ErrorFallbackProps) => {
         className='dx-attention-surface overflow-y-auto p-8 grid place-items-center'
       >
         <p className={mx(descriptionMessage, 'break-all rounded-md p-4')}>
-          {error ? errorString : t('error fallback message')}
+          {error ? errorString : t('error-fallback.message')}
         </p>
       </div>
     );

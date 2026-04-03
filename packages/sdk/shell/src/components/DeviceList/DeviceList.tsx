@@ -26,7 +26,7 @@ export const DeviceList = ({
   const { t } = useTranslation(translationKey);
   return (
     <div role='none' className='p-1'>
-      <h2 className={mx('text-description', 'text-center mt-2')}>{t('devices heading')}</h2>
+      <h2 className={mx('text-description', 'text-center mt-2')}>{t('devices.heading')}</h2>
       {devices.length > 0 && (
         <List>
           {devices.map((device: Device) => {
@@ -50,7 +50,7 @@ export const DeviceList = ({
         <div role='img' className={mx(getSize(8), 'm-1 rounded-xs bg-input-surface grid place-items-center')}>
           <Icon icon='ph--plus--light' size={6} />
         </div>
-        <span className='grow font-medium text-start'>{t('choose add device label')}</span>
+        <span className='grow font-medium text-start'>{t('choose-add-device.label')}</span>
         <Icon icon='ph--caret-right--bold' size={4} />
       </Button>
     </div>

@@ -72,7 +72,7 @@ const NotebookSection = ({
               variant='ghost'
               icon='ph--dots-three--regular'
               iconOnly
-              label={t('notebook cell insert label')}
+              label={t('notebook-cell-insert.label')}
             />
           </DropdownMenu.Trigger>
           <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />

@@ -39,12 +39,12 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
       return Atom.make(() => {
         const builder = MenuBuilder.make()
           .root({
-            label: ['chat toolbar title', { ns: meta.id }],
+            label: ['chat-toolbar.title', { ns: meta.id }],
           })
           .action(
             'new',
             {
-              label: ['new thread button', { ns: meta.id }],
+              label: ['new-thread.button', { ns: meta.id }],
               icon: 'ph--plus--regular',
               type: 'new',
               disabled: !companionTo,
@@ -60,7 +60,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
           .action(
             'rename',
             {
-              label: ['rename thread button', { ns: meta.id }],
+              label: ['rename-thread.button', { ns: meta.id }],
               icon: 'ph--magic-wand--regular',
               type: 'rename',
               disabled: !chat,
@@ -74,7 +74,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
           .action(
             'branch',
             {
-              label: ['button branch thread', { ns: meta.id }],
+              label: ['button-branch-thread.menu', { ns: meta.id }],
               icon: 'ph--git-branch--regular',
               type: 'branch',
               disabled: true,
@@ -86,7 +86,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
           builder.group(
             'chats',
             {
-              label: ['chat history label', { ns: meta.id }],
+              label: ['chat-history.label', { ns: meta.id }],
               icon: 'ph--clock-counter-clockwise--regular',
               selectCardinality: 'single',
               variant: 'dropdownMenu',
@@ -99,7 +99,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
                   builder.action(
                     chat.id,
                     {
-                      label: Obj.getLabel(chat) ?? ['object name placeholder', { ns: Chat.Chat.typename }],
+                      label: Obj.getLabel(chat) ?? ['object-name.placeholder', { ns: Chat.Chat.typename }],
                     },
                     () =>
                       Effect.gen(function* () {

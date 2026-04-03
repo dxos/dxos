@@ -25,8 +25,6 @@ export const translations = [
         'functions-registry-verbose.label': 'Functions registry',
         'functions-registry.description': 'Import functions from the registry',
         'functions.description': 'You can manage all the functions deployed from your space on EDGE here.',
-        'function-copy-id': 'Copy Function ID',
-        'no-functions-found': 'No functions found',
         'show-source-button.label': 'Show source',
         'delete-function-button.label': 'Delete function',
 
@@ -36,6 +34,7 @@ export const translations = [
         'trigger-editor.description':
           'Triggers are used to run functions at specific times or when specific events occur.',
         'new-trigger.label': 'Add Trigger',
+
         'trigger-type.timer.label': 'Timer',
         'trigger-type.webhook.label': 'Webhook',
         'trigger-type.websocket.label': 'Websocket',
@@ -43,15 +42,10 @@ export const translations = [
         'trigger-type.email.label': 'Email',
         'trigger-type.queue.label': 'Feed',
 
-        'trigger-copy-url': 'Copy URL',
-        'trigger-copy-email': 'Copy Email',
-
-        'trigger-payload-add': 'Add',
-        'trigger-payload-remove': 'Remove',
         'trigger-payload-prop-name.placeholder': 'New payload property name',
-        'import-function-button.label': '',
-        'loading-functions': '',
-        'update-function-button.label': '',
+        'import-function-button.label': 'Loading...',
+        'loading-functions.message': 'Loading functions...',
+        'update-function-button.label': 'Update',
       },
     },
   },
