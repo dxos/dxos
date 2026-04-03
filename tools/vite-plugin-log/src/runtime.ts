@@ -6,14 +6,7 @@
 
 import { getDebugName } from '@dxos/util';
 
-import {
-  LogLevel,
-  shortLevelName,
-  log,
-  type LogConfig,
-  type LogEntry,
-  type LogProcessor,
-} from '@dxos/log';
+import { LogLevel, shortLevelName, log, type LogConfig, type LogEntry, type LogProcessor } from '@dxos/log';
 
 const MAX_CONTEXT_LENGTH = 500;
 

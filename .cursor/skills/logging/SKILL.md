@@ -24,15 +24,15 @@ log.warn('plugin failed to activate', { pluginId, cause: err.message });
 
 Use **`log('…', ctx)`** for DEBUG-level diagnostics. The callable `log` **is** `log.debug` (same level); prefer **`log(...)`** in new code and avoid writing **`log.debug`** so style stays consistent.
 
-| API | Role |
-|-----|------|
-| `log('…', ctx)` | **DEBUG** — default verbose diagnostics; often **not** shown on the default browser console but still captured when a log sink (e.g. vite-plugin-log `app.log`) is attached. |
-| `log.trace('…', ctx)` | **TRACE** — finest granularity; usually filtered out everywhere except explicit trace filters. |
-| `log.verbose('…', ctx)` | **VERBOSE** — between debug and info. |
-| `log.info('…', ctx)` | **INFO** — user-visible / product-level events; **shown on console** with typical filters. |
-| `log.warn('…', ctx)` | **WARN** — non-fatal issues. |
-| `log.error('…', ctx)` | **ERROR** — hard failures. |
-| `log.catch(err, ctx?, meta?)` | Log an **Error** at ERROR level (stack in processors). |
+| API                           | Role                                                                                                                                                                         |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `log('…', ctx)`               | **DEBUG** — default verbose diagnostics; often **not** shown on the default browser console but still captured when a log sink (e.g. vite-plugin-log `app.log`) is attached. |
+| `log.trace('…', ctx)`         | **TRACE** — finest granularity; usually filtered out everywhere except explicit trace filters.                                                                               |
+| `log.verbose('…', ctx)`       | **VERBOSE** — between debug and info.                                                                                                                                        |
+| `log.info('…', ctx)`          | **INFO** — user-visible / product-level events; **shown on console** with typical filters.                                                                                   |
+| `log.warn('…', ctx)`          | **WARN** — non-fatal issues.                                                                                                                                                 |
+| `log.error('…', ctx)`         | **ERROR** — hard failures.                                                                                                                                                   |
+| `log.catch(err, ctx?, meta?)` | Log an **Error** at ERROR level (stack in processors).                                                                                                                       |
 
 Rule of thumb: **`log.info` and above** are what operators and users normally see in the **console**; **`log(...)`** is for deep diagnosis and file buffers.
 
@@ -106,18 +106,18 @@ node scripts/query-logs.mjs packages/apps/composer-app/app.log -q 'sdk/client/sr
 
 These substrings match **typical** `packages/...` paths in NDJSON. Counts vary per session.
 
-| Area | Example `-q` fragment | Notes |
-|------|------------------------|--------|
-| Process / agent runtime | `ProcessManager` (use `-g`) or `functions-runtime:debug` | `functions-runtime/src/process/ProcessManager.ts` |
-| ECHO queries | `echo-db:debug` or `echo/echo-db:debug` | `query-result`, graph, index |
-| Automerge | `automerge:debug` | Lower volume than full echo-db |
-| Client (DXOS Client) | `sdk/client/src:debug` or `client.ts:debug` | `packages/sdk/client/src/client/client.ts` |
-| Space / ECHO proxy | `space-proxy:debug` | `packages/sdk/client/src/echo/space-proxy.ts` |
-| Dedicated worker services | `dedicated-worker:debug` | `packages/sdk/client/src/services/dedicated/` |
-| Mesh RPC (noisy) | `mesh/rpc:debug` | Very high volume; pair with `!rpc.ts` or `-g` |
-| RPC tunnel / worker port | `rpc-tunnel:debug` | Worker transport |
-| Plugins | `plugin-manager:debug` | `packages/sdk/app-framework/.../plugin-manager.ts` |
-| Edge / status RPC | `edge` with `-g` or path under `client-services` | Responses often `QueryEdgeStatusResponse` |
+| Area                      | Example `-q` fragment                                    | Notes                                              |
+| ------------------------- | -------------------------------------------------------- | -------------------------------------------------- |
+| Process / agent runtime   | `ProcessManager` (use `-g`) or `functions-runtime:debug` | `functions-runtime/src/process/ProcessManager.ts`  |
+| ECHO queries              | `echo-db:debug` or `echo/echo-db:debug`                  | `query-result`, graph, index                       |
+| Automerge                 | `automerge:debug`                                        | Lower volume than full echo-db                     |
+| Client (DXOS Client)      | `sdk/client/src:debug` or `client.ts:debug`              | `packages/sdk/client/src/client/client.ts`         |
+| Space / ECHO proxy        | `space-proxy:debug`                                      | `packages/sdk/client/src/echo/space-proxy.ts`      |
+| Dedicated worker services | `dedicated-worker:debug`                                 | `packages/sdk/client/src/services/dedicated/`      |
+| Mesh RPC (noisy)          | `mesh/rpc:debug`                                         | Very high volume; pair with `!rpc.ts` or `-g`      |
+| RPC tunnel / worker port  | `rpc-tunnel:debug`                                       | Worker transport                                   |
+| Plugins                   | `plugin-manager:debug`                                   | `packages/sdk/app-framework/.../plugin-manager.ts` |
+| Edge / status RPC         | `edge` with `-g` or path under `client-services`         | Responses often `QueryEdgeStatusResponse`          |
 
 Add more fragments by copying a path prefix from an **`app.log`** line (`f` field) and using it in `-q your-fragment:debug`.
 

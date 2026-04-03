@@ -14,7 +14,7 @@ import type {
   QueueService,
   TracingService,
 } from '@dxos/functions';
-import type { ProcessManager, TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
+import type { TriggerDispatcher, TriggerStateStore } from '@dxos/functions-runtime';
 import type { SpaceId } from '@dxos/keys';
 import type { Blueprint } from '@dxos/blueprints';
 import { AgentService } from '@dxos/assistant';

@@ -30,7 +30,14 @@ ObjectId.dangerouslyDisableRandomness();
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   operationHandlers: MarkdownOperationHandlerSet,
-  types: [SpaceProperties, Collection.Collection, Blueprint.Blueprint, Markdown.Document, HasSubject.HasSubject, Feed.Feed],
+  types: [
+    SpaceProperties,
+    Collection.Collection,
+    Blueprint.Blueprint,
+    Markdown.Document,
+    HasSubject.HasSubject,
+    Feed.Feed,
+  ],
   blueprints: [MarkdownBlueprint.make()],
   tracing: 'pretty',
 });

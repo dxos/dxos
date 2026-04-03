@@ -21,7 +21,6 @@ import { Operation, OperationRegistry } from '@dxos/operation';
 import * as Option from 'effect/Option';
 
 import { RefFromLLM } from '../types';
-import { log } from '@dxos/log';
 
 /**
  * Constructs a `ToolResolverService` whose `resolve(id)` looks up tools in the following order:

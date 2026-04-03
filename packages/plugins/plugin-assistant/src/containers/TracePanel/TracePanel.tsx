@@ -4,37 +4,26 @@
 
 import { Atom } from '@effect-atom/atom';
 import { useAtomValue } from '@effect-atom/atom-react';
-import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
-import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Filter, Obj, Query } from '@dxos/echo';
-import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
-import {
-  FeedTraceSink,
-  InvocationOutcome,
-  InvocationTraceEndEvent,
-  InvocationTraceStartEvent,
-  Process,
-} from '@dxos/functions-runtime';
+import { Filter, Query } from '@dxos/echo';
+import { AtomQuery } from '@dxos/echo-atom';
+import { FeedTraceSink, Process } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
-import { dbg, LogLevel } from '@dxos/log';
+import { LogLevel } from '@dxos/log';
 import { useComputeRuntimeService, useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { type Space } from '@dxos/react-client/echo';
-import { Input, Panel, Toolbar, useTranslation, Separator } from '@dxos/react-ui';
+import { Input, Panel, Separator, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
-import { Message, type ContentBlock } from '@dxos/types';
 
-import { extractFirstDxnFromToolInput, extractFirstDxnFromToolResult } from './dxn-extractor';
-import { ProcessTree } from './ProcessTree';
-import { meta } from '../../meta';
-import { SpaceId } from '@dxos/keys';
-import { Trace } from '@dxos/functions';
 import { AGENT_PROCESS_KEY, CompleteBlock } from '@dxos/assistant';
-import { run } from 'effect/Channel';
+import { Trace } from '@dxos/functions';
+import { SpaceId } from '@dxos/keys';
+import { meta } from '../../meta';
+import { ProcessTree } from './ProcessTree';
 
 export const TracePanel = ({ space }: { space: Space }) => {
   const { t } = useTranslation(meta.id);
