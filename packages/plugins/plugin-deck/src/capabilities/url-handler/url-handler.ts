@@ -148,7 +148,14 @@ const handleDeepLink = async (urlString: string, navigate: (url?: URL) => Promis
   log.info('[UrlHandler] Deep link received', { url: urlString });
   try {
     const deepLinkUrl = new URL(urlString);
-    if (isRedirectPath(deepLinkUrl.pathname)) {
+
+    // For custom schemes (e.g., composer://a/b/c), new URL() treats the first segment as the
+    // hostname. Reconstruct the full path from hostname + pathname.
+    const fullPath = deepLinkUrl.protocol !== 'https:' && deepLinkUrl.protocol !== 'http:' && deepLinkUrl.hostname
+      ? '/' + deepLinkUrl.hostname + deepLinkUrl.pathname
+      : deepLinkUrl.pathname;
+
+    if (isRedirectPath(fullPath)) {
       return;
     }
 
@@ -157,7 +164,7 @@ const handleDeepLink = async (urlString: string, navigate: (url?: URL) => Promis
     if (deepLinkUrl.search) {
       deepLinkUrl.searchParams.forEach((value, key) => current.searchParams.set(key, value));
     }
-    current.pathname = deepLinkUrl.pathname;
+    current.pathname = fullPath;
     history.replaceState(null, '', current.pathname + current.search);
 
     await navigate(current);
