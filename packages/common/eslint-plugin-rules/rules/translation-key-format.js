@@ -242,7 +242,7 @@ export default {
     },
     messages: {
       missingSuffix:
-        'Translation key "{{key}}" must end with a type suffix: {{suffixes}}.',
+        'Invalid translation key: "{{key}}"',
       useDotsNotSpaces:
         'Translation key "{{key}}" should use dot.kebab-case format. Suggested: "{{suggested}}".',
       undefinedKey:
