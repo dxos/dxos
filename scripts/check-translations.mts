@@ -216,18 +216,18 @@ function extractUsedKeys(filePath: string, packageNamespace: string | null): Use
 
 /** Valid suffixes that every translation key should end with. */
 const VALID_SUFFIXES = [
-  'label',
-  'message',
-  'placeholder',
-  'title',
-  'description',
-  'heading',
   'alt',
   'button',
-  'name',
-  'value',
+  'description',
+  'heading',
   'icon',
+  'label',
   'menu',
+  'message',
+  'name',
+  'placeholder',
+  'title',
+  'value',
 ] as const;
 
 /** Plural suffixes appended by i18next. */
