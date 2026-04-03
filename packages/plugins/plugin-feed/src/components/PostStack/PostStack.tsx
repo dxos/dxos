@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Card, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -43,8 +43,12 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
           <Card.Content>
             <Card.Row>
               <Card.Text classNames='truncate'>{post.title ?? t('post title placeholder')}</Card.Text>
+              {post.link && (
+                <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>
+                  <Icon icon='ph--arrow-square-out--regular' size={4} />
+                </a>
+              )}
             </Card.Row>
-            {post.link && <Card.Link label={post.link} href={post.link} />}
             {post.author && (
               <Card.Row icon='ph--user--regular'>
                 <Card.Text variant='description'>{post.author}</Card.Text>
