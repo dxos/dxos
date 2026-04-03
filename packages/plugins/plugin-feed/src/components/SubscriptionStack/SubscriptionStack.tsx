@@ -86,6 +86,11 @@ SubscriptionStack.displayName = 'SubscriptionStack';
 // SubscriptionTile
 //
 
+const icons: Record<Subscription.FeedType, { icon: string; className?: string }> = {
+  atproto: { icon: 'ph--butterfly--regular', className: 'text-sky-500' },
+  rss: { icon: 'ph--rss--regular', className: 'text-green-500' },
+};
+
 type SubscriptionTileData = {
   feed: Subscription.Feed;
   onAction?: SubscriptionStackActionHandler;
@@ -97,6 +102,7 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
   ({ data, location, current }, forwardedRef) => {
     const { feed, onAction } = data;
     const { setCurrentId } = useMosaicContainer('SubscriptionTile');
+    const { icon, className: iconClassName } = icons[feed.type ?? 'rss'] || icons.rss;
 
     const handleCurrentChange = useCallback(() => {
       setCurrentId(feed.id);
@@ -115,7 +121,7 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
         <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
           <Card.Root ref={forwardedRef}>
             <Card.Toolbar>
-              <Card.Icon icon='ph--rss--regular' />
+              <Card.Icon icon={icon} classNames={iconClassName} />
               <Card.Title>{feed.name ?? 'Untitled feed'}</Card.Title>
               <Card.Menu items={menuItems} />
             </Card.Toolbar>

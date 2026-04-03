@@ -11,7 +11,7 @@ import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 
 /** Feed protocol type. */
-export const FeedType = Schema.Literal('rss', 'atproto');
+export const FeedType = Schema.Literal('atproto', 'rss');
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
 
 /** Subscription feed schema — an RSS/Atom/AT Protocol subscription. */

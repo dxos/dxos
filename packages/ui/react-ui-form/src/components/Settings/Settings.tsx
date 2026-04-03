@@ -121,7 +121,7 @@ SettingsGroup.displayName = SETTINGS_GROUP_NAME;
 //
 
 const SettingsFrame = ({ children }: SettingsGroupProps) => (
-  <div role='none' className='p-trim-md border border-separator rounded-md'>
+  <div role='none' className='flex flex-col gap-3 p-trim-md border border-separator rounded-md'>
     {children}
   </div>
 );
