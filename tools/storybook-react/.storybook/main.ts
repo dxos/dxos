@@ -141,25 +141,6 @@ export const createConfig = ({
             // TODO(burdon): Disable overlay error (e.g., "ESM integration proposal for Wasm" is not supported currently.")
             overlay: false,
           },
-          proxy: {
-            // Proxy for fetching external RSS/Atom feeds without CORS restrictions.
-            '/api/rss': {
-              target: 'https://placeholder.invalid',
-              changeOrigin: true,
-              configure: (proxy) => {
-                proxy.on('proxyReq', (proxyReq, req) => {
-                  const url = new URL(req.url!, `http://${req.headers.host}`);
-                  const feedUrl = url.searchParams.get('url');
-                  if (feedUrl) {
-                    const parsed = new URL(feedUrl);
-                    proxyReq.setHeader('host', parsed.host);
-                    (proxy as any).options.target = parsed.origin;
-                    proxyReq.path = parsed.pathname + parsed.search;
-                  }
-                });
-              },
-            },
-          },
         },
         optimizeDeps: {
           exclude: ['@dxos/wa-sqlite'],
@@ -242,6 +223,34 @@ export const createConfig = ({
           //
           // NOTE: Order matters.
           //
+
+          // RSS proxy middleware for CORS-free feed fetching.
+          {
+            name: 'rss-proxy',
+            configureServer(server: any) {
+              server.middlewares.use('/api/rss', async (req: any, res: any) => {
+                const url = new URL(req.url!, `http://${req.headers.host}`);
+                const feedUrl = url.searchParams.get('url');
+                if (!feedUrl) {
+                  res.statusCode = 400;
+                  res.end('Missing url parameter');
+                  return;
+                }
+                try {
+                  const response = await globalThis.fetch(feedUrl);
+                  const contentType = response.headers.get('content-type');
+                  if (contentType) {
+                    res.setHeader('content-type', contentType);
+                  }
+                  res.statusCode = response.status;
+                  res.end(await response.text());
+                } catch (error) {
+                  res.statusCode = 502;
+                  res.end(String(error));
+                }
+              });
+            },
+          },
 
           !isFastBundle &&
             importSource({
