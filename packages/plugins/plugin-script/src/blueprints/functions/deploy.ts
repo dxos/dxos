@@ -8,12 +8,11 @@ import { ClientService } from '@dxos/client';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { getUserFunctionIdInMetadata, type Script } from '@dxos/functions';
-import { bundleFunction, initializeBundler } from '@dxos/functions-runtime/bundler';
+import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { getSpace } from '@dxos/react-client/echo';
-import { isNode } from '@dxos/util';
 
 import { Deploy } from './definitions';
 
@@ -32,10 +31,8 @@ export default Deploy.pipe(
         return yield* Effect.fail(new Error('Script source or space not available'));
       }
 
-      if (!isNode()) {
-        const { default: wasmUrl } = yield* Effect.promise(() => import('esbuild-wasm/esbuild.wasm?url'));
-        yield* Effect.promise(() => initializeBundler({ wasmUrl }));
-      }
+      // In browser, the Compiler capability initializes esbuild-wasm during plugin load.
+      // In Node/Bun, esbuild uses the native binary and skips WASM initialization.
       const buildResult = yield* Effect.promise(() => bundleFunction({ source: script.source!.target!.content }));
       if ('error' in buildResult) {
         return yield* Effect.fail(buildResult.error ?? new Error('Bundle creation failed'));
