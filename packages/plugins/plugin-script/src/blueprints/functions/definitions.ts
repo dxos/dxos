@@ -2,14 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
 import * as Schema from 'effect/Schema';
 
+import { ClientService } from '@dxos/client';
 import { Database, Ref } from '@dxos/echo';
 import { QueueService, Script } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
-
-import { ScriptDeploymentService } from './services';
 
 const ScriptRef = Ref.Ref(Script.Script).annotations({
   description: 'The ID of the script.',
@@ -125,7 +123,7 @@ export const Deploy = Operation.make({
       description: 'The URL of the deployed function.',
     }),
   }),
-  services: [Database.Service, ScriptDeploymentService],
+  services: [Database.Service, ClientService],
 });
 
 export const Invoke = Operation.make({
@@ -145,7 +143,7 @@ export const Invoke = Operation.make({
       description: 'The response from the function.',
     }),
   }),
-  services: [Database.Service, ScriptDeploymentService, HttpClient.HttpClient],
+  services: [Database.Service, ClientService],
 });
 
 const InvocationSpanSchema = Schema.Struct({
@@ -190,4 +188,63 @@ export const InspectInvocations = Operation.make({
     }),
   }),
   services: [Database.Service, QueueService],
+});
+
+const DeployedFunctionSchema = Schema.Struct({
+  key: Schema.optional(Schema.String).annotations({
+    description: 'Unique key identifying the function.',
+  }),
+  name: Schema.String.annotations({
+    description: 'Display name of the function.',
+  }),
+  version: Schema.String.annotations({
+    description: 'Semantic version of the deployed function.',
+  }),
+  description: Schema.optional(Schema.String).annotations({
+    description: 'Description of what the function does.',
+  }),
+  updated: Schema.optional(Schema.String).annotations({
+    description: 'ISO timestamp of the last deployment.',
+  }),
+});
+
+export const QueryDeployedFunctions = Operation.make({
+  meta: {
+    key: 'org.dxos.function.script.query-deployed',
+    name: 'QueryDeployedFunctions',
+    description: 'Lists all functions deployed to the EDGE runtime.',
+  },
+  input: Schema.Void,
+  output: Schema.Struct({
+    functions: Schema.Array(DeployedFunctionSchema).annotations({
+      description: 'List of deployed functions.',
+    }),
+  }),
+  services: [ClientService],
+});
+
+export const InstallFunction = Operation.make({
+  meta: {
+    key: 'org.dxos.function.script.install',
+    name: 'InstallFunction',
+    description:
+      'Installs a deployed EDGE function into the current space by key. Updates the function if it already exists.',
+  },
+  input: Schema.Struct({
+    key: Schema.String.annotations({
+      description: 'The unique key of the deployed function to install.',
+    }),
+  }),
+  output: Schema.Struct({
+    key: Schema.optional(Schema.String).annotations({
+      description: 'Key of the installed function.',
+    }),
+    name: Schema.String.annotations({
+      description: 'Name of the installed function.',
+    }),
+    version: Schema.String.annotations({
+      description: 'Version of the installed function.',
+    }),
+  }),
+  services: [ClientService],
 });

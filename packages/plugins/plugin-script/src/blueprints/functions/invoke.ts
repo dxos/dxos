@@ -2,34 +2,42 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
 
-import { Database } from '@dxos/echo';
+import { ClientService } from '@dxos/client';
+import { Context } from '@dxos/context';
+import { Database, Query, Ref } from '@dxos/echo';
+import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { Operation } from '@dxos/operation';
+import { getSpace } from '@dxos/react-client/echo';
 
 import { Invoke } from './definitions';
-import { ScriptDeploymentService } from './services';
 
 export default Invoke.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ script, payload }) {
       const loaded = yield* Database.load(script);
-      const deploymentService = yield* ScriptDeploymentService;
-      const functionUrl = yield* deploymentService.getFunctionUrl(loaded);
-      if (!functionUrl) {
-        throw new Error('Script is not deployed. Deploy it first.');
+      const client = yield* ClientService;
+
+      const space = getSpace(loaded);
+      if (!space) {
+        return yield* Effect.fail(new Error('Script is not in a space.'));
       }
 
-      const httpClient = yield* HttpClient.HttpClient;
-      const request = yield* HttpClientRequest.post(functionUrl).pipe(
-        HttpClientRequest.bodyJson(payload ?? {}),
+      const existingFns = yield* Effect.promise(() =>
+        space.db.query(Query.type(Operation.PersistentOperation, { source: Ref.make(loaded) })).run(),
       );
-      const response = yield* httpClient.execute(request);
-      const json: unknown = yield* response.json;
+      const fn = existingFns[0];
+      if (!fn) {
+        return yield* Effect.fail(new Error('Script is not deployed. Deploy it first.'));
+      }
 
-      return { response: json };
+      const functionsService = FunctionsServiceClient.fromClient(client);
+      const result = yield* Effect.promise(() =>
+        functionsService.invoke(Context.default(), fn, payload ?? {}, { spaceId: space.id }),
+      );
+
+      return { response: result };
     }),
   ),
 );

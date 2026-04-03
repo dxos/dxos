@@ -5,7 +5,6 @@
 import { OperationHandlerSet } from '@dxos/operation';
 
 export * from './definitions';
-export { ScriptDeploymentService } from './services';
 
 export const ScriptHandlers = OperationHandlerSet.lazy(
   () => import('./create'),
@@ -15,4 +14,6 @@ export const ScriptHandlers = OperationHandlerSet.lazy(
   () => import('./deploy'),
   () => import('./invoke'),
   () => import('./inspect-invocations'),
+  () => import('./query-deployed-functions'),
+  () => import('./install-function'),
 );
