@@ -143,7 +143,7 @@ export class AiConversation extends Resource {
           blueprints: currentBlueprints,
           genericToolkits: mcps,
         });
-        log.info('toolkit', { tools: Record.keys(toolkit.tools) });
+        log('toolkit', { tools: Record.keys(toolkit.tools) });
         const system = yield* formatSystemPrompt({
           system: params.system,
           blueprints: currentBlueprints,
