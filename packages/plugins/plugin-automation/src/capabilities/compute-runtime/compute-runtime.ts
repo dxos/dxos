@@ -17,7 +17,7 @@ import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
-import { CredentialsService, QueueService } from '@dxos/functions';
+import { CredentialsService, QueueService, Trace } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
@@ -121,6 +121,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           Layer.provideMerge(
             Layer.mergeAll(
               TracingServiceLive,
+              Trace.layerNoop,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
               ToolExecutionServices,
               KeyValueStore.layerMemory,

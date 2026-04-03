@@ -111,6 +111,12 @@ export interface Sink {
  */
 export class TraceSink extends Context.Tag('@dxos/functions/TraceSink')<TraceSink, Sink>() {}
 
+export const noopWriter: TraceWriter = {
+  write: () => {},
+};
+
+export const writerLayerNoop: Layer.Layer<TraceService> = Layer.succeed(TraceService, noopWriter);
+
 export const layerNoop: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
   write: () => {},
 });

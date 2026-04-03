@@ -101,6 +101,7 @@ export type AssistantTestServices =
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
   | TracingService
+  | Trace.TraceSink
   // Deperacted
   | ToolExecutionService
   | ToolResolverService

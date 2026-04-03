@@ -19,7 +19,7 @@ import { type ClientService, type ConfigService } from '@dxos/client';
 import { getProfilePath } from '@dxos/client-protocol';
 import { DX_DATA } from '@dxos/client-protocol';
 import { Database, type Key } from '@dxos/echo';
-import { ServiceResolver, TracingService } from '@dxos/functions';
+import { ServiceResolver, Trace, TracingService } from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   ProcessManager,
@@ -93,6 +93,7 @@ export const triggerRuntimeLayer = ({
         Layer.provide(Registry.layer),
         Layer.provideMerge(triggerStateStoreLayer),
         Layer.provideMerge(TracingService.layerNoop),
+        Layer.provideMerge(Trace.layerNoop),
         Layer.provideMerge(ToolExecutionServices),
         Layer.provideMerge(GenericToolkit.providerLayer(toolkit)),
         Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: blueprintOperationHandlers })),
