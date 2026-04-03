@@ -7,7 +7,6 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
 
 import { FeedArticle, SubscriptionsArticle } from '../../containers';
 import { meta } from '../../meta';
@@ -31,7 +30,7 @@ export default Capability.makeModule(() =>
           <SubscriptionsArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
-      // Companion view: FeedArticle shown when a post is selected within a subscription feed.
+      // Companion view: FeedArticle shown alongside a parent Subscription.Feed.
       Surface.create({
         id: `${meta.id}.feed-article`,
         role: ['article', 'section'],
@@ -39,11 +38,11 @@ export default Capability.makeModule(() =>
           data,
         ): data is {
           attendableId?: string;
-          subject: Subscription.Post;
+          subject: Subscription.Feed;
           companionTo: Subscription.Feed;
-        } => Obj.instanceOf(Subscription.Post, data.subject) && Subscription.instanceOf(data.companionTo),
+        } => Subscription.instanceOf(data.subject) && Subscription.instanceOf(data.companionTo),
         component: ({ data, role }) => (
-          <FeedArticle role={role} subject={data.companionTo} attendableId={data.attendableId} />
+          <FeedArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
     ]),
