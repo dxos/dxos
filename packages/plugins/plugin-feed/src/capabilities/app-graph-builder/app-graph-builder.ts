@@ -2,15 +2,17 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
@@ -30,6 +32,15 @@ export default Capability.makeModule(
     const resolve = (typename: string) =>
       capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
+    const selectionManager = yield* Capability.get(AttentionCapabilities.Selection);
+    const selectedId = Atom.family((nodeId: string) =>
+      Atom.make((get) => {
+        const state = get(selectionManager.state);
+        const selection = state.selections[nodeId];
+        return selection?.mode === 'single' ? selection.id : undefined;
+      }),
+    );
+
     const extensions = yield* Effect.all([
       // Show Subscription.Feed objects as nodes under each space.
       GraphBuilder.createExtension({
@@ -47,17 +58,30 @@ export default Capability.makeModule(
         },
       }),
 
-      // Companion panel: when a Subscription.Feed is selected, show FeedArticle.
+      // Companion panel: resolve the selected feed from the SubscriptionsArticle.
       GraphBuilder.createExtension({
         id: `${meta.id}.subscription-feed-companion`,
         match: (node) =>
-          Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Feed) : Option.none(),
-        connector: (subscriptionFeed) => {
+          Subscription.instanceOf(node.data)
+            ? Option.some({ feed: node.data as Subscription.Feed, nodeId: node.id })
+            : Option.none(),
+        connector: (matched, get) => {
+          const db = Obj.getDatabase(matched.feed);
+          if (!db) {
+            return Effect.succeed([]);
+          }
+
+          // Resolve the selected feed from the attention selection.
+          const feedId = get(selectedId(matched.nodeId));
+          const selectedFeed = feedId
+            ? get(AtomQuery.make(db, Filter.and(Filter.type(Subscription.Feed), Filter.id(feedId))))[0]
+            : undefined;
+
           return Effect.succeed([
             {
               id: 'feed',
               type: PLANK_COMPANION_TYPE,
-              data: subscriptionFeed,
+              data: selectedFeed ?? 'feed',
               properties: {
                 label: ['feed companion label', { ns: meta.id }],
                 icon: 'ph--article--regular',
