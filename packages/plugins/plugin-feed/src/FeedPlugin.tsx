@@ -15,6 +15,7 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 
 import { AppGraphBuilder, OperationHandler, ReactSurface } from './capabilities';
 import { meta } from './meta';
+import { FeedOperation } from './operations';
 import { translations } from './translations';
 import { Subscription } from './types';
 
@@ -34,12 +35,17 @@ export const FeedPlugin = Plugin.define(meta).pipe(
           createObject: ((props, options) =>
             Effect.gen(function* () {
               const object = Subscription.makeFeed(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
+              const result = yield* Operation.invoke(SpaceOperation.AddObject, {
                 object,
                 target: options.target,
                 hidden: true,
                 targetNodeId: options.targetNodeId,
               });
+              // Auto-sync after creation if URL is provided.
+              if (object.url) {
+                yield* Operation.schedule(FeedOperation.SyncFeed, { feed: object });
+              }
+              return result;
             })) satisfies CreateObject,
         },
       },
