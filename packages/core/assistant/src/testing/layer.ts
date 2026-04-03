@@ -101,6 +101,7 @@ export type AssistantTestServices =
   | KeyValueStore.KeyValueStore
   | ServiceResolver.ServiceResolver
   | TracingService
+  | Trace.TraceService
   | Trace.TraceSink
   // Deperacted
   | ToolExecutionService
@@ -127,6 +128,7 @@ export const AssistantTestLayer = ({
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
+    Layer.provideMerge(Trace.testTraceService),
     Layer.provideMerge(AgentService.layer({ systemPrompt })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
     Layer.provideMerge(
@@ -247,7 +249,7 @@ const TraceSinkPretty = () =>
     write: (message) => {
       for (const event of message.events) {
         if (Trace.isOfType(CompleteBlock, event)) {
-          const tag = message.meta.processName ?? `[${message.meta.pid}]`;
+          const tag = message.meta.processName ?? `[${message.meta.pid ?? 'unknown'}]`;
           console.log(`[${tag}] ${event.data.role.toUpperCase()}`);
           new ConsolePrinter({ tag }).printContentBlock(event.data.block);
         } else if (Trace.isOfType(Process.SpawnedEvent, event)) {

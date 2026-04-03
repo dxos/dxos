@@ -17,6 +17,11 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./Trace": {
+      "source": "./src/Trace.ts",
+      "types": "./dist/types/src/Trace.d.ts",
+      "default": "./dist/lib/neutral/Trace.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

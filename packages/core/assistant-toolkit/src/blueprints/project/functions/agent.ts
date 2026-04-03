@@ -3,12 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { AiConversation, type ContextBinding } from '@dxos/assistant';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
+import { QueueService, Trace } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { type Message } from '@dxos/types';
@@ -58,7 +59,7 @@ export default Agent.pipe(
           .pipe(Effect.retry({ times: 2 }));
       },
       Effect.scoped,
-      Effect.provide(AiService.model('@anthropic/claude-sonnet-4-5')),
+      Effect.provide(Layer.mergeAll(AiService.model('@anthropic/claude-sonnet-4-5'), Trace.writerLayerNoop)),
     ),
   ),
 );

@@ -25,6 +25,7 @@ import { CredentialsService, FunctionInvocationService, QueueService, TracingSer
 import { Operation } from '@dxos/operation';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
+import { Trace } from '../index';
 
 /**
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.
@@ -174,7 +175,17 @@ class FunctionContext extends Resource {
         )
       : AiService.notAvailable;
 
-    return Layer.mergeAll(dbLayer, queuesLayer, feedLayer, credentials, functionInvocationService, aiLayer, tracing);
+    return Layer.mergeAll(
+      dbLayer,
+      queuesLayer,
+      feedLayer,
+      credentials,
+      functionInvocationService,
+      aiLayer,
+      tracing,
+      // TODO(dmaretskyi): Forward trace events.
+      Trace.writerLayerNoop,
+    );
   }
 }
 

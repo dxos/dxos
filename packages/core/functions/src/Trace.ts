@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Annotation, Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import * as Layer from 'effect/Layer';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
@@ -69,7 +69,7 @@ export const isOfType = <T>(eventType: EventType<T>, event: Event): event is Eve
  */
 // TODO(dmaretskyi): Expand on this: conversation id, tool call id, etc.
 export const Meta = Schema.Struct({
-  pid: Schema.String, // NOTE: Not Process.ID to avoid circular dependency.
+  pid: Schema.optional(Schema.String), // NOTE: Not Process.ID to avoid circular dependency.
   parentPid: Schema.optional(Schema.String),
   processName: Schema.optional(Schema.String),
 });
@@ -109,6 +109,7 @@ export interface Sink {
  * Sink for complete trace messages.
  * The Process Manager forwards trace messages to it.
  */
+// TODO(dmaretskyi): Consider moving sink to the Process Manager.
 export class TraceSink extends Context.Tag('@dxos/functions/TraceSink')<TraceSink, Sink>() {}
 
 export const noopWriter: TraceWriter = {
@@ -126,3 +127,21 @@ export const layerConsole: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
     console.log(message);
   },
 });
+
+export const testTraceService: Layer.Layer<TraceService, never, TraceSink> = Layer.effect(
+  TraceService,
+  Effect.gen(function* () {
+    const sink = yield* TraceSink;
+    return {
+      write: (event, data) => {
+        sink.write(
+          Obj.make(Message, {
+            meta: {},
+            isEphemeral: event.isEphemeral,
+            events: [{ type: event.key, timestamp: Date.now(), data }],
+          }),
+        );
+      },
+    };
+  }),
+);

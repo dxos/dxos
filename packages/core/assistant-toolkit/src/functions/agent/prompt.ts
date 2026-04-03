@@ -13,7 +13,7 @@ import { Template } from '@dxos/blueprints';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService, TracingService } from '@dxos/functions';
+import { QueueService, Trace, TracingService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
@@ -127,6 +127,6 @@ export default AgentPrompt.pipe(
       return {
         note: lastTextFromMessages(result),
       };
-    }, Effect.scoped),
+    }, Effect.scoped, Effect.provide(Trace.writerLayerNoop)),
   ),
 );
