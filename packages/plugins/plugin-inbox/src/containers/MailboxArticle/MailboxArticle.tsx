@@ -203,13 +203,13 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
                 <IconButton
                   ref={filterSaveButtonRef}
                   disabled={!filter}
-                  label={t('mailbox toolbar save button label')}
+                  label={t('mailbox-toolbar-save-button.label')}
                   icon='ph--folder-plus--regular'
                   iconOnly
                   onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
                 />
                 <IconButton
-                  label={t('mailbox toolbar clear button label')}
+                  label={t('mailbox-toolbar-clear-button.label')}
                   icon='ph--x--regular'
                   iconOnly
                   onClick={() => handleClear()}

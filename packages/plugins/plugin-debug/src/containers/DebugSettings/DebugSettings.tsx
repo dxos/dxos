@@ -71,16 +71,16 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
         return;
       }
       handleToast({
-        title: t('settings uploaded'),
-        description: t('settings uploaded to clipboard'),
+        title: t('settings-uploaded'),
+        description: t('settings-uploaded-to-clipboard'),
       });
 
       // TODO(nf): move to IpfsPlugin?
       const url = client.config.values.runtime!.services!.ipfs!.gateway + '/' + info.cid;
       void navigator.clipboard.writeText(url);
       handleToast({
-        title: t('settings uploaded'),
-        description: t('settings uploaded to clipboard'),
+        title: t('settings-uploaded'),
+        description: t('settings-uploaded-to-clipboard'),
       });
       log.info('diagnostics', { url });
     }
@@ -98,12 +98,12 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
       const info = await client.repair();
       setStorageConfig(await Storage());
       handleToast({
-        title: t('settings repair success'),
+        title: t('settings-repair-success'),
         description: JSON.stringify(info, undefined, 2),
       });
     } catch (err: any) {
       handleToast({
-        title: t('settings repair failed'),
+        title: t('settings-repair-failed'),
         description: err.message,
       });
     }
@@ -111,35 +111,35 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('settings title', { ns: meta.id })}>
+      <Settings.Section title={t('settings.title', { ns: meta.id })}>
         <Settings.Group>
-          <Settings.ItemInput title={t('settings wireframe')}>
+          <Settings.ItemInput title={t('settings-wireframe')}>
             <Input.Switch
               checked={settings.wireframe}
               onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, wireframe: !!checked }))}
             />
           </Settings.ItemInput>
-          <Settings.ItemInput title={t('settings download diagnostics')}>
+          <Settings.ItemInput title={t('settings-download-diagnostics')}>
             <IconButton
               icon='ph--download-simple--regular'
               iconOnly
-              label={t('settings download diagnostics')}
+              label={t('settings-download-diagnostics')}
               onClick={handleDownload}
             />
           </Settings.ItemInput>
-          <Settings.ItemInput title={t('settings download logs')}>
+          <Settings.ItemInput title={t('settings-download-logs')}>
             <IconButton
               icon='ph--download-simple--regular'
               iconOnly
-              label={t('settings download logs')}
+              label={t('settings-download-logs')}
               onClick={handleDownloadLogs}
             />
           </Settings.ItemInput>
-          <Settings.ItemInput title={t('settings repair')}>
+          <Settings.ItemInput title={t('settings-repair')}>
             <IconButton
               icon='ph--first-aid-kit--regular'
               iconOnly
-              label={t('settings repair')}
+              label={t('settings-repair')}
               onClick={handleRepair}
             />
           </Settings.ItemInput>
@@ -157,7 +157,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
             </Toast.Root>
           )}
 
-          <Settings.ItemInput title={t('settings choose storage adaptor')}>
+          <Settings.ItemInput title={t('settings-choose-storage-adaptor')}>
             <Select.Root
               value={
                 Object.entries(StorageAdapters).find(
@@ -165,7 +165,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
                 )?.[0]
               }
               onValueChange={(value) => {
-                if (confirm(t('settings storage adapter changed alert'))) {
+                if (confirm(t('settings-storage-adapter-changed-alert'))) {
                   updateConfig(
                     storageConfig,
                     setStorageConfig,
@@ -175,7 +175,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
                 }
               }}
             >
-              <Select.TriggerButton placeholder={t('settings data store label')} />
+              <Select.TriggerButton placeholder={t('settings-data-store.label')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>

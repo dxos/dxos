@@ -62,14 +62,14 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('deployment dialog title')}</Dialog.Title>
+        <Dialog.Title>{t('deployment-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
           <Dialog.CloseIconButton />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>
         <p>
-          {t('deployment dialog scripts found message', {
+          {t('deployment-dialog-scripts-found.message', {
             count: scriptTemplates.length,
           })}
         </p>
@@ -81,14 +81,14 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
       </Dialog.Body>
       <Dialog.ActionBar>
         <Dialog.Close asChild>
-          <Button disabled={status === 'pending'}>{t('deployment dialog skip button label')}</Button>
+          <Button disabled={status === 'pending'}>{t('deployment-dialog-skip-button.label')}</Button>
         </Dialog.Close>
         <Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
           {status === 'pending'
-            ? t('deployment dialog deploy functions pending button label', {
+            ? t('deployment-dialog-deploy-functions-pending-button.label', {
                 count: scriptTemplates.length,
               })
-            : t('deployment dialog deploy functions button label', {
+            : t('deployment-dialog-deploy-functions-button.label', {
                 count: scriptTemplates.length,
               })}
         </Button>

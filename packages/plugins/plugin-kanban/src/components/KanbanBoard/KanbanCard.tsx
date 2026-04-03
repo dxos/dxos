@@ -38,7 +38,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
       ...(onCardRemove
         ? [
             createMenuAction('remove', () => onCardRemove(data), {
-              label: t('remove card label'),
+              label: t('remove-card.label'),
               icon: 'ph--trash--regular',
             }),
           ]
@@ -68,7 +68,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(({ data, l
                   iconOnly
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'
-                  label={t('action menu label')}
+                  label={t('action-menu.label')}
                 />
               </Menu.Trigger>
               <Menu.Content items={menuItems} />

@@ -36,7 +36,7 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
                 data-testid='column-sort-descending'
                 onClick={() => model.setSort(state.fieldId, 'desc')}
               >
-                {t('column action sort descending')}
+                {t('column-action-sort-descending')}
               </DropdownMenu.Item>
             )}
             {(!isCurrentColumnSorted || currentSort?.direction === 'desc') && (
@@ -44,22 +44,22 @@ export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => 
                 data-testid='column-sort-ascending'
                 onClick={() => model.setSort(state.fieldId, 'asc')}
               >
-                {t('column action sort ascending')}
+                {t('column-action-sort-ascending')}
               </DropdownMenu.Item>
             )}
             {isCurrentColumnSorted && (
               <DropdownMenu.Item data-testid='column-clear-sort' onClick={() => model.clearSort()}>
-                {t('column action clear sorting')}
+                {t('column-action-clear-sorting')}
               </DropdownMenu.Item>
             )}
             {model.getColumnCount() > 1 && model.features.schemaEditable && (
               <DropdownMenu.Item data-testid='column-delete' onClick={() => model.deleteColumn(state.fieldId)}>
-                {t('column action delete')}
+                {t('column-action-delete')}
               </DropdownMenu.Item>
             )}
             {model.features.schemaEditable && (
               <DropdownMenu.Item data-testid='column-settings' onClick={() => modals.openColumnSettings()}>
-                {t('column action settings')}
+                {t('column-action-settings')}
               </DropdownMenu.Item>
             )}
           </DropdownMenu.Viewport>

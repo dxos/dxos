@@ -82,7 +82,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
           <Treegrid.Cell classNames='contents'>
             <NavTreeItemAction
               testId={`navtree.treeItem.actionsLevel${level}`}
-              label={t('tree item actions label')}
+              label={t('tree-item-actions.label')}
               icon='ph--dots-three-vertical--regular'
               parent={item}
               path={path}

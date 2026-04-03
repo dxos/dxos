@@ -15,7 +15,7 @@ export const ShortcutsDialogContent = () => {
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('shortcuts dialog title')}</Dialog.Title>
+        <Dialog.Title>{t('shortcuts-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
           <Dialog.CloseIconButton />
         </Dialog.Close>

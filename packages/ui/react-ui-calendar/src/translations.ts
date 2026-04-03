@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'today button': 'Today',
+        'today.button': 'Today',
       },
     },
   },

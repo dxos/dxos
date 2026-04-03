@@ -41,7 +41,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
               icon='ph--x--bold'
               iconOnly
               variant='ghost'
-              label={t('remove object in context label')}
+              label={t('remove-object-in-context.label')}
               classNames='p-0 hover:bg-transparent'
               size={3}
               onClick={() => onUpdateObject?.(dxn, false)}

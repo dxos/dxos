@@ -75,14 +75,14 @@ export const InvitationManager = ({
               </Centered>
             </div>
             <span id={qrLabel} className='sr-only'>
-              {t('qr label')}
+              {t('qr.label')}
             </span>
             <Clipboard.Button variant='ghost' value={invitationUrl ?? 'never'} />
           </InvitationManagerView>
           <InvitationManagerView id='showing auth code'>
-            <Label>{t('auth code message')}</Label>
+            <Label>{t('auth-code.message')}</Label>
             <AuthCode code={authCode} large classNames='text-black dark:text-white' />
-            <Label>{t('auth other device emoji message')}</Label>
+            <Label>{t('auth-other-device-emoji.message')}</Label>
             {emoji && <Emoji text={emoji} />}
           </InvitationManagerView>
           <InvitationManagerView id='showing final'>
@@ -96,7 +96,7 @@ export const InvitationManager = ({
       </Viewport.Root>
       <ActionBar classNames='mt-4'>
         <Action disabled={!active} onClick={() => send?.({ type: 'deselectInvitation' })}>
-          {t('back label')}
+          {t('back.label')}
         </Action>
       </ActionBar>
     </>

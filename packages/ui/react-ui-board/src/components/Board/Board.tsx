@@ -342,7 +342,7 @@ const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) =
         <IconButton
           icon='ph--plus--regular'
           iconOnly
-          label={t('button add')}
+          label={t('button-add')}
           classNames='aspect-square opacity-0 transition-opacity duration-300 group-hover/cell:opacity-100'
           onClick={onAddClick}
         />
@@ -369,20 +369,20 @@ const BoardToolbar = composable<HTMLDivElement, BoardToolbarProps>((props, forwa
       <Toolbar.IconButton
         icon='ph--crosshair--regular'
         iconOnly
-        label={t('button center')}
+        label={t('button-center')}
         onClick={() => controller.center()}
       />
       <Toolbar.IconButton
         icon={zoom ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
         iconOnly
-        label={t('button zoom')}
+        label={t('button-zoom')}
         onClick={() => controller.toggleZoom()}
       />
       {!readonly && onAdd && (
         <Toolbar.IconButton
           icon='ph--plus--regular'
           iconOnly
-          label={t('button add')}
+          label={t('button-add')}
           onClick={(event) => onAdd?.(event.currentTarget as HTMLButtonElement)}
         />
       )}

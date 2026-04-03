@@ -49,12 +49,12 @@ export const ResponsiveGridItem = <T extends object = any>({
   const iconProps: Record<string, { icon: string; label: string; classNames?: string }> = {
     wave: {
       icon: 'ph--hand-waving--duotone',
-      label: t('icon wave'),
+      label: t('icon-wave'),
       classNames: 'animate-pulse bg-orange-500',
     },
     mute: {
       icon: 'ph--microphone-slash--regular',
-      label: t('icon muted'),
+      label: t('icon-muted'),
     },
   };
 
@@ -93,7 +93,7 @@ export const ResponsiveGridItem = <T extends object = any>({
             iconOnly
             icon={pinned ? 'ph--x--regular' : 'ph--arrows-out--regular'}
             size={pinned ? 5 : 4}
-            label={pinned ? t('icon unpin') : t('icon pin')}
+            label={pinned ? t('icon-unpin') : t('icon-pin')}
             onClick={() => onClick?.(item)}
           />
         </div>

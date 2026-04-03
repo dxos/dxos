@@ -11,18 +11,18 @@ export const translations = [
   {
     'en-US': {
       [Template.Data.typename]: {
-        'typename label': 'Template',
-        'typename label_zero': 'Templates',
-        'typename label_one': 'Template',
-        'typename label_other': 'Templates',
-        'object name placeholder': 'New template',
-        'add object label': 'Add template',
-        'rename object label': 'Rename template',
-        'delete object label': 'Delete template',
-        'object deleted label': 'Template deleted',
+        'typename.label': 'Template',
+        'typename.label_zero': 'Templates',
+        'typename.label_one': 'Template',
+        'typename.label_other': 'Templates',
+        'object-name.placeholder': 'New template',
+        'add-object.label': 'Add template',
+        'rename-object.label': 'Rename template',
+        'delete-object.label': 'Delete template',
+        'object-deleted.label': 'Template deleted',
       },
       [meta.id]: {
-        'plugin name': 'Template',
+        'plugin-name': 'Template',
       },
     },
   },

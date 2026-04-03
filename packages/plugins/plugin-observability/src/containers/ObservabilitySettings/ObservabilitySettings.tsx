@@ -35,12 +35,12 @@ export const ObservabilitySettings = ({ settings }: ObservabilitySettingsCompone
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('settings title', { ns: meta.id })}>
+      <Settings.Section title={t('settings.title', { ns: meta.id })}>
         <Message.Root valence='info' classNames=' mb-form-padding'>
-          <Message.Content>{t('observability description')}</Message.Content>
+          <Message.Content>{t('observability.description')}</Message.Content>
         </Message.Root>
         <Settings.Group>
-          <Settings.ItemInput title={t('observability enabled label')}>
+          <Settings.ItemInput title={t('observability-enabled.label')}>
             <Input.Switch
               checked={settings.enabled}
               onCheckedChange={(checked) => invokePromise(ObservabilityOperation.Toggle, { state: !!checked })}

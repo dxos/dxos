@@ -170,7 +170,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
           variant='ghost'
           icon='ph--caret-left--regular'
           iconOnly
-          label={t('button back')}
+          label={t('button-back')}
           data-testid='treeView.primaryTreeButton'
           onClick={() => onBack?.()}
         />
@@ -216,7 +216,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
                 variant='ghost'
                 icon='ph--dots-three-vertical--regular'
                 iconOnly
-                label={t('tree item actions label')}
+                label={t('tree-item-actions.label')}
                 data-testid='navtree.treeItem.actionsLevel0'
               />
             </Menu.Trigger>

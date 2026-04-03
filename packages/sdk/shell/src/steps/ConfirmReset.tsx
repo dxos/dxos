@@ -29,7 +29,7 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
   const testIdAffix =
     mode === 'join new identity' ? 'join-new-identity' : mode === 'recover' ? 'recover' : 'reset-storage';
 
-  const confirmationValue = t('confirmation value');
+  const confirmationValue = t('confirmation-value');
 
   const handleConfirm = useCallback(async () => {
     setPending(true);
@@ -38,7 +38,7 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
       setPending(false);
     } catch (err) {
       log.catch(err);
-      setValidationMessage(t('failed to reset identity message'));
+      setValidationMessage(t('failed-to-reset-identity.message'));
       setPending(false);
     }
   }, [onConfirm, t]);
@@ -47,8 +47,8 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
     <>
       <Dialog.Body>
         <Message.Root valence='error'>
-          <Message.Title>{t('sign out chooser title')}</Message.Title>
-          <Message.Content>{t('sign out chooser message')}</Message.Content>
+          <Message.Title>{t('sign-out-chooser.title')}</Message.Title>
+          <Message.Content>{t('sign-out-chooser.message')}</Message.Content>
         </Message.Root>
         <TextInput
           {...{ validationMessage }}
@@ -70,14 +70,14 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
           }
           disabled={disabled}
           data-testid={`${testIdAffix}.reset-identity-input`}
-          placeholder={t('confirmation placeholder', { confirmationValue })}
+          placeholder={t('confirmation.placeholder', { confirmationValue })}
           onChange={({ target: { value } }) => setInputValue(value)}
         />
       </Dialog.Body>
       <Dialog.ActionBar classNames='grid grid-cols-2 gap-2'>
         {onCancel && (
           <Action disabled={disabled} onClick={onCancel} data-testid={`${testIdAffix}.reset-identity-cancel`}>
-            {t('cancel label')}
+            {t('cancel.label')}
           </Action>
         )}
         {onConfirm && (
@@ -87,7 +87,7 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
             onClick={handleConfirm}
             data-testid={`${testIdAffix}.reset-identity-confirm`}
           >
-            {pending ? t('reset in progress label') : t('reset device label')}
+            {pending ? t('reset-in-progress.label') : t('reset-device.label')}
           </Action>
         )}
       </Dialog.ActionBar>
