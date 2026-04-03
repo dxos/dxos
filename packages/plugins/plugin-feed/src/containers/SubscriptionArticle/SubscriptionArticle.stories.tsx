@@ -3,45 +3,57 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useState } from 'react';
+import React from 'react';
 
 import { faker } from '@dxos/random';
-import { Panel } from '@dxos/react-ui';
+import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 
-import { SubscriptionStack, type SubscriptionStackAction } from '../../components';
 import { Subscription } from '../../types';
 
-const generateFeeds = (count: number): Subscription.Feed[] =>
-  Array.from({ length: count }, () =>
-    Subscription.makeFeed({
-      name: faker.company.name() + ' Blog',
-      url: faker.internet.url(),
-      description: faker.lorem.sentence(),
-    }),
-  );
+import { SubscriptionArticle } from './SubscriptionArticle';
 
 const DefaultStory = () => {
-  const feeds = useMemo(() => generateFeeds(10), []);
-  const [currentId, setCurrentId] = useState<string>();
+  const spaces = useSpaces();
+  const space = spaces[spaces.length - 1];
+  const feeds = useQuery(space?.db, Filter.type(Subscription.Feed));
+  const feed = feeds[0];
 
-  const handleAction = (action: SubscriptionStackAction) => {
-    if (action.type === 'current') {
-      setCurrentId(action.feedId);
-    }
-  };
+  if (!feed) {
+    return null;
+  }
 
-  return (
-    <SubscriptionStack id='story' feeds={feeds} currentId={currentId} onAction={handleAction} />
-  );
+  return <SubscriptionArticle role='article' subject={feed} />;
 };
 
 const meta: Meta<typeof DefaultStory> = {
   title: 'plugins/plugin-feed/containers/SubscriptionArticle',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' }), withAttention(), withMosaic()],
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column' }),
+    withAttention(),
+    withMosaic(),
+    withClientProvider({
+      types: [Subscription.Feed, Subscription.Post],
+      createIdentity: true,
+      createSpace: true,
+      onCreateSpace: async ({ space }) => {
+        Array.from({ length: 5 }).forEach(() => {
+          space.db.add(
+            Subscription.makeFeed({
+              name: faker.company.name() + ' Blog',
+              url: faker.internet.url(),
+              description: faker.lorem.sentence(),
+            }),
+          );
+        });
+      },
+    }),
+  ],
   parameters: {
     layout: 'fullscreen',
   },
