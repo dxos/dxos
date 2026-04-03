@@ -3,19 +3,23 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type { WatchEvent } from '@tauri-apps/plugin-fs';
 
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
-import type { FilesystemDirectory, FilesystemEntry, FilesystemFile, FilesystemWorkspace } from './types';
+import {
+  isFilesystemDirectory,
+  type FilesystemDirectory,
+  type FilesystemEntry,
+  type FilesystemFile,
+  type FilesystemWorkspace,
+} from './types';
 
+/** Persisted per-workspace metadata stored in `.composer/meta.json`. */
 export type ComposerConfig = { icon?: string; hue?: string; spaceId?: string };
 
 const COMPOSER_CONFIG_DIR = '.composer';
 const COMPOSER_CONFIG_FILE = 'meta.json';
-const FILEMAP_FILE = 'filemap.json';
-const XATTR_DXN_NAME = 'org.dxos.dxn';
 
 type DirEntry = { name: string; isDirectory: boolean; isFile: boolean; isSymlink: boolean };
 
@@ -46,11 +50,12 @@ const isImageFile = (name: string): boolean => {
   return SUPPORTED_IMAGE_EXTENSIONS.includes(ext);
 };
 
+// TODO: Add image/PDF support.
 const isSupportedFile = (name: string): boolean => {
-  // TODO: Add image/PDF support.
   return isMarkdownFile(name);
 };
 
+// Deterministic id derived from the absolute path.
 const createFileId = (path: string): string => {
   return `fs:${path.replace(/[^a-zA-Z0-9]/g, '-')}`;
 };
@@ -60,6 +65,7 @@ export const isTauriAvailable = (): boolean => {
   return isTauri();
 };
 
+/** Open a native directory picker dialog via Tauri. Returns the selected path or null. */
 export const openDirectoryPicker = (): Effect.Effect<string | null> => {
   if (!isTauriAvailable()) {
     return Effect.sync(() => {
@@ -106,60 +112,7 @@ export const readFileContent = (path: string): Effect.Effect<string | undefined>
   );
 };
 
-/**
- * Watch a single markdown file for external changes. Uses debounced Tauri watch.
- * Invokes onExternalChange when the file may have been modified on disk.
- */
-export const watchMarkdownFile = (
-  filePath: string,
-  onExternalChange: () => Effect.Effect<void>,
-): Effect.Effect<(() => void) | null> => {
-  if (!isTauriAvailable()) {
-    return Effect.succeed(null);
-  }
-
-  return Effect.tryPromise(async () => {
-    const { watch } = await import('@tauri-apps/plugin-fs');
-    const shouldSyncFromDisk = (event: WatchEvent): boolean => {
-      const t = event.type;
-      if (t === 'any') {
-        return false;
-      }
-      if (typeof t === 'object' && t !== null) {
-        if ('modify' in t) {
-          return true;
-        }
-        if ('create' in t) {
-          return true;
-        }
-        if ('remove' in t) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    const unwatch = await watch(
-      filePath,
-      (event) => {
-        if (!shouldSyncFromDisk(event)) {
-          return;
-        }
-        void Effect.runFork(onExternalChange());
-      },
-      { delayMs: 250 },
-    );
-    return unwatch;
-  }).pipe(
-    Effect.catchAll((error) =>
-      Effect.sync(() => {
-        log.warn('Failed to watch file', { filePath, error });
-        return null;
-      }),
-    ),
-  );
-};
-
+/** Write UTF-8 text to a file path (Tauri desktop only). Returns true on success. */
 export const writeFileContent = (path: string, content: string): Effect.Effect<boolean> => {
   if (!isTauriAvailable()) {
     return Effect.sync(() => {
@@ -245,139 +198,7 @@ export const writeComposerConfig = (workspacePath: string, config: ComposerConfi
     return yield* writeFileContent(configPath, JSON.stringify(config, null, 2) + '\n');
   });
 
-//
-// xattr helpers
-//
-
-/** Read the DXN stored as an extended attribute on a file. */
-export const getFileXattrDxn = (filePath: string): Effect.Effect<string | undefined> => {
-  if (!isTauriAvailable()) {
-    return Effect.succeed(undefined);
-  }
-
-  return Effect.tryPromise(async () => {
-    const { invoke } = await import('@tauri-apps/api/core');
-    return invoke<string | null>('get_xattr', { path: filePath, name: XATTR_DXN_NAME });
-  }).pipe(
-    Effect.map((value) => value ?? undefined),
-    Effect.catchAll((error) =>
-      Effect.sync(() => {
-        log.warn('Failed to read xattr', { filePath, error });
-        return undefined;
-      }),
-    ),
-  );
-};
-
-/** Write a DXN as an extended attribute on a file. */
-export const setFileXattrDxn = (filePath: string, dxn: string): Effect.Effect<void> => {
-  if (!isTauriAvailable()) {
-    return Effect.void;
-  }
-
-  return Effect.tryPromise(async () => {
-    const { invoke } = await import('@tauri-apps/api/core');
-    await invoke('set_xattr', { path: filePath, name: XATTR_DXN_NAME, value: dxn });
-  }).pipe(
-    Effect.catchAll((error) =>
-      Effect.sync(() => {
-        log.warn('Failed to set xattr', { filePath, error });
-      }),
-    ),
-  );
-};
-
-//
-// filemap.json helpers
-//
-
-export type FileMapEntry = { relativePath: string; objectDxn: string };
-export type FileMap = { files: FileMapEntry[] };
-
-/** Read `.composer/filemap.json` from a workspace directory. */
-export const readFileMap = (workspacePath: string): Effect.Effect<FileMap> => {
-  const mapPath = pathJoin(workspacePath, COMPOSER_CONFIG_DIR, FILEMAP_FILE);
-  return Effect.gen(function* () {
-    const content = yield* readFileContent(mapPath);
-    if (content === undefined) {
-      return { files: [] };
-    }
-
-    const parsed = yield* Effect.sync(() => {
-      try {
-        return JSON.parse(content);
-      } catch {
-        log.warn('Failed to parse filemap', { mapPath });
-        return undefined;
-      }
-    });
-
-    if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.files)) {
-      return { files: [] };
-    }
-
-    return { files: parsed.files } as FileMap;
-  });
-};
-
-/** Write `.composer/filemap.json` to a workspace directory. */
-export const writeFileMap = (workspacePath: string, fileMap: FileMap): Effect.Effect<boolean> =>
-  Effect.gen(function* () {
-    const dirCreated = yield* ensureComposerDir(workspacePath);
-    if (!dirCreated) {
-      return false;
-    }
-
-    const mapPath = pathJoin(workspacePath, COMPOSER_CONFIG_DIR, FILEMAP_FILE);
-    return yield* writeFileContent(mapPath, JSON.stringify(fileMap, null, 2) + '\n');
-  });
-
-/**
- * Watch a directory recursively for structural changes (new/removed files).
- * Uses `watchImmediate` to receive individual create/remove events rather than
- * Tauri's debounced `watch` which aggregates into `any` events.
- * Callers should debounce the callback at the application level.
- */
-export const watchDirectory = (
-  dirPath: string,
-  onStructuralChange: (event: WatchEvent) => Effect.Effect<void>,
-): Effect.Effect<(() => void) | null> => {
-  if (!isTauriAvailable()) {
-    return Effect.succeed(null);
-  }
-
-  return Effect.tryPromise(async () => {
-    const { watchImmediate } = await import('@tauri-apps/plugin-fs');
-    const unwatch = await watchImmediate(
-      dirPath,
-      (event: WatchEvent) => {
-        const eventType = event.type;
-        const shouldTrigger =
-          eventType !== 'any' &&
-          eventType !== 'other' &&
-          typeof eventType === 'object' &&
-          eventType !== null &&
-          ('create' in eventType ||
-            'remove' in eventType ||
-            ('modify' in eventType && eventType.modify.kind === 'rename'));
-        if (!shouldTrigger) {
-          return;
-        }
-        void Effect.runFork(onStructuralChange(event));
-      },
-      { recursive: true },
-    );
-    return unwatch;
-  }).pipe(
-    Effect.catchAll((error) =>
-      Effect.sync(() => {
-        log.warn('Failed to watch directory', { dirPath, error });
-        return null;
-      }),
-    ),
-  );
-};
-
+// List directory entries via Tauri, returning an empty array on failure.
 const readDir = (path: string): Effect.Effect<DirEntry[]> => {
   if (!isTauriAvailable()) {
     return Effect.succeed([]);
@@ -396,6 +217,7 @@ const readDir = (path: string): Effect.Effect<DirEntry[]> => {
   );
 };
 
+// Convert a single DirEntry into a FilesystemEntry, reading children/content as needed.
 const processEntry = (entry: DirEntry, parentPath: string): Effect.Effect<FilesystemEntry | null> =>
   Effect.gen(function* () {
     if (entry.isSymlink) {
@@ -445,6 +267,7 @@ const processEntry = (entry: DirEntry, parentPath: string): Effect.Effect<Filesy
     } satisfies FilesystemFile;
   });
 
+// Recursively read a directory tree, sorting directories before files.
 const readDirectoryContents = (path: string): Effect.Effect<FilesystemEntry[]> =>
   Effect.gen(function* () {
     const entries = yield* readDir(path);
@@ -462,6 +285,7 @@ const readDirectoryContents = (path: string): Effect.Effect<FilesystemEntry[]> =
       });
   });
 
+/** Load a workspace tree from disk, reading directory contents and composer config. Returns null on failure. */
 export const loadWorkspace = (path: string): Effect.Effect<FilesystemWorkspace | null> => {
   if (!isTauriAvailable()) {
     return Effect.sync(() => {
@@ -494,11 +318,12 @@ export const loadWorkspace = (path: string): Effect.Effect<FilesystemWorkspace |
   );
 };
 
+/** Reload a workspace's directory tree from disk. */
 export const refreshWorkspace = (workspace: FilesystemWorkspace): Effect.Effect<FilesystemWorkspace | null> => {
   return loadWorkspace(workspace.path);
 };
 
-export const findFileInWorkspace = (workspace: FilesystemWorkspace, fileId: string): FilesystemFile | undefined => {
+const findFileInWorkspace = (workspace: FilesystemWorkspace, fileId: string): FilesystemFile | undefined => {
   const searchEntries = (entries: FilesystemEntry[]): FilesystemFile | undefined => {
     for (const entry of entries) {
       if ('children' in entry) {
@@ -516,6 +341,7 @@ export const findFileInWorkspace = (workspace: FilesystemWorkspace, fileId: stri
   return searchEntries(workspace.children);
 };
 
+/** Find a file by id across all workspaces, returning the containing workspace and file. */
 export const findFileById = (
   workspaces: FilesystemWorkspace[],
   fileId: string,
@@ -529,6 +355,45 @@ export const findFileById = (
   return undefined;
 };
 
+/** Find a directory by id across all workspaces. */
+export const findDirectoryById = (
+  workspaces: FilesystemWorkspace[],
+  directoryId: string,
+): { directory: FilesystemDirectory; workspaceId: string } | undefined => {
+  for (const workspace of workspaces) {
+    const directory = findDirectoryInEntries(workspace.children, directoryId);
+    if (directory) {
+      return { directory, workspaceId: workspace.id };
+    }
+  }
+
+  return undefined;
+};
+
+/** Recursively search entries for a directory by id. */
+export const findDirectoryInEntries = (
+  entries: FilesystemEntry[],
+  directoryId: string,
+): FilesystemDirectory | undefined => {
+  for (const entry of entries) {
+    if (!isFilesystemDirectory(entry)) {
+      continue;
+    }
+
+    if (entry.id === directoryId) {
+      return entry;
+    }
+
+    const nestedDirectory = findDirectoryInEntries(entry.children, directoryId);
+    if (nestedDirectory) {
+      return nestedDirectory;
+    }
+  }
+
+  return undefined;
+};
+
+/** Immutably update a file's properties within a workspace tree. */
 export const updateFileInWorkspace = (
   workspace: FilesystemWorkspace,
   fileId: string,

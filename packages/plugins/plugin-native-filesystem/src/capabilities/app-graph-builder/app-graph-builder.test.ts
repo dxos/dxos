@@ -9,15 +9,10 @@ import { describe, test } from 'vitest';
 import { qualifyId } from '@dxos/app-graph';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Text } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import {
-  type FilesystemEntry,
-  type FilesystemFile,
-  type NativeFilesystemState,
-  type NativeMarkdownDocumentsService,
-} from '../../types';
+import { type FilesystemEntry, type FilesystemFile, type NativeFilesystemState } from '../../types';
+import { MockFilesystemManager } from '../../testing/mock-filesystem-manager';
 import { createFilesystemEntryExtensions } from './app-graph-builder';
 
 const FILESYSTEM_TYPE = `${meta.id}.workspace`;
@@ -156,9 +151,9 @@ const setupNativeFilesystemGraphBuilder = ({
   const initialState = registry.get(stateAtom);
   const rootExtensions = Effect.runSync(createWorkspaceRootExtensions(stateAtom));
   const stateCapabilitiesAtom = Atom.make([stateAtom]);
-  const nativeMarkdownDocsCapabilitiesAtom = Atom.make([createMarkdownDocumentsStub(initialState)]);
+  const filesystemManagerCapabilitiesAtom = Atom.make([new MockFilesystemManager(initialState)]);
   const entryExtensions = Effect.runSync(
-    createFilesystemEntryExtensions(stateCapabilitiesAtom, nativeMarkdownDocsCapabilitiesAtom),
+    createFilesystemEntryExtensions(stateCapabilitiesAtom, filesystemManagerCapabilitiesAtom),
   );
 
   return setupGraphBuilder({
@@ -180,44 +175,6 @@ const createWorkspaceRootExtensions = (stateAtom: Atom.Writable<NativeFilesystem
         })),
       ),
   });
-
-const createMarkdownDocumentsStub = (state: NativeFilesystemState): NativeMarkdownDocumentsService => {
-  const documents = new Map<string, Text.Text>();
-  const markdownBindingGeneration = Atom.family((fileId: string) => Atom.make(0).pipe(Atom.keepAlive));
-
-  const seedMarkdownFiles = (entries: FilesystemEntry[]) => {
-    for (const entry of entries) {
-      if ('children' in entry) {
-        seedMarkdownFiles(entry.children);
-      } else if (entry.type === 'markdown') {
-        documents.set(entry.id, Text.make(entry.text ?? ''));
-      }
-    }
-  };
-  for (const workspace of state.workspaces) {
-    seedMarkdownFiles(workspace.children);
-  }
-
-  return {
-    markdownBindingAtom: (fileId: string) => markdownBindingGeneration(fileId),
-    ensureDocumentForFile: (file, _workspaceId) => {
-      const existing = documents.get(file.id);
-      if (existing) {
-        return existing;
-      }
-
-      const document = Text.make(file.text ?? '');
-      documents.set(file.id, document);
-      return document;
-    },
-    getByFileId: (fileId) => documents.get(fileId),
-    getWriteTargetByDxn: () => undefined,
-    getDxnForFileId: () => undefined,
-    restoreWorkspaceDocuments: () => Effect.void,
-    syncMarkdownFilesFromDisk: () => Effect.void,
-    evictForWorkspace: () => {},
-  };
-};
 
 const createMarkdownFile = ({
   id,
