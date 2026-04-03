@@ -125,9 +125,7 @@ function extractDefinedKeysForNamespace(translationsPath: string, nsSource: stri
   let inBlock = false;
   let braceDepth = 0;
 
-  const blockPattern = nsSource === 'meta.id'
-    ? /\[meta\.id\]\s*:\s*\{/
-    : /\[translationKey\]\s*:\s*\{/;
+  const blockPattern = nsSource === 'meta.id' ? /\[meta\.id\]\s*:\s*\{/ : /\[translationKey\]\s*:\s*\{/;
 
   for (const line of lines) {
     const trimmed = line.trim();
@@ -171,9 +169,7 @@ function insertKeys(translationsPath: string, nsSource: string, missingKeys: str
   const content = readFileSync(translationsPath, 'utf-8');
   const lines = content.split('\n');
 
-  const blockPattern = nsSource === 'meta.id'
-    ? /\[meta\.id\]\s*:\s*\{/
-    : /\[translationKey\]\s*:\s*\{/;
+  const blockPattern = nsSource === 'meta.id' ? /\[meta\.id\]\s*:\s*\{/ : /\[translationKey\]\s*:\s*\{/;
 
   // Find the namespace block and its closing brace.
   let blockStart = -1;
@@ -267,7 +263,12 @@ function main() {
     for (const dir of uiDirs) {
       const ns = resolveTranslationKey(dir);
       if (ns) {
-        packages.push({ dir, namespace: ns, nsSource: 'translationKey', translationsPath: join(dir, 'src/translations.ts') });
+        packages.push({
+          dir,
+          namespace: ns,
+          nsSource: 'translationKey',
+          translationsPath: join(dir, 'src/translations.ts'),
+        });
       }
     }
   }
@@ -281,7 +282,12 @@ function main() {
     for (const dir of sdkDirs) {
       const ns = resolveTranslationKey(dir);
       if (ns) {
-        packages.push({ dir, namespace: ns, nsSource: 'translationKey', translationsPath: join(dir, 'src/translations.ts') });
+        packages.push({
+          dir,
+          namespace: ns,
+          nsSource: 'translationKey',
+          translationsPath: join(dir, 'src/translations.ts'),
+        });
       }
     }
   }
@@ -292,7 +298,10 @@ function main() {
   for (const pkg of packages) {
     // Collect all used keys for this package's namespace.
     const usedKeys = new Set<string>();
-    for (const file of walkFiles(join(pkg.dir, 'src'), (p) => /\.(tsx?|jsx?)$/.test(p) && !p.includes('.test.') && !p.includes('.stories.'))) {
+    for (const file of walkFiles(
+      join(pkg.dir, 'src'),
+      (p) => /\.(tsx?|jsx?)$/.test(p) && !p.includes('.test.') && !p.includes('.stories.'),
+    )) {
       for (const uk of extractUsedKeys(file, pkg.namespace)) {
         if (uk.namespace === pkg.namespace) {
           usedKeys.add(uk.key);

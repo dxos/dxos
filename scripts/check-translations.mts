@@ -265,7 +265,17 @@ const toDotNotation = (key: string): string => {
   }
 
   // Try to detect natural grouping by known prefix words.
-  const prefixWords = ['settings', 'column', 'range', 'trigger', 'message', 'draft', 'script', 'deployment', 'notebook'];
+  const prefixWords = [
+    'settings',
+    'column',
+    'range',
+    'trigger',
+    'message',
+    'draft',
+    'script',
+    'deployment',
+    'notebook',
+  ];
   const firstWord = pathParts[0];
   if (prefixWords.includes(firstWord) && pathParts.length > 1) {
     return `${firstWord}.${pathParts.slice(1).join('-')}.${suffix}`;
@@ -316,7 +326,9 @@ function checkNormalization(definedKeys: DefinedKey[]): NormalizationIssue[] {
 }
 
 /** Check for incomplete plural sets. */
-function checkPlurals(definedKeys: DefinedKey[]): { namespace: string; baseKey: string; file: string; missing: string[] }[] {
+function checkPlurals(
+  definedKeys: DefinedKey[],
+): { namespace: string; baseKey: string; file: string; missing: string[] }[] {
   const pluralSuffixes = ['_zero', '_one', '_other'];
   const issues: { namespace: string; baseKey: string; file: string; missing: string[] }[] = [];
 
@@ -348,9 +360,7 @@ function checkPlurals(definedKeys: DefinedKey[]): { namespace: string; baseKey: 
         }
       }
       if (missing.length > 0) {
-        const anyExisting = pluralSuffixes
-          .map((s) => keyMap.get(baseKey + s))
-          .find((dk) => dk !== undefined);
+        const anyExisting = pluralSuffixes.map((s) => keyMap.get(baseKey + s)).find((dk) => dk !== undefined);
         issues.push({
           namespace: ns,
           baseKey,
@@ -386,7 +396,10 @@ function main() {
       allDefinedKeys.push(...keys);
     }
 
-    for (const file of walkFiles(join(pluginDir, 'src'), (p) => /\.(tsx?|jsx?)$/.test(p) && !p.includes('.test.') && !p.includes('.stories.'))) {
+    for (const file of walkFiles(
+      join(pluginDir, 'src'),
+      (p) => /\.(tsx?|jsx?)$/.test(p) && !p.includes('.test.') && !p.includes('.stories.'),
+    )) {
       const keys = extractUsedKeys(file, metaId);
       allUsedKeys.push(...keys);
     }
@@ -410,7 +423,10 @@ function main() {
       allDefinedKeys.push(...keys);
     }
 
-    for (const file of walkFiles(join(uiDir, 'src'), (p) => /\.(tsx?|jsx?)$/.test(p) && !p.includes('.test.') && !p.includes('.stories.'))) {
+    for (const file of walkFiles(
+      join(uiDir, 'src'),
+      (p) => /\.(tsx?|jsx?)$/.test(p) && !p.includes('.test.') && !p.includes('.stories.'),
+    )) {
       const keys = extractUsedKeys(file, translationKey);
       allUsedKeys.push(...keys);
     }
@@ -434,13 +450,19 @@ function main() {
       allDefinedKeys.push(...keys);
     }
 
-    for (const file of walkFiles(join(sdkDir, 'src'), (p) => /\.(tsx?|jsx?)$/.test(p) && !p.includes('.test.') && !p.includes('.stories.'))) {
+    for (const file of walkFiles(
+      join(sdkDir, 'src'),
+      (p) => /\.(tsx?|jsx?)$/.test(p) && !p.includes('.test.') && !p.includes('.stories.'),
+    )) {
       const keys = extractUsedKeys(file, translationKey);
       allUsedKeys.push(...keys);
     }
   }
 
-  const totalPackages = pluginDirs.length + uiDirs.filter((d) => resolveTranslationKey(d)).length + sdkDirs.filter((d) => resolveTranslationKey(d)).length;
+  const totalPackages =
+    pluginDirs.length +
+    uiDirs.filter((d) => resolveTranslationKey(d)).length +
+    sdkDirs.filter((d) => resolveTranslationKey(d)).length;
   console.log(`Found ${allDefinedKeys.length} defined translation keys across ${totalPackages} packages.`);
   console.log(`Found ${allUsedKeys.length} translation key usages in source files.\n`);
 
@@ -481,9 +503,7 @@ function main() {
   }
 
   // --- Unused keys: defined but not used (only for resolvable namespaces) ---
-  const unusedKeys = [...definedSet]
-    .filter((id) => !usedSet.has(id))
-    .filter((id) => !id.startsWith('<dynamic:')); // Skip typename-based namespaces (used dynamically).
+  const unusedKeys = [...definedSet].filter((id) => !usedSet.has(id)).filter((id) => !id.startsWith('<dynamic:')); // Skip typename-based namespaces (used dynamically).
   console.log(`\n${'='.repeat(60)}`);
   console.log(`UNUSED KEYS (defined but not used in code): ${unusedKeys.length}`);
   console.log('='.repeat(60));
@@ -500,7 +520,9 @@ function main() {
   console.log(`INCOMPLETE PLURALS: ${pluralIssues.length}`);
   console.log('='.repeat(60));
   for (const issue of pluralIssues) {
-    console.log(`  [${issue.namespace}] "${issue.baseKey}" missing: ${issue.missing.join(', ')}  (${relative(ROOT, issue.file)})`);
+    console.log(
+      `  [${issue.namespace}] "${issue.baseKey}" missing: ${issue.missing.join(', ')}  (${relative(ROOT, issue.file)})`,
+    );
   }
 
   // --- Normalization issues ---
@@ -512,7 +534,9 @@ function main() {
   console.log(`MISSING SUFFIX (${missingSuffixIssues.length} keys lack a type suffix)`);
   console.log(`Valid suffixes: ${VALID_SUFFIXES.join(', ')}`);
   console.log('='.repeat(60));
-  for (const issue of missingSuffixIssues.sort((a, b) => `${a.namespace}::${a.key}`.localeCompare(`${b.namespace}::${b.key}`))) {
+  for (const issue of missingSuffixIssues.sort((a, b) =>
+    `${a.namespace}::${a.key}`.localeCompare(`${b.namespace}::${b.key}`),
+  )) {
     console.log(`  [${issue.namespace}] "${issue.key}"  (${relative(ROOT, issue.file)})`);
   }
 

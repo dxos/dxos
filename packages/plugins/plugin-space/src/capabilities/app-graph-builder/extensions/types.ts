@@ -281,7 +281,7 @@ const createSchemaNode = ({
       };
     }),
     Match.orElse(() => ({
-      label: getDynamicLabel('typename label', typename, { count: 2, default: typename }),
+      label: getDynamicLabel('typename.label', typename, { count: 2, default: typename }),
       nodeId: typename,
     })),
   );

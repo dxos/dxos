@@ -10,7 +10,20 @@ import { join, dirname } from 'node:path';
 /**
  * Valid type suffixes for translation keys.
  */
-const VALID_SUFFIXES = ['label', 'message', 'placeholder', 'title', 'description', 'heading', 'alt', 'button', 'name', 'value', 'icon', 'menu'];
+const VALID_SUFFIXES = [
+  'label',
+  'message',
+  'placeholder',
+  'title',
+  'description',
+  'heading',
+  'alt',
+  'button',
+  'name',
+  'value',
+  'icon',
+  'menu',
+];
 
 /**
  * Plural suffixes appended by i18next.
@@ -171,9 +184,7 @@ const readTranslationKeys = (packageDir, nsSource) => {
   let braceDepth = 0;
 
   // Match the namespace block header based on the source pattern.
-  const blockPattern = nsSource === 'meta.id'
-    ? /\[meta\.id\]\s*:\s*\{/
-    : /\[translationKey\]\s*:\s*\{/;
+  const blockPattern = nsSource === 'meta.id' ? /\[meta\.id\]\s*:\s*\{/ : /\[translationKey\]\s*:\s*\{/;
 
   for (const line of lines) {
     const trimmed = line.trim();
@@ -238,15 +249,13 @@ export default {
     type: 'suggestion',
     fixable: 'code',
     docs: {
-      description: 'Enforce translation key format: dot.kebab-case with required type suffix. Validates keys exist in translations.',
+      description:
+        'Enforce translation key format: dot.kebab-case with required type suffix. Validates keys exist in translations.',
     },
     messages: {
-      missingSuffix:
-        'Invalid translation key: "{{key}}"',
-      useDotsNotSpaces:
-        'Translation key "{{key}}" should use dot.kebab-case format. Suggested: "{{suggested}}".',
-      undefinedKey:
-        'Translation key "{{key}}" is not defined in translations for namespace "{{namespace}}".',
+      missingSuffix: 'Invalid translation key: "{{key}}"',
+      useDotsNotSpaces: 'Translation key "{{key}}" should use dot.kebab-case format. Suggested: "{{suggested}}".',
+      undefinedKey: 'Translation key "{{key}}" is not defined in translations for namespace "{{namespace}}".',
     },
     schema: [
       {
@@ -265,12 +274,14 @@ export default {
   create(context) {
     const options = context.options[0] || {};
     const suffixes = options.suffixes || VALID_SUFFIXES;
-    const filename = context.filename || (context.getFilename && context.getFilename()) || context.physicalFilename || '';
+    const filename =
+      context.filename || (context.getFilename && context.getFilename()) || context.physicalFilename || '';
 
     // Check source text once to determine if this is a translation-aware file.
     const sourceText = (context.sourceCode || context.getSourceCode()).text;
     const usesTranslation = sourceText.includes('useTranslation');
-    const usesStaticNamespace = sourceText.includes('useTranslation(meta.id)') || sourceText.includes('useTranslation(translationKey)');
+    const usesStaticNamespace =
+      sourceText.includes('useTranslation(meta.id)') || sourceText.includes('useTranslation(translationKey)');
 
     // Resolve package info for this file (works for both plugins and UI packages).
     const packageInfo = getPackageInfo(filename);
@@ -358,7 +369,10 @@ export default {
         let hasNsOverride = false;
         if (node.arguments.length >= 2 && node.arguments[1].type === 'ObjectExpression') {
           hasNsOverride = node.arguments[1].properties.some(
-            (prop) => prop.key && ((prop.key.type === 'Identifier' && prop.key.name === 'ns') || (prop.key.type === 'Literal' && prop.key.value === 'ns')),
+            (prop) =>
+              prop.key &&
+              ((prop.key.type === 'Identifier' && prop.key.name === 'ns') ||
+                (prop.key.type === 'Literal' && prop.key.value === 'ns')),
           );
         }
 
@@ -377,7 +391,10 @@ export default {
           node.elements[1] &&
           node.elements[1].type === 'ObjectExpression' &&
           node.elements[1].properties.some(
-            (prop) => prop.key && ((prop.key.type === 'Identifier' && prop.key.name === 'ns') || (prop.key.type === 'Literal' && prop.key.value === 'ns')),
+            (prop) =>
+              prop.key &&
+              ((prop.key.type === 'Identifier' && prop.key.name === 'ns') ||
+                (prop.key.type === 'Literal' && prop.key.value === 'ns')),
           )
         ) {
           const key = node.elements[0].value;
@@ -387,14 +404,20 @@ export default {
 
           // Check existence (determine if ns points to the package's own namespace).
           const nsProp = node.elements[1].properties.find(
-            (prop) => prop.key && ((prop.key.type === 'Identifier' && prop.key.name === 'ns') || (prop.key.type === 'Literal' && prop.key.value === 'ns')),
+            (prop) =>
+              prop.key &&
+              ((prop.key.type === 'Identifier' && prop.key.name === 'ns') ||
+                (prop.key.type === 'Literal' && prop.key.value === 'ns')),
           );
-          const isOwnNamespace = nsProp && nsProp.value && (
-            (nsProp.value.type === 'MemberExpression' &&
-              nsProp.value.object.type === 'Identifier' && nsProp.value.object.name === 'meta' &&
-              nsProp.value.property.type === 'Identifier' && nsProp.value.property.name === 'id') ||
-            (nsProp.value.type === 'Identifier' && nsProp.value.name === 'translationKey')
-          );
+          const isOwnNamespace =
+            nsProp &&
+            nsProp.value &&
+            ((nsProp.value.type === 'MemberExpression' &&
+              nsProp.value.object.type === 'Identifier' &&
+              nsProp.value.object.name === 'meta' &&
+              nsProp.value.property.type === 'Identifier' &&
+              nsProp.value.property.name === 'id') ||
+              (nsProp.value.type === 'Identifier' && nsProp.value.name === 'translationKey'));
           checkKeyExists(node.elements[0], key, !isOwnNamespace);
         }
       },
