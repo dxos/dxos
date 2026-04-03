@@ -44,6 +44,7 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
             <Card.Row>
               <Card.Text classNames='truncate'>{post.title ?? t('post title placeholder')}</Card.Text>
             </Card.Row>
+            {post.link && <Card.Link label={post.link} href={post.link} />}
             {post.author && (
               <Card.Row icon='ph--user--regular'>
                 <Card.Text variant='description'>{post.author}</Card.Text>
