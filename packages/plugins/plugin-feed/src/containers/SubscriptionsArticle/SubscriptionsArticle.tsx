@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
+import { type SurfaceThingProps, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
@@ -14,30 +14,30 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
+import { invariant } from '@dxos/invariant';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '../../components';
 import { meta } from '../../meta';
 import { FeedOperation } from '../../operations';
 import { Subscription } from '../../types';
 
-export type SubscriptionsArticleProps = SurfaceComponentProps<Subscription.Feed>;
+export type SubscriptionsArticleProps = SurfaceThingProps;
 
-export const SubscriptionsArticle = ({ role, subject, attendableId }: SubscriptionsArticleProps) => {
+export const SubscriptionsArticle = ({ role, attendableId, space }: SubscriptionsArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
-  const id = attendableId ?? Obj.getDXN(subject).toString();
-  const db = Obj.getDatabase(subject);
   const layout = useLayout();
 
-  const feeds = useQuery(db, Filter.type(Subscription.Feed));
-  const currentId = useSelected(id, 'single');
+  const feeds = useQuery(space?.db, Filter.type(Subscription.Feed));
+  const currentId = useSelected(attendableId, 'single');
 
   const handleAction = useCallback(
     (action: SubscriptionStackAction) => {
       switch (action.type) {
         case 'current': {
+          invariant(attendableId);
           void invokePromise(AttentionOperation.Select, {
-            contextId: id,
+            contextId: attendableId,
             selection: { mode: 'single', id: action.feedId },
           });
 
@@ -72,17 +72,17 @@ export const SubscriptionsArticle = ({ role, subject, attendableId }: Subscripti
         }
       }
     },
-    [id, layout.mode, feeds, invokePromise],
+    [attendableId, layout.mode, feeds, invokePromise],
   );
 
   const handleCreate = useCallback(() => {
-    if (db) {
+    if (space) {
       void invokePromise(SpaceOperation.OpenCreateObject, {
-        target: db,
+        target: space.db,
         typename: Subscription.Feed.typename,
       });
     }
-  }, [db, invokePromise]);
+  }, [space, invokePromise]);
 
   return (
     <Panel.Root role={role}>
@@ -92,7 +92,7 @@ export const SubscriptionsArticle = ({ role, subject, attendableId }: Subscripti
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <SubscriptionStack id={id} feeds={feeds} currentId={currentId} onAction={handleAction} />
+        <SubscriptionStack id={attendableId} feeds={feeds} currentId={currentId} onAction={handleAction} />
       </Panel.Content>
     </Panel.Root>
   );

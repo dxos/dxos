@@ -3,6 +3,7 @@
 //
 
 import { type Obj } from '@dxos/echo';
+import { Space } from '@dxos/client/echo';
 
 // TODO(burdon): Standardize PluginSettings and ObjectProperties.
 
@@ -12,6 +13,8 @@ export type SurfaceRole =
   | 'complementary' // Companion
   | 'section'
   | 'card--content';
+
+// TODO(burdon): attendableId => id ("attentable" is the valence)
 
 /**
  * Base type for surface components.
@@ -30,3 +33,13 @@ export type SurfaceComponentProps<Subject extends Obj.Unknown | undefined = Obj.
   /** The primary object being displayed. */
   subject: Subject;
 } & Props;
+
+export type SurfaceThingProps = {
+  space?: Space;
+
+  /** Surface role (superset of WAI-ARIA role). */
+  role?: string;
+
+  /** Path-based ID inherited from the surface data for attention tracking and graph action lookup. */
+  attendableId?: string;
+};
