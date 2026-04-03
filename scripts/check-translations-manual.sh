@@ -47,5 +47,23 @@ echo ""
   done
 } | column -t
 
+# Find keys with empty values in translations.ts files.
+EMPTY_VALUES=$(grep -rn "'[^']*':\s*''," --include='translations.ts' packages/ | grep -v node_modules | sort)
+EMPTY_COUNT=$(echo "$EMPTY_VALUES" | grep -c . || true)
+
 echo ""
-echo "Total: $((MISSING_COUNT + UNDEFINED_COUNT)) issues"
+echo "Empty Values ($EMPTY_COUNT)"
+echo ""
+{
+  echo "FILE KEY"
+  echo "$EMPTY_VALUES" | while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    file=$(echo "$line" | cut -d: -f1)
+    lineno=$(echo "$line" | cut -d: -f2)
+    key=$(echo "$line" | sed "s/.*'\\([^']*\\)':\\s*''.*/\\1/")
+    echo "$file:$lineno $key"
+  done
+} | column -t
+
+echo ""
+echo "Total: $((MISSING_COUNT + UNDEFINED_COUNT + EMPTY_COUNT)) issues"
