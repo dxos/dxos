@@ -10,13 +10,13 @@ ESLint rule and migration script ready. Tested on `plugin-chess`.
 
 ## Convention
 
-**Format:** `segment.camelCase.suffix`
+**Format:** `segment.kebab-case.suffix`
 
 ```
 settings.debug.label
-addComment.label
-objectName.placeholder
-addSection.beforeDialog.title
+add-comment.label
+object-name.placeholder
+add-section.before-dialog.title
 typename.label_other
 ```
 
@@ -24,7 +24,7 @@ typename.label_other
 
 - Every key ends with a **type suffix**: `label | message | placeholder | title | description | heading | alt | button`.
 - Plural suffixes append after the type suffix: `typename.label_zero`, `lobby.participants_other`.
-- Dots separate hierarchical segments; segments use camelCase.
+- Dots separate hierarchical segments; segments use kebab-case.
 - `plugin name` keys become `plugin.label`.
 
 ## Tools
@@ -36,10 +36,12 @@ typename.label_other
 Registered in `.oxlintrc.json` as `@dxos/eslint-plugin-rules/translation-key-format` (currently `warn`).
 
 **Checks:**
-- `useDotsNotSpaces` — flags space-separated keys, suggests dot.camelCase, auto-fixable.
+
+- `useDotsNotSpaces` — flags space-separated keys, suggests dot.kebab-case, auto-fixable.
 - `missingSuffix` — flags keys missing a valid type suffix (not auto-fixable, needs human decision).
 
 **Catches violations in:**
+
 - `t('key')` calls in source files.
 - Property keys in `translations.ts` files (string literal keys with string literal values).
 
@@ -53,13 +55,13 @@ Registered in `.oxlintrc.json` as `@dxos/eslint-plugin-rules/translation-key-for
 
 Reports:
 
-| Check | Current Count |
-|---|---|
-| Missing keys (used but undefined) | 68 |
-| Unused keys (defined but unreferenced) | 444 |
-| Incomplete plurals | 8 |
-| Missing suffix | 135 |
-| Non-hierarchical (space-separated) | 1,326 |
+| Check                                  | Current Count |
+| -------------------------------------- | ------------- |
+| Missing keys (used but undefined)      | 68            |
+| Unused keys (defined but unreferenced) | 444           |
+| Incomplete plurals                     | 8             |
+| Missing suffix                         | 135           |
+| Non-hierarchical (space-separated)     | 1,326         |
 
 Use this for bulk analysis, migration planning, and tracking progress.
 

@@ -50,7 +50,7 @@ const hasValidSuffix = (key) => {
 };
 
 /**
- * Check if a key uses dot.camelCase format (no spaces).
+ * Check if a key uses dot.kebab-case format (no spaces).
  */
 const isDotNotation = (key) => {
   const base = stripPluralSuffix(key);
@@ -58,7 +58,7 @@ const isDotNotation = (key) => {
 };
 
 /**
- * Convert a space-separated key to dot.camelCase format.
+ * Convert a space-separated key to dot.kebab-case format.
  */
 const toDotNotation = (key) => {
   const pluralSuffix = getPluralSuffix(key);
@@ -74,13 +74,13 @@ const toDotNotation = (key) => {
 
   if (isLastWordSuffix) {
     const pathWords = words.slice(0, -1);
-    const camel = pathWords[0] + pathWords.slice(1).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join('');
-    return `${camel}.${lastWord}${pluralSuffix}`;
+    const kebab = pathWords.join('-');
+    return `${kebab}.${lastWord}${pluralSuffix}`;
   }
 
-  // No valid suffix — camelCase everything.
-  const camel = words[0] + words.slice(1).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join('');
-  return `${camel}${pluralSuffix}`;
+  // No valid suffix — kebab-case everything.
+  const kebab = words.join('-');
+  return `${kebab}${pluralSuffix}`;
 };
 
 export default {
@@ -88,13 +88,13 @@ export default {
     type: 'suggestion',
     fixable: 'code',
     docs: {
-      description: 'Enforce translation key format: dot.camelCase with required type suffix.',
+      description: 'Enforce translation key format: dot.kebab-case with required type suffix.',
     },
     messages: {
       missingSuffix:
         'Translation key "{{key}}" must end with a type suffix: {{suffixes}}.',
       useDotsNotSpaces:
-        'Translation key "{{key}}" should use dot.camelCase format. Suggested: "{{suggested}}".',
+        'Translation key "{{key}}" should use dot.kebab-case format. Suggested: "{{suggested}}".',
     },
     schema: [
       {

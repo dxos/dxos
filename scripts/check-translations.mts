@@ -234,15 +234,13 @@ const hasValidSuffix = (key: string): boolean => {
   return VALID_SUFFIXES.some((suffix) => base.endsWith(` ${suffix}`) || base === suffix);
 };
 
-/** Convert a space-separated key to dot.camelCase format. */
+/** Convert a space-separated key to dot.kebab-case format. */
 const toDotNotation = (key: string): string => {
   const parts = key.split(' ');
   if (parts.length <= 1) {
     return key;
   }
 
-  // Group words into segments separated by the suffix word.
-  // e.g., 'settings editor input mode label' => 'settings.editorInputMode.label'
   // Strategy: the last word is the suffix/type, everything else forms the path.
   const suffix = parts[parts.length - 1];
   const pathParts = parts.slice(0, -1);
@@ -251,23 +249,14 @@ const toDotNotation = (key: string): string => {
     return suffix;
   }
 
-  // Simple heuristic: group into 1-2 segments based on common prefixes.
-  // For now, just camelCase the path and append the suffix.
-  const camelCase = (words: string[]): string => {
-    if (words.length === 0) {
-      return '';
-    }
-    return words[0] + words.slice(1).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join('');
-  };
-
   // Try to detect natural grouping by known prefix words.
   const prefixWords = ['settings', 'column', 'range', 'trigger', 'message', 'draft', 'script', 'deployment', 'notebook'];
   const firstWord = pathParts[0];
   if (prefixWords.includes(firstWord) && pathParts.length > 1) {
-    return `${firstWord}.${camelCase(pathParts.slice(1))}.${suffix}`;
+    return `${firstWord}.${pathParts.slice(1).join('-')}.${suffix}`;
   }
 
-  return `${camelCase(pathParts)}.${suffix}`;
+  return `${pathParts.join('-')}.${suffix}`;
 };
 
 interface NormalizationIssue {
