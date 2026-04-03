@@ -277,10 +277,9 @@ export default {
 
     /**
      * Check a string literal node that represents a translation key.
+     * @param {boolean} isDefinition - true for keys in translations.ts definitions.
      */
-    const checkKeyFormat = (node, key) => {
-      const base = stripPluralSuffix(key);
-
+    const checkKeyFormat = (node, key, isDefinition = false) => {
       // Check 1: Must use dot notation (no spaces).
       if (!isDotNotation(key)) {
         const suggested = toDotNotation(key);
@@ -305,8 +304,8 @@ export default {
         return;
       }
 
-      // Check 3: Must end with a valid suffix.
-      if (!hasValidSuffix(key)) {
+      // Check 3: Must end with a valid suffix (definitions only).
+      if (isDefinition && !hasValidSuffix(key)) {
         context.report({
           node,
           messageId: 'missingSuffix',
@@ -413,7 +412,7 @@ export default {
           node.value.type === 'Literal' &&
           typeof node.value.value === 'string'
         ) {
-          checkKeyFormat(node.key, node.key.value);
+          checkKeyFormat(node.key, node.key.value, true);
         }
       },
     };
