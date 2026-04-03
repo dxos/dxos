@@ -24,7 +24,7 @@ export const translations = [
         'object-deleted.label': 'Map deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Maps',
+        'plugin.name': 'Maps',
         'toggle-type.label': 'Toggle view',
       },
     },

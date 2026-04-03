@@ -10,7 +10,7 @@ import { join, dirname } from 'node:path';
 /**
  * Valid type suffixes for translation keys.
  */
-const VALID_SUFFIXES = ['label', 'message', 'placeholder', 'title', 'description', 'heading', 'alt', 'button'];
+const VALID_SUFFIXES = ['label', 'message', 'placeholder', 'title', 'description', 'heading', 'alt', 'button', 'name', 'value'];
 
 /**
  * Plural suffixes appended by i18next.
@@ -43,13 +43,29 @@ const getPluralSuffix = (key) => {
 
 /**
  * Check if a key has a valid type suffix (after stripping plural suffix).
+ * Only dot-separated suffixes are considered valid (e.g., 'foo.label').
  */
 const hasValidSuffix = (key) => {
   const base = stripPluralSuffix(key);
   return VALID_SUFFIXES.some((suffix) => {
-    // Key is exactly the suffix, or ends with a separator + suffix.
-    return base === suffix || base.endsWith(`.${suffix}`) || base.endsWith(` ${suffix}`);
+    return base === suffix || base.endsWith(`.${suffix}`);
   });
+};
+
+/**
+ * Check if a key has a suffix joined by hyphen instead of dot (e.g., 'plugin-name').
+ * Returns the corrected key if fixable, null otherwise.
+ */
+const fixHyphenatedSuffix = (key) => {
+  const pluralSuffix = getPluralSuffix(key);
+  const base = stripPluralSuffix(key);
+  for (const suffix of VALID_SUFFIXES) {
+    if (base.endsWith(`-${suffix}`) && base.length > suffix.length + 1) {
+      const prefix = base.slice(0, -(suffix.length + 1));
+      return `${prefix}.${suffix}${pluralSuffix}`;
+    }
+  }
+  return null;
 };
 
 /**
@@ -277,7 +293,19 @@ export default {
         return;
       }
 
-      // Check 2: Must end with a valid suffix.
+      // Check 2: Suffix joined by hyphen instead of dot (e.g., 'plugin-name' → 'plugin.name').
+      const fixedKey = fixHyphenatedSuffix(key);
+      if (fixedKey) {
+        context.report({
+          node,
+          messageId: 'useDotsNotSpaces',
+          data: { key, suggested: fixedKey },
+          fix: (fixer) => fixer.replaceText(node, `'${fixedKey}'`),
+        });
+        return;
+      }
+
+      // Check 3: Must end with a valid suffix.
       if (!hasValidSuffix(key)) {
         context.report({
           node,

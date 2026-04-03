@@ -22,7 +22,7 @@ export const translations = [
         'object-deleted.label': 'File deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Files',
+        'plugin.name': 'Files',
         'file-input.placeholder': 'Drop a file here, or click to select a file',
       },
     },

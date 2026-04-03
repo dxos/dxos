@@ -21,7 +21,7 @@ export const translations = [
         'object-deleted.label': 'Pipeline deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Pipelines',
+        'plugin.name': 'Pipelines',
         'add-column.label': 'Add column',
         'add-card.label': 'Add object',
         'untitled-view.title': 'New view',

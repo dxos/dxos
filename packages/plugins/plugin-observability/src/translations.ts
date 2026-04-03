@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin-name': 'Telemetry',
+        'plugin.name': 'Telemetry',
         'settings.title': 'Telemetry settings',
         'observability-toast.label': 'Privacy Notice',
         'observability-toast.description':

@@ -34,7 +34,7 @@ export const translations = [
         'object-deleted.label': 'Notebook deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Scripts',
+        'plugin.name': 'Scripts',
         'settings.title': 'Scripts plugin settings',
         'description.label': 'Description',
         'description.placeholder': 'Enter description',

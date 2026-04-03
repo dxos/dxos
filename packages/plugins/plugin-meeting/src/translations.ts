@@ -23,7 +23,7 @@ export const translations = [
         'object-deleted.label': 'Meeting deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Meeting',
+        'plugin.name': 'Meeting',
         'settings.title': 'Meeting plugin settings',
         'meetings.label': 'All Meetings',
         'meeting.label': 'Meeting',

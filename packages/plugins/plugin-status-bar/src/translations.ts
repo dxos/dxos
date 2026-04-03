@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin-name': 'Status Bar',
+        'plugin.name': 'Status Bar',
         'warning.title': 'WARNING',
         'technology-preview.message': 'Composer is currently in beta.',
         'learn-more.label': 'Learn more',

@@ -22,7 +22,7 @@ export const translations = [
         'object-deleted.label': 'Board deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Board',
+        'plugin.name': 'Board',
       },
     },
   },

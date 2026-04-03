@@ -23,7 +23,7 @@ export const translations = [
         'object-deleted.label': 'Document deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Editor',
+        'plugin.name': 'Editor',
         'settings.title': 'Editor settings',
         'choose-markdown-from-space-dialog.title': 'Choose one or more documents to add',
         // TODO(burdon): Style-guide for user-facing text (e.g., hints, questions, capitalization, etc.)

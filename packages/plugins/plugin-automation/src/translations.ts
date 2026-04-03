@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin-name': 'Automation',
+        'plugin.name': 'Automation',
         'automation-panel.label': 'Automations',
         'script-automation.label': 'Automation',
         'automation-verbose.label': 'Manage automations',

@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin-name': 'Registry',
+        'plugin.name': 'Registry',
         'details.label': 'Details',
         'home-page.label': 'Website',
         'source.label': 'Source',

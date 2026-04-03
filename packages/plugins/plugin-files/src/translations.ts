@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin-name': 'Local Files',
+        'plugin.name': 'Local Files',
         'settings.title': 'Local files plugin settings',
         'missing-file-permissions': 'Permission required to view the currently selected file',
         'open-file.label': 'Open file',

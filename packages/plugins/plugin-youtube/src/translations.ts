@@ -33,7 +33,7 @@ export const translations = [
         'object-deleted.label': 'Video deleted',
       },
       [meta.id]: {
-        'plugin-name': 'YouTube',
+        'plugin.name': 'YouTube',
         'channel.label': 'YouTube Channel',
         'video.label': 'Video',
         'sync-channel.label': 'Sync channel',

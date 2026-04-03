@@ -12,7 +12,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin-name': 'Simple layout',
+        'plugin.name': 'Simple layout',
         'settings.title': 'Simple layout settings',
         'workspaces.heading': 'Workspaces',
         'settings.heading': 'Settings',

@@ -22,7 +22,7 @@ export const translations = [
         'object-deleted.label': 'Excalidraw deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Sketch',
+        'plugin.name': 'Sketch',
         'settings.title': 'Sketch settings',
         'settings-hover-tools.label': 'Auto hide controls',
         'settings-grid-type.label': 'Dotted grid',

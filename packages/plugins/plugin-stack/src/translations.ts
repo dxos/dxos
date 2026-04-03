@@ -11,7 +11,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin-name': 'Stacks',
+        'plugin.name': 'Stacks',
         'settings.title': 'Stack plugin settings',
         'settings-separation.label': 'Separate sections',
         'add-section-beforeAll-dialog.title': 'Add a section to the start',

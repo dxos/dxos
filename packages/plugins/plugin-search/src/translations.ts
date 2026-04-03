@@ -12,7 +12,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin-name': 'Search',
+        'plugin.name': 'Search',
         'search-action.label': 'Search spaces',
         'search.placeholder': 'Search…',
         'search-dialog.title': 'Search',

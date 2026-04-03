@@ -21,7 +21,7 @@ export const translations = [
         'object-deleted.label': 'Dream deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Zen',
+        'plugin.name': 'Zen',
         'unmute-button.label': 'Unmute',
         'mute-button.label': 'Mute',
       },

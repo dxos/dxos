@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'plugin-name': 'Threads',
+        'plugin.name': 'Threads',
         'thread-title.placeholder': 'New thread',
         'thread-title.label': 'Title',
         'delete-thread.label': 'Delete',

@@ -41,7 +41,7 @@ export const AppBar = composable<HTMLDivElement, AppBarProps>(
     const { keyboardOpen } = useMobileLayout(APP_BAR_NAME);
 
     // Fall back to app name if no title provided.
-    const displayTitle = title ?? t('current-app-name', { ns: osTranslations });
+    const displayTitle = title ?? t('current-app.name', { ns: osTranslations });
 
     // Wrap the menu trigger with Popover.Anchor when the popoverAnchorId is set.
     const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;

@@ -223,6 +223,8 @@ const VALID_SUFFIXES = [
   'heading',
   'alt',
   'button',
+  'name',
+  'value',
 ] as const;
 
 /** Plural suffixes appended by i18next. */

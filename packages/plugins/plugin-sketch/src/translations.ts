@@ -22,7 +22,7 @@ export const translations = [
         'object-deleted.label': 'Sketch deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Sketch',
+        'plugin.name': 'Sketch',
         'settings.title': 'Sketch plugin settings',
         'settings-hover-tools.label': 'Auto hide controls',
         'settings-grid': 'Show grid',

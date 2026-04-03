@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin-name': 'Filesystem',
+        'plugin.name': 'Filesystem',
         'open-directory.label': 'Open folder',
         'open-directory.description': 'Open a folder from your filesystem as a workspace',
         'close-directory.label': 'Close folder',

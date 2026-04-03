@@ -29,7 +29,7 @@ export const ConfirmReset = ({ active, mode, onCancel, onConfirm }: ConfirmReset
   const testIdAffix =
     mode === 'join new identity' ? 'join-new-identity' : mode === 'recover' ? 'recover' : 'reset-storage';
 
-  const confirmationValue = t('confirmation-value');
+  const confirmationValue = t('confirmation.value');
 
   const handleConfirm = useCallback(async () => {
     setPending(true);

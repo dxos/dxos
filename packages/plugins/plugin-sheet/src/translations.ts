@@ -22,7 +22,7 @@ export const translations = [
         'object-deleted.label': 'Sheet deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Sheets',
+        'plugin.name': 'Sheets',
         'cell.placeholder': 'Cell value...',
         'range-key-alignment.label': 'Align',
         'range-key-style.label': 'Style',

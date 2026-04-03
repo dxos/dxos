@@ -24,7 +24,7 @@ export const translations = [
       },
       [meta.id]: {
         'action-menu.label': 'Actions',
-        'plugin-name': 'Kanban',
+        'plugin.name': 'Kanban',
         'kanban-title.label': 'Title',
         'column-title.label': 'Column title',
         'column-title.placeholder': 'New column',

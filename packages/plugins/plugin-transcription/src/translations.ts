@@ -10,7 +10,7 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin-name': 'Transcription',
+        'plugin.name': 'Transcription',
         'transcript-companion.label': 'Transcript',
 
         'delete.button': 'Delete',

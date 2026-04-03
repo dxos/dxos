@@ -22,7 +22,7 @@ export const translations = [
         'object-deleted.label': 'Circuit deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Conductor',
+        'plugin.name': 'Conductor',
         'content.placeholder': 'Enter text...',
       },
     },

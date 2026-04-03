@@ -23,7 +23,7 @@ export const translations = [
         'object-deleted.label': 'Masonry deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Masonry',
+        'plugin.name': 'Masonry',
       },
     },
   },

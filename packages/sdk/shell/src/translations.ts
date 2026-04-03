@@ -115,7 +115,7 @@ export const translations = [
         'join-new-identity.label': 'Join an existing identity',
         'join-new-identity-input.label': 'Type {{confirmationValue}} to continue. This action cannot be undone.',
         'failed-to-reset-identity.message': 'Failed to reset identity.',
-        'confirmation-value': 'RESET',
+        'confirmation.value': 'RESET',
         'confirmation.placeholder': 'Type {{confirmationValue}} to continue.',
         'sign-out-chooser.title': 'WARNING',
         'sign-out-chooser.message': 'Proceeding with the action below will erase all data on this device.',

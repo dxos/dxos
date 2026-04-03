@@ -24,7 +24,7 @@ export const translations = [
         'object-deleted.label': 'Explorer deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Explorer',
+        'plugin.name': 'Explorer',
         'object-title.label': 'Title',
       },
     },

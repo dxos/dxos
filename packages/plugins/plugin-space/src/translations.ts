@@ -102,7 +102,7 @@ export const translations = [
         'object-deleted.label': 'Task deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Spaces',
+        'plugin.name': 'Spaces',
         'first-run.message': 'Nothing selected.',
         'create-space.label': 'Create space',
         'join-space.label': 'Join space',

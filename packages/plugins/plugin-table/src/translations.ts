@@ -23,7 +23,7 @@ export const translations = [
         'object-deleted.label': 'Table deleted',
       },
       [meta.id]: {
-        'plugin-name': 'Tables',
+        'plugin.name': 'Tables',
         'table-name.placeholder': 'Table name',
         'settings.title': 'Table settings',
         'table-schema.label': 'Type',

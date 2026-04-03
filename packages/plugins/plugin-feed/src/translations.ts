@@ -29,7 +29,7 @@ export const translations = [
         'post-title.placeholder': 'Untitled',
       },
       [meta.id]: {
-        'plugin-name': 'Feed',
+        'plugin.name': 'Feed',
         'empty-feed.message': 'No posts yet',
         'feed-companion.label': 'Feed',
         'sync-feed.label': 'Sync feed',
