@@ -93,7 +93,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
   }, [event.id, setCurrentId]);
 
   return (
-    <Mosaic.Tile asChild classNames='dx-hover dx-current' id={event.id} data={data} location={location}>
+    <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={event.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef}>
           <Card.Content>
