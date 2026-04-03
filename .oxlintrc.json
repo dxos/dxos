@@ -68,7 +68,8 @@
     "unicorn/no-useless-spread": "off",
     "unicorn/prefer-string-starts-ends-with": "off",
     "vitest/warn-todo": "off",
-    "unused-imports/no-unused-imports": "warn"
+    "unused-imports/no-unused-imports": "warn",
+    "import-x-js/order": "off"
   },
   "settings": {
     "jsx-a11y": {
@@ -115,5 +116,9 @@
     "tools/swc-log-plugin/tests/__swc_snapshots__/**",
     "tools/swc-log-plugin/test-rig/**"
   ],
-  "jsPlugins": ["@dxos/eslint-plugin-rules", "eslint-plugin-unused-imports"]
+  "jsPlugins": [
+    "@dxos/eslint-plugin-rules",
+    "eslint-plugin-unused-imports",
+    { "name": "import-x-js", "specifier": "eslint-plugin-import-x" }
+  ]
 }

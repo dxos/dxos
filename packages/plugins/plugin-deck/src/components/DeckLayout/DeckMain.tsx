@@ -23,7 +23,7 @@ import { StatusBar } from './StatusBar';
 import { Topbar } from './Topbar';
 
 export const DeckMain = () => {
-  const { invokeSync } = useOperationInvoker();
+  const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(DeckCapabilities.Settings);
   const { state, deck, updateState } = useDeckState();
   const { sidebarState, complementarySidebarState, complementarySidebarPanel } = state;
@@ -62,20 +62,20 @@ export const DeckMain = () => {
       const attended = attention.getCurrent();
 
       shouldRevert.current = true;
-      invokeSync(LayoutOperation.SetLayoutMode, { subject: attended[0], mode: 'solo' });
+      void invokePromise(LayoutOperation.SetLayoutMode, { subject: attended[0], mode: 'solo' });
     } else if (isNotMobile && layoutMode === 'solo' && shouldRevert.current) {
-      invokeSync(LayoutOperation.SetLayoutMode, { revert: true });
+      void invokePromise(LayoutOperation.SetLayoutMode, { revert: true });
     }
     // NOTE: Using `layoutMode` instead of `deck` to avoid infinite loops caused by object reference changes.
-  }, [isNotMobile, layoutMode, invokeSync]);
+  }, [isNotMobile, layoutMode, invokePromise]);
 
   // When deck is disabled in settings, set to solo mode if the current layout mode is deck.
   // TODO(thure): Applying this as an effect should be avoided over emitting the operation only when the setting changes.
   useEffect(() => {
     if (!settings?.enableDeck && layoutMode === 'deck') {
-      invokeSync(LayoutOperation.SetLayoutMode, { subject: active[0], mode: 'solo' });
+      void invokePromise(LayoutOperation.SetLayoutMode, { subject: active[0], mode: 'solo' });
     }
-  }, [settings?.enableDeck, invokeSync, active, layoutMode]);
+  }, [settings?.enableDeck, invokePromise, active, layoutMode]);
 
   /**
    * Clear scroll restoration state if the window is resized.
@@ -211,7 +211,6 @@ export const DeckMain = () => {
               <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
             )}
             <Stack
-              ref={deckRef}
               orientation='horizontal'
               size='contain'
               itemsCount={itemsCount - 1}
@@ -221,6 +220,7 @@ export const DeckMain = () => {
               ]}
               style={padding}
               onScroll={handleScroll}
+              ref={deckRef}
             >
               {active.map((entryId) => (
                 <Fragment key={entryId}>

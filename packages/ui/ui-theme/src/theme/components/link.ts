@@ -4,7 +4,6 @@
 
 import { type ComponentFunction, type Theme } from '@dxos/ui-types';
 
-import { focusRing } from '../../fragments';
 import { mx } from '../../util';
 
 export type LinkStyleProps = {
@@ -17,7 +16,7 @@ export const linkRoot: ComponentFunction<LinkStyleProps> = ({ variant }, ...etc)
     variant === 'neutral'
       ? 'text-inherit hover:opacity-90 visited:text-inherit visited:hover:opacity-90'
       : 'text-accent-text hover:text-accent-text-hover visited:text-accent-text visited:hover:text-accent-text-hover',
-    focusRing,
+    'dx-focus-ring',
     ...etc,
   );
 

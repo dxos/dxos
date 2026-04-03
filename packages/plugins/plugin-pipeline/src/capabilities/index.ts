@@ -3,5 +3,4 @@
 //
 
 export * from './app-graph-builder';
-export * from './operation-resolver';
 export * from './react-surface';

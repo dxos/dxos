@@ -61,6 +61,6 @@ export class SpaceProxy extends Resource {
       owningObject: this,
     });
 
-    await this._db.coreDatabase.open({ rootUrl: meta.rootDocumentId });
+    await this._db.coreDatabase.open(this._ctx, { rootUrl: meta.rootDocumentId });
   }
 }

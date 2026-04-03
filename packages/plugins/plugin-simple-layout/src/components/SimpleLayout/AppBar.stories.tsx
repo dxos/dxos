@@ -39,11 +39,11 @@ const buildDefaultActions = (): ActionGraphProps => {
   return result;
 };
 
-type StoryProps = Omit<AppBarProps, 'actions'> & {
+type DefaultStoryProps = Omit<AppBarProps, 'actions'> & {
   actions: ActionGraphProps;
 };
 
-const DefaultStory = ({ actions: actionsProp, ...props }: StoryProps) => {
+const DefaultStory = ({ actions: actionsProp, ...props }: DefaultStoryProps) => {
   const actions = useMemo(() => Atom.make(actionsProp).pipe(Atom.keepAlive), [actionsProp]);
   return (
     <MobileLayout.Root>
@@ -71,7 +71,7 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<DefaultStoryProps>;
 
 export const Default: Story = {
   tags: ['test'],

@@ -34,6 +34,7 @@ import {
   selectionState,
   typewriter,
 } from '@dxos/ui-editor';
+import { useThemeContext } from '@dxos/react-ui';
 import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '../types';
@@ -46,10 +47,12 @@ export type ExtensionsOptions = {
   id: string;
   object?: DocumentType;
   settings?: Markdown.Settings;
-  selectionManager?: SelectionManager;
+  compact?: boolean;
   viewMode?: EditorViewMode;
+  selectionManager?: SelectionManager;
   editorStateStore?: EditorStateStore;
   previewOptions?: PreviewOptions;
+  platform?: 'mobile' | 'desktop';
   /** Callback when an internal link is clicked. */
   onSelectObject?: (objectId: string) => void;
 };
@@ -59,12 +62,14 @@ export const useExtensions = ({
   id,
   object,
   settings,
-  selectionManager,
+  compact,
   viewMode,
+  selectionManager,
   editorStateStore,
   previewOptions,
   onSelectObject,
 }: ExtensionsOptions): Extension[] => {
+  const { platform } = useThemeContext();
   const identity = useIdentity();
   const space = getSpace(object);
 
@@ -86,15 +91,19 @@ export const useExtensions = ({
         id,
         object,
         settings,
-        selectionManager,
+        compact,
         viewMode,
+        selectionManager,
         previewOptions,
         onSelectObject,
+        platform,
       }),
     [
       id,
       object,
+      compact,
       viewMode,
+      selectionManager,
       previewOptions,
       onSelectObject,
       settings,
@@ -102,8 +111,8 @@ export const useExtensions = ({
       settings?.editorInputMode,
       settings?.folding,
       settings?.numberedHeadings,
+      platform,
       settings?.typewriter,
-      selectionManager,
     ],
   );
 
@@ -143,14 +152,16 @@ const createBaseExtensions = ({
   object,
   onSelectObject,
   settings,
-  selectionManager,
+  compact,
   viewMode,
+  selectionManager,
   previewOptions,
+  platform,
 }: ExtensionsOptions): Extension[] => {
   const extensions: Extension[] = [
     selectionManager && selectionChange(selectionManager),
     settings?.editorInputMode && InputModeExtensions[settings.editorInputMode],
-    settings?.folding && folding(),
+    settings?.folding && !compact && platform !== 'mobile' && folding(),
   ].filter(isTruthy);
 
   //

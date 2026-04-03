@@ -4,7 +4,6 @@
 
 import React, {
   type FocusEvent,
-  forwardRef,
   type KeyboardEvent,
   type MouseEvent,
   type WheelEvent,
@@ -19,7 +18,7 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
-import { type ComposableProps, DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
+import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
@@ -34,12 +33,13 @@ import {
   editorKeys,
   parseCellIndex,
 } from '@dxos/react-ui-grid';
-import { composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
 import { useSelectThreadOnCellFocus } from '../../integrations';
 import { meta } from '../../meta';
-import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities, SheetOperation } from '../../types';
+import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities } from '../../types';
+import { SheetOperation } from '../../operations';
 import { useSheetContext } from '../SheetRoot';
 
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util';
@@ -72,9 +72,9 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
-export type SheetContentProps = ComposableProps<HTMLDivElement>;
+export type SheetContentProps = {};
 
-export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
+export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const {
     id,
@@ -341,7 +341,7 @@ export const SheetContent = forwardRef<HTMLDivElement, SheetContentProps>((props
   useSelectThreadOnCellFocus();
 
   return (
-    <div ref={forwardedRef} {...composableProps(props, { role: 'none', className: 'relative min-h-0' })}>
+    <div ref={forwardedRef} {...composableProps(props, { role: 'none', classNames: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'

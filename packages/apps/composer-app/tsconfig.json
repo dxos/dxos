@@ -104,6 +104,9 @@
       "path": "../../plugins/plugin-conductor"
     },
     {
+      "path": "../../plugins/plugin-daily-summary"
+    },
+    {
       "path": "../../plugins/plugin-debug"
     },
     {
@@ -152,6 +155,9 @@
       "path": "../../plugins/plugin-native"
     },
     {
+      "path": "../../plugins/plugin-native-filesystem"
+    },
+    {
       "path": "../../plugins/plugin-navtree"
     },
     {
@@ -195,6 +201,9 @@
     },
     {
       "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-spotlight"
     },
     {
       "path": "../../plugins/plugin-stack"

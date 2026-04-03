@@ -22,7 +22,8 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { DatabaseBlueprint } from '../database';
+import { DatabaseBlueprint, DatabaseHandlers } from '../database';
+import { MarkdownHandlers } from '../markdown';
 import { addBlueprints } from '../testing';
 
 import BrowserBlueprint from './blueprint';
@@ -31,11 +32,7 @@ ObjectId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayerWithTriggers({
   aiServicePreset: 'edge-remote',
-  operationHandlers: OperationHandlerSet.merge(
-    DatabaseBlueprint.operations,
-    MarkdownBlueprint.operations,
-    BrowserBlueprint.operations,
-  ),
+  operationHandlers: OperationHandlerSet.merge(DatabaseHandlers, MarkdownHandlers),
   types: [Blueprint.Blueprint, Person.Person, Markdown.Document, SpaceProperties, Collection.Collection],
   tracing: 'pretty',
 });

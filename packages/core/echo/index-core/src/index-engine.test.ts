@@ -8,6 +8,7 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, ObjectId, SpaceId } from '@dxos/keys';
@@ -49,6 +50,7 @@ class MockIndexDataSource implements IndexDataSource {
   }
 
   getChangedObjects(
+    _ctx: Context,
     cursors: IndexCursor[],
     opts?: { limit?: number },
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }> {
@@ -118,6 +120,7 @@ describe('IndexEngine', () => {
         documentId: 'doc-1',
         queueId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: {
           id: ObjectId.random(),
           [ATTR_TYPE]: TYPE_DEFAULT,
@@ -128,7 +131,7 @@ describe('IndexEngine', () => {
       dataSource.push([obj1]);
 
       // First update.
-      const { updated } = yield* engine.update(dataSource, { spaceId: null });
+      const { updated } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
       // Updates objectMeta, FTS, and reverseRef indexes.
       expect(updated).toBe(2);
 
@@ -154,12 +157,13 @@ describe('IndexEngine', () => {
         documentId: obj1.documentId,
         queueId: null,
         recordId: null,
+        updatedAt: Date.now(),
         data: { id: obj1.data.id, [ATTR_TYPE]: obj1.data[ATTR_TYPE], title: 'Hello World' },
       };
       dataSource.push([obj1Updated]);
 
       // Second update.
-      const { updated: updated2 } = yield* engine.update(dataSource, { spaceId: null });
+      const { updated: updated2 } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
       expect(updated2).toBe(2);
 
       // Verify update.
@@ -193,6 +197,7 @@ describe('IndexEngine', () => {
           queueId: null,
           documentId: 'd1',
           recordId: null,
+          updatedAt: Date.now(),
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_A,
@@ -204,6 +209,7 @@ describe('IndexEngine', () => {
           queueId: null,
           documentId: 'd2',
           recordId: null,
+          updatedAt: Date.now(),
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_A,
@@ -215,6 +221,7 @@ describe('IndexEngine', () => {
           queueId: null,
           documentId: 'd3',
           recordId: null,
+          updatedAt: Date.now(),
           data: {
             id: ObjectId.random(),
             [ATTR_TYPE]: TYPE_B,
@@ -225,7 +232,7 @@ describe('IndexEngine', () => {
 
       dataSource.push(objects);
 
-      yield* engine.update(dataSource, { spaceId: null });
+      yield* engine.update(Context.default(), dataSource, { spaceId: null });
 
       const resultsA = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_A });
       expect(resultsA).toHaveLength(2);
@@ -240,6 +247,46 @@ describe('IndexEngine', () => {
         queueIds: null,
       });
       expect(ftsResults).toHaveLength(2);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    'done is true only when all sub-indexes have no remaining work',
+    Effect.fnUntraced(function* () {
+      const { tracker, metaIndex, ftsIndex, reverseRefIndex } = yield* setup;
+
+      const engine = new IndexEngine({ tracker, objectMetaIndex: metaIndex, ftsIndex, reverseRefIndex });
+      const dataSource = new MockIndexDataSource();
+      const spaceId = SpaceId.random();
+
+      // First update with no data — both sub-indexes report done immediately.
+      const { updated: updated0, done: done0 } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      expect(updated0).toBe(0);
+      expect(done0).toBe(true);
+
+      // Push an object so sub-indexes have work to do.
+      dataSource.push([
+        {
+          spaceId,
+          queueId: null,
+          documentId: 'doc-done-test',
+          recordId: null,
+          updatedAt: Date.now(),
+          data: { id: ObjectId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: 'Done test' },
+        },
+      ]);
+
+      // Update with pending data — sub-indexes process objects, done is false.
+      const { updated: updated1, done: done1 } = yield* engine.update(Context.default(), dataSource, { spaceId: null });
+      expect(updated1).toBeGreaterThan(0);
+      expect(done1).toBe(false);
+
+      // Second update with no new data — all sub-indexes caught up, done is true.
+      const { updated: updated2, done: done2 } = yield* engine.update(Context.default(), dataSource, {
+        spaceId: null,
+      });
+      expect(updated2).toBe(0);
+      expect(done2).toBe(true);
     }, Effect.provide(TestLayer)),
   );
 });

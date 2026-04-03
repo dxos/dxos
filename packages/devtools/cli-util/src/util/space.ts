@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
+import { getPersonalSpace } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Database, type Key } from '@dxos/echo';
@@ -26,26 +27,25 @@ export const getSpace = (spaceId: Key.SpaceId): Effect.Effect<Space, SpaceNotFou
 export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
-    yield* Effect.promise(() => client.spaces.waitUntilReady());
-    return Option.getOrElse(spaceId, () => client.spaces.default.id);
+    return Option.getOrElse(spaceId, () => {
+      const personal = getPersonalSpace(client);
+      if (!personal) {
+        throw new Error('No space ID provided and no personal space found.');
+      }
+      return personal.id;
+    });
   });
 
 // TODO(wittjosiah): Factor out.
 export const spaceLayer = (
   spaceId$: Option.Option<Key.SpaceId>,
-  fallbackToDefaultSpace = false,
+  fallbackToPersonalSpace = false,
 ): Layer.Layer<Database.Service | QueueService, never, ClientService> => {
   const getSpace = Effect.fn(function* () {
     const client = yield* ClientService;
-    yield* Effect.promise(() => client.spaces.waitUntilReady());
 
-    const spaceId = Match.value(fallbackToDefaultSpace).pipe(
-      Match.when(true, () =>
-        spaceId$.pipe(
-          Option.getOrElse(() => client.spaces.default.id),
-          Option.some,
-        ),
-      ),
+    const spaceId = Match.value(fallbackToPersonalSpace).pipe(
+      Match.when(true, () => spaceId$.pipe(Option.orElse(() => Option.fromNullable(getPersonalSpace(client)?.id)))),
       Match.when(false, () => spaceId$),
       Match.exhaustive,
     );

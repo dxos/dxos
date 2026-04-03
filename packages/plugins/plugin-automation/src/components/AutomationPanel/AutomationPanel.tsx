@@ -8,6 +8,7 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { Context } from '@dxos/context';
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { Script, Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
@@ -93,12 +94,12 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleForceRunTrigger = async (trigger: Trigger.Trigger) => {
-    await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+    await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
   };
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
-    Obj.change(trigger, (t) => {
-      Obj.deleteKeys(t, KEY_QUEUE_CURSOR);
+    Obj.change(trigger, (obj) => {
+      Obj.deleteKeys(obj, KEY_QUEUE_CURSOR);
     });
     await space.db.flush({ indexes: true });
   };

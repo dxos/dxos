@@ -24,7 +24,7 @@ export type CreateClientServicesOptions = {
   createOpfsWorker?: LocalClientServicesParams['createOpfsWorker'];
   /**
    * Use single-client mode for the dedicated worker coordinator.
-   * This bypasses SharedWorker which doesn't work on iOS WKWebView.
+   * This bypasses SharedWorker; use for WKWebView where the coordinator SharedWorker port is unreliable.
    */
   singleClientMode?: boolean;
   /** Observability group sent with signaling metadata. */

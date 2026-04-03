@@ -34,7 +34,10 @@ import {
   AppGraphBuilder,
   AppGraphSerializer,
   IdentityCreated,
-  OperationResolver,
+  Migrations,
+  NavigationResolver,
+  OperationHandler,
+  UndoMappings,
   ReactRoot,
   ReactSurface,
   Repair,
@@ -45,7 +48,8 @@ import {
 import { meta } from './meta';
 import { translations } from './translations';
 import { SpaceEvents } from './types';
-import { type CreateObject, SpaceOperation, type SpacePluginOptions } from './types';
+import { type CreateObject, type SpacePluginOptions } from './types';
+import { SpaceOperation } from './operations';
 
 export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   AppPlugin.addMetadataModule({
@@ -145,6 +149,8 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       },
     ],
   }),
+  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
     schema: [
@@ -216,9 +222,9 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       };
 
       return {
-        id: Capability.getModuleTag(OperationResolver),
-        activatesOn: ActivationEvents.SetupOperationResolver,
-        activate: () => OperationResolver({ createInvitationUrl, observability }),
+        id: Capability.getModuleTag(UndoMappings),
+        activatesOn: ActivationEvents.SetupOperationHandler,
+        activate: () => UndoMappings({ createInvitationUrl, observability }),
       };
     },
   ),
@@ -229,7 +235,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
-    activatesAfter: [SpaceEvents.DefaultSpaceReady],
+    activatesAfter: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.addModule({
@@ -242,6 +248,10 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       ClientEvents.SpacesReady,
     ),
     activate: SpacesReady,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.SpacesReady,

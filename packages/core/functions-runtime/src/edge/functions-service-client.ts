@@ -3,6 +3,7 @@
 //
 
 import { type Client } from '@dxos/client';
+import { type Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { type EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, FunctionError } from '@dxos/functions';
@@ -87,13 +88,14 @@ export class FunctionsServiceClient {
   /**
    * Deploys a function to the EDGE service.
    */
-  async deploy(request: FunctionDeployOptions): Promise<Operation.PersistentOperation> {
+  async deploy(ctx: Context, request: FunctionDeployOptions): Promise<Operation.PersistentOperation> {
     try {
       invariant(
         Object.keys(request.assets).every((path) => !path.startsWith('/')),
         'Asset paths must be relative',
       );
       const response = await this.#edgeClient.uploadFunction(
+        ctx,
         { functionId: request.functionId },
         {
           name: request.name,
@@ -127,9 +129,9 @@ export class FunctionsServiceClient {
    * Queries the EDGE service for deployed functions.
    */
   // TODO(dmaretskyi): Add query filters.
-  async query(): Promise<Operation.PersistentOperation[]> {
+  async query(ctx: Context): Promise<Operation.PersistentOperation[]> {
     try {
-      const response = await this.#edgeClient.listFunctions();
+      const response = await this.#edgeClient.listFunctions(ctx);
       return response.uploadedFunctions.map((record: any) => {
         // Record shape is determined by EDGE API. We defensively parse.
         const latest = record.latestVersion ?? {};
@@ -156,7 +158,7 @@ export class FunctionsServiceClient {
     }
   }
 
-  async invoke(func: Operation.PersistentOperation, input: unknown, options?: FunctionInvokeOptions) {
+  async invoke(ctx: Context, func: Operation.PersistentOperation, input: unknown, options?: FunctionInvokeOptions) {
     const functionId = Obj.getMeta(func).keys.find((key) => key.source === FUNCTIONS_META_KEY)?.id;
     if (!functionId) {
       throw new FunctionServiceError({ message: 'No identifier for the function at the EDGE service' });
@@ -165,6 +167,7 @@ export class FunctionsServiceClient {
     const cleanedId = functionId.replace(/^\//, '');
     try {
       return await this.#edgeClient.invokeFunction(
+        ctx,
         {
           functionId: cleanedId,
           spaceId: options?.spaceId,
@@ -178,7 +181,7 @@ export class FunctionsServiceClient {
     }
   }
 
-  async forceRunCronTrigger(spaceId: SpaceId, triggerId: ObjectId): Promise<InvokeResult> {
-    return (await this.#edgeClient.forceRunCronTrigger(spaceId, triggerId)) as InvokeResult;
+  async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId): Promise<InvokeResult> {
+    return (await this.#edgeClient.forceRunCronTrigger(ctx, spaceId, triggerId)) as InvokeResult;
   }
 }

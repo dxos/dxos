@@ -5,6 +5,7 @@
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
+import { composeRefs } from '@radix-ui/react-compose-refs';
 import { createContext } from '@radix-ui/react-context';
 import React, {
   type ComponentPropsWithoutRef,
@@ -29,7 +30,7 @@ import {
   usePx,
   useTranslation,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations';
 
@@ -155,56 +156,59 @@ BoardRoot.displayName = 'Board.Root';
 
 const BOARD_CONTAINER_NAME = 'Board.Container';
 
-type BoardContainerProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
+type BoardContainerProps = PropsWithChildren<ComponentPropsWithoutRef<'div'>>;
 
-const BoardContainer = ({ classNames, children, ...props }: BoardContainerProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { width, height } = useResizeDetector({ targetRef: containerRef });
-  const { bounds, grid, center } = useBoardContext(BOARD_CONTAINER_NAME);
+const BoardContainer = composable<HTMLDivElement, BoardContainerProps>(
+  ({ classNames, children, ...props }, forwardedRef) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const { width, height } = useResizeDetector({ targetRef: containerRef });
+    const { bounds, grid, center } = useBoardContext(BOARD_CONTAINER_NAME);
 
-  const [mounted, setMounted] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
-  // Auto-center (on mount).
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container && width && height) {
-      container.scrollTo({
-        left: center.x - width / 2,
-        top: center.y - height / 2,
-        behavior: mounted ? 'smooth' : 'auto',
+    // Auto-center (on mount).
+    useEffect(() => {
+      const container = containerRef.current;
+      if (container && width && height) {
+        container.scrollTo({
+          left: center.x - width / 2,
+          top: center.y - height / 2,
+          behavior: mounted ? 'smooth' : 'auto',
+        });
+
+        setMounted(true);
+      }
+    }, [center, bounds, width, height]);
+
+    // Auto-scroll.
+    useEffect(() => {
+      invariant(containerRef.current);
+      return autoScrollForElements({
+        element: containerRef.current,
       });
+    }, []);
 
-      setMounted(true);
-    }
-  }, [center, bounds, width, height]);
-
-  // Auto-scroll.
-  useEffect(() => {
-    invariant(containerRef.current);
-    return autoScrollForElements({
-      element: containerRef.current,
-    });
-  }, []);
-
-  return (
-    <div
-      {...props}
-      ref={containerRef}
-      className={mx(
-        'flex items-center justify-center overflow-auto scrollbar-none overscroll-x-contain',
-        'opacity-0 transition-opacity duration-1000',
-        mounted && 'opacity-100',
-        classNames,
-      )}
-      style={{
-        padding: grid.overScroll ?? 0,
-      }}
-    >
-      {/* NOTE: This ensures that the children are centered if they are smaller than the container. */}
-      <div className='max-h-full max-w-full'>{children}</div>
-    </div>
-  );
-};
+    return (
+      <div
+        {...composableProps(props, {
+          classNames: [
+            'flex items-center justify-center overflow-auto scrollbar-none overscroll-x-contain',
+            'opacity-0 transition-opacity duration-1000',
+            mounted && 'opacity-100',
+            classNames,
+          ],
+        })}
+        ref={composeRefs(containerRef, forwardedRef)}
+        style={{
+          padding: grid.overScroll ?? 0,
+        }}
+      >
+        {/* NOTE: This ensures that the children are centered if they are smaller than the container. */}
+        <div className='max-h-full max-w-full'>{children}</div>
+      </div>
+    );
+  },
+);
 
 BoardContainer.displayName = BOARD_CONTAINER_NAME;
 
@@ -353,15 +357,15 @@ const BoardDropTarget = ({ position, rect, onAddClick }: BoardDropTargetProps) =
 
 const BOARD_TOOLBAR_NAME = 'Board.Controls';
 
-type BoardToolbarProps = ThemedClassName<ToolbarRootProps>;
+type BoardToolbarProps = ToolbarRootProps;
 
-const BoardToolbar = (props: BoardToolbarProps) => {
+const BoardToolbar = composable<HTMLDivElement, BoardToolbarProps>((props, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   const { readonly, zoom, controller, onAdd } = useBoardContext(BOARD_TOOLBAR_NAME);
 
   // TODO(burdon): Convert to MenuProvider.
   return (
-    <Toolbar.Root {...props}>
+    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
       <Toolbar.IconButton
         icon='ph--crosshair--regular'
         iconOnly
@@ -384,7 +388,7 @@ const BoardToolbar = (props: BoardToolbarProps) => {
       )}
     </Toolbar.Root>
   );
-};
+});
 
 BoardToolbar.displayName = BOARD_TOOLBAR_NAME;
 

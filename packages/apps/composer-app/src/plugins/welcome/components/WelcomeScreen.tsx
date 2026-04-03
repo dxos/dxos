@@ -7,8 +7,8 @@ import React, { useCallback, useRef, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client/types';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { ClientOperation } from '@dxos/plugin-client/operations';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -20,7 +20,6 @@ import { meta } from '../meta';
 import { Welcome, WelcomeState } from './Welcome';
 
 export const WELCOME_SCREEN = `${meta.id}.component.welcome-screen`;
-const TEST_EMAIL = 'test@dxos.org';
 
 export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   const searchProps = new URLSearchParams(window.location.search);
@@ -45,27 +44,48 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         setError(false);
       }
 
-      if (email === TEST_EMAIL) {
-        if (!identity) {
-          await invokePromise(ClientOperation.CreateIdentity, {
-            displayName: 'Test User',
-            data: { emoji: '🧪', hue: 'amber' },
-          });
-        }
-        await invokePromise(LayoutOperation.UpdateDialog, { state: false });
-        return;
-      }
-
       try {
         // Prevent multiple signups.
         pendingRef.current = true;
-        const login = await signup({
+        const result = await signup({
           hubUrl,
           email,
           identity,
           redirectUrl: location.origin,
         });
-        setState(login ? WelcomeState.LOGIN_SENT : WelcomeState.EMAIL_SENT);
+
+        // Test path: Hub returned a token immediately.
+        if (result.token && result.type === 'verify') {
+          const ensureIdentity = async () => {
+            if (identity) {
+              return identity;
+            }
+            await invokePromise(ClientOperation.CreateIdentity, {
+              displayName: email.split('@')[0],
+              data: { emoji: '🧪', hue: 'amber' },
+            });
+            return client.halo.identity.get();
+          };
+
+          const resolvedIdentity = await ensureIdentity();
+          if (resolvedIdentity) {
+            const credential = await activateAccount({
+              hubUrl,
+              identity: resolvedIdentity,
+              token: result.token,
+            });
+            if (credential) {
+              await client.halo.writeCredentials([credential]);
+            }
+            void invokePromise(ClientOperation.CreateAgent);
+          }
+
+          await invokePromise(LayoutOperation.UpdateDialog, { state: false });
+          return;
+        }
+
+        // Normal path: wait for email verification.
+        setState(result.login ? WelcomeState.LOGIN_SENT : WelcomeState.EMAIL_SENT);
       } catch (err) {
         log.catch(err);
         setError(true);
@@ -73,7 +93,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         pendingRef.current = false;
       }
     },
-    [hubUrl, identity, invokePromise],
+    [hubUrl, identity, client, invokePromise],
   );
 
   const handlePasskey = useCallback(async () => {

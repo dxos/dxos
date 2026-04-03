@@ -14,7 +14,9 @@ import { meta } from '../meta';
 
 const KANBAN_CARD_TILE_SIMPLE_NAME = 'KanbanCardTileSimple';
 
-/** Card tile without Surface; for stories and tests when plugin manager is not available. */
+/**
+ * Card tile without Surface; for stories and tests when plugin manager is not available.
+ */
 export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
   ({ data, location, debug }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
@@ -37,16 +39,16 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
     );
 
     return (
-      <Mosaic.Tile
-        asChild
-        id={model.getItemId(data)}
-        data={data}
-        location={location}
-        debug={debug}
-        dragHandle={dragHandle}
-      >
-        <Focus.Group asChild>
-          <Menu.Root>
+      <Menu.Root>
+        <Mosaic.Tile
+          asChild
+          id={model.getItemId(data)}
+          data={data}
+          location={location}
+          debug={debug}
+          dragHandle={dragHandle}
+        >
+          <Focus.Item asChild>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
               <Card.Toolbar>
                 <Card.DragHandle ref={dragHandleRef} />
@@ -63,12 +65,16 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
                 <Menu.Content items={menuItems} />
               </Card.Toolbar>
               <Card.Content>
-                <div className='p-2 text-sm text-fg'>{Obj.getLabel(data)}</div>
+                <Card.Section>
+                  <pre className='p-2 text-xs text-description whitespace-pre-wrap'>
+                    {JSON.stringify(data, null, 2)}
+                  </pre>
+                </Card.Section>
               </Card.Content>
             </Card.Root>
-          </Menu.Root>
-        </Focus.Group>
-      </Mosaic.Tile>
+          </Focus.Item>
+        </Mosaic.Tile>
+      </Menu.Root>
     );
   },
 );

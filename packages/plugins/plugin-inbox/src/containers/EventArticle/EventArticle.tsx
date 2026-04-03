@@ -14,7 +14,8 @@ import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps } from '../../components';
 import { useShadowObject } from '../../hooks';
-import { type Calendar, InboxOperation } from '../../types';
+import { InboxOperation } from '../../operations';
+import { type Calendar } from '../../types';
 
 export type EventArticleProps = SurfaceComponentProps<
   EventType.Event,
@@ -35,8 +36,8 @@ export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => 
     const event = createShadowEvent();
     const notes = await event.notes?.load();
     if (!notes) {
-      Obj.change(event, (e) => {
-        e.notes = Ref.make(Text.make());
+      Obj.change(event, (obj) => {
+        obj.notes = Ref.make(Text.make());
       });
     }
   }, [id, subject, db, shadowedEvent]);
@@ -54,14 +55,14 @@ export const EventArticle = ({ role, subject, calendar }: EventArticleProps) => 
     <Event.Root event={subject}>
       <Panel.Root role={role} className='dx-document'>
         <Panel.Toolbar asChild>
-          <Event.Toolbar onNoteCreate={handleNoteCreate} />
+          <Event.Toolbar alwaysActive onNoteCreate={handleNoteCreate} />
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Event.Viewport>
             <Event.Header db={db} onContactCreate={handleContactCreate} />
             <Event.Content />
             {/* TODO(burdon): Suppress markdown toolbar if section. */}
-            {notes && <Surface.Surface role='section' data={{ id, subject: notes }} limit={1} />}
+            {notes && <Surface.Surface role='section' data={{ id, subject: notes, attendableId: id }} limit={1} />}
           </Event.Viewport>
         </Panel.Content>
       </Panel.Root>

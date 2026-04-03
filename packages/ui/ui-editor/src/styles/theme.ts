@@ -12,28 +12,28 @@ export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 // https://tailwindcss.com/docs/font-weight
 const headings: Record<HeadingLevel, { className: string; fontSize: string; lineHeight: string }> = {
   1: {
-    className: 'text-4xl',
-    fontSize: 'var(--text-4xl)',
+    className: 'text-3xl',
+    fontSize: 'var(--text-3xl)',
     lineHeight: 'var(--text-4xl--line-height)',
   },
   2: {
-    className: 'text-3xl',
-    fontSize: 'var(--text-3xl)',
+    className: 'text-2xl',
+    fontSize: 'var(--text-2xl)',
     lineHeight: 'var(--text-3xl--line-height)',
   },
   3: {
-    className: 'text-2xl',
-    fontSize: 'var(--text-2xl)',
+    className: 'text-xl',
+    fontSize: 'var(--text-xl)',
     lineHeight: 'var(--text-2xl--line-height)',
   },
   4: {
-    className: 'text-xl',
-    fontSize: 'var(--text-xl)',
+    className: 'text-lg',
+    fontSize: 'var(--text-lg)',
     lineHeight: 'var(--text-xl--line-height)',
   },
   5: {
-    className: 'text-lg',
-    fontSize: 'var(--text-lg)',
+    className: 'text-base',
+    fontSize: 'var(--text-base)',
     lineHeight: 'var(--text-lg--line-height)',
   },
   6: {
@@ -43,22 +43,22 @@ const headings: Record<HeadingLevel, { className: string; fontSize: string; line
   },
 };
 
+// Font families matching --font-body and --font-mono in theme.css.
+export const fontBody = '"Inter Variable", ui-sans-serif, system-ui, sans-serif';
+export const fontMono = '"JetBrains Mono Variable", ui-monospace, "Cascadia Code", "Source Code Pro", monospace';
+
 export const markdownTheme = {
-  code: 'font-mono no-underline! text-cm-code',
-  codeMark: 'font-mono text-cm-code-mark',
-  mark: 'opacity-50',
+  code: 'font-mono! text-cm-code',
+  codeMark: 'font-mono! text-cm-code-mark',
+  mark: 'font-mono!',
   heading: (level: HeadingLevel) => ({
-    className: mx(headings[level].className, 'font-light text-cm-heading'),
+    className: mx(headings[level].className, 'font-light text-cm-heading-number'),
     color: 'var(--color-cm-heading) !important',
     lineHeight: headings[level].lineHeight,
     fontSize: headings[level].fontSize,
     fontWeight: '100 !important',
   }),
 };
-
-// Font families matching --font-body and --font-mono in theme.css.
-export const fontBody = 'Inter Variable, ui-sans-serif, system-ui, sans-serif';
-export const fontMono = 'JetBrains Mono Variable, ui-monospace, Cascadia Code, Source Code Pro, monospace';
 
 /**
  * Global base theme.
@@ -128,7 +128,6 @@ export const baseTheme = EditorView.baseTheme({
    */
   '.cm-content': {
     padding: 'unset',
-    lineHeight: '24px',
     color: 'unset',
   },
 
@@ -153,7 +152,7 @@ export const baseTheme = EditorView.baseTheme({
    * Height is set to match the corresponding line (which may have wrapped).
    */
   '.cm-gutterElement': {
-    lineHeight: '24px',
+    lineHeight: 1.5,
     fontSize: '12px',
   },
 
@@ -161,8 +160,15 @@ export const baseTheme = EditorView.baseTheme({
    * Line.
    */
   '.cm-line': {
-    lineHeight: '24px',
+    lineHeight: 1.5,
     paddingInline: 0,
+  },
+  /**
+   * Force all inline children to inherit line-height to prevent monospace font metrics
+   * (JetBrains Mono ascent/descent) from inflating the line box beyond 24px.
+   */
+  '.cm-line *': {
+    lineHeight: 'inherit',
   },
   '.cm-activeLine': {
     background: 'var(--color-cm-active-line)',
@@ -356,10 +362,9 @@ export type FontOptions = {
 
 export const createFontTheme = ({ monospace }: FontOptions = {}) =>
   EditorView.theme({
-    // Set metrics on the scroller (this is often what CM uses for layout).
+    // Main content.
     '.cm-scroller': {
       fontFamily: monospace ? fontMono : fontBody,
-      fontSize: '16px',
     },
 
     // Maintain defaults for UI components.

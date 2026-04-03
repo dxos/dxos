@@ -5,6 +5,7 @@
 import { type AutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 
 import { Trigger, synchronized, trackLeaks } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { type DelegateInvitationCredential, type MemberInfo, getCredentialAssertion } from '@dxos/credentials';
 import { failUndefined } from '@dxos/debug';
 import { type FeedStore } from '@dxos/feed-store';
@@ -135,7 +136,10 @@ export class SpaceManager {
     return space;
   }
 
-  public async requestSpaceAdmissionCredential(params: RequestSpaceAdmissionCredentialProps): Promise<Credential> {
+  public async requestSpaceAdmissionCredential(
+    ctx: Context,
+    params: RequestSpaceAdmissionCredentialProps,
+  ): Promise<Credential> {
     const traceKey = 'dxos.echo.space-manager.request-space-admission';
     log.trace(traceKey, trace.begin({ id: this._instanceId }));
     log('requesting space admission credential...', { spaceKey: params.spaceKey });
@@ -160,7 +164,7 @@ export class SpaceManager {
     });
 
     try {
-      await protocol.start();
+      await protocol.start(ctx);
       const credential = await onCredentialResolved.wait({ timeout: params.timeout });
       log.trace(traceKey, trace.end({ id: this._instanceId }));
       return credential;
@@ -168,7 +172,7 @@ export class SpaceManager {
       log.trace(traceKey, trace.error({ id: this._instanceId, error: err }));
       throw err;
     } finally {
-      await protocol.stop();
+      await protocol.stop(ctx);
     }
   }
 

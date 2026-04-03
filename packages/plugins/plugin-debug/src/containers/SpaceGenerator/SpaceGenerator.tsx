@@ -15,6 +15,7 @@ import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Panel, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Organization, Person, Task } from '@dxos/types';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { jsonKeyReplacer, sortKeys } from '@dxos/util';
 
 import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGenerators } from '../../components';
@@ -24,104 +25,106 @@ export type SpaceGeneratorProps = {
   onCreateObjects?: (objects: Obj.Unknown[]) => void;
 };
 
-export const SpaceGenerator = ({ space, onCreateObjects }: SpaceGeneratorProps) => {
-  const { invokePromise } = useOperationInvoker();
-  const client = useClient();
-  const staticTypes = [Markdown.Document, Sketch.Sketch, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
-  const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
-  const [count, setCount] = useState(1);
-  const [info, setInfo] = useState<any>({});
-  const presets = useMemo(() => generator(), []);
+export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
+  ({ space, onCreateObjects, children, ...props }, forwardedRef) => {
+    const { invokePromise } = useOperationInvoker();
+    const client = useClient();
+    const staticTypes = [Markdown.Document, Sketch.Sketch, Sheet.Sheet, ComputeGraph]; // TODO(burdon): Make extensible.
+    const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
+    const [count, setCount] = useState(1);
+    const [info, setInfo] = useState<any>({});
+    const presets = useMemo(() => generator(), []);
 
-  // Register types.
-  useAsyncEffect(async () => {
-    await client.addTypes([...staticTypes, ...recordTypes, ...presets.schemas]);
-  }, [client]);
+    // Register types.
+    useAsyncEffect(async () => {
+      await client.addTypes([...staticTypes, ...recordTypes, ...presets.schemas]);
+    }, [client]);
 
-  // Create type generators.
-  const typeMap = useMemo(() => {
-    const recordGenerators = new Map<string, ObjectGenerator<any>>(
-      recordTypes.map((type) => [type.typename, createGenerator(client, invokePromise, type)]),
-    );
+    // Create type generators.
+    const typeMap = useMemo(() => {
+      const recordGenerators = new Map<string, ObjectGenerator<any>>(
+        recordTypes.map((type) => [type.typename, createGenerator(client, invokePromise, type)]),
+      );
 
-    return new Map([...staticGenerators, ...presets.items, ...recordGenerators]);
-  }, [client, recordTypes, invokePromise]);
+      return new Map([...staticGenerators, ...presets.items, ...recordGenerators]);
+    }, [client, recordTypes, invokePromise]);
 
-  // Query space to get info.
-  const updateInfo = async () => {
-    // Create schema map.
-    const echoSchema = await space.db.schemaRegistry.query().run();
-    const staticSchema = await space.db.graph.schemaRegistry.query().run();
+    // Query space to get info.
+    const updateInfo = async () => {
+      // Create schema map.
+      const echoSchema = await space.db.schemaRegistry.query().run();
+      const staticSchema = await space.db.graph.schemaRegistry.query().run();
 
-    // Create object map.
-    const objects = await space.db.query(Filter.everything()).run();
-    const objectMap = sortKeys(
-      objects.reduce<Record<string, number>>((map, obj) => {
-        const type = Obj.getTypename(obj);
-        if (type) {
-          const count = map[type] ?? 0;
-          map[type] = count + 1;
+      // Create object map.
+      const objects = await space.db.query(Filter.everything()).run();
+      const objectMap = sortKeys(
+        objects.reduce<Record<string, number>>((map, obj) => {
+          const type = Obj.getTypename(obj);
+          if (type) {
+            const count = map[type] ?? 0;
+            map[type] = count + 1;
+          }
+
+          return map;
+        }, {}),
+      );
+
+      setInfo({
+        schema: {
+          static: staticSchema.length,
+          mutable: echoSchema.length,
+        },
+        objects: objectMap,
+      });
+    };
+
+    useAsyncEffect(updateInfo, [space]);
+
+    const handleCreateData = useCallback(
+      async (typename: string) => {
+        const constructor = typeMap.get(typename);
+        if (constructor) {
+          // TODO(burdon): Input to specify number of objects.
+          await constructor(space, count, onCreateObjects);
+          await updateInfo();
         }
-
-        return map;
-      }, {}),
+      },
+      [typeMap, count],
     );
 
-    setInfo({
-      schema: {
-        static: staticSchema.length,
-        mutable: echoSchema.length,
-      },
-      objects: objectMap,
-    });
-  };
-
-  useAsyncEffect(updateInfo, [space]);
-
-  const handleCreateData = useCallback(
-    async (typename: string) => {
-      const constructor = typeMap.get(typename);
-      if (constructor) {
-        // TODO(burdon): Input to specify number of objects.
-        await constructor(space, count, onCreateObjects);
-        await updateInfo();
-      }
-    },
-    [typeMap, count],
-  );
-
-  return (
-    <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
-          <Toolbar.Separator />
-          <Input.Root>
-            <Input.TextInput
-              type='number'
-              placeholder='Count'
-              classNames='w-[4rem] text-right'
-              min={1}
-              max={100}
-              size={8}
-              value={count}
-              onChange={(event) => setCount(parseInt(event.target.value))}
-            />
-          </Input.Root>
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <ScrollArea.Root thin orientation='vertical'>
-          <ScrollArea.Viewport classNames='gap-4 divide-y divide-subdued-separator'>
-            <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
-            <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
-            <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
-            <SyntaxHighlighter language='json' classNames='text-xs'>
-              {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
-            </SyntaxHighlighter>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Content>
-    </Panel.Root>
-  );
-};
+    return (
+      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <IconButton icon='ph--arrow-clockwise--regular' iconOnly label='Refresh' onClick={updateInfo} />
+            <Toolbar.Separator />
+            <Input.Root>
+              <Input.TextInput
+                type='number'
+                placeholder='Count'
+                classNames='w-[4rem] text-right'
+                min={1}
+                max={100}
+                size={8}
+                value={count}
+                onChange={(event) => setCount(parseInt(event.target.value))}
+              />
+            </Input.Root>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ScrollArea.Root thin orientation='vertical'>
+            <ScrollArea.Viewport classNames='gap-4 divide-y divide-subdued-separator'>
+              <SchemaTable types={staticTypes} objects={info.objects} label='Static Types' onClick={handleCreateData} />
+              <SchemaTable types={recordTypes} objects={info.objects} label='Record Types' onClick={handleCreateData} />
+              <SchemaTable types={presets.types} objects={info.objects} label='Presets' onClick={handleCreateData} />
+              <SyntaxHighlighter language='json' classNames='text-xs'>
+                {JSON.stringify({ space, ...info }, jsonKeyReplacer({ truncate: true }), 2)}
+              </SyntaxHighlighter>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      </Panel.Root>
+    );
+  },
+);

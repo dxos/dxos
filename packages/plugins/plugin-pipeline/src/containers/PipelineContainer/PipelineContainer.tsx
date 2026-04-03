@@ -14,8 +14,8 @@ import {
   type SurfaceComponentProps,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
-import { DeckOperation } from '@dxos/plugin-deck/types';
+import { companionSegment } from '@dxos/app-toolkit';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { useMenu } from '@dxos/react-ui-menu';
@@ -37,7 +37,7 @@ export const PipelineContainer = ({ role, subject: pipeline, attendableId }: Pip
   const handleColumnAdd = useCallback(
     () =>
       invokePromise(DeckOperation.ChangeCompanion, {
-        companion: `${COMPANION_PREFIX}settings`,
+        companion: companionSegment('settings'),
       }),
     [invokePromise],
   );
@@ -49,7 +49,7 @@ export const PipelineContainer = ({ role, subject: pipeline, attendableId }: Pip
           <PipelineComponent.Toolbar disabled={!hasAttention} />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <PipelineComponent.Content model={model}>
+          <PipelineComponent.Content asChild model={model}>
             <PipelineComponent.Columns pipeline={pipeline} />
           </PipelineComponent.Content>
         </Panel.Content>

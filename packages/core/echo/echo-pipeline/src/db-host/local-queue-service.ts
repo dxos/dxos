@@ -22,6 +22,7 @@ import {
   type SyncQueueRequest,
 } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
+import { Context } from '@dxos/context';
 
 /**
  * Writes queue data to a local FeedStore.
@@ -29,12 +30,12 @@ import type { SqlTransaction } from '@dxos/sql-sqlite';
 export class LocalQueueServiceImpl implements QueueService {
   #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   #feedStore: FeedStore;
-  #syncQueue?: (request: SyncQueueRequest) => Promise<void>;
+  #syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>;
 
   constructor(
     runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>,
     feedStore: FeedStore,
-    syncQueue?: (request: SyncQueueRequest) => Promise<void>,
+    syncQueue?: (ctx: Context, request: SyncQueueRequest) => Promise<void>,
   ) {
     this.#runtime = runtime;
     this.#feedStore = feedStore;
@@ -120,6 +121,6 @@ export class LocalQueueServiceImpl implements QueueService {
   }
 
   async syncQueue(request: SyncQueueRequest): Promise<void> {
-    await this.#syncQueue?.(request);
+    await this.#syncQueue?.(Context.default(), request);
   }
 }

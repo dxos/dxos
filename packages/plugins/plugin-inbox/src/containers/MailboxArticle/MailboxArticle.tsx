@@ -6,26 +6,28 @@ import { Atom, useAtomSet, useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
 import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { AttentionOperation } from '@dxos/plugin-attention/types';
-import { COMPANION_PREFIX } from '@dxos/app-toolkit';
-import { DeckOperation } from '@dxos/plugin-deck/types';
+import { AttentionOperation } from '@dxos/plugin-attention/operations';
+import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { Menu, MenuBuilder, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
-import { type MailboxActionHandler, Mailbox as MailboxComponent, MailboxEmpty } from '../../components';
+import { type MessageStackActionHandler, MessageStack } from '../../components';
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { meta } from '../../meta';
-import { InboxOperation, type Mailbox } from '../../types';
+import { InboxOperation } from '../../operations';
+import { type Mailbox } from '../../types';
 import { sortByCreated } from '../../util';
+
+import { NewMailbox } from './NewMailbox';
 
 export type MailboxArticleProps = SurfaceComponentProps<
   Mailbox.Mailbox,
@@ -37,28 +39,20 @@ export type MailboxArticleProps = SurfaceComponentProps<
 
 export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
+  const { invokePromise } = useOperationInvoker();
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const db = Obj.getDatabase(mailbox);
+
+  // TODO(burdon): Review.
+  const currentId = useSelected(id, 'single');
 
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   useObject(mailbox);
   const feed = mailbox.feed?.target as Feed.Feed | undefined;
 
-  const { invokePromise } = useOperationInvoker();
-  const layout = useLayout();
-  const currentMessageId = useSelected(id, 'single');
-
-  const filterEditorRef = useRef<EditorController>(null);
-  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
-
   // Menu state.
   const sortDescending = useAtomState(true);
-  const filterVisible = useAtomState(false);
-  const menuActions = useMailboxActions({
-    db,
-    sortDescending: sortDescending.atom,
-    filterVisible: filterVisible.atom,
-  });
+  const menuActions = useMailboxActions({ db, sortDescending: sortDescending.atom });
 
   // Filter and messages.
   const [filter, setFilter] = useState<Filter.Any>();
@@ -88,7 +82,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // Merge tags into mailbox labels.
   const mergedLabels = useMemo(() => {
-    const labels = { ...(mailbox.labels ?? {}) };
+    const labels = { ...mailbox.labels };
     for (const [_messageId, messageTags] of Object.entries(messageTagsMap)) {
       for (const tag of messageTags) {
         labels[tag.id] = tag.label;
@@ -117,16 +111,21 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     });
   }, [sortedMessages, messageTagsMap]);
 
+  // TODO(burdon): Actual test should be if we have synced; not number of messages.
   // Delay showing empty state to prevent flicker as messages are loaded.
   const [isEmpty, setEmpty] = useState<boolean>(false);
   useEffect(() => {
     const t = setTimeout(() => {
-      setEmpty(messagesWithTags.length === 0);
-    }, 1000);
+      setEmpty(sortedMessages.length === 0);
+    }, 1_000);
     return () => clearTimeout(t);
-  }, [messagesWithTags]);
+  }, [sortedMessages]);
 
-  const handleAction = useCallback<MailboxActionHandler>(
+  const layout = useLayout();
+  const filterEditorRef = useRef<EditorController>(null);
+  const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
+
+  const handleAction = useCallback<MessageStackActionHandler>(
     (action) => {
       switch (action.type) {
         case 'current': {
@@ -136,17 +135,17 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             selection: { mode: 'single', id: message?.id },
           });
 
-          const companionId = `${COMPANION_PREFIX}message`;
+          const companion = companionSegment('message');
           if (layout.mode === 'simple') {
             // Simple layout: open drawer with message companion.
             void invokePromise(LayoutOperation.UpdateComplementary, {
-              subject: companionId,
+              subject: companion,
               state: 'expanded',
             });
           } else {
             // Deck layout: open as companion panel.
             void invokePromise(DeckOperation.ChangeCompanion, {
-              companion: companionId,
+              companion,
             });
           }
           break;
@@ -162,7 +161,6 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
             return [prevFilterText.trim(), '#' + action.label].filter(Boolean).join(' ') + ' ';
           });
-          filterVisible.set(true);
           filterEditorRef.current?.focus();
           break;
         }
@@ -182,63 +180,53 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
     [id, layout.mode, mailbox, sortedMessages, invokePromise],
   );
 
-  const handleCancel = useCallback(() => {
-    filterVisible.set(false);
+  const handleClear = useCallback(() => {
     setFilterText(filterProp ?? '');
     setFilter(parser.build(filterProp ?? '').filter);
-  }, [filterVisible, filterProp, parser]);
+  }, [filterProp, parser]);
 
   return (
     <Panel.Root>
       <Panel.Toolbar>
-        {/* TODO(burdon): Factor out menu. */}
-        <ElevationProvider elevation='positioned'>
-          <Menu.Root {...menuActions} attendableId={id}>
-            <Menu.Toolbar />
-            {filterVisible.value && (
-              <div
-                role='none'
-                className='grid grid-cols-[1fr_min-content] w-full items-center p-1 gap-1 border-b border-separator'
-              >
+        {!isEmpty && (
+          <ElevationProvider elevation='positioned'>
+            <Menu.Root {...menuActions} attendableId={id}>
+              <Menu.Toolbar>
                 <QueryEditor
                   ref={filterEditorRef}
-                  classNames='min-w-0 ps-1'
-                  autoFocus
+                  classNames='grow min-w-0 ps-1'
                   db={db}
                   tags={tagMap}
                   value={filterText}
                   onChange={setFilterText}
                 />
-                <div role='none' className='flex shrink-0 gap-1 items-center'>
-                  <IconButton
-                    ref={filterSaveButtonRef}
-                    disabled={!filter}
-                    label={t('mailbox toolbar save button label')}
-                    icon='ph--folder-plus--regular'
-                    iconOnly
-                    onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
-                  />
-                  <IconButton
-                    label={t('mailbox toolbar clear button label')}
-                    icon='ph--x--regular'
-                    iconOnly
-                    onClick={() => handleCancel()}
-                  />
-                </div>
-              </div>
-            )}
-          </Menu.Root>
-        </ElevationProvider>
+                <IconButton
+                  ref={filterSaveButtonRef}
+                  disabled={!filter}
+                  label={t('mailbox toolbar save button label')}
+                  icon='ph--folder-plus--regular'
+                  iconOnly
+                  onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
+                />
+                <IconButton
+                  label={t('mailbox toolbar clear button label')}
+                  icon='ph--x--regular'
+                  iconOnly
+                  onClick={() => handleClear()}
+                />
+              </Menu.Toolbar>
+            </Menu.Root>
+          </ElevationProvider>
+        )}
       </Panel.Toolbar>
-
-      <Panel.Content>
+      <Panel.Content asChild>
         {isEmpty ? (
-          <MailboxEmpty mailbox={mailbox} />
+          <NewMailbox mailbox={mailbox} />
         ) : (
-          <MailboxComponent
+          <MessageStack
             id={id}
-            currentMessageId={currentMessageId}
             messages={messagesWithTags}
+            currentId={currentId}
             labels={mergedLabels}
             onAction={handleAction}
           />
@@ -263,7 +251,6 @@ const useMessageTagsMap = (
 
   useEffect(() => {
     const map: Record<string, Tag.Tag[]> = {};
-
     for (const relation of hasSubjectRelations) {
       try {
         const source = Relation.getSource(relation);
@@ -313,18 +300,16 @@ const useMessageTagsMap = (
 const useMailboxActions = ({
   db,
   sortDescending,
-  filterVisible,
 }: {
   db?: Database.Database;
   sortDescending: Atom.Writable<boolean>;
-  filterVisible: Atom.Writable<boolean>;
 }) => {
   const { invokePromise } = useOperationInvoker();
 
   const menu = useMemo(
     () =>
       Atom.make((context) => {
-        const base = MenuBuilder.make()
+        return MenuBuilder.make()
           .root({
             label: ['mailbox toolbar title', { ns: meta.id }],
           })
@@ -338,47 +323,23 @@ const useMailboxActions = ({
             () => context.set(sortDescending, !context.get(sortDescending)),
           )
           .action(
-            'filterVisible',
-            {
-              type: 'filterVisible',
-              icon: 'ph--magnifying-glass--regular',
-              label: ['mailbox toolbar filter', { ns: meta.id }],
-            },
-            () => context.set(filterVisible, !context.get(filterVisible)),
-          )
-          .action(
             'composeEmail',
             {
               type: 'composeEmail',
               icon: 'ph--paper-plane-right--regular',
               label: ['compose email label', { ns: meta.id }],
             },
-            () => db && invokePromise(InboxOperation.CreateDraft, { db }),
+            () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db }),
           )
           .build();
-
-        // Add gap separator before compose email action.
-        const gap = createGapSeparator();
-        return {
-          nodes: [...base.nodes, ...gap.nodes],
-          edges: [
-            // Keep edges for sort and filter actions.
-            ...base.edges.filter((e) => e.target !== 'composeEmail'),
-            // Add gap after filter action.
-            ...gap.edges,
-            // Add compose email after gap.
-            { source: 'root', target: 'composeEmail', relation: 'child' },
-          ],
-        };
       }),
-    [sortDescending, filterVisible, invokePromise, db],
+    [sortDescending, invokePromise, db],
   );
 
   return useMenuActions(menu);
 };
 
 // TODO(wittjosiah): Factor out.
-
 type AtomState<T> = {
   atom: Atom.Writable<T>;
   value: T;

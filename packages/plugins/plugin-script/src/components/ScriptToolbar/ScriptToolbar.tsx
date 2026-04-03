@@ -3,11 +3,11 @@
 //
 
 import { Atom } from '@effect-atom/atom-react';
-import React, { forwardRef, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { type Script } from '@dxos/functions';
-import { ComposableProps, ElevationProvider, useTranslation } from '@dxos/react-ui';
-import { composableProps } from '@dxos/ui-theme';
+import { ElevationProvider, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { type ActionGraphProps, Menu, MenuRootProps, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
 
 import {
@@ -20,16 +20,12 @@ import {
 } from '../../hooks';
 import { meta } from '../../meta';
 
-export type ScriptToolbarProps = ComposableProps<
-  HTMLDivElement,
-  Pick<MenuRootProps, 'attendableId'> & {
-    script: Script.Script;
-    role?: string;
-    state: ScriptToolbarStateStore;
-  }
->;
+export type ScriptToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
+  script: Script.Script;
+  state: ScriptToolbarStateStore;
+};
 
-export const ScriptToolbar = forwardRef<HTMLDivElement, ScriptToolbarProps>(
+export const ScriptToolbar = composable<HTMLDivElement, ScriptToolbarProps>(
   ({ script, attendableId, role, state, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const options = useDeployDeps({ script });

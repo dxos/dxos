@@ -84,8 +84,8 @@ describe('RepoProxy', () => {
     await openAndClose(repo2);
     const network = await new TestReplicationNetwork().open();
 
-    await peer1.host.addReplicator(await network.createReplicator());
-    await peer2.host.addReplicator(await network.createReplicator());
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
 
     const text = 'Hello World!';
     const handle1 = repo1.create<{ text: string }>({ text });
@@ -95,7 +95,7 @@ describe('RepoProxy', () => {
     const handle2 = repo2.find<{ text: string }>(handle1.url!);
     await handle2.whenReady();
     expect(handle2.doc()?.text).to.equal(text);
-    await peer1.host.flush();
+    await peer1.host.flush(Context.default());
 
     {
       // Change from another peer.
@@ -131,7 +131,7 @@ describe('RepoProxy', () => {
       });
 
       await clientRepo.flush();
-      await host.flush();
+      await host.flush(Context.default());
       await clientRepo.close();
       await host.close();
       await level.close();

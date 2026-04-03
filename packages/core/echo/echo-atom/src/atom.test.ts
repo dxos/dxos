@@ -73,8 +73,8 @@ describe('Echo Atom - Basic Functionality', () => {
     );
 
     // Mutate object via Obj.change.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
 
     // Subscription should have fired: immediate + update.
@@ -105,8 +105,8 @@ describe('Echo Atom - Basic Functionality', () => {
     );
 
     // Update through Obj.change.
-    Obj.change(obj, (o) => {
-      o.title = (o.title ?? '') + ' Updated';
+    Obj.change(obj, (obj) => {
+      obj.title = (obj.title ?? '') + ' Updated';
     });
 
     // Subscription should have fired: immediate + update.
@@ -140,8 +140,8 @@ describe('Echo Atom - Basic Functionality', () => {
     expect(propertyUpdateCount).toBe(1);
 
     // Mutate the standalone object.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated Standalone';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated Standalone';
     });
 
     // Both atoms should have received updates.
@@ -244,8 +244,8 @@ describe('Echo Atom - Referential Equality', () => {
     expect(updateCount).toBe(1);
 
     // Mutate the object.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
 
     // The subscription should still work.
@@ -276,8 +276,8 @@ describe('Echo Atom - Referential Equality', () => {
     expect(updateCount).toBe(1);
 
     // Mutate the specific property.
-    Obj.change(obj, (o) => {
-      o.name = 'Updated';
+    Obj.change(obj, (obj) => {
+      obj.name = 'Updated';
     });
 
     // The subscription should still work.

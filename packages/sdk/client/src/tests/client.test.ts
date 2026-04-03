@@ -35,7 +35,7 @@ describe('Client', () => {
     expect(client.initialized).to.be.true;
   });
 
-  test('default space loads', async () => {
+  test('space creation works after identity', async () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
@@ -45,8 +45,8 @@ describe('Client', () => {
     onTestFinished(() => client.destroy());
     await asyncTimeout(client.initialize(), 2_000);
     await asyncTimeout(client.halo.createIdentity(), 2_000);
-    await asyncTimeout(client.spaces.waitUntilReady(), 2_000);
-    await asyncTimeout(client.spaces.default.waitUntilReady(), 2_000);
+    const space = await asyncTimeout(client.spaces.create(), 2_000);
+    await asyncTimeout(space.waitUntilReady(), 2_000);
   });
 
   test('initialize and destroy multiple times', async () => {
@@ -114,7 +114,6 @@ describe('Client', () => {
       expect(client.halo.identity.get()).not.to.exist;
       const identity = await client.halo.createIdentity({ displayName });
       expect(client.halo.identity.get()).to.deep.eq(identity);
-      await client.spaces.waitUntilReady();
       await client.destroy();
     }
 
@@ -124,7 +123,6 @@ describe('Client', () => {
       expect(client.halo.identity).to.exist;
       // TODO(burdon): Error type.
       await expect(client.halo.createIdentity({ displayName })).rejects.toBeInstanceOf(Error);
-      await client.spaces.waitUntilReady();
     }
     {
       // Reset storage.
@@ -137,7 +135,6 @@ describe('Client', () => {
       // expect(client.halo.identity.get()).to.eq(null);
       // await client.halo.createIdentity({ displayName });
       // expect(client.halo.identity).to.exist;
-      // await client.spaces.waitUntilReady();
       // await client.destroy();
     }
   });
@@ -159,7 +156,6 @@ describe('Client', () => {
     await client.initialize();
     onTestFinished(() => client.destroy());
     await client.halo.createIdentity({ displayName: 'reset-check' });
-    await client.spaces.waitUntilReady();
 
     // Close client.
     await client.destroy();
@@ -245,8 +241,8 @@ describe('Client', () => {
         ],
       }),
     );
-    Obj.change(thread2, (t) => {
-      t.messages.push(Ref.make(message));
+    Obj.change(thread2, (obj) => {
+      obj.messages.push(Ref.make(message));
     });
     await space2.db.flush();
 

@@ -18,7 +18,8 @@ import { AnchoredTo, Thread } from '@dxos/types';
 
 import { CommentsPanel, type CommentsPanelProps } from '../../components';
 import { meta } from '../../meta';
-import { ThreadCapabilities, ThreadOperation, type ViewState } from '../../types';
+import { ThreadCapabilities, type ViewState } from '../../types';
+import { ThreadOperation } from '../../operations';
 import { SurfaceComponentProps } from '@dxos/app-toolkit/ui';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
@@ -205,8 +206,8 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
         <Panel.Content asChild>
           <ScrollArea.Root thin>
             <ScrollArea.Viewport>
-              <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
-              <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
+              <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
+              <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Content>

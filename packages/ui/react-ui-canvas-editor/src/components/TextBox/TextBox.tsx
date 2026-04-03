@@ -59,7 +59,7 @@ export const TextBox = forwardRef<TextBoxControl, TextBoxProps>(
             themeMode,
             syntaxHighlighting: !!language,
             slots: {
-              editor: { className: 'w-full h-full [&>.cm-scroller]:scrollbar-none p-2' },
+              editor: { className: 'h-full w-full [&>.cm-scroller]:scrollbar-none p-2' },
               content: { className: mx(centered && 'text-center') },
             },
           }),

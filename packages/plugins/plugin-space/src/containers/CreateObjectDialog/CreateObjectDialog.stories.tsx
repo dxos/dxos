@@ -3,26 +3,24 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 import React, { useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Database } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
-import { withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type CreateObjectOption, type Metadata, CreateObjectPanel } from '../../components';
 import { translations } from '../../translations';
 
-//
-// Mock data.
-//
-
 const mockOptions: CreateObjectOption[] = [
-  { id: 'dxos.org/type/Document', label: 'Document', icon: 'ph--file-text--regular' },
-  { id: 'dxos.org/type/Table', label: 'Table', icon: 'ph--table--regular' },
-  { id: 'dxos.org/type/Canvas', label: 'Canvas', icon: 'ph--paint-brush--regular' },
-  { id: 'dxos.org/type/Thread', label: 'Thread', icon: 'ph--chat-circle-text--regular' },
+  { id: 'org.dxos.type.document', label: 'Document', icon: 'ph--file-text--regular' },
+  { id: 'org.dxos.type.table', label: 'Table', icon: 'ph--table--regular' },
+  { id: 'org.dxos.type.canvas', label: 'Canvas', icon: 'ph--paint-brush--regular' },
+  { id: 'org.dxos.type.thread', label: 'Thread', icon: 'ph--chat-circle-text--regular' },
 ];
 
 const mockSpaces = [
@@ -30,67 +28,46 @@ const mockSpaces = [
   { id: 'space-2', db: {} as Database.Database, displayName: 'Team Space' },
 ] as unknown as Space[];
 
-const mockResolve = (_typename: string): Metadata | undefined => undefined;
-
-//
-// Wrapper that places the panel inside a Dialog (matching production usage).
-//
-
-const DialogWrapper = ({ children }: { children: React.ReactNode }) => (
-  <Dialog.Root open>
-    <Dialog.Content>
-      <Dialog.Header>
-        <Dialog.Title>Create Object</Dialog.Title>
-      </Dialog.Header>
-      <Dialog.Body>{children}</Dialog.Body>
-    </Dialog.Content>
-  </Dialog.Root>
-);
-
-//
-// Stories.
-//
-
-const SelectTypeStory = () => {
+const DefaultStory = () => {
   const [typename, setTypename] = useState<string | undefined>(undefined);
 
   return (
-    <DialogWrapper>
-      <CreateObjectPanel
-        options={mockOptions}
-        spaces={mockSpaces}
-        typename={typename}
-        resolve={mockResolve}
-        onTypenameChange={setTypename}
-        onCreateObject={async () => {}}
-      />
-    </DialogWrapper>
+    <Dialog.Root open>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Body>
+            <CreateObjectPanel
+              options={mockOptions}
+              spaces={mockSpaces}
+              typename={typename}
+              target={{} as Database.Database}
+              resolve={() => mockMetadata}
+              onTypenameChange={setTypename}
+              onCreateObject={async () => {}}
+            />
+          </Dialog.Body>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
   );
 };
 
-const SelectSpaceStory = () => {
-  const [target, setTarget] = useState<Database.Database | undefined>(undefined);
+const mockInputSchema = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String.annotations({ title: 'Name' }),
+  description: Schema.optional(Schema.String.annotations({ title: 'Description' })),
+});
 
-  return (
-    <DialogWrapper>
-      <CreateObjectPanel
-        options={mockOptions}
-        spaces={mockSpaces}
-        typename='dxos.org/type/Document'
-        target={target}
-        resolve={mockResolve}
-        onTargetChange={setTarget as any}
-        onCreateObject={async () => {}}
-      />
-    </DialogWrapper>
-  );
+const mockMetadata: Metadata = {
+  createObject: () => Effect.succeed({ id: 'mock-id', subject: [], object: {} as any }),
+  inputSchema: mockInputSchema,
+  icon: 'ph--file-text--regular',
 };
 
 const meta = {
   title: 'plugins/plugin-space/containers/CreateObjectDialog',
-  decorators: [withTheme(), withPluginManager()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager()],
   parameters: {
-    layout: 'centered',
     translations,
   },
 } satisfies Meta;
@@ -99,10 +76,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const SelectType: Story = {
-  render: SelectTypeStory,
-};
-
-export const SelectSpace: Story = {
-  render: SelectSpaceStory,
+export const Default: Story = {
+  render: DefaultStory,
 };

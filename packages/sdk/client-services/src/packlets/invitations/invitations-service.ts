@@ -28,9 +28,9 @@ export class InvitationsServiceImpl implements InvitationsService {
   }
 
   createInvitation(options: Invitation): Stream<Invitation> {
-    return new Stream<Invitation>(({ next, close }) => {
+    return new Stream<Invitation>(({ ctx, next, close }) => {
       void this._invitationsManager
-        .createInvitation(options)
+        .createInvitation(ctx, options)
         .then((invitation) => {
           trace.metrics.increment('dxos.invitation.created');
           invitation.subscribe(next, close, close);
@@ -40,8 +40,8 @@ export class InvitationsServiceImpl implements InvitationsService {
   }
 
   acceptInvitation(request: AcceptInvitationRequest): Stream<Invitation> {
-    const invitation = this._invitationsManager.acceptInvitation(request);
-    return new Stream<Invitation>(({ next, close }) => {
+    return new Stream<Invitation>(({ ctx, next, close }) => {
+      const invitation = this._invitationsManager.acceptInvitation(ctx, request);
       invitation.subscribe(next, close, close);
     });
   }

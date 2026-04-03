@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, getSpaceIdFromPath } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getPersonalSpace, getSpaceIdFromPath } from '@dxos/app-toolkit';
 import { addEventListener } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -52,7 +52,10 @@ export default Capability.makeModule(
       const [layoutAtom] = capabilities.getAll(AppCapabilities.Layout);
       const layout = registry.get(layoutAtom);
       const spaceId = getSpaceIdFromPath(layout.workspace);
-      const space = (spaceId && client.spaces.get(spaceId)) ?? client.spaces.default;
+      const space = (spaceId && client.spaces.get(spaceId)) ?? getPersonalSpace(client);
+      if (!space) {
+        return;
+      }
       const result = await handlePreviewLookup(client, space, { dxn, label });
       if (!result) {
         return;

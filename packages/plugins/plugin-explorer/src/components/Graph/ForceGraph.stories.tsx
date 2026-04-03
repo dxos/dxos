@@ -34,7 +34,7 @@ const DefaultStory = () => {
   const [graph, setGraph] = useState<Graph.Graph>();
 
   useAsyncEffect(async () => {
-    const space = client.spaces.default;
+    const space = client.spaces.get()[0];
     void generate(space, generator);
     const { view } = await ViewModel.makeFromDatabase({ db: space.db, typename: Type.getTypename(Graph.Graph) });
     const graph = Graph.make({ name: 'Test', view });

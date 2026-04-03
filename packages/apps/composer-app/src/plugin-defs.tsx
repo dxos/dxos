@@ -15,11 +15,11 @@ import { BoardPlugin } from '@dxos/plugin-board';
 import { ChessPlugin } from '@dxos/plugin-chess';
 import { ClientPlugin } from '@dxos/plugin-client';
 import { ConductorPlugin } from '@dxos/plugin-conductor';
+import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
 import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
-import { FilesPlugin } from '@dxos/plugin-files';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -31,6 +31,7 @@ import { MasonryPlugin } from '@dxos/plugin-masonry';
 import { MeetingPlugin } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { NativePlugin } from '@dxos/plugin-native';
+import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem';
 import { NavTreePlugin } from '@dxos/plugin-navtree';
 import { ObservabilityPlugin } from '@dxos/plugin-observability';
 import { OutlinerPlugin } from '@dxos/plugin-outliner';
@@ -45,6 +46,7 @@ import { SettingsPlugin } from '@dxos/plugin-settings';
 import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
+import { SpotlightPlugin } from '@dxos/plugin-spotlight';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StackPlugin } from '@dxos/plugin-stack';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar';
@@ -83,16 +85,19 @@ export type PluginConfig = State & {
 };
 
 export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
-  const useSimpleLayout = isPopover || isMobile;
+  const layoutPluginId = isPopover
+    ? SpotlightPlugin.meta.id
+    : isMobile
+      ? SimpleLayoutPlugin.meta.id
+      : DeckPlugin.meta.id;
   return [
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
-    useSimpleLayout ? SimpleLayoutPlugin.meta.id : DeckPlugin.meta.id,
-    FilesPlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
-    isTauri && !isMobile && NativePlugin.meta.id,
+    layoutPluginId,
+    isTauri && !isMobile && !isPopover && NativePlugin.meta.id,
     OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
@@ -131,9 +136,10 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     // Labs
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
-      PipelinePlugin.meta.id,
+      DailySummaryPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
+      PipelinePlugin.meta.id,
       TranscriptionPlugin.meta.id,
       ZenPlugin.meta.id,
     ],
@@ -154,7 +160,7 @@ export const getPlugins = ({
   isPopover,
   isMobile,
 }: PluginConfig): Plugin.Plugin[] => {
-  const useSimpleLayout = isPopover || isMobile;
+  const layoutPlugin = isPopover ? SpotlightPlugin() : isMobile ? SimpleLayoutPlugin({}) : DeckPlugin();
   const origin = isTauri ? APP_LINK_ORIGIN : window.location.origin;
   return [
     AssistantPlugin(),
@@ -179,23 +185,24 @@ export const getPlugins = ({
         }),
     }),
     ConductorPlugin(),
+    DailySummaryPlugin(),
     DebugPlugin({ logBuffer }),
-    useSimpleLayout ? SimpleLayoutPlugin({ isPopover }) : DeckPlugin(),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
-    isLabs && FilesPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
     OperationPlugin(),
     KanbanPlugin(),
+    layoutPlugin,
     MapPlugin(),
     isLabs && MapPluginSolid(),
     MarkdownPlugin(),
     MasonryPlugin(),
     MeetingPlugin(),
     MermaidPlugin(),
-    isTauri && !isMobile && NativePlugin(),
+    isTauri && !isMobile && !isPopover && NativePlugin(),
+    NativeFilesystemPlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,
@@ -224,6 +231,7 @@ export const getPlugins = ({
     ThemePlugin({
       appName: 'Composer',
       noCache: isDev,
+      platform: isMobile ? 'mobile' : 'desktop',
     }),
     ThreadPlugin(),
     TokenManagerPlugin(),

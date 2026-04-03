@@ -20,12 +20,12 @@ import { Table } from '../../types';
 
 import { TableCellEditor } from './TableCellEditor';
 
-type StoryProps = {
+type DefaultStoryProps = {
   editing: GridEditing;
 };
 
 // TODO(burdon): Broken layout.
-const DefaultStory = ({ editing }: StoryProps) => {
+const DefaultStory = ({ editing }: DefaultStoryProps) => {
   const { model, table } = useTestTableModel();
 
   if (!model || !table) {

@@ -22,7 +22,7 @@ export type JoinStepProps = Omit<StepProps, 'send' | 'onDone'> & {
   onDone?: (result: InvitationResult | null) => void;
 };
 
-export interface JoinPanelProps {
+export type JoinPanelProps = {
   mode?: JoinPanelMode;
   initialDisposition?: JoinPanelInitialDisposition;
   initialInvitationCode?: string;
@@ -33,7 +33,7 @@ export interface JoinPanelProps {
   onDone?: (result: InvitationResult | null) => void;
   parseInvitationCodeInput?: (invitationCodeInput: string) => string;
   onCancelResetStorage?: () => void;
-}
+};
 
 export type JoinPanelImplProps = Pick<
   JoinPanelProps,

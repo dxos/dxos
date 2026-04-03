@@ -5,9 +5,9 @@
 import * as Schema from 'effect/Schema';
 
 import { meta } from './meta';
+import { SETTINGS_ID, SETTINGS_KEY } from './types';
 
-export const SETTINGS_ID = '!dxos:settings';
-export const SETTINGS_KEY = 'settings';
+export { SETTINGS_ID, SETTINGS_KEY };
 
 export namespace SettingsAction {
   export class Open extends Schema.TaggedClass<Open>()(`${meta.id}.open`, {

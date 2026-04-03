@@ -63,7 +63,7 @@ export const Default = {
           <ScrollToolbar items={items} index={index} setIndex={setIndex} />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <ScrollArea.Root orientation='vertical' margin>
+          <ScrollArea.Root orientation='vertical' centered>
             <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
               <div
                 role='none'

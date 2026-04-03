@@ -9,38 +9,46 @@ import { Filter } from '@dxos/client/echo';
 import { faker } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Card } from '@dxos/react-ui';
+import { Card, ScrollArea } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createObjectFactory } from '@dxos/schema/testing';
 import { Organization } from '@dxos/types';
 
-import { Masonry } from './Masonry';
+import { Masonry, MasonryRootProps } from './Masonry';
 
 const StoryItem = ({ data: { image, name, description } }: { data: Organization.Organization }) => {
   return (
     <Card.Root>
+      <Card.Toolbar>
+        <Card.Icon icon='ph--building-office--regular' />
+        <Card.Title>{name}</Card.Title>
+      </Card.Toolbar>
       <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
-      <Card.Heading>{name}</Card.Heading>
-      {description && <Card.Text variant='description'>{description}</Card.Text>}
+      {description && (
+        <Card.Section classNames='px-2 pb-2'>
+          <Card.Text variant='description'>{description}</Card.Text>
+        </Card.Section>
+      )}
     </Card.Root>
   );
 };
 
-const DefaultStory = () => {
+type DefaultStoryProps = MasonryRootProps;
+
+const DefaultStory = (props: DefaultStoryProps) => {
   const { space } = useClientStory();
   const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
 
   return (
-    <Masonry.Root<Organization.Organization>
-      items={organizations}
-      render={StoryItem}
-      classNames='w-full max-w-full h-full max-h-full overflow-y-auto p-4'
-    />
+    <Masonry.Root {...props} Tile={StoryItem}>
+      <Masonry.Content items={organizations} />
+    </Masonry.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-masonry/Masonry',
+  render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -57,12 +65,28 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof Masonry>;
+} satisfies Meta;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
-  render: DefaultStory,
+export const Default: Story = {};
+
+// TODO(burdon): Masonry currently doesn't support an external scroller.
+export const Single: Story = {
+  render: (props) => {
+    return (
+      <div className='dx-container flex justify-center'>
+        <ScrollArea.Root className='dx-card-max-width' thin padding>
+          <ScrollArea.Viewport>
+            <DefaultStory {...props} />
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </div>
+    );
+  },
+  args: {
+    columns: 1,
+  },
 };

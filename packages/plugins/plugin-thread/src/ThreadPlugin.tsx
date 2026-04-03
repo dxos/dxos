@@ -12,7 +12,8 @@ import { Operation } from '@dxos/operation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { translations as threadTranslations } from '@dxos/react-ui-thread';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
@@ -21,14 +22,16 @@ import {
   BlueprintDefinition,
   CallManager,
   Markdown,
-  OperationResolver,
+  OperationHandler,
+  UndoMappings,
   ReactRoot,
   ReactSurface,
   ThreadState,
 } from './capabilities';
 import { THREAD_ITEM, meta } from './meta';
+import { ThreadOperation } from './operations';
 import { translations } from './translations';
-import { Channel, ThreadOperation } from './types';
+import { Channel } from './types';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
@@ -81,7 +84,8 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addOperationHandlerModule({ id: 'undo-mappings', activate: UndoMappings }),
   AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
     schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Thread.Thread],

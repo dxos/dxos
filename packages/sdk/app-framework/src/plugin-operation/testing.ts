@@ -9,7 +9,7 @@ import * as Ref from 'effect/Ref';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Operation, type OperationInvoker, OperationResolver } from '@dxos/operation';
+import { Operation, type OperationInvoker } from '@dxos/operation';
 
 //
 // Test Operations
@@ -49,34 +49,24 @@ export const SideEffect = Operation.make({
 // Test Handlers
 //
 
-export const computeHandler = OperationResolver.make({
-  operation: Compute,
-  handler: (data) =>
-    Effect.gen(function* () {
-      yield* Effect.sleep(data.value * 10);
-      return { value: data.value * 2 };
-    }),
-});
+export const computeHandler = Operation.withHandler(Compute, (data) =>
+  Effect.gen(function* () {
+    yield* Effect.sleep(data.value * 10);
+    return { value: data.value * 2 };
+  }),
+);
 
-export const halveComputeHandler = OperationResolver.make({
-  operation: HalveCompute,
-  handler: (data) => Effect.succeed({ value: data.value / 2 }),
-});
+export const halveComputeHandler = Operation.withHandler(HalveCompute, (data) =>
+  Effect.succeed({ value: data.value / 2 }),
+);
 
-export const toStringHandler = OperationResolver.make({
-  operation: ToString,
-  handler: (data) => Effect.succeed({ string: data.value.toString() }),
-});
+export const toStringHandler = Operation.withHandler(ToString, (data) =>
+  Effect.succeed({ string: data.value.toString() }),
+);
 
-export const addHandler = OperationResolver.make({
-  operation: Add,
-  handler: (data) => Effect.succeed(data[0] + data[1]),
-});
+export const addHandler = Operation.withHandler(Add, (data) => Effect.succeed(data[0] + data[1]));
 
-export const sideEffectHandler = OperationResolver.make({
-  operation: SideEffect,
-  handler: () => Effect.succeed(undefined),
-});
+export const sideEffectHandler = Operation.withHandler(SideEffect, () => Effect.succeed(undefined));
 
 //
 // Test Utilities

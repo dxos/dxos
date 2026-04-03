@@ -40,6 +40,9 @@
       "path": "../../core/operation"
     },
     {
+      "path": "../../plugins/plugin-client"
+    },
+    {
       "path": "../../plugins/plugin-testing"
     },
     {

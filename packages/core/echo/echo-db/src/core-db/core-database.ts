@@ -98,7 +98,7 @@ export class CoreDatabase {
 
   private _state = CoreDatabaseState.CLOSED;
 
-  private _ctx = new Context();
+  private _ctx = Context.default();
 
   // TODO(dmaretskyi): Refactor this.
   public readonly opened = new Trigger();
@@ -155,7 +155,7 @@ export class CoreDatabase {
   }
 
   @synchronized
-  async open(spaceState: SpaceState): Promise<void> {
+  async open(ctx: Context, spaceState: SpaceState): Promise<void> {
     const start = performance.now();
     if (this._state !== CoreDatabaseState.CLOSED) {
       log.info('Already open');
@@ -163,12 +163,17 @@ export class CoreDatabase {
     }
     this._state = CoreDatabaseState.OPENING;
 
+    this._ctx = new Context({ parent: ctx });
+    this._updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(this._ctx), {
+      maxFrequency: THROTTLED_UPDATE_FREQUENCY,
+    });
+
     await this._repoProxy.open();
-    this._ctx.onDispose(this._unsubscribeFromHandles.bind(this));
+    this._ctx.onDispose(() => this._unsubscribeFromHandles());
     this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, this._onObjectDocumentLoaded.bind(this));
 
     try {
-      await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
+      await this._automergeDocLoader.loadSpaceRootDocHandle(ctx, spaceState);
       const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
       const spaceRootDoc: DatabaseDirectory = spaceRootDocHandle.doc();
       invariant(spaceRootDoc);
@@ -204,7 +209,7 @@ export class CoreDatabase {
     this.opened.reset();
 
     await this._ctx.dispose();
-    this._ctx = new Context();
+    this._ctx = Context.default();
 
     await this._repoProxy.close();
   }
@@ -215,7 +220,7 @@ export class CoreDatabase {
    */
   // TODO(dmaretskyi): should it be synchronized and/or cancelable?
   @synchronized
-  async updateSpaceState(spaceState: SpaceState): Promise<void> {
+  async updateSpaceState(ctx: Context, spaceState: SpaceState): Promise<void> {
     invariant(this._ctx, 'Must be open');
     const currentRootUrl = this._automergeDocLoader.getSpaceRootDocHandle().url;
     if (spaceState.rootUrl === currentRootUrl) {
@@ -225,7 +230,7 @@ export class CoreDatabase {
     const objectIdsToLoad = this._automergeDocLoader.clearHandleReferences();
 
     try {
-      await this._automergeDocLoader.loadSpaceRootDocHandle(this._ctx, spaceState);
+      await this._automergeDocLoader.loadSpaceRootDocHandle(ctx, spaceState);
       const spaceRootDocHandle = this._automergeDocLoader.getSpaceRootDocHandle();
       await this._handleSpaceRootDocumentChange(spaceRootDocHandle, objectIdsToLoad);
       spaceRootDocHandle.on('change', this._onDocumentUpdate);
@@ -926,12 +931,12 @@ export class CoreDatabase {
    * This happens for objects which were loaded for the first time (_onObjectDocumentLoaded).
    */
   private _objectsForNextUpdate = new Set<string>();
-  private readonly _updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(), {
+  private _updateScheduler = new UpdateScheduler(this._ctx, async () => this._emitDbUpdateEvents(this._ctx), {
     maxFrequency: THROTTLED_UPDATE_FREQUENCY,
   });
 
   @trace.span({ showInBrowserTimeline: true })
-  private _emitDbUpdateEvents(): void {
+  private _emitDbUpdateEvents(_ctx: Context): void {
     const fullUpdateIds = [...this._objectsForNextUpdate];
     const allDbUpdates = new Set([...this._objectsForNextUpdate, ...this._objectsForNextDbUpdate]);
     this._objectsForNextUpdate.clear();

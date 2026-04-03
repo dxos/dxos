@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -91,8 +91,8 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
 
   const handleAdd = useCallback(() => {
     const sequence = Sequence.makeSequence();
-    Obj.change(dream, (d) => {
-      d.sequences = [...(d.sequences ?? []), sequence];
+    Obj.change(dream, (obj) => {
+      obj.sequences = [...(obj.sequences ?? []), sequence];
     });
     setSelected(sequence.id);
   }, [dream]);
@@ -233,7 +233,7 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
         }}
       />
       <List.ItemDeleteButton
-        onClick={(event: React.MouseEvent) => {
+        onClick={(event: MouseEvent) => {
           event.stopPropagation();
           onLayerDelete(item.id);
         }}

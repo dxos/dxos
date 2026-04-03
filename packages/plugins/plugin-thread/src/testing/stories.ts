@@ -22,8 +22,8 @@ export const createThreadPlugins = async (): Promise<Array<Plugin.Plugin>> => [
       }),
     onSpacesReady: ({ client }) =>
       Effect.gen(function* () {
-        yield* Effect.promise(() => client.spaces.default.waitUntilReady());
-        client.spaces.default.db.add(Channel.make());
+        const space = client.spaces.get()[0];
+        space.db.add(Channel.make());
       }),
     config: new Config({
       runtime: {

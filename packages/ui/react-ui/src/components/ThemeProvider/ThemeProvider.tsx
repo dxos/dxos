@@ -43,7 +43,8 @@ export const ThemeProvider = ({
   tx = (_path, _styleProps, ..._options) => undefined,
   themeMode = 'dark',
   rootDensity = 'fine',
-  ...rest
+  noCache,
+  platform,
 }: ThemeProviderProps) => {
   useEffect(() => {
     if (document.defaultView) {
@@ -54,9 +55,10 @@ export const ThemeProvider = ({
   }, []);
 
   const safeAreaPadding = useSafeArea();
+  // Destructure all props explicitly so useMemo deps are stable primitives, not a new `rest` object every render.
   const contextValue = useMemo(
-    () => ({ tx, themeMode, hasIosKeyboard: hasIosKeyboard(), safeAreaPadding, ...rest }),
-    [tx, themeMode, safeAreaPadding, rest],
+    () => ({ tx, themeMode, hasIosKeyboard: hasIosKeyboard(), safeAreaPadding, noCache, platform }),
+    [tx, themeMode, safeAreaPadding, noCache, platform],
   );
 
   return (

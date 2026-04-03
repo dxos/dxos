@@ -19,6 +19,7 @@ import {
   getSchemaDXN,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
+import { Context } from '@dxos/context';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -72,8 +73,8 @@ describe('ECHO specific proxy properties with schema', () => {
   test('throws when assigning a class instance inside Obj.change', () => {
     const obj = createObject(Obj.make(TestSchema.Example, {}));
     expect(() => {
-      Obj.change(obj, (o) => {
-        o.classInstance = new TestSchema.TestClass();
+      Obj.change(obj, (obj) => {
+        obj.classInstance = new TestSchema.TestClass();
       });
     }).to.throw();
   });
@@ -105,14 +106,14 @@ describe('ECHO specific proxy properties with schema', () => {
       called++;
     });
 
-    Obj.change(obj, (o) => {
-      o.string = 'baz';
+    Obj.change(obj, (obj) => {
+      obj.string = 'baz';
     });
     expect(called).to.eq(1);
 
     unsubscribe();
-    Obj.change(obj, (o) => {
-      o.string = 'qux';
+    Obj.change(obj, (obj) => {
+      obj.string = 'qux';
     });
     expect(called).to.eq(1);
   });
@@ -151,10 +152,10 @@ describe('without database', () => {
 
   test('create', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
-    Obj.change(obj, (o) => {
-      o.nested.name = 'bar';
-      o.nested.arr = ['a', 'b', 'c'];
-      o.nested.arr.push('d');
+    Obj.change(obj, (obj) => {
+      obj.nested.name = 'bar';
+      obj.nested.arr = ['a', 'b', 'c'];
+      obj.nested.arr.push('d');
     });
   });
 
@@ -236,8 +237,8 @@ describe('Reactive Object with ECHO database', () => {
     await graph.schemaRegistry.register([TestSchema]);
     const objectHost = db.add(Obj.make(TestSchema, { field: [] }));
     const object = db.add(Obj.make(TestSchema, { field: 'foo' }));
-    Obj.change(objectHost, (o) => {
-      o.field?.push({ hosted: Ref.make(object) });
+    Obj.change(objectHost, (obj) => {
+      obj.field?.push({ hosted: Ref.make(object) });
     });
     Obj.make(TestSchema, {
       field: [Obj.make(TestSchema, { field: Ref.make(objectHost) })],
@@ -262,7 +263,7 @@ describe('Reactive Object with ECHO database', () => {
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
     const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-    const root = await peer.host.createSpaceRoot(spaceKey);
+    const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
     await peer.client.graph.schemaRegistry.register([TestSchema.Example]);
 
     let id: string;
@@ -296,7 +297,7 @@ describe('Reactive Object with ECHO database', () => {
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
     const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-    const root = await peer.host.createSpaceRoot(spaceKey);
+    const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
     let id: string;
     {
@@ -426,8 +427,8 @@ describe('Reactive Object with ECHO database', () => {
         array: [{ field: undefined }],
       }),
     );
-    Obj.change(object, (o) => {
-      o.array.push({ field: undefined });
+    Obj.change(object, (obj) => {
+      obj.array.push({ field: undefined });
     });
     for (const value of [object.field, object.nested.deep.field, ...object.array.map((o: any) => o.field)]) {
       expect(value).to.be.undefined;
@@ -501,8 +502,8 @@ describe('Reactive Object with ECHO database', () => {
       const { db } = await builder.createDatabase();
       const another = Obj.make(TestSchema.Expando, { title: 'another' });
       const task = Obj.make(TestSchema.Expando, { title: 'test', previous: Ref.make(another) });
-      Obj.change(another, (o) => {
-        o.previous = Ref.make(task);
+      Obj.change(another, (obj) => {
+        obj.previous = Ref.make(task);
       });
       db.add(task);
     });
@@ -571,13 +572,13 @@ describe('Reactive Object with ECHO database', () => {
       const task1 = Obj.make(TestSchema.Task, { title: 'Task1' });
       const task2 = Obj.make(TestSchema.Task, { title: 'Task2' });
 
-      Obj.change(contact, (c) => {
-        c.tasks!.push(Ref.make(task1));
-        c.tasks!.push(Ref.make(task2));
+      Obj.change(contact, (obj) => {
+        obj.tasks!.push(Ref.make(task1));
+        obj.tasks!.push(Ref.make(task2));
       });
 
-      Obj.change(task2, (t) => {
-        t.previous = Ref.make(task1);
+      Obj.change(task2, (obj) => {
+        obj.previous = Ref.make(task1);
       });
 
       expect(contact.tasks![0].target).to.eq(task1);
@@ -677,8 +678,8 @@ describe('Reactive Object with ECHO database', () => {
       await graph.schemaRegistry.register([TestType, NestedType]);
       const obj = db.add(Obj.make(TestType, { objects: [] }));
       const objectWithMeta = Obj.make(NestedType, { [Obj.Meta]: { keys: [key] }, field: 42 });
-      Obj.change(obj, (o) => {
-        o.objects.push(Ref.make(objectWithMeta));
+      Obj.change(obj, (obj) => {
+        obj.objects.push(Ref.make(objectWithMeta));
       });
       expect(Obj.getMeta(obj.objects[0]!.target!).keys).to.deep.eq([key]);
     });
@@ -712,7 +713,7 @@ describe('Reactive Object with ECHO database', () => {
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-      const root = await peer.host.createSpaceRoot(spaceKey);
+      const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
       let id: string;
       {
@@ -800,10 +801,10 @@ describe('Reactive Object with ECHO database', () => {
     const { db } = await builder.createDatabase();
 
     const obj = db.add(Obj.make(TestSchema.Expando, { title: 'Object 1' }));
-    Obj.change(obj, (o) => {
-      o.ref = Ref.make(Obj.make(TestSchema.Expando, { title: 'Object 2' }));
-      o.refs = [Ref.make(Obj.make(TestSchema.Expando, { title: 'Object 2' }))];
-      o.refMap = {
+    Obj.change(obj, (obj) => {
+      obj.ref = Ref.make(Obj.make(TestSchema.Expando, { title: 'Object 2' }));
+      obj.refs = [Ref.make(Obj.make(TestSchema.Expando, { title: 'Object 2' }))];
+      obj.refMap = {
         ref: Ref.make(Obj.make(TestSchema.Expando, { title: 'Object 3' })),
       };
     });
@@ -813,8 +814,8 @@ describe('Reactive Object with ECHO database', () => {
     test('object field is not an echo object', async () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(TestSchema.Expando, { title: 'Object 1' }));
-      Obj.change(obj, (o) => {
-        o.field = { foo: 'bar' };
+      Obj.change(obj, (obj) => {
+        obj.field = { foo: 'bar' };
       });
       expect(isEchoObject(obj.field)).to.be.false;
     });
@@ -822,8 +823,8 @@ describe('Reactive Object with ECHO database', () => {
     test('nested reactive object is an echo object', async () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(TestSchema.Expando, { title: 'Object 1' }));
-      Obj.change(obj, (o) => {
-        o.field = {
+      Obj.change(obj, (obj) => {
+        obj.field = {
           ref: Ref.make(Obj.make(TestSchema.Expando, { title: 'Object 2' })),
         };
       });
@@ -833,8 +834,8 @@ describe('Reactive Object with ECHO database', () => {
     test('nested ref is an echo object', async () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(TestSchema.Expando, { title: 'Object 1' }));
-      Obj.change(obj, (o) => {
-        o.field = {
+      Obj.change(obj, (obj) => {
+        obj.field = {
           ref: Ref.make(Obj.make(TestSchema.Expando, { title: 'Object 2' })),
         };
       });
@@ -846,20 +847,20 @@ describe('Reactive Object with ECHO database', () => {
 
       const originalValue = { foo: 'bar', nested: { value: 42 } };
       const obj1 = db.add(Obj.make(TestSchema.Expando, { title: 'Object 1' }));
-      Obj.change(obj1, (o) => {
-        o.field = originalValue;
+      Obj.change(obj1, (obj) => {
+        obj.field = originalValue;
       });
       expect(obj1.field).toEqual(originalValue);
 
       const obj2 = db.add(Obj.make(TestSchema.Expando, { title: 'Object 2' }));
-      Obj.change(obj2, (o) => {
-        o.field = obj1.field;
+      Obj.change(obj2, (obj) => {
+        obj.field = obj1.field;
       });
       expect(obj1.field).toEqual(obj2.field);
 
-      Obj.change(obj1, (o) => {
-        o.field.foo = o.field.foo + '_v2';
-        o.field.nested.value += 1;
+      Obj.change(obj1, (obj) => {
+        obj.field.foo = obj.field.foo + '_v2';
+        obj.field.nested.value += 1;
       });
       expect(obj1.field.foo).not.toEqual(obj2.field.foo);
       expect(obj1.field.nested.value).not.toEqual(obj2.field.nested.value);
@@ -870,19 +871,19 @@ describe('Reactive Object with ECHO database', () => {
 
       const obj1 = db.add(Obj.make(TestSchema.Expando, { title: 'Object 1' }));
       const obj2 = Obj.make(TestSchema.Expando, { title: 'Object 2' });
-      Obj.change(obj1, (o) => {
-        o.nested = { object: { ref: Ref.make(obj2) } };
+      Obj.change(obj1, (obj) => {
+        obj.nested = { object: { ref: Ref.make(obj2) } };
       });
       expect(obj1.nested.object.ref.target).toEqual(obj2);
 
       const obj3 = db.add(Obj.make(TestSchema.Expando, { title: 'Object 3' }));
-      Obj.change(obj3, (o) => {
-        o.nested = obj1.nested;
+      Obj.change(obj3, (obj) => {
+        obj.nested = obj1.nested;
       });
       expect(obj1.nested.object.ref.target).toEqual(obj3.nested.object.ref.target);
 
-      Obj.change(obj1, (o) => {
-        o.nested.object.ref = Ref.make(Obj.make(TestSchema.Expando, { title: 'Object 4' }));
+      Obj.change(obj1, (obj) => {
+        obj.nested.object.ref = Ref.make(Obj.make(TestSchema.Expando, { title: 'Object 4' }));
       });
       expect(obj1.nested.object.ref.target).not.toEqual(obj3.nested.object.ref.target);
     });
@@ -894,8 +895,8 @@ describe('Reactive Object with ECHO database', () => {
 
     const obj = db.add(Obj.make(TestSchema.Example, { string: 'Object 1' }));
     const another = Obj.make(TestSchema.Example, { string: 'Object 2' });
-    Obj.change(obj, (o) => {
-      o.other = Ref.make(another);
+    Obj.change(obj, (obj) => {
+      obj.other = Ref.make(another);
     });
     expect(Obj.getDatabase(another)).not.to.be.undefined;
   });

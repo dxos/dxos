@@ -5,7 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { AppGraphBuilder, OperationResolver, ReactSurface } from './capabilities';
+import { AppGraphBuilder, OperationHandler, ReactSurface } from './capabilities';
 import { SEARCH_RESULT, meta } from './meta';
 import { translations } from './translations';
 import { type SearchResult } from './types';
@@ -29,7 +29,7 @@ export const SearchPlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,

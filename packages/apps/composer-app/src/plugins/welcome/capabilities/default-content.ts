@@ -26,10 +26,14 @@ export default Capability.makeModule(
     const { invoke, schedule } = operationInvoker;
     const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
     const client = yield* Capability.get(ClientCapabilities.Client);
+    const { getPersonalSpace } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
 
-    const space = client.spaces.default;
-    Obj.change(space.properties, (p) => {
-      p.icon = SPACE_ICON;
+    const space = getPersonalSpace(client);
+    if (!space) {
+      return Capability.contributes(Capabilities.Null, null);
+    }
+    Obj.change(space.properties, (obj) => {
+      obj.icon = SPACE_ICON;
     });
     const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
 

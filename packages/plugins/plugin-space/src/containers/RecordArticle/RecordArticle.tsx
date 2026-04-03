@@ -8,23 +8,19 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { type SurfaceComponentProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Annotation, type Database, Entity, Filter, Obj, Ref, Relation } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
-import { Card, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Annotation, Entity, Obj } from '@dxos/echo';
+import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
-import { isNonNullable } from '@dxos/util';
 
 import { meta } from '../../meta';
+import { useRelatedObjects } from '../../hooks';
 
 export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(subject);
-  const related = useRelatedObjects(db, subject, {
-    references: true,
-    relations: true,
-  });
+  const related = useRelatedObjects(db, subject, { references: true, relations: true });
   const singleColumn = related.length === 1;
 
   return (
@@ -37,20 +33,25 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
           <ScrollArea.Viewport classNames='p-4 gap-4'>
             <ObjectCard data={subject} classNames='dx-card-max-width' />
 
-            <div role='none' className='flex flex-col gap-2'>
-              <label className='mt-2 text-sm text-description'>{t('related actions label')}</label>
-              <Surface.Surface role='magic' data={{ subject }} limit={1} />
+            {/* TODO(burdon): Prompts and related should both be surfaces. */}
+            <div role='none' className='flex flex-col gap-form-gap'>
+              <Input.Root>
+                <Input.Label>{t('related actions label')}</Input.Label>
+              </Input.Root>
+              <Surface.Surface role='prompts' data={{ subject }} limit={1} />
             </div>
 
             {related.length > 0 && (
-              <div role='none' className={mx('flex flex-col gap-2', singleColumn ? 'dx-card-max-width' : 'w-full')}>
-                <label className='mt-2 text-sm text-description'>{t('related objects label')}</label>
-                <Masonry.Root<Entity.Unknown>
-                  items={related}
-                  render={ObjectCard}
-                  columnCount={singleColumn ? 1 : undefined}
-                  intrinsicHeight
-                />
+              <div
+                role='none'
+                className={mx('dx-expander flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
+              >
+                <Input.Root>
+                  <Input.Label>{t('related objects label')}</Input.Label>
+                </Input.Root>
+                <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined}>
+                  <Masonry.Content items={related} />
+                </Masonry.Root>
               </div>
             )}
           </ScrollArea.Viewport>
@@ -88,65 +89,4 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
       </Card.Root>
     </Menu.Root>
   );
-};
-
-// TODO(wittjosiah): This is a hack. ECHO needs to have a back reference index to easily query for related objects.
-const useRelatedObjects = (
-  db?: Database.Database,
-  record?: Obj.Unknown,
-  options: { references?: boolean; relations?: boolean } = {},
-) => {
-  const objects = useQuery(db, Filter.everything());
-  return useMemo(() => {
-    if (!record) {
-      return [];
-    }
-
-    const related: Entity.Unknown[] = [];
-
-    // TODO(burdon): Change Person => Organization to relations.
-    if (options.references) {
-      const getReferences = (obj: Entity.Unknown): Ref.Unknown[] => {
-        return Object.getOwnPropertyNames(obj)
-          .map((name) => obj[name as keyof Obj.Unknown])
-          .filter((value) => Ref.isRef(value)) as Ref.Unknown[];
-      };
-
-      const references = getReferences(record);
-      const referenceTargets = references.map((ref) => ref.target).filter(isNonNullable);
-      const referenceSources = objects.filter((obj) => {
-        const refs = getReferences(obj);
-        return refs.some((ref) => ref.target === record);
-      });
-
-      related.push(...referenceTargets, ...referenceSources);
-    }
-
-    if (options.relations) {
-      // TODO(dmaretskyi): Workaround until https://github.com/dxos/dxos/pull/10100 lands.
-      const isValidRelation = (obj: Relation.Unknown) => {
-        try {
-          return Relation.isRelation(obj) && Relation.getSource(obj) && Relation.getTarget(obj);
-        } catch {
-          return false;
-        }
-      };
-
-      const relations = objects.filter(Relation.isRelation).filter((obj) => isValidRelation(obj));
-      const targetObjects = relations
-        .filter((relation) => Relation.getTarget(relation) === record)
-        .map((relation) => Relation.getSource(relation));
-      const sourceObjects = relations
-        .filter((relation) => Relation.getSource(relation) === record)
-        .map((relation) => Relation.getTarget(relation));
-
-      related.push(...targetObjects, ...sourceObjects);
-    }
-
-    return (
-      Array.from(new Set(related))
-        // TODO(burdon): Hack to filter out chat objects.
-        .filter((obj) => Entity.getTypename(obj) !== 'org.dxos.type.assistant.chat')
-    );
-  }, [record, objects]);
 };

@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 
 import { CommandConfig, Common, printList, spaceIdWithDefault, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { Database, Filter } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
 
@@ -29,7 +30,7 @@ export const list = Command.make(
     const remoteCronIds = yield* Effect.gen(function* () {
       const client = yield* ClientService;
       const spaceId = yield* spaceIdWithDefault(spaceIdOption);
-      const result = yield* Effect.promise(() => client.edge.http.getCronTriggers(spaceId)).pipe(
+      const result = yield* Effect.promise(() => client.edge.http.getCronTriggers(Context.default(), spaceId)).pipe(
         Effect.catchAll(() => Effect.succeed({ cronIds: [] })),
       );
       return result.cronIds;

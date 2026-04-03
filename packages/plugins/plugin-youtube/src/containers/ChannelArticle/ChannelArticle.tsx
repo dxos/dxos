@@ -78,7 +78,7 @@ export const ChannelArticle = ({ subject: channel }: ChannelArticleProps) => {
                       rel='noopener noreferrer'
                       className='relative aspect-video group'
                     >
-                      <img src={video.thumbnailUrl} alt={video.title} className='w-full h-full object-cover rounded' />
+                      <img src={video.thumbnailUrl} alt={video.title} className='h-full w-full object-cover rounded' />
                       <div className='absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 rounded transition-colors'>
                         <div className='opacity-0 group-hover:opacity-100 bg-red-600 text-white rounded-full p-2 transition-opacity'>
                           <Icon icon='ph--play--fill' size={4} />

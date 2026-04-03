@@ -14,12 +14,13 @@ import { Operation } from '@dxos/operation';
 import { AssistantPlugin } from '@dxos/plugin-assistant';
 import { AutomationPlugin } from '@dxos/plugin-automation';
 import { ClientPlugin } from '@dxos/plugin-client';
+import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
 import { Markdown, MarkdownPlugin } from '@dxos/plugin-markdown';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config, useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout } from '@dxos/react-ui/testing';
 import { DataTypes } from '@dxos/schema';
 
 import { createNotebook } from '../../testing';
@@ -33,12 +34,11 @@ const meta: Meta<typeof NotebookContainer> = {
   component: NotebookContainer,
   render: (args) => {
     const client = useClient();
-    const space = client.spaces.default;
+    const space = client.spaces.get()[0];
     const notebooks = useQuery(space?.db, Filter.type(Notebook.Notebook));
     return <NotebookContainer {...args} subject={notebooks[0]} attendableId='test' />;
   },
   decorators: [
-    withTheme(),
     withLayout({ layout: 'column', classNames: 'w-document-max-width' }),
     withPluginManager({
       plugins: [
@@ -53,14 +53,11 @@ const meta: Meta<typeof NotebookContainer> = {
           types: [...DataTypes, Notebook.Notebook, Operation.PersistentOperation, Markdown.Document],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              yield* Effect.promise(() => client.halo.createIdentity());
-              yield* Effect.promise(() => client.spaces.waitUntilReady());
-              const space = client.spaces.default;
-              yield* Effect.promise(() => space.waitUntilReady());
+              const { personalSpace } = yield* initializeIdentity(client);
 
-              space.db.add(createNotebook());
-              space.db.add(Markdown.make({ content: '# Hello World' }));
-              space.db.add(Operation.serialize(AgentPrompt));
+              personalSpace.db.add(createNotebook());
+              personalSpace.db.add(Markdown.make({ content: '# Hello World' }));
+              personalSpace.db.add(Operation.serialize(AgentPrompt));
             }),
         }),
         AssistantPlugin(),

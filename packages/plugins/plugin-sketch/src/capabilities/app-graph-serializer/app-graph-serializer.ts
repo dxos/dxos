@@ -8,11 +8,12 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { isSpace } from '@dxos/react-client/echo';
 
 import { translations } from '../../translations';
-import { Sketch, SketchOperation } from '../../types';
+import { Sketch } from '../../types';
+import { SketchOperation } from '../../operations';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

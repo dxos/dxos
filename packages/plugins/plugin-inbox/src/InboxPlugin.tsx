@@ -11,14 +11,22 @@ import { Annotation } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionEvents } from '@dxos/plugin-attention';
 import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
-import { type CreateObject, SpaceOperation } from '@dxos/plugin-space/types';
+import { type CreateObject } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Event, Message } from '@dxos/types';
 
 import { CalendarBlueprint, InboxBlueprint } from './blueprints';
-import { AppGraphBuilder, BlueprintDefinition, OperationResolver, ReactSurface } from './capabilities';
+import {
+  AppGraphBuilder,
+  BlueprintDefinition,
+  NavigationResolver,
+  OperationHandler,
+  ReactSurface,
+} from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Calendar, InboxOperation, Mailbox } from './types';
+import { InboxOperation } from './operations';
+import { Calendar, Mailbox } from './types';
 import { CreateCalendarSchema } from './types/Calendar';
 import { CreateMailboxSchema } from './types/Mailbox';
 
@@ -28,6 +36,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
     activate: AppGraphBuilder,
   }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
+  AppPlugin.addNavigationResolverModule({ activate: NavigationResolver }),
   AppPlugin.addMetadataModule({
     metadata: [
       {
@@ -102,7 +111,7 @@ export const InboxPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [Event.Event, Mailbox.Mailbox, Calendar.Calendar, Message.Message],
   }),

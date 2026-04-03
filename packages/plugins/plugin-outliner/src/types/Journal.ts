@@ -6,10 +6,26 @@ import { isAfter, isBefore, isEqual } from 'date-fns';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { updateText } from '@dxos/echo-db';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
 import { getDateString, parseDateString } from './util';
+
+/** @deprecated Use JournalEntry instead. */
+export const LegacyJournalEntry = Schema.Struct({
+  id: Schema.String,
+  date: Schema.String,
+  content: Ref.Ref(Text.Text),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.journal-entry',
+    version: '0.1.0',
+  }),
+  SystemTypeAnnotation.set(true),
+);
+
+export interface LegacyJournalEntry extends Schema.Schema.Type<typeof LegacyJournalEntry> {}
 
 export const JournalEntry = Schema.Struct({
   id: Schema.String,
@@ -17,7 +33,7 @@ export const JournalEntry = Schema.Struct({
   content: Ref.Ref(Text.Text),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.journal-entry',
+    typename: 'org.dxos.type.journalEntry',
     version: '0.1.0',
   }),
   SystemTypeAnnotation.set(true),
@@ -56,6 +72,37 @@ export const makeEntry = (date = new Date()): JournalEntry => {
     date: getDateString(date),
     content: Ref.make(Text.make()),
   });
+};
+
+/**
+ * Append a checkbox bullet to a journal entry's content.
+ */
+export const addBullet = async (entry: JournalEntry, text: string) => {
+  const textObj = await entry.content.load();
+  const existing = textObj.content ?? '';
+  const sanitized = text.trim().replace(/\n+/g, ' ');
+  const bullet = `- [ ] ${sanitized}`;
+  const newContent = existing.length > 0 ? `${existing}\n${bullet}` : bullet;
+  updateText(textObj, ['content'], newContent);
+};
+
+/**
+ * Get or create the entry for a given date in a journal.
+ * If the entry doesn't exist, creates one and adds it to the journal.
+ * Requires `db` to persist the new entry.
+ */
+export const getOrCreateEntry = (journal: Journal, db: { add: (obj: any) => any }, date = new Date()): JournalEntry => {
+  const dateKey = getDateString(date);
+  const existing = journal.entries[dateKey]?.target;
+  if (existing) {
+    return existing;
+  }
+
+  const entry = db.add(makeEntry(date)) as JournalEntry;
+  Obj.change(journal, (draft) => {
+    draft.entries[dateKey] = Ref.make(entry);
+  });
+  return entry;
 };
 
 export const getEntries = (journal: Journal, range?: { from?: Date; to?: Date }): JournalEntry[] => {

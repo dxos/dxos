@@ -13,8 +13,10 @@ import { Annotation, Obj, Type } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { ClientEvents } from '@dxos/plugin-client/types';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { type CreateObject, SpaceCapabilities, SpaceEvents, SpaceOperation } from '@dxos/plugin-space/types';
+import { type CreateObject, SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { HasSubject } from '@dxos/types';
 
 import {
@@ -25,14 +27,16 @@ import {
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
-  OperationResolver,
+  Migrations,
+  OperationHandler,
   ReactSurface,
   Settings,
   Toolkit,
 } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { AssistantEvents, AssistantOperation } from './types';
+import { AssistantEvents } from './types';
+import { AssistantOperation } from './operations';
 import * as Option from 'effect/Option';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
@@ -137,7 +141,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       },
     ],
   }),
-  AppPlugin.addOperationResolverModule({ activate: OperationResolver }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [
       Chat.Chat,
@@ -198,6 +202,10 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     // TODO(wittjosiah): Use a different event.
     activatesOn: ActivationEvents.Startup,
     activate: Toolkit,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
   }),
   Plugin.make,
 );

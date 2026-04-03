@@ -14,8 +14,6 @@ import { ClientService } from '@dxos/client';
 export const handler = Effect.fn(function* () {
   const { json } = yield* CommandConfig;
   const client = yield* ClientService;
-  yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
-
   const identity = client.halo.identity.get();
   const device = client.halo.device;
 

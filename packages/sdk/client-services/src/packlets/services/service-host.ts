@@ -147,7 +147,7 @@ export class ClientServicesHost {
             void this.open(new Context());
           }
         },
-        onRelease: () => this.close(),
+        onRelease: () => this.close(Context.default()),
       });
     }
 
@@ -345,7 +345,6 @@ export class ClientServicesHost {
       this._serviceContext.identityManager,
       this._serviceContext.recoveryManager,
       this._serviceContext.keyring,
-      () => this._serviceContext.dataSpaceManager!,
       (params) => this._createIdentity(params),
       (profile) => this._serviceContext.broadcastProfileUpdate(profile),
     );
@@ -422,7 +421,7 @@ export class ClientServicesHost {
 
   @synchronized
   @Trace.span()
-  async close(): Promise<void> {
+  async close(ctx: Context): Promise<void> {
     if (!this._open) {
       return;
     }

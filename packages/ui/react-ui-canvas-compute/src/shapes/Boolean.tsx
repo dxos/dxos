@@ -95,7 +95,7 @@ const createSymbol =
     const paths = pathConstructor({ startX, endX, height });
 
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} className='w-full h-full'>
+      <svg viewBox={`0 0 ${width} ${height}`} className='h-full w-full'>
         {/* Input line. */}
         {getAnchorPoints({ x: 0, y: centerY }, inputs).map(({ x, y }, i) => (
           <line key={i} x1={x} y1={y} x2={startX * 1.3} y2={y} strokeWidth={strokeWidth} className={className} />

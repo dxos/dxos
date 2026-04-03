@@ -4,15 +4,15 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { type Plugin } from '@dxos/app-framework';
 import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ObservabilityOperation } from '@dxos/plugin-observability/types';
-import { ComposableProps, ScrollArea } from '@dxos/react-ui';
-import { composableProps } from '@dxos/ui-theme';
+import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ScrollArea } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { PluginList } from '../../components';
 import { getPluginPath } from '../../meta';
@@ -20,15 +20,12 @@ import { getPluginPath } from '../../meta';
 const sortByPluginMeta = ({ meta: { name: a = '' } }: Plugin.Plugin, { meta: { name: b = '' } }: Plugin.Plugin) =>
   a.localeCompare(b);
 
-export type PluginRegistryProps = ComposableProps<
-  HTMLDivElement,
-  {
-    id: string;
-    plugins: Plugin.Plugin[];
-  }
->;
+export type PluginRegistryProps = {
+  id: string;
+  plugins: Plugin.Plugin[];
+};
 
-export const PluginRegistry = forwardRef<HTMLDivElement, PluginRegistryProps>(
+export const PluginRegistry = composable<HTMLDivElement, PluginRegistryProps>(
   ({ id, plugins: pluginsProp, ...props }, forwardedRef) => {
     const manager = usePluginManager();
     const { invoke, invokePromise } = useOperationInvoker();

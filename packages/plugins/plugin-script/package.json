@@ -25,6 +25,12 @@
       "node": "./dist/lib/node-esm/blueprints/index.mjs",
       "types": "./dist/types/src/blueprints/index.d.ts"
     },
+    "./operations": {
+      "source": "./src/operations/index.ts",
+      "browser": "./dist/lib/browser/operations/index.mjs",
+      "node": "./dist/lib/node-esm/operations/index.mjs",
+      "types": "./dist/types/src/operations/index.d.ts"
+    },
     "./templates": {
       "source": "./src/templates/index.ts",
       "browser": "./dist/lib/browser/templates/index.mjs",
@@ -43,6 +49,9 @@
     "*": {
       "blueprints": [
         "dist/types/src/blueprints/index.d.ts"
+      ],
+      "operations": [
+        "dist/types/src/operations/index.d.ts"
       ],
       "templates": [
         "dist/types/src/templates/index.d.ts"
@@ -76,6 +85,7 @@
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
     "@dxos/devtools": "workspace:*",
     "@dxos/echo": "workspace:*",
@@ -126,6 +136,7 @@
     "@lezer/common": "catalog:",
     "@lezer/highlight": "catalog:",
     "@octokit/core": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
     "@typescript/vfs": "catalog:",
     "@valtown/codemirror-continue": "catalog:",
     "@valtown/codemirror-ts": "catalog:",

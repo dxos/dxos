@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { forwardRef, useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { ComposableProps } from '@dxos/react-ui';
 import {
   type ControlProps,
   Map,
@@ -13,12 +12,13 @@ import {
   type MapRootProps,
   useMapZoomHandler,
 } from '@dxos/react-ui-geo';
+import { composable } from '@dxos/ui-theme';
 
 import { type GeoControlProps } from '../types';
 
-export type MapControlProps = ComposableProps<HTMLDivElement, GeoControlProps & MapContentProps & MapRootProps>;
+export type MapControlProps = GeoControlProps & MapContentProps & MapRootProps;
 
-export const MapControl = forwardRef<HTMLDivElement, MapControlProps>(
+export const MapControl = composable<HTMLDivElement, MapControlProps>(
   ({ center, zoom, markers, selected, onToggle, onChange, ...props }, forwardedRef) => {
     const [controller, setController] = useState<MapController | null>(null);
     const handleZoomAction = useMapZoomHandler(controller);

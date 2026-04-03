@@ -25,10 +25,12 @@ import {
 } from '@dxos/types';
 
 import { IdentityCreated } from '../capabilities/identity-created';
-import { OperationResolver } from '../capabilities/operation-resolver';
+import { OperationHandler } from '../capabilities/operation-handler';
+import { UndoMappings } from '../capabilities/undo-mappings';
 import { meta } from '../meta';
 import { SpaceEvents } from '../types';
-import { type CreateObject, SpaceOperation, type SpacePluginOptions } from '../types';
+import { type CreateObject, type SpacePluginOptions } from '../types';
+import { SpaceOperation } from '../operations';
 
 import { database, queue, space } from './commands';
 
@@ -54,6 +56,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       },
     },
   }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
     schema: [
       ...DataTypes,
@@ -83,15 +86,15 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
       };
 
       return {
-        id: Capability.getModuleTag(OperationResolver),
-        activatesOn: ActivationEvents.SetupOperationResolver,
-        activate: () => OperationResolver({ createInvitationUrl, observability: false }),
+        id: Capability.getModuleTag(UndoMappings),
+        activatesOn: ActivationEvents.SetupOperationHandler,
+        activate: () => UndoMappings({ createInvitationUrl, observability: false }),
       };
     },
   ),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
-    activatesAfter: [SpaceEvents.DefaultSpaceReady],
+    activatesAfter: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.make,

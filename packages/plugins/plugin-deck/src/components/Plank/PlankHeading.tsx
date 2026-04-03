@@ -15,7 +15,8 @@ import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dx
 
 import { useBreakpoints } from '../../hooks';
 import { meta } from '../../meta';
-import { DeckOperation, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
+import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
+import { DeckOperation } from '../../operations';
 import { soloInlinePadding } from '../fragments';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
@@ -55,7 +56,7 @@ export const PlankHeading = memo(
     actions = [],
   }: PlankHeadingProps) => {
     const { t } = useTranslation(meta.id);
-    const { invokePromise, invokeSync } = useOperationInvoker();
+    const { invokePromise } = useOperationInvoker();
     const runAction = useActionRunner();
     const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
@@ -121,15 +122,15 @@ export const PlankHeading = memo(
           return invokePromise(DeckOperation.Adjust, { type: eventType, id });
         } else if (eventType === 'close') {
           if (part === 'complementary') {
-            return invokeSync(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+            return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
           } else {
-            return invokeSync(LayoutOperation.Close, { subject: [id] });
+            return invokePromise(LayoutOperation.Close, { subject: [id] });
           }
         } else {
           return invokePromise(DeckOperation.Adjust, { type: eventType, id });
         }
       },
-      [invokePromise, invokeSync, id, part],
+      [invokePromise, id, part],
     );
 
     const ActionRoot = node && popoverAnchorId === `${meta.id}:${node.id}` ? Popover.Anchor : Fragment;
@@ -147,6 +148,7 @@ export const PlankHeading = memo(
 
     return (
       <StackItem.Heading
+        data-tauri-drag-region
         data-plank-heading
         style={iconSize(5)}
         classNames={[
@@ -164,7 +166,7 @@ export const PlankHeading = memo(
       >
         {companions && isCompanionNode ? (
           /* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */
-          <div role='none' className='flex-1 min-w-0 overflow-x-auto scrollbar-none flex gap-1'>
+          <div data-tauri-drag-region role='none' className='flex-1 min-w-0 overflow-x-auto scrollbar-none flex gap-1'>
             {companions.map(({ id, properties: { icon, label } }) => (
               <IconButton
                 key={id}
@@ -200,6 +202,7 @@ export const PlankHeading = memo(
             </ActionRoot>
             <TextTooltip text={label} onlyWhenTruncating>
               <StackItem.HeadingLabel
+                data-tauri-drag-region
                 attendableId={attendableId}
                 related={part === 'complementary'}
                 {...(pending && { classNames: 'text-description' })}

@@ -11,7 +11,7 @@ import { faker } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
-import { Combobox, type ComboboxRootProps, useSearchListResults } from '@dxos/react-ui-searchlist';
+import { Combobox, type ComboboxRootProps, useSearchListResults } from '@dxos/react-ui-search';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
 

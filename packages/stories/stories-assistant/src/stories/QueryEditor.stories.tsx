@@ -70,8 +70,8 @@ const meta: Meta<typeof QueryEditor> = {
     withClientProvider({
       types: [Organization.Organization, Person.Person, Pipeline.Pipeline, Employer.Employer],
       createIdentity: true,
-      onCreateIdentity: async ({ client }) => {
-        const space = client.spaces.default;
+      createSpace: true,
+      onCreateSpace: async ({ space }) => {
         const createObjects = createObjectFactory(space.db, generator);
         const objects = await createObjects([
           { type: Organization.Organization, count: 30 },
@@ -79,8 +79,8 @@ const meta: Meta<typeof QueryEditor> = {
           { type: Person.Person, count: 50 },
         ]);
         objects.forEach((obj) => {
-          Obj.change(obj, (o) => {
-            Obj.getMeta(o).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));
+          Obj.change(obj, (obj) => {
+            Obj.getMeta(obj).tags = faker.helpers.uniqueArray(Object.keys(tags), faker.number.int(3));
           });
         });
       },

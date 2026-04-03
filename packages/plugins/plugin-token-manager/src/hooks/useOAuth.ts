@@ -10,6 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { useCallback, useEffect, useState } from 'react';
 
+import { Context } from '@dxos/context';
 import { type Key, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { withAuthorization } from '@dxos/functions';
@@ -54,8 +55,8 @@ export const enrichGoogleTokenWithEmail = (token: AccessToken.AccessToken) =>
     );
 
     if (userInfo.email) {
-      Obj.change(token, (t) => {
-        t.note = `${userInfo.email} - ${t.note ?? ''}`.trim();
+      Obj.change(token, (obj) => {
+        obj.note = `${userInfo.email} - ${obj.note ?? ''}`.trim();
       });
     }
   }).pipe(
@@ -101,8 +102,8 @@ export const useOAuth = ({ spaceId, onAddAccessToken }: UseOAuthOptions) => {
             return;
           }
 
-          Obj.change(token, (t) => {
-            t.token = data.accessToken;
+          Obj.change(token, (obj) => {
+            obj.token = data.accessToken;
           });
           yield* enrichGoogleTokenWithEmail(token);
           onAddAccessToken(token);
@@ -155,7 +156,7 @@ export const useOAuth = ({ spaceId, onAddAccessToken }: UseOAuthOptions) => {
           ),
         );
       } else {
-        const { authUrl } = await edgeClient.initiateOAuthFlow({
+        const { authUrl } = await edgeClient.initiateOAuthFlow(Context.default(), {
           provider: preset.provider,
           scopes: preset.scopes,
           spaceId,

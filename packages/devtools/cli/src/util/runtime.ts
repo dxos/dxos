@@ -61,7 +61,7 @@ export const chatLayer = ({
 
   return FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
     Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
-    Layer.provideMerge(RemoteFunctionExecutionService.withClient(spaceId, true)),
+    Layer.provideMerge(RemoteFunctionExecutionService.withClient(spaceId)),
     Layer.provideMerge(aiServiceLayer),
     Layer.provideMerge(CredentialsService.layerFromDatabase()),
     Layer.provideMerge(spaceLayer(spaceId, true)),

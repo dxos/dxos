@@ -23,12 +23,14 @@ import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
+import { observabilityTranslations } from '@dxos/plugin-observability';
 
 import { Placeholder, ResetDialog } from './components';
-import { initializeObservability, setupConfig } from './config';
+import { initializeObservability, PARAM_PROFILER, setupConfig } from './config';
 import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY } from './constants';
 import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
+import { startupProfiler } from './profiler';
 import { translations } from './translations';
 import { defaultStorageIsEmpty, isFalse, isTrue } from './util';
 
@@ -49,6 +51,9 @@ const main = async () => {
     log.info('SAFE MODE');
     setSafeModeUrl(false);
   }
+
+  const profiler = isTrue(url.searchParams.get(PARAM_PROFILER), false) ? startupProfiler() : undefined;
+
   const logLevel = url.searchParams.get(PARAM_LOG_LEVEL) ?? (safeMode ? 'debug' : undefined);
   if (logLevel) {
     const level = LogLevel[logLevel.toUpperCase() as keyof typeof LogLevel];
@@ -60,15 +65,22 @@ const main = async () => {
   const logBuffer = new LogBuffer();
   log.addProcessor(logBuffer.logProcessor);
 
+  profiler?.mark('dynamic-imports:start');
+
   const { defs, SaveConfig } = await import('@dxos/config');
   const { createClientServices } = await import('@dxos/react-client');
   const { Migrations } = await import('@dxos/migrations');
   const { __COMPOSER_MIGRATIONS__ } = await import('./migrations');
 
-  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
+  profiler?.mark('dynamic-imports:end');
+  profiler?.measure('dynamic-imports', 'dynamic-imports:start', 'dynamic-imports:end');
 
   // Namespace for global Composer test & debug hooks.
-  (window as any).composer = {};
+  (window as any).composer = { profiler };
+
+  Migrations.define(APP_KEY, __COMPOSER_MIGRATIONS__);
+
+  profiler?.mark('config:start');
 
   let config = await setupConfig();
   if (
@@ -86,6 +98,9 @@ const main = async () => {
     });
     config = await setupConfig();
   }
+
+  profiler?.mark('config:end');
+  profiler?.measure('config', 'config:start', 'config:end');
 
   const isTauri = isTauri$();
   if (isTauri) {
@@ -128,8 +143,12 @@ const main = async () => {
     runAndForwardErrors,
   );
 
-  // Use single-client mode on mobile Tauri apps where SharedWorker crashes on WKWebView.
+  // Use in-process coordinator (no SharedWorker) for mobile Tauri apps only. iOS WKWebView has a
+  // separate SharedWorker crash bug (Apple FB11723920) unrelated to origin. Desktop Tauri uses
+  // tauri-plugin-localhost which serves from http://localhost, giving SharedWorker a proper origin.
   const useSingleClientMode = isTauri && isMobile;
+
+  profiler?.mark('services:start');
 
   const useLocalServices = config.values.runtime?.app?.env?.DX_HOST;
   const useSharedWorker = config.values.runtime?.app?.env?.DX_SHARED_WORKER;
@@ -165,6 +184,11 @@ const main = async () => {
     signalTelemetryEnabled: !observabilityDisabled,
   });
 
+  profiler?.mark('services:end');
+  profiler?.measure('services', 'services:start', 'services:end');
+
+  profiler?.mark('plugins:start');
+
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
@@ -186,6 +210,9 @@ const main = async () => {
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
 
+  profiler?.mark('plugins:end');
+  profiler?.measure('plugins-init', 'plugins:start', 'plugins:end');
+
   const Fallback = ({ error }: { error: Error }) => {
     const {
       needRefresh: [needRefresh],
@@ -199,7 +226,7 @@ const main = async () => {
     }, [services]);
 
     return (
-      <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+      <ThemeProvider tx={defaultTx} resourceExtensions={[...translations, ...observabilityTranslations]}>
         <Tooltip.Provider>
           <ResetDialog
             error={error}

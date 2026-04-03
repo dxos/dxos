@@ -2,17 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type Dispatch, type SetStateAction, useCallback, useMemo, useState } from 'react';
+import React, { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
 import { QR } from 'react-qr-rounded';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space, useSpaceInvitations } from '@dxos/react-client/echo';
 import { type CancellableInvitationObservable, Invitation, InvitationEncoder } from '@dxos/react-client/invitations';
-import { Button, Clipboard, Icon, Input, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Clipboard, Icon, useId, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import {
   type ActionMenuItem,
@@ -28,8 +27,7 @@ import {
 import { hexToEmoji } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { SpaceOperation } from '../../types';
-import { COMPOSER_SPACE_LOCK } from '../../util';
+import { SpaceOperation } from '../../operations';
 
 // TODO(wittjosiah): Copied from Shell.
 const activeActionKey = 'dxos:react-shell/space-manager/active-action';
@@ -65,13 +63,6 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
 
   // TODO(wittjosiah): Track which was the most recently viewed object.
   const target = space.properties[Collection.Collection.typename]?.target?.objects[0]?.target;
-
-  const locked = space.properties[COMPOSER_SPACE_LOCK];
-  const handleChangeLocked = useCallback(() => {
-    Obj.change(space.properties, (p) => {
-      p[COMPOSER_SPACE_LOCK] = !locked;
-    });
-  }, [locked, space]);
 
   const inviteActions = useMemo(
     (): Record<string, ActionMenuItem> => ({
@@ -135,41 +126,28 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             <Settings.FrameItem title={t('members label')}>
               <SpaceMemberList spaceKey={space.key} includeSelf />
             </Settings.FrameItem>
-            {locked && (
-              <Settings.FrameItem title={t('invitations label')}>
-                <p className='text-description mb-2'>{t('locked space description')}</p>
-              </Settings.FrameItem>
-            )}
-            {!locked && (
-              <Settings.FrameItem title={t('invitations label')}>
-                {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
-                {!selectedInvitation && (
-                  <>
-                    <p className='text-description mb-2'>{t('space invitation description')}</p>
-                    <InvitationList
-                      className='mb-2'
-                      send={handleSend}
-                      invitations={visibleInvitations ?? []}
-                      onClickRemove={(invitation) => invitation.cancel()}
-                      createInvitationUrl={createInvitationUrl}
-                    />
-                    <BifurcatedAction
-                      actions={inviteActions}
-                      activeAction={activeAction}
-                      onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
-                      data-testid='membersContainer.createInvitation'
-                    />
-                  </>
-                )}
-              </Settings.FrameItem>
-            )}
+            <Settings.FrameItem title={t('invitations label')}>
+              {selectedInvitation && <InvitationSection {...selectedInvitation} onBack={handleBack} />}
+              {!selectedInvitation && (
+                <>
+                  <p className='text-description mb-2'>{t('space invitation description')}</p>
+                  <InvitationList
+                    className='mb-2'
+                    send={handleSend}
+                    invitations={visibleInvitations ?? []}
+                    onClickRemove={(invitation) => invitation.cancel()}
+                    createInvitationUrl={createInvitationUrl}
+                  />
+                  <BifurcatedAction
+                    actions={inviteActions}
+                    activeAction={activeAction}
+                    onChangeActiveAction={setActiveAction as Dispatch<SetStateAction<string>>}
+                    data-testid='membersContainer.createInvitation'
+                  />
+                </>
+              )}
+            </Settings.FrameItem>
           </Settings.Frame>
-          {/* TODO(wittjosiah): Make Settings.ItemInput & Settings.Frame compatible. */}
-          <div className='justify-center p-0 mt-4 grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
-            <Settings.ItemInput title={t('space locked label')} description={t('space locked description')}>
-              <Input.Switch checked={locked} onCheckedChange={handleChangeLocked} classNames='justify-self-end' />
-            </Settings.ItemInput>
-          </div>
         </Settings.Section>
       </Settings.Root>
     </Clipboard.Provider>

@@ -3,6 +3,6 @@
 //
 
 export * from './meta';
-export * from './functions';
+export * from './operations';
 
 export * from './YouTubePlugin';

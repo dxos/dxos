@@ -3,6 +3,7 @@
 //
 
 import { type Client } from '@dxos/client';
+import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
@@ -51,7 +52,7 @@ export const deployScript = async ({
     }
 
     const functionsServiceClient = FunctionsServiceClient.fromClient(client);
-    const newFunction = await functionsServiceClient.deploy({
+    const newFunction = await functionsServiceClient.deploy(Context.default(), {
       // TODO(dmaretskyi): Space key or identity key.
       ownerPublicKey: space.key,
       version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
@@ -62,8 +63,8 @@ export const deployScript = async ({
     });
 
     const storedFunction = createOrUpdateFunctionInSpace(space, fn, script, newFunction);
-    Obj.change(script, (s) => {
-      s.changed = false;
+    Obj.change(script, (obj) => {
+      obj.changed = false;
     });
 
     return { success: true, functionId: getUserFunctionIdInMetadata(Obj.getMeta(storedFunction)) };
@@ -93,8 +94,8 @@ const createOrUpdateFunctionInSpace = (
     Operation.setFrom(fn, newFunction);
     return fn;
   } else {
-    Obj.change(newFunction, (f) => {
-      f.source = Ref.make(script);
+    Obj.change(newFunction, (obj) => {
+      obj.source = Ref.make(script);
     });
     return space.db.add(newFunction);
   }

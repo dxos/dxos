@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation, fromUrlPath, getWorkspaceFromPath, toUrlPath } from '@dxos/app-toolkit';
+import { LayoutOperation, NOT_FOUND_PATH, fromUrlPath, getWorkspaceFromPath, toUrlPath } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
 import { Node } from '@dxos/plugin-graph';
 
@@ -13,7 +13,7 @@ import { DeckCapabilities, type DeckStateProps, defaultDeck } from '../../types'
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokeSync } = yield* Capability.get(Capabilities.OperationInvoker);
+    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(DeckCapabilities.State);
 
@@ -33,7 +33,7 @@ export default Capability.makeModule(
       registry.set(stateAtom, fn(getState()));
     };
 
-    const handleNavigation = () => {
+    const handleNavigation = async () => {
       const pathname = window.location.pathname;
       const state = getState();
       if (pathname === '/reset') {
@@ -51,19 +51,30 @@ export default Capability.makeModule(
       const qualifiedId = fromUrlPath(pathname);
       const workspace = getWorkspaceFromPath(qualifiedId);
       if (workspace !== Node.RootId && workspace !== state.activeDeck) {
-        invokeSync(LayoutOperation.SwitchWorkspace, { subject: workspace });
+        await invokePromise(LayoutOperation.SwitchWorkspace, { subject: workspace });
       }
 
       const deck = getDeck();
       const activeId = qualifiedId !== workspace ? qualifiedId : undefined;
-      if (activeId && activeId !== deck.solo) {
-        invokeSync(LayoutOperation.SetLayoutMode, { subject: activeId, mode: 'solo' });
-      } else if (!activeId && deck.solo) {
-        invokeSync(LayoutOperation.SetLayoutMode, { mode: 'deck' });
+      if (activeId) {
+        // Ensure the object referenced by the URL is open in the deck.
+        // Open validates the target and may redirect to 404, returning the resolved IDs.
+        const { data: resolvedIds } = await invokePromise(LayoutOperation.Open, { subject: [activeId] });
+        // If not already in solo mode, switch to solo for the resolved target.
+        if (!deck.solo) {
+          await invokePromise(LayoutOperation.SetLayoutMode, { subject: resolvedIds?.[0] ?? activeId, mode: 'solo' });
+        }
+      } else if (deck.solo && deck.solo !== NOT_FOUND_PATH) {
+        // Stay in solo mode; redirect URL to reflect the current solo item.
+        // Do not switch to deck mode here — only explicit user action should change layout mode.
+        const path = toUrlPath(deck.solo);
+        if (window.location.pathname !== path) {
+          history.replaceState(null, '', `${path}${window.location.search}`);
+        }
       }
     };
 
-    yield* Effect.sync(() => handleNavigation());
+    yield* Effect.promise(() => handleNavigation());
     window.addEventListener('popstate', handleNavigation);
 
     // Subscribe to state changes to update the URL.
@@ -80,7 +91,7 @@ export default Capability.makeModule(
         lastSolo = solo;
         lastActiveDeck = activeDeck;
 
-        const path = solo ? toUrlPath(solo) : toUrlPath(activeDeck);
+        const path = solo && solo !== NOT_FOUND_PATH ? toUrlPath(solo) : toUrlPath(activeDeck);
         if (window.location.pathname !== path) {
           // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
           history.pushState(null, '', `${path}${window.location.search}`);

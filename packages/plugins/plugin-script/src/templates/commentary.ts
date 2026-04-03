@@ -85,7 +85,9 @@ export default Commentary.pipe(
         const moveNotation = lastMove.san;
 
         // Generate AI commentary about the move
-        const result = yield* new AiSession().run({
+        const result = yield* new AiSession({
+          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'chess-commentary' })),
+        }).run({
           prompt:
             `Comment on this chess move as if you're commentating a live match for an audience:\n\n` +
             `Move ${moveNumber}: ${player} plays ${moveNotation} (${lastMove.from} to ${lastMove.to})${lastMove.captured ? `, capturing ${lastMove.captured}` : ''}\n` +
@@ -96,7 +98,6 @@ export default Commentary.pipe(
             `\nGame so far:\n${chess.pgn()}`,
           system: COMMENTARY_SYSTEM_PROMPT,
           history: [],
-          observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'chess-commentary' })),
         });
 
         const commentaryText = Function.pipe(
@@ -157,7 +158,7 @@ export default Commentary.pipe(
         let document: Markdown.Document;
         if (docs.length === 0) {
           // TODO(wittjosiah): Deploy fails if `SpaceProperties` schema is imported because its from `client-protocol`.
-          const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.space-properties'));
+          const [properties] = yield* Database.runQuery(Filter.typename('org.dxos.type.spaceProperties'));
           const rootCollection = yield* Database.load<Collection.Collection>(
             properties[Collection.Collection.typename],
           );
@@ -174,8 +175,8 @@ export default Commentary.pipe(
           );
 
           const documentRef = Ref.make(document);
-          Obj.change(rootCollection, (c) => {
-            c.objects.push(documentRef);
+          Obj.change(rootCollection, (obj) => {
+            obj.objects.push(documentRef);
           });
 
           // Create the HasSubject relation

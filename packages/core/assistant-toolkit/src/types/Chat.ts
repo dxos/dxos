@@ -16,8 +16,6 @@ import { Queue } from '@dxos/echo-db';
 export const Chat = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   queue: Ref.Ref(Queue).pipe(FormInputAnnotation.set(false)),
-  // TODO(dmaretskyi): Eventually this and the message queue will be the same.
-  traceQueue: Ref.Ref(Queue).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.assistant.chat',
@@ -34,6 +32,20 @@ export interface Chat extends Schema.Schema.Type<typeof Chat> {}
 
 export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props);
 
+/** @deprecated Use CompanionTo instead. */
+export const LegacyCompanionTo = Schema.Struct({
+  id: Obj.ID,
+}).pipe(
+  Type.relation({
+    typename: 'org.dxos.relation.assistant.companion-to',
+    version: '0.1.0',
+    source: Chat,
+    target: Obj.Unknown,
+  }),
+);
+
+export interface LegacyCompanionTo extends Schema.Schema.Type<typeof LegacyCompanionTo> {}
+
 /**
  * Relation between a Chat and companion objects (e.g., artifacts).
  */
@@ -41,7 +53,7 @@ export const CompanionTo = Schema.Struct({
   id: Obj.ID,
 }).pipe(
   Type.relation({
-    typename: 'org.dxos.relation.assistant.companion-to',
+    typename: 'org.dxos.relation.assistant.companionTo',
     version: '0.1.0',
     source: Chat,
     target: Obj.Unknown,

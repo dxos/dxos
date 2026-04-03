@@ -29,7 +29,7 @@ import { type ModalController, type TableModel } from '../../model';
 import { CellValidationMessage } from './CellValidationMessage';
 import { FormCellEditor, type OnCreateHandler } from './FormCellEditor';
 
-const editorSlots = {
+const documentSlots = {
   scroll: {
     className: '!py-(--dx-grid-cell-editor-padding-block)',
   },
@@ -250,7 +250,12 @@ export const TableCellEditor = ({
   return (
     <>
       <CellValidationMessage validationError={validationError} variant={validationVariant} __gridScope={__gridScope} />
-      <GridCellEditor extensions={extensions} getCellContent={getCellContent} onBlur={handleBlur} slots={editorSlots} />
+      <GridCellEditor
+        extensions={extensions}
+        getCellContent={getCellContent}
+        onBlur={handleBlur}
+        slots={documentSlots}
+      />
     </>
   );
 };

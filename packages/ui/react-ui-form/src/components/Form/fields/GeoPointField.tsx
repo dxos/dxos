@@ -62,7 +62,7 @@ export const GeoPointField = ({
       {layout === 'static' ? (
         <LatLng {...value} />
       ) : (
-        <div role='none' className='grid grid-cols-2 gap-2'>
+        <div role='none' className='grid grid-cols-2 gap-form-gap'>
           <div>
             <Input.Root>
               {layout !== 'inline' && <Input.Label>{t('latitude label')}</Input.Label>}
@@ -106,7 +106,7 @@ const LatLng = ({ latitude = 0, longitude = 0 }: GeoLocation) => {
   const lngHem = longitude >= 0 ? 'E' : 'W';
 
   return (
-    <span className='inline-flex items-center gap-1'>
+    <span className='inline-flex items-center gap-form-gap'>
       <span>
         <span>{Math.abs(latitude).toFixed(5)}</span>
         <span className='text-subdued'>°{latHem}</span>
