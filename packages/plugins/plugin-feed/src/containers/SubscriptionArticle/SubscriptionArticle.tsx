@@ -38,26 +38,37 @@ export const SubscriptionArticle = ({ role, subject, attendableId }: Subscriptio
 
   const handleAction = useCallback(
     (action: SubscriptionStackAction) => {
-      if (action.type === 'current') {
-        void invokePromise(AttentionOperation.Select, {
-          contextId: id,
-          selection: { mode: 'single', id: action.feedId },
-        });
+      switch (action.type) {
+        case 'current': {
+          void invokePromise(AttentionOperation.Select, {
+            contextId: id,
+            selection: { mode: 'single', id: action.feedId },
+          });
 
-        const companion = companionSegment('feed');
-        if (layout.mode === 'simple') {
-          void invokePromise(LayoutOperation.UpdateComplementary, {
-            subject: companion,
-            state: 'expanded',
-          });
-        } else {
-          void invokePromise(DeckOperation.ChangeCompanion, {
-            companion,
-          });
+          const companion = companionSegment('feed');
+          if (layout.mode === 'simple') {
+            void invokePromise(LayoutOperation.UpdateComplementary, {
+              subject: companion,
+              state: 'expanded',
+            });
+          } else {
+            void invokePromise(DeckOperation.ChangeCompanion, {
+              companion,
+            });
+          }
+          break;
+        }
+
+        case 'delete': {
+          const feed = feeds.find((feed) => feed.id === action.feedId);
+          if (feed) {
+            void invokePromise(SpaceOperation.RemoveObjects, { objects: [feed] });
+          }
+          break;
         }
       }
     },
-    [id, layout.mode, invokePromise],
+    [id, layout.mode, feeds, invokePromise],
   );
 
   const handleCreate = useCallback(() => {

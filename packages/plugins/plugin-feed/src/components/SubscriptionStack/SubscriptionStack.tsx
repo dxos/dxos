@@ -14,7 +14,9 @@ import { type Subscription } from '../../types';
 // SubscriptionTile
 //
 
-export type SubscriptionStackAction = { type: 'current'; feedId: string };
+export type SubscriptionStackAction =
+  | { type: 'current'; feedId: string }
+  | { type: 'delete'; feedId: string };
 
 export type SubscriptionStackActionHandler = (action: SubscriptionStackAction) => void;
 
@@ -27,21 +29,28 @@ type SubscriptionTileProps = Pick<MosaicTileProps<SubscriptionTileData>, 'locati
 
 const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
   ({ data, location, current }, forwardedRef) => {
-    const { feed } = data;
+    const { feed, onAction } = data;
     const { setCurrentId } = useMosaicContainer('SubscriptionTile');
 
     const handleCurrentChange = useCallback(() => {
       setCurrentId(feed.id);
     }, [feed.id, setCurrentId]);
 
+    const menuItems = useMemo(
+      () => [{ label: 'Delete', onClick: () => onAction?.({ type: 'delete', feedId: feed.id }) }],
+      [feed.id, onAction],
+    );
+
     return (
       <Mosaic.Tile asChild classNames='dx-hover dx-current' id={feed.id} data={data} location={location}>
         <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
           <Card.Root ref={forwardedRef}>
+            <Card.Toolbar>
+              <Card.Icon icon='ph--rss--regular' />
+              <Card.Title>{feed.name ?? 'Untitled feed'}</Card.Title>
+              <Card.Menu items={menuItems} />
+            </Card.Toolbar>
             <Card.Content>
-              <Card.Row icon='ph--rss--regular'>
-                <Card.Text>{feed.name ?? 'Untitled feed'}</Card.Text>
-              </Card.Row>
               {feed.url && (
                 <Card.Row>
                   <Card.Text classNames='text-xs text-description truncate'>{feed.url}</Card.Text>
