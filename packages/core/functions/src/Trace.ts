@@ -133,20 +133,21 @@ export const layerConsole: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
   },
 });
 
-export const testTraceService: Layer.Layer<TraceService, never, TraceSink> = Layer.effect(
-  TraceService,
-  Effect.gen(function* () {
-    const sink = yield* TraceSink;
-    return {
-      write: (event, data) => {
-        sink.write(
-          Obj.make(Message, {
-            meta: {},
-            isEphemeral: event.isEphemeral,
-            events: [{ type: event.key, timestamp: Date.now(), data }],
-          }),
-        );
-      },
-    };
-  }),
-);
+export const testTraceService = (opts: { meta?: Meta } = {}): Layer.Layer<TraceService, never, TraceSink> =>
+  Layer.effect(
+    TraceService,
+    Effect.gen(function* () {
+      const sink = yield* TraceSink;
+      return {
+        write: (event, data) => {
+          sink.write(
+            Obj.make(Message, {
+              meta: opts.meta ?? {},
+              isEphemeral: event.isEphemeral,
+              events: [{ type: event.key, timestamp: Date.now(), data }],
+            }),
+          );
+        },
+      };
+    }),
+  );

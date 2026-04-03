@@ -128,7 +128,7 @@ export const AssistantTestLayer = ({
   types = Array.dedupeWith(types, (a, b) => Type.getTypename(a) === Type.getTypename(b));
 
   return Layer.empty.pipe(
-    Layer.provideMerge(Trace.testTraceService),
+    Layer.provideMerge(Trace.testTraceService({ meta: { processName: 'test' } })),
     Layer.provideMerge(AgentService.layer({ systemPrompt })),
     Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
     Layer.provideMerge(

@@ -14,6 +14,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import {
+  FeedTraceSink,
   InvocationOutcome,
   InvocationTraceEndEvent,
   InvocationTraceStartEvent,
@@ -92,6 +93,15 @@ const getExecutionGraph = (
   branches: string[];
   commits: Commit[];
 }> => {
+  return pipe(
+    AtomQuery.make(space.db, FeedTraceSink.query),
+    Atom.map((feed) => {
+      dbg(feed);
+
+      return { branches: [], commits: [] };
+    }),
+  );
+
   return pipe(
     space.properties,
     (_) => AtomObj.make(_),
