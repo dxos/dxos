@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Obj, Query } from '@dxos/echo';
 import { getUserFunctionIdInMetadata, QueueService } from '@dxos/functions';
 import { type InvocationTraceEvent, createInvocationSpans } from '@dxos/functions-runtime';
 import { Operation } from '@dxos/operation';
@@ -14,8 +14,8 @@ import { InspectInvocations } from './definitions';
 
 export default InspectInvocations.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ script, limit }) {
-      const loaded = yield* Database.load(script);
+    Effect.fn(function* ({ function: fn, limit }) {
+      const loaded = yield* Database.load(fn);
       const maxResults = limit ?? 20;
 
       const [properties] = yield* Database.runQuery(Query.type(SpaceProperties));
@@ -29,23 +29,15 @@ export default InspectInvocations.pipe(
       const events = yield* Effect.promise(() => queue.queryObjects());
       const allSpans = createInvocationSpans(events);
 
-      const deployedFunctions = yield* Database.runQuery(
-        Query.select(Filter.type(Operation.PersistentOperation)),
-      );
-      const scriptFunctionIds = new Set(
-        deployedFunctions
-          .filter((fn) => fn.source?.target?.id === loaded.id)
-          .map((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)))
-          .filter(Boolean),
-      );
+      const functionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));
 
       const filtered = allSpans.filter((span) => {
-        if (!span.invocationTarget) {
+        if (!span.invocationTarget || !functionId) {
           return false;
         }
         const targetDxn = span.invocationTarget.dxn.toString();
         const uuidPart = targetDxn.split(':').pop();
-        return uuidPart ? scriptFunctionIds.has(uuidPart) : false;
+        return uuidPart === functionId;
       });
 
       filtered.sort((a, b) => b.timestamp - a.timestamp);

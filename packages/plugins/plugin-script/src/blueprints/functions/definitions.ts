@@ -6,12 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import { ClientService } from '@dxos/client';
 import { Database, Ref } from '@dxos/echo';
-import { QueueService, Script } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { trim } from '@dxos/util';
 
-const ScriptRef = Ref.Ref(Script.Script).annotations({
-  description: 'The ID of the script.',
+const FunctionRef = Ref.Ref(Operation.PersistentOperation).annotations({
+  description: 'The ID of the function.',
 });
 
 const AVAILABLE_PACKAGES = trim`
@@ -83,7 +83,7 @@ export const Read = Operation.make({
     description: 'Reads the source code and metadata of a script.',
   },
   input: Schema.Struct({
-    script: ScriptRef,
+    function: FunctionRef,
   }),
   output: Schema.Struct({
     name: Schema.optional(Schema.String),
@@ -112,7 +112,7 @@ export const Update = Operation.make({
     description: 'Updates the source code or metadata of a script.',
   },
   input: Schema.Struct({
-    script: ScriptRef,
+    function: FunctionRef,
     name: Schema.optional(Schema.String).annotations({
       description: 'New name for the script.',
     }),
@@ -138,7 +138,7 @@ export const Delete = Operation.make({
     description: 'Deletes a script from the space.',
   },
   input: Schema.Struct({
-    script: ScriptRef,
+    function: FunctionRef,
   }),
   output: Schema.Void,
   services: [Database.Service],
@@ -151,7 +151,7 @@ export const Deploy = Operation.make({
     description: 'Deploys a script to the Edge runtime.',
   },
   input: Schema.Struct({
-    script: ScriptRef,
+    function: FunctionRef,
   }),
   output: Schema.Struct({
     functionId: Schema.String.annotations({
@@ -171,7 +171,7 @@ export const Invoke = Operation.make({
     description: 'Invokes a deployed Edge function with the given payload.',
   },
   input: Schema.Struct({
-    script: ScriptRef,
+    function: FunctionRef,
     payload: Schema.optional(Schema.Unknown).annotations({
       description: 'The input payload to pass to the function.',
     }),
@@ -212,7 +212,7 @@ export const InspectInvocations = Operation.make({
     description: 'Queries the invocation trace feed for a deployed script, returning its invocation history.',
   },
   input: Schema.Struct({
-    script: ScriptRef,
+    function: FunctionRef,
     limit: Schema.optional(Schema.Number).annotations({
       description: 'Maximum number of invocations to return. Defaults to 20.',
     }),

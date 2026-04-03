@@ -5,20 +5,25 @@
 import * as Effect from 'effect/Effect';
 
 import { Database } from '@dxos/echo';
+import { type Script } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
 import { Read } from './definitions';
 
 export default Read.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ script }) {
-      const loaded = yield* Database.load(script);
-      const text = yield* Database.load(loaded.source);
+    Effect.fn(function* ({ function: fn }) {
+      const loaded = yield* Database.load(fn);
+      if (!loaded.source) {
+        return yield* Effect.fail(new Error('Function has no source script.'));
+      }
+      const script = (yield* Database.load(loaded.source)) as Script.Script;
+      const text = yield* Database.load(script.source);
 
       return {
-        name: loaded.name,
+        name: script.name,
         source: text.content,
-        description: loaded.description,
+        description: script.description,
       };
     }),
   ),

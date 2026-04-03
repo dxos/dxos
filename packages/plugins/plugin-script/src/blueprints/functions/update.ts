@@ -7,17 +7,22 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Obj } from '@dxos/echo';
 import { DocAccessor, createDocAccessor } from '@dxos/echo-db';
+import { type Script } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
 import { Update } from './definitions';
 
 export default Update.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ script, name, description, edits }) {
-      const loaded = yield* Database.load(script);
+    Effect.fn(function* ({ function: fn, name, description, edits }) {
+      const loaded = yield* Database.load(fn);
+      if (!loaded.source) {
+        return yield* Effect.fail(new Error('Function has no source script.'));
+      }
+      const script = (yield* Database.load(loaded.source)) as Script.Script;
 
       if (name !== undefined || description !== undefined) {
-        Obj.change(loaded, (draft) => {
+        Obj.change(script, (draft) => {
           if (name !== undefined) {
             draft.name = name;
           }
@@ -28,7 +33,7 @@ export default Update.pipe(
       }
 
       if (edits && edits.length > 0) {
-        const text = yield* Database.load(loaded.source);
+        const text = yield* Database.load(script.source);
         const accessor = createDocAccessor(text, ['content']);
 
         for (const edit of edits) {
@@ -51,13 +56,13 @@ export default Update.pipe(
           });
         }
 
-        Obj.change(loaded, (draft) => {
+        Obj.change(script, (draft) => {
           draft.changed = true;
         });
       }
 
       return {
-        id: Obj.getDXN(loaded).toString(),
+        id: Obj.getDXN(script).toString(),
       };
     }),
   ),
