@@ -49,10 +49,7 @@ export const TokensPanel = ({
 
   return (
     <Settings.Root>
-      <Settings.Section
-        title={t('integrations-verbose.label', { ns: meta.id })}
-        description={t('integrations.description', { ns: meta.id })}
-      >
+      <Settings.Section title={t('integrations-verbose.label')} description={t('integrations.description')}>
         {adding ? (
           <Settings.Item title={t('new-integration.label')} description={t('new-integration.description')}>
             <Form.Root schema={FormSchema} values={initialValues} onCancel={onCancel} onSave={onAdd}>
@@ -63,9 +60,7 @@ export const TokensPanel = ({
         ) : (
           <Settings.Frame>
             <TokenManager tokens={tokens} onDelete={onDelete} />
-            <div role='none'>
-              <NewTokenSelector spaceId={spaceId} onAddAccessToken={onAddAccessToken} onCustomToken={onNew} />
-            </div>
+            <NewTokenSelector spaceId={spaceId} onAddAccessToken={onAddAccessToken} onCustomToken={onNew} />
           </Settings.Frame>
         )}
       </Settings.Section>
