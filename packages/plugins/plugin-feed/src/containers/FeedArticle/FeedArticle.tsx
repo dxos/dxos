@@ -5,8 +5,8 @@
 import React, { useCallback, useState } from 'react';
 
 import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
-import { Filter, Obj } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { PostStack, type PostStackAction } from '../../components';
@@ -16,8 +16,12 @@ export type FeedArticleProps = SurfaceComponentProps<Subscription.Feed>;
 
 export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
   const [currentPostId, setCurrentPostId] = useState<string>();
-  // TODO(feed): Query from the ECHO feed once posts are stored via Feed.append.
-  const posts = useQuery(Obj.getDatabase(subject), Filter.type(Subscription.Post));
+  useObject(subject);
+  const feed = subject.feed?.target;
+  const posts = useQuery(
+    Obj.getDatabase(subject),
+    feed ? Query.select(Filter.type(Subscription.Post)).from(feed) : Query.select(Filter.nothing()),
+  );
 
   const handleAction = useCallback((action: PostStackAction) => {
     if (action.type === 'current') {

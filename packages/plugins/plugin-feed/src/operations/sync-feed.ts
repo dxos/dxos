@@ -5,12 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
+import { Feed, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
+import { Subscription } from '../types';
 import { fetchRss } from '../util';
 
 import { SyncFeed } from './definitions';
@@ -20,21 +21,25 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
     Effect.fnUntraced(function* ({ feed: subscriptionFeed }) {
       const url = subscriptionFeed.url;
       invariant(url, 'Feed URL is required.');
+      const echoFeed = subscriptionFeed.feed?.target;
+      invariant(echoFeed, 'Backing ECHO feed not found.');
 
-      yield* Effect.tryPromise(async () => {
-        // Use local proxy in browser to avoid CORS restrictions.
+      yield* Effect.gen(function* () {
         const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
-        const { feed: feedMeta, posts } = await fetchRss(url, { corsProxy });
+        const { feed: feedMeta, posts } = yield* Effect.promise(() => fetchRss(url, { corsProxy }));
 
-        // Add posts to the space database.
-        // TODO(feed): Deduplicate by guid against existing posts.
-        // TODO(feed): Use Feed.append when Feed.Service layer is available.
         if (posts.length > 0) {
-          const db = Obj.getDatabase(subscriptionFeed);
-          invariant(db);
-          for (const post of posts) {
-            db.add(post);
-          }
+          const postObjects = posts.map((post) =>
+            Obj.make(Subscription.Post, {
+              title: post.title,
+              link: post.link,
+              description: post.description,
+              author: post.author,
+              published: post.published,
+              guid: post.guid,
+            }),
+          );
+          yield* Feed.append(echoFeed, postObjects);
         }
 
         // Update feed metadata from channel if not already set.

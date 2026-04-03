@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { Database, Feed } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
@@ -19,7 +20,7 @@ export const SyncFeed = Operation.make({
     name: 'Sync Feed',
     description: 'Fetches RSS/Atom feed and writes posts to the ECHO feed.',
   },
-  services: [Capability.Service],
+  services: [Capability.Service, Database.Service, Feed.Service],
   input: Schema.Struct({
     feed: Subscription.Feed,
   }),
