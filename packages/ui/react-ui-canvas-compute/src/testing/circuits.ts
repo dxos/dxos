@@ -24,7 +24,7 @@ import {
   createJsonTransform,
   createNot,
   createOr,
-  createQueue,
+  createFeed,
   createRandom,
   createScope,
   createSurface,
@@ -241,7 +241,7 @@ export const createGptCircuit = (options: {
         }),
       );
 
-      const thread = model.createNode(createQueue(position({ x: -3, y: 3, width: 14, height: 10 })));
+      const thread = model.createNode(createFeed(position({ x: -3, y: 3, width: 14, height: 10 })));
       const append = model.createNode(createAppend(position({ x: 10, y: 6 })));
 
       builder

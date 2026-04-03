@@ -20,6 +20,7 @@ import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
+import { FeedPlugin } from '@dxos/plugin-feed';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -137,6 +138,7 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
       DailySummaryPlugin.meta.id,
+      FeedPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
@@ -189,6 +191,7 @@ export const getPlugins = ({
     DebugPlugin({ logBuffer }),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
+    FeedPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),

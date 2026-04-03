@@ -27,7 +27,7 @@ export const translations = [
         'functions description': 'You can manage all the functions deployed from your space on EDGE here.',
         'function copy id': 'Copy Function ID',
         'no functions found': 'No functions found',
-        'go to function source button label': 'Show function source',
+        'show source button label': 'Show source',
         'delete function button label': 'Delete function',
 
         'function parameters label': 'Function parameters',
@@ -41,7 +41,7 @@ export const translations = [
         'trigger type websocket': 'Websocket',
         'trigger type subscription': 'Subscription',
         'trigger type email': 'Email',
-        'trigger type queue': 'Queue',
+        'trigger type queue': 'Feed',
 
         'trigger copy url': 'Copy URL',
         'trigger copy email': 'Copy Email',

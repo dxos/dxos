@@ -50,7 +50,13 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.message`,
         role: ['article', 'section'],
-        filter: (data): data is { attendableId: string; subject: Message.Message; companionTo: Mailbox.Mailbox } =>
+        filter: (
+          data,
+        ): data is {
+          attendableId: string;
+          subject: Message.Message;
+          companionTo: Mailbox.Mailbox;
+        } =>
           typeof data.attendableId === 'string' &&
           Obj.instanceOf(Message.Message, data.subject) &&
           Mailbox.instanceOf(data.companionTo),

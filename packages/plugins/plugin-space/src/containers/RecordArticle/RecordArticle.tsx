@@ -38,6 +38,7 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
               <Input.Root>
                 <Input.Label>{t('related actions label')}</Input.Label>
               </Input.Root>
+
               <Surface.Surface role='prompts' data={{ subject }} limit={1} />
             </div>
 

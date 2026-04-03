@@ -16,25 +16,25 @@ import { createFunctionAnchors } from './common';
 import { Box, type BoxActionHandler } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
-export const QueueShape = Schema.extend(
+export const FeedShape = Schema.extend(
   ComputeShape,
   Schema.Struct({
     type: Schema.Literal('queue'),
   }),
 );
 
-export type QueueShape = Schema.Schema.Type<typeof QueueShape>;
+export type FeedShape = Schema.Schema.Type<typeof FeedShape>;
 
-export type CreateQueueProps = CreateShapeProps<QueueShape>;
+export type CreateFeedProps = CreateShapeProps<FeedShape>;
 
-export const createQueue = (props: CreateQueueProps) =>
-  createShape<QueueShape>({
+export const createFeed = (props: CreateFeedProps) =>
+  createShape<FeedShape>({
     type: 'queue',
     size: { width: 256, height: 512 },
     ...props,
   });
 
-export const QueueComponent = ({ shape }: ShapeComponentProps<QueueShape>) => {
+export const FeedComponent = ({ shape }: ShapeComponentProps<FeedShape>) => {
   const { runtime } = useComputeNodeState(shape);
   const items = runtime.outputs[DEFAULT_OUTPUT]?.type === 'executed' ? runtime.outputs[DEFAULT_OUTPUT].value : [];
 
@@ -49,7 +49,7 @@ export const QueueComponent = ({ shape }: ShapeComponentProps<QueueShape>) => {
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport classNames='divide-y divide-separator'>
           {[...items].map((item, i) => (
-            <QueueItem key={i} classNames='p-1 px-2' item={item} />
+            <FeedItem key={i} classNames='p-1 px-2' item={item} />
           ))}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
@@ -57,7 +57,7 @@ export const QueueComponent = ({ shape }: ShapeComponentProps<QueueShape>) => {
   );
 };
 
-export const QueueItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
+export const FeedItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
   if (typeof item !== 'object') {
     return <div className={mx(classNames, 'whitespace-pre-wrap')}>{item}</div>;
   }
@@ -74,12 +74,12 @@ export const QueueItem = ({ classNames, item }: ThemedClassName<{ item: any }>) 
   );
 };
 
-export const queueShape: ShapeDef<QueueShape> = {
-  type: 'queue',
-  name: 'Queue',
+export const feedShape: ShapeDef<FeedShape> = {
+  type: 'feed',
+  name: 'Feed',
   icon: 'ph--queue--regular',
-  component: QueueComponent,
-  createShape: createQueue,
+  component: FeedComponent,
+  createShape: createFeed,
   getAnchors: (shape) => createFunctionAnchors(shape, QueueInput, QueueOutput),
   resizable: true,
 };

@@ -224,6 +224,34 @@ export const createConfig = ({
           // NOTE: Order matters.
           //
 
+          // RSS proxy middleware for CORS-free feed fetching.
+          {
+            name: 'rss-proxy',
+            configureServer(server: any) {
+              server.middlewares.use('/api/rss', async (req: any, res: any) => {
+                const url = new URL(req.url!, `http://${req.headers.host}`);
+                const feedUrl = url.searchParams.get('url');
+                if (!feedUrl) {
+                  res.statusCode = 400;
+                  res.end('Missing url parameter');
+                  return;
+                }
+                try {
+                  const response = await globalThis.fetch(feedUrl);
+                  const contentType = response.headers.get('content-type');
+                  if (contentType) {
+                    res.setHeader('content-type', contentType);
+                  }
+                  res.statusCode = response.status;
+                  res.end(await response.text());
+                } catch (error) {
+                  res.statusCode = 502;
+                  res.end(String(error));
+                }
+              });
+            },
+          },
+
           !isFastBundle &&
             importSource({
               exclude: [
