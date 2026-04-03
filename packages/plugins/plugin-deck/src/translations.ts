@@ -25,7 +25,7 @@ export const translations = [
           'No plugin had a response for the address you navigated to. Double-check the URL, and ensure you’ve enabled a plugin that supports the object.',
         'toggle fullscreen label': 'Toggle fullscreen',
         'settings show hints label': 'Show hints',
-        'settings native redirect label': 'Enable native url redirect (experimental)',
+        'settings native redirect label': 'Enable native url redirect',
         'settings new plank position start label': 'Start',
         'settings new plank position end label': 'End',
         'select new plank positioning placeholder': 'Select new plank positioning',
