@@ -16,7 +16,7 @@ import { failedInvariant } from '@dxos/invariant';
 import { AgentProcess } from './agent-process';
 
 import { Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
+import { QueueService, type Trace } from '@dxos/functions';
 import { type Message } from '@dxos/types';
 
 import { acquireReleaseResource } from '@dxos/effect';
@@ -53,7 +53,7 @@ export interface Session {
    * Subscribe to ephemeral trace events (e.g. streaming partial messages).
    * Replays buffered events, then streams new ones until the process ends.
    */
-  subscribeEphemeral: () => Stream.Stream<Obj.Unknown>;
+  subscribeEphemeral: () => Stream.Stream<Trace.Message>;
 
   /**
    * Adds context objects to the agent.

@@ -17,8 +17,9 @@ import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
-import { CredentialsService, QueueService, Trace } from '@dxos/functions';
+import { CredentialsService, feedServiceFromQueueServiceLayer, QueueService } from '@dxos/functions';
 import {
+  FeedTraceSink,
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
   ProcessManager,
@@ -108,6 +109,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               Database.Service,
               GenericToolkit.GenericToolkitProvider,
               QueueService,
+              Feed.Service,
               OperationRegistry.Service,
               AiService.AiService,
               CredentialsService,
@@ -121,12 +123,13 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           Layer.provideMerge(
             Layer.mergeAll(
               TracingServiceLive,
-              Trace.layerNoop,
+              FeedTraceSink.layerLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
               ToolExecutionServices,
               KeyValueStore.layerMemory,
             ),
           ),
+          Layer.provideMerge(feedServiceFromQueueServiceLayer),
           Layer.provideMerge(OperationHandlerSet.provide(operationHandlers)),
           Layer.provideMerge(
             FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(

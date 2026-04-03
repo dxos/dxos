@@ -19,6 +19,10 @@ import { AssistantTestLayer } from '../testing';
 import { log } from '@dxos/log';
 import * as AgentService from './AgentService';
 import { ObjectId } from '@dxos/keys';
+import * as Stream from 'effect/Stream';
+import { Trace } from '@dxos/functions';
+import { PartialBlock } from '../tracing';
+import { expect } from 'vitest';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -113,7 +117,7 @@ const SYSTEM_PROMPT = trim`
 
 const TestLayer = AssistantTestLayer({
   types: [Organization.Organization, Feed.Feed, Blueprint.Blueprint],
-  tracing: 'pretty',
+  tracing: 'console',
   aiServicePreset: 'edge-remote',
   operationHandlers: [handlers],
   blueprints: [ResearchBlueprint],
@@ -135,11 +139,26 @@ describe('Agent Executable', () => {
           blueprints: [ResearchBlueprint],
         });
 
+        let ephemeralEventCount = 0;
+        yield* agent.subscribeEphemeral().pipe(
+          Stream.runForEach((msg) =>
+            Effect.gen(function* () {
+              for (const event of msg.events) {
+                if (Trace.isOfType(PartialBlock, event)) {
+                  ephemeralEventCount++;
+                }
+              }
+            }),
+          ),
+          Effect.fork,
+        );
+
         for (const org of TEST_DATA.organizations) {
           yield* agent.submitPrompt(JSON.stringify(org));
         }
         yield* agent.submitPrompt('When all research is complete, print 1-sentence summary for each organization.');
         yield* agent.waitForCompletion();
+        expect(ephemeralEventCount).toBeGreaterThan(0);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

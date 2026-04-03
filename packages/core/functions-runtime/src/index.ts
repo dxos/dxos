@@ -9,3 +9,4 @@ export * from './trace';
 export * from './triggers';
 export * from './url';
 export * from './errors';
+export * as FeedTraceSink from './FeedTraceSink';
