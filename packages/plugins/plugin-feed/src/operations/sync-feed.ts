@@ -22,7 +22,9 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
       invariant(url, 'Feed URL is required.');
 
       yield* Effect.tryPromise(async () => {
-        const { feed: feedMeta, posts } = await fetchRss(url);
+        // Use local proxy in browser to avoid CORS restrictions.
+        const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
+        const { feed: feedMeta, posts } = await fetchRss(url, { corsProxy });
 
         // Add posts to the space database.
         // TODO(feed): Deduplicate by guid against existing posts.

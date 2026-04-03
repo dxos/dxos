@@ -78,6 +78,25 @@ export default defineConfig((env) => ({
         rootDir,
       ],
     },
+    proxy: {
+      // Proxy for fetching external RSS/Atom feeds without CORS restrictions.
+      '/api/rss': {
+        target: 'https://placeholder.invalid',
+        changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            const url = new URL(req.url!, `http://${req.headers.host}`);
+            const feedUrl = url.searchParams.get('url');
+            if (feedUrl) {
+              const parsed = new URL(feedUrl);
+              proxyReq.setHeader('host', parsed.host);
+              (proxy as any).options.target = parsed.origin;
+              proxyReq.path = parsed.pathname + parsed.search;
+            }
+          });
+        },
+      },
+    },
   },
   esbuild: {
     keepNames: true,
