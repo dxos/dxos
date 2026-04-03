@@ -20,6 +20,7 @@ import {
   QueueService,
   Reply,
   ServiceResolver,
+  Trace,
   TracingService,
   Trigger,
 } from '@dxos/functions';
@@ -39,29 +40,26 @@ import { TriggerStateStore } from './trigger-state-store';
  */
 const TestLayer = Layer.mergeAll(
   TriggerStateStore.layerMemory,
-  Layer.mergeAll(
-    AiService.notAvailable,
-    CredentialsService.layerConfig([]),
-    FetchHttpClient.layer,
+  Layer.mergeAll(AiService.notAvailable, CredentialsService.layerConfig([]), FetchHttpClient.layer),
+).pipe(
+  Layer.provideMerge(ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator })),
+  Layer.provideMerge(ServiceResolver.layerRequirements(Database.Service)),
+  Layer.provideMerge(
     TestDatabaseLayer({
       types: [Operation.PersistentOperation, Trigger.Trigger, Person.Person, Task.Task],
     }),
   ),
-).pipe(
-  Layer.provideMerge(
-    ProcessManager.layer({ idGenerator: ProcessManager.SequentialProcessIdGenerator }).pipe(
-      Layer.provide(ServiceResolver.layerRequirements(Database.Service)),
-      Layer.provide(KeyValueStore.layerMemory),
-      Layer.provide(OperationHandlerSet.provide(ExampleHandlers)),
-      Layer.provide(TracingService.layerNoop),
-      Layer.provideMerge(Registry.layer),
-    ),
-  ),
+  Layer.provideMerge(KeyValueStore.layerMemory),
+  Layer.provideMerge(OperationHandlerSet.provide(ExampleHandlers)),
+  Layer.provideMerge(TracingService.layerNoop),
+  Layer.provideMerge(Registry.layer),
+  Layer.provideMerge(Trace.layerNoop),
 );
 
 /** Full environment for trigger tests; cast so `it.effect` accepts the provided service union. */
-const makeTestTriggerDispatcherLayer = (options: { timeControl: 'natural' } | { timeControl: 'manual'; startingTime: Date }) =>
-  Layer.provideMerge(TriggerDispatcher.layer(options), TestLayer) as Layer.Layer<any>;
+const makeTestTriggerDispatcherLayer = (
+  options: { timeControl: 'natural' } | { timeControl: 'manual'; startingTime: Date },
+) => Layer.provideMerge(TriggerDispatcher.layer(options), TestLayer);
 
 const TestTriggerDispatcherLayer = makeTestTriggerDispatcherLayer({
   timeControl: 'manual',
