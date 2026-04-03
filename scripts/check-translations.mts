@@ -189,7 +189,7 @@ function extractUsedKeys(filePath: string, packageNamespace: string | null): Use
     }
 
     // Pattern 2: Label tuple — ['key', { ns: something }]
-    const labelRegex = /\[\s*['"]([^'"]+)['"]\s*,\s*\{\s*ns:\s*(\w+|['"][^'"]+['"])/g;
+    const labelRegex = /\[\s*['"]([^'"]+)['"]\s*,\s*\{\s*ns:\s*([\w.]+|['"][^'"]+['"])/g;
     while ((match = labelRegex.exec(line)) !== null) {
       const key = match[1];
       let namespace: string | null = match[2];

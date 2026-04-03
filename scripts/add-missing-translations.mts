@@ -92,6 +92,21 @@ function extractUsedKeys(filePath: string, packageNamespace: string | null): Use
       }
       keys.push({ namespace, key, file: filePath, line: i + 1 });
     }
+
+    // Pattern 2: Label tuple — ['key', { ns: something }]
+    const labelRegex = /\[\s*['"]([^'"]+)['"]\s*,\s*\{\s*ns:\s*([\w.]+|['"][^'"]+['"])/g;
+    while ((match = labelRegex.exec(line)) !== null) {
+      const key = match[1];
+      let namespace: string | null = match[2];
+      if (namespace === 'meta.id' || namespace === 'meta' || namespace === 'translationKey') {
+        namespace = packageNamespace;
+      } else if (namespace === 'osTranslations') {
+        namespace = 'org.dxos.i18n.os';
+      } else {
+        namespace = namespace.replace(/['"]/g, '');
+      }
+      keys.push({ namespace, key, file: filePath, line: i + 1 });
+    }
   }
 
   return keys;
