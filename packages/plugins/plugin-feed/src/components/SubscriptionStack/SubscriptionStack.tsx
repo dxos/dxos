@@ -16,6 +16,7 @@ import { type Subscription } from '../../types';
 
 export type SubscriptionStackAction =
   | { type: 'current'; feedId: string }
+  | { type: 'sync'; feedId: string }
   | { type: 'delete'; feedId: string };
 
 export type SubscriptionStackActionHandler = (action: SubscriptionStackAction) => void;
@@ -37,7 +38,10 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
     }, [feed.id, setCurrentId]);
 
     const menuItems = useMemo(
-      () => [{ label: 'Delete', onClick: () => onAction?.({ type: 'delete', feedId: feed.id }) }],
+      () => [
+        { label: 'Sync', onClick: () => onAction?.({ type: 'sync', feedId: feed.id }) },
+        { label: 'Delete', onClick: () => onAction?.({ type: 'delete', feedId: feed.id }) },
+      ],
       [feed.id, onAction],
     );
 

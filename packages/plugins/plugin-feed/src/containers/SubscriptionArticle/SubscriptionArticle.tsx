@@ -17,6 +17,7 @@ import { useSelected } from '@dxos/react-ui-attention';
 
 import { SubscriptionStack, type SubscriptionStackAction } from '../../components';
 import { meta } from '../../meta';
+import { FeedOperation } from '../../operations';
 import { Subscription } from '../../types';
 
 export type SubscriptionArticleProps = SurfaceComponentProps<
@@ -55,6 +56,14 @@ export const SubscriptionArticle = ({ role, subject, attendableId }: Subscriptio
             void invokePromise(DeckOperation.ChangeCompanion, {
               companion,
             });
+          }
+          break;
+        }
+
+        case 'sync': {
+          const feedToSync = feeds.find((feed) => feed.id === action.feedId);
+          if (feedToSync) {
+            void invokePromise(FeedOperation.SyncFeed, { feed: feedToSync });
           }
           break;
         }
