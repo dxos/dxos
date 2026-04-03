@@ -566,7 +566,7 @@ describe('query api', () => {
       const feedDxn = DXN.parse(`dxn:echo:${spaceId}:${feedId}`);
       const feed = (await Obj.fromJSON(
         {
-          '@type': 'dxn:type:dxos.org/type/Feed:0.1.0',
+          '@type': 'dxn:type:org.dxos.type.feed:0.1.0',
           id: feedId,
           name: 'test-feed',
         },
@@ -593,6 +593,44 @@ describe('query api', () => {
           },
         },
       });
+    });
+
+    test('Query.from(non-feed) throws TypeError', () => {
+      const person = Obj.make(TestSchema.Person, { name: 'Fred' });
+      expect(() => Query.select(Filter.type(TestSchema.Person)).from(person as any)).toThrow(TypeError);
+      expect(() => Query.select(Filter.type(TestSchema.Person)).from(person as any)).toThrow(
+        /Query\.from\(\) expects Feed objects/,
+      );
+    });
+
+    test('Query.from(undefined) throws TypeError', () => {
+      expect(() => Query.select(Filter.type(TestSchema.Person)).from(undefined as any)).toThrow(TypeError);
+      expect(() => Query.select(Filter.type(TestSchema.Person)).from(undefined as any)).toThrow(
+        /Query\.from\(\) requires a valid data source argument/,
+      );
+    });
+
+    test('Query.from(null) throws TypeError', () => {
+      expect(() => Query.select(Filter.type(TestSchema.Person)).from(null as any)).toThrow(TypeError);
+      expect(() => Query.select(Filter.type(TestSchema.Person)).from(null as any)).toThrow(
+        /Query\.from\(\) requires a valid data source argument/,
+      );
+    });
+
+    test('Query.pretty returns human-readable query string', () => {
+      const query = Query.select(Filter.type(TestSchema.Person, { name: 'Fred' }));
+      const pretty = Query.pretty(query);
+      expect(pretty).toContain('Query.select');
+      expect(pretty).toContain('Filter.type');
+      expect(pretty).toContain('com.example.type.person');
+    });
+
+    test('Query.pretty handles complex queries', () => {
+      const query = Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.id(ObjectId.random()))).limit(10);
+      const pretty = Query.pretty(query);
+      expect(pretty).toContain('Query.select');
+      expect(pretty).toContain('Filter.and');
+      expect(pretty).toContain('limit(10)');
     });
 
     test.skip('chain', () => {
@@ -635,6 +673,26 @@ describe('query api', () => {
       const filter = Filter.or(Filter.typename('com.example.type.person'));
       // TODO(dmaretskyi): Give vitest type-tests a try.
       const _isAssignable: Obj.Unknown = null as any as Filter.Type<typeof filter>;
+    });
+
+    test('Filter.pretty returns human-readable filter string', () => {
+      const filter = Filter.type(TestSchema.Person, { name: 'Fred' });
+      const pretty = Filter.pretty(filter);
+      expect(pretty).toContain('Filter.type');
+      expect(pretty).toContain('com.example.type.person');
+    });
+
+    test('Filter.pretty handles complex filters', () => {
+      const filter = Filter.and(Filter.type(TestSchema.Person), Filter.id(ObjectId.random()));
+      const pretty = Filter.pretty(filter);
+      expect(pretty).toContain('Filter.and');
+      expect(pretty).toContain('Filter.type');
+    });
+
+    test('Filter.pretty handles or filters', () => {
+      const filter = Filter.or(Filter.type(TestSchema.Person), Filter.type(TestSchema.Organization));
+      const pretty = Filter.pretty(filter);
+      expect(pretty).toContain('Filter.or');
     });
   });
 });
