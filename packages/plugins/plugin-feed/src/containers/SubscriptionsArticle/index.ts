@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './SubscriptionsArticle';
+import { SubscriptionsArticle } from './SubscriptionsArticle';
+
+export default SubscriptionsArticle;

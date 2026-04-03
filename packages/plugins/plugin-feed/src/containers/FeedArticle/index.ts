@@ -2,4 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './FeedArticle';
+import { FeedArticle } from './FeedArticle';
+
+export default FeedArticle;
