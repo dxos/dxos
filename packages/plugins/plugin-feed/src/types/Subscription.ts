@@ -7,14 +7,16 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Feed as EchoFeed, Obj, Ref, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
 
 /** Feed protocol type. */
 export const FeedType = Schema.Literal('atproto', 'rss');
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
 
-/** Subscription feed schema — an RSS/Atom/AT Protocol subscription. */
+/**
+ * Subscription feed schema: an RSS/Atom/AT Protocol subscription.
+ */
 export const Feed = Schema.Struct({
   /** User-facing title of the feed. */
   name: Schema.String.pipe(Schema.optional),
@@ -37,6 +39,7 @@ export const Feed = Schema.Struct({
     typename: 'org.dxos.type.subscription.feed',
     version: '0.1.0',
   }),
+  LabelAnnotation.set(['name', 'url']),
   Annotation.IconAnnotation.set({
     icon: 'ph--rss--regular',
     hue: 'orange',
@@ -79,6 +82,7 @@ export const Post = Schema.Struct({
     typename: 'org.dxos.type.subscription.post',
     version: '0.1.0',
   }),
+  LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({
     icon: 'ph--article--regular',
     hue: 'orange',
@@ -96,7 +100,7 @@ export const CreateFeedSchema = Schema.Struct({
   url: Schema.optional(
     Schema.String.annotations({
       title: 'URL',
-      description: 'RSS/Atom feed URL or Bluesky handle.',
+      description: 'RSS Feed URL or Bluesky handle.',
     }),
   ),
   type: Schema.optional(
