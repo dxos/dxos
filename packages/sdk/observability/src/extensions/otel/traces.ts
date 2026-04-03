@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Tracer, trace } from '@opentelemetry/api';
+import { type Context, ROOT_CONTEXT, type Tracer, propagation, trace } from '@opentelemetry/api';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
@@ -44,6 +44,19 @@ export class OtelTraces {
         log('begin otel trace', { options });
         return this._tracer.startSpan(options.name, options);
       },
+    });
+
+    TRACE_PROCESSOR.remoteTracing.setContextPropagation({
+      inject: (opaqueContext) => {
+        const carrier: Record<string, string> = {};
+        propagation.inject(opaqueContext as Context, carrier);
+        return carrier.traceparent ? { traceparent: carrier.traceparent, tracestate: carrier.tracestate } : undefined;
+      },
+      extract: (traceContext) =>
+        propagation.extract(ROOT_CONTEXT, {
+          traceparent: traceContext.traceparent,
+          tracestate: traceContext.tracestate ?? '',
+        }),
     });
   }
 }

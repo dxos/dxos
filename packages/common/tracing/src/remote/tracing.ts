@@ -24,6 +24,21 @@ interface TracingMethods {
   startSpan: (options: StartSpanOptions) => RemoteSpan;
 }
 
+/** W3C trace context wire format. */
+export type TraceContextData = {
+  traceparent: string;
+  tracestate?: string;
+};
+
+/**
+ * Pluggable serialization/deserialization of opaque span contexts to/from W3C trace context.
+ * Provided by the concrete tracing backend (e.g., OTEL) at initialization time.
+ */
+export type ContextPropagation = {
+  inject: (opaqueContext: unknown) => TraceContextData | undefined;
+  extract: (traceContext: TraceContextData) => unknown;
+};
+
 const MAX_ENDED_CONTEXTS = 10_000;
 
 /**
@@ -53,6 +68,34 @@ export class RemoteTracing {
    * so early startup spans are not silently dropped.
    */
   private _pendingFlushes: Array<{ span: TracingSpan; isEnd: boolean }> | null = [];
+
+  private _contextPropagation?: ContextPropagation;
+
+  /** Register backend-specific W3C trace context serialization. */
+  setContextPropagation(propagation: ContextPropagation): void {
+    this._contextPropagation = propagation;
+  }
+
+  /** Serialize the opaque span context for the given DXOS span ID to W3C trace context. */
+  serializeSpanContext(spanId: number): TraceContextData | undefined {
+    if (!this._contextPropagation) {
+      return undefined;
+    }
+    const opaqueCtx = this.getSpanContext(spanId);
+    if (!opaqueCtx) {
+      return undefined;
+    }
+    return this._contextPropagation.inject(opaqueCtx);
+  }
+
+  /** Deserialize a W3C trace context and register it as a virtual parent span. */
+  deserializeAndRegisterParent(traceContext: TraceContextData): number | undefined {
+    if (!this._contextPropagation) {
+      return undefined;
+    }
+    const opaqueCtx = this._contextPropagation.extract(traceContext);
+    return this.registerRemoteParent(opaqueCtx);
+  }
 
   registerProcessor(processor: TracingMethods): void {
     this._tracing = processor;
