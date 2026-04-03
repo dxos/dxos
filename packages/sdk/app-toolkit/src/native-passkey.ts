@@ -36,7 +36,11 @@ export type NativePasskeyLoginResult = {
   prf_output: number[];
 };
 
-const PASSKEY_DOMAIN = 'composer.space';
+/** Domain for the Composer app (used for passkey RP ID, app links, and share links). */
+export const APP_DOMAIN = 'composer.space';
+
+/** Custom URL scheme for the Composer native app. */
+export const APP_SCHEME = 'composer://';
 
 /** Whether native passkeys are available (Tauri on macOS). */
 export const supportsNativePasskeys = (): boolean => {
@@ -54,10 +58,10 @@ export const createNativePasskey = async (params: {
   username: string;
   userId: Uint8Array;
 }): Promise<NativePasskeyRegistrationResult> => {
-  log('creating native passkey', { domain: PASSKEY_DOMAIN, username: params.username });
+  log('creating native passkey', { domain: APP_DOMAIN, username: params.username });
   const { invoke } = await import('@tauri-apps/api/core');
   const result = await invoke<NativePasskeyRegistrationResult>('plugin:macos-passkey|register_passkey', {
-    domain: PASSKEY_DOMAIN,
+    domain: APP_DOMAIN,
     challenge: Array.from(new Uint8Array(32)),
     username: params.username,
     userId: Array.from(params.userId),
@@ -78,10 +82,10 @@ export const createNativePasskey = async (params: {
 export const loginNativePasskey = async (params: {
   challenge: Uint8Array;
 }): Promise<NativePasskeyLoginResult> => {
-  log('authenticating with native passkey', { domain: PASSKEY_DOMAIN });
+  log('authenticating with native passkey', { domain: APP_DOMAIN });
   const { invoke } = await import('@tauri-apps/api/core');
   const result = await invoke<NativePasskeyLoginResult>('plugin:macos-passkey|login_passkey', {
-    domain: PASSKEY_DOMAIN,
+    domain: APP_DOMAIN,
     challenge: Array.from(params.challenge),
     salt: [],
   });

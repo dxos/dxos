@@ -4,11 +4,10 @@
 
 import React, { useEffect } from 'react';
 
+import { APP_SCHEME } from '@dxos/app-toolkit';
 import { Button, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
-
-const APP_SCHEME = 'composer://';
 
 export const NATIVE_REDIRECT_DIALOG = `${meta.id}.component.native-redirect-dialog`;
 
@@ -17,8 +16,18 @@ export const NativeRedirectDialog = ({ onOpenHere }: { onOpenHere: () => void })
 
   useEffect(() => {
     // Attempt to open the native app via custom URL scheme.
+    // Use an iframe instead of window.location.href to avoid errors on invalid URLs
+    // (e.g., paths containing colons like !dxos:settings/...).
     const schemeUrl = APP_SCHEME + window.location.pathname.replace(/^\/+/, '') + window.location.search;
-    window.location.href = schemeUrl;
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = schemeUrl;
+    document.body.appendChild(iframe);
+    const timer = setTimeout(() => iframe.remove(), 3000);
+    return () => {
+      clearTimeout(timer);
+      iframe.remove();
+    };
   }, []);
 
   return (

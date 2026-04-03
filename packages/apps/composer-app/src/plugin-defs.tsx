@@ -61,10 +61,12 @@ import { YouTubePlugin } from '@dxos/plugin-youtube';
 import { ZenPlugin } from '@dxos/plugin-zen';
 import { isTruthy } from '@dxos/util';
 
+import { APP_DOMAIN } from '@dxos/app-toolkit';
+
 import { steps } from './help';
 import { WelcomePlugin } from './plugins';
 
-const APP_LINK_ORIGIN = 'https://composer.space';
+const APP_LINK_ORIGIN = `https://${APP_DOMAIN}`;
 
 export type State = {
   appKey: string;
