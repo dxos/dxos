@@ -6,7 +6,7 @@ import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/blueprints';
 import { trim } from '@dxos/util';
 
-import { ScriptHandlers, Create, Read, Update, Delete, Deploy, Invoke, InspectInvocations } from './functions';
+import { Create, Read, Update, Delete, Deploy, Invoke, InspectInvocations } from './functions';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.script';
 
@@ -59,19 +59,12 @@ const make = () =>
         You can inspect the invocation history of a deployed script.
 
         ${AVAILABLE_PACKAGES}
-
-        When writing scripts, prefer using the pre-bundled packages above over inline implementations.
-        For data fetching, use \`fetch\` or \`@effect/platform\` HttpClient.
-        For data transformation, use \`jsonata\` expressions or \`effect/Array\` utilities.
-        For date operations, use \`date-fns\` functions.
-        For schema validation, use \`effect/Schema\`.
       `,
     }),
   });
 
 const blueprint: AppCapabilities.BlueprintDefinition = {
   key: BLUEPRINT_KEY,
-  operations: ScriptHandlers,
   make,
 };
 
