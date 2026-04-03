@@ -23,9 +23,7 @@ export default InspectInvocations.pipe(
         return { invocations: [], total: 0 };
       }
 
-      const queue = yield* QueueService.getQueue<InvocationTraceEvent>(
-        properties.invocationTraceQueue.target.dxn,
-      );
+      const queue = yield* QueueService.getQueue<InvocationTraceEvent>(properties.invocationTraceQueue.target.dxn);
       const events = yield* Effect.promise(() => queue.queryObjects());
       const allSpans = createInvocationSpans(events);
 

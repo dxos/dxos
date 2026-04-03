@@ -47,11 +47,7 @@ const PACKAGES = [
   '@dxos/operation',
 ];
 
-const IGNORED = [
-  'effect/.index',
-  'effect/package.json',
-  '@effect/platform/package.json',
-];
+const IGNORED = ['effect/.index', 'effect/package.json', '@effect/platform/package.json'];
 
 const entryPoints = Object.fromEntries(
   (await Promise.all(PACKAGES.map((pkg) => resolveExports(pkg))))

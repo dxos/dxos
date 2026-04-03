@@ -33,9 +33,7 @@ export default Deploy.pipe(
       }
 
       yield* Effect.promise(() => initializeBundler({ wasmUrl }));
-      const buildResult = yield* Effect.promise(() =>
-        bundleFunction({ source: script.source!.target!.content }),
-      );
+      const buildResult = yield* Effect.promise(() => bundleFunction({ source: script.source!.target!.content }));
       if ('error' in buildResult) {
         return yield* Effect.fail(buildResult.error ?? new Error('Bundle creation failed'));
       }
