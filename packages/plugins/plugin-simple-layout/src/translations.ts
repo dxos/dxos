@@ -29,7 +29,7 @@ export const translations = [
         'expand-drawer.label': 'Expand drawer',
         'collapse-drawer.label': 'Collapse drawer',
         'actions-menu.label': 'Actions',
-        'done.label': '',
+        'done.label': 'Done',
       },
     },
   },

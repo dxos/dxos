@@ -70,7 +70,7 @@ const pluginTranslations = [
         'auth-other-device-emoji.message': '',
         'cancel.label': '',
         'join-new-identity.label': '',
-        'qr.label': '',
+        'qr.label': 'QR Code',
         'recover-identity.label': '',
         'reset-device.label': '',
         'reset-dialog.description': '',

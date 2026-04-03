@@ -52,7 +52,7 @@ export const CloseSidebarButton = () => {
       icon='ph--caret-line-left--regular'
       iconOnly
       size={4}
-      label={t('close-navigation-sidebar.label')}
+      label={t('close-navigation-sidebar.button')}
       onClick={handleClick}
       classNames='rounded-none px-1 dx-focus-ring-inset pe-[max(.5rem,env(safe-area-inset-left))]'
     />
