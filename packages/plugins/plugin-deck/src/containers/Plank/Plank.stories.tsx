@@ -28,7 +28,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
 );
 
 const meta = {
-  title: 'plugins/plugin-deck/components/Plank',
+  title: 'plugins/plugin-deck/containers/Plank',
   component: Plank,
   render: (args) => {
     return (

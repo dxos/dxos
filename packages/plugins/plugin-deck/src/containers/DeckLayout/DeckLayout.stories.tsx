@@ -29,7 +29,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
 );
 
 const meta = {
-  title: 'plugins/plugin-deck/components/DeckLayout',
+  title: 'plugins/plugin-deck/containers/DeckLayout',
   component: DeckLayout,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
