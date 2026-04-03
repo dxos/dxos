@@ -244,15 +244,6 @@ const processEntry = (entry: DirEntry, parentPath: string): Effect.Effect<Filesy
       return null;
     }
 
-    if (isImageFile(entry.name)) {
-      return {
-        id: entryId,
-        name: entry.name,
-        path: entryPath,
-        type: 'image',
-      } satisfies FilesystemFile;
-    }
-
     const text = yield* readFileContent(entryPath);
     if (text === undefined) {
       return null;

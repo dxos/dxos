@@ -52,7 +52,7 @@ export class MirrorSpaceManager {
     const config = await runAndForwardErrors(readComposerConfig(workspace.path));
     if (config.spaceId) {
       const existing = this._client.spaces.get().find((space) => space.id === config.spaceId);
-      if (existing) {
+      if (existing && existing.tags.includes(FILESYSTEM_MIRROR_TAG)) {
         this._spaceByWorkspaceId.set(workspace.id, existing);
         return existing;
       }

@@ -13,6 +13,7 @@ import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SHARED } from '@dxos/plugin-space/types';
+import { isNonNullable } from '@dxos/util';
 import { Expando, Text } from '@dxos/schema';
 
 import { meta } from '../../meta';
@@ -34,7 +35,6 @@ const FILESYSTEM_TYPE = `${meta.id}.workspace`;
 const SETTINGS_TYPE = `${meta.id}.settings`;
 const GENERAL_TYPE = `${meta.id}.general`;
 const DIRECTORY_TYPE = `${meta.id}.directory`;
-const IMAGE_TYPE = `${meta.id}.image`;
 const MARKDOWN_PENDING_TYPE = `${meta.id}.markdown-pending`;
 
 const workspaceRearrangeCache = new Map<string, (nextOrder: (FilesystemWorkspace | unknown)[]) => void>();
@@ -59,7 +59,9 @@ export const createFilesystemEntryExtensions = (
         const workspace = state.workspaces.find((item) => item.id === workspaceId);
         return Effect.succeed(
           workspace
-            ? workspace.children.map((entry) => constructEntryNode(entry, filesystemManager, workspaceId, get))
+            ? workspace.children
+                .map((entry) => constructEntryNode(entry, filesystemManager, workspaceId, get))
+                .filter(isNonNullable)
             : [],
         );
       },
@@ -80,9 +82,9 @@ export const createFilesystemEntryExtensions = (
         const result = findDirectoryById(state.workspaces, directoryId);
         return Effect.succeed(
           result
-            ? result.directory.children.map((entry) =>
-                constructEntryNode(entry, filesystemManager, result.workspaceId, get),
-              )
+            ? result.directory.children
+                .map((entry) => constructEntryNode(entry, filesystemManager, result.workspaceId, get))
+                .filter(isNonNullable)
             : [],
         );
       },
@@ -252,7 +254,7 @@ const constructEntryNode = (
   filesystemManager: MarkdownResolver,
   workspaceId: string,
   get: Atom.Context,
-): Node.NodeArg<any> => {
+): Node.NodeArg<any> | null => {
   if (isFilesystemDirectory(entry)) {
     return {
       id: entry.id,
@@ -299,13 +301,6 @@ const constructEntryNode = (
     };
   }
 
-  return {
-    id: file.id,
-    type: IMAGE_TYPE,
-    data: file,
-    properties: {
-      label: file.name,
-      icon: 'ph--image--regular',
-    },
-  };
+  // Unsupported file type — skip.
+  return null;
 };
