@@ -367,6 +367,39 @@ export default {
         checkKeyExists(node.arguments[0], key, hasNsOverride);
       },
 
+      // Label tuples: ['key', { ns: meta.id, ... }]
+      // Matches ArrayExpression with a string literal first element and an object with an `ns` property.
+      ArrayExpression(node) {
+        if (
+          node.elements.length >= 2 &&
+          node.elements[0] &&
+          node.elements[0].type === 'Literal' &&
+          typeof node.elements[0].value === 'string' &&
+          node.elements[1] &&
+          node.elements[1].type === 'ObjectExpression' &&
+          node.elements[1].properties.some(
+            (prop) => prop.key && ((prop.key.type === 'Identifier' && prop.key.name === 'ns') || (prop.key.type === 'Literal' && prop.key.value === 'ns')),
+          )
+        ) {
+          const key = node.elements[0].value;
+
+          // Check format.
+          checkKeyFormat(node.elements[0], key);
+
+          // Check existence (determine if ns points to the package's own namespace).
+          const nsProp = node.elements[1].properties.find(
+            (prop) => prop.key && ((prop.key.type === 'Identifier' && prop.key.name === 'ns') || (prop.key.type === 'Literal' && prop.key.value === 'ns')),
+          );
+          const isOwnNamespace = nsProp && nsProp.value && (
+            (nsProp.value.type === 'MemberExpression' &&
+              nsProp.value.object.type === 'Identifier' && nsProp.value.object.name === 'meta' &&
+              nsProp.value.property.type === 'Identifier' && nsProp.value.property.name === 'id') ||
+            (nsProp.value.type === 'Identifier' && nsProp.value.name === 'translationKey')
+          );
+          checkKeyExists(node.elements[0], key, !isOwnNamespace);
+        }
+      },
+
       // Property keys in translations.ts files.
       // Guard: only check files whose source contains the translations export pattern.
       Property(node) {
