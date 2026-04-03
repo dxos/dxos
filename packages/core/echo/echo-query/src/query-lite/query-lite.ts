@@ -294,6 +294,11 @@ class FilterClass implements Filter$.Any {
     });
   }
 
+  /** Returns a human-readable string representation of a Filter AST. */
+  static pretty(filter: Filter$.Any): string {
+    return JSON.stringify(filter.ast, null, 2);
+  }
+
   private constructor(public readonly ast: QueryAST.Filter) {}
 
   '~Filter' = FilterClass.variance;
@@ -547,6 +552,11 @@ class QueryClass implements Query$.Any {
       query: this.ast,
       options,
     });
+  }
+
+  /** Returns a human-readable string representation of a Query AST. */
+  static pretty(query: Query$.Any): string {
+    return JSON.stringify(query.ast, null, 2);
   }
 }
 
