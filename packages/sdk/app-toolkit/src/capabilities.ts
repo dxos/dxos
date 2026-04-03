@@ -190,4 +190,16 @@ export namespace AppCapabilities {
   export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>(
     'org.dxos.app-framework.capability.navigation-target-resolver',
   );
+
+  /**
+   * Handler called by layout plugins on navigation events (page load, popstate, deep link).
+   * Plugins contribute handlers to react to URL query params or other URL parts
+   * without the layout plugin needing to know about specific params.
+   * @category Capability
+   */
+  export type NavigationHandler = (url: URL) => void | Promise<void>;
+
+  export const NavigationHandler = Capability$.make<NavigationHandler>(
+    'org.dxos.app-toolkit.capability.navigation-handler',
+  );
 }

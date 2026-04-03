@@ -12,6 +12,7 @@
   <true/>
   <key>com.apple.developer.associated-domains</key>
   <array>
+    <string>applinks:composer.space</string>
     <string>webcredentials:composer.space</string>
   </array>
 </dict>

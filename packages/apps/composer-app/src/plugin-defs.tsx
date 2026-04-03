@@ -64,7 +64,7 @@ import { isTruthy } from '@dxos/util';
 import { steps } from './help';
 import { WelcomePlugin } from './plugins';
 
-const APP_LINK_ORIGIN = 'https://composer.dxos.org';
+const APP_LINK_ORIGIN = 'https://composer.space';
 
 export type State = {
   appKey: string;

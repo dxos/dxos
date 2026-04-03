@@ -5,6 +5,7 @@
 export * from './app-graph-builder';
 export * from './client';
 export * from './migrations';
+export * from './navigation-handler';
 export * from './operation-handler';
 export * from './react-context';
 export * from './react-surface';
