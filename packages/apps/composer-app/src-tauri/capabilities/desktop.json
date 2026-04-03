@@ -22,6 +22,7 @@
       "allow": [{ "path": "**" }, { "path": "**/.composer" }, { "path": "**/.composer/**" }]
     },
     "fs:write-all",
+    "macos-passkey:default",
     "process:default",
     "shell:allow-open",
     {
@@ -34,7 +35,6 @@
         }
       ]
     },
-    "updater:default",
-    "macos-passkey:default"
+    "updater:default"
   ]
 }
