@@ -5,6 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { getSpace } from '@dxos/client/echo';
 import { Feed, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -24,10 +25,17 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
       const echoFeed = subscriptionFeed.feed?.target;
       invariant(echoFeed, 'Backing ECHO feed not found.');
 
-      yield* Effect.gen(function* () {
-        const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
-        const { feed: feedMeta, posts } = yield* Effect.promise(() => fetchRss(url, { corsProxy }));
+      const feedDxn = Feed.getQueueDxn(echoFeed);
+      invariant(feedDxn, 'Feed not stored in a space.');
 
+      const space = getSpace(subscriptionFeed);
+      invariant(space, 'Space not found.');
+
+      yield* Effect.tryPromise(async () => {
+        const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
+        const { feed: feedMeta, posts } = await fetchRss(url, { corsProxy });
+
+        // Append posts to the ECHO feed queue.
         if (posts.length > 0) {
           const postObjects = posts.map((post) =>
             Obj.make(Subscription.Post, {
@@ -39,7 +47,8 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
               guid: post.guid,
             }),
           );
-          yield* Feed.append(echoFeed, postObjects);
+          const queue = space.queues.get(feedDxn);
+          await queue.append(postObjects);
         }
 
         // Update feed metadata from channel if not already set.
