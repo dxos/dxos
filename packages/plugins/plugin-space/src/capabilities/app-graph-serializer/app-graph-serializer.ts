@@ -31,8 +31,8 @@ export default Capability.makeModule(
         inputType: SPACES,
         outputType: DIRECTORY_TYPE,
         serialize: (node) => ({
-          name: translations[0]['en-US'][meta.id]['spaces label'] ?? 'Spaces',
-          data: translations[0]['en-US'][meta.id]['spaces label'] ?? 'Spaces',
+          name: translations[0]['en-US'][meta.id]['spaces.label'] ?? 'Spaces',
+          data: translations[0]['en-US'][meta.id]['spaces.label'] ?? 'Spaces',
           type: DIRECTORY_TYPE,
         }),
         deserialize: () => {
