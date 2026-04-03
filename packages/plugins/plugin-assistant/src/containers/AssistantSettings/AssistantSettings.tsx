@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
+import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
@@ -20,12 +21,7 @@ const LLM_PROVIDER_LABELS = {
   lmstudio: 'LM Studio',
 } as const;
 
-export type AssistantSettingsComponentProps = {
-  settings: Assistant.Settings;
-  onSettingsChange: (fn: (current: Assistant.Settings) => Assistant.Settings) => void;
-};
-
-export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSettingsComponentProps) => {
+export const AssistantSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<Assistant.Settings>) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -34,22 +30,24 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
         <Settings.Group>
           <Settings.ItemInput title={t('settings-custom-prompts.label')}>
             <Input.Switch
+              disabled={!onSettingsChange}
               checked={!!settings.customPrompts}
-              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, customPrompts: checked }))}
+              onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, customPrompts: checked }))}
             />
           </Settings.ItemInput>
 
           <Settings.ItemInput title={t('settings-llm-provider.label')}>
             <Select.Root
+              disabled={!onSettingsChange}
               value={settings.llmProvider ?? 'edge'}
               onValueChange={(value) => {
-                onSettingsChange((s) => ({
+                onSettingsChange?.((s) => ({
                   ...s,
                   llmProvider: value === DEFAULT_VALUE ? undefined : (value as any),
                 }));
               }}
             >
-              <Select.TriggerButton placeholder={t('settings-llm-provider.label')} />
+              <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings-llm-provider.label')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
@@ -68,12 +66,13 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
 
           <Settings.ItemInput title={t('settings-edge-llm-model.label')}>
             <Select.Root
+              disabled={!onSettingsChange}
               value={settings.edgeModel ?? DEFAULT_VALUE}
               onValueChange={(value) => {
-                onSettingsChange((s) => ({ ...s, edgeModel: value === DEFAULT_VALUE ? undefined : value }));
+                onSettingsChange?.((s) => ({ ...s, edgeModel: value === DEFAULT_VALUE ? undefined : value }));
               }}
             >
-              <Select.TriggerButton placeholder={t('settings-default-llm-model.label')} />
+              <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings-default-llm-model.label')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
@@ -92,12 +91,13 @@ export const AssistantSettings = ({ settings, onSettingsChange }: AssistantSetti
 
           <Settings.ItemInput title={t('settings-ollama-llm-model.label')}>
             <Select.Root
+              disabled={!onSettingsChange}
               value={settings.ollamaModel ?? DEFAULT_VALUE}
               onValueChange={(value) => {
-                onSettingsChange((s) => ({ ...s, ollamaModel: value === DEFAULT_VALUE ? undefined : value }));
+                onSettingsChange?.((s) => ({ ...s, ollamaModel: value === DEFAULT_VALUE ? undefined : value }));
               }}
             >
-              <Select.TriggerButton placeholder={t('settings-default-llm-model.label')} />
+              <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings-default-llm-model.label')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>

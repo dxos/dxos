@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities, getPersonalSpace } from '@dxos/app-toolkit';
+import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { type LogBuffer, log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
@@ -26,9 +27,7 @@ const StorageAdapters = {
   idb: defs.Runtime.Client.Storage.StorageDriver.IDB,
 } as const;
 
-export type DebugSettingsComponentProps = {
-  settings: DebugSettingsProps;
-  onSettingsChange: (fn: (current: DebugSettingsProps) => DebugSettingsProps) => void;
+export type DebugSettingsComponentProps = SettingsSurfaceProps<DebugSettingsProps> & {
   logBuffer: LogBuffer;
 };
 
@@ -115,8 +114,9 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
         <Settings.Group>
           <Settings.ItemInput title={t('settings-wireframe.label')}>
             <Input.Switch
+              disabled={!onSettingsChange}
               checked={settings.wireframe}
-              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, wireframe: !!checked }))}
+              onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, wireframe: !!checked }))}
             />
           </Settings.ItemInput>
           <Settings.ItemInput title={t('settings-download-diagnostics.label')}>
@@ -159,6 +159,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
 
           <Settings.ItemInput title={t('settings-choose-storage-adaptor.label')}>
             <Select.Root
+              disabled={!onSettingsChange}
               value={
                 Object.entries(StorageAdapters).find(
                   ([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
@@ -175,7 +176,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
                 }
               }}
             >
-              <Select.TriggerButton placeholder={t('settings-data-store.label')} />
+              <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings-data-store.label')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>

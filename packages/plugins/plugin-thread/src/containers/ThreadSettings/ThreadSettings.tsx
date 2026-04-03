@@ -4,19 +4,15 @@
 
 import React from 'react';
 
+import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import type { ThreadSettingsProps } from '../../types';
-
-export type ThreadSettingsComponentProps = {
-  settings: ThreadSettingsProps;
-  onSettingsChange: (fn: (current: ThreadSettingsProps) => ThreadSettingsProps) => void;
-};
+import { type ThreadSettingsProps } from '../../types';
 
 // TODO(burdon): Settings.
-export const ThreadSettings = ({ settings: _settings }: ThreadSettingsComponentProps) => {
+export const ThreadSettings = ({ settings: _settings }: SettingsSurfaceProps<ThreadSettingsProps>) => {
   const { t: _t } = useTranslation(meta.id);
   return <Settings.Root></Settings.Root>;
 };

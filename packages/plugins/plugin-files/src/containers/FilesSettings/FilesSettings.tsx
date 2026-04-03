@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
@@ -12,10 +13,8 @@ import { meta } from '../../meta';
 import { FilesOperation } from '../../operations';
 import { type FilesSettingsProps, type FilesState } from '../../types';
 
-export type FilesSettingsComponentProps = {
-  settings: FilesSettingsProps;
+export type FilesSettingsComponentProps = SettingsSurfaceProps<FilesSettingsProps> & {
   state: FilesState;
-  onSettingsChange: (fn: (current: FilesSettingsProps) => FilesSettingsProps) => void;
 };
 
 export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettingsComponentProps) => {
@@ -61,25 +60,27 @@ export const FilesSettings = ({ settings, state, onSettingsChange }: FilesSettin
           </Settings.ItemInput>
           <Settings.ItemInput title={t('auto-export.label')}>
             <Input.Switch
-              disabled={!state.rootHandle}
+              disabled={!onSettingsChange || !state.rootHandle}
               checked={state.rootHandle ? settings.autoExport : false}
-              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, autoExport: !!checked }))}
+              onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, autoExport: !!checked }))}
             />
           </Settings.ItemInput>
           <Settings.ItemInput title={t('auto-export-interval.label')}>
             <Input.TextInput
+              disabled={!onSettingsChange}
               type='number'
               min={1}
               value={settings.autoExportInterval / 1000}
               onInput={(event) =>
-                onSettingsChange((s) => ({ ...s, autoExportInterval: parseInt(event.currentTarget.value, 10) * 1000 }))
+                onSettingsChange?.((s) => ({ ...s, autoExportInterval: parseInt(event.currentTarget.value, 10) * 1000 }))
               }
             />
           </Settings.ItemInput>
           <Settings.ItemInput title={t('open-local-files.label')}>
             <Input.Switch
+              disabled={!onSettingsChange}
               checked={settings.openLocalFiles}
-              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, openLocalFiles: !!checked }))}
+              onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, openLocalFiles: !!checked }))}
             />
           </Settings.ItemInput>
         </Settings.Group>

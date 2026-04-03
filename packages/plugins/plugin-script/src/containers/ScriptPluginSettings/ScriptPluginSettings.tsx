@@ -4,6 +4,7 @@
 
 import React from 'react';
 
+import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { useClient } from '@dxos/react-client';
 import { Button, Select, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
@@ -13,12 +14,7 @@ import { meta } from '../../meta';
 import { type ScriptSettings } from '../../types';
 import { getAccessCredential } from '../../util';
 
-export type ScriptPluginSettingsComponentProps = {
-  settings: ScriptSettings;
-  onSettingsChange: (fn: (current: ScriptSettings) => ScriptSettings) => void;
-};
-
-export const ScriptPluginSettings = ({ settings, onSettingsChange }: ScriptPluginSettingsComponentProps) => {
+export const ScriptPluginSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<ScriptSettings>) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
 
@@ -34,17 +30,18 @@ export const ScriptPluginSettings = ({ settings, onSettingsChange }: ScriptPlugi
         <Settings.Group>
           {/* TODO(wittjosiah): Hide outside of dev environments. */}
           <Settings.ItemInput title={t('authenticate-action.label')}>
-            <Button onClick={handleAuthenticate}>{t('authenticate-button.label')}</Button>
+            <Button disabled={!onSettingsChange} onClick={handleAuthenticate}>{t('authenticate-button.label')}</Button>
           </Settings.ItemInput>
 
           <Settings.ItemInput title={t('editor-input-mode.label')}>
             <Select.Root
+              disabled={!onSettingsChange}
               value={settings.editorInputMode ?? 'default'}
               onValueChange={(value) => {
-                onSettingsChange((s) => ({ ...s, editorInputMode: value as EditorInputMode }));
+                onSettingsChange?.((s) => ({ ...s, editorInputMode: value as EditorInputMode }));
               }}
             >
-              <Select.TriggerButton placeholder={t('select-editor-input-mode.placeholder')} />
+              <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('select-editor-input-mode.placeholder')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>

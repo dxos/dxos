@@ -6,6 +6,7 @@ import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { isPersonalSpace } from '@dxos/app-toolkit';
+import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
@@ -15,12 +16,7 @@ import { type SpaceSettingsProps } from '../../types';
 import { SpaceOperation } from '../../operations';
 import { getSpaceDisplayName } from '../../util';
 
-export type SpacePluginSettingsComponentProps = {
-  settings: SpaceSettingsProps;
-  onSettingsChange: (fn: (current: SpaceSettingsProps) => SpaceSettingsProps) => void;
-};
-
-export const SpacePluginSettings = ({ settings, onSettingsChange }: SpacePluginSettingsComponentProps) => {
+export const SpacePluginSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<SpaceSettingsProps>) => {
   const { t } = useTranslation(meta.id);
   const spaces = useSpaces({ all: settings.showHidden });
   const { invokePromise } = useOperationInvoker();
@@ -31,8 +27,9 @@ export const SpacePluginSettings = ({ settings, onSettingsChange }: SpacePluginS
         <Settings.Group>
           <Settings.ItemInput title={t('show-hidden-spaces.label')}>
             <Input.Switch
+              disabled={!onSettingsChange}
               checked={settings.showHidden}
-              onCheckedChange={(checked) => onSettingsChange((state) => ({ ...state, showHidden: !!checked }))}
+              onCheckedChange={(checked) => onSettingsChange?.((state) => ({ ...state, showHidden: !!checked }))}
             />
           </Settings.ItemInput>
         </Settings.Group>

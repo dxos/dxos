@@ -28,28 +28,28 @@ export const DeckSettings = ({ settings, onSettingsChange }: SettingsSurfaceProp
         <Settings.Group>
           <Settings.ItemInput title={t('settings-enable-deck.label')}>
             <Input.Switch
-              disabled={!!onSettingsChange}
+              disabled={!onSettingsChange}
               checked={settings.enableDeck}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, enableDeck: checked }))}
             />
           </Settings.ItemInput>
           <Settings.ItemInput title={t('settings-encapsulated-planks.label')}>
             <Input.Switch
-              disabled={!!onSettingsChange}
+              disabled={!onSettingsChange}
               checked={settings.encapsulatedPlanks ?? false}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, encapsulatedPlanks: checked }))}
             />
           </Settings.ItemInput>
           <Settings.ItemInput title={t('select-new-plank-positioning.label')}>
             <Select.Root
-              disabled={!settings.enableDeck || !!onSettingsChange}
+              disabled={!settings.enableDeck || !onSettingsChange}
               value={settings.newPlankPositioning ?? 'start'}
               onValueChange={(value) =>
                 onSettingsChange?.((s) => ({ ...s, newPlankPositioning: value as NewPlankPositioning }))
               }
             >
               <Select.TriggerButton
-                disabled={!!onSettingsChange}
+                disabled={!onSettingsChange}
                 placeholder={t('select-new-plank-positioning.placeholder')}
               />
               <Select.Portal>
@@ -68,7 +68,7 @@ export const DeckSettings = ({ settings, onSettingsChange }: SettingsSurfaceProp
           </Settings.ItemInput>
           <Settings.ItemInput title={t('settings-overscroll.label')}>
             <Select.Root
-              disabled={!settings.enableDeck || !!onSettingsChange}
+              disabled={!settings.enableDeck || !onSettingsChange}
               value={settings.overscroll ?? 'none'}
               onValueChange={(value) => onSettingsChange?.((s) => ({ ...s, overscroll: value as Overscroll }))}
             >
@@ -89,14 +89,14 @@ export const DeckSettings = ({ settings, onSettingsChange }: SettingsSurfaceProp
           </Settings.ItemInput>
           <Settings.ItemInput title={t('settings-enable-statusbar.label')}>
             <Input.Switch
-              disabled={!!onSettingsChange}
+              disabled={!onSettingsChange}
               checked={settings.enableStatusbar}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, enableStatusbar: checked }))}
             />
           </Settings.ItemInput>
           <Settings.ItemInput title={t('settings-show-hints.label')}>
             <Input.Switch
-              disabled={!!onSettingsChange}
+              disabled={!onSettingsChange}
               checked={settings.showHints}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, showHints: checked }))}
             />
@@ -104,7 +104,7 @@ export const DeckSettings = ({ settings, onSettingsChange }: SettingsSurfaceProp
           {!isSocket && (
             <Settings.ItemInput title={t('settings-native-redirect.label')}>
               <Input.Switch
-                disabled={!!onSettingsChange}
+                disabled={!onSettingsChange}
                 checked={settings.enableNativeRedirect}
                 onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, enableNativeRedirect: checked }))}
               />

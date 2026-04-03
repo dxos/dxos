@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
@@ -24,12 +25,7 @@ export const ObservabilitySettingsSchema = Schema.mutable(
 
 export type ObservabilitySettingsProps = Schema.Schema.Type<typeof ObservabilitySettingsSchema>;
 
-export type ObservabilitySettingsComponentProps = {
-  settings: ObservabilitySettingsProps;
-  onSettingsChange: (fn: (current: ObservabilitySettingsProps) => ObservabilitySettingsProps) => void;
-};
-
-export const ObservabilitySettings = ({ settings }: ObservabilitySettingsComponentProps) => {
+export const ObservabilitySettings = ({ settings }: SettingsSurfaceProps<ObservabilitySettingsProps>) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 

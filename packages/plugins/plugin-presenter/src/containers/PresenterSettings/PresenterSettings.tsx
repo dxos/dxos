@@ -4,18 +4,14 @@
 
 import React from 'react';
 
+import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
 import { type PresenterSettingsProps } from '../../types';
 
-export type PresenterSettingsComponentProps = {
-  settings: PresenterSettingsProps;
-  onSettingsChange: (fn: (current: PresenterSettingsProps) => PresenterSettingsProps) => void;
-};
-
-export const PresenterSettings = ({ settings, onSettingsChange }: PresenterSettingsComponentProps) => {
+export const PresenterSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<PresenterSettingsProps>) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -24,8 +20,9 @@ export const PresenterSettings = ({ settings, onSettingsChange }: PresenterSetti
         <Settings.Group>
           <Settings.ItemInput title={t('present-collections.label')}>
             <Input.Switch
+              disabled={!onSettingsChange}
               checked={settings.presentCollections}
-              onCheckedChange={(checked) => onSettingsChange((s) => ({ ...s, presentCollections: !!checked }))}
+              onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, presentCollections: !!checked }))}
             />
           </Settings.ItemInput>
         </Settings.Group>
