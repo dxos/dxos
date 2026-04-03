@@ -52,11 +52,20 @@ export const SpecSelector = (props: SpecSelectorProps) => {
     [props.type, specProps],
   );
 
+  const kindLabels: Record<string, string> = {
+    timer: t('trigger-type.timer.label'),
+    webhook: t('trigger-type.webhook.label'),
+    websocket: t('trigger-type.websocket.label'),
+    subscription: t('trigger-type.subscription.label'),
+    email: t('trigger-type.email.label'),
+    queue: t('trigger-type.queue.label'),
+  };
+
   const options = useMemo(
     () =>
       Trigger.Kinds.map((kind) => ({
         value: kind,
-        label: t(`trigger type ${kind}`),
+        label: kindLabels[kind],
       })),
     [t],
   );
