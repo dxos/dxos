@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 
-import { FeedArticle, SubscriptionArticle } from '../../containers';
+import { FeedArticle, SubscriptionsArticle } from '../../containers';
 import { meta } from '../../meta';
 import { Subscription } from '../../types';
 
@@ -20,10 +20,15 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.subscription-feed`,
         role: ['article'],
-        filter: (data): data is { subject: Subscription.Feed; attendableId?: string } =>
-          Subscription.instanceOf(data.subject) && !data.companionTo,
+        position: 'hoist',
+        filter: (
+          data,
+        ): data is {
+          attendableId?: string;
+          subject: Subscription.Feed;
+        } => Subscription.instanceOf(data.subject) && !data.companionTo,
         component: ({ data, role }) => (
-          <SubscriptionArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+          <SubscriptionsArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       // Companion view: FeedArticle shown when a post is selected within a subscription feed.

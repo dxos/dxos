@@ -20,14 +20,9 @@ import { meta } from '../../meta';
 import { FeedOperation } from '../../operations';
 import { Subscription } from '../../types';
 
-export type SubscriptionArticleProps = SurfaceComponentProps<
-  Subscription.Feed,
-  {
-    attendableId?: string;
-  }
->;
+export type SubscriptionsArticleProps = SurfaceComponentProps<Subscription.Feed>;
 
-export const SubscriptionArticle = ({ role, subject, attendableId }: SubscriptionArticleProps) => {
+export const SubscriptionsArticle = ({ role, subject, attendableId }: SubscriptionsArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const id = attendableId ?? Obj.getDXN(subject).toString();

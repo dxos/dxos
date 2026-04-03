@@ -21,7 +21,7 @@ import { FeedPlugin } from '../../FeedPlugin';
 import { Subscription } from '../../types';
 import { translations } from '../../translations';
 
-import { SubscriptionArticle } from './SubscriptionArticle';
+import { SubscriptionsArticle } from './SubscriptionsArticle';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
@@ -32,11 +32,11 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  return <SubscriptionArticle role='article' subject={feed} />;
+  return <SubscriptionsArticle role='article' subject={feed} />;
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'plugins/plugin-feed/containers/SubscriptionArticle',
+  title: 'plugins/plugin-feed/containers/SubscriptionsArticle',
   component: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
