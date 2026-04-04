@@ -22,7 +22,6 @@ import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 
 export type PlankComponentProps = {
-  layoutMode: LayoutMode;
   id: string;
   part: ResolvedPart;
   path?: string[];
@@ -32,12 +31,12 @@ export type PlankComponentProps = {
   node?: Node.Node;
   primary?: Node.Node;
   companions?: Node.Node[];
+  layoutMode: LayoutMode;
   settings?: Settings.Settings;
 };
 
 export const PlankComponent = memo(
   ({
-    layoutMode,
     id,
     part,
     path,
@@ -47,6 +46,7 @@ export const PlankComponent = memo(
     node,
     primary,
     companions,
+    layoutMode,
     settings,
   }: PlankComponentProps) => {
     const { popoverAnchorId, scrollIntoView, plankSizing, onResize, onScrollIntoView } =

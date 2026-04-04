@@ -29,7 +29,7 @@ import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from './fragments';
 import {
   PlankRoot,
-  PlankContainer,
+  PlankContent,
   PlankComponent,
   type PlankComponentProps,
 } from '../Plank';
@@ -120,7 +120,7 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
       onScrollIntoView={handleScrollIntoView}
       onChangeCompanion={handleChangeCompanion}
     >
-      <PlankContainer
+      <PlankContent
         solo={props.part === 'solo'}
         companion={hasCompanion}
         encapsulate={!!props.settings?.encapsulatedPlanks}
@@ -144,7 +144,7 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
             {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: (props.order ?? 0) + 1 })}
           />
         )}
-      </PlankContainer>
+      </PlankContent>
     </PlankRoot>
   );
 });

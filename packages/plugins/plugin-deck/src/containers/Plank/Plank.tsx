@@ -6,7 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { PlankProvider, type PlankContextValue } from './PlankContext';
 import { PlankComponent } from './PlankComponent';
-import { PlankContainer } from './PlankContainer';
+import { PlankContent } from './PlankContent';
 import { PlankHeading } from './PlankHeading';
 import { PlankControls } from './PlankControls';
 
@@ -33,7 +33,7 @@ export type { PlankRootProps };
  */
 export const Plank = {
   Root: PlankRoot,
-  Container: PlankContainer,
+  Container: PlankContent,
   Article: PlankComponent,
   Heading: PlankHeading,
   Controls: PlankControls,
