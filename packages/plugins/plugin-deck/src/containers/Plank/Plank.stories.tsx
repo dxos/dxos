@@ -40,7 +40,7 @@ const PlankStory = ({ id, layoutMode, part }: PlankStoryProps) => {
   return (
     <Stack orientation='vertical'>
       <Plank.Root graph={graph} layoutMode={layoutMode} part={part}>
-        <Plank.Article id={id} layoutMode={layoutMode} part={part} />
+        <Plank.Component id={id} layoutMode={layoutMode} part={part} />
       </Plank.Root>
     </Stack>
   );

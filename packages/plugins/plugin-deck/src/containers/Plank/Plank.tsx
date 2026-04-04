@@ -33,8 +33,8 @@ export type { PlankRootProps };
  */
 export const Plank = {
   Root: PlankRoot,
-  Container: PlankContent,
-  Article: PlankComponent,
+  Content: PlankContent,
+  Component: PlankComponent,
   Heading: PlankHeading,
   Controls: PlankControls,
 };
