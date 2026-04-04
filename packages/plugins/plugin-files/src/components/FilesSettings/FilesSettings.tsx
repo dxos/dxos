@@ -11,12 +11,15 @@ import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { meta } from '../../meta';
 import { type Settings, type FilesState } from '../../types';
 
-export type FilesSettingsComponentProps = SettingsSurfaceProps<Settings.Settings> & {
-  state: FilesState;
-  onSelectRoot?: () => void;
-  onExport?: () => void;
-  onImport?: () => void;
-};
+export type FilesSettingsProps = SettingsSurfaceProps<
+  Settings.Settings,
+  {
+    state: FilesState;
+    onSelectRoot?: () => void;
+    onExport?: () => void;
+    onImport?: () => void;
+  }
+>;
 
 export const FilesSettings = ({
   settings,
@@ -25,7 +28,7 @@ export const FilesSettings = ({
   onSelectRoot,
   onExport,
   onImport,
-}: FilesSettingsComponentProps) => {
+}: FilesSettingsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (

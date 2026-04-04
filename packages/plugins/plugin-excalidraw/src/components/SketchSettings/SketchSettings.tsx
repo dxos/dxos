@@ -11,7 +11,9 @@ import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { meta } from '../../meta';
 import { type Settings } from '../../types';
 
-export const SketchSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<Settings.Settings>) => {
+export type SketchSettingsProps = SettingsSurfaceProps<Settings.Settings>;
+
+export const SketchSettings = ({ settings, onSettingsChange }: SketchSettingsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (

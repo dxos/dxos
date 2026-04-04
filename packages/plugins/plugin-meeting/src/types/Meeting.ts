@@ -63,4 +63,7 @@ export const Meeting = Schema.Struct({
 export interface Meeting extends Schema.Schema.Type<typeof Meeting> {}
 
 // TODO(burdon): Create with decode consistently: Schema.decodeSync(TranscriptionSettingsSchema)({}))
-export { Settings } from './Settings';
+// Re-export Settings as merged const/type (not as namespace).
+import * as SettingsModule from './Settings';
+export const Settings = SettingsModule.Settings;
+export type Settings = SettingsModule.Settings;

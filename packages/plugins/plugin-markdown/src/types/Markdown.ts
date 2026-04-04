@@ -8,7 +8,10 @@ import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
-export { Settings } from './Settings';
+// Re-export Settings as merged const/type (not as namespace).
+import * as SettingsModule from './Settings';
+export const Settings = SettingsModule.Settings;
+export type Settings = SettingsModule.Settings;
 
 /**
  * Document Item type.

@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities, getPersonalSpace } from '@dxos/app-toolkit';
 import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
@@ -27,30 +26,35 @@ const StorageAdapters = {
   idb: defs.Runtime.Client.Storage.StorageDriver.IDB,
 } as const;
 
-export type DebugSettingsComponentProps = SettingsSurfaceProps<Settings.Settings> & {
-  logBuffer: LogBuffer;
-};
+export type DebugSettingsProps = SettingsSurfaceProps<
+  Settings.Settings,
+  {
+    logBuffer: LogBuffer;
+    onUpload?: AppCapabilities.FileUploader;
+  }
+>;
 
-export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSettingsComponentProps) => {
+export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload }: DebugSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const [toast, setToast] = useState<Toast>();
-  const client = useClient();
   const download = useFileDownload();
-  // TODO(mykola): Get updates from other places that change Config.
   const [storageConfig, setStorageConfig] = useState<ConfigProto>({});
-  const [upload] = useCapabilities(AppCapabilities.FileUploader);
+  const client = useClient();
 
   useEffect(() => {
     void Storage().then((config) => setStorageConfig(config));
   }, []);
 
-  const handleToast = (toast: Toast) => {
-    setToast(toast);
-    const t = setTimeout(() => setToast(undefined), 5_000);
-    return () => clearTimeout(t);
-  };
+  const handleToast = useCallback(
+    (toast: Toast) => {
+      setToast(toast);
+      const timer = setTimeout(() => setToast(undefined), 5_000);
+      return () => clearTimeout(timer);
+    },
+    [setToast],
+  );
 
-  const handleDownload = async () => {
+  const handleDownload = useCallback(async () => {
     const data = await client.diagnostics();
     const file = new Blob([JSON.stringify(data, undefined, 2)], {
       type: 'text/plain',
@@ -58,13 +62,13 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
     const fileName = `composer-${new Date().toISOString().replace(/\W/g, '-')}.json`;
     download(file, fileName);
 
-    if (upload) {
+    if (onUpload) {
       const personalSpace = getPersonalSpace(client);
       if (!personalSpace) {
         log.error('no personal space available for upload');
         return;
       }
-      const info = await upload(personalSpace.db, new File([file], fileName));
+      const info = await onUpload(personalSpace.db, new File([file], fileName));
       if (!info) {
         log.error('diagnostics failed to upload to IPFS');
         return;
@@ -83,16 +87,16 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
       });
       log.info('diagnostics', { url });
     }
-  };
+  }, [client, download, handleToast, onUpload, t]);
 
-  const handleDownloadLogs = () => {
+  const handleDownloadLogs = useCallback(() => {
     const ndjson = logBuffer.serialize();
     const file = new Blob([ndjson], { type: 'application/x-ndjson' });
     const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
     download(file, fileName);
-  };
+  }, [download, logBuffer]);
 
-  const handleRepair = async () => {
+  const handleRepair = useCallback(async () => {
     try {
       const info = await client.repair();
       setStorageConfig(await Storage());
@@ -106,7 +110,26 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
         description: err.message,
       });
     }
-  };
+  }, [client, handleToast, t]);
+
+  const handleWireframeChange = useCallback(
+    (checked: boolean) => onSettingsChange?.((s) => ({ ...s, wireframe: !!checked })),
+    [onSettingsChange],
+  );
+
+  const handleStorageAdapterChange = useCallback(
+    (value: string) => {
+      if (confirm(t('settings-storage-adapter-changed-alert.message'))) {
+        updateConfig(
+          storageConfig,
+          setStorageConfig,
+          ['runtime', 'client', 'storage', 'dataStore'],
+          StorageAdapters[value as keyof typeof StorageAdapters],
+        );
+      }
+    },
+    [storageConfig, t],
+  );
 
   return (
     <SettingsForm.Root>
@@ -116,13 +139,14 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.wireframe}
-              onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, wireframe: !!checked }))}
+              onCheckedChange={handleWireframeChange}
             />
           </SettingsForm.ItemInput>
           <SettingsForm.ItemInput title={t('settings-download-diagnostics.label')}>
             <IconButton
               icon='ph--download-simple--regular'
               iconOnly
+              disabled={!onUpload}
               label={t('settings-download-diagnostics.label')}
               onClick={handleDownload}
             />
@@ -165,16 +189,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
                   ([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
                 )?.[0]
               }
-              onValueChange={(value) => {
-                if (confirm(t('settings-storage-adapter-changed-alert.message'))) {
-                  updateConfig(
-                    storageConfig,
-                    setStorageConfig,
-                    ['runtime', 'client', 'storage', 'dataStore'],
-                    StorageAdapters[value as keyof typeof StorageAdapters],
-                  );
-                }
-              }}
+              onValueChange={handleStorageAdapterChange}
             >
               <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings-data-store.label')} />
               <Select.Portal>

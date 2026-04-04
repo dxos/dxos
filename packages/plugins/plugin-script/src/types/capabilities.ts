@@ -9,9 +9,9 @@ import { Capability } from '@dxos/app-framework';
 import { type Compiler } from '../compiler';
 import { meta } from '../meta';
 
-import { type Settings as SettingsType } from './Settings';
+import * as Settings from './Settings';
 
 export namespace ScriptCapabilities {
-  export const Settings = Capability.make<Atom.Writable<SettingsType>>(`${meta.id}.capability.settings`);
+  export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);
   export const Compiler = Capability.make<Compiler>(`${meta.id}.capability.compiler`);
 }

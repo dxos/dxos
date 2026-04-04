@@ -12,7 +12,9 @@ import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorView
 import { meta } from '../../meta';
 import { type Markdown } from '../../types';
 
-export const MarkdownSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<Markdown.Settings>) => {
+export type MarkdownSettingsProps = SettingsSurfaceProps<Markdown.Settings>;
+
+export const MarkdownSettings = ({ settings, onSettingsChange }: MarkdownSettingsProps) => {
   const { t } = useTranslation(meta.id);
 
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.

@@ -8,4 +8,7 @@ import { Chat as ChatModule } from '@dxos/assistant-toolkit';
 export const Chat = ChatModule.Chat;
 export type Chat = ChatModule.Chat;
 
-export { Settings } from './Settings';
+// Re-export Settings as merged const/type (not as namespace).
+import * as SettingsModule from './Settings';
+export const Settings = SettingsModule.Settings;
+export type Settings = SettingsModule.Settings;

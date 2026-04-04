@@ -8,11 +8,11 @@ import { Space } from '@dxos/client/echo';
 // TODO(burdon): AUDIT classes of all surface providers.
 
 export type SurfaceRole =
-  | 'item'
   | 'article'
+  | 'card--content'
   | 'complementary' // Companion
-  | 'section'
-  | 'card--content';
+  | 'item'
+  | 'section';
 
 /**
  * Generic type for surface components that are anchored to a space.

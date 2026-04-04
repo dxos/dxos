@@ -14,17 +14,20 @@ import { meta } from '../../meta';
 import { type Settings } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
-export type SpacePluginSettingsComponentProps = SettingsSurfaceProps<Settings.Settings> & {
-  spaces?: Space[];
-  onOpenSpaceSettings?: (space: Space) => void;
-};
+export type SpacePluginSettingsProps = SettingsSurfaceProps<
+  Settings.Settings,
+  {
+    spaces?: Space[];
+    onOpenSpaceSettings?: (space: Space) => void;
+  }
+>;
 
 export const SpacePluginSettings = ({
   settings,
   onSettingsChange,
   spaces,
   onOpenSpaceSettings,
-}: SpacePluginSettingsComponentProps) => {
+}: SpacePluginSettingsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -41,6 +44,9 @@ export const SpacePluginSettings = ({
         </SettingsForm.Group>
 
         <SettingsForm.Container>
+          <Input.Root>
+            <Input.Label>{t('settings.space-list.label')}</Input.Label>
+          </Input.Root>
           <List classNames='flex flex-col gap-trim-sm'>
             {spaces?.map((space) => (
               <ListItem.Root key={space.id} classNames='w-full items-center'>
@@ -55,8 +61,9 @@ export const SpacePluginSettings = ({
                 </ListItem.Heading>
                 <IconButton
                   icon='ph--faders--regular'
+                  label={t('settings.open-settings.label')}
+                  disabled={!!onOpenSpaceSettings}
                   onClick={() => onOpenSpaceSettings?.(space)}
-                  label={t('open-space-settings.label')}
                 />
               </ListItem.Root>
             ))}

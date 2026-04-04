@@ -90,6 +90,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
     const registry = capabilities.get(Capabilities.AtomRegistry);
     const settingsAtom = capabilities.get(DebugCapabilities.Settings);
+    const fileUploader = capabilities.get(AppCapabilities.FileUploader);
 
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
@@ -99,7 +100,14 @@ export default Capability.makeModule(
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
-          return <DebugSettings settings={settings} onSettingsChange={updateSettings} logBuffer={logBuffer} />;
+          return (
+            <DebugSettings
+              settings={settings}
+              onSettingsChange={updateSettings}
+              logBuffer={logBuffer}
+              onUpload={fileUploader}
+            />
+          );
         },
       }),
       Surface.create({

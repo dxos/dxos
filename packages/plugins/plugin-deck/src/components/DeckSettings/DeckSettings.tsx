@@ -13,7 +13,9 @@ import { Settings } from '../../types';
 
 const isSocket = !!(globalThis as any).__args;
 
-export const DeckSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<Settings.Settings>) => {
+export type DeckSettingsProps = SettingsSurfaceProps<Settings.Settings>;
+
+export const DeckSettings = ({ settings, onSettingsChange }: DeckSettingsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (

@@ -210,7 +210,8 @@ export const translations = [
         'expose-object.label': 'Expose in navtree',
         'add-tag.label': 'Add tag',
         'advanced-settings.label': 'Advanced',
-        'open-space-settings.label': 'Open settings',
+        'settings.space-list.label': 'Spaces',
+        'settings.open-settings.label': 'Open settings',
         'related-actions.label': 'Related Actions',
         'related-objects.label': 'Related Objects',
 
