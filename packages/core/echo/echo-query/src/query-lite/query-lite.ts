@@ -294,6 +294,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
+  /** Returns a human-readable string representation of a Filter AST. */
   static pretty(filter: Filter$.Any): string {
     return prettyFilter(filter.ast);
   }
@@ -375,6 +376,22 @@ class QueryClass implements Query$.Any {
     });
   }
 
+  select(filter: Filter$.Any | Filter$.Props<any>): Query$.Any {
+    if (FilterClass.is(filter)) {
+      return new QueryClass({
+        type: 'filter',
+        selection: this.ast,
+        filter: filter.ast,
+      });
+    } else {
+      return new QueryClass({
+        type: 'filter',
+        selection: this.ast,
+        filter: FilterClass.props(filter).ast,
+      });
+    }
+  }
+
   static type(schema: Schema.Schema.All | string, predicates?: Filter$.Props<unknown>): Query$.Any {
     return new QueryClass({
       type: 'select',
@@ -411,6 +428,32 @@ class QueryClass implements Query$.Any {
     return wrapper.from(source, options);
   }
 
+  from(arg: any, options?: { includeFeeds?: boolean }): Query$.Any {
+    if (arg === 'all-accessible-spaces') {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: {
+          _tag: 'scope',
+          scope: {
+            ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+          },
+        },
+      });
+    }
+
+    if (_isScopeLike(arg)) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'scope', scope: arg },
+      });
+    }
+
+    throw new TypeError('Database and Feed objects are not supported in query-lite sandbox');
+  }
+
+  /** Returns a human-readable string representation of a Query AST. */
   static pretty(query: Query$.Any): string {
     return prettyQuery(query.ast);
   }
@@ -418,22 +461,6 @@ class QueryClass implements Query$.Any {
   constructor(public readonly ast: QueryAST.Query) {}
 
   '~Query' = QueryClass.variance;
-
-  select(filter: Filter$.Any | Filter$.Props<any>): Query$.Any {
-    if (FilterClass.is(filter)) {
-      return new QueryClass({
-        type: 'filter',
-        selection: this.ast,
-        filter: filter.ast,
-      });
-    } else {
-      return new QueryClass({
-        type: 'filter',
-        selection: this.ast,
-        filter: FilterClass.props(filter).ast,
-      });
-    }
-  }
 
   reference(key: string): Query$.Any {
     return new QueryClass({
@@ -522,31 +549,6 @@ class QueryClass implements Query$.Any {
       query: this.ast,
       limit,
     });
-  }
-
-  from(arg: any, options?: { includeFeeds?: boolean }): Query$.Any {
-    if (arg === 'all-accessible-spaces') {
-      return new QueryClass({
-        type: 'from',
-        query: this.ast,
-        from: {
-          _tag: 'scope',
-          scope: {
-            ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
-          },
-        },
-      });
-    }
-
-    if (_isScopeLike(arg)) {
-      return new QueryClass({
-        type: 'from',
-        query: this.ast,
-        from: { _tag: 'scope', scope: arg },
-      });
-    }
-
-    throw new TypeError('Database and Feed objects are not supported in query-lite sandbox');
   }
 
   options(options: QueryAST.QueryOptions): Query$.Any {
