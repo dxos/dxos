@@ -241,7 +241,7 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
       }
 
       // Apply in-progress extrusion preview.
-      if (inProgressExtrusion && inProgressExtrusion.distance > 0) {
+      if (inProgressExtrusion && inProgressExtrusion.distance !== 0) {
         const next = applyExtrusion(Manifold, solid, inProgressExtrusion);
         if (next !== solid) {
           solid.delete();
