@@ -317,6 +317,8 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
           // Shift-click on selection overlay: start extruding the already-selected face.
           if (event.shiftKey && hitSelectionMesh && state.selectedNormal) {
             computeExtrudeScreenDir(state, state.selectedNormal, scene, manager.camera, canvasRef.current!);
+            selectionMeshRef.current?.dispose();
+            selectionMeshRef.current = null;
             state.extruding = true;
             state.extrudeStartX = event.clientX;
             state.extrudeStartY = event.clientY;
@@ -353,6 +355,8 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
           // Start extrusion if shift is held.
           if (event.shiftKey) {
             computeExtrudeScreenDir(state, normal, scene, manager.camera, canvasRef.current!);
+            selectionMeshRef.current?.dispose();
+            selectionMeshRef.current = null;
             state.extruding = true;
             state.extrudeStartX = event.clientX;
             state.extrudeStartY = event.clientY;
