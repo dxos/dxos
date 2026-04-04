@@ -9,7 +9,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { SceneManager } from '../../engine';
 import { getManifold } from '../../engine';
-import { manifoldToBabylon, getFaceNormal } from '../../engine';
+import { manifoldToBabylon, updateMeshFromManifold, getFaceNormal } from '../../engine';
 
 type Extrusion = {
   normal: { x: number; y: number; z: number };
@@ -253,14 +253,15 @@ export const SpacetimeEditor = composable<HTMLDivElement, SpacetimeEditorProps>(
         }
 
         if (meshRef.current) {
-          meshRef.current.dispose();
+          // Update existing mesh in-place (no dispose/recreate flicker).
+          updateMeshFromManifold(solid, meshRef.current);
+        } else {
+          meshRef.current = manifoldToBabylon(solid, {
+            scene: manager.scene,
+            name: 'solid',
+            color: CUBE_COLOR,
+          });
         }
-
-        meshRef.current = manifoldToBabylon(solid, {
-          scene: manager.scene,
-          name: 'solid',
-          color: CUBE_COLOR,
-        });
 
         // Clean up all Manifold objects after mesh data has been extracted.
         for (const obj of toDelete) {

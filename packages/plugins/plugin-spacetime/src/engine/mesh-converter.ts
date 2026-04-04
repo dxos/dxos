@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Color3, Mesh, StandardMaterial, VertexData, type Scene } from '@babylonjs/core';
+import { Color3, Mesh, StandardMaterial, VertexBuffer, VertexData, type Scene } from '@babylonjs/core';
 import type { Manifold } from 'manifold-3d';
 
 export type ConvertOptions = {
@@ -12,13 +12,13 @@ export type ConvertOptions = {
 };
 
 /**
- * Converts a Manifold object to a Babylon.js Mesh with flat shading (sharp edges).
+ * Extracts flat-shaded vertex data from a Manifold object.
  * Vertices are unshared so each triangle has its own face normal.
+ * Winding is swapped (Manifold CCW -> Babylon CW).
  */
-export const manifoldToBabylon = (
+const extractVertexData = (
   manifold: Manifold,
-  { scene, name = 'manifold-mesh', color = new Color3(0.4, 0.6, 0.9) }: ConvertOptions,
-): Mesh => {
+): { positions: Float32Array; normals: Float32Array; indices: Uint32Array } => {
   const meshGL = manifold.getMesh();
 
   const numTri = meshGL.numTri;
@@ -26,7 +26,6 @@ export const manifoldToBabylon = (
   const triVerts = meshGL.triVerts;
   const numProp = meshGL.numProp;
 
-  // Unshare vertices for flat shading: 3 unique vertices per triangle.
   const positions = new Float32Array(numTri * 9);
   const normals = new Float32Array(numTri * 9);
   const indices = new Uint32Array(numTri * 3);
@@ -37,7 +36,6 @@ export const manifoldToBabylon = (
     const vi1 = triVerts[tri * 3 + 2];
     const vi2 = triVerts[tri * 3 + 1];
 
-    // Read positions for each vertex of this triangle.
     const p0x = vertProperties[vi0 * numProp];
     const p0y = vertProperties[vi0 * numProp + 1];
     const p0z = vertProperties[vi0 * numProp + 2];
@@ -48,7 +46,7 @@ export const manifoldToBabylon = (
     const p2y = vertProperties[vi2 * numProp + 1];
     const p2z = vertProperties[vi2 * numProp + 2];
 
-    // Compute flat face normal (negated because winding was swapped for Babylon CW convention).
+    // Compute flat face normal (negated because winding was swapped).
     const ax = p1x - p0x;
     const ay = p1y - p0y;
     const az = p1z - p0z;
@@ -76,7 +74,6 @@ export const manifoldToBabylon = (
     positions[base + 7] = p2y;
     positions[base + 8] = p2z;
 
-    // Same normal for all 3 vertices (flat shading).
     normals[base] = nx;
     normals[base + 1] = ny;
     normals[base + 2] = nz;
@@ -92,12 +89,25 @@ export const manifoldToBabylon = (
     indices[tri * 3 + 2] = tri * 3 + 2;
   }
 
+  return { positions, normals, indices };
+};
+
+/**
+ * Creates a new updatable Babylon.js Mesh from a Manifold object.
+ */
+export const manifoldToBabylon = (
+  manifold: Manifold,
+  { scene, name = 'manifold-mesh', color = new Color3(0.4, 0.6, 0.9) }: ConvertOptions,
+): Mesh => {
+  const { positions, normals, indices } = extractVertexData(manifold);
+
   const mesh = new Mesh(name, scene);
   const vertexData = new VertexData();
   vertexData.positions = positions;
   vertexData.indices = indices;
   vertexData.normals = normals;
-  vertexData.applyToMesh(mesh);
+  // Pass updatable=true so vertex data can be updated in-place later.
+  vertexData.applyToMesh(mesh, true);
 
   const material = new StandardMaterial(`${name}-material`, scene);
   material.diffuseColor = color;
@@ -106,6 +116,28 @@ export const manifoldToBabylon = (
   mesh.material = material;
 
   return mesh;
+};
+
+/**
+ * Updates an existing Babylon.js Mesh with new geometry from a Manifold object.
+ * If the triangle count changed, the mesh is recreated; otherwise vertex data is updated in-place.
+ */
+export const updateMeshFromManifold = (manifold: Manifold, existingMesh: Mesh): void => {
+  const { positions, normals, indices } = extractVertexData(manifold);
+
+  const currentIndices = existingMesh.getIndices();
+  if (currentIndices && currentIndices.length === indices.length) {
+    // Same triangle count — update vertex buffers in-place (no flicker).
+    existingMesh.updateVerticesData(VertexBuffer.PositionKind, positions);
+    existingMesh.updateVerticesData(VertexBuffer.NormalKind, normals);
+  } else {
+    // Triangle count changed — must rebuild geometry.
+    const vertexData = new VertexData();
+    vertexData.positions = positions;
+    vertexData.indices = indices;
+    vertexData.normals = normals;
+    vertexData.applyToMesh(existingMesh, true);
+  }
 };
 
 /**
