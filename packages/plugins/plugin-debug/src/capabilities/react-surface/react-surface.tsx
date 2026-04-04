@@ -90,7 +90,7 @@ export default Capability.makeModule(
     const capabilities = yield* Capability.Service;
     const registry = capabilities.get(Capabilities.AtomRegistry);
     const settingsAtom = capabilities.get(DebugCapabilities.Settings);
-    const fileUploader = capabilities.get(AppCapabilities.FileUploader);
+    const fileUploader = capabilities.getAll(AppCapabilities.FileUploader)[0];
 
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
