@@ -107,6 +107,7 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
   const meshRef = useRef<Mesh | null>(null);
   const selectionMeshRef = useRef<Mesh | null>(null);
   const stateRef = useRef<EditorState>({ ...INITIAL_STATE });
+  const fpsRef = useRef<HTMLSpanElement>(null);
   const [ready, setReady] = useState(false);
 
   const rebuildMesh = useCallback(
@@ -122,18 +123,21 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
       // Start with a unit cube centered at origin.
       let solid = Manifold.cube([2, 2, 2], true);
 
-      // If extruding, add a box along the face normal.
+      // If extruding, add a box along the face normal direction.
       if (faceNormal && extrudeDistance > 0) {
-        const normal = new Vector3(faceNormal.x, faceNormal.y, faceNormal.z);
+        const nx = Math.abs(faceNormal.x);
+        const ny = Math.abs(faceNormal.y);
+        const nz = Math.abs(faceNormal.z);
         const dist = extrudeDistance;
 
-        const extrudeBox = Manifold.cube(
-          [normal.x !== 0 ? dist : 2, normal.y !== 0 ? dist : 2, normal.z !== 0 ? dist : 2],
-          true,
-        );
+        // Create extrusion slab: full face size on tangent axes, `dist` thick along normal.
+        const extrudeBox = Manifold.cube([nx > 0.5 ? dist : 2, ny > 0.5 ? dist : 2, nz > 0.5 ? dist : 2], true);
 
-        const offset = normal.scale(1 + dist / 2);
-        const translated = extrudeBox.translate([offset.x, offset.y, offset.z]);
+        // Position so it touches the cube face and extends outward.
+        const ox = faceNormal.x * (1 + dist / 2);
+        const oy = faceNormal.y * (1 + dist / 2);
+        const oz = faceNormal.z * (1 + dist / 2);
+        const translated = extrudeBox.translate([ox, oy, oz]);
 
         solid = Manifold.union(solid, translated);
         translated.delete();
@@ -171,7 +175,15 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
     const resizeObserver = new ResizeObserver(() => manager.resize());
     resizeObserver.observe(container);
 
+    // Update FPS counter every 500ms.
+    const fpsInterval = setInterval(() => {
+      if (fpsRef.current) {
+        fpsRef.current.textContent = `${manager.fps.toFixed(0)} fps`;
+      }
+    }, 500);
+
     return () => {
+      clearInterval(fpsInterval);
       resizeObserver.disconnect();
       manager.dispose();
       managerRef.current = null;
@@ -286,6 +298,7 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
         onContextMenu={(event) => event.preventDefault()}
         ref={canvasRef}
       />
+      <span className='absolute bottom-2 left-2 text-xs font-mono opacity-50 pointer-events-none' ref={fpsRef} />
     </div>
   );
 });

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ArcRotateCamera, Color3, Color4, Engine, HemisphericLight, Scene, Vector3 } from '@babylonjs/core';
+import { ArcRotateCamera, AxesViewer, Color3, Color4, Engine, HemisphericLight, Scene, Vector3 } from '@babylonjs/core';
 
 /**
  * Reads the computed background-color from an element and converts to Color4.
@@ -59,6 +59,14 @@ export class SceneManager {
     // Bright ground color so downward-facing surfaces aren't black.
     light.groundColor = new Color3(0.4, 0.4, 0.4);
 
+    // Axes viewer (R=X, G=Y, B=Z).
+    new AxesViewer(this._scene, 0.5);
+
+    // FPS counter.
+    this._scene.onBeforeRenderObservable.add(() => {
+      this._engine.getFps();
+    });
+
     this._engine.runRenderLoop(() => {
       this._scene.render();
     });
@@ -74,6 +82,10 @@ export class SceneManager {
 
   get camera(): ArcRotateCamera {
     return this._camera;
+  }
+
+  get fps(): number {
+    return this._engine.getFps();
   }
 
   resize(): void {
