@@ -27,6 +27,9 @@ const PlankRoot = ({ children, ...context }: PlankRootProps) => {
 
 export { PlankRoot };
 export type { PlankRootProps };
+export type { PlankComponentProps } from './PlankComponent';
+export type { PlankContentProps } from './PlankContent';
+export type { PlankContextValue } from './PlankContext';
 
 /**
  * Radix-style composite Plank component.

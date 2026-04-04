@@ -9,7 +9,11 @@ import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { useMainSize } from '../../hooks';
 
-export type PlankContentProps = PropsWithChildren<{ solo: boolean; companion: boolean; encapsulate: boolean }>;
+export type PlankContentProps = PropsWithChildren<{
+  solo: boolean;
+  companion: boolean;
+  encapsulate: boolean;
+}>;
 
 export const PlankContent = ({ children, solo, companion, encapsulate }: PlankContentProps) => {
   const sizeAttrs = useMainSize();

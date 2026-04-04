@@ -27,12 +27,7 @@ import { DeckCapabilities, getMode } from '../../types';
 import { DeckOperation } from '../../operations';
 import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from './fragments';
-import {
-  PlankRoot,
-  PlankContent,
-  PlankComponent,
-  type PlankComponentProps,
-} from '../Plank';
+import { Plank, type PlankComponentProps } from '../Plank';
 import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 import { ContentEmpty } from './ContentEmpty';
@@ -55,7 +50,7 @@ const DeckMainRoot = ({ children, ...context }: DeckMainRootProps) => {
 // ConnectedPlank
 //
 
-type ConnectedPlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path' | 'order' | 'active' | 'settings'> & {
+type ConnectedPlankProps = Pick<Plank.ComponentProps, 'layoutMode' | 'part' | 'path' | 'order' | 'active' | 'settings'> & {
   id?: string;
   companionVariant?: string;
 };
@@ -107,7 +102,7 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
   );
 
   return (
-    <PlankRoot
+    <Plank.Root
       graph={graph}
       layoutMode={props.layoutMode}
       part={props.part}
@@ -120,12 +115,12 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
       onScrollIntoView={handleScrollIntoView}
       onChangeCompanion={handleChangeCompanion}
     >
-      <PlankContent
+      <Plank.Content
         solo={props.part === 'solo'}
         companion={hasCompanion}
         encapsulate={!!props.settings?.encapsulatedPlanks}
       >
-        <PlankComponent
+        <Plank.Component
           id={id}
           node={node}
           companioned={hasCompanion ? 'primary' : undefined}
@@ -134,7 +129,7 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
           {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
         />
         {hasCompanion && (
-          <PlankComponent
+          <Plank.Component
             id={resolvedCompanionId}
             node={currentCompanion}
             primary={node}
@@ -144,8 +139,8 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
             {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: (props.order ?? 0) + 1 })}
           />
         )}
-      </PlankContent>
-    </PlankRoot>
+      </Plank.Content>
+    </Plank.Root>
   );
 });
 
