@@ -82,15 +82,20 @@ const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
         const tileRect = tile.getBoundingClientRect();
         const viewportRect = viewport.getBoundingClientRect();
         const offset = tileRect.left - viewportRect.left + viewport.scrollLeft;
-        viewport.scrollTo({ left: offset, behavior: 'smooth' });
+        const needsScroll = Math.abs(offset - viewport.scrollLeft) > 1;
 
-        // Focus after scroll completes to avoid interrupting smooth scroll.
-        // The focusin handler on the viewport will call onCurrentChange.
-        const onScrollEnd = () => {
-          viewport.removeEventListener('scrollend', onScrollEnd);
+        if (needsScroll) {
+          viewport.scrollTo({ left: offset, behavior: 'smooth' });
+          // Focus after scroll completes to avoid interrupting smooth scroll.
+          const onScrollEnd = () => {
+            viewport.removeEventListener('scrollend', onScrollEnd);
+            tile.focus({ preventScroll: true });
+          };
+          viewport.addEventListener('scrollend', onScrollEnd);
+        } else {
+          // Already at the right position; focus immediately.
           tile.focus({ preventScroll: true });
-        };
-        viewport.addEventListener('scrollend', onScrollEnd);
+        }
       },
     }));
 
