@@ -55,6 +55,7 @@ Plank (connected wrapper — calls useAppGraph, useOperationInvoker, useDeckStat
 ### PlankContext
 
 Context replaces direct hook usage within Plank sub-components:
+
 - `graph` — ExpandableGraph for node resolution.
 - `node` — the resolved graph node.
 - `layoutMode` — 'deck' | 'solo' | 'solo--fullscreen'.
@@ -77,6 +78,7 @@ DeckMain (connected wrapper — calls useAtomCapability, usePluginManager)
 ### DeckMainContext
 
 Context replaces direct hook usage within DeckMain sub-components:
+
 - `settings` — deck plugin settings atom.
 - `pluginManager` — for attention capabilities.
 - `state` — combined persisted + ephemeral state.

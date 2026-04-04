@@ -27,5 +27,5 @@ export const Text = Schema.Struct({
 
 export interface Text extends Schema.Schema.Type<typeof Text> {}
 
-export const make = ({ name, content = '' }: Partial<{ name: string; content: string }> = {}) =>
-  Obj.make(Text, { name, content });
+export const make = ({ id, name, content = '' }: Partial<{ id: string; name: string; content: string }> = {}) =>
+  Obj.make(Text, { id, name, content });

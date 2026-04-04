@@ -31,7 +31,9 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => (
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Json data={props.data} />
+          <Json.Root data={props.data}>
+            <Json.Content />
+          </Json.Root>
         </Panel.Content>
       </Panel.Root>
     </Focus.Item>
@@ -78,7 +80,11 @@ const storySurfaceExtension = Capability.contributes(
       if (!subject) {
         return <div>No data</div>;
       }
-      return <Json data={subject} />;
+      return (
+        <Json.Root data={subject}>
+          <Json.Content />
+        </Json.Root>
+      );
     },
   }),
 );

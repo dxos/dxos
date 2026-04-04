@@ -5,7 +5,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Ref } from '@dxos/echo';
-import { type ObjectId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
 /**
@@ -52,10 +51,10 @@ export const Template = Schema.Struct({
 export interface Template extends Schema.Schema.Type<typeof Template> {}
 
 export const make = ({
+  id,
   source,
   inputs = [],
-  id,
-}: { source?: string; inputs?: Input[]; id?: ObjectId } = {}): Template => ({
-  source: Ref.make(Text.make(source, id)),
+}: { id?: string; source?: string; inputs?: Input[] } = {}): Template => ({
+  source: Ref.make(Text.make({ id, content: source })),
   inputs,
 });

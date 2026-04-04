@@ -15,6 +15,7 @@
 ### Phase 1 (Plank refactor + Matrix story)
 
 **Modified files:**
+
 - `packages/plugins/plugin-deck/src/containers/Plank/Plank.tsx` — Extract `PlankContext`, add `Plank.Root`, keep connected wrapper
 - `packages/plugins/plugin-deck/src/containers/Plank/PlankHeading.tsx` — Read from `PlankContext` instead of direct hook usage
 - `packages/plugins/plugin-deck/src/containers/Plank/PlankControls.tsx` — Read callbacks from context
@@ -23,16 +24,19 @@
 - `packages/plugins/plugin-deck/src/components/Matrix/Matrix.stories.tsx` — Add PlankTile variant with Surface
 
 **New files:**
+
 - `packages/plugins/plugin-deck/src/containers/Plank/PlankContext.tsx` — Context definition and provider
 - `packages/plugins/plugin-deck/src/components/Matrix/SPEC.md` — Updated with design decisions
 
 ### Phase 2 (DeckMain refactor)
 
 **Modified files:**
+
 - `packages/plugins/plugin-deck/src/containers/DeckMain/DeckMain.tsx` — Extract context, split into Root/Content/Viewport
 - `packages/plugins/plugin-deck/src/containers/DeckMain/index.ts` — Export new parts
 
 **New files:**
+
 - `packages/plugins/plugin-deck/src/containers/DeckMain/DeckMainContext.tsx` — Context definition and provider
 
 ---
@@ -40,6 +44,7 @@
 ## Task 1: Create PlankContext
 
 **Files:**
+
 - Create: `packages/plugins/plugin-deck/src/containers/Plank/PlankContext.tsx`
 
 This task defines the context that replaces direct hook usage within Plank sub-components.
@@ -104,6 +109,7 @@ git commit -m "feat(plugin-deck): add PlankContext for radix-style Plank refacto
 ## Task 2: Refactor Plank.tsx to use PlankContext
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/containers/Plank/Plank.tsx`
 
 The key change: The existing `Plank` memo component remains as the "connected" wrapper. It calls `useAppGraph`, `useOperationInvoker`, `useDeckState` etc. and passes them into a new `PlankRoot` component that provides `PlankContext`. The internal `PlankComponent` reads from context instead of calling hooks directly.
@@ -214,6 +220,7 @@ git commit -m "feat(plugin-deck): wrap Plank internals with PlankRoot context pr
 ## Task 3: Migrate PlankHeading to use PlankContext
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/containers/Plank/PlankHeading.tsx`
 
 PlankHeading currently calls `useOperationInvoker()`, `useAppGraph()`, `useActionRunner()`, and `useBreakpoints()` directly. We replace the operation-related calls with context callbacks.
@@ -221,6 +228,7 @@ PlankHeading currently calls `useOperationInvoker()`, `useAppGraph()`, `useActio
 - [ ] **Step 1: Import and use PlankContext**
 
 Replace these lines:
+
 ```typescript
 const { invokePromise } = useOperationInvoker();
 ```
@@ -232,6 +240,7 @@ import { usePlankContext } from './PlankContext';
 ```
 
 In the component body:
+
 ```typescript
 const { onAdjust, onChangeCompanion } = usePlankContext('PlankHeading');
 ```
@@ -288,6 +297,7 @@ git commit -m "refactor(plugin-deck): migrate PlankHeading to use PlankContext c
 ## Task 4: Migrate PlankComponent resize/scroll to context
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/containers/Plank/Plank.tsx`
 
 The internal `PlankComponent` uses `useOperationInvoker` for resize and scroll-into-view. Migrate these to context callbacks.
@@ -301,6 +311,7 @@ const { onResize, onScrollIntoView } = usePlankContext('PlankComponent');
 - [ ] **Step 2: Replace handleSizeChange**
 
 Change from:
+
 ```typescript
 const handleSizeChange = useCallback(
   debounce((nextSize: number) => {
@@ -311,6 +322,7 @@ const handleSizeChange = useCallback(
 ```
 
 To:
+
 ```typescript
 const handleSizeChange = useCallback(
   debounce((nextSize: number) => {
@@ -323,6 +335,7 @@ const handleSizeChange = useCallback(
 - [ ] **Step 3: Replace scrollIntoView effect**
 
 Change from:
+
 ```typescript
 useLayoutEffect(() => {
   if (scrollIntoView === id) {
@@ -333,6 +346,7 @@ useLayoutEffect(() => {
 ```
 
 To:
+
 ```typescript
 useLayoutEffect(() => {
   if (scrollIntoView === id) {
@@ -360,6 +374,7 @@ git commit -m "refactor(plugin-deck): migrate PlankComponent resize/scroll to co
 ## Task 5: Export Plank compound component parts
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/containers/Plank/Plank.tsx` — Export PlankRoot
 - Modify: `packages/plugins/plugin-deck/src/containers/Plank/index.ts` — Re-export context and Root
 
@@ -406,18 +421,21 @@ git commit -m "feat(plugin-deck): export Plank compound component parts"
 ## Task 6: Add responsive snap classes to Matrix tiles
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/components/Matrix/Matrix.tsx`
 
 - [ ] **Step 1: Update Mosaic.Stack classNames in MatrixViewport**
 
 Change the Mosaic.Stack classNames from:
+
 ```typescript
-classNames='snap-x snap-mandatory gap-2'
+classNames = 'snap-x snap-mandatory gap-2';
 ```
 
 To:
+
 ```typescript
-classNames='snap-x snap-mandatory gap-2 flex'
+classNames = 'snap-x snap-mandatory gap-2 flex';
 ```
 
 This ensures tiles lay out horizontally. The individual tile components control their own width.
@@ -438,9 +456,11 @@ git commit -m "feat(plugin-deck): add responsive layout classes to Matrix viewpo
 ## Task 7: Create PlankTile and update Matrix story
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/components/Matrix/Matrix.stories.tsx`
 
 This is the big story update. We create two tile variants:
+
 1. `StoryTile` (existing) — simple JSON display
 2. `PlankTile` — uses Surface to render content, approximating Plank behavior
 
@@ -627,6 +647,7 @@ Run: `moon run plugin-deck:build`
 Then visually verify: `moon run storybook-react:serve` and navigate to `plugins/plugin-deck/components/Matrix`.
 
 Expected:
+
 - Default story shows 4 JSON panels in a horizontal scroll
 - WithSurface story shows 4 panels with Surface-resolved content
 - On narrow viewport (< md breakpoint), only one panel visible at a time with snap scrolling
@@ -643,6 +664,7 @@ git commit -m "feat(plugin-deck): add PlankTile and Surface story variant to Mat
 ## Task 8: Update SPEC.md with design decisions and structure
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/components/Matrix/SPEC.md`
 
 - [ ] **Step 1: Update SPEC.md**
@@ -653,17 +675,18 @@ Add the component structure and design decisions after the Phase 2 section:
 ## Design Decisions
 
 ### Plank Radix-Style Structure
-
 ```
+
 Plank (connected wrapper — calls useAppGraph, useOperationInvoker, useDeckState)
-  └── Plank.Root (PlankProvider — injects context)
-        ├── Plank.Container (layout: solo grid vs passthrough)
-        ├── Plank.Article (PlankComponent — attention, resize, Surface)
-        │     ├── Plank.Heading (icon, label, controls)
-        │     │     └── Plank.Controls (solo/deck/close/companion buttons)
-        │     ├── Surface.Surface role='article' (main content)
-        │     └── StackItem.ResizeHandle (deck mode only)
-        └── [Companion Plank.Article] (optional)
+└── Plank.Root (PlankProvider — injects context)
+├── Plank.Container (layout: solo grid vs passthrough)
+├── Plank.Article (PlankComponent — attention, resize, Surface)
+│ ├── Plank.Heading (icon, label, controls)
+│ │ └── Plank.Controls (solo/deck/close/companion buttons)
+│ ├── Surface.Surface role='article' (main content)
+│ └── StackItem.ResizeHandle (deck mode only)
+└── [Companion Plank.Article] (optional)
+
 ```
 
 ### PlankContext
@@ -680,12 +703,14 @@ Context replaces direct hook usage within Plank sub-components:
 ### DeckMain Radix-Style Structure
 
 ```
+
 DeckMain (connected wrapper — calls useAtomCapability, usePluginManager)
-  └── DeckMain.Root (DeckMainProvider — injects context)
-        ├── DeckMain.Content (Main.Content with sidebars)
-        │     ├── Deck mode: Stack + Plank[]
-        │     └── Solo mode: StackContext + single Plank
-        └── DeckMain.Viewport (scroll container)
+└── DeckMain.Root (DeckMainProvider — injects context)
+├── DeckMain.Content (Main.Content with sidebars)
+│ ├── Deck mode: Stack + Plank[]
+│ └── Solo mode: StackContext + single Plank
+└── DeckMain.Viewport (scroll container)
+
 ```
 
 ### DeckMainContext
@@ -727,6 +752,7 @@ git commit -m "docs(plugin-deck): update SPEC.md with Plank/DeckMain design deci
 ## Task 9: Create DeckMainContext
 
 **Files:**
+
 - Create: `packages/plugins/plugin-deck/src/containers/DeckMain/DeckMainContext.tsx`
 
 - [ ] **Step 1: Create DeckMainContext.tsx**
@@ -776,6 +802,7 @@ git commit -m "feat(plugin-deck): add DeckMainContext for radix-style DeckMain r
 ## Task 10: Refactor DeckMain to use DeckMainContext
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/containers/DeckMain/DeckMain.tsx`
 - Modify: `packages/plugins/plugin-deck/src/containers/DeckMain/index.ts`
 
@@ -861,6 +888,7 @@ git commit -m "refactor(plugin-deck): wrap DeckMain with DeckMainRoot context pr
 ## Task 11: Analyze DeckMain/Plank and write functional spec
 
 **Files:**
+
 - Modify: `packages/plugins/plugin-deck/src/components/Matrix/SPEC.md`
 
 - [ ] **Step 1: Add DeckMain functional spec to SPEC.md**
