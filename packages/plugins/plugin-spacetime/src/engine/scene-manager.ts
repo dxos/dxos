@@ -11,8 +11,8 @@ export type SceneManagerOptions = {
 /**
  * Resolves a CSS custom property to an rgba Color4.
  */
-const resolveCssColor = (canvas: HTMLCanvasElement, property: string): Color4 => {
-  const raw = getComputedStyle(canvas).getPropertyValue(property).trim();
+const resolveCssColor = (property: string): Color4 => {
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(property).trim();
   if (!raw) {
     return new Color4(0.97, 0.97, 0.97, 1);
   }
@@ -47,7 +47,7 @@ export class SceneManager {
       adaptToDeviceRatio: true,
     });
     this._scene = new Scene(this._engine);
-    this._scene.clearColor = resolveCssColor(canvas, '--surface-bg');
+    this._scene.clearColor = resolveCssColor('--surface-bg');
 
     this._camera = new ArcRotateCamera('camera', -Math.PI / 4, Math.PI / 3, 10, Vector3.Zero(), this._scene);
     this._camera.attachControl(canvas, true);

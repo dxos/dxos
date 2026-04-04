@@ -32,9 +32,10 @@ export const manifoldToBabylon = (
   const indices = new Uint32Array(numTri * 3);
 
   for (let tri = 0; tri < numTri; tri++) {
+    // Swap v1/v2 to convert Manifold CCW winding to Babylon.js CW front-face convention.
     const vi0 = triVerts[tri * 3];
-    const vi1 = triVerts[tri * 3 + 1];
-    const vi2 = triVerts[tri * 3 + 2];
+    const vi1 = triVerts[tri * 3 + 2];
+    const vi2 = triVerts[tri * 3 + 1];
 
     // Read positions for each vertex of this triangle.
     const p0x = vertProperties[vi0 * numProp];

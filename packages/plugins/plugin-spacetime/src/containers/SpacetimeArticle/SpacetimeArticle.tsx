@@ -4,18 +4,20 @@
 
 import React from 'react';
 
+import { Panel } from '@dxos/react-ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+
 import { SpacetimeEditor } from '../../components';
 
-export type SpacetimeArticleProps = {
-  subject: unknown;
-  role?: string;
-};
+export type SpacetimeArticleProps = ObjectSurfaceProps<any>;
 
 const SpacetimeArticle = ({ role }: SpacetimeArticleProps) => {
   return (
-    <div role={role} className='flex w-full h-full overflow-hidden'>
-      <SpacetimeEditor className='w-full h-full' />
-    </div>
+    <Panel.Root>
+      <Panel.Content asChild>
+        <SpacetimeEditor className='w-full h-full' />
+      </Panel.Content>
+    </Panel.Root>
   );
 };
 

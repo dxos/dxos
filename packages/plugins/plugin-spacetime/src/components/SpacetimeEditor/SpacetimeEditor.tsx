@@ -5,13 +5,11 @@
 import { Color3, Mesh, PointerEventTypes, Vector3, StandardMaterial, VertexData } from '@babylonjs/core';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { composable, composableProps } from '@dxos/ui-theme';
+
 import { SceneManager } from '../../engine';
 import { getManifold } from '../../engine';
 import { manifoldToBabylon, getFaceNormal } from '../../engine';
-
-export type SpacetimeEditorProps = {
-  className?: string;
-};
 
 type EditorState = {
   /** Currently selected face index, or null. */
@@ -38,8 +36,9 @@ const CUBE_COLOR = new Color3(0.4, 0.6, 0.9);
 const SELECTED_FACE_COLOR = new Color3(1.0, 0.8, 0.0);
 const EXTRUDE_SENSITIVITY = 0.02;
 
-export const SpacetimeEditor = ({ className }: SpacetimeEditorProps) => {
+export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
   const meshRef = useRef<Mesh | null>(null);
   const selectionMeshRef = useRef<Mesh | null>(null);
@@ -98,7 +97,8 @@ export const SpacetimeEditor = ({ className }: SpacetimeEditorProps) => {
   // Initialize Babylon.js scene and Manifold, render initial cube.
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) {
+    const container = containerRef.current;
+    if (!canvas || !container) {
       return;
     }
 
@@ -108,12 +108,12 @@ export const SpacetimeEditor = ({ className }: SpacetimeEditorProps) => {
     // Build initial cube.
     void rebuildMesh(0, null).then(() => setReady(true));
 
-    // Handle window resize.
-    const handleResize = () => manager.resize();
-    window.addEventListener('resize', handleResize);
+    // Handle resize via ResizeObserver on the container.
+    const resizeObserver = new ResizeObserver(() => manager.resize());
+    resizeObserver.observe(container);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      resizeObserver.disconnect();
       manager.dispose();
       managerRef.current = null;
     };
@@ -225,11 +225,22 @@ export const SpacetimeEditor = ({ className }: SpacetimeEditorProps) => {
   }, [ready, rebuildMesh]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className={className}
-      style={{ width: '100%', height: '100%', display: 'block', outline: 'none' }}
-      onContextMenu={(event) => event.preventDefault()}
-    />
+    <div
+      {...composableProps(props, { classNames: 'relative surface-base' })}
+      ref={(node) => {
+        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+        if (typeof forwardedRef === 'function') {
+          forwardedRef(node);
+        } else if (forwardedRef) {
+          forwardedRef.current = node;
+        }
+      }}
+    >
+      <canvas
+        ref={canvasRef}
+        className='absolute inset-0 w-full h-full block outline-none'
+        onContextMenu={(event) => event.preventDefault()}
+      />
+    </div>
   );
-};
+});
