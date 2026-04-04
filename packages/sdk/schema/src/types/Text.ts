@@ -27,5 +27,5 @@ export const Text = Schema.Struct({
 
 export interface Text extends Schema.Schema.Type<typeof Text> {}
 
-// TODO(burdon): Should have object props.
-export const make = (content = '', id?: Obj.ID) => Obj.make(Text, { id, content });
+export const make = ({ name, content = '' }: Partial<{ name: string; content: string }> = {}) =>
+  Obj.make(Text, { name, content });

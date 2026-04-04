@@ -12,15 +12,20 @@ import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { Text } from '@dxos/schema';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
+import { faker } from '@dxos/random';
 
 import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
+
+faker.seed(123);
 
 const StoryTile = (props: MosaicTileProps<Obj.Any>) => (
   <Mosaic.Tile {...props} asChild>
     <Focus.Item asChild border>
       <Panel.Root classNames='dx-current dx-hover w-[50rem] snap-start'>
         <Panel.Toolbar asChild>
-          <Toolbar.Root>{props.id}</Toolbar.Root>
+          <Toolbar.Root>
+            <p>{Obj.getLabel(props.data)}</p>
+          </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Json data={props.data} />
@@ -33,10 +38,9 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => (
 const DefaultStory = () => {
   const items = useMemo(
     () => [
-      // Hierarchy.
-      Organization.make({ name: 'DXOS' }),
-      Person.make({ fullName: 'Test Bot' }),
-      Text.make('Test Bot Bio'),
+      Organization.make({ name: faker.company.name() }),
+      Person.make({ fullName: faker.person.fullName() }),
+      Text.make({ name: 'Bio', content: faker.lorem.paragraphs(10) }),
     ],
     [],
   );
