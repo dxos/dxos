@@ -38,17 +38,26 @@ Ask clarifying questions before you begin.
 - [x] Create a concise spec for the functionality of both `DeckMain` and `Plank` (about 20 bullets each).
 - [x] Check everything builds and commit.
 
-#### Recommendations
+#### Decisions
 
-1. **Merge PlankComponent into Plank.Article**: The `PlankComponent` internal component duplicates the role of a proper compound component part. Rename to `Plank.Article` and simplify.
-2. **Extract solo layout from Plank**: Solo layout (`PlankContainer`) should be a DeckMain responsibility, not Plank's. Plank should always render the same structure; the parent decides positioning.
-3. **Simplify part props**: The `ResolvedPart` type has 5 variants (`solo`, `deck`, `complementary`, `solo-primary`, `solo-companion`). These could be derived from context (`layoutMode` + `isCompanion`) rather than threaded as props.
-4. **Remove dual-mount pattern in DeckMain**: Currently both deck and solo views are always mounted with one hidden via `sr-only` + `inert`. Consider mounting only the active mode to reduce DOM size and simplify state.
-5. **Consolidate PlankHeading action loading**: The `Graph.expand` call in PlankHeading should be lifted to Plank.Root to avoid per-heading side effects.
+1. ~~Merge PlankComponent into Plank.Article~~ — deferred.
+2. **Remove `Plank.Content`**: Solo layout container moves to DeckMain (`Deck.Content`). Plank is layout-agnostic.
+3. **Reduce `part` to `deck | solo | complementary`**: Remove `solo-primary`/`solo-companion` variants. Deck handles companion column layout.
+4. **Remove dual-mount pattern**: Only mount the active mode (deck or solo). Scroll position tracked via `scrollLeftRef`.
+5. **Remove all framework hooks from Plank**: Lift `Graph.expand`, `Graph.getActions`, and `useActionRunner` from PlankHeading into ConnectedPlank. Resolved actions passed through PlankContext.
 
-### Phase 3 (Attention)
+### Phase 3 (Cleanup)
 
-- [ ] Concisely document the attention system (`react-ui-attention`) and how it works with the deck
+- [ ] Remove `Plank.Content` — move solo grid layout to `Deck.Content`.
+- [ ] Reduce `ResolvedPart` to `'deck' | 'solo' | 'complementary'`.
+- [ ] Remove dual-mount in DeckMain — only render active mode.
+- [ ] Lift action resolution from PlankHeading to ConnectedPlank/PlankContext.
+- [ ] Refactor DeckMain to use `Deck.Root` / `Deck.Content` radix structure.
+- [ ] Remove `useAppGraph`, `useActionRunner` from PlankHeading.
+
+### Phase 4 (Attention)
+
+- [ ] Concisely document the attention system (`react-ui-attention`) and how it works with the deck.
 
 ## Design
 
