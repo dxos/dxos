@@ -6,8 +6,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { Surface } from '@dxos/app-framework/ui';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
 
@@ -39,14 +38,7 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.native-redirect`,
         role: 'dialog',
         filter: (data): data is any => data.component === NATIVE_REDIRECT_DIALOG,
-        component: () => {
-          const { invokePromise } = useOperationInvoker();
-          return (
-            <NativeRedirectDialog
-              onOpenHere={() => void invokePromise(LayoutOperation.UpdateDialog, { state: false })}
-            />
-          );
-        },
+        component: ({ data }) => <NativeRedirectDialog {...data.props} />,
       }),
       Surface.create({
         id: ABOUT_DIALOG,

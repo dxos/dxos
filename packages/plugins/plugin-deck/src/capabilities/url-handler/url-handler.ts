@@ -6,19 +6,33 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, fromUrlPath, getWorkspaceFromPath, toUrlPath } from '@dxos/app-toolkit';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Node } from '@dxos/plugin-graph';
 import { isTauri } from '@dxos/util';
 
+import { shouldDeferNavigationHandlers } from '../check-app-scheme/check-app-scheme';
 import { DeckCapabilities, type DeckStateProps, defaultDeck } from '../../types';
+
+/** Dispatch all NavigationHandler contributions with a given URL. */
+/** Dispatch all NavigationHandler contributions with a given URL. */
+const dispatchNavigationHandlers = Effect.fn(function* (url: URL) {
+  const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
+  yield* Effect.all(
+    handlers.map((handler) => handler(url)),
+    { concurrency: 'unbounded' },
+  );
+});
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+    const capabilities = yield* Capability.Service;
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(DeckCapabilities.State);
-    const managedRuntime = yield* Capability.get(Capabilities.ManagedRuntime);
+    const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
+    const deferHandlers = settings?.enableNativeRedirect && shouldDeferNavigationHandlers();
 
     const getState = () => registry.get(stateAtom);
 
@@ -33,20 +47,16 @@ export default Capability.makeModule(
       registry.set(stateAtom, fn(getState()));
     };
 
-    /** Dispatch URL to all registered NavigationHandler contributions. Resolves handlers fresh each time. */
-    const dispatchNavigationHandlers = (url: URL) => {
-      void managedRuntime.runPromise(
-        Effect.gen(function* () {
-          const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
-          log.info('[UrlHandler] Dispatching to navigation handlers', { count: handlers.length, url: url.toString() });
-          yield* Effect.promise(() => Promise.allSettled(handlers.map((handler) => handler(url))));
-        }),
-      );
-    };
-
     const handleNavigation = async (url?: URL) => {
       const resolvedUrl = url ?? new URL(window.location.href);
-      dispatchNavigationHandlers(resolvedUrl);
+      // When native redirect is active, check-app-scheme owns the initial dispatch
+      // to prevent one-time tokens from being consumed before the native app can use them.
+      if (!deferHandlers) {
+        await dispatchNavigationHandlers(resolvedUrl).pipe(
+          Effect.provideService(Capability.Service, capabilities),
+          runAndForwardErrors,
+        );
+      }
 
       const pathname = resolvedUrl.pathname;
       const state = getState();
@@ -83,9 +93,13 @@ export default Capability.makeModule(
       }
     };
 
+    const onPopState = () => {
+      void handleNavigation();
+    };
+
     // Initial navigation.
     yield* Effect.promise(() => handleNavigation());
-    window.addEventListener('popstate', () => void handleNavigation());
+    window.addEventListener('popstate', onPopState);
 
     // Tauri deep link support.
     let unlistenDeepLink: (() => void) | undefined;
@@ -96,14 +110,13 @@ export default Capability.makeModule(
 
           const launchUrls = await getCurrent();
           if (launchUrls && launchUrls.length > 0) {
-            log.info('[UrlHandler] App launched with deep links', { urls: launchUrls });
+            log('app launched with deep links', { urls: launchUrls });
             for (const urlString of launchUrls) {
               void handleDeepLink(urlString, handleNavigation);
             }
           }
 
           unlistenDeepLink = await onOpenUrl((urls) => {
-            log.info('[UrlHandler] Deep links received', { urls });
             for (const urlString of urls) {
               void handleDeepLink(urlString, handleNavigation);
             }
@@ -138,7 +151,7 @@ export default Capability.makeModule(
 
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
-        window.removeEventListener('popstate', () => void handleNavigation());
+        window.removeEventListener('popstate', onPopState);
         unsubscribe();
         unlistenDeepLink?.();
       }),
@@ -151,15 +164,16 @@ const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redi
 
 /** Handle a deep link URL string. Merges query params into window.location and navigates. */
 const handleDeepLink = async (urlString: string, navigate: (url?: URL) => Promise<void>): Promise<void> => {
-  log.info('[UrlHandler] Deep link received', { url: urlString });
+  log('deep link received', { url: urlString });
   try {
     const deepLinkUrl = new URL(urlString);
 
     // For custom schemes (e.g., composer://a/b/c), new URL() treats the first segment as the
     // hostname. Reconstruct the full path from hostname + pathname.
-    const fullPath = deepLinkUrl.protocol !== 'https:' && deepLinkUrl.protocol !== 'http:' && deepLinkUrl.hostname
-      ? '/' + deepLinkUrl.hostname + deepLinkUrl.pathname
-      : deepLinkUrl.pathname;
+    const fullPath =
+      deepLinkUrl.protocol !== 'https:' && deepLinkUrl.protocol !== 'http:' && deepLinkUrl.hostname
+        ? '/' + deepLinkUrl.hostname + deepLinkUrl.pathname
+        : deepLinkUrl.pathname;
 
     if (isRedirectPath(fullPath)) {
       return;
@@ -175,6 +189,6 @@ const handleDeepLink = async (urlString: string, navigate: (url?: URL) => Promis
 
     await navigate(current);
   } catch (error) {
-    log.warn('[UrlHandler] Failed to parse deep link URL', { urlString, error });
+    log.warn('failed to parse deep link url', { url: urlString, error });
   }
 };

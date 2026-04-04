@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 
 import { SpaceOperation } from '../../operations';
 
@@ -21,16 +22,22 @@ export type NavigationHandlerOptions = {
 const NavigationHandler = ({ invitationProp = 'spaceInvitationCode' }: NavigationHandlerOptions = {}) =>
   Capability.makeModule(
     Effect.fnUntraced(function* () {
-      const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+      const capabilities = yield* Capability.Service;
+      const operationService = yield* Capability.get(Capabilities.OperationInvoker);
 
-      const handler: AppCapabilities.NavigationHandler = async (url: URL) => {
-        const invitationCode = url.searchParams.get(invitationProp);
-        if (invitationCode) {
-          log.info('space invitation received via navigation');
-          removeQueryParam(invitationProp);
-          await invokePromise(SpaceOperation.Join, { invitationCode });
-        }
-      };
+      const handler: AppCapabilities.NavigationHandler = (url: URL) =>
+        Effect.gen(function* () {
+          const invitationCode = url.searchParams.get(invitationProp);
+          if (invitationCode) {
+            log.info('space invitation received via navigation');
+            removeQueryParam(invitationProp);
+            yield* Operation.invoke(SpaceOperation.Join, { invitationCode });
+          }
+        }).pipe(
+          Effect.provideService(Capability.Service, capabilities),
+          Effect.provideService(Operation.Service, operationService),
+          Effect.orDie,
+        );
 
       return Capability.contributes(AppCapabilities.NavigationHandler, handler);
     }),

@@ -18,8 +18,7 @@ import { meta } from '../../meta';
 import { hero } from './hero-image';
 import { type WelcomeScreenProps, WelcomeState, validEmail } from './types';
 
-const supportsPasskeys =
-  (navigator.credentials && 'create' in navigator.credentials) || supportsNativePasskeys();
+const supportsPasskeys = (navigator.credentials && 'create' in navigator.credentials) || supportsNativePasskeys();
 
 export const OVERLAY_CLASSES = 'dark bg-neutral-950! bg-no-repeat bg-center';
 export const OVERLAY_STYLE = { backgroundImage: `url(${hero})` };

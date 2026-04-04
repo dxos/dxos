@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, fromUrlPath, getWorkspaceFromPath, toUrlPath } from '@dxos/app-toolkit';
+import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
@@ -21,17 +22,17 @@ import { type SimpleLayoutState, SimpleLayoutState as SimpleLayoutStateCapabilit
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
-    const managedRuntime = yield* Capability.get(Capabilities.ManagedRuntime);
+    const capabilities = yield* Capability.Service;
 
-    /** Dispatch URL to all registered NavigationHandler contributions. Resolves handlers fresh each time. */
-    const dispatchNavigationHandlers = (url: URL) => {
-      void managedRuntime.runPromise(
-        Effect.gen(function* () {
-          const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
-          yield* Effect.promise(() => Promise.allSettled(handlers.map((handler) => handler(url))));
-        }),
-      );
-    };
+    /** Dispatch all NavigationHandler contributions with a given URL. */
+    const dispatchNavigationHandlers = (url: URL) =>
+      Effect.gen(function* () {
+        const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
+        yield* Effect.all(
+          handlers.map((handler) => handler(url)),
+          { concurrency: 'unbounded' },
+        );
+      }).pipe(Effect.provideService(Capability.Service, capabilities), runAndForwardErrors);
 
     /**
      * Handle navigation from a URL.
@@ -39,7 +40,7 @@ export default Capability.makeModule(
      */
     const handlePathNavigation = (url?: URL) => {
       const resolvedUrl = url ?? new URL(window.location.href);
-      dispatchNavigationHandlers(resolvedUrl);
+      void dispatchNavigationHandlers(resolvedUrl);
 
       let pathname = resolvedUrl.pathname;
       if (isFilePath(pathname)) {
@@ -58,9 +59,13 @@ export default Capability.makeModule(
       }
     };
 
+    const onPopState = () => {
+      handlePathNavigation();
+    };
+
     // Initial navigation.
     yield* Effect.sync(() => handlePathNavigation());
-    window.addEventListener('popstate', () => handlePathNavigation());
+    window.addEventListener('popstate', onPopState);
 
     // Tauri deep link support.
     let unlistenDeepLink: (() => void) | undefined;
@@ -110,7 +115,7 @@ export default Capability.makeModule(
 
     return Capability.contributes(Capabilities.Null, null, () =>
       Effect.sync(() => {
-        window.removeEventListener('popstate', () => handlePathNavigation());
+        window.removeEventListener('popstate', onPopState);
         unsubscribe();
         unlistenDeepLink?.();
       }),
@@ -132,9 +137,10 @@ const handleDeepLink = (urlString: string, navigate: (url?: URL) => void): void 
 
     // For custom schemes (e.g., composer://a/b/c), new URL() treats the first segment as the
     // hostname. Reconstruct the full path from hostname + pathname.
-    const fullPath = deepLinkUrl.protocol !== 'https:' && deepLinkUrl.protocol !== 'http:' && deepLinkUrl.hostname
-      ? '/' + deepLinkUrl.hostname + deepLinkUrl.pathname
-      : deepLinkUrl.pathname;
+    const fullPath =
+      deepLinkUrl.protocol !== 'https:' && deepLinkUrl.protocol !== 'http:' && deepLinkUrl.hostname
+        ? '/' + deepLinkUrl.hostname + deepLinkUrl.pathname
+        : deepLinkUrl.pathname;
 
     if (isRedirectPath(fullPath)) {
       return;

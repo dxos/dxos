@@ -45,11 +45,16 @@ const buildCoseKeyES256 = (xCoord: Uint8Array, yCoord: Uint8Array): Uint8Array =
   // CBOR map with 5 entries.
   const parts: Uint8Array[] = [
     new Uint8Array([0xa5]), // Map of 5 items.
-    cborUint(1), cborUint(2),         // kty: EC2
-    cborUint(3), cborNegInt(7),       // alg: ES256 (-7)
-    cborNegInt(1), cborUint(1),       // crv: P-256
-    cborNegInt(2), cborByteString(xCoord), // x coordinate.
-    cborNegInt(3), cborByteString(yCoord), // y coordinate.
+    cborUint(1),
+    cborUint(2), // kty: EC2
+    cborUint(3),
+    cborNegInt(7), // alg: ES256 (-7)
+    cborNegInt(1),
+    cborUint(1), // crv: P-256
+    cborNegInt(2),
+    cborByteString(xCoord), // x coordinate.
+    cborNegInt(3),
+    cborByteString(yCoord), // y coordinate.
   ];
   return concat(...parts);
 };
@@ -59,9 +64,12 @@ const buildAttestationCbor = (authData: Uint8Array): Uint8Array => {
   // CBOR map with 3 entries: {"fmt": "none", "attStmt": {}, "authData": <bytes>}
   const parts: Uint8Array[] = [
     new Uint8Array([0xa3]), // Map of 3 items.
-    cborTextString('fmt'), cborTextString('none'),
-    cborTextString('attStmt'), new Uint8Array([0xa0]), // Empty map.
-    cborTextString('authData'), cborByteString(authData),
+    cborTextString('fmt'),
+    cborTextString('none'),
+    cborTextString('attStmt'),
+    new Uint8Array([0xa0]), // Empty map.
+    cborTextString('authData'),
+    cborByteString(authData),
   ];
   return concat(...parts);
 };

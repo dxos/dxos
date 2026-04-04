@@ -79,9 +79,7 @@ export const createNativePasskey = async (params: {
 /**
  * Authenticate with a passkey using the native macOS passkey API.
  */
-export const loginNativePasskey = async (params: {
-  challenge: Uint8Array;
-}): Promise<NativePasskeyLoginResult> => {
+export const loginNativePasskey = async (params: { challenge: Uint8Array }): Promise<NativePasskeyLoginResult> => {
   log('authenticating with native passkey', { domain: APP_DOMAIN });
   const { invoke } = await import('@tauri-apps/api/core');
   const result = await invoke<NativePasskeyLoginResult>('plugin:macos-passkey|login_passkey', {
@@ -103,7 +101,9 @@ export const loginNativePasskey = async (params: {
  * The attestation object is CBOR-encoded with an `authData` field that contains
  * the credential public key in COSE_Key format starting at byte offset 55 + credIdLen.
  */
-export const extractPublicKeyFromAttestation = (attestationObjectEncoded: string): { publicKey: Uint8Array; algorithm: number } => {
+export const extractPublicKeyFromAttestation = (
+  attestationObjectEncoded: string,
+): { publicKey: Uint8Array; algorithm: number } => {
   // The plugin returns URL-safe base64. Normalize to standard base64 and decode.
   const b64 = attestationObjectEncoded.replace(/-/g, '+').replace(/_/g, '/');
   const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
@@ -232,10 +232,7 @@ const decodeCborMap = (data: Uint8Array): Map<number, number | Uint8Array> => {
   return result;
 };
 
-const decodeCborValue = (
-  data: Uint8Array,
-  offset: number,
-): { value: number | Uint8Array; newOffset: number } => {
+const decodeCborValue = (data: Uint8Array, offset: number): { value: number | Uint8Array; newOffset: number } => {
   const header = data[offset++];
   const majorType = header >> 5;
   const additionalInfo = header & 0x1f;

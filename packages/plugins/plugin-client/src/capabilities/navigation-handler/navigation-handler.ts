@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 
 import { ClientOperation } from '../../operations';
 
@@ -27,24 +28,30 @@ const NavigationHandler = ({
 }: NavigationHandlerOptions = {}) =>
   Capability.makeModule(
     Effect.fnUntraced(function* () {
-      const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+      const capabilities = yield* Capability.Service;
+      const operationService = yield* Capability.get(Capabilities.OperationInvoker);
 
-      const handler: AppCapabilities.NavigationHandler = async (url: URL) => {
-        const token = url.searchParams.get(tokenProp);
-        const tokenType = url.searchParams.get(tokenTypeProp);
-        const invitationCode = url.searchParams.get(invitationProp);
+      const handler: AppCapabilities.NavigationHandler = (url: URL) =>
+        Effect.gen(function* () {
+          const token = url.searchParams.get(tokenProp);
+          const tokenType = url.searchParams.get(tokenTypeProp);
+          const invitationCode = url.searchParams.get(invitationProp);
 
-        if (token && tokenType === 'login') {
-          log.info('login token received via navigation');
-          removeQueryParam(tokenProp);
-          removeQueryParam(tokenTypeProp);
-          await invokePromise(ClientOperation.RedeemToken, { token });
-        } else if (invitationCode) {
-          log.info('device invitation received via navigation');
-          removeQueryParam(invitationProp);
-          await invokePromise(ClientOperation.JoinIdentity, { invitationCode });
-        }
-      };
+          if (token && tokenType === 'login') {
+            log.info('login token received via navigation');
+            removeQueryParam(tokenProp);
+            removeQueryParam(tokenTypeProp);
+            yield* Operation.invoke(ClientOperation.RedeemToken, { token });
+          } else if (invitationCode) {
+            log.info('device invitation received via navigation');
+            removeQueryParam(invitationProp);
+            yield* Operation.invoke(ClientOperation.JoinIdentity, { invitationCode });
+          }
+        }).pipe(
+          Effect.provideService(Capability.Service, capabilities),
+          Effect.provideService(Operation.Service, operationService),
+          Effect.orDie,
+        );
 
       return Capability.contributes(AppCapabilities.NavigationHandler, handler);
     }),

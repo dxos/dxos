@@ -5,10 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { APP_SCHEME, LayoutOperation } from '@dxos/app-toolkit';
+import { APP_SCHEME, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { isTauri } from '@dxos/util';
 
 import { DeckCapabilities } from '../../types';
+import { runAndForwardErrors } from '@dxos/effect';
 
 /** Identifier for the native redirect dialog surface (defined in welcome plugin). */
 const NATIVE_REDIRECT_DIALOG = 'org.dxos.plugin.welcome.component.native-redirect-dialog';
@@ -80,30 +81,59 @@ const tryOpenNativeApp = (): Promise<boolean> => {
   });
 };
 
+/** Dispatch all NavigationHandler contributions with the current page URL. */
+const dispatchNavigationHandlers = Effect.fn(function* () {
+  const url = new URL(window.location.href);
+  const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
+  yield* Effect.all(
+    handlers.map((handler) => handler(url)),
+    { concurrency: 'unbounded' },
+  );
+});
+
+/**
+ * Checks whether the native redirect setting is enabled and the redirect should be attempted.
+ * Exported for the URL handler to decide whether to defer NavigationHandler dispatch.
+ */
+export const shouldDeferNavigationHandlers = (): boolean => {
+  return !isTauri() && !isSafari() && !import.meta.env.DEV && canRedirectToScheme();
+};
+
 /**
  * When running in a web browser (not Tauri) with native redirect enabled,
- * tries to open the native app via custom scheme. If the app is running and
- * opens successfully (detected via page blur), shows a dialog so the user
- * can return to the web app if needed. If the app doesn't open, loads the
- * web app normally without showing any dialog.
- * In Safari, universal links handle this natively so the check is skipped.
+ * tries to open the native app via custom scheme. Defers NavigationHandlers
+ * to prevent the web app from consuming one-time tokens before the native app.
+ *
+ * If the app opens: shows dialog with "Open here" callback that dispatches handlers.
+ * If the app doesn't open: dispatches handlers immediately.
+ * In Safari: universal links handle this natively, so the check is skipped.
  */
-// TODO(mjamesderocher): Factor out as part of NavigationPlugin.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+    const capabilities = yield* Capability.Service;
+    const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
     const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
-    if (!isTauri() && !isSafari() && settings?.enableNativeRedirect && canRedirectToScheme()) {
-      const appOpened = yield* Effect.promise(() => tryOpenNativeApp());
-      if (appOpened) {
-        yield* Effect.promise(() =>
-          invokePromise(LayoutOperation.UpdateDialog, {
-            subject: NATIVE_REDIRECT_DIALOG,
-            type: 'alert',
-            overlayClasses: 'dark bg-neutral-950!',
-          }),
-        );
-      }
+
+    if (!settings?.enableNativeRedirect || !shouldDeferNavigationHandlers()) {
+      return;
+    }
+
+    const appOpened = yield* Effect.promise(() => tryOpenNativeApp());
+    if (appOpened) {
+      const onOpenHere = () =>
+        Effect.gen(function* () {
+          yield* dispatchNavigationHandlers();
+          yield* invoke(LayoutOperation.UpdateDialog, { state: false });
+        }).pipe(Effect.provideService(Capability.Service, capabilities), runAndForwardErrors);
+
+      yield* invoke(LayoutOperation.UpdateDialog, {
+        subject: NATIVE_REDIRECT_DIALOG,
+        type: 'alert',
+        overlayClasses: 'dark bg-neutral-950!',
+        props: { onOpenHere },
+      });
+    } else {
+      yield* dispatchNavigationHandlers();
     }
   }),
 );

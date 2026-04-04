@@ -197,7 +197,7 @@ export namespace AppCapabilities {
    * without the layout plugin needing to know about specific params.
    * @category Capability
    */
-  export type NavigationHandler = (url: URL) => void | Promise<void>;
+  export type NavigationHandler = (url: URL) => Effect$.Effect<void>;
 
   export const NavigationHandler = Capability$.make<NavigationHandler>(
     'org.dxos.app-toolkit.capability.navigation-handler',
