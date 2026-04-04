@@ -27,6 +27,7 @@ catalog:
   '@automerge/automerge-repo-storage-indexeddb': 2.5.1
   '@babel/core': ^7.18.13
   '@babel/runtime': ^7.9.6
+  '@babylonjs/core': ^7.52.5
   '@bufbuild/buf': 1.65.0
   '@bufbuild/protobuf': 2.11.0
   '@bufbuild/protoc-gen-es': 2.11.0
@@ -448,6 +449,7 @@ catalog:
   koffi: ^2.8.0
   leaflet: ^1.9.4
   leva: ^0.10.1
+  manifold-3d: ^3.0.0
   level: ^8.0.1
   level-transcoder: ^1.0.1
   lib0: ^0.2.65
