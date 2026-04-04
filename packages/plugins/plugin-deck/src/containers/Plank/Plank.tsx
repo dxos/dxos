@@ -26,11 +26,27 @@ import { useCompanions, useDeckState, useMainSize, useSelectedCompanion } from '
 import { type Settings, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
 import { DeckOperation } from '../../operations';
 
+import { PlankProvider, usePlankContext, type PlankContextValue } from './PlankContext';
 import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 
 const UNKNOWN_ID = 'unknown_id';
+
+//
+// PlankRoot
+//
+
+type PlankRootProps = PropsWithChildren<PlankContextValue>;
+
+/**
+ * Headless root that provides plank context.
+ * In production, the connected Plank wrapper populates this from hooks.
+ * In stories/tests, values can be provided directly.
+ */
+const PlankRoot = ({ children, ...context }: PlankRootProps) => {
+  return <PlankProvider {...context}>{children}</PlankProvider>;
+};
 
 //
 // Plank
@@ -46,41 +62,83 @@ export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path
  * It may be paired with a companion plank that enables the user to select one of multiple companion surfaces.
  */
 export const Plank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: PlankProps) => {
-  // TODO(burdon): Pass in graph and node.
   const { graph } = useAppGraph();
   const node = useNode(graph, id);
   const companions = useCompanions(id);
   const { companionId } = useSelectedCompanion(companions, companionVariant);
+  const { invokePromise } = useOperationInvoker();
+  const { state } = useDeckState();
   const resolvedCompanionId = companionVariant ? companionId : undefined;
   const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
   const hasCompanion = !!(resolvedCompanionId && currentCompanion);
 
+  const handleAdjust = useCallback(
+    (id: string, type: DeckOperation.PartAdjustment) => {
+      if (type === 'close') {
+        if (props.part === 'complementary') {
+          return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+        }
+        return invokePromise(LayoutOperation.Close, { subject: [id] });
+      }
+      return invokePromise(DeckOperation.Adjust, { type, id });
+    },
+    [invokePromise, props.part],
+  );
+
+  const handleResize = useCallback(
+    (id: string, size: number) => invokePromise(DeckOperation.UpdatePlankSize, { id, size }),
+    [invokePromise],
+  );
+
+  const handleScrollIntoView = useCallback(
+    (id?: string) => invokePromise(LayoutOperation.ScrollIntoView, { subject: id }),
+    [invokePromise],
+  );
+
+  const handleChangeCompanion = useCallback(
+    (companion: string | null) => invokePromise(DeckOperation.ChangeCompanion, { companion }),
+    [invokePromise],
+  );
+
   return (
-    <PlankContainer
-      solo={props.part === 'solo'}
-      companion={hasCompanion}
-      encapsulate={!!props.settings?.encapsulatedPlanks}
+    <PlankRoot
+      graph={graph}
+      node={node}
+      layoutMode={props.layoutMode}
+      part={props.part}
+      settings={props.settings}
+      popoverAnchorId={state.popoverAnchorId}
+      onAdjust={handleAdjust}
+      onResize={handleResize}
+      onScrollIntoView={handleScrollIntoView}
+      onChangeCompanion={handleChangeCompanion}
     >
-      <PlankComponent
-        id={id}
-        node={node}
-        companioned={hasCompanion ? 'primary' : undefined}
-        companions={hasCompanion ? [] : companions}
-        {...props}
-        {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
-      />
-      {hasCompanion && (
+      <PlankContainer
+        solo={props.part === 'solo'}
+        companion={hasCompanion}
+        encapsulate={!!props.settings?.encapsulatedPlanks}
+      >
         <PlankComponent
-          id={resolvedCompanionId}
-          node={currentCompanion}
-          primary={node}
-          companions={companions}
-          companioned='companion'
+          id={id}
+          node={node}
+          companioned={hasCompanion ? 'primary' : undefined}
+          companions={hasCompanion ? [] : companions}
           {...props}
-          {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: (props.order ?? 0) + 1 })}
+          {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
         />
-      )}
-    </PlankContainer>
+        {hasCompanion && (
+          <PlankComponent
+            id={resolvedCompanionId}
+            node={currentCompanion}
+            primary={node}
+            companions={companions}
+            companioned='companion'
+            {...props}
+            {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: (props.order ?? 0) + 1 })}
+          />
+        )}
+      </PlankContainer>
+    </PlankRoot>
   );
 });
 
@@ -146,7 +204,7 @@ const PlankComponent = memo(
     companions,
     settings,
   }: PlankComponentProps) => {
-    const { invokePromise } = useOperationInvoker();
+    const { onResize, onScrollIntoView } = usePlankContext('PlankComponent');
     const {
       deck,
       state: { popoverAnchorId, scrollIntoView },
@@ -167,11 +225,10 @@ const PlankComponent = memo(
     const size = deck.plankSizing[sizeKey] as number | undefined;
 
     const handleSizeChange = useCallback(
-      debounce(
-        (nextSize: number) => invokePromise(DeckOperation.UpdatePlankSize, { id: sizeKey, size: nextSize }),
-        200,
-      ),
-      [invokePromise, sizeKey],
+      debounce((nextSize: number) => {
+        onResize?.(sizeKey, nextSize);
+      }, 200),
+      [onResize, sizeKey],
     );
 
     // TODO(thure): Tabster's focus group should handle moving focus to Main, but something is blocking it.
@@ -191,10 +248,9 @@ const PlankComponent = memo(
     useLayoutEffect(() => {
       if (scrollIntoView === id) {
         layoutMode === 'deck' && rootElement.current?.scrollIntoView({ behavior: 'smooth', inline: 'center' });
-        // Clear the scroll into view state once it has been actioned.
-        void invokePromise(LayoutOperation.ScrollIntoView, { subject: undefined });
+        onScrollIntoView?.(undefined);
       }
-    }, [id, scrollIntoView, layoutMode, invokePromise]);
+    }, [id, scrollIntoView, layoutMode, onScrollIntoView]);
 
     const isSolo = layoutMode.startsWith('solo') && part === 'solo';
     const isAttendable =
@@ -288,3 +344,6 @@ const PlankComponent = memo(
     );
   },
 );
+
+export { PlankRoot };
+export type { PlankRootProps };
