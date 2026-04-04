@@ -16,6 +16,8 @@ Ask clarifying questions before you begin.
 - `Matrix` is an experimental alternative to `DeckMain`, which contains a horizontal `Matrix.Stack`.
 - `Matrix` is a low-level component that does not depend directly on `Plank`.
 
+## Implementation
+
 ### Phase 1 (Plank)
 
 - [x] Refactor `Plank` as radix-style composite component.
@@ -36,7 +38,19 @@ Ask clarifying questions before you begin.
 - [x] Create a concise spec for the functionality of both `DeckMain` and `Plank` (about 20 bullets each).
 - [x] Check everything builds and commit.
 
-## Design Decisions
+#### Recommendations
+
+1. **Merge PlankComponent into Plank.Article**: The `PlankComponent` internal component duplicates the role of a proper compound component part. Rename to `Plank.Article` and simplify.
+2. **Extract solo layout from Plank**: Solo layout (`PlankContainer`) should be a DeckMain responsibility, not Plank's. Plank should always render the same structure; the parent decides positioning.
+3. **Simplify part props**: The `ResolvedPart` type has 5 variants (`solo`, `deck`, `complementary`, `solo-primary`, `solo-companion`). These could be derived from context (`layoutMode` + `isCompanion`) rather than threaded as props.
+4. **Remove dual-mount pattern in DeckMain**: Currently both deck and solo views are always mounted with one hidden via `sr-only` + `inert`. Consider mounting only the active mode to reduce DOM size and simplify state.
+5. **Consolidate PlankHeading action loading**: The `Graph.expand` call in PlankHeading should be lifted to Plank.Root to avoid per-heading side effects.
+
+### Phase 3 (Attention)
+
+- [ ] Concisely document the attention system (`react-ui-attention`) and how it works with the deck
+
+## Design
 
 ### Plank Radix-Style Structure
 
@@ -143,11 +157,3 @@ only one tile is visible at a time.
 18. PlankHeading supports companion tabs when in companion mode.
 19. PlankControls provides solo/deck toggle, increment start/end, close, and companion buttons.
 20. PlankCompanionControls provides close button for the companion panel.
-
-## Simplification Recommendations
-
-1. **Merge PlankComponent into Plank.Article**: The `PlankComponent` internal component duplicates the role of a proper compound component part. Rename to `Plank.Article` and simplify.
-2. **Extract solo layout from Plank**: Solo layout (`PlankContainer`) should be a DeckMain responsibility, not Plank's. Plank should always render the same structure; the parent decides positioning.
-3. **Simplify part props**: The `ResolvedPart` type has 5 variants (`solo`, `deck`, `complementary`, `solo-primary`, `solo-companion`). These could be derived from context (`layoutMode` + `isCompanion`) rather than threaded as props.
-4. **Remove dual-mount pattern in DeckMain**: Currently both deck and solo views are always mounted with one hidden via `sr-only` + `inert`. Consider mounting only the active mode to reduce DOM size and simplify state.
-5. **Consolidate PlankHeading action loading**: The `Graph.expand` call in PlankHeading should be lifted to Plank.Root to avoid per-heading side effects.
