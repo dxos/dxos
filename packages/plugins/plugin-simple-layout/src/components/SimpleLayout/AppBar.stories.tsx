@@ -104,7 +104,7 @@ export const Default: Story = {
     const editAction = await screen.findByRole('menuitem', { name: /edit/i });
     await userEvent.click(editAction);
     await expect(args.onAction).toHaveBeenCalledTimes(1);
-    await expect((args.onAction as Mock).mock.calls[0][0]).toHaveProperty('id', 'action-edit');
+    await expect((args.onAction as Mock).mock.calls[0][0]).toHaveProperty('id', 'action-edit.menu');
   },
 };
 
