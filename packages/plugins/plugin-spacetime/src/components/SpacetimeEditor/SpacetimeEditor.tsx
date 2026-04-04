@@ -192,7 +192,21 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
 
       switch (pointerInfo.type) {
         case PointerEventTypes.POINTERDOWN: {
-          if (!pointerInfo.pickInfo?.hit || pointerInfo.pickInfo.pickedMesh !== meshRef.current) {
+          const event = pointerInfo.event as PointerEvent;
+          const pickedMesh = pointerInfo.pickInfo?.pickedMesh;
+          const hitMainMesh = pickedMesh === meshRef.current;
+          const hitSelectionMesh = pickedMesh === selectionMeshRef.current;
+
+          // Shift-click on selection overlay: start extruding the already-selected face.
+          if (event.shiftKey && hitSelectionMesh && state.selectedNormal) {
+            state.extruding = true;
+            state.extrudeStartY = event.clientY;
+            state.extrudeDistance = 0;
+            manager.camera.detachControl();
+            break;
+          }
+
+          if (!pointerInfo.pickInfo?.hit || !hitMainMesh) {
             state.selectedFace = null;
             state.selectedNormal = null;
             selectionMeshRef.current?.dispose();
@@ -218,7 +232,6 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
           selectionMeshRef.current = buildFaceSelectionMesh(faceId, positions, indices, normal, scene);
 
           // Start extrusion if shift is held.
-          const event = pointerInfo.event as PointerEvent;
           if (event.shiftKey) {
             state.extruding = true;
             state.extrudeStartY = event.clientY;

@@ -6,15 +6,20 @@ import { ArcRotateCamera, Color3, Color4, Engine, HemisphericLight, Scene, Vecto
 
 /**
  * Reads the computed background-color from an element and converts to Color4.
- * Works with oklch, rgb, etc. — the browser resolves to rgb for getComputedStyle.
+ * Uses a temporary canvas to resolve any CSS color format (oklch, rgb, etc.) to rgba.
  */
 const resolveBackgroundColor = (element: HTMLElement): Color4 => {
-  const computed = getComputedStyle(element).backgroundColor;
-  const match = computed.match(/rgba?\(\s*([\d.]+),?\s*([\d.]+),?\s*([\d.]+)/);
-  if (match) {
-    return new Color4(Number(match[1]) / 255, Number(match[2]) / 255, Number(match[3]) / 255, 1);
+  const raw = getComputedStyle(element).backgroundColor;
+  if (!raw || raw === 'transparent' || raw === 'rgba(0, 0, 0, 0)') {
+    return new Color4(0.97, 0.97, 0.97, 1);
   }
-  return new Color4(0.97, 0.97, 0.97, 1);
+
+  // Use a 2d canvas to resolve any CSS color to rgba.
+  const ctx = document.createElement('canvas').getContext('2d')!;
+  ctx.fillStyle = raw;
+  ctx.fillRect(0, 0, 1, 1);
+  const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+  return new Color4(r / 255, g / 255, b / 255, 1);
 };
 
 export type SceneManagerOptions = {
