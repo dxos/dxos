@@ -3,10 +3,11 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { forwardRef, type PropsWithChildren, useCallback, useImperativeHandle, useRef } from 'react';
+import React, { forwardRef, type PropsWithChildren, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { ScrollArea } from '@dxos/react-ui';
+import { useAttended } from '@dxos/react-ui-attention';
 import { type MosaicStackTileComponent, Mosaic } from '@dxos/react-ui-mosaic';
 import { composable, composableProps } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
@@ -22,9 +23,9 @@ type MatrixContextValue = {
   items: Obj.Any[];
   /** Tile component to render for each item. */
   Tile: MosaicStackTileComponent<Obj.Any>;
-  /** Currently focused tile ID. */
+  /** Currently attended tile ID. */
   current?: Obj.ID;
-  /** Callback when the focused tile changes. */
+  /** Callback when the attended tile changes. */
   onCurrentChange?: (id: Obj.ID | undefined) => void;
   /** Register the viewport element for scroll operations. */
   registerViewport: (element: HTMLElement | null) => void;
@@ -40,14 +41,6 @@ interface MatrixController {
   scrollTo: (id: Obj.ID) => void;
 }
 
-/**
- * Resolve the tile ID from a focusin event target by walking up to find `data-mosaic-tile-id`.
- */
-const resolveTileId = (target: EventTarget | null): string | undefined => {
-  const element = target as HTMLElement | null;
-  return element?.closest<HTMLElement>('[data-mosaic-tile-id]')?.dataset?.mosaicTileId;
-};
-
 //
 // Root
 //
@@ -58,6 +51,7 @@ type MatrixRootProps = PropsWithChildren<Partial<MatrixContextValue>>;
 
 /**
  * Headless root that provides matrix context.
+ * Syncs the attention system with `onCurrentChange` — when a tile gains attention, the callback fires.
  */
 const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
   ({ children, items = [], Tile, current, onCurrentChange, ...props }, forwardedRef) => {
@@ -65,6 +59,21 @@ const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
     const registerViewport = useCallback((element: HTMLElement | null) => {
       viewportRef.current = element;
     }, []);
+
+    // Sync attention system with current tile.
+    const attended = useAttended();
+    const itemIds = useRef(new Set<string>());
+    useEffect(() => {
+      itemIds.current = new Set(items.map((item) => item.id));
+    }, [items]);
+
+    useEffect(() => {
+      // Find the first attended ID that matches an item.
+      const matchedId = attended.find((id) => itemIds.current.has(id));
+      if (matchedId !== current) {
+        onCurrentChange?.(matchedId);
+      }
+    }, [attended, current, onCurrentChange]);
 
     useImperativeHandle(forwardedRef, () => ({
       scrollTo: (id) => {
@@ -87,6 +96,7 @@ const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
         if (needsScroll) {
           viewport.scrollTo({ left: offset, behavior: 'smooth' });
           // Focus after scroll completes to avoid interrupting smooth scroll.
+          // Focus triggers attention which calls onCurrentChange.
           const onScrollEnd = () => {
             viewport.removeEventListener('scrollend', onScrollEnd);
             tile.focus({ preventScroll: true });
@@ -150,10 +160,9 @@ const getId = (item: Obj.Any) => item.id;
 
 /**
  * Horizontally scrollable viewport that renders tiles from context.
- * Listens for focusin events to report the currently focused tile.
  */
 const MatrixViewport = composable<HTMLDivElement>(({ ...props }, forwardedRef) => {
-  const { items, Tile, onCurrentChange, registerViewport } = useMatrixContext(MATRIX_VIEWPORT_NAME);
+  const { items, Tile, registerViewport } = useMatrixContext(MATRIX_VIEWPORT_NAME);
   const viewportRef = useCallback(
     (element: HTMLElement | null) => {
       registerViewport(element);
@@ -161,29 +170,17 @@ const MatrixViewport = composable<HTMLDivElement>(({ ...props }, forwardedRef) =
     [registerViewport],
   );
 
-  const handleFocusIn = useCallback(
-    (event: React.FocusEvent) => {
-      const tileId = resolveTileId(event.target);
-      if (tileId) {
-        onCurrentChange?.(tileId);
-      }
-    },
-    [onCurrentChange],
-  );
-
   return (
     <ScrollArea.Root orientation='horizontal' padding snap {...composableProps(props)} ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef}>
-        <div role='none' onFocusCapture={handleFocusIn}>
-          <Mosaic.Stack
-            orientation='horizontal'
-            classNames='snap-x snap-mandatory gap-2'
-            getId={getId}
-            items={items}
-            Tile={Tile}
-            draggable={false}
-          />
-        </div>
+        <Mosaic.Stack
+          orientation='horizontal'
+          classNames='snap-x snap-mandatory gap-2'
+          getId={getId}
+          items={items}
+          Tile={Tile}
+          draggable={false}
+        />
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
