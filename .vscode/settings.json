@@ -376,7 +376,14 @@
     "6B2210",
   ],
   "hediet.vscode-drawio.resizeImages": null,
+<<<<<<< Updated upstream
   "hediet.vscode-drawio.theme": "automatic",
+||||||| Stash base
+  "hediet.vscode-drawio.theme": "Kennedy",
+=======
+  "hediet.vscode-drawio.appearance": "dark",
+  "hediet.vscode-drawio.theme": "dark",
+>>>>>>> Stashed changes
   "javascript.suggest.autoImports": true,
   "json.schemas": [
     {
