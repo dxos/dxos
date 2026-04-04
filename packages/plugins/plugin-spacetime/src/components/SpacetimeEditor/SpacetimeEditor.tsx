@@ -155,6 +155,7 @@ export const SpacetimeEditor = composable<HTMLDivElement, SpacetimeEditorProps>(
     const meshRef = useRef<Mesh | null>(null);
     const selectionMeshRef = useRef<Mesh | null>(null);
     const stateRef = useRef<EditorState>({ ...INITIAL_STATE });
+    const wasmRef = useRef<Awaited<ReturnType<typeof getManifold>> | null>(null);
     const fpsRef = useRef<HTMLSpanElement>(null);
     const [ready, setReady] = useState(false);
 
@@ -219,14 +220,18 @@ export const SpacetimeEditor = composable<HTMLDivElement, SpacetimeEditorProps>(
       [],
     );
 
+    /**
+     * Rebuilds the Babylon mesh from committed extrusions + optional in-progress preview.
+     * Synchronous when WASM is already loaded (avoids async race conditions during drag).
+     */
     const rebuildMesh = useCallback(
-      async (inProgressExtrusion?: Extrusion) => {
+      (inProgressExtrusion?: Extrusion) => {
         const manager = managerRef.current;
-        if (!manager) {
+        const wasm = wasmRef.current;
+        if (!manager || !wasm) {
           return;
         }
 
-        const wasm = await getManifold();
         const { Manifold } = wasm;
         const state = stateRef.current;
 
@@ -276,7 +281,12 @@ export const SpacetimeEditor = composable<HTMLDivElement, SpacetimeEditorProps>(
       const manager = new SceneManager({ canvas });
       managerRef.current = manager;
 
-      void rebuildMesh().then(() => setReady(true));
+      // Load WASM once, cache it, then build initial mesh synchronously.
+      void getManifold().then((wasm) => {
+        wasmRef.current = wasm;
+        rebuildMesh();
+        setReady(true);
+      });
 
       const resizeObserver = new ResizeObserver(() => manager.resize());
       resizeObserver.observe(container);
@@ -386,7 +396,7 @@ export const SpacetimeEditor = composable<HTMLDivElement, SpacetimeEditorProps>(
             const projected = dx * state.extrudeScreenDirX + dy * state.extrudeScreenDirY;
             state.extrudeDistance = projected * EXTRUDE_SENSITIVITY;
 
-            void rebuildMesh({ normal: state.selectedNormal!, distance: state.extrudeDistance });
+            rebuildMesh({ normal: state.selectedNormal!, distance: state.extrudeDistance });
             break;
           }
 
