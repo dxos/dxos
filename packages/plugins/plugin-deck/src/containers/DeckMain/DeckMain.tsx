@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Fragment, type UIEvent, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { Fragment, type PropsWithChildren, type UIEvent, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -18,14 +18,20 @@ import { Plank } from '../Plank';
 import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 import { ContentEmpty } from './ContentEmpty';
+import { DeckMainProvider, type DeckMainContextValue } from './DeckMainContext';
 import { StatusBar } from './StatusBar';
 import { Banner } from './Banner';
 
+export type { LayoutChangeRequest } from './DeckMainContext';
+
+export type DeckMainRootProps = PropsWithChildren<DeckMainContextValue>;
+
 /**
- * Request to change the layout mode.
- * Either set a specific mode (with optional subject), or revert to the previous mode.
+ * Headless root that provides DeckMain context.
  */
-export type LayoutChangeRequest = { subject?: string; mode: string } | { revert: true };
+const DeckMainRoot = ({ children, ...context }: DeckMainRootProps) => {
+  return <DeckMainProvider {...context}>{children}</DeckMainProvider>;
+};
 
 export type DeckMainProps = {
   /** Callback invoked when the layout mode needs to change. */
@@ -160,12 +166,21 @@ export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
   );
 
   return (
-    <Main.Root
-      navigationSidebarState={fullscreen ? 'closed' : sidebarState}
-      complementarySidebarState={fullscreen ? 'closed' : complementarySidebarState}
-      onNavigationSidebarStateChange={handleNavigationSidebarStateChange}
-      onComplementarySidebarStateChange={handleComplementarySidebarStateChange}
+    <DeckMainRoot
+      settings={settings}
+      pluginManager={pluginManager}
+      layoutMode={layoutMode}
+      state={state}
+      deck={deck}
+      updateState={updateState}
+      onLayoutChange={onLayoutChange}
     >
+      <Main.Root
+        navigationSidebarState={fullscreen ? 'closed' : sidebarState}
+        complementarySidebarState={fullscreen ? 'closed' : complementarySidebarState}
+        onNavigationSidebarStateChange={handleNavigationSidebarStateChange}
+        onComplementarySidebarStateChange={handleComplementarySidebarStateChange}
+      >
       {/* Left sidebar. */}
       <Sidebar />
 
@@ -281,9 +296,12 @@ export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
 
       {/* Status bar. */}
       {hoistStatusbar && <StatusBar showHints={settings?.showHints} />}
-    </Main.Root>
+      </Main.Root>
+    </DeckMainRoot>
   );
 };
+
+export { DeckMainRoot };
 
 const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: boolean }) =>
   order > 0 ? (

@@ -2,4 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export { DeckMain, type DeckMainProps, type LayoutChangeRequest } from './DeckMain';
+export { DeckMain, DeckMainRoot, type DeckMainProps, type DeckMainRootProps } from './DeckMain';
+export { type DeckMainContextValue, type LayoutChangeRequest } from './DeckMainContext';

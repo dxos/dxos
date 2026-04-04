@@ -29,12 +29,12 @@ Ask clarifying questions before you begin.
 
 ### Phase 2 (Deck)
 
-- [ ] Refactor `DeckMain` as radix-style composite component.
+- [x] Refactor `DeckMain` as radix-style composite component.
   - This enables us to separate the functionality so that we can isolate the use of react-ui-stack
   - Instead of `useAtomCapability` and `usePluginManager` pass the associated objects into `Root`.
-- [ ] Analyize the `DeckMain` and `Plank` components and make recommendations for how to simplify.
-- [ ] Create a concise spec for the functionality of both `DeckMain` and `Plank` (about 20 bullets each).
-- [ ] Check everything builds and commit.
+- [x] Analyize the `DeckMain` and `Plank` components and make recommendations for how to simplify.
+- [x] Create a concise spec for the functionality of both `DeckMain` and `Plank` (about 20 bullets each).
+- [x] Check everything builds and commit.
 
 ## Design Decisions
 
@@ -95,3 +95,57 @@ only one tile is visible at a time.
 - **Default** — uses StoryTile (simple JSON display, no Surface).
 - **WithSurface** — uses PlankTile (Surface.Surface role='article') with withPluginManager decorator
   providing a surface extension that resolves any object to a Json component.
+
+## DeckMain Functional Spec
+
+1. Renders the main content area with navigation sidebar (left) and complementary sidebar (right).
+2. Supports three layout modes: `deck` (horizontal scroll of planks), `solo` (single plank), `solo--fullscreen` (single plank without heading).
+3. In deck mode, renders a `Stack` with horizontal orientation containing all active planks.
+4. In solo mode, renders a single `Plank` inside a `StackContext.Provider`.
+5. Both deck and solo views are always mounted; the inactive one gets `sr-only` class and `inert` attribute.
+6. Handles responsive breakpoints: auto-switches to solo mode on mobile, reverts on desktop.
+7. Disables deck mode when `settings.enableDeck` is false.
+8. Persists and restores scroll position when switching between deck and solo modes.
+9. Manages sidebar state (open/closed/collapsed) for both navigation and complementary sidebars.
+10. Renders a topbar (`Banner`) when breakpoint and layout mode require it.
+11. Renders a status bar when breakpoint requires it.
+12. Shows empty state (`ContentEmpty`) when no planks are active.
+13. Applies centering overscroll padding when `settings.overscroll === 'centering'`.
+14. Calculates plank ordering for grid layout (accounts for companions and separators).
+15. Renders `PlankSeparator` between planks in deck mode.
+16. Sets CSS custom properties for sidebar widths and first/last plank widths.
+17. Attends (focuses) the first plank on initial render.
+18. Handles fullscreen mode by hiding sidebars.
+19. Applies `Main.Overlay` for dialog dismissal.
+20. Passes `companionVariant` to planks when companion is open.
+
+## Plank Functional Spec
+
+1. A plank is the main container for a single object's content within a deck.
+2. Resolves a graph node by ID via `useNode(graph, id)`.
+3. Optionally pairs with a companion plank (secondary panel showing related content).
+4. Companion resolution: finds child nodes of type `PLANK_COMPANION_TYPE`, selects by variant preference.
+5. In solo mode, wraps content in a grid container (`PlankContainer`) with optional companion column.
+6. In deck mode, renders as a `StackItem.Root` with resizable width.
+7. Renders a `PlankHeading` with icon, label, action menu, and layout controls.
+8. Renders content via `Surface.Surface` with `role='article'` and node data.
+9. Supports keyboard navigation: Escape focuses the parent main, Enter focuses first child.
+10. Tracks attention via `useAttentionAttributes` for focus-based highlighting.
+11. Handles scroll-into-view when state requests it, then clears the request.
+12. Supports resize via `StackItem.ResizeHandle` with debounced size persistence.
+13. Shows loading placeholder while content resolves.
+14. Shows error fallback (with 5s timeout) when node cannot be resolved.
+15. Applies different CSS for solo vs deck vs companion layouts.
+16. Supports `encapsulatedPlanks` setting (adds borders and margins).
+17. PlankHeading shows actions from the graph node's child actions.
+18. PlankHeading supports companion tabs when in companion mode.
+19. PlankControls provides solo/deck toggle, increment start/end, close, and companion buttons.
+20. PlankCompanionControls provides close button for the companion panel.
+
+## Simplification Recommendations
+
+1. **Merge PlankComponent into Plank.Article**: The `PlankComponent` internal component duplicates the role of a proper compound component part. Rename to `Plank.Article` and simplify.
+2. **Extract solo layout from Plank**: Solo layout (`PlankContainer`) should be a DeckMain responsibility, not Plank's. Plank should always render the same structure; the parent decides positioning.
+3. **Simplify part props**: The `ResolvedPart` type has 5 variants (`solo`, `deck`, `complementary`, `solo-primary`, `solo-companion`). These could be derived from context (`layoutMode` + `isCompanion`) rather than threaded as props.
+4. **Remove dual-mount pattern in DeckMain**: Currently both deck and solo views are always mounted with one hidden via `sr-only` + `inert`. Consider mounting only the active mode to reduce DOM size and simplify state.
+5. **Consolidate PlankHeading action loading**: The `Graph.expand` call in PlankHeading should be lifted to Plank.Root to avoid per-heading side effects.
