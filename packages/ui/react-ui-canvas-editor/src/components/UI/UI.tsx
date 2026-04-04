@@ -52,7 +52,7 @@ export const UI = ({ showTools, showToolbar }: UIProps) => {
       <div>
         <div className='absolute bottom-2 left-2'>
           {debug && (
-            <Json
+            <Json.Data
               classNames={mx('w-[300px] bg-base-surface border border-separator rounded-xs text-xs opacity-70')}
               data={info}
             />
