@@ -11,8 +11,18 @@ export type SurfaceRole =
   | 'article'
   | 'card--content'
   | 'complementary' // Companion
+<<<<<<< HEAD
   | 'item'
   | 'section';
+||||||| db70584ce3
+  | 'section'
+  | 'card--content';
+=======
+  | 'section'
+  | 'card--content';
+
+// TODO(burdon): attendableId => id ("attentable" is the valence)
+>>>>>>> origin/main
 
 /**
  * Generic type for surface components that are anchored to a space.
@@ -54,3 +64,13 @@ export type SettingsSurfaceProps<T extends {}, Props extends {} = {}> = {
   /** Callback to update settings. */
   onSettingsChange?: (cb: (current: T) => T) => void;
 } & Props;
+
+export type SurfaceThingProps = {
+  space?: Space;
+
+  /** Surface role (superset of WAI-ARIA role). */
+  role?: string;
+
+  /** Path-based ID inherited from the surface data for attention tracking and graph action lookup. */
+  attendableId?: string;
+};

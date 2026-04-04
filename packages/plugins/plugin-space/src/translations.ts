@@ -214,7 +214,7 @@ export const translations = [
         'settings.open-settings.label': 'Open settings',
         'related-actions.label': 'Related Actions',
         'related-objects.label': 'Related Objects',
-
+        'open-space-settings.label': 'Open settings',
         'row-details-no-selection.label': 'No objects selected',
         'companion-selected-objects.label': 'Selected',
         'field-deleted.label': 'Field deleted',
