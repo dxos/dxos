@@ -29,7 +29,7 @@ const NavigationHandler = ({ invitationProp = 'spaceInvitationCode' }: Navigatio
         Effect.gen(function* () {
           const invitationCode = url.searchParams.get(invitationProp);
           if (invitationCode) {
-            log.info('space invitation received via navigation');
+            log('space invitation received via navigation');
             removeQueryParam(invitationProp);
             yield* Operation.invoke(SpaceOperation.Join, { invitationCode });
           }

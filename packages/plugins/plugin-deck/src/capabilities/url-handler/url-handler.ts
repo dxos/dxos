@@ -9,13 +9,13 @@ import { AppCapabilities, LayoutOperation, fromUrlPath, getWorkspaceFromPath, to
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { Node } from '@dxos/plugin-graph';
 import { isTauri } from '@dxos/util';
 
 import { shouldDeferNavigationHandlers } from '../check-app-scheme/check-app-scheme';
 import { DeckCapabilities, type DeckStateProps, defaultDeck } from '../../types';
 
-/** Dispatch all NavigationHandler contributions with a given URL. */
 /** Dispatch all NavigationHandler contributions with a given URL. */
 const dispatchNavigationHandlers = Effect.fn(function* (url: URL) {
   const handlers = yield* Capability.getAll(AppCapabilities.NavigationHandler);
@@ -27,15 +27,22 @@ const dispatchNavigationHandlers = Effect.fn(function* (url: URL) {
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
+    const operationService = yield* Capability.get(Capabilities.OperationInvoker);
     const capabilities = yield* Capability.Service;
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const stateAtom = yield* Capability.get(DeckCapabilities.State);
-    const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
-    const deferHandlers = settings?.enableNativeRedirect && shouldDeferNavigationHandlers();
+    const settingsAtom = yield* Capability.get(DeckCapabilities.Settings);
 
+    const provideServices = <A, E>(effect: Effect.Effect<A, E, Capability.Service | Operation.Service>) =>
+      effect.pipe(
+        Effect.provideService(Capability.Service, capabilities),
+        Effect.provideService(Operation.Service, operationService),
+      );
+
+    // Helper to get state.
     const getState = () => registry.get(stateAtom);
 
+    // Helper to get computed deck from state.
     const getDeck = () => {
       const state = getState();
       const deck = state.decks[state.activeDeck];
@@ -43,19 +50,19 @@ export default Capability.makeModule(
       return deck;
     };
 
+    // Helper to update state.
     const updateState = (fn: (current: DeckStateProps) => DeckStateProps) => {
       registry.set(stateAtom, fn(getState()));
     };
 
-    const handleNavigation = async (url?: URL) => {
+    const handleNavigation = Effect.fn(function* (url?: URL) {
       const resolvedUrl = url ?? new URL(window.location.href);
       // When native redirect is active, check-app-scheme owns the initial dispatch
       // to prevent one-time tokens from being consumed before the native app can use them.
+      const settings = registry.get(settingsAtom);
+      const deferHandlers = settings?.enableNativeRedirect && shouldDeferNavigationHandlers();
       if (!deferHandlers) {
-        await dispatchNavigationHandlers(resolvedUrl).pipe(
-          Effect.provideService(Capability.Service, capabilities),
-          runAndForwardErrors,
-        );
+        yield* dispatchNavigationHandlers(resolvedUrl);
       }
 
       const pathname = resolvedUrl.pathname;
@@ -75,57 +82,55 @@ export default Capability.makeModule(
       const qualifiedId = fromUrlPath(pathname);
       const workspace = getWorkspaceFromPath(qualifiedId);
       if (workspace !== Node.RootId && workspace !== state.activeDeck) {
-        await invokePromise(LayoutOperation.SwitchWorkspace, { subject: workspace });
+        yield* Operation.invoke(LayoutOperation.SwitchWorkspace, { subject: workspace });
       }
 
       const deck = getDeck();
       const activeId = qualifiedId !== workspace ? qualifiedId : undefined;
       if (activeId) {
-        await invokePromise(LayoutOperation.Open, { subject: [activeId] });
+        // Ensure the object referenced by the URL is open in the deck.
+        yield* Operation.invoke(LayoutOperation.Open, { subject: [activeId] });
+        // If not already in solo mode, switch to solo for the target object.
         if (!deck.solo) {
-          await invokePromise(LayoutOperation.SetLayoutMode, { subject: activeId, mode: 'solo' });
+          yield* Operation.invoke(LayoutOperation.SetLayoutMode, { subject: activeId, mode: 'solo' });
         }
       } else if (deck.solo) {
+        // Stay in solo mode; redirect URL to reflect the current solo item.
+        // Do not switch to deck mode here — only explicit user action should change layout mode.
         const path = toUrlPath(deck.solo);
         if (window.location.pathname !== path) {
           history.replaceState(null, '', `${path}${window.location.search}`);
         }
       }
-    };
+    });
 
-    const onPopState = () => {
-      void handleNavigation();
-    };
+    const onPopState = () => void runAndForwardErrors(provideServices(handleNavigation()));
 
     // Initial navigation.
-    yield* Effect.promise(() => handleNavigation());
+    yield* handleNavigation();
     window.addEventListener('popstate', onPopState);
 
     // Tauri deep link support.
     let unlistenDeepLink: (() => void) | undefined;
     if (isTauri()) {
-      yield* Effect.tryPromise({
-        try: async () => {
-          const { getCurrent, onOpenUrl } = await import('@tauri-apps/plugin-deep-link');
+      yield* Effect.gen(function* () {
+        const { getCurrent, onOpenUrl } = yield* Effect.promise(() => import('@tauri-apps/plugin-deep-link'));
 
-          const launchUrls = await getCurrent();
-          if (launchUrls && launchUrls.length > 0) {
-            log('app launched with deep links', { urls: launchUrls });
-            for (const urlString of launchUrls) {
-              void handleDeepLink(urlString, handleNavigation);
-            }
+        const launchUrls = yield* Effect.promise(() => getCurrent());
+        if (launchUrls && launchUrls.length > 0) {
+          log('app launched with deep links', { urls: launchUrls });
+          for (const urlString of launchUrls) {
+            yield* handleDeepLink(urlString, handleNavigation);
           }
+        }
 
-          unlistenDeepLink = await onOpenUrl((urls) => {
+        unlistenDeepLink = yield* Effect.promise(() =>
+          onOpenUrl((urls) => {
             for (const urlString of urls) {
-              void handleDeepLink(urlString, handleNavigation);
+              void runAndForwardErrors(provideServices(handleDeepLink(urlString, handleNavigation)));
             }
-          });
-        },
-        catch: (error) => {
-          log.warn('[UrlHandler] Failed to initialize deep link listener', { error });
-          return error;
-        },
+          }),
+        );
       }).pipe(Effect.catchAll(() => Effect.void));
     }
 
@@ -163,32 +168,29 @@ export default Capability.makeModule(
 const isRedirectPath = (pathname: string): boolean => pathname.startsWith('/redirect/');
 
 /** Handle a deep link URL string. Merges query params into window.location and navigates. */
-const handleDeepLink = async (urlString: string, navigate: (url?: URL) => Promise<void>): Promise<void> => {
+const handleDeepLink = Effect.fn(function* (urlString: string, navigate: (url?: URL) => Effect.Effect<void, any, any>) {
   log('deep link received', { url: urlString });
-  try {
-    const deepLinkUrl = new URL(urlString);
 
-    // For custom schemes (e.g., composer://a/b/c), new URL() treats the first segment as the
-    // hostname. Reconstruct the full path from hostname + pathname.
-    const fullPath =
-      deepLinkUrl.protocol !== 'https:' && deepLinkUrl.protocol !== 'http:' && deepLinkUrl.hostname
-        ? '/' + deepLinkUrl.hostname + deepLinkUrl.pathname
-        : deepLinkUrl.pathname;
+  const deepLinkUrl = new URL(urlString);
 
-    if (isRedirectPath(fullPath)) {
-      return;
-    }
+  // For custom schemes (e.g., composer://a/b/c), new URL() treats the first segment as the
+  // hostname. Reconstruct the full path from hostname + pathname.
+  const fullPath =
+    deepLinkUrl.protocol !== 'https:' && deepLinkUrl.protocol !== 'http:' && deepLinkUrl.hostname
+      ? '/' + deepLinkUrl.hostname + deepLinkUrl.pathname
+      : deepLinkUrl.pathname;
 
-    // Merge deep link query params into the current window URL so handlers can read them.
-    const current = new URL(window.location.href);
-    if (deepLinkUrl.search) {
-      deepLinkUrl.searchParams.forEach((value, key) => current.searchParams.set(key, value));
-    }
-    current.pathname = fullPath;
-    history.replaceState(null, '', current.pathname + current.search);
-
-    await navigate(current);
-  } catch (error) {
-    log.warn('failed to parse deep link url', { url: urlString, error });
+  if (isRedirectPath(fullPath)) {
+    return;
   }
-};
+
+  // Merge deep link query params into the current window URL so handlers can read them.
+  const current = new URL(window.location.href);
+  if (deepLinkUrl.search) {
+    deepLinkUrl.searchParams.forEach((value, key) => current.searchParams.set(key, value));
+  }
+  current.pathname = fullPath;
+  history.replaceState(null, '', current.pathname + current.search);
+
+  yield* navigate(current);
+});

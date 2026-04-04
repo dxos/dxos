@@ -38,12 +38,12 @@ const NavigationHandler = ({
           const invitationCode = url.searchParams.get(invitationProp);
 
           if (token && tokenType === 'login') {
-            log.info('login token received via navigation');
+            log('login token received via navigation');
             removeQueryParam(tokenProp);
             removeQueryParam(tokenTypeProp);
             yield* Operation.invoke(ClientOperation.RedeemToken, { token });
           } else if (invitationCode) {
-            log.info('device invitation received via navigation');
+            log('device invitation received via navigation');
             removeQueryParam(invitationProp);
             yield* Operation.invoke(ClientOperation.JoinIdentity, { invitationCode });
           }
