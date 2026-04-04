@@ -13,25 +13,22 @@ import React, {
   useRef,
 } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { Surface } from '@dxos/app-framework/ui';
+import { getCompanionVariant } from '@dxos/app-toolkit';
 import { debounce } from '@dxos/async';
-import { type Node, useNode } from '@dxos/plugin-graph';
+import { type Node } from '@dxos/plugin-graph';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
-import { useCompanions, useDeckState, useMainSize, useSelectedCompanion } from '../../hooks';
+import { useMainSize } from '../../hooks';
 import { type Settings, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
-import { DeckOperation } from '../../operations';
 
 import { PlankProvider, usePlankContext, type PlankContextValue } from './PlankContext';
 import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
+import { PlankControls } from './PlankControls';
 import { PlankLoading } from './PlankLoading';
-
-const UNKNOWN_ID = 'unknown_id';
 
 //
 // PlankRoot
@@ -41,106 +38,12 @@ type PlankRootProps = PropsWithChildren<PlankContextValue>;
 
 /**
  * Headless root that provides plank context.
- * In production, the connected Plank wrapper populates this from hooks.
- * In stories/tests, values can be provided directly.
+ * Consumers (e.g., DeckMain) call hooks and pass values in as props.
+ * In stories/tests, values can be provided directly without plugin infrastructure.
  */
 const PlankRoot = ({ children, ...context }: PlankRootProps) => {
   return <PlankProvider {...context}>{children}</PlankProvider>;
 };
-
-//
-// Plank
-//
-
-export type PlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'path' | 'order' | 'active' | 'settings'> & {
-  id?: string;
-  companionVariant?: string;
-};
-
-/**
- * A Plank is the main container for surfaces within a Deck.
- * It may be paired with a companion plank that enables the user to select one of multiple companion surfaces.
- */
-export const Plank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: PlankProps) => {
-  const { graph } = useAppGraph();
-  const node = useNode(graph, id);
-  const companions = useCompanions(id);
-  const { companionId } = useSelectedCompanion(companions, companionVariant);
-  const { invokePromise } = useOperationInvoker();
-  const { state } = useDeckState();
-  const resolvedCompanionId = companionVariant ? companionId : undefined;
-  const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
-  const hasCompanion = !!(resolvedCompanionId && currentCompanion);
-
-  const handleAdjust = useCallback(
-    (id: string, type: DeckOperation.PartAdjustment) => {
-      if (type === 'close') {
-        if (props.part === 'complementary') {
-          return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
-        }
-        return invokePromise(LayoutOperation.Close, { subject: [id] });
-      }
-      return invokePromise(DeckOperation.Adjust, { type, id });
-    },
-    [invokePromise, props.part],
-  );
-
-  const handleResize = useCallback(
-    (id: string, size: number) => invokePromise(DeckOperation.UpdatePlankSize, { id, size }),
-    [invokePromise],
-  );
-
-  const handleScrollIntoView = useCallback(
-    (id?: string) => invokePromise(LayoutOperation.ScrollIntoView, { subject: id }),
-    [invokePromise],
-  );
-
-  const handleChangeCompanion = useCallback(
-    (companion: string | null) => invokePromise(DeckOperation.ChangeCompanion, { companion }),
-    [invokePromise],
-  );
-
-  return (
-    <PlankRoot
-      graph={graph}
-      node={node}
-      layoutMode={props.layoutMode}
-      part={props.part}
-      settings={props.settings}
-      popoverAnchorId={state.popoverAnchorId}
-      onAdjust={handleAdjust}
-      onResize={handleResize}
-      onScrollIntoView={handleScrollIntoView}
-      onChangeCompanion={handleChangeCompanion}
-    >
-      <PlankContainer
-        solo={props.part === 'solo'}
-        companion={hasCompanion}
-        encapsulate={!!props.settings?.encapsulatedPlanks}
-      >
-        <PlankComponent
-          id={id}
-          node={node}
-          companioned={hasCompanion ? 'primary' : undefined}
-          companions={hasCompanion ? [] : companions}
-          {...props}
-          {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
-        />
-        {hasCompanion && (
-          <PlankComponent
-            id={resolvedCompanionId}
-            node={currentCompanion}
-            primary={node}
-            companions={companions}
-            companioned='companion'
-            {...props}
-            {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: (props.order ?? 0) + 1 })}
-          />
-        )}
-      </PlankContainer>
-    </PlankRoot>
-  );
-});
 
 //
 // PlankContainer
@@ -204,11 +107,8 @@ const PlankComponent = memo(
     companions,
     settings,
   }: PlankComponentProps) => {
-    const { onResize, onScrollIntoView } = usePlankContext('PlankComponent');
-    const {
-      deck,
-      state: { popoverAnchorId, scrollIntoView },
-    } = useDeckState();
+    const { popoverAnchorId, scrollIntoView, plankSizing, onResize, onScrollIntoView } =
+      usePlankContext('PlankComponent');
 
     const canResize = layoutMode === 'deck';
     const { findFirstFocusable } = useFocusFinders();
@@ -222,7 +122,7 @@ const PlankComponent = memo(
 
     const variant = node?.type === PLANK_COMPANION_TYPE ? getCompanionVariant(id) : undefined;
     const sizeKey = id.split('+')[0];
-    const size = deck.plankSizing[sizeKey] as number | undefined;
+    const size = plankSizing?.[sizeKey] as number | undefined;
 
     const handleSizeChange = useCallback(
       debounce((nextSize: number) => {

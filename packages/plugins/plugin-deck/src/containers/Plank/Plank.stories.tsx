@@ -8,6 +8,7 @@ import React from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Stack } from '@dxos/react-ui-stack';
@@ -16,7 +17,7 @@ import { DeckState } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
-import { Plank } from './Plank';
+import { PlankParts, type PlankRootProps } from './Plank';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
@@ -27,16 +28,27 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.make,
 );
 
+type PlankStoryProps = {
+  id: string;
+  layoutMode: PlankRootProps['layoutMode'];
+  part: PlankRootProps['part'];
+};
+
+const PlankStory = ({ id, layoutMode, part }: PlankStoryProps) => {
+  const { graph } = useAppGraph();
+
+  return (
+    <Stack orientation='horizontal'>
+      <PlankParts.Root graph={graph} layoutMode={layoutMode} part={part}>
+        <PlankParts.Article id={id} layoutMode={layoutMode} part={part} />
+      </PlankParts.Root>
+    </Stack>
+  );
+};
+
 const meta = {
   title: 'plugins/plugin-deck/containers/Plank',
-  component: Plank,
-  render: (args) => {
-    return (
-      <Stack orientation='horizontal'>
-        <Plank {...args} />
-      </Stack>
-    );
-  },
+  component: PlankStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
@@ -47,7 +59,7 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof Plank>;
+} satisfies Meta<typeof PlankStory>;
 
 export default meta;
 

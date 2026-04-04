@@ -4,18 +4,16 @@
 
 import { createContext } from '@radix-ui/react-context';
 
-import { type Graph, type Node } from '@dxos/plugin-graph';
+import { type Graph } from '@dxos/plugin-graph';
 
 import { type DeckOperation } from '../../operations';
-import { type LayoutMode, type ResolvedPart, type Settings } from '../../types';
+import { type LayoutMode, type PlankSizing, type ResolvedPart, type Settings } from '../../types';
 
 const PLANK_NAME = 'Plank';
 
 export type PlankContextValue = {
   /** The application graph. */
   graph: Graph.ExpandableGraph;
-  /** The graph node for this plank. */
-  node?: Node.Node;
   /** Current layout mode. */
   layoutMode: LayoutMode;
   /** Which part of the layout this plank occupies. */
@@ -24,11 +22,15 @@ export type PlankContextValue = {
   settings?: Settings.Settings;
   /** Popover anchor ID for heading menus. */
   popoverAnchorId?: string;
+  /** ID of plank that should be scrolled into view. */
+  scrollIntoView?: string;
+  /** Persisted plank sizes keyed by plank ID. */
+  plankSizing?: PlankSizing;
   /** Callback for plank adjustments (close, solo, increment, companion). */
   onAdjust?: (id: string, type: DeckOperation.PartAdjustment) => void;
   /** Callback for plank resize. */
   onResize?: (id: string, size: number) => void;
-  /** Callback to scroll a plank into view. */
+  /** Callback to clear scroll-into-view state. */
   onScrollIntoView?: (id?: string) => void;
   /** Callback to change the companion. */
   onChangeCompanion?: (companion: string | null) => void;
