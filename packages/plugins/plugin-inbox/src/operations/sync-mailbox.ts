@@ -37,8 +37,8 @@ const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
             id: `${meta.id}/sync-mailbox-error`,
             icon: 'ph--warning--regular',
             duration: 5_000,
-            title: ['sync mailbox error title', { ns: meta.id }],
-            closeLabel: ['close label', { ns: meta.id }],
+            title: ['sync-mailbox-error.title', { ns: meta.id }],
+            closeLabel: ['close.label', { ns: meta.id }],
           });
         }),
       );

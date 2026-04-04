@@ -20,7 +20,7 @@ export default Capability.makeModule(
             type: NOT_FOUND_NODE_TYPE,
             data: null,
             properties: {
-              label: ['not found heading', { ns: 'org.dxos.i18n.os' }],
+              label: ['not-found.heading', { ns: 'org.dxos.i18n.os' }],
               icon: 'ph--warning--regular',
               disposition: 'hidden',
             },

@@ -5,12 +5,14 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { ExportStatus, FilesSettings, LocalFileContainer } from '../../containers';
+import { FilesSettings } from '../../components';
+import { ExportStatus, LocalFileContainer } from '../../containers';
 import { meta } from '../../meta';
-import { FileCapabilities, type FilesSettingsProps, type LocalFile } from '../../types';
+import { FilesOperation } from '../../operations';
+import { FileCapabilities, type Settings, type LocalFile } from '../../types';
 import { isLocalFile } from '../../util';
 
 export default Capability.makeModule(
@@ -32,9 +34,19 @@ export default Capability.makeModule(
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<FilesSettingsProps>(subject.atom);
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           const state = useAtomCapability(FileCapabilities.State);
-          return <FilesSettings settings={settings} state={state} onSettingsChange={updateSettings} />;
+          const { invokePromise } = useOperationInvoker();
+          return (
+            <FilesSettings
+              settings={settings}
+              state={state}
+              onSettingsChange={updateSettings}
+              onSelectRoot={() => invokePromise(FilesOperation.SelectRoot)}
+              onExport={() => invokePromise(FilesOperation.Export)}
+              onImport={() => invokePromise(FilesOperation.Import, {})}
+            />
+          );
         },
       }),
       Surface.create({

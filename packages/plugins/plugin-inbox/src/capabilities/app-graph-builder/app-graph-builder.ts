@@ -62,7 +62,7 @@ export default Capability.makeModule(
               type: MAILBOXES_SECTION_TYPE,
               data: null,
               properties: {
-                label: ['mailboxes section label', { ns: meta.id }],
+                label: ['mailboxes-section.label', { ns: meta.id }],
                 icon: 'ph--tray--regular',
                 iconHue: 'neutral',
                 role: 'branch',
@@ -92,7 +92,7 @@ export default Capability.makeModule(
                 type: Mailbox.Mailbox.typename,
                 data: null,
                 properties: {
-                  label: mailbox.name ?? ['object name placeholder', { ns: Mailbox.Mailbox.typename }],
+                  label: mailbox.name ?? ['object-name.placeholder', { ns: Mailbox.Mailbox.typename }],
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
                   role: 'branch',
@@ -104,7 +104,7 @@ export default Capability.makeModule(
                     type: MAILBOX_ALL_MAIL_TYPE,
                     data: mailbox,
                     properties: {
-                      label: ['all mail label', { ns: meta.id }],
+                      label: ['all-mail.label', { ns: meta.id }],
                       icon: 'ph--envelope--regular',
                       iconHue: 'rose',
                       filter: null,
@@ -115,7 +115,7 @@ export default Capability.makeModule(
                     type: MAILBOX_DRAFTS_TYPE,
                     data: null,
                     properties: {
-                      label: ['drafts label', { ns: meta.id }],
+                      label: ['drafts.label', { ns: meta.id }],
                       icon: 'ph--pencil-simple--regular',
                       iconHue: 'rose',
                       role: 'branch',
@@ -144,7 +144,7 @@ export default Capability.makeModule(
                             });
                           }),
                         properties: {
-                          label: ['delete filter label', { ns: meta.id }],
+                          label: ['delete-filter.label', { ns: meta.id }],
                           icon: 'ph--trash--regular',
                           disposition: 'list-item',
                         },
@@ -194,7 +194,7 @@ export default Capability.makeModule(
               type: Node.ActionType,
               data: () => Operation.invoke(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
               properties: {
-                label: ['create draft label', { ns: meta.id }],
+                label: ['create-draft.label', { ns: meta.id }],
                 icon: 'ph--plus--regular',
                 disposition: 'list-item-primary',
               },
@@ -228,7 +228,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: message ?? 'message',
               properties: {
-                label: ['message label', { ns: meta.id }],
+                label: ['message.label', { ns: meta.id }],
                 icon: 'ph--envelope-open--regular',
                 disposition: 'hidden',
               },
@@ -259,7 +259,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: event ?? 'event',
               properties: {
-                label: ['event label', { ns: meta.id }],
+                label: ['event.label', { ns: meta.id }],
                 icon: 'ph--calendar-dot--regular',
                 disposition: 'hidden',
               },
@@ -277,7 +277,7 @@ export default Capability.makeModule(
               id: 'sync',
               data: () => Operation.invoke(InboxOperation.SyncMailbox, { mailbox }),
               properties: {
-                label: ['sync mailbox label', { ns: meta.id }],
+                label: ['sync-mailbox.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },
@@ -294,7 +294,7 @@ export default Capability.makeModule(
               id: 'sync',
               data: () => Operation.invoke(InboxOperation.SyncCalendar, { calendar }),
               properties: {
-                label: ['sync calendar label', { ns: meta.id }],
+                label: ['sync-calendar.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },

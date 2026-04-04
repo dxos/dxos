@@ -28,11 +28,12 @@ export const Placeholder = ({ stage = 1, progress }: PlaceholderProps) => {
               stage >= 2 && 'scale-50 opacity-0',
             )}
           />
-          {hasProgress && (
+          {/* TODO(burdon): Option to show progress. */}
+          {/* {hasProgress && (
             <p className='flex justify-center absolute bottom-8 text-sm text-subdued mt-4 transition-opacity duration-300'>
               {progress.status} ({Math.round(progress.progress * 100)}%)
             </p>
-          )}
+          )} */}
         </div>
         <Status
           variant='main-bottom'

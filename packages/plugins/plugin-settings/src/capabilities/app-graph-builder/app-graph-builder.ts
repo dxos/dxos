@@ -30,7 +30,7 @@ export default Capability.makeModule(
               id: meta.id,
               data: () => Operation.invoke(SettingsOperation.Open, {}),
               properties: {
-                label: ['open settings label', { ns: meta.id }],
+                label: ['open-settings.label', { ns: meta.id }],
                 icon: 'ph--gear--regular',
                 disposition: 'menu',
                 keyBinding: {
@@ -50,7 +50,7 @@ export default Capability.makeModule(
               id: SETTINGS_ID,
               type: meta.id,
               properties: {
-                label: ['app settings label', { ns: meta.id }],
+                label: ['app-settings.label', { ns: meta.id }],
                 icon: 'ph--gear--regular',
                 disposition: 'pin-end',
                 position: 'hoist',

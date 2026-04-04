@@ -10,7 +10,7 @@ NOTE: Use the plugin: /superpowers:writing-plans (Subagent-Driven)
 - Primitive components are in `src/components`.
 - Primitive components should not use hooks from `@dxos/app-framework`.
 - Surface components are in `src/containers` and are referenced by `src/capabilities/react-surface`.
-- Surface components should define and export a `SurfaceComponentProps` properties type.
+- Surface components should define and export a `ObjectSurfaceProps` properties type.
 - Surface components should not use classNames (other than tailwind functional styles like `@container`, `dx-document`, etc.) or implement custom styling; flag as an issue if you see this.
 - Surface components should have lazy exports.
 - Surface should implement appropriate `<Suspense>` boundaries.

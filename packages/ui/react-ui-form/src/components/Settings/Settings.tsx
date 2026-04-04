@@ -40,16 +40,13 @@ const styles = {
 //
 
 const SettingsRoot = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { className, ...composedProps } = composableProps(props);
   return (
-    <ScrollArea.Root
-      {...composedProps}
-      className={mx('dx-document', className)}
-      orientation='vertical'
-      centered
-      ref={forwardedRef}
-    >
-      <ScrollArea.Viewport classNames='p-trim-md'>{children}</ScrollArea.Viewport>
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' thin ref={forwardedRef}>
+      <ScrollArea.Viewport classNames='px-4 pointer-coarse:px-2'>
+        <div role='none' className='dx-document flex flex-col gap-2 py-4'>
+          {children}
+        </div>
+      </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 });
@@ -121,7 +118,7 @@ SettingsGroup.displayName = SETTINGS_GROUP_NAME;
 //
 
 const SettingsFrame = ({ children }: SettingsGroupProps) => (
-  <div role='none' className='p-trim-md border border-separator rounded-md'>
+  <div role='none' className='flex flex-col gap-3 p-trim-md border border-separator rounded-md'>
     {children}
   </div>
 );
@@ -155,7 +152,7 @@ const SettingsContainer = ({ classNames, children }: ThemedClassName<PropsWithCh
     <div
       role='none'
       className={mx([
-        'dx-document',
+        'dx-document flex flex-col gap-3',
         '*:first:mt-0! *:last:mb-0! px-trim-md py-trim-md',
         'border border-separator rounded-md',
         classNames,
@@ -221,6 +218,7 @@ SettingsItemInput.displayName = SETTINGS_ITEM_INPUT_NAME;
 // Settings
 //
 
+// TODO(burdon): Audit and reduce number of components, removing custom classNames.
 export const Settings = {
   Root: SettingsRoot,
   Section: SettingsSection,

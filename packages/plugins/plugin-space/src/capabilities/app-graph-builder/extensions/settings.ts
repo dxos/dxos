@@ -29,7 +29,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           type: `${meta.id}.general`,
           data: `${meta.id}.general`,
           properties: {
-            label: ['space settings properties label', { ns: meta.id }],
+            label: ['space-settings-properties.label', { ns: meta.id }],
             icon: 'ph--sliders--regular',
             position: 'hoist',
             testId: 'spacePlugin.general',
@@ -42,7 +42,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
                 type: `${meta.id}.members`,
                 data: `${meta.id}.members`,
                 properties: {
-                  label: ['members panel label', { ns: meta.id }],
+                  label: ['members-panel.label', { ns: meta.id }],
                   icon: 'ph--users--regular',
                   position: 'hoist',
                   testId: 'spacePlugin.members',
@@ -55,7 +55,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           type: `${meta.id}.schema`,
           data: `${meta.id}.schema`,
           properties: {
-            label: ['space settings schema label', { ns: meta.id }],
+            label: ['space-settings-schema.label', { ns: meta.id }],
             icon: 'ph--shapes--regular',
             testId: 'spacePlugin.schema',
           },

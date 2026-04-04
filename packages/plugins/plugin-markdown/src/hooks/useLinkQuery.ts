@@ -50,7 +50,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
         // TODO(wittjosiah): Remove metadata labels.
         const type = Obj.getTypename(object)!;
         const metadata = resolve(type);
-        return metadata.label?.(object) || ['object name placeholder', { ns: type, default: 'New object' }];
+        return metadata.label?.(object) || ['object-name.placeholder', { ns: type, default: 'New object' }];
       };
 
       const items =

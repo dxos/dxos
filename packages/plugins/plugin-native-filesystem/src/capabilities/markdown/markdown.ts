@@ -18,7 +18,7 @@ const AUTO_SAVE_DELAY_MS = 1000;
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
-    const nativeMarkdownDocs = yield* Capability.get(NativeFilesystemCapabilities.NativeMarkdownDocuments);
+    const filesystemManager = yield* Capability.get(NativeFilesystemCapabilities.FilesystemManager);
 
     const pendingSaves = new Map<string, ReturnType<typeof debounce>>();
 
@@ -37,7 +37,6 @@ export default Capability.makeModule(
               if (!result) {
                 return current;
               }
-              // Only clear modified if the saved text matches the current in-memory text.
               if (result.file.text !== text) {
                 return current;
               }
@@ -54,11 +53,15 @@ export default Capability.makeModule(
         Effect.asVoid,
       );
 
-    const getDebouncedSave = (fileId: string, path: string) => {
+    /** Get or create a debounced save. The path is resolved at save time via dxn lookup so renames are reflected. */
+    const getDebouncedSave = (fileId: string, dxn: string) => {
       let debouncedFn = pendingSaves.get(fileId);
       if (!debouncedFn) {
         debouncedFn = debounce((text: string) => {
-          void Effect.runFork(saveFile(fileId, path, text));
+          const currentTarget = filesystemManager.getWriteTargetByDxn(dxn);
+          if (currentTarget) {
+            void Effect.runFork(saveFile(fileId, currentTarget.path, text));
+          }
         }, AUTO_SAVE_DELAY_MS);
         pendingSaves.set(fileId, debouncedFn);
       }
@@ -68,7 +71,7 @@ export default Capability.makeModule(
     const extensionProvider = () =>
       listener({
         onChange: ({ id, text }) => {
-          const target = nativeMarkdownDocs.getWriteTargetByDxn(id);
+          const target = filesystemManager.getWriteTargetByDxn(id);
           if (!target) {
             return;
           }
@@ -97,7 +100,7 @@ export default Capability.makeModule(
             ),
           }));
 
-          const debouncedSave = getDebouncedSave(fileId, path);
+          const debouncedSave = getDebouncedSave(fileId, id);
           void debouncedSave(textContent);
         },
       });

@@ -30,7 +30,7 @@ export default Capability.makeModule(
               id: FilesOperation.Export.meta.key,
               data: () => Operation.invoke(FilesOperation.Export),
               properties: {
-                label: ['export label', { ns: meta.id }],
+                label: ['export.label', { ns: meta.id }],
                 icon: 'ph--floppy-disk--regular',
               },
             },
@@ -38,7 +38,7 @@ export default Capability.makeModule(
               id: FilesOperation.Import.meta.key,
               data: () => Operation.invoke(FilesOperation.Import, {}),
               properties: {
-                label: ['import label', { ns: meta.id }],
+                label: ['import.label', { ns: meta.id }],
                 icon: 'ph--folder-open--regular',
               },
             },
@@ -61,7 +61,7 @@ export default Capability.makeModule(
                     type: meta.id,
                     // TODO(burdon): Factor out palette constants.
                     properties: {
-                      label: ['plugin name', { ns: meta.id }],
+                      label: ['plugin.name', { ns: meta.id }],
                       role: 'branch',
                       disposition: 'workspace',
                     },
@@ -87,7 +87,7 @@ export default Capability.makeModule(
                 }
               }),
               properties: {
-                label: ['open file label', { ns: meta.id }],
+                label: ['open-file.label', { ns: meta.id }],
                 icon: 'ph--file-plus--regular',
               },
             },
@@ -102,7 +102,7 @@ export default Capability.makeModule(
                       }
                     }),
                     properties: {
-                      label: ['open directory label', { ns: meta.id }],
+                      label: ['open-directory.label', { ns: meta.id }],
                       icon: 'ph--folder-plus--regular',
                     },
                   },
@@ -155,7 +155,7 @@ export default Capability.makeModule(
               id: `${FilesOperation.Close.meta.key}:${entity.id}`,
               data: () => Operation.invoke(FilesOperation.Close, { id: entity.id }),
               properties: {
-                label: ['close label', { ns: meta.id }],
+                label: ['close.label', { ns: meta.id }],
                 icon: 'ph--x--regular',
               },
             },
@@ -165,7 +165,7 @@ export default Capability.makeModule(
                     id: `${FilesOperation.Reconnect.meta.key}:${entity.id}`,
                     data: () => Operation.invoke(FilesOperation.Reconnect, { id: entity.id }),
                     properties: {
-                      label: ['re-open label', { ns: meta.id }],
+                      label: ['re-open.label', { ns: meta.id }],
                       icon: 'ph--plugs--regular',
                     },
                   },

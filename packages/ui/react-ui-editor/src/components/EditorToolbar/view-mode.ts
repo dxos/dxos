@@ -33,7 +33,7 @@ const createViewModeActions = (value: string, onViewModeChange: (mode: EditorVie
     return createEditorAction(
       `view-mode--${viewMode}`,
       {
-        label: [`${viewMode} mode label`, { ns: translationKey }],
+        label: [`view-mode.${viewMode}.label`, { ns: translationKey }],
         checked,
         icon,
       },

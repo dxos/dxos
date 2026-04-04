@@ -64,7 +64,7 @@ export const CommentsThread = ({
   const messageRef = useRef('');
   const extensions = useMemo(
     () => [
-      createBasicExtensions({ placeholder: t('message placeholder') }),
+      createBasicExtensions({ placeholder: t('message.placeholder') }),
       createThemeExtensions({ themeMode }),
       listener({ onChange: ({ text }) => (messageRef.current = text) }),
       command,
@@ -82,7 +82,7 @@ export const CommentsThread = ({
   const handleThreadDelete = useCallback(() => onThreadDelete?.(anchor), [onThreadDelete, anchor]);
   const handleAcceptProposal = useCallback((id: string) => onAcceptProposal?.(anchor, id), [onAcceptProposal, anchor]);
 
-  const handleComment: MessageTextboxProps['onSend'] = useCallback(() => {
+  const handleComment = useCallback<NonNullable<MessageTextboxProps['onSend']>>(() => {
     if (!messageRef.current) {
       return false;
     }
@@ -112,21 +112,21 @@ export const CommentsThread = ({
         )}
       >
         {detached ? (
-          <Tooltip.Trigger asChild content={t('detached thread label')} side='top'>
+          <Tooltip.Trigger asChild content={t('detached-thread.label')} side='top'>
             <ThreadComponent.Header detached>{thread.name}</ThreadComponent.Header>
           </Tooltip.Trigger>
         ) : (
           <ThreadComponent.Header>{thread.name}</ThreadComponent.Header>
         )}
         <div role='none' className={buttonGroupClassNames}>
-          {thread.status === 'staged' && <Tag palette='neutral'>{t('draft button')}</Tag>}
+          {thread.status === 'staged' && <Tag palette='neutral'>{t('draft.button')}</Tag>}
           {onResolve && !(thread?.status === 'staged') && (
             <IconButton
               data-testid='thread.resolve'
               variant='ghost'
               icon={thread?.status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
               iconOnly
-              label={t('resolve thread label')}
+              label={t('resolve-thread.label')}
               classNames={[buttonClassNames, thread?.status !== 'resolved' && hoverableControlItem]}
               onClick={handleResolve}
             />
@@ -137,7 +137,7 @@ export const CommentsThread = ({
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
-              label={t('delete thread label')}
+              label={t('delete-thread.label')}
               classNames={[buttonClassNames, hoverableControlItem]}
               onClick={handleThreadDelete}
             />
@@ -164,7 +164,7 @@ export const CommentsThread = ({
       */}
       <MessageTextbox extensions={extensions} onSend={handleComment} {...textboxMetadata} />
 
-      <ThreadComponent.Status activity={activity}>{t('activity message')}</ThreadComponent.Status>
+      <ThreadComponent.Status activity={activity}>{t('activity.message')}</ThreadComponent.Status>
 
       <div role='none' className='h-px -mt-px' ref={threadScrollRef} />
     </ThreadComponent.Root>

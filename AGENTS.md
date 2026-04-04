@@ -61,6 +61,7 @@
 ## Workflow
 
 - Never work on main; if not already in a worktree, create a new git worktree for the branch you are working on.
+- IMPORTANT: Do not change the branch or worktree after you have started unless you are instructed to directly by the user.
 - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
 - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
 - Check `moon.yml` for available package tasks
@@ -96,7 +97,7 @@ Examples:
   - Check `moon run :test` succeeds.
   - Commit and push any pending changes.
   - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
-  - **IMPORTANT**: Address all PR review comments (fix or explain why not) and post a reply to all comments.
+  - **IMPORTANT**: Address and RESPOND to all PR review comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
   - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".
   - **IMPORTANT**: DO NOT DELETE ANY BRANCHES OR WORKTREES THAT HAVE UNCOMMITTED CHANGES.

@@ -82,7 +82,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
             variant='ghost'
             icon='ph--x--regular'
             iconOnly
-            label={t('button delete')}
+            label={t('delete-object.button')}
             onClick={() => onDelete?.(item.id)}
           />
         )}

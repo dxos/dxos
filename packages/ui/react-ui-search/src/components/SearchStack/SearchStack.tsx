@@ -10,7 +10,10 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type SearchResult } from '../../types';
 
-export type SearchStackAction = { type: 'select'; resultId: string };
+export type SearchStackAction = {
+  type: 'select';
+  resultId: string;
+};
 
 export type SearchStackActionHandler = (action: SearchStackAction) => void;
 
@@ -52,7 +55,7 @@ export const SearchStack = composable<HTMLDivElement, SearchStackProps>(
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
-          <ScrollArea.Root orientation='vertical' padding centered>
+          <ScrollArea.Root orientation='vertical' padding centered thin>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SearchTile}
@@ -97,13 +100,11 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
   }, [result.id, setCurrentId]);
 
   return (
-    <Mosaic.Tile asChild classNames='dx-hover dx-current' id={result.id} data={data} location={location}>
+    <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={result.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef}>
           <Card.Toolbar>
-            <Card.Title>
-              <span className='truncate'>{result.label ?? 'Untitled'}</span>
-            </Card.Title>
+            <Card.Title>{result.label}</Card.Title>
           </Card.Toolbar>
           {result.snippet && (
             <Card.Content>

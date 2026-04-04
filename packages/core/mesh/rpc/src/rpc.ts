@@ -392,8 +392,14 @@ export class RpcPeer {
         this._outgoingRequests.set(id, new PendingRpcRequest(resolve, reject, false));
       });
 
-      const traceContext =
-        options?.ctx && this._params.injectTraceContext ? this._params.injectTraceContext(options.ctx) : undefined;
+      let traceContext: TraceContext | undefined;
+      try {
+        traceContext =
+          options?.ctx && this._params.injectTraceContext ? this._params.injectTraceContext(options.ctx) : undefined;
+      } catch (err) {
+        this._outgoingRequests.delete(id);
+        throw err;
+      }
 
       // Send request call.
       const sending = this._sendMessage({

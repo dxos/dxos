@@ -85,7 +85,7 @@ const DefaultStory = () => {
           classNames='dx-card-popover-width'
           options={options}
           createSchema={personSchema}
-          createOptionLabel={['create new person label', { ns: osTranslations }]}
+          createOptionLabel={['create-new-person.label', { ns: osTranslations }]}
           createOptionIcon='ph--user-plus--regular'
           createInitialValuePath='fullName'
           onCreate={handleCreateCallback}

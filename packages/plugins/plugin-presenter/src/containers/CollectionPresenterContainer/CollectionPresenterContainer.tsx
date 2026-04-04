@@ -5,7 +5,7 @@
 import React, { useContext, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { type Collection } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
@@ -13,7 +13,7 @@ import { PageNumber, Pager, Layout as PresenterLayout } from '../../components';
 import { PresenterContext } from '../../types';
 import { useExitPresenter } from '../../useExitPresenter';
 
-type CollectionPresenterContainerProps = SurfaceComponentProps<Collection.Collection>;
+type CollectionPresenterContainerProps = ObjectSurfaceProps<Collection.Collection>;
 
 export const CollectionPresenterContainer = ({ role, subject: collection }: CollectionPresenterContainerProps) => {
   const [slide, setSlide] = useState(0);

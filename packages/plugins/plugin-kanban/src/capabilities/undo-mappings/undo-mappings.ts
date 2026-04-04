@@ -19,7 +19,7 @@ export default Capability.makeModule(() =>
           props: output.props,
           index: output.index,
         }),
-        message: ['card field deleted label', { ns: meta.id }],
+        message: ['card-field-deleted.label', { ns: meta.id }],
       }),
       UndoMapping.make({
         operation: KanbanOperation.DeleteCard,
@@ -27,7 +27,7 @@ export default Capability.makeModule(() =>
         deriveContext: (_input, output) => ({
           card: output.card,
         }),
-        message: ['card deleted label', { ns: meta.id }],
+        message: ['card-deleted.label', { ns: meta.id }],
       }),
     ]),
   ),

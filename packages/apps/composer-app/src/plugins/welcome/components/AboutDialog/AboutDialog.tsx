@@ -36,11 +36,11 @@ export const AboutDialog = () => {
         {/* TODO(burdon): Reconcile with plugin-status-bar */}
         <Column.Content classNames='flex flex-col text-sm'>
           <div role='none' className='flex items-center'>
-            {t('version label', { version: v })}
+            {t('version.label', { version: v })}
           </div>
           {timestamp && (
             <div role='none' className='flex items-center gap-1'>
-              {t('published label', {
+              {t('published.label', {
                 timestamp: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
               })}
             </div>
@@ -60,7 +60,7 @@ export const AboutDialog = () => {
       </Dialog.Body>
       <Dialog.ActionBar>
         <Dialog.Close asChild>
-          <Button variant='primary'>{t('close label')}</Button>
+          <Button variant='primary'>{t('close.label')}</Button>
         </Dialog.Close>
       </Dialog.ActionBar>
     </Dialog.Content>

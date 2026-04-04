@@ -83,7 +83,7 @@ export default Capability.makeModule(
                     type: DECK_COMPANION_TYPE,
                     data: null,
                     properties: {
-                      label: ['call panel label', { ns: meta.id }],
+                      label: ['call-panel.label', { ns: meta.id }],
                       icon: 'ph--video-conference--regular',
                       position: 'hoist',
                       disposition: 'hidden',
@@ -113,7 +113,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: 'chat',
               properties: {
-                label: ['channel companion label', { ns: meta.id }],
+                label: ['channel-companion.label', { ns: meta.id }],
                 icon: 'ph--hash--regular',
                 position: 'hoist',
                 disposition: 'hidden',
@@ -138,7 +138,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: 'comments',
               properties: {
-                label: ['comments label', { ns: meta.id }],
+                label: ['comments.label', { ns: meta.id }],
                 icon: 'ph--chat-text--regular',
                 disposition: 'hidden',
                 position: 'hoist',
@@ -187,7 +187,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['add comment label', { ns: meta.id }],
+                label: ['add-comment.label', { ns: meta.id }],
                 icon: 'ph--chat-text--regular',
                 disposition: 'toolbar',
                 disabled,
