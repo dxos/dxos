@@ -3,60 +3,54 @@
 //
 
 import { JSONPath } from 'jsonpath-plus';
-import React, { forwardRef, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { Input, type ThemedClassName } from '@dxos/react-ui';
+import { Input, ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type CreateReplacerProps, createReplacer, safeStringify } from '@dxos/util';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { SyntaxHighlighter } from '../SyntaxHighlighter';
 
 export type JsonProps = ThemedClassName<{
   data?: any;
-  filter?: boolean;
   replacer?: CreateReplacerProps;
   testId?: string;
 }>;
 
-export const Json = forwardRef<HTMLDivElement, JsonProps>((props, forwardedRef) => {
-  if (props.filter) {
-    return <JsonFilter {...props} />;
-  }
-
-  const { classNames, data, replacer, testId } = props;
+export const Json = composable<HTMLDivElement, JsonProps>(({ data, replacer, testId, ...props }, forwardedRef) => {
   return (
-    <SyntaxHighlighter
-      language='json'
-      classNames={['w-full py-1 px-2 overflow-y-auto text-sm', classNames]}
-      data-testid={testId}
-      ref={forwardedRef}
-    >
-      {safeStringify(data, replacer && createReplacer(replacer), 2)}
-    </SyntaxHighlighter>
+    <ScrollArea.Root {...composableProps(props, { classNames: 'dx-container py-1 px-2 text-sm' })} ref={forwardedRef}>
+      <ScrollArea.Viewport asChild>
+        <SyntaxHighlighter language='json' classNames='w-full text-sm' data-testid={testId}>
+          {safeStringify(data, replacer && createReplacer(replacer), 2)}
+        </SyntaxHighlighter>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
   );
 });
 
-export const JsonFilter = forwardRef<HTMLDivElement, JsonProps>(
-  ({ classNames, data: initialData, replacer, testId }, forwardedRef) => {
-    const [data, setData] = useState(initialData);
+export const JsonFilter = composable<HTMLDivElement, JsonProps>(
+  ({ data: dataProp, replacer, testId, ...props }, forwardedRef) => {
+    const [data, setData] = useState(dataProp);
     const [text, setText] = useState('');
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-      if (!initialData || !text.trim().length) {
-        setData(initialData);
+      if (!dataProp || !text.trim().length) {
+        setData(dataProp);
       } else {
         try {
-          setData(JSONPath({ path: text, json: initialData }));
+          setData(JSONPath({ path: text, json: dataProp }));
           setError(null);
         } catch (err) {
-          setData(initialData);
+          setData(dataProp);
           setError(err as Error);
         }
       }
-    }, [initialData, text]); // TODO(burdon): Need structural diff.
+    }, [dataProp, text]); // TODO(burdon): Need structural diff.
 
     return (
-      <div className='flex flex-col h-full overflow-hidden' ref={forwardedRef}>
+      <div {...composableProps(props, { role: 'none', classNames: 'dx-container flex flex-col' })} ref={forwardedRef}>
         <Input.Root validationValence={error ? 'error' : 'success'}>
           <Input.TextInput
             classNames={['p-1 px-2 font-mono', error && 'border-rose-500']}
@@ -66,13 +60,7 @@ export const JsonFilter = forwardRef<HTMLDivElement, JsonProps>(
             onChange={(event) => setText(event.target.value)}
           />
         </Input.Root>
-        <SyntaxHighlighter
-          language='json'
-          classNames={['w-full overflow-y-auto text-sm', classNames]}
-          data-testid={testId}
-        >
-          {safeStringify(data, replacer && createReplacer(replacer), 2)}
-        </SyntaxHighlighter>
+        <Json data={data} replacer={replacer} testId={testId} />
       </div>
     );
   },

@@ -89,7 +89,10 @@
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "@effect/platform": "catalog:",

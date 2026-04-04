@@ -22,7 +22,7 @@ type StoryStackItem = {
 
 const KanbanBlock = ({ item }: { item: StoryStackItem }) => {
   return (
-    <div className='overflow-hidden'>
+    <div role='none' className='overflow-hidden'>
       <p className='place-content-center p-4'>{item.title}</p>
     </div>
   );
@@ -77,7 +77,6 @@ const DefaultStory = () => {
             targetColumn.items
           ) {
             const [movedCard] = sourceColumn.items.splice(sourceCardIndex, 1);
-
             let insertIndex;
             if (sourceColumn === targetColumn && sourceCardIndex < targetCardIndex) {
               insertIndex = closestEdge === 'bottom' ? targetCardIndex : targetCardIndex - 1;

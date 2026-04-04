@@ -8,7 +8,7 @@ import React from 'react';
 import { faker } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Json } from './Json';
+import { Json, JsonFilter } from './Json';
 
 faker.seed(0);
 
@@ -67,23 +67,20 @@ const data = createData();
 
 export const Default: Story = {
   args: {
-    classNames: 'text-sm',
     data,
   },
 };
 
 export const Filter: Story = {
+  render: (args) => <JsonFilter {...args} />,
   args: {
-    classNames: 'text-sm',
-    filter: true,
     data,
   },
 };
 
 export const Large: Story = {
+  render: (args) => <JsonFilter {...args} />,
   args: {
-    classNames: 'text-sm',
-    filter: true,
     data: createData({ depth: 5 }),
     replacer: {
       maxDepth: 3,
@@ -93,11 +90,7 @@ export const Large: Story = {
   },
 };
 
-const cycle: any = {
-  a: 1,
-  b: [],
-};
-
+const cycle: any = { a: 1, b: [] };
 cycle.b.push(cycle);
 
 // NOTE: Storybook args cannot be circular.

@@ -27,5 +27,5 @@ export const Text = Schema.Struct({
 
 export interface Text extends Schema.Schema.Type<typeof Text> {}
 
-// TODO(burdon): Remove id property.
+// TODO(burdon): Should have object props.
 export const make = (content = '', id?: Obj.ID) => Obj.make(Text, { id, content });

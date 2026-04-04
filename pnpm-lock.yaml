@@ -8479,9 +8479,18 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-syntax-highlighter':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-syntax-highlighter
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme
