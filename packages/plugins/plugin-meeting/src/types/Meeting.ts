@@ -9,8 +9,6 @@ import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 import { Thread, Transcript } from '@dxos/types';
 
-import * as Settings from './Settings';
-
 // TODO(wittjosiah): Factor out. Brand.
 const IdentityDidSchema = Schema.String;
 
@@ -65,6 +63,4 @@ export const Meeting = Schema.Struct({
 export interface Meeting extends Schema.Schema.Type<typeof Meeting> {}
 
 // TODO(burdon): Create with decode consistently: Schema.decodeSync(TranscriptionSettingsSchema)({}))
-export const Settings = Settings.SettingsSchema;
-
-export type Settings = Settings.SettingsType;
+export { Settings } from './Settings';

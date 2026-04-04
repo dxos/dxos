@@ -17,7 +17,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
-import { type Sketch as SketchNs, type SketchGridType, type Settings } from '../../types';
+import { type Sketch as SketchNs, type Settings } from '../../types';
 import { handleSnap } from '../actions';
 import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom';
 
@@ -25,7 +25,7 @@ import './theme.css';
 
 const threadToolId = 'thread';
 
-const gridComponents: Record<SketchGridType, FC<TLGridProps>> = {
+const gridComponents: Record<Settings.SketchGridType, FC<TLGridProps>> = {
   mesh: MeshGrid,
   dotted: DottedGrid,
 };

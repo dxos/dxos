@@ -8,13 +8,13 @@ import { isPersonalSpace } from '@dxos/app-toolkit';
 import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { type Settings as SpaceSettings } from '../../types';
+import { type Settings } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
-export type SpacePluginSettingsComponentProps = SettingsSurfaceProps<SpaceSettings.Settings> & {
+export type SpacePluginSettingsComponentProps = SettingsSurfaceProps<Settings.Settings> & {
   spaces?: Space[];
   onOpenSpaceSettings?: (space: Space) => void;
 };
@@ -28,19 +28,19 @@ export const SpacePluginSettings = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <Settings.Root>
-      <Settings.Section title={t('space-settings.label')} description={t('space-settings.description')}>
-        <Settings.Group>
-          <Settings.ItemInput title={t('show-hidden-spaces.label')}>
+    <SettingsForm.Root>
+      <SettingsForm.Section title={t('space-settings.label')} description={t('space-settings.description')}>
+        <SettingsForm.Group>
+          <SettingsForm.ItemInput title={t('show-hidden-spaces.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.showHidden}
               onCheckedChange={(checked) => onSettingsChange?.((state) => ({ ...state, showHidden: !!checked }))}
             />
-          </Settings.ItemInput>
-        </Settings.Group>
+          </SettingsForm.ItemInput>
+        </SettingsForm.Group>
 
-        <Settings.Container>
+        <SettingsForm.Container>
           <List classNames='flex flex-col gap-trim-sm'>
             {spaces?.map((space) => (
               <ListItem.Root key={space.id} classNames='w-full items-center'>
@@ -61,8 +61,8 @@ export const SpacePluginSettings = ({
               </ListItem.Root>
             ))}
           </List>
-        </Settings.Container>
-      </Settings.Section>
-    </Settings.Root>
+        </SettingsForm.Container>
+      </SettingsForm.Section>
+    </SettingsForm.Root>
   );
 };

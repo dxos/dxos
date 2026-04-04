@@ -6,33 +6,30 @@ import React from 'react';
 
 import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { type Settings as ObservabilitySettingsNs } from '../../types';
+import { type Settings } from '../../types';
 
-export const ObservabilitySettings = ({
-  settings,
-  onSettingsChange,
-}: SettingsSurfaceProps<ObservabilitySettingsNs.Settings>) => {
+export const ObservabilitySettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<Settings.Settings>) => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <Settings.Root>
-      <Settings.Section title={t('settings.title', { ns: meta.id })}>
+    <SettingsForm.Root>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
         <Message.Root valence='info' classNames=' mb-form-padding'>
           <Message.Content>{t('observability.description')}</Message.Content>
         </Message.Root>
-        <Settings.Group>
-          <Settings.ItemInput title={t('observability-enabled.label')}>
+        <SettingsForm.Group>
+          <SettingsForm.ItemInput title={t('observability-enabled.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.enabled}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, enabled: !!checked }))}
             />
-          </Settings.ItemInput>
-        </Settings.Group>
-      </Settings.Section>
-    </Settings.Root>
+          </SettingsForm.ItemInput>
+        </SettingsForm.Group>
+      </SettingsForm.Section>
+    </SettingsForm.Root>
   );
 };

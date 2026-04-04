@@ -1,9 +1,24 @@
 # Deck Refactor
 
+TODO(burdon): Factor out Rules into plugins/AGENTS.md
+
+## Background
+
 - This is a complex refactor. Think deeply about these tasks and create a plan.
+- When starting a complex refactor that involves applying changes across multiple packages,
+  try to indentify an exemplar that you can copy -- and compare with the exemplar at each step.
+- If in doubt, ask the user for an exemplar.
+
+### Workflow
+
 - Use this document to track progress to the user.
 - Work only on the section of the document/plan that you are directed to work on.
-- Format, lint, commit and push after each step.
+- After each step, check everything builds, then format, lint, commit and push.
+- If we are trying to land a PR monitor CI and address ALL PR comments and CI errors.
+
+### Imports
+
+- To resolve import clashes between components and types, rename the component not the type (e.g., Sketch => SketchComponent)
 
 ## Phase 1
 

@@ -6,13 +6,13 @@ import React from 'react';
 
 import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Button, Select, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor';
 
 import { meta } from '../../meta';
-import { type Settings as ScriptSettingsNs } from '../../types';
+import { type Settings } from '../../types';
 
-export type ScriptPluginSettingsProps = SettingsSurfaceProps<ScriptSettingsNs.Settings> & {
+export type ScriptPluginSettingsProps = SettingsSurfaceProps<Settings.Settings> & {
   onAuthenticate?: () => void;
 };
 
@@ -20,17 +20,17 @@ export const ScriptPluginSettings = ({ settings, onSettingsChange, onAuthenticat
   const { t } = useTranslation(meta.id);
 
   return (
-    <Settings.Root>
-      <Settings.Section title={t('settings.title', { ns: meta.id })}>
-        <Settings.Group>
+    <SettingsForm.Root>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+        <SettingsForm.Group>
           {/* TODO(wittjosiah): Hide outside of dev environments. */}
-          <Settings.ItemInput title={t('authenticate-action.label')}>
+          <SettingsForm.ItemInput title={t('authenticate-action.label')}>
             <Button disabled={!onSettingsChange} onClick={onAuthenticate}>
               {t('authenticate-button.label')}
             </Button>
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
 
-          <Settings.ItemInput title={t('editor-input-mode.label')}>
+          <SettingsForm.ItemInput title={t('editor-input-mode.label')}>
             <Select.Root
               disabled={!onSettingsChange}
               value={settings.editorInputMode ?? 'default'}
@@ -55,9 +55,9 @@ export const ScriptPluginSettings = ({ settings, onSettingsChange, onAuthenticat
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </Settings.ItemInput>
-        </Settings.Group>
-      </Settings.Section>
-    </Settings.Root>
+          </SettingsForm.ItemInput>
+        </SettingsForm.Group>
+      </SettingsForm.Section>
+    </SettingsForm.Root>
   );
 };

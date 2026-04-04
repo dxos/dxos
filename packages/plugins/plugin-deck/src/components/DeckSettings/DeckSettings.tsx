@@ -9,13 +9,7 @@ import { Input, Select, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import {
-  type Settings,
-  type NewPlankPositioning,
-  NewPlankPositions,
-  OverScrollToProps,
-  type Overscroll,
-} from '../../types';
+import { Settings } from '../../types';
 
 const isSocket = !!(globalThis as any).__args;
 
@@ -45,7 +39,7 @@ export const DeckSettings = ({ settings, onSettingsChange }: SettingsSurfaceProp
               disabled={!settings.enableDeck || !onSettingsChange}
               value={settings.newPlankPositioning ?? 'start'}
               onValueChange={(value) =>
-                onSettingsChange?.((s) => ({ ...s, newPlankPositioning: value as NewPlankPositioning }))
+                onSettingsChange?.((s) => ({ ...s, newPlankPositioning: value as Settings.NewPlankPositioning }))
               }
             >
               <Select.TriggerButton
@@ -55,7 +49,7 @@ export const DeckSettings = ({ settings, onSettingsChange }: SettingsSurfaceProp
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
-                    {NewPlankPositions.map((position) => (
+                    {Settings.NewPlankPositions.map((position) => (
                       <Select.Option key={position} value={position}>
                         {t(`settings-new-plank-position.${position}.label`)}
                       </Select.Option>
@@ -70,13 +64,13 @@ export const DeckSettings = ({ settings, onSettingsChange }: SettingsSurfaceProp
             <Select.Root
               disabled={!settings.enableDeck || !onSettingsChange}
               value={settings.overscroll ?? 'none'}
-              onValueChange={(value) => onSettingsChange?.((s) => ({ ...s, overscroll: value as Overscroll }))}
+              onValueChange={(value) => onSettingsChange?.((s) => ({ ...s, overscroll: value as Settings.Overscroll }))}
             >
               <Select.TriggerButton placeholder={t('select-overscroll.placeholder')} />
               <Select.Portal>
                 <Select.Content>
                   <Select.Viewport>
-                    {OverScrollToProps.map((option) => (
+                    {Settings.OverScrollToProps.map((option) => (
                       <Select.Option key={option} value={option}>
                         {t(`settings-overscroll.${option}.label`)}
                       </Select.Option>

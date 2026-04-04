@@ -10,7 +10,7 @@ import type { TimerCallback, TimerOptions } from '@dxos/async';
 
 import { meta } from '../meta';
 
-import * as Settings from './Settings';
+import { type Settings as SettingsType } from './Settings';
 
 export * as Settings from './Settings';
 
@@ -27,7 +27,7 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
 });
 
 export namespace DebugCapabilities {
-  export const Settings = Capability.make<Atom.Writable<Settings.SettingsType>>(`${meta.id}.capability.settings`);
+  export const Settings = Capability.make<Atom.Writable<SettingsType>>(`${meta.id}.capability.settings`);
 }
 
 export namespace Devtools {

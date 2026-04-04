@@ -8,7 +8,7 @@ import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
-import * as Settings from './Settings';
+export { Settings } from './Settings';
 
 /**
  * Document Item type.
@@ -45,10 +45,3 @@ export const make = ({
   Obj.setParent(doc.content.target!, doc);
   return doc;
 };
-
-/**
- * Plugin settings.
- */
-export const Settings = Settings.SettingsSchema;
-
-export type Settings = Settings.SettingsType;

@@ -7,7 +7,7 @@ import React from 'react';
 import { DEFAULT_EDGE_MODELS, DEFAULT_OLLAMA_MODELS } from '@dxos/ai';
 import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
 import { type Assistant, LLM_PROVIDERS } from '../../types';
@@ -25,18 +25,18 @@ export const AssistantSettings = ({ settings, onSettingsChange }: SettingsSurfac
   const { t } = useTranslation(meta.id);
 
   return (
-    <Settings.Root>
-      <Settings.Section title={t('settings.title', { ns: meta.id })}>
-        <Settings.Group>
-          <Settings.ItemInput title={t('settings-custom-prompts.label')}>
+    <SettingsForm.Root>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+        <SettingsForm.Group>
+          <SettingsForm.ItemInput title={t('settings-custom-prompts.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={!!settings.customPrompts}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, customPrompts: checked }))}
             />
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
 
-          <Settings.ItemInput title={t('settings-llm-provider.label')}>
+          <SettingsForm.ItemInput title={t('settings-llm-provider.label')}>
             <Select.Root
               disabled={!onSettingsChange}
               value={settings.llmProvider ?? 'edge'}
@@ -62,9 +62,9 @@ export const AssistantSettings = ({ settings, onSettingsChange }: SettingsSurfac
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
 
-          <Settings.ItemInput title={t('settings-edge-llm-model.label')}>
+          <SettingsForm.ItemInput title={t('settings-edge-llm-model.label')}>
             <Select.Root
               disabled={!onSettingsChange}
               value={settings.edgeModel ?? DEFAULT_VALUE}
@@ -87,9 +87,9 @@ export const AssistantSettings = ({ settings, onSettingsChange }: SettingsSurfac
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
 
-          <Settings.ItemInput title={t('settings-ollama-llm-model.label')}>
+          <SettingsForm.ItemInput title={t('settings-ollama-llm-model.label')}>
             <Select.Root
               disabled={!onSettingsChange}
               value={settings.ollamaModel ?? DEFAULT_VALUE}
@@ -112,9 +112,9 @@ export const AssistantSettings = ({ settings, onSettingsChange }: SettingsSurfac
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </Settings.ItemInput>
-        </Settings.Group>
-      </Settings.Section>
-    </Settings.Root>
+          </SettingsForm.ItemInput>
+        </SettingsForm.Group>
+      </SettingsForm.Section>
+    </SettingsForm.Root>
   );
 };

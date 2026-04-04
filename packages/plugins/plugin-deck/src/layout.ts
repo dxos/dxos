@@ -4,11 +4,11 @@
 
 import { produce } from 'immer';
 
-import { type DeckAction, type NewPlankPositioning } from './types';
+import { type DeckAction, type Settings } from './types';
 
 type OpenLayoutEntryOptions = {
   key?: string;
-  positioning?: NewPlankPositioning;
+  positioning?: Settings.NewPlankPositioning;
   pivotId?: string;
 };
 

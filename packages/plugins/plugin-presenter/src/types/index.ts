@@ -9,7 +9,7 @@ import { Capability } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 
-import * as Settings from './Settings';
+import { type Settings as SettingsType } from './Settings';
 
 export type PresenterContextType = {
   running: boolean;
@@ -26,5 +26,5 @@ export const PresenterContext: Context<PresenterContextType> = createContext<Pre
 export * as Settings from './Settings';
 
 export namespace PresenterCapabilities {
-  export const Settings = Capability.make<Atom.Writable<Settings.SettingsType>>(`${meta.id}.capability.settings`);
+  export const Settings = Capability.make<Atom.Writable<SettingsType>>(`${meta.id}.capability.settings`);
 }

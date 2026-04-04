@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorViewModes } from '@dxos/ui-editor';
 
 import { meta } from '../../meta';
@@ -17,10 +17,10 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: SettingsSurface
 
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
   return (
-    <Settings.Root>
-      <Settings.Section title={t('settings.title', { ns: meta.id })}>
-        <Settings.Group>
-          <Settings.ItemInput title={t('default-view-mode.label')}>
+    <SettingsForm.Root>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+        <SettingsForm.Group>
+          <SettingsForm.ItemInput title={t('default-view-mode.label')}>
             <Select.Root
               disabled={!onSettingsChange}
               value={settings.defaultViewMode}
@@ -42,9 +42,9 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: SettingsSurface
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
 
-          <Settings.ItemInput title={t('editor-input-mode.label')}>
+          <SettingsForm.ItemInput title={t('editor-input-mode.label')}>
             <Select.Root
               disabled={!onSettingsChange}
               value={settings.editorInputMode ?? 'default'}
@@ -69,50 +69,50 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: SettingsSurface
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
 
-          <Settings.ItemInput title={t('settings-toolbar.label')}>
+          <SettingsForm.ItemInput title={t('settings-toolbar.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.toolbar}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, toolbar: !!checked }))}
             />
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
 
-          <Settings.ItemInput title={t('settings-numbered-headings.label')}>
+          <SettingsForm.ItemInput title={t('settings-numbered-headings.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.numberedHeadings}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, numberedHeadings: !!checked }))}
             />
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
 
-          <Settings.ItemInput title={t('settings-folding.label')}>
+          <SettingsForm.ItemInput title={t('settings-folding.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.folding}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, folding: !!checked }))}
             />
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
 
-          <Settings.ItemInput title={t('settings-experimental.label')}>
+          <SettingsForm.ItemInput title={t('settings-experimental.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.experimental}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, experimental: !!checked }))}
             />
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
 
-          <Settings.ItemInput title={t('settings-debug.label')}>
+          <SettingsForm.ItemInput title={t('settings-debug.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.debug}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, debug: !!checked }))}
             />
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
 
           {settings.debug && (
-            <Settings.ItemInput title={t('settings-debug-typewriter.label', { ns: meta.id })}>
+            <SettingsForm.ItemInput title={t('settings-debug-typewriter.label', { ns: meta.id })}>
               <Input.TextArea
                 disabled={!onSettingsChange}
                 rows={5}
@@ -120,10 +120,10 @@ export const MarkdownSettings = ({ settings, onSettingsChange }: SettingsSurface
                 onChange={({ target: { value } }) => onSettingsChange?.((s) => ({ ...s, typewriter: value }))}
                 placeholder={t('settings-debug-typewriter.placeholder')}
               />
-            </Settings.ItemInput>
+            </SettingsForm.ItemInput>
           )}
-        </Settings.Group>
-      </Settings.Section>
-    </Settings.Root>
+        </SettingsForm.Group>
+      </SettingsForm.Section>
+    </SettingsForm.Root>
   );
 };

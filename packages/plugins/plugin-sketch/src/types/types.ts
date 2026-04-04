@@ -9,4 +9,3 @@ export interface SketchModel {
 }
 
 export * as Settings from './Settings';
-export * as Settings from './Settings';

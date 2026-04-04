@@ -9,10 +9,11 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '../meta';
-import { type DeckEphemeralStateProps, type DeckSettingsProps, type DeckState, type DeckStateProps } from '../types';
+import { type Settings as SettingsType } from './Settings';
+import { type DeckEphemeralStateProps, type DeckState, type DeckStateProps } from './schema';
 
 export namespace DeckCapabilities {
-  export const Settings = Capability.make<Atom.Writable<DeckSettingsProps>>(`${meta.id}.capability.settings`);
+  export const Settings = Capability.make<Atom.Writable<SettingsType>>(`${meta.id}.capability.settings`);
 
   /** Persisted state (stored in KVS/localStorage). */
   export const State = Capability.make<Atom.Writable<DeckStateProps>>(`${meta.id}.capability.state`);
