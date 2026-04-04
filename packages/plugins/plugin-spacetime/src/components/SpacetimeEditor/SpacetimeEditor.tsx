@@ -3,7 +3,7 @@
 //
 
 import { Color3, Matrix, Mesh, PointerEventTypes, Vector3, StandardMaterial, VertexData } from '@babylonjs/core';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -55,10 +55,6 @@ const EXTRUDE_SENSITIVITY = 0.02;
  * Projects the face normal into screen space and stores the direction in editor state.
  * This determines which mouse drag direction maps to positive extrusion.
  */
-/**
- * Projects the face normal into screen space and stores the direction in editor state.
- * This determines which mouse drag direction maps to positive extrusion.
- */
 const computeExtrudeScreenDir = (
   state: EditorState,
   normal: { x: number; y: number; z: number },
@@ -92,7 +88,6 @@ const buildFaceSelectionMesh = (
   normal: { x: number; y: number; z: number },
   scene: import('@babylonjs/core').Scene,
 ): Mesh => {
-  const numTris = indices.length / 3;
   const selPositions: number[] = [];
   const selNormals: number[] = [];
   const selIndices: number[] = [];
@@ -100,6 +95,7 @@ const buildFaceSelectionMesh = (
 
   const refIdx = indices[faceId * 3];
 
+  const numTris = indices.length / 3;
   for (let tri = 0; tri < numTris; tri++) {
     const triNormal = getFaceNormal(tri, positions, indices);
     const dot = triNormal.x * normal.x + triNormal.y * normal.y + triNormal.z * normal.z;
@@ -146,289 +142,306 @@ const buildFaceSelectionMesh = (
   return selMesh;
 };
 
-export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const managerRef = useRef<SceneManager | null>(null);
-  const meshRef = useRef<Mesh | null>(null);
-  const selectionMeshRef = useRef<Mesh | null>(null);
-  const stateRef = useRef<EditorState>({ ...INITIAL_STATE });
-  const fpsRef = useRef<HTMLSpanElement>(null);
-  const [ready, setReady] = useState(false);
+export type SpacetimeEditorProps = {
+  showAxes?: boolean;
+  showFps?: boolean;
+};
 
-  /**
-   * Applies an extrusion to a Manifold solid and returns the result.
-   * Caller is responsible for deleting the returned Manifold.
-   */
-  const applyExtrusion = useCallback(
-    (
-      Manifold: Awaited<ReturnType<typeof getManifold>>['Manifold'],
-      solid: ReturnType<Awaited<ReturnType<typeof getManifold>>['Manifold']['cube']>,
-      extrusion: Extrusion,
-    ) => {
-      const { normal, distance } = extrusion;
-      if (distance === 0) {
-        return solid;
-      }
+export const SpacetimeEditor = composable<HTMLDivElement, SpacetimeEditorProps>(
+  ({ showAxes = false, showFps = false, ...props }, forwardedRef) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const managerRef = useRef<SceneManager | null>(null);
+    const meshRef = useRef<Mesh | null>(null);
+    const selectionMeshRef = useRef<Mesh | null>(null);
+    const stateRef = useRef<EditorState>({ ...INITIAL_STATE });
+    const fpsRef = useRef<HTMLSpanElement>(null);
+    const [ready, setReady] = useState(false);
 
-      const absDist = Math.abs(distance);
-      const sign = distance > 0 ? 1 : -1;
+    /**
+     * Applies an extrusion to a Manifold solid and returns the result.
+     * Caller is responsible for deleting the returned Manifold.
+     */
+    const applyExtrusion = useCallback(
+      (
+        Manifold: Awaited<ReturnType<typeof getManifold>>['Manifold'],
+        solid: ReturnType<Awaited<ReturnType<typeof getManifold>>['Manifold']['cube']>,
+        extrusion: Extrusion,
+      ) => {
+        const { normal, distance } = extrusion;
+        if (distance === 0) {
+          return solid;
+        }
 
-      const bbox = solid.boundingBox();
-      const minX = bbox.min[0];
-      const minY = bbox.min[1];
-      const minZ = bbox.min[2];
-      const maxX = bbox.max[0];
-      const maxY = bbox.max[1];
-      const maxZ = bbox.max[2];
+        const absDist = Math.abs(distance);
+        const sign = distance > 0 ? 1 : -1;
 
-      const anx = Math.abs(normal.x);
-      const any = Math.abs(normal.y);
-      const anz = Math.abs(normal.z);
+        const bbox = solid.boundingBox();
+        const minX = bbox.min[0];
+        const minY = bbox.min[1];
+        const minZ = bbox.min[2];
+        const maxX = bbox.max[0];
+        const maxY = bbox.max[1];
+        const maxZ = bbox.max[2];
 
-      // Slab dimensions: full bounding box size on tangent axes, `absDist` on normal axis.
-      const slabW = anx > 0.5 ? absDist : maxX - minX;
-      const slabH = any > 0.5 ? absDist : maxY - minY;
-      const slabD = anz > 0.5 ? absDist : maxZ - minZ;
-      const extrudeBox = Manifold.cube([slabW, slabH, slabD], true);
+        const anx = Math.abs(normal.x);
+        const any = Math.abs(normal.y);
+        const anz = Math.abs(normal.z);
 
-      if (sign > 0) {
-        // Outward: position slab outside the face, union.
-        const cx = (minX + maxX) / 2 + normal.x * ((anx > 0.5 ? (maxX - minX) / 2 : 0) + absDist / 2);
-        const cy = (minY + maxY) / 2 + normal.y * ((any > 0.5 ? (maxY - minY) / 2 : 0) + absDist / 2);
-        const cz = (minZ + maxZ) / 2 + normal.z * ((anz > 0.5 ? (maxZ - minZ) / 2 : 0) + absDist / 2);
-        const translated = extrudeBox.translate([cx, cy, cz]);
-        const result = Manifold.union(solid, translated);
-        translated.delete();
-        extrudeBox.delete();
-        return result;
-      } else {
-        // Inward: position slab inside the face, subtract.
-        const cx = (minX + maxX) / 2 + normal.x * ((anx > 0.5 ? (maxX - minX) / 2 : 0) - absDist / 2);
-        const cy = (minY + maxY) / 2 + normal.y * ((any > 0.5 ? (maxY - minY) / 2 : 0) - absDist / 2);
-        const cz = (minZ + maxZ) / 2 + normal.z * ((anz > 0.5 ? (maxZ - minZ) / 2 : 0) - absDist / 2);
-        const translated = extrudeBox.translate([cx, cy, cz]);
-        const result = Manifold.difference(solid, translated);
-        translated.delete();
-        extrudeBox.delete();
-        return result;
-      }
-    },
-    [],
-  );
+        // Slab dimensions: full bounding box size on tangent axes, `absDist` on normal axis.
+        const slabW = anx > 0.5 ? absDist : maxX - minX;
+        const slabH = any > 0.5 ? absDist : maxY - minY;
+        const slabD = anz > 0.5 ? absDist : maxZ - minZ;
+        const extrudeBox = Manifold.cube([slabW, slabH, slabD], true);
 
-  const rebuildMesh = useCallback(
-    async (inProgressExtrusion?: Extrusion) => {
-      const manager = managerRef.current;
-      if (!manager) {
+        if (sign > 0) {
+          // Outward: position slab outside the face, union.
+          const cx = (minX + maxX) / 2 + normal.x * ((anx > 0.5 ? (maxX - minX) / 2 : 0) + absDist / 2);
+          const cy = (minY + maxY) / 2 + normal.y * ((any > 0.5 ? (maxY - minY) / 2 : 0) + absDist / 2);
+          const cz = (minZ + maxZ) / 2 + normal.z * ((anz > 0.5 ? (maxZ - minZ) / 2 : 0) + absDist / 2);
+          const translated = extrudeBox.translate([cx, cy, cz]);
+          const result = Manifold.union(solid, translated);
+          translated.delete();
+          extrudeBox.delete();
+          return result;
+        } else {
+          // Inward: position slab inside the face, subtract.
+          const cx = (minX + maxX) / 2 + normal.x * ((anx > 0.5 ? (maxX - minX) / 2 : 0) - absDist / 2);
+          const cy = (minY + maxY) / 2 + normal.y * ((any > 0.5 ? (maxY - minY) / 2 : 0) - absDist / 2);
+          const cz = (minZ + maxZ) / 2 + normal.z * ((anz > 0.5 ? (maxZ - minZ) / 2 : 0) - absDist / 2);
+          const translated = extrudeBox.translate([cx, cy, cz]);
+          const result = Manifold.difference(solid, translated);
+          translated.delete();
+          extrudeBox.delete();
+          return result;
+        }
+      },
+      [],
+    );
+
+    const rebuildMesh = useCallback(
+      async (inProgressExtrusion?: Extrusion) => {
+        const manager = managerRef.current;
+        if (!manager) {
+          return;
+        }
+
+        const wasm = await getManifold();
+        const { Manifold } = wasm;
+        const state = stateRef.current;
+
+        // Start with base cube.
+        let solid = Manifold.cube([2, 2, 2], true);
+
+        // Apply all committed extrusions.
+        for (const extrusion of state.extrusions) {
+          const next = applyExtrusion(Manifold, solid, extrusion);
+          if (next !== solid) {
+            solid.delete();
+            solid = next;
+          }
+        }
+
+        // Apply in-progress extrusion preview.
+        if (inProgressExtrusion && inProgressExtrusion.distance !== 0) {
+          const next = applyExtrusion(Manifold, solid, inProgressExtrusion);
+          if (next !== solid) {
+            solid.delete();
+            solid = next;
+          }
+        }
+
+        if (meshRef.current) {
+          meshRef.current.dispose();
+        }
+
+        meshRef.current = manifoldToBabylon(solid, {
+          scene: manager.scene,
+          name: 'solid',
+          color: CUBE_COLOR,
+        });
+
+        solid.delete();
+      },
+      [applyExtrusion],
+    );
+
+    // Initialize Babylon.js scene and Manifold, render initial cube.
+    useEffect(() => {
+      const canvas = canvasRef.current;
+      const container = containerRef.current;
+      if (!canvas || !container) {
         return;
       }
 
-      const wasm = await getManifold();
-      const { Manifold } = wasm;
-      const state = stateRef.current;
+      const manager = new SceneManager({ canvas });
+      managerRef.current = manager;
 
-      // Start with base cube.
-      let solid = Manifold.cube([2, 2, 2], true);
+      void rebuildMesh().then(() => setReady(true));
 
-      // Apply all committed extrusions.
-      for (const extrusion of state.extrusions) {
-        const next = applyExtrusion(Manifold, solid, extrusion);
-        if (next !== solid) {
-          solid.delete();
-          solid = next;
+      const resizeObserver = new ResizeObserver(() => manager.resize());
+      resizeObserver.observe(container);
+
+      // Update FPS counter every 500ms.
+      const fpsInterval = setInterval(() => {
+        if (fpsRef.current) {
+          fpsRef.current.textContent = `${manager.fps.toFixed(0)} fps`;
         }
+      }, 500);
+
+      return () => {
+        clearInterval(fpsInterval);
+        resizeObserver.disconnect();
+        manager.dispose();
+        managerRef.current = null;
+      };
+    }, [rebuildMesh]);
+
+    // Sync debug settings.
+    useEffect(() => {
+      if (managerRef.current) {
+        managerRef.current.showAxes = showAxes;
+      }
+    }, [showAxes, ready]);
+
+    // Set up pointer interaction for face picking and extrusion.
+    useEffect(() => {
+      const manager = managerRef.current;
+      if (!manager || !ready) {
+        return;
       }
 
-      // Apply in-progress extrusion preview.
-      if (inProgressExtrusion && inProgressExtrusion.distance !== 0) {
-        const next = applyExtrusion(Manifold, solid, inProgressExtrusion);
-        if (next !== solid) {
-          solid.delete();
-          solid = next;
-        }
-      }
+      const scene = manager.scene;
 
-      if (meshRef.current) {
-        meshRef.current.dispose();
-      }
+      const observer = scene.onPointerObservable.add((pointerInfo) => {
+        const state = stateRef.current;
 
-      meshRef.current = manifoldToBabylon(solid, {
-        scene: manager.scene,
-        name: 'solid',
-        color: CUBE_COLOR,
-      });
+        switch (pointerInfo.type) {
+          case PointerEventTypes.POINTERDOWN: {
+            const event = pointerInfo.event as PointerEvent;
+            const pickedMesh = pointerInfo.pickInfo?.pickedMesh;
+            const hitMainMesh = pickedMesh === meshRef.current;
+            const hitSelectionMesh = pickedMesh === selectionMeshRef.current;
 
-      solid.delete();
-    },
-    [applyExtrusion],
-  );
+            // Shift-click on selection overlay: start extruding the already-selected face.
+            if (event.shiftKey && hitSelectionMesh && state.selectedNormal) {
+              computeExtrudeScreenDir(state, state.selectedNormal, scene, manager.camera, canvasRef.current!);
+              selectionMeshRef.current?.dispose();
+              selectionMeshRef.current = null;
+              state.extruding = true;
+              state.extrudeStartX = event.clientX;
+              state.extrudeStartY = event.clientY;
+              state.extrudeDistance = 0;
+              manager.camera.detachControl();
+              break;
+            }
 
-  // Initialize Babylon.js scene and Manifold, render initial cube.
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) {
-      return;
-    }
+            if (!pointerInfo.pickInfo?.hit || !hitMainMesh) {
+              state.selectedFace = null;
+              state.selectedNormal = null;
+              selectionMeshRef.current?.dispose();
+              selectionMeshRef.current = null;
+              return;
+            }
 
-    const manager = new SceneManager({ canvas });
-    managerRef.current = manager;
+            const faceId = pointerInfo.pickInfo.faceId;
+            if (faceId === -1) {
+              return;
+            }
 
-    void rebuildMesh().then(() => setReady(true));
+            const mesh = meshRef.current!;
+            const positions = mesh.getVerticesData('position')!;
+            const indices = mesh.getIndices()! as number[];
+            const normal = getFaceNormal(faceId, positions, indices);
 
-    const resizeObserver = new ResizeObserver(() => manager.resize());
-    resizeObserver.observe(container);
+            state.selectedFace = faceId;
+            state.selectedNormal = normal;
 
-    // Update FPS counter every 500ms.
-    const fpsInterval = setInterval(() => {
-      if (fpsRef.current) {
-        fpsRef.current.textContent = `${manager.fps.toFixed(0)} fps`;
-      }
-    }, 500);
-
-    return () => {
-      clearInterval(fpsInterval);
-      resizeObserver.disconnect();
-      manager.dispose();
-      managerRef.current = null;
-    };
-  }, [rebuildMesh]);
-
-  // Set up pointer interaction for face picking and extrusion.
-  useEffect(() => {
-    const manager = managerRef.current;
-    if (!manager || !ready) {
-      return;
-    }
-
-    const scene = manager.scene;
-
-    const observer = scene.onPointerObservable.add((pointerInfo) => {
-      const state = stateRef.current;
-
-      switch (pointerInfo.type) {
-        case PointerEventTypes.POINTERDOWN: {
-          const event = pointerInfo.event as PointerEvent;
-          const pickedMesh = pointerInfo.pickInfo?.pickedMesh;
-          const hitMainMesh = pickedMesh === meshRef.current;
-          const hitSelectionMesh = pickedMesh === selectionMeshRef.current;
-
-          // Shift-click on selection overlay: start extruding the already-selected face.
-          if (event.shiftKey && hitSelectionMesh && state.selectedNormal) {
-            computeExtrudeScreenDir(state, state.selectedNormal, scene, manager.camera, canvasRef.current!);
+            // Build highlight overlay for the selected face.
             selectionMeshRef.current?.dispose();
-            selectionMeshRef.current = null;
-            state.extruding = true;
-            state.extrudeStartX = event.clientX;
-            state.extrudeStartY = event.clientY;
-            state.extrudeDistance = 0;
-            manager.camera.detachControl();
+            selectionMeshRef.current = buildFaceSelectionMesh(faceId, positions, indices, normal, scene);
+
+            // Start extrusion if shift is held.
+            if (event.shiftKey) {
+              computeExtrudeScreenDir(state, normal, scene, manager.camera, canvasRef.current!);
+              selectionMeshRef.current?.dispose();
+              selectionMeshRef.current = null;
+              state.extruding = true;
+              state.extrudeStartX = event.clientX;
+              state.extrudeStartY = event.clientY;
+              state.extrudeDistance = 0;
+              manager.camera.detachControl();
+            }
             break;
           }
 
-          if (!pointerInfo.pickInfo?.hit || !hitMainMesh) {
-            state.selectedFace = null;
-            state.selectedNormal = null;
-            selectionMeshRef.current?.dispose();
-            selectionMeshRef.current = null;
-            return;
-          }
-
-          const faceId = pointerInfo.pickInfo.faceId;
-          if (faceId === -1) {
-            return;
-          }
-
-          const mesh = meshRef.current!;
-          const positions = mesh.getVerticesData('position')!;
-          const indices = mesh.getIndices()! as number[];
-          const normal = getFaceNormal(faceId, positions, indices);
-
-          state.selectedFace = faceId;
-          state.selectedNormal = normal;
-
-          // Build highlight overlay for the selected face.
-          selectionMeshRef.current?.dispose();
-          selectionMeshRef.current = buildFaceSelectionMesh(faceId, positions, indices, normal, scene);
-
-          // Start extrusion if shift is held.
-          if (event.shiftKey) {
-            computeExtrudeScreenDir(state, normal, scene, manager.camera, canvasRef.current!);
-            selectionMeshRef.current?.dispose();
-            selectionMeshRef.current = null;
-            state.extruding = true;
-            state.extrudeStartX = event.clientX;
-            state.extrudeStartY = event.clientY;
-            state.extrudeDistance = 0;
-            manager.camera.detachControl();
-          }
-          break;
-        }
-
-        case PointerEventTypes.POINTERMOVE: {
-          if (!state.extruding) {
-            return;
-          }
-
-          const event = pointerInfo.event as PointerEvent;
-          // Project mouse delta onto the screen-space normal direction.
-          const dx = event.clientX - state.extrudeStartX;
-          const dy = event.clientY - state.extrudeStartY;
-          const projected = dx * state.extrudeScreenDirX + dy * state.extrudeScreenDirY;
-          state.extrudeDistance = projected * EXTRUDE_SENSITIVITY;
-
-          void rebuildMesh({ normal: state.selectedNormal!, distance: state.extrudeDistance });
-          break;
-        }
-
-        case PointerEventTypes.POINTERUP: {
-          if (state.extruding) {
-            // Commit the extrusion if distance != 0.
-            if (state.extrudeDistance !== 0 && state.selectedNormal) {
-              state.extrusions.push({
-                normal: { ...state.selectedNormal },
-                distance: state.extrudeDistance,
-              });
-              // No rebuild needed — the current mesh already shows the final state.
+          case PointerEventTypes.POINTERMOVE: {
+            if (!state.extruding) {
+              return;
             }
-            state.extruding = false;
-            state.extrudeDistance = 0;
-            // Clear selection after extrusion.
-            state.selectedFace = null;
-            state.selectedNormal = null;
-            selectionMeshRef.current?.dispose();
-            selectionMeshRef.current = null;
-            manager.camera.attachControl(canvasRef.current!, true);
+
+            const event = pointerInfo.event as PointerEvent;
+            // Project mouse delta onto the screen-space normal direction.
+            const dx = event.clientX - state.extrudeStartX;
+            const dy = event.clientY - state.extrudeStartY;
+            const projected = dx * state.extrudeScreenDirX + dy * state.extrudeScreenDirY;
+            state.extrudeDistance = projected * EXTRUDE_SENSITIVITY;
+
+            void rebuildMesh({ normal: state.selectedNormal!, distance: state.extrudeDistance });
+            break;
           }
-          break;
-        }
-      }
-    });
 
-    return () => {
-      scene.onPointerObservable.remove(observer);
-    };
-  }, [ready, rebuildMesh]);
-
-  return (
-    <div
-      {...composableProps(props, { classNames: 'relative bg-(--surface-bg)' })}
-      ref={(node) => {
-        (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-        if (typeof forwardedRef === 'function') {
-          forwardedRef(node);
-        } else if (forwardedRef) {
-          forwardedRef.current = node;
+          case PointerEventTypes.POINTERUP: {
+            if (state.extruding) {
+              // Commit the extrusion if distance != 0.
+              if (state.extrudeDistance !== 0 && state.selectedNormal) {
+                state.extrusions.push({
+                  normal: { ...state.selectedNormal },
+                  distance: state.extrudeDistance,
+                });
+                // No rebuild needed — the current mesh already shows the final state.
+              }
+              state.extruding = false;
+              state.extrudeDistance = 0;
+              // Clear selection after extrusion.
+              state.selectedFace = null;
+              state.selectedNormal = null;
+              selectionMeshRef.current?.dispose();
+              selectionMeshRef.current = null;
+              manager.camera.attachControl(canvasRef.current!, true);
+            }
+            break;
+          }
         }
-      }}
-    >
-      <canvas
-        className='absolute inset-0 w-full h-full block outline-none'
-        onContextMenu={(event) => event.preventDefault()}
-        ref={canvasRef}
-      />
-      <span className='absolute bottom-2 left-2 text-xs font-mono opacity-50 pointer-events-none' ref={fpsRef} />
-    </div>
-  );
-});
+      });
+
+      return () => {
+        scene.onPointerObservable.remove(observer);
+      };
+    }, [ready, rebuildMesh]);
+
+    return (
+      <div
+        {...composableProps(props, { classNames: 'relative bg-(--surface-bg)' })}
+        ref={(node) => {
+          (containerRef as RefObject<HTMLDivElement | null>).current = node;
+          if (typeof forwardedRef === 'function') {
+            forwardedRef(node);
+          } else if (forwardedRef) {
+            forwardedRef.current = node;
+          }
+        }}
+      >
+        <canvas
+          className='absolute inset-0 w-full h-full block outline-none'
+          onContextMenu={(event) => event.preventDefault()}
+          ref={canvasRef}
+        />
+
+        {showFps && (
+          <span className='absolute bottom-2 left-2 text-xs font-mono opacity-50 pointer-events-none' ref={fpsRef} />
+        )}
+      </div>
+    );
+  },
+);

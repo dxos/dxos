@@ -11,7 +11,7 @@ import { SpacetimeEditor } from '../../components';
 
 export type SpacetimeArticleProps = ObjectSurfaceProps<any>;
 
-const SpacetimeArticle = ({ role }: SpacetimeArticleProps) => {
+export const SpacetimeArticle = ({ role }: SpacetimeArticleProps) => {
   return (
     <Panel.Root>
       <Panel.Content asChild>
@@ -20,5 +20,3 @@ const SpacetimeArticle = ({ role }: SpacetimeArticleProps) => {
     </Panel.Root>
   );
 };
-
-export default SpacetimeArticle;

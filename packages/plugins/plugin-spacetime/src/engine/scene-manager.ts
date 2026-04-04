@@ -33,6 +33,7 @@ export class SceneManager {
   private readonly _engine: Engine;
   private readonly _scene: Scene;
   private readonly _camera: ArcRotateCamera;
+  private _axesViewer: AxesViewer | null = null;
 
   constructor({ canvas }: SceneManagerOptions) {
     this._engine = new Engine(canvas, true, {
@@ -59,14 +60,6 @@ export class SceneManager {
     // Bright ground color so downward-facing surfaces aren't black.
     light.groundColor = new Color3(0.4, 0.4, 0.4);
 
-    // Axes viewer (R=X, G=Y, B=Z).
-    new AxesViewer(this._scene, 0.5);
-
-    // FPS counter.
-    this._scene.onBeforeRenderObservable.add(() => {
-      this._engine.getFps();
-    });
-
     this._engine.runRenderLoop(() => {
       this._scene.render();
     });
@@ -82,6 +75,19 @@ export class SceneManager {
 
   get camera(): ArcRotateCamera {
     return this._camera;
+  }
+
+  set showAxes(show: boolean) {
+    if (show && !this._axesViewer) {
+      this._axesViewer = new AxesViewer(this._scene, 0.5);
+    } else if (!show && this._axesViewer) {
+      this._axesViewer.dispose();
+      this._axesViewer = null;
+    }
+  }
+
+  get showAxes(): boolean {
+    return this._axesViewer !== null;
   }
 
   get fps(): number {

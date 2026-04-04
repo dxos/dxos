@@ -7,10 +7,10 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SpacetimeEditor } from './SpacetimeEditor';
+import { SpacetimeEditor, type SpacetimeEditorProps } from './SpacetimeEditor';
 
-const DefaultStory = () => {
-  return <SpacetimeEditor className='w-full h-full' />;
+const DefaultStory = ({ showAxes, showFps }: SpacetimeEditorProps) => {
+  return <SpacetimeEditor classNames='w-full h-full' showAxes={showAxes} showFps={showFps} />;
 };
 
 const meta = {
@@ -20,6 +20,10 @@ const meta = {
   parameters: {
     layout: 'fullscreen',
   },
+  argTypes: {
+    showAxes: { control: 'boolean' },
+    showFps: { control: 'boolean' },
+  },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -27,5 +31,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {},
+  args: {
+    showAxes: true,
+    showFps: true,
+  },
 };
