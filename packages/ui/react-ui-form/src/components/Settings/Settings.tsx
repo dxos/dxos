@@ -7,9 +7,9 @@ import React, { type PropsWithChildren } from 'react';
 import {
   Button,
   type ButtonProps,
+  Column,
   Input,
   type Label,
-  ScrollArea,
   type ThemedClassName,
   toLocalizedString,
   useTranslation,
@@ -40,17 +40,10 @@ const styles = {
 //
 
 const SettingsRoot = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { className, ...composedProps } = composableProps(props);
   return (
-    <ScrollArea.Root
-      {...composedProps}
-      className={mx('dx-document', className)}
-      orientation='vertical'
-      centered
-      ref={forwardedRef}
-    >
-      <ScrollArea.Viewport classNames='p-trim-md'>{children}</ScrollArea.Viewport>
-    </ScrollArea.Root>
+    <Column.Root gutter='lg' {...composableProps(props, { classNames: 'dx-container' })} ref={forwardedRef}>
+      <Column.Viewport>{children}</Column.Viewport>
+    </Column.Root>
   );
 });
 
@@ -155,7 +148,7 @@ const SettingsContainer = ({ classNames, children }: ThemedClassName<PropsWithCh
     <div
       role='none'
       className={mx([
-        'dx-document flex flex-col gap-3',
+        'flex flex-col gap-3',
         '*:first:mt-0! *:last:mb-0! px-trim-md py-trim-md',
         'border border-separator rounded-md',
         classNames,
