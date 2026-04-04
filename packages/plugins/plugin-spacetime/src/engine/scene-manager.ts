@@ -2,10 +2,34 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ArcRotateCamera, Engine, HemisphericLight, Scene, Vector3 } from '@babylonjs/core';
+import { ArcRotateCamera, Color4, Engine, HemisphericLight, Scene, Vector3 } from '@babylonjs/core';
 
 export type SceneManagerOptions = {
   canvas: HTMLCanvasElement;
+};
+
+/**
+ * Resolves a CSS custom property to an rgba Color4.
+ */
+const resolveCssColor = (canvas: HTMLCanvasElement, property: string): Color4 => {
+  const raw = getComputedStyle(canvas).getPropertyValue(property).trim();
+  if (!raw) {
+    return new Color4(0.97, 0.97, 0.97, 1);
+  }
+
+  // Parse oklch(...) or other color formats via a temporary element.
+  const temp = document.createElement('div');
+  temp.style.color = raw;
+  document.body.appendChild(temp);
+  const computed = getComputedStyle(temp).color;
+  document.body.removeChild(temp);
+
+  const match = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (match) {
+    return new Color4(Number(match[1]) / 255, Number(match[2]) / 255, Number(match[3]) / 255, 1);
+  }
+
+  return new Color4(0.97, 0.97, 0.97, 1);
 };
 
 /**
@@ -17,8 +41,13 @@ export class SceneManager {
   private readonly _camera: ArcRotateCamera;
 
   constructor({ canvas }: SceneManagerOptions) {
-    this._engine = new Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true });
+    this._engine = new Engine(canvas, true, {
+      preserveDrawingBuffer: true,
+      stencil: true,
+      adaptToDeviceRatio: true,
+    });
     this._scene = new Scene(this._engine);
+    this._scene.clearColor = resolveCssColor(canvas, '--surface-bg');
 
     this._camera = new ArcRotateCamera('camera', -Math.PI / 4, Math.PI / 3, 10, Vector3.Zero(), this._scene);
     this._camera.attachControl(canvas, true);

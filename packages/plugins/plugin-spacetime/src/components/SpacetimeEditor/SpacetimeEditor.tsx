@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Color3, type Mesh, PointerEventTypes, Vector3, HighlightLayer } from '@babylonjs/core';
+import { Color3, Mesh, PointerEventTypes, Vector3, StandardMaterial, VertexData } from '@babylonjs/core';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { SceneManager } from '../../engine';
@@ -35,14 +35,14 @@ const INITIAL_STATE: EditorState = {
 };
 
 const CUBE_COLOR = new Color3(0.4, 0.6, 0.9);
-const HIGHLIGHT_COLOR = new Color3(1.0, 0.8, 0.0);
+const SELECTED_FACE_COLOR = new Color3(1.0, 0.8, 0.0);
 const EXTRUDE_SENSITIVITY = 0.02;
 
 export const SpacetimeEditor = ({ className }: SpacetimeEditorProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
   const meshRef = useRef<Mesh | null>(null);
-  const highlightRef = useRef<HighlightLayer | null>(null);
+  const selectionMeshRef = useRef<Mesh | null>(null);
   const stateRef = useRef<EditorState>({ ...INITIAL_STATE });
   const [ready, setReady] = useState(false);
 
@@ -90,12 +90,6 @@ export const SpacetimeEditor = ({ className }: SpacetimeEditorProps) => {
         color: CUBE_COLOR,
       });
 
-      // Re-apply highlight if a face is selected.
-      if (highlightRef.current && stateRef.current.selectedFace !== null) {
-        highlightRef.current.removeAllMeshes();
-        highlightRef.current.addMesh(meshRef.current, HIGHLIGHT_COLOR);
-      }
-
       solid.delete();
     },
     [],
@@ -110,8 +104,6 @@ export const SpacetimeEditor = ({ className }: SpacetimeEditorProps) => {
 
     const manager = new SceneManager({ canvas });
     managerRef.current = manager;
-
-    highlightRef.current = new HighlightLayer('highlight', manager.scene);
 
     // Build initial cube.
     void rebuildMesh(0, null).then(() => setReady(true));
@@ -145,7 +137,8 @@ export const SpacetimeEditor = ({ className }: SpacetimeEditorProps) => {
             // Click on empty space — deselect.
             state.selectedFace = null;
             state.selectedNormal = null;
-            highlightRef.current?.removeAllMeshes();
+            selectionMeshRef.current?.dispose();
+            selectionMeshRef.current = null;
             return;
           }
 
@@ -162,8 +155,35 @@ export const SpacetimeEditor = ({ className }: SpacetimeEditorProps) => {
           state.selectedFace = faceId;
           state.selectedNormal = normal;
 
-          highlightRef.current?.removeAllMeshes();
-          highlightRef.current?.addMesh(mesh, HIGHLIGHT_COLOR);
+          // Build a highlight overlay for the selected face (single triangle).
+          selectionMeshRef.current?.dispose();
+          const selMesh = new Mesh('face-selection', scene);
+          const selVd = new VertexData();
+          const i0 = indices[faceId * 3];
+          const i1 = indices[faceId * 3 + 1];
+          const i2 = indices[faceId * 3 + 2];
+          selVd.positions = [
+            positions[i0 * 3],
+            positions[i0 * 3 + 1],
+            positions[i0 * 3 + 2],
+            positions[i1 * 3],
+            positions[i1 * 3 + 1],
+            positions[i1 * 3 + 2],
+            positions[i2 * 3],
+            positions[i2 * 3 + 1],
+            positions[i2 * 3 + 2],
+          ];
+          selVd.indices = [0, 1, 2];
+          selVd.normals = [normal.x, normal.y, normal.z, normal.x, normal.y, normal.z, normal.x, normal.y, normal.z];
+          selVd.applyToMesh(selMesh);
+          const selMat = new StandardMaterial('face-selection-mat', scene);
+          selMat.diffuseColor = SELECTED_FACE_COLOR;
+          selMat.specularColor = Color3.Black();
+          selMat.backFaceCulling = false;
+          selMesh.material = selMat;
+          // Offset slightly to avoid z-fighting.
+          selMesh.position = new Vector3(normal.x * 0.001, normal.y * 0.001, normal.z * 0.001);
+          selectionMeshRef.current = selMesh;
 
           // Start extrusion if shift is held.
           const event = pointerInfo.event as PointerEvent;
