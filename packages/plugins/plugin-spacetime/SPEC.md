@@ -79,6 +79,27 @@ Keep this section up-to-date with periodical restructuring as the plugin becomes
 
 Keep this section up-to-date.
 
+### WASM Bundling (manifold-3d)
+
+The `manifold-3d` package ships a `manifold.wasm` binary (~1MB) that must be loadable at runtime. The default loading mechanism uses `new URL("manifold.wasm", import.meta.url)` which breaks when Vite/Storybook pre-bundles the module (the `.wasm` file is not copied to the dep cache).
+
+**Current solution:**
+1. `manifold-3d` is excluded from Vite's `optimizeDeps` in `tools/storybook-react/.storybook/main.ts` so Vite serves it directly from `node_modules`.
+2. `engine/manifold-context.ts` imports the WASM URL via `import wasmUrl from 'manifold-3d/manifold.wasm?url'` (Vite `?url` suffix) and passes it to the module init via `locateFile`.
+3. `wasm.setup()` must be called after init to register the high-level API (`Manifold.cube`, `Manifold.union`, etc.).
+
+**For Composer (production app):**
+- The `vite-plugin-wasm` plugin is already configured in the Vite pipeline.
+- `manifold-3d` must be excluded from `optimizeDeps.exclude` in the Composer Vite config (same as storybook).
+- The `?url` import ensures Vite copies the `.wasm` file to the build output as a static asset.
+- No CDN or external fetch is needed — the WASM is self-contained in the bundle.
+
+### Manifold ↔ Babylon.js Integration
+
+- Manifold uses CCW triangle winding; Babylon.js uses CW for front faces. The mesh converter swaps vertex order.
+- Flat shading is achieved by unsharing vertices (3 unique vertices per triangle with face normal).
+- Scene background reads from `document.body` computed `backgroundColor` to respect the DXOS theme (light/dark mode).
+
 ## Issues
 
 Keep this section up-to-date.
