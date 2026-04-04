@@ -166,22 +166,10 @@ const MatrixViewport = composable<HTMLDivElement>(({ ...props }, forwardedRef) =
     [onCurrentChange],
   );
 
-  const handleFocusOut = useCallback(
-    (event: React.FocusEvent) => {
-      // Clear current when focus leaves the viewport entirely.
-      const related = event.relatedTarget as HTMLElement | null;
-      const viewport = event.currentTarget as HTMLElement;
-      if (!related || !viewport.contains(related)) {
-        onCurrentChange?.(undefined);
-      }
-    },
-    [onCurrentChange],
-  );
-
   return (
     <ScrollArea.Root orientation='horizontal' padding snap {...composableProps(props)} ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef}>
-        <div role='none' onFocusCapture={handleFocusIn} onBlurCapture={handleFocusOut}>
+        <div role='none' onFocusCapture={handleFocusIn}>
           <Mosaic.Stack
             orientation='horizontal'
             classNames='snap-x snap-mandatory gap-2'
