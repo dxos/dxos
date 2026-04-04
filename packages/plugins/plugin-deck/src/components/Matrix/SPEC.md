@@ -57,7 +57,57 @@ Ask clarifying questions before you begin.
 
 ### Phase 4 (Attention)
 
-- [ ] Concisely document the attention system (`react-ui-attention`) and how it works with the deck.
+- [x] Concisely document the attention system (`react-ui-attention`) and how it works with the deck.
+
+## Attention System
+
+The attention system (`react-ui-attention`) tracks which plank currently has user focus.
+It is separate from DOM focus — attention is a higher-level concept derived from focus events.
+
+### Architecture
+
+- **`AttentionManager`** — core state: maintains an array of currently attended IDs (qualified, `/`-separated paths).
+- **`RootAttentionProvider`** — listens for `focusCapture` events at the app root. Walks up from the focused element collecting `data-attendable-id` attributes. Calls `AttentionManager.update()` with the collected IDs.
+- **`useAttentionAttributes(id)`** — returns `{ 'data-attendable-id': id }` for a DOM element. Makes the element participate in attention tracking.
+- **`useAttention(id)`** — subscribes to attention state for a specific ID. Returns `{ hasAttention, isAncestor, isRelated }`.
+
+### How attention changes
+
+1. User clicks or tabs into a plank → DOM focus event fires.
+2. `RootAttentionProvider` captures the focus event at the root.
+3. Walks up from `event.target`, collecting all `data-attendable-id` values.
+4. Calls `attention.update(ids)` — the first ID is the primary attended element; ancestors get `isAncestor: true`.
+5. All subscribers (e.g., `useAttention`) are notified via atoms.
+
+### Hierarchy and related items
+
+IDs are `/`-separated paths (e.g., `root/space/document`). When `root/space/document` is attended:
+- `root/space/document` → `{ hasAttention: true }`
+- `root/space` → `{ isAncestor: true }`
+- `root` → `{ isAncestor: true }`
+
+IDs sharing the same last segment are marked `isRelated: true` (e.g., the same object shown in two places).
+IDs with a `~` prefix on the last segment (e.g., `root/obj/~settings`) mark the parent as both ancestor and related.
+
+### Integration with the Deck
+
+- **Plank** uses `useAttentionAttributes(id)` on the root element, making each plank attendable.
+  - `isAttendable` is true for `solo`, `solo-primary`, `solo-companion`, and `deck` parts.
+  - The `dx-attention-surface` CSS class provides visual feedback.
+- **DeckMain** ensures attention is initialized:
+  - On first render, focuses the first plank's button if nothing is attended.
+  - On mobile breakpoint: reads the currently attended ID to determine which plank to show in solo mode.
+- **Keyboard** — `plugin-attention` syncs `Keyboard.singleton.setCurrentContext(id)` with the attended ID, so keyboard shortcuts apply to the attended plank.
+
+### Attention vs Focus vs Matrix.current
+
+| Concept | Scope | Mechanism |
+|---------|-------|-----------|
+| DOM focus | Browser | `tabIndex`, `focus()`, focus/blur events |
+| Attention | App-wide | `data-attendable-id` + `RootAttentionProvider` capture |
+| Matrix.current | Matrix only | `focusin` on viewport → resolve `data-mosaic-tile-id` |
+
+Currently, Matrix.current and the attention system are independent. For the Matrix to participate in the attention system, tiles would need `data-attendable-id` attributes and the `RootAttentionProvider` would track them automatically via DOM focus. The `onCurrentChange` callback on Matrix.Root could then be driven by attention rather than raw focus events.
 
 ## Design
 
