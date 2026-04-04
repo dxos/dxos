@@ -729,6 +729,7 @@ patchedDependencies:
 peerDependencyRules:
   allowedVersions:
     dfx>@effect/platform: '>=0.93.0'
+    manifold-3d>esbuild-wasm: '*'
   ignoreMissing:
     - '@cloudflare/ai-chat'
     - '@cloudflare/codemode'
