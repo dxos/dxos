@@ -2,13 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  ArcRotateCamera,
-  Engine,
-  HemisphericLight,
-  Scene,
-  Vector3,
-} from '@babylonjs/core';
+import { ArcRotateCamera, Engine, HemisphericLight, Scene, Vector3 } from '@babylonjs/core';
 
 export type SceneManagerOptions = {
   canvas: HTMLCanvasElement;

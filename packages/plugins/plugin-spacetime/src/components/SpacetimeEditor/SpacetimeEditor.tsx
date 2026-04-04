@@ -2,13 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  Color3,
-  type Mesh,
-  PointerEventTypes,
-  Vector3,
-  HighlightLayer,
-} from '@babylonjs/core';
+import { Color3, type Mesh, PointerEventTypes, Vector3, HighlightLayer } from '@babylonjs/core';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { SceneManager } from '../../engine';
@@ -52,58 +46,60 @@ export const SpacetimeEditor = ({ className }: SpacetimeEditorProps) => {
   const stateRef = useRef<EditorState>({ ...INITIAL_STATE });
   const [ready, setReady] = useState(false);
 
-  const rebuildMesh = useCallback(async (extrudeDistance: number, faceNormal: { x: number; y: number; z: number } | null) => {
-    const manager = managerRef.current;
-    if (!manager) {
-      return;
-    }
+  const rebuildMesh = useCallback(
+    async (extrudeDistance: number, faceNormal: { x: number; y: number; z: number } | null) => {
+      const manager = managerRef.current;
+      if (!manager) {
+        return;
+      }
 
-    const wasm = await getManifold();
-    const { Manifold } = wasm;
+      const wasm = await getManifold();
+      const { Manifold } = wasm;
 
-    // Start with a unit cube centered at origin.
-    let solid = Manifold.cube([2, 2, 2], true);
+      // Start with a unit cube centered at origin.
+      let solid = Manifold.cube([2, 2, 2], true);
 
-    // If extruding, add a box along the face normal.
-    if (faceNormal && extrudeDistance > 0) {
-      const normal = new Vector3(faceNormal.x, faceNormal.y, faceNormal.z);
-      const dist = extrudeDistance;
+      // If extruding, add a box along the face normal.
+      if (faceNormal && extrudeDistance > 0) {
+        const normal = new Vector3(faceNormal.x, faceNormal.y, faceNormal.z);
+        const dist = extrudeDistance;
 
-      // Create extrusion box: thin slab along the normal direction.
-      const extrudeBox = Manifold.cube([
-        normal.x !== 0 ? dist : 2,
-        normal.y !== 0 ? dist : 2,
-        normal.z !== 0 ? dist : 2,
-      ], true);
+        // Create extrusion box: thin slab along the normal direction.
+        const extrudeBox = Manifold.cube(
+          [normal.x !== 0 ? dist : 2, normal.y !== 0 ? dist : 2, normal.z !== 0 ? dist : 2],
+          true,
+        );
 
-      // Position the extrusion box on the face.
-      const offset = normal.scale(1 + dist / 2);
-      const translated = extrudeBox.translate([offset.x, offset.y, offset.z]);
+        // Position the extrusion box on the face.
+        const offset = normal.scale(1 + dist / 2);
+        const translated = extrudeBox.translate([offset.x, offset.y, offset.z]);
 
-      solid = Manifold.union(solid, translated);
-      translated.delete();
-      extrudeBox.delete();
-    }
+        solid = Manifold.union(solid, translated);
+        translated.delete();
+        extrudeBox.delete();
+      }
 
-    // Remove old mesh.
-    if (meshRef.current) {
-      meshRef.current.dispose();
-    }
+      // Remove old mesh.
+      if (meshRef.current) {
+        meshRef.current.dispose();
+      }
 
-    meshRef.current = manifoldToBabylon(solid, {
-      scene: manager.scene,
-      name: 'solid',
-      color: CUBE_COLOR,
-    });
+      meshRef.current = manifoldToBabylon(solid, {
+        scene: manager.scene,
+        name: 'solid',
+        color: CUBE_COLOR,
+      });
 
-    // Re-apply highlight if a face is selected.
-    if (highlightRef.current && stateRef.current.selectedFace !== null) {
-      highlightRef.current.removeAllMeshes();
-      highlightRef.current.addMesh(meshRef.current, HIGHLIGHT_COLOR);
-    }
+      // Re-apply highlight if a face is selected.
+      if (highlightRef.current && stateRef.current.selectedFace !== null) {
+        highlightRef.current.removeAllMeshes();
+        highlightRef.current.addMesh(meshRef.current, HIGHLIGHT_COLOR);
+      }
 
-    solid.delete();
-  }, []);
+      solid.delete();
+    },
+    [],
+  );
 
   // Initialize Babylon.js scene and Manifold, render initial cube.
   useEffect(() => {
