@@ -11,7 +11,7 @@ import { type Graph, type GraphModel, SelectionModel } from '@dxos/graph';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { JsonFilter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Json, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withRegistry } from '@dxos/storybook-utils';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
@@ -320,7 +320,12 @@ const Debug = ({
         <IconButton onClick={onDelete} label='Delete' icon='ph--x--regular' iconOnly />
         <IconButton onClick={onPing} label='Delete' icon='ph--crosshair-simple--regular' iconOnly />
       </Toolbar.Root>
-      <JsonFilter data={data} classNames='text-sm' />
+      <Json.Root data={data}>
+        <Json.Content>
+          <Json.Filter />
+          <Json.Data classNames='text-sm' />
+        </Json.Content>
+      </Json.Root>
     </div>
   );
 };

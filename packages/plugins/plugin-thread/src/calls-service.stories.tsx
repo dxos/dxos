@@ -166,7 +166,7 @@ const DefaultStory = ({ source }: DefaultStoryProps) => {
           Re-pull video
         </Button>
       </div>
-      <Json data={metrics} />
+      <Json.Data data={metrics} />
     </div>
   );
 };
@@ -208,7 +208,7 @@ export const InaudibleAudioStreamTrack = {
 
     return (
       <div className='flex flex-col gap-4 items-center'>
-        <Json data={metrics} />
+        <Json.Data data={metrics} />
         <Button onClick={rePullTrack}>Re-pull audio</Button>
       </div>
     );
@@ -221,7 +221,7 @@ export const BlackVideoStreamTrack = {
     const { rePullTrack, metrics } = pushAndPullTrack(videoStreamTrack);
     return (
       <div className='flex flex-col gap-4 items-center'>
-        <Json data={metrics} />
+        <Json.Data data={metrics} />
         <Button onClick={rePullTrack}>Re-pull audio</Button>
       </div>
     );

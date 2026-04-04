@@ -449,7 +449,6 @@ catalog:
   koffi: ^2.8.0
   leaflet: ^1.9.4
   leva: ^0.10.1
-  manifold-3d: ^3.0.0
   level: ^8.0.1
   level-transcoder: ^1.0.1
   lib0: ^0.2.65
@@ -469,6 +468,7 @@ catalog:
   luxon: ^3.4.4
   madge: 8.0.0
   main-thread-scheduling: ^14.1.1
+  manifold-3d: ^3.0.0
   marked: ^12.0.2
   mathjs: ^14.2.1
   md5-hex: 5.0.0

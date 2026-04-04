@@ -12,7 +12,7 @@ import { Operation } from '@dxos/operation';
 import { type CreateObject } from '@dxos/plugin-space/types';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 
-import { ReactSurface } from './capabilities';
+import { ReactSurface, SpacetimeSettings } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
 import { Spacetime } from './types';
@@ -38,6 +38,7 @@ export const SpacetimePlugin = Plugin.define(meta).pipe(
     },
   }),
   AppPlugin.addSchemaModule({ schema: [Spacetime.Scene] }),
+  AppPlugin.addSettingsModule({ activate: SpacetimeSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,

@@ -74,7 +74,7 @@ const DefaultStory = (props: TypescriptEditorProps) => {
       <Panel.Content>
         <div role='none' className='grid grid-rows-[1fr_min-content] h-full overflow-hidden text-sm'>
           <TypescriptEditor {...props} initialValue={object.content} extensions={extensions} />
-          <Json data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
+          <Json.Data data={result} classNames='shrink-0 p-2 border-y border-subdued-separator' />
         </div>
       </Panel.Content>
     </Panel.Root>

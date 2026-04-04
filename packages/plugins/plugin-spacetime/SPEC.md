@@ -59,23 +59,23 @@ Keep this section up-to-date with periodical restructuring as the plugin becomes
   - [x] The user should be able to rotate the scene.
   - [x] The user should be able to click on a surface to select it.
   - [x] The user should be able to extrude the selected surface by holding shift and moving the mouse.
+- [ ] Create ECHO types for: `Scene.Scene`, `Model.Object`, and `Settings.Settings` (in `./types`);
+  - [ ] SpacetimeArticle should be bound to a `Scene.Scene` object; when creating a Scene from composer it should create a default cube.
+  - [ ] `Scene.Scene` should contain a map of `Model.Object` objects.
+- [ ] Create a Settings component like other plugins.
+- [ ] Add the plugin to composer.
 
 ### Phase 2
 
-- [ ] Create ECHO types for: `Scene.Scene` and `Model.Object`;
-      SpacetimeArticle should be bound to a `Scene.Scene` object; when creating a Scene from composer it should create a default cube.
-- [ ] Persist geometry state to ECHO (serialize/deserialize Manifold mesh data).
-- [ ] Multi-operation history: support undo/redo of extrusions and boolean ops.
-- [ ] Face selection improvements: highlight individual face (not whole mesh), multi-face select.
+- [ ] Implement 3d grid with snap and minimum size.
 - [ ] Boolean operations toolbar: union, difference, intersection between selected solids.
-
-### Phase 3
-
+- [ ] Multi-operation history: support undo/redo of extrusions and boolean ops.
 - [ ] Additional solid primitives: sphere, cylinder, torus.
 - [ ] Transform gizmos: translate, rotate, scale selected solids.
 - [ ] Material/color picker per solid or per face.
 - [ ] Export: OBJ/STL/glTF mesh export from Manifold geometry.
 - [ ] Real-time collaboration: sync scene state across peers via ECHO.
+- [ ] Face selection improvements: highlight individual face (not whole mesh), multi-face select.
 
 ## Design Notes
 

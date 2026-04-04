@@ -23,6 +23,9 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Spacetime',
+        'settings.title': 'Spacetime settings',
+        'settings-show-axes.label': 'Show axes',
+        'settings-show-fps.label': 'Show FPS',
       },
     },
   },

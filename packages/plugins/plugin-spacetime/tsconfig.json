@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -25,6 +28,9 @@
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/operation"
@@ -39,10 +45,10 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../../ui/ui-theme"
+      "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../../ui/ui-types"
+      "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-space"

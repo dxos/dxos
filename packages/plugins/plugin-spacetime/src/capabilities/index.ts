@@ -3,3 +3,4 @@
 //
 
 export * from './react-surface';
+export * from './settings';
