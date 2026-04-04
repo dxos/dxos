@@ -34,7 +34,7 @@
 | plugin-files         | FilesSettings         | yes                    | yes       | yes      |
 | plugin-markdown      | MarkdownSettings      | yes                    | yes       | yes      |
 | plugin-meeting       | MeetingSettings       | yes                    | yes       | yes      |
-| plugin-observability | ObservabilitySettings | yes                    | yes       | n/a      |
+| plugin-observability | ObservabilitySettings | yes                    | yes       | yes      |
 | plugin-presenter     | PresenterSettings     | yes                    | yes       | yes      |
 | plugin-script        | ScriptPluginSettings  | yes                    | yes       | yes      |
 | plugin-sketch        | SketchSettings        | yes                    | yes       | yes      |

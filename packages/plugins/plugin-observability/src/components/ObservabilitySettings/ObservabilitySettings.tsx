@@ -11,11 +11,10 @@ import { Settings } from '@dxos/react-ui-form';
 import { meta } from '../../meta';
 import { type Settings as ObservabilitySettingsNs } from '../../types';
 
-export type ObservabilitySettingsComponentProps = SettingsSurfaceProps<ObservabilitySettingsNs.Settings> & {
-  onToggle?: (state: boolean) => void;
-};
-
-export const ObservabilitySettings = ({ settings, onToggle }: ObservabilitySettingsComponentProps) => {
+export const ObservabilitySettings = ({
+  settings,
+  onSettingsChange,
+}: SettingsSurfaceProps<ObservabilitySettingsNs.Settings>) => {
   const { t } = useTranslation(meta.id);
 
   return (
@@ -26,7 +25,11 @@ export const ObservabilitySettings = ({ settings, onToggle }: ObservabilitySetti
         </Message.Root>
         <Settings.Group>
           <Settings.ItemInput title={t('observability-enabled.label')}>
-            <Input.Switch checked={settings.enabled} onCheckedChange={(checked) => onToggle?.(!!checked)} />
+            <Input.Switch
+              disabled={!onSettingsChange}
+              checked={settings.enabled}
+              onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, enabled: !!checked }))}
+            />
           </Settings.ItemInput>
         </Settings.Group>
       </Settings.Section>

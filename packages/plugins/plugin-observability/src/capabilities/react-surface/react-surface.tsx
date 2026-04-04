@@ -24,15 +24,13 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+          const { settings } = useSettingsState<Settings.Settings>(subject.atom);
           const { invokePromise } = useOperationInvoker();
-          return (
-            <ObservabilitySettings
-              settings={settings}
-              onSettingsChange={updateSettings}
-              onToggle={(state: boolean) => invokePromise(ObservabilityOperation.Toggle, { state })}
-            />
-          );
+          const handleSettingsChange = (cb: (current: Settings.Settings) => Settings.Settings) => {
+            const next = cb(settings);
+            void invokePromise(ObservabilityOperation.Toggle, { state: next.enabled });
+          };
+          return <ObservabilitySettings settings={settings} onSettingsChange={handleSettingsChange} />;
         },
       }),
       Surface.create({
