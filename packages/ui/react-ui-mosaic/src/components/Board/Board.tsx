@@ -163,7 +163,7 @@ export const BoardDebug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNa
   const { containers, dragging } = useMosaic(BOARD_DEBUG_NAME);
   const counter = useRef(0);
   return (
-    <Json
+    <Json.Data
       data={{ containers, dragging, count: counter.current++ }}
       classNames={mx('text-xs', classNames)}
       ref={forwardedRef}

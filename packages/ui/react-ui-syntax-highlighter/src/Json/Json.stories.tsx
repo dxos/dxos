@@ -55,42 +55,42 @@ const createData = ({ depth = 2, children = 3 } = {}): any => {
 
 const meta = {
   title: 'ui/react-ui-syntax-highlighter/Json',
-  component: Json,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
-} satisfies Meta<typeof Json>;
+} satisfies Meta;
 
 export default meta;
 
-type Story = StoryObj<typeof Json>;
+type Story = StoryObj<typeof meta>;
 
 const data = createData();
 
+/** Standalone Json.Data — simplest usage. */
 export const Default: Story = {
-  args: {
-    classNames: 'text-sm',
-    data,
-  },
+  render: () => <Json.Data classNames='text-sm' data={data} />,
 };
 
+/** Composed with filter. */
 export const Filter: Story = {
-  args: {
-    classNames: 'text-sm',
-    filter: true,
-    data,
-  },
+  render: () => (
+    <Json.Root data={data}>
+      <Json.Content>
+        <Json.Filter />
+        <Json.Data />
+      </Json.Content>
+    </Json.Root>
+  ),
 };
 
+/** Large dataset with replacer. */
 export const Large: Story = {
-  args: {
-    classNames: 'text-sm',
-    filter: true,
-    data: createData({ depth: 5 }),
-    replacer: {
-      maxDepth: 3,
-      maxArrayLen: 10,
-      maxStringLen: 10,
-    },
-  },
+  render: () => (
+    <Json.Root data={createData({ depth: 5 })} replacer={{ maxDepth: 3, maxArrayLen: 10, maxStringLen: 10 }}>
+      <Json.Content>
+        <Json.Filter />
+        <Json.Data />
+      </Json.Content>
+    </Json.Root>
+  ),
 };
 
 const cycle: any = {
@@ -100,7 +100,7 @@ const cycle: any = {
 
 cycle.b.push(cycle);
 
-// NOTE: Storybook args cannot be circular.
+/** Circular reference handling. */
 export const Cycle: Story = {
-  render: () => <Json data={cycle} />,
+  render: () => <Json.Data data={cycle} />,
 };

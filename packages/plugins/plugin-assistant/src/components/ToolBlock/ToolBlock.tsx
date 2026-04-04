@@ -128,7 +128,7 @@ export const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
       </TogglePanel.Header>
       <TogglePanel.Content classNames='grid grid-cols-[32px_1fr]'>
         <NumericTabs ref={tabsRef} classNames='p-1' length={items.length} selected={selected} onSelect={handleSelect} />
-        <Json
+        <Json.Data
           data={items[selected]?.content}
           classNames='p-1 text-xs bg-transparent'
           replacer={{

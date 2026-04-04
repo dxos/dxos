@@ -46,7 +46,7 @@ const DebugSpaceObjectsPanelMain = ({ database }: { database: Database.Database 
                 <ObjectsTree db={database} onSelect={(entity) => setSelectedId(entity.id)} />
               </ScrollArea.Viewport>
             </ScrollArea.Root>
-            {selectedObject && <Json classNames='p-1' data={selectedObject} />}
+            {selectedObject && <Json.Data classNames='p-1' data={selectedObject} />}
           </Grid>
         </Panel.Content>
       </Panel.Root>
