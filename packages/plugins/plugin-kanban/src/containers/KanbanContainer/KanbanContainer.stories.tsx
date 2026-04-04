@@ -23,7 +23,7 @@ import { faker } from '@dxos/random';
 import { Filter, type Space, useQuery, useSchema, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { ViewEditor } from '@dxos/react-ui-form';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { ViewModel, getTypenameFromQuery } from '@dxos/schema';
 // TODO(wittjosiah): Replace with echo/testing.
 import { Organization, Person } from '@dxos/types';
@@ -79,7 +79,7 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
 
 /**
  * Renders the first Kanban in the space via Surface (resolves to KanbanContainer),
- * with a sidebar containing ViewEditor and JsonFilter.
+ * with a sidebar containing ViewEditor and Json filter.
  */
 const DefaultComponent = () => {
   const registry = useContext(RegistryContext);
@@ -130,7 +130,12 @@ const DefaultComponent = () => {
           onQueryChanged={handleUpdateQuery}
           onDelete={schema && Type.isMutable(schema) ? handleDeleteField : undefined}
         />
-        <JsonFilter data={{ view: kanban.view.target, schema }} classNames='text-xs' />
+        <Json.Root data={{ view: kanban.view.target, schema }}>
+          <Json.Content>
+            <Json.Filter />
+            <Json.Data classNames='text-xs' />
+          </Json.Content>
+        </Json.Root>
       </div>
     </div>
   );

@@ -1383,6 +1383,9 @@ catalogs:
     oxc-resolver:
       specifier: ^11.6.0
       version: 11.9.0
+    papaparse:
+      specifier: ^5.5.3
+      version: 5.5.3
     parjs:
       specifier: ^1.3.9
       version: 1.3.9
@@ -1807,7 +1810,7 @@ catalogs:
       specifier: ^4.37.0
       version: 4.37.1
     yaml:
-      specifier: ^2.7.0
+      specifier: ^2.8.2
       version: 2.8.2
     yargs:
       specifier: ~16.2.0
@@ -5258,9 +5261,6 @@ importers:
       iso-did:
         specifier: 'catalog:'
         version: 1.6.0
-      jsonata:
-        specifier: 'catalog:'
-        version: 2.1.0
     devDependencies:
       '@automerge/automerge':
         specifier: 3.2.3
@@ -5271,6 +5271,27 @@ importers:
       chess.js:
         specifier: 'catalog:'
         version: 1.4.0
+      date-fns:
+        specifier: 'catalog:'
+        version: 3.6.0
+      fast-xml-parser:
+        specifier: '>=5.3.6'
+        version: 5.3.7
+      jsonata:
+        specifier: 'catalog:'
+        version: 2.1.0
+      linkedom:
+        specifier: 'catalog:'
+        version: 0.18.12(canvas@3.2.0)
+      papaparse:
+        specifier: 'catalog:'
+        version: 5.5.3
+      turndown:
+        specifier: 'catalog:'
+        version: 7.2.1
+      yaml:
+        specifier: 'catalog:'
+        version: 2.8.2
 
   packages/core/functions-runtime-cloudflare:
     dependencies:
@@ -11266,6 +11287,9 @@ importers:
 
   packages/plugins/plugin-script:
     dependencies:
+      '@automerge/automerge':
+        specifier: 3.2.3
+        version: 3.2.3
       '@codemirror/autocomplete':
         specifier: 'catalog:'
         version: 6.19.0
@@ -11504,9 +11528,6 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
     devDependencies:
-      '@automerge/automerge':
-        specifier: 3.2.3
-        version: 3.2.3
       '@dxos/plugin-chess':
         specifier: workspace:*
         version: link:../plugin-chess
@@ -18541,6 +18562,9 @@ importers:
 
   packages/ui/react-ui-syntax-highlighter:
     dependencies:
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../ui-types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -34162,6 +34186,9 @@ packages:
   pako@2.0.3:
     resolution: {integrity: sha512-WjR1hOeg+kki3ZIOjaf4b5WVcay1jaliKSYiEaB1XzwhMQZJxRdQRv0V31EKBYlxb4T7SK3hjfc/jxyU64BoSw==}
 
+  papaparse@5.5.3:
+    resolution: {integrity: sha512-5QvjGxYVjxO59MGU2lHVYpRWBBtKHnlIAcSe1uNFCkkptUh63NFRj0FJQm7nR67puEruUci/ZkjmEFrjCAyP4A==}
+
   param-case@3.0.4:
     resolution: {integrity: sha512-RXlj7zCYokReqWpOPH9oYivUzLYZ5vAPIfEmCTNViosC78F8F0H9y7T7gG2M39ymgutxF5gcFEsyZQSph9Bp3A==}
 
@@ -38546,7 +38573,7 @@ snapshots:
       '@atlaskit/platform-feature-flags': 1.1.2(react@19.2.3)
       '@babel/runtime': 7.27.1
       '@babel/traverse': 7.28.5
-      '@babel/types': 7.29.0
+      '@babel/types': 7.28.5
       bind-event-listener: 3.0.0
       react: 19.2.3
     transitivePeerDependencies:
@@ -46471,16 +46498,16 @@ snapshots:
 
   '@types/babel__generator@7.6.4':
     dependencies:
-      '@babel/types': 7.29.0
+      '@babel/types': 7.28.5
 
   '@types/babel__template@7.4.1':
     dependencies:
       '@babel/parser': 7.28.5
-      '@babel/types': 7.29.0
+      '@babel/types': 7.28.5
 
   '@types/babel__traverse@7.28.0':
     dependencies:
-      '@babel/types': 7.29.0
+      '@babel/types': 7.28.5
 
   '@types/base16@1.0.2': {}
 
@@ -48709,7 +48736,7 @@ snapshots:
       '@babel/core': 7.28.0
       '@babel/helper-module-imports': 7.18.6
       '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.28.0)
-      '@babel/types': 7.29.0
+      '@babel/types': 7.28.5
       html-entities: 2.3.3
       parse5: 7.3.0
 
@@ -53958,7 +53985,7 @@ snapshots:
   magicast@0.3.5:
     dependencies:
       '@babel/parser': 7.28.5
-      '@babel/types': 7.29.0
+      '@babel/types': 7.28.5
       source-map-js: 1.2.1
 
   magicast@0.5.2:
@@ -55669,6 +55696,8 @@ snapshots:
   pako@1.0.11: {}
 
   pako@2.0.3: {}
+
+  papaparse@5.5.3: {}
 
   param-case@3.0.4:
     dependencies:

@@ -14,7 +14,7 @@ import { useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { JsonFilter } from '@dxos/react-ui-syntax-highlighter';
+import { Json } from '@dxos/react-ui-syntax-highlighter';
 import { type ValueGenerator, createObjectFactory } from '@dxos/schema/testing';
 
 import { TestSchema } from '../testing';
@@ -90,7 +90,12 @@ const DefaultStory = () => {
         <Button onClick={handleFlush}>Flush</Button>
         <Button onClick={handleQuery}>Query</Button>
       </Toolbar.Root>
-      <JsonFilter data={data} />
+      <Json.Root data={data}>
+        <Json.Content>
+          <Json.Filter />
+          <Json.Data />
+        </Json.Content>
+      </Json.Root>
     </div>
   );
 };

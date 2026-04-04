@@ -48,7 +48,7 @@ const meta = {
           onChange={handleChange}
         />
 
-        <Json data={filter} classNames='text-xs' />
+        <Json.Data data={filter} classNames='text-xs' />
       </div>
     );
   },
