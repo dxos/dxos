@@ -6,11 +6,11 @@ import React from 'react';
 
 import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Input, Select, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
 import {
-  type DeckSettingsProps,
+  type Settings,
   type NewPlankPositioning,
   NewPlankPositions,
   OverScrollToProps,
@@ -19,28 +19,28 @@ import {
 
 const isSocket = !!(globalThis as any).__args;
 
-export const DeckSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<DeckSettingsProps>) => {
+export const DeckSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<Settings.Settings>) => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <Settings.Root>
-      <Settings.Section title={t('settings.title', { ns: meta.id })}>
-        <Settings.Group>
-          <Settings.ItemInput title={t('settings-enable-deck.label')}>
+    <SettingsForm.Root>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+        <SettingsForm.Group>
+          <SettingsForm.ItemInput title={t('settings-enable-deck.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.enableDeck}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, enableDeck: checked }))}
             />
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('settings-encapsulated-planks.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('settings-encapsulated-planks.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.encapsulatedPlanks ?? false}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, encapsulatedPlanks: checked }))}
             />
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('select-new-plank-positioning.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('select-new-plank-positioning.label')}>
             <Select.Root
               disabled={!settings.enableDeck || !onSettingsChange}
               value={settings.newPlankPositioning ?? 'start'}
@@ -65,8 +65,8 @@ export const DeckSettings = ({ settings, onSettingsChange }: SettingsSurfaceProp
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('settings-overscroll.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('settings-overscroll.label')}>
             <Select.Root
               disabled={!settings.enableDeck || !onSettingsChange}
               value={settings.overscroll ?? 'none'}
@@ -86,32 +86,32 @@ export const DeckSettings = ({ settings, onSettingsChange }: SettingsSurfaceProp
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('settings-enable-statusbar.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('settings-enable-statusbar.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.enableStatusbar}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, enableStatusbar: checked }))}
             />
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('settings-show-hints.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('settings-show-hints.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.showHints}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, showHints: checked }))}
             />
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
           {!isSocket && (
-            <Settings.ItemInput title={t('settings-native-redirect.label')}>
+            <SettingsForm.ItemInput title={t('settings-native-redirect.label')}>
               <Input.Switch
                 disabled={!onSettingsChange}
                 checked={settings.enableNativeRedirect}
                 onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, enableNativeRedirect: checked }))}
               />
-            </Settings.ItemInput>
+            </SettingsForm.ItemInput>
           )}
-        </Settings.Group>
-      </Settings.Section>
-    </Settings.Root>
+        </SettingsForm.Group>
+      </SettingsForm.Section>
+    </SettingsForm.Root>
   );
 };

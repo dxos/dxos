@@ -14,6 +14,7 @@ const meta = {
   title: 'plugins/plugin-debug/components/DebugSettings',
   component: DebugSettings,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
+  tags: ['settings'],
   parameters: {
     layout: 'fullscreen',
     translations,

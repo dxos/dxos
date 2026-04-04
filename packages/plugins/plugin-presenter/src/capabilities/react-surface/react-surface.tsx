@@ -15,7 +15,7 @@ import { Markdown } from '@dxos/plugin-markdown/types';
 import { PresenterSettings } from '../../components';
 import { CollectionPresenterContainer, DocumentPresenterContainer, MarkdownSlide } from '../../containers';
 import { meta } from '../../meta';
-import { type PresenterSettingsProps } from '../../types';
+import { type Settings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -58,7 +58,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<PresenterSettingsProps>(subject.atom);
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <PresenterSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),

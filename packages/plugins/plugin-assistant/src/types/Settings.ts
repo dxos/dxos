@@ -1,12 +1,13 @@
 //
 // Copyright 2024 DXOS.org
 //
+// @import-as-namespace
 
 import * as Schema from 'effect/Schema';
 
 import { LLM_PROVIDERS } from './defs';
 
-export const AssistantSettingsSchema = Schema.mutable(
+export const Settings = Schema.mutable(
   Schema.Struct({
     llmProvider: Schema.optional(Schema.Literal(...LLM_PROVIDERS)),
     edgeModel: Schema.optional(Schema.String),
@@ -16,4 +17,4 @@ export const AssistantSettingsSchema = Schema.mutable(
   }),
 );
 
-export type AssistantSettingsProps = Schema.Schema.Type<typeof AssistantSettingsSchema>;
+export type Settings = Schema.Schema.Type<typeof Settings>;

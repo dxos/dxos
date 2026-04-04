@@ -1,6 +1,7 @@
 //
 // Copyright 2023 DXOS.org
 //
+// @import-as-namespace
 
 import * as Schema from 'effect/Schema';
 
@@ -11,7 +12,7 @@ export type NewPlankPositioning = (typeof NewPlankPositions)[number];
 export const OverScrollToProps = ['none', 'centering'] as const;
 export type Overscroll = (typeof OverScrollToProps)[number];
 
-export const DeckSettingsSchema = Schema.Struct({
+export const Settings = Schema.Struct({
   showHints: Schema.optional(Schema.Boolean),
   enableDeck: Schema.optional(Schema.Boolean),
   enableStatusbar: Schema.optional(Schema.Boolean),
@@ -21,4 +22,4 @@ export const DeckSettingsSchema = Schema.Struct({
   // TODO(burdon): Rename layoutMode? (e.g., bento | encapsulated?)
   encapsulatedPlanks: Schema.optional(Schema.Boolean),
 }).pipe(Schema.mutable);
-export type DeckSettingsProps = Schema.Schema.Type<typeof DeckSettingsSchema>;
+export type Settings = Schema.Schema.Type<typeof Settings>;

@@ -9,9 +9,9 @@ import { Input, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { type SketchSettingsProps } from '../../types';
+import { type Settings as SketchSettingsNs } from '../../types';
 
-export const SketchSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<SketchSettingsProps>) => {
+export const SketchSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<SketchSettingsNs.Settings>) => {
   const { t } = useTranslation(meta.id);
 
   return (

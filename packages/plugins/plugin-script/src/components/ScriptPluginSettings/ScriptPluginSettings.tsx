@@ -10,9 +10,9 @@ import { Settings } from '@dxos/react-ui-form';
 import { type EditorInputMode, EditorInputModes } from '@dxos/ui-editor';
 
 import { meta } from '../../meta';
-import { type ScriptSettings } from '../../types';
+import { type Settings as ScriptSettingsNs } from '../../types';
 
-export type ScriptPluginSettingsProps = SettingsSurfaceProps<ScriptSettings> & {
+export type ScriptPluginSettingsProps = SettingsSurfaceProps<ScriptSettingsNs.Settings> & {
   onAuthenticate?: () => void;
 };
 

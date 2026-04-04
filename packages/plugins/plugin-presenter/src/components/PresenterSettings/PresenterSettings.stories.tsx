@@ -14,6 +14,7 @@ const meta = {
   title: 'plugins/plugin-presenter/components/PresenterSettings',
   component: PresenterSettings,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
+  tags: ['settings'],
   parameters: {
     layout: 'fullscreen',
     translations,

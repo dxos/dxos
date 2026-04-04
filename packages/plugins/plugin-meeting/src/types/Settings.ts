@@ -1,13 +1,14 @@
 //
 // Copyright 2025 DXOS.org
 //
+// @import-as-namespace
 
 import * as Schema from 'effect/Schema';
 
-export const MeetingSettingsSchema = Schema.mutable(
+export const Settings = Schema.mutable(
   Schema.Struct({
     entityExtraction: Schema.optional(Schema.Boolean).pipe(Schema.withConstructorDefault(() => true)),
   }),
 );
 
-export type MeetingSettingsProps = Schema.Schema.Type<typeof MeetingSettingsSchema>;
+export type Settings = Schema.Schema.Type<typeof Settings>;

@@ -1,6 +1,7 @@
 //
 // Copyright 2024 DXOS.org
 //
+// @import-as-namespace
 
 import * as Schema from 'effect/Schema';
 
@@ -9,7 +10,7 @@ import { EditorInputMode, EditorViewMode } from '@dxos/ui-editor/types';
 /**
  * Plugin settings.
  */
-export const MarkdownSettingsSchema = Schema.mutable(
+export const Settings = Schema.mutable(
   Schema.Struct({
     defaultViewMode: EditorViewMode,
     editorInputMode: Schema.optional(EditorInputMode),
@@ -23,4 +24,4 @@ export const MarkdownSettingsSchema = Schema.mutable(
   }),
 );
 
-export type MarkdownSettingsProps = Schema.Schema.Type<typeof MarkdownSettingsSchema>;
+export type Settings = Schema.Schema.Type<typeof Settings>;

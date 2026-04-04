@@ -23,7 +23,7 @@ import { type EditorViewMode } from '@dxos/ui-editor';
 import { MarkdownSettings } from '../../components';
 import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps } from '../../containers';
 import { meta } from '../../meta';
-import { Markdown, MarkdownCapabilities, type MarkdownSettingsProps } from '../../types';
+import { Markdown, MarkdownCapabilities } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -69,7 +69,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<MarkdownSettingsProps>(subject.atom);
+          const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
           return <MarkdownSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),

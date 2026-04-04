@@ -17,10 +17,11 @@ import { type ComplexMap, type Position } from '@dxos/util';
 
 import { meta } from '../meta';
 
-import { type ObjectViewerProps, type SpaceSettingsProps } from './types';
+import * as Settings from './Settings';
+import { type ObjectViewerProps } from './types';
 
 export namespace SpaceCapabilities {
-  export const Settings = Capability.make<Atom.Writable<SpaceSettingsProps>>(`${meta.id}.capability.settings`);
+  export const Settings = Capability.make<Atom.Writable<Settings.SettingsProps>>(`${meta.id}.capability.settings`);
 
   /** Schema for persisted space plugin state. */
   export const StateSchema = Schema.mutable(

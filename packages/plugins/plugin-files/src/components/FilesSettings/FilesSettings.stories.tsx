@@ -14,6 +14,7 @@ const meta = {
   title: 'plugins/plugin-files/components/FilesSettings',
   component: FilesSettings,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
+  tags: ['settings'],
   parameters: {
     layout: 'fullscreen',
     translations,

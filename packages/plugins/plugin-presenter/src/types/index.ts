@@ -9,7 +9,7 @@ import { Capability } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 
-import { type PresenterSettingsProps } from './Settings';
+import * as Settings from './Settings';
 
 export type PresenterContextType = {
   running: boolean;
@@ -23,8 +23,8 @@ export const PresenterContext: Context<PresenterContextType> = createContext<Pre
   stop: () => {},
 });
 
-export { PresenterSettingsSchema, type PresenterSettingsProps } from './Settings';
+export * as Settings from './Settings';
 
 export namespace PresenterCapabilities {
-  export const Settings = Capability.make<Atom.Writable<PresenterSettingsProps>>(`${meta.id}.capability.settings`);
+  export const Settings = Capability.make<Atom.Writable<Settings.SettingsType>>(`${meta.id}.capability.settings`);
 }

@@ -8,4 +8,5 @@ export interface SketchModel {
   store: TLStore;
 }
 
-export { SketchGridSchema, type SketchGridType, SketchSettingsSchema, type SketchSettingsProps } from './Settings';
+export * as Settings from './Settings';
+export * as Settings from './Settings';

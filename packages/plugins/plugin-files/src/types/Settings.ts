@@ -1,10 +1,11 @@
 //
 // Copyright 2025 DXOS.org
 //
+// @import-as-namespace
 
 import * as Schema from 'effect/Schema';
 
-export const FilesSettingsSchema = Schema.mutable(
+export const Settings = Schema.mutable(
   Schema.Struct({
     autoExport: Schema.Boolean,
     autoExportInterval: Schema.Number,
@@ -12,4 +13,4 @@ export const FilesSettingsSchema = Schema.mutable(
   }),
 );
 
-export type FilesSettingsProps = Schema.Schema.Type<typeof FilesSettingsSchema>;
+export type Settings = Schema.Schema.Type<typeof Settings>;

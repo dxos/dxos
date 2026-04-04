@@ -13,6 +13,7 @@ import { SpacePluginSettings } from './SpacePluginSettings';
 const meta = {
   title: 'plugins/plugin-space/components/SpacePluginSettings',
   component: SpacePluginSettings,
+  tags: ['settings'],
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',

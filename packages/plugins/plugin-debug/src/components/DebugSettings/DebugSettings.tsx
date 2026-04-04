@@ -11,11 +11,11 @@ import { type ConfigProto, SaveConfig, Storage, defs } from '@dxos/config';
 import { type LogBuffer, log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Icon, IconButton, Input, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Settings as SettingsForm } from '@dxos/react-ui-form';
 import { setDeep } from '@dxos/util';
 
 import { meta } from '../../meta';
-import { type DebugSettingsProps } from '../../types';
+import { type Settings } from '../../types';
 
 type Toast = {
   title: string;
@@ -27,7 +27,7 @@ const StorageAdapters = {
   idb: defs.Runtime.Client.Storage.StorageDriver.IDB,
 } as const;
 
-export type DebugSettingsComponentProps = SettingsSurfaceProps<DebugSettingsProps> & {
+export type DebugSettingsComponentProps = SettingsSurfaceProps<Settings.Settings> & {
   logBuffer: LogBuffer;
 };
 
@@ -109,40 +109,40 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
   };
 
   return (
-    <Settings.Root>
-      <Settings.Section title={t('settings.title', { ns: meta.id })}>
-        <Settings.Group>
-          <Settings.ItemInput title={t('settings-wireframe.label')}>
+    <SettingsForm.Root>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
+        <SettingsForm.Group>
+          <SettingsForm.ItemInput title={t('settings-wireframe.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.wireframe}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, wireframe: !!checked }))}
             />
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('settings-download-diagnostics.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('settings-download-diagnostics.label')}>
             <IconButton
               icon='ph--download-simple--regular'
               iconOnly
               label={t('settings-download-diagnostics.label')}
               onClick={handleDownload}
             />
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('settings-download-logs.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('settings-download-logs.label')}>
             <IconButton
               icon='ph--download-simple--regular'
               iconOnly
               label={t('settings-download-logs.label')}
               onClick={handleDownloadLogs}
             />
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('settings-repair.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('settings-repair.label')}>
             <IconButton
               icon='ph--first-aid-kit--regular'
               iconOnly
               label={t('settings-repair.label')}
               onClick={handleRepair}
             />
-          </Settings.ItemInput>
+          </SettingsForm.ItemInput>
 
           {/* TODO(burdon): Move to layout? */}
           {toast && (
@@ -157,7 +157,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
             </Toast.Root>
           )}
 
-          <Settings.ItemInput title={t('settings-choose-storage-adaptor.label')}>
+          <SettingsForm.ItemInput title={t('settings-choose-storage-adaptor.label')}>
             <Select.Root
               disabled={!onSettingsChange}
               value={
@@ -190,10 +190,10 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer }: DebugSe
                 </Select.Content>
               </Select.Portal>
             </Select.Root>
-          </Settings.ItemInput>
-        </Settings.Group>
-      </Settings.Section>
-    </Settings.Root>
+          </SettingsForm.ItemInput>
+        </SettingsForm.Group>
+      </SettingsForm.Section>
+    </SettingsForm.Root>
   );
 };
 

@@ -11,12 +11,12 @@ import { type Sketch } from '@dxos/plugin-sketch/types';
 import { Panel as DxPanel, useThemeContext } from '@dxos/react-ui';
 
 import { useStoreAdapter } from '../../hooks';
-import { type SketchSettingsProps } from '../../types';
+import { type Settings } from '../../types';
 
 export type SketchContainerProps = ObjectSurfaceProps<
   Sketch.Sketch,
   {
-    settings: SketchSettingsProps;
+    settings: Settings.Settings;
   }
 >;
 

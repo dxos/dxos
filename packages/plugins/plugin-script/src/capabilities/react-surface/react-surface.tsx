@@ -28,7 +28,7 @@ import {
 } from '../../containers';
 import { useCompiler } from '../../hooks';
 import { meta } from '../../meta';
-import { Notebook, ScriptCapabilities, type ScriptSettings } from '../../types';
+import { Notebook, ScriptCapabilities, type Settings } from '../../types';
 import { getAccessCredential } from '../../util';
 
 export default Capability.makeModule(() =>
@@ -40,7 +40,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<ScriptSettings>(subject.atom);
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           const client = useClient();
           // TODO(burdon): Check token.
           const handleAuthenticate = async () => {

@@ -1,10 +1,11 @@
 //
 // Copyright 2023 DXOS.org
 //
+// @import-as-namespace
 
 import * as Schema from 'effect/Schema';
 
-export const SpaceSettingsSchema = Schema.mutable(
+export const Settings = Schema.mutable(
   Schema.Struct({
     /**
      * Show closed spaces.
@@ -13,4 +14,4 @@ export const SpaceSettingsSchema = Schema.mutable(
   }),
 );
 
-export type SpaceSettingsProps = Schema.Schema.Type<typeof SpaceSettingsSchema>;
+export type Settings = Schema.Schema.Type<typeof Settings>;

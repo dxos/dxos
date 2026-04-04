@@ -13,12 +13,12 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
 import { Sketch } from '../../components';
-import { type Sketch as SketchNs, type SketchSettingsProps } from '../../types';
+import { type Sketch as SketchNs, type Settings } from '../../types';
 
 export type SketchContainerProps = ObjectSurfaceProps<
   SketchNs.Sketch,
   {
-    settings: SketchSettingsProps;
+    settings: Settings.Settings;
   }
 >;
 

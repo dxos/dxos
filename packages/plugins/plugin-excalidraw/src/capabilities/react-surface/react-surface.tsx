@@ -14,7 +14,7 @@ import { Sketch } from '@dxos/plugin-sketch/types';
 import { SketchSettings } from '../../components';
 import { SketchContainer } from '../../containers';
 import { meta } from '../../meta';
-import { EXCALIDRAW_SCHEMA, ExcalidrawCapabilities, type SketchSettingsProps } from '../../types';
+import { EXCALIDRAW_SCHEMA, ExcalidrawCapabilities, type Settings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -42,7 +42,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<SketchSettingsProps>(subject.atom);
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <SketchSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),

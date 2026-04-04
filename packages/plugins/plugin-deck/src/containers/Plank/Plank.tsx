@@ -23,7 +23,7 @@ import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { useCompanions, useDeckState, useMainSize, useSelectedCompanion } from '../../hooks';
-import { type DeckSettingsProps, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
+import { type Settings, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
 import { DeckOperation } from '../../operations';
 
 import { PlankError, PlankErrorFallback } from './PlankError';
@@ -130,7 +130,7 @@ type PlankComponentProps = {
   node?: Node.Node;
   primary?: Node.Node;
   companions?: Node.Node[];
-  settings?: DeckSettingsProps;
+  settings?: Settings.Settings;
 };
 
 const PlankComponent = memo(

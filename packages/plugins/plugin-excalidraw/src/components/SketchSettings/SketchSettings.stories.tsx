@@ -14,6 +14,7 @@ const meta = {
   title: 'plugins/plugin-excalidraw/components/SketchSettings',
   component: SketchSettings,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
+  tags: ['settings'],
   parameters: {
     layout: 'fullscreen',
     translations,

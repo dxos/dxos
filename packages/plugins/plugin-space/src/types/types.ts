@@ -14,7 +14,7 @@ import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '../meta';
 
-export { SpaceSettingsSchema, type SpaceSettingsProps } from './Settings';
+export * as Settings from './Settings';
 
 export const SPACE_DIRECTORY_HANDLE = `${meta.id}.directory`;
 

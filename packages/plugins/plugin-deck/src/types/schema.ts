@@ -12,14 +12,7 @@ import { meta } from '../meta';
 export const PLANK_COMPANION_TYPE = `${meta.id}.plank-companion`;
 export const DECK_COMPANION_TYPE = `${meta.id}.deck-companion`;
 
-export {
-  DeckSettingsSchema,
-  type DeckSettingsProps,
-  NewPlankPositions,
-  type NewPlankPositioning,
-  OverScrollToProps,
-  type Overscroll,
-} from './Settings';
+export * as Settings from './Settings';
 
 export type Part = 'solo' | 'deck' | 'complementary';
 export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';

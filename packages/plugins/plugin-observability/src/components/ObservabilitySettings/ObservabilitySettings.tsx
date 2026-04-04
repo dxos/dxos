@@ -9,9 +9,9 @@ import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { type ObservabilitySettingsProps } from '../../types';
+import { type Settings as ObservabilitySettingsNs } from '../../types';
 
-export type ObservabilitySettingsComponentProps = SettingsSurfaceProps<ObservabilitySettingsProps> & {
+export type ObservabilitySettingsComponentProps = SettingsSurfaceProps<ObservabilitySettingsNs.Settings> & {
   onToggle?: (state: boolean) => void;
 };
 

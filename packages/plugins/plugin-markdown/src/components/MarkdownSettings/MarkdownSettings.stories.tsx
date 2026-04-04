@@ -12,6 +12,7 @@ import { MarkdownSettings } from './MarkdownSettings';
 
 const meta = {
   title: 'plugins/plugin-markdown/components/MarkdownSettings',
+  tags: ['settings'],
   component: MarkdownSettings,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

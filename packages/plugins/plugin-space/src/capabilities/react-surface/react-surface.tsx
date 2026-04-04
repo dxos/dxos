@@ -57,7 +57,7 @@ import {
   HueAnnotationId,
   IconAnnotationId,
   SpaceCapabilities,
-  type SpaceSettingsProps,
+  type Settings,
   type TypeInputOptions,
   TypeInputOptionsAnnotationId,
 } from '../../types';
@@ -90,7 +90,7 @@ export default Capability.makeModule(
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<SpaceSettingsProps>(subject.atom);
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           const spaces = useSpaces({ all: settings.showHidden });
           const { invokePromise } = useOperationInvoker();
           return (

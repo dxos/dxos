@@ -11,10 +11,10 @@ import { IconButton, Input, List, ListItem, toLocalizedString, useTranslation } 
 import { Settings } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { type SpaceSettingsProps } from '../../types';
+import { type Settings as SpaceSettings } from '../../types';
 import { getSpaceDisplayName } from '../../util';
 
-export type SpacePluginSettingsComponentProps = SettingsSurfaceProps<SpaceSettingsProps> & {
+export type SpacePluginSettingsComponentProps = SettingsSurfaceProps<SpaceSettings.Settings> & {
   spaces?: Space[];
   onOpenSpaceSettings?: (space: Space) => void;
 };

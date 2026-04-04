@@ -7,7 +7,8 @@ import * as Schema from 'effect/Schema';
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
-import { EditorInputMode, EditorViewMode } from '@dxos/ui-editor/types';
+
+import * as Settings from './Settings';
 
 /**
  * Document Item type.
@@ -48,18 +49,6 @@ export const make = ({
 /**
  * Plugin settings.
  */
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    defaultViewMode: EditorViewMode,
-    editorInputMode: Schema.optional(EditorInputMode),
-    experimental: Schema.optional(Schema.Boolean),
-    debug: Schema.optional(Schema.Boolean),
-    toolbar: Schema.optional(Schema.Boolean),
-    typewriter: Schema.optional(Schema.String),
-    // TODO(burdon): Per document settings.
-    numberedHeadings: Schema.optional(Schema.Boolean),
-    folding: Schema.optional(Schema.Boolean),
-  }),
-);
+export const Settings = Settings.SettingsSchema;
 
-export interface Settings extends Schema.Schema.Type<typeof Settings> {}
+export type Settings = Settings.SettingsType;

@@ -12,6 +12,7 @@ import { AssistantSettings } from './AssistantSettings';
 
 const meta = {
   title: 'plugins/plugin-assistant/components/AssistantSettings',
+  tags: ['settings'],
   component: AssistantSettings,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

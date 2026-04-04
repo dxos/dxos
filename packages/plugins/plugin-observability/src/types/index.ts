@@ -4,4 +4,4 @@
 
 export * from './capabilities';
 export * from './events';
-export * from './Settings';
+export * as Settings from './Settings';

@@ -59,7 +59,7 @@ import {
   Wireframe,
 } from '../../containers';
 import { meta } from '../../meta';
-import { DebugCapabilities, type DebugSettingsProps, Devtools } from '../../types';
+import { DebugCapabilities, type Settings, Devtools } from '../../types';
 
 type SpaceDebug = {
   type: string;
@@ -98,7 +98,7 @@ export default Capability.makeModule(
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<DebugSettingsProps>(subject.atom);
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <DebugSettings settings={settings} onSettingsChange={updateSettings} logBuffer={logBuffer} />;
         },
       }),

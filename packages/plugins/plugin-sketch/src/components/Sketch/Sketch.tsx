@@ -17,7 +17,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { useStoreAdapter } from '../../hooks';
-import { type Sketch as SketchNs, type SketchGridType, type SketchSettingsProps } from '../../types';
+import { type Sketch as SketchNs, type SketchGridType, type Settings } from '../../types';
 import { handleSnap } from '../actions';
 import { CustomMenu, CustomStylePanel, DefaultToolbarContent, DottedGrid, MeshGrid } from '../custom';
 
@@ -37,7 +37,7 @@ export type SketchProps = ThemedClassName<{
   maxZoom?: number;
   hideUi?: boolean;
   assetsBaseUrl?: string | null;
-  settings?: SketchSettingsProps;
+  settings?: Settings.Settings;
   onThreadCreate?: () => void;
 }>;
 

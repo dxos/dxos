@@ -13,6 +13,7 @@ import { ThreadSettings } from './ThreadSettings';
 const meta = {
   title: 'plugins/plugin-thread/components/ThreadSettings',
   component: ThreadSettings,
+  tags: ['settings'],
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',

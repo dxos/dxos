@@ -1,10 +1,11 @@
 //
 // Copyright 2023 DXOS.org
 //
+// @import-as-namespace
 
 import * as Schema from 'effect/Schema';
 
-export const ObservabilitySettingsSchema = Schema.mutable(
+export const Settings = Schema.mutable(
   Schema.Struct({
     enabled: Schema.Boolean,
     // TODO(wittjosiah): Separate settings for each observability feature.
@@ -14,4 +15,4 @@ export const ObservabilitySettingsSchema = Schema.mutable(
   }),
 );
 
-export type ObservabilitySettingsProps = Schema.Schema.Type<typeof ObservabilitySettingsSchema>;
+export type Settings = Schema.Schema.Type<typeof Settings>;

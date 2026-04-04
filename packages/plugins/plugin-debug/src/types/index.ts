@@ -2,13 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+import { type Atom } from '@effect-atom/atom-react';
 import { type Context, createContext } from 'react';
 
+import { Capability } from '@dxos/app-framework';
 import type { TimerCallback, TimerOptions } from '@dxos/async';
 
 import { meta } from '../meta';
 
-export * from './Settings';
+import * as Settings from './Settings';
+
+export * as Settings from './Settings';
 
 export type DebugContextType = {
   running: boolean;
@@ -21,6 +25,10 @@ export const DebugContext: Context<DebugContextType> = createContext<DebugContex
   start: () => {},
   stop: () => {},
 });
+
+export namespace DebugCapabilities {
+  export const Settings = Capability.make<Atom.Writable<Settings.SettingsType>>(`${meta.id}.capability.settings`);
+}
 
 export namespace Devtools {
   export const id = `${meta.id}.devtools`;

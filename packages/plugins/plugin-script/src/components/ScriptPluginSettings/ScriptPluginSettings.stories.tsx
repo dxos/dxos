@@ -13,6 +13,7 @@ import { ScriptPluginSettings } from './ScriptPluginSettings';
 const meta = {
   title: 'plugins/plugin-script/components/ScriptPluginSettings',
   component: ScriptPluginSettings,
+  tags: ['settings'],
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',

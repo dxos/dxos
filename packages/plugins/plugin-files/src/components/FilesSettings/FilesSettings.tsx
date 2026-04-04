@@ -6,12 +6,12 @@ import React from 'react';
 
 import { type SettingsSurfaceProps } from '@dxos/app-toolkit/ui';
 import { IconButton, Input, Message, useTranslation } from '@dxos/react-ui';
-import { Settings } from '@dxos/react-ui-form';
+import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
 import { meta } from '../../meta';
-import { type FilesSettingsProps, type FilesState } from '../../types';
+import { type Settings, type FilesState } from '../../types';
 
-export type FilesSettingsComponentProps = SettingsSurfaceProps<FilesSettingsProps> & {
+export type FilesSettingsComponentProps = SettingsSurfaceProps<Settings.Settings> & {
   state: FilesState;
   onSelectRoot?: () => void;
   onExport?: () => void;
@@ -29,13 +29,13 @@ export const FilesSettings = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <Settings.Root>
-      <Settings.Section title={t('settings.title', { ns: meta.id })}>
+    <SettingsForm.Root>
+      <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
         <Message.Root valence='warning'>
           <Message.Content>{t('save-files-to-directory.description')}</Message.Content>
         </Message.Root>
-        <Settings.Group>
-          <Settings.ItemInput
+        <SettingsForm.Group>
+          <SettingsForm.ItemInput
             title={t('save-files-to-directory.label')}
             {...(state.rootHandle && { description: state.rootHandle.name })}
           >
@@ -46,8 +46,8 @@ export const FilesSettings = ({
               label={t('save-files-to-directory.label')}
               onClick={() => onSelectRoot?.()}
             />
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('trigger-export.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('trigger-export.label')}>
             <IconButton
               classNames='ms-2'
               icon='ph--floppy-disk--regular'
@@ -55,8 +55,8 @@ export const FilesSettings = ({
               label={t('trigger-export.label')}
               onClick={() => onExport?.()}
             />
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('trigger-import.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('trigger-import.label')}>
             <IconButton
               classNames='ms-2'
               icon='ph--folder-open--regular'
@@ -64,15 +64,15 @@ export const FilesSettings = ({
               label={t('trigger-import.label')}
               onClick={() => onImport?.()}
             />
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('auto-export.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('auto-export.label')}>
             <Input.Switch
               disabled={!onSettingsChange || !state.rootHandle}
               checked={state.rootHandle ? settings.autoExport : false}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, autoExport: !!checked }))}
             />
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('auto-export-interval.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('auto-export-interval.label')}>
             <Input.TextInput
               disabled={!onSettingsChange}
               type='number'
@@ -85,16 +85,16 @@ export const FilesSettings = ({
                 }))
               }
             />
-          </Settings.ItemInput>
-          <Settings.ItemInput title={t('open-local-files.label')}>
+          </SettingsForm.ItemInput>
+          <SettingsForm.ItemInput title={t('open-local-files.label')}>
             <Input.Switch
               disabled={!onSettingsChange}
               checked={settings.openLocalFiles}
               onCheckedChange={(checked) => onSettingsChange?.((s) => ({ ...s, openLocalFiles: !!checked }))}
             />
-          </Settings.ItemInput>
-        </Settings.Group>
-      </Settings.Section>
-    </Settings.Root>
+          </SettingsForm.ItemInput>
+        </SettingsForm.Group>
+      </SettingsForm.Section>
+    </SettingsForm.Root>
   );
 };

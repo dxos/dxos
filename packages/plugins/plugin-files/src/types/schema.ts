@@ -25,7 +25,7 @@ export type LocalDirectory = {
   children: LocalEntity[];
 };
 
-export { FilesSettingsSchema, type FilesSettingsProps } from './Settings';
+export * as Settings from './Settings';
 
 export type FilesState = {
   exportRunning: boolean;

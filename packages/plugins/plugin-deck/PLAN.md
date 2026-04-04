@@ -44,5 +44,8 @@
 ## Review
 
 - [x] Settings components should be in ./components
-- [x] All settings props should be defined in ./types/Settings.ts
 - [x] Settings components should not use useOperationInvoker; instead rely on the SettingsSurfaceProps callback
+- [x] All settings props should be defined in ./types/Settings.ts
+  - [x] Rename Props like this: ObservabilitySettingsSchema/ObservabilitySettingsProps => Settings.Settings
+  - [x] Export settings using namespace and include: "// @import-as-namespace"
+  - [x] Add "settings" tag to all associated stories

@@ -12,6 +12,7 @@ import { DeckSettings } from './DeckSettings';
 
 const meta = {
   title: 'plugins/plugin-deck/components/DeckSettings',
+  tags: ['settings'],
   component: DeckSettings,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

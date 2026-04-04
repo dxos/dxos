@@ -10,9 +10,9 @@ import { Settings } from '@dxos/react-ui-form';
 import { type EditorInputMode, EditorInputModes, type EditorViewMode, EditorViewModes } from '@dxos/ui-editor';
 
 import { meta } from '../../meta';
-import { type MarkdownSettingsProps } from '../../types';
+import { type Markdown } from '../../types';
 
-export const MarkdownSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<MarkdownSettingsProps>) => {
+export const MarkdownSettings = ({ settings, onSettingsChange }: SettingsSurfaceProps<Markdown.Settings>) => {
   const { t } = useTranslation(meta.id);
 
   // TODO(wittjosiah): Add skill test confirmation for entering vim mode.
