@@ -22,6 +22,10 @@ type MatrixContextValue = {
   items: Obj.Any[];
   /** Tile component to render for each item. */
   Tile: MosaicStackTileComponent<Obj.Any>;
+  /** Currently focused tile ID. */
+  current?: Obj.ID;
+  /** Callback when the focused tile changes. */
+  onCurrentChange?: (id: Obj.ID | undefined) => void;
   /** Register the viewport element for scroll operations. */
   registerViewport: (element: HTMLElement | null) => void;
 };
@@ -36,6 +40,14 @@ interface MatrixController {
   scrollTo: (id: Obj.ID) => void;
 }
 
+/**
+ * Resolve the tile ID from a focusin event target by walking up to find `data-mosaic-tile-id`.
+ */
+const resolveTileId = (target: EventTarget | null): string | undefined => {
+  const element = target as HTMLElement | null;
+  return element?.closest<HTMLElement>('[data-mosaic-tile-id]')?.dataset?.mosaicTileId;
+};
+
 //
 // Root
 //
@@ -48,7 +60,7 @@ type MatrixRootProps = PropsWithChildren<Partial<MatrixContextValue>>;
  * Headless root that provides matrix context.
  */
 const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
-  ({ children, items = [], Tile, ...props }, forwardedRef) => {
+  ({ children, items = [], Tile, current, onCurrentChange, ...props }, forwardedRef) => {
     const viewportRef = useRef<HTMLElement | null>(null);
     const registerViewport = useCallback((element: HTMLElement | null) => {
       viewportRef.current = element;
@@ -73,6 +85,7 @@ const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
         viewport.scrollTo({ left: offset, behavior: 'smooth' });
 
         // Focus after scroll completes to avoid interrupting smooth scroll.
+        // The focusin handler on the viewport will call onCurrentChange.
         const onScrollEnd = () => {
           viewport.removeEventListener('scrollend', onScrollEnd);
           tile.focus({ preventScroll: true });
@@ -82,7 +95,14 @@ const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
     }));
 
     return (
-      <MatrixProvider items={items} Tile={Tile!} registerViewport={registerViewport} {...props}>
+      <MatrixProvider
+        items={items}
+        Tile={Tile!}
+        current={current}
+        onCurrentChange={onCurrentChange}
+        registerViewport={registerViewport}
+        {...props}
+      >
         {children}
       </MatrixProvider>
     );
@@ -125,9 +145,10 @@ const getId = (item: Obj.Any) => item.id;
 
 /**
  * Horizontally scrollable viewport that renders tiles from context.
+ * Listens for focusin events to report the currently focused tile.
  */
 const MatrixViewport = composable<HTMLDivElement>(({ ...props }, forwardedRef) => {
-  const { items, Tile, registerViewport } = useMatrixContext(MATRIX_VIEWPORT_NAME);
+  const { items, Tile, onCurrentChange, registerViewport } = useMatrixContext(MATRIX_VIEWPORT_NAME);
   const viewportRef = useCallback(
     (element: HTMLElement | null) => {
       registerViewport(element);
@@ -135,17 +156,41 @@ const MatrixViewport = composable<HTMLDivElement>(({ ...props }, forwardedRef) =
     [registerViewport],
   );
 
+  const handleFocusIn = useCallback(
+    (event: React.FocusEvent) => {
+      const tileId = resolveTileId(event.target);
+      if (tileId) {
+        onCurrentChange?.(tileId);
+      }
+    },
+    [onCurrentChange],
+  );
+
+  const handleFocusOut = useCallback(
+    (event: React.FocusEvent) => {
+      // Clear current when focus leaves the viewport entirely.
+      const related = event.relatedTarget as HTMLElement | null;
+      const viewport = event.currentTarget as HTMLElement;
+      if (!related || !viewport.contains(related)) {
+        onCurrentChange?.(undefined);
+      }
+    },
+    [onCurrentChange],
+  );
+
   return (
     <ScrollArea.Root orientation='horizontal' padding snap {...composableProps(props)} ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef}>
-        <Mosaic.Stack
-          orientation='horizontal'
-          classNames='snap-x snap-mandatory gap-2'
-          getId={getId}
-          items={items}
-          Tile={Tile}
-          draggable={false}
-        />
+        <div role='none' onFocusCapture={handleFocusIn} onBlurCapture={handleFocusOut}>
+          <Mosaic.Stack
+            orientation='horizontal'
+            classNames='snap-x snap-mandatory gap-2'
+            getId={getId}
+            items={items}
+            Tile={Tile}
+            draggable={false}
+          />
+        </div>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
