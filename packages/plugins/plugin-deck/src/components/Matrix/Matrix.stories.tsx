@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Focus, Panel, Toolbar } from '@dxos/react-ui';
@@ -18,7 +18,7 @@ import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
 const StoryTile = (props: MosaicTileProps<Obj.Any>) => (
   <Mosaic.Tile {...props} asChild>
     <Focus.Item asChild border>
-      <Panel.Root classNames='dx-current dx-hover w-[50rem]'>
+      <Panel.Root classNames='dx-current dx-hover w-[50rem] snap-start'>
         <Panel.Toolbar asChild>
           <Toolbar.Root>{props.id}</Toolbar.Root>
         </Panel.Toolbar>
@@ -43,9 +43,11 @@ const DefaultStory = () => {
 
   const controller = useRef<MatrixController>(null);
 
-  const handleHome = useCallback(() => {
-    controller.current?.scrollTo(items[0]?.id);
-  }, [items]);
+  // TODO(burdon): Set focus.
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    controller.current?.scrollTo(items[index]?.id);
+  }, [items, index]);
 
   return (
     <Mosaic.Root classNames='dx-container'>
@@ -53,7 +55,21 @@ const DefaultStory = () => {
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
-              <Toolbar.IconButton icon='ph--house--regular' iconOnly label='Home' onClick={handleHome} />
+              <Toolbar.IconButton
+                icon='ph--caret-left--regular'
+                iconOnly
+                label='Back'
+                onClick={() => setIndex((index) => (index > 0 ? index - 1 : index))}
+              />
+              <Toolbar.IconButton
+                icon='ph--caret-right--regular'
+                iconOnly
+                label='Forward'
+                onClick={() => setIndex((index) => (index < items.length - 1 ? index + 1 : index))}
+              />
+              <Toolbar.Text>
+                {index + 1} / {items.length}
+              </Toolbar.Text>
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
