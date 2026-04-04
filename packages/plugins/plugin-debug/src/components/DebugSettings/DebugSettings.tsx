@@ -189,31 +189,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
                   ([_name, value]) => value === storageConfig?.runtime?.client?.storage?.dataStore,
                 )?.[0]
               }
-<<<<<<< HEAD:packages/plugins/plugin-debug/src/components/DebugSettings/DebugSettings.tsx
               onValueChange={handleStorageAdapterChange}
-||||||| db70584ce3:packages/plugins/plugin-debug/src/containers/DebugSettings/DebugSettings.tsx
-              onValueChange={(value) => {
-                if (confirm(t('settings storage adapter changed alert'))) {
-                  updateConfig(
-                    storageConfig,
-                    setStorageConfig,
-                    ['runtime', 'client', 'storage', 'dataStore'],
-                    StorageAdapters[value as keyof typeof StorageAdapters],
-                  );
-                }
-              }}
-=======
-              onValueChange={(value) => {
-                if (confirm(t('settings-storage-adapter-changed-alert.message'))) {
-                  updateConfig(
-                    storageConfig,
-                    setStorageConfig,
-                    ['runtime', 'client', 'storage', 'dataStore'],
-                    StorageAdapters[value as keyof typeof StorageAdapters],
-                  );
-                }
-              }}
->>>>>>> origin/main:packages/plugins/plugin-debug/src/containers/DebugSettings/DebugSettings.tsx
             >
               <Select.TriggerButton disabled={!onSettingsChange} placeholder={t('settings-data-store.label')} />
               <Select.Portal>

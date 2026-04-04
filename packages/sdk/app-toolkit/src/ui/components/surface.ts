@@ -11,18 +11,10 @@ export type SurfaceRole =
   | 'article'
   | 'card--content'
   | 'complementary' // Companion
-<<<<<<< HEAD
   | 'item'
   | 'section';
-||||||| db70584ce3
-  | 'section'
-  | 'card--content';
-=======
-  | 'section'
-  | 'card--content';
 
 // TODO(burdon): attendableId => id ("attentable" is the valence)
->>>>>>> origin/main
 
 /**
  * Generic type for surface components that are anchored to a space.
