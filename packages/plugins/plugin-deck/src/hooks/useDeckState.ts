@@ -42,9 +42,9 @@ export const useDeckState = (): DeckStateHook => {
 
   // Compute deck from decks[activeDeck] to ensure it's always current.
   const deck = useMemo(() => {
-    const d = persistedState.decks[persistedState.activeDeck];
-    invariant(d, `Deck not found: ${persistedState.activeDeck}`);
-    return d;
+    const deck = persistedState.decks[persistedState.activeDeck];
+    invariant(deck, `Deck not found: ${persistedState.activeDeck}`);
+    return deck;
   }, [persistedState.decks, persistedState.activeDeck]);
 
   // Combine persisted and ephemeral state into a unified view.
@@ -70,13 +70,5 @@ export const useDeckState = (): DeckStateHook => {
     [registry, ephemeralAtom],
   );
 
-  return useMemo(
-    () => ({
-      state,
-      deck,
-      updateState,
-      updateEphemeral,
-    }),
-    [state, deck, updateState, updateEphemeral],
-  );
+  return useMemo(() => ({ state, deck, updateState, updateEphemeral }), [state, deck, updateState, updateEphemeral]);
 };

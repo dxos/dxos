@@ -2,30 +2,153 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { Fragment, type UIEvent, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, {
+  Fragment,
+  type PropsWithChildren,
+  type UIEvent,
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
-import { useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
+import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { useNode } from '@dxos/plugin-graph';
 import { Main, type MainContentProps, useMediaQuery, useOnTransition } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
 import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
 
-import { useBreakpoints, useDeckState, useHoistStatusbar } from '../../hooks';
+import { useBreakpoints, useCompanions, useDeckState, useHoistStatusbar, useSelectedCompanion } from '../../hooks';
 import { DeckCapabilities, getMode } from '../../types';
+import { DeckOperation } from '../../operations';
 import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from './fragments';
-import { Plank } from '../Plank';
+import { Plank, type PlankComponentProps } from '../Plank';
+import { type LayoutChangeRequest } from './DeckMainContext';
 import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 import { ContentEmpty } from './ContentEmpty';
+import { DeckMainProvider, type DeckMainContextValue } from './DeckMainContext';
 import { StatusBar } from './StatusBar';
 import { Banner } from './Banner';
 
+export type { LayoutChangeRequest } from './DeckMainContext';
+
+export type DeckMainRootProps = PropsWithChildren<DeckMainContextValue>;
+
 /**
- * Request to change the layout mode.
- * Either set a specific mode (with optional subject), or revert to the previous mode.
+ * Headless root that provides DeckMain context.
  */
-export type LayoutChangeRequest = { subject?: string; mode: string } | { revert: true };
+const DeckMainRoot = ({ children, ...context }: DeckMainRootProps) => {
+  return <DeckMainProvider {...context}>{children}</DeckMainProvider>;
+};
+
+//
+// ConnectedPlank
+//
+
+type ConnectedPlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'settings'> &
+  Partial<Pick<PlankComponentProps, 'path' | 'order' | 'active'>> & {
+    id?: string;
+    companionVariant?: string;
+  };
+
+const UNKNOWN_ID = 'unknown_id';
+
+/**
+ * Connected Plank that calls hooks and renders the radix-style Plank tree.
+ * This is the bridge between DeckMain (which knows about framework hooks) and
+ * the pure Plank components (which receive everything via context).
+ */
+const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: ConnectedPlankProps) => {
+  const { graph } = useAppGraph();
+  const { invokePromise } = useOperationInvoker();
+  const { state, deck } = useDeckState();
+  const node = useNode(graph, id);
+  const companions = useCompanions(id);
+  const { companionId } = useSelectedCompanion(companions, companionVariant);
+  const resolvedCompanionId = companionVariant ? companionId : undefined;
+  const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
+  const hasCompanion = !!(resolvedCompanionId && currentCompanion);
+
+  const handleAdjust = useCallback(
+    (plankId: string, type: DeckOperation.PartAdjustment) => {
+      if (type === 'close') {
+        if (props.part === 'complementary') {
+          return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+        }
+        return invokePromise(LayoutOperation.Close, { subject: [plankId] });
+      }
+      return invokePromise(DeckOperation.Adjust, { type, id: plankId });
+    },
+    [invokePromise, props.part],
+  );
+
+  const handleResize = useCallback(
+    (plankId: string, size: number) => invokePromise(DeckOperation.UpdatePlankSize, { id: plankId, size }),
+    [invokePromise],
+  );
+
+  const handleScrollIntoView = useCallback(
+    (subject?: string) => invokePromise(LayoutOperation.ScrollIntoView, { subject }),
+    [invokePromise],
+  );
+
+  const handleChangeCompanion = useCallback(
+    (companion: string | null) => invokePromise(DeckOperation.ChangeCompanion, { companion }),
+    [invokePromise],
+  );
+
+  return (
+    <Plank.Root
+      graph={graph}
+      layoutMode={props.layoutMode}
+      part={props.part}
+      settings={props.settings}
+      popoverAnchorId={state.popoverAnchorId}
+      scrollIntoView={state.scrollIntoView}
+      plankSizing={deck.plankSizing}
+      onAdjust={handleAdjust}
+      onResize={handleResize}
+      onScrollIntoView={handleScrollIntoView}
+      onChangeCompanion={handleChangeCompanion}
+    >
+      <Plank.Content
+        solo={props.part === 'solo'}
+        companion={hasCompanion}
+        encapsulate={!!props.settings?.encapsulatedPlanks}
+      >
+        <Plank.Component
+          id={id}
+          node={node}
+          companioned={hasCompanion ? 'primary' : undefined}
+          companions={hasCompanion ? [] : companions}
+          {...props}
+          {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
+        />
+        {hasCompanion && (
+          <Plank.Component
+            id={resolvedCompanionId}
+            node={currentCompanion}
+            primary={node}
+            companions={companions}
+            companioned='companion'
+            {...props}
+            {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: (props.order ?? 0) + 1 })}
+          />
+        )}
+      </Plank.Content>
+    </Plank.Root>
+  );
+});
+
+//
+// DeckMain
+//
 
 export type DeckMainProps = {
   /** Callback invoked when the layout mode needs to change. */
@@ -34,6 +157,7 @@ export type DeckMainProps = {
 
 export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
   const settings = useAtomCapability(DeckCapabilities.Settings);
+  const pluginManager = usePluginManager();
   const { state, deck, updateState } = useDeckState();
   const { sidebarState, complementarySidebarState, complementarySidebarPanel } = state;
   const { active, companionOpen, companionVariant, fullscreen, solo, plankSizing } = deck;
@@ -42,7 +166,6 @@ export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
-  const pluginManager = usePluginManager();
 
   const scrollLeftRef = useRef<number>(null);
   const deckRef = useRef<HTMLDivElement>(null);
@@ -69,7 +192,6 @@ export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
       // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
       const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
       const attended = attention.getCurrent();
-
       shouldRevert.current = true;
       onLayoutChange({ subject: attended[0], mode: 'solo' });
     } else if (isNotMobile && layoutMode === 'solo' && shouldRevert.current) {
@@ -161,128 +283,138 @@ export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
   );
 
   return (
-    <Main.Root
-      navigationSidebarState={fullscreen ? 'closed' : sidebarState}
-      complementarySidebarState={fullscreen ? 'closed' : complementarySidebarState}
-      onNavigationSidebarStateChange={handleNavigationSidebarStateChange}
-      onComplementarySidebarStateChange={handleComplementarySidebarStateChange}
+    <DeckMainRoot
+      settings={settings}
+      pluginManager={pluginManager}
+      layoutMode={layoutMode}
+      state={state}
+      deck={deck}
+      updateState={updateState}
+      onLayoutChange={onLayoutChange}
     >
-      {/* Left sidebar. */}
-      <Sidebar />
+      <Main.Root
+        navigationSidebarState={fullscreen ? 'closed' : sidebarState}
+        complementarySidebarState={fullscreen ? 'closed' : complementarySidebarState}
+        onNavigationSidebarStateChange={handleNavigationSidebarStateChange}
+        onComplementarySidebarStateChange={handleComplementarySidebarStateChange}
+      >
+        {/* Left sidebar. */}
+        <Sidebar />
 
-      {/* Right sidebar. */}
-      <ComplementarySidebar current={complementarySidebarPanel} />
+        {/* Right sidebar. */}
+        <ComplementarySidebar current={complementarySidebarPanel} />
 
-      {/* Dialog overlay to dismiss dialogs. */}
-      <Main.Overlay />
+        {/* Dialog overlay to dismiss dialogs. */}
+        <Main.Overlay />
 
-      {/* No content. */}
-      {isEmpty && (
-        <Main.Content bounce handlesFocus classNames={mainPosition}>
-          <ContentEmpty />
-        </Main.Content>
-      )}
+        {/* No content. */}
+        {isEmpty && (
+          <Main.Content bounce handlesFocus classNames={mainPosition}>
+            <ContentEmpty />
+          </Main.Content>
+        )}
 
-      {/* Solo/deck mode. */}
-      {!isEmpty && (
-        <Main.Content
-          bounce
-          handlesFocus
-          classNames={mainPosition}
-          style={
-            {
-              '--main-spacing': settings?.encapsulatedPlanks ? '0.75rem' : '0',
-              '--dx-main-sidebar-width':
-                sidebarState === 'expanded'
-                  ? 'var(--dx-nav-sidebar-size)'
-                  : sidebarState === 'collapsed'
-                    ? 'var(--dx-l0-size)'
-                    : '0',
-              '--dx-main-complementary-width':
-                complementarySidebarState === 'expanded'
-                  ? 'var(--dx-complementary-sidebar-size)'
-                  : complementarySidebarState === 'collapsed'
-                    ? 'var(--dx-rail-size)'
-                    : '0',
-              '--dx-main-content-first-width': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-              '--dx-main-content-last-width': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
-            } as MainContentProps['style']
-          }
-        >
-          {/* Deck mode. */}
-          <div
-            role='none'
-            className={!solo ? 'relative bg-deck-surface overflow-hidden' : 'sr-only'}
-            {...(solo && { inert: true })}
+        {/* Solo/deck mode. */}
+        {!isEmpty && (
+          <Main.Content
+            bounce
+            handlesFocus
+            classNames={mainPosition}
+            style={
+              {
+                '--main-spacing': settings?.encapsulatedPlanks ? '0.75rem' : '0',
+                '--dx-main-sidebar-width':
+                  sidebarState === 'expanded'
+                    ? 'var(--dx-nav-sidebar-size)'
+                    : sidebarState === 'collapsed'
+                      ? 'var(--dx-l0-size)'
+                      : '0',
+                '--dx-main-complementary-width':
+                  complementarySidebarState === 'expanded'
+                    ? 'var(--dx-complementary-sidebar-size)'
+                    : complementarySidebarState === 'collapsed'
+                      ? 'var(--dx-rail-size)'
+                      : '0',
+                '--dx-main-content-first-width': `${plankSizing[active[0] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+                '--dx-main-content-last-width': `${plankSizing[active[(active.length ?? 1) - 1] ?? 'never'] ?? DEFAULT_HORIZONTAL_SIZE}rem`,
+              } as MainContentProps['style']
+            }
           >
-            {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
-            {!topbar && !fullscreen && (
-              <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
-            )}
-            <Stack
-              orientation='horizontal'
-              size='contain'
-              itemsCount={itemsCount - 1}
-              classNames={[
-                'absolute inset-y-(--main-spacing) -inset-w-px h-[calc(100%-2*var(--main-spacing))]',
-                mainPaddingTransitions,
-              ]}
-              style={padding}
-              onScroll={handleScroll}
-              ref={deckRef}
+            {/* Deck mode. */}
+            <div
+              role='none'
+              className={!solo ? 'relative bg-deck-surface overflow-hidden' : 'sr-only'}
+              {...(solo && { inert: true })}
             >
-              {active.map((entryId) => (
-                <Fragment key={entryId}>
-                  <PlankSeparator order={order[entryId] - 1} encapsulate={!!settings?.enableDeck} />
-                  <Plank
-                    id={entryId}
-                    companionVariant={effectiveCompanionVariant}
-                    part='deck'
-                    order={order[entryId]}
-                    active={active}
-                    layoutMode={layoutMode}
-                    settings={settings}
-                  />
-                </Fragment>
-              ))}
-            </Stack>
-          </div>
+              {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
+              {!topbar && !fullscreen && (
+                <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
+              )}
+              <Stack
+                orientation='horizontal'
+                size='contain'
+                itemsCount={itemsCount - 1}
+                classNames={[
+                  'absolute inset-y-(--main-spacing) -inset-w-px h-[calc(100%-2*var(--main-spacing))]',
+                  mainPaddingTransitions,
+                ]}
+                style={padding}
+                onScroll={handleScroll}
+                ref={deckRef}
+              >
+                {active.map((entryId) => (
+                  <Fragment key={entryId}>
+                    <PlankSeparator order={order[entryId] - 1} encapsulate={!!settings?.encapsulatedPlanks} />
+                    <ConnectedPlank
+                      id={entryId}
+                      companionVariant={effectiveCompanionVariant}
+                      part='deck'
+                      order={order[entryId]}
+                      active={active}
+                      layoutMode={layoutMode}
+                      settings={settings}
+                    />
+                  </Fragment>
+                ))}
+              </Stack>
+            </div>
 
-          {/* Solo mode. */}
-          <div
-            role='none'
-            className={solo ? 'relative overflow-hidden bg-deck-surface' : 'sr-only'}
-            {...(!solo && { inert: true })}
-          >
-            {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
-            {!topbar && !fullscreen && (
-              <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
-            )}
-            <StackContext.Provider
-              value={{
-                orientation: 'horizontal',
-                size: 'contain',
-                rail: true,
-              }}
+            {/* Solo mode. */}
+            <div
+              role='none'
+              className={solo ? 'relative overflow-hidden bg-deck-surface' : 'sr-only'}
+              {...(!solo && { inert: true })}
             >
-              <Plank
-                id={solo}
-                companionVariant={effectiveCompanionVariant}
-                part='solo'
-                layoutMode={layoutMode}
-                settings={settings}
-              />
-            </StackContext.Provider>
-          </div>
-        </Main.Content>
-      )}
+              {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
+              {!topbar && !fullscreen && (
+                <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
+              )}
+              <StackContext.Provider
+                value={{
+                  orientation: 'horizontal',
+                  size: 'contain',
+                  rail: true,
+                }}
+              >
+                <ConnectedPlank
+                  id={solo}
+                  companionVariant={effectiveCompanionVariant}
+                  part='solo'
+                  layoutMode={layoutMode}
+                  settings={settings}
+                />
+              </StackContext.Provider>
+            </div>
+          </Main.Content>
+        )}
 
-      {/* Topbar. */}
-      {topbar && <Banner variant='topbar' />}
+        {/* Topbar. */}
+        {topbar && <Banner variant='topbar' />}
 
-      {/* Status bar. */}
-      {hoistStatusbar && <StatusBar showHints={settings?.showHints} />}
-    </Main.Root>
+        {/* Status bar. */}
+        {hoistStatusbar && <StatusBar showHints={settings?.showHints} />}
+      </Main.Root>
+    </DeckMainRoot>
   );
 };
 
@@ -294,3 +426,12 @@ const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: b
       style={{ gridColumn: order }}
     />
   ) : null;
+
+export { DeckMainRoot };
+
+/**
+ * Radix-style composite DeckMain component.
+ */
+export const DeckMainParts = {
+  Root: DeckMainRoot,
+};

@@ -4,9 +4,8 @@
 
 import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { LayoutOperation, getCompanionVariant } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { Surface } from '@dxos/app-framework/ui';
+import { getCompanionVariant } from '@dxos/app-toolkit';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
@@ -19,6 +18,7 @@ import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../
 import { DeckOperation } from '../../operations';
 import { soloInlinePadding } from '../DeckMain/fragments';
 
+import { usePlankContext } from './PlankContext';
 import { PlankCompanionControls, PlankControls } from './PlankControls';
 
 const MAX_COMPANIONS = 5;
@@ -56,9 +56,8 @@ export const PlankHeading = memo(
     actions = [],
   }: PlankHeadingProps) => {
     const { t } = useTranslation(meta.id);
-    const { invokePromise } = useOperationInvoker();
+    const { graph, onAdjust, onChangeCompanion } = usePlankContext('PlankHeading');
     const runAction = useActionRunner();
-    const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
     const label = pending
@@ -118,19 +117,9 @@ export const PlankHeading = memo(
 
     const handlePlankAction = useCallback(
       (eventType: DeckOperation.PartAdjustment) => {
-        if (eventType.startsWith('solo')) {
-          return invokePromise(DeckOperation.Adjust, { type: eventType, id });
-        } else if (eventType === 'close') {
-          if (part === 'complementary') {
-            return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
-          } else {
-            return invokePromise(LayoutOperation.Close, { subject: [id] });
-          }
-        } else {
-          return invokePromise(DeckOperation.Adjust, { type: eventType, id });
-        }
+        onAdjust?.(id, eventType);
       },
-      [invokePromise, id, part],
+      [onAdjust, id],
     );
 
     const ActionRoot = node && popoverAnchorId === `${meta.id}:${node.id}` ? Popover.Anchor : Fragment;
@@ -140,10 +129,10 @@ export const PlankHeading = memo(
         const target = (event.target as HTMLElement).closest('[data-id]') as HTMLElement | null;
         const tabId = target?.dataset?.id;
         if (tabId) {
-          void invokePromise(DeckOperation.ChangeCompanion, { companion: tabId });
+          onChangeCompanion?.(tabId);
         }
       },
-      [invokePromise],
+      [onChangeCompanion],
     );
 
     return (
