@@ -25,7 +25,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: 'invocations',
               properties: {
-                label: ['pipeline invocations label', { ns: meta.id }],
+                label: ['pipeline-invocations.label', { ns: meta.id }],
                 icon: 'ph--clock-countdown--regular',
                 disposition: 'hidden',
               },
@@ -35,7 +35,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: 'automation',
               properties: {
-                label: ['pipeline automation label', { ns: meta.id }],
+                label: ['pipeline-automation.label', { ns: meta.id }],
                 icon: 'ph--lightning--regular',
                 disposition: 'hidden',
               },

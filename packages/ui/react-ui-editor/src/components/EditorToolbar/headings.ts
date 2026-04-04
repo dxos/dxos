@@ -40,7 +40,7 @@ const createHeadingActions = (currentLevel: string, getView: () => EditorView) =
     return createEditorAction(
       `heading--${levelStr}`,
       {
-        label: ['heading level label', { count: level, ns: translationKey }],
+        label: ['heading-level.label', { count: level, ns: translationKey }],
         icon,
         checked: levelStr === currentLevel,
       },

@@ -18,7 +18,7 @@ import { PlankErrorFallback, PlankLoading } from '../Plank';
 
 import { ToggleComplementarySidebarButton } from './SidebarButton';
 
-const label = ['complementary sidebar title', { ns: meta.id }] satisfies Label;
+const label = ['complementary-sidebar.title', { ns: meta.id }] satisfies Label;
 
 export type ComplementarySidebarProps = {
   current?: string;

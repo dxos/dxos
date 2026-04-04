@@ -48,7 +48,13 @@ const TokenListItem = ({ token, onDelete }: TokenListItemProps) => {
         <p className='text-description'>{token.note}</p>
       </div>
       <ListItem.Endcap>
-        <IconButton iconOnly icon='ph--x--regular' variant='ghost' label={t('delete token')} onClick={handleDelete} />
+        <IconButton
+          iconOnly
+          icon='ph--x--regular'
+          variant='ghost'
+          label={t('delete-token.menu')}
+          onClick={handleDelete}
+        />
       </ListItem.Endcap>
     </ListItem.Root>
   );

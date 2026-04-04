@@ -9,14 +9,15 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, createObjectNode } from '@dxos/app-toolkit';
 import { type Space, isSpace } from '@dxos/client/echo';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { SPACE_TYPE } from '@dxos/plugin-space/types';
+import { getActiveSpace } from '@dxos/plugin-space';
 
 import { meta } from '../../meta';
 import { FeedOperation } from '../../operations';
@@ -44,35 +45,43 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       // Show Subscription.Feed objects as nodes under each space.
       GraphBuilder.createExtension({
-        id: `${meta.id}.subscription-feed-listing`,
+        id: `${meta.id}.subscription-feeds`,
         match: whenSpace,
         connector: (space, get) => {
           const feeds = get(AtomQuery.make(space.db, Filter.type(Subscription.Feed)));
-          return Effect.succeed(
-            feeds
-              .map((feed: Subscription.Feed) =>
-                createObjectNode({ db: space.db, object: feed, resolve, disposition: undefined }),
-              )
-              .filter((node): node is NonNullable<typeof node> => node !== null),
-          );
+          return Effect.succeed([
+            {
+              id: 'feeds',
+              type: 'feeds', // TODO(burdon): Const.
+              data: 'feeds-root', // TODO(burdon): Const.
+              properties: { label: 'Feeds', icon: 'ph--rss--regular', disposition: 'branch', position: 'hoist' },
+              nodes: feeds
+                .map((feed: Subscription.Feed) =>
+                  createObjectNode({
+                    db: space.db,
+                    object: feed,
+                    resolve,
+                  }),
+                )
+                .filter((node): node is NonNullable<typeof node> => node !== null),
+            },
+          ]);
         },
       }),
 
       // Companion panel: resolve the selected feed from the SubscriptionsArticle.
       GraphBuilder.createExtension({
-        id: `${meta.id}.subscription-feed-companion`,
-        match: (node) =>
-          Subscription.instanceOf(node.data)
-            ? Option.some({ feed: node.data as Subscription.Feed, nodeId: node.id })
-            : Option.none(),
+        id: `${meta.id}.subscription-feeds-companion`,
+        match: NodeMatcher.whenNodeType('feeds'),
         connector: (matched, get) => {
-          const db = Obj.getDatabase(matched.feed);
+          const space = getActiveSpace(capabilities);
+          const db = space?.db;
           if (!db) {
             return Effect.succeed([]);
           }
 
           // Resolve the selected feed from the attention selection.
-          const feedId = get(selectedId(matched.nodeId));
+          const feedId = get(selectedId(matched.id));
           const selectedFeed = feedId
             ? get(AtomQuery.make(db, Filter.and(Filter.type(Subscription.Feed), Filter.id(feedId))))[0]
             : undefined;
@@ -81,9 +90,9 @@ export default Capability.makeModule(
             {
               id: 'feed',
               type: PLANK_COMPANION_TYPE,
-              data: selectedFeed ?? 'feed',
+              data: selectedFeed,
               properties: {
-                label: ['feed companion label', { ns: meta.id }],
+                label: ['feed-companion.label', { ns: meta.id }],
                 icon: 'ph--article--regular',
                 disposition: 'hidden',
               },
@@ -103,7 +112,7 @@ export default Capability.makeModule(
               id: 'sync',
               data: () => Operation.invoke(FeedOperation.SyncFeed, { feed }),
               properties: {
-                label: ['sync feed label', { ns: meta.id }],
+                label: ['sync-feed.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },
@@ -112,7 +121,7 @@ export default Capability.makeModule(
               id: 'delete',
               data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [feed] }),
               properties: {
-                label: ['delete object label', { ns: Subscription.Feed.typename }],
+                label: ['delete-object.label', { ns: Subscription.Feed.typename }],
                 icon: 'ph--trash--regular',
                 disposition: 'list-item',
               },

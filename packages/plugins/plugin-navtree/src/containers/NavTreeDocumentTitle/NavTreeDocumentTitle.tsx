@@ -12,7 +12,7 @@ import { meta } from '../../meta';
 export const NavTreeDocumentTitle = ({ node }: { node?: Node.Node }) => {
   const { t } = useTranslation(meta.id);
   useEffect(() => {
-    document.title = node ? toLocalizedString(node.properties.label, t) : t('current app name', { ns: osTranslations });
+    document.title = node ? toLocalizedString(node.properties.label, t) : t('current-app.name', { ns: osTranslations });
   }, [node?.properties?.label]);
   return null;
 };

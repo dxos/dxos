@@ -37,8 +37,8 @@ const handler: Operation.WithHandler<typeof SyncCalendar> = SyncCalendar.pipe(
             id: `${meta.id}/sync-calendar-error`,
             icon: 'ph--warning--regular',
             duration: 5_000,
-            title: ['sync calendar error title', { ns: meta.id }],
-            closeLabel: ['close label', { ns: meta.id }],
+            title: ['sync-calendar-error.title', { ns: meta.id }],
+            closeLabel: ['close.label', { ns: meta.id }],
           });
         }),
       );

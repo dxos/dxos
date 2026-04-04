@@ -24,13 +24,13 @@ export const StatusBarActions = (_props: StatusBarActionsProps) => {
       <StatusBar.Button asChild>
         <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
           <Icon icon='ph--discord-logo--regular' />
-          <StatusBar.Text classNames='hidden sm:block'>{t('discord label')}</StatusBar.Text>
+          <StatusBar.Text classNames='hidden sm:block'>{t('discord.label')}</StatusBar.Text>
         </a>
       </StatusBar.Button>
       <StatusBar.Button asChild>
         <a href='https://github.com/dxos/dxos' target='_blank' rel='noopener noreferrer'>
           <Icon icon='ph--github-logo--regular' />
-          <StatusBar.Text classNames='hidden sm:block'>{t('github label')}</StatusBar.Text>
+          <StatusBar.Text classNames='hidden sm:block'>{t('github.label')}</StatusBar.Text>
         </a>
       </StatusBar.Button>
     </Popover.Root>

@@ -27,7 +27,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
       {objects.map((obj) => {
         const dxn = Obj.getDXN(obj);
         const typename = Obj.getTypename(obj);
-        const label: Label = Obj.getLabel(obj) ?? (typename ? ['object name placeholder', { ns: typename }] : obj.id);
+        const label: Label = Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
         const { icon, hue } = Option.fromNullable(Obj.getSchema(obj)).pipe(
           Option.flatMap(Annotation.IconAnnotation.get),
           Option.getOrElse(() => ({ icon: DEFAULT_OBJECT_ICON, hue: undefined as string | undefined })),
@@ -41,7 +41,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
               icon='ph--x--bold'
               iconOnly
               variant='ghost'
-              label={t('remove object in context label')}
+              label={t('remove-object-in-context.label')}
               classNames='p-0 hover:bg-transparent'
               size={3}
               onClick={() => onUpdateObject?.(dxn, false)}

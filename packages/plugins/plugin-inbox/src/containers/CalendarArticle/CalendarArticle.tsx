@@ -108,13 +108,7 @@ export const CalendarArticle = ({ role, subject: calendar, attendableId }: Calen
 
         <Panel.Root>
           <Panel.Toolbar asChild>
-            <Toolbar.Root>
-              {!isEmpty && (
-                <>
-                  <Toolbar.IconButton icon='ph--calendar--duotone' iconOnly variant='ghost' label={t('calendar')} />
-                </>
-              )}
-            </Toolbar.Root>
+            <Toolbar.Root />
           </Panel.Toolbar>
           <Panel.Content asChild>
             {isEmpty ? (

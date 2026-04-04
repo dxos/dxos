@@ -25,7 +25,7 @@ export default Capability.makeModule(
               type: DECK_COMPANION_TYPE,
               data: null,
               properties: {
-                label: ['help label', { ns: meta.id }],
+                label: ['help.label', { ns: meta.id }],
                 icon: 'ph--question--regular',
                 disposition: 'hidden',
                 position: 'hoist',

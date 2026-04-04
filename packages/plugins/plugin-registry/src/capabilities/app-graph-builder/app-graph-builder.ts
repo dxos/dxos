@@ -25,7 +25,7 @@ export default Capability.makeModule(
               id: meta.id,
               data: () => Operation.invoke(SettingsOperation.OpenPluginRegistry),
               properties: {
-                label: ['open plugin registry label', { ns: meta.id }],
+                label: ['open-plugin-registry.label', { ns: meta.id }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'menu',
               },
@@ -41,7 +41,7 @@ export default Capability.makeModule(
               id: REGISTRY_ID,
               type: meta.id,
               properties: {
-                label: ['plugin registry label', { ns: meta.id }],
+                label: ['plugin-registry.label', { ns: meta.id }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'pin-end',
                 testId: 'treeView.pluginRegistry',
@@ -52,7 +52,7 @@ export default Capability.makeModule(
                   type: 'category' as const,
                   data: registryCategoryId('all'),
                   properties: {
-                    label: ['all plugins label', { ns: meta.id }],
+                    label: ['all-plugins.label', { ns: meta.id }],
                     icon: 'ph--squares-four--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.all',
@@ -63,7 +63,7 @@ export default Capability.makeModule(
                   type: 'category' as const,
                   data: registryCategoryId('installed'),
                   properties: {
-                    label: ['installed plugins label', { ns: meta.id }],
+                    label: ['installed-plugins.label', { ns: meta.id }],
                     icon: 'ph--check--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.installed',
@@ -74,7 +74,7 @@ export default Capability.makeModule(
                   type: 'category' as const,
                   data: registryCategoryId('recommended'),
                   properties: {
-                    label: ['recommended plugins label', { ns: meta.id }],
+                    label: ['recommended-plugins.label', { ns: meta.id }],
                     icon: 'ph--star--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.recommended',
@@ -85,7 +85,7 @@ export default Capability.makeModule(
                   type: 'category' as const,
                   data: registryCategoryId('labs'),
                   properties: {
-                    label: ['labs plugins label', { ns: meta.id }],
+                    label: ['labs-plugins.label', { ns: meta.id }],
                     icon: 'ph--flask--regular',
                     key: REGISTRY_KEY,
                     testId: 'pluginRegistry.labs',
@@ -104,7 +104,7 @@ export default Capability.makeModule(
               id: `${meta.id}.load-by-url`,
               data: Effect.fnUntraced(function* () {}),
               properties: {
-                label: ['load by url label', { ns: meta.id }],
+                label: ['load-by-url.label', { ns: meta.id }],
                 icon: 'ph--cloud-arrow-down--regular',
                 disabled: true,
               },

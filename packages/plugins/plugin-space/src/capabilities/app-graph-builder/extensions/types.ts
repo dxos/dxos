@@ -66,7 +66,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
             type: TYPES_SECTION_TYPE,
             data: null,
             properties: {
-              label: ['types section label', { ns: meta.id }],
+              label: ['types-section.label', { ns: meta.id }],
               icon: 'ph--shapes--regular',
               iconHue: 'neutral',
               role: 'branch',
@@ -148,7 +148,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           type: TYPE_COLLECTION_TYPE,
           data: { space, typename },
           properties: {
-            label: ['type collection all label', { ns: meta.id }],
+            label: ['type-collection-all.label', { ns: meta.id }],
             icon: 'ph--list--regular',
             iconHue: 'neutral',
             role: 'branch',
@@ -276,12 +276,12 @@ const createSchemaNode = ({
       const persistentSchema = mutableSchema.persistentSchema;
       const snapshot = get(AtomObj.make(persistentSchema));
       return {
-        label: snapshot.name || ['object name placeholder', { ns: Type.PersistentType.typename }],
+        label: snapshot.name || ['object-name.placeholder', { ns: Type.PersistentType.typename }],
         nodeId: typename,
       };
     }),
     Match.orElse(() => ({
-      label: getDynamicLabel('typename label', typename, { count: 2, default: typename }),
+      label: getDynamicLabel('typename.label', typename, { count: 2, default: typename }),
       nodeId: typename,
     })),
   );

@@ -50,7 +50,7 @@ const InvitationActions = ({
             onClick={() => send({ type: `reset${Kind}Invitation` })}
             data-testid='invitation-rescuer-reset'
           >
-            {t('reset label')}
+            {t('reset.label')}
           </Action>
         </ActionBar>
       </>
@@ -58,14 +58,14 @@ const InvitationActions = ({
   } else {
     return (
       <>
-        <InputLabel classNames='text-description'>{t('connecting status label')}</InputLabel>
+        <InputLabel classNames='text-description'>{t('connecting-status.label')}</InputLabel>
         <div role='none' className='grow' />
         <ActionBar>
           <Action disabled classNames='order-2' data-testid='next'>
-            {t('next label')}
+            {t('next.label')}
           </Action>
           <Action disabled={!active} onClick={onInvitationCancel} data-testid='invitation-rescuer-cancel'>
-            {t('cancel label')}
+            {t('cancel.label')}
           </Action>
         </ActionBar>
       </>
@@ -90,7 +90,7 @@ export const InvitationRescuer = (props: InvitationRescuerProps) => {
               data-testid='invitation-rescuer-blank-reset'
               onClick={() => send({ type: `reset${Kind}Invitation` })}
             >
-              {t('reset label')}
+              {t('reset.label')}
             </Action>
           </ActionBar>
         </>

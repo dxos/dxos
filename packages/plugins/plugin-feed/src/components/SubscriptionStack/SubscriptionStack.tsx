@@ -22,7 +22,7 @@ export type SubscriptionStackActionHandler = (action: SubscriptionStackAction) =
 //
 
 export type SubscriptionStackProps = {
-  id: string;
+  id?: string;
   feeds?: Subscription.Feed[];
   currentId?: string;
   onAction?: SubscriptionStackActionHandler;

@@ -58,9 +58,9 @@ const Fallback = ({ onClose }: { onClose?: () => void }) => {
     <Dialog.Root modal open onOpenChange={() => onClose?.()}>
       <Dialog.Overlay>
         <Dialog.Content>
-          <Dialog.Title>{t('shell fallback title')}</Dialog.Title>
+          <Dialog.Title>{t('shell-fallback.title')}</Dialog.Title>
           <Dialog.Close asChild onClick={() => onClose?.()}>
-            <Button variant='primary'>{t('close label')}</Button>
+            <Button variant='primary'>{t('close.label')}</Button>
           </Dialog.Close>
         </Dialog.Content>
       </Dialog.Overlay>

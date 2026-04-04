@@ -99,7 +99,7 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
         const handleChange = useCallback((icon: string) => onValueChange(type, icon), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Settings.Item title={label} description={t('icon description')}>
+          <Settings.Item title={label} description={t('icon.description')}>
             <IconPicker
               value={getValue()}
               onChange={handleChange}
@@ -113,7 +113,7 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
         const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
         const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
         return (
-          <Settings.Item title={label} description={t('hue description')}>
+          <Settings.Item title={label} description={t('hue.description')}>
             <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} classNames='justify-self-end' />
           </Settings.Item>
         );
@@ -124,7 +124,7 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('folder properties title')}>
+      <Settings.Section title={t('folder-properties.title')}>
         <Form.Root
           fieldMap={fieldMap}
           schema={WorkspaceSettingsSchema}
@@ -134,10 +134,10 @@ export const WorkspaceSettingsContainer = ({ workspace }: WorkspaceSettingsConta
           <Form.FieldSet />
         </Form.Root>
       </Settings.Section>
-      <Settings.Section title={t('remove folder label')}>
-        <Settings.ItemInput title={t('remove folder label')} description={t('remove folder description')}>
+      <Settings.Section title={t('remove-folder.label')}>
+        <Settings.ItemInput title={t('remove-folder.label')} description={t('remove-folder.description')}>
           <Button variant='destructive' onClick={handleRemove}>
-            {t('remove folder label')}
+            {t('remove-folder.label')}
           </Button>
         </Settings.ItemInput>
       </Settings.Section>

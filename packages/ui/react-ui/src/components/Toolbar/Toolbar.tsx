@@ -214,7 +214,7 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
         iconOnly
         icon='ph--dots-six-vertical--regular'
         variant='ghost'
-        label={label ?? t('toolbar drag handle label')}
+        label={label ?? t('toolbar-drag-handle.label')}
         classNames='dx-focus-ring-none cursor-pointer'
         disabled={!forwardedRef}
         ref={forwardedRef}
@@ -238,7 +238,7 @@ const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconBut
         iconOnly
         icon='ph--x--regular'
         variant='ghost'
-        label={label ?? t('toolbar close label')}
+        label={label ?? t('toolbar-close.label')}
         classNames='cursor-pointer'
         onClick={onClick}
         ref={forwardedRef}
@@ -272,7 +272,7 @@ const ToolbarMenu = <T extends any | void = void>({ context, items }: ToolbarMen
           iconOnly
           variant='ghost'
           icon='ph--dots-three-vertical--regular'
-          label={t('toolbar menu label')}
+          label={t('toolbar-menu.label')}
         />
       </DropdownMenu.Trigger>
       {(items?.length ?? 0) > 0 && (

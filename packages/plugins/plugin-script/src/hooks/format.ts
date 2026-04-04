@@ -39,7 +39,7 @@ export const createFormat = (script: Script.Script) => {
       }
     },
     {
-      label: ['format label', { ns: meta.id }],
+      label: ['format.label', { ns: meta.id }],
       icon: 'ph--magic-wand--regular',
     },
   );

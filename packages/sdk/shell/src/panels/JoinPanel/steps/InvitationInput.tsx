@@ -59,7 +59,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
       {...(onExit ? { onClick: () => onExit() } : { onClick: () => onDone?.(null) })}
       data-testid='join-exit'
     >
-      {t('cancel label')}
+      {t('cancel.label')}
     </Action>
   );
 
@@ -67,8 +67,8 @@ export const InvitationInput = (props: InvitationInputProps) => {
     <>
       <div role='none' className='grow flex flex-col justify-center'>
         <TextInput
-          label={<InputLabel>{t('invitation input label')}</InputLabel>}
-          placeholder={t('invitation input placeholder')}
+          label={<InputLabel>{t('invitation-input.label')}</InputLabel>}
+          placeholder={t('invitation-input.placeholder')}
           disabled={disabled}
           value={inputValue}
           onChange={({ target: { value } }) => setInputValue(value)}
@@ -92,7 +92,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
           onClick={handleNext}
           data-testid={`${Kind.toLowerCase()}-invitation-input-continue`}
         >
-          {t('continue label')}
+          {t('continue.label')}
         </Action>
       </ActionBar>
     </>

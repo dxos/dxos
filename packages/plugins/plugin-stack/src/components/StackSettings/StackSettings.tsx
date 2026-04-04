@@ -15,9 +15,9 @@ export const StackSettings = ({ settings }: { settings: StackSettingsProps }) =>
 
   return (
     <Settings.Root>
-      <Settings.Section title={t('settings title', { ns: meta.id })}>
+      <Settings.Section title={t('settings.title', { ns: meta.id })}>
         <Settings.Group>
-          <Settings.ItemInput title={t('settings separation label')}>
+          <Settings.ItemInput title={t('settings-separation.label')}>
             <Input.Switch
               checked={settings.separation}
               onCheckedChange={(checked) => (settings.separation = !!checked)}
