@@ -17,7 +17,7 @@
 ### SDK
 
 - Consider at all times how to best use the DXOS SDK (esp. `@dxos/echo` and plugin standards.)
-- When creating new components, try to indentify an exemplar that you can copy and compare with the exemplar at each step.
+- When creating new components, try to identify an exemplar that you can copy and compare with the exemplar at each step.
   - Example: complex react components should use the Radix-composition pattern (see `Dialog.tsx`).
   - Example: container components should implement `composable` (see `slots.stories.tsx`).
   - If in doubt, ask the user for an exemplar.
