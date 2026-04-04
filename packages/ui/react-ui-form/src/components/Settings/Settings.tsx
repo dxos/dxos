@@ -40,16 +40,13 @@ const styles = {
 //
 
 const SettingsRoot = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { className, ...composedProps } = composableProps(props);
   return (
-    <ScrollArea.Root
-      {...composedProps}
-      className={mx('dx-document', className)}
-      orientation='vertical'
-      centered
-      ref={forwardedRef}
-    >
-      <ScrollArea.Viewport classNames='p-trim-md'>{children}</ScrollArea.Viewport>
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' thin ref={forwardedRef}>
+      <ScrollArea.Viewport classNames='px-4 pointer-coarse:px-2'>
+        <div role='none' className='dx-document flex flex-col gap-2 py-4'>
+          {children}
+        </div>
+      </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
 });
