@@ -8,17 +8,11 @@ import { describe, test } from 'vitest';
 
 import { qualifyId } from '@dxos/app-graph';
 import { setupGraphBuilder } from '@dxos/app-graph/testing';
-import { createObject } from '@dxos/echo-db';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Text } from '@dxos/schema';
 
 import { meta } from '../../meta';
-import {
-  type FilesystemEntry,
-  type FilesystemFile,
-  type NativeFilesystemState,
-  type NativeMarkdownDocumentsService,
-} from '../../types';
+import { type FilesystemEntry, type FilesystemFile, type NativeFilesystemState } from '../../types';
+import { MockFilesystemManager } from '../../testing/mock-filesystem-manager';
 import { createFilesystemEntryExtensions } from './app-graph-builder';
 
 const FILESYSTEM_TYPE = `${meta.id}.workspace`;
@@ -154,11 +148,12 @@ const setupNativeFilesystemGraphBuilder = ({
   registry: Registry.Registry;
   stateAtom: Atom.Writable<NativeFilesystemState>;
 }) => {
+  const initialState = registry.get(stateAtom);
   const rootExtensions = Effect.runSync(createWorkspaceRootExtensions(stateAtom));
   const stateCapabilitiesAtom = Atom.make([stateAtom]);
-  const nativeMarkdownDocsCapabilitiesAtom = Atom.make([createMarkdownDocumentsStub()]);
+  const filesystemManagerCapabilitiesAtom = Atom.make([new MockFilesystemManager(initialState)]);
   const entryExtensions = Effect.runSync(
-    createFilesystemEntryExtensions(stateCapabilitiesAtom, nativeMarkdownDocsCapabilitiesAtom),
+    createFilesystemEntryExtensions(stateCapabilitiesAtom, filesystemManagerCapabilitiesAtom),
   );
 
   return setupGraphBuilder({
@@ -180,27 +175,6 @@ const createWorkspaceRootExtensions = (stateAtom: Atom.Writable<NativeFilesystem
         })),
       ),
   });
-
-const createMarkdownDocumentsStub = (): NativeMarkdownDocumentsService => {
-  const documents = new Map<string, Text.Text>();
-
-  return {
-    getOrCreate: (file) => {
-      const existing = documents.get(file.id);
-      if (existing) {
-        return existing;
-      }
-
-      const document = createObject(Text.make(file.text ?? ''));
-      documents.set(file.id, document);
-      return document;
-    },
-    getByFileId: (fileId) => documents.get(fileId),
-    getWriteTargetByDxn: () => undefined,
-    getDxnForFileId: () => undefined,
-    evictForWorkspace: () => {},
-  };
-};
 
 const createMarkdownFile = ({
   id,

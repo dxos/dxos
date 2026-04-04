@@ -8,15 +8,16 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 
-import { NativeFilesystemCapabilities, NativeFilesystemOperation, type FilesystemWorkspace } from '../types';
-import { refreshWorkspace } from '../util';
+import { NativeFilesystemCapabilities } from '../types';
 
-export default NativeFilesystemOperation.RefreshDirectory.pipe(
+import { RefreshDirectory } from './definitions';
+
+export default RefreshDirectory.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const stateAtom = yield* Capability.get(NativeFilesystemCapabilities.State);
-      const nativeMarkdownDocs = yield* Capability.get(NativeFilesystemCapabilities.NativeMarkdownDocuments);
+      const filesystemManager = yield* Capability.get(NativeFilesystemCapabilities.FilesystemManager);
 
       const state = registry.get(stateAtom);
       const workspace = state.workspaces.find((ws) => ws.id === id);
@@ -26,15 +27,7 @@ export default NativeFilesystemOperation.RefreshDirectory.pipe(
         return;
       }
 
-      nativeMarkdownDocs.evictForWorkspace(workspace);
-
-      const refreshed = yield* refreshWorkspace(workspace);
-      if (refreshed) {
-        registry.update(stateAtom, (current) => ({
-          ...current,
-          workspaces: current.workspaces.map((ws: FilesystemWorkspace) => (ws.id === id ? refreshed : ws)),
-        }));
-      }
+      yield* filesystemManager.refreshWorkspaceContent(workspace);
     }),
   ),
 );

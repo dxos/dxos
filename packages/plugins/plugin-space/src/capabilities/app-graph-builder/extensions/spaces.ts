@@ -156,6 +156,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
               .filter((space, idx) => (settings?.showHidden ? true : spaceStates[idx] !== SpaceState.SPACE_INACTIVE))
+              .filter((space) => space.tags.length === 0 || isPersonalSpace(space))
               .map((space) =>
                 constructSpaceNode({
                   space,
