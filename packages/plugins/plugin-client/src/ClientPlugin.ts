@@ -23,7 +23,7 @@ import { type ClientPluginOptions } from './types';
 export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addNavigationHandlerModule(({ invitationProp }) => ({
-    activate: NavigationHandler({ invitationProp }),
+    activate: () => NavigationHandler({ invitationProp }),
   })),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addReactContextModule({ activate: ReactContext }),

@@ -21,43 +21,40 @@ export type NavigationHandlerOptions = {
  * NavigationHandler for auth-related URL params.
  * Handles login tokens and device invitation codes.
  */
-const NavigationHandler = ({
-  invitationProp = 'deviceInvitationCode',
-  tokenProp = 'token',
-  tokenTypeProp = 'type',
-}: NavigationHandlerOptions = {}) =>
-  Capability.makeModule(
-    Effect.fnUntraced(function* () {
-      const capabilities = yield* Capability.Service;
-      const operationService = yield* Capability.get(Capabilities.OperationInvoker);
+export default Capability.makeModule(
+  Effect.fnUntraced(function* ({
+    invitationProp = 'deviceInvitationCode',
+    tokenProp = 'token',
+    tokenTypeProp = 'type',
+  }: NavigationHandlerOptions = {}) {
+    const capabilities = yield* Capability.Service;
+    const operationService = yield* Capability.get(Capabilities.OperationInvoker);
 
-      const handler: AppCapabilities.NavigationHandler = (url: URL) =>
-        Effect.gen(function* () {
-          const token = url.searchParams.get(tokenProp);
-          const tokenType = url.searchParams.get(tokenTypeProp);
-          const invitationCode = url.searchParams.get(invitationProp);
+    const handler: AppCapabilities.NavigationHandler = (url: URL) =>
+      Effect.gen(function* () {
+        const token = url.searchParams.get(tokenProp);
+        const tokenType = url.searchParams.get(tokenTypeProp);
+        const invitationCode = url.searchParams.get(invitationProp);
 
-          if (token && tokenType === 'login') {
-            log('login token received via navigation');
-            removeQueryParam(tokenProp);
-            removeQueryParam(tokenTypeProp);
-            yield* Operation.invoke(ClientOperation.RedeemToken, { token });
-          } else if (invitationCode) {
-            log('device invitation received via navigation');
-            removeQueryParam(invitationProp);
-            yield* Operation.invoke(ClientOperation.JoinIdentity, { invitationCode });
-          }
-        }).pipe(
-          Effect.provideService(Capability.Service, capabilities),
-          Effect.provideService(Operation.Service, operationService),
-          Effect.orDie,
-        );
+        if (token && tokenType === 'login') {
+          log('login token received via navigation');
+          removeQueryParam(tokenProp);
+          removeQueryParam(tokenTypeProp);
+          yield* Operation.invoke(ClientOperation.RedeemToken, { token });
+        } else if (invitationCode) {
+          log('device invitation received via navigation');
+          removeQueryParam(invitationProp);
+          yield* Operation.invoke(ClientOperation.JoinIdentity, { invitationCode });
+        }
+      }).pipe(
+        Effect.provideService(Capability.Service, capabilities),
+        Effect.provideService(Operation.Service, operationService),
+        Effect.orDie,
+      );
 
-      return Capability.contributes(AppCapabilities.NavigationHandler, handler);
-    }),
-  );
-
-export default NavigationHandler;
+    return Capability.contributes(AppCapabilities.NavigationHandler, handler);
+  }),
+);
 
 /** Remove a query param from the current browser URL. */
 const removeQueryParam = (key: string) => {
