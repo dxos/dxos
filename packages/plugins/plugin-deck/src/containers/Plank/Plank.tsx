@@ -345,6 +345,16 @@ const PlankComponent = memo(
   },
 );
 
-export { PlankRoot };
+export { PlankRoot, PlankContainer, PlankComponent };
+export type { PlankRootProps, PlankContainerProps, PlankComponentProps };
 
-export type { PlankRootProps };
+/**
+ * Radix-style composite Plank component.
+ */
+export const PlankParts = {
+  Root: PlankRoot,
+  Container: PlankContainer,
+  Article: PlankComponent,
+  Heading: PlankHeading,
+  Controls: PlankControls,
+};
