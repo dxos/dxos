@@ -46,7 +46,7 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
   const attentionAttrs = useAttentionAttributes(props.data.id);
   return (
     <Mosaic.Tile {...props} asChild>
-      <Focus.Item asChild border>
+      <Focus.Item asChild border current={props.current}>
         <Panel.Root classNames='dx-current dx-hover w-full md:w-[50rem] snap-start shrink-0' {...attentionAttrs}>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
@@ -71,7 +71,7 @@ const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
   const attentionAttrs = useAttentionAttributes(props.data.id);
   return (
     <Mosaic.Tile {...props} asChild>
-      <Focus.Item asChild border>
+      <Focus.Item asChild border current={props.current}>
         <Panel.Root classNames='dx-current dx-hover w-full md:w-[50rem] snap-start shrink-0' {...attentionAttrs}>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
