@@ -161,7 +161,7 @@ export const ResetDialog = ({
                 </div>
                 {showStack && (
                   <Message.Root key={error.message} classNames='overflow-auto' data-testid='resetDialog.stackTrace'>
-                    <pre className='text-xs max-h-16'>{error.stack}</pre>
+                    <pre className='text-xs max-h-[136px]'>{error.stack}</pre>
                   </Message.Root>
                 )}
               </>
@@ -169,10 +169,13 @@ export const ResetDialog = ({
           </AlertDialog.Body>
 
           <AlertDialog.ActionBar>
-            <Button variant='primary' onClick={handleSafeMode}>
-              {t('safe-mode.label')}
-            </Button>
-
+            <IconButton
+              variant='primary'
+              icon='ph--stethoscope--regular'
+              iconOnly={!isNotMobile}
+              label={t('safe-mode.label')}
+              onClick={handleSafeMode}
+            />
             {onReset && (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
@@ -215,7 +218,8 @@ export const ResetDialog = ({
               ))}
             <IconButton
               icon='ph--arrow-clockwise--regular'
-              label={t(needRefresh ? 'update and reload page label' : 'reload page label')}
+              iconOnly={!!isNotMobile}
+              label={t(needRefresh ? 'update-and-reload-page.label' : 'reload-page.label')}
               onClick={handleRefresh}
             />
           </AlertDialog.ActionBar>
