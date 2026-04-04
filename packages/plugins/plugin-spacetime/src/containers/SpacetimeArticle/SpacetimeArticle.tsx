@@ -15,7 +15,7 @@ const SpacetimeArticle = ({ role }: SpacetimeArticleProps) => {
   return (
     <Panel.Root>
       <Panel.Content asChild>
-        <SpacetimeEditor className='w-full h-full' />
+        <SpacetimeEditor />
       </Panel.Content>
     </Panel.Root>
   );

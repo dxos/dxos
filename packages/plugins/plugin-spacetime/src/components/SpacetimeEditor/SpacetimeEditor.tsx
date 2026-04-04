@@ -276,9 +276,9 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
       }}
     >
       <canvas
-        ref={canvasRef}
         className='absolute inset-0 w-full h-full block outline-none'
         onContextMenu={(event) => event.preventDefault()}
+        ref={canvasRef}
       />
     </div>
   );

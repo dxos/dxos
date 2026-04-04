@@ -26,6 +26,7 @@ export class SceneManager {
       preserveDrawingBuffer: true,
       stencil: true,
       adaptToDeviceRatio: true,
+      alpha: false,
     });
     this._scene = new Scene(this._engine);
     this._scene.clearColor = themeMode === 'dark' ? BACKGROUND_DARK : BACKGROUND_LIGHT;
