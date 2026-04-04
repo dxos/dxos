@@ -5,6 +5,7 @@
 import { Color3, Mesh, PointerEventTypes, Vector3, StandardMaterial, VertexData } from '@babylonjs/core';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { SceneManager } from '../../engine';
@@ -36,7 +37,72 @@ const CUBE_COLOR = new Color3(0.4, 0.6, 0.9);
 const SELECTED_FACE_COLOR = new Color3(1.0, 0.8, 0.0);
 const EXTRUDE_SENSITIVITY = 0.02;
 
+/**
+ * Builds a highlight overlay mesh for all coplanar triangles sharing the clicked face's normal.
+ */
+const buildFaceSelectionMesh = (
+  faceId: number,
+  positions: Float32Array | number[],
+  indices: Uint32Array | number[],
+  normal: { x: number; y: number; z: number },
+  scene: import('@babylonjs/core').Scene,
+): Mesh => {
+  const numTris = indices.length / 3;
+  const selPositions: number[] = [];
+  const selNormals: number[] = [];
+  const selIndices: number[] = [];
+  let vertCount = 0;
+
+  const refIdx = indices[faceId * 3];
+
+  for (let tri = 0; tri < numTris; tri++) {
+    const triNormal = getFaceNormal(tri, positions, indices);
+    const dot = triNormal.x * normal.x + triNormal.y * normal.y + triNormal.z * normal.z;
+    if (dot < 0.99) {
+      continue;
+    }
+
+    // Check coplanarity: vertex must lie on same plane as reference face.
+    const triIdx = indices[tri * 3];
+    const dx = positions[triIdx * 3] - positions[refIdx * 3];
+    const dy = positions[triIdx * 3 + 1] - positions[refIdx * 3 + 1];
+    const dz = positions[triIdx * 3 + 2] - positions[refIdx * 3 + 2];
+    const planeDist = Math.abs(dx * normal.x + dy * normal.y + dz * normal.z);
+    if (planeDist > 0.01) {
+      continue;
+    }
+
+    for (let vi = 0; vi < 3; vi++) {
+      const idx = indices[tri * 3 + vi];
+      selPositions.push(positions[idx * 3], positions[idx * 3 + 1], positions[idx * 3 + 2]);
+      selNormals.push(normal.x, normal.y, normal.z);
+    }
+    selIndices.push(vertCount, vertCount + 1, vertCount + 2);
+    vertCount += 3;
+  }
+
+  const selMesh = new Mesh('face-selection', scene);
+  const selVd = new VertexData();
+  selVd.positions = selPositions;
+  selVd.indices = selIndices;
+  selVd.normals = selNormals;
+  selVd.applyToMesh(selMesh);
+
+  const selMat = new StandardMaterial('face-selection-mat', scene);
+  selMat.emissiveColor = SELECTED_FACE_COLOR;
+  selMat.diffuseColor = Color3.Black();
+  selMat.specularColor = Color3.Black();
+  selMat.backFaceCulling = false;
+  selMesh.material = selMat;
+
+  // Offset along normal to avoid z-fighting with the underlying geometry.
+  selMesh.position = new Vector3(normal.x * 0.01, normal.y * 0.01, normal.z * 0.01);
+
+  return selMesh;
+};
+
 export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) => {
+  const { themeMode } = useThemeContext();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
@@ -63,13 +129,11 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
         const normal = new Vector3(faceNormal.x, faceNormal.y, faceNormal.z);
         const dist = extrudeDistance;
 
-        // Create extrusion box: thin slab along the normal direction.
         const extrudeBox = Manifold.cube(
           [normal.x !== 0 ? dist : 2, normal.y !== 0 ? dist : 2, normal.z !== 0 ? dist : 2],
           true,
         );
 
-        // Position the extrusion box on the face.
         const offset = normal.scale(1 + dist / 2);
         const translated = extrudeBox.translate([offset.x, offset.y, offset.z]);
 
@@ -78,7 +142,6 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
         extrudeBox.delete();
       }
 
-      // Remove old mesh.
       if (meshRef.current) {
         meshRef.current.dispose();
       }
@@ -102,13 +165,11 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
       return;
     }
 
-    const manager = new SceneManager({ canvas });
+    const manager = new SceneManager({ canvas, themeMode });
     managerRef.current = manager;
 
-    // Build initial cube.
     void rebuildMesh(0, null).then(() => setReady(true));
 
-    // Handle resize via ResizeObserver on the container.
     const resizeObserver = new ResizeObserver(() => manager.resize());
     resizeObserver.observe(container);
 
@@ -117,7 +178,12 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
       manager.dispose();
       managerRef.current = null;
     };
-  }, [rebuildMesh]);
+  }, [rebuildMesh, themeMode]);
+
+  // Update background when theme changes.
+  useEffect(() => {
+    managerRef.current?.setThemeMode(themeMode);
+  }, [themeMode]);
 
   // Set up pointer interaction for face picking and extrusion.
   useEffect(() => {
@@ -134,7 +200,6 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
       switch (pointerInfo.type) {
         case PointerEventTypes.POINTERDOWN: {
           if (!pointerInfo.pickInfo?.hit || pointerInfo.pickInfo.pickedMesh !== meshRef.current) {
-            // Click on empty space — deselect.
             state.selectedFace = null;
             state.selectedNormal = null;
             selectionMeshRef.current?.dispose();
@@ -149,61 +214,15 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
 
           const mesh = meshRef.current!;
           const positions = mesh.getVerticesData('position')!;
-          const indices = mesh.getIndices()!;
+          const indices = mesh.getIndices()! as number[];
           const normal = getFaceNormal(faceId, positions, indices);
 
           state.selectedFace = faceId;
           state.selectedNormal = normal;
 
-          // Build highlight overlay for all coplanar triangles sharing the same normal.
+          // Build highlight overlay for the selected face.
           selectionMeshRef.current?.dispose();
-          const numTris = indices.length / 3;
-          const coplanarPositions: number[] = [];
-          const coplanarNormals: number[] = [];
-          const coplanarIndices: number[] = [];
-          let vertCount = 0;
-
-          for (let tri = 0; tri < numTris; tri++) {
-            const triNormal = getFaceNormal(tri, positions, indices);
-            const dot = triNormal.x * normal.x + triNormal.y * normal.y + triNormal.z * normal.z;
-            if (dot < 0.99) {
-              continue;
-            }
-
-            // Check coplanarity: a vertex of this triangle should lie on the same plane.
-            const refIdx = indices[faceId * 3];
-            const triIdx = indices[tri * 3];
-            const dx = positions[triIdx * 3] - positions[refIdx * 3];
-            const dy = positions[triIdx * 3 + 1] - positions[refIdx * 3 + 1];
-            const dz = positions[triIdx * 3 + 2] - positions[refIdx * 3 + 2];
-            const planeDist = Math.abs(dx * normal.x + dy * normal.y + dz * normal.z);
-            if (planeDist > 0.01) {
-              continue;
-            }
-
-            for (let vi = 0; vi < 3; vi++) {
-              const idx = indices[tri * 3 + vi];
-              coplanarPositions.push(positions[idx * 3], positions[idx * 3 + 1], positions[idx * 3 + 2]);
-              coplanarNormals.push(normal.x, normal.y, normal.z);
-            }
-            coplanarIndices.push(vertCount, vertCount + 1, vertCount + 2);
-            vertCount += 3;
-          }
-
-          const selMesh = new Mesh('face-selection', scene);
-          const selVd = new VertexData();
-          selVd.positions = coplanarPositions;
-          selVd.indices = coplanarIndices;
-          selVd.normals = coplanarNormals;
-          selVd.applyToMesh(selMesh);
-          const selMat = new StandardMaterial('face-selection-mat', scene);
-          selMat.diffuseColor = SELECTED_FACE_COLOR;
-          selMat.specularColor = Color3.Black();
-          selMat.backFaceCulling = false;
-          selMesh.material = selMat;
-          // Offset slightly along normal to avoid z-fighting.
-          selMesh.position = new Vector3(normal.x * 0.005, normal.y * 0.005, normal.z * 0.005);
-          selectionMeshRef.current = selMesh;
+          selectionMeshRef.current = buildFaceSelectionMesh(faceId, positions, indices, normal, scene);
 
           // Start extrusion if shift is held.
           const event = pointerInfo.event as PointerEvent;
@@ -246,7 +265,7 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
 
   return (
     <div
-      {...composableProps(props, { classNames: 'relative surface-base' })}
+      {...composableProps(props, { classNames: 'relative' })}
       ref={(node) => {
         (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         if (typeof forwardedRef === 'function') {

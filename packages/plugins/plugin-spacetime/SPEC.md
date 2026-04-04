@@ -62,6 +62,8 @@ Keep this section up-to-date with periodical restructuring as the plugin becomes
 
 ### Phase 2
 
+- [ ] Create ECHO types for: `Scene.Scene` and `Model.Object`;
+      SpacetimeArticle should be bound to a `Scene.Scene` object; when creating a Scene from composer it should create a default cube.
 - [ ] Persist geometry state to ECHO (serialize/deserialize Manifold mesh data).
 - [ ] Multi-operation history: support undo/redo of extrusions and boolean ops.
 - [ ] Face selection improvements: highlight individual face (not whole mesh), multi-face select.
@@ -84,11 +86,13 @@ Keep this section up-to-date.
 The `manifold-3d` package ships a `manifold.wasm` binary (~1MB) that must be loadable at runtime. The default loading mechanism uses `new URL("manifold.wasm", import.meta.url)` which breaks when Vite/Storybook pre-bundles the module (the `.wasm` file is not copied to the dep cache).
 
 **Current solution:**
+
 1. `manifold-3d` is excluded from Vite's `optimizeDeps` in `tools/storybook-react/.storybook/main.ts` so Vite serves it directly from `node_modules`.
 2. `engine/manifold-context.ts` imports the WASM URL via `import wasmUrl from 'manifold-3d/manifold.wasm?url'` (Vite `?url` suffix) and passes it to the module init via `locateFile`.
 3. `wasm.setup()` must be called after init to register the high-level API (`Manifold.cube`, `Manifold.union`, etc.).
 
 **For Composer (production app):**
+
 - The `vite-plugin-wasm` plugin is already configured in the Vite pipeline.
 - `manifold-3d` must be excluded from `optimizeDeps.exclude` in the Composer Vite config (same as storybook).
 - The `?url` import ensures Vite copies the `.wasm` file to the build output as a static asset.
