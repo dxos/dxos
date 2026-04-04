@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Color3, Mesh, PointerEventTypes, Vector3, StandardMaterial, VertexData } from '@babylonjs/core';
+import { Color3, Matrix, Mesh, PointerEventTypes, Vector3, StandardMaterial, VertexData } from '@babylonjs/core';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/ui-theme';
@@ -18,8 +18,12 @@ type EditorState = {
   selectedNormal: { x: number; y: number; z: number } | null;
   /** Whether user is currently extruding (shift + drag). */
   extruding: boolean;
-  /** Starting Y screen position for extrusion drag. */
+  /** Starting screen position for extrusion drag. */
+  extrudeStartX: number;
   extrudeStartY: number;
+  /** Screen-space direction of the normal (for drag mapping). */
+  extrudeScreenDirX: number;
+  extrudeScreenDirY: number;
   /** Current extrusion distance. */
   extrudeDistance: number;
 };
@@ -28,13 +32,47 @@ const INITIAL_STATE: EditorState = {
   selectedFace: null,
   selectedNormal: null,
   extruding: false,
+  extrudeStartX: 0,
   extrudeStartY: 0,
+  extrudeScreenDirX: 0,
+  extrudeScreenDirY: -1,
   extrudeDistance: 0,
 };
 
 const CUBE_COLOR = new Color3(0.4, 0.6, 0.9);
 const SELECTED_FACE_COLOR = new Color3(1.0, 0.8, 0.0);
 const EXTRUDE_SENSITIVITY = 0.02;
+
+/**
+ * Projects the face normal into screen space and stores the direction in editor state.
+ * This determines which mouse drag direction maps to positive extrusion.
+ */
+/**
+ * Projects the face normal into screen space and stores the direction in editor state.
+ * This determines which mouse drag direction maps to positive extrusion.
+ */
+const computeExtrudeScreenDir = (
+  state: EditorState,
+  normal: { x: number; y: number; z: number },
+  scene: import('@babylonjs/core').Scene,
+  camera: import('@babylonjs/core').ArcRotateCamera,
+  canvas: HTMLCanvasElement,
+) => {
+  const viewProjection = scene.getTransformMatrix();
+  const viewport = camera.viewport.toGlobal(canvas.clientWidth, canvas.clientHeight);
+  const worldOrigin = Vector3.Project(Vector3.Zero(), Matrix.Identity(), viewProjection, viewport);
+  const worldTip = Vector3.Project(
+    new Vector3(normal.x, normal.y, normal.z),
+    Matrix.Identity(),
+    viewProjection,
+    viewport,
+  );
+  const sdx = worldTip.x - worldOrigin.x;
+  const sdy = worldTip.y - worldOrigin.y;
+  const slen = Math.sqrt(sdx * sdx + sdy * sdy);
+  state.extrudeScreenDirX = slen > 0 ? sdx / slen : 0;
+  state.extrudeScreenDirY = slen > 0 ? sdy / slen : -1;
+};
 
 /**
  * Builds a highlight overlay mesh for all coplanar triangles sharing the clicked face's normal.
@@ -211,7 +249,9 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
 
           // Shift-click on selection overlay: start extruding the already-selected face.
           if (event.shiftKey && hitSelectionMesh && state.selectedNormal) {
+            computeExtrudeScreenDir(state, state.selectedNormal, scene, manager.camera, canvasRef.current!);
             state.extruding = true;
+            state.extrudeStartX = event.clientX;
             state.extrudeStartY = event.clientY;
             state.extrudeDistance = 0;
             manager.camera.detachControl();
@@ -245,7 +285,9 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
 
           // Start extrusion if shift is held.
           if (event.shiftKey) {
+            computeExtrudeScreenDir(state, normal, scene, manager.camera, canvasRef.current!);
             state.extruding = true;
+            state.extrudeStartX = event.clientX;
             state.extrudeStartY = event.clientY;
             state.extrudeDistance = 0;
             manager.camera.detachControl();
@@ -259,8 +301,11 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
           }
 
           const event = pointerInfo.event as PointerEvent;
-          const deltaY = state.extrudeStartY - event.clientY;
-          state.extrudeDistance = Math.max(0, deltaY * EXTRUDE_SENSITIVITY);
+          // Project mouse delta onto the screen-space normal direction.
+          const dx = event.clientX - state.extrudeStartX;
+          const dy = event.clientY - state.extrudeStartY;
+          const projected = dx * state.extrudeScreenDirX + dy * state.extrudeScreenDirY;
+          state.extrudeDistance = Math.max(0, projected * EXTRUDE_SENSITIVITY);
 
           void rebuildMesh(state.extrudeDistance, state.selectedNormal);
           break;
