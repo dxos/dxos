@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Annotation, Entity, Obj } from '@dxos/echo';
 import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -17,7 +17,7 @@ import { mx } from '@dxos/ui-theme';
 import { meta } from '../../meta';
 import { useRelatedObjects } from '../../hooks';
 
-export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
+export const RecordArticle = ({ role, subject }: ObjectSurfaceProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(subject);
   const related = useRelatedObjects(db, subject, { references: true, relations: true });
@@ -36,7 +36,7 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
             {/* TODO(burdon): Prompts and related should both be surfaces. */}
             <div role='none' className='flex flex-col gap-form-gap'>
               <Input.Root>
-                <Input.Label>{t('related actions label')}</Input.Label>
+                <Input.Label>{t('related-actions.label')}</Input.Label>
               </Input.Root>
 
               <Surface.Surface role='prompts' data={{ subject }} limit={1} />
@@ -48,7 +48,7 @@ export const RecordArticle = ({ role, subject }: SurfaceComponentProps) => {
                 className={mx('dx-expander flex flex-col gap-form-gap', singleColumn ? 'dx-card-max-width' : 'w-full')}
               >
                 <Input.Root>
-                  <Input.Label>{t('related objects label')}</Input.Label>
+                  <Input.Label>{t('related-objects.label')}</Input.Label>
                 </Input.Root>
                 <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined}>
                   <Masonry.Content items={related} />

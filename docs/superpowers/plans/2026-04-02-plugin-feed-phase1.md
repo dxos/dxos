@@ -452,25 +452,25 @@ export const translations = [
   {
     'en-US': {
       [Subscription.Feed.typename]: {
-        'typename label': 'Feed',
-        'typename label_zero': 'Feeds',
-        'typename label_one': 'Feed',
-        'typename label_other': 'Feeds',
-        'object name placeholder': 'New feed',
-        'add object label': 'Add feed',
-        'rename object label': 'Rename feed',
-        'delete object label': 'Delete feed',
-        'object deleted label': 'Feed deleted',
+        'typename.label': 'Feed',
+        'typename.label_zero': 'Feeds',
+        'typename.label_one': 'Feed',
+        'typename.label_other': 'Feeds',
+        'object-name.placeholder': 'New feed',
+        'add-object.label': 'Add feed',
+        'rename-object.label': 'Rename feed',
+        'delete-object.label': 'Delete feed',
+        'object-deleted.label': 'Feed deleted',
       },
       [Subscription.Post.typename]: {
-        'typename label': 'Post',
-        'typename label_zero': 'Posts',
-        'typename label_one': 'Post',
-        'typename label_other': 'Posts',
+        'typename.label': 'Post',
+        'typename.label_zero': 'Posts',
+        'typename.label_one': 'Post',
+        'typename.label_other': 'Posts',
       },
       [meta.id]: {
-        'plugin name': 'Feed',
-        'empty feed message': 'No posts yet',
+        'plugin.name': 'Feed',
+        'empty-feed.message': 'No posts yet',
       },
     },
   },
@@ -737,7 +737,7 @@ This container receives a `Subscription.Feed` subject, queries its backing ECHO 
 
 import React, { useCallback, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -745,7 +745,7 @@ import { Panel } from '@dxos/react-ui';
 import { PostStack, type PostStackAction } from '../../components';
 import { type Subscription } from '../../types';
 
-export type FeedArticleProps = SurfaceComponentProps<Subscription.Feed>;
+export type FeedArticleProps = ObjectSurfaceProps<Subscription.Feed>;
 
 export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
   const [currentPostId, setCurrentPostId] = useState<string>();

@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
@@ -29,7 +29,7 @@ import { sortByCreated } from '../../util';
 
 import { NewMailbox } from './NewMailbox';
 
-export type MailboxArticleProps = SurfaceComponentProps<
+export type MailboxArticleProps = ObjectSurfaceProps<
   Mailbox.Mailbox,
   {
     filter?: string;
@@ -203,13 +203,13 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
                 <IconButton
                   ref={filterSaveButtonRef}
                   disabled={!filter}
-                  label={t('mailbox toolbar save button label')}
+                  label={t('mailbox-toolbar-save-button.label')}
                   icon='ph--folder-plus--regular'
                   iconOnly
                   onClick={() => filter && handleAction({ type: 'save', filter: filterText })}
                 />
                 <IconButton
-                  label={t('mailbox toolbar clear button label')}
+                  label={t('mailbox-toolbar-clear-button.label')}
                   icon='ph--x--regular'
                   iconOnly
                   onClick={() => handleClear()}
@@ -304,6 +304,7 @@ const useMailboxActions = ({
   db?: Database.Database;
   sortDescending: Atom.Writable<boolean>;
 }) => {
+  const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
   const menu = useMemo(
@@ -311,14 +312,14 @@ const useMailboxActions = ({
       Atom.make((context) => {
         return MenuBuilder.make()
           .root({
-            label: ['mailbox toolbar title', { ns: meta.id }],
+            label: t('mailbox-toolbar.title'),
           })
           .action(
             'sortAscending',
             {
               type: 'sortDescending',
               icon: context.get(sortDescending) ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
-              label: ['mailbox toolbar sort', { ns: meta.id }],
+              label: t('mailbox-toolbar-sort.menu'),
             },
             () => context.set(sortDescending, !context.get(sortDescending)),
           )
@@ -327,7 +328,7 @@ const useMailboxActions = ({
             {
               type: 'composeEmail',
               icon: 'ph--paper-plane-right--regular',
-              label: ['compose email label', { ns: meta.id }],
+              label: t('compose-email.label'),
             },
             () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db }),
           )

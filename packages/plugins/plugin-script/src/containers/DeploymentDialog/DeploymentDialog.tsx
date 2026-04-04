@@ -40,9 +40,9 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
         id: `${meta.id}.deployment-success`,
         icon: 'ph--check--regular',
         duration: Infinity,
-        title: ['script deployment toast label', { ns: meta.id, count: scriptTemplates.length }],
-        description: ['script deployment toast description', { ns: meta.id, count: scriptTemplates.length }],
-        closeLabel: ['script deployment toast close label', { ns: meta.id, count: scriptTemplates.length }],
+        title: ['script-deployment-toast.label', { ns: meta.id, count: scriptTemplates.length }],
+        description: ['script-deployment-toast.description', { ns: meta.id, count: scriptTemplates.length }],
+        closeLabel: ['script-deployment-toast-close.label', { ns: meta.id, count: scriptTemplates.length }],
       });
       void invokePromise(LayoutOperation.UpdateDialog, { state: false });
     }
@@ -52,9 +52,9 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
         id: `${meta.id}.deployment-error`,
         icon: 'ph--warning--regular',
         duration: Infinity,
-        title: ['script deployment error toast label', { ns: meta.id, count: scriptTemplates.length }],
-        description: ['script deployment error toast description', { ns: meta.id, count: scriptTemplates.length }],
-        closeLabel: ['script deployment error toast close label', { ns: meta.id, count: scriptTemplates.length }],
+        title: ['script-deployment-error-toast.label', { ns: meta.id, count: scriptTemplates.length }],
+        description: ['script-deployment-error-toast.description', { ns: meta.id, count: scriptTemplates.length }],
+        closeLabel: ['script-deployment-error-toast-close.label', { ns: meta.id, count: scriptTemplates.length }],
       });
     }
   }, [status, invokePromise]);
@@ -62,14 +62,14 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('deployment dialog title')}</Dialog.Title>
+        <Dialog.Title>{t('deployment-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
           <Dialog.CloseIconButton />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>
         <p>
-          {t('deployment dialog scripts found message', {
+          {t('deployment-dialog-scripts-found.message', {
             count: scriptTemplates.length,
           })}
         </p>
@@ -81,14 +81,14 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
       </Dialog.Body>
       <Dialog.ActionBar>
         <Dialog.Close asChild>
-          <Button disabled={status === 'pending'}>{t('deployment dialog skip button label')}</Button>
+          <Button disabled={status === 'pending'}>{t('deployment-dialog-skip-button.label')}</Button>
         </Dialog.Close>
         <Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
           {status === 'pending'
-            ? t('deployment dialog deploy functions pending button label', {
+            ? t('deployment-dialog-deploy-functions-pending-button.label', {
                 count: scriptTemplates.length,
               })
-            : t('deployment dialog deploy functions button label', {
+            : t('deployment-dialog-deploy-functions-button.label', {
                 count: scriptTemplates.length,
               })}
         </Button>

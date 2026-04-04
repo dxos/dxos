@@ -75,7 +75,7 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
         try {
           await onSend?.(draft);
         } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : t('send email error unknown');
+          const errorMessage = err instanceof Error ? err.message : t('send-email-error-unknown.message');
           setError(errorMessage);
         }
       },
@@ -97,11 +97,11 @@ export const ComposeEmailPanel = composable<HTMLDivElement, ComposeEmailPanelPro
               <Form.FieldSet />
               {error && (
                 <Message.Root valence='error'>
-                  <Message.Title>{t('send email error title')}</Message.Title>
+                  <Message.Title>{t('send-email-error.title')}</Message.Title>
                   <Message.Content>{error}</Message.Content>
                 </Message.Root>
               )}
-              <Form.Submit icon='ph--paper-plane-right--regular' label={t('send email button label')} />
+              <Form.Submit icon='ph--paper-plane-right--regular' label={t('send-email-button.label')} />
             </Form.Content>
           </Form.Viewport>
         </Form.Root>

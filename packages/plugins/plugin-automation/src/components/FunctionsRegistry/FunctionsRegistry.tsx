@@ -96,7 +96,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
                     iconOnly
                     icon={state(func) === 'update' ? 'ph--arrows-clockwise--regular' : 'ph--download--regular'}
                     label={
-                      state(func) === 'update' ? t('update function button label') : t('import function button label')
+                      state(func) === 'update' ? t('update-function-button.label') : t('import-function-button.label')
                     }
                     disabled={state(func) === 'none'}
                     onClick={() => hanleImportOrUpdate(func)}
@@ -108,10 +108,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
         </List.Root>
       )}
 
-      {functions.length === 0 && !loading && (
-        <div className='text-center py-4 text-gray-500'>{t('no functions found')}</div>
-      )}
-      {loading && <div className='text-center py-4 text-gray-500'>{t('loading functions')}</div>}
+      {loading && <div className='text-center py-4 text-gray-500'>{t('loading-functions.message')}</div>}
     </Settings.Container>
   );
 };

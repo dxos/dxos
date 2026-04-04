@@ -48,7 +48,7 @@ export const CreateSpaceDialog = () => {
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('create space dialog title')}</Dialog.Title>
+        <Dialog.Title>{t('create-space-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
           <Dialog.CloseIconButton ref={closeRef} />
         </Dialog.Close>

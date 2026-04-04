@@ -27,7 +27,7 @@ export const DateComponent = ({ start, end, icon }: { start: Date; end?: Date; i
           icon='ph--calendar--duotone'
           iconOnly
           size={4}
-          label={t('open calendar button')}
+          label={t('open-calendar.button')}
           classNames='cursor-pointer text-subdued p-0!'
         />
       )}

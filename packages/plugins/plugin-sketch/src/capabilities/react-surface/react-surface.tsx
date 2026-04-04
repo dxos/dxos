@@ -9,9 +9,10 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 
-import { SketchContainer, SketchSettings } from '../../containers';
+import { SketchSettings } from '../../components';
+import { SketchContainer } from '../../containers';
 import { meta } from '../../meta';
-import { Sketch, SketchCapabilities, type SketchSettingsProps } from '../../types';
+import { Sketch, SketchCapabilities, type Settings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -31,7 +32,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<SketchSettingsProps>(subject.atom);
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <SketchSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),

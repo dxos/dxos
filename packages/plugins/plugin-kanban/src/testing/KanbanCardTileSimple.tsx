@@ -30,7 +30,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
         onCardRemove
           ? [
               createMenuAction('remove', () => onCardRemove(data), {
-                label: t('remove card label'),
+                label: t('remove-card.label'),
                 icon: 'ph--trash--regular',
               }),
             ]
@@ -59,7 +59,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
-                    label={t('action menu label')}
+                    label={t('action-menu.label')}
                   />
                 </Menu.Trigger>
                 <Menu.Content items={menuItems} />

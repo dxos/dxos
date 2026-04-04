@@ -7,6 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { useActiveSpace } from '@dxos/plugin-space';
 
 import { FeedArticle, SubscriptionsArticle } from '../../containers';
 import { meta } from '../../meta';
@@ -19,16 +20,16 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.subscription-feed`,
         role: ['article'],
-        position: 'hoist',
         filter: (
           data,
         ): data is {
           attendableId?: string;
-          subject: Subscription.Feed;
-        } => Subscription.instanceOf(data.subject) && !data.companionTo,
-        component: ({ data, role }) => (
-          <SubscriptionsArticle role={role} subject={data.subject} attendableId={data.attendableId} />
-        ),
+          subject: 'feeds-root';
+        } => data.subject === 'feeds-root' && !data.companionTo,
+        component: ({ data, role }) => {
+          const space = useActiveSpace();
+          return <SubscriptionsArticle role={role} space={space} attendableId={data.attendableId} />;
+        },
       }),
       // Companion view: FeedArticle shown alongside a parent Subscription.Feed.
       Surface.create({
@@ -40,7 +41,7 @@ export default Capability.makeModule(() =>
           attendableId?: string;
           subject: Subscription.Feed;
           companionTo: Subscription.Feed;
-        } => Subscription.instanceOf(data.subject) && Subscription.instanceOf(data.companionTo),
+        } => Subscription.instanceOf(data.subject) && data.companionTo === 'feeds-root',
         component: ({ data, role }) => (
           <FeedArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),

@@ -44,9 +44,9 @@ export const HelpContainer = () => {
         id: `${meta.id}.feedback-success`,
         icon: 'ph--paper-plane-tilt--regular',
         duration: 3000,
-        title: ['feedback toast label', { ns: meta.id }],
-        description: ['feedback toast description', { ns: meta.id }],
-        closeLabel: ['close label', { ns: osTranslations }],
+        title: ['feedback-toast.label', { ns: meta.id }],
+        description: ['feedback-toast.description', { ns: meta.id }],
+        closeLabel: ['close.label', { ns: osTranslations }],
       });
     },
     [invokePromise],

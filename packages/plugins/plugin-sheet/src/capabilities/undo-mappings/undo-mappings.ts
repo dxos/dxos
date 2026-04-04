@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
           axisMeta: output.axisMeta,
           values: output.values,
         }),
-        message: ['axis dropped label', { ns: meta.id }],
+        message: ['axis-dropped.label', { ns: meta.id }],
       }),
     ]),
   ),

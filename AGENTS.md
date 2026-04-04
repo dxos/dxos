@@ -61,6 +61,7 @@
 ## Workflow
 
 - Never work on main; if not already in a worktree, create a new git worktree for the branch you are working on.
+- IMPORTANT: Do not change the branch or worktree after you have started unless you are instructed to directly by the user.
 - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
 - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
 - Check `moon.yml` for available package tasks

@@ -18,7 +18,7 @@ export const TriggersSettings = ({ db }: { db: Database.Database }) => {
 
   return (
     <div className='grid grid-cols-1 md:grid-cols-[1fr_min-content]'>
-      <Settings.ItemInput title={t('runtime label')} description={t('runtime description')}>
+      <Settings.ItemInput title={t('runtime.label')} description={t('runtime.description')}>
         <Input.Switch classNames='justify-self-end' checked={isRunning} onCheckedChange={isRunning ? stop : start} />
       </Settings.ItemInput>
     </div>

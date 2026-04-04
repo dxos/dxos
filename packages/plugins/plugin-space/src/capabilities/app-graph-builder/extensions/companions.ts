@@ -34,7 +34,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
             type: PLANK_COMPANION_TYPE,
             data: 'settings',
             properties: {
-              label: ['object settings label', { ns: meta.id }],
+              label: ['object-settings.label', { ns: meta.id }],
               icon: 'ph--sliders--regular',
               disposition: 'hidden',
               position: 'fallback',
@@ -69,7 +69,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
             type: PLANK_COMPANION_TYPE,
             data: 'selected-objects',
             properties: {
-              label: ['companion selected objects label', { ns: meta.id }],
+              label: ['companion-selected-objects.label', { ns: meta.id }],
               icon: 'ph--tree-view--regular',
               disposition: 'hidden',
             },

@@ -118,7 +118,7 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
             <Input.TextInput
               ref={inputRef}
               autoFocus
-              placeholder={t('function request placeholder')}
+              placeholder={t('function-request.placeholder')}
               value={input}
               onChange={(ev) => setInput(ev.target.value)}
               onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}

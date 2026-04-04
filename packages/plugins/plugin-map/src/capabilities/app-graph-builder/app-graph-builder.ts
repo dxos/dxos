@@ -33,7 +33,7 @@ export default Capability.makeModule(
             id: `${view.id}.toggle-map`,
             data: () => Operation.invoke(MapOperation.Toggle, undefined),
             properties: {
-              label: ['toggle type label', { ns: meta.id }],
+              label: ['toggle-type.label', { ns: meta.id }],
               icon: 'ph--compass--regular',
             },
           },

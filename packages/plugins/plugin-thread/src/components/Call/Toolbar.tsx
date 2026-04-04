@@ -69,13 +69,13 @@ export const Toolbar = ({
           state={{
             on: {
               icon: 'ph--microphone--regular',
-              label: t('mic off'),
+              label: t('mic-off.button'),
               onClick: () => call.turnAudioOff(),
               classNames: 'bg-call-active',
             },
             off: {
               icon: 'ph--microphone-slash--duotone',
-              label: t('mic on'),
+              label: t('mic-on.button'),
               onClick: () => call.turnAudioOn(),
             },
           }}
@@ -85,12 +85,12 @@ export const Toolbar = ({
           state={{
             on: {
               icon: 'ph--video-camera--regular',
-              label: t('camera off'),
+              label: t('camera-off.button'),
               onClick: () => call.turnVideoOff(),
             },
             off: {
               icon: 'ph--video-camera-slash--duotone',
-              label: t('camera on'),
+              label: t('camera-on.button'),
               onClick: () => call.turnVideoOn(),
             },
           }}
@@ -111,12 +111,12 @@ export const Toolbar = ({
               state={{
                 on: {
                   icon: 'ph--monitor--regular',
-                  label: t('screenshare off'),
+                  label: t('screenshare-off.button'),
                   onClick: () => call.turnScreenshareOff(),
                 },
                 off: {
                   icon: 'ph--monitor-arrow-up--duotone',
-                  label: t('screenshare on'),
+                  label: t('screenshare-on.button'),
                   onClick: () => call.turnScreenshareOn(),
                 },
               }}
@@ -141,12 +141,12 @@ export const Toolbar = ({
               state={{
                 on: {
                   icon: 'ph--hand-waving--regular',
-                  label: t('lower hand'),
+                  label: t('lower-hand.button'),
                   onClick: () => call.setRaisedHand(false),
                 },
                 off: {
                   icon: 'ph--hand-palm--duotone',
-                  label: t('raise hand'),
+                  label: t('raise-hand.button'),
                   onClick: () => call.setRaisedHand(true),
                 },
               }}
@@ -154,9 +154,19 @@ export const Toolbar = ({
           </>
         )}
         {joined ? (
-          <IconButton variant='destructive' icon='ph--phone-x--regular' label={t('leave call')} onClick={onLeave} />
+          <IconButton
+            variant='destructive'
+            icon='ph--phone-x--regular'
+            label={t('leave-call.button')}
+            onClick={onLeave}
+          />
         ) : (
-          <IconButton variant='primary' icon='ph--phone-incoming--regular' label={t('join call')} onClick={onJoin} />
+          <IconButton
+            variant='primary'
+            icon='ph--phone-incoming--regular'
+            label={t('join-call.button')}
+            onClick={onJoin}
+          />
         )}
       </NaturalToolbar.Root>
     </div>

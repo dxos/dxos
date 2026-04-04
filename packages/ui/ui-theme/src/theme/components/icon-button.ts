@@ -10,9 +10,8 @@ import { type ButtonStyleProps } from './button';
 
 export type IconButtonStyleProps = ButtonStyleProps & { iconOnly?: boolean };
 
-// TODO(burdon): Gap/font size should depend on density.
 export const iconButtonRoot: ComponentFunction<IconButtonStyleProps> = ({ iconOnly }, ...etc) => {
-  return mx('gap-2', iconOnly && 'p-icon-button-padding min-h-0', ...etc);
+  return mx('dx-button gap-2', ...etc);
 };
 
 export const iconButtonTheme: Theme<IconButtonStyleProps> = {

@@ -67,7 +67,7 @@ export const useObjectMenuItems = (subject: unknown): MenuItem[] => {
           void invokePromise(LayoutOperation.Open, { subject: [subjectPath] });
         },
         {
-          label: t('open label'),
+          label: t('open.label'),
           icon: OPEN_ICON,
         },
       ),

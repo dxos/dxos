@@ -65,7 +65,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['share call link label', { ns: meta.id }],
+                label: ['share-call-link.label', { ns: meta.id }],
                 icon: 'ph--share-network--regular',
               },
             },
@@ -97,7 +97,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: get(AtomObj.make(meeting.thread)),
               properties: {
-                label: ['meeting thread label', { ns: meta.id }],
+                label: ['meeting-thread.label', { ns: meta.id }],
                 icon: 'ph--chat-text--regular',
                 position: 'hoist',
                 disposition: 'hidden',
@@ -183,8 +183,8 @@ export default Capability.makeModule(
               }),
               properties: {
                 label: enabled
-                  ? ['stop transcription label', { ns: meta.id }]
-                  : ['start transcription label', { ns: meta.id }],
+                  ? ['stop-transcription.label', { ns: meta.id }]
+                  : ['start-transcription.label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',
                 disposition: 'toolbar',
               },
@@ -204,7 +204,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: get(AtomObj.make(meeting.transcript)),
               properties: {
-                label: ['transcript companion label', { ns: meta.id }],
+                label: ['transcript-companion.label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',
                 position: 'hoist',
                 disposition: 'hidden',
@@ -224,7 +224,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: get(AtomObj.make(meeting.transcript)),
               properties: {
-                label: ['transcript companion label', { ns: meta.id }],
+                label: ['transcript-companion.label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',
                 position: 'hoist',
                 disposition: 'hidden',
