@@ -11,7 +11,14 @@ import { SceneManager } from '../../engine';
 import { getManifold } from '../../engine';
 import { manifoldToBabylon, getFaceNormal } from '../../engine';
 
+type Extrusion = {
+  normal: { x: number; y: number; z: number };
+  distance: number;
+};
+
 type EditorState = {
+  /** Committed extrusions applied to the base cube. */
+  extrusions: Extrusion[];
   /** Currently selected face index, or null. */
   selectedFace: number | null;
   /** Normal of the selected face. */
@@ -24,11 +31,12 @@ type EditorState = {
   /** Screen-space direction of the normal (for drag mapping). */
   extrudeScreenDirX: number;
   extrudeScreenDirY: number;
-  /** Current extrusion distance. */
+  /** Current in-progress extrusion distance. */
   extrudeDistance: number;
 };
 
 const INITIAL_STATE: EditorState = {
+  extrusions: [],
   selectedFace: null,
   selectedNormal: null,
   extruding: false,
@@ -148,8 +156,55 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
   const fpsRef = useRef<HTMLSpanElement>(null);
   const [ready, setReady] = useState(false);
 
+  /**
+   * Applies an extrusion to a Manifold solid and returns the result.
+   * Caller is responsible for deleting the returned Manifold.
+   */
+  const applyExtrusion = useCallback(
+    (
+      Manifold: Awaited<ReturnType<typeof getManifold>>['Manifold'],
+      solid: ReturnType<Awaited<ReturnType<typeof getManifold>>['Manifold']['cube']>,
+      extrusion: Extrusion,
+    ) => {
+      const { normal, distance } = extrusion;
+      if (distance <= 0) {
+        return solid;
+      }
+
+      const bbox = solid.boundingBox();
+      const minX = bbox.min[0];
+      const minY = bbox.min[1];
+      const minZ = bbox.min[2];
+      const maxX = bbox.max[0];
+      const maxY = bbox.max[1];
+      const maxZ = bbox.max[2];
+
+      const anx = Math.abs(normal.x);
+      const any = Math.abs(normal.y);
+      const anz = Math.abs(normal.z);
+
+      // Slab dimensions: full bounding box size on tangent axes, `distance` on normal axis.
+      const slabW = anx > 0.5 ? distance : maxX - minX;
+      const slabH = any > 0.5 ? distance : maxY - minY;
+      const slabD = anz > 0.5 ? distance : maxZ - minZ;
+      const extrudeBox = Manifold.cube([slabW, slabH, slabD], true);
+
+      // Center of the slab positioned at the face + half the extrusion distance outward.
+      const cx = (minX + maxX) / 2 + normal.x * ((anx > 0.5 ? (maxX - minX) / 2 : 0) + distance / 2);
+      const cy = (minY + maxY) / 2 + normal.y * ((any > 0.5 ? (maxY - minY) / 2 : 0) + distance / 2);
+      const cz = (minZ + maxZ) / 2 + normal.z * ((anz > 0.5 ? (maxZ - minZ) / 2 : 0) + distance / 2);
+      const translated = extrudeBox.translate([cx, cy, cz]);
+
+      const result = Manifold.union(solid, translated);
+      translated.delete();
+      extrudeBox.delete();
+      return result;
+    },
+    [],
+  );
+
   const rebuildMesh = useCallback(
-    async (extrudeDistance: number, faceNormal: { x: number; y: number; z: number } | null) => {
+    async (inProgressExtrusion?: Extrusion) => {
       const manager = managerRef.current;
       if (!manager) {
         return;
@@ -157,29 +212,27 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
 
       const wasm = await getManifold();
       const { Manifold } = wasm;
+      const state = stateRef.current;
 
-      // Start with a unit cube centered at origin.
+      // Start with base cube.
       let solid = Manifold.cube([2, 2, 2], true);
 
-      // If extruding, add a box along the face normal direction.
-      if (faceNormal && extrudeDistance > 0) {
-        const nx = Math.abs(faceNormal.x);
-        const ny = Math.abs(faceNormal.y);
-        const nz = Math.abs(faceNormal.z);
-        const dist = extrudeDistance;
+      // Apply all committed extrusions.
+      for (const extrusion of state.extrusions) {
+        const next = applyExtrusion(Manifold, solid, extrusion);
+        if (next !== solid) {
+          solid.delete();
+          solid = next;
+        }
+      }
 
-        // Create extrusion slab: full face size on tangent axes, `dist` thick along normal.
-        const extrudeBox = Manifold.cube([nx > 0.5 ? dist : 2, ny > 0.5 ? dist : 2, nz > 0.5 ? dist : 2], true);
-
-        // Position so it touches the cube face and extends outward.
-        const ox = faceNormal.x * (1 + dist / 2);
-        const oy = faceNormal.y * (1 + dist / 2);
-        const oz = faceNormal.z * (1 + dist / 2);
-        const translated = extrudeBox.translate([ox, oy, oz]);
-
-        solid = Manifold.union(solid, translated);
-        translated.delete();
-        extrudeBox.delete();
+      // Apply in-progress extrusion preview.
+      if (inProgressExtrusion && inProgressExtrusion.distance > 0) {
+        const next = applyExtrusion(Manifold, solid, inProgressExtrusion);
+        if (next !== solid) {
+          solid.delete();
+          solid = next;
+        }
       }
 
       if (meshRef.current) {
@@ -194,7 +247,7 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
 
       solid.delete();
     },
-    [],
+    [applyExtrusion],
   );
 
   // Initialize Babylon.js scene and Manifold, render initial cube.
@@ -208,7 +261,7 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
     const manager = new SceneManager({ canvas });
     managerRef.current = manager;
 
-    void rebuildMesh(0, null).then(() => setReady(true));
+    void rebuildMesh().then(() => setReady(true));
 
     const resizeObserver = new ResizeObserver(() => manager.resize());
     resizeObserver.observe(container);
@@ -307,13 +360,28 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
           const projected = dx * state.extrudeScreenDirX + dy * state.extrudeScreenDirY;
           state.extrudeDistance = Math.max(0, projected * EXTRUDE_SENSITIVITY);
 
-          void rebuildMesh(state.extrudeDistance, state.selectedNormal);
+          void rebuildMesh({ normal: state.selectedNormal!, distance: state.extrudeDistance });
           break;
         }
 
         case PointerEventTypes.POINTERUP: {
           if (state.extruding) {
+            // Commit the extrusion if distance > 0.
+            if (state.extrudeDistance > 0 && state.selectedNormal) {
+              state.extrusions.push({
+                normal: { ...state.selectedNormal },
+                distance: state.extrudeDistance,
+              });
+              // Rebuild with committed state (no in-progress preview).
+              void rebuildMesh();
+            }
             state.extruding = false;
+            state.extrudeDistance = 0;
+            // Clear selection after extrusion.
+            state.selectedFace = null;
+            state.selectedNormal = null;
+            selectionMeshRef.current?.dispose();
+            selectionMeshRef.current = null;
             manager.camera.attachControl(canvasRef.current!, true);
           }
           break;
