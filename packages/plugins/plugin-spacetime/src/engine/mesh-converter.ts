@@ -9,7 +9,7 @@ import {
   VertexData,
   type Scene,
 } from '@babylonjs/core';
-import type ManifoldModule from 'manifold-3d';
+import type { Manifold } from 'manifold-3d';
 
 export type ConvertOptions = {
   scene: Scene;
@@ -21,7 +21,7 @@ export type ConvertOptions = {
  * Converts a Manifold object to a Babylon.js Mesh.
  */
 export const manifoldToBabylon = (
-  manifold: InstanceType<ManifoldModule['Manifold']>,
+  manifold: Manifold,
   { scene, name = 'manifold-mesh', color = new Color3(0.4, 0.6, 0.9) }: ConvertOptions,
 ): Mesh => {
   const meshGL = manifold.getMesh();

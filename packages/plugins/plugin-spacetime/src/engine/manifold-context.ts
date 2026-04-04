@@ -2,15 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import type ManifoldModule from 'manifold-3d';
+import type { ManifoldToplevel } from 'manifold-3d';
 
-let manifoldInstance: ManifoldModule | null = null;
-let loadingPromise: Promise<ManifoldModule> | null = null;
+let manifoldInstance: ManifoldToplevel | null = null;
+let loadingPromise: Promise<ManifoldToplevel> | null = null;
 
 /**
  * Lazily loads and returns the Manifold WASM module singleton.
  */
-export const getManifold = async (): Promise<ManifoldModule> => {
+export const getManifold = async (): Promise<ManifoldToplevel> => {
   if (manifoldInstance) {
     return manifoldInstance;
   }
