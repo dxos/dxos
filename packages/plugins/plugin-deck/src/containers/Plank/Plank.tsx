@@ -10,26 +10,14 @@ import { PlankContent } from './PlankContent';
 import { PlankHeading } from './PlankHeading';
 import { PlankControls } from './PlankControls';
 
-//
-// PlankRoot
-//
-
 type PlankRootProps = PropsWithChildren<PlankContextValue>;
 
 /**
  * Headless root that provides plank context.
- * Consumers (e.g., DeckMain) call hooks and pass values in as props.
- * In stories/tests, values can be provided directly without plugin infrastructure.
  */
 const PlankRoot = ({ children, ...context }: PlankRootProps) => {
   return <PlankProvider {...context}>{children}</PlankProvider>;
 };
-
-export { PlankRoot };
-export type { PlankRootProps };
-export type { PlankComponentProps } from './PlankComponent';
-export type { PlankContentProps } from './PlankContent';
-export type { PlankContextValue } from './PlankContext';
 
 /**
  * Radix-style composite Plank component.
@@ -41,3 +29,8 @@ export const Plank = {
   Heading: PlankHeading,
   Controls: PlankControls,
 };
+
+export type { PlankRootProps };
+export type { PlankComponentProps } from './PlankComponent';
+export type { PlankContentProps } from './PlankContent';
+export type { PlankContextValue } from './PlankContext';
