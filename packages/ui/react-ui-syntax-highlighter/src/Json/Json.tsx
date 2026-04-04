@@ -2,9 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { JSONPath } from 'jsonpath-plus';
-import React, { type PropsWithChildren, forwardRef, useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  type PropsWithChildren,
+  forwardRef,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { Input } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
@@ -17,8 +24,6 @@ import { SyntaxHighlighter } from '../SyntaxHighlighter';
 // Context
 //
 
-const JSON_NAME = 'Json';
-
 type JsonContextType = {
   data: any;
   filteredData: any;
@@ -28,7 +33,21 @@ type JsonContextType = {
   replacer?: CreateReplacerProps;
 };
 
-const [JsonProvider, useJsonContext] = createContext<JsonContextType>(JSON_NAME);
+const JsonContext = createContext<JsonContextType | null>(null);
+
+/** Require Json context (throws if used outside Json.Root). */
+const useJsonContext = (consumerName: string): JsonContextType => {
+  const context = useContext(JsonContext);
+  if (!context) {
+    throw new Error(`\`${consumerName}\` must be used within \`Json.Root\`.`);
+  }
+  return context;
+};
+
+/** Optional Json context (returns null outside Json.Root). */
+const useOptionalJsonContext = (): JsonContextType | null => {
+  return useContext(JsonContext);
+};
 
 //
 // Root
@@ -48,7 +67,7 @@ const JsonRoot = forwardRef<HTMLDivElement, JsonRootProps>(({ children, data, re
   const [filterError, setFilterError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!data || !filterText.trim().length) {
+    if (!filterText.trim().length) {
       setFilteredData(data);
       setFilterError(null);
     } else {
@@ -67,7 +86,7 @@ const JsonRoot = forwardRef<HTMLDivElement, JsonRootProps>(({ children, data, re
     [data, filteredData, filterText, setFilterText, filterError, replacer],
   );
 
-  return <JsonProvider {...context}>{children}</JsonProvider>;
+  return <JsonContext.Provider value={context}>{children}</JsonContext.Provider>;
 });
 
 JsonRoot.displayName = JSON_ROOT_NAME;
@@ -84,7 +103,7 @@ type JsonContentProps = ComposableProps;
 const JsonContent = composable<HTMLDivElement, JsonContentProps>(({ children, ...props }, forwardedRef) => {
   return (
     <div
-      {...composableProps(props, { role: 'none', classNames: 'flex flex-col h-full overflow-hidden' })}
+      {...composableProps(props, { role: 'none', classNames: 'flex flex-col h-full min-h-0 overflow-hidden' })}
       ref={forwardedRef}
     >
       {children}
@@ -141,23 +160,13 @@ type JsonDataProps = ComposableProps<{
 /** Syntax-highlighted JSON display. Works standalone or within Json.Root. */
 const JsonData = composable<HTMLDivElement, JsonDataProps>(
   ({ data: dataProp, replacer: replacerProp, testId, ...props }, forwardedRef) => {
-    // Try to read from context; fall back to own props.
-    let contextData: any;
-    let contextReplacer: CreateReplacerProps | undefined;
-    try {
-      const context = useJsonContext(JSON_DATA_NAME);
-      contextData = context.filteredData;
-      contextReplacer = context.replacer;
-    } catch {
-      // No context — standalone mode.
-    }
-
-    const data = dataProp ?? contextData;
-    const replacer = replacerProp ?? contextReplacer;
+    const context = useOptionalJsonContext();
+    const data = dataProp ?? context?.filteredData;
+    const replacer = replacerProp ?? context?.replacer;
 
     return (
       <SyntaxHighlighter
-        {...composableProps(props, { classNames: 'w-full py-1 px-2 overflow-auto text-sm' })}
+        {...composableProps(props, { classNames: 'flex-1 min-h-0 w-full py-1 px-2 overflow-y-auto text-sm' })}
         language='json'
         data-testid={testId}
         ref={forwardedRef}
