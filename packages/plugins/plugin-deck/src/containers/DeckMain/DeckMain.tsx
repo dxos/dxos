@@ -34,6 +34,7 @@ export type DeckMainProps = {
 
 export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
   const settings = useAtomCapability(DeckCapabilities.Settings);
+  const pluginManager = usePluginManager();
   const { state, deck, updateState } = useDeckState();
   const { sidebarState, complementarySidebarState, complementarySidebarPanel } = state;
   const { active, companionOpen, companionVariant, fullscreen, solo, plankSizing } = deck;
@@ -42,7 +43,6 @@ export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
-  const pluginManager = usePluginManager();
 
   const scrollLeftRef = useRef<number>(null);
   const deckRef = useRef<HTMLDivElement>(null);
@@ -69,7 +69,6 @@ export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
       // NOTE: Not `useAttended` so that the layout component is not re-rendered when the attended list changes.
       const attention = pluginManager.capabilities.get(AttentionCapabilities.Attention);
       const attended = attention.getCurrent();
-
       shouldRevert.current = true;
       onLayoutChange({ subject: attended[0], mode: 'solo' });
     } else if (isNotMobile && layoutMode === 'solo' && shouldRevert.current) {

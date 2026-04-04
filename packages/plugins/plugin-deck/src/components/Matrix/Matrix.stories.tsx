@@ -35,7 +35,9 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => (
   </Mosaic.Tile>
 );
 
-const DefaultStory = () => {
+type DefaultStoryProps = Pick<MatrixRootProps, 'Tile'>;
+
+const DefaultStory = ({ Tile }: DefaultStoryProps) => {
   const items = useMemo(
     () => [
       Organization.make({ name: faker.company.name() }),
@@ -55,7 +57,7 @@ const DefaultStory = () => {
 
   return (
     <Mosaic.Root classNames='dx-container'>
-      <Matrix.Root Tile={StoryTile} items={items} ref={controller}>
+      <Matrix.Root Tile={Tile} items={items} ref={controller}>
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
@@ -89,8 +91,7 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-deck/components/Matrix',
-  component: Matrix.Root,
-  render: DefaultStory,
+  component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
@@ -101,4 +102,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    Tile: StoryTile,
+  },
+};

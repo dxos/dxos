@@ -96,7 +96,6 @@ const PlankContainer = ({ children, solo, companion, encapsulate }: PlankContain
     return children;
   }
 
-  // TODO(burdon): Make resizable.
   return (
     <div
       role='none'
@@ -148,11 +147,13 @@ const PlankComponent = memo(
     settings,
   }: PlankComponentProps) => {
     const { invokePromise } = useOperationInvoker();
-    const { state, deck } = useDeckState();
-    const { popoverAnchorId, scrollIntoView } = state;
-    const { findFirstFocusable } = useFocusFinders();
-    const canResize = layoutMode === 'deck';
+    const {
+      deck,
+      state: { popoverAnchorId, scrollIntoView },
+    } = useDeckState();
 
+    const canResize = layoutMode === 'deck';
+    const { findFirstFocusable } = useFocusFinders();
     const attentionAttrs = useAttentionAttributes(primary?.id ?? id);
     const index = active ? active.findIndex((entryId) => entryId === id) : 0;
     const length = active?.length ?? 1;
@@ -166,9 +167,10 @@ const PlankComponent = memo(
     const size = deck.plankSizing[sizeKey] as number | undefined;
 
     const handleSizeChange = useCallback(
-      debounce((nextSize: number) => {
-        return invokePromise(DeckOperation.UpdatePlankSize, { id: sizeKey, size: nextSize });
-      }, 200),
+      debounce(
+        (nextSize: number) => invokePromise(DeckOperation.UpdatePlankSize, { id: sizeKey, size: nextSize }),
+        200,
+      ),
       [invokePromise, sizeKey],
     );
 
@@ -197,7 +199,6 @@ const PlankComponent = memo(
     const isSolo = layoutMode.startsWith('solo') && part === 'solo';
     const isAttendable =
       (layoutMode.startsWith('solo') && part.startsWith('solo')) || (layoutMode === 'deck' && part === 'deck');
-
     const sizeAttrs = useMainSize();
 
     const data = useMemo(
