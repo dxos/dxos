@@ -28,10 +28,13 @@
 
 ## Phase 1
 
-- [ ] Decide on the best Typescript 3d engine to use for the plugin
-- [ ] Decide on the topology library
-- [ ] Create the basic plugin structure, incl. types, settings, and components.
-- [ ] Create a minimal storybook-driven experiment that renders a cube and allows the user to extrude surfaces.
-  - [ ] The user should be able to rotate the scene.
-  - [ ] The user should be able to click on a surface to select it.
-  - [ ] The user should be able to extrude the selected surface by holding shift and moving the mouse.
+- [x] Decide on the best Typescript 3d engine to use for the plugin — **Babylon.js** (`@babylonjs/core`)
+  - Chosen for: native TypeScript, built-in scene picking, CSG gizmos, WebGPU-ready.
+- [x] Decide on the topology library — **Manifold** (`manifold-3d`)
+  - Chosen for: fast boolean operations (~1MB WASM), clean API, watertight output guarantees.
+  - OpenCascade.js deferred to future phases if BREP/parametric features needed.
+- [x] Create the basic plugin structure, incl. types, settings, and components.
+- [x] Create a minimal storybook-driven experiment that renders a cube and allows the user to extrude surfaces.
+  - [x] The user should be able to rotate the scene.
+  - [x] The user should be able to click on a surface to select it.
+  - [x] The user should be able to extrude the selected surface by holding shift and moving the mouse.
