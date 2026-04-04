@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ArcRotateCamera, Color4, Engine, HemisphericLight, Scene, Vector3 } from '@babylonjs/core';
+import { ArcRotateCamera, Color3, Color4, Engine, HemisphericLight, Scene, Vector3 } from '@babylonjs/core';
 
 /**
  * Reads the computed background-color from an element and converts to Color4.
@@ -47,9 +47,12 @@ export class SceneManager {
     this._camera.upperRadiusLimit = 50;
     this._camera.wheelPrecision = 20;
 
-    // Light direction points downward (from above).
+    // HemisphericLight direction = vector toward the sky.
+    // Surfaces facing the sky get diffuse; surfaces facing away get groundColor.
     const light = new HemisphericLight('light', new Vector3(0, 1, 0), this._scene);
-    light.intensity = 0.8;
+    light.intensity = 1.0;
+    // Bright ground color so downward-facing surfaces aren't black.
+    light.groundColor = new Color3(0.4, 0.4, 0.4);
 
     this._engine.runRenderLoop(() => {
       this._scene.render();

@@ -48,16 +48,16 @@ export const manifoldToBabylon = (
     const p2y = vertProperties[vi2 * numProp + 1];
     const p2z = vertProperties[vi2 * numProp + 2];
 
-    // Compute flat face normal.
+    // Compute flat face normal (negated because winding was swapped for Babylon CW convention).
     const ax = p1x - p0x;
     const ay = p1y - p0y;
     const az = p1z - p0z;
     const bx = p2x - p0x;
     const by = p2y - p0y;
     const bz = p2z - p0z;
-    let nx = ay * bz - az * by;
-    let ny = az * bx - ax * bz;
-    let nz = ax * by - ay * bx;
+    let nx = -(ay * bz - az * by);
+    let ny = -(az * bx - ax * bz);
+    let nz = -(ax * by - ay * bx);
     const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
     if (len > 0) {
       nx /= len;
@@ -109,7 +109,8 @@ export const manifoldToBabylon = (
 };
 
 /**
- * Computes the face normal from triangle indices and vertex positions.
+ * Computes the outward face normal from triangle indices and vertex positions.
+ * Negated because the mesh uses CW winding (swapped from Manifold's CCW).
  */
 export const getFaceNormal = (
   faceId: number,
@@ -128,9 +129,9 @@ export const getFaceNormal = (
   const by = positions[i2 * 3 + 1] - positions[i0 * 3 + 1];
   const bz = positions[i2 * 3 + 2] - positions[i0 * 3 + 2];
 
-  const nx = ay * bz - az * by;
-  const ny = az * bx - ax * bz;
-  const nz = ax * by - ay * bx;
+  const nx = -(ay * bz - az * by);
+  const ny = -(az * bx - ax * bz);
+  const nz = -(ax * by - ay * bx);
 
   const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
   return { x: nx / len, y: ny / len, z: nz / len };
