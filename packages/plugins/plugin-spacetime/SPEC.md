@@ -38,3 +38,33 @@
   - [x] The user should be able to rotate the scene.
   - [x] The user should be able to click on a surface to select it.
   - [x] The user should be able to extrude the selected surface by holding shift and moving the mouse.
+
+## Specification
+
+### Tech Stack
+
+- **Rendering:** Babylon.js (`@babylonjs/core`) — scene, camera, lighting, picking.
+- **Geometry:** Manifold (`manifold-3d`) — solid modeling via WASM, boolean operations.
+- **Schema:** ECHO `Spacetime.Scene` type with `org.dxos.type.spacetime.scene` typename.
+
+### Implemented (Phase 1)
+
+- Plugin scaffold: metadata, ECHO schema, translations, React surface capability.
+- Babylon.js scene manager with ArcRotateCamera orbit controls.
+- Manifold WASM singleton loader (lazy, async).
+- Manifold-to-Babylon mesh converter (positions, normals, indices).
+- SpacetimeEditor component: renders centered cube, face picking with highlight, shift-drag extrusion via Manifold boolean union.
+- Storybook story (fullscreen).
+
+## Phase 2
+
+- [ ] Persist geometry state to ECHO (serialize/deserialize Manifold mesh data).
+- [ ] Multi-operation history: support undo/redo of extrusions and boolean ops.
+- [ ] Additional solid primitives: sphere, cylinder, torus.
+- [ ] Boolean operations toolbar: union, difference, intersection between selected solids.
+- [ ] Face selection improvements: highlight individual face (not whole mesh), multi-face select.
+- [ ] Transform gizmos: translate, rotate, scale selected solids.
+- [ ] Material/color picker per solid or per face.
+- [ ] Export: OBJ/STL/glTF mesh export from Manifold geometry.
+- [ ] Real-time collaboration: sync scene state across peers via ECHO.
+- [ ] Evaluate OpenCascade.js for BREP/parametric modeling if Manifold limits are hit.
