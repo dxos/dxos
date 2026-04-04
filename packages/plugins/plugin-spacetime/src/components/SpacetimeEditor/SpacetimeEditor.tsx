@@ -167,9 +167,12 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
       extrusion: Extrusion,
     ) => {
       const { normal, distance } = extrusion;
-      if (distance <= 0) {
+      if (distance === 0) {
         return solid;
       }
+
+      const absDist = Math.abs(distance);
+      const sign = distance > 0 ? 1 : -1;
 
       const bbox = solid.boundingBox();
       const minX = bbox.min[0];
@@ -183,22 +186,33 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
       const any = Math.abs(normal.y);
       const anz = Math.abs(normal.z);
 
-      // Slab dimensions: full bounding box size on tangent axes, `distance` on normal axis.
-      const slabW = anx > 0.5 ? distance : maxX - minX;
-      const slabH = any > 0.5 ? distance : maxY - minY;
-      const slabD = anz > 0.5 ? distance : maxZ - minZ;
+      // Slab dimensions: full bounding box size on tangent axes, `absDist` on normal axis.
+      const slabW = anx > 0.5 ? absDist : maxX - minX;
+      const slabH = any > 0.5 ? absDist : maxY - minY;
+      const slabD = anz > 0.5 ? absDist : maxZ - minZ;
       const extrudeBox = Manifold.cube([slabW, slabH, slabD], true);
 
-      // Center of the slab positioned at the face + half the extrusion distance outward.
-      const cx = (minX + maxX) / 2 + normal.x * ((anx > 0.5 ? (maxX - minX) / 2 : 0) + distance / 2);
-      const cy = (minY + maxY) / 2 + normal.y * ((any > 0.5 ? (maxY - minY) / 2 : 0) + distance / 2);
-      const cz = (minZ + maxZ) / 2 + normal.z * ((anz > 0.5 ? (maxZ - minZ) / 2 : 0) + distance / 2);
-      const translated = extrudeBox.translate([cx, cy, cz]);
-
-      const result = Manifold.union(solid, translated);
-      translated.delete();
-      extrudeBox.delete();
-      return result;
+      if (sign > 0) {
+        // Outward: position slab outside the face, union.
+        const cx = (minX + maxX) / 2 + normal.x * ((anx > 0.5 ? (maxX - minX) / 2 : 0) + absDist / 2);
+        const cy = (minY + maxY) / 2 + normal.y * ((any > 0.5 ? (maxY - minY) / 2 : 0) + absDist / 2);
+        const cz = (minZ + maxZ) / 2 + normal.z * ((anz > 0.5 ? (maxZ - minZ) / 2 : 0) + absDist / 2);
+        const translated = extrudeBox.translate([cx, cy, cz]);
+        const result = Manifold.union(solid, translated);
+        translated.delete();
+        extrudeBox.delete();
+        return result;
+      } else {
+        // Inward: position slab inside the face, subtract.
+        const cx = (minX + maxX) / 2 + normal.x * ((anx > 0.5 ? (maxX - minX) / 2 : 0) - absDist / 2);
+        const cy = (minY + maxY) / 2 + normal.y * ((any > 0.5 ? (maxY - minY) / 2 : 0) - absDist / 2);
+        const cz = (minZ + maxZ) / 2 + normal.z * ((anz > 0.5 ? (maxZ - minZ) / 2 : 0) - absDist / 2);
+        const translated = extrudeBox.translate([cx, cy, cz]);
+        const result = Manifold.difference(solid, translated);
+        translated.delete();
+        extrudeBox.delete();
+        return result;
+      }
     },
     [],
   );
@@ -358,7 +372,7 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
           const dx = event.clientX - state.extrudeStartX;
           const dy = event.clientY - state.extrudeStartY;
           const projected = dx * state.extrudeScreenDirX + dy * state.extrudeScreenDirY;
-          state.extrudeDistance = Math.max(0, projected * EXTRUDE_SENSITIVITY);
+          state.extrudeDistance = projected * EXTRUDE_SENSITIVITY;
 
           void rebuildMesh({ normal: state.selectedNormal!, distance: state.extrudeDistance });
           break;
@@ -366,14 +380,13 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
 
         case PointerEventTypes.POINTERUP: {
           if (state.extruding) {
-            // Commit the extrusion if distance > 0.
-            if (state.extrudeDistance > 0 && state.selectedNormal) {
+            // Commit the extrusion if distance != 0.
+            if (state.extrudeDistance !== 0 && state.selectedNormal) {
               state.extrusions.push({
                 normal: { ...state.selectedNormal },
                 distance: state.extrudeDistance,
               });
-              // Rebuild with committed state (no in-progress preview).
-              void rebuildMesh();
+              // No rebuild needed — the current mesh already shows the final state.
             }
             state.extruding = false;
             state.extrudeDistance = 0;
