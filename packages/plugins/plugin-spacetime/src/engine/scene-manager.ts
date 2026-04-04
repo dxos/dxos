@@ -9,21 +9,10 @@ export type SceneManagerOptions = {
 };
 
 /**
- * Resolves a CSS custom property to an rgba Color4.
+ * Resolves the computed background-color of the document body to a Babylon Color4.
  */
-const resolveCssColor = (property: string): Color4 => {
-  const raw = getComputedStyle(document.documentElement).getPropertyValue(property).trim();
-  if (!raw) {
-    return new Color4(0.97, 0.97, 0.97, 1);
-  }
-
-  // Parse oklch(...) or other color formats via a temporary element.
-  const temp = document.createElement('div');
-  temp.style.color = raw;
-  document.body.appendChild(temp);
-  const computed = getComputedStyle(temp).color;
-  document.body.removeChild(temp);
-
+const resolveBackgroundColor = (): Color4 => {
+  const computed = getComputedStyle(document.body).backgroundColor;
   const match = computed.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
   if (match) {
     return new Color4(Number(match[1]) / 255, Number(match[2]) / 255, Number(match[3]) / 255, 1);
@@ -47,7 +36,7 @@ export class SceneManager {
       adaptToDeviceRatio: true,
     });
     this._scene = new Scene(this._engine);
-    this._scene.clearColor = resolveCssColor('--surface-bg');
+    this._scene.clearColor = resolveBackgroundColor();
 
     this._camera = new ArcRotateCamera('camera', -Math.PI / 4, Math.PI / 3, 10, Vector3.Zero(), this._scene);
     this._camera.attachControl(canvas, true);
