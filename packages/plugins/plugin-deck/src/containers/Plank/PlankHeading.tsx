@@ -6,7 +6,6 @@ import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo
 
 import { Surface } from '@dxos/app-framework/ui';
 import { getCompanionVariant } from '@dxos/app-toolkit';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
 import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
@@ -57,9 +56,8 @@ export const PlankHeading = memo(
     actions = [],
   }: PlankHeadingProps) => {
     const { t } = useTranslation(meta.id);
-    const { onAdjust, onChangeCompanion } = usePlankContext('PlankHeading');
+    const { graph, onAdjust, onChangeCompanion } = usePlankContext('PlankHeading');
     const runAction = useActionRunner();
-    const { graph } = useAppGraph();
     const breakpoint = useBreakpoints();
     const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
     const label = pending

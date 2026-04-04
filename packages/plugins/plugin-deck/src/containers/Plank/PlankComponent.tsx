@@ -55,10 +55,12 @@ export const PlankComponent = memo(
     const canResize = layoutMode === 'deck';
     const { findFirstFocusable } = useFocusFinders();
     const attentionAttrs = useAttentionAttributes(primary?.id ?? id);
-    const index = active ? active.findIndex((entryId) => entryId === id) : 0;
+    const orderId = companioned === 'companion' ? primary?.id : id;
+    const index = orderId && active ? active.findIndex((entryId) => entryId === orderId) : -1;
     const length = active?.length ?? 1;
-    const canIncrementStart = active && index !== undefined && index > 0 && length !== undefined && length > 1;
-    const canIncrementEnd = active && index !== undefined && index < length - 1 && length !== undefined;
+    const isOrdered = !!active && index >= 0;
+    const canIncrementStart = isOrdered && index > 0;
+    const canIncrementEnd = isOrdered && index < length - 1;
 
     const rootElement = useRef<HTMLDivElement | null>(null);
 

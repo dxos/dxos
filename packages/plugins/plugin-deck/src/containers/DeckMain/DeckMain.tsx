@@ -364,7 +364,7 @@ export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
               >
                 {active.map((entryId) => (
                   <Fragment key={entryId}>
-                    <PlankSeparator order={order[entryId] - 1} encapsulate={!!settings?.enableDeck} />
+                    <PlankSeparator order={order[entryId] - 1} encapsulate={!!settings?.encapsulatedPlanks} />
                     <ConnectedPlank
                       id={entryId}
                       companionVariant={effectiveCompanionVariant}

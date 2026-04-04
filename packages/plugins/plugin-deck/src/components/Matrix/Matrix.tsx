@@ -47,14 +47,23 @@ interface MatrixController {
 
 const MATRIX_ROOT_NAME = 'Matrix.Root';
 
-type MatrixRootProps = PropsWithChildren<Partial<MatrixContextValue>>;
+type MatrixRootProps = PropsWithChildren<{
+  /** Items to render. */
+  items?: Obj.Any[];
+  /** Tile component to render for each item. */
+  Tile: MosaicStackTileComponent<Obj.Any>;
+  /** Currently attended tile ID. */
+  current?: Obj.ID;
+  /** Callback when the attended tile changes. */
+  onCurrentChange?: (id: Obj.ID | undefined) => void;
+}>;
 
 /**
  * Headless root that provides matrix context.
  * Syncs the attention system with `onCurrentChange` — when a tile gains attention, the callback fires.
  */
 const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
-  ({ children, items = [], Tile, current, onCurrentChange, ...props }, forwardedRef) => {
+  ({ children, items = [], Tile, current, onCurrentChange }, forwardedRef) => {
     const viewportRef = useRef<HTMLElement | null>(null);
     const registerViewport = useCallback((element: HTMLElement | null) => {
       viewportRef.current = element;
@@ -102,11 +111,10 @@ const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
     return (
       <MatrixProvider
         items={items}
-        Tile={Tile!}
+        Tile={Tile}
         current={current}
         onCurrentChange={onCurrentChange}
         registerViewport={registerViewport}
-        {...props}
       >
         {children}
       </MatrixProvider>

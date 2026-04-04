@@ -34,7 +34,7 @@ Ask clarifying questions before you begin.
 - [x] Refactor `DeckMain` as radix-style composite component.
   - This enables us to separate the functionality so that we can isolate the use of react-ui-stack
   - Instead of `useAtomCapability` and `usePluginManager` pass the associated objects into `Root`.
-- [x] Analyize the `DeckMain` and `Plank` components and make recommendations for how to simplify.
+- [x] Analyze the `DeckMain` and `Plank` components and make recommendations for how to simplify.
 - [x] Create a concise spec for the functionality of both `DeckMain` and `Plank` (about 20 bullets each).
 - [x] Check everything builds and commit.
 
