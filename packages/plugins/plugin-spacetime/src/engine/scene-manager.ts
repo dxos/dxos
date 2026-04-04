@@ -4,6 +4,19 @@
 
 import { ArcRotateCamera, Color4, Engine, HemisphericLight, Scene, Vector3 } from '@babylonjs/core';
 
+/**
+ * Reads the computed background-color from an element and converts to Color4.
+ * Works with oklch, rgb, etc. — the browser resolves to rgb for getComputedStyle.
+ */
+const resolveBackgroundColor = (element: HTMLElement): Color4 => {
+  const computed = getComputedStyle(element).backgroundColor;
+  const match = computed.match(/rgba?\(\s*([\d.]+),?\s*([\d.]+),?\s*([\d.]+)/);
+  if (match) {
+    return new Color4(Number(match[1]) / 255, Number(match[2]) / 255, Number(match[3]) / 255, 1);
+  }
+  return new Color4(0.97, 0.97, 0.97, 1);
+};
+
 export type SceneManagerOptions = {
   canvas: HTMLCanvasElement;
 };
@@ -21,11 +34,12 @@ export class SceneManager {
       preserveDrawingBuffer: true,
       stencil: true,
       adaptToDeviceRatio: true,
-      premultipliedAlpha: false,
     });
     this._scene = new Scene(this._engine);
-    // Transparent background — the page CSS background (theme-aware) shows through.
-    this._scene.clearColor = new Color4(0, 0, 0, 0);
+
+    // Read background color from the container div (has bg-(--surface-bg) class).
+    const container = canvas.parentElement;
+    this._scene.clearColor = container ? resolveBackgroundColor(container) : new Color4(0.97, 0.97, 0.97, 1);
 
     this._camera = new ArcRotateCamera('camera', -Math.PI / 4, Math.PI / 3, 10, Vector3.Zero(), this._scene);
     this._camera.attachControl(canvas, true);
