@@ -66,6 +66,7 @@
     "src"
   ],
   "dependencies": {
+    "@automerge/automerge": "catalog:",
     "@codemirror/autocomplete": "catalog:",
     "@codemirror/lang-javascript": "catalog:",
     "@codemirror/language": "catalog:",
@@ -147,9 +148,7 @@
     "typescript": "catalog:"
   },
   "devDependencies": {
-    "@automerge/automerge": "catalog:",
     "@dxos/config": "workspace:*",
-    "@dxos/echo-db": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
