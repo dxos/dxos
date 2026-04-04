@@ -19,7 +19,7 @@ export const ObservabilitySettings = ({ settings, onSettingsChange }: Observabil
   return (
     <SettingsForm.Root>
       <SettingsForm.Section title={t('settings.title', { ns: meta.id })}>
-        <Message.Root valence='info' classNames=' mb-form-padding'>
+        <Message.Root valence='info'>
           <Message.Content>{t('observability.description')}</Message.Content>
         </Message.Root>
         <SettingsForm.Group>

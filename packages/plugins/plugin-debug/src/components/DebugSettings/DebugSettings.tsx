@@ -119,7 +119,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
 
   const handleStorageAdapterChange = useCallback(
     (value: string) => {
-      if (confirm(t('settings-storage-adapter-changed-alert.message'))) {
+      if (confirm(t('settings-storage-adapter.changed-alert.message'))) {
         updateConfig(
           storageConfig,
           setStorageConfig,
@@ -197,7 +197,7 @@ export const DebugSettings = ({ settings, onSettingsChange, logBuffer, onUpload 
                   <Select.Viewport>
                     {Object.keys(StorageAdapters).map((key) => (
                       <Select.Option key={key} value={key}>
-                        {t(`settings storage adaptor ${key} label`)}
+                        {t(`settings-storage-adaptor.${key}.label`)}
                       </Select.Option>
                     ))}
                   </Select.Viewport>

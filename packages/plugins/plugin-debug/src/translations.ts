@@ -28,10 +28,12 @@ export const translations = [
         'settings-choose-storage-adaptor.label': 'Storage adaptor (worker reload required).',
         'settings-repair-success.message': 'Repair succeeded',
         'settings-repair-failed.message': 'Repair failed',
-        'settings-storage-adaptor-idb.label': 'IndexedDB',
-        'settings-storage-adaptor-opfs.label': 'OPFS',
-        'settings-storage-adapter-changed-alert.message':
+
+        'settings-storage-adaptor.idb.label': 'IndexedDB',
+        'settings-storage-adaptor.opfs.label': 'OPFS',
+        'settings-storage-adapter.changed-alert.message':
           'Warning: Swapping the storage adapter will make your data unavailable.',
+
         'settings-data-store.label': 'Data Store',
 
         'open-debug-panel.label': 'Show Debug',

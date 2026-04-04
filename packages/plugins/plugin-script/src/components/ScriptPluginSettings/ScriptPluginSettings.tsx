@@ -50,7 +50,7 @@ export const ScriptPluginSettings = ({ settings, onSettingsChange, onAuthenticat
                   <Select.Viewport>
                     {EditorInputModes.map((mode) => (
                       <Select.Option key={mode} value={mode}>
-                        {t(`settings editor input mode ${mode} label`)}
+                        {t(`settings-editor-input-mode.${mode}.label`)}
                       </Select.Option>
                     ))}
                   </Select.Viewport>

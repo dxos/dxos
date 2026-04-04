@@ -9,15 +9,15 @@ import { withTheme } from '../../testing';
 import { Tooltip } from '../Tooltip';
 
 import { IconButton, type IconButtonProps } from './IconButton';
+import { Button } from './Button';
 
 const DefaultStory = (props: IconButtonProps) => {
   return (
     <Tooltip.Provider>
-      <div className='mb-4'>
+      <div role='none' className='flex gap-4'>
         <IconButton {...props} />
-      </div>
-      <div className='mb-4'>
         <IconButton iconOnly {...props} />
+        <Button>{props.label}</Button>
       </div>
     </Tooltip.Provider>
   );
@@ -28,6 +28,9 @@ const meta = {
   component: IconButton,
   render: DefaultStory as any,
   decorators: [withTheme()],
+  parameters: {
+    layout: 'centered',
+  },
 } satisfies Meta<typeof IconButton>;
 
 export default meta;
