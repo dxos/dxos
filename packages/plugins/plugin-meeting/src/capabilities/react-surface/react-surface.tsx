@@ -14,7 +14,7 @@ import { Channel } from '@dxos/plugin-thread/types';
 import { MeetingSettings } from '../../components';
 import { MeetingContainer, MeetingsList } from '../../containers';
 import { meta } from '../../meta';
-import { Meeting } from '../../types';
+import { Meeting, Settings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<Meeting.Settings>(subject.atom);
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <MeetingSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
