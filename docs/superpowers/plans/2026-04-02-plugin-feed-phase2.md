@@ -205,7 +205,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, companionSegment } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps, useLayout } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { AttentionOperation } from '@dxos/plugin-attention/operations';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
@@ -216,7 +216,7 @@ import { useSelected } from '@dxos/react-ui-attention';
 import { SubscriptionStack, type SubscriptionStackAction } from '../../components';
 import { Subscription } from '../../types';
 
-export type SubscriptionArticleProps = SurfaceComponentProps<
+export type SubscriptionArticleProps = ObjectSurfaceProps<
   Subscription.Feed,
   {
     attendableId?: string;

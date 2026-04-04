@@ -155,7 +155,7 @@ const SettingsContainer = ({ classNames, children }: ThemedClassName<PropsWithCh
     <div
       role='none'
       className={mx([
-        'dx-document',
+        'dx-document flex flex-col gap-3',
         '*:first:mt-0! *:last:mb-0! px-trim-md py-trim-md',
         'border border-separator rounded-md',
         classNames,
@@ -221,6 +221,7 @@ SettingsItemInput.displayName = SETTINGS_ITEM_INPUT_NAME;
 // Settings
 //
 
+// TODO(burdon): Audit and reduce number of components, removing custom classNames.
 export const Settings = {
   Root: SettingsRoot,
   Section: SettingsSection,

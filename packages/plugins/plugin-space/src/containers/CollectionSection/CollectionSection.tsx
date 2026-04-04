@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { type Collection } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
-export const CollectionSection = ({ role, subject }: SurfaceComponentProps<Collection.Collection>) => {
+export const CollectionSection = ({ role, subject }: ObjectSurfaceProps<Collection.Collection>) => {
   const { t } = useTranslation(meta.id);
 
   // TODO(wittjosiah): Better placeholder.

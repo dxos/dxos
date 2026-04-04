@@ -14,13 +14,14 @@ import {
   useSettingsState,
 } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
-import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps, MarkdownSettings } from '../../containers';
+import { MarkdownSettings } from '../../components';
+import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps } from '../../containers';
 import { meta } from '../../meta';
 import { Markdown, MarkdownCapabilities } from '../../types';
 
@@ -86,7 +87,7 @@ export default Capability.makeModule(() =>
 /**
  * Common wrapper.
  */
-const Container = forwardRef<HTMLDivElement, SurfaceComponentProps<Markdown.Document | Text.Text, { id: string }>>(
+const Container = forwardRef<HTMLDivElement, ObjectSurfaceProps<Markdown.Document | Text.Text, { id: string }>>(
   ({ id, attendableId, subject, role }, forwardedRef) => {
     const selectionManager = useCapability(AttentionCapabilities.Selection);
     const settings = useAtomCapability(MarkdownCapabilities.Settings);

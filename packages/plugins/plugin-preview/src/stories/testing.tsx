@@ -4,7 +4,7 @@
 
 import React, { type FC, useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { faker } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
@@ -12,7 +12,7 @@ import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/te
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
 export type DefaultStoryProps<T extends Obj.Any> = {
-  Component: FC<SurfaceComponentProps<T>>;
+  Component: FC<ObjectSurfaceProps<T>>;
   createObject: () => T;
   image?: boolean;
 };

@@ -4,13 +4,13 @@
 
 import React, { useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Card } from '@dxos/react-ui';
 
 import { VoxelEditor } from '../../components';
 import { Voxel } from '../../types';
 
-export type VoxelCardProps = SurfaceComponentProps<Voxel.World>;
+export type VoxelCardProps = ObjectSurfaceProps<Voxel.World>;
 
 /** Read-only card view of a voxel world. */
 export const VoxelCard = ({ subject: world }: VoxelCardProps) => {

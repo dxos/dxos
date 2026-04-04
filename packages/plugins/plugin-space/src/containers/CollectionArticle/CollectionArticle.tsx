@@ -6,7 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation, getCollectionObjectPath, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type Collection } from '@dxos/echo';
 import { ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -28,7 +28,7 @@ const useMetadataResolver = () => {
 /**
  * Article view for collections.
  */
-export const CollectionArticle = ({ subject, attendableId }: SurfaceComponentProps<Collection.Collection>) => {
+export const CollectionArticle = ({ subject, attendableId }: ObjectSurfaceProps<Collection.Collection>) => {
   const { t } = useTranslation(meta.id);
   const resolveMetadata = useMetadataResolver();
   const { items, handleSearch } = useCollectionItems(subject, resolveMetadata, attendableId);

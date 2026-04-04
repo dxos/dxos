@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { useObject } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
@@ -13,7 +13,7 @@ import { DEFAULT_HUE, type ToolMode, VoxelEditor, VoxelToolbar } from '../../com
 import { Life, generateRandomModel } from '../../models';
 import { Voxel } from '../../types';
 
-export type VoxelArticleProps = SurfaceComponentProps<Voxel.World>;
+export type VoxelArticleProps = ObjectSurfaceProps<Voxel.World>;
 
 const LIFE_TICK_MS = 500;
 

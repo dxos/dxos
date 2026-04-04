@@ -737,7 +737,7 @@ This container receives a `Subscription.Feed` subject, queries its backing ECHO 
 
 import React, { useCallback, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -745,7 +745,7 @@ import { Panel } from '@dxos/react-ui';
 import { PostStack, type PostStackAction } from '../../components';
 import { type Subscription } from '../../types';
 
-export type FeedArticleProps = SurfaceComponentProps<Subscription.Feed>;
+export type FeedArticleProps = ObjectSurfaceProps<Subscription.Feed>;
 
 export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
   const [currentPostId, setCurrentPostId] = useState<string>();

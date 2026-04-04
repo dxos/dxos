@@ -8,15 +8,14 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
-import { ObservabilitySettingsSchema } from '../../containers';
 import { meta } from '../../meta';
-import { ObservabilityCapabilities } from '../../types';
+import { ObservabilityCapabilities, Settings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
       key: meta.id,
-      schema: ObservabilitySettingsSchema,
+      schema: Settings.Settings,
       defaultValue: () => ({
         enabled: true,
       }),
@@ -26,7 +25,7 @@ export default Capability.makeModule(() =>
       Capability.contributes(ObservabilityCapabilities.Settings, settingsAtom),
       Capability.contributes(AppCapabilities.Settings, {
         prefix: meta.id,
-        schema: ObservabilitySettingsSchema,
+        schema: Settings.Settings,
         atom: settingsAtom,
       }),
     ];

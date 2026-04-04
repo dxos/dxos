@@ -13,16 +13,10 @@ import { Obj, type Ref } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import { Thread } from '@dxos/types';
 
-import {
-  CallDebugPanel,
-  CallSidebar,
-  ChannelContainer,
-  ChatContainer,
-  ThreadCompanion,
-  ThreadSettings,
-} from '../../containers';
+import { ThreadSettings } from '../../components';
+import { CallDebugPanel, CallSidebar, ChannelContainer, ChatContainer, ThreadCompanion } from '../../containers';
 import { meta } from '../../meta';
-import { Channel, ThreadCapabilities, type ThreadSettingsProps } from '../../types';
+import { Channel, ThreadCapabilities, type Settings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -78,7 +72,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<ThreadSettingsProps>(subject.atom);
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <ThreadSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),

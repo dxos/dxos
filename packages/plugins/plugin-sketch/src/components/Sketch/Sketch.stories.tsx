@@ -11,27 +11,27 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { migrateCanvas } from '../../migrations';
 import { data } from '../../testing';
-import { Sketch as SketchNs } from '../../types';
+import { Sketch } from '../../types';
 
-import { Sketch } from './Sketch';
+import { SketchComponent } from './Sketch';
 
 const DefaultStory = () => {
-  const [sketch, setSketch] = useState(createObject(SketchNs.make({ canvas: { content: data.v2 } })));
+  const [sketch, setSketch] = useState(createObject(Sketch.make({ canvas: { content: data.v2 } })));
 
   const handleClear = () => {
-    const sketch = createObject(SketchNs.make());
+    const sketch = createObject(Sketch.make());
     setSketch(sketch);
   };
 
   const handleCreate = () => {
-    const sketch = createObject(SketchNs.make({ canvas: { content: data.v2 } }));
+    const sketch = createObject(Sketch.make({ canvas: { content: data.v2 } }));
     console.log(JSON.stringify(sketch, undefined, 2));
     setSketch(sketch);
   };
 
   const handleMigrate = async () => {
     const content = await migrateCanvas(data.v1);
-    setSketch(createObject(SketchNs.make({ canvas: { content } })));
+    setSketch(createObject(Sketch.make({ canvas: { content } })));
   };
 
   return (
@@ -48,7 +48,7 @@ const DefaultStory = () => {
         </Button>
       </Toolbar.Root>
       <div className='flex grow overflow-hidden'>
-        <Sketch sketch={sketch} assetsBaseUrl={null} autoZoom />
+        <SketchComponent sketch={sketch} assetsBaseUrl={null} autoZoom />
       </div>
     </div>
   );
@@ -56,7 +56,7 @@ const DefaultStory = () => {
 
 const meta = {
   title: 'plugins/plugin-sketch/components/Sketch',
-  component: Sketch as any,
+  component: SketchComponent as any,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
