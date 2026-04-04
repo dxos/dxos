@@ -8,8 +8,8 @@ import { Capability } from '@dxos/app-framework';
 
 import { meta } from '../meta';
 
-import { type Settings as SettingsType } from './Settings';
+import * as Settings from './Settings';
 
 export namespace SketchCapabilities {
-  export const Settings = Capability.make<Atom.Writable<SettingsType>>(`${meta.id}.capability.settings`);
+  export const Settings = Capability.make<Atom.Writable<Settings.SettingsType>>(`${meta.id}.capability.settings`);
 }

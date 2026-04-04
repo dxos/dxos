@@ -12,11 +12,11 @@ import { Panel as DxPanel, Flex } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { isTauri } from '@dxos/util';
 
-import { Sketch } from '../../components';
-import { type Sketch as SketchNs, type Settings } from '../../types';
+import { SketchComponent } from '../../components';
+import { type Sketch, type Settings } from '../../types';
 
 export type SketchContainerProps = ObjectSurfaceProps<
-  SketchNs.Sketch,
+  Sketch.Sketch,
   {
     settings: Settings.Settings;
   }
@@ -38,7 +38,7 @@ export const SketchContainer = ({ role, attendableId, subject: sketch, settings 
   const handleThreadCreate = actions.find((action) => action.id === `${id}/comment`)?.data;
 
   const sketchElement = (
-    <Sketch
+    <SketchComponent
       // Force instance per sketch object. Otherwise, sketch shares the same instance.
       key={id}
       classNames='dx-attention-surface'

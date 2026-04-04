@@ -2,7 +2,9 @@
 
 TODO(burdon): Factor out Rules into plugins/AGENTS.md
 
-## Background
+## Instructions
+
+### Background
 
 - This is a complex refactor. Think deeply about these tasks and create a plan.
 - When starting a complex refactor that involves applying changes across multiple packages,
