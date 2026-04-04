@@ -5,7 +5,6 @@
 import { Color3, Mesh, PointerEventTypes, Vector3, StandardMaterial, VertexData } from '@babylonjs/core';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { SceneManager } from '../../engine';
@@ -102,7 +101,6 @@ const buildFaceSelectionMesh = (
 };
 
 export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { themeMode } = useThemeContext();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
@@ -165,7 +163,7 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
       return;
     }
 
-    const manager = new SceneManager({ canvas, themeMode });
+    const manager = new SceneManager({ canvas });
     managerRef.current = manager;
 
     void rebuildMesh(0, null).then(() => setReady(true));
@@ -178,12 +176,7 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
       manager.dispose();
       managerRef.current = null;
     };
-  }, [rebuildMesh, themeMode]);
-
-  // Update background when theme changes.
-  useEffect(() => {
-    managerRef.current?.setThemeMode(themeMode);
-  }, [themeMode]);
+  }, [rebuildMesh]);
 
   // Set up pointer interaction for face picking and extrusion.
   useEffect(() => {
@@ -265,7 +258,7 @@ export const SpacetimeEditor = composable<HTMLDivElement>((props, forwardedRef) 
 
   return (
     <div
-      {...composableProps(props, { classNames: 'relative' })}
+      {...composableProps(props, { classNames: 'relative bg-(--surface-bg)' })}
       ref={(node) => {
         (containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         if (typeof forwardedRef === 'function') {
