@@ -17,7 +17,7 @@ import { DeckState } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
-import { PlankParts, type PlankRootProps } from './Plank';
+import { Plank, type PlankRootProps } from './Plank';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.addModule({
@@ -38,10 +38,10 @@ const PlankStory = ({ id, layoutMode, part }: PlankStoryProps) => {
   const { graph } = useAppGraph();
 
   return (
-    <Stack orientation='horizontal'>
-      <PlankParts.Root graph={graph} layoutMode={layoutMode} part={part}>
-        <PlankParts.Article id={id} layoutMode={layoutMode} part={part} />
-      </PlankParts.Root>
+    <Stack orientation='vertical'>
+      <Plank.Root graph={graph} layoutMode={layoutMode} part={part}>
+        <Plank.Article id={id} layoutMode={layoutMode} part={part} />
+      </Plank.Root>
     </Stack>
   );
 };
@@ -50,7 +50,7 @@ const meta = {
   title: 'plugins/plugin-deck/containers/Plank',
   component: PlankStory,
   decorators: [
-    withLayout({ layout: 'fullscreen' }),
+    withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
     }),

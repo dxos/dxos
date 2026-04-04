@@ -3,6 +3,8 @@
 //
 
 export * from './Plank';
+export * from './PlankComponent';
+export * from './PlankContainer';
 export * from './PlankContext';
 export * from './PlankControls';
 export * from './PlankError';
