@@ -28,6 +28,7 @@ import { DeckOperation } from '../../operations';
 import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from './fragments';
 import { Plank, type PlankComponentProps } from '../Plank';
+import { type LayoutChangeRequest } from './DeckMainContext';
 import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 import { ContentEmpty } from './ContentEmpty';
@@ -50,10 +51,11 @@ const DeckMainRoot = ({ children, ...context }: DeckMainRootProps) => {
 // ConnectedPlank
 //
 
-type ConnectedPlankProps = Pick<Plank.ComponentProps, 'layoutMode' | 'part' | 'path' | 'order' | 'active' | 'settings'> & {
-  id?: string;
-  companionVariant?: string;
-};
+type ConnectedPlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'settings'> &
+  Partial<Pick<PlankComponentProps, 'path' | 'order' | 'active'>> & {
+    id?: string;
+    companionVariant?: string;
+  };
 
 const UNKNOWN_ID = 'unknown_id';
 
