@@ -83,7 +83,10 @@ type JsonContentProps = ComposableProps;
 /** Layout container for Json composite parts. */
 const JsonContent = composable<HTMLDivElement, JsonContentProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { classNames: 'flex flex-col h-full overflow-hidden' })} ref={forwardedRef}>
+    <div
+      {...composableProps(props, { role: 'none', classNames: 'flex flex-col h-full overflow-hidden' })}
+      ref={forwardedRef}
+    >
       {children}
     </div>
   );
@@ -102,16 +105,14 @@ type JsonFilterProps = ComposableProps<{
 }>;
 
 /** JSONPath filter input. Must be used within Json.Root. */
-const JsonFilter = composable<HTMLInputElement, JsonFilterProps>(
-  ({ placeholder = 'JSONPath (e.g., $.graph.nodes)', ...props }, forwardedRef) => {
+const JsonFilter = forwardRef<HTMLInputElement, JsonFilterProps>(
+  ({ classNames, placeholder = 'JSONPath (e.g., $.graph.nodes)' }, forwardedRef) => {
     const { filterText, setFilterText, filterError } = useJsonContext(JSON_FILTER_NAME);
 
     return (
       <Input.Root validationValence={filterError ? 'error' : 'success'}>
         <Input.TextInput
-          {...composableProps(props, {
-            classNames: ['p-1 px-2 font-mono', filterError && 'border-rose-500'],
-          })}
+          classNames={['p-1 px-2 font-mono', filterError && 'border-rose-500', classNames]}
           variant='subdued'
           value={filterText}
           placeholder={placeholder}
@@ -156,8 +157,8 @@ const JsonData = composable<HTMLDivElement, JsonDataProps>(
 
     return (
       <SyntaxHighlighter
+        {...composableProps(props, { classNames: 'w-full py-1 px-2 overflow-auto text-sm' })}
         language='json'
-        {...composableProps(props, { classNames: 'w-full py-1 px-2 overflow-y-auto text-sm' })}
         data-testid={testId}
         ref={forwardedRef}
       >
