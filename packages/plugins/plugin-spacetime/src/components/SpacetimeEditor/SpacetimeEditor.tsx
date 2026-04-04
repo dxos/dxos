@@ -230,25 +230,21 @@ export const SpacetimeEditor = composable<HTMLDivElement, SpacetimeEditorProps>(
         const { Manifold } = wasm;
         const state = stateRef.current;
 
-        // Start with base cube.
+        // Start with base cube. Collect intermediates for cleanup.
+        const toDelete: Array<ReturnType<typeof Manifold.cube>> = [];
         let solid = Manifold.cube([2, 2, 2], true);
+        toDelete.push(solid);
 
         // Apply all committed extrusions.
         for (const extrusion of state.extrusions) {
-          const next = applyExtrusion(Manifold, solid, extrusion);
-          if (next !== solid) {
-            solid.delete();
-            solid = next;
-          }
+          solid = applyExtrusion(Manifold, solid, extrusion);
+          toDelete.push(solid);
         }
 
         // Apply in-progress extrusion preview.
         if (inProgressExtrusion && inProgressExtrusion.distance !== 0) {
-          const next = applyExtrusion(Manifold, solid, inProgressExtrusion);
-          if (next !== solid) {
-            solid.delete();
-            solid = next;
-          }
+          solid = applyExtrusion(Manifold, solid, inProgressExtrusion);
+          toDelete.push(solid);
         }
 
         if (meshRef.current) {
@@ -261,7 +257,10 @@ export const SpacetimeEditor = composable<HTMLDivElement, SpacetimeEditorProps>(
           color: CUBE_COLOR,
         });
 
-        solid.delete();
+        // Clean up all Manifold objects after mesh data has been extracted.
+        for (const obj of toDelete) {
+          obj.delete();
+        }
       },
       [applyExtrusion],
     );
