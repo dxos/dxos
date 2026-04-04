@@ -5,10 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
+import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
+import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
+import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Focus, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -19,10 +21,23 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
-import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
+import { DeckState } from '../../capabilities';
 import { Plank, type PlankContextValue } from '../../containers/Plank';
+import { meta as pluginMeta } from '../../meta';
+import { translations } from '../../translations';
+
+import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
 
 faker.seed(123);
+
+const TestPlugin = Plugin.define(pluginMeta).pipe(
+  Plugin.addModule({
+    id: Capability.getModuleTag(DeckState),
+    activatesOn: AppActivationEvents.AppGraphReady,
+    activate: () => DeckState(),
+  }),
+  Plugin.make,
+);
 
 /**
  * Simple tile with JSON display and attention tracking.
@@ -178,9 +193,13 @@ export const Default: Story = {
 export const WithPlank: Story = {
   decorators: [
     withPluginManager({
+      plugins: [...corePlugins(), TestPlugin()],
       capabilities: [storySurfaceExtension],
     }),
   ],
+  parameters: {
+    translations,
+  },
   args: {
     Tile: PlankTile,
   },
