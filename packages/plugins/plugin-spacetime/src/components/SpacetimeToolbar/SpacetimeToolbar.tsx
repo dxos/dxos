@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 
 import { ElevationProvider } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, MenuBuilder, MenuRootProps, useMenuActions } from '@dxos/react-ui-menu';
+import { HuePicker } from '@dxos/react-ui-pickers';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type Model } from '../../types';
@@ -25,6 +26,8 @@ export type SpacetimeToolbarProps = Pick<MenuRootProps, 'alwaysActive'> & {
   onViewChange: (next: Partial<ViewState>) => void;
   selectedPrimitive: Model.PrimitiveType;
   onPrimitiveChange: (primitive: Model.PrimitiveType) => void;
+  selectedHue: string;
+  onHueChange: (hue: string) => void;
   editorActions: EditorActions;
 };
 
@@ -38,6 +41,8 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
       onViewChange,
       selectedPrimitive,
       onPrimitiveChange,
+      selectedHue,
+      onHueChange,
       editorActions,
       ...props
     },
@@ -52,6 +57,8 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
           onViewChange,
           selectedPrimitive,
           onPrimitiveChange,
+          selectedHue,
+          onHueChange,
           editorActions,
         }),
       [tool, onToolChange, viewState, onViewChange, selectedPrimitive, onPrimitiveChange, editorActions],
@@ -61,7 +68,9 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
     return (
       <ElevationProvider elevation='base'>
         <Menu.Root alwaysActive={alwaysActive} {...menuActions}>
-          <Menu.Toolbar {...composableProps(props)} ref={forwardedRef} />
+          <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+            <HuePicker value={selectedHue} onChange={onHueChange} />
+          </Menu.Toolbar>
         </Menu.Root>
       </ElevationProvider>
     );

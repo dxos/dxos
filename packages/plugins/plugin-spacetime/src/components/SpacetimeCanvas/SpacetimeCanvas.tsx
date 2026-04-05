@@ -92,7 +92,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             }
             const objId = (obj as any).id as string;
             const solid = createSolidFromObject(wasm, obj);
-            const objectColor = obj.color ? Color3.FromHexString(obj.color) : theme.object;
+            const objectColor = resolveColor(obj.color);
             const mesh = manifoldToBabylon(solid, {
               scene: manager.scene,
               name: objId ?? 'solid',
@@ -287,7 +287,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           // Add new objects.
           if (!meshesRef.current.has(objId)) {
             const solid = createSolidFromObject(wasm, obj);
-            const objectColor = obj.color ? Color3.FromHexString(obj.color) : theme.object;
+            const objectColor = resolveColor(obj.color);
             const mesh = manifoldToBabylon(solid, {
               scene: manager.scene,
               name: objId,
@@ -339,7 +339,38 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
 );
 
 
-// TODO(burdon): Property on object.
+/** Map DXOS hue names to approximate Babylon Color3 values. */
+const hueColors: Record<string, Color3> = {
+  red: new Color3(0.8, 0.2, 0.2),
+  orange: new Color3(0.9, 0.5, 0.1),
+  amber: new Color3(0.9, 0.7, 0.1),
+  yellow: new Color3(0.9, 0.8, 0.1),
+  lime: new Color3(0.5, 0.8, 0.1),
+  green: new Color3(0.2, 0.7, 0.2),
+  emerald: new Color3(0.2, 0.7, 0.5),
+  teal: new Color3(0.1, 0.7, 0.7),
+  cyan: new Color3(0.1, 0.7, 0.9),
+  sky: new Color3(0.2, 0.6, 0.9),
+  blue: new Color3(0.2, 0.4, 0.8),
+  indigo: new Color3(0.3, 0.3, 0.8),
+  violet: new Color3(0.5, 0.3, 0.8),
+  purple: new Color3(0.6, 0.2, 0.8),
+  fuchsia: new Color3(0.8, 0.2, 0.7),
+  pink: new Color3(0.9, 0.3, 0.5),
+  rose: new Color3(0.9, 0.3, 0.4),
+};
+
+/** Resolve a hue name or hex string to a Babylon Color3. */
+const resolveColor = (color: string | undefined): Color3 => {
+  if (!color) {
+    return theme.object;
+  }
+  if (color.startsWith('#')) {
+    return Color3.FromHexString(color);
+  }
+  return hueColors[color] ?? theme.object;
+};
+
 const theme = {
   object: new Color3(0.3, 0.3, 0.3),
   selected: new Color3(0.3, 0.6, 1.0),

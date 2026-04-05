@@ -34,6 +34,8 @@ type SpacetimeEditorContextValue = {
   onViewChange: (next: Partial<ViewState>) => void;
   selectedPrimitive: Model.PrimitiveType;
   onPrimitiveChange: (primitive: Model.PrimitiveType) => void;
+  selectedHue: string;
+  onHueChange: (hue: string) => void;
   editorActions: EditorActions;
   selectedObjectId: string | null;
   setSelectedObjectId: (id: string | null) => void;
@@ -72,6 +74,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     const [viewState, setViewState] = useState<ViewState>(DEFAULT_VIEW_STATE);
     const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
     const [selectedPrimitive, setSelectedPrimitive] = useState<Model.PrimitiveType>('cube');
+    const [selectedHue, setSelectedHue] = useState<string>('blue');
     const solidsRef = useRef<Map<string, import('manifold-3d').Manifold> | null>(null);
     const importGLBRef = useRef<(data: ArrayBuffer) => Promise<void>>(async () => {});
 
@@ -81,12 +84,13 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       [],
     );
     const handlePrimitiveChange = useCallback((primitive: Model.PrimitiveType) => setSelectedPrimitive(primitive), []);
+    const handleHueChange = useCallback((hue: string) => setSelectedHue(hue), []);
 
     const handleAddObject = useCallback(() => {
       if (!scene) {
         return;
       }
-      const object = Model.make({ primitive: selectedPrimitive });
+      const object = Model.make({ primitive: selectedPrimitive, color: selectedHue });
       Obj.change(scene, (obj) => {
         obj.objects.push(Ref.make(object));
       });
@@ -150,6 +154,8 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         onViewChange={handleViewChange}
         selectedPrimitive={selectedPrimitive}
         onPrimitiveChange={handlePrimitiveChange}
+        selectedHue={selectedHue}
+        onHueChange={handleHueChange}
         editorActions={editorActions}
         selectedObjectId={selectedObjectId}
         setSelectedObjectId={setSelectedObjectId}
@@ -173,8 +179,12 @@ const SPACETIME_EDITOR_TOOLBAR = 'SpacetimeEditor:Toolbar';
 type SpacetimeEditorToolbarProps = Pick<SpacetimeToolbarProps, 'alwaysActive'>;
 
 const SpacetimeEditorToolbar = composable<HTMLDivElement, SpacetimeEditorToolbarProps>((props, forwardedRef) => {
-  const { tool, onToolChange, viewState, onViewChange, selectedPrimitive, onPrimitiveChange, editorActions } =
-    useSpacetimeEditorContext(SPACETIME_EDITOR_TOOLBAR);
+  const {
+    tool, onToolChange, viewState, onViewChange,
+    selectedPrimitive, onPrimitiveChange,
+    selectedHue, onHueChange,
+    editorActions,
+  } = useSpacetimeEditorContext(SPACETIME_EDITOR_TOOLBAR);
 
   return (
     <SpacetimeToolbar
@@ -185,6 +195,8 @@ const SpacetimeEditorToolbar = composable<HTMLDivElement, SpacetimeEditorToolbar
       onViewChange={onViewChange}
       selectedPrimitive={selectedPrimitive}
       onPrimitiveChange={onPrimitiveChange}
+      selectedHue={selectedHue}
+      onHueChange={onHueChange}
       editorActions={editorActions}
       ref={forwardedRef}
     />
