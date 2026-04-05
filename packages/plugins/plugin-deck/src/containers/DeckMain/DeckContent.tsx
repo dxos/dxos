@@ -15,9 +15,11 @@ import { DeckViewport } from './DeckViewport';
 import { StatusBar } from './StatusBar';
 import { Banner } from './Banner';
 
+const DECK_CONTENT_NAME = 'DeckContent';
+
 export const DeckContent = () => {
   const { settings, pluginManager, state, deck, updateState, layoutMode, onLayoutChange } =
-    useDeckContext('DeckContent');
+    useDeckContext(DECK_CONTENT_NAME);
   const { sidebarState, complementarySidebarState, complementarySidebarPanel } = state;
   const { active, fullscreen, solo } = deck;
   const breakpoint = useBreakpoints();
@@ -102,3 +104,5 @@ export const DeckContent = () => {
     </Main.Root>
   );
 };
+
+DeckContent.displayName = DECK_CONTENT_NAME;

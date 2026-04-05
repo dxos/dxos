@@ -10,7 +10,8 @@ import { type DeckStateHook } from '../../hooks/useDeckState';
 import { type LayoutMode, type Settings } from '../../types';
 import React, { PropsWithChildren } from 'react';
 
-const DECK_MAIN_NAME = 'DeckMain';
+const DECK_NAME = 'Deck';
+const DECK_ROOT_NAME = 'DeckRoot';
 
 /** Request to change the layout mode. */
 export type DeckLayoutChangeRequest = { subject?: string; mode: string } | { revert: true };
@@ -30,7 +31,7 @@ export type DeckContextValue = {
   onLayoutChange: (request: DeckLayoutChangeRequest) => void;
 } & Pick<DeckStateHook, 'state' | 'deck' | 'updateState'>;
 
-export const [DeckProvider, useDeckContext] = createContext<DeckContextValue>(DECK_MAIN_NAME);
+export const [DeckProvider, useDeckContext] = createContext<DeckContextValue>(DECK_NAME);
 
 //
 // Root
@@ -44,3 +45,5 @@ export type DeckRootProps = PropsWithChildren<DeckContextValue>;
 export const DeckRoot = ({ children, ...context }: DeckRootProps) => {
   return <DeckProvider {...context}>{children}</DeckProvider>;
 };
+
+DeckRoot.displayName = DECK_ROOT_NAME;

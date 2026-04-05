@@ -16,14 +16,16 @@ import { useDeckContext } from './DeckRoot';
 import { ConnectedPlank } from './ConnectedPlank';
 import { ContentEmpty } from './ContentEmpty';
 
+const DECK_VIEWPORT_NAME = 'DeckViewport';
+
 /**
  * Deck viewport that renders the main content area.
  * Handles empty state, deck mode (horizontal stack), and solo mode.
  */
 export const DeckViewport = () => {
-  const { settings, state, deck, layoutMode } = useDeckContext('DeckViewport');
-  const { sidebarState, complementarySidebarState } = state;
+  const { deck, state, settings, layoutMode } = useDeckContext(DECK_VIEWPORT_NAME);
   const { active, companionOpen, companionVariant, fullscreen, solo, plankSizing } = deck;
+  const { sidebarState, complementarySidebarState } = state;
   const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
@@ -193,6 +195,8 @@ export const DeckViewport = () => {
     </Main.Content>
   );
 };
+
+DeckViewport.displayName = DECK_VIEWPORT_NAME;
 
 const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: boolean }) =>
   order > 0 ? (
