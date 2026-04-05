@@ -22,10 +22,13 @@ export const createSolidFromObject = (Manifold: ManifoldToplevel['Manifold'], ob
       solid = Manifold.sphere(size[0] / 2, 24);
       break;
     case 'cylinder':
-      solid = Manifold.cylinder(size[1], size[0] / 2, size[0] / 2, 24);
+      solid = Manifold.cylinder(size[1], size[0] / 2, size[0] / 2, 24, true);
+      break;
+    case 'pyramid':
+      solid = Manifold.cylinder(size[1], size[0] / 2, 0, 4, true);
       break;
     case 'torus':
-      solid = Manifold.cylinder(size[1] * 0.5, size[0] / 2, size[0] / 2, 24);
+      solid = Manifold.cylinder(size[1] * 0.5, size[0] / 2, size[0] / 2, 24, true);
       break;
     case 'cube':
     default:

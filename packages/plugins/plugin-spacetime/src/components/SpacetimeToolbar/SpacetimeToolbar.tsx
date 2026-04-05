@@ -9,7 +9,8 @@ import { ElevationProvider } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, MenuBuilder, MenuRootProps, useMenuActions } from '@dxos/react-ui-menu';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { type EditorActions, createEditorActions } from './actions';
+import { type Model } from '../../types';
+import { type EditorActions, createEditorActions, createPrimitiveSelector } from './actions';
 import { type SpacetimeTool, createToolActions } from './tools';
 import { type ViewState, createSelectionModeActions, createViewActions } from './view';
 
@@ -22,14 +23,16 @@ export type SpacetimeToolbarProps = Pick<MenuRootProps, 'alwaysActive'> & {
   onToolChange: (tool: SpacetimeTool) => void;
   viewState: ViewState;
   onViewChange: (next: Partial<ViewState>) => void;
+  selectedPrimitive: Model.PrimitiveType;
+  onPrimitiveChange: (primitive: Model.PrimitiveType) => void;
   editorActions: EditorActions;
 };
 
 export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps>(
-  ({ alwaysActive, tool, onToolChange, viewState, onViewChange, editorActions, ...props }, forwardedRef) => {
+  ({ alwaysActive, tool, onToolChange, viewState, onViewChange, selectedPrimitive, onPrimitiveChange, editorActions, ...props }, forwardedRef) => {
     const menuCreator = useMemo(
-      () => createToolbarActions({ tool, onToolChange, viewState, onViewChange, editorActions }),
-      [tool, onToolChange, viewState, onViewChange, editorActions],
+      () => createToolbarActions({ tool, onToolChange, viewState, onViewChange, selectedPrimitive, onPrimitiveChange, editorActions }),
+      [tool, onToolChange, viewState, onViewChange, selectedPrimitive, onPrimitiveChange, editorActions],
     );
     const menuActions = useMenuActions(menuCreator);
 
@@ -48,12 +51,15 @@ const createToolbarActions = ({
   onToolChange,
   viewState,
   onViewChange,
+  selectedPrimitive,
+  onPrimitiveChange,
   editorActions,
 }: SpacetimeToolbarProps): Atom.Atom<ActionGraphProps> => {
   return Atom.make(() => {
     const builder = MenuBuilder.make();
     builder.subgraph(createSelectionModeActions(viewState, onViewChange));
     builder.separator('gap-1', 'line');
+    builder.subgraph(createPrimitiveSelector(selectedPrimitive, onPrimitiveChange));
     builder.subgraph(createEditorActions(editorActions));
     builder.separator('gap-2', 'line');
     builder.subgraph(createToolActions({ tool }, onToolChange));

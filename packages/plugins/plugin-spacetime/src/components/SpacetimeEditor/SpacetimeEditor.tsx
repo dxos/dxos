@@ -31,8 +31,9 @@ type SpacetimeEditorContextValue = {
   onToolChange: (tool: SpacetimeTool) => void;
   viewState: ViewState;
   onViewChange: (next: Partial<ViewState>) => void;
+  selectedPrimitive: Model.PrimitiveType;
+  onPrimitiveChange: (primitive: Model.PrimitiveType) => void;
   editorActions: EditorActions;
-  /** Currently selected object id (set by canvas, read by actions). */
   selectedObjectId: string | null;
   setSelectedObjectId: (id: string | null) => void;
 };
@@ -65,23 +66,25 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     const [tool, setTool] = useState<SpacetimeTool>('select');
     const [viewState, setViewState] = useState<ViewState>(DEFAULT_VIEW_STATE);
     const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+    const [selectedPrimitive, setSelectedPrimitive] = useState<Model.PrimitiveType>('cube');
 
     const handleToolChange = useCallback((tool: SpacetimeTool) => setTool(tool), []);
     const handleViewChange = useCallback(
       (next: Partial<ViewState>) => setViewState((prev) => ({ ...prev, ...next })),
       [],
     );
+    const handlePrimitiveChange = useCallback((primitive: Model.PrimitiveType) => setSelectedPrimitive(primitive), []);
 
-    const handleAddCube = useCallback(() => {
+    const handleAddObject = useCallback(() => {
       if (!scene) {
         return;
       }
-      const cube = Model.make({ primitive: 'cube' });
+      const object = Model.make({ primitive: selectedPrimitive });
       Obj.change(scene, (obj) => {
-        obj.objects.push(Ref.make(cube));
+        obj.objects.push(Ref.make(object));
       });
-      Obj.setParent(cube, scene);
-    }, [scene]);
+      Obj.setParent(object, scene);
+    }, [scene, selectedPrimitive]);
 
     const handleDeleteSelected = useCallback(() => {
       if (!scene || !selectedObjectId) {
@@ -97,8 +100,8 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     }, [scene, selectedObjectId]);
 
     const editorActions: EditorActions = useMemo(
-      () => ({ onAddObject: handleAddCube, onDeleteSelected: handleDeleteSelected }),
-      [handleAddCube, handleDeleteSelected],
+      () => ({ onAddObject: handleAddObject, onDeleteSelected: handleDeleteSelected }),
+      [handleAddObject, handleDeleteSelected],
     );
 
     useImperativeHandle(forwardedRef, () => ({
@@ -112,6 +115,8 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         onToolChange={handleToolChange}
         viewState={viewState}
         onViewChange={handleViewChange}
+        selectedPrimitive={selectedPrimitive}
+        onPrimitiveChange={handlePrimitiveChange}
         editorActions={editorActions}
         selectedObjectId={selectedObjectId}
         setSelectedObjectId={setSelectedObjectId}
@@ -133,7 +138,7 @@ const SPACETIME_EDITOR_TOOLBAR = 'SpacetimeEditor:Toolbar';
 type SpacetimeEditorToolbarProps = Pick<SpacetimeToolbarProps, 'alwaysActive'>;
 
 const SpacetimeEditorToolbar = composable<HTMLDivElement, SpacetimeEditorToolbarProps>((props, forwardedRef) => {
-  const { tool, onToolChange, viewState, onViewChange, editorActions } =
+  const { tool, onToolChange, viewState, onViewChange, selectedPrimitive, onPrimitiveChange, editorActions } =
     useSpacetimeEditorContext(SPACETIME_EDITOR_TOOLBAR);
 
   return (
@@ -143,6 +148,8 @@ const SpacetimeEditorToolbar = composable<HTMLDivElement, SpacetimeEditorToolbar
       onToolChange={onToolChange}
       viewState={viewState}
       onViewChange={onViewChange}
+      selectedPrimitive={selectedPrimitive}
+      onPrimitiveChange={onPrimitiveChange}
       editorActions={editorActions}
       ref={forwardedRef}
     />
