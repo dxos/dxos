@@ -13,7 +13,7 @@ import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from './fragments';
 import { ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 import { useDeckContext } from './DeckRoot';
-import { ConnectedPlank } from './DeckContent';
+import { ConnectedPlank } from './ConnectedPlank';
 import { ContentEmpty } from './ContentEmpty';
 
 /**
