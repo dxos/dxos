@@ -2,7 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Color3, Mesh, PointerEventTypes, StandardMaterial, Vector3, VertexData, type PointerInfo } from '@babylonjs/core';
+import {
+  Color3,
+  Mesh,
+  PointerEventTypes,
+  StandardMaterial,
+  Vector3,
+  VertexData,
+  type PointerInfo,
+} from '@babylonjs/core';
 
 import { getFaceNormal } from '../../engine';
 import { type ToolContext } from '../tool-context';

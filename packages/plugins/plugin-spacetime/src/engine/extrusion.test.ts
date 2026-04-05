@@ -369,9 +369,11 @@ describe('applyExtrusion', () => {
       expect(afterY.volume()).toBeCloseTo(10, 0);
 
       // Check the +X face boundary on the committed solid.
-      const boundary = extractFaceBoundaryFromSolid(afterY, findFaceByNormal(
-        extractMeshData(afterY).positions, extractMeshData(afterY).indices, { x: 1, y: 0, z: 0 }
-      ), { x: 1, y: 0, z: 0 });
+      const boundary = extractFaceBoundaryFromSolid(
+        afterY,
+        findFaceByNormal(extractMeshData(afterY).positions, extractMeshData(afterY).indices, { x: 1, y: 0, z: 0 }),
+        { x: 1, y: 0, z: 0 },
+      );
       // All boundary vertices should be at X=1.
       const badVerts = boundary.filter((v) => Math.abs(v[0] - 1) > 0.5);
       if (badVerts.length > 0) {

@@ -326,7 +326,6 @@ const createSolidFromObject = (Manifold: Awaited<ReturnType<typeof getManifold>>
   return translated;
 };
 
-
 // TODO(burdon): Property on object.
 const theme = {
   object: new Color3(0.3, 0.3, 0.3),
