@@ -894,6 +894,9 @@ catalogs:
     autoprefixer:
       specifier: ^10.4.12
       version: 10.4.13
+    babylonjs-gltf2interface:
+      specifier: ^9.1.0
+      version: 9.1.0
     base-x:
       specifier: ~3.0.11
       version: 3.0.11
@@ -12475,7 +12478,7 @@ importers:
         version: 7.54.3
       '@babylonjs/loaders':
         specifier: 'catalog:'
-        version: 7.54.3(@babylonjs/core@7.54.3)
+        version: 7.54.3(@babylonjs/core@7.54.3)(babylonjs-gltf2interface@9.1.0)
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -12527,6 +12530,9 @@ importers:
       '@radix-ui/react-context':
         specifier: 'catalog:'
         version: 1.1.1(@types/react@19.2.7)(react@19.2.3)
+      babylonjs-gltf2interface:
+        specifier: 'catalog:'
+        version: 9.1.0
       effect:
         specifier: 3.20.0
         version: 3.20.0
@@ -28687,6 +28693,9 @@ packages:
       solid-js:
         optional: true
 
+  babylonjs-gltf2interface@9.1.0:
+    resolution: {integrity: sha512-80wgo57ev8pvLKGCwwXBemlaWP5PvlviT0CLzDX5NIJ9fBLH7p3B77TVZplOZx230cTLUF6EiJQ7pelw+f8Qlw==}
+
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
 
@@ -40198,9 +40207,10 @@ snapshots:
 
   '@babylonjs/core@7.54.3': {}
 
-  '@babylonjs/loaders@7.54.3(@babylonjs/core@7.54.3)':
+  '@babylonjs/loaders@7.54.3(@babylonjs/core@7.54.3)(babylonjs-gltf2interface@9.1.0)':
     dependencies:
       '@babylonjs/core': 7.54.3
+      babylonjs-gltf2interface: 9.1.0
 
   '@bcoe/v8-coverage@1.0.2': {}
 
@@ -49003,6 +49013,8 @@ snapshots:
       babel-plugin-jsx-dom-expressions: 0.40.3(@babel/core@7.28.0)
     optionalDependencies:
       solid-js: 1.9.11
+
+  babylonjs-gltf2interface@9.1.0: {}
 
   bail@2.0.2: {}
 

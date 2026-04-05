@@ -57,6 +57,7 @@
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@radix-ui/react-context": "catalog:",
+    "babylonjs-gltf2interface": "catalog:",
     "effect": "catalog:",
     "manifold-3d": "catalog:"
   },
