@@ -149,13 +149,13 @@ export const testTraceService = (opts: { meta?: Meta } = {}): Layer.Layer<TraceS
       const sink = yield* TraceSink;
       return {
         write: (event, data) => {
-          // Construct as plain object instead of Obj.make to avoid consuming ObjectId.random()
-          // from the deterministic sequence (used in tests with ObjectId.dangerouslyDisableRandomness).
-          sink.write({
-            meta: opts.meta ?? {},
-            isEphemeral: event.isEphemeral,
-            events: [{ type: event.key, timestamp: Date.now(), data }],
-          } as Message);
+          sink.write(
+            Obj.make(Message, {
+              meta: opts.meta ?? {},
+              isEphemeral: event.isEphemeral,
+              events: [{ type: event.key, timestamp: Date.now(), data }],
+            }),
+          );
         },
       };
     }),
