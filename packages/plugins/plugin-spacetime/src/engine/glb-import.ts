@@ -27,12 +27,16 @@ export const importGLB = async (
 ): Promise<Manifold | null> => {
   const { Manifold } = wasm;
 
-  // Convert ArrayBuffer to base64 data URL for SceneLoader.
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(data)));
-  const dataUrl = `data:model/gltf-binary;base64,${base64}`;
+  // Create a Blob URL to avoid base64 encoding stack overflow on large files.
+  const blob = new Blob([data], { type: 'model/gltf-binary' });
+  const blobUrl = URL.createObjectURL(blob);
 
-  // Load the GLB into a temporary container.
-  const container = await SceneLoader.LoadAssetContainerAsync('', dataUrl, scene, undefined, '.glb');
+  let container;
+  try {
+    container = await SceneLoader.LoadAssetContainerAsync('', blobUrl, scene, undefined, '.glb');
+  } finally {
+    URL.revokeObjectURL(blobUrl);
+  }
 
   // Extract mesh data from all loaded meshes.
   const meshes = container.meshes.filter(
