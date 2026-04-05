@@ -89,23 +89,25 @@ Instead implement tool handlers that operate on the runtime properties and then 
 - [x] Menu action and operation to delete the selected object.
 - [x] Show wireframe bounding box for selected object.
 - [x] Show table of vectors.
-- [ ] Snap objects when dragging (moving).
+- [x] Snap objects when dragging (moving).
 
 ### Phase 3
 
-- [ ] Import OBJ geometry.
+- [ ] Import/Export: OBJ/STL/glTF mesh export from Manifold geometry.
 
 ### Phase 4 (Boolean geometry)
 
 - [ ] Mult-select if holding shift when clicking.
 - [ ] Menu action to join selected objects.
 - [ ] Menu action to subtract selected objects.
+
+### Phase 5
+
 - [ ] Multi-operation history: support undo/redo of extrusions and boolean ops.
 - [ ] Boolean operations toolbar: union, difference, intersection between selected solids.
 - [ ] Transform gizmos: translate, rotate, scale selected solids.
 - [ ] Additional solid primitives: sphere, cylinder, torus.
 - [ ] Material/color picker per solid or per face.
-- [ ] Export: OBJ/STL/glTF mesh export from Manifold geometry.
 - [ ] Real-time collaboration: sync scene state across peers via ECHO.
 - [ ] Face selection improvements: highlight individual face (not whole mesh), multi-face select.
 

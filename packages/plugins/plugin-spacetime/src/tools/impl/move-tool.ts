@@ -80,10 +80,18 @@ export class MoveTool implements Tool {
       return false;
     }
 
-    // Use the pick point as the drag origin. The plane is horizontal at the pick point's Y level
-    // so the object moves relative to where the pointer actually hit, not the object center.
-    const dragOrigin = pickPoint.clone();
-    const plane = Plane.FromPositionAndNormal(new Vector3(0, pickPoint.y, 0), Vector3.Up());
+    // Project the initial pick point onto a horizontal plane at the object's Y level.
+    // The drag origin is the projected point so movement is purely in the XZ plane.
+    const plane = Plane.FromPositionAndNormal(new Vector3(0, startPosition.y, 0), Vector3.Up());
+
+    // Ray-cast the initial click onto the drag plane to get a consistent drag origin.
+    const startEvent = info.event as PointerEvent;
+    const startRay = ctx.scene.createPickingRay(startEvent.clientX, startEvent.clientY, null, ctx.camera);
+    const startDist = startRay.intersectsPlane(plane);
+    if (startDist === null) {
+      return false;
+    }
+    const dragOrigin = startRay.origin.add(startRay.direction.scale(startDist));
 
     this._drag = { objectId, mesh, startPosition, dragOrigin, plane };
     ctx.camera.detachControl();
