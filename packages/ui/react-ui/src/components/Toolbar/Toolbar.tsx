@@ -189,7 +189,7 @@ const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
   ({ variant = 'gap', ...props }, forwardedRef) => {
     return variant === 'line' ? (
       <ToolbarPrimitive.Separator asChild>
-        <Separator {...props} ref={forwardedRef} />
+        <Separator orientation='vertical' {...props} ref={forwardedRef} />
       </ToolbarPrimitive.Separator>
     ) : (
       <ToolbarPrimitive.Separator className='grow' ref={forwardedRef} />

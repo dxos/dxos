@@ -4,18 +4,10 @@
 
 import { type EditorView } from '@codemirror/view';
 
-import {
-  type ActionGroupBuilderFn,
-  type MenuItemGroup,
-  type ToolbarMenuActionGroupProperties,
-  createMenuAction,
-  createMenuItemGroup,
-} from '@dxos/react-ui-menu';
+import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { List, addList, removeList } from '@dxos/ui-editor';
-import { type MenuActionProperties } from '@dxos/ui-types';
 
 import { translationKey } from '../../translations';
-
 import { type EditorToolbarState } from './useEditorToolbar';
 
 const listStyles = {
@@ -63,27 +55,3 @@ export const addLists =
       },
     );
   };
-
-export const createEditorAction = (id: string, props: Partial<MenuActionProperties>, invoke: () => void) => {
-  const { label = [`${id} label`, { ns: translationKey }], ...rest } = props;
-
-  return createMenuAction(id, invoke, {
-    label,
-    ...rest,
-  });
-};
-
-export const createEditorActionGroup = (
-  id: string,
-  props: Omit<ToolbarMenuActionGroupProperties, 'icon'>,
-  icon?: string,
-): MenuItemGroup<ToolbarMenuActionGroupProperties> => {
-  const { label = [`${id} label`, { ns: translationKey }], ...rest } = props;
-
-  return createMenuItemGroup(id, {
-    label,
-    icon,
-    iconOnly: true,
-    ...rest,
-  }) as MenuItemGroup<ToolbarMenuActionGroupProperties>;
-};

@@ -24,7 +24,7 @@ packages/plugins/plugin-spacetime/
 │   ├── SpacetimePlugin.tsx                # Main plugin definition
 │   ├── types/
 │   │   ├── index.ts                       # Barrel export
-│   │   └── schema.ts                      # ECHO schema (Spacetime.Scene)
+│   │   └── schema.ts                      # ECHO schema (Scene.Scene)
 │   ├── capabilities/
 │   │   ├── index.ts                       # Barrel export
 │   │   └── react-surface/
@@ -34,7 +34,7 @@ packages/plugins/plugin-spacetime/
 │   │   ├── index.ts                       # Barrel export
 │   │   ├── manifold-context.ts            # Manifold WASM singleton loader
 │   │   ├── mesh-converter.ts              # Manifold mesh → Babylon.js mesh
-│   │   └── scene-manager.ts              # Babylon.js engine/scene lifecycle
+│   │   └── scene-manager.ts               # Babylon.js engine/scene lifecycle
 │   ├── components/
 │   │   ├── index.ts                       # Barrel export
 │   │   └── SpacetimeEditor/
@@ -280,7 +280,7 @@ export namespace Spacetime {
     name: Schema.optional(Schema.String),
   }).pipe(
     Type.object({
-      typename: 'org.dxos.type.spacetime.scene',
+      typename: 'org.dxos.type.Scene.Scene',
       version: '0.1.0',
     }),
     Annotation.IconAnnotation.set({
@@ -320,7 +320,7 @@ import { Spacetime } from './types';
 export const translations = [
   {
     'en-US': {
-      [Spacetime.Scene.typename]: {
+      [Scene.Scene.typename]: {
         'typename.label': 'Scene',
         'typename.label_zero': 'Scenes',
         'typename.label_one': 'Scene',
@@ -1020,8 +1020,8 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: meta.id,
         role: 'article',
-        filter: (data): data is { subject: Spacetime.Scene } => Obj.instanceOf(Spacetime.Scene, data.subject),
-        component: ({ data, role }: { data: { subject: Spacetime.Scene }; role: string }) => (
+        filter: (data): data is { subject: Scene.Scene } => Obj.instanceOf(Scene.Scene, data.subject),
+        component: ({ data, role }: { data: { subject: Scene.Scene }; role: string }) => (
           <SpacetimeArticle role={role} subject={data.subject} />
         ),
       }),
@@ -1077,10 +1077,10 @@ import { Spacetime } from './types';
 export const SpacetimePlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
-      id: Spacetime.Scene.typename,
+      id: Scene.Scene.typename,
       metadata: {
-        icon: Annotation.IconAnnotation.get(Spacetime.Scene).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Spacetime.Scene).pipe(Option.getOrThrow).hue ?? 'white',
+        icon: Annotation.IconAnnotation.get(Scene.Scene).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Scene.Scene).pipe(Option.getOrThrow).hue ?? 'white',
         createObject: ((props, options) =>
           Effect.gen(function* () {
             const object = Spacetime.make(props);
@@ -1094,7 +1094,7 @@ export const SpacetimePlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addSchemaModule({ schema: [Spacetime.Scene] }),
+  AppPlugin.addSchemaModule({ schema: [Scene.Scene] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,

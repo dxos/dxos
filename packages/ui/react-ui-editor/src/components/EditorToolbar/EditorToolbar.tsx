@@ -11,7 +11,7 @@ import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
-import { addLists } from './actions';
+import { addLists } from './lists';
 import { addBlocks } from './blocks';
 import { addFormatting } from './formatting';
 import { addHeadings } from './headings';

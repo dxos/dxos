@@ -21,6 +21,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -39,7 +42,13 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/react-client"
     },
     {
       "path": "../../ui/react-ui"
@@ -48,10 +57,25 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-pickers"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../../ui/ui-types"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

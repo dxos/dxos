@@ -37,7 +37,7 @@ export interface ActionGroupBuilder {
   subgraph(subgraphOrCb: ActionGraphProps | ActionGroupBuilderFn | false | null | undefined): this;
 
   /** Add a separator. */
-  separator(id?: string, variant?: 'gap' | 'line'): this;
+  separator(variant?: 'gap' | 'line'): this;
 }
 
 /** Top-level builder that creates the root group and produces the final action graph. */
@@ -94,8 +94,8 @@ class MenuBuilderImpl implements MenuBuilder {
     return this;
   }
 
-  separator(id?: string, variant: 'gap' | 'line' = 'gap'): this {
-    id ??= `separator-${++this._separatorCount}`;
+  separator(variant: 'gap' | 'line' = 'gap'): this {
+    const id = `separator-${++this._separatorCount}`;
     this._data.nodes.push({
       id,
       type: MenuSeparatorType,

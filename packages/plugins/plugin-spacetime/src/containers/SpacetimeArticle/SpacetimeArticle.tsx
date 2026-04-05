@@ -5,26 +5,24 @@
 import React from 'react';
 
 import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
+import { Panel } from '@dxos/react-ui';
 
 import { SpacetimeEditor } from '../../components';
-import { type Spacetime, type Settings } from '../../types';
+import { type Scene } from '../../types';
 
-export type SpacetimeArticleProps = ObjectSurfaceProps<
-  Spacetime.Scene,
-  {
-    settings?: Settings.Settings | null;
-  }
->;
+export type SpacetimeArticleProps = ObjectSurfaceProps<Scene.Scene>;
 
-const SpacetimeArticle = ({ role, settings }: SpacetimeArticleProps) => {
-  const showAxes = settings?.showAxes === true;
-  const showFps = settings?.showFps === true;
-
+export const SpacetimeArticle = ({ subject, attendableId }: SpacetimeArticleProps) => {
   return (
-    <div role={role} className='flex w-full h-full overflow-hidden'>
-      <SpacetimeEditor classNames='w-full h-full' showAxes={showAxes} showFps={showFps} />
-    </div>
+    <SpacetimeEditor.Root scene={subject}>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <SpacetimeEditor.Toolbar attendableId={attendableId} />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SpacetimeEditor.Canvas />
+        </Panel.Content>
+      </Panel.Root>
+    </SpacetimeEditor.Root>
   );
 };
-
-export default SpacetimeArticle;
