@@ -7,10 +7,10 @@ import { type EditorView } from '@codemirror/view';
 
 import { type Node } from '@dxos/app-graph';
 
-import { createEditorAction } from './actions';
+import { createEditorMenuAction } from './actions';
 
 const createSearchAction = (getView: () => EditorView) =>
-  createEditorAction(
+  createEditorMenuAction(
     'search',
     {
       testId: 'editor.toolbar.search',

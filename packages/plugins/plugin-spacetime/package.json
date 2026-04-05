@@ -40,6 +40,7 @@
   "dependencies": {
     "@babylonjs/core": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
@@ -47,9 +48,12 @@
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
+    "@radix-ui/react-context": "catalog:",
     "effect": "catalog:",
     "manifold-3d": "catalog:"
   },

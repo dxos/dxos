@@ -3,14 +3,31 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useRef } from 'react';
 
+import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SpacetimeEditor, type SpacetimeEditorProps } from './SpacetimeEditor';
+import { SpacetimeEditor, type SpacetimeController } from './SpacetimeEditor';
+import { translations } from '../../translations';
 
-const DefaultStory = ({ showAxes, showFps }: SpacetimeEditorProps) => {
-  return <SpacetimeEditor classNames='w-full h-full' showAxes={showAxes} showFps={showFps} />;
+type DefaulttoryProps = {};
+
+const DefaultStory = (props: DefaulttoryProps) => {
+  const controller = useRef<SpacetimeController>(null);
+
+  return (
+    <SpacetimeEditor.Root ref={controller}>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <SpacetimeEditor.Toolbar alwaysActive />
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <SpacetimeEditor.Canvas />
+        </Panel.Content>
+      </Panel.Root>
+    </SpacetimeEditor.Root>
+  );
 };
 
 const meta = {
@@ -19,10 +36,7 @@ const meta = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
-  },
-  argTypes: {
-    showAxes: { control: 'boolean' },
-    showFps: { control: 'boolean' },
+    translations,
   },
 } satisfies Meta<typeof DefaultStory>;
 

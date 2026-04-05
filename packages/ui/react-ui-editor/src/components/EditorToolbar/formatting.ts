@@ -8,7 +8,7 @@ import { type Node } from '@dxos/app-graph';
 import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { type Formatting, Inline, addLink, removeLink, setStyle } from '@dxos/ui-editor';
 
-import { createEditorAction, createEditorActionGroup } from './actions';
+import { createEditorMenuAction, createEditorMenuItemGroup } from './actions';
 import { type EditorToolbarState } from './useEditorToolbar';
 
 const formats = {
@@ -20,7 +20,7 @@ const formats = {
 };
 
 const createFormattingGroup = (formatting: Formatting) =>
-  createEditorActionGroup('formatting', {
+  createEditorMenuItemGroup('formatting', {
     variant: 'toggleGroup',
     selectCardinality: 'multiple',
     value: Object.keys(formats).filter((key) => !!formatting[key as keyof Formatting]),
@@ -29,7 +29,7 @@ const createFormattingGroup = (formatting: Formatting) =>
 const createFormattingActions = (formatting: Formatting, getView: () => EditorView) =>
   Object.entries(formats).map(([type, icon]) => {
     const checked = !!formatting[type as keyof Formatting];
-    return createEditorAction(type, { checked, icon }, () => {
+    return createEditorMenuAction(type, { checked, icon }, () => {
       const view = getView();
       if (!view) {
         return;

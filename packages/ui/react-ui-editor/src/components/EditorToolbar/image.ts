@@ -4,10 +4,10 @@
 
 import { type Node } from '@dxos/app-graph';
 
-import { createEditorAction } from './actions';
+import { createEditorMenuAction } from './actions';
 
 const createImageUploadAction = (onImageUpload: () => void) =>
-  createEditorAction(
+  createEditorMenuAction(
     'image',
     {
       testId: 'editor.toolbar.image',

@@ -3,25 +3,21 @@
 //
 
 import { type Node } from '@dxos/app-graph';
-import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
 
-import { createEditorAction, createEditorActionGroup } from './actions';
+import { createEditorMenuAction, createEditorMenuItemGroup } from './actions';
 import { type EditorToolbarState } from './useEditorToolbar';
 
 const createViewModeGroupAction = (value: string) =>
-  createEditorActionGroup(
-    'viewMode',
-    {
-      variant: 'dropdownMenu',
-      applyActive: true,
-      selectCardinality: 'single',
-      value,
-    } as ToolbarMenuActionGroupProperties,
-    'ph--eye--regular',
-  );
+  createEditorMenuItemGroup('viewMode', {
+    icon: 'ph--eye--regular',
+    variant: 'dropdownMenu',
+    applyActive: true,
+    selectCardinality: 'single',
+    value,
+  });
 
 const createViewModeActions = (value: string, onViewModeChange: (mode: EditorViewMode) => void) =>
   Object.entries({
@@ -30,7 +26,7 @@ const createViewModeActions = (value: string, onViewModeChange: (mode: EditorVie
     readonly: 'ph--pencil-slash--regular',
   }).map(([viewMode, icon]) => {
     const checked = viewMode === value;
-    return createEditorAction(
+    return createEditorMenuAction(
       `view-mode--${viewMode}`,
       {
         label: [`view-mode.${viewMode}.label`, { ns: translationKey }],

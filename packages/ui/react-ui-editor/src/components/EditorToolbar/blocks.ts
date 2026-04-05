@@ -5,18 +5,17 @@
 import { type EditorView } from '@codemirror/view';
 
 import { type Node } from '@dxos/app-graph';
-import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { addBlockquote, addCodeblock, insertTable, removeBlockquote, removeCodeblock } from '@dxos/ui-editor';
 
-import { createEditorAction, createEditorActionGroup } from './actions';
+import { createEditorMenuAction, createEditorMenuItemGroup } from './actions';
 import { type EditorToolbarState } from './useEditorToolbar';
 
 const createBlockGroupAction = (value: string) =>
-  createEditorActionGroup('block', {
+  createEditorMenuItemGroup('block', {
     variant: 'toggleGroup',
     selectCardinality: 'single',
     value,
-  } as ToolbarMenuActionGroupProperties);
+  });
 
 const createBlockActions = (value: string, getView: () => EditorView, blankLine?: boolean) =>
   Object.entries({
@@ -25,7 +24,7 @@ const createBlockActions = (value: string, getView: () => EditorView, blankLine?
     table: 'ph--table--regular',
   }).map(([type, icon]) => {
     const checked = type === value;
-    return createEditorAction(type, { checked, ...(type === 'table' && { disabled: !!blankLine }), icon }, () => {
+    return createEditorMenuAction(type, { checked, ...(type === 'table' && { disabled: !!blankLine }), icon }, () => {
       const view = getView();
       if (!view) {
         return;

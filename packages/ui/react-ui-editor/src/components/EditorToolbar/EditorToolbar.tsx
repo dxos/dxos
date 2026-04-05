@@ -11,7 +11,7 @@ import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
-import { createLists } from './actions';
+import { createLists } from './list';
 import { createBlocks } from './blocks';
 import { createFormatting } from './formatting';
 import { createHeadings } from './headings';
@@ -39,17 +39,16 @@ export type EditorToolbarActionGraphProps = {
   customActions?: Atom.Atom<ActionGraphProps>;
 };
 
-export type EditorToolbarProps = ThemedClassName<
-  {
-    role?: string;
-    attendableId?: string;
-    /** Handler for executing actions. Required when customActions use Operation.invoke. */
-    onAction?: (action: MenuAction, params: Node.InvokeProps) => void;
-  } & (EditorToolbarActionGraphProps & EditorToolbarFeatureFlags)
->;
+export type EditorToolbarProps = ThemedClassName<{
+  role?: string;
+  attendableId?: string;
+  /** Handler for executing actions. Required when customActions use Operation.invoke. */
+  onAction?: (action: MenuAction, params: Node.InvokeProps) => void;
+}> &
+  (EditorToolbarActionGraphProps & EditorToolbarFeatureFlags);
 
 export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, ...props }: EditorToolbarProps) => {
-  const menuActions = useEditorToolbarActionGraph(props);
+  const menuActions = useEditorToolbar(props);
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
@@ -62,30 +61,6 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
 
 type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getView' | 'customActions'> &
   EditorToolbarFeatureFlags;
-
-// TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
-//   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
-//   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
-// TODO(burdon): Some actions should toggle the state (e.g., toggle bullets on/off depending on the current state).
-const useEditorToolbarActionGraph = ({ state, getView, customActions, ...features }: ToolbarActionsProps) => {
-  const menuCreator = useMemo(
-    () => createToolbarActions({ state, getView, customActions, ...features }),
-    [
-      state,
-      getView,
-      customActions,
-      features?.showHeadings,
-      features?.showFormatting,
-      features?.showLists,
-      features?.showBlocks,
-      features?.showSearch,
-      features?.onImageUpload,
-      features?.onViewModeChange,
-    ],
-  );
-
-  return useMenuActions(menuCreator);
-};
 
 const createToolbarActions = ({
   state,
@@ -129,4 +104,28 @@ const createToolbarActions = ({
 
     return builder.build();
   });
+};
+
+// TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
+//   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
+//   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
+// TODO(burdon): Some actions should toggle the state (e.g., toggle bullets on/off depending on the current state).
+const useEditorToolbar = ({ state, getView, customActions, ...features }: ToolbarActionsProps) => {
+  const menuCreator = useMemo(
+    () => createToolbarActions({ state, getView, customActions, ...features }),
+    [
+      state,
+      getView,
+      customActions,
+      features?.showHeadings,
+      features?.showFormatting,
+      features?.showLists,
+      features?.showBlocks,
+      features?.showSearch,
+      features?.onImageUpload,
+      features?.onViewModeChange,
+    ],
+  );
+
+  return useMenuActions(menuCreator);
 };

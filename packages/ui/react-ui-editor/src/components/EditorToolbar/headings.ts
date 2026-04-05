@@ -5,26 +5,21 @@
 import { type EditorView } from '@codemirror/view';
 
 import { type Node } from '@dxos/app-graph';
-import { type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { setHeading } from '@dxos/ui-editor';
 
 import { translationKey } from '../../translations';
 
-import { createEditorAction, createEditorActionGroup } from './actions';
+import { createEditorMenuAction, createEditorMenuItemGroup } from './actions';
 import { type EditorToolbarState } from './useEditorToolbar';
 
 const createHeadingGroupAction = (value: string) =>
-  createEditorActionGroup(
-    'heading',
-    {
-      variant: 'dropdownMenu',
-      applyActive: true,
-      selectCardinality: 'single',
-      // TODO(wittjosiah): Remove? Not sure this does anything.
-      value,
-    } as ToolbarMenuActionGroupProperties,
-    'ph--text-h--regular',
-  );
+  createEditorMenuItemGroup('heading', {
+    icon: 'ph--text-h--regular',
+    variant: 'dropdownMenu',
+    applyActive: true,
+    selectCardinality: 'single',
+    value,
+  });
 
 const createHeadingActions = (currentLevel: string, getView: () => EditorView) =>
   Object.entries({
@@ -37,7 +32,7 @@ const createHeadingActions = (currentLevel: string, getView: () => EditorView) =
     6: 'ph--text-h-six--regular',
   }).map(([levelStr, icon]) => {
     const level = parseInt(levelStr);
-    return createEditorAction(
+    return createEditorMenuAction(
       `heading--${levelStr}`,
       {
         label: ['heading-level.label', { count: level, ns: translationKey }],

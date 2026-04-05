@@ -13,16 +13,20 @@ export const translations = [
         'strong.label': 'Bold',
         'emphasis.label': 'Italics',
         'strikethrough.label': 'Strikethrough',
+
         'code.label': 'Code',
         'link.label': 'Link',
-        'list-bullet.label': 'Bullet list',
-        'list-ordered.label': 'Numbered list',
-        'list-task.label': 'Task list',
+
+        'list.bullet.label': 'Bullet list',
+        'list.ordered.label': 'Numbered list',
+        'list.task.label': 'Task list',
+
         'blockquote.label': 'Block quote',
         'codeblock.label': 'Code block',
         'comment.label': 'Create comment',
         'selection-overlaps-existing-comment.label': 'Selection overlaps existing comment',
         'select-text-to-comment.label': 'Select text to comment',
+
         'image.label': 'Insert image',
         'table.label': 'Create table',
         'search.label': 'Search',
