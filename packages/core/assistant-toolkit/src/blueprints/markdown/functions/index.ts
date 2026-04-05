@@ -8,6 +8,7 @@ export * from './definitions';
 
 export const MarkdownHandlers = OperationHandlerSet.lazy(
   () => import('./create'),
+  () => import('./open'),
   () => import('./read'),
   () => import('./update'),
 );

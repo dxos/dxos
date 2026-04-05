@@ -11,15 +11,15 @@ import {
   ConsolePrinter,
   GenericToolkit,
   type ModelName,
-  type ToolExecutionService,
-  type ToolResolverService,
+  ToolExecutionService,
+  ToolResolverService,
 } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Database, DXN, Feed, Type } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import {
   CredentialsService,
-  type FunctionInvocationService,
+  FunctionInvocationService,
   QueueService,
   type ServiceCredential,
   ServiceNotAvailableError,
@@ -182,6 +182,9 @@ export const AssistantTestLayer = ({
               AiService.AiService,
               OperationRegistry.Service,
               Blueprint.RegistryService,
+              FunctionInvocationService,
+              ToolExecutionService,
+              ToolResolverService,
             ),
           );
         }),

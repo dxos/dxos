@@ -920,6 +920,7 @@ export class ProcessManagerImpl implements Manager {
         StorageService.StorageService.key,
         Scope.Scope.key,
         TracingService.key,
+        Trace.TraceService.key,
         Operation.Service.key,
         ProcessOperationInvoker.Service.key,
       ]);
