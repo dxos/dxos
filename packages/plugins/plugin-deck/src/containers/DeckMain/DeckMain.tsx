@@ -130,8 +130,7 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
 //
 
 export const DeckMain = () => {
-  const { settings, pluginManager, state, deck, updateState, layoutMode, onLayoutChange } =
-    useDeckContext('DeckMain');
+  const { settings, pluginManager, state, deck, updateState, layoutMode, onLayoutChange } = useDeckContext('DeckMain');
   const { sidebarState, complementarySidebarState, complementarySidebarPanel } = state;
   const { active, companionOpen, companionVariant, fullscreen, solo, plankSizing } = deck;
   const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
