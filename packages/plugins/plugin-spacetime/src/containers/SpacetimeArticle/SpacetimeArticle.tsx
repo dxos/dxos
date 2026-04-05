@@ -17,11 +17,11 @@ export type SpacetimeArticleProps = ObjectSurfaceProps<
   }
 >;
 
-export const SpacetimeArticle = ({ role, settings }: SpacetimeArticleProps) => {
+export const SpacetimeArticle = ({ role, subject, settings }: SpacetimeArticleProps) => {
   // TODO(burdon): Settings atom.
 
   return (
-    <SpacetimeEditor.Root>
+    <SpacetimeEditor.Root scene={subject}>
       <Panel.Root>
         <Panel.Toolbar asChild>
           <SpacetimeEditor.Toolbar />

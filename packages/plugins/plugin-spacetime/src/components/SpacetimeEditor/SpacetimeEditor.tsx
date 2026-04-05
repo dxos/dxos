@@ -7,6 +7,7 @@ import React, { type PropsWithChildren, useState, useCallback, forwardRef, useIm
 
 import { composable, composableProps } from '@dxos/ui-theme';
 
+import { type Spacetime } from '../../types';
 import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
 import { type SpacetimeTool, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar';
 
@@ -17,6 +18,7 @@ import { type SpacetimeTool, SpacetimeToolbar, type SpacetimeToolbarProps } from
 const SPACETIME_EDITOR = 'SpacetimeEditor';
 
 type SpacetimeEditorContextValue = {
+  scene?: Spacetime.Scene;
   tool: SpacetimeTool;
   onToolChange: (tool: SpacetimeTool) => void;
 };
@@ -38,23 +40,27 @@ interface SpacetimeController {
 
 const SPACETIME_EDITOR_ROOT = 'SpacetimeEditor:Root';
 
-type SpacetimeEditorRootProps = PropsWithChildren<{}>;
+type SpacetimeEditorRootProps = PropsWithChildren<{
+  scene?: Spacetime.Scene;
+}>;
 
-const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootProps>(({ children }, forwardedRef) => {
-  const [tool, setTool] = useState<SpacetimeTool>('select');
+const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootProps>(
+  ({ children, scene }, forwardedRef) => {
+    const [tool, setTool] = useState<SpacetimeTool>('select');
 
-  const handleToolChange = useCallback((tool: SpacetimeTool) => setTool(tool), []);
+    const handleToolChange = useCallback((tool: SpacetimeTool) => setTool(tool), []);
 
-  useImperativeHandle(forwardedRef, () => ({
-    setTool: handleToolChange,
-  }));
+    useImperativeHandle(forwardedRef, () => ({
+      setTool: handleToolChange,
+    }));
 
-  return (
-    <SpacetimeEditorProvider tool={tool} onToolChange={handleToolChange}>
-      {children}
-    </SpacetimeEditorProvider>
-  );
-});
+    return (
+      <SpacetimeEditorProvider scene={scene} tool={tool} onToolChange={handleToolChange}>
+        {children}
+      </SpacetimeEditorProvider>
+    );
+  },
+);
 
 SpacetimeEditorRoot.displayName = SPACETIME_EDITOR_ROOT;
 
@@ -83,8 +89,8 @@ const SPACETIME_EDITOR_CANVAS = 'SpacetimeEditor:Canvas';
 type SpacetimeEditorCanvasProsp = Omit<SpacetimeCanvasProps, 'showAxes' | 'showFps'>;
 
 const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {
-  const _ = useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
-  return <SpacetimeCanvas {...composableProps(props)} ref={forwardedRef} />;
+  const { scene } = useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
+  return <SpacetimeCanvas {...composableProps(props)} scene={scene} ref={forwardedRef} />;
 });
 
 SpacetimeEditorCanvas.displayName = SPACETIME_EDITOR_CANVAS;
