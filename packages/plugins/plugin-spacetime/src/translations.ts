@@ -52,7 +52,7 @@ export const translations = [
 
         'action.add-object.label': 'Add object',
         'action.delete-object.label': 'Delete object',
-        'action.import-glb.label': 'Import GLB',
+        'action.import.label': 'Import',
         'action.export-stl.label': 'Export STL',
 
         'view.label': 'View',

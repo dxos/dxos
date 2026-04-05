@@ -7,7 +7,7 @@ import React, { type RefObject, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { SceneManager, createSolidFromObject, getManifold, importGLB, manifoldToBabylon } from '../../engine';
+import { SceneManager, createSolidFromObject, getManifold, importGLB, importOBJ, manifoldToBabylon } from '../../engine';
 import { DebugPanel, extractSolidDebugInfo, type DebugInfo } from './DebugPanel';
 import { ToolManager, SelectTool, MoveTool, ExtrudeTool, type Selection } from '../../tools';
 import { type Scene, type Model } from '../../types';
@@ -25,7 +25,7 @@ export type SpacetimeCanvasProps = {
   /** Parent ref to expose the solids map for export. */
   parentSolidsRef?: React.RefObject<Map<string, import('manifold-3d').Manifold> | null>;
   /** Ref to set the importGLB callback (canvas provides the implementation). */
-  importGLBRef?: React.MutableRefObject<(data: ArrayBuffer) => Promise<void>>;
+  importGLBRef?: React.MutableRefObject<(data: ArrayBuffer | string) => Promise<void>>;
 };
 
 /**
@@ -187,8 +187,15 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
 
         // Provide GLB import callback to parent.
         if (importGLBRef) {
-          importGLBRef.current = async (data: ArrayBuffer) => {
-            const solid = await importGLB(data, wasm, manager.scene);
+          importGLBRef.current = async (data: ArrayBuffer | string) => {
+            let solid;
+            if (typeof data === 'string') {
+              // OBJ text.
+              solid = importOBJ(data, wasm);
+            } else {
+              // GLB binary.
+              solid = await importGLB(data, wasm, manager.scene);
+            }
             if (solid) {
               const objId = `imported-${Date.now()}`;
               const mesh = manifoldToBabylon(solid, {

@@ -41,8 +41,8 @@ type SpacetimeEditorContextValue = {
   setSelectedObjectId: (id: string | null) => void;
   /** Runtime Manifold solids (provided by canvas). */
   solidsRef: React.RefObject<Map<string, import('manifold-3d').Manifold> | null>;
-  /** Ref for canvas to provide the GLB import implementation. */
-  importGLBRef: React.MutableRefObject<(data: ArrayBuffer) => Promise<void>>;
+  /** Ref for canvas to provide the import implementation (ArrayBuffer for GLB, string for OBJ). */
+  importGLBRef: React.MutableRefObject<(data: ArrayBuffer | string) => Promise<void>>;
 };
 
 const [SpacetimeEditorProvider, useSpacetimeEditorContext] =
@@ -76,7 +76,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     const [selectedPrimitive, setSelectedPrimitive] = useState<Model.PrimitiveType>('cube');
     const [selectedHue, setSelectedHue] = useState<string>('blue');
     const solidsRef = useRef<Map<string, import('manifold-3d').Manifold> | null>(null);
-    const importGLBRef = useRef<(data: ArrayBuffer) => Promise<void>>(async () => {});
+    const importGLBRef = useRef<(data: ArrayBuffer | string) => Promise<void>>(async () => {});
 
     const handleToolChange = useCallback((tool: SpacetimeTool) => setTool(tool), []);
     const handleViewChange = useCallback(
@@ -110,17 +110,22 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       setSelectedObjectId(null);
     }, [scene, selectedObjectId]);
 
-    const handleImportGLB = useCallback(() => {
+    const handleImport = useCallback(() => {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = '.glb,.gltf';
+      input.accept = '.glb,.gltf,.obj';
       input.onchange = async () => {
         const file = input.files?.[0];
         if (!file) {
           return;
         }
-        const buffer = await file.arrayBuffer();
-        await importGLBRef.current(buffer);
+        if (file.name.endsWith('.obj')) {
+          const text = await file.text();
+          await importGLBRef.current(text);
+        } else {
+          const buffer = await file.arrayBuffer();
+          await importGLBRef.current(buffer);
+        }
       };
       input.click();
     }, []);
@@ -137,8 +142,8 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     }, [selectedObjectId]);
 
     const editorActions: EditorActions = useMemo(
-      () => ({ onAddObject: handleAddObject, onDeleteSelected: handleDeleteSelected, onImportGLB: handleImportGLB, onExportSTL: handleExportSTL }),
-      [handleAddObject, handleDeleteSelected, handleImportGLB, handleExportSTL],
+      () => ({ onAddObject: handleAddObject, onDeleteSelected: handleDeleteSelected, onImport: handleImport, onExportSTL: handleExportSTL }),
+      [handleAddObject, handleDeleteSelected, handleImport, handleExportSTL],
     );
 
     useImperativeHandle(forwardedRef, () => ({

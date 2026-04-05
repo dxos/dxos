@@ -24,7 +24,7 @@ const primitiveIcons: Record<Model.PrimitiveType, string> = {
 export type EditorActions = {
   onAddObject: () => void;
   onDeleteSelected: () => void;
-  onImportGLB: () => void;
+  onImport: () => void;
   onExportSTL: () => void;
 };
 
@@ -74,8 +74,8 @@ export const createEditorActions = (actions: EditorActions): ActionGraphProps =>
         label: ['action.delete-object.label', { ns: meta.id }],
         icon: 'ph--trash--regular',
       }),
-      createMenuAction('import-glb', actions.onImportGLB, {
-        label: ['action.import-glb.label', { ns: meta.id }],
+      createMenuAction('import', actions.onImport, {
+        label: ['action.import.label', { ns: meta.id }],
         icon: 'ph--upload-simple--regular',
       }),
       createMenuAction('export-stl', actions.onExportSTL, {
@@ -86,7 +86,7 @@ export const createEditorActions = (actions: EditorActions): ActionGraphProps =>
     edges: [
       { source: 'root', target: 'add-object', relation: 'child' },
       { source: 'root', target: 'delete-object', relation: 'child' },
-      { source: 'root', target: 'import-glb', relation: 'child' },
+      { source: 'root', target: 'import', relation: 'child' },
       { source: 'root', target: 'export-stl', relation: 'child' },
     ],
   };
