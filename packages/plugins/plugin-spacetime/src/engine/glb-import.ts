@@ -114,7 +114,7 @@ export const importGLB = async (
  * Direct GLB binary parser — extracts geometry without Babylon's SceneLoader.
  * Handles files with external texture references that cause SceneLoader to fail.
  */
-const importGLBDirect = (data: ArrayBuffer, wasm: ManifoldToplevel): Manifold | null => {
+export const importGLBDirect = (data: ArrayBuffer, wasm: ManifoldToplevel): Manifold | null => {
   const { Manifold } = wasm;
 
   // Parse GLB header.
