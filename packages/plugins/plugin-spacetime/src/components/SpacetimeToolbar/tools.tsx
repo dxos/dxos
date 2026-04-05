@@ -7,10 +7,11 @@ import { ActionGraphProps, createMenuAction, createMenuItemGroup } from '@dxos/r
 import { meta } from '../../meta';
 import { SpacetimeToolbarState } from './SpacetimeToolbar';
 
-export type SpacetimeTool = 'select' | 'extrude';
+export type SpacetimeTool = 'select' | 'move' | 'extrude';
 
 const tools: Record<SpacetimeTool, string> = {
   select: 'ph--cursor--regular',
+  move: 'ph--arrows-out-cardinal--regular',
   extrude: 'ph--arrow-fat-line-right--regular',
 };
 

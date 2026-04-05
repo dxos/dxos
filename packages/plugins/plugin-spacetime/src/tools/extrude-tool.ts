@@ -5,6 +5,8 @@
 import { Matrix, type Mesh, PointerEventTypes, Vector3, VertexBuffer, type PointerInfo } from '@babylonjs/core';
 import type { Manifold, ManifoldToplevel } from 'manifold-3d';
 
+import { log } from '@dxos/log';
+
 import { getFaceNormal, updateMeshFromManifold } from '../engine/mesh-converter';
 import { type Model } from '../types';
 import { type ToolContext } from './tool-context';
@@ -27,8 +29,8 @@ type ExtrudeState = {
   startX: number;
   /** Pointer position at drag start. */
   startY: number;
-  /** The Model.Object for this mesh. */
-  modelObject: Model.Object;
+  /** Manifold solid at the start of this extrusion (cloned). */
+  baseSolid: Manifold;
 };
 
 /**
@@ -146,46 +148,87 @@ export class ExtrudeTool implements Tool {
       return false;
     }
 
-    const pickedMesh = info.pickInfo?.pickedMesh;
-    if (!info.pickInfo?.hit || !pickedMesh) {
-      return false;
-    }
+    console.log('[extrude] onPointerDown', {
+      hasSelection: !!ctx.selection,
+      selectionObjectId: ctx.selection?.objectId,
+      selectionNormal: ctx.selection?.normal,
+      hit: info.pickInfo?.hit,
+      pickedMesh: info.pickInfo?.pickedMesh?.name,
+      meshCount: ctx.meshes.size,
+    });
 
-    // Find the ECHO object id for the picked mesh.
+    // Use shared selection if available; otherwise try ray-pick.
     let objectId: string | undefined;
-    for (const [id, mesh] of ctx.meshes) {
-      if (mesh === pickedMesh) {
-        objectId = id;
-        break;
+    let mesh: Mesh | undefined;
+    let normal: { x: number; y: number; z: number } | undefined;
+
+    if (ctx.selection) {
+      objectId = ctx.selection.objectId;
+      mesh = ctx.selection.mesh;
+      normal = ctx.selection.normal;
+      log.info('extrude.onPointerDown — using shared selection', { objectId, normal });
+    } else {
+      const pickedMesh = info.pickInfo?.pickedMesh;
+      if (!info.pickInfo?.hit || !pickedMesh) {
+        console.log('[extrude] bail: no selection, no pick');
+        return false;
       }
+
+      for (const [id, managedMesh] of ctx.meshes) {
+        if (managedMesh === pickedMesh) {
+          objectId = id;
+          break;
+        }
+      }
+
+      if (!objectId) {
+        console.log('[extrude] bail: picked mesh not in managed meshes');
+        return false;
+      }
+
+      mesh = pickedMesh as Mesh;
+      const faceId = info.pickInfo.faceId;
+      if (faceId === undefined || faceId < 0) {
+        log.info('extrude.onPointerDown — no faceId');
+        return false;
+      }
+
+      const positions = mesh.getVerticesData(VertexBuffer.PositionKind);
+      const indices = mesh.getIndices();
+      if (!positions || !indices) {
+        log.info('extrude.onPointerDown — no vertex data');
+        return false;
+      }
+
+      normal = getFaceNormal(faceId, positions, indices);
+      log.info('extrude.onPointerDown — ray-picked face', { objectId, faceId, normal });
     }
 
-    if (!objectId) {
+    if (!objectId || !mesh || !normal) {
+      log.info('extrude.onPointerDown — missing data', { objectId: !!objectId, mesh: !!mesh, normal: !!normal });
       return false;
     }
 
-    const modelObject = ctx.getObject(objectId);
-    if (!modelObject) {
+    // Get the current runtime solid for this object.
+    const currentSolid = ctx.solids.get(objectId);
+    console.log('[extrude] getSolid', { objectId, found: !!currentSolid });
+    if (!currentSolid) {
       return false;
     }
 
-    const mesh = pickedMesh as Mesh;
-
-    // Determine the face that was picked and compute its normal.
-    const faceId = info.pickInfo.faceId;
-    if (faceId === undefined || faceId < 0) {
-      return false;
-    }
-
-    const positions = mesh.getVerticesData(VertexBuffer.PositionKind);
-    const indices = mesh.getIndices();
-    if (!positions || !indices) {
-      return false;
-    }
-
-    const normal = getFaceNormal(faceId, positions, indices);
     const screenDir = computeScreenDir(normal, ctx);
     const event = info.event as PointerEvent;
+
+    console.log('[extrude] starting extrusion', { objectId, normal, screenDir });
+
+    // Hide selection highlight during extrusion (geometry changes invalidate it).
+    if (ctx.selection?.highlightMesh) {
+      ctx.selection.highlightMesh.setEnabled(false);
+    }
+
+    // Clone the solid so we can rebuild from base during drag.
+    const { Manifold } = ctx.manifold;
+    const baseSolid = Manifold.union(currentSolid, currentSolid); // Clone via self-union.
 
     this._state = {
       objectId,
@@ -194,7 +237,7 @@ export class ExtrudeTool implements Tool {
       screenDir,
       startX: event.clientX,
       startY: event.clientY,
-      modelObject,
+      baseSolid,
     };
 
     ctx.camera.detachControl();
@@ -205,6 +248,7 @@ export class ExtrudeTool implements Tool {
     if (!this._state) {
       return false;
     }
+    log.info('extrude.onPointerMove', { hasState: true });
 
     const event = info.event as PointerEvent;
     const dx = event.clientX - this._state.startX;
@@ -214,11 +258,9 @@ export class ExtrudeTool implements Tool {
     const projection = dx * this._state.screenDir.x + dy * this._state.screenDir.y;
     const distance = projection * EXTRUDE_SENSITIVITY;
 
-    // Rebuild the solid with extrusion applied.
+    // Apply extrusion to the base solid (does not consume baseSolid).
     const { Manifold } = ctx.manifold;
-    const baseSolid = createSolidFromObject(Manifold, this._state.modelObject);
-    const extruded = applyExtrusion(Manifold, baseSolid, this._state.normal, distance);
-    baseSolid.delete();
+    const extruded = applyExtrusion(Manifold, this._state.baseSolid, this._state.normal, distance);
 
     // Update the Babylon mesh in-place.
     updateMeshFromManifold(extruded, this._state.mesh);
@@ -227,14 +269,33 @@ export class ExtrudeTool implements Tool {
     return true;
   }
 
-  onPointerUp(ctx: ToolContext, _info: PointerInfo): boolean {
+  onPointerUp(ctx: ToolContext, info: PointerInfo): boolean {
     if (!this._state) {
       return false;
     }
 
+    // Rebuild the final solid and store it as the new runtime state.
+    const event = info.event as PointerEvent;
+    const dx = event.clientX - this._state.startX;
+    const dy = event.clientY - this._state.startY;
+    const projection = dx * this._state.screenDir.x + dy * this._state.screenDir.y;
+    const distance = projection * EXTRUDE_SENSITIVITY;
+
+    const { Manifold } = ctx.manifold;
+    const finalSolid = applyExtrusion(Manifold, this._state.baseSolid, this._state.normal, distance);
+
+    // Replace the runtime solid for this object.
+    const oldSolid = ctx.solids.get(this._state.objectId);
+    oldSolid?.delete();
+    ctx.solids.set(this._state.objectId, finalSolid);
+
+    // Clean up the cloned base solid.
+    this._state.baseSolid.delete();
+
+    // Re-show selection highlight and clear selection (geometry changed, face ids invalid).
+    ctx.setSelection(null);
+
     // TODO(burdon): Serialize geometry to Model.Object once geometry field is added.
-    // The mesh already shows the final extruded state from the last pointer move.
-    // For now we skip the ECHO commit since there is no geometry field on Model.Object.
 
     ctx.camera.attachControl(ctx.canvas, true);
     this._state = null;

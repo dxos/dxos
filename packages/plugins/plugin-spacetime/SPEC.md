@@ -47,7 +47,7 @@ Keep this section up-to-date with periodical restructuring as the plugin becomes
 
 ## Implementation
 
-### Phase 1
+### Phase 1 (Basic)
 
 - [x] Decide on the best Typescript 3d engine to use for the plugin — **Babylon.js** (`@babylonjs/core`)
   - Chosen for: native TypeScript, built-in scene picking, CSG gizmos, WebGPU-ready.
@@ -55,7 +55,7 @@ Keep this section up-to-date with periodical restructuring as the plugin becomes
   - Chosen for: fast boolean operations (~1MB WASM), clean API, watertight output guarantees.
   - OpenCascade.js deferred to future phases if BREP/parametric features needed.
 - [x] Create the basic plugin structure, incl. types, settings, and components.
-- [x] Create a minimal storybook-driven experiment that renders a cube and allows the user to extrude surfaces.
+- [x] Create a minimal storybook-driven experiment that renders a cube.
   - [x] The user should be able to rotate the scene.
   - [x] The user should be able to click on a surface to select it.
   - [x] The user should be able to extrude the selected surface by holding shift and moving the mouse.
@@ -65,8 +65,19 @@ Keep this section up-to-date with periodical restructuring as the plugin becomes
 - [x] Create a Settings component like other plugins.
 - [x] Add the plugin to composer.
 
-### Phase 2
+### Phase 2 (Extrusion)
 
+Design a mechanism for tools.
+We should aim not to complicate further the SpacetimeCanvas.
+Instead implement tool handlers that operate on the runtime properties and then update the model once the action (e.g., dragging) has completed.
+
+- [ ] When the move tool is selected, dragging on an object should move it relative to the ground plane.
+- [ ] When a facet is selected and the extrusion tool is selected, dragging should extrude the facet and update the object model once the dragging completes.
+
+### Phase 3
+
+- [ ] Show the ground plane grid.
+- [ ] Select object, face, line, point.
 - [ ] Implement 3d grid with snap and minimum size.
 - [ ] Boolean operations toolbar: union, difference, intersection between selected solids.
 - [ ] Multi-operation history: support undo/redo of extrusions and boolean ops.
@@ -97,6 +108,83 @@ The `manifold-3d` package ships a `manifold.wasm` binary (~1MB) that must be loa
 - `manifold-3d` must be excluded from `optimizeDeps.exclude` in the Composer Vite config (same as storybook).
 - The `?url` import ensures Vite copies the `.wasm` file to the build output as a static asset.
 - No CDN or external fetch is needed — the WASM is self-contained in the bundle.
+
+### Tool Plugin Architecture
+
+Tools are stateful objects that handle pointer interaction on the Babylon scene. They manipulate Babylon meshes directly during interaction (visual-only), then commit the final state to the ECHO `Model.Object` when the action completes. The canvas remains a renderer — it reads ECHO state, renders meshes, and delegates all pointer events to the active tool.
+
+**Separation of concerns:**
+
+- **Canvas** renders ECHO state and delegates pointer events to the `ToolManager`.
+- **Tools** handle interaction logic, manipulate Babylon runtime, and commit to ECHO on completion.
+- **Toolbar** selects the active tool via the editor context; it is not coupled to tool implementations.
+
+**Key interfaces:**
+
+```
+ToolContext {
+  scene: BabylonScene         // For visual manipulation during interaction.
+  camera: ArcRotateCamera
+  canvas: HTMLCanvasElement
+  manifold: ManifoldWASM      // For CSG operations (extrude, boolean).
+  echoScene: Scene.Scene      // For committing changes on action completion.
+  meshes: Map<string, Mesh>   // ECHO object id → Babylon mesh.
+  getObject(id) → Model.Object
+}
+
+Tool {
+  id: string
+  activate(ctx)               // Set up gizmos, cursors.
+  deactivate(ctx)             // Clean up.
+  onPointerDown(ctx, info) → boolean
+  onPointerMove(ctx, info) → boolean
+  onPointerUp(ctx, info) → boolean
+}
+
+ToolManager {
+  register(tool)
+  setContext(ctx)
+  setActiveTool(id)
+  handlePointer(info) → boolean
+  dispose()
+}
+```
+
+**Data flow:**
+
+```
+Pointer Event → Canvas Observer → ToolManager.handlePointer()
+                                        │
+                                  Active Tool
+                                        │
+                          ┌─────────────┼──────────────┐
+                          ▼             ▼              ▼
+                    onPointerDown  onPointerMove  onPointerUp
+                    (pick mesh,    (manipulate     (commit to
+                     start drag)    Babylon mesh)   ECHO Model.Object)
+```
+
+During drag: tools call `mesh.position.set(...)` directly — no ECHO writes, no network replication.
+On pointer-up: tools call `Obj.change(obj, ...)` — single atomic ECHO mutation, replicates once.
+
+**Geometry persistence:**
+`Model.Object` stores both a `primitive` type and an optional `geometry` field (serialized Manifold mesh data). Objects start as primitives; after CSG operations (e.g., extrude) the result is serialized into `geometry`, and the object is no longer a simple primitive.
+
+**Undo integration point:**
+The tool commit (pointer-up) is the natural boundary for undo entries. Each commit can push `{ objectId, before, after }` onto an undo stack. This is why visual manipulation is separated from model commit — the commit is a single atomic operation that can be reversed.
+
+**File structure:**
+
+```
+src/tools/
+  index.ts           — barrel exports
+  tool.ts            — Tool interface
+  tool-context.ts    — ToolContext type
+  tool-manager.ts    — ToolManager class
+  select-tool.ts     — face picking + highlight (extracted from canvas)
+  move-tool.ts       — drag to translate object
+  extrude-tool.ts    — face extrude via Manifold CSG
+```
 
 ### Manifold ↔ Babylon.js Integration
 

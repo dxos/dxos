@@ -21,6 +21,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/storybook-utils"
     },
     {
@@ -45,6 +48,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/react-client"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -60,7 +66,13 @@
       "path": "../../ui/ui-types"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

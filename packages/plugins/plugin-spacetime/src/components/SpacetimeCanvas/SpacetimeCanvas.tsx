@@ -5,10 +5,11 @@
 import { Color3, Mesh } from '@babylonjs/core';
 import React, { type RefObject, useEffect, useRef, useState } from 'react';
 
+import { log } from '@dxos/log';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { SceneManager, getManifold, manifoldToBabylon } from '../../engine';
-import { ToolManager, SelectTool, MoveTool, ExtrudeTool } from '../../tools';
+import { ToolManager, SelectTool, MoveTool, ExtrudeTool, type Selection } from '../../tools';
 import { type Scene, type Model } from '../../types';
 import { type SpacetimeTool } from '../SpacetimeToolbar';
 
@@ -27,6 +28,8 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
     const meshRef = useRef<Mesh | null>(null);
     const toolManagerRef = useRef<ToolManager | null>(null);
     const meshesRef = useRef<Map<string, Mesh>>(new Map());
+    const solidsRef = useRef<Map<string, import('manifold-3d').Manifold>>(new Map());
+    const selectionRef = useRef<Selection | null>(null);
     const fpsRef = useRef<HTMLSpanElement>(null);
     const [ready, setReady] = useState(false);
 
@@ -41,40 +44,26 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       const manager = new SceneManager({ canvas });
       managerRef.current = manager;
 
-      // Load WASM once, then build initial mesh from scene objects or fallback cube.
+      // Load WASM once, then build meshes from scene objects.
       void getManifold().then((wasm) => {
         if (sceneData?.objects?.length) {
-          const obj = sceneData.objects[0]?.target;
-          if (!obj) {
-            setReady(true);
-            return;
-          }
-          const solid = createSolidFromObject(wasm.Manifold, obj);
-          const objectColor = obj.color ? Color3.FromHexString(obj.color) : theme.object;
-          meshRef.current = manifoldToBabylon(solid, {
-            scene: manager.scene,
-            name: 'solid',
-            color: objectColor,
-          });
-          solid.delete();
-        } else {
-          const solid = wasm.Manifold.cube([2, 2, 2], true);
-          meshRef.current = manifoldToBabylon(solid, {
-            scene: manager.scene,
-            name: 'solid',
-            color: theme.object,
-          });
-          solid.delete();
-        }
-
-        // Track meshes for tool context.
-        if (meshRef.current && sceneData?.objects?.length) {
-          const obj = sceneData.objects[0]?.target;
-          if (obj) {
-            const objId = (obj as any).id as string;
-            if (objId) {
-              meshesRef.current.set(objId, meshRef.current);
+          for (const ref of sceneData.objects) {
+            const obj = ref?.target as Model.Object | undefined;
+            if (!obj) {
+              continue;
             }
+            const objId = (obj as any).id as string;
+            const solid = createSolidFromObject(wasm.Manifold, obj);
+            const objectColor = obj.color ? Color3.FromHexString(obj.color) : theme.object;
+            const mesh = manifoldToBabylon(solid, {
+              scene: manager.scene,
+              name: objId ?? 'solid',
+              color: objectColor,
+            });
+            // Keep the Manifold solid alive for tool operations.
+            solidsRef.current.set(objId, solid);
+            meshRef.current = mesh;
+            meshesRef.current.set(objId, mesh);
           }
         }
 
@@ -93,16 +82,26 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           manifold: wasm,
           echoScene: sceneData,
           meshes: meshesRef.current,
+          solids: solidsRef.current,
           getObject: (id: string) => {
             if (!sceneData?.objects) {
               return undefined;
             }
             for (const ref of sceneData.objects) {
-              if ((ref?.target as any)?.id === id) {
-                return ref?.target as Model.Object;
+              const obj = ref?.target as (Model.Object & { id?: string }) | undefined;
+              if (obj && (obj as any).id === id) {
+                return obj;
               }
             }
             return undefined;
+          },
+          get selection() {
+            return selectionRef.current;
+          },
+          setSelection: (next: Selection | null) => {
+            // Dispose old highlight mesh.
+            selectionRef.current?.highlightMesh?.dispose();
+            selectionRef.current = next;
           },
         });
 
@@ -123,8 +122,14 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       }, 500);
 
       return () => {
+        selectionRef.current?.highlightMesh?.dispose();
+        selectionRef.current = null;
         toolManagerRef.current?.dispose();
         toolManagerRef.current = null;
+        for (const solid of solidsRef.current.values()) {
+          solid.delete();
+        }
+        solidsRef.current.clear();
         clearInterval(fpsInterval);
         resizeObserver.disconnect();
         manager.dispose();
@@ -147,6 +152,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         return;
       }
 
+      log.info('pointer observer registered', { activeTool: toolManager.activeToolId });
       const observer = manager.scene.onPointerObservable.add((pointerInfo) => {
         toolManager.handlePointer(pointerInfo);
       });
@@ -213,6 +219,7 @@ const createSolidFromObject = (Manifold: Awaited<ReturnType<typeof getManifold>>
   return translated;
 };
 
+// TODO(burdon): Property on object.
 const theme = {
   object: new Color3(0.3, 0.3, 0.3),
 };
