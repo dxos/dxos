@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { type LayoutChangeRequest, DeckMain } from '../DeckMain';
+import { type DeckLayoutChangeRequest, DeckMain } from '../DeckMain';
 import { useDeckState } from '../../hooks';
 
 import { ActiveNode } from './ActiveNode';
@@ -24,7 +24,7 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const { invokePromise } = useOperationInvoker();
 
   const handleLayoutChange = useCallback(
-    (request: LayoutChangeRequest) => {
+    (request: DeckLayoutChangeRequest) => {
       void invokePromise(LayoutOperation.SetLayoutMode, request);
     },
     [invokePromise],

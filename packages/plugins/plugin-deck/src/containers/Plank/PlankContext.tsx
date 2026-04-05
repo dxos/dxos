@@ -14,10 +14,10 @@ const PLANK_NAME = 'Plank';
 export type PlankContextValue = {
   /** The application graph. */
   graph: Graph.ExpandableGraph;
-  /** Current layout mode. */
-  layoutMode: LayoutMode;
   /** Which part of the layout this plank occupies. */
   part: ResolvedPart;
+  /** Current layout mode. */
+  layoutMode: LayoutMode;
   /** Deck settings. */
   settings?: Settings.Settings;
   /** Popover anchor ID for heading menus. */

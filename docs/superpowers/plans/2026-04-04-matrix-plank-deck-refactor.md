@@ -768,7 +768,7 @@ import { type PluginManager } from '@dxos/app-framework';
 
 import { type DeckStateHook } from '../../hooks/useDeckState';
 import { type Settings, type LayoutMode } from '../../types';
-import { type LayoutChangeRequest } from './DeckMain';
+import { type DeckLayoutChangeRequest } from './DeckMain';
 
 const DECK_MAIN_NAME = 'DeckMain';
 
@@ -780,7 +780,7 @@ export type DeckMainContextValue = {
   /** Layout mode. */
   layoutMode: LayoutMode;
   /** Callback for layout mode changes. */
-  onLayoutChange: (request: LayoutChangeRequest) => void;
+  onLayoutChange: (request: DeckLayoutChangeRequest) => void;
 } & Pick<DeckStateHook, 'state' | 'deck' | 'updateState'>;
 
 export const [DeckMainProvider, useDeckMainContext] = createContext<DeckMainContextValue>(DECK_MAIN_NAME);
@@ -866,7 +866,7 @@ export const DeckMainParts = {
 - [ ] **Step 5: Update index.ts**
 
 ```typescript
-export { DeckMain, DeckMainParts, type DeckMainProps, type LayoutChangeRequest } from './DeckMain';
+export { DeckMain, DeckMainParts, type DeckMainProps, type DeckLayoutChangeRequest } from './DeckMain';
 export { type DeckMainContextValue } from './DeckMainContext';
 ```
 

@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
+import { Graph } from '@dxos/app-graph';
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
@@ -22,7 +23,7 @@ import { Text } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
 import { DeckState } from '../../capabilities';
-import { Plank, type PlankContextValue } from '../../containers/Plank';
+import { Plank } from '../../containers/Plank';
 import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
@@ -69,6 +70,7 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
  */
 const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
   const attentionAttrs = useAttentionAttributes(props.data.id);
+  const graph = useMemo(() => Graph.make(), []);
   return (
     <Mosaic.Tile {...props} asChild>
       <Focus.Item asChild border current={props.current}>
@@ -79,7 +81,7 @@ const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content>
-            <Plank.Root layoutMode='deck' part='deck' graph={{} as PlankContextValue['graph']}>
+            <Plank.Root layoutMode='deck' part='deck' graph={graph}>
               <Plank.Component
                 id={props.data.id}
                 layoutMode='deck'

@@ -10,13 +10,17 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 
-import { DeckState, OperationHandler } from '../../capabilities';
+import { DeckSettings, DeckState, OperationHandler } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
 import { DeckLayout } from './DeckLayout';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: DeckSettings,
+  }),
   Plugin.addModule({
     id: Capability.getModuleTag(DeckState),
     activatesOn: AppActivationEvents.AppGraphReady,
@@ -35,6 +39,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
+      setupEvents: [AppActivationEvents.SetupSettings],
     }),
   ],
   parameters: {

@@ -24,6 +24,7 @@ import { PlankLoading } from './PlankLoading';
 export type PlankComponentProps = {
   id: string;
   part: ResolvedPart;
+  layoutMode: LayoutMode;
   path?: string[];
   order?: number;
   active?: string[];
@@ -31,7 +32,6 @@ export type PlankComponentProps = {
   node?: Node.Node;
   primary?: Node.Node;
   companions?: Node.Node[];
-  layoutMode: LayoutMode;
   settings?: Settings.Settings;
 };
 

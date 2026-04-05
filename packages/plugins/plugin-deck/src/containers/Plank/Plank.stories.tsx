@@ -10,16 +10,21 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { corePlugins } from '@dxos/plugin-testing';
+import { Main } from '@dxos/react-ui';
 import { withLayout } from '@dxos/react-ui/testing';
-import { Stack } from '@dxos/react-ui-stack';
+import { StackContext } from '@dxos/react-ui-stack';
 
-import { DeckState } from '../../capabilities';
+import { DeckSettings, DeckState } from '../../capabilities';
 import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
-import { Plank, type PlankRootProps } from './Plank';
+import { Plank, PlankComponentProps } from './Plank';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
+  Plugin.addModule({
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: DeckSettings,
+  }),
   Plugin.addModule({
     id: Capability.getModuleTag(DeckState),
     activatesOn: AppActivationEvents.AppGraphReady,
@@ -28,38 +33,43 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
   Plugin.make,
 );
 
-type PlankStoryProps = {
-  id: string;
-  layoutMode: PlankRootProps['layoutMode'];
-  part: PlankRootProps['part'];
-};
+type PlankStoryProps = Pick<PlankComponentProps, 'id'>;
 
-const PlankStory = ({ id, layoutMode, part }: PlankStoryProps) => {
+const DefaultStory = ({ id }: PlankStoryProps) => {
   const { graph } = useAppGraph();
 
   return (
-    <Stack orientation='vertical'>
-      <Plank.Root graph={graph} layoutMode={layoutMode} part={part}>
-        <Plank.Component id={id} layoutMode={layoutMode} part={part} />
-      </Plank.Root>
-    </Stack>
+    <Main.Root>
+      <Main.Content bounce handlesFocus classNames='border'>
+        <div role='none' className='relative overflow-hidden bg-deck-surface'>
+          <StackContext.Provider value={{ orientation: 'horizontal', size: 'contain', rail: true }}>
+            <Plank.Root graph={graph} part='solo' layoutMode='solo'>
+              <Plank.Content solo companion={false} encapsulate={false}>
+                <Plank.Component id={id} part='solo-primary' layoutMode='solo' />
+              </Plank.Content>
+            </Plank.Root>
+          </StackContext.Provider>
+        </div>
+      </Main.Content>
+    </Main.Root>
   );
 };
 
 const meta = {
   title: 'plugins/plugin-deck/containers/Plank',
-  component: PlankStory,
+  component: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
+      setupEvents: [AppActivationEvents.SetupSettings],
     }),
   ],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof PlankStory>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
@@ -69,7 +79,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     id: 'plank-1',
-    part: 'solo',
-    layoutMode: 'deck',
   },
 };

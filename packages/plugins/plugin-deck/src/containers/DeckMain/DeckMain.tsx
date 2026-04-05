@@ -2,16 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, {
-  Fragment,
-  type PropsWithChildren,
-  type UIEvent,
-  memo,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { Fragment, type UIEvent, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -28,24 +19,12 @@ import { DeckOperation } from '../../operations';
 import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
 import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from './fragments';
 import { Plank, type PlankComponentProps } from '../Plank';
-import { type LayoutChangeRequest } from './DeckMainContext';
+import { DeckRoot, type DeckLayoutChangeRequest } from './DeckRoot';
 import { ComplementarySidebar, Sidebar, ToggleComplementarySidebarButton, ToggleSidebarButton } from '../Sidebar';
 
 import { ContentEmpty } from './ContentEmpty';
-import { DeckMainProvider, type DeckMainContextValue } from './DeckMainContext';
 import { StatusBar } from './StatusBar';
 import { Banner } from './Banner';
-
-export type { LayoutChangeRequest } from './DeckMainContext';
-
-export type DeckMainRootProps = PropsWithChildren<DeckMainContextValue>;
-
-/**
- * Headless root that provides DeckMain context.
- */
-const DeckMainRoot = ({ children, ...context }: DeckMainRootProps) => {
-  return <DeckMainProvider {...context}>{children}</DeckMainProvider>;
-};
 
 //
 // ConnectedPlank
@@ -122,6 +101,7 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
         companion={hasCompanion}
         encapsulate={!!props.settings?.encapsulatedPlanks}
       >
+        {/* TODO(burdon): Destructure props rather than passing everything to Root and Component. */}
         <Plank.Component
           id={id}
           node={node}
@@ -152,7 +132,7 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
 
 export type DeckMainProps = {
   /** Callback invoked when the layout mode needs to change. */
-  onLayoutChange: (request: LayoutChangeRequest) => void;
+  onLayoutChange: (request: DeckLayoutChangeRequest) => void;
 };
 
 export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
@@ -283,7 +263,7 @@ export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
   );
 
   return (
-    <DeckMainRoot
+    <DeckRoot
       settings={settings}
       pluginManager={pluginManager}
       layoutMode={layoutMode}
@@ -351,13 +331,13 @@ export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
                 <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
               )}
               <Stack
-                orientation='horizontal'
-                size='contain'
-                itemsCount={itemsCount - 1}
                 classNames={[
                   'absolute inset-y-(--main-spacing) -inset-w-px h-[calc(100%-2*var(--main-spacing))]',
                   mainPaddingTransitions,
                 ]}
+                itemsCount={itemsCount - 1}
+                size='contain'
+                orientation='horizontal'
                 style={padding}
                 onScroll={handleScroll}
                 ref={deckRef}
@@ -414,7 +394,7 @@ export const DeckMain = ({ onLayoutChange }: DeckMainProps) => {
         {/* Status bar. */}
         {hoistStatusbar && <StatusBar showHints={settings?.showHints} />}
       </Main.Root>
-    </DeckMainRoot>
+    </DeckRoot>
   );
 };
 
@@ -426,12 +406,3 @@ const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: b
       style={{ gridColumn: order }}
     />
   ) : null;
-
-export { DeckMainRoot };
-
-/**
- * Radix-style composite DeckMain component.
- */
-export const DeckMainParts = {
-  Root: DeckMainRoot,
-};
