@@ -38,7 +38,6 @@ This would involve removing the reliance on `app-framework` and `app-tookit` hoo
 then `Deck.Main` would access these as needed via the context.
 
 - [x] Move Deck.Root OUT of Deck.Main and update current use of DeckMain to use the composite structure.
-
-## Later
-
-- [ ] Breack up Deck.Main => Deck.Content with different Deck/Solo sub components.
+- [x] Rename Deck.Main => Deck.Content (the layout shell: Main.Root, sidebars, overlay, topbar, statusbar, responsive effects).
+- [x] Extract Deck.Viewport from Deck.Content (Main.Content: CSS vars, empty state, deck-mode Stack, solo-mode StackContext).
+- [x] Move ConnectedPlank to its own file.
