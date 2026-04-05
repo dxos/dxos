@@ -9,6 +9,15 @@ import { Process } from '@dxos/functions-runtime';
 import { Icon, Treegrid } from '@dxos/react-ui';
 
 export const ProcessTree = ({ processes }: { processes: readonly Process.Info[] }) => {
+  processes = [
+    ...processes.filter((process) => [Process.State.RUNNING, Process.State.HYBERNATING].includes(process.state)),
+    ...processes.filter((process) => [Process.State.IDLE].includes(process.state)).slice(0, 3),
+    ...processes
+      .filter((process) =>
+        [Process.State.SUCCEEDED, Process.State.FAILED, Process.State.TERMINATED].includes(process.state),
+      )
+      .slice(0, 3),
+  ];
   return (
     <Treegrid.Root gridTemplateColumns='1fr'>
       {processes
