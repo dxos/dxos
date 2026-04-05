@@ -95,6 +95,35 @@ describe('importOBJ', () => {
     expect(result).toBeNull();
   });
 
+  test('loads taxi.glb and reports per-mesh import status', ({ expect }) => {
+    const glbPath = resolve(dirname(fileURLToPath(import.meta.url)), '../..', 'assets/models/taxi.glb');
+    const glbData = readFileSync(glbPath);
+
+    // Parse GLB header to get mesh info.
+    const view = new DataView(glbData.buffer);
+    expect(view.getUint32(0, true)).toBe(0x46546C67);
+
+    const jsonLength = view.getUint32(12, true);
+    const jsonChunk = new TextDecoder().decode(new Uint8Array(glbData.buffer, 20, jsonLength));
+    const gltf = JSON.parse(jsonChunk);
+
+    console.log('taxi.glb meshes:', gltf.meshes?.map((m: any) => ({
+      name: m.name,
+      primitives: m.primitives?.length,
+    })));
+
+    const solid = importGLBDirect(glbData.buffer as ArrayBuffer, wasm);
+    if (solid) {
+      console.log('taxi.glb result:', {
+        tris: solid.getMesh().numTri,
+        volume: solid.volume().toFixed(4),
+      });
+      solid.delete();
+    }
+    // Just verify it doesn't crash.
+    expect(true).toBe(true);
+  });
+
   test('loads race.glb and imports manifold sub-meshes', ({ expect }) => {
     const glbPath = resolve(dirname(fileURLToPath(import.meta.url)), '../..', 'assets/models/race.glb');
     const glbData = readFileSync(glbPath);

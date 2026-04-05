@@ -4,6 +4,7 @@
 
 export * from './extrusion';
 export * from './glb-import';
+export * from './mesh-repair';
 export * from './obj-import';
 export * from './manifold-context';
 export * from './mesh-converter';

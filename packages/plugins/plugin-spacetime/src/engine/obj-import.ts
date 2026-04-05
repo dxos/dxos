@@ -6,6 +6,8 @@ import type { ManifoldToplevel, Manifold } from 'manifold-3d';
 
 import { log } from '@dxos/log';
 
+import { repairMesh } from './mesh-repair';
+
 /**
  * Parses an OBJ file string and converts it to a Manifold solid.
  *
@@ -55,11 +57,10 @@ export const importOBJ = (objText: string, wasm: ManifoldToplevel): Manifold | n
     return null;
   }
 
-  const vertProperties = new Float32Array(positions);
-  const triVerts = new Uint32Array(indices);
+  const repaired = repairMesh(new Float32Array(positions), new Uint32Array(indices));
 
   try {
-    const mesh = new wasm.Mesh({ numProp: 3, vertProperties, triVerts });
+    const mesh = new wasm.Mesh({ numProp: 3, vertProperties: repaired.positions, triVerts: repaired.indices });
     mesh.merge();
     return new Manifold(mesh);
   } catch (error) {
