@@ -13,6 +13,12 @@ import { type Tool } from '../tool';
 /** Sensitivity factor converting pixel drag distance to extrude distance. */
 const EXTRUDE_SENSITIVITY = 0.02;
 
+/** Minimum object dimension on any axis (matches grid step). */
+const MIN_SIZE = 1;
+
+/** Throttle interval for pointer move updates (ms). */
+const MOVE_THROTTLE_MS = 30;
+
 /** State tracked during an active extrude drag. */
 type ExtrudeState = {
   /** ECHO object id being extruded. */
@@ -29,6 +35,8 @@ type ExtrudeState = {
   startY: number;
   /** Manifold solid at the start of this extrusion (cloned). */
   baseSolid: Manifold;
+  /** Timestamp of last move update (for throttling). */
+  lastMoveTime: number;
 };
 
 /**
@@ -80,6 +88,10 @@ const createSolidFromObject = (Manifold: ManifoldToplevel['Manifold'], obj: Mode
 /**
  * Applies extrusion to a solid by creating a slab along the given normal direction
  * and performing a boolean union (positive) or difference (negative).
+ *
+ * NOTE: Uses dominant-axis detection (largest absolute component of the normal) instead of
+ * a fixed 0.5 threshold. This handles non-axis-aligned normals correctly after geometry
+ * has been modified by prior extrusions.
  */
 const applyExtrusion = (
   Manifold: ManifoldToplevel['Manifold'],
@@ -95,31 +107,38 @@ const applyExtrusion = (
     return Manifold.union(baseSolid, baseSolid);
   }
 
-  const absDist = Math.abs(distance);
-  const sign = distance > 0 ? 1 : -1;
   const bbox = baseSolid.boundingBox();
+  const bboxSize = [bbox.max[0] - bbox.min[0], bbox.max[1] - bbox.min[1], bbox.max[2] - bbox.min[2]];
+  const bboxCenter = [(bbox.min[0] + bbox.max[0]) / 2, (bbox.min[1] + bbox.max[1]) / 2, (bbox.min[2] + bbox.max[2]) / 2];
+  const normalArr = [normal.x, normal.y, normal.z];
 
-  const anx = Math.abs(normal.x);
-  const any = Math.abs(normal.y);
-  const anz = Math.abs(normal.z);
+  // Determine dominant axis: the axis most aligned with the normal.
+  const absNormal = normalArr.map(Math.abs);
+  const dominantAxis = absNormal[0] >= absNormal[1] && absNormal[0] >= absNormal[2] ? 0 : absNormal[1] >= absNormal[2] ? 1 : 2;
 
-  // Slab: full bounding box on tangent axes, absDist on normal axis.
-  const slabW = anx > 0.5 ? absDist : bbox.max[0] - bbox.min[0];
-  const slabH = any > 0.5 ? absDist : bbox.max[1] - bbox.min[1];
-  const slabD = anz > 0.5 ? absDist : bbox.max[2] - bbox.min[2];
-  const slab = Manifold.cube([slabW, slabH, slabD], true);
+  // Clamp negative extrusion so the object can't collapse below MIN_SIZE on the dominant axis.
+  const sign = distance > 0 ? 1 : -1;
+  let absDist = Math.abs(distance);
+  if (sign < 0) {
+    const maxInward = Math.max(0, bboxSize[dominantAxis] - MIN_SIZE);
+    absDist = Math.min(absDist, maxInward);
+    if (absDist === 0) {
+      return Manifold.union(baseSolid, baseSolid);
+    }
+  }
 
-  // Position slab at the face.
-  const cx =
-    (bbox.min[0] + bbox.max[0]) / 2 +
-    normal.x * ((anx > 0.5 ? (bbox.max[0] - bbox.min[0]) / 2 : 0) + (sign * absDist) / 2);
-  const cy =
-    (bbox.min[1] + bbox.max[1]) / 2 +
-    normal.y * ((any > 0.5 ? (bbox.max[1] - bbox.min[1]) / 2 : 0) + (sign * absDist) / 2);
-  const cz =
-    (bbox.min[2] + bbox.max[2]) / 2 +
-    normal.z * ((anz > 0.5 ? (bbox.max[2] - bbox.min[2]) / 2 : 0) + (sign * absDist) / 2);
-  const translated = slab.translate([cx, cy, cz]);
+  // Slab dimensions: full bbox size on tangent axes, absDist on dominant axis.
+  const slabSize = [...bboxSize] as [number, number, number];
+  slabSize[dominantAxis] = absDist;
+  const slab = Manifold.cube(slabSize, true);
+
+  // Position slab adjacent to the face on the dominant axis.
+  const slabCenter = [...bboxCenter] as [number, number, number];
+  const faceOffset = bboxSize[dominantAxis] / 2;
+  const normalSign = normalArr[dominantAxis] > 0 ? 1 : -1;
+  slabCenter[dominantAxis] += normalSign * (faceOffset + (sign * absDist) / 2);
+
+  const translated = slab.translate(slabCenter);
   slab.delete();
 
   const result = sign > 0 ? Manifold.union(baseSolid, translated) : Manifold.difference(baseSolid, translated);
@@ -225,6 +244,7 @@ export class ExtrudeTool implements Tool {
       startX: event.clientX,
       startY: event.clientY,
       baseSolid,
+      lastMoveTime: 0,
     };
 
     ctx.camera.detachControl();
@@ -235,6 +255,13 @@ export class ExtrudeTool implements Tool {
     if (!this._state) {
       return false;
     }
+
+    // Throttle CSG operations to prevent slowdown on complex geometry.
+    const now = performance.now();
+    if (now - this._state.lastMoveTime < MOVE_THROTTLE_MS) {
+      return true;
+    }
+    this._state.lastMoveTime = now;
 
     const event = info.event as PointerEvent;
     const dx = event.clientX - this._state.startX;

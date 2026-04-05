@@ -15,14 +15,18 @@ import { createMenuAction, createMenuItemGroup } from './util';
 export interface ActionGroupBuilder {
   /** Add an action node as a child of the current group. */
   action<P extends {} = {}>(id: string, props: P & MenuActionProperties, invoke: () => void): this;
+
   /** Add a nested action group. */
   group<P extends {} = {}>(
     id: string,
     props: P & MenuItemGroupProperties,
     cb: (builder: ActionGroupBuilder) => void,
   ): this;
+
   /** Merge pre-built nodes and edges into this builder. */
+  // TODO(burdon): Option to pass in builder.
   subgraph(subgraph: ActionGraphProps): this;
+
   /** Add a separator. */
   separator(id?: string, variant?: 'gap' | 'line'): this;
 }

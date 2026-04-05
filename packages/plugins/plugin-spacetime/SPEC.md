@@ -88,6 +88,8 @@ Instead implement tool handlers that operate on the runtime properties and then 
   - Canvas subscribes to `objectCount` (via `useObject` on scene) and syncs new meshes reactively.
 - [ ] Menu action and operation to delete the selected object.
 - [ ] Show wireframe bounding box for selected object.
+- [ ] Show table of vectors.
+- [ ] Extrusion bug.
 
 ### Phase 3 (Boolean geometry)
 
@@ -95,14 +97,15 @@ Instead implement tool handlers that operate on the runtime properties and then 
 - [ ] Snap objects when dragging (moving).
 - [ ] Menu action to join selected objects.
 - [ ] Menu action to subtract selected objects.
+- [ ] Implement 3d grid with snap and minimum size.
 
 ### Phase 4
 
-- [ ] Implement 3d grid with snap and minimum size.
-- [ ] Boolean operations toolbar: union, difference, intersection between selected solids.
 - [ ] Multi-operation history: support undo/redo of extrusions and boolean ops.
-- [ ] Additional solid primitives: sphere, cylinder, torus.
+- [ ] Mult-select.
+- [ ] Boolean operations toolbar: union, difference, intersection between selected solids.
 - [ ] Transform gizmos: translate, rotate, scale selected solids.
+- [ ] Additional solid primitives: sphere, cylinder, torus.
 - [ ] Material/color picker per solid or per face.
 - [ ] Export: OBJ/STL/glTF mesh export from Manifold geometry.
 - [ ] Real-time collaboration: sync scene state across peers via ECHO.
