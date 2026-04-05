@@ -41,9 +41,13 @@ export type AiSessionRunRequirements =
   | LanguageModel.LanguageModel
   | ToolExecutionService
   | ToolResolverService
-  | TracingService
   | FunctionInvocationService
-  | Trace.TraceService;
+  | Trace.TraceService
+  /**
+   * @deprecated Retained for backward compatibility with tool handlers that use TracingService.emitStatus().
+   *   New code should use Trace.TraceService instead.
+   */
+  | TracingService;
 
 export type AiSessionOptions = {
   /**
