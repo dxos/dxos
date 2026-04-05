@@ -6,10 +6,15 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
-import { AiConversation, type ContextBinding } from '@dxos/assistant';
+import {
+  AiConversation,
+  functionInvocationServiceFromOperations,
+  ToolExecutionServices,
+  type ContextBinding,
+} from '@dxos/assistant';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService, Trace } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
 import { type Message } from '@dxos/types';
@@ -59,9 +64,12 @@ export default Agent.pipe(
           .pipe(Effect.retry({ times: 2 }));
       },
       Effect.scoped,
-      Effect.provide(Layer.mergeAll(
-        AiService.model('@anthropic/claude-opus-4-6'), 
-      )),
+      Effect.provide(
+        Layer.mergeAll(AiService.model('@anthropic/claude-opus-4-6'), ToolExecutionServices).pipe(
+          Layer.provide(functionInvocationServiceFromOperations),
+        ),
+      ),
     ),
   ),
+  Operation.opaqueHandler,
 );

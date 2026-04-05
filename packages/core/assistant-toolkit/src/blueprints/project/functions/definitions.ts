@@ -4,10 +4,10 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService } from '@dxos/ai';
+import { AiService, GenericToolkit } from '@dxos/ai';
 import { AiContextService } from '@dxos/assistant';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { FunctionInvocationService, QueueService, TracingService, TriggerEvent } from '@dxos/functions';
+import { QueueService, TracingService, TriggerEvent } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
 import { Project } from '../../../types';
@@ -27,10 +27,10 @@ export const Agent = Operation.make({
   services: [
     AiService.AiService,
     Database.Service,
-    FunctionInvocationService,
     QueueService,
     // @deprecated TracingService kept for backward compat with tool handlers.
     TracingService,
+    GenericToolkit.GenericToolkitProvider,
   ],
 });
 
