@@ -145,7 +145,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             return undefined;
           },
           get viewState() {
-            return viewStateRef.current ?? { selectionMode: 'face' as const, showGrid: true };
+            return viewStateRef.current ?? { selectionMode: 'face' as const, showGrid: true, showDebug: false };
           },
           get selection() {
             return selectionRef.current;
@@ -352,7 +352,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           <span className='absolute bottom-2 left-2 text-xs font-mono opacity-50 pointer-events-none' ref={fpsRef} />
         )}
 
-        <DebugPanel info={debugInfo} />
+        {viewState?.showDebug && <DebugPanel info={debugInfo} />}
       </div>
     );
   },

@@ -57,6 +57,7 @@ export const translations = [
 
         'view.label': 'View',
         'view.grid.label': 'Grid',
+        'view.debug.label': 'Debug',
       },
     },
   },

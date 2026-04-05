@@ -11,6 +11,7 @@ export type SelectionMode = 'object' | 'face';
 export type ViewState = {
   selectionMode: SelectionMode;
   showGrid: boolean;
+  showDebug: boolean;
 };
 
 /** Creates the selection mode toggle group action subgraph. */
@@ -69,11 +70,18 @@ export const createViewActions = (
     icon: 'ph--grid-four--regular',
   });
 
+  const debugAction = createMenuAction('showDebug', () => onViewChange({ showDebug: !state.showDebug }), {
+    label: ['view.debug.label', { ns: meta.id }],
+    checked: state.showDebug,
+    icon: 'ph--bug--regular',
+  });
+
   return {
-    nodes: [viewGroupAction, gridAction],
+    nodes: [viewGroupAction, gridAction, debugAction],
     edges: [
       { source: 'root', target: 'view', relation: 'child' },
       { source: viewGroupAction.id, target: gridAction.id, relation: 'child' },
+      { source: viewGroupAction.id, target: debugAction.id, relation: 'child' },
     ],
   };
 };

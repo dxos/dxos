@@ -68,7 +68,7 @@ type SpacetimeEditorRootProps = PropsWithChildren<{
   scene?: Scene.Scene;
 }>;
 
-const DEFAULT_VIEW_STATE: ViewState = { selectionMode: 'face', showGrid: true };
+const DEFAULT_VIEW_STATE: ViewState = { selectionMode: 'face', showGrid: true, showDebug: false };
 
 const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootProps>(
   ({ children, scene }, forwardedRef) => {
@@ -87,7 +87,19 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       [],
     );
     const handlePrimitiveChange = useCallback((primitive: Model.PrimitiveType) => setSelectedPrimitive(primitive), []);
-    const handleHueChange = useCallback((hue: string) => setSelectedHue(hue), []);
+    const handleHueChange = useCallback((hue: string) => {
+      setSelectedHue(hue);
+      // Update the selected object's color if one is selected.
+      if (selectedObjectId && scene?.objects) {
+        for (const ref of scene.objects) {
+          const obj = ref?.target;
+          if (obj && (obj as any).id === selectedObjectId) {
+            Obj.change(obj, (o) => { o.color = hue; });
+            break;
+          }
+        }
+      }
+    }, [selectedObjectId, scene]);
 
     const handleAddObject = useCallback(() => {
       if (!scene) {
