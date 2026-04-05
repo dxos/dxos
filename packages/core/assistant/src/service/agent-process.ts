@@ -57,7 +57,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         QueueService,
         ProcessManager.ProcessOperationInvoker.Service,
         AiService.AiService,
-
+        // @deprecated Required by AiSessionRunRequirements for backward compat with tool handlers.
         TracingService,
       ],
     },
