@@ -63,27 +63,40 @@ export const exportSTL = (solid: Manifold): ArrayBuffer => {
     }
 
     // Normal.
-    view.setFloat32(offset, nx, true); offset += 4;
-    view.setFloat32(offset, ny, true); offset += 4;
-    view.setFloat32(offset, nz, true); offset += 4;
+    view.setFloat32(offset, nx, true);
+    offset += 4;
+    view.setFloat32(offset, ny, true);
+    offset += 4;
+    view.setFloat32(offset, nz, true);
+    offset += 4;
 
     // Vertex 0.
-    view.setFloat32(offset, p0x, true); offset += 4;
-    view.setFloat32(offset, p0y, true); offset += 4;
-    view.setFloat32(offset, p0z, true); offset += 4;
+    view.setFloat32(offset, p0x, true);
+    offset += 4;
+    view.setFloat32(offset, p0y, true);
+    offset += 4;
+    view.setFloat32(offset, p0z, true);
+    offset += 4;
 
     // Vertex 1.
-    view.setFloat32(offset, p1x, true); offset += 4;
-    view.setFloat32(offset, p1y, true); offset += 4;
-    view.setFloat32(offset, p1z, true); offset += 4;
+    view.setFloat32(offset, p1x, true);
+    offset += 4;
+    view.setFloat32(offset, p1y, true);
+    offset += 4;
+    view.setFloat32(offset, p1z, true);
+    offset += 4;
 
     // Vertex 2.
-    view.setFloat32(offset, p2x, true); offset += 4;
-    view.setFloat32(offset, p2y, true); offset += 4;
-    view.setFloat32(offset, p2z, true); offset += 4;
+    view.setFloat32(offset, p2x, true);
+    offset += 4;
+    view.setFloat32(offset, p2y, true);
+    offset += 4;
+    view.setFloat32(offset, p2z, true);
+    offset += 4;
 
     // Attribute byte count.
-    view.setUint16(offset, 0, true); offset += 2;
+    view.setUint16(offset, 0, true);
+    offset += 2;
   }
 
   return buffer;

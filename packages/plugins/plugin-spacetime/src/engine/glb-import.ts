@@ -52,9 +52,7 @@ export const importGLB = async (
   });
 
   // Extract mesh data from all loaded meshes.
-  const meshes = container.meshes.filter(
-    (mesh): mesh is BabylonMesh => mesh.getTotalVertices() > 0,
-  );
+  const meshes = container.meshes.filter((mesh): mesh is BabylonMesh => mesh.getTotalVertices() > 0);
 
   log.info('importGLB: meshes with vertices', { count: meshes.length });
 
@@ -121,7 +119,8 @@ export const importGLBDirect = (data: ArrayBuffer, wasm: ManifoldToplevel): Mani
   // Parse GLB header.
   const view = new DataView(data);
   const magic = view.getUint32(0, true);
-  if (magic !== 0x46546C67) { // 'glTF'
+  if (magic !== 0x46546c67) {
+    // 'glTF'
     log.info('importGLBDirect: not a valid GLB file');
     return null;
   }
@@ -164,7 +163,8 @@ export const importGLBDirect = (data: ArrayBuffer, wasm: ManifoldToplevel): Mani
       const vertProperties = new Float32Array(binData.buffer, binData.byteOffset + posOffset, posAccessor.count * 3);
       const componentType = idxAccessor.componentType;
       let triVerts: Uint32Array;
-      if (componentType === 5123) { // UNSIGNED_SHORT
+      if (componentType === 5123) {
+        // UNSIGNED_SHORT
         const shortIndices = new Uint16Array(binData.buffer, binData.byteOffset + idxOffset, idxAccessor.count);
         triVerts = Uint32Array.from(shortIndices);
       } else {
