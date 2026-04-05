@@ -2,27 +2,31 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Color3, Mesh, PointerEventTypes, Vector3, StandardMaterial, VertexData } from '@babylonjs/core';
-import React, { RefObject, useEffect, useRef, useState } from 'react';
+import { Color3, Mesh } from '@babylonjs/core';
+import React, { type RefObject, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { SceneManager, getManifold, manifoldToBabylon, getFaceNormal } from '../../engine';
+import { SceneManager, getManifold, manifoldToBabylon } from '../../engine';
+import { ToolManager, SelectTool, MoveTool, ExtrudeTool } from '../../tools';
 import { type Scene, type Model } from '../../types';
+import { type SpacetimeTool } from '../SpacetimeToolbar';
 
 export type SpacetimeCanvasProps = {
   scene?: Scene.Scene;
+  tool?: SpacetimeTool;
   showAxes?: boolean;
   showFps?: boolean;
 };
 
 export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
-  ({ scene: sceneData, showAxes = false, showFps = false, ...props }, forwardedRef) => {
+  ({ scene: sceneData, tool = 'select', showAxes = false, showFps = false, ...props }, forwardedRef) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const managerRef = useRef<SceneManager | null>(null);
     const meshRef = useRef<Mesh | null>(null);
-    const selectionMeshRef = useRef<Mesh | null>(null);
+    const toolManagerRef = useRef<ToolManager | null>(null);
+    const meshesRef = useRef<Map<string, Mesh>>(new Map());
     const fpsRef = useRef<HTMLSpanElement>(null);
     const [ready, setReady] = useState(false);
 
@@ -62,6 +66,49 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           });
           solid.delete();
         }
+
+        // Track meshes for tool context.
+        if (meshRef.current && sceneData?.objects?.length) {
+          const obj = sceneData.objects[0]?.target;
+          if (obj) {
+            const objId = (obj as any).id as string;
+            if (objId) {
+              meshesRef.current.set(objId, meshRef.current);
+            }
+          }
+        }
+
+        // Set up tool manager.
+        const toolManager = new ToolManager();
+        toolManager.register(new SelectTool());
+        toolManager.register(new MoveTool());
+        toolManager.register(new ExtrudeTool());
+        toolManagerRef.current = toolManager;
+
+        // Create tool context.
+        toolManager.setContext({
+          scene: manager.scene,
+          camera: manager.camera,
+          canvas: canvas,
+          manifold: wasm,
+          echoScene: sceneData,
+          meshes: meshesRef.current,
+          getObject: (id: string) => {
+            if (!sceneData?.objects) {
+              return undefined;
+            }
+            for (const ref of sceneData.objects) {
+              if ((ref?.target as any)?.id === id) {
+                return ref?.target as Model.Object;
+              }
+            }
+            return undefined;
+          },
+        });
+
+        // Set initial tool.
+        toolManager.setActiveTool(tool ?? 'select');
+
         setReady(true);
       });
 
@@ -76,6 +123,8 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       }, 500);
 
       return () => {
+        toolManagerRef.current?.dispose();
+        toolManagerRef.current = null;
         clearInterval(fpsInterval);
         resizeObserver.disconnect();
         manager.dispose();
@@ -90,45 +139,29 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       }
     }, [showAxes, ready]);
 
-    // Set up pointer interaction for face picking.
+    // Delegate pointer events to ToolManager.
     useEffect(() => {
       const manager = managerRef.current;
-      if (!manager || !ready) {
+      const toolManager = toolManagerRef.current;
+      if (!manager || !toolManager || !ready) {
         return;
       }
 
-      const scene = manager.scene;
-      const observer = scene.onPointerObservable.add((pointerInfo) => {
-        if (pointerInfo.type !== PointerEventTypes.POINTERDOWN) {
-          return;
-        }
-
-        const pickedMesh = pointerInfo.pickInfo?.pickedMesh;
-        if (!pointerInfo.pickInfo?.hit || pickedMesh !== meshRef.current) {
-          selectionMeshRef.current?.dispose();
-          selectionMeshRef.current = null;
-          return;
-        }
-
-        const faceId = pointerInfo.pickInfo.faceId;
-        if (faceId === -1) {
-          return;
-        }
-
-        const mesh = meshRef.current!;
-        const positions = mesh.getVerticesData('position')!;
-        const indices = mesh.getIndices()! as number[];
-        const normal = getFaceNormal(faceId, positions, indices);
-
-        // Build highlight overlay for the selected face.
-        selectionMeshRef.current?.dispose();
-        selectionMeshRef.current = buildFaceSelectionMesh(faceId, positions, indices, normal, scene);
+      const observer = manager.scene.onPointerObservable.add((pointerInfo) => {
+        toolManager.handlePointer(pointerInfo);
       });
 
       return () => {
-        scene.onPointerObservable.remove(observer);
+        manager.scene.onPointerObservable.remove(observer);
       };
     }, [ready]);
+
+    // Sync active tool from props.
+    useEffect(() => {
+      if (toolManagerRef.current && tool) {
+        toolManagerRef.current.setActiveTool(tool);
+      }
+    }, [tool, ready]);
 
     return (
       <div
@@ -182,68 +215,4 @@ const createSolidFromObject = (Manifold: Awaited<ReturnType<typeof getManifold>>
 
 const theme = {
   object: new Color3(0.3, 0.3, 0.3),
-  selected: new Color3(0.2, 0.4, 0.6),
-};
-
-/**
- * Builds a highlight overlay mesh for all coplanar triangles sharing the clicked face's normal.
- */
-const buildFaceSelectionMesh = (
-  faceId: number,
-  positions: Float32Array | number[],
-  indices: Uint32Array | number[],
-  normal: { x: number; y: number; z: number },
-  scene: import('@babylonjs/core').Scene,
-): Mesh => {
-  const selPositions: number[] = [];
-  const selNormals: number[] = [];
-  const selIndices: number[] = [];
-  let vertCount = 0;
-
-  const refIdx = indices[faceId * 3];
-
-  const numTris = indices.length / 3;
-  for (let tri = 0; tri < numTris; tri++) {
-    const triNormal = getFaceNormal(tri, positions, indices);
-    const dot = triNormal.x * normal.x + triNormal.y * normal.y + triNormal.z * normal.z;
-    if (dot < 0.99) {
-      continue;
-    }
-
-    // Check coplanarity: vertex must lie on same plane as reference face.
-    const triIdx = indices[tri * 3];
-    const dx = positions[triIdx * 3] - positions[refIdx * 3];
-    const dy = positions[triIdx * 3 + 1] - positions[refIdx * 3 + 1];
-    const dz = positions[triIdx * 3 + 2] - positions[refIdx * 3 + 2];
-    const planeDist = Math.abs(dx * normal.x + dy * normal.y + dz * normal.z);
-    if (planeDist > 0.01) {
-      continue;
-    }
-
-    for (let vi = 0; vi < 3; vi++) {
-      const idx = indices[tri * 3 + vi];
-      selPositions.push(positions[idx * 3], positions[idx * 3 + 1], positions[idx * 3 + 2]);
-      selNormals.push(normal.x, normal.y, normal.z);
-    }
-    selIndices.push(vertCount, vertCount + 1, vertCount + 2);
-    vertCount += 3;
-  }
-
-  const selMesh = new Mesh('face-selection', scene);
-  const selVd = new VertexData();
-  selVd.positions = selPositions;
-  selVd.indices = selIndices;
-  selVd.normals = selNormals;
-  selVd.applyToMesh(selMesh);
-
-  const selMat = new StandardMaterial('face-selection-mat', scene);
-  selMat.emissiveColor = theme.selected;
-  selMat.diffuseColor = Color3.Black();
-  selMat.specularColor = Color3.Black();
-  selMat.backFaceCulling = false;
-  selMesh.material = selMat;
-
-  // Offset along normal to avoid z-fighting with the underlying geometry.
-  selMesh.position = new Vector3(normal.x * 0.01, normal.y * 0.01, normal.z * 0.01);
-  return selMesh;
 };

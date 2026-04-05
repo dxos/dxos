@@ -89,8 +89,8 @@ const SPACETIME_EDITOR_CANVAS = 'SpacetimeEditor:Canvas';
 type SpacetimeEditorCanvasProsp = Omit<SpacetimeCanvasProps, 'showAxes' | 'showFps'>;
 
 const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {
-  const { scene } = useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
-  return <SpacetimeCanvas {...composableProps(props)} scene={scene} ref={forwardedRef} />;
+  const { scene, tool } = useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
+  return <SpacetimeCanvas {...composableProps(props)} scene={scene} tool={tool} ref={forwardedRef} />;
 });
 
 SpacetimeEditorCanvas.displayName = SPACETIME_EDITOR_CANVAS;
