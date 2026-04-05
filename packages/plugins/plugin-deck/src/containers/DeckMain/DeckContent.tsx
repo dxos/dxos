@@ -85,21 +85,11 @@ export const DeckContent = () => {
       onNavigationSidebarStateChange={handleNavigationSidebarStateChange}
       onComplementarySidebarStateChange={handleComplementarySidebarStateChange}
     >
-      {/* Left sidebar. */}
       <Sidebar />
-
-      {/* Right sidebar. */}
       <ComplementarySidebar current={complementarySidebarPanel} />
-
-      {/* Dialog overlay to dismiss dialogs. */}
       <Main.Overlay />
-
       <DeckViewport />
-
-      {/* Topbar. */}
       {topbar && <Banner variant='topbar' />}
-
-      {/* Status bar. */}
       {hoistStatusbar && <StatusBar showHints={settings?.showHints} />}
     </Main.Root>
   );
