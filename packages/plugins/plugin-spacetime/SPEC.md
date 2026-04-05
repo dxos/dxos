@@ -86,10 +86,9 @@ Instead implement tool handlers that operate on the runtime properties and then 
   - `EditorActions.onAddObject` in `actions.ts`, wired through editor context.
   - Creates `Model.Object` via `Model.make()`, adds `Ref` to scene via `Obj.change`.
   - Canvas subscribes to `objectCount` (via `useObject` on scene) and syncs new meshes reactively.
-- [ ] Menu action and operation to delete the selected object.
-- [ ] Show wireframe bounding box for selected object.
-- [ ] Show table of vectors.
-- [ ] Extrusion bug.
+- [x] Menu action and operation to delete the selected object.
+- [x] Show wireframe bounding box for selected object.
+- [x] Show table of vectors.
 
 ### Phase 3 (Boolean geometry)
 
