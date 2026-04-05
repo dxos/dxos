@@ -138,6 +138,9 @@ export const updateMeshFromManifold = (manifold: Manifold, existingMesh: Mesh): 
     vertexData.normals = normals;
     vertexData.applyToMesh(existingMesh, true);
   }
+
+  // Refresh bounding info so Babylon's ray-picking uses the new geometry extents.
+  existingMesh.refreshBoundingInfo();
 };
 
 /**

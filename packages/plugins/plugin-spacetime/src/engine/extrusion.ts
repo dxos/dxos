@@ -453,29 +453,25 @@ const buildZToNormalTransform = (
 //
 
 /**
- * Applies extrusion to a solid along a face defined by its boundary polygon.
+ * Applies extrusion to a solid by moving face vertices along the normal.
  *
- * Algorithm:
- * 1. Extract the face boundary polygon from coplanar triangles.
- * 2. Project to 2D on the face plane.
- * 3. Create a CrossSection and extrude along Z.
- * 4. Transform the extrusion to align with the face normal and position.
- * 5. Boolean union (outward) or difference (inward).
+ * Uses Manifold's `warp()` to selectively move vertices that lie on the face plane.
+ * This is a topological operation (vertex movement), not a CSG operation (boolean union),
+ * so it preserves vertex count and doesn't create seam artifacts.
  *
- * This correctly handles faces of any shape, including faces that don't span
- * the full bounding box (e.g., after prior extrusions).
+ * The side faces connecting moved and unmoved vertices stretch automatically.
  */
 export const applyExtrusion = (
   wasm: ManifoldToplevel,
   baseSolid: Manifold,
   faceId: number,
-  positions: ArrayLike<number>,
-  indices: ArrayLike<number>,
+  _positions: ArrayLike<number>,
+  _indices: ArrayLike<number>,
   normal: Model.Vec3,
   distance: number,
-  faceIDs?: Uint32Array,
+  _faceIDs?: Uint32Array,
 ): Manifold => {
-  const { Manifold, CrossSection } = wasm;
+  const { Manifold } = wasm;
 
   if (distance === 0) {
     // NOTE: Must clone even for zero distance. The caller (onPointerUp) deletes baseSolid
@@ -491,71 +487,38 @@ export const applyExtrusion = (
     absNormal[0] >= absNormal[1] && absNormal[0] >= absNormal[2] ? 0 : absNormal[1] >= absNormal[2] ? 1 : 2;
   const bboxDim = bbox.max[dominantAxis] - bbox.min[dominantAxis];
 
-  const sign = distance > 0 ? 1 : -1;
-  let absDist = Math.abs(distance);
-  if (sign < 0) {
+  let clampedDistance = distance;
+  if (distance < 0) {
     const maxInward = Math.max(0, bboxDim - MIN_SIZE);
-    absDist = Math.min(absDist, maxInward);
-    if (absDist === 0) {
+    clampedDistance = -Math.min(Math.abs(distance), maxInward);
+    if (clampedDistance === 0) {
       return Manifold.union(baseSolid, baseSolid);
     }
   }
 
-  // Extract the 3D boundary polygon directly from the Manifold solid's shared-vertex mesh.
-  const boundary3D = extractFaceBoundaryFromSolid(baseSolid, faceId, normal);
-  if (boundary3D.length < 3) {
-    return Manifold.union(baseSolid, baseSolid);
-  }
+  // Get the reference point on the face plane from the Manifold mesh.
+  const mesh = baseSolid.getMesh();
+  const { vertProperties, triVerts, numProp } = mesh;
+  const refVert = triVerts[faceId * 3];
+  const refX = vertProperties[refVert * numProp];
+  const refY = vertProperties[refVert * numProp + 1];
+  const refZ = vertProperties[refVert * numProp + 2];
 
-  // Compute face origin (centroid of boundary).
-  const origin: [number, number, number] = [0, 0, 0];
-  for (const vertex of boundary3D) {
-    origin[0] += vertex[0];
-    origin[1] += vertex[1];
-    origin[2] += vertex[2];
-  }
-  origin[0] /= boundary3D.length;
-  origin[1] /= boundary3D.length;
-  origin[2] /= boundary3D.length;
+  // Move face vertices along the normal using warp().
+  // A vertex is on the face plane if its signed distance to the plane is ~0.
+  const nx = normal.x;
+  const ny = normal.y;
+  const nz = normal.z;
+  const dx = nx * clampedDistance;
+  const dy = ny * clampedDistance;
+  const dz = nz * clampedDistance;
 
-  // Project to 2D and ensure CCW winding for Manifold's CrossSection.
-  const polygon2D = projectTo2D(boundary3D, normal, origin);
-
-  // Compute signed area to determine winding. Positive = CCW, negative = CW.
-  let signedArea = 0;
-  for (let idx = 0; idx < polygon2D.length; idx++) {
-    const curr = polygon2D[idx];
-    const next = polygon2D[(idx + 1) % polygon2D.length];
-    signedArea += curr[0] * next[1] - next[0] * curr[1];
-  }
-  if (signedArea < 0) {
-    polygon2D.reverse();
-  }
-  const crossSection = new CrossSection([polygon2D]);
-  // DEBUG: log cross section area and boundary info.
-  const csArea = crossSection.area();
-  if (csArea === 0) {
-    crossSection.delete();
-    return Manifold.union(baseSolid, baseSolid);
-  }
-  const extruded = Manifold.extrude(crossSection, absDist);
-  crossSection.delete();
-
-  // Build transform: rotate Z→normal, translate to face position.
-  // For outward extrusion: extrusion starts at the face surface.
-  // For inward extrusion: extrusion starts inward from the face.
-  const extrudeOrigin: [number, number, number] =
-    sign > 0
-      ? [origin[0], origin[1], origin[2]]
-      : [origin[0] - normal.x * absDist, origin[1] - normal.y * absDist, origin[2] - normal.z * absDist];
-
-  const transform = buildZToNormalTransform(normal, extrudeOrigin);
-  const transformed = extruded.transform(transform);
-  extruded.delete();
-
-  // Boolean union (outward) or difference (inward).
-  const result = sign > 0 ? Manifold.union(baseSolid, transformed) : Manifold.difference(baseSolid, transformed);
-  transformed.delete();
-
-  return result;
+  return baseSolid.warp((vert) => {
+    const planeDist = (vert[0] - refX) * nx + (vert[1] - refY) * ny + (vert[2] - refZ) * nz;
+    if (Math.abs(planeDist) < 0.001) {
+      vert[0] += dx;
+      vert[1] += dy;
+      vert[2] += dz;
+    }
+  });
 };

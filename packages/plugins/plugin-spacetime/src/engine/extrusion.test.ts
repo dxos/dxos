@@ -268,9 +268,8 @@ describe('applyExtrusion', () => {
     const result = extrudeByNormal(wasmInstance, cube, { x: 1, y: 0, z: 0 }, 1);
     const meshAfter = result.getMesh();
 
-    // After union with an extruded face shape, expect more than 12 tris but still reasonable.
-    expect(meshAfter.numTri).toBeGreaterThan(12);
-    expect(meshAfter.numTri).toBeLessThan(100);
+    // warp()-based extrusion preserves topology — triangle count stays the same.
+    expect(meshAfter.numTri).toBe(12);
 
     result.delete();
     cube.delete();

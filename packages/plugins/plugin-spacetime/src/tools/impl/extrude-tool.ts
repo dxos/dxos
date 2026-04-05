@@ -5,7 +5,7 @@
 import { Matrix, type Mesh, PointerEventTypes, Vector3, VertexBuffer, type PointerInfo } from '@babylonjs/core';
 import type { Manifold } from 'manifold-3d';
 
-import { applyExtrusion, getFaceNormal, updateMeshFromManifold } from '../../engine';
+import { applyExtrusion, updateMeshFromManifold } from '../../engine';
 import { type ToolContext } from '../tool-context';
 import { type Tool } from '../tool';
 
@@ -90,52 +90,12 @@ export class ExtrudeTool implements Tool {
       return true;
     }
 
-    // Use shared face selection if available; otherwise try ray-pick.
-    let objectId: string | undefined;
-    let mesh: Mesh | undefined;
-    let normal: { x: number; y: number; z: number } | undefined;
-    let faceId: number | undefined;
-
-    if (ctx.selection?.type === 'face') {
-      objectId = ctx.selection.objectId;
-      mesh = ctx.selection.mesh;
-      normal = ctx.selection.normal;
-      faceId = ctx.selection.faceId;
-    } else {
-      const pickedMesh = info.pickInfo?.pickedMesh;
-      if (!info.pickInfo?.hit || !pickedMesh) {
-        return false;
-      }
-
-      for (const [id, managedMesh] of ctx.meshes) {
-        if (managedMesh === pickedMesh) {
-          objectId = id;
-          break;
-        }
-      }
-
-      if (!objectId) {
-        return false;
-      }
-
-      mesh = pickedMesh as Mesh;
-      faceId = info.pickInfo.faceId;
-      if (faceId === undefined || faceId < 0) {
-        return false;
-      }
-
-      const positions = mesh.getVerticesData(VertexBuffer.PositionKind);
-      const indices = mesh.getIndices();
-      if (!positions || !indices) {
-        return false;
-      }
-
-      normal = getFaceNormal(faceId, positions, indices);
-    }
-
-    if (!objectId || !mesh || !normal || faceId === undefined) {
+    // Extrusion requires a face selection.
+    if (ctx.selection?.type !== 'face') {
       return false;
     }
+
+    const { objectId, mesh, normal, faceId } = ctx.selection;
 
     // Get the current runtime solid for this object.
     const currentSolid = ctx.solids.get(objectId);
@@ -270,8 +230,8 @@ export class ExtrudeTool implements Tool {
     // Clean up the cloned base solid.
     this._state.baseSolid.delete();
 
-    // Clear selection (geometry changed, face ids invalid).
-    ctx.setSelection(null);
+    // Clear face selection (geometry changed, face ids invalid) but keep object selected.
+    ctx.setSelection({ type: 'object', objectId: this._state.objectId, mesh: this._state.mesh, highlightMesh: null });
 
     // TODO(burdon): Serialize geometry to Model.Object once geometry field is added.
 

@@ -3,11 +3,12 @@
 //
 
 import { Color3, Color4, HighlightLayer, Mesh } from '@babylonjs/core';
-import React, { type RefObject, useEffect, useRef, useState } from 'react';
+import React, { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { SceneManager, getManifold, manifoldToBabylon } from '../../engine';
+import { DebugPanel, extractSolidDebugInfo, type DebugInfo } from './DebugPanel';
 import { ToolManager, SelectTool, MoveTool, ExtrudeTool, type Selection } from '../../tools';
 import { type Scene, type Model } from '../../types';
 import { type SpacetimeTool, type ViewState } from '../SpacetimeToolbar';
@@ -40,7 +41,9 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
     const wasmRef = useRef<Awaited<ReturnType<typeof getManifold>> | null>(null);
     const solidsRef = useRef<Map<string, import('manifold-3d').Manifold>>(new Map());
     const selectionRef = useRef<Selection | null>(null);
-    const debugStatsRef = useRef<HTMLPreElement>(null);
+    const [debugInfo, setDebugInfo] = useState<DebugInfo>(null);
+    const setDebugInfoRef = useRef(setDebugInfo);
+    setDebugInfoRef.current = setDebugInfo;
     const viewStateRef = useRef<ViewState | undefined>(viewState);
     viewStateRef.current = viewState;
     const onSelectionChangeRef = useRef(onSelectionChange);
@@ -146,13 +149,13 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
               highlightLayer.addMesh(next.highlightMesh, theme.selected);
             }
             onSelectionChangeRef.current?.(next?.objectId ?? null);
+
+            // Show vertex table for selected object.
+            const solid = next ? solidsRef.current.get(next.objectId) : undefined;
+            setDebugInfoRef.current(solid ? extractSolidDebugInfo(solid) : null);
           },
           setDebugStats: (stats: Record<string, string | number>) => {
-            if (debugStatsRef.current) {
-              debugStatsRef.current.textContent = Object.entries(stats)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join('\n');
-            }
+            setDebugInfoRef.current({ type: 'stats', entries: stats });
           },
         });
 
@@ -289,10 +292,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           <span className='absolute bottom-2 left-2 text-xs font-mono opacity-50 pointer-events-none' ref={fpsRef} />
         )}
 
-        <pre
-          className='absolute top-2 right-2 text-xs font-mono opacity-70 pointer-events-none bg-black/50 text-white px-2 py-1 rounded empty:hidden'
-          ref={debugStatsRef}
-        />
+        <DebugPanel info={debugInfo} />
       </div>
     );
   },
@@ -321,6 +321,7 @@ const createSolidFromObject = (Manifold: Awaited<ReturnType<typeof getManifold>>
   solid.delete();
   return translated;
 };
+
 
 // TODO(burdon): Property on object.
 const theme = {
