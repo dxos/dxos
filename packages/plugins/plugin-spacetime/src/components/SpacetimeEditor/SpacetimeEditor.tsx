@@ -43,6 +43,8 @@ type SpacetimeEditorContextValue = {
   solidsRef: React.RefObject<Map<string, import('manifold-3d').Manifold> | null>;
   /** Ref for canvas to provide the import implementation (ArrayBuffer for GLB, string for OBJ). */
   importGLBRef: React.MutableRefObject<(data: ArrayBuffer | string) => Promise<void>>;
+  /** Ref for canvas to provide object deletion (disposes mesh + solid). */
+  deleteObjectRef: React.MutableRefObject<(objectId: string) => void>;
 };
 
 const [SpacetimeEditorProvider, useSpacetimeEditorContext] =
@@ -77,6 +79,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     const [selectedHue, setSelectedHue] = useState<string>('blue');
     const solidsRef = useRef<Map<string, import('manifold-3d').Manifold> | null>(null);
     const importGLBRef = useRef<(data: ArrayBuffer | string) => Promise<void>>(async () => {});
+    const deleteObjectRef = useRef<(objectId: string) => void>(() => {});
 
     const handleToolChange = useCallback((tool: SpacetimeTool) => setTool(tool), []);
     const handleViewChange = useCallback(
@@ -98,15 +101,23 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     }, [scene, selectedPrimitive]);
 
     const handleDeleteSelected = useCallback(() => {
-      if (!scene || !selectedObjectId) {
+      if (!selectedObjectId) {
         return;
       }
-      Obj.change(scene, (obj) => {
-        const index = obj.objects.findIndex((ref) => (ref?.target as any)?.id === selectedObjectId);
-        if (index !== -1) {
-          obj.objects.splice(index, 1);
-        }
-      });
+
+      // Remove from ECHO scene if it's an ECHO object.
+      if (scene) {
+        Obj.change(scene, (obj) => {
+          const index = obj.objects.findIndex((ref) => (ref?.target as any)?.id === selectedObjectId);
+          if (index !== -1) {
+            obj.objects.splice(index, 1);
+          }
+        });
+      }
+
+      // Remove mesh + solid from canvas (covers both ECHO and imported objects).
+      deleteObjectRef.current(selectedObjectId);
+
       setSelectedObjectId(null);
     }, [scene, selectedObjectId]);
 
@@ -166,6 +177,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         setSelectedObjectId={setSelectedObjectId}
         solidsRef={solidsRef}
         importGLBRef={importGLBRef}
+        deleteObjectRef={deleteObjectRef}
       >
         {children}
       </SpacetimeEditorProvider>
@@ -219,7 +231,7 @@ const SPACETIME_EDITOR_CANVAS = 'SpacetimeEditor:Canvas';
 type SpacetimeEditorCanvasProsp = Omit<SpacetimeCanvasProps, 'showAxes' | 'showFps'>;
 
 const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {
-  const { scene, tool, viewState, setSelectedObjectId, solidsRef: parentSolidsRef, importGLBRef: parentImportGLBRef } =
+  const { scene, tool, viewState, setSelectedObjectId, solidsRef: parentSolidsRef, importGLBRef: parentImportGLBRef, deleteObjectRef: parentDeleteObjectRef } =
     useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
   // Subscribe to ECHO scene changes so we re-render when objects are added/removed.
   const [liveScene] = useObject(scene);
@@ -234,6 +246,7 @@ const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasPr
       onSelectionChange={setSelectedObjectId}
       parentSolidsRef={parentSolidsRef}
       importGLBRef={parentImportGLBRef}
+      deleteObjectRef={parentDeleteObjectRef}
       ref={forwardedRef}
     />
   );

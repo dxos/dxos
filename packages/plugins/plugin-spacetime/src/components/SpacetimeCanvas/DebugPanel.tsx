@@ -5,76 +5,27 @@
 import type { Manifold } from 'manifold-3d';
 import React from 'react';
 
-//
-// Types
-//
+const n = (value: number, decimals = 2) => value.toFixed(decimals);
 
-type SolidDebugInfo = {
-  type: 'solid';
-  tris: number;
-  verts: Array<{ idx: number; x: number; y: number; z: number }>;
-  volume: number;
-  bbox: { min: [number, number, number]; max: [number, number, number] };
-  position?: [number, number, number];
-};
+const containerClasses = 'absolute right-2 top-2 bottom-2 flex flex-col pointer-events-none';
+const gridClasses =
+  'grid grid-cols-4 [&_label]:text-right [&_label]:text-green-800 [&_p]:text-right [&_p]:text-green-600 bg-black/50 overflow-y-auto text-xs font-mono pointer-events-auto';
 
 type StatsDebugInfo = {
   type: 'stats';
   entries: Record<string, string | number>;
 };
 
-export type DebugInfo = SolidDebugInfo | StatsDebugInfo | null;
-
-//
-// Data extraction
-//
-
-/** Extracts debug info from a Manifold solid. */
-export const extractSolidDebugInfo = (solid: Manifold, position?: [number, number, number]): SolidDebugInfo => {
-  const mesh = solid.getMesh();
-  const { vertProperties, triVerts, numProp, numTri } = mesh;
-
-  const seen = new Set<number>();
-  const verts: SolidDebugInfo['verts'] = [];
-  for (let tri = 0; tri < numTri; tri++) {
-    for (let vi = 0; vi < 3; vi++) {
-      const idx = triVerts[tri * 3 + vi];
-      if (!seen.has(idx)) {
-        seen.add(idx);
-        verts.push({
-          idx,
-          x: vertProperties[idx * numProp],
-          y: vertProperties[idx * numProp + 1],
-          z: vertProperties[idx * numProp + 2],
-        });
-      }
-    }
-  }
-  verts.sort((a, b) => a.idx - b.idx);
-
-  const bbox = solid.boundingBox();
-  return {
-    type: 'solid',
-    tris: numTri,
-    verts,
-    volume: solid.volume(),
-    bbox: {
-      min: [bbox.min[0], bbox.min[1], bbox.min[2]],
-      max: [bbox.max[0], bbox.max[1], bbox.max[2]],
-    },
-    position,
-  };
+type SolidDebugInfo = {
+  type: 'solid';
+  tris: number;
+  volume: number;
+  verts: Array<{ idx: number; x: number; y: number; z: number }>;
+  bbox: { min: [number, number, number]; max: [number, number, number] };
+  position?: [number, number, number];
 };
 
-//
-// Component
-//
-
-const n = (value: number, decimals = 2) => value.toFixed(decimals);
-
-const containerClasses = 'absolute top-2 right-2 text-xs font-mono pointer-events-none bg-black/50';
-const gridClasses =
-  'grid grid-cols-4 [&_label]:text-right [&_label]:text-green-800 [&_p]:text-right [&_p]:text-green-600';
+export type DebugInfo = StatsDebugInfo | SolidDebugInfo | null;
 
 /** Debug overlay panel showing solid geometry or tool stats. */
 export const DebugPanel = ({ info }: { info: DebugInfo }) => {
@@ -149,4 +100,41 @@ export const DebugPanel = ({ info }: { info: DebugInfo }) => {
       </div>
     </div>
   );
+};
+
+/** Extracts debug info from a Manifold solid. */
+export const extractSolidDebugInfo = (solid: Manifold, position?: [number, number, number]): SolidDebugInfo => {
+  const mesh = solid.getMesh();
+  const { vertProperties, triVerts, numProp, numTri } = mesh;
+
+  const seen = new Set<number>();
+  const verts: SolidDebugInfo['verts'] = [];
+  for (let tri = 0; tri < numTri; tri++) {
+    for (let vi = 0; vi < 3; vi++) {
+      const idx = triVerts[tri * 3 + vi];
+      if (!seen.has(idx)) {
+        seen.add(idx);
+        verts.push({
+          idx,
+          x: vertProperties[idx * numProp],
+          y: vertProperties[idx * numProp + 1],
+          z: vertProperties[idx * numProp + 2],
+        });
+      }
+    }
+  }
+  verts.sort((a, b) => a.idx - b.idx);
+
+  const bbox = solid.boundingBox();
+  return {
+    type: 'solid',
+    tris: numTri,
+    verts,
+    volume: solid.volume(),
+    bbox: {
+      min: [bbox.min[0], bbox.min[1], bbox.min[2]],
+      max: [bbox.max[0], bbox.max[1], bbox.max[2]],
+    },
+    position,
+  };
 };

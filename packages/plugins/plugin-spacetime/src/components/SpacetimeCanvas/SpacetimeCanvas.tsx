@@ -26,6 +26,7 @@ export type SpacetimeCanvasProps = {
   parentSolidsRef?: React.RefObject<Map<string, import('manifold-3d').Manifold> | null>;
   /** Ref to set the importGLB callback (canvas provides the implementation). */
   importGLBRef?: React.MutableRefObject<(data: ArrayBuffer | string) => Promise<void>>;
+  deleteObjectRef?: React.MutableRefObject<(objectId: string) => void>;
 };
 
 /**
@@ -42,6 +43,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       onSelectionChange,
       parentSolidsRef,
       importGLBRef,
+      deleteObjectRef,
       ...props
     },
     forwardedRef,
@@ -206,6 +208,17 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
               solidsRef.current.set(objId, solid);
               meshesRef.current.set(objId, mesh);
             }
+          };
+        }
+
+        // Provide delete callback to parent.
+        if (deleteObjectRef) {
+          deleteObjectRef.current = (objectId: string) => {
+            const mesh = meshesRef.current.get(objectId);
+            mesh?.dispose();
+            meshesRef.current.delete(objectId);
+            solidsRef.current.get(objectId)?.delete();
+            solidsRef.current.delete(objectId);
           };
         }
 
