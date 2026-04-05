@@ -12,7 +12,7 @@ export type SpacetimeTool = 'select' | 'move' | 'extrude';
 const tools: Record<SpacetimeTool, string> = {
   select: 'ph--cursor--regular',
   move: 'ph--arrows-out-cardinal--regular',
-  extrude: 'ph--arrow-fat-line-right--regular',
+  extrude: 'ph--arrow-line-up--regular',
 };
 
 /** Creates the tool selection toggle group action subgraph. */

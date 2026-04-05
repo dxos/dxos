@@ -4,8 +4,6 @@
 
 import { type PointerInfo, PointerEventTypes } from '@babylonjs/core';
 
-import { log } from '@dxos/log';
-
 import { type Tool } from './tool';
 import { type ToolContext } from './tool-context';
 
@@ -23,7 +21,6 @@ export class ToolManager {
   /** Set the shared tool context. Call when Babylon scene and Manifold are ready. */
   setContext(ctx: ToolContext): void {
     this._ctx = ctx;
-    // Re-activate current tool with new context.
     if (this._activeTool && this._ctx) {
       this._activeTool.activate(this._ctx);
     }
@@ -32,7 +29,6 @@ export class ToolManager {
   /** Switch the active tool by id. */
   setActiveTool(id: string): void {
     const next = this._tools.get(id);
-    log.info('setActiveTool', { id, found: !!next, registered: [...this._tools.keys()] });
     if (!next || next === this._activeTool) {
       return;
     }
@@ -50,23 +46,10 @@ export class ToolManager {
     return this._activeTool?.id;
   }
 
-  /**
-   * Dispatch a Babylon pointer event to the active tool.
-   * Returns true if the tool consumed the event.
-   */
+  /** Dispatch a Babylon pointer event to the active tool. */
   handlePointer(info: PointerInfo): boolean {
     if (!this._activeTool || !this._ctx) {
-      log.info('handlePointer — no active tool or context', { activeTool: this._activeTool?.id, hasCtx: !!this._ctx });
       return false;
-    }
-
-    const eventName =
-      info.type === PointerEventTypes.POINTERDOWN ? 'down' :
-      info.type === PointerEventTypes.POINTERMOVE ? 'move' :
-      info.type === PointerEventTypes.POINTERUP ? 'up' : 'other';
-
-    if (info.type !== PointerEventTypes.POINTERMOVE) {
-      log.info('handlePointer', { tool: this._activeTool.id, event: eventName });
     }
 
     switch (info.type) {

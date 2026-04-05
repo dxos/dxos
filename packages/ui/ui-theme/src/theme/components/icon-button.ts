@@ -11,7 +11,7 @@ import { type ButtonStyleProps } from './button';
 export type IconButtonStyleProps = ButtonStyleProps & { iconOnly?: boolean };
 
 export const iconButtonRoot: ComponentFunction<IconButtonStyleProps> = ({ iconOnly }, ...etc) => {
-  return mx('dx-button gap-2', ...etc);
+  return mx('px-1.5', !iconOnly && 'gap-2', ...etc);
 };
 
 export const iconButtonTheme: Theme<IconButtonStyleProps> = {

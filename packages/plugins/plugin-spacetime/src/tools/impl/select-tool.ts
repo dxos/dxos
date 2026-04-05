@@ -4,24 +4,22 @@
 
 import { Color3, Mesh, PointerEventTypes, StandardMaterial, Vector3, VertexData, type PointerInfo } from '@babylonjs/core';
 
-import { log } from '@dxos/log';
-
-import { getFaceNormal } from '../engine';
-import { type ToolContext } from './tool-context';
-import { type Tool } from './tool';
+import { getFaceNormal } from '../../engine';
+import { type ToolContext } from '../tool-context';
+import { type Tool } from '../tool';
 
 const theme = {
   selected: new Color3(0.2, 0.4, 0.6),
 };
 
-/** Tool for selecting faces on meshes via ray-picking. */
+/** Tool for selecting objects or faces via ray-picking. */
 export class SelectTool implements Tool {
   readonly id = 'select';
 
   activate(_ctx: ToolContext): void {}
 
   deactivate(_ctx: ToolContext): void {
-    // Selection persists across tool switches — do NOT clear it here.
+    // Selection persists across tool switches.
   }
 
   onPointerDown(ctx: ToolContext, info: PointerInfo): boolean {
@@ -30,14 +28,6 @@ export class SelectTool implements Tool {
     }
 
     const pickedMesh = info.pickInfo?.pickedMesh;
-    log.info('select.onPointerDown', {
-      hit: info.pickInfo?.hit,
-      pickedMesh: pickedMesh?.name,
-      faceId: info.pickInfo?.faceId,
-      meshCount: ctx.meshes.size,
-      meshKeys: [...ctx.meshes.keys()],
-    });
-
     if (!info.pickInfo?.hit || !pickedMesh) {
       ctx.setSelection(null);
       return false;
@@ -52,26 +42,33 @@ export class SelectTool implements Tool {
       }
     }
 
-    log.info('select.onPointerDown — mesh lookup', { objectId, pickedMeshName: pickedMesh.name });
-
     if (!objectId) {
       ctx.setSelection(null);
       return false;
     }
 
+    const mesh = pickedMesh as Mesh;
+
+    if (ctx.viewState.selectionMode === 'object') {
+      // Object selection: highlight layer glow managed by ctx.setSelection.
+      ctx.setSelection({ type: 'object', objectId, mesh, highlightMesh: null });
+      return true;
+    }
+
+    // Face selection mode.
     const faceId = info.pickInfo.faceId;
     if (faceId === -1) {
       return false;
     }
 
-    const mesh = pickedMesh as Mesh;
     const positions = mesh.getVerticesData('position')!;
     const indices = mesh.getIndices()! as number[];
     const normal = getFaceNormal(faceId, positions, indices);
 
-    // Build highlight overlay and update shared selection.
+    // Build highlight overlay and parent to object mesh so it follows transforms.
     const highlightMesh = buildFaceSelectionMesh(faceId, positions, indices, normal, ctx.scene);
-    ctx.setSelection({ objectId, mesh, faceId, normal, highlightMesh });
+    highlightMesh.parent = mesh;
+    ctx.setSelection({ type: 'face', objectId, mesh, faceId, normal, highlightMesh });
 
     return true;
   }
@@ -136,14 +133,15 @@ const buildFaceSelectionMesh = (
   selVd.normals = selNormals;
   selVd.applyToMesh(selMesh);
 
+  // Transparent material — the HighlightLayer provides the glow.
   const selMat = new StandardMaterial('face-selection-mat', scene);
   selMat.emissiveColor = theme.selected;
-  selMat.diffuseColor = Color3.Black();
-  selMat.specularColor = Color3.Black();
+  selMat.alpha = 0.3;
   selMat.backFaceCulling = false;
   selMesh.material = selMat;
 
   // Offset along normal to avoid z-fighting with the underlying geometry.
   selMesh.position = new Vector3(normal.x * 0.01, normal.y * 0.01, normal.z * 0.01);
+  selMesh.isPickable = false;
   return selMesh;
 };

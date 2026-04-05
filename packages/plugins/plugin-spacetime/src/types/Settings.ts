@@ -6,11 +6,6 @@
 
 import * as Schema from 'effect/Schema';
 
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    showAxes: Schema.optional(Schema.Boolean),
-    showFps: Schema.optional(Schema.Boolean),
-  }),
-);
+export const Settings = Schema.mutable(Schema.Struct({}));
 
 export type Settings = Schema.Schema.Type<typeof Settings>;

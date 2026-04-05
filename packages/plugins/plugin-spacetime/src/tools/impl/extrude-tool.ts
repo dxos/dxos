@@ -5,12 +5,10 @@
 import { Matrix, type Mesh, PointerEventTypes, Vector3, VertexBuffer, type PointerInfo } from '@babylonjs/core';
 import type { Manifold, ManifoldToplevel } from 'manifold-3d';
 
-import { log } from '@dxos/log';
-
-import { getFaceNormal, updateMeshFromManifold } from '../engine/mesh-converter';
-import { type Model } from '../types';
-import { type ToolContext } from './tool-context';
-import { type Tool } from './tool';
+import { getFaceNormal, updateMeshFromManifold } from '../../engine';
+import { type Model } from '../../types';
+import { type ToolContext } from '../tool-context';
+import { type Tool } from '../tool';
 
 /** Sensitivity factor converting pixel drag distance to extrude distance. */
 const EXTRUDE_SENSITIVITY = 0.02;
@@ -37,10 +35,7 @@ type ExtrudeState = {
  * Computes a screen-space direction vector corresponding to a world-space normal.
  * Used to determine which mouse drag direction maps to positive extrusion.
  */
-const computeScreenDir = (
-  normal: { x: number; y: number; z: number },
-  ctx: ToolContext,
-): { x: number; y: number } => {
+const computeScreenDir = (normal: { x: number; y: number; z: number }, ctx: ToolContext): { x: number; y: number } => {
   const viewProjection = ctx.scene.getTransformMatrix();
   const viewport = ctx.camera.viewport.toGlobal(ctx.canvas.clientWidth, ctx.canvas.clientHeight);
   const worldOrigin = Vector3.Project(Vector3.Zero(), Matrix.Identity(), viewProjection, viewport);
@@ -93,7 +88,11 @@ const applyExtrusion = (
   distance: number,
 ): Manifold => {
   if (distance === 0) {
-    return baseSolid;
+    // NOTE: Must clone even for zero distance. The caller (onPointerUp) deletes baseSolid
+    // and stores the result in ctx.solids. If we return baseSolid directly, both references
+    // point to the same WASM object — deleting baseSolid destroys the stored solid, breaking
+    // subsequent extrusions. Self-union is a no-op clone in Manifold.
+    return Manifold.union(baseSolid, baseSolid);
   }
 
   const absDist = Math.abs(distance);
@@ -148,29 +147,25 @@ export class ExtrudeTool implements Tool {
       return false;
     }
 
-    console.log('[extrude] onPointerDown', {
-      hasSelection: !!ctx.selection,
-      selectionObjectId: ctx.selection?.objectId,
-      selectionNormal: ctx.selection?.normal,
-      hit: info.pickInfo?.hit,
-      pickedMesh: info.pickInfo?.pickedMesh?.name,
-      meshCount: ctx.meshes.size,
-    });
+    // NOTE: Guard against re-entry. A double-click fires two POINTERDOWN events in rapid
+    // succession. Without this guard, the second would start a new extrusion while the first
+    // is still active, leaking the cloned baseSolid from the first operation.
+    if (this._state) {
+      return true;
+    }
 
-    // Use shared selection if available; otherwise try ray-pick.
+    // Use shared face selection if available; otherwise try ray-pick.
     let objectId: string | undefined;
     let mesh: Mesh | undefined;
     let normal: { x: number; y: number; z: number } | undefined;
 
-    if (ctx.selection) {
+    if (ctx.selection?.type === 'face') {
       objectId = ctx.selection.objectId;
       mesh = ctx.selection.mesh;
       normal = ctx.selection.normal;
-      log.info('extrude.onPointerDown — using shared selection', { objectId, normal });
     } else {
       const pickedMesh = info.pickInfo?.pickedMesh;
       if (!info.pickInfo?.hit || !pickedMesh) {
-        console.log('[extrude] bail: no selection, no pick');
         return false;
       }
 
@@ -182,44 +177,36 @@ export class ExtrudeTool implements Tool {
       }
 
       if (!objectId) {
-        console.log('[extrude] bail: picked mesh not in managed meshes');
         return false;
       }
 
       mesh = pickedMesh as Mesh;
       const faceId = info.pickInfo.faceId;
       if (faceId === undefined || faceId < 0) {
-        log.info('extrude.onPointerDown — no faceId');
         return false;
       }
 
       const positions = mesh.getVerticesData(VertexBuffer.PositionKind);
       const indices = mesh.getIndices();
       if (!positions || !indices) {
-        log.info('extrude.onPointerDown — no vertex data');
         return false;
       }
 
       normal = getFaceNormal(faceId, positions, indices);
-      log.info('extrude.onPointerDown — ray-picked face', { objectId, faceId, normal });
     }
 
     if (!objectId || !mesh || !normal) {
-      log.info('extrude.onPointerDown — missing data', { objectId: !!objectId, mesh: !!mesh, normal: !!normal });
       return false;
     }
 
     // Get the current runtime solid for this object.
     const currentSolid = ctx.solids.get(objectId);
-    console.log('[extrude] getSolid', { objectId, found: !!currentSolid });
     if (!currentSolid) {
       return false;
     }
 
     const screenDir = computeScreenDir(normal, ctx);
     const event = info.event as PointerEvent;
-
-    console.log('[extrude] starting extrusion', { objectId, normal, screenDir });
 
     // Hide selection highlight during extrusion (geometry changes invalidate it).
     if (ctx.selection?.highlightMesh) {
@@ -228,7 +215,7 @@ export class ExtrudeTool implements Tool {
 
     // Clone the solid so we can rebuild from base during drag.
     const { Manifold } = ctx.manifold;
-    const baseSolid = Manifold.union(currentSolid, currentSolid); // Clone via self-union.
+    const baseSolid = Manifold.union(currentSolid, currentSolid);
 
     this._state = {
       objectId,
@@ -248,7 +235,6 @@ export class ExtrudeTool implements Tool {
     if (!this._state) {
       return false;
     }
-    log.info('extrude.onPointerMove', { hasState: true });
 
     const event = info.event as PointerEvent;
     const dx = event.clientX - this._state.startX;
@@ -292,7 +278,7 @@ export class ExtrudeTool implements Tool {
     // Clean up the cloned base solid.
     this._state.baseSolid.delete();
 
-    // Re-show selection highlight and clear selection (geometry changed, face ids invalid).
+    // Clear selection (geometry changed, face ids invalid).
     ctx.setSelection(null);
 
     // TODO(burdon): Serialize geometry to Model.Object once geometry field is added.

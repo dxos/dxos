@@ -2,34 +2,48 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Color3, Mesh } from '@babylonjs/core';
+import { Color3, Color4, HighlightLayer, Mesh } from '@babylonjs/core';
 import React, { type RefObject, useEffect, useRef, useState } from 'react';
 
-import { log } from '@dxos/log';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { SceneManager, getManifold, manifoldToBabylon } from '../../engine';
 import { ToolManager, SelectTool, MoveTool, ExtrudeTool, type Selection } from '../../tools';
 import { type Scene, type Model } from '../../types';
-import { type SpacetimeTool } from '../SpacetimeToolbar';
+import { type SpacetimeTool, type ViewState } from '../SpacetimeToolbar';
 
 export type SpacetimeCanvasProps = {
+  showFps?: boolean;
   scene?: Scene.Scene;
   tool?: SpacetimeTool;
-  showAxes?: boolean;
-  showFps?: boolean;
+  viewState?: ViewState;
+  /** Reactive object count from ECHO subscription. Triggers sync when objects are added/removed. */
+  objectCount?: number;
+  /** Called when the selected object changes. */
+  onSelectionChange?: (objectId: string | null) => void;
 };
 
+/**
+ * A 3D canvas for creating and editing 3D models using Babylon.js and Manifold.
+ */
 export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
-  ({ scene: sceneData, tool = 'select', showAxes = false, showFps = false, ...props }, forwardedRef) => {
+  (
+    { showFps = true, scene: sceneData, tool = 'select', viewState, objectCount = 0, onSelectionChange, ...props },
+    forwardedRef,
+  ) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const managerRef = useRef<SceneManager | null>(null);
-    const meshRef = useRef<Mesh | null>(null);
     const toolManagerRef = useRef<ToolManager | null>(null);
+    const meshRef = useRef<Mesh | null>(null);
     const meshesRef = useRef<Map<string, Mesh>>(new Map());
+    const wasmRef = useRef<Awaited<ReturnType<typeof getManifold>> | null>(null);
     const solidsRef = useRef<Map<string, import('manifold-3d').Manifold>>(new Map());
     const selectionRef = useRef<Selection | null>(null);
+    const viewStateRef = useRef<ViewState | undefined>(viewState);
+    viewStateRef.current = viewState;
+    const onSelectionChangeRef = useRef(onSelectionChange);
+    onSelectionChangeRef.current = onSelectionChange;
     const fpsRef = useRef<HTMLSpanElement>(null);
     const [ready, setReady] = useState(false);
 
@@ -46,6 +60,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
 
       // Load WASM once, then build meshes from scene objects.
       void getManifold().then((wasm) => {
+        wasmRef.current = wasm;
         if (sceneData?.objects?.length) {
           for (const ref of sceneData.objects) {
             const obj = ref?.target as Model.Object | undefined;
@@ -74,6 +89,14 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         toolManager.register(new ExtrudeTool());
         toolManagerRef.current = toolManager;
 
+        // Create highlight layer for object selection glow.
+        // NOTE: neutralColor is set to transparent so non-highlighted meshes (e.g., the grid)
+        // don't pick up the selection color in the glow pass.
+        const highlightLayer = new HighlightLayer('selection-highlight', manager.scene);
+        highlightLayer.outerGlow = true;
+        highlightLayer.innerGlow = true;
+        highlightLayer.neutralColor = new Color4(0, 0, 0, 0);
+
         // Create tool context.
         toolManager.setContext({
           scene: manager.scene,
@@ -83,6 +106,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           echoScene: sceneData,
           meshes: meshesRef.current,
           solids: solidsRef.current,
+          highlightLayer,
           getObject: (id: string) => {
             if (!sceneData?.objects) {
               return undefined;
@@ -95,13 +119,32 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             }
             return undefined;
           },
+          get viewState() {
+            return viewStateRef.current ?? { selectionMode: 'face' as const, showGrid: true };
+          },
           get selection() {
             return selectionRef.current;
           },
           setSelection: (next: Selection | null) => {
-            // Dispose old highlight mesh.
-            selectionRef.current?.highlightMesh?.dispose();
+            // Clean up previous selection.
+            const prev = selectionRef.current;
+            if (prev) {
+              if (prev.highlightMesh) {
+                highlightLayer.removeMesh(prev.highlightMesh);
+                prev.highlightMesh.dispose();
+              }
+              if (prev.type === 'object') {
+                highlightLayer.removeMesh(prev.mesh);
+              }
+            }
+            // Apply new selection.
             selectionRef.current = next;
+            if (next?.type === 'object') {
+              highlightLayer.addMesh(next.mesh, theme.selected);
+            } else if (next?.type === 'face' && next.highlightMesh) {
+              highlightLayer.addMesh(next.highlightMesh, theme.selected);
+            }
+            onSelectionChangeRef.current?.(next?.objectId ?? null);
           },
         });
 
@@ -137,13 +180,6 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       };
     }, []);
 
-    // Sync debug settings.
-    useEffect(() => {
-      if (managerRef.current) {
-        managerRef.current.showAxes = showAxes;
-      }
-    }, [showAxes, ready]);
-
     // Delegate pointer events to ToolManager.
     useEffect(() => {
       const manager = managerRef.current;
@@ -152,7 +188,6 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         return;
       }
 
-      log.info('pointer observer registered', { activeTool: toolManager.activeToolId });
       const observer = manager.scene.onPointerObservable.add((pointerInfo) => {
         toolManager.handlePointer(pointerInfo);
       });
@@ -168,6 +203,61 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         toolManagerRef.current.setActiveTool(tool);
       }
     }, [tool, ready]);
+
+    // Sync view state.
+    useEffect(() => {
+      if (managerRef.current && viewState) {
+        managerRef.current.showGrid = viewState.showGrid;
+      }
+    }, [viewState, ready]);
+
+    // Sync scene objects — add/remove meshes when ECHO scene changes.
+    useEffect(() => {
+      const manager = managerRef.current;
+      const wasm = wasmRef.current;
+      if (!manager || !wasm || !ready) {
+        return;
+      }
+
+      // Collect current ECHO object ids.
+      const objectIds = new Set<string>();
+      if (sceneData?.objects) {
+        for (const ref of sceneData.objects) {
+          const obj = ref?.target as Model.Object | undefined;
+          if (!obj) {
+            continue;
+          }
+          const objId = (obj as any).id as string;
+          if (!objId) {
+            continue;
+          }
+          objectIds.add(objId);
+
+          // Add new objects.
+          if (!meshesRef.current.has(objId)) {
+            const solid = createSolidFromObject(wasm.Manifold, obj);
+            const objectColor = obj.color ? Color3.FromHexString(obj.color) : theme.object;
+            const mesh = manifoldToBabylon(solid, {
+              scene: manager.scene,
+              name: objId,
+              color: objectColor,
+            });
+            solidsRef.current.set(objId, solid);
+            meshesRef.current.set(objId, mesh);
+          }
+        }
+      }
+
+      // Remove deleted objects.
+      for (const [objId, mesh] of meshesRef.current) {
+        if (!objectIds.has(objId)) {
+          mesh.dispose();
+          meshesRef.current.delete(objId);
+          solidsRef.current.get(objId)?.delete();
+          solidsRef.current.delete(objId);
+        }
+      }
+    }, [objectCount, ready]);
 
     return (
       <div
@@ -222,4 +312,5 @@ const createSolidFromObject = (Manifold: Awaited<ReturnType<typeof getManifold>>
 // TODO(burdon): Property on object.
 const theme = {
   object: new Color3(0.3, 0.3, 0.3),
+  selected: new Color3(0.3, 0.6, 1.0),
 };

@@ -65,19 +65,39 @@ Keep this section up-to-date with periodical restructuring as the plugin becomes
 - [x] Create a Settings component like other plugins.
 - [x] Add the plugin to composer.
 
-### Phase 2 (Extrusion)
+### Phase 2 (Tools)
 
 Design a mechanism for tools.
 We should aim not to complicate further the SpacetimeCanvas.
 Instead implement tool handlers that operate on the runtime properties and then update the model once the action (e.g., dragging) has completed.
 
-- [ ] When the move tool is selected, dragging on an object should move it relative to the ground plane.
-- [ ] When a facet is selected and the extrusion tool is selected, dragging should extrude the facet and update the object model once the dragging completes.
+- [x] When the move tool is selected, dragging on an object should move it relative to the ground plane.
+- [x] When a facet is selected and the extrusion tool is selected, dragging should extrude the facet and update the object model once the dragging completes.
+- [x] Show the ground plane as a transparent grid.
+- [ ] Implement pinch zoom.
+- [x] Add a menu toggle group to select either objects or faces.
+  - Selection mode toggle (object/face) in toolbar via `view.ts` `createSelectionModeActions`.
+  - `Selection` type is a discriminated union: `ObjectSelection | FaceSelection`.
+  - Object mode shows wireframe bounding box; face mode shows coplanar face overlay.
+- [x] Menu action to toggle visibility of ground plane.
+  - View toggle group in toolbar via `view.ts` `createViewActions`.
+  - `ViewState.showGrid` synced to `SceneManager.showGrid` via canvas effect.
+- [x] Menu action and operation to create a new cube.
+  - `EditorActions.onAddObject` in `actions.ts`, wired through editor context.
+  - Creates `Model.Object` via `Model.make()`, adds `Ref` to scene via `Obj.change`.
+  - Canvas subscribes to `objectCount` (via `useObject` on scene) and syncs new meshes reactively.
+- [ ] Menu action and operation to delete the selected object.
+- [ ] Show wireframe bounding box for selected object.
 
-### Phase 3
+### Phase 3 (Boolean geometry)
 
-- [ ] Show the ground plane grid.
-- [ ] Select object, face, line, point.
+- [ ] Menu action for snapping.
+- [ ] Snap objects when dragging (moving).
+- [ ] Menu action to join selected objects.
+- [ ] Menu action to subtract selected objects.
+
+### Phase 4
+
 - [ ] Implement 3d grid with snap and minimum size.
 - [ ] Boolean operations toolbar: union, difference, intersection between selected solids.
 - [ ] Multi-operation history: support undo/redo of extrusions and boolean ops.
@@ -179,12 +199,46 @@ The tool commit (pointer-up) is the natural boundary for undo entries. Each comm
 src/tools/
   index.ts           — barrel exports
   tool.ts            — Tool interface
-  tool-context.ts    — ToolContext type
+  tool-context.ts    — ToolContext type, Selection type
   tool-manager.ts    — ToolManager class
   select-tool.ts     — face picking + highlight (extracted from canvas)
   move-tool.ts       — drag to translate object
   extrude-tool.ts    — face extrude via Manifold CSG
 ```
+
+### Selection Model
+
+Selection data is separate from selection visuals. The `Selection` type is a discriminated union that supports different granularities:
+
+```
+SelectionBase { objectId: string }
+
+ObjectSelection  = SelectionBase & { type: 'object' }
+FaceSelection    = SelectionBase & { type: 'face'; faceId; normal }
+EdgeSelection    = SelectionBase & { type: 'edge'; edgeId }
+VertexSelection  = SelectionBase & { type: 'vertex'; vertexId }
+GroupSelection   = { type: 'group'; objectIds: string[] }
+
+Selection = ObjectSelection | FaceSelection | EdgeSelection | VertexSelection | GroupSelection
+```
+
+**Current implementation:** Selection stores data + a highlight mesh parented to the object mesh (so it follows transforms). Tools write selection via `ctx.setSelection(data)` which disposes the old highlight automatically.
+
+**Future: SelectionOverlay class.**
+A `SelectionOverlay` manages the visual separately from the data:
+
+- `update(selection, ctx)` — rebuild highlight from current mesh vertex data.
+- `sync(ctx)` — called per-frame or after transforms to keep visuals aligned.
+- `dispose()` — clean up.
+
+This enables:
+
+- Object selection → bounding box wireframe that tracks the mesh.
+- Face selection → coplanar triangle overlay (current behavior).
+- Edge/vertex selection → point or line highlight.
+- Group selection → multiple bounding boxes.
+
+Selection is invalidated after geometry-changing operations (extrude) since face/edge/vertex ids change.
 
 ### Manifold ↔ Babylon.js Integration
 

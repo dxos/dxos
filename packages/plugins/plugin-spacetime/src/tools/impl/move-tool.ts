@@ -6,8 +6,8 @@ import { type Mesh, Plane, PointerEventTypes, Vector3, type PointerInfo } from '
 
 import { Obj } from '@dxos/echo';
 
-import { type ToolContext } from './tool-context';
-import { type Tool } from './tool';
+import { type ToolContext } from '../tool-context';
+import { type Tool } from '../tool';
 
 /** State tracked during an active drag operation. */
 type DragState = {
@@ -41,6 +41,12 @@ export class MoveTool implements Tool {
   onPointerDown(ctx: ToolContext, info: PointerInfo): boolean {
     if (info.type !== PointerEventTypes.POINTERDOWN) {
       return false;
+    }
+
+    // NOTE: Guard against re-entry. Double-click fires two rapid POINTERDOWN events.
+    // Without this guard, the second would overwrite _drag, losing the original start position.
+    if (this._drag) {
+      return true;
     }
 
     const pickedMesh = info.pickInfo?.pickedMesh;

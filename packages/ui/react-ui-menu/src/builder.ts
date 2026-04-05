@@ -9,6 +9,9 @@ import type { ActionGraphProps } from './hooks';
 import { MenuSeparatorType } from './types';
 import { createMenuAction, createMenuItemGroup } from './util';
 
+/**
+ * Builder for creating action graphs.
+ */
 export interface ActionGroupBuilder {
   /** Add an action node as a child of the current group. */
   action<P extends {} = {}>(id: string, props: P & MenuActionProperties, invoke: () => void): this;

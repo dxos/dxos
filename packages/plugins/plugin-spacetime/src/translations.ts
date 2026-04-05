@@ -29,14 +29,25 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Spacetime',
+
         'settings.title': 'Spacetime settings',
-        'settings-show-axes.label': 'Show axes',
-        'settings-show-fps.label': 'Show FPS',
+
+        'selection-mode.label': 'Selection mode',
+        'selection-mode.object.label': 'Object',
+        'selection-mode.face.label': 'Face',
+
         'tool.label': 'Tool',
         'tool.select.label': 'Select',
         'tool.create.label': 'Create',
         'tool.delete.label': 'Delete',
+        'tool.move.label': 'Move',
         'tool.extrude.label': 'Extrude',
+
+        'action.add-object.label': 'Add object',
+        'action.delete-object.label': 'Delete object',
+
+        'view.label': 'View',
+        'view.grid.label': 'Grid',
       },
     },
   },
