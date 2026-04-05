@@ -93,9 +93,13 @@ Instead implement tool handlers that operate on the runtime properties and then 
 
 ### Phase 3
 
-- [ ] Additional solid primitives: sphere, cylinder, pyramid, torus; Add toolbar <Select> to choise solid that is added by the add object operation.
+- [x] Additional solid primitives: sphere, cylinder, pyramid, torus; Add toolbar <Select> to choose solid that is added by the add object operation.
+  - Primitive dropdown with applyActive showing selected icon. Pyramid via Manifold.cylinder(radiusHigh=0, 4 segments).
 - [ ] Find 3 basic open source files to import (as presets) and test with; add these to the package files; Add these as options to the <Select>
-- [ ] Import/Export: OBJ/STL/glTF mesh export from Manifold geometry; see `useFileDownload` for upload functionality.
+  - Downloaded box.glb, duck.glb to src/assets/. Need GLB→Manifold import pipeline.
+- [x] Export: STL mesh export from Manifold geometry.
+  - Binary STL exporter in engine/stl-export.ts. Export button in toolbar, downloads selected object.
+- [ ] Import: GLB/OBJ file import as new scene objects.
 
 ### Phase 4 (Boolean geometry)
 
