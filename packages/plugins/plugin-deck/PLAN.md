@@ -37,7 +37,8 @@ Carefully consider how we might split up DeckMain into smaller components inside
 This would involve removing the reliance on `app-framework` and `app-tookit` hooks (e.g., usePluginManager) and instead passing these objects into `Deck.Root`;
 then `Deck.Main` would access these as needed via the context.
 
-## Phase 2.1
+- [x] Move Deck.Root OUT of Deck.Main and update current use of DeckMain to use the composite structure.
 
-- [ ] Move Deck.Root OUT of Deck.Main and update current use of DeckMain to use the composite structure.
+## Later
+
 - [ ] Breack up Deck.Main => Deck.Content with different Deck/Solo sub components.

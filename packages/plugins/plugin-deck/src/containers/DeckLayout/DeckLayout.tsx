@@ -10,8 +10,7 @@ import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { useDeckState } from '../../hooks';
 import { DeckCapabilities, getMode } from '../../types';
-import { Deck } from '../DeckMain/Deck';
-import { type DeckLayoutChangeRequest } from '../DeckMain/DeckRoot';
+import { Deck, type DeckLayoutChangeRequest } from '../DeckMain';
 
 import { ActiveNode } from './ActiveNode';
 import { Dialog } from './Dialog';
