@@ -12,6 +12,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type Model } from '../../types';
 import { type EditorActions, createEditorActions, createPrimitiveSelector } from './actions';
+import { type PropertiesState } from './properties';
 import { type SelectionState, createSelectionModeActions } from './selection';
 import { type ToolState, createToolActions } from './tools';
 import { type ViewState, createViewActions } from './view';
@@ -22,15 +23,14 @@ export type SpacetimeToolbarProps = Pick<MenuRootProps, 'alwaysActive'> & {
   toolState: ToolState;
   onToolChange: (next: Partial<ToolState>) => void;
 
+  selectionState: SelectionState;
+  onSelectionChange: (next: Partial<SelectionState>) => void;
+
   viewState: ViewState;
   onViewChange: (next: Partial<ViewState>) => void;
 
-  // TODO(burdon): Generalize to propertiesState.
-  selectedHue: string;
-  onHueChange: (hue: string) => void;
-
-  selectionState: SelectionState;
-  onSelectionChange: (next: Partial<SelectionState>) => void;
+  propertiesState: PropertiesState;
+  onPropertiesChange: (next: Partial<PropertiesState>) => void;
 
   selectedPrimitive: Model.PrimitiveType;
   onSelectedPrimitiveChange: (primitive: Model.PrimitiveType) => void;
@@ -43,12 +43,12 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
       editorActions,
       toolState,
       onToolChange,
-      viewState,
-      onViewChange,
-      selectedHue,
-      onHueChange,
       selectionState,
       onSelectionChange,
+      viewState,
+      onViewChange,
+      propertiesState,
+      onPropertiesChange,
       selectedPrimitive,
       onSelectedPrimitiveChange,
       ...props
@@ -61,28 +61,16 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
           editorActions,
           toolState,
           onToolChange,
-          viewState,
-          onViewChange,
-          selectedHue,
-          onHueChange,
           selectionState,
           onSelectionChange,
+          viewState,
+          onViewChange,
+          propertiesState,
+          onPropertiesChange,
           selectedPrimitive,
           onSelectedPrimitiveChange,
         }),
-      [
-        editorActions,
-        toolState,
-        onToolChange,
-        viewState,
-        onViewChange,
-        selectedHue,
-        onHueChange,
-        selectionState,
-        onSelectionChange,
-        selectedPrimitive,
-        onSelectedPrimitiveChange,
-      ],
+      [editorActions, toolState, onToolChange, selectionState, onSelectionChange, viewState, onViewChange, selectedPrimitive, onSelectedPrimitiveChange],
     );
     const menuActions = useMenuActions(menuCreator);
 
@@ -91,7 +79,7 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
         <Menu.Root alwaysActive={alwaysActive} {...menuActions}>
           <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
             {/* TODO(burdon): Extend builder to support custom components. */}
-            <HuePicker value={selectedHue} onChange={onHueChange} />
+            <HuePicker value={propertiesState.hue} onChange={(hue) => onPropertiesChange({ hue })} />
           </Menu.Toolbar>
         </Menu.Root>
       </ElevationProvider>
@@ -103,10 +91,10 @@ const createToolbarActions = ({
   editorActions,
   toolState,
   onToolChange,
-  viewState,
-  onViewChange,
   selectionState,
   onSelectionChange,
+  viewState,
+  onViewChange,
   selectedPrimitive,
   onSelectedPrimitiveChange,
 }: SpacetimeToolbarProps): Atom.Atom<ActionGraphProps> => {
