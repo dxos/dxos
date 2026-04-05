@@ -5,7 +5,7 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Spacetime } from './types';
+import { Model, Spacetime } from './types';
 
 export const translations = [
   {
@@ -20,6 +20,12 @@ export const translations = [
         'rename-object.label': 'Rename scene',
         'delete-object.label': 'Delete scene',
         'object-deleted.label': 'Scene deleted',
+      },
+      [Model.Object.typename]: {
+        'typename.label': 'Object',
+        'typename.label_zero': 'Objects',
+        'typename.label_one': 'Object',
+        'typename.label_other': 'Objects',
       },
       [meta.id]: {
         'plugin.name': 'Spacetime',
