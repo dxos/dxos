@@ -2,12 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  type ActionGraphProps,
-  type ActionGroupBuilderFn,
-  type ToolbarMenuActionGroupProperties,
-  createMenuAction,
-} from '@dxos/react-ui-menu';
+import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { meta } from '../../meta';
 import { type Model } from '../../types';
@@ -28,12 +23,9 @@ export type EditorActions = {
   onExportSTL: () => void;
 };
 
-/** Creates the primitive type dropdown for selecting which shape the add button creates. */
+/** Creates the primitive type dropdown. */
 export const createPrimitiveSelector =
-  (
-    selectedPrimitive: Model.PrimitiveType,
-    onPrimitiveChange: (primitive: Model.PrimitiveType) => void,
-  ): ActionGroupBuilderFn =>
+  (selectedPrimitive: Model.PrimitiveType, onPrimitiveChange: (primitive: Model.PrimitiveType) => void): ActionGroupBuilderFn =>
   (builder) => {
     builder.group(
       'primitive',
@@ -50,11 +42,7 @@ export const createPrimitiveSelector =
         for (const [primitive, icon] of Object.entries(primitiveIcons)) {
           group.action(
             `primitive-${primitive}`,
-            {
-              label: [`primitive.${primitive}.label`, { ns: meta.id }],
-              icon,
-              checked: primitive === selectedPrimitive,
-            },
+            { label: [`primitive.${primitive}.label`, { ns: meta.id }], icon, checked: primitive === selectedPrimitive },
             () => onPrimitiveChange(primitive as Model.PrimitiveType),
           );
         }
@@ -62,32 +50,12 @@ export const createPrimitiveSelector =
     );
   };
 
-/** Creates standalone action buttons for the toolbar. */
-export const createEditorActions = (actions: EditorActions): ActionGraphProps => {
-  return {
-    nodes: [
-      createMenuAction('add-object', actions.onAddObject, {
-        label: ['action.add-object.label', { ns: meta.id }],
-        icon: 'ph--plus--regular',
-      }),
-      createMenuAction('delete-object', actions.onDeleteSelected, {
-        label: ['action.delete-object.label', { ns: meta.id }],
-        icon: 'ph--trash--regular',
-      }),
-      createMenuAction('import', actions.onImport, {
-        label: ['action.import.label', { ns: meta.id }],
-        icon: 'ph--upload-simple--regular',
-      }),
-      createMenuAction('export-stl', actions.onExportSTL, {
-        label: ['action.export-stl.label', { ns: meta.id }],
-        icon: 'ph--download-simple--regular',
-      }),
-    ],
-    edges: [
-      { source: 'root', target: 'add-object', relation: 'child' },
-      { source: 'root', target: 'delete-object', relation: 'child' },
-      { source: 'root', target: 'import', relation: 'child' },
-      { source: 'root', target: 'export-stl', relation: 'child' },
-    ],
+/** Creates standalone action buttons. */
+export const createEditorActions =
+  (actions: EditorActions): ActionGroupBuilderFn =>
+  (builder) => {
+    builder.action('add-object', { label: ['action.add-object.label', { ns: meta.id }], icon: 'ph--plus--regular' }, actions.onAddObject);
+    builder.action('delete-object', { label: ['action.delete-object.label', { ns: meta.id }], icon: 'ph--trash--regular' }, actions.onDeleteSelected);
+    builder.action('import', { label: ['action.import.label', { ns: meta.id }], icon: 'ph--upload-simple--regular' }, actions.onImport);
+    builder.action('export-stl', { label: ['action.export-stl.label', { ns: meta.id }], icon: 'ph--download-simple--regular' }, actions.onExportSTL);
   };
-};

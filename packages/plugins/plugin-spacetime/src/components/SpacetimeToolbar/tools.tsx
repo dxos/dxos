@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ActionGraphProps, createMenuAction, createMenuItemGroup } from '@dxos/react-ui-menu';
+import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { meta } from '../../meta';
-import { SpacetimeToolbarState } from './SpacetimeToolbar';
+import { type SpacetimeToolbarState } from './SpacetimeToolbar';
 
 export type SpacetimeTool = 'select' | 'move' | 'extrude';
 
@@ -15,33 +15,27 @@ const tools: Record<SpacetimeTool, string> = {
   extrude: 'ph--arrow-line-up--regular',
 };
 
-/** Creates the tool selection toggle group action subgraph. */
-export const createToolActions = (
-  state: SpacetimeToolbarState,
-  onToolChange: (tool: SpacetimeTool) => void,
-): ActionGraphProps => {
-  const toolGroupAction = createMenuItemGroup('tool', {
-    iconOnly: true,
-    label: ['tool.label', { ns: meta.id }],
-    variant: 'toggleGroup',
-    selectCardinality: 'single',
-    value: state.tool,
-  });
-
-  const toolActions = Object.entries(tools).map(([tool, icon]) => {
-    const checked = state.tool === tool;
-    return createMenuAction(tool, () => onToolChange(tool as SpacetimeTool), {
-      label: [`tool.${tool}.label`, { ns: meta.id }],
-      checked,
-      icon,
-    });
-  });
-
-  return {
-    nodes: [toolGroupAction, ...toolActions],
-    edges: [
-      { source: 'root', target: 'tool', relation: 'child' },
-      ...toolActions.map(({ id }) => ({ source: toolGroupAction.id, target: id, relation: 'child' })),
-    ],
+/** Creates the tool selection toggle group. */
+export const createToolActions =
+  (state: SpacetimeToolbarState, onToolChange: (tool: SpacetimeTool) => void): ActionGroupBuilderFn =>
+  (builder) => {
+    builder.group(
+      'tool',
+      {
+        label: ['tool.label', { ns: meta.id }],
+        iconOnly: true,
+        variant: 'toggleGroup',
+        selectCardinality: 'single',
+        value: state.tool,
+      } as ToolbarMenuActionGroupProperties,
+      (group) => {
+        for (const [tool, icon] of Object.entries(tools)) {
+          group.action(
+            tool,
+            { label: [`tool.${tool}.label`, { ns: meta.id }], checked: state.tool === tool, icon },
+            () => onToolChange(tool as SpacetimeTool),
+          );
+        }
+      },
+    );
   };
-};
