@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useState, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, { type PropsWithChildren, useEffect, useState, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { exportSTL, downloadFile } from '../../engine';
@@ -110,6 +110,11 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         obj.objects.push(Ref.make(object));
       });
       Obj.setParent(object, scene);
+      // Select the newly created object.
+      const objId = (object as any).id as string | undefined;
+      if (objId) {
+        setSelectedObjectId(objId);
+      }
     }, [scene, selectedPrimitive, selectedHue]);
 
     const handleDeleteSelected = useCallback(() => {
@@ -164,6 +169,20 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       }
     }, [selectedObjectId]);
 
+    // Sync hue picker with selected object's color.
+    useEffect(() => {
+      if (!selectedObjectId || !scene?.objects) {
+        return;
+      }
+      for (const ref of scene.objects) {
+        const obj = ref?.target;
+        if (obj && (obj as any).id === selectedObjectId && (obj as any).color) {
+          setSelectedHue((obj as any).color);
+          return;
+        }
+      }
+    }, [selectedObjectId, scene]);
+
     const editorActions: EditorActions = useMemo(
       () => ({ onAddObject: handleAddObject, onDeleteSelected: handleDeleteSelected, onImport: handleImport, onExportSTL: handleExportSTL }),
       [handleAddObject, handleDeleteSelected, handleImport, handleExportSTL],
@@ -186,19 +205,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         onHueChange={handleHueChange}
         editorActions={editorActions}
         selectedObjectId={selectedObjectId}
-        setSelectedObjectId={(id: string | null) => {
-          setSelectedObjectId(id);
-          // Sync hue picker with the selected object's color.
-          if (id && scene?.objects) {
-            for (const ref of scene.objects) {
-              const obj = ref?.target;
-              if (obj && (obj as any).id === id && (obj as any).color) {
-                setSelectedHue((obj as any).color);
-                break;
-              }
-            }
-          }
-        }}
+        setSelectedObjectId={setSelectedObjectId}
         solidsRef={solidsRef}
         importGLBRef={importGLBRef}
         deleteObjectRef={deleteObjectRef}
