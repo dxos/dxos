@@ -110,7 +110,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         obj.objects.push(Ref.make(object));
       });
       Obj.setParent(object, scene);
-    }, [scene, selectedPrimitive]);
+    }, [scene, selectedPrimitive, selectedHue]);
 
     const handleDeleteSelected = useCallback(() => {
       if (!selectedObjectId) {
@@ -186,7 +186,19 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         onHueChange={handleHueChange}
         editorActions={editorActions}
         selectedObjectId={selectedObjectId}
-        setSelectedObjectId={setSelectedObjectId}
+        setSelectedObjectId={(id: string | null) => {
+          setSelectedObjectId(id);
+          // Sync hue picker with the selected object's color.
+          if (id && scene?.objects) {
+            for (const ref of scene.objects) {
+              const obj = ref?.target;
+              if (obj && (obj as any).id === id && (obj as any).color) {
+                setSelectedHue((obj as any).color);
+                break;
+              }
+            }
+          }
+        }}
         solidsRef={solidsRef}
         importGLBRef={importGLBRef}
         deleteObjectRef={deleteObjectRef}
