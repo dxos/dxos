@@ -89,19 +89,18 @@ Instead implement tool handlers that operate on the runtime properties and then 
 - [x] Menu action and operation to delete the selected object.
 - [x] Show wireframe bounding box for selected object.
 - [x] Show table of vectors.
-
-### Phase 3 (Boolean geometry)
-
-- [ ] Menu action for snapping.
 - [ ] Snap objects when dragging (moving).
+
+### Phase 3
+
+- [ ] Import OBJ geometry.
+
+### Phase 4 (Boolean geometry)
+
+- [ ] Mult-select if holding shift when clicking.
 - [ ] Menu action to join selected objects.
 - [ ] Menu action to subtract selected objects.
-- [ ] Implement 3d grid with snap and minimum size.
-
-### Phase 4
-
 - [ ] Multi-operation history: support undo/redo of extrusions and boolean ops.
-- [ ] Mult-select.
 - [ ] Boolean operations toolbar: union, difference, intersection between selected solids.
 - [ ] Transform gizmos: translate, rotate, scale selected solids.
 - [ ] Additional solid primitives: sphere, cylinder, torus.
