@@ -4,6 +4,7 @@
 
 import { DeckRoot } from './DeckRoot';
 import { DeckContent } from './DeckContent';
+import { DeckViewport } from './DeckViewport';
 
 /**
  * Radix-style composite Deck component.
@@ -11,4 +12,5 @@ import { DeckContent } from './DeckContent';
 export const Deck = {
   Root: DeckRoot,
   Content: DeckContent,
+  Viewport: DeckViewport,
 };
