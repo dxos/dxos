@@ -85,6 +85,7 @@ export const importGLB = async (
 
     try {
       const mesh = new wasm.Mesh({ numProp: 3, vertProperties, triVerts });
+      mesh.merge();
       const solid = new Manifold(mesh);
 
       if (result) {
@@ -178,6 +179,7 @@ export const importGLBDirect = (data: ArrayBuffer, wasm: ManifoldToplevel): Mani
 
       try {
         const manifoldMesh = new wasm.Mesh({ numProp: 3, vertProperties, triVerts });
+        manifoldMesh.merge();
         const solid = new Manifold(manifoldMesh);
 
         if (result) {

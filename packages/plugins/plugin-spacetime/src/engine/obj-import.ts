@@ -60,6 +60,7 @@ export const importOBJ = (objText: string, wasm: ManifoldToplevel): Manifold | n
 
   try {
     const mesh = new wasm.Mesh({ numProp: 3, vertProperties, triVerts });
+    mesh.merge();
     return new Manifold(mesh);
   } catch (error) {
     log.info('importOBJ: failed to create Manifold', { error });
