@@ -243,8 +243,11 @@ const SPACETIME_EDITOR_CANVAS = 'SpacetimeEditor:Canvas';
 type SpacetimeEditorCanvasProsp = Omit<SpacetimeCanvasProps, 'showAxes' | 'showFps'>;
 
 const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {
-  const { scene, tool, viewState, setSelectedObjectId, solidsRef: parentSolidsRef, importGLBRef: parentImportGLBRef, deleteObjectRef: parentDeleteObjectRef } =
-    useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
+  const {
+    scene, tool, viewState, selectedHue, selectedObjectId,
+    setSelectedObjectId, solidsRef: parentSolidsRef,
+    importGLBRef: parentImportGLBRef, deleteObjectRef: parentDeleteObjectRef,
+  } = useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
   // Subscribe to ECHO scene changes so we re-render when objects are added/removed.
   const [liveScene] = useObject(scene);
   const objectCount = liveScene?.objects?.length ?? 0;
@@ -259,6 +262,8 @@ const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasPr
       parentSolidsRef={parentSolidsRef}
       importGLBRef={parentImportGLBRef}
       deleteObjectRef={parentDeleteObjectRef}
+      selectedObjectId={selectedObjectId}
+      selectedHue={selectedHue}
       ref={forwardedRef}
     />
   );

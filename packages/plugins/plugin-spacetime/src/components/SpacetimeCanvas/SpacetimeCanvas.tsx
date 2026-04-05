@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Color3, Color4, HighlightLayer, Mesh } from '@babylonjs/core';
+import { Color3, Color4, HighlightLayer, Mesh, StandardMaterial } from '@babylonjs/core';
 import React, { type RefObject, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/ui-theme';
@@ -27,6 +27,9 @@ export type SpacetimeCanvasProps = {
   /** Ref to set the importGLB callback (canvas provides the implementation). */
   importGLBRef?: React.MutableRefObject<(data: ArrayBuffer | string) => Promise<void>>;
   deleteObjectRef?: React.MutableRefObject<(objectId: string) => void>;
+  /** Currently selected object id and hue for material updates. */
+  selectedObjectId?: string | null;
+  selectedHue?: string;
 };
 
 /**
@@ -44,6 +47,8 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       parentSolidsRef,
       importGLBRef,
       deleteObjectRef,
+      selectedObjectId,
+      selectedHue,
       ...props
     },
     forwardedRef,
@@ -281,6 +286,17 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         managerRef.current.showGrid = viewState.showGrid;
       }
     }, [viewState, ready]);
+
+    // Sync selected object material color when hue changes.
+    useEffect(() => {
+      if (!selectedObjectId || !selectedHue) {
+        return;
+      }
+      const mesh = meshesRef.current.get(selectedObjectId);
+      if (mesh?.material instanceof StandardMaterial) {
+        mesh.material.diffuseColor = resolveColor(selectedHue);
+      }
+    }, [selectedHue, selectedObjectId]);
 
     // Sync scene objects — add/remove meshes when ECHO scene changes.
     useEffect(() => {
