@@ -11,14 +11,14 @@ import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
-import { createLists } from './list';
-import { createBlocks } from './blocks';
-import { createFormatting } from './formatting';
-import { createHeadings } from './headings';
-import { createImageUpload } from './image';
-import { createSearch } from './search';
+import { addLists } from './lists';
+import { addBlocks } from './blocks';
+import { addFormatting } from './formatting';
+import { addHeadings } from './headings';
+import { addImageUpload } from './image';
+import { addSearch } from './search';
 import { type EditorToolbarState } from './useEditorToolbar';
-import { createViewMode } from './view-mode';
+import { addViewMode } from './view-mode';
 
 export type EditorToolbarFeatureFlags = Partial<{
   showHeadings: boolean;
@@ -39,16 +39,17 @@ export type EditorToolbarActionGraphProps = {
   customActions?: Atom.Atom<ActionGraphProps>;
 };
 
-export type EditorToolbarProps = ThemedClassName<{
-  role?: string;
-  attendableId?: string;
-  /** Handler for executing actions. Required when customActions use Operation.invoke. */
-  onAction?: (action: MenuAction, params: Node.InvokeProps) => void;
-}> &
-  (EditorToolbarActionGraphProps & EditorToolbarFeatureFlags);
+export type EditorToolbarProps = ThemedClassName<
+  {
+    role?: string;
+    attendableId?: string;
+    /** Handler for executing actions. Required when customActions use Operation.invoke. */
+    onAction?: (action: MenuAction, params: Node.InvokeProps) => void;
+  } & (EditorToolbarActionGraphProps & EditorToolbarFeatureFlags)
+>;
 
 export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, ...props }: EditorToolbarProps) => {
-  const menuActions = useEditorToolbar(props);
+  const menuActions = useEditorToolbarActionGraph(props);
 
   return (
     <ElevationProvider elevation={role === 'section' ? 'positioned' : 'base'}>
@@ -62,55 +63,11 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
 type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getView' | 'customActions'> &
   EditorToolbarFeatureFlags;
 
-const createToolbarActions = ({
-  state,
-  getView,
-  customActions,
-  ...features
-}: ToolbarActionsProps): Atom.Atom<ActionGraphProps> => {
-  return Atom.make((get) => {
-    // Subscribe to state changes.
-    const stateSnapshot = get(state);
-
-    const builder = MenuBuilder.make();
-
-    if (features?.showHeadings ?? true) {
-      builder.subgraph(createHeadings(stateSnapshot, getView));
-    }
-    if (features?.showFormatting ?? true) {
-      builder.subgraph(createFormatting(stateSnapshot, getView));
-    }
-    if (features?.showLists ?? true) {
-      builder.subgraph(createLists(stateSnapshot, getView));
-    }
-    if (features?.showBlocks ?? true) {
-      builder.subgraph(createBlocks(stateSnapshot, getView));
-    }
-    if (features?.onImageUpload) {
-      builder.subgraph(createImageUpload(features.onImageUpload!));
-    }
-
-    builder.separator('gap');
-
-    if (customActions) {
-      builder.subgraph(get(customActions));
-    }
-    if (features?.showSearch ?? true) {
-      builder.subgraph(createSearch(getView));
-    }
-    if (features?.onViewModeChange) {
-      builder.subgraph(createViewMode(stateSnapshot, features.onViewModeChange!));
-    }
-
-    return builder.build();
-  });
-};
-
 // TODO(wittjosiah): Toolbar re-rendering is causing this graph to be recreated and breaking reactivity in some cases.
 //   E.g. for toolbar dropdowns which use active icon, the icon is not updated when the active item changes.
 //   This is currently only happening in the markdown plugin usage and should be reproduced in an editor story.
 // TODO(burdon): Some actions should toggle the state (e.g., toggle bullets on/off depending on the current state).
-const useEditorToolbar = ({ state, getView, customActions, ...features }: ToolbarActionsProps) => {
+const useEditorToolbarActionGraph = ({ state, getView, customActions, ...features }: ToolbarActionsProps) => {
   const menuCreator = useMemo(
     () => createToolbarActions({ state, getView, customActions, ...features }),
     [
@@ -128,4 +85,27 @@ const useEditorToolbar = ({ state, getView, customActions, ...features }: Toolba
   );
 
   return useMenuActions(menuCreator);
+};
+
+const createToolbarActions = ({
+  state,
+  getView,
+  customActions,
+  ...features
+}: ToolbarActionsProps): Atom.Atom<ActionGraphProps> => {
+  return Atom.make((get) => {
+    // Subscribe to state changes.
+    const stateSnapshot = get(state);
+    return MenuBuilder.make()
+      .subgraph(features?.showHeadings !== false && addHeadings(stateSnapshot, getView))
+      .subgraph(features?.showFormatting !== false && addFormatting(stateSnapshot, getView))
+      .subgraph(features?.showLists !== false && addLists(stateSnapshot, getView))
+      .subgraph(features?.showBlocks !== false && addBlocks(stateSnapshot, getView))
+      .subgraph(features?.onImageUpload && addImageUpload(features.onImageUpload))
+      .separator('gap')
+      .subgraph(customActions && get(customActions))
+      .subgraph(features?.showSearch !== false && addSearch(getView))
+      .subgraph(features?.onViewModeChange && addViewMode(stateSnapshot, features.onViewModeChange))
+      .build();
+  });
 };

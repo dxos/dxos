@@ -10,26 +10,25 @@ export const translations = [
   {
     'en-US': {
       [translationKey]: {
-        'strong.label': 'Bold',
-        'emphasis.label': 'Italics',
-        'strikethrough.label': 'Strikethrough',
+        'comment.label': 'Create comment',
+        'image.label': 'Insert image',
+        'search.label': 'Search',
 
-        'code.label': 'Code',
-        'link.label': 'Link',
+        'block.label': 'Block',
+        'block.blockquote.label': 'Block quote',
+        'block.codeblock.label': 'Code block',
+        'block.table.label': 'Create table',
+
+        'formatting.label': 'Formatting',
+        'formatting.strong.label': 'Bold',
+        'formatting.emphasis.label': 'Italics',
+        'formatting.strikethrough.label': 'Strikethrough',
+        'formatting.code.label': 'Code',
+        'formatting.link.label': 'Link',
 
         'list.bullet.label': 'Bullet list',
         'list.ordered.label': 'Numbered list',
         'list.task.label': 'Task list',
-
-        'blockquote.label': 'Block quote',
-        'codeblock.label': 'Code block',
-        'comment.label': 'Create comment',
-        'selection-overlaps-existing-comment.label': 'Selection overlaps existing comment',
-        'select-text-to-comment.label': 'Select text to comment',
-
-        'image.label': 'Insert image',
-        'table.label': 'Create table',
-        'search.label': 'Search',
 
         'heading.label': 'Heading level',
         'heading-level.label_zero': 'Paragraph',
