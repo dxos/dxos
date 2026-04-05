@@ -11,8 +11,6 @@ import { getFaceNormal } from './mesh-converter';
 /** Minimum object dimension on any axis (matches grid step). */
 export const MIN_SIZE = 1;
 
-type Vec3 = { x: number; y: number; z: number };
-
 /**
  * Creates a Manifold solid from a Model.Object based on its primitive type and scale.
  */
@@ -44,35 +42,217 @@ export const createSolidFromObject = (Manifold: ManifoldToplevel['Manifold'], ob
 //
 
 /**
- * Extracts the outer boundary polygon of a coplanar face group.
- * Boundary edges appear in exactly one triangle; interior edges appear in two.
- * Returns ordered 3D vertices forming the face outline.
+ * Extracts the face boundary directly from a Manifold solid using its internal shared-vertex mesh.
+ * This avoids the unshared-vertex problem in the Babylon mesh where edge cancellation fails
+ * due to floating point differences between duplicate vertices.
  *
- * When `faceIDs` is provided (from Manifold's getMesh().faceID), triangles are grouped
- * by their Manifold-assigned face ID. This is much more reliable than manual coplanarity
- * checks after boolean operations, which can introduce seam edges within a logical face.
+ * @param solid The Manifold solid.
+ * @param babylonFaceId Triangle index from the Babylon mesh (maps 1:1 to Manifold triangles).
+ * @param normal Face normal for coplanar merging.
+ */
+export const extractFaceBoundaryFromSolid = (
+  solid: Manifold,
+  babylonFaceId: number,
+  normal: Model.Vec3,
+): Array<[number, number, number]> => {
+  const mesh = solid.getMesh();
+  const { vertProperties, triVerts, numProp, numTri, faceID } = mesh;
+
+  // Reference point on the face plane.
+  const refVert = triVerts[babylonFaceId * 3];
+  const refX = vertProperties[refVert * numProp];
+  const refY = vertProperties[refVert * numProp + 1];
+  const refZ = vertProperties[refVert * numProp + 2];
+
+  // Collect coplanar triangles by checking EVERY triangle individually.
+  // NOTE: faceIDs are unreliable — Manifold may assign the same faceID to non-coplanar
+  // triangles after boolean operations. Each triangle must be geometrically verified.
+  const coplanarTris: number[] = [];
+  for (let tri = 0; tri < numTri; tri++) {
+    const vi0 = triVerts[tri * 3];
+    const vi1 = triVerts[tri * 3 + 1];
+    const vi2 = triVerts[tri * 3 + 2];
+
+    // Compute face normal from Manifold's CCW winding.
+    const ax = vertProperties[vi1 * numProp] - vertProperties[vi0 * numProp];
+    const ay = vertProperties[vi1 * numProp + 1] - vertProperties[vi0 * numProp + 1];
+    const az = vertProperties[vi1 * numProp + 2] - vertProperties[vi0 * numProp + 2];
+    const bx = vertProperties[vi2 * numProp] - vertProperties[vi0 * numProp];
+    const by = vertProperties[vi2 * numProp + 1] - vertProperties[vi0 * numProp + 1];
+    const bz = vertProperties[vi2 * numProp + 2] - vertProperties[vi0 * numProp + 2];
+    let nx = ay * bz - az * by;
+    let ny = az * bx - ax * bz;
+    let nz = ax * by - ay * bx;
+    const len = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    if (len === 0) {
+      continue;
+    }
+    nx /= len;
+    ny /= len;
+    nz /= len;
+
+    // Check normal alignment.
+    if (nx * normal.x + ny * normal.y + nz * normal.z < 0.99) {
+      continue;
+    }
+
+    // Check coplanarity (same plane, not just parallel).
+    const vx = vertProperties[vi0 * numProp] - refX;
+    const vy = vertProperties[vi0 * numProp + 1] - refY;
+    const vz = vertProperties[vi0 * numProp + 2] - refZ;
+    if (Math.abs(vx * normal.x + vy * normal.y + vz * normal.z) > 0.01) {
+      continue;
+    }
+
+    coplanarTris.push(tri);
+  }
+
+  // Find boundary edges using shared vertex INDICES (not positions).
+  // With shared vertices, edge cancellation works reliably.
+  const edgeCount = new Map<string, [number, number]>();
+  const edgeKey = (a: number, b: number) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+
+  for (const tri of coplanarTris) {
+    const v0 = triVerts[tri * 3];
+    const v1 = triVerts[tri * 3 + 1];
+    const v2 = triVerts[tri * 3 + 2];
+    const edges = [
+      [v0, v1],
+      [v1, v2],
+      [v2, v0],
+    ] as const;
+
+    for (const [a, b] of edges) {
+      const key = edgeKey(a, b);
+      if (edgeCount.has(key)) {
+        edgeCount.delete(key);
+      } else {
+        edgeCount.set(key, [a, b]);
+      }
+    }
+  }
+
+  // Chain boundary edges into an ordered polygon.
+  const boundaryEdges = [...edgeCount.values()];
+  if (boundaryEdges.length === 0) {
+    return [];
+  }
+
+  const getPos = (vi: number): [number, number, number] => [
+    vertProperties[vi * numProp],
+    vertProperties[vi * numProp + 1],
+    vertProperties[vi * numProp + 2],
+  ];
+
+  const polygon: Array<[number, number, number]> = [getPos(boundaryEdges[0][0]), getPos(boundaryEdges[0][1])];
+  let lastVert = boundaryEdges[0][1];
+  const used = new Set<number>([0]);
+
+  while (used.size < boundaryEdges.length) {
+    let found = false;
+    for (let idx = 0; idx < boundaryEdges.length; idx++) {
+      if (used.has(idx)) {
+        continue;
+      }
+      const [a, b] = boundaryEdges[idx];
+      if (a === lastVert) {
+        polygon.push(getPos(b));
+        lastVert = b;
+        used.add(idx);
+        found = true;
+        break;
+      }
+      if (b === lastVert) {
+        polygon.push(getPos(a));
+        lastVert = a;
+        used.add(idx);
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      break;
+    }
+  }
+
+  // Remove closing vertex if it duplicates the first.
+  if (polygon.length > 1) {
+    const first = polygon[0];
+    const last = polygon[polygon.length - 1];
+    if (
+      Math.abs(first[0] - last[0]) < 1e-5 &&
+      Math.abs(first[1] - last[1]) < 1e-5 &&
+      Math.abs(first[2] - last[2]) < 1e-5
+    ) {
+      polygon.pop();
+    }
+  }
+
+  return polygon;
+};
+
+/**
+ * Extracts the outer boundary polygon of a coplanar face group from Babylon mesh data.
+ * @deprecated Use extractFaceBoundaryFromSolid for reliable results with shared vertices.
  */
 export const extractFaceBoundary = (
   faceId: number,
   positions: ArrayLike<number>,
   indices: ArrayLike<number>,
-  normal: Vec3,
+  normal: Model.Vec3,
   faceIDs?: Uint32Array,
 ): Array<[number, number, number]> => {
   const numTris = indices.length / 3;
   const coplanarTris: number[] = [];
 
+  // Collect all coplanar triangles using both faceID grouping AND geometric coplanarity.
+  // After boolean operations, a logical face may be split into multiple faceIDs
+  // (e.g., the +X face of a cube becomes two faceIDs after a +Y extrusion creates
+  // a column — both sub-faces are coplanar but have different origins).
+  // We merge by: first collecting all faceIDs that share the same plane as the selected face,
+  // then collecting all triangles with any of those faceIDs.
+  const refIdx = indices[faceId * 3];
+
   if (faceIDs && faceIDs.length >= numTris) {
-    // Use Manifold's face grouping — triangles with the same faceID belong to the same logical face.
-    const targetFaceID = faceIDs[faceId];
+    // Phase 1: find all faceIDs that are coplanar with the selected face.
+    const coplanarFaceIDs = new Set<number>();
+    coplanarFaceIDs.add(faceIDs[faceId]);
+
+    // Check one triangle from each unique faceID for coplanarity.
+    const seenFaceIDs = new Set<number>();
     for (let tri = 0; tri < numTris; tri++) {
-      if (faceIDs[tri] === targetFaceID) {
+      const fid = faceIDs[tri];
+      if (seenFaceIDs.has(fid)) {
+        continue;
+      }
+      seenFaceIDs.add(fid);
+
+      const triNormal = getFaceNormal(tri, positions, indices);
+      const dot = triNormal.x * normal.x + triNormal.y * normal.y + triNormal.z * normal.z;
+      if (dot < 0.99) {
+        continue;
+      }
+
+      const triIdx = indices[tri * 3];
+      const dx = positions[triIdx * 3] - positions[refIdx * 3];
+      const dy = positions[triIdx * 3 + 1] - positions[refIdx * 3 + 1];
+      const dz = positions[triIdx * 3 + 2] - positions[refIdx * 3 + 2];
+      const planeDist = Math.abs(dx * normal.x + dy * normal.y + dz * normal.z);
+      if (planeDist > 0.01) {
+        continue;
+      }
+
+      coplanarFaceIDs.add(fid);
+    }
+
+    // Phase 2: collect all triangles with any of the coplanar faceIDs.
+    for (let tri = 0; tri < numTris; tri++) {
+      if (coplanarFaceIDs.has(faceIDs[tri])) {
         coplanarTris.push(tri);
       }
     }
   } else {
     // Fallback: manual coplanarity check using normal dot product + plane distance.
-    const refIdx = indices[faceId * 3];
     for (let tri = 0; tri < numTris; tri++) {
       const triNormal = getFaceNormal(tri, positions, indices);
       const dot = triNormal.x * normal.x + triNormal.y * normal.y + triNormal.z * normal.z;
@@ -110,7 +290,11 @@ export const extractFaceBoundary = (
     const i0 = indices[tri * 3];
     const i1 = indices[tri * 3 + 1];
     const i2 = indices[tri * 3 + 2];
-    const triEdges = [[i0, i1], [i1, i2], [i2, i0]] as const;
+    const triEdges = [
+      [i0, i1],
+      [i1, i2],
+      [i2, i0],
+    ] as const;
 
     for (const [a, b] of triEdges) {
       const key = edgeKey(a, b);
@@ -175,7 +359,7 @@ export const extractFaceBoundary = (
 //
 
 /** Builds orthonormal axes (nx, ny) on the plane perpendicular to the given normal. */
-const buildFaceAxes = (normal: Vec3): { nx: Vec3; ny: Vec3 } => {
+const buildFaceAxes = (normal: Model.Vec3): { nx: Model.Vec3; ny: Model.Vec3 } => {
   // Choose a reference vector not parallel to the normal.
   const ref = Math.abs(normal.y) < 0.9 ? { x: 0, y: 1, z: 0 } : { x: 1, y: 0, z: 0 };
 
@@ -199,9 +383,9 @@ const buildFaceAxes = (normal: Vec3): { nx: Vec3; ny: Vec3 } => {
 };
 
 /** Projects 3D vertices onto a 2D coordinate system defined by the face normal and origin. */
-const projectTo2D = (
+export const projectTo2D = (
   vertices: Array<[number, number, number]>,
-  normal: Vec3,
+  normal: Model.Vec3,
   origin: [number, number, number],
 ): Vec2[] => {
   const { nx, ny } = buildFaceAxes(normal);
@@ -222,21 +406,45 @@ const projectTo2D = (
  * [col0x, col0y, col0z, 0, col1x, col1y, col1z, 0, col2x, col2y, col2z, 0, tx, ty, tz, 1]
  */
 const buildZToNormalTransform = (
-  normal: Vec3,
+  normal: Model.Vec3,
   origin: [number, number, number],
 ): [
-  number, number, number, number,
-  number, number, number, number,
-  number, number, number, number,
-  number, number, number, number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
 ] => {
   const { nx, ny } = buildFaceAxes(normal);
 
   return [
-    nx.x, nx.y, nx.z, 0, // Column 0: local X -> world.
-    ny.x, ny.y, ny.z, 0, // Column 1: local Y -> world.
-    normal.x, normal.y, normal.z, 0, // Column 2: local Z (normal) -> world.
-    origin[0], origin[1], origin[2], 1, // Column 3: translation.
+    nx.x,
+    nx.y,
+    nx.z,
+    0, // Column 0: local X -> world.
+    ny.x,
+    ny.y,
+    ny.z,
+    0, // Column 1: local Y -> world.
+    normal.x,
+    normal.y,
+    normal.z,
+    0, // Column 2: local Z (normal) -> world.
+    origin[0],
+    origin[1],
+    origin[2],
+    1, // Column 3: translation.
   ];
 };
 
@@ -263,7 +471,7 @@ export const applyExtrusion = (
   faceId: number,
   positions: ArrayLike<number>,
   indices: ArrayLike<number>,
-  normal: Vec3,
+  normal: Model.Vec3,
   distance: number,
   faceIDs?: Uint32Array,
 ): Manifold => {
@@ -279,7 +487,8 @@ export const applyExtrusion = (
   const bbox = baseSolid.boundingBox();
   const normalArr = [normal.x, normal.y, normal.z];
   const absNormal = normalArr.map(Math.abs);
-  const dominantAxis = absNormal[0] >= absNormal[1] && absNormal[0] >= absNormal[2] ? 0 : absNormal[1] >= absNormal[2] ? 1 : 2;
+  const dominantAxis =
+    absNormal[0] >= absNormal[1] && absNormal[0] >= absNormal[2] ? 0 : absNormal[1] >= absNormal[2] ? 1 : 2;
   const bboxDim = bbox.max[dominantAxis] - bbox.min[dominantAxis];
 
   const sign = distance > 0 ? 1 : -1;
@@ -292,8 +501,8 @@ export const applyExtrusion = (
     }
   }
 
-  // Extract the 3D boundary polygon of the face.
-  const boundary3D = extractFaceBoundary(faceId, positions, indices, normal, faceIDs);
+  // Extract the 3D boundary polygon directly from the Manifold solid's shared-vertex mesh.
+  const boundary3D = extractFaceBoundaryFromSolid(baseSolid, faceId, normal);
   if (boundary3D.length < 3) {
     return Manifold.union(baseSolid, baseSolid);
   }
@@ -309,11 +518,26 @@ export const applyExtrusion = (
   origin[1] /= boundary3D.length;
   origin[2] /= boundary3D.length;
 
-  // Project to 2D and create CrossSection.
-  // Reverse the polygon to ensure CCW winding — the mesh uses CW winding (swapped for Babylon),
-  // but Manifold's CrossSection requires counterclockwise vertex ordering.
-  const polygon2D = projectTo2D(boundary3D, normal, origin).reverse();
+  // Project to 2D and ensure CCW winding for Manifold's CrossSection.
+  const polygon2D = projectTo2D(boundary3D, normal, origin);
+
+  // Compute signed area to determine winding. Positive = CCW, negative = CW.
+  let signedArea = 0;
+  for (let idx = 0; idx < polygon2D.length; idx++) {
+    const curr = polygon2D[idx];
+    const next = polygon2D[(idx + 1) % polygon2D.length];
+    signedArea += curr[0] * next[1] - next[0] * curr[1];
+  }
+  if (signedArea < 0) {
+    polygon2D.reverse();
+  }
   const crossSection = new CrossSection([polygon2D]);
+  // DEBUG: log cross section area and boundary info.
+  const csArea = crossSection.area();
+  if (csArea === 0) {
+    crossSection.delete();
+    return Manifold.union(baseSolid, baseSolid);
+  }
   const extruded = Manifold.extrude(crossSection, absDist);
   crossSection.delete();
 

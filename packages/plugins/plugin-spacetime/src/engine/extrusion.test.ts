@@ -5,7 +5,7 @@
 import type { ManifoldToplevel, Manifold } from 'manifold-3d';
 import { type ExpectStatic, afterAll, beforeAll, describe, test } from 'vitest';
 
-import { applyExtrusion, extractFaceBoundary, MIN_SIZE } from './extrusion';
+import { applyExtrusion, extractFaceBoundary, extractFaceBoundaryFromSolid, MIN_SIZE } from './extrusion';
 import { getFaceNormal } from './mesh-converter';
 
 /** Tolerance for floating-point comparisons in geometry tests. */
@@ -89,6 +89,12 @@ const findFaceByNormal = (
  * Helper that wraps the new applyExtrusion API for simpler test calls.
  * Extracts mesh data from the solid, finds the face matching the normal, and calls applyExtrusion.
  */
+/** Extract Manifold faceIDs (mapped to CW-wound Babylon triangle order). */
+const extractFaceIDs = (solid: Manifold): Uint32Array => {
+  const mesh = solid.getMesh();
+  return Uint32Array.from(mesh.faceID);
+};
+
 const extrudeByNormal = (
   wasmInstance: ManifoldToplevel,
   solid: Manifold,
@@ -96,11 +102,12 @@ const extrudeByNormal = (
   distance: number,
 ): Manifold => {
   const { positions, indices } = extractMeshData(solid);
+  const faceIDs = extractFaceIDs(solid);
   const faceId = findFaceByNormal(positions, indices, normal);
   if (faceId < 0) {
     throw new Error(`No face found matching normal (${normal.x}, ${normal.y}, ${normal.z})`);
   }
-  return applyExtrusion(wasmInstance, solid, faceId, positions, indices, normal, distance);
+  return applyExtrusion(wasmInstance, solid, faceId, positions, indices, normal, distance, faceIDs);
 };
 
 describe('applyExtrusion', () => {
@@ -349,6 +356,101 @@ describe('applyExtrusion', () => {
       expect(boundary.length).toBeLessThanOrEqual(3);
 
       cube.delete();
+    });
+  });
+
+  describe('drag simulation', () => {
+    test('simulates drag up then down, then extrude a different face', ({ expect }) => {
+      // Simulates: extrude +Y by 0.5 (drag up then back), commit, then extrude +X by 1.
+      const cube = makeCube();
+
+      // First extrusion: +Y face by 0.5.
+      const afterY = extrudeByNormal(wasmInstance, cube, { x: 0, y: 1, z: 0 }, 0.5);
+      cube.delete();
+      expectBBox(expect, afterY, [-1, -1, -1], [1, 1.5, 1]);
+      expect(afterY.volume()).toBeCloseTo(10, 0);
+
+      // Check the +X face boundary on the committed solid.
+      const boundary = extractFaceBoundaryFromSolid(afterY, findFaceByNormal(
+        extractMeshData(afterY).positions, extractMeshData(afterY).indices, { x: 1, y: 0, z: 0 }
+      ), { x: 1, y: 0, z: 0 });
+      // All boundary vertices should be at X=1.
+      const badVerts = boundary.filter((v) => Math.abs(v[0] - 1) > 0.5);
+      if (badVerts.length > 0) {
+        const bStr = boundary.map((v) => `[${v[0].toFixed(2)}, ${v[1].toFixed(2)}, ${v[2].toFixed(2)}]`).join(', ');
+        throw new Error(`extractFaceBoundaryFromSolid: bad verts at ${bStr} (len=${boundary.length})`);
+      }
+      // Should span full Y extent.
+      const bYs = boundary.map((v) => v[1]);
+      expect(Math.min(...bYs)).toBeCloseTo(-1, 1);
+      expect(Math.max(...bYs)).toBeCloseTo(1.5, 1);
+
+      // Second extrusion: +X face by 1 on the result.
+      const afterXY = extrudeByNormal(wasmInstance, afterY, { x: 1, y: 0, z: 0 }, 1);
+      afterY.delete();
+
+      // X should extend to 2, Y should still be 1.5.
+      expect(afterXY.boundingBox().max[0]).toBeCloseTo(2, 1);
+      expect(afterXY.boundingBox().max[1]).toBeCloseTo(1.5, 1);
+
+      // Volume: original 10 + 1 * 2.5 * 2 = 15.
+      expect(afterXY.volume()).toBeCloseTo(15, 0);
+
+      afterXY.delete();
+    });
+
+    test('negative drag past zero reverses direction', ({ expect }) => {
+      // Simulate dragging +X face: first outward (+1), then back inward past zero (-0.5).
+      const cube = makeCube();
+      const baseSolid = ManifoldApi.union(cube, cube);
+      const { positions, indices } = extractMeshData(baseSolid);
+      const faceIDs = extractFaceIDs(baseSolid);
+      const faceId = findFaceByNormal(positions, indices, { x: 1, y: 0, z: 0 });
+
+      // Drag outward.
+      const outward = applyExtrusion(wasmInstance, baseSolid, faceId, positions, indices, { x: 1, y: 0, z: 0 }, 1, faceIDs);
+      expect(outward.boundingBox().max[0]).toBeCloseTo(2, 1);
+      outward.delete();
+
+      // Drag back past zero (inward).
+      const inward = applyExtrusion(wasmInstance, baseSolid, faceId, positions, indices, { x: 1, y: 0, z: 0 }, -0.5, faceIDs);
+      expect(inward.boundingBox().max[0]).toBeCloseTo(0.5, 1);
+      inward.delete();
+
+      baseSolid.delete();
+      cube.delete();
+    });
+
+    test('three sequential extrusions on different faces', ({ expect }) => {
+      // Extrude +X by 1, then +Y by 1, then +Z by 1 on the result.
+      // Each extrusion commits before the next.
+      let solid = makeCube();
+
+      // +X by 1.
+      let next = extrudeByNormal(wasmInstance, solid, { x: 1, y: 0, z: 0 }, 1);
+      solid.delete();
+      solid = next;
+      expectBBox(expect, solid, [-1, -1, -1], [2, 1, 1]);
+
+      // +Y by 1.
+      next = extrudeByNormal(wasmInstance, solid, { x: 0, y: 1, z: 0 }, 1);
+      solid.delete();
+      solid = next;
+      expect(solid.boundingBox().max[1]).toBeCloseTo(2, 1);
+
+      // +Z by 1.
+      next = extrudeByNormal(wasmInstance, solid, { x: 0, y: 0, z: 1 }, 1);
+      solid.delete();
+      solid = next;
+      expect(solid.boundingBox().max[2]).toBeCloseTo(2, 1);
+
+      // All axes should be extended.
+      expect(solid.boundingBox().max[0]).toBeCloseTo(2, 1);
+      expect(solid.boundingBox().max[1]).toBeCloseTo(2, 1);
+      expect(solid.boundingBox().max[2]).toBeCloseTo(2, 1);
+      expect(solid.boundingBox().min[0]).toBeCloseTo(-1, 1);
+
+      solid.delete();
     });
   });
 });
