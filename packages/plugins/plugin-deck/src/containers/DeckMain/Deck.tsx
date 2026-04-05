@@ -3,12 +3,12 @@
 //
 
 import { DeckRoot } from './DeckRoot';
-import { DeckMain } from './DeckMain';
+import { DeckContent } from './DeckContent';
 
 /**
- * Radix-style composite DeckMain component.
+ * Radix-style composite Deck component.
  */
 export const Deck = {
   Root: DeckRoot,
-  Main: DeckMain,
+  Content: DeckContent,
 };

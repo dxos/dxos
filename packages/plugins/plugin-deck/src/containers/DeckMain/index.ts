@@ -4,4 +4,4 @@
 
 export { Deck } from './Deck';
 export { type DeckContextValue, type DeckLayoutChangeRequest } from './DeckRoot';
-export { DeckMain } from './DeckMain';
+export { DeckContent } from './DeckContent';

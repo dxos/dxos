@@ -53,7 +53,7 @@ const DefaultStory = () => {
       updateState={updateState}
       onLayoutChange={handleLayoutChange}
     >
-      <Deck.Main />
+      <Deck.Content />
     </Deck.Root>
   );
 };

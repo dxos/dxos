@@ -29,17 +29,17 @@ import { Banner } from './Banner';
 // ConnectedPlank
 //
 
+const UNKNOWN_ID = 'unknown_id';
+
 type ConnectedPlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'settings'> &
   Partial<Pick<PlankComponentProps, 'path' | 'order' | 'active'>> & {
     id?: string;
     companionVariant?: string;
   };
 
-const UNKNOWN_ID = 'unknown_id';
-
 /**
  * Connected Plank that calls hooks and renders the radix-style Plank tree.
- * This is the bridge between DeckMain (which knows about framework hooks) and
+ * This is the bridge between DeckContent (which knows about framework hooks) and
  * the pure Plank components (which receive everything via context).
  */
 const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: ConnectedPlankProps) => {
@@ -126,11 +126,11 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
 });
 
 //
-// DeckMain
+// DeckContent
 //
 
-export const DeckMain = () => {
-  const { settings, pluginManager, state, deck, updateState, layoutMode, onLayoutChange } = useDeckContext('DeckMain');
+export const DeckContent = () => {
+  const { settings, pluginManager, state, deck, updateState, layoutMode, onLayoutChange } = useDeckContext('DeckContent');
   const { sidebarState, complementarySidebarState, complementarySidebarPanel } = state;
   const { active, companionOpen, companionVariant, fullscreen, solo, plankSizing } = deck;
   const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
