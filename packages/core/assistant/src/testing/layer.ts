@@ -11,8 +11,8 @@ import {
   ConsolePrinter,
   GenericToolkit,
   type ModelName,
-  ToolExecutionService,
-  ToolResolverService,
+  type ToolExecutionService,
+  type ToolResolverService,
 } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
 import { Database, DXN, Feed, Type } from '@dxos/echo';
@@ -183,8 +183,6 @@ export const AssistantTestLayer = ({
               OperationRegistry.Service,
               Blueprint.RegistryService,
               FunctionInvocationService,
-              ToolExecutionService,
-              ToolResolverService,
             ),
           );
         }),

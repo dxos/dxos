@@ -4,14 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
+import { AiService } from '@dxos/ai';
 import { AiContextService } from '@dxos/assistant';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { FunctionInvocationService, QueueService, TracingService, TriggerEvent } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
 import { Project } from '../../../types';
-import { Trace } from '@dxos/functions';
 
 export const Agent = Operation.make({
   meta: {
@@ -30,12 +29,8 @@ export const Agent = Operation.make({
     Database.Service,
     FunctionInvocationService,
     QueueService,
-    // TODO(dmaretskyi): Consider making TracingService a default to all operations.
-    Trace.TraceService,
+    // @deprecated TracingService kept for backward compat with tool handlers.
     TracingService,
-    // TODO(dmaretskyi): Handle those within session/conversation context.
-    ToolExecutionService,
-    ToolResolverService,
   ],
 });
 
