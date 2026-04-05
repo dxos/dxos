@@ -93,6 +93,8 @@ Instead implement tool handlers that operate on the runtime properties and then 
 
 ### Phase 3
 
+- [ ] Additional solid primitives: sphere, cylinder, pyramid, torus; Add toolbar <Select> to choise solid that is added by the add object operation.
+- [ ] Find 3 basic open source files to import (as presets) and test with; add these to the package files; Add these as options to the <Select>
 - [ ] Import/Export: OBJ/STL/glTF mesh export from Manifold geometry; see `useFileDownload` for upload functionality.
 
 ### Phase 4 (Boolean geometry)
@@ -106,7 +108,6 @@ Instead implement tool handlers that operate on the runtime properties and then 
 - [ ] Multi-operation history: support undo/redo of extrusions and boolean ops.
 - [ ] Boolean operations toolbar: union, difference, intersection between selected solids.
 - [ ] Transform gizmos: translate, rotate, scale selected solids.
-- [ ] Additional solid primitives: sphere, cylinder, torus.
 - [ ] Material/color picker per solid or per face.
 
 ## Design Notes
