@@ -8,14 +8,16 @@ import React, { RefObject, useEffect, useRef, useState } from 'react';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { SceneManager, getManifold, manifoldToBabylon, getFaceNormal } from '../../engine';
+import { type Spacetime, type Model } from '../../types';
 
 export type SpacetimeCanvasProps = {
+  scene?: Spacetime.Scene;
   showAxes?: boolean;
   showFps?: boolean;
 };
 
 export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
-  ({ showAxes = false, showFps = false, ...props }, forwardedRef) => {
+  ({ scene: sceneData, showAxes = false, showFps = false, ...props }, forwardedRef) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const managerRef = useRef<SceneManager | null>(null);
@@ -35,15 +37,31 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       const manager = new SceneManager({ canvas });
       managerRef.current = manager;
 
-      // Load WASM once, then build initial mesh.
+      // Load WASM once, then build initial mesh from scene objects or fallback cube.
       void getManifold().then((wasm) => {
-        const solid = wasm.Manifold.cube([2, 2, 2], true);
-        meshRef.current = manifoldToBabylon(solid, {
-          scene: manager.scene,
-          name: 'solid',
-          color: CUBE_COLOR,
-        });
-        solid.delete();
+        if (sceneData?.objects?.length) {
+          const obj = sceneData.objects[0]?.target;
+          if (!obj) {
+            setReady(true);
+            return;
+          }
+          const solid = createSolidFromObject(wasm.Manifold, obj);
+          const objectColor = obj.color ? Color3.FromHexString(obj.color) : CUBE_COLOR;
+          meshRef.current = manifoldToBabylon(solid, {
+            scene: manager.scene,
+            name: 'solid',
+            color: objectColor,
+          });
+          solid.delete();
+        } else {
+          const solid = wasm.Manifold.cube([2, 2, 2], true);
+          meshRef.current = manifoldToBabylon(solid, {
+            scene: manager.scene,
+            name: 'solid',
+            color: CUBE_COLOR,
+          });
+          solid.delete();
+        }
         setReady(true);
       });
 
@@ -137,6 +155,33 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
     );
   },
 );
+
+/** Creates a Manifold solid from a Model.Object based on its primitive type. */
+const createSolidFromObject = (
+  Manifold: Awaited<ReturnType<typeof getManifold>>['Manifold'],
+  obj: Model.Object,
+) => {
+  const size = [obj.scale.x * 2, obj.scale.y * 2, obj.scale.z * 2] as [number, number, number];
+  let solid;
+  switch (obj.primitive) {
+    case 'sphere':
+      solid = Manifold.sphere(size[0] / 2, 24);
+      break;
+    case 'cylinder':
+      solid = Manifold.cylinder(size[1], size[0] / 2, size[0] / 2, 24);
+      break;
+    case 'torus':
+      solid = Manifold.cylinder(size[1] * 0.5, size[0] / 2, size[0] / 2, 24);
+      break;
+    case 'cube':
+    default:
+      solid = Manifold.cube(size, true);
+      break;
+  }
+  const translated = solid.translate([obj.position.x, obj.position.y, obj.position.z]);
+  solid.delete();
+  return translated;
+};
 
 const CUBE_COLOR = new Color3(0.4, 0.6, 0.9);
 const SELECTED_FACE_COLOR = new Color3(1.0, 0.8, 0.0);
