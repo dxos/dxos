@@ -14,22 +14,42 @@ export const MIN_SIZE = 1;
 /**
  * Creates a Manifold solid from a Model.Object based on its primitive type and scale.
  */
-export const createSolidFromObject = (Manifold: ManifoldToplevel['Manifold'], obj: Model.Object): Manifold => {
+export const createSolidFromObject = (wasm: ManifoldToplevel, obj: Model.Object): Manifold => {
+  const { Manifold } = wasm;
   const size = [obj.scale.x * 2, obj.scale.y * 2, obj.scale.z * 2] as [number, number, number];
   let solid;
   switch (obj.primitive) {
     case 'sphere':
       solid = Manifold.sphere(size[0] / 2, 24);
       break;
-    case 'cylinder':
-      solid = Manifold.cylinder(size[1], size[0] / 2, size[0] / 2, 24, true);
+    case 'cylinder': {
+      // Manifold creates cylinders along Z. Rotate -90° around X so flat faces are parallel to ground (Y-up).
+      const cyl = Manifold.cylinder(size[1], size[0] / 2, size[0] / 2, 24, true);
+      solid = cyl.rotate([-90, 0, 0]);
+      cyl.delete();
       break;
-    case 'pyramid':
-      solid = Manifold.cylinder(size[1], size[0] / 2, 0, 4, true);
+    }
+    case 'cone': {
+      // Cylinder with zero top radius, rotated so base is on the ground.
+      const cone = Manifold.cylinder(size[1], size[0] / 2, 0, 24, true);
+      solid = cone.rotate([-90, 0, 0]);
+      cone.delete();
       break;
-    case 'torus':
-      solid = Manifold.cylinder(size[1] * 0.5, size[0] / 2, size[0] / 2, 24, true);
+    }
+    case 'pyramid': {
+      // Extrude a square cross-section that tapers to a point (scaleTop=[0,0]).
+      // Then rotate -90° around X so the base is parallel to the ground (Y-up).
+      const halfW = size[0] / 2;
+      const halfD = size[2] / 2;
+      const cs = new wasm.CrossSection([
+        [[-halfW, -halfD], [halfW, -halfD], [halfW, halfD], [-halfW, halfD]] as Vec2[],
+      ]);
+      const pyr = Manifold.extrude(cs, size[1], 0, 0, [0, 0], true);
+      cs.delete();
+      solid = pyr.rotate([-90, 0, 0]);
+      pyr.delete();
       break;
+    }
     case 'cube':
     default:
       solid = Manifold.cube(size, true);

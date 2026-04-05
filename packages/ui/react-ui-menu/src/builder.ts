@@ -94,8 +94,8 @@ class MenuBuilderImpl implements MenuBuilder {
     return this;
   }
 
-  separator(id?: string, variant: 'gap' | 'line' = 'gap'): this {
-    id ??= `separator-${++this._separatorCount}`;
+  separator(variant: 'gap' | 'line' = 'gap'): this {
+    const id = `separator-${++this._separatorCount}`;
     this._data.nodes.push({
       id,
       type: MenuSeparatorType,

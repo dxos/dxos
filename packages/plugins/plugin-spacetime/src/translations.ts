@@ -47,11 +47,12 @@ export const translations = [
         'primitive.cube.label': 'Cube',
         'primitive.sphere.label': 'Sphere',
         'primitive.cylinder.label': 'Cylinder',
+        'primitive.cone.label': 'Cone',
         'primitive.pyramid.label': 'Pyramid',
-        'primitive.torus.label': 'Torus',
 
         'action.add-object.label': 'Add object',
         'action.delete-object.label': 'Delete object',
+        'action.import-glb.label': 'Import GLB',
         'action.export-stl.label': 'Export STL',
 
         'view.label': 'View',

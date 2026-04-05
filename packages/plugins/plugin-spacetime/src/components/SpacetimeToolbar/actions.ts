@@ -17,13 +17,14 @@ const primitiveIcons: Record<Model.PrimitiveType, string> = {
   cube: 'ph--cube--regular',
   sphere: 'ph--globe--regular',
   cylinder: 'ph--cylinder--regular',
+  cone: 'ph--cone--regular',
   pyramid: 'ph--triangle--regular',
-  torus: 'ph--circle-dashed--regular',
 };
 
 export type EditorActions = {
   onAddObject: () => void;
   onDeleteSelected: () => void;
+  onImportGLB: () => void;
   onExportSTL: () => void;
 };
 
@@ -71,6 +72,10 @@ export const createEditorActions = (actions: EditorActions): ActionGraphProps =>
         label: ['action.delete-object.label', { ns: meta.id }],
         icon: 'ph--trash--regular',
       }),
+      createMenuAction('import-glb', actions.onImportGLB, {
+        label: ['action.import-glb.label', { ns: meta.id }],
+        icon: 'ph--upload-simple--regular',
+      }),
       createMenuAction('export-stl', actions.onExportSTL, {
         label: ['action.export-stl.label', { ns: meta.id }],
         icon: 'ph--download-simple--regular',
@@ -79,6 +84,7 @@ export const createEditorActions = (actions: EditorActions): ActionGraphProps =>
     edges: [
       { source: 'root', target: 'add-object', relation: 'child' },
       { source: 'root', target: 'delete-object', relation: 'child' },
+      { source: 'root', target: 'import-glb', relation: 'child' },
       { source: 'root', target: 'export-stl', relation: 'child' },
     ],
   };

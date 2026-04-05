@@ -57,6 +57,9 @@ catalogs:
     '@babylonjs/core':
       specifier: ^7.52.5
       version: 7.54.3
+    '@babylonjs/loaders':
+      specifier: ^7.54.3
+      version: 7.54.3
     '@bufbuild/buf':
       specifier: 1.65.0
       version: 1.65.0
@@ -12470,6 +12473,9 @@ importers:
       '@babylonjs/core':
         specifier: 'catalog:'
         version: 7.54.3
+      '@babylonjs/loaders':
+        specifier: 'catalog:'
+        version: 7.54.3(@babylonjs/core@7.54.3)
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -20914,6 +20920,12 @@ packages:
 
   '@babylonjs/core@7.54.3':
     resolution: {integrity: sha512-P5ncXVd8GEUJLhwloP9V0oVwQYIrvZztguVeLlvd5Rx+9aQnenKjpV8auJ6SRsUlAmNZU4pFTKzwF6o2EUfhAw==}
+
+  '@babylonjs/loaders@7.54.3':
+    resolution: {integrity: sha512-RBPmOsaMTxi6Ga08ueLTm6Tnvx/l2nNQigucubvrngZ7muwn5/ubfcStckkI1c0qvhR1+/FFlD54do7gZ1pnsQ==}
+    peerDependencies:
+      '@babylonjs/core': ^7.0.0
+      babylonjs-gltf2interface: ^7.0.0
 
   '@bcoe/v8-coverage@1.0.2':
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
@@ -40179,6 +40191,10 @@ snapshots:
       '@babel/helper-validator-identifier': 7.28.5
 
   '@babylonjs/core@7.54.3': {}
+
+  '@babylonjs/loaders@7.54.3(@babylonjs/core@7.54.3)':
+    dependencies:
+      '@babylonjs/core': 7.54.3
 
   '@bcoe/v8-coverage@1.0.2': {}
 

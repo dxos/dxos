@@ -49,7 +49,7 @@ import { FormInputAnnotation } from '@dxos/echo/internal';
 /**
  * Primitive geometry type for a model object.
  */
-export const PrimitiveType = Schema.Literal('cube', 'sphere', 'cylinder', 'torus');
+export const PrimitiveType = Schema.Literal('cube', 'sphere', 'cylinder');
 export type PrimitiveType = Schema.Schema.Type<typeof PrimitiveType>;
 
 /**
@@ -341,10 +341,6 @@ const createSolidFromObject = (Manifold: Awaited<ReturnType<typeof getManifold>>
       break;
     case 'cylinder':
       solid = Manifold.cylinder(size[1], size[0] / 2, size[0] / 2, 24);
-      break;
-    case 'torus':
-      // Approximate torus as a cylinder for now.
-      solid = Manifold.cylinder(size[1] * 0.5, size[0] / 2, size[0] / 2, 24);
       break;
     case 'cube':
     default:

@@ -3,11 +3,11 @@
 //
 
 import { Color3, Color4, HighlightLayer, Mesh } from '@babylonjs/core';
-import React, { type RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type RefObject, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { SceneManager, getManifold, manifoldToBabylon } from '../../engine';
+import { SceneManager, createSolidFromObject, getManifold, importGLB, manifoldToBabylon } from '../../engine';
 import { DebugPanel, extractSolidDebugInfo, type DebugInfo } from './DebugPanel';
 import { ToolManager, SelectTool, MoveTool, ExtrudeTool, type Selection } from '../../tools';
 import { type Scene, type Model } from '../../types';
@@ -24,6 +24,8 @@ export type SpacetimeCanvasProps = {
   onSelectionChange?: (objectId: string | null) => void;
   /** Parent ref to expose the solids map for export. */
   parentSolidsRef?: React.RefObject<Map<string, import('manifold-3d').Manifold> | null>;
+  /** Ref to set the importGLB callback (canvas provides the implementation). */
+  importGLBRef?: React.MutableRefObject<(data: ArrayBuffer) => Promise<void>>;
 };
 
 /**
@@ -31,7 +33,17 @@ export type SpacetimeCanvasProps = {
  */
 export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
   (
-    { showFps = true, scene: sceneData, tool = 'select', viewState, objectCount = 0, onSelectionChange, parentSolidsRef, ...props },
+    {
+      showFps = true,
+      scene: sceneData,
+      tool = 'select',
+      viewState,
+      objectCount = 0,
+      onSelectionChange,
+      parentSolidsRef,
+      importGLBRef,
+      ...props
+    },
     forwardedRef,
   ) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -44,7 +56,8 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
     const solidsRef = useRef<Map<string, import('manifold-3d').Manifold>>(new Map());
     // Expose solids map to parent for export functionality.
     if (parentSolidsRef && 'current' in parentSolidsRef) {
-      (parentSolidsRef as React.MutableRefObject<Map<string, import('manifold-3d').Manifold> | null>).current = solidsRef.current;
+      (parentSolidsRef as React.MutableRefObject<Map<string, import('manifold-3d').Manifold> | null>).current =
+        solidsRef.current;
     }
     const selectionRef = useRef<Selection | null>(null);
     const [debugInfo, setDebugInfo] = useState<DebugInfo>(null);
@@ -78,7 +91,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
               continue;
             }
             const objId = (obj as any).id as string;
-            const solid = createSolidFromObject(wasm.Manifold, obj);
+            const solid = createSolidFromObject(wasm, obj);
             const objectColor = obj.color ? Color3.FromHexString(obj.color) : theme.object;
             const mesh = manifoldToBabylon(solid, {
               scene: manager.scene,
@@ -172,6 +185,23 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         // Set initial tool.
         toolManager.setActiveTool(tool ?? 'select');
 
+        // Provide GLB import callback to parent.
+        if (importGLBRef) {
+          importGLBRef.current = async (data: ArrayBuffer) => {
+            const solid = await importGLB(data, wasm, manager.scene);
+            if (solid) {
+              const objId = `imported-${Date.now()}`;
+              const mesh = manifoldToBabylon(solid, {
+                scene: manager.scene,
+                name: objId,
+                color: theme.object,
+              });
+              solidsRef.current.set(objId, solid);
+              meshesRef.current.set(objId, mesh);
+            }
+          };
+        }
+
         setReady(true);
       });
 
@@ -256,7 +286,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
 
           // Add new objects.
           if (!meshesRef.current.has(objId)) {
-            const solid = createSolidFromObject(wasm.Manifold, obj);
+            const solid = createSolidFromObject(wasm, obj);
             const objectColor = obj.color ? Color3.FromHexString(obj.color) : theme.object;
             const mesh = manifoldToBabylon(solid, {
               scene: manager.scene,
@@ -308,29 +338,6 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
   },
 );
 
-/** Creates a Manifold solid from a Model.Object based on its primitive type. */
-const createSolidFromObject = (Manifold: Awaited<ReturnType<typeof getManifold>>['Manifold'], obj: Model.Object) => {
-  const size = [obj.scale.x * 2, obj.scale.y * 2, obj.scale.z * 2] as [number, number, number];
-  let solid;
-  switch (obj.primitive) {
-    case 'sphere':
-      solid = Manifold.sphere(size[0] / 2, 24);
-      break;
-    case 'cylinder':
-      solid = Manifold.cylinder(size[1], size[0] / 2, size[0] / 2, 24);
-      break;
-    case 'torus':
-      solid = Manifold.cylinder(size[1] * 0.5, size[0] / 2, size[0] / 2, 24);
-      break;
-    case 'cube':
-    default:
-      solid = Manifold.cube(size, true);
-      break;
-  }
-  const translated = solid.translate([obj.position.x, obj.position.y, obj.position.z]);
-  solid.delete();
-  return translated;
-};
 
 // TODO(burdon): Property on object.
 const theme = {

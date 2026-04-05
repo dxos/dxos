@@ -10,7 +10,7 @@ import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 
 /** Supported primitive geometry types. */
-export const PrimitiveType = Schema.Literal('cube', 'sphere', 'cylinder', 'pyramid', 'torus');
+export const PrimitiveType = Schema.Literal('cube', 'sphere', 'cylinder', 'cone', 'pyramid');
 export type PrimitiveType = Schema.Schema.Type<typeof PrimitiveType>;
 
 /** 3D vector. */

@@ -29,9 +29,31 @@ export type SpacetimeToolbarProps = Pick<MenuRootProps, 'alwaysActive'> & {
 };
 
 export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps>(
-  ({ alwaysActive, tool, onToolChange, viewState, onViewChange, selectedPrimitive, onPrimitiveChange, editorActions, ...props }, forwardedRef) => {
+  (
+    {
+      alwaysActive,
+      tool,
+      onToolChange,
+      viewState,
+      onViewChange,
+      selectedPrimitive,
+      onPrimitiveChange,
+      editorActions,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const menuCreator = useMemo(
-      () => createToolbarActions({ tool, onToolChange, viewState, onViewChange, selectedPrimitive, onPrimitiveChange, editorActions }),
+      () =>
+        createToolbarActions({
+          tool,
+          onToolChange,
+          viewState,
+          onViewChange,
+          selectedPrimitive,
+          onPrimitiveChange,
+          editorActions,
+        }),
       [tool, onToolChange, viewState, onViewChange, selectedPrimitive, onPrimitiveChange, editorActions],
     );
     const menuActions = useMenuActions(menuCreator);
@@ -55,16 +77,16 @@ const createToolbarActions = ({
   onPrimitiveChange,
   editorActions,
 }: SpacetimeToolbarProps): Atom.Atom<ActionGraphProps> => {
-  return Atom.make(() => {
-    const builder = MenuBuilder.make();
-    builder.subgraph(createSelectionModeActions(viewState, onViewChange));
-    builder.separator('gap-1', 'line');
-    builder.subgraph(createPrimitiveSelector(selectedPrimitive, onPrimitiveChange));
-    builder.subgraph(createEditorActions(editorActions));
-    builder.separator('gap-2', 'line');
-    builder.subgraph(createToolActions({ tool }, onToolChange));
-    builder.separator('gap-3');
-    builder.subgraph(createViewActions(viewState, onViewChange));
-    return builder.build();
-  });
+  return Atom.make(() =>
+    MenuBuilder.make()
+      .subgraph(createSelectionModeActions(viewState, onViewChange))
+      .separator('line')
+      .subgraph(createPrimitiveSelector(selectedPrimitive, onPrimitiveChange))
+      .subgraph(createEditorActions(editorActions))
+      .separator('line')
+      .subgraph(createToolActions({ tool }, onToolChange))
+      .separator()
+      .subgraph(createViewActions(viewState, onViewChange))
+      .build(),
+  );
 };

@@ -39,6 +39,8 @@ type SpacetimeEditorContextValue = {
   setSelectedObjectId: (id: string | null) => void;
   /** Runtime Manifold solids (provided by canvas). */
   solidsRef: React.RefObject<Map<string, import('manifold-3d').Manifold> | null>;
+  /** Ref for canvas to provide the GLB import implementation. */
+  importGLBRef: React.MutableRefObject<(data: ArrayBuffer) => Promise<void>>;
 };
 
 const [SpacetimeEditorProvider, useSpacetimeEditorContext] =
@@ -71,6 +73,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
     const [selectedPrimitive, setSelectedPrimitive] = useState<Model.PrimitiveType>('cube');
     const solidsRef = useRef<Map<string, import('manifold-3d').Manifold> | null>(null);
+    const importGLBRef = useRef<(data: ArrayBuffer) => Promise<void>>(async () => {});
 
     const handleToolChange = useCallback((tool: SpacetimeTool) => setTool(tool), []);
     const handleViewChange = useCallback(
@@ -103,6 +106,21 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       setSelectedObjectId(null);
     }, [scene, selectedObjectId]);
 
+    const handleImportGLB = useCallback(() => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.glb,.gltf';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) {
+          return;
+        }
+        const buffer = await file.arrayBuffer();
+        await importGLBRef.current(buffer);
+      };
+      input.click();
+    }, []);
+
     const handleExportSTL = useCallback(() => {
       if (!selectedObjectId || !solidsRef.current) {
         return;
@@ -115,8 +133,8 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     }, [selectedObjectId]);
 
     const editorActions: EditorActions = useMemo(
-      () => ({ onAddObject: handleAddObject, onDeleteSelected: handleDeleteSelected, onExportSTL: handleExportSTL }),
-      [handleAddObject, handleDeleteSelected, handleExportSTL],
+      () => ({ onAddObject: handleAddObject, onDeleteSelected: handleDeleteSelected, onImportGLB: handleImportGLB, onExportSTL: handleExportSTL }),
+      [handleAddObject, handleDeleteSelected, handleImportGLB, handleExportSTL],
     );
 
     useImperativeHandle(forwardedRef, () => ({
@@ -136,6 +154,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         selectedObjectId={selectedObjectId}
         setSelectedObjectId={setSelectedObjectId}
         solidsRef={solidsRef}
+        importGLBRef={importGLBRef}
       >
         {children}
       </SpacetimeEditorProvider>
@@ -183,7 +202,7 @@ const SPACETIME_EDITOR_CANVAS = 'SpacetimeEditor:Canvas';
 type SpacetimeEditorCanvasProsp = Omit<SpacetimeCanvasProps, 'showAxes' | 'showFps'>;
 
 const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {
-  const { scene, tool, viewState, setSelectedObjectId, solidsRef: parentSolidsRef } =
+  const { scene, tool, viewState, setSelectedObjectId, solidsRef: parentSolidsRef, importGLBRef: parentImportGLBRef } =
     useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
   // Subscribe to ECHO scene changes so we re-render when objects are added/removed.
   const [liveScene] = useObject(scene);
@@ -197,6 +216,7 @@ const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasPr
       objectCount={objectCount}
       onSelectionChange={setSelectedObjectId}
       parentSolidsRef={parentSolidsRef}
+      importGLBRef={parentImportGLBRef}
       ref={forwardedRef}
     />
   );
