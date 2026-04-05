@@ -3,9 +3,10 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useState, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
+import React, { type PropsWithChildren, useState, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
+import { exportSTL, downloadFile } from '../../engine';
 import { useObject } from '@dxos/echo-react';
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -36,6 +37,8 @@ type SpacetimeEditorContextValue = {
   editorActions: EditorActions;
   selectedObjectId: string | null;
   setSelectedObjectId: (id: string | null) => void;
+  /** Runtime Manifold solids (provided by canvas). */
+  solidsRef: React.RefObject<Map<string, import('manifold-3d').Manifold> | null>;
 };
 
 const [SpacetimeEditorProvider, useSpacetimeEditorContext] =
@@ -67,6 +70,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     const [viewState, setViewState] = useState<ViewState>(DEFAULT_VIEW_STATE);
     const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
     const [selectedPrimitive, setSelectedPrimitive] = useState<Model.PrimitiveType>('cube');
+    const solidsRef = useRef<Map<string, import('manifold-3d').Manifold> | null>(null);
 
     const handleToolChange = useCallback((tool: SpacetimeTool) => setTool(tool), []);
     const handleViewChange = useCallback(
@@ -99,9 +103,20 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       setSelectedObjectId(null);
     }, [scene, selectedObjectId]);
 
+    const handleExportSTL = useCallback(() => {
+      if (!selectedObjectId || !solidsRef.current) {
+        return;
+      }
+      const solid = solidsRef.current.get(selectedObjectId);
+      if (solid) {
+        const buffer = exportSTL(solid);
+        downloadFile(buffer, 'object.stl');
+      }
+    }, [selectedObjectId]);
+
     const editorActions: EditorActions = useMemo(
-      () => ({ onAddObject: handleAddObject, onDeleteSelected: handleDeleteSelected }),
-      [handleAddObject, handleDeleteSelected],
+      () => ({ onAddObject: handleAddObject, onDeleteSelected: handleDeleteSelected, onExportSTL: handleExportSTL }),
+      [handleAddObject, handleDeleteSelected, handleExportSTL],
     );
 
     useImperativeHandle(forwardedRef, () => ({
@@ -120,6 +135,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         editorActions={editorActions}
         selectedObjectId={selectedObjectId}
         setSelectedObjectId={setSelectedObjectId}
+        solidsRef={solidsRef}
       >
         {children}
       </SpacetimeEditorProvider>
@@ -167,7 +183,8 @@ const SPACETIME_EDITOR_CANVAS = 'SpacetimeEditor:Canvas';
 type SpacetimeEditorCanvasProsp = Omit<SpacetimeCanvasProps, 'showAxes' | 'showFps'>;
 
 const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {
-  const { scene, tool, viewState, setSelectedObjectId } = useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
+  const { scene, tool, viewState, setSelectedObjectId, solidsRef: parentSolidsRef } =
+    useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
   // Subscribe to ECHO scene changes so we re-render when objects are added/removed.
   const [liveScene] = useObject(scene);
   const objectCount = liveScene?.objects?.length ?? 0;
@@ -179,6 +196,7 @@ const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasPr
       viewState={viewState}
       objectCount={objectCount}
       onSelectionChange={setSelectedObjectId}
+      parentSolidsRef={parentSolidsRef}
       ref={forwardedRef}
     />
   );

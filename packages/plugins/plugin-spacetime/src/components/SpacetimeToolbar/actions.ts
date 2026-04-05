@@ -24,6 +24,7 @@ const primitiveIcons: Record<Model.PrimitiveType, string> = {
 export type EditorActions = {
   onAddObject: () => void;
   onDeleteSelected: () => void;
+  onExportSTL: () => void;
 };
 
 /** Creates the primitive type dropdown for selecting which shape the add button creates. */
@@ -70,10 +71,15 @@ export const createEditorActions = (actions: EditorActions): ActionGraphProps =>
         label: ['action.delete-object.label', { ns: meta.id }],
         icon: 'ph--trash--regular',
       }),
+      createMenuAction('export-stl', actions.onExportSTL, {
+        label: ['action.export-stl.label', { ns: meta.id }],
+        icon: 'ph--download-simple--regular',
+      }),
     ],
     edges: [
       { source: 'root', target: 'add-object', relation: 'child' },
       { source: 'root', target: 'delete-object', relation: 'child' },
+      { source: 'root', target: 'export-stl', relation: 'child' },
     ],
   };
 };

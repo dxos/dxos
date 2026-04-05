@@ -6,3 +6,4 @@ export * from './extrusion';
 export * from './manifold-context';
 export * from './mesh-converter';
 export * from './scene-manager';
+export * from './stl-export';

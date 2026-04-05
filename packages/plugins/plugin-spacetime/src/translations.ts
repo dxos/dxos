@@ -52,6 +52,7 @@ export const translations = [
 
         'action.add-object.label': 'Add object',
         'action.delete-object.label': 'Delete object',
+        'action.export-stl.label': 'Export STL',
 
         'view.label': 'View',
         'view.grid.label': 'Grid',

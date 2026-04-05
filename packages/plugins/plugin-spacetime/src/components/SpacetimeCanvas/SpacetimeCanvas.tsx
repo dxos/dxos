@@ -22,6 +22,8 @@ export type SpacetimeCanvasProps = {
   objectCount?: number;
   /** Called when the selected object changes. */
   onSelectionChange?: (objectId: string | null) => void;
+  /** Parent ref to expose the solids map for export. */
+  parentSolidsRef?: React.RefObject<Map<string, import('manifold-3d').Manifold> | null>;
 };
 
 /**
@@ -29,7 +31,7 @@ export type SpacetimeCanvasProps = {
  */
 export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
   (
-    { showFps = true, scene: sceneData, tool = 'select', viewState, objectCount = 0, onSelectionChange, ...props },
+    { showFps = true, scene: sceneData, tool = 'select', viewState, objectCount = 0, onSelectionChange, parentSolidsRef, ...props },
     forwardedRef,
   ) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -40,6 +42,10 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
     const meshesRef = useRef<Map<string, Mesh>>(new Map());
     const wasmRef = useRef<Awaited<ReturnType<typeof getManifold>> | null>(null);
     const solidsRef = useRef<Map<string, import('manifold-3d').Manifold>>(new Map());
+    // Expose solids map to parent for export functionality.
+    if (parentSolidsRef && 'current' in parentSolidsRef) {
+      (parentSolidsRef as React.MutableRefObject<Map<string, import('manifold-3d').Manifold> | null>).current = solidsRef.current;
+    }
     const selectionRef = useRef<Selection | null>(null);
     const [debugInfo, setDebugInfo] = useState<DebugInfo>(null);
     const setDebugInfoRef = useRef(setDebugInfo);
