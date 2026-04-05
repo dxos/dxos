@@ -59,11 +59,11 @@ Keep this section up-to-date with periodical restructuring as the plugin becomes
   - [x] The user should be able to rotate the scene.
   - [x] The user should be able to click on a surface to select it.
   - [x] The user should be able to extrude the selected surface by holding shift and moving the mouse.
-- [ ] Create ECHO types for: `Scene.Scene`, `Model.Object`, and `Settings.Settings` (in `./types`);
-  - [ ] SpacetimeArticle should be bound to a `Scene.Scene` object; when creating a Scene from composer it should create a default cube.
-  - [ ] `Scene.Scene` should contain a map of `Model.Object` objects.
-- [ ] Create a Settings component like other plugins.
-- [ ] Add the plugin to composer.
+- [x] Create ECHO types for: `Scene.Scene`, `Model.Object`, and `Settings.Settings` (in `./types`);
+  - [x] SpacetimeArticle should be bound to a `Scene.Scene` object; when creating a Scene from composer it should create a default cube.
+  - [x] `Scene.Scene` should contain a map of `Model.Object` objects.
+- [x] Create a Settings component like other plugins.
+- [x] Add the plugin to composer.
 
 ### Phase 2
 
