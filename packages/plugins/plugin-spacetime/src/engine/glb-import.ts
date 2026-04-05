@@ -8,8 +8,6 @@ import type { ManifoldToplevel, Manifold } from 'manifold-3d';
 
 import { log } from '@dxos/log';
 
-import { repairMesh } from './mesh-repair';
-
 // Register GLTF/GLB loader plugin.
 import '@babylonjs/loaders/glTF';
 
@@ -86,8 +84,7 @@ export const importGLB = async (
     const triVerts = new Uint32Array(indices);
 
     try {
-      const repaired = repairMesh(new Float32Array(positions), new Uint32Array(indices));
-      const mesh = new wasm.Mesh({ numProp: 3, vertProperties: repaired.positions, triVerts: repaired.indices });
+      const mesh = new wasm.Mesh({ numProp: 3, vertProperties, triVerts });
       mesh.merge();
       const solid = new Manifold(mesh);
 
@@ -164,34 +161,14 @@ export const importGLBDirect = (data: ArrayBuffer, wasm: ManifoldToplevel): Mani
       const posOffset = (posView.byteOffset ?? 0) + (posAccessor.byteOffset ?? 0);
       const idxOffset = (idxView.byteOffset ?? 0) + (idxAccessor.byteOffset ?? 0);
 
-      // Extract vertex positions, handling byteStride for interleaved buffers.
-      const posByteStride = posView.byteStride ?? (3 * 4); // Default: tightly packed float3.
-      let vertProperties: Float32Array;
-      if (posByteStride === 3 * 4) {
-        // Tightly packed — direct copy.
-        const posBytes = new Uint8Array(binData.buffer, binData.byteOffset + posOffset, posAccessor.count * 3 * 4);
-        vertProperties = new Float32Array(posBytes.buffer.slice(posBytes.byteOffset, posBytes.byteOffset + posBytes.byteLength));
-      } else {
-        // Interleaved — extract positions with stride.
-        vertProperties = new Float32Array(posAccessor.count * 3);
-        const dataView = new DataView(binData.buffer, binData.byteOffset);
-        for (let vi = 0; vi < posAccessor.count; vi++) {
-          const base = posOffset + vi * posByteStride;
-          vertProperties[vi * 3] = dataView.getFloat32(base, true);
-          vertProperties[vi * 3 + 1] = dataView.getFloat32(base + 4, true);
-          vertProperties[vi * 3 + 2] = dataView.getFloat32(base + 8, true);
-        }
-      }
-
+      const vertProperties = new Float32Array(binData.buffer, binData.byteOffset + posOffset, posAccessor.count * 3);
       const componentType = idxAccessor.componentType;
       let triVerts: Uint32Array;
       if (componentType === 5123) { // UNSIGNED_SHORT
-        const idxBytes = new Uint8Array(binData.buffer, binData.byteOffset + idxOffset, idxAccessor.count * 2);
-        const shortIndices = new Uint16Array(idxBytes.buffer.slice(idxBytes.byteOffset, idxBytes.byteOffset + idxBytes.byteLength));
+        const shortIndices = new Uint16Array(binData.buffer, binData.byteOffset + idxOffset, idxAccessor.count);
         triVerts = Uint32Array.from(shortIndices);
       } else {
-        const idxBytes = new Uint8Array(binData.buffer, binData.byteOffset + idxOffset, idxAccessor.count * 4);
-        triVerts = new Uint32Array(idxBytes.buffer.slice(idxBytes.byteOffset, idxBytes.byteOffset + idxBytes.byteLength));
+        triVerts = new Uint32Array(binData.buffer, binData.byteOffset + idxOffset, idxAccessor.count);
       }
 
       log.info('importGLBDirect: primitive', {
@@ -201,8 +178,7 @@ export const importGLBDirect = (data: ArrayBuffer, wasm: ManifoldToplevel): Mani
       });
 
       try {
-        const repaired = repairMesh(vertProperties, triVerts);
-        const manifoldMesh = new wasm.Mesh({ numProp: 3, vertProperties: repaired.positions, triVerts: repaired.indices });
+        const manifoldMesh = new wasm.Mesh({ numProp: 3, vertProperties, triVerts });
         manifoldMesh.merge();
         const solid = new Manifold(manifoldMesh);
 
