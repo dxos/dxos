@@ -11,7 +11,7 @@ import { HuePicker } from '@dxos/react-ui-pickers';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type Model } from '../../types';
-import { type EditorActions, createEditorActions, createPrimitiveSelector } from './actions';
+import { type EditorActions, createEditorActions, createTemplateSelector } from './actions';
 import { type PropertiesState } from './properties';
 import { type SelectionState, createSelectionModeActions } from './selection';
 import { type ToolState, createToolActions } from './tools';
@@ -23,17 +23,17 @@ export type SpacetimeToolbarProps = Pick<MenuRootProps, 'alwaysActive'> & {
   toolState: ToolState;
   onToolChange: (next: Partial<ToolState>) => void;
 
-  selectionState: SelectionState;
-  onSelectionChange: (next: Partial<SelectionState>) => void;
-
   viewState: ViewState;
   onViewChange: (next: Partial<ViewState>) => void;
 
   propertiesState: PropertiesState;
   onPropertiesChange: (next: Partial<PropertiesState>) => void;
 
-  selectedPrimitive: Model.PrimitiveType;
-  onSelectedPrimitiveChange: (primitive: Model.PrimitiveType) => void;
+  selectionState: SelectionState;
+  onSelectionChange: (next: Partial<SelectionState>) => void;
+
+  selectedTemplate: Model.ObjectTemplate;
+  onSelectedTemplateChange: (template: Model.ObjectTemplate) => void;
 };
 
 export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps>(
@@ -43,14 +43,14 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
       editorActions,
       toolState,
       onToolChange,
-      selectionState,
-      onSelectionChange,
       viewState,
       onViewChange,
       propertiesState,
       onPropertiesChange,
-      selectedPrimitive,
-      onSelectedPrimitiveChange,
+      selectionState,
+      onSelectionChange,
+      selectedTemplate,
+      onSelectedTemplateChange,
       ...props
     },
     forwardedRef,
@@ -67,10 +67,20 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
           onViewChange,
           propertiesState,
           onPropertiesChange,
-          selectedPrimitive,
-          onSelectedPrimitiveChange,
+          selectedTemplate,
+          onSelectedTemplateChange,
         }),
-      [editorActions, toolState, onToolChange, selectionState, onSelectionChange, viewState, onViewChange, selectedPrimitive, onSelectedPrimitiveChange],
+      [
+        editorActions,
+        toolState,
+        onToolChange,
+        selectionState,
+        onSelectionChange,
+        viewState,
+        onViewChange,
+        selectedTemplate,
+        onSelectedTemplateChange,
+      ],
     );
     const menuActions = useMenuActions(menuCreator);
 
@@ -95,8 +105,8 @@ const createToolbarActions = ({
   onSelectionChange,
   viewState,
   onViewChange,
-  selectedPrimitive,
-  onSelectedPrimitiveChange,
+  selectedTemplate,
+  onSelectedTemplateChange,
 }: SpacetimeToolbarProps): Atom.Atom<ActionGraphProps> => {
   return Atom.make(() =>
     MenuBuilder.make()
@@ -104,7 +114,7 @@ const createToolbarActions = ({
       .separator('line')
       .subgraph(createToolActions(toolState, onToolChange))
       .separator('line')
-      .subgraph(createPrimitiveSelector(selectedPrimitive, onSelectedPrimitiveChange))
+      .subgraph(createTemplateSelector(selectedTemplate, onSelectedTemplateChange))
       .separator('line')
       .subgraph(createEditorActions(editorActions))
       .separator()

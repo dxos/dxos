@@ -16,17 +16,17 @@ import React, {
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { exportSTL, downloadFile } from '../../engine';
+import { parseOBJ, presetObjData } from '../../engine';
 import { useObject } from '@dxos/echo-react';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type Scene, Model } from '../../types';
+import { handleImport as doImport, handleExportSTL as doExportSTL } from './import-export';
 import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
 import {
   type EditorActions,
   type PropertiesState,
   type SelectionState,
-  type SpacetimeTool,
   type ViewState,
   SpacetimeToolbar,
   type SpacetimeToolbarProps,
@@ -64,17 +64,19 @@ type SpacetimeEditorContextValue = {
   selectedObjectId: string | null;
   setSelectedObjectId: (id: string | null) => void;
 
-  selectedPrimitive: Model.PrimitiveType;
-  onSelectedPrimitiveChange: (primitive: Model.PrimitiveType) => void;
+  selectedTemplate: Model.ObjectTemplate;
+  onSelectedTemplateChange: (template: Model.ObjectTemplate) => void;
+
+  /** Ref for canvas to provide object deletion (disposes mesh + solid). */
+  deleteObjectRef: RefObject<(objectId: string) => void>;
 
   /** Runtime Manifold solids (provided by canvas). */
   solidsRef: RefObject<Map<string, import('manifold-3d').Manifold> | null>;
 
   /** Ref for canvas to provide the import implementation (ArrayBuffer for GLB, string for OBJ). */
-  importGLBRef: RefObject<(data: ArrayBuffer | string) => Promise<void>>;
-
-  /** Ref for canvas to provide object deletion (disposes mesh + solid). */
-  deleteObjectRef: RefObject<(objectId: string) => void>;
+  importGLBRef: RefObject<
+    (data: ArrayBuffer | string) => Promise<{ vertexData: string; indexData: string } | undefined>
+  >;
 };
 
 const [SpacetimeEditorProvider, useSpacetimeEditorContext] =
@@ -98,7 +100,7 @@ type SpacetimeEditorRootProps = PropsWithChildren<{
   scene?: Scene.Scene;
 }>;
 
-const DEFAULT_SELECTION_STATE: SelectionState = { selectionMode: 'face' };
+const DEFAULT_SELECTION_STATE: SelectionState = { selectionMode: 'object' };
 const DEFAULT_VIEW_STATE: ViewState = { showGrid: true, showDebug: false };
 
 const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootProps>(
@@ -107,11 +109,13 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     const [selectionState, setSelectionState] = useState<SelectionState>(DEFAULT_SELECTION_STATE);
     const [viewState, setViewState] = useState<ViewState>(DEFAULT_VIEW_STATE);
     const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
-    const [selectedPrimitive, setSelectedPrimitive] = useState<Model.PrimitiveType>('cube');
+    const [selectedTemplate, setSelectedTemplate] = useState<Model.ObjectTemplate>('cube');
     const [propertiesState, setPropertiesState] = useState<PropertiesState>({ hue: 'blue' });
-    const solidsRef = useRef<Map<string, import('manifold-3d').Manifold> | null>(null);
-    const importGLBRef = useRef<(data: ArrayBuffer | string) => Promise<void>>(async () => {});
     const deleteObjectRef = useRef<(objectId: string) => void>(() => {});
+    const solidsRef = useRef<Map<string, import('manifold-3d').Manifold> | null>(null);
+    const importGLBRef = useRef<
+      (data: ArrayBuffer | string) => Promise<{ vertexData: string; indexData: string } | undefined>
+    >(async () => undefined);
 
     const handleToolChange = useCallback(
       (next: Partial<ToolState>) => setToolState((prev) => ({ ...prev, ...next })),
@@ -125,8 +129,8 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       (next: Partial<ViewState>) => setViewState((prev) => ({ ...prev, ...next })),
       [],
     );
-    const handleSelectedPrimitiveChange = useCallback(
-      (primitive: Model.PrimitiveType) => setSelectedPrimitive(primitive),
+    const handleSelectedTemplateChange = useCallback(
+      (template: Model.ObjectTemplate) => setSelectedTemplate(template),
       [],
     );
     const handlePropertiesChange = useCallback(
@@ -152,17 +156,43 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       if (!scene) {
         return;
       }
-      const object = Model.make({ primitive: selectedPrimitive, color: propertiesState.hue });
-      Obj.change(scene, (obj) => {
-        obj.objects.push(Ref.make(object));
-      });
-      Obj.setParent(object, scene);
-      // Select the newly created object.
-      const objId = (object as any).id as string | undefined;
-      if (objId) {
-        setSelectedObjectId(objId);
+      const objData = presetObjData[selectedTemplate as Model.PresetType];
+      if (objData) {
+        // Preset: parse OBJ directly (no Manifold needed — works for non-watertight meshes too).
+        const parsed = parseOBJ(objData);
+        if (!parsed) {
+          return;
+        }
+        const object = Model.make({
+          primitive: undefined,
+          label: selectedTemplate,
+          mesh: {
+            vertexData: Model.encodeTypedArray(parsed.positions),
+            indexData: Model.encodeTypedArray(parsed.indices),
+          },
+          color: propertiesState.hue,
+        });
+        Obj.change(scene, (obj) => {
+          obj.objects.push(Ref.make(object));
+        });
+        Obj.setParent(object, scene);
+        const objId = (object as any).id as string | undefined;
+        if (objId) {
+          setSelectedObjectId(objId);
+        }
+      } else {
+        // Primitive: create parametric object.
+        const object = Model.make({ primitive: selectedTemplate as Model.PrimitiveType, color: propertiesState.hue });
+        Obj.change(scene, (obj) => {
+          obj.objects.push(Ref.make(object));
+        });
+        Obj.setParent(object, scene);
+        const objId = (object as any).id as string | undefined;
+        if (objId) {
+          setSelectedObjectId(objId);
+        }
       }
-    }, [scene, selectedPrimitive, propertiesState.hue]);
+    }, [scene, selectedTemplate, propertiesState.hue]);
 
     const handleDeleteSelected = useCallback(() => {
       if (!selectedObjectId) {
@@ -185,36 +215,20 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       setSelectedObjectId(null);
     }, [scene, selectedObjectId]);
 
-    const handleImport = useCallback(() => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.glb,.gltf,.obj';
-      input.onchange = async () => {
-        const file = input.files?.[0];
-        if (!file) {
-          return;
-        }
-        if (file.name.endsWith('.obj')) {
-          const text = await file.text();
-          await importGLBRef.current(text);
-        } else {
-          const buffer = await file.arrayBuffer();
-          await importGLBRef.current(buffer);
-        }
-      };
-      input.click();
-    }, []);
+    const handleImport = useCallback(
+      () =>
+        doImport({
+          scene,
+          selectedObjectId,
+          hue: propertiesState.hue,
+          solidsRef,
+          importGLBRef,
+          setSelectedObjectId,
+        }),
+      [scene, propertiesState.hue],
+    );
 
-    const handleExportSTL = useCallback(() => {
-      if (!selectedObjectId || !solidsRef.current) {
-        return;
-      }
-      const solid = solidsRef.current.get(selectedObjectId);
-      if (solid) {
-        const buffer = exportSTL(solid);
-        downloadFile(buffer, 'object.stl');
-      }
-    }, [selectedObjectId]);
+    const handleExportSTL = useCallback(() => doExportSTL({ selectedObjectId, solidsRef }), [selectedObjectId]);
 
     // Sync hue picker with selected object's color.
     useEffect(() => {
@@ -253,16 +267,16 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         onSelectionChange={handleSelectionChange}
         viewState={viewState}
         onViewChange={handleViewChange}
-        selectedPrimitive={selectedPrimitive}
-        onSelectedPrimitiveChange={handleSelectedPrimitiveChange}
+        selectedTemplate={selectedTemplate}
+        onSelectedTemplateChange={handleSelectedTemplateChange}
         propertiesState={propertiesState}
         onPropertiesChange={handlePropertiesChange}
         editorActions={editorActions}
         selectedObjectId={selectedObjectId}
         setSelectedObjectId={setSelectedObjectId}
+        deleteObjectRef={deleteObjectRef}
         solidsRef={solidsRef}
         importGLBRef={importGLBRef}
-        deleteObjectRef={deleteObjectRef}
       >
         {children}
       </SpacetimeEditorProvider>
@@ -288,8 +302,8 @@ const SpacetimeEditorToolbar = composable<HTMLDivElement, SpacetimeEditorToolbar
     onSelectionChange,
     viewState,
     onViewChange,
-    selectedPrimitive,
-    onSelectedPrimitiveChange,
+    selectedTemplate,
+    onSelectedTemplateChange,
     propertiesState,
     onPropertiesChange,
     editorActions,
@@ -304,8 +318,8 @@ const SpacetimeEditorToolbar = composable<HTMLDivElement, SpacetimeEditorToolbar
       onSelectionChange={onSelectionChange}
       viewState={viewState}
       onViewChange={onViewChange}
-      selectedPrimitive={selectedPrimitive}
-      onSelectedPrimitiveChange={onSelectedPrimitiveChange}
+      selectedTemplate={selectedTemplate}
+      onSelectedTemplateChange={onSelectedTemplateChange}
       propertiesState={propertiesState}
       onPropertiesChange={onPropertiesChange}
       editorActions={editorActions}

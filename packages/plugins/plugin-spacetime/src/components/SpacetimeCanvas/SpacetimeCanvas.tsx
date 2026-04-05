@@ -7,11 +7,19 @@ import React, { type RefObject, useEffect, useRef, useState } from 'react';
 
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { SceneManager, createSolidFromObject, getManifold, importGLB, importOBJ, manifoldToBabylon } from '../../engine';
+import {
+  SceneManager,
+  createSolidFromObject,
+  getManifold,
+  importGLB,
+  importOBJ,
+  manifoldToBabylon,
+  rawDataToBabylon,
+} from '../../engine';
 import { DebugPanel, extractSolidDebugInfo, type DebugInfo } from './DebugPanel';
 import { ToolManager, SelectTool, MoveTool, ExtrudeTool, type Selection } from '../../tools';
-import { type Scene, type Model } from '../../types';
-import { type SpacetimeTool, type ViewState } from '../SpacetimeToolbar';
+import { type Scene, Model } from '../../types';
+import { type SelectionMode, type SpacetimeTool, type ViewState } from '../SpacetimeToolbar';
 
 export type SpacetimeCanvasProps = {
   showFps?: boolean;
@@ -26,7 +34,9 @@ export type SpacetimeCanvasProps = {
   /** Parent ref to expose the solids map for export. */
   parentSolidsRef?: React.RefObject<Map<string, import('manifold-3d').Manifold> | null>;
   /** Ref to set the importGLB callback (canvas provides the implementation). */
-  importGLBRef?: React.MutableRefObject<(data: ArrayBuffer | string) => Promise<void>>;
+  importGLBRef?: React.MutableRefObject<
+    (data: ArrayBuffer | string) => Promise<{ vertexData: string; indexData: string } | undefined>
+  >;
   deleteObjectRef?: React.MutableRefObject<(objectId: string) => void>;
   /** Currently selected object id and hue for material updates. */
   selectedObjectId?: string | null;
@@ -42,7 +52,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       showFps = true,
       scene: sceneData,
       tool = 'select',
-      selectionMode = 'face',
+      selectionMode,
       viewState,
       objectCount = 0,
       onSelectionChange,
@@ -63,12 +73,14 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
     const meshesRef = useRef<Map<string, Mesh>>(new Map());
     const wasmRef = useRef<Awaited<ReturnType<typeof getManifold>> | null>(null);
     const solidsRef = useRef<Map<string, import('manifold-3d').Manifold>>(new Map());
+    const importedIdsRef = useRef<Set<string>>(new Set());
     // Expose solids map to parent for export functionality.
     if (parentSolidsRef && 'current' in parentSolidsRef) {
       (parentSolidsRef as React.MutableRefObject<Map<string, import('manifold-3d').Manifold> | null>).current =
         solidsRef.current;
     }
     const selectionRef = useRef<Selection | null>(null);
+    const setSelectionRef = useRef<((next: Selection | null) => void) | null>(null);
     const selectionModeRef = useRef(selectionMode);
     selectionModeRef.current = selectionMode;
     const [debugInfo, setDebugInfo] = useState<DebugInfo>(null);
@@ -102,17 +114,29 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
               continue;
             }
             const objId = (obj as any).id as string;
-            const solid = createSolidFromObject(wasm, obj);
             const objectColor = resolveColor(obj.color);
-            const mesh = manifoldToBabylon(solid, {
-              scene: manager.scene,
-              name: objId ?? 'solid',
-              color: objectColor,
-            });
-            // Keep the Manifold solid alive for tool operations.
-            solidsRef.current.set(objId, solid);
-            meshRef.current = mesh;
-            meshesRef.current.set(objId, mesh);
+            const solid = createSolidFromObject(wasm, obj);
+            if (solid) {
+              const mesh = manifoldToBabylon(solid, {
+                scene: manager.scene,
+                name: objId ?? 'solid',
+                color: objectColor,
+              });
+              solidsRef.current.set(objId, solid);
+              meshRef.current = mesh;
+              meshesRef.current.set(objId, mesh);
+            } else if (obj.mesh?.vertexData && obj.mesh?.indexData) {
+              // Non-manifold mesh: render directly from raw data (no CSG support).
+              const positions = Model.decodeFloat32Array(obj.mesh.vertexData);
+              const indices = Model.decodeUint32Array(obj.mesh.indexData);
+              const mesh = rawDataToBabylon(positions, indices, {
+                scene: manager.scene,
+                name: objId ?? 'raw',
+                color: objectColor,
+              });
+              meshRef.current = mesh;
+              meshesRef.current.set(objId, mesh);
+            }
           }
         }
 
@@ -130,6 +154,55 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         highlightLayer.outerGlow = true;
         highlightLayer.innerGlow = true;
         highlightLayer.neutralColor = new Color4(0, 0, 0, 0);
+
+        // Selection handler shared between tool context and programmatic selection.
+        const setSelection = (next: Selection | null) => {
+          // Clean up previous selection.
+          const prev = selectionRef.current;
+          if (prev) {
+            if (prev.highlightMesh) {
+              highlightLayer.removeMesh(prev.highlightMesh);
+              prev.highlightMesh.dispose();
+            }
+            if (prev.type === 'object') {
+              highlightLayer.removeMesh(prev.mesh);
+            }
+          }
+          // Apply new selection.
+          selectionRef.current = next;
+          if (next?.type === 'object') {
+            highlightLayer.addMesh(next.mesh, theme.selected);
+          } else if (next?.type === 'face' && next.highlightMesh) {
+            highlightLayer.addMesh(next.highlightMesh, theme.selected);
+          }
+          onSelectionChangeRef.current?.(next?.objectId ?? null);
+
+          // Show vertex table for selected object, or scene overview when nothing selected.
+          if (next) {
+            const solid = solidsRef.current.get(next.objectId);
+            const meshPos = next.mesh?.position;
+            const position: [number, number, number] | undefined = meshPos
+              ? [meshPos.x, meshPos.y, meshPos.z]
+              : undefined;
+            if (solid) {
+              setDebugInfoRef.current(extractSolidDebugInfo(solid, position));
+            } else {
+              // Non-manifold mesh: show basic info from the Babylon mesh.
+              const babylonMesh = meshesRef.current.get(next.objectId);
+              const totalIndices = babylonMesh?.getTotalIndices() ?? 0;
+              const totalVerts = babylonMesh?.getTotalVertices() ?? 0;
+              setDebugInfoRef.current({
+                type: 'mesh',
+                tris: totalIndices / 3,
+                verts: totalVerts,
+                position,
+              });
+            }
+          } else {
+            setDebugInfoRef.current(extractSceneDebugInfo(sceneData));
+          }
+        };
+        setSelectionRef.current = setSelection;
 
         // Create tool context.
         toolManager.setContext({
@@ -154,7 +227,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             return undefined;
           },
           get selectionState() {
-            return { selectionMode: selectionModeRef.current as 'object' | 'face' };
+            return { selectionMode: selectionModeRef.current as SelectionMode };
           },
           get viewState() {
             return viewStateRef.current ?? { showGrid: true, showDebug: false };
@@ -162,35 +235,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           get selection() {
             return selectionRef.current;
           },
-          setSelection: (next: Selection | null) => {
-            // Clean up previous selection.
-            const prev = selectionRef.current;
-            if (prev) {
-              if (prev.highlightMesh) {
-                highlightLayer.removeMesh(prev.highlightMesh);
-                prev.highlightMesh.dispose();
-              }
-              if (prev.type === 'object') {
-                highlightLayer.removeMesh(prev.mesh);
-              }
-            }
-            // Apply new selection.
-            selectionRef.current = next;
-            if (next?.type === 'object') {
-              highlightLayer.addMesh(next.mesh, theme.selected);
-            } else if (next?.type === 'face' && next.highlightMesh) {
-              highlightLayer.addMesh(next.highlightMesh, theme.selected);
-            }
-            onSelectionChangeRef.current?.(next?.objectId ?? null);
-
-            // Show vertex table for selected object.
-            const solid = next ? solidsRef.current.get(next.objectId) : undefined;
-            const meshPos = next?.mesh?.position;
-            const position: [number, number, number] | undefined = meshPos
-              ? [meshPos.x, meshPos.y, meshPos.z]
-              : undefined;
-            setDebugInfoRef.current(solid ? extractSolidDebugInfo(solid, position) : null);
-          },
+          setSelection,
           setDebugStats: (stats: Record<string, string | number>) => {
             setDebugInfoRef.current({ type: 'stats', entries: stats });
           },
@@ -204,37 +249,54 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           importGLBRef.current = async (data: ArrayBuffer | string) => {
             let solid;
             if (typeof data === 'string') {
-              // OBJ text.
               solid = importOBJ(data, wasm);
             } else {
-              // GLB binary.
               solid = await importGLB(data, wasm, manager.scene);
             }
-            if (solid) {
-              const objId = `imported-${Date.now()}`;
-              const mesh = manifoldToBabylon(solid, {
-                scene: manager.scene,
-                name: objId,
-                color: theme.object,
-              });
-              solidsRef.current.set(objId, solid);
-              meshesRef.current.set(objId, mesh);
+            if (!solid) {
+              return undefined;
             }
+            // Serialize mesh data for ECHO storage.
+            const meshData = solid.getMesh();
+            const { vertProperties, triVerts, numProp } = meshData;
+            // Extract just positions (first 3 of numProp per vertex).
+            const numVert = vertProperties.length / numProp;
+            const positions = new Float32Array(numVert * 3);
+            for (let vi = 0; vi < numVert; vi++) {
+              positions[vi * 3] = vertProperties[vi * numProp];
+              positions[vi * 3 + 1] = vertProperties[vi * numProp + 1];
+              positions[vi * 3 + 2] = vertProperties[vi * numProp + 2];
+            }
+            solid.delete();
+            return {
+              vertexData: Model.encodeTypedArray(positions),
+              indexData: Model.encodeTypedArray(new Uint32Array(triVerts)),
+            };
           };
         }
 
         // Provide delete callback to parent.
         if (deleteObjectRef) {
           deleteObjectRef.current = (objectId: string) => {
+            // Clear selection if the deleted object is currently selected.
+            if (selectionRef.current?.objectId === objectId) {
+              selectionRef.current.highlightMesh?.dispose();
+              if (selectionRef.current.type === 'object') {
+                highlightLayer.removeMesh(selectionRef.current.mesh);
+              }
+              selectionRef.current = null;
+            }
             const mesh = meshesRef.current.get(objectId);
             mesh?.dispose();
             meshesRef.current.delete(objectId);
             solidsRef.current.get(objectId)?.delete();
             solidsRef.current.delete(objectId);
+            setDebugInfoRef.current(extractSceneDebugInfo(sceneData));
           };
         }
 
         setReady(true);
+        setDebugInfo(extractSceneDebugInfo(sceneData));
       });
 
       const resizeObserver = new ResizeObserver(() => manager.resize());
@@ -329,15 +391,26 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
 
           // Add new objects.
           if (!meshesRef.current.has(objId)) {
-            const solid = createSolidFromObject(wasm, obj);
             const objectColor = resolveColor(obj.color);
-            const mesh = manifoldToBabylon(solid, {
-              scene: manager.scene,
-              name: objId,
-              color: objectColor,
-            });
-            solidsRef.current.set(objId, solid);
-            meshesRef.current.set(objId, mesh);
+            const solid = createSolidFromObject(wasm, obj);
+            if (solid) {
+              const mesh = manifoldToBabylon(solid, {
+                scene: manager.scene,
+                name: objId,
+                color: objectColor,
+              });
+              solidsRef.current.set(objId, solid);
+              meshesRef.current.set(objId, mesh);
+            } else if (obj.mesh?.vertexData && obj.mesh?.indexData) {
+              const positions = Model.decodeFloat32Array(obj.mesh.vertexData);
+              const indices = Model.decodeUint32Array(obj.mesh.indexData);
+              const mesh = rawDataToBabylon(positions, indices, {
+                scene: manager.scene,
+                name: objId,
+                color: objectColor,
+              });
+              meshesRef.current.set(objId, mesh);
+            }
           }
         }
       }
@@ -351,7 +424,18 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           solidsRef.current.delete(objId);
         }
       }
-    }, [objectCount, ready]);
+
+      // Programmatically select object when selectedObjectId is set but not yet selected.
+      if (selectedObjectId && selectionRef.current?.objectId !== selectedObjectId) {
+        const mesh = meshesRef.current.get(selectedObjectId);
+        if (mesh && setSelectionRef.current) {
+          setSelectionRef.current({ type: 'object', objectId: selectedObjectId, mesh, highlightMesh: null });
+        }
+      } else if (!selectionRef.current) {
+        // Refresh scene overview when nothing is selected.
+        setDebugInfo(extractSceneDebugInfo(sceneData));
+      }
+    }, [objectCount, selectedObjectId, ready]);
 
     return (
       <div
@@ -380,7 +464,6 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
     );
   },
 );
-
 
 /** Map DXOS hue names to approximate Babylon Color3 values. */
 const hueColors: Record<string, Color3> = {
@@ -417,4 +500,27 @@ const resolveColor = (color: string | undefined): Color3 => {
 const theme = {
   object: new Color3(0.3, 0.3, 0.3),
   selected: new Color3(0.3, 0.6, 1.0),
+};
+
+/** Build scene overview debug info from ECHO scene data. */
+const extractSceneDebugInfo = (sceneData?: Scene.Scene): DebugInfo => {
+  if (!sceneData?.objects?.length) {
+    return { type: 'scene', objects: [] };
+  }
+  const objects = sceneData.objects
+    .map((ref) => {
+      const obj = ref?.target as (Model.Object & { id?: string }) | undefined;
+      if (!obj) {
+        return undefined;
+      }
+      return {
+        id: (obj as any).id as string,
+        label: obj.label,
+        primitive: obj.primitive,
+        hasMesh: !!obj.mesh,
+        position: [obj.position?.x ?? 0, obj.position?.y ?? 0, obj.position?.z ?? 0] as [number, number, number],
+      };
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry != null);
+  return { type: 'scene', objects };
 };

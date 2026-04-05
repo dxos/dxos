@@ -7,13 +7,60 @@ import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from
 import { meta } from '../../meta';
 import { type Model } from '../../types';
 
-/** Icons for each primitive type. */
-const primitiveIcons: Record<Model.PrimitiveType, string> = {
-  cube: 'ph--cube--regular',
-  sphere: 'ph--sphere--regular',
-  cylinder: 'ph--cylinder--regular',
-  cone: 'ph--triangle--regular',
-  pyramid: 'ph--triangle--regular',
+type TemplateType = 'primitive' | 'preset';
+
+export type TemplateDefinition = {
+  id: Model.ObjectTemplate;
+  label: string;
+  icon: string;
+};
+
+/** All object templates: primitives and presets. */
+export const templates: Record<TemplateType, TemplateDefinition[]> = {
+  primitive: [
+    {
+      id: 'cube',
+      label: 'Cube',
+      icon: 'ph--cube--regular',
+    },
+    {
+      id: 'sphere',
+      label: 'Sphere',
+      icon: 'ph--sphere--regular',
+    },
+    {
+      id: 'cylinder',
+      label: 'Cylinder',
+      icon: 'ph--cylinder--regular',
+    },
+    {
+      id: 'cone',
+      label: 'Cone',
+      icon: 'ph--triangle--regular',
+    },
+    {
+      id: 'pyramid',
+      label: 'Pyramid',
+      icon: 'ph--triangle--regular',
+    },
+  ],
+  preset: [
+    {
+      id: 'firetruck',
+      label: 'Fire truck',
+      icon: 'ph--fire-truck--regular',
+    },
+    {
+      id: 'race',
+      label: 'Race Car',
+      icon: 'ph--steering-wheel--regular',
+    },
+    {
+      id: 'taxi',
+      label: 'Taxi',
+      icon: 'ph--car-profile--regular',
+    },
+  ],
 };
 
 export type EditorActions = {
@@ -23,35 +70,43 @@ export type EditorActions = {
   onExportSTL: () => void;
 };
 
-/** Creates the primitive type dropdown. */
-export const createPrimitiveSelector =
+/** Creates the object template selector with primitives and presets groups. */
+export const createTemplateSelector =
   (
-    selectedPrimitive: Model.PrimitiveType,
-    onSelectedPrimitiveChange: (primitive: Model.PrimitiveType) => void,
+    selectedTemplate: Model.ObjectTemplate,
+    onSelectedTemplateChange: (template: Model.ObjectTemplate) => void,
   ): ActionGroupBuilderFn =>
   (builder) => {
+    const allTemplates = Object.values(templates).flat();
+    const selected = allTemplates.find((t) => t.id === selectedTemplate);
     builder.group(
-      'primitive',
+      'template',
       {
-        label: ['primitive.label', { ns: meta.id }],
-        icon: primitiveIcons[selectedPrimitive],
+        label: ['template.label', { ns: meta.id }],
+        icon: selected?.icon ?? 'ph--cube--regular',
         iconOnly: true,
         variant: 'dropdownMenu',
         applyActive: true,
         selectCardinality: 'single',
-        value: selectedPrimitive,
+        value: selectedTemplate,
       } as ToolbarMenuActionGroupProperties,
       (group) => {
-        for (const [primitive, icon] of Object.entries(primitiveIcons)) {
-          group.action(
-            `primitive-${primitive}`,
-            {
-              label: [`primitive.${primitive}.label`, { ns: meta.id }],
-              icon,
-              checked: primitive === selectedPrimitive,
-            },
-            () => onSelectedPrimitiveChange(primitive as Model.PrimitiveType),
-          );
+        let i = 0;
+        for (const [type, items] of Object.entries(templates)) {
+          if (i++ > 0) {
+            group.separator('line');
+          }
+          for (const template of items) {
+            group.action(
+              `${type}-${template.id}`,
+              {
+                label: template.label,
+                icon: template.icon,
+                checked: template.id === selectedTemplate,
+              },
+              () => onSelectedTemplateChange(template.id),
+            );
+          }
         }
       },
     );
@@ -60,25 +115,26 @@ export const createPrimitiveSelector =
 /** Creates standalone action buttons. */
 export const createEditorActions =
   (actions: EditorActions): ActionGroupBuilderFn =>
-  (builder) => {
-    builder.action(
-      'add-object',
-      { label: ['action.add-object.label', { ns: meta.id }], icon: 'ph--plus--regular' },
-      actions.onAddObject,
-    );
-    builder.action(
-      'delete-object',
-      { label: ['action.delete-object.label', { ns: meta.id }], icon: 'ph--trash--regular' },
-      actions.onDeleteSelected,
-    );
-    builder.action(
-      'import',
-      { label: ['action.import.label', { ns: meta.id }], icon: 'ph--upload-simple--regular' },
-      actions.onImport,
-    );
-    builder.action(
-      'export-stl',
-      { label: ['action.export-stl.label', { ns: meta.id }], icon: 'ph--download-simple--regular' },
-      actions.onExportSTL,
-    );
-  };
+  (builder) =>
+    builder
+      .action(
+        'add-object',
+        { label: ['action.add-object.label', { ns: meta.id }], icon: 'ph--plus--regular' },
+        actions.onAddObject,
+      )
+      .action(
+        'delete-object',
+        { label: ['action.delete-object.label', { ns: meta.id }], icon: 'ph--trash--regular' },
+        actions.onDeleteSelected,
+      )
+      .separator('line')
+      .action(
+        'import',
+        { label: ['action.import.label', { ns: meta.id }], icon: 'ph--upload-simple--regular' },
+        actions.onImport,
+      )
+      .action(
+        'export',
+        { label: ['action.export.label', { ns: meta.id }], icon: 'ph--download-simple--regular' },
+        actions.onExportSTL,
+      );

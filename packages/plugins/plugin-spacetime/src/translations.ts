@@ -43,17 +43,12 @@ export const translations = [
         'tool.move.label': 'Move',
         'tool.extrude.label': 'Extrude',
 
-        'primitive.label': 'Primitive',
-        'primitive.cube.label': 'Cube',
-        'primitive.sphere.label': 'Sphere',
-        'primitive.cylinder.label': 'Cylinder',
-        'primitive.cone.label': 'Cone',
-        'primitive.pyramid.label': 'Pyramid',
+        'template.label': 'Object type',
 
         'action.add-object.label': 'Add object',
         'action.delete-object.label': 'Delete object',
         'action.import.label': 'Import',
-        'action.export-stl.label': 'Export STL',
+        'action.export.label': 'Export',
 
         'view.label': 'View',
         'view.grid.label': 'Grid',

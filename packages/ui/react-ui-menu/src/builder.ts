@@ -37,7 +37,7 @@ export interface ActionGroupBuilder {
   subgraph(subgraphOrCb: ActionGraphProps | ActionGroupBuilderFn | false | null | undefined): this;
 
   /** Add a separator. */
-  separator(id?: string, variant?: 'gap' | 'line'): this;
+  separator(variant?: 'gap' | 'line'): this;
 }
 
 /** Top-level builder that creates the root group and produces the final action graph. */

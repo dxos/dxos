@@ -4,7 +4,7 @@
 
 import type { Manifold, ManifoldToplevel, Vec2 } from 'manifold-3d';
 
-import { type Model } from '../types';
+import { Model } from '../types';
 
 import { getFaceNormal } from './mesh-converter';
 
@@ -12,10 +12,29 @@ import { getFaceNormal } from './mesh-converter';
 export const MIN_SIZE = 1;
 
 /**
- * Creates a Manifold solid from a Model.Object based on its primitive type and scale.
+ * Creates a Manifold solid from a Model.Object.
+ * Uses mesh data if present, otherwise generates from primitive type.
  */
-export const createSolidFromObject = (wasm: ManifoldToplevel, obj: Model.Object): Manifold => {
+export const createSolidFromObject = (wasm: ManifoldToplevel, obj: Model.Object): Manifold | null => {
   const { Manifold } = wasm;
+
+  // Mesh data takes precedence over primitive.
+  if (obj.mesh?.vertexData && obj.mesh?.indexData) {
+    const vertProperties = Model.decodeFloat32Array(obj.mesh.vertexData);
+    const triVerts = Model.decodeUint32Array(obj.mesh.indexData);
+    try {
+      const mesh = new wasm.Mesh({ numProp: 3, vertProperties, triVerts });
+      mesh.merge();
+      return new Manifold(mesh);
+    } catch {
+      return null;
+    }
+  }
+
+  if (!obj.primitive) {
+    return null;
+  }
+
   const size = [obj.scale.x * 2, obj.scale.y * 2, obj.scale.z * 2] as [number, number, number];
   let solid;
   switch (obj.primitive) {
@@ -42,7 +61,12 @@ export const createSolidFromObject = (wasm: ManifoldToplevel, obj: Model.Object)
       const halfW = size[0] / 2;
       const halfD = size[2] / 2;
       const cs = new wasm.CrossSection([
-        [[-halfW, -halfD], [halfW, -halfD], [halfW, halfD], [-halfW, halfD]] as Vec2[],
+        [
+          [-halfW, -halfD],
+          [halfW, -halfD],
+          [halfW, halfD],
+          [-halfW, halfD],
+        ] as Vec2[],
       ]);
       const pyr = Manifold.extrude(cs, size[1], 0, 0, [0, 0], true);
       cs.delete();
