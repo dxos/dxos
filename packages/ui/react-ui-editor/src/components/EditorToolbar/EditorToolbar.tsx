@@ -11,14 +11,14 @@ import { ElevationProvider, type ThemedClassName } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, type MenuAction, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 import { type EditorViewMode } from '@dxos/ui-editor';
 
-import { createLists } from './actions';
-import { createBlocks } from './blocks';
-import { createFormatting } from './formatting';
-import { createHeadings } from './headings';
-import { createImageUpload } from './image';
-import { createSearch } from './search';
+import { addLists } from './actions';
+import { addBlocks } from './blocks';
+import { addFormatting } from './formatting';
+import { addHeadings } from './headings';
+import { addImageUpload } from './image';
+import { addSearch } from './search';
 import { type EditorToolbarState } from './useEditorToolbar';
-import { createViewMode } from './view-mode';
+import { addViewMode } from './view-mode';
 
 export type EditorToolbarFeatureFlags = Partial<{
   showHeadings: boolean;
@@ -96,37 +96,16 @@ const createToolbarActions = ({
   return Atom.make((get) => {
     // Subscribe to state changes.
     const stateSnapshot = get(state);
-
-    const builder = MenuBuilder.make();
-
-    if (features?.showHeadings ?? true) {
-      builder.subgraph(createHeadings(stateSnapshot, getView));
-    }
-    if (features?.showFormatting ?? true) {
-      builder.subgraph(createFormatting(stateSnapshot, getView));
-    }
-    if (features?.showLists ?? true) {
-      builder.subgraph(createLists(stateSnapshot, getView));
-    }
-    if (features?.showBlocks ?? true) {
-      builder.subgraph(createBlocks(stateSnapshot, getView));
-    }
-    if (features?.onImageUpload) {
-      builder.subgraph(createImageUpload(features.onImageUpload!));
-    }
-
-    builder.separator('gap');
-
-    if (customActions) {
-      builder.subgraph(get(customActions));
-    }
-    if (features?.showSearch ?? true) {
-      builder.subgraph(createSearch(getView));
-    }
-    if (features?.onViewModeChange) {
-      builder.subgraph(createViewMode(stateSnapshot, features.onViewModeChange!));
-    }
-
-    return builder.build();
+    return MenuBuilder.make()
+      .subgraph(features?.showHeadings !== false && addHeadings(stateSnapshot, getView))
+      .subgraph(features?.showFormatting !== false && addFormatting(stateSnapshot, getView))
+      .subgraph(features?.showLists !== false && addLists(stateSnapshot, getView))
+      .subgraph(features?.showBlocks !== false && addBlocks(stateSnapshot, getView))
+      .subgraph(features?.onImageUpload && addImageUpload(features.onImageUpload))
+      .separator('gap')
+      .subgraph(customActions && get(customActions))
+      .subgraph(features?.showSearch !== false && addSearch(getView))
+      .subgraph(features?.onViewModeChange && addViewMode(stateSnapshot, features.onViewModeChange))
+      .build();
   });
 };

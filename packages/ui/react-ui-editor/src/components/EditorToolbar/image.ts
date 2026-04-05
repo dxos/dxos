@@ -2,26 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Node } from '@dxos/app-graph';
+import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
-import { createEditorAction } from './actions';
+import { translationKey } from '../../translations';
 
-const createImageUploadAction = (onImageUpload: () => void) =>
-  createEditorAction(
-    'image',
-    {
-      testId: 'editor.toolbar.image',
-      icon: 'ph--image-square--regular',
-    },
-    onImageUpload,
-  );
-
-export const createImageUpload = (
-  onImageUpload: () => void,
-): {
-  nodes: Node.NodeArg<any>[];
-  edges: Array<{ source: string; target: string; relation: 'child' }>;
-} => ({
-  nodes: [createImageUploadAction(onImageUpload)],
-  edges: [{ source: 'root', target: 'image', relation: 'child' }],
-});
+/** Add image upload action to the builder. */
+export const addImageUpload =
+  (onImageUpload: () => void): ActionGroupBuilderFn =>
+  (builder) => {
+    builder.action(
+      'image',
+      {
+        label: ['image.label', { ns: translationKey }],
+        testId: 'editor.toolbar.image',
+        icon: 'ph--image-square--regular',
+      },
+      onImageUpload,
+    );
+  };
