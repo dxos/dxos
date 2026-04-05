@@ -8,23 +8,16 @@ import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Panel } from '@dxos/react-ui';
 
 import { SpacetimeEditor } from '../../components';
-import { type Scene, type Settings } from '../../types';
+import { type Scene } from '../../types';
 
-export type SpacetimeArticleProps = ObjectSurfaceProps<
-  Scene.Scene,
-  {
-    settings?: Settings.Settings | null;
-  }
->;
+export type SpacetimeArticleProps = ObjectSurfaceProps<Scene.Scene>;
 
-export const SpacetimeArticle = ({ role, subject, settings }: SpacetimeArticleProps) => {
-  // TODO(burdon): Settings atom.
-
+export const SpacetimeArticle = ({ subject, attendableId }: SpacetimeArticleProps) => {
   return (
     <SpacetimeEditor.Root scene={subject}>
       <Panel.Root>
         <Panel.Toolbar asChild>
-          <SpacetimeEditor.Toolbar />
+          <SpacetimeEditor.Toolbar attendableId={attendableId} />
         </Panel.Toolbar>
         <Panel.Content asChild>
           <SpacetimeEditor.Canvas />

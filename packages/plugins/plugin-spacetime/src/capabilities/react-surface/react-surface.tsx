@@ -6,14 +6,14 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framework/ui';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Obj } from '@dxos/echo';
 
 import { SpacetimeSettings } from '../../components';
 import { SpacetimeArticle } from '../../containers';
 import { meta } from '../../meta';
-import { Scene, SpacetimeCapabilities, type Settings } from '../../types';
+import { Scene, type Settings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -22,9 +22,8 @@ export default Capability.makeModule(() =>
         id: `${meta.id}.scene`,
         role: 'article',
         filter: (data): data is { subject: Scene.Scene } => Obj.instanceOf(Scene.Scene, data.subject),
-        component: ({ data, role }) => {
-          const settings = useAtomCapability(SpacetimeCapabilities.Settings);
-          return <SpacetimeArticle role={role} subject={data.subject} settings={settings} />;
+        component: ({ data, role, attendableId }) => {
+          return <SpacetimeArticle role={role} subject={data.subject} attendableId={attendableId} />;
         },
       }),
       Surface.create({

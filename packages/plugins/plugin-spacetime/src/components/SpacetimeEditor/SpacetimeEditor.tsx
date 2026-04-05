@@ -292,41 +292,45 @@ SpacetimeEditorRoot.displayName = SPACETIME_EDITOR_ROOT;
 
 const SPACETIME_EDITOR_TOOLBAR = 'SpacetimeEditor:Toolbar';
 
-type SpacetimeEditorToolbarProps = Pick<SpacetimeToolbarProps, 'alwaysActive'>;
+type SpacetimeEditorToolbarProps = Pick<SpacetimeToolbarProps, 'attendableId' | 'alwaysActive'>;
 
-const SpacetimeEditorToolbar = composable<HTMLDivElement, SpacetimeEditorToolbarProps>((props, forwardedRef) => {
-  const {
-    toolState,
-    onToolChange,
-    selectionState,
-    onSelectionChange,
-    viewState,
-    onViewChange,
-    selectedTemplate,
-    onSelectedTemplateChange,
-    propertiesState,
-    onPropertiesChange,
-    editorActions,
-  } = useSpacetimeEditorContext(SPACETIME_EDITOR_TOOLBAR);
+const SpacetimeEditorToolbar = composable<HTMLDivElement, SpacetimeEditorToolbarProps>(
+  ({ attendableId, alwaysActive, ...props }, forwardedRef) => {
+    const {
+      toolState,
+      onToolChange,
+      selectionState,
+      onSelectionChange,
+      viewState,
+      onViewChange,
+      selectedTemplate,
+      onSelectedTemplateChange,
+      propertiesState,
+      onPropertiesChange,
+      editorActions,
+    } = useSpacetimeEditorContext(SPACETIME_EDITOR_TOOLBAR);
 
-  return (
-    <SpacetimeToolbar
-      {...composableProps(props)}
-      toolState={toolState}
-      onToolChange={onToolChange}
-      selectionState={selectionState}
-      onSelectionChange={onSelectionChange}
-      viewState={viewState}
-      onViewChange={onViewChange}
-      selectedTemplate={selectedTemplate}
-      onSelectedTemplateChange={onSelectedTemplateChange}
-      propertiesState={propertiesState}
-      onPropertiesChange={onPropertiesChange}
-      editorActions={editorActions}
-      ref={forwardedRef}
-    />
-  );
-});
+    return (
+      <SpacetimeToolbar
+        {...composableProps(props)}
+        attendableId={attendableId}
+        alwaysActive={alwaysActive}
+        toolState={toolState}
+        onToolChange={onToolChange}
+        selectionState={selectionState}
+        onSelectionChange={onSelectionChange}
+        viewState={viewState}
+        onViewChange={onViewChange}
+        selectedTemplate={selectedTemplate}
+        onSelectedTemplateChange={onSelectedTemplateChange}
+        propertiesState={propertiesState}
+        onPropertiesChange={onPropertiesChange}
+        editorActions={editorActions}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 SpacetimeEditorToolbar.displayName = SPACETIME_EDITOR_TOOLBAR;
 

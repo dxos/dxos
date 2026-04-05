@@ -17,7 +17,7 @@ import { type SelectionState, createSelectionModeActions } from './selection';
 import { type ToolState, createToolActions } from './tools';
 import { type ViewState, createViewActions } from './view';
 
-export type SpacetimeToolbarProps = Pick<MenuRootProps, 'alwaysActive'> & {
+export type SpacetimeToolbarProps = Pick<MenuRootProps, 'attendableId' | 'alwaysActive'> & {
   editorActions: EditorActions;
 
   toolState: ToolState;
