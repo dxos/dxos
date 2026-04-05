@@ -62,4 +62,6 @@ export type ToolContext = {
   selection: Selection | null;
   /** Update the shared selection. Disposes old highlight and manages highlight layer. */
   setSelection: (selection: Selection | null) => void;
+  /** Report debug stats for the canvas overlay. */
+  setDebugStats: (stats: Record<string, string | number>) => void;
 };

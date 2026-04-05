@@ -3,18 +3,14 @@
 //
 
 import { Matrix, type Mesh, PointerEventTypes, Vector3, VertexBuffer, type PointerInfo } from '@babylonjs/core';
-import type { Manifold, ManifoldToplevel } from 'manifold-3d';
+import type { Manifold } from 'manifold-3d';
 
-import { getFaceNormal, updateMeshFromManifold } from '../../engine';
-import { type Model } from '../../types';
+import { applyExtrusion, getFaceNormal, updateMeshFromManifold } from '../../engine';
 import { type ToolContext } from '../tool-context';
 import { type Tool } from '../tool';
 
 /** Sensitivity factor converting pixel drag distance to extrude distance. */
 const EXTRUDE_SENSITIVITY = 0.02;
-
-/** Minimum object dimension on any axis (matches grid step). */
-const MIN_SIZE = 1;
 
 /** Throttle interval for pointer move updates (ms). */
 const MOVE_THROTTLE_MS = 30;
@@ -27,6 +23,12 @@ type ExtrudeState = {
   mesh: Mesh;
   /** Face normal in world space. */
   normal: { x: number; y: number; z: number };
+  /** Selected face index (for CrossSection extraction). */
+  faceId: number;
+  /** Vertex positions snapshot at drag start. */
+  positions: Float32Array | number[];
+  /** Index buffer snapshot at drag start. */
+  indices: Uint32Array | number[];
   /** Normalized screen-space direction that maps to positive extrusion. */
   screenDir: { x: number; y: number };
   /** Pointer position at drag start. */
@@ -57,93 +59,6 @@ const computeScreenDir = (normal: { x: number; y: number; z: number }, ctx: Tool
   const dy = worldTip.y - worldOrigin.y;
   const len = Math.sqrt(dx * dx + dy * dy);
   return { x: len > 0 ? dx / len : 0, y: len > 0 ? dy / len : -1 };
-};
-
-/**
- * Creates a Manifold solid from a Model.Object based on its primitive type and scale.
- */
-const createSolidFromObject = (Manifold: ManifoldToplevel['Manifold'], obj: Model.Object): Manifold => {
-  const size = [obj.scale.x * 2, obj.scale.y * 2, obj.scale.z * 2] as [number, number, number];
-  let solid;
-  switch (obj.primitive) {
-    case 'sphere':
-      solid = Manifold.sphere(size[0] / 2, 24);
-      break;
-    case 'cylinder':
-      solid = Manifold.cylinder(size[1], size[0] / 2, size[0] / 2, 24);
-      break;
-    case 'torus':
-      solid = Manifold.cylinder(size[1] * 0.5, size[0] / 2, size[0] / 2, 24);
-      break;
-    case 'cube':
-    default:
-      solid = Manifold.cube(size, true);
-      break;
-  }
-  const translated = solid.translate([obj.position.x, obj.position.y, obj.position.z]);
-  solid.delete();
-  return translated;
-};
-
-/**
- * Applies extrusion to a solid by creating a slab along the given normal direction
- * and performing a boolean union (positive) or difference (negative).
- *
- * NOTE: Uses dominant-axis detection (largest absolute component of the normal) instead of
- * a fixed 0.5 threshold. This handles non-axis-aligned normals correctly after geometry
- * has been modified by prior extrusions.
- */
-const applyExtrusion = (
-  Manifold: ManifoldToplevel['Manifold'],
-  baseSolid: Manifold,
-  normal: { x: number; y: number; z: number },
-  distance: number,
-): Manifold => {
-  if (distance === 0) {
-    // NOTE: Must clone even for zero distance. The caller (onPointerUp) deletes baseSolid
-    // and stores the result in ctx.solids. If we return baseSolid directly, both references
-    // point to the same WASM object — deleting baseSolid destroys the stored solid, breaking
-    // subsequent extrusions. Self-union is a no-op clone in Manifold.
-    return Manifold.union(baseSolid, baseSolid);
-  }
-
-  const bbox = baseSolid.boundingBox();
-  const bboxSize = [bbox.max[0] - bbox.min[0], bbox.max[1] - bbox.min[1], bbox.max[2] - bbox.min[2]];
-  const bboxCenter = [(bbox.min[0] + bbox.max[0]) / 2, (bbox.min[1] + bbox.max[1]) / 2, (bbox.min[2] + bbox.max[2]) / 2];
-  const normalArr = [normal.x, normal.y, normal.z];
-
-  // Determine dominant axis: the axis most aligned with the normal.
-  const absNormal = normalArr.map(Math.abs);
-  const dominantAxis = absNormal[0] >= absNormal[1] && absNormal[0] >= absNormal[2] ? 0 : absNormal[1] >= absNormal[2] ? 1 : 2;
-
-  // Clamp negative extrusion so the object can't collapse below MIN_SIZE on the dominant axis.
-  const sign = distance > 0 ? 1 : -1;
-  let absDist = Math.abs(distance);
-  if (sign < 0) {
-    const maxInward = Math.max(0, bboxSize[dominantAxis] - MIN_SIZE);
-    absDist = Math.min(absDist, maxInward);
-    if (absDist === 0) {
-      return Manifold.union(baseSolid, baseSolid);
-    }
-  }
-
-  // Slab dimensions: full bbox size on tangent axes, absDist on dominant axis.
-  const slabSize = [...bboxSize] as [number, number, number];
-  slabSize[dominantAxis] = absDist;
-  const slab = Manifold.cube(slabSize, true);
-
-  // Position slab adjacent to the face on the dominant axis.
-  const slabCenter = [...bboxCenter] as [number, number, number];
-  const faceOffset = bboxSize[dominantAxis] / 2;
-  const normalSign = normalArr[dominantAxis] > 0 ? 1 : -1;
-  slabCenter[dominantAxis] += normalSign * (faceOffset + (sign * absDist) / 2);
-
-  const translated = slab.translate(slabCenter);
-  slab.delete();
-
-  const result = sign > 0 ? Manifold.union(baseSolid, translated) : Manifold.difference(baseSolid, translated);
-  translated.delete();
-  return result;
 };
 
 /** Tool for extruding faces of mesh objects via click-drag. */
@@ -177,11 +92,13 @@ export class ExtrudeTool implements Tool {
     let objectId: string | undefined;
     let mesh: Mesh | undefined;
     let normal: { x: number; y: number; z: number } | undefined;
+    let faceId: number | undefined;
 
     if (ctx.selection?.type === 'face') {
       objectId = ctx.selection.objectId;
       mesh = ctx.selection.mesh;
       normal = ctx.selection.normal;
+      faceId = ctx.selection.faceId;
     } else {
       const pickedMesh = info.pickInfo?.pickedMesh;
       if (!info.pickInfo?.hit || !pickedMesh) {
@@ -200,7 +117,7 @@ export class ExtrudeTool implements Tool {
       }
 
       mesh = pickedMesh as Mesh;
-      const faceId = info.pickInfo.faceId;
+      faceId = info.pickInfo.faceId;
       if (faceId === undefined || faceId < 0) {
         return false;
       }
@@ -214,7 +131,7 @@ export class ExtrudeTool implements Tool {
       normal = getFaceNormal(faceId, positions, indices);
     }
 
-    if (!objectId || !mesh || !normal) {
+    if (!objectId || !mesh || !normal || faceId === undefined) {
       return false;
     }
 
@@ -232,6 +149,13 @@ export class ExtrudeTool implements Tool {
       ctx.selection.highlightMesh.setEnabled(false);
     }
 
+    // Snapshot the mesh vertex data at drag start (geometry changes during drag).
+    const positions = mesh.getVerticesData(VertexBuffer.PositionKind);
+    const indices = mesh.getIndices();
+    if (!positions || !indices) {
+      return false;
+    }
+
     // Clone the solid so we can rebuild from base during drag.
     const { Manifold } = ctx.manifold;
     const baseSolid = Manifold.union(currentSolid, currentSolid);
@@ -240,6 +164,9 @@ export class ExtrudeTool implements Tool {
       objectId,
       mesh,
       normal,
+      faceId,
+      positions: Float32Array.from(positions),
+      indices: Uint32Array.from(indices as number[]),
       screenDir,
       startX: event.clientX,
       startY: event.clientY,
@@ -271,12 +198,32 @@ export class ExtrudeTool implements Tool {
     const projection = dx * this._state.screenDir.x + dy * this._state.screenDir.y;
     const distance = projection * EXTRUDE_SENSITIVITY;
 
-    // Apply extrusion to the base solid (does not consume baseSolid).
-    const { Manifold } = ctx.manifold;
-    const extruded = applyExtrusion(Manifold, this._state.baseSolid, this._state.normal, distance);
+    // Apply extrusion using the face boundary polygon (CrossSection-based).
+    const t0 = performance.now();
+    const extruded = applyExtrusion(
+      ctx.manifold,
+      this._state.baseSolid,
+      this._state.faceId,
+      this._state.positions,
+      this._state.indices,
+      this._state.normal,
+      distance,
+    );
+    const t1 = performance.now();
 
     // Update the Babylon mesh in-place.
     updateMeshFromManifold(extruded, this._state.mesh);
+    const t2 = performance.now();
+
+    const meshData = extruded.getMesh();
+    ctx.setDebugStats({
+      tris: meshData.numTri,
+      verts: meshData.vertProperties.length / meshData.numProp,
+      csg: `${(t1 - t0).toFixed(1)}ms`,
+      mesh: `${(t2 - t1).toFixed(1)}ms`,
+      dist: distance.toFixed(3),
+    });
+
     extruded.delete();
 
     return true;
@@ -294,8 +241,15 @@ export class ExtrudeTool implements Tool {
     const projection = dx * this._state.screenDir.x + dy * this._state.screenDir.y;
     const distance = projection * EXTRUDE_SENSITIVITY;
 
-    const { Manifold } = ctx.manifold;
-    const finalSolid = applyExtrusion(Manifold, this._state.baseSolid, this._state.normal, distance);
+    const finalSolid = applyExtrusion(
+      ctx.manifold,
+      this._state.baseSolid,
+      this._state.faceId,
+      this._state.positions,
+      this._state.indices,
+      this._state.normal,
+      distance,
+    );
 
     // Replace the runtime solid for this object.
     const oldSolid = ctx.solids.get(this._state.objectId);
