@@ -43,7 +43,6 @@ export const resolveAll = <const Tags extends readonly Context.Tag<any, any>[]>(
   context: ResolutionContext,
 ): Effect.Effect<Context.Context<Tags[number]>, ServiceNotAvailableError, Scope.Scope | ServiceResolver> =>
   Effect.gen(function* () {
-    const serviceResolver = yield* ServiceResolver;
     const services = yield* Effect.forEach(tags, (tag) =>
       resolve(tag, context).pipe(Effect.map((service) => Context.make(tag, service))),
     );
@@ -110,9 +109,7 @@ export const fromContext = (ctx: Context.Context<any>): ServiceResolver =>
     Effect.gen(function* () {
       const service = Context.getOption(ctx, tag);
       if (Option.isNone(service)) {
-        return yield* Effect.fail(
-          new ServiceNotAvailableError(`Service not available: ${String((tag as any).key ?? tag)}`),
-        );
+        return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
       }
       return service.value;
     }),
@@ -131,11 +128,11 @@ export const fromRequirements = <const Tags extends readonly Context.Tag<any, an
       Effect.gen(function* () {
         let result: Context.Context<never> = Context.empty() as Context.Context<never>;
         if (!available.has(tag.key)) {
-          return yield* Effect.fail(new ServiceNotAvailableError(`Service not available: ${String(tag.key ?? tag)}`));
+          return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
         }
         const service = Context.getOption(parentCtx, tag);
         if (Option.isNone(service)) {
-          return yield* Effect.fail(new ServiceNotAvailableError(`Service not available: ${String(tag.key ?? tag)}`));
+          return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
         }
         return service.value;
       }),
@@ -164,7 +161,7 @@ export const compose = (...resolvers: readonly ServiceResolver[]): ServiceResolv
         }
       }
 
-      return yield* Effect.fail(new ServiceNotAvailableError(`Service not available: ${String(tag.key ?? tag)}`));
+      return yield* Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
     }),
   );
 
@@ -172,5 +169,5 @@ export const compose = (...resolvers: readonly ServiceResolver[]): ServiceResolv
  * An empty resolver that fails for any requested service.
  */
 export const empty: ServiceResolver = make((tag, context) => {
-  return Effect.fail(new ServiceNotAvailableError(`Service not available: ${String(tag.key ?? tag)}`));
+  return Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
 });

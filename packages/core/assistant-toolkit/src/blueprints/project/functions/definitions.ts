@@ -11,6 +11,7 @@ import { FunctionInvocationService, QueueService, TracingService, TriggerEvent }
 import { Operation } from '@dxos/operation';
 
 import { Project } from '../../../types';
+import { Trace } from '@dxos/functions';
 
 export const Agent = Operation.make({
   meta: {
@@ -25,12 +26,12 @@ export const Agent = Operation.make({
   }),
   output: Schema.Void,
   services: [
-    AiContextService,
     AiService.AiService,
     Database.Service,
     FunctionInvocationService,
     QueueService,
     // TODO(dmaretskyi): Consider making TracingService a default to all operations.
+    Trace.TraceService,
     TracingService,
     // TODO(dmaretskyi): Handle those within session/conversation context.
     ToolExecutionService,

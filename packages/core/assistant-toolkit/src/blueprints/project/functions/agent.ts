@@ -59,7 +59,9 @@ export default Agent.pipe(
           .pipe(Effect.retry({ times: 2 }));
       },
       Effect.scoped,
-      Effect.provide(Layer.mergeAll(AiService.model('@anthropic/claude-sonnet-4-5'), Trace.writerLayerNoop)),
+      Effect.provide(Layer.mergeAll(
+        AiService.model('@anthropic/claude-opus-4-6'), 
+      )),
     ),
   ),
 );

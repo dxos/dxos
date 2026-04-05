@@ -6,7 +6,7 @@ import { BaseError, type BaseErrorOptions } from '@dxos/errors';
 
 export class ServiceNotAvailableError extends BaseError.extend('ServiceNotAvailable', 'Service not available') {
   constructor(service: string, options?: Omit<BaseErrorOptions, 'context'>) {
-    super({ context: { service }, ...options });
+    super({ context: { service }, ...options, message: `Service not available: ${service}` });
   }
 }
 
