@@ -152,7 +152,11 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
 
             // Show vertex table for selected object.
             const solid = next ? solidsRef.current.get(next.objectId) : undefined;
-            setDebugInfoRef.current(solid ? extractSolidDebugInfo(solid) : null);
+            const meshPos = next?.mesh?.position;
+            const position: [number, number, number] | undefined = meshPos
+              ? [meshPos.x, meshPos.y, meshPos.z]
+              : undefined;
+            setDebugInfoRef.current(solid ? extractSolidDebugInfo(solid, position) : null);
           },
           setDebugStats: (stats: Record<string, string | number>) => {
             setDebugInfoRef.current({ type: 'stats', entries: stats });

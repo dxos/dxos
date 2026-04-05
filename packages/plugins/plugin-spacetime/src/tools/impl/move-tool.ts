@@ -102,6 +102,13 @@ export class MoveTool implements Tool {
 
     // Update visual position only (no ECHO write during drag).
     this._drag.mesh.position = this._drag.startPosition.add(delta);
+
+    ctx.setDebugStats({
+      x: this._drag.mesh.position.x.toFixed(2),
+      y: this._drag.mesh.position.y.toFixed(2),
+      z: this._drag.mesh.position.z.toFixed(2),
+    });
+
     return true;
   }
 
@@ -122,6 +129,9 @@ export class MoveTool implements Tool {
         };
       });
     }
+
+    // Re-select the object to refresh the debug panel.
+    ctx.setSelection({ type: 'object', objectId, mesh, highlightMesh: null });
 
     ctx.camera.attachControl(ctx.canvas, true);
     this._drag = null;

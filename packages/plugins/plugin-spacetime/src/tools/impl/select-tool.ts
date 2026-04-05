@@ -56,21 +56,7 @@ export class SelectTool implements Tool {
     }
 
     // Face selection mode.
-    const faceId = info.pickInfo.faceId;
-    if (faceId === -1) {
-      return false;
-    }
-
-    const positions = mesh.getVerticesData('position')!;
-    const indices = mesh.getIndices()! as number[];
-    const normal = getFaceNormal(faceId, positions, indices);
-
-    // Build highlight overlay and parent to object mesh so it follows transforms.
-    const highlightMesh = buildFaceSelectionMesh(faceId, positions, indices, normal, ctx.scene);
-    highlightMesh.parent = mesh;
-    ctx.setSelection({ type: 'face', objectId, mesh, faceId, normal, highlightMesh });
-
-    return true;
+    return selectFace(ctx, info);
   }
 
   onPointerMove(_ctx: ToolContext, _info: PointerInfo): boolean {
@@ -144,4 +130,45 @@ const buildFaceSelectionMesh = (
   selMesh.position = new Vector3(normal.x * 0.01, normal.y * 0.01, normal.z * 0.01);
   selMesh.isPickable = false;
   return selMesh;
+};
+
+/**
+ * Picks a face from the pointer event and sets it as the selection.
+ * Shared by SelectTool (in face mode) and ExtrudeTool (when no face is pre-selected).
+ * Returns true if a face was selected.
+ */
+export const selectFace = (ctx: ToolContext, info: PointerInfo): boolean => {
+  const pickedMesh = info.pickInfo?.pickedMesh;
+  if (!info.pickInfo?.hit || !pickedMesh) {
+    ctx.setSelection(null);
+    return false;
+  }
+
+  let objectId: string | undefined;
+  for (const [id, mesh] of ctx.meshes) {
+    if (mesh === pickedMesh) {
+      objectId = id;
+      break;
+    }
+  }
+
+  if (!objectId) {
+    ctx.setSelection(null);
+    return false;
+  }
+
+  const mesh = pickedMesh as Mesh;
+  const faceId = info.pickInfo.faceId;
+  if (faceId === -1) {
+    return false;
+  }
+
+  const positions = mesh.getVerticesData('position')!;
+  const indices = mesh.getIndices()! as number[];
+  const normal = getFaceNormal(faceId, positions, indices);
+
+  const highlightMesh = buildFaceSelectionMesh(faceId, positions, indices, normal, ctx.scene);
+  highlightMesh.parent = mesh;
+  ctx.setSelection({ type: 'face', objectId, mesh, faceId, normal, highlightMesh });
+  return true;
 };

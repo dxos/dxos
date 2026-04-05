@@ -15,6 +15,7 @@ type SolidDebugInfo = {
   verts: Array<{ idx: number; x: number; y: number; z: number }>;
   volume: number;
   bbox: { min: [number, number, number]; max: [number, number, number] };
+  position?: [number, number, number];
 };
 
 type StatsDebugInfo = {
@@ -29,7 +30,7 @@ export type DebugInfo = SolidDebugInfo | StatsDebugInfo | null;
 //
 
 /** Extracts debug info from a Manifold solid. */
-export const extractSolidDebugInfo = (solid: Manifold): SolidDebugInfo => {
+export const extractSolidDebugInfo = (solid: Manifold, position?: [number, number, number]): SolidDebugInfo => {
   const mesh = solid.getMesh();
   const { vertProperties, triVerts, numProp, numTri } = mesh;
 
@@ -61,6 +62,7 @@ export const extractSolidDebugInfo = (solid: Manifold): SolidDebugInfo => {
       min: [bbox.min[0], bbox.min[1], bbox.min[2]],
       max: [bbox.max[0], bbox.max[1], bbox.max[2]],
     },
+    position,
   };
 };
 
@@ -70,6 +72,10 @@ export const extractSolidDebugInfo = (solid: Manifold): SolidDebugInfo => {
 
 const n = (value: number, decimals = 2) => value.toFixed(decimals);
 
+const containerClasses = 'absolute top-2 right-2 text-xs font-mono pointer-events-none bg-black/50';
+const gridClasses =
+  'grid grid-cols-4 [&_label]:text-right [&_label]:text-green-800 [&_p]:text-right [&_p]:text-green-600';
+
 /** Debug overlay panel showing solid geometry or tool stats. */
 export const DebugPanel = ({ info }: { info: DebugInfo }) => {
   if (!info) {
@@ -78,19 +84,22 @@ export const DebugPanel = ({ info }: { info: DebugInfo }) => {
 
   if (info.type === 'stats') {
     return (
-      <div className='absolute top-2 right-2 text-xs font-mono opacity-70 pointer-events-none bg-black/50 text-green-500 px-2 py-1 rounded'>
-        {Object.entries(info.entries).map(([key, value]) => (
-          <div key={key}>
-            {key}: {value}
-          </div>
-        ))}
+      <div className={containerClasses}>
+        <div className={gridClasses}>
+          {Object.entries(info.entries).map(([key, value]) => (
+            <div key={key} className='col-span-full grid grid-cols-subgrid gap-2'>
+              <label>{key}</label>
+              <p>{value}</p>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className='absolute top-2 right-2 text-xs font-mono pointer-events-none bg-black/50'>
-      <div className='grid grid-cols-4 [&_label]:text-right [&_label]:text-green-800 [&_p]:text-right [&_p]:text-green-600'>
+    <div className={containerClasses}>
+      <div className={gridClasses}>
         <div className='col-span-full grid grid-cols-subgrid gap-2'>
           <label>tris</label>
           <p>{info.tris}</p>
@@ -115,6 +124,14 @@ export const DebugPanel = ({ info }: { info: DebugInfo }) => {
           <p>{n(info.bbox.max[1], 1)}</p>
           <p>{n(info.bbox.max[2], 1)}</p>
         </div>
+        {info.position && (
+          <div className='col-span-full grid grid-cols-subgrid gap-2'>
+            <label>pos</label>
+            <p>{n(info.position[0], 1)}</p>
+            <p>{n(info.position[1], 1)}</p>
+            <p>{n(info.position[2], 1)}</p>
+          </div>
+        )}
         <div className='col-span-full grid grid-cols-subgrid gap-2'>
           <label />
           <label>x</label>

@@ -398,56 +398,6 @@ export const projectTo2D = (
   });
 };
 
-/**
- * Builds a column-major 4x4 matrix that maps local coordinates (Z = face normal) to world coordinates.
- * Used to transform extruded CrossSection geometry to the face position and orientation.
- *
- * Manifold.transform() expects a 16-element column-major Mat4:
- * [col0x, col0y, col0z, 0, col1x, col1y, col1z, 0, col2x, col2y, col2z, 0, tx, ty, tz, 1]
- */
-const buildZToNormalTransform = (
-  normal: Model.Vec3,
-  origin: [number, number, number],
-): [
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-] => {
-  const { nx, ny } = buildFaceAxes(normal);
-
-  return [
-    nx.x,
-    nx.y,
-    nx.z,
-    0, // Column 0: local X -> world.
-    ny.x,
-    ny.y,
-    ny.z,
-    0, // Column 1: local Y -> world.
-    normal.x,
-    normal.y,
-    normal.z,
-    0, // Column 2: local Z (normal) -> world.
-    origin[0],
-    origin[1],
-    origin[2],
-    1, // Column 3: translation.
-  ];
-};
-
 //
 // Face extrusion.
 //
@@ -462,17 +412,12 @@ const buildZToNormalTransform = (
  * The side faces connecting moved and unmoved vertices stretch automatically.
  */
 export const applyExtrusion = (
-  wasm: ManifoldToplevel,
+  Manifold: ManifoldToplevel['Manifold'],
   baseSolid: Manifold,
   faceId: number,
-  _positions: ArrayLike<number>,
-  _indices: ArrayLike<number>,
   normal: Model.Vec3,
   distance: number,
-  _faceIDs?: Uint32Array,
 ): Manifold => {
-  const { Manifold } = wasm;
-
   if (distance === 0) {
     // NOTE: Must clone even for zero distance. The caller (onPointerUp) deletes baseSolid
     // and stores the result in ctx.solids. Self-union is a no-op clone in Manifold.

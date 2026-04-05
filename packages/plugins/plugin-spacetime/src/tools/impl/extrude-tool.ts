@@ -2,10 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Matrix, type Mesh, PointerEventTypes, Vector3, VertexBuffer, type PointerInfo } from '@babylonjs/core';
+import { Matrix, type Mesh, PointerEventTypes, Vector3, type PointerInfo } from '@babylonjs/core';
 import type { Manifold } from 'manifold-3d';
 
 import { applyExtrusion, updateMeshFromManifold } from '../../engine';
+import { selectFace } from './select-tool';
 import { type ToolContext } from '../tool-context';
 import { type Tool } from '../tool';
 
@@ -23,14 +24,8 @@ type ExtrudeState = {
   mesh: Mesh;
   /** Face normal in world space. */
   normal: { x: number; y: number; z: number };
-  /** Selected face index (for CrossSection extraction). */
+  /** Selected face index. */
   faceId: number;
-  /** Vertex positions snapshot at drag start. */
-  positions: Float32Array | number[];
-  /** Index buffer snapshot at drag start. */
-  indices: Uint32Array | number[];
-  /** Manifold face IDs for reliable coplanar face grouping after boolean ops. */
-  faceIDs: Uint32Array;
   /** Normalized screen-space direction that maps to positive extrusion. */
   screenDir: { x: number; y: number };
   /** Pointer position at drag start. */
@@ -90,9 +85,9 @@ export class ExtrudeTool implements Tool {
       return true;
     }
 
-    // Extrusion requires a face selection.
+    // If no face is selected, pick one (without starting extrusion).
     if (ctx.selection?.type !== 'face') {
-      return false;
+      return selectFace(ctx, info);
     }
 
     const { objectId, mesh, normal, faceId } = ctx.selection;
@@ -111,31 +106,15 @@ export class ExtrudeTool implements Tool {
       ctx.selection.highlightMesh.setEnabled(false);
     }
 
-    // Snapshot the mesh vertex data at drag start (geometry changes during drag).
-    const positions = mesh.getVerticesData(VertexBuffer.PositionKind);
-    const indices = mesh.getIndices();
-    if (!positions || !indices) {
-      return false;
-    }
-
     // Clone the solid so we can rebuild from base during drag.
     const { Manifold } = ctx.manifold;
     const baseSolid = Manifold.union(currentSolid, currentSolid);
-
-    // Extract Manifold's face IDs for reliable coplanar face grouping.
-    // After boolean operations, Manifold may split a logical face into multiple triangles
-    // with seam edges — faceID correctly groups them where manual coplanarity checks fail.
-    const manifoldMesh = currentSolid.getMesh();
-    const faceIDs = manifoldMesh.faceID;
 
     this._state = {
       objectId,
       mesh,
       normal,
       faceId,
-      positions: Float32Array.from(positions),
-      indices: Uint32Array.from(indices as number[]),
-      faceIDs: Uint32Array.from(faceIDs),
       screenDir,
       startX: event.clientX,
       startY: event.clientY,
@@ -167,17 +146,13 @@ export class ExtrudeTool implements Tool {
     const projection = dx * this._state.screenDir.x + dy * this._state.screenDir.y;
     const distance = projection * EXTRUDE_SENSITIVITY;
 
-    // Apply extrusion using the face boundary polygon (CrossSection-based).
     const t0 = performance.now();
     const extruded = applyExtrusion(
-      ctx.manifold,
+      ctx.manifold.Manifold,
       this._state.baseSolid,
       this._state.faceId,
-      this._state.positions,
-      this._state.indices,
       this._state.normal,
       distance,
-      this._state.faceIDs,
     );
     const t1 = performance.now();
 
@@ -212,14 +187,11 @@ export class ExtrudeTool implements Tool {
     const distance = projection * EXTRUDE_SENSITIVITY;
 
     const finalSolid = applyExtrusion(
-      ctx.manifold,
+      ctx.manifold.Manifold,
       this._state.baseSolid,
       this._state.faceId,
-      this._state.positions,
-      this._state.indices,
       this._state.normal,
       distance,
-      this._state.faceIDs,
     );
 
     // Replace the runtime solid for this object.

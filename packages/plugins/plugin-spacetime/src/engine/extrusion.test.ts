@@ -96,18 +96,17 @@ const extractFaceIDs = (solid: Manifold): Uint32Array => {
 };
 
 const extrudeByNormal = (
-  wasmInstance: ManifoldToplevel,
+  ManifoldApi: ManifoldToplevel['Manifold'],
   solid: Manifold,
   normal: { x: number; y: number; z: number },
   distance: number,
 ): Manifold => {
   const { positions, indices } = extractMeshData(solid);
-  const faceIDs = extractFaceIDs(solid);
   const faceId = findFaceByNormal(positions, indices, normal);
   if (faceId < 0) {
     throw new Error(`No face found matching normal (${normal.x}, ${normal.y}, ${normal.z})`);
   }
-  return applyExtrusion(wasmInstance, solid, faceId, positions, indices, normal, distance, faceIDs);
+  return applyExtrusion(ManifoldApi, solid, faceId, normal, distance);
 };
 
 describe('applyExtrusion', () => {
@@ -136,7 +135,7 @@ describe('applyExtrusion', () => {
     // Extrude +X face by distance 1.
     // Expected: bbox [-1, 2] on X, [-1, 1] on Y, [-1, 1] on Z.
     const cube = makeCube();
-    const result = extrudeByNormal(wasmInstance, cube, { x: 1, y: 0, z: 0 }, 1);
+    const result = extrudeByNormal(ManifoldApi, cube, { x: 1, y: 0, z: 0 }, 1);
 
     expectBBox(expect, result, [-1, -1, -1], [2, 1, 1]);
 
@@ -146,7 +145,7 @@ describe('applyExtrusion', () => {
 
   test('basic positive extrusion on +Y face', ({ expect }) => {
     const cube = makeCube();
-    const result = extrudeByNormal(wasmInstance, cube, { x: 0, y: 1, z: 0 }, 1);
+    const result = extrudeByNormal(ManifoldApi, cube, { x: 0, y: 1, z: 0 }, 1);
 
     expectBBox(expect, result, [-1, -1, -1], [1, 2, 1]);
 
@@ -156,7 +155,7 @@ describe('applyExtrusion', () => {
 
   test('basic positive extrusion on +Z face', ({ expect }) => {
     const cube = makeCube();
-    const result = extrudeByNormal(wasmInstance, cube, { x: 0, y: 0, z: 1 }, 1);
+    const result = extrudeByNormal(ManifoldApi, cube, { x: 0, y: 0, z: 1 }, 1);
 
     expectBBox(expect, result, [-1, -1, -1], [1, 1, 2]);
 
@@ -166,7 +165,7 @@ describe('applyExtrusion', () => {
 
   test('basic positive extrusion on -X face', ({ expect }) => {
     const cube = makeCube();
-    const result = extrudeByNormal(wasmInstance, cube, { x: -1, y: 0, z: 0 }, 1);
+    const result = extrudeByNormal(ManifoldApi, cube, { x: -1, y: 0, z: 0 }, 1);
 
     expectBBox(expect, result, [-2, -1, -1], [1, 1, 1]);
 
@@ -179,7 +178,7 @@ describe('applyExtrusion', () => {
     // With face-boundary-aware extrusion, the cut should be exact.
     // Expected: bbox [-1, 0.5] on X, [-1, 1] on Y, [-1, 1] on Z.
     const cube = makeCube();
-    const result = extrudeByNormal(wasmInstance, cube, { x: 1, y: 0, z: 0 }, -0.5);
+    const result = extrudeByNormal(ManifoldApi, cube, { x: 1, y: 0, z: 0 }, -0.5);
 
     expectBBox(expect, result, [-1, -1, -1], [0.5, 1, 1]);
 
@@ -191,7 +190,7 @@ describe('applyExtrusion', () => {
     const cube = makeCube();
     const { positions, indices } = extractMeshData(cube);
     const faceId = findFaceByNormal(positions, indices, { x: 1, y: 0, z: 0 });
-    const result = applyExtrusion(wasmInstance, cube, faceId, positions, indices, { x: 1, y: 0, z: 0 }, 0);
+    const result = applyExtrusion(ManifoldApi, cube, faceId, { x: 1, y: 0, z: 0 }, 0);
 
     // Should return a clone with the same bounding box.
     expectBBox(expect, result, [-1, -1, -1], [1, 1, 1]);
@@ -208,10 +207,10 @@ describe('applyExtrusion', () => {
     // After +X extrusion: bbox [-1, 2] on X, [-1, 1] on Y, [-1, 1] on Z.
     // After +Y extrusion: bbox [-1, 2] on X, [-1, 2] on Y, [-1, 1] on Z.
     const cube = makeCube();
-    const afterX = extrudeByNormal(wasmInstance, cube, { x: 1, y: 0, z: 0 }, 1);
+    const afterX = extrudeByNormal(ManifoldApi, cube, { x: 1, y: 0, z: 0 }, 1);
     cube.delete();
 
-    const afterXY = extrudeByNormal(wasmInstance, afterX, { x: 0, y: 1, z: 0 }, 1);
+    const afterXY = extrudeByNormal(ManifoldApi, afterX, { x: 0, y: 1, z: 0 }, 1);
     afterX.delete();
 
     expectBBox(expect, afterXY, [-1, -1, -1], [2, 2, 1]);
@@ -226,10 +225,10 @@ describe('applyExtrusion', () => {
     // the actual face boundary, not the full bounding box.
     // Expected: bbox [-0.5, 2] on X.
     const cube = makeCube();
-    const afterPosX = extrudeByNormal(wasmInstance, cube, { x: 1, y: 0, z: 0 }, 1);
+    const afterPosX = extrudeByNormal(ManifoldApi, cube, { x: 1, y: 0, z: 0 }, 1);
     cube.delete();
 
-    const afterNegX = extrudeByNormal(wasmInstance, afterPosX, { x: -1, y: 0, z: 0 }, -0.5);
+    const afterNegX = extrudeByNormal(ManifoldApi, afterPosX, { x: -1, y: 0, z: 0 }, -0.5);
     afterPosX.delete();
 
     const bbox = afterNegX.boundingBox();
@@ -248,7 +247,7 @@ describe('applyExtrusion', () => {
     // 2x2x2 cube. Extrude +X face by -10 (huge negative, would collapse X dimension).
     // Should clamp to leave at least MIN_SIZE (1) on X axis.
     const cube = makeCube();
-    const result = extrudeByNormal(wasmInstance, cube, { x: 1, y: 0, z: 0 }, -10);
+    const result = extrudeByNormal(ManifoldApi, cube, { x: 1, y: 0, z: 0 }, -10);
 
     const bbox = result.boundingBox();
     const xSize = bbox.max[0] - bbox.min[0];
@@ -265,7 +264,7 @@ describe('applyExtrusion', () => {
     const meshBefore = cube.getMesh();
     expect(meshBefore.numTri).toBe(12);
 
-    const result = extrudeByNormal(wasmInstance, cube, { x: 1, y: 0, z: 0 }, 1);
+    const result = extrudeByNormal(ManifoldApi, cube, { x: 1, y: 0, z: 0 }, 1);
     const meshAfter = result.getMesh();
 
     // warp()-based extrusion preserves topology — triangle count stays the same.
@@ -282,7 +281,7 @@ describe('applyExtrusion', () => {
     const volumeBefore = cube.volume();
     expect(volumeBefore).toBeCloseTo(8, 0);
 
-    const result = extrudeByNormal(wasmInstance, cube, { x: 1, y: 0, z: 0 }, 1);
+    const result = extrudeByNormal(ManifoldApi, cube, { x: 1, y: 0, z: 0 }, 1);
     const volumeAfter = result.volume();
 
     // Expected volume: 2*2*3 = 12 (original 2x2x2 + 1x2x2 slab merged).
@@ -296,7 +295,7 @@ describe('applyExtrusion', () => {
     const cube = makeCube();
     const volumeBefore = cube.volume();
 
-    const result = extrudeByNormal(wasmInstance, cube, { x: 1, y: 0, z: 0 }, -0.5);
+    const result = extrudeByNormal(ManifoldApi, cube, { x: 1, y: 0, z: 0 }, -0.5);
     const volumeAfter = result.volume();
 
     // Original: 2x2x2 = 8. After cutting 0.5 from +X: 1.5x2x2 = 6.
@@ -310,10 +309,10 @@ describe('applyExtrusion', () => {
   test('symmetric extrusions produce symmetric results', ({ expect }) => {
     // Extrude +X and -X by the same amount should produce a symmetric solid.
     const cube = makeCube();
-    const afterPosX = extrudeByNormal(wasmInstance, cube, { x: 1, y: 0, z: 0 }, 1);
+    const afterPosX = extrudeByNormal(ManifoldApi, cube, { x: 1, y: 0, z: 0 }, 1);
     cube.delete();
 
-    const afterBothX = extrudeByNormal(wasmInstance, afterPosX, { x: -1, y: 0, z: 0 }, 1);
+    const afterBothX = extrudeByNormal(ManifoldApi, afterPosX, { x: -1, y: 0, z: 0 }, 1);
     afterPosX.delete();
 
     // Should be symmetric: [-2, 2] on X.
@@ -364,7 +363,7 @@ describe('applyExtrusion', () => {
       const cube = makeCube();
 
       // First extrusion: +Y face by 0.5.
-      const afterY = extrudeByNormal(wasmInstance, cube, { x: 0, y: 1, z: 0 }, 0.5);
+      const afterY = extrudeByNormal(ManifoldApi, cube, { x: 0, y: 1, z: 0 }, 0.5);
       cube.delete();
       expectBBox(expect, afterY, [-1, -1, -1], [1, 1.5, 1]);
       expect(afterY.volume()).toBeCloseTo(10, 0);
@@ -385,7 +384,7 @@ describe('applyExtrusion', () => {
       expect(Math.max(...bYs)).toBeCloseTo(1.5, 1);
 
       // Second extrusion: +X face by 1 on the result.
-      const afterXY = extrudeByNormal(wasmInstance, afterY, { x: 1, y: 0, z: 0 }, 1);
+      const afterXY = extrudeByNormal(ManifoldApi, afterY, { x: 1, y: 0, z: 0 }, 1);
       afterY.delete();
 
       // X should extend to 2, Y should still be 1.5.
@@ -407,12 +406,12 @@ describe('applyExtrusion', () => {
       const faceId = findFaceByNormal(positions, indices, { x: 1, y: 0, z: 0 });
 
       // Drag outward.
-      const outward = applyExtrusion(wasmInstance, baseSolid, faceId, positions, indices, { x: 1, y: 0, z: 0 }, 1, faceIDs);
+      const outward = applyExtrusion(ManifoldApi, baseSolid, faceId, { x: 1, y: 0, z: 0 }, 1);
       expect(outward.boundingBox().max[0]).toBeCloseTo(2, 1);
       outward.delete();
 
       // Drag back past zero (inward).
-      const inward = applyExtrusion(wasmInstance, baseSolid, faceId, positions, indices, { x: 1, y: 0, z: 0 }, -0.5, faceIDs);
+      const inward = applyExtrusion(ManifoldApi, baseSolid, faceId, { x: 1, y: 0, z: 0 }, -0.5);
       expect(inward.boundingBox().max[0]).toBeCloseTo(0.5, 1);
       inward.delete();
 
@@ -426,19 +425,19 @@ describe('applyExtrusion', () => {
       let solid = makeCube();
 
       // +X by 1.
-      let next = extrudeByNormal(wasmInstance, solid, { x: 1, y: 0, z: 0 }, 1);
+      let next = extrudeByNormal(ManifoldApi, solid, { x: 1, y: 0, z: 0 }, 1);
       solid.delete();
       solid = next;
       expectBBox(expect, solid, [-1, -1, -1], [2, 1, 1]);
 
       // +Y by 1.
-      next = extrudeByNormal(wasmInstance, solid, { x: 0, y: 1, z: 0 }, 1);
+      next = extrudeByNormal(ManifoldApi, solid, { x: 0, y: 1, z: 0 }, 1);
       solid.delete();
       solid = next;
       expect(solid.boundingBox().max[1]).toBeCloseTo(2, 1);
 
       // +Z by 1.
-      next = extrudeByNormal(wasmInstance, solid, { x: 0, y: 0, z: 1 }, 1);
+      next = extrudeByNormal(ManifoldApi, solid, { x: 0, y: 0, z: 1 }, 1);
       solid.delete();
       solid = next;
       expect(solid.boundingBox().max[2]).toBeCloseTo(2, 1);
