@@ -5,7 +5,7 @@
 import { type ArcRotateCamera, type HighlightLayer, type Mesh, type Scene as BabylonScene } from '@babylonjs/core';
 import type { Manifold } from 'manifold-3d';
 
-import { type ViewState } from '../components/SpacetimeToolbar';
+import { type SelectionState, type ViewState } from '../components/SpacetimeToolbar';
 import { type Scene, type Model } from '../types';
 import { type getManifold } from '../engine';
 
@@ -53,6 +53,7 @@ export type ToolContext = {
   /** Resolve an ECHO object id to its Model.Object. */
   getObject: (id: string) => Model.Object | undefined;
   /** Current view state (selection mode, grid, etc.). */
+  selectionState: SelectionState;
   viewState: ViewState;
   /** Runtime Manifold solids keyed by object id. Persists across tool operations. */
   solids: Map<string, Manifold>;

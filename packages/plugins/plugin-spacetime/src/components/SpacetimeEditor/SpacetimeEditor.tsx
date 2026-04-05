@@ -3,7 +3,17 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import React, { type PropsWithChildren, useEffect, useState, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react';
+import React, {
+  type PropsWithChildren,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+  RefObject,
+} from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { exportSTL, downloadFile } from '../../engine';
@@ -14,11 +24,13 @@ import { type Scene, Model } from '../../types';
 import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
 import {
   type EditorActions,
+  type SelectionState,
   type SpacetimeTool,
   type ViewState,
   SpacetimeToolbar,
   type SpacetimeToolbarProps,
 } from '../SpacetimeToolbar';
+import { type ToolState } from '../SpacetimeToolbar/tools';
 
 //
 // Context
@@ -28,23 +40,40 @@ const SPACETIME_EDITOR = 'SpacetimeEditor';
 
 type SpacetimeEditorContextValue = {
   scene?: Scene.Scene;
-  tool: SpacetimeTool;
-  onToolChange: (tool: SpacetimeTool) => void;
+
+  /** Actions. */
+  editorActions: EditorActions;
+
+  /** Tools. */
+  toolState: ToolState;
+  onToolChange: (next: Partial<ToolState>) => void;
+
+  /** View. */
   viewState: ViewState;
   onViewChange: (next: Partial<ViewState>) => void;
-  selectedPrimitive: Model.PrimitiveType;
-  onPrimitiveChange: (primitive: Model.PrimitiveType) => void;
+
+  /** Object Properties. */
   selectedHue: string;
   onHueChange: (hue: string) => void;
-  editorActions: EditorActions;
+
+  /** Selection. */
+  selectionState: SelectionState;
+  onSelectionChange: (next: Partial<SelectionState>) => void;
+
   selectedObjectId: string | null;
   setSelectedObjectId: (id: string | null) => void;
+
+  selectedPrimitive: Model.PrimitiveType;
+  onSelectedPrimitiveChange: (primitive: Model.PrimitiveType) => void;
+
   /** Runtime Manifold solids (provided by canvas). */
-  solidsRef: React.RefObject<Map<string, import('manifold-3d').Manifold> | null>;
+  solidsRef: RefObject<Map<string, import('manifold-3d').Manifold> | null>;
+
   /** Ref for canvas to provide the import implementation (ArrayBuffer for GLB, string for OBJ). */
-  importGLBRef: React.MutableRefObject<(data: ArrayBuffer | string) => Promise<void>>;
+  importGLBRef: RefObject<(data: ArrayBuffer | string) => Promise<void>>;
+
   /** Ref for canvas to provide object deletion (disposes mesh + solid). */
-  deleteObjectRef: React.MutableRefObject<(objectId: string) => void>;
+  deleteObjectRef: RefObject<(objectId: string) => void>;
 };
 
 const [SpacetimeEditorProvider, useSpacetimeEditorContext] =
@@ -55,7 +84,7 @@ const [SpacetimeEditorProvider, useSpacetimeEditorContext] =
 //
 
 interface SpacetimeController {
-  setTool(tool: SpacetimeTool): void;
+  setTool(tool: Partial<ToolState>): void;
 }
 
 //
@@ -68,11 +97,13 @@ type SpacetimeEditorRootProps = PropsWithChildren<{
   scene?: Scene.Scene;
 }>;
 
-const DEFAULT_VIEW_STATE: ViewState = { selectionMode: 'face', showGrid: true, showDebug: false };
+const DEFAULT_SELECTION_STATE: SelectionState = { selectionMode: 'face' };
+const DEFAULT_VIEW_STATE: ViewState = { showGrid: true, showDebug: false };
 
 const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootProps>(
   ({ children, scene }, forwardedRef) => {
-    const [tool, setTool] = useState<SpacetimeTool>('select');
+    const [toolState, setToolState] = useState<ToolState>({ tool: 'select' });
+    const [selectionState, setSelectionState] = useState<SelectionState>(DEFAULT_SELECTION_STATE);
     const [viewState, setViewState] = useState<ViewState>(DEFAULT_VIEW_STATE);
     const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
     const [selectedPrimitive, setSelectedPrimitive] = useState<Model.PrimitiveType>('cube');
@@ -81,25 +112,40 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     const importGLBRef = useRef<(data: ArrayBuffer | string) => Promise<void>>(async () => {});
     const deleteObjectRef = useRef<(objectId: string) => void>(() => {});
 
-    const handleToolChange = useCallback((tool: SpacetimeTool) => setTool(tool), []);
+    const handleToolChange = useCallback(
+      (next: Partial<ToolState>) => setToolState((prev) => ({ ...prev, ...next })),
+      [],
+    );
+    const handleSelectionChange = useCallback(
+      (next: Partial<SelectionState>) => setSelectionState((prev) => ({ ...prev, ...next })),
+      [],
+    );
     const handleViewChange = useCallback(
       (next: Partial<ViewState>) => setViewState((prev) => ({ ...prev, ...next })),
       [],
     );
-    const handlePrimitiveChange = useCallback((primitive: Model.PrimitiveType) => setSelectedPrimitive(primitive), []);
-    const handleHueChange = useCallback((hue: string) => {
-      setSelectedHue(hue);
-      // Update the selected object's color if one is selected.
-      if (selectedObjectId && scene?.objects) {
-        for (const ref of scene.objects) {
-          const obj = ref?.target;
-          if (obj && (obj as any).id === selectedObjectId) {
-            Obj.change(obj, (o) => { o.color = hue; });
-            break;
+    const handleSelectedPrimitiveChange = useCallback(
+      (primitive: Model.PrimitiveType) => setSelectedPrimitive(primitive),
+      [],
+    );
+    const handleHueChange = useCallback(
+      (hue: string) => {
+        setSelectedHue(hue);
+        // Update the selected object's color if one is selected.
+        if (selectedObjectId && scene?.objects) {
+          for (const ref of scene.objects) {
+            const obj = ref?.target;
+            if (obj && (obj as any).id === selectedObjectId) {
+              Obj.change(obj, (o) => {
+                o.color = hue;
+              });
+              break;
+            }
           }
         }
-      }
-    }, [selectedObjectId, scene]);
+      },
+      [selectedObjectId, scene],
+    );
 
     const handleAddObject = useCallback(() => {
       if (!scene) {
@@ -184,7 +230,12 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     }, [selectedObjectId, scene]);
 
     const editorActions: EditorActions = useMemo(
-      () => ({ onAddObject: handleAddObject, onDeleteSelected: handleDeleteSelected, onImport: handleImport, onExportSTL: handleExportSTL }),
+      () => ({
+        onAddObject: handleAddObject,
+        onDeleteSelected: handleDeleteSelected,
+        onImport: handleImport,
+        onExportSTL: handleExportSTL,
+      }),
       [handleAddObject, handleDeleteSelected, handleImport, handleExportSTL],
     );
 
@@ -195,12 +246,14 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     return (
       <SpacetimeEditorProvider
         scene={scene}
-        tool={tool}
+        toolState={toolState}
         onToolChange={handleToolChange}
+        selectionState={selectionState}
+        onSelectionChange={handleSelectionChange}
         viewState={viewState}
         onViewChange={handleViewChange}
         selectedPrimitive={selectedPrimitive}
-        onPrimitiveChange={handlePrimitiveChange}
+        onSelectedPrimitiveChange={handleSelectedPrimitiveChange}
         selectedHue={selectedHue}
         onHueChange={handleHueChange}
         editorActions={editorActions}
@@ -228,21 +281,30 @@ type SpacetimeEditorToolbarProps = Pick<SpacetimeToolbarProps, 'alwaysActive'>;
 
 const SpacetimeEditorToolbar = composable<HTMLDivElement, SpacetimeEditorToolbarProps>((props, forwardedRef) => {
   const {
-    tool, onToolChange, viewState, onViewChange,
-    selectedPrimitive, onPrimitiveChange,
-    selectedHue, onHueChange,
+    toolState,
+    onToolChange,
+    selectionState,
+    onSelectionChange,
+    viewState,
+    onViewChange,
+    selectedPrimitive,
+    onSelectedPrimitiveChange,
+    selectedHue,
+    onHueChange,
     editorActions,
   } = useSpacetimeEditorContext(SPACETIME_EDITOR_TOOLBAR);
 
   return (
     <SpacetimeToolbar
       {...composableProps(props)}
-      tool={tool}
+      toolState={toolState}
       onToolChange={onToolChange}
+      selectionState={selectionState}
+      onSelectionChange={onSelectionChange}
       viewState={viewState}
       onViewChange={onViewChange}
       selectedPrimitive={selectedPrimitive}
-      onPrimitiveChange={onPrimitiveChange}
+      onSelectedPrimitiveChange={onSelectedPrimitiveChange}
       selectedHue={selectedHue}
       onHueChange={onHueChange}
       editorActions={editorActions}
@@ -263,9 +325,16 @@ type SpacetimeEditorCanvasProsp = Omit<SpacetimeCanvasProps, 'showAxes' | 'showF
 
 const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {
   const {
-    scene, tool, viewState, selectedHue, selectedObjectId,
-    setSelectedObjectId, solidsRef: parentSolidsRef,
-    importGLBRef: parentImportGLBRef, deleteObjectRef: parentDeleteObjectRef,
+    scene,
+    toolState,
+    selectionState,
+    viewState,
+    selectedHue,
+    selectedObjectId,
+    setSelectedObjectId,
+    solidsRef: parentSolidsRef,
+    importGLBRef: parentImportGLBRef,
+    deleteObjectRef: parentDeleteObjectRef,
   } = useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
   // Subscribe to ECHO scene changes so we re-render when objects are added/removed.
   const [liveScene] = useObject(scene);
@@ -274,7 +343,8 @@ const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasPr
     <SpacetimeCanvas
       {...composableProps(props)}
       scene={scene}
-      tool={tool}
+      tool={toolState.tool}
+      selectionMode={selectionState.selectionMode}
       viewState={viewState}
       objectCount={objectCount}
       onSelectionChange={setSelectedObjectId}

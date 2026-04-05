@@ -25,7 +25,10 @@ export type EditorActions = {
 
 /** Creates the primitive type dropdown. */
 export const createPrimitiveSelector =
-  (selectedPrimitive: Model.PrimitiveType, onPrimitiveChange: (primitive: Model.PrimitiveType) => void): ActionGroupBuilderFn =>
+  (
+    selectedPrimitive: Model.PrimitiveType,
+    onSelectedPrimitiveChange: (primitive: Model.PrimitiveType) => void,
+  ): ActionGroupBuilderFn =>
   (builder) => {
     builder.group(
       'primitive',
@@ -42,8 +45,12 @@ export const createPrimitiveSelector =
         for (const [primitive, icon] of Object.entries(primitiveIcons)) {
           group.action(
             `primitive-${primitive}`,
-            { label: [`primitive.${primitive}.label`, { ns: meta.id }], icon, checked: primitive === selectedPrimitive },
-            () => onPrimitiveChange(primitive as Model.PrimitiveType),
+            {
+              label: [`primitive.${primitive}.label`, { ns: meta.id }],
+              icon,
+              checked: primitive === selectedPrimitive,
+            },
+            () => onSelectedPrimitiveChange(primitive as Model.PrimitiveType),
           );
         }
       },
@@ -54,8 +61,24 @@ export const createPrimitiveSelector =
 export const createEditorActions =
   (actions: EditorActions): ActionGroupBuilderFn =>
   (builder) => {
-    builder.action('add-object', { label: ['action.add-object.label', { ns: meta.id }], icon: 'ph--plus--regular' }, actions.onAddObject);
-    builder.action('delete-object', { label: ['action.delete-object.label', { ns: meta.id }], icon: 'ph--trash--regular' }, actions.onDeleteSelected);
-    builder.action('import', { label: ['action.import.label', { ns: meta.id }], icon: 'ph--upload-simple--regular' }, actions.onImport);
-    builder.action('export-stl', { label: ['action.export-stl.label', { ns: meta.id }], icon: 'ph--download-simple--regular' }, actions.onExportSTL);
+    builder.action(
+      'add-object',
+      { label: ['action.add-object.label', { ns: meta.id }], icon: 'ph--plus--regular' },
+      actions.onAddObject,
+    );
+    builder.action(
+      'delete-object',
+      { label: ['action.delete-object.label', { ns: meta.id }], icon: 'ph--trash--regular' },
+      actions.onDeleteSelected,
+    );
+    builder.action(
+      'import',
+      { label: ['action.import.label', { ns: meta.id }], icon: 'ph--upload-simple--regular' },
+      actions.onImport,
+    );
+    builder.action(
+      'export-stl',
+      { label: ['action.export-stl.label', { ns: meta.id }], icon: 'ph--download-simple--regular' },
+      actions.onExportSTL,
+    );
   };

@@ -5,9 +5,12 @@
 import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 
 import { meta } from '../../meta';
-import { type SpacetimeToolbarState } from './SpacetimeToolbar';
 
 export type SpacetimeTool = 'select' | 'move' | 'extrude';
+
+export type ToolState = {
+  tool: SpacetimeTool;
+};
 
 const tools: Record<SpacetimeTool, string> = {
   select: 'ph--cursor--regular',
@@ -17,7 +20,7 @@ const tools: Record<SpacetimeTool, string> = {
 
 /** Creates the tool selection toggle group. */
 export const createToolActions =
-  (state: SpacetimeToolbarState, onToolChange: (tool: SpacetimeTool) => void): ActionGroupBuilderFn =>
+  (state: ToolState, onToolChange: (next: Partial<ToolState>) => void): ActionGroupBuilderFn =>
   (builder) => {
     builder.group(
       'tool',
@@ -33,7 +36,7 @@ export const createToolActions =
           group.action(
             tool,
             { label: [`tool.${tool}.label`, { ns: meta.id }], checked: state.tool === tool, icon },
-            () => onToolChange(tool as SpacetimeTool),
+            () => onToolChange({ tool: tool as SpacetimeTool }),
           );
         }
       },

@@ -17,6 +17,7 @@ export type SpacetimeCanvasProps = {
   showFps?: boolean;
   scene?: Scene.Scene;
   tool?: SpacetimeTool;
+  selectionMode?: string;
   viewState?: ViewState;
   /** Reactive object count from ECHO subscription. Triggers sync when objects are added/removed. */
   objectCount?: number;
@@ -41,6 +42,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       showFps = true,
       scene: sceneData,
       tool = 'select',
+      selectionMode = 'face',
       viewState,
       objectCount = 0,
       onSelectionChange,
@@ -67,6 +69,8 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         solidsRef.current;
     }
     const selectionRef = useRef<Selection | null>(null);
+    const selectionModeRef = useRef(selectionMode);
+    selectionModeRef.current = selectionMode;
     const [debugInfo, setDebugInfo] = useState<DebugInfo>(null);
     const setDebugInfoRef = useRef(setDebugInfo);
     setDebugInfoRef.current = setDebugInfo;
@@ -149,8 +153,11 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             }
             return undefined;
           },
+          get selectionState() {
+            return { selectionMode: selectionModeRef.current as 'object' | 'face' };
+          },
           get viewState() {
-            return viewStateRef.current ?? { selectionMode: 'face' as const, showGrid: true, showDebug: false };
+            return viewStateRef.current ?? { showGrid: true, showDebug: false };
           },
           get selection() {
             return selectionRef.current;

@@ -57,7 +57,7 @@ export class SelectTool implements Tool {
 
     const mesh = pickedMesh as Mesh;
 
-    if (ctx.viewState.selectionMode === 'object') {
+    if (ctx.selectionState.selectionMode === 'object') {
       // Object selection: highlight layer glow managed by ctx.setSelection.
       ctx.setSelection({ type: 'object', objectId, mesh, highlightMesh: null });
       return true;

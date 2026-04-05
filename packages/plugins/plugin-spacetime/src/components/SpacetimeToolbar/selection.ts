@@ -8,13 +8,18 @@ import { meta } from '../../meta';
 
 export type SelectionMode = 'object' | 'face';
 
-export type ViewState = {
+export type SelectionState = {
   selectionMode: SelectionMode;
+};
+
+const selectionModes: Record<SelectionMode, string> = {
+  object: 'ph--cube--regular',
+  face: 'ph--rectangle--regular',
 };
 
 /** Creates the selection mode toggle group. */
 export const createSelectionModeActions =
-  (state: ViewState, onViewChange: (next: Partial<ViewState>) => void): ActionGroupBuilderFn =>
+  (state: SelectionState, onViewChange: (next: Partial<SelectionState>) => void): ActionGroupBuilderFn =>
   (builder) => {
     builder.group(
       'selection-mode',

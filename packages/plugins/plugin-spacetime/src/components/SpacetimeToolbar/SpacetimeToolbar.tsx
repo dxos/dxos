@@ -12,38 +12,45 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type Model } from '../../types';
 import { type EditorActions, createEditorActions, createPrimitiveSelector } from './actions';
-import { type SpacetimeTool, createToolActions } from './tools';
-import { type ViewState, createSelectionModeActions, createViewActions } from './view';
-
-export type SpacetimeToolbarState = {
-  tool: SpacetimeTool;
-};
+import { type SelectionState, createSelectionModeActions } from './selection';
+import { type ToolState, createToolActions } from './tools';
+import { type ViewState, createViewActions } from './view';
 
 export type SpacetimeToolbarProps = Pick<MenuRootProps, 'alwaysActive'> & {
-  tool: SpacetimeTool;
-  onToolChange: (tool: SpacetimeTool) => void;
+  editorActions: EditorActions;
+
+  toolState: ToolState;
+  onToolChange: (next: Partial<ToolState>) => void;
+
   viewState: ViewState;
   onViewChange: (next: Partial<ViewState>) => void;
-  selectedPrimitive: Model.PrimitiveType;
-  onPrimitiveChange: (primitive: Model.PrimitiveType) => void;
+
+  // TODO(burdon): Generalize to propertiesState.
   selectedHue: string;
   onHueChange: (hue: string) => void;
-  editorActions: EditorActions;
+
+  selectionState: SelectionState;
+  onSelectionChange: (next: Partial<SelectionState>) => void;
+
+  selectedPrimitive: Model.PrimitiveType;
+  onSelectedPrimitiveChange: (primitive: Model.PrimitiveType) => void;
 };
 
 export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps>(
   (
     {
       alwaysActive,
-      tool,
+      editorActions,
+      toolState,
       onToolChange,
       viewState,
       onViewChange,
-      selectedPrimitive,
-      onPrimitiveChange,
       selectedHue,
       onHueChange,
-      editorActions,
+      selectionState,
+      onSelectionChange,
+      selectedPrimitive,
+      onSelectedPrimitiveChange,
       ...props
     },
     forwardedRef,
@@ -51,17 +58,31 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
     const menuCreator = useMemo(
       () =>
         createToolbarActions({
-          tool,
+          editorActions,
+          toolState,
           onToolChange,
           viewState,
           onViewChange,
-          selectedPrimitive,
-          onPrimitiveChange,
           selectedHue,
           onHueChange,
-          editorActions,
+          selectionState,
+          onSelectionChange,
+          selectedPrimitive,
+          onSelectedPrimitiveChange,
         }),
-      [tool, onToolChange, viewState, onViewChange, selectedPrimitive, onPrimitiveChange, editorActions],
+      [
+        editorActions,
+        toolState,
+        onToolChange,
+        viewState,
+        onViewChange,
+        selectedHue,
+        onHueChange,
+        selectionState,
+        onSelectionChange,
+        selectedPrimitive,
+        onSelectedPrimitiveChange,
+      ],
     );
     const menuActions = useMenuActions(menuCreator);
 
@@ -69,6 +90,7 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
       <ElevationProvider elevation='base'>
         <Menu.Root alwaysActive={alwaysActive} {...menuActions}>
           <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
+            {/* TODO(burdon): Extend builder to support custom components. */}
             <HuePicker value={selectedHue} onChange={onHueChange} />
           </Menu.Toolbar>
         </Menu.Root>
@@ -78,21 +100,23 @@ export const SpacetimeToolbar = composable<HTMLDivElement, SpacetimeToolbarProps
 );
 
 const createToolbarActions = ({
-  tool,
+  editorActions,
+  toolState,
   onToolChange,
   viewState,
   onViewChange,
+  selectionState,
+  onSelectionChange,
   selectedPrimitive,
-  onPrimitiveChange,
-  editorActions,
+  onSelectedPrimitiveChange,
 }: SpacetimeToolbarProps): Atom.Atom<ActionGraphProps> => {
   return Atom.make(() =>
     MenuBuilder.make()
-      .subgraph(createSelectionModeActions(viewState, onViewChange))
+      .subgraph(createSelectionModeActions(selectionState, onSelectionChange))
       .separator('line')
-      .subgraph(createToolActions({ tool }, onToolChange))
+      .subgraph(createToolActions(toolState, onToolChange))
       .separator('line')
-      .subgraph(createPrimitiveSelector(selectedPrimitive, onPrimitiveChange))
+      .subgraph(createPrimitiveSelector(selectedPrimitive, onSelectedPrimitiveChange))
       .separator('line')
       .subgraph(createEditorActions(editorActions))
       .separator()
