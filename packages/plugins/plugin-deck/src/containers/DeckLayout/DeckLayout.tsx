@@ -4,12 +4,14 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Mosaic } from '@dxos/react-ui-mosaic';
 
-import { type DeckLayoutChangeRequest, DeckMain } from '../DeckMain';
 import { useDeckState } from '../../hooks';
+import { DeckCapabilities, getMode } from '../../types';
+import { Deck } from '../DeckMain/Deck';
+import { type DeckLayoutChangeRequest } from '../DeckMain/DeckRoot';
 
 import { ActiveNode } from './ActiveNode';
 import { Dialog } from './Dialog';
@@ -19,7 +21,10 @@ import { Toaster, type ToasterProps } from './Toast';
 export type DeckLayoutProps = Pick<ToasterProps, 'onDismissToast'>;
 
 export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
-  const { state } = useDeckState();
+  const settings = useAtomCapability(DeckCapabilities.Settings);
+  const pluginManager = usePluginManager();
+  const { state, deck, updateState } = useDeckState();
+  const layoutMode = getMode(deck);
   const { toasts } = state;
   const { invokePromise } = useOperationInvoker();
 
@@ -34,7 +39,17 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
     <Mosaic.Root>
       <PopoverRoot>
         <ActiveNode />
-        <DeckMain onLayoutChange={handleLayoutChange} />
+        <Deck.Root
+          settings={settings}
+          pluginManager={pluginManager}
+          layoutMode={layoutMode}
+          state={state}
+          deck={deck}
+          updateState={updateState}
+          onLayoutChange={handleLayoutChange}
+        >
+          <Deck.Main />
+        </Deck.Root>
         <PopoverContent />
         <Dialog />
         <Toaster toasts={toasts} onDismissToast={onDismissToast} />
