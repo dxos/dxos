@@ -12,22 +12,23 @@
 
 ## File Structure
 
-| File | Action | Responsibility |
-|------|--------|----------------|
-| `src/types/Model.ts` | Create | `Model.Object` ECHO type with primitive, position, scale, rotation |
-| `src/types/Scene.ts` | Modify | Add `objects: Ref.Ref(Model.Object)[]` field, update `make()` to create default cube |
-| `src/types/index.ts` | Modify | Add `Model` namespace export |
-| `src/SpacetimePlugin.tsx` | Modify | Register `Model.Object` in schema module |
-| `src/translations.ts` | Modify | Add `Model.Object` translations |
-| `src/components/SpacetimeEditor/SpacetimeEditor.tsx` | Modify | Pass scene to context |
-| `src/containers/SpacetimeArticle/SpacetimeArticle.tsx` | Modify | Pass scene subject to editor root |
-| `src/components/SpacetimeCanvas/SpacetimeCanvas.tsx` | Modify | Read objects from scene, render each as Babylon mesh |
+| File                                                   | Action | Responsibility                                                                       |
+| ------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------ |
+| `src/types/Model.ts`                                   | Create | `Model.Object` ECHO type with primitive, position, scale, rotation                   |
+| `src/types/Scene.ts`                                   | Modify | Add `objects: Ref.Ref(Model.Object)[]` field, update `make()` to create default cube |
+| `src/types/index.ts`                                   | Modify | Add `Model` namespace export                                                         |
+| `src/SpacetimePlugin.tsx`                              | Modify | Register `Model.Object` in schema module                                             |
+| `src/translations.ts`                                  | Modify | Add `Model.Object` translations                                                      |
+| `src/components/SpacetimeEditor/SpacetimeEditor.tsx`   | Modify | Pass scene to context                                                                |
+| `src/containers/SpacetimeArticle/SpacetimeArticle.tsx` | Modify | Pass scene subject to editor root                                                    |
+| `src/components/SpacetimeCanvas/SpacetimeCanvas.tsx`   | Modify | Read objects from scene, render each as Babylon mesh                                 |
 
 ---
 
 ### Task 1: Create `Model.Object` ECHO type
 
 **Files:**
+
 - Create: `src/types/Model.ts`
 
 - [ ] **Step 1: Create Model.ts with Object schema**
@@ -110,6 +111,7 @@ git commit -m "feat(plugin-spacetime): add Model.Object ECHO type"
 ### Task 2: Update Scene to reference Model objects
 
 **Files:**
+
 - Modify: `src/types/Scene.ts`
 - Modify: `src/types/index.ts`
 
@@ -135,7 +137,7 @@ export namespace Spacetime {
     objects: Ref.Ref(ModelObject).pipe(Schema.Array, FormInputAnnotation.set(false)),
   }).pipe(
     Type.object({
-      typename: 'org.dxos.type.spacetime.scene',
+      typename: 'org.dxos.type.Scene.Scene',
       version: '0.1.0',
     }),
     Annotation.IconAnnotation.set({
@@ -189,6 +191,7 @@ git commit -m "feat(plugin-spacetime): add objects array to Scene, export Model 
 ### Task 3: Register Model.Object schema and update translations
 
 **Files:**
+
 - Modify: `src/SpacetimePlugin.tsx`
 - Modify: `src/translations.ts`
 
@@ -201,8 +204,9 @@ import { Spacetime, Model } from './types';
 ```
 
 Change the schema line:
+
 ```typescript
-AppPlugin.addSchemaModule({ schema: [Spacetime.Scene, Model.Object] }),
+AppPlugin.addSchemaModule({ schema: [Scene.Scene, Model.Object] }),
 ```
 
 - [ ] **Step 2: Add Model.Object translations**
@@ -219,6 +223,7 @@ In `translations.ts`, add a Model.Object section after the Scene translations:
 ```
 
 Update the import to include `Model`:
+
 ```typescript
 import { Spacetime, Model } from './types';
 ```
@@ -240,6 +245,7 @@ git commit -m "feat(plugin-spacetime): register Model.Object schema and translat
 ### Task 4: Wire scene subject into SpacetimeEditor context
 
 **Files:**
+
 - Modify: `src/components/SpacetimeEditor/SpacetimeEditor.tsx`
 - Modify: `src/containers/SpacetimeArticle/SpacetimeArticle.tsx`
 
@@ -252,18 +258,20 @@ import { type Spacetime } from '../../types';
 ```
 
 Add to `SpacetimeEditorContextValue`:
+
 ```typescript
 type SpacetimeEditorContextValue = {
-  scene?: Spacetime.Scene;
+  scene?: Scene.Scene;
   tool: SpacetimeTool;
   onToolChange: (tool: SpacetimeTool) => void;
 };
 ```
 
 Add `scene` prop to `SpacetimeEditorRootProps`:
+
 ```typescript
 type SpacetimeEditorRootProps = PropsWithChildren<{
-  scene?: Spacetime.Scene;
+  scene?: Scene.Scene;
 }>;
 ```
 
@@ -300,6 +308,7 @@ git commit -m "feat(plugin-spacetime): wire scene subject into editor context"
 ### Task 5: Render scene objects in SpacetimeCanvas
 
 **Files:**
+
 - Modify: `src/components/SpacetimeCanvas/SpacetimeCanvas.tsx`
 
 This is the most complex task. The canvas currently creates a hardcoded cube. It needs to read `scene.objects` and render each one.
@@ -307,11 +316,12 @@ This is the most complex task. The canvas currently creates a hardcoded cube. It
 - [ ] **Step 1: Add scene prop to SpacetimeCanvas**
 
 Add `scene` to `SpacetimeCanvasProps`:
+
 ```typescript
 import { type Spacetime, type Model } from '../../types';
 
 export type SpacetimeCanvasProps = {
-  scene?: Spacetime.Scene;
+  scene?: Scene.Scene;
   showAxes?: boolean;
   showFps?: boolean;
 };
@@ -322,10 +332,7 @@ export type SpacetimeCanvasProps = {
 Add a function that maps `Model.Object.primitive` to a Manifold solid:
 
 ```typescript
-const createSolidFromObject = (
-  Manifold: Awaited<ReturnType<typeof getManifold>>['Manifold'],
-  obj: Model.Object,
-) => {
+const createSolidFromObject = (Manifold: Awaited<ReturnType<typeof getManifold>>['Manifold'], obj: Model.Object) => {
   const size = [obj.scale.x * 2, obj.scale.y * 2, obj.scale.z * 2] as [number, number, number];
   let solid;
   switch (obj.primitive) {
@@ -355,6 +362,7 @@ const createSolidFromObject = (
 Replace the initialization effect that creates a single cube with one that iterates `scene.objects`, creates a Manifold solid per object, converts to Babylon mesh, and tracks meshes by object id.
 
 Key changes:
+
 - Store meshes in a `Map<string, Mesh>` ref keyed by object id.
 - On scene change, diff meshes: add new, remove deleted, update changed.
 - For the storybook (no scene prop), fall back to the existing hardcoded cube.
@@ -387,6 +395,7 @@ git commit -m "feat(plugin-spacetime): render scene objects in canvas"
 ### Task 6: Update SPEC.md to mark completed tasks
 
 **Files:**
+
 - Modify: `SPEC.md`
 
 - [ ] **Step 1: Mark Phase 1 type tasks as complete**

@@ -8,10 +8,10 @@ import React, { RefObject, useEffect, useRef, useState } from 'react';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { SceneManager, getManifold, manifoldToBabylon, getFaceNormal } from '../../engine';
-import { type Spacetime, type Model } from '../../types';
+import { type Scene, type Model } from '../../types';
 
 export type SpacetimeCanvasProps = {
-  scene?: Spacetime.Scene;
+  scene?: Scene.Scene;
   showAxes?: boolean;
   showFps?: boolean;
 };
@@ -46,7 +46,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             return;
           }
           const solid = createSolidFromObject(wasm.Manifold, obj);
-          const objectColor = obj.color ? Color3.FromHexString(obj.color) : CUBE_COLOR;
+          const objectColor = obj.color ? Color3.FromHexString(obj.color) : theme.object;
           meshRef.current = manifoldToBabylon(solid, {
             scene: manager.scene,
             name: 'solid',
@@ -58,7 +58,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           meshRef.current = manifoldToBabylon(solid, {
             scene: manager.scene,
             name: 'solid',
-            color: CUBE_COLOR,
+            color: theme.object,
           });
           solid.delete();
         }
@@ -157,10 +157,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
 );
 
 /** Creates a Manifold solid from a Model.Object based on its primitive type. */
-const createSolidFromObject = (
-  Manifold: Awaited<ReturnType<typeof getManifold>>['Manifold'],
-  obj: Model.Object,
-) => {
+const createSolidFromObject = (Manifold: Awaited<ReturnType<typeof getManifold>>['Manifold'], obj: Model.Object) => {
   const size = [obj.scale.x * 2, obj.scale.y * 2, obj.scale.z * 2] as [number, number, number];
   let solid;
   switch (obj.primitive) {
@@ -183,8 +180,10 @@ const createSolidFromObject = (
   return translated;
 };
 
-const CUBE_COLOR = new Color3(0.4, 0.6, 0.9);
-const SELECTED_FACE_COLOR = new Color3(1.0, 0.8, 0.0);
+const theme = {
+  object: new Color3(0.3, 0.3, 0.3),
+  selected: new Color3(0.2, 0.4, 0.6),
+};
 
 /**
  * Builds a highlight overlay mesh for all coplanar triangles sharing the clicked face's normal.
@@ -238,7 +237,7 @@ const buildFaceSelectionMesh = (
   selVd.applyToMesh(selMesh);
 
   const selMat = new StandardMaterial('face-selection-mat', scene);
-  selMat.emissiveColor = SELECTED_FACE_COLOR;
+  selMat.emissiveColor = theme.selected;
   selMat.diffuseColor = Color3.Black();
   selMat.specularColor = Color3.Black();
   selMat.backFaceCulling = false;

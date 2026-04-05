@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, useState, useCallback, forwardRef, useIm
 
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { type Spacetime } from '../../types';
+import { type Scene } from '../../types';
 import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
 import { type SpacetimeTool, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar';
 
@@ -18,7 +18,7 @@ import { type SpacetimeTool, SpacetimeToolbar, type SpacetimeToolbarProps } from
 const SPACETIME_EDITOR = 'SpacetimeEditor';
 
 type SpacetimeEditorContextValue = {
-  scene?: Spacetime.Scene;
+  scene?: Scene.Scene;
   tool: SpacetimeTool;
   onToolChange: (tool: SpacetimeTool) => void;
 };
@@ -41,7 +41,7 @@ interface SpacetimeController {
 const SPACETIME_EDITOR_ROOT = 'SpacetimeEditor:Root';
 
 type SpacetimeEditorRootProps = PropsWithChildren<{
-  scene?: Spacetime.Scene;
+  scene?: Scene.Scene;
 }>;
 
 const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootProps>(

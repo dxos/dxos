@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from './meta';
-import { Model, Spacetime } from './types';
+import { Model, Scene } from './types';
 
 export const translations = [
   {
     'en-US': {
-      [Spacetime.Scene.typename]: {
+      [Scene.Scene.typename]: {
         'typename.label': 'Scene',
         'typename.label_zero': 'Scenes',
         'typename.label_one': 'Scene',

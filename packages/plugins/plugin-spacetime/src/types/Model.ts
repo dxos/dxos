@@ -1,7 +1,8 @@
-// @import-as-namespace
 //
 // Copyright 2026 DXOS.org
 //
+
+// @import-as-namespace
 
 import * as Schema from 'effect/Schema';
 

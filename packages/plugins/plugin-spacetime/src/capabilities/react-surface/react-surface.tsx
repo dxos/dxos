@@ -13,7 +13,7 @@ import { Obj } from '@dxos/echo';
 import { SpacetimeSettings } from '../../components';
 import { SpacetimeArticle } from '../../containers';
 import { meta } from '../../meta';
-import { Spacetime, SpacetimeCapabilities, type Settings } from '../../types';
+import { Scene, SpacetimeCapabilities, type Settings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -21,7 +21,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: `${meta.id}.scene`,
         role: 'article',
-        filter: (data): data is { subject: Spacetime.Scene } => Obj.instanceOf(Spacetime.Scene, data.subject),
+        filter: (data): data is { subject: Scene.Scene } => Obj.instanceOf(Scene.Scene, data.subject),
         component: ({ data, role }) => {
           const settings = useAtomCapability(SpacetimeCapabilities.Settings);
           return <SpacetimeArticle role={role} subject={data.subject} settings={settings} />;

@@ -8,10 +8,10 @@ import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Panel } from '@dxos/react-ui';
 
 import { SpacetimeEditor } from '../../components';
-import { type Spacetime, type Settings } from '../../types';
+import { type Scene, type Settings } from '../../types';
 
 export type SpacetimeArticleProps = ObjectSurfaceProps<
-  Spacetime.Scene,
+  Scene.Scene,
   {
     settings?: Settings.Settings | null;
   }

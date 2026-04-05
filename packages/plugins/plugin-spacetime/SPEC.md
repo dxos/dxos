@@ -34,7 +34,7 @@ Keep this section up-to-date with periodical restructuring as the plugin becomes
 
 - **Rendering:** Babylon.js (`@babylonjs/core`) — scene, camera, lighting, picking.
 - **Geometry:** Manifold (`manifold-3d`) — solid modeling via WASM, boolean operations.
-- **Schema:** ECHO `Spacetime.Scene` type with `org.dxos.type.spacetime.scene` typename.
+- **Schema:** ECHO `Scene.Scene` type with `org.dxos.type.Scene.Scene` typename.
 
 ### Functionality
 

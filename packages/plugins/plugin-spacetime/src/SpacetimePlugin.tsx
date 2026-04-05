@@ -15,18 +15,18 @@ import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { ReactSurface, SpacetimeSettings } from './capabilities';
 import { meta } from './meta';
 import { translations } from './translations';
-import { Model, Spacetime } from './types';
+import { Model, Scene } from './types';
 
 export const SpacetimePlugin = Plugin.define(meta).pipe(
   AppPlugin.addMetadataModule({
     metadata: {
-      id: Spacetime.Scene.typename,
+      id: Scene.Scene.typename,
       metadata: {
-        icon: Annotation.IconAnnotation.get(Spacetime.Scene).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Spacetime.Scene).pipe(Option.getOrThrow).hue ?? 'white',
+        icon: Annotation.IconAnnotation.get(Scene.Scene).pipe(Option.getOrThrow).icon,
+        iconHue: Annotation.IconAnnotation.get(Scene.Scene).pipe(Option.getOrThrow).hue ?? 'white',
         createObject: ((props, options) =>
           Effect.gen(function* () {
-            const object = Spacetime.make(props);
+            const object = Scene.make(props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
@@ -37,7 +37,7 @@ export const SpacetimePlugin = Plugin.define(meta).pipe(
       },
     },
   }),
-  AppPlugin.addSchemaModule({ schema: [Spacetime.Scene, Model.Object] }),
+  AppPlugin.addSchemaModule({ schema: [Scene.Scene, Model.Object] }),
   AppPlugin.addSettingsModule({ activate: SpacetimeSettings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
