@@ -33,10 +33,10 @@ const resolveBackgroundColor = (element: HTMLElement): Color4 => {
   return new Color4(r / 255, g / 255, b / 255, 1);
 };
 
-const GRID_SIZE = 10;
+const GRID_SIZE = 20;
 const GRID_STEP = 1;
-const GRID_COLOR = new Color3(0.5, 0.5, 0.5);
-const GRID_ALPHA = 0.3;
+const GRID_COLOR = new Color3(0.2, 0.4, 0.2);
+const GRID_ALPHA = 0.8;
 
 /** Creates a transparent grid on the Y=0 ground plane. */
 const createGroundGrid = (scene: Scene): Mesh => {

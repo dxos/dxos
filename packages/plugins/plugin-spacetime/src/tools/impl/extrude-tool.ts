@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Matrix, type Mesh, PointerEventTypes, Vector3, type PointerInfo } from '@babylonjs/core';
+import { type Mesh, PointerEventTypes, Vector3, type PointerInfo } from '@babylonjs/core';
 import type { Manifold } from 'manifold-3d';
 
 import { applyExtrusion, updateMeshFromManifold } from '../../engine';
@@ -10,11 +10,14 @@ import { selectFace } from './select-tool';
 import { type ToolContext } from '../tool-context';
 import { type Tool } from '../tool';
 
-/** Sensitivity factor converting pixel drag distance to extrude distance. */
-const EXTRUDE_SENSITIVITY = 0.02;
-
 /** Throttle interval for pointer move updates (ms). */
 const MOVE_THROTTLE_MS = 30;
+
+/** Grid snap size (matches GRID_STEP in scene-manager). */
+const SNAP_SIZE = 1;
+
+/** Snaps a value to the nearest grid increment. */
+const snapToGrid = (value: number): number => Math.round(value / SNAP_SIZE) * SNAP_SIZE;
 
 /** State tracked during an active extrude drag. */
 type ExtrudeState = {
@@ -26,12 +29,12 @@ type ExtrudeState = {
   normal: { x: number; y: number; z: number };
   /** Selected face index. */
   faceId: number;
-  /** Normalized screen-space direction that maps to positive extrusion. */
-  screenDir: { x: number; y: number };
-  /** Pointer position at drag start. */
-  startX: number;
-  /** Pointer position at drag start. */
-  startY: number;
+  /** A point on the face plane (anchor for ray-normal intersection). */
+  facePoint: Vector3;
+  /** Normal as a Babylon Vector3. */
+  normalVec: Vector3;
+  /** T parameter along the normal line at drag start. */
+  startT: number;
   /** Manifold solid at the start of this extrusion (cloned). */
   baseSolid: Manifold;
   /** Timestamp of last move update (for throttling). */
@@ -39,23 +42,41 @@ type ExtrudeState = {
 };
 
 /**
- * Computes a screen-space direction vector corresponding to a world-space normal.
- * Used to determine which mouse drag direction maps to positive extrusion.
+ * Computes the closest point on the normal line to a mouse ray.
+ * Returns the signed distance (t parameter) along the normal from the face point.
+ *
+ * Normal line: P = facePoint + t * normal
+ * Mouse ray:   Q = rayOrigin + s * rayDir
+ *
+ * Finds t where the two lines are closest (line-line closest approach).
  */
-const computeScreenDir = (normal: { x: number; y: number; z: number }, ctx: ToolContext): { x: number; y: number } => {
-  const viewProjection = ctx.scene.getTransformMatrix();
-  const viewport = ctx.camera.viewport.toGlobal(ctx.canvas.clientWidth, ctx.canvas.clientHeight);
-  const worldOrigin = Vector3.Project(Vector3.Zero(), Matrix.Identity(), viewProjection, viewport);
-  const worldTip = Vector3.Project(
-    new Vector3(normal.x, normal.y, normal.z),
-    Matrix.Identity(),
-    viewProjection,
-    viewport,
-  );
-  const dx = worldTip.x - worldOrigin.x;
-  const dy = worldTip.y - worldOrigin.y;
-  const len = Math.sqrt(dx * dx + dy * dy);
-  return { x: len > 0 ? dx / len : 0, y: len > 0 ? dy / len : -1 };
+const projectRayOntoNormal = (
+  facePoint: Vector3,
+  normalVec: Vector3,
+  ctx: ToolContext,
+  event: PointerEvent,
+): number => {
+  const ray = ctx.scene.createPickingRay(event.clientX, event.clientY, null, ctx.camera);
+  const rayDir = ray.direction;
+  const rayOrigin = ray.origin;
+
+  // Vector from facePoint to rayOrigin.
+  const w = rayOrigin.subtract(facePoint);
+
+  const a = Vector3.Dot(normalVec, normalVec); // Always 1 for unit normal.
+  const b = Vector3.Dot(normalVec, rayDir);
+  const c = Vector3.Dot(rayDir, rayDir); // Always 1 for unit ray.
+  const d = Vector3.Dot(normalVec, w);
+  const e = Vector3.Dot(rayDir, w);
+
+  const denom = a * c - b * b;
+  if (Math.abs(denom) < 1e-10) {
+    // Lines are parallel — return 0.
+    return 0;
+  }
+
+  // t parameter on the normal line at the closest point.
+  return (b * e - c * d) / denom;
 };
 
 /** Tool for extruding faces of mesh objects via click-drag. */
@@ -98,8 +119,15 @@ export class ExtrudeTool implements Tool {
       return false;
     }
 
-    const screenDir = computeScreenDir(normal, ctx);
     const event = info.event as PointerEvent;
+
+    // Compute face point from the picked point or face centroid.
+    const pickedPoint = info.pickInfo?.pickedPoint;
+    const facePoint = pickedPoint ? pickedPoint.clone() : mesh.position.clone();
+    const normalVec = new Vector3(normal.x, normal.y, normal.z);
+
+    // Compute the initial t parameter (where the drag starts on the normal line).
+    const startT = projectRayOntoNormal(facePoint, normalVec, ctx, event);
 
     // Hide selection highlight during extrusion (geometry changes invalidate it).
     if (ctx.selection?.highlightMesh) {
@@ -115,9 +143,9 @@ export class ExtrudeTool implements Tool {
       mesh,
       normal,
       faceId,
-      screenDir,
-      startX: event.clientX,
-      startY: event.clientY,
+      facePoint,
+      normalVec,
+      startT,
       baseSolid,
       lastMoveTime: 0,
     };
@@ -139,12 +167,16 @@ export class ExtrudeTool implements Tool {
     this._state.lastMoveTime = now;
 
     const event = info.event as PointerEvent;
-    const dx = event.clientX - this._state.startX;
-    const dy = event.clientY - this._state.startY;
 
-    // Project mouse delta onto the screen-space normal direction.
-    const projection = dx * this._state.screenDir.x + dy * this._state.screenDir.y;
-    const distance = projection * EXTRUDE_SENSITIVITY;
+    // Ray-cast from the mouse position and find where it's closest to the face normal line.
+    // The extrusion distance is the delta along the normal from the drag start point.
+    const currentT = projectRayOntoNormal(this._state.facePoint, this._state.normalVec, ctx, event);
+    let distance = -(currentT - this._state.startT);
+
+    // Snap to grid when shift is held.
+    if (event.shiftKey) {
+      distance = snapToGrid(distance);
+    }
 
     const t0 = performance.now();
     const extruded = applyExtrusion(
@@ -154,6 +186,7 @@ export class ExtrudeTool implements Tool {
       this._state.normal,
       distance,
     );
+
     const t1 = performance.now();
 
     // Update the Babylon mesh in-place.
@@ -167,10 +200,10 @@ export class ExtrudeTool implements Tool {
       csg: `${(t1 - t0).toFixed(1)}ms`,
       mesh: `${(t2 - t1).toFixed(1)}ms`,
       dist: distance.toFixed(3),
+      snap: event.shiftKey ? 'on' : 'off',
     });
 
     extruded.delete();
-
     return true;
   }
 
@@ -181,10 +214,11 @@ export class ExtrudeTool implements Tool {
 
     // Rebuild the final solid and store it as the new runtime state.
     const event = info.event as PointerEvent;
-    const dx = event.clientX - this._state.startX;
-    const dy = event.clientY - this._state.startY;
-    const projection = dx * this._state.screenDir.x + dy * this._state.screenDir.y;
-    const distance = projection * EXTRUDE_SENSITIVITY;
+    const currentT = projectRayOntoNormal(this._state.facePoint, this._state.normalVec, ctx, event);
+    let distance = -(currentT - this._state.startT);
+    if (event.shiftKey) {
+      distance = snapToGrid(distance);
+    }
 
     const finalSolid = applyExtrusion(
       ctx.manifold.Manifold,
@@ -206,7 +240,6 @@ export class ExtrudeTool implements Tool {
     ctx.setSelection({ type: 'object', objectId: this._state.objectId, mesh: this._state.mesh, highlightMesh: null });
 
     // TODO(burdon): Serialize geometry to Model.Object once geometry field is added.
-
     ctx.camera.attachControl(ctx.canvas, true);
     this._state = null;
     return true;
