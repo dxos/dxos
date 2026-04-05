@@ -47,7 +47,7 @@ const extractMeshData = (solid: Manifold): { positions: Float32Array; indices: U
     const vi1 = triVerts[tri * 3 + 2];
     const vi2 = triVerts[tri * 3 + 1];
 
-    positions[tri * 9] = vertProperties[vi0 * numProp];
+    positions[tri * 9 + 0] = vertProperties[vi0 * numProp];
     positions[tri * 9 + 1] = vertProperties[vi0 * numProp + 1];
     positions[tri * 9 + 2] = vertProperties[vi0 * numProp + 2];
     positions[tri * 9 + 3] = vertProperties[vi1 * numProp];

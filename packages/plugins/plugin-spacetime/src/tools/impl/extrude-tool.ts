@@ -29,6 +29,8 @@ type ExtrudeState = {
   positions: Float32Array | number[];
   /** Index buffer snapshot at drag start. */
   indices: Uint32Array | number[];
+  /** Manifold face IDs for reliable coplanar face grouping after boolean ops. */
+  faceIDs: Uint32Array;
   /** Normalized screen-space direction that maps to positive extrusion. */
   screenDir: { x: number; y: number };
   /** Pointer position at drag start. */
@@ -160,6 +162,12 @@ export class ExtrudeTool implements Tool {
     const { Manifold } = ctx.manifold;
     const baseSolid = Manifold.union(currentSolid, currentSolid);
 
+    // Extract Manifold's face IDs for reliable coplanar face grouping.
+    // After boolean operations, Manifold may split a logical face into multiple triangles
+    // with seam edges — faceID correctly groups them where manual coplanarity checks fail.
+    const manifoldMesh = currentSolid.getMesh();
+    const faceIDs = manifoldMesh.faceID;
+
     this._state = {
       objectId,
       mesh,
@@ -167,6 +175,7 @@ export class ExtrudeTool implements Tool {
       faceId,
       positions: Float32Array.from(positions),
       indices: Uint32Array.from(indices as number[]),
+      faceIDs: Uint32Array.from(faceIDs),
       screenDir,
       startX: event.clientX,
       startY: event.clientY,
@@ -208,6 +217,7 @@ export class ExtrudeTool implements Tool {
       this._state.indices,
       this._state.normal,
       distance,
+      this._state.faceIDs,
     );
     const t1 = performance.now();
 
@@ -249,6 +259,7 @@ export class ExtrudeTool implements Tool {
       this._state.indices,
       this._state.normal,
       distance,
+      this._state.faceIDs,
     );
 
     // Replace the runtime solid for this object.

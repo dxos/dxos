@@ -47,35 +47,50 @@ export const createSolidFromObject = (Manifold: ManifoldToplevel['Manifold'], ob
  * Extracts the outer boundary polygon of a coplanar face group.
  * Boundary edges appear in exactly one triangle; interior edges appear in two.
  * Returns ordered 3D vertices forming the face outline.
+ *
+ * When `faceIDs` is provided (from Manifold's getMesh().faceID), triangles are grouped
+ * by their Manifold-assigned face ID. This is much more reliable than manual coplanarity
+ * checks after boolean operations, which can introduce seam edges within a logical face.
  */
 export const extractFaceBoundary = (
   faceId: number,
   positions: ArrayLike<number>,
   indices: ArrayLike<number>,
   normal: Vec3,
+  faceIDs?: Uint32Array,
 ): Array<[number, number, number]> => {
-  // Collect coplanar triangles.
-  const refIdx = indices[faceId * 3];
   const numTris = indices.length / 3;
   const coplanarTris: number[] = [];
 
-  for (let tri = 0; tri < numTris; tri++) {
-    const triNormal = getFaceNormal(tri, positions, indices);
-    const dot = triNormal.x * normal.x + triNormal.y * normal.y + triNormal.z * normal.z;
-    if (dot < 0.99) {
-      continue;
+  if (faceIDs && faceIDs.length >= numTris) {
+    // Use Manifold's face grouping — triangles with the same faceID belong to the same logical face.
+    const targetFaceID = faceIDs[faceId];
+    for (let tri = 0; tri < numTris; tri++) {
+      if (faceIDs[tri] === targetFaceID) {
+        coplanarTris.push(tri);
+      }
     }
+  } else {
+    // Fallback: manual coplanarity check using normal dot product + plane distance.
+    const refIdx = indices[faceId * 3];
+    for (let tri = 0; tri < numTris; tri++) {
+      const triNormal = getFaceNormal(tri, positions, indices);
+      const dot = triNormal.x * normal.x + triNormal.y * normal.y + triNormal.z * normal.z;
+      if (dot < 0.99) {
+        continue;
+      }
 
-    const triIdx = indices[tri * 3];
-    const dx = positions[triIdx * 3] - positions[refIdx * 3];
-    const dy = positions[triIdx * 3 + 1] - positions[refIdx * 3 + 1];
-    const dz = positions[triIdx * 3 + 2] - positions[refIdx * 3 + 2];
-    const planeDist = Math.abs(dx * normal.x + dy * normal.y + dz * normal.z);
-    if (planeDist > 0.01) {
-      continue;
+      const triIdx = indices[tri * 3];
+      const dx = positions[triIdx * 3] - positions[refIdx * 3];
+      const dy = positions[triIdx * 3 + 1] - positions[refIdx * 3 + 1];
+      const dz = positions[triIdx * 3 + 2] - positions[refIdx * 3 + 2];
+      const planeDist = Math.abs(dx * normal.x + dy * normal.y + dz * normal.z);
+      if (planeDist > 0.01) {
+        continue;
+      }
+
+      coplanarTris.push(tri);
     }
-
-    coplanarTris.push(tri);
   }
 
   // Find boundary edges (edges that appear in exactly one triangle).
@@ -250,6 +265,7 @@ export const applyExtrusion = (
   indices: ArrayLike<number>,
   normal: Vec3,
   distance: number,
+  faceIDs?: Uint32Array,
 ): Manifold => {
   const { Manifold, CrossSection } = wasm;
 
@@ -277,7 +293,7 @@ export const applyExtrusion = (
   }
 
   // Extract the 3D boundary polygon of the face.
-  const boundary3D = extractFaceBoundary(faceId, positions, indices, normal);
+  const boundary3D = extractFaceBoundary(faceId, positions, indices, normal, faceIDs);
   if (boundary3D.length < 3) {
     return Manifold.union(baseSolid, baseSolid);
   }
