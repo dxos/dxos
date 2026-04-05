@@ -93,7 +93,7 @@ Instead implement tool handlers that operate on the runtime properties and then 
 
 ### Phase 3
 
-- [ ] Import/Export: OBJ/STL/glTF mesh export from Manifold geometry.
+- [ ] Import/Export: OBJ/STL/glTF mesh export from Manifold geometry; see `useFileDownload` for upload functionality.
 
 ### Phase 4 (Boolean geometry)
 
@@ -108,8 +108,6 @@ Instead implement tool handlers that operate on the runtime properties and then 
 - [ ] Transform gizmos: translate, rotate, scale selected solids.
 - [ ] Additional solid primitives: sphere, cylinder, torus.
 - [ ] Material/color picker per solid or per face.
-- [ ] Real-time collaboration: sync scene state across peers via ECHO.
-- [ ] Face selection improvements: highlight individual face (not whole mesh), multi-face select.
 
 ## Design Notes
 
