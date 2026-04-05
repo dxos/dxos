@@ -2,7 +2,7 @@
 
 ## Branch: dm/process
 ## Status: In Progress
-## Last Updated: 2026-04-05
+## Last Updated: 2026-04-05 (iteration 3)
 
 ## Overview
 
@@ -152,7 +152,7 @@ User prompt → AiChatProcessor → AgentService.getSession()
 - [x] Trace.TraceService added to ProcessManager builtinTagKeys
 - [x] Service resolution fixed (FunctionInvocationService, ToolExecutionService, ToolResolverService)
 - [x] Open handler added to assistant-toolkit MarkdownHandlers
-- [ ] No degraded functionality vs main (memory delete test pre-existing failure)
+- [x] No degraded functionality vs main (all tests pass, memory delete fixed via conversation regen)
 - [x] Observability via new trace feed (FeedTraceSink wired in compute-runtime)
 - [ ] Build succeeds (composer — blocked by pre-existing echo build failure)
 
