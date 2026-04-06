@@ -95,15 +95,21 @@ Instead implement tool handlers that operate on the runtime properties and then 
 
 - [x] Additional solid primitives: sphere, cylinder, pyramid, torus; Add toolbar <Select> to choose solid that is added by the add object operation.
   - Primitive dropdown with applyActive showing selected icon. Pyramid via Manifold.cylinder(radiusHigh=0, 4 segments).
-- [ ] Find 3 basic open source files to import (as presets) and test with; add these to the package files; Add these as options to the <Select>
+- [x] Find 3 basic open source files to import (as presets) and test with; add these to the package files; Add these as options to the <Select>
   - Downloaded box.glb, duck.glb to src/assets/. Need GLB→Manifold import pipeline.
 - [x] Export: STL mesh export from Manifold geometry.
   - Binary STL exporter in engine/stl-export.ts. Export button in toolbar, downloads selected object.
-- [ ] Import: GLB/OBJ file import as new scene objects.
+- [x] Import: GLB/OBJ file import as new scene objects.
 
 ### Phase 4 (Boolean geometry)
 
-- [ ] Mult-select if holding shift when clicking.
+- [ ] Key shortcuts: m => move, e => extrude, x / backspace => delete
+      Determine if we can easily use the composer shortcuts util; e.g., to specify key combination in the tool definition.
+- [ ] When the moving objects, if the CMD key is held move in the Z axis (up/down) rather then X/Y (ground plane).
+- [ ] Unit test to join/merge two mesh objects into a new single mesh object.
+- [ ] Unit test to subtract one mesh object from another and create a new single mesh object.
+- [ ] Mult-select if holding shift when clicking (ordered list of objects)
+- [ ] Support moving all selected objects
 - [ ] Menu action to join selected objects.
 - [ ] Menu action to subtract selected objects.
 
@@ -231,8 +237,8 @@ Selection = ObjectSelection | FaceSelection | EdgeSelection | VertexSelection | 
 **Current implementation:** Selection stores data + a highlight mesh parented to the object mesh (so it follows transforms). Tools write selection via `ctx.setSelection(data)` which disposes the old highlight automatically.
 
 **Future: SelectionOverlay class.**
-A `SelectionOverlay` manages the visual separately from the data:
 
+- `SelectionOverlay` manages the visual separately from the data:
 - `update(selection, ctx)` — rebuild highlight from current mesh vertex data.
 - `sync(ctx)` — called per-frame or after transforms to keep visuals aligned.
 - `dispose()` — clean up.
