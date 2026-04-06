@@ -35,6 +35,9 @@
       "path": "../../../tools/vite-plugin-import-source"
     },
     {
+      "path": "../../../tools/vite-plugin-log"
+    },
+    {
       "path": "../../common/context"
     },
     {
@@ -119,6 +122,9 @@
       "path": "../../plugins/plugin-explorer"
     },
     {
+      "path": "../../plugins/plugin-feed"
+    },
+    {
       "path": "../../plugins/plugin-files"
     },
     {
@@ -153,6 +159,9 @@
     },
     {
       "path": "../../plugins/plugin-native"
+    },
+    {
+      "path": "../../plugins/plugin-native-filesystem"
     },
     {
       "path": "../../plugins/plugin-navtree"
@@ -198,6 +207,9 @@
     },
     {
       "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-spacetime"
     },
     {
       "path": "../../plugins/plugin-spotlight"

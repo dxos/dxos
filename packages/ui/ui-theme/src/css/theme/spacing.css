@@ -111,12 +111,12 @@
     /* TODO(burdon): Remove direct usage. */
     --dx-rail-action: calc(var(--dx-rail-content) - 0.5rem);
 
-    --dx-topbar-size: var(--dx-rail-size);
-    --dx-toolbar-size: var(--dx-rail-action);
-    --dx-statusbar-size: var(--dx-rail-action);
+    --dx-topbar-size: var(--dx-rail-size); /* 50px */
+    --dx-toolbar-size: var(--dx-rail-action); /* 40px */
+    --dx-statusbar-size: var(--dx-rail-item); /* 32px */
 
     /** NOTE: On MBP, should have nav sidebare open with 4 column mosaic board. */
-    --dx-nav-sidebar-size: 22rem;
+    --dx-nav-sidebar-size: 21.5rem;
     --dx-complementary-sidebar-size: 25rem;
     --dx-drawer-size: 50dvh;
 

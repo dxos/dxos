@@ -31,7 +31,7 @@ describe('diff', () => {
       But not this one.
     `;
 
-    const text = db.add(Text.make(document));
+    const text = db.add(Text.make({ content: document }));
     const accessor = createDocAccessor(text, ['content']);
     const result = applyDiffs(accessor, [
       `- There'z a typo in this sentence.`,
@@ -53,7 +53,7 @@ describe('diff', () => {
 
     const document = '# Shopping list';
 
-    const text = db.add(Text.make(document));
+    const text = db.add(Text.make({ content: document }));
     const accessor = createDocAccessor(text, ['content']);
     const result = applyDiffs(accessor, ['- # Shopping list', '+ # Shopping list\n- Milk']);
 
@@ -65,7 +65,7 @@ describe('diff', () => {
     const { db, graph } = await builder.createDatabase();
     await graph.schemaRegistry.register([Text.Text]);
 
-    const text = db.add(Text.make(''));
+    const text = db.add(Text.make({ content: '' }));
     const accessor = createDocAccessor(text, ['content']);
     const result = applyDiffs(accessor, ['+ # Shopping list']);
 

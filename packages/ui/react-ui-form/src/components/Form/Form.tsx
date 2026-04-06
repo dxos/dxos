@@ -11,7 +11,6 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import { IconButton, type IconButtonProps, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
-import { type ComposableProps } from '@dxos/ui-types';
 
 import {
   type FormHandler,
@@ -159,11 +158,11 @@ FormRoot.displayName = 'Form.Root';
 
 const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
-type FormViewportProps = ComposableProps;
+type FormViewportProps = {};
 
 const FormViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props)} orientation='vertical' margin padding thin ref={forwardedRef}>
+    <ScrollArea.Root {...composableProps(props)} orientation='vertical' centered padding thin ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -237,7 +236,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
         <IconButton
           icon='ph--x--regular'
           iconEnd
-          label={t('cancel button label')}
+          label={t('cancel-button.label')}
           onClick={onCancel}
           data-testid='cancel-button'
         />
@@ -249,7 +248,7 @@ const FormActions = ({ classNames }: FormActionsProps) => {
           disabled={!canSave}
           icon='ph--check--regular'
           iconEnd
-          label={t('save button label')}
+          label={t('save-button.label')}
           onClick={onSave}
           data-testid='save-button'
         />
@@ -288,7 +287,7 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
         variant='primary'
         disabled={disabled ?? !canSave}
         icon={icon ?? 'ph--check--regular'}
-        label={label ?? t('save button label')}
+        label={label ?? t('save-button.label')}
         onClick={onSave}
         data-testid='save-button'
       />

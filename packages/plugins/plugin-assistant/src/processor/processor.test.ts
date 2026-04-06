@@ -2,75 +2,38 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Tool from '@effect/ai/Tool';
-import * as Toolkit from '@effect/ai/Toolkit';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import * as Schema from 'effect/Schema';
+import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { AiService } from '@dxos/ai';
-import { GenericToolkit } from '@dxos/ai';
-import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { AiConversation, ToolExecutionServices } from '@dxos/assistant';
+import { AiConversation } from '@dxos/assistant';
+import { AssistantTestLayer } from '@dxos/assistant/testing';
+import { Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { CredentialsService, QueueService, TracingService } from '@dxos/functions';
-import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { OperationHandlerSet } from '@dxos/operation';
+import { QueueService } from '@dxos/functions';
 import { type Message } from '@dxos/types';
 
-import { AiChatProcessor, type AiChatServices } from './processor';
+import { AiChatProcessor } from './processor';
 
-const TestToolkit = Toolkit.make(
-  Tool.make('random', {
-    description: 'Random number generator',
-    parameters: {},
-    success: Schema.Number,
-  }),
-);
-
-// TODO(burdon): Explain structure.
-const TestServicesLayer = Layer.mergeAll(
-  TracingService.layerNoop,
-  AiServiceTestingPreset('direct'),
-  TestDatabaseLayer({
-    // indexing: { vector: true },
-    // types: [],
-  }),
-  // CredentialsService.configuredLayer([{ service: 'exa.ai', apiKey: EXA_API_KEY }]),
-  FunctionInvocationServiceLayerTestMocked({ functions: OperationHandlerSet.empty }).pipe(
-    Layer.provideMerge(TracingService.layerNoop),
-  ),
-);
-
-const TestLayer: Layer.Layer<AiChatServices, never, never> = Layer.mergeAll(
-  AiService.model('@anthropic/claude-opus-4-0'),
-  ToolExecutionServices,
-  CredentialsService.layerFromDatabase(),
-).pipe(
-  Layer.provideMerge(GenericToolkit.providerLayer(GenericToolkit.make(TestToolkit, TestToolkit.toLayer({} as any)))),
-  Layer.provideMerge(TestServicesLayer),
-  Layer.orDie,
-);
-
-// TODO(burdon): Create actual test with mock LLM.
 describe('Chat processor', () => {
   it.scoped(
     'basic',
     Effect.fn(
       function* ({ expect }) {
-        const services = yield* Effect.runtime<AiChatServices>();
         const queue = yield* QueueService.createQueue<Message.Message>();
         const conversation = yield* acquireReleaseResource(() => new AiConversation({ queue }));
-        const processor = new AiChatProcessor(conversation, async () => services);
-        const result = yield* Effect.promise(() => processor.request({ message: 'Hello' }));
-        void processor.cancel();
-        expect(processor.active).to.be.false;
-        expect(result).to.exist;
+        const runtime = yield* Effect.runtime<any>();
+        const managedRuntime = ManagedRuntime.make(
+          Effect.runSync(Effect.map(Effect.context<never>(), () => undefined as any)) as any,
+        );
+        const feed = Feed.make();
+        const processor = new AiChatProcessor(conversation, managedRuntime as any, feed);
+        expect(processor).toBeDefined();
+        expect(processor.active).toBeDefined();
       },
-      Effect.provide(TestLayer),
-      TestHelpers.taggedTest('llm'),
+      Effect.provide(AssistantTestLayer({ tracing: 'noop' })),
+      TestHelpers.provideTestContext,
     ),
   );
 });

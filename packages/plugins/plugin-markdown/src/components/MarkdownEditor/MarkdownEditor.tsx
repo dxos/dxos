@@ -22,6 +22,7 @@ import {
   useEditorToolbar,
 } from '@dxos/react-ui-editor';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import {
@@ -53,7 +54,7 @@ type MarkdownEditorContextValue = {
   previewBlocks: PreviewBlock[];
   toolbarState: Atom.Writable<EditorToolbarState>;
   popoverMenu: Omit<UseEditorMenu, 'extension'>;
-} & (Pick<ExtensionsOptions, 'viewMode'> &
+} & (Pick<ExtensionsOptions, 'compact' | 'viewMode'> &
   Pick<NaturalMarkdownToolbarProps, 'editorView' | 'onAction' | 'onFileUpload' | 'onViewModeChange'>);
 
 const [MarkdownEditorContextProvider, useMarkdownEditorContext] =
@@ -69,7 +70,7 @@ type MarkdownEditorRootProps = PropsWithChildren<
     extensions?: Extension[];
   } & Pick<
     MarkdownEditorContextValue,
-    'id' | 'attendableId' | 'onAction' | 'onFileUpload' | 'onViewModeChange' | 'viewMode'
+    'id' | 'attendableId' | 'viewMode' | 'compact' | 'onAction' | 'onFileUpload' | 'onViewModeChange'
   > &
     Pick<UseEditorMenuOptionsProps, 'slashCommandGroups' | 'onLinkQuery'> &
     Pick<ExtensionsOptions, 'editorStateStore' | 'selectionManager' | 'settings' | 'onSelectObject'>
@@ -80,10 +81,11 @@ const MarkdownEditorRoot = ({
   id,
   attendableId,
   object,
-  editorStateStore,
-  selectionManager,
   settings,
+  compact,
   viewMode,
+  selectionManager,
+  editorStateStore,
   extensions: extensionsProp,
   slashCommandGroups,
   onLinkQuery,
@@ -118,11 +120,12 @@ const MarkdownEditorRoot = ({
   const coreExtensions = useExtensions({
     id,
     object,
+    compact,
+    viewMode,
+    selectionManager,
     editorStateStore,
     previewOptions,
-    selectionManager,
     settings,
-    viewMode,
     onSelectObject,
   });
 
@@ -135,6 +138,7 @@ const MarkdownEditorRoot = ({
     <MarkdownEditorContextProvider
       id={id}
       attendableId={attendableId}
+      compact={compact}
       editorView={editorView}
       setEditorView={setEditorView}
       extensions={extensions}
@@ -159,10 +163,11 @@ const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
 
 type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
-const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
+const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(({ ...props }, _forwardedRef) => {
   const {
     id,
     attendableId,
+    compact,
     editorView,
     setEditorView,
     viewMode,
@@ -174,9 +179,10 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
   return (
     <EditorMenuProvider view={editorView} groups={groupsRef.current} {...menuProps}>
       <NaturalMarkdownEditorContent
-        {...props}
+        {...composableProps(props)}
         id={id}
         attendableId={attendableId}
+        compact={compact}
         viewMode={viewMode}
         toolbarState={toolbarState}
         extensions={extensions}
@@ -184,7 +190,7 @@ const MarkdownEditorContent = (props: MarkdownEditorContentProps) => {
       />
     </EditorMenuProvider>
   );
-};
+});
 
 MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 

@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import {
@@ -29,7 +29,7 @@ import {
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
-import { Obj, Ref } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
 import { ExampleHandlers, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -116,12 +116,8 @@ const buildPluginManagerOptions = ({
           }
 
           yield* Effect.promise(() => client.halo.createIdentity());
-          yield* Effect.promise(() => client.spaces.waitUntilReady());
 
-          const space = client.spaces.default;
-          // TODO(burdon): Should not require this.
-          //  ERROR: invariant violation: Database was not initialized with root object.
-          // TODO(burdon): onSpacesReady is never called.
+          const space = yield* Effect.promise(() => client.spaces.create());
           yield* Effect.promise(() => space.waitUntilReady());
 
           // Add tokens.
@@ -164,7 +160,7 @@ const PluginManagerHost = ({
   contextId,
 }: {
   options: WithPluginManagerOptions;
-  children: React.ReactNode;
+  children: ReactNode;
   contextId: string;
 }) => {
   const manager = useMemo(() => {
@@ -288,7 +284,8 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const space = client.spaces.default;
+      const space = client.spaces.get()[0];
+      invariant(space, 'No space available after initialization.');
 
       // Ensure workspace is set.
       yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
@@ -312,10 +309,12 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
               const space = client.spaces.get(db.spaceId);
               invariant(space, 'Space not found');
 
-              const queue = space.queues.create();
+              const feed = space.db.add(Feed.make());
+              const queueDxn = Feed.getQueueDxn(feed)!;
+              const queue = space.queues.get(queueDxn);
               const chat = Obj.make(Assistant.Chat, {
                 name,
-                queue: Ref.fromDXN(queue.dxn),
+                feed: Ref.make(feed),
               });
               const binder = new AiContextBinder({ queue, registry });
 

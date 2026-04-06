@@ -23,9 +23,9 @@ import { Markdown } from '../../types';
 
 import { MarkdownEditor, type MarkdownEditorRootProps } from './MarkdownEditor';
 
-type StoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'>;
+type DefaultStoryProps = Omit<MarkdownEditorRootProps, 'id' | 'extensions'>;
 
-const DefaultStory = (props: StoryProps) => {
+const DefaultStory = (props: DefaultStoryProps) => {
   const space = useSpace();
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
   const id = doc && Obj.getDXN(doc).toString();
@@ -62,8 +62,8 @@ const meta: Meta<typeof DefaultStory> = {
           types: [Markdown.Document, Text.Text],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
-              defaultSpace.db.add(
+              const { personalSpace } = yield* initializeIdentity(client);
+              personalSpace.db.add(
                 Markdown.make({ content: Array.from({ length: 100 }, (_, i) => `Line ${i + 1}`).join('\n') }),
               );
             }),

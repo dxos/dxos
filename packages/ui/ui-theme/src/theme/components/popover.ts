@@ -4,7 +4,6 @@
 
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
-import { focusRing } from '../../fragments';
 import { mx, surfaceShadow, surfaceZIndex } from '../../util';
 
 export type PopoverStyleProps = Partial<{
@@ -18,7 +17,7 @@ export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation
     'dx-modal-surface border border-separator rounded-sm',
     surfaceShadow({ elevation: 'positioned' }),
     surfaceZIndex({ elevation, level: 'menu' }),
-    focusRing,
+    'dx-focus-ring',
     ...etc,
   );
 

@@ -45,7 +45,7 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
     <div role='none' className='flex p-2'>
       <Popover.Root>
         <Popover.Trigger asChild>
-          <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('context objects button')} />
+          <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('context-objects.button')} />
         </Popover.Trigger>
         <Popover.Portal>
           <Popover.Content side='top' classNames={panelClassNames}>
@@ -63,7 +63,7 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
             variant='ghost'
             icon='ph--sliders-horizontal--regular'
             iconOnly
-            label={t('context settings button')}
+            label={t('context-settings.button')}
           />
         </Popover.Trigger>
         <Popover.Portal>
@@ -78,19 +78,19 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
                     '[&_[role="tabpanel"]]:min-h-0 [&_[role="tabpanel"]]:px-form-chrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden',
                   )}
                 >
-                  <Tabs.Tabpanel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
+                  <Tabs.Panel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
                     <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
-                  </Tabs.Tabpanel>
-                  <Tabs.Tabpanel value='model' tabIndex={-1} classNames='dx-focus-ring-inset px-0!'>
+                  </Tabs.Panel>
+                  <Tabs.Panel value='model' tabIndex={-1} classNames='dx-focus-ring-inset px-0!'>
                     <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
-                  </Tabs.Tabpanel>
+                  </Tabs.Panel>
                   <Tabs.Tablist classNames='justify-center p-form-chrome border-y border-subdued-separator order-last'>
                     <Tabs.IconTab
                       value='blueprints'
                       icon='ph--blueprint--regular'
-                      label={t('blueprints in context title')}
+                      label={t('blueprints-in-context.title')}
                     />
-                    <Tabs.IconTab value='model' label={t('chat model title')} icon='ph--cpu--regular' />
+                    <Tabs.IconTab value='model' label={t('chat-model.title')} icon='ph--cpu--regular' />
                   </Tabs.Tablist>
                 </Tabs.Viewport>
               </Tabs.Root>
@@ -138,7 +138,7 @@ const BlueprintsPanel = ({
           })}
         </SearchList.Viewport>
       </SearchList.Content>
-      <SearchList.Input placeholder={t('search placeholder')} classNames='mb-form-chrome' autoFocus />
+      <SearchList.Input placeholder={t('search.placeholder')} classNames='mb-form-chrome' autoFocus />
     </SearchList.Root>
   );
 };
@@ -174,7 +174,7 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
       const typename = Type.getTypename(type);
       return {
         typename,
-        label: t('typename label', { ns: typename, defaultValue: typename }),
+        label: t('typename.label', { ns: typename, defaultValue: typename }),
       };
     });
 
@@ -224,19 +224,19 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
               );
             })
           ) : (
-            <SearchList.Item value='__empty__' label={t('no results')} />
+            <SearchList.Item value='__empty__' label={t('no-results.message')} />
           )}
         </SearchList.Viewport>
       </SearchList.Content>
 
       <div role='none' className='grid grid-cols-[min-content_1fr] gap-2 px-form-chrome mb-form-chrome'>
         <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
-          <Select.TriggerButton placeholder={t('type filter placeholder')} />
+          <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
           <Select.Portal>
             <Select.Content>
               <Select.ScrollUpButton />
               <Select.Viewport>
-                <Select.Option value={ANY}>{t('any type filter label')}</Select.Option>
+                <Select.Option value={ANY}>{t('any-type-filter.label')}</Select.Option>
                 {typenames.map(({ typename, label }) => (
                   <Select.Option key={typename} value={typename}>
                     {label}
@@ -248,7 +248,7 @@ const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'context'>)
             </Select.Content>
           </Select.Portal>
         </Select.Root>
-        <SearchList.Input placeholder={t('search placeholder')} classNames='mb-0' autoFocus />
+        <SearchList.Input placeholder={t('search.placeholder')} classNames='mb-0' autoFocus />
       </div>
     </SearchList.Root>
   );

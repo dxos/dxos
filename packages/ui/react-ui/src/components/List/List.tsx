@@ -24,6 +24,7 @@ import {
   useListContext,
   useListItemContext,
 } from '@dxos/react-list';
+import { composable, composableProps } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
@@ -33,15 +34,16 @@ import { Icon } from '../Icon';
 
 import { ListDropIndicator } from './ListDropIndicator';
 
-type ListProps = ThemedClassName<ListPrimitiveProps> & { density?: Density };
+type ListProps = ThemedClassName<ListPrimitiveProps & { density?: Density }>;
 
-const List = forwardRef<HTMLOListElement, ListProps>(({ classNames, children, ...props }, forwardedRef) => {
+const List = composable<HTMLOListElement, ListProps>(({ children, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const density = useDensityContext(props.density);
+  const { className, ...rest } = composableProps(props);
 
   return (
     <DensityProvider density={density}>
-      <ListPrimitive {...props} className={tx('list.root', {}, classNames)} ref={forwardedRef}>
+      <ListPrimitive {...rest} className={tx('list.root', {}, className)} ref={forwardedRef}>
         {children}
       </ListPrimitive>
     </DensityProvider>
@@ -89,7 +91,7 @@ const ListItemHeading = forwardRef<HTMLParagraphElement, ListItemHeadingProps>(
         className={tx('list.item.heading', { density }, classNames)}
         ref={forwardedRef}
       >
-        {children}
+        <span>{children}</span>
       </ListPrimitiveItemHeading>
     );
   },

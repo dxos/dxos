@@ -7,6 +7,8 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
+import { NOT_FOUND_PATH } from '@dxos/app-toolkit';
+import { NotFoundArticle } from '@dxos/app-toolkit/ui';
 import { Node } from '@dxos/plugin-graph';
 
 import { Home, NavBranch } from '../../components';
@@ -27,6 +29,12 @@ export default Capability.makeModule(() =>
         role: 'article',
         filter: (data): data is SurfaceData => data.attendableId === Node.RootId,
         component: () => <Home />,
+      }),
+      Surface.create({
+        id: `${meta.id}.not-found`,
+        role: 'article',
+        filter: (data): data is SurfaceData => data.attendableId === NOT_FOUND_PATH,
+        component: () => <NotFoundArticle />,
       }),
       Surface.create({
         id: `${meta.id}.nav-branch`,

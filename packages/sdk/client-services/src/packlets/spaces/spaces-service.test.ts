@@ -8,6 +8,7 @@ import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 import { type Space, type SpacesService } from '@dxos/protocols/proto/dxos/client/services';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 
 import { type ServiceContext } from '../services';
 import { createServiceContext } from '../testing';
@@ -33,12 +34,14 @@ describe('SpacesService', () => {
 
   describe('createSpace', () => {
     test('fails if no identity is available', async () => {
-      await expect(spacesService.createSpace()).rejects.toBeInstanceOf(Error);
+      await expect(spacesService.createSpace({ membershipPolicy: MembershipPolicy.INVITE })).rejects.toBeInstanceOf(
+        Error,
+      );
     });
 
     test('creates a new space', async () => {
       await serviceContext.createIdentity();
-      const space = await spacesService.createSpace();
+      const space = await spacesService.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
       expect(space).to.exist;
       expect(space.spaceKey).to.be.instanceof(PublicKey);
     });
@@ -60,9 +63,9 @@ describe('SpacesService', () => {
     test('returns list of existing spaces', async () => {
       await serviceContext.createIdentity();
       const existingSpaces = [
-        await spacesService.createSpace(),
-        await spacesService.createSpace(),
-        await spacesService.createSpace(),
+        await spacesService.createSpace({ membershipPolicy: MembershipPolicy.INVITE }),
+        await spacesService.createSpace({ membershipPolicy: MembershipPolicy.INVITE }),
+        await spacesService.createSpace({ membershipPolicy: MembershipPolicy.INVITE }),
       ];
 
       const query = spacesService.querySpaces();
@@ -88,7 +91,7 @@ describe('SpacesService', () => {
       expect(await result.wait()).to.be.length(0);
 
       result.reset();
-      const space = await spacesService.createSpace();
+      const space = await spacesService.createSpace({ membershipPolicy: MembershipPolicy.INVITE });
       const spaces = await result.wait();
       expect(spaces).to.be.length(1);
       expect(spaces?.[0].spaceKey.equals(space.spaceKey)).to.be.true;

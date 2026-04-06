@@ -19,6 +19,7 @@ import {
   getSchemaDXN,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
+import { Context } from '@dxos/context';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -262,7 +263,7 @@ describe('Reactive Object with ECHO database', () => {
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
     const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-    const root = await peer.host.createSpaceRoot(spaceKey);
+    const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
     await peer.client.graph.schemaRegistry.register([TestSchema.Example]);
 
     let id: string;
@@ -296,7 +297,7 @@ describe('Reactive Object with ECHO database', () => {
     const builder = new EchoTestBuilder();
     await openAndClose(builder);
     const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-    const root = await peer.host.createSpaceRoot(spaceKey);
+    const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
     let id: string;
     {
@@ -522,6 +523,22 @@ describe('Reactive Object with ECHO database', () => {
       expect(person.organization.target?.id).to.be.a('string');
     });
 
+    test('Obj.clone(deep) then add: top-level Ref on echo object loads (sanity)', async () => {
+      const { db, graph } = await builder.createDatabase();
+      await graph.schemaRegistry.register([Organization, Contact]);
+
+      const original = Obj.make(Contact, {
+        name: 'John',
+        organization: Ref.make(Obj.make(Organization, { name: 'DXOS' })),
+      });
+      const cloned = Obj.clone(original, { deep: true });
+      const person = db.add(cloned);
+
+      expect(cloned.organization.target?.id).not.to.eq(original.organization.target?.id);
+      const nested = await person.organization.load();
+      expect(nested?.name).to.eq('DXOS');
+    });
+
     test('adding objects with nested arrays to DB', async () => {
       const { db, graph } = await builder.createDatabase();
       await graph.schemaRegistry.register([Organization, Contact]);
@@ -712,7 +729,7 @@ describe('Reactive Object with ECHO database', () => {
       const builder = new EchoTestBuilder();
       await openAndClose(builder);
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-      const root = await peer.host.createSpaceRoot(spaceKey);
+      const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
 
       let id: string;
       {

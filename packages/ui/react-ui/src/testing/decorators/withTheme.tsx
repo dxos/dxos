@@ -3,7 +3,7 @@
 //
 
 import { type Decorator } from '@storybook/react';
-import React, { memo } from 'react';
+import React from 'react';
 
 import { defaultTx } from '@dxos/ui-theme';
 import { type ThemeMode } from '@dxos/ui-types';
@@ -14,20 +14,23 @@ import { type ThemeContextValue, ThemeProvider, Tooltip } from '../../components
  * Adds theme decorator.
  */
 export const withTheme =
-  ({ tx = defaultTx, ...props }: Partial<ThemeContextValue> = {}): Decorator =>
+  ({ tx = defaultTx, noCache, platform }: Partial<ThemeContextValue> = {}): Decorator =>
   (Story, context) => {
     const {
       globals: { theme },
       parameters: { translations },
     } = context;
 
-    // Prevent re-rendering of the story.
-    const MemoizedStory = memo(Story);
-
     return (
-      <ThemeProvider {...props} tx={tx} themeMode={theme as ThemeMode} resourceExtensions={translations} noCache>
+      <ThemeProvider
+        tx={tx}
+        themeMode={theme as ThemeMode}
+        resourceExtensions={translations}
+        noCache={noCache}
+        platform={platform}
+      >
         <Tooltip.Provider>
-          <MemoizedStory />
+          <Story />
         </Tooltip.Provider>
       </ThemeProvider>
     );

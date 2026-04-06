@@ -33,7 +33,7 @@ export default Capability.makeModule(
               type: DECK_COMPANION_TYPE,
               data: space,
               properties: {
-                label: ['search label', { ns: meta.id }],
+                label: ['search.label', { ns: meta.id }],
                 icon: 'ph--magnifying-glass--regular',
                 disposition: 'hidden',
               },
@@ -53,7 +53,7 @@ export default Capability.makeModule(
                 return false;
               }),
               properties: {
-                label: ['search action label', { ns: meta.id }],
+                label: ['search-action.label', { ns: meta.id }],
                 icon: 'ph--magnifying-glass--regular',
                 keyBinding: {
                   macos: 'shift+meta+f',

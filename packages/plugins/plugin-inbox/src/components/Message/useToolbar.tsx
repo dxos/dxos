@@ -36,7 +36,7 @@ export const useMessageToolbarActions = ({
         {
           nodes.push(
             createMenuItemGroup('root', {
-              label: ['message toolbar label', { ns: meta.id }],
+              label: ['message-toolbar.label', { ns: meta.id }],
             }),
           );
         }
@@ -48,7 +48,7 @@ export const useMessageToolbarActions = ({
         // Reply actions.
         if (onReply) {
           const action = createMenuAction('reply', onReply, {
-            label: ['message toolbar reply', { ns: meta.id }],
+            label: ['message-toolbar-reply.menu', { ns: meta.id }],
             icon: 'ph--arrow-bend-up-left--regular',
           });
           nodes.push(action);
@@ -57,7 +57,7 @@ export const useMessageToolbarActions = ({
 
         if (onReplyAll) {
           const action = createMenuAction('replyAll', onReplyAll, {
-            label: ['message toolbar reply all', { ns: meta.id }],
+            label: ['message-toolbar-reply-all.menu', { ns: meta.id }],
             icon: 'ph--arrow-bend-double-up-left--regular',
           });
           nodes.push(action);
@@ -66,7 +66,7 @@ export const useMessageToolbarActions = ({
 
         if (onForward) {
           const action = createMenuAction('forward', onForward, {
-            label: ['message toolbar forward', { ns: meta.id }],
+            label: ['message-toolbar-forward.menu', { ns: meta.id }],
             icon: 'ph--arrow-bend-up-right--regular',
           });
           nodes.push(action);

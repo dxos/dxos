@@ -20,7 +20,7 @@ import { DebugPlugin } from '@dxos/plugin-debug';
 import { DeckPlugin } from '@dxos/plugin-deck';
 import { ExcalidrawPlugin } from '@dxos/plugin-excalidraw';
 import { ExplorerPlugin } from '@dxos/plugin-explorer';
-import { FilesPlugin } from '@dxos/plugin-files';
+import { FeedPlugin } from '@dxos/plugin-feed';
 import { GraphPlugin } from '@dxos/plugin-graph';
 import { HelpPlugin } from '@dxos/plugin-help';
 import { InboxPlugin } from '@dxos/plugin-inbox';
@@ -32,6 +32,7 @@ import { MasonryPlugin } from '@dxos/plugin-masonry';
 import { MeetingPlugin } from '@dxos/plugin-meeting';
 import { MermaidPlugin } from '@dxos/plugin-mermaid';
 import { NativePlugin } from '@dxos/plugin-native';
+import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem';
 import { NavTreePlugin } from '@dxos/plugin-navtree';
 import { ObservabilityPlugin } from '@dxos/plugin-observability';
 import { OutlinerPlugin } from '@dxos/plugin-outliner';
@@ -46,6 +47,7 @@ import { SettingsPlugin } from '@dxos/plugin-settings';
 import { SheetPlugin } from '@dxos/plugin-sheet';
 import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
 import { SketchPlugin } from '@dxos/plugin-sketch';
+import { SpacetimePlugin } from '@dxos/plugin-spacetime';
 import { SpotlightPlugin } from '@dxos/plugin-spotlight';
 import { SpacePlugin } from '@dxos/plugin-space';
 import { StackPlugin } from '@dxos/plugin-stack';
@@ -94,10 +96,9 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
-    layoutPluginId,
-    FilesPlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
+    layoutPluginId,
     isTauri && !isMobile && !isPopover && NativePlugin.meta.id,
     OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
@@ -138,9 +139,10 @@ export const getDefaults = ({ isDev, isLabs }: PluginConfig): string[] =>
     (isDev || isLabs) && [
       AssistantPlugin.meta.id,
       DailySummaryPlugin.meta.id,
-      PipelinePlugin.meta.id,
+      FeedPlugin.meta.id,
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
+      PipelinePlugin.meta.id,
       TranscriptionPlugin.meta.id,
       ZenPlugin.meta.id,
     ],
@@ -190,7 +192,7 @@ export const getPlugins = ({
     DebugPlugin({ logBuffer }),
     isLabs && ExcalidrawPlugin(),
     ExplorerPlugin(),
-    isLabs && FilesPlugin(),
+    FeedPlugin(),
     GraphPlugin(),
     HelpPlugin({ steps }),
     InboxPlugin(),
@@ -204,6 +206,7 @@ export const getPlugins = ({
     MeetingPlugin(),
     MermaidPlugin(),
     isTauri && !isMobile && !isPopover && NativePlugin(),
+    NativeFilesystemPlugin(),
     NavTreePlugin(),
     ObservabilityPlugin({
       namespace: appKey,
@@ -221,6 +224,7 @@ export const getPlugins = ({
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
+    SpacetimePlugin(),
     SpacePlugin({
       observability: true,
       shareableLinkOrigin: origin,

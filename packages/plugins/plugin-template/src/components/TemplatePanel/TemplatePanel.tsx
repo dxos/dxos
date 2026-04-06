@@ -4,11 +4,11 @@
 
 import React from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 
-export type TemplatePanelProps = SurfaceComponentProps<Obj.Unknown>;
+export type TemplatePanelProps = ObjectSurfaceProps<Obj.Unknown>;
 
 export const TemplatePanel = ({ role, subject: object }: TemplatePanelProps) => {
   return (

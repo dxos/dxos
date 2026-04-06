@@ -139,6 +139,7 @@
     "@effect/ai-openai": "catalog:",
     "@effect/experimental": "catalog:",
     "@effect/platform-browser": "catalog:",
+    "@radix-ui/react-compose-refs": "catalog:",
     "@radix-ui/react-context": "catalog:",
     "effect": "catalog:",
     "exa-js": "catalog:",

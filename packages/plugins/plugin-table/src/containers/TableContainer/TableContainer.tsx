@@ -8,7 +8,7 @@ import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'rea
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 
@@ -34,7 +34,7 @@ import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 import { meta } from '../../meta';
 import { type Table } from '../../operations';
 
-export type TableContainerProps = SurfaceComponentProps<Table.Table>;
+export type TableContainerProps = ObjectSurfaceProps<Table.Table>;
 
 // TODO(wittjosiah): Need to handle more complex queries by restricting add row.
 export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
@@ -97,7 +97,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     }, []);
 
     const rowActions = useMemo(
-      (): TableRowAction[] => [{ id: 'open', label: ['open object label', { ns: meta.id }] }],
+      (): TableRowAction[] => [{ id: 'open', label: ['open-object.label', { ns: meta.id }] }],
       [],
     );
 
@@ -159,7 +159,7 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
     );
 
     return (
-      <TableComponent.Root>
+      <TableComponent.Root ref={tableRef}>
         <Panel.Root role={role} ref={forwardedRef}>
           <Panel.Toolbar asChild>
             <TableComponent.Toolbar
@@ -171,10 +171,9 @@ export const TableContainer = forwardRef<HTMLDivElement, TableContainerProps>(
             />
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <TableComponent.Main
+            <TableComponent.Content
               classNames='border-t border-separator'
               key={attendableId}
-              ref={tableRef}
               model={model}
               presentation={presentation}
               schema={schema}

@@ -71,7 +71,7 @@ export type Requirements<T extends Any> = T extends GenericToolkit<infer _TR, in
 export const make = <Tools extends Record<string, Tool.Any>, E, R>(
   toolkit: Toolkit.Toolkit<Tools>,
   layer: Layer.Layer<Tool.HandlersFor<Tools>, E, R>,
-): GenericToolkit<E, R> => {
+): GenericToolkit<Tool.Requirements<Tools>, E, R> => {
   return {
     [TypeId]: TypeId,
     toolkit: toolkit as any,
@@ -139,8 +139,8 @@ export interface AnyStructSchemaNoContext extends Pipeable.Pipeable {
 /**
  * Provides a generic toolkit to the agent.
  */
-export class Provider extends Context.Tag('@dxos/ai/GenericToolkit.Provider')<
-  Provider,
+export class GenericToolkitProvider extends Context.Tag('@dxos/ai/GenericToolkit.GenericToolkitProvider')<
+  GenericToolkitProvider,
   {
     readonly getToolkit: () => GenericToolkit;
   }
@@ -150,7 +150,7 @@ export class Provider extends Context.Tag('@dxos/ai/GenericToolkit.Provider')<
  * Layer for providing a generic toolkit to the agent.
  */
 export const providerLayer = (toolkit: GenericToolkit) =>
-  Layer.succeed(Provider, {
+  Layer.succeed(GenericToolkitProvider, {
     getToolkit: () => toolkit,
   });
 

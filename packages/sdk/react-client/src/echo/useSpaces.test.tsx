@@ -11,14 +11,14 @@ import { useSpace, useSpaces } from './useSpaces';
 
 describe('useSpaces', () => {
   test('lists existing spaces', async () => {
-    const { client } = await createClient({ createIdentity: true });
+    const { client } = await createClient({ createIdentity: true, createSpace: true });
     const wrapper = await createClientContextProvider(client);
     const { result } = renderHook(() => useSpaces(), { wrapper });
     expect(result.current.length).to.eq(1);
   });
 
   test('updates when new spaces are created', async () => {
-    const { client } = await createClient({ createIdentity: true });
+    const { client } = await createClient({ createIdentity: true, createSpace: true });
     const wrapper = await createClientContextProvider(client);
     const { result, rerender } = renderHook(() => useSpaces(), { wrapper });
     expect(result.current.length).to.eq(1);
@@ -31,20 +31,14 @@ describe('useSpaces', () => {
 });
 
 describe('useSpace', () => {
-  test('gets default space', async () => {
-    const { client } = await createClient();
+  test('returns undefined when no id provided', async () => {
+    const { client } = await createClient({ createIdentity: true });
     const wrapper = await createClientContextProvider(client);
-    const { result, rerender } = renderHook(() => useSpace(), { wrapper });
+    const { result } = renderHook(() => useSpace(), { wrapper });
     expect(result.current).to.be.undefined;
-    await act(async () => {
-      await client.halo.createIdentity();
-      await client.spaces.waitUntilReady();
-    });
-    rerender();
-    expect(result.current).to.not.be.undefined;
   });
 
-  test('gets space by key', async () => {
+  test('gets space by id', async () => {
     const { client, space } = await createClient({ createIdentity: true, createSpace: true });
     const wrapper = await createClientContextProvider(client);
     const { result } = renderHook(() => useSpace(space!.id), { wrapper });

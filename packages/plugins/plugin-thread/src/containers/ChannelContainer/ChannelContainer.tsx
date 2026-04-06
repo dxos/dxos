@@ -3,21 +3,21 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import React, { type ChangeEvent, forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Context } from '@dxos/context';
 import { failUndefined } from '@dxos/debug';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ComposableProps, ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, Input, Panel, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { Menu, MenuRootProps, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
-import { composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Call } from '../../components';
 import { meta } from '../../meta';
@@ -25,7 +25,7 @@ import { ThreadCapabilities } from '../../types';
 import { type Channel } from '../../types';
 import { ChatContainer } from '../ChatContainer';
 
-export type ChannelContainerProps = SurfaceComponentProps<
+export type ChannelContainerProps = ObjectSurfaceProps<
   Channel.Channel | undefined,
   {
     roomId?: string;
@@ -164,16 +164,16 @@ const DisplayNameMissing = () => {
 
   return (
     <Settings.Group classNames='p-4 place-content-center'>
-      <Settings.ItemInput title={t('display name label')} description={t('display name description')}>
+      <Settings.ItemInput title={t('display-name.label')} description={t('display-name.description')}>
         <Input.TextInput
           value={displayName}
           onChange={handleChange}
-          placeholder={t('display name input placeholder')}
+          placeholder={t('display-name-input.placeholder')}
           classNames='md:min-w-64'
         />
       </Settings.ItemInput>
       <Settings.GroupButton disabled={!displayName} onClick={handleSave}>
-        {t('set display name label')}
+        {t('set-display-name.label')}
       </Settings.GroupButton>
     </Settings.Group>
   );
@@ -186,10 +186,10 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
         return {
           nodes: [
             createMenuItemGroup('root', {
-              label: ['channel toolbar title', { ns: meta.id }],
+              label: ['channel-toolbar.title', { ns: meta.id }],
             }),
             createMenuAction('video-call', () => onJoinCall?.(), {
-              label: ['start video call label', { ns: meta.id }],
+              label: ['start-video-call.menu', { ns: meta.id }],
               icon: 'ph--video-camera--regular',
               type: 'video-call',
             }),
@@ -203,13 +203,11 @@ const useChannelToolbarActions = (onJoinCall?: () => void) => {
   return useMenuActions(creator);
 };
 
-type ChannelToolbarProps = ComposableProps<
-  Pick<MenuRootProps, 'attendableId'> & {
-    onJoinCall?: () => void;
-  }
->;
+type ChannelToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
+  onJoinCall?: () => void;
+};
 
-const ChannelToolbar = forwardRef<HTMLDivElement, ChannelToolbarProps>(
+const ChannelToolbar = composable<HTMLDivElement, ChannelToolbarProps>(
   ({ attendableId, role, onJoinCall, ...props }, forwardedRef) => {
     const menuActions = useChannelToolbarActions(onJoinCall);
 

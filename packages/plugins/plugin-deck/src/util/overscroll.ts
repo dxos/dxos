@@ -56,14 +56,14 @@ export const calculateOverscroll = (
   }
   if (planksCount === 1) {
     const overscrollPadding =
-      'max(0px, calc(((100dvw - var(--dx-main-sidebar-width) - var(--dx-main-complementary-width) - (var(--dx-main-content-first-width) + 1px)) / 2)))';
+      'max(0px, calc(((100dvw - var(--main-sidebar-width) - var(--main-complementary-width) - (var(--main-content-first-width) + 1px)) / 2)))';
     return { paddingInlineStart: overscrollPadding, paddingInlineEnd: overscrollPadding };
   } else {
     return {
       paddingInlineStart:
-        'max(0px, calc(((100dvw - (var(--dx-main-content-first-width) + 1px)) / 2) - var(--dx-main-sidebar-width)))',
+        'max(0px, calc(((100dvw - (var(--main-content-first-width) + 1px)) / 2) - var(--main-sidebar-width)))',
       paddingInlineEnd:
-        'max(0px, calc(((100dvw - (var(--dx-main-content-last-width) + 1px)) / 2) - var(--dx-main-complementary-width)))',
+        'max(0px, calc(((100dvw - (var(--main-content-last-width) + 1px)) / 2) - var(--main-complementary-width)))',
     };
   }
 };

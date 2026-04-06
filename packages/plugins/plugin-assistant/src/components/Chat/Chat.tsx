@@ -8,31 +8,21 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
 import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
-import React, {
-  type ComponentPropsWithoutRef,
-  type PropsWithChildren,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Chat as ChatModule } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useVoiceInput } from '@dxos/plugin-transcription';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Queue, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Input, type ThemedClassName, useDynamicRef, useTranslation, ComposableProps } from '@dxos/react-ui';
+import { Input, type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
-import { composableProps } from '@dxos/ui-theme';
 
 import { useChatToolbarActions } from '../../hooks';
 import { meta } from '../../meta';
@@ -72,18 +62,19 @@ export const [ChatContextProvider, useChatContext] = createContext<ChatContextVa
 
 type ChatRootProps = PropsWithChildren<
   Pick<ChatContextValue, 'db' | 'chat' | 'processor'> & {
+    queue?: Queue;
     onEvent?: (event: ChatEvent) => void;
   }
 >;
 
-const ChatRoot = ({ children, chat, processor, onEvent, ...props }: ChatRootProps) => {
+const ChatRoot = ({ children, chat, queue, processor, onEvent, ...props }: ChatRootProps) => {
   const [debug, setDebug] = useState(false);
   const pending = useAtomValue(processor.messages);
   const streaming = useAtomValue(processor.streaming);
   const lastPrompt = useRef<string | undefined>(undefined);
 
   // Messages.
-  const storedMessages = useQuery(chat?.queue?.target, Filter.type(Message.Message));
+  const storedMessages = useQuery(queue, Filter.type(Message.Message));
   const messages = useMemo(() => {
     return Array.dedupeWith([...storedMessages, ...pending], ({ id: a }, { id: b }) => a === b);
   }, [storedMessages, pending]);
@@ -173,15 +164,15 @@ ChatRoot.displayName = 'Chat.Root';
 
 const CHAT_VIEWPORT_NAME = 'Chat.Viewport';
 
-type ChatViewportProps = ThemedClassName<PropsWithChildren<ComponentPropsWithoutRef<'div'>>>;
+type ChatViewportProps = {};
 
-const ChatViewport = ({ classNames, children, ...props }: ChatViewportProps) => {
+const ChatViewport = composable<HTMLDivElement, ChatViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div role='none' {...props} className={mx('flex flex-col h-full w-full', classNames)}>
+    <div {...composableProps(props, { role: 'none', classNames: 'dx-expander flex flex-col' })} ref={forwardedRef}>
       {children}
     </div>
   );
-};
+});
 
 ChatViewport.displayName = CHAT_VIEWPORT_NAME;
 
@@ -386,7 +377,7 @@ const ChatPrompt = ({
           autoFocus
           lineWrapping
           classNames='col-span-2 pt-0.5'
-          placeholder={placeholder ?? t('prompt placeholder')}
+          placeholder={placeholder ?? t('prompt.placeholder')}
           extensions={extensions}
           onSubmit={handleSubmit}
         />
@@ -417,7 +408,7 @@ const ChatPrompt = ({
             {/* TODO(burdon): Move offline switch into dialog. */}
             {online !== undefined && (
               <Input.Root>
-                <Input.Label srOnly>{t('online switch label')}</Input.Label>
+                <Input.Label srOnly>{t('online-switch.label')}</Input.Label>
                 <Input.Switch classNames='mx-2' checked={online} onCheckedChange={onOnlineChange} />
               </Input.Root>
             )}
@@ -436,13 +427,11 @@ ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = ComposableProps<
-  Pick<MenuRootProps, 'attendableId'> & {
-    companionTo?: Obj.Unknown;
-  }
->;
+type ChatToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
+  companionTo?: Obj.Unknown;
+};
 
-const ChatToolbar = forwardRef<HTMLDivElement, ChatToolbarProps>(
+const ChatToolbar = composable<HTMLDivElement, ChatToolbarProps>(
   ({ attendableId, companionTo, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
     const menuActions = useChatToolbarActions({ chat, companionTo });

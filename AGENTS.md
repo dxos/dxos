@@ -48,10 +48,11 @@
 - Avoid single letter variable names.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
 - Use barrel imports whenever possible.
+- Prefer ES `#private` fields/methods over TypeScript `private` keyword in new code. Existing `_private` convention is fine to keep.
 
 ### React
 
-- Import all required properties from React (i.e., don't do `React.forwardRef`, do `forwardRef`).
+- Import all required symbols from React — hooks, types, and utilities — as named imports (i.e., use `useMemo` not `React.useMemo`, use `type Ref` not `React.Ref`).
 - When using `forwardRef` use the variable name `forwardedRef`.
 
 ## New Packages
@@ -61,6 +62,7 @@
 ## Workflow
 
 - Never work on main; if not already in a worktree, create a new git worktree for the branch you are working on.
+- IMPORTANT: Do not change the branch or worktree after you have started unless you are instructed to directly by the user.
 - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
 - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
 - Check `moon.yml` for available package tasks
@@ -81,6 +83,12 @@ Examples:
 - `refactor: simplify error handling in client SDK`
 - `docs: update API reference for Space class`
 
+## CI
+
+- **IMPORTANT**: After every `git push`, proactively check CI status using `gh run list --branch <branch> --limit 5 --workflow "Check"`. Do NOT rely solely on `pnpm -w gh-action --verify` — it only checks agent workflows, not the main **Check** workflow that runs build and tests.
+- If the Check workflow fails, inspect the failure with `gh run view <run-id>` and `gh run view <run-id> --log-failed`, identify the failing job/test, and fix it.
+- When the user asks "what is the CI status" or similar, always check the **Check** workflow specifically.
+
 ## Submitting PRs
 
 - When the user asks you to submit a PR:
@@ -88,9 +96,9 @@ Examples:
   - Merge `origin/main` in to current branch and resolve conflicts.
   - Format code with `pnpm format` and check that `moon run :lint -- --fix` succeeds.
   - Check `moon run :test` succeeds.
-  - Commit and push any pending changes.
-  - Monitor CI (every 5 minutes): `pnpm -w gh-action --verify --watch`.
-  - **IMPORTANT**: Address all PR review comments (fix or explain why not) and post a reply to all comments.
+  - Commit and push all pending changes.
+  - Monitor CI (every 5 minutes): `gh run list --branch <branch> --limit 3 --workflow "Check"` and `pnpm -w gh-action --verify --watch`.
+  - **IMPORTANT**: Address and RESPOND to all PR review comments.
   - Update the PR description with a summary of the changes and the reasoning behind major changes.
   - Add any reference linear issues if available in PR description as "closes DX-123" or "part of DX-123".
   - **IMPORTANT**: DO NOT DELETE ANY BRANCHES OR WORKTREES THAT HAVE UNCOMMITTED CHANGES.

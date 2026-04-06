@@ -25,7 +25,7 @@ export default Capability.makeModule(
             id: `${meta.id}.open-user-account`,
             data: () => Operation.invoke(ClientOperation.ShareIdentity),
             properties: {
-              label: ['open user account label', { ns: meta.id }],
+              label: ['open-user-account.label', { ns: meta.id }],
               icon: 'ph--user--regular',
               disposition: 'menu',
               keyBinding: {
@@ -47,7 +47,7 @@ export default Capability.makeModule(
             id: Account.id,
             type: meta.id,
             properties: {
-              label: ['account label', { ns: meta.id }],
+              label: ['account.label', { ns: meta.id }],
               icon: 'ph--user--regular',
               disposition: 'user-account',
               testId: 'clientPlugin.account',
@@ -63,7 +63,7 @@ export default Capability.makeModule(
                 data: Account.Profile,
                 type: meta.id,
                 properties: {
-                  label: ['profile label', { ns: meta.id }],
+                  label: ['profile.label', { ns: meta.id }],
                   icon: 'ph--user--regular',
                 },
               },
@@ -72,7 +72,7 @@ export default Capability.makeModule(
                 data: Account.Devices,
                 type: meta.id,
                 properties: {
-                  label: ['devices label', { ns: meta.id }],
+                  label: ['devices.label', { ns: meta.id }],
                   icon: 'ph--devices--regular',
                   testId: 'clientPlugin.devices',
                 },
@@ -82,7 +82,7 @@ export default Capability.makeModule(
                 data: Account.Security,
                 type: meta.id,
                 properties: {
-                  label: ['security label', { ns: meta.id }],
+                  label: ['security.label', { ns: meta.id }],
                   icon: 'ph--key--regular',
                 },
               },

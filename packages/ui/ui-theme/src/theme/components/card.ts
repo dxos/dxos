@@ -18,7 +18,7 @@ export type CardStyleProps = {
 
 const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
-    'dx-card dx-card-min-width min-h-(--dx-rail-item) group/card relative _overflow-hidden',
+    'dx-card dx-card-min-width min-h-(--dx-rail-item) group/card relative overflow-hidden',
     border &&
       'bg-card-surface border border-separator dark:border-subdued-separator rounded-xs dx-focus-ring-group-y-indicator',
     fullWidth && 'max-w-none!',
@@ -46,9 +46,9 @@ const cardHeading: ComponentFunction<CardStyleProps> = ({ variant = 'default' },
 
 const cardText: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate: _truncate }, ...etc) =>
   mx(
-    'dx-card__text flex overflow-hidden',
+    'dx-card__text items-center overflow-hidden',
     variant === 'default' && 'py-1',
-    variant === 'description' && 'py-1.5',
+    variant === 'description' && 'py-1.5 text-description',
     ...etc,
   );
 

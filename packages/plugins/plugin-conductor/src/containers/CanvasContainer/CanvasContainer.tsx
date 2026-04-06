@@ -5,7 +5,7 @@
 import React, { Fragment, useEffect, useMemo, useRef } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { ComputeGraphModel } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
@@ -29,7 +29,7 @@ import {
   ShapeRegistry,
 } from '@dxos/react-ui-canvas-editor';
 
-export type CanvasContainerProps = SurfaceComponentProps<CanvasBoard.CanvasBoard>;
+export type CanvasContainerProps = ObjectSurfaceProps<CanvasBoard.CanvasBoard>;
 
 export const CanvasContainer = ({ role, subject: canvas }: CanvasContainerProps) => {
   const id = Obj.getDXN(canvas as any).toString();

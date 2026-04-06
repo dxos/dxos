@@ -6,6 +6,7 @@ import React from 'react';
 
 import { DropdownMenu, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Stack, StackItem, type StackProps } from '@dxos/react-ui-stack';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 import { type Notebook } from '../../types';
@@ -25,15 +26,25 @@ export type NotebookStackProps = ThemedClassName<
 >;
 
 // TODO(burdon): Option for narrow rail (with compact buttons that align with first button in toolbar).
-export const NotebookStack = ({ classNames, notebook, onRearrange, ...props }: NotebookStackProps) => {
-  return (
-    <Stack classNames={classNames} orientation='vertical' size='contain' rail onRearrange={onRearrange}>
-      {notebook?.cells.map((cell, i) => (
-        <NotebookSection key={i} cell={cell} {...props} />
-      ))}
-    </Stack>
-  );
-};
+export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
+  ({ notebook, onRearrange, db, graph, promptResults, onCellInsert, onCellDelete, env, ...props }, forwardedRef) => {
+    const sectionProps = { db, graph, promptResults, onCellInsert, onCellDelete, env };
+    return (
+      <Stack
+        {...composableProps(props)}
+        orientation='vertical'
+        size='contain'
+        rail
+        onRearrange={onRearrange}
+        ref={forwardedRef}
+      >
+        {notebook?.cells.map((cell, i) => (
+          <NotebookSection key={i} cell={cell} {...sectionProps} />
+        ))}
+      </Stack>
+    );
+  },
+);
 
 type NotebookSectionProps = NotebookCellProps;
 
@@ -61,7 +72,7 @@ const NotebookSection = ({
               variant='ghost'
               icon='ph--dots-three--regular'
               iconOnly
-              label={t('notebook cell insert label')}
+              label={t('notebook-cell-insert.label')}
             />
           </DropdownMenu.Trigger>
           <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />

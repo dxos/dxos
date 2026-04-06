@@ -39,7 +39,7 @@ export default Capability.makeModule(
                 data: null,
                 type: DEVTOOLS_TYPE,
                 properties: {
-                  label: ['devtools label', { ns: meta.id }],
+                  label: ['devtools.label', { ns: meta.id }],
                   icon: 'ph--hammer--regular',
                   disposition: 'pin-end',
                   position: 'fallback',
@@ -52,7 +52,7 @@ export default Capability.makeModule(
                           type: `${meta.id}.space`,
                           data: { space, type: `${meta.id}.space` },
                           properties: {
-                            label: ['debug label', { ns: meta.id }],
+                            label: ['debug.label', { ns: meta.id }],
                             icon: 'ph--bug--regular',
                           },
                         },
@@ -63,7 +63,7 @@ export default Capability.makeModule(
                     type: `${meta.id}.app-graph`,
                     data: { graph: graph?.graph, root: node.id === Node.RootId ? node.id : getParentId(node.id) },
                     properties: {
-                      label: ['debug app graph label', { ns: meta.id }],
+                      label: ['debug-app-graph.label', { ns: meta.id }],
                       icon: 'ph--graph--regular',
                     },
                   },
@@ -72,7 +72,7 @@ export default Capability.makeModule(
                     data: null,
                     type: DEVTOOLS_TYPE,
                     properties: {
-                      label: ['client label', { ns: meta.id }],
+                      label: ['client.label', { ns: meta.id }],
                       icon: 'ph--users--regular',
                     },
                     nodes: [
@@ -81,7 +81,7 @@ export default Capability.makeModule(
                         data: Devtools.Client.Config,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['config label', { ns: meta.id }],
+                          label: ['config.label', { ns: meta.id }],
                           icon: 'ph--gear--regular',
                         },
                       },
@@ -90,7 +90,7 @@ export default Capability.makeModule(
                         data: Devtools.Client.Storage,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['storage label', { ns: meta.id }],
+                          label: ['storage.label', { ns: meta.id }],
                           icon: 'ph--hard-drives--regular',
                         },
                       },
@@ -99,7 +99,7 @@ export default Capability.makeModule(
                         data: Devtools.Client.Logs,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['logs label', { ns: meta.id }],
+                          label: ['logs.label', { ns: meta.id }],
                           icon: 'ph--file-text--regular',
                         },
                       },
@@ -108,7 +108,7 @@ export default Capability.makeModule(
                         data: Devtools.Client.Diagnostics,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['diagnostics label', { ns: meta.id }],
+                          label: ['diagnostics.label', { ns: meta.id }],
                           icon: 'ph--chart-line--regular',
                         },
                       },
@@ -117,7 +117,7 @@ export default Capability.makeModule(
                         data: Devtools.Client.Tracing,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['tracing label', { ns: meta.id }],
+                          label: ['tracing.label', { ns: meta.id }],
                           icon: 'ph--fire--regular',
                         },
                       },
@@ -128,7 +128,7 @@ export default Capability.makeModule(
                     data: null,
                     type: DEVTOOLS_TYPE,
                     properties: {
-                      label: ['halo label', { ns: meta.id }],
+                      label: ['halo.label', { ns: meta.id }],
                       icon: 'ph--identification-badge--regular',
                     },
                     nodes: [
@@ -137,7 +137,7 @@ export default Capability.makeModule(
                         data: Devtools.Halo.Identity,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['identity label', { ns: meta.id }],
+                          label: ['identity.label', { ns: meta.id }],
                           icon: 'ph--identification-badge--regular',
                         },
                       },
@@ -146,7 +146,7 @@ export default Capability.makeModule(
                         data: Devtools.Halo.Devices,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['devices label', { ns: meta.id }],
+                          label: ['devices.label', { ns: meta.id }],
                           icon: 'ph--devices--regular',
                         },
                       },
@@ -155,7 +155,7 @@ export default Capability.makeModule(
                         data: Devtools.Halo.Keyring,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['keyring label', { ns: meta.id }],
+                          label: ['keyring.label', { ns: meta.id }],
                           icon: 'ph--key--regular',
                         },
                       },
@@ -164,7 +164,7 @@ export default Capability.makeModule(
                         data: Devtools.Halo.Credentials,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['credentials label', { ns: meta.id }],
+                          label: ['credentials.label', { ns: meta.id }],
                           icon: 'ph--credit-card--regular',
                         },
                       },
@@ -175,7 +175,7 @@ export default Capability.makeModule(
                     data: null,
                     type: DEVTOOLS_TYPE,
                     properties: {
-                      label: ['echo label', { ns: meta.id }],
+                      label: ['echo.label', { ns: meta.id }],
                       icon: 'ph--database--regular',
                     },
                     nodes: [
@@ -184,7 +184,7 @@ export default Capability.makeModule(
                         data: Devtools.Echo.Spaces,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['spaces label', { ns: meta.id }],
+                          label: ['spaces.label', { ns: meta.id }],
                           icon: 'ph--graph--regular',
                         },
                       },
@@ -193,7 +193,7 @@ export default Capability.makeModule(
                         data: Devtools.Echo.Space,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['space label', { ns: meta.id }],
+                          label: ['space.label', { ns: meta.id }],
                           icon: 'ph--planet--regular',
                         },
                       },
@@ -202,7 +202,7 @@ export default Capability.makeModule(
                         data: Devtools.Echo.Feeds,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['feeds label', { ns: meta.id }],
+                          label: ['feeds.label', { ns: meta.id }],
                           icon: 'ph--list-bullets--regular',
                         },
                       },
@@ -211,7 +211,7 @@ export default Capability.makeModule(
                         data: Devtools.Echo.Objects,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['objects label', { ns: meta.id }],
+                          label: ['objects.label', { ns: meta.id }],
                           icon: 'ph--cube--regular',
                         },
                       },
@@ -220,7 +220,7 @@ export default Capability.makeModule(
                         data: Devtools.Echo.Schema,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['schema label', { ns: meta.id }],
+                          label: ['schema.label', { ns: meta.id }],
                           icon: 'ph--database--regular',
                         },
                       },
@@ -229,7 +229,7 @@ export default Capability.makeModule(
                         data: Devtools.Echo.Automerge,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['automerge label', { ns: meta.id }],
+                          label: ['automerge.label', { ns: meta.id }],
                           icon: 'ph--gear-six--regular',
                         },
                       },
@@ -238,7 +238,7 @@ export default Capability.makeModule(
                         data: Devtools.Echo.Queues,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['queues label', { ns: meta.id }],
+                          label: ['queues.label', { ns: meta.id }],
                           icon: 'ph--queue--regular',
                         },
                       },
@@ -247,7 +247,7 @@ export default Capability.makeModule(
                         data: Devtools.Echo.Members,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['members label', { ns: meta.id }],
+                          label: ['members.label', { ns: meta.id }],
                           icon: 'ph--users--regular',
                         },
                       },
@@ -256,7 +256,7 @@ export default Capability.makeModule(
                         data: Devtools.Echo.Metadata,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['metadata label', { ns: meta.id }],
+                          label: ['metadata.label', { ns: meta.id }],
                           icon: 'ph--hard-drive--regular',
                         },
                       },
@@ -267,7 +267,7 @@ export default Capability.makeModule(
                     data: null,
                     type: DEVTOOLS_TYPE,
                     properties: {
-                      label: ['mesh label', { ns: meta.id }],
+                      label: ['mesh.label', { ns: meta.id }],
                       icon: 'ph--graph--regular',
                     },
                     nodes: [
@@ -276,7 +276,7 @@ export default Capability.makeModule(
                         data: Devtools.Mesh.Signal,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['signal label', { ns: meta.id }],
+                          label: ['signal.label', { ns: meta.id }],
                           icon: 'ph--wifi-high--regular',
                         },
                       },
@@ -285,7 +285,7 @@ export default Capability.makeModule(
                         data: Devtools.Mesh.Swarm,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['swarm label', { ns: meta.id }],
+                          label: ['swarm.label', { ns: meta.id }],
                           icon: 'ph--users-three--regular',
                         },
                       },
@@ -294,7 +294,7 @@ export default Capability.makeModule(
                         data: Devtools.Mesh.Network,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['network label', { ns: meta.id }],
+                          label: ['network.label', { ns: meta.id }],
                           icon: 'ph--polygon--regular',
                         },
                       },
@@ -305,7 +305,7 @@ export default Capability.makeModule(
                     data: null,
                     type: DEVTOOLS_TYPE,
                     properties: {
-                      label: ['edge label', { ns: meta.id }],
+                      label: ['edge.label', { ns: meta.id }],
                       icon: 'ph--cloud--regular',
                     },
                     nodes: [
@@ -314,7 +314,7 @@ export default Capability.makeModule(
                         data: Devtools.Edge.Dashboard,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['dashboard label', { ns: meta.id }],
+                          label: ['dashboard.label', { ns: meta.id }],
                           icon: 'ph--computer-tower--regular',
                         },
                       },
@@ -323,7 +323,7 @@ export default Capability.makeModule(
                         data: Devtools.Edge.Workflows,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['workflows label', { ns: meta.id }],
+                          label: ['workflows.label', { ns: meta.id }],
                           icon: 'ph--function--regular',
                         },
                       },
@@ -332,7 +332,7 @@ export default Capability.makeModule(
                         data: Devtools.Edge.Traces,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['traces label', { ns: meta.id }],
+                          label: ['traces.label', { ns: meta.id }],
                           icon: 'ph--line-segments--regular',
                         },
                       },
@@ -341,7 +341,7 @@ export default Capability.makeModule(
                         data: Devtools.Edge.Testing,
                         type: DEVTOOLS_TYPE,
                         properties: {
-                          label: ['testing label', { ns: meta.id }],
+                          label: ['testing.label', { ns: meta.id }],
                           icon: 'ph--flask--regular',
                         },
                       },
@@ -364,7 +364,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: 'debug',
               properties: {
-                label: ['debug label', { ns: meta.id }],
+                label: ['debug.label', { ns: meta.id }],
                 icon: 'ph--bug--regular',
                 disposition: 'hidden',
                 position: 'fallback',
@@ -384,7 +384,7 @@ export default Capability.makeModule(
               type: DECK_COMPANION_TYPE,
               data: 'devtools' as const,
               properties: {
-                label: ['devtools overview label', { ns: meta.id }],
+                label: ['devtools-overview.label', { ns: meta.id }],
                 icon: 'ph--equalizer--regular',
                 disposition: 'hidden',
                 position: 'fallback',
@@ -404,7 +404,7 @@ export default Capability.makeModule(
               type: DECK_COMPANION_TYPE,
               data: 'space-objects' as const,
               properties: {
-                label: ['space objects label', { ns: meta.id }],
+                label: ['space-objects.label', { ns: meta.id }],
                 icon: 'ph--cube--regular',
                 disposition: 'hidden',
                 position: 'fallback',

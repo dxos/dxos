@@ -164,6 +164,7 @@ export abstract class Resource implements Lifecycle {
   async #open(ctx?: Context): Promise<void> {
     this.#closePromise = null;
     this.#parentCtx = ctx?.derive({ name: this.#name }) ?? this.#createParentContext();
+    this.#internalCtx = this.#createContext(this.#parentCtx);
     await this._open(this.#parentCtx);
     this.#lifecycleState = LifecycleState.OPEN;
   }
@@ -176,9 +177,10 @@ export abstract class Resource implements Lifecycle {
     this.#lifecycleState = LifecycleState.CLOSED;
   }
 
-  #createContext(): Context {
+  #createContext(attributeParent?: Context): Context {
     return new Context({
       name: this.#name,
+      parent: attributeParent,
       onError: (error) =>
         queueMicrotask(async () => {
           try {

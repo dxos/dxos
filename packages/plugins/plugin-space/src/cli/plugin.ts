@@ -94,7 +94,7 @@ export const SpacePlugin = Plugin.define<SpacePluginOptions>(meta).pipe(
   ),
   Plugin.addModule({
     activatesOn: ClientEvents.IdentityCreated,
-    activatesAfter: [SpaceEvents.DefaultSpaceReady],
+    activatesAfter: [SpaceEvents.PersonalSpaceReady],
     activate: IdentityCreated,
   }),
   Plugin.make,

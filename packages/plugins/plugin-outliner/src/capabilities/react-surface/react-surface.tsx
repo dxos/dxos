@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 
 import { JournalContainer, OutlineCard, OutlineContainer, QuickEntryDialog } from '../../containers';
@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
         role: ['article', 'section'],
         filter: (data): data is { subject: Journal.Journal } => Obj.instanceOf(Journal.Journal, data.subject),
         component: ({ role, data }) => (
-          <JournalContainer role={role as SurfaceComponentProps['role']} subject={data.subject} />
+          <JournalContainer role={role as ObjectSurfaceProps['role']} subject={data.subject} showCalendar />
         ),
       }),
       Surface.create({
@@ -30,7 +30,7 @@ export default Capability.makeModule(() =>
         role: ['article', 'section'],
         filter: (data): data is { subject: Outline.Outline } => Obj.instanceOf(Outline.Outline, data.subject),
         component: ({ role, data }) => (
-          <OutlineContainer role={role as SurfaceComponentProps['role']} subject={data.subject} />
+          <OutlineContainer role={role as ObjectSurfaceProps['role']} subject={data.subject} />
         ),
       }),
       Surface.create({

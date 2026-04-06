@@ -61,7 +61,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: video ?? 'video',
               properties: {
-                label: ['video label', { ns: meta.id }],
+                label: ['video.label', { ns: meta.id }],
                 icon: 'ph--play--regular',
                 disposition: 'hidden',
               },
@@ -95,14 +95,14 @@ export default Capability.makeModule(
                       id: `${meta.id}.sync-channel-error`,
                       icon: 'ph--warning--regular',
                       duration: 5_000,
-                      title: ['sync channel error title', { ns: meta.id }],
-                      closeLabel: ['close label', { ns: meta.id }],
+                      title: ['sync-channel-error.title', { ns: meta.id }],
+                      closeLabel: ['close.label', { ns: meta.id }],
                     });
                   }),
                 );
               }),
               properties: {
-                label: ['sync channel label', { ns: meta.id }],
+                label: ['sync-channel.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',
                 disposition: 'list-item',
               },
@@ -127,14 +127,14 @@ export default Capability.makeModule(
                       id: `${meta.id}.clear-synced-videos-error`,
                       icon: 'ph--warning--regular',
                       duration: 5_000,
-                      title: ['clear synced videos error title', { ns: meta.id }],
-                      closeLabel: ['close label', { ns: meta.id }],
+                      title: ['clear-synced-videos-error.title', { ns: meta.id }],
+                      closeLabel: ['close.label', { ns: meta.id }],
                     });
                   }),
                 );
               }),
               properties: {
-                label: ['clear synced videos label', { ns: meta.id }],
+                label: ['clear-synced-videos.label', { ns: meta.id }],
                 icon: 'ph--trash--regular',
                 disposition: 'list-item',
               },

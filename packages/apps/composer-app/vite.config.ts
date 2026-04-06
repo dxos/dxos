@@ -3,6 +3,7 @@
 //
 
 import importSource from '@dxos/vite-plugin-import-source';
+import { vitePluginLog } from '@dxos/vite-plugin-log';
 import react from '@vitejs/plugin-react-swc';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -51,6 +52,7 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
         '@dxos/lit-*',
       ],
     }),
+  env.command === 'serve' && vitePluginLog(),
   wasm(),
   // sourcemaps(),
 ];
@@ -211,6 +213,34 @@ export default defineConfig((env) => ({
   },
   plugins: [
     ...sharedPlugins(env),
+
+    // RSS proxy middleware for CORS-free feed fetching.
+    {
+      name: 'rss-proxy',
+      configureServer(server) {
+        server.middlewares.use('/api/rss', async (req, res) => {
+          const url = new URL(req.url!, `http://${req.headers.host}`);
+          const feedUrl = url.searchParams.get('url');
+          if (!feedUrl) {
+            res.statusCode = 400;
+            res.end('Missing url parameter');
+            return;
+          }
+          try {
+            const response = await globalThis.fetch(feedUrl);
+            const contentType = response.headers.get('content-type');
+            if (contentType) {
+              res.setHeader('content-type', contentType);
+            }
+            res.statusCode = response.status;
+            res.end(await response.text());
+          } catch (error) {
+            res.statusCode = 502;
+            res.end(String(error));
+          }
+        });
+      },
+    },
 
     // Handle .md?raw imports.
     {

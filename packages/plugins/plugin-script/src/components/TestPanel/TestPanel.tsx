@@ -7,7 +7,7 @@ import React, { forwardRef, useRef, useState } from 'react';
 import { log } from '@dxos/log';
 import { Avatar, Icon, Input, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -28,104 +28,109 @@ export type TestPanelProps = ThemedClassName<{
 }>;
 
 // TODO(burdon): Need persistent history (currently lost when switching tabs).
-export const TestPanel = ({ classNames, onInvoke }: TestPanelProps) => {
-  const { t } = useTranslation(meta.id);
+export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
+  ({ classNames, onInvoke, ...props }, forwardedRef) => {
+    const { t } = useTranslation(meta.id);
 
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [input, setInput] = useState('');
-  const [state, setState] = useState<State | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [input, setInput] = useState('');
+    const [state, setState] = useState<State | null>(null);
 
-  // TODO(burdon): Persistent history (thread).
-  const [history, setHistory] = useState<Message[]>([]);
+    // TODO(burdon): Persistent history (thread).
+    const [history, setHistory] = useState<Message[]>([]);
 
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const handleScroll = () => {
-    if (scrollerRef.current) {
-      scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
-    }
-  };
+    const scrollerRef = useRef<HTMLDivElement>(null);
+    const handleScroll = () => {
+      if (scrollerRef.current) {
+        scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
+      }
+    };
 
-  const handleClear = () => {
-    setInput('');
-    setHistory([]);
-    inputRef.current?.focus();
-  };
+    const handleClear = () => {
+      setInput('');
+      setHistory([]);
+      inputRef.current?.focus();
+    };
 
-  const handleResponse = ({
-    text,
-    data,
-    error,
-  }: {
-    text?: string;
-    data?: any;
-    error?: Error;
-  } = {}) => {
-    setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
-    setState(null);
-    handleScroll();
-  };
+    const handleResponse = ({
+      text,
+      data,
+      error,
+    }: {
+      text?: string;
+      data?: any;
+      error?: Error;
+    } = {}) => {
+      setHistory((history) => [...history, { type: 'response', text, data, error } satisfies Message]);
+      setState(null);
+      handleScroll();
+    };
 
-  const handleRequest = async (input: string) => {
-    if (!onInvoke) {
-      handleResponse({ error: new Error('Function not deployed') });
-      return;
-    }
-
-    let data: unknown = input;
-    let displayText = input;
-    if (input.charAt(0) === '{') {
-      try {
-        const validJsonString = input.replace(/'/g, '"').replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
-        data = JSON.parse(validJsonString);
-        displayText = JSON.stringify(data, null, 2);
-      } catch (err) {
-        handleResponse({ error: new Error('Invalid JSON input') });
+    const handleRequest = async (input: string) => {
+      if (!onInvoke) {
+        handleResponse({ error: new Error('Function not deployed') });
         return;
       }
-    }
 
-    try {
-      setState('pending');
-      setInput('');
-      setHistory((history) => [...history, { type: 'request', text: displayText }]);
-      setTimeout(handleScroll);
-
-      const result = await onInvoke(data);
-
-      if (typeof result === 'string') {
-        handleResponse({ text: result });
-      } else {
-        handleResponse({ data: result });
+      let data: unknown = input;
+      let displayText = input;
+      if (input.charAt(0) === '{') {
+        try {
+          const validJsonString = input.replace(/'/g, '"').replace(/([{,]\s*)([a-zA-Z0-9_]+)(\s*:)/g, '$1"$2"$3');
+          data = JSON.parse(validJsonString);
+          displayText = JSON.stringify(data, null, 2);
+        } catch (err) {
+          handleResponse({ error: new Error('Invalid JSON input') });
+          return;
+        }
       }
-    } catch (err: any) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      handleResponse({ error });
-      log.catch(err);
-    }
-  };
 
-  return (
-    <div className={mx('flex flex-col h-full overflow-hidden', classNames)}>
-      {/* TODO(burdon): Replace with Thread. */}
-      <MessageThread ref={scrollerRef} state={state} history={history} />
-      {/* TODO(burdon): Replace with Form based on the function's input schema. */}
-      <Toolbar.Root>
-        <Input.Root>
-          <Input.TextInput
-            ref={inputRef}
-            autoFocus
-            placeholder={t('function request placeholder')}
-            value={input}
-            onChange={(ev) => setInput(ev.target.value)}
-            onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
-          />
-        </Input.Root>
-        <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
-        <Toolbar.IconButton icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
-      </Toolbar.Root>
-    </div>
-  );
-};
+      try {
+        setState('pending');
+        setInput('');
+        setHistory((history) => [...history, { type: 'request', text: displayText }]);
+        setTimeout(handleScroll);
+
+        const result = await onInvoke(data);
+
+        if (typeof result === 'string') {
+          handleResponse({ text: result });
+        } else {
+          handleResponse({ data: result });
+        }
+      } catch (err: any) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        handleResponse({ error });
+        log.catch(err);
+      }
+    };
+
+    return (
+      <div
+        {...composableProps(props, { classNames: ['flex flex-col h-full overflow-hidden', classNames] })}
+        ref={forwardedRef}
+      >
+        {/* TODO(burdon): Replace with Thread. */}
+        <MessageThread ref={scrollerRef} state={state} history={history} />
+        {/* TODO(burdon): Replace with Form based on the function's input schema. */}
+        <Toolbar.Root>
+          <Input.Root>
+            <Input.TextInput
+              ref={inputRef}
+              autoFocus
+              placeholder={t('function-request.placeholder')}
+              value={input}
+              onChange={(ev) => setInput(ev.target.value)}
+              onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
+            />
+          </Input.Root>
+          <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
+          <Toolbar.IconButton icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
+        </Toolbar.Root>
+      </div>
+    );
+  },
+);
 
 // TODO(burdon): Replace with thread?
 // TODO(burdon): Button to edit/re-run question.

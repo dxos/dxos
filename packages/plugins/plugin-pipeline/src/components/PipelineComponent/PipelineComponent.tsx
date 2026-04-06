@@ -4,6 +4,7 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import { createContext } from '@radix-ui/react-context';
+import { Slot } from '@radix-ui/react-slot';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Obj } from '@dxos/echo';
@@ -11,6 +12,7 @@ import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
 import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
+import { composable, composableProps, slottable } from '@dxos/ui-theme';
 
 import { meta } from '../../meta';
 
@@ -59,10 +61,17 @@ type PipelineContentProps = PropsWithChildren<{
   model: BoardModel<Pipeline.Column, Obj.Unknown>;
 }>;
 
-const PipelineContent = ({ model, children, ...props }: PipelineContentProps) => (
-  <Board.Root {...props} model={model}>
-    {children}
-  </Board.Root>
+const PipelineContent = slottable<HTMLDivElement, PipelineContentProps>(
+  ({ asChild, model, children, ...props }, forwardedRef) => {
+    const Comp = asChild ? Slot : 'div';
+    return (
+      <Board.Root model={model}>
+        <Comp {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
+          {children}
+        </Comp>
+      </Board.Root>
+    );
+  },
 );
 
 PipelineContent.displayName = PIPELINE_CONTENT_NAME;
@@ -77,7 +86,7 @@ type PipelineColumnsProps = {
   pipeline: Pipeline.Pipeline;
 };
 
-const PipelineColumns = ({ pipeline }: PipelineColumnsProps) => {
+const PipelineColumns = composable<HTMLDivElement, PipelineColumnsProps>(({ pipeline, ...props }) => {
   const { model } = useBoard(PIPELINE_COLUMNS_NAME);
   const columns = useAtomValue(model.columns);
   const eventHandler = useEventHandlerAdapter<Pipeline.Column, Obj.Unknown>({
@@ -91,8 +100,8 @@ const PipelineColumns = ({ pipeline }: PipelineColumnsProps) => {
     onChange: (mutate) => Obj.change(pipeline, (obj) => mutate(obj.columns)),
   });
 
-  return <Board.Content id='pipeline' eventHandler={eventHandler} Tile={PipelineColumn} />;
-};
+  return <Board.Content {...props} id='pipeline' eventHandler={eventHandler} Tile={PipelineColumn} />;
+});
 
 PipelineColumns.displayName = PIPELINE_COLUMNS_NAME;
 
@@ -102,16 +111,16 @@ PipelineColumns.displayName = PIPELINE_COLUMNS_NAME;
 
 const PIPELINE_TOOLBAR_NAME = 'Pipeline.Toolbar';
 
-export const PipelineToolbar = (props: ToolbarRootProps) => {
+export const PipelineToolbar = composable<HTMLDivElement, ToolbarRootProps>(({ children, ...props }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
   const { onAddColumn } = usePipeline(PIPELINE_TOOLBAR_NAME);
 
   return (
-    <Toolbar.Root {...props}>
-      <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('add column label')} onClick={onAddColumn} />
+    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+      <Toolbar.IconButton icon='ph--plus--regular' iconOnly label={t('add-column.label')} onClick={onAddColumn} />
     </Toolbar.Root>
   );
-};
+});
 
 PipelineToolbar.displayName = PIPELINE_TOOLBAR_NAME;
 

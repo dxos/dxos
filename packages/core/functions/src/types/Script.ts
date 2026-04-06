@@ -35,4 +35,4 @@ export interface Script extends Schema.Schema.Type<typeof Script> {}
 type Props = Omit<Obj.MakeProps<typeof Script>, 'source'> & { source?: string };
 
 export const make = ({ source = '', ...props }: Props = {}): Script =>
-  Obj.make(Script, { ...props, source: Ref.make(Text.make(source)) });
+  Obj.make(Script, { ...props, source: Ref.make(Text.make({ content: source })) });

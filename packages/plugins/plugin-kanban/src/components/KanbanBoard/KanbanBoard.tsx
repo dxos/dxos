@@ -14,9 +14,10 @@ import React, {
 } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { ComposableProps, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Board, useBoard } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '../../hooks';
 import { meta } from '../../meta';
@@ -119,7 +120,7 @@ export const KanbanBoardRoot = ({
   if (columns.length === 0) {
     return (
       <div role='none' className='flex flex-1 items-center justify-center p-8 text-center text-description'>
-        {t('select pivot placeholder')}
+        {t('select-pivot.placeholder')}
       </div>
     );
   }
@@ -149,9 +150,9 @@ KanbanBoardRoot.displayName = KANBAN_BOARD_ROOT;
 
 const KANBAN_BOARD_CONTENT = 'KanbanBoard.Content';
 
-type KanbanBoardContentProps = ComposableProps;
+type KanbanBoardContentProps = {};
 
-export const KanbanBoardContent = (props: KanbanBoardContentProps) => {
+export const KanbanBoardContent = composable<HTMLDivElement, KanbanBoardContentProps>((props, forwardedRef) => {
   const { model } = useBoard(KANBAN_BOARD_CONTENT);
   const { kanbanId, projection, pivotFieldId, change } = useKanbanBoard(KANBAN_BOARD_CONTENT);
 
@@ -163,8 +164,16 @@ export const KanbanBoardContent = (props: KanbanBoardContentProps) => {
     change,
   });
 
-  return <Board.Content {...props} id={kanbanId} eventHandler={columnEventHandler} Tile={KanbanColumn} />;
-};
+  return (
+    <Board.Content
+      {...composableProps(props)}
+      ref={forwardedRef}
+      id={kanbanId}
+      eventHandler={columnEventHandler}
+      Tile={KanbanColumn}
+    />
+  );
+});
 
 KanbanBoardContent.displayName = KANBAN_BOARD_CONTENT;
 

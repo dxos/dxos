@@ -14,9 +14,14 @@ import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '../meta';
 
+export * as Settings from './Settings';
+
 export const SPACE_DIRECTORY_HANDLE = `${meta.id}.directory`;
 
 export const SPACE_TYPE = 'org.dxos.type.space';
+
+/** Key for the Expando that stores cross-space ordering (must stay stable for persisted data). */
+export const SHARED = 'shared-spaces';
 
 export type SpacePluginOptions = {
   /**
@@ -88,17 +93,6 @@ export type PluginState = {
   // TODO(wittjosiah): Systematic way to handle migrations of state outside of spaces.
   enabledEdgeReplication: boolean;
 };
-
-export const SpaceSettingsSchema = Schema.mutable(
-  Schema.Struct({
-    /**
-     * Show closed spaces.
-     */
-    showHidden: Schema.Boolean,
-  }),
-);
-
-export type SpaceSettingsProps = Schema.Schema.Type<typeof SpaceSettingsSchema>;
 
 // TODO(wittjosiah): Reconcile with graph export serializers.
 

@@ -550,6 +550,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-feed/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-files/package.json",
           "jsonpath": "$.version"
         },
@@ -606,6 +611,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-native/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-native-filesystem/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -681,6 +691,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-space/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-spacetime/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1131,6 +1146,11 @@
         {
           "type": "json",
           "path": "tools/vite-plugin-import-source/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/vite-plugin-log/package.json",
           "jsonpath": "$.version"
         },
         {

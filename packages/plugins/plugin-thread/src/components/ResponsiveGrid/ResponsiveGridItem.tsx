@@ -49,12 +49,12 @@ export const ResponsiveGridItem = <T extends object = any>({
   const iconProps: Record<string, { icon: string; label: string; classNames?: string }> = {
     wave: {
       icon: 'ph--hand-waving--duotone',
-      label: t('icon wave'),
+      label: t('icon-wave.label'),
       classNames: 'animate-pulse bg-orange-500',
     },
     mute: {
       icon: 'ph--microphone-slash--regular',
-      label: t('icon muted'),
+      label: t('icon-muted.label'),
     },
   };
 
@@ -76,7 +76,7 @@ export const ResponsiveGridItem = <T extends object = any>({
   return (
     <div
       className={mx(
-        'relative w-full h-full group',
+        'dx-expander relative group',
         'rounded-md outline outline-2 outline-neutral-900 transition-[outline-color] duration-500',
         speakingIndicator ? 'outline-green-500' : !video && 'outline-separator',
         classNames,
@@ -93,7 +93,7 @@ export const ResponsiveGridItem = <T extends object = any>({
             iconOnly
             icon={pinned ? 'ph--x--regular' : 'ph--arrows-out--regular'}
             size={pinned ? 5 : 4}
-            label={pinned ? t('icon unpin') : t('icon pin')}
+            label={pinned ? t('icon-unpin.label') : t('icon-pin.label')}
             onClick={() => onClick?.(item)}
           />
         </div>

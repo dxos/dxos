@@ -7,11 +7,12 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { AppCapabilities, NOT_FOUND_PATH } from '@dxos/app-toolkit';
+import { NotFoundArticle } from '@dxos/app-toolkit/ui';
 
-import { Banner, DeckSettings } from '../../containers';
+import { DeckSettings } from '../../components';
 import { meta } from '../../meta';
-import { type DeckSettingsProps } from '../../types';
+import { type Settings } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -22,16 +23,15 @@ export default Capability.makeModule(() =>
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
         component: ({ data: { subject } }) => {
-          const { settings, updateSettings } = useSettingsState<DeckSettingsProps>(subject.atom);
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <DeckSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
       Surface.create({
-        id: `${meta.id}.banner`,
-        role: 'banner',
-        component: ({ data }: { data: { variant?: 'topbar' | 'sidebar' } }) => {
-          return <Banner variant={data.variant} />;
-        },
+        id: `${meta.id}.not-found`,
+        role: 'article',
+        filter: (data): data is { attendableId: string } => data.attendableId === NOT_FOUND_PATH,
+        component: () => <NotFoundArticle />,
       }),
     ]),
   ),

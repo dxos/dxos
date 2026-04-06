@@ -20,11 +20,11 @@ import { CommentsPanel, type CommentsPanelProps } from '../../components';
 import { meta } from '../../meta';
 import { ThreadCapabilities, type ViewState } from '../../types';
 import { ThreadOperation } from '../../operations';
-import { SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 
-export type ThreadCompanionProps = SurfaceComponentProps<
+export type ThreadCompanionProps = ObjectSurfaceProps<
   Thread.Thread,
   {
     attendableId?: string;
@@ -195,10 +195,10 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
           <Toolbar.Root>
             <Tabs.Tablist classNames='p-0'>
               <Tabs.Tab classNames='text-sm' value='unresolved'>
-                {t('show unresolved label')}
+                {t('show-unresolved.label')}
               </Tabs.Tab>
               <Tabs.Tab classNames='text-sm' value='all'>
-                {t('show all label')}
+                {t('show-all.label')}
               </Tabs.Tab>
             </Tabs.Tablist>
           </Toolbar.Root>
@@ -206,8 +206,8 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
         <Panel.Content asChild>
           <ScrollArea.Root thin>
             <ScrollArea.Viewport>
-              <Tabs.Tabpanel value='all'>{showResolvedThreads && comments}</Tabs.Tabpanel>
-              <Tabs.Tabpanel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Tabpanel>
+              <Tabs.Panel value='all'>{showResolvedThreads && comments}</Tabs.Panel>
+              <Tabs.Panel value='unresolved'>{!showResolvedThreads && comments}</Tabs.Panel>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Content>

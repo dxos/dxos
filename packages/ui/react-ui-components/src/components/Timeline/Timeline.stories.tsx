@@ -11,14 +11,14 @@ import { LogLevel, log } from '@dxos/log';
 import { faker } from '@dxos/random';
 import { useSpace } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
 import { type ScrollController } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { useExecutionGraph } from '@dxos/react-ui-components';
 import { Message } from '@dxos/types';
 
 import { research } from './testing';
-import { type Commit, Timeline } from './Timeline';
+import { type Commit, Timeline, TimelineProps } from './Timeline';
 
 faker.seed(1);
 
@@ -39,28 +39,6 @@ enum IconType {
   LINK = 'ph--link--regular',
   TOOL = 'ph--wrench--regular',
 }
-
-const generateCommits = (n: number): { commits: Commit[]; branches: string[] } => {
-  const commits = [];
-  const branches = ['main'];
-  let lastBranch = branches[0];
-  let lastCommit: string | undefined;
-  const closedBranches = new Set<string>();
-
-  for (let i = 0; i < n; i++) {
-    const { commit, branch } = generateCommit(commits, branches, lastBranch, lastCommit, closedBranches);
-    if (commit) {
-      commits.push(commit);
-      lastCommit = commit.id;
-    }
-    if (branch) {
-      branches.push(branch);
-      lastBranch = branch;
-    }
-  }
-
-  return { commits, branches };
-};
 
 const generateCommit = (
   commits: Commit[],
@@ -108,6 +86,7 @@ const generateCommit = (
   if (!commit) {
     commit = {
       id: faker.string.uuid(),
+      timestamp: new Date(),
       branch: lastBranch,
       icon: faker.helpers.arrayElement([
         IconType.WARN,
@@ -134,6 +113,28 @@ const generateCommit = (
   }
 
   return { commit, branch };
+};
+
+const generateCommits = (n: number): Pick<TimelineProps, 'commits' | 'branches'> => {
+  const commits = [];
+  const branches = ['main'];
+  let lastBranch = branches[0];
+  let lastCommit: string | undefined;
+  const closedBranches = new Set<string>();
+
+  for (let i = 0; i < n; i++) {
+    const { commit, branch } = generateCommit(commits, branches, lastBranch, lastCommit, closedBranches);
+    if (commit) {
+      commits.push(commit);
+      lastCommit = commit.id;
+    }
+    if (branch) {
+      branches.push(branch);
+      lastBranch = branch;
+    }
+  }
+
+  return { commits, branches };
 };
 
 const meta = {
@@ -172,6 +173,36 @@ export const Branch: Story = {
       { id: 'c1', message: faker.lorem.paragraph(), branch: 'main' },
       { id: 'c2', message: faker.lorem.paragraph(), branch: 'main', parents: ['c1'] },
       { id: 'c3', message: faker.lorem.paragraph(), branch: 'feature-a', parents: ['c2'] },
+    ],
+  },
+};
+
+export const Timestamp: Story = {
+  args: {
+    debug: true,
+    showIcon: false,
+    showTimestamp: true,
+    commits: [
+      {
+        id: 'c1',
+        timestamp: new Date(Date.now()),
+        message: faker.lorem.paragraph(),
+        branch: 'main',
+      },
+      {
+        id: 'c2',
+        timestamp: new Date(Date.now() + 100),
+        message: faker.lorem.paragraph(),
+        branch: 'main',
+        parents: ['c1'],
+      },
+      {
+        id: 'c3',
+        timestamp: new Date(Date.now() + 120),
+        message: faker.lorem.paragraph(),
+        branch: 'feature-a',
+        parents: ['c2'],
+      },
     ],
   },
 };
@@ -215,9 +246,10 @@ export const Compact: Story = {
   args: { ...generateCommits(100), compact: true },
 };
 
-const slice = 0;
 export const ExecutionGraph: Story = {
+  decorators: [withClientProvider({ createIdentity: true })],
   render: () => {
+    const slice = 0;
     const space = useSpace();
     const queue = useMemo(() => space?.queues.create(), [space]);
     useAsyncEffect(async () => {
@@ -231,9 +263,7 @@ export const ExecutionGraph: Story = {
       const interval = setInterval(async () => {
         const obj = objects[i];
         await queue?.append([obj]);
-
-        i++;
-        if (i >= objects.length) {
+        if (++i >= objects.length) {
           clearInterval(interval);
         }
       }, 1000);
@@ -242,9 +272,8 @@ export const ExecutionGraph: Story = {
     }, [queue]);
     const { branches, commits } = useExecutionGraph(queue);
     log.info('execution graph', { branches, commits });
-    return <Timeline branches={branches} commits={commits} />;
+    return <Timeline branches={branches} commits={commits} showTimestamp />;
   },
-  decorators: [withClientProvider({ createIdentity: true })],
 };
 
 export const Streaming: Story = {
@@ -294,15 +323,19 @@ export const Streaming: Story = {
     const scrollerRef = useRef<ScrollController>(null);
 
     return (
-      <div className='flex flex-col w-full h-full overflow-hidden'>
-        <Toolbar.Root>
-          <Button onClick={() => setRunning(true)}>Start</Button>
-          <Button onClick={() => setRunning(false)}>Stop</Button>
-          <Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button>
-          <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
-        </Toolbar.Root>
-        <Timeline ref={scrollerRef} branches={branches} commits={commits} />
-      </div>
+      <Panel.Root>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Button onClick={() => setRunning(true)}>Start</Button>
+            <Button onClick={() => setRunning(false)}>Stop</Button>
+            <Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button>
+            <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content>
+          <Timeline ref={scrollerRef} branches={branches} commits={commits} showTimestamp />
+        </Panel.Content>
+      </Panel.Root>
     );
   },
 };
@@ -376,6 +409,7 @@ const toolCalls = [
   }),
 ];
 
+// TODO(burdon): Not used.
 const testExecutionGraph = [
   Obj.make(AgentStatus, {
     created: '2025-09-25T19:51:39.014Z',

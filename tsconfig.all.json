@@ -316,6 +316,9 @@
       "path": "packages/plugins/plugin-explorer/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-feed/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-files/tsconfig.json"
     },
     {
@@ -350,6 +353,9 @@
     },
     {
       "path": "packages/plugins/plugin-native/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-native-filesystem/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-navtree/tsconfig.json"
@@ -395,6 +401,9 @@
     },
     {
       "path": "packages/plugins/plugin-space/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-spacetime/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-spotlight/tsconfig.json"
@@ -662,6 +671,9 @@
     },
     {
       "path": "tools/vite-plugin-import-source/tsconfig.json"
+    },
+    {
+      "path": "tools/vite-plugin-log/tsconfig.json"
     },
     {
       "path": "tools/x/tsconfig.json"

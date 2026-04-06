@@ -50,7 +50,7 @@ const createTestData = (db: Database.Database, columns: number, items?: (column:
   });
 };
 
-type StoryProps = {
+type DefaultStoryProps = {
   columns?: number;
   items?: (column: number) => number;
   debug?: boolean;
@@ -164,7 +164,7 @@ const useTestBoardModel = (): TestBoardModelResult => {
   return { model, eventHandler };
 };
 
-const DefaultStory = ({ debug = false }: StoryProps) => {
+const DefaultStory = ({ debug = false }: DefaultStoryProps) => {
   const { model, eventHandler } = useTestBoardModel();
   const columns = useAtomValue(model.columns);
 
@@ -200,7 +200,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: ({ space }, context) => {
-        const args = context.args as StoryProps;
+        const args = context.args as DefaultStoryProps;
         createTestData(space.db, args.columns ?? 0, args.items);
       },
     }),

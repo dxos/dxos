@@ -3,7 +3,7 @@
 //
 
 import * as Cause from 'effect/Cause';
-import type * as Context from 'effect/Context';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import type * as ManagedRuntime from 'effect/ManagedRuntime';

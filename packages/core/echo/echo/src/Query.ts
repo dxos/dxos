@@ -333,6 +333,12 @@ class QueryClass implements Any {
       | 'all-accessible-spaces',
     options?: { includeFeeds?: boolean },
   ): Any {
+    if (arg == null) {
+      throw new TypeError(
+        'Query.from() requires a valid data source argument (database, feed, query, scope, or "all-accessible-spaces").',
+      );
+    }
+
     if (is(arg)) {
       return new QueryClass({
         type: 'from',
@@ -388,6 +394,14 @@ class QueryClass implements Any {
       // TODO(dmaretskyi): Support querying from collections.
       if (typename === 'org.dxos.type.collection') {
         throw new Error('Query.from(collection) is not yet supported.');
+      }
+      // Validate that the items are Feed.Feed instances.
+      for (const item of items) {
+        if (!Obj.instanceOf(Feed.Feed, item)) {
+          throw new TypeError(
+            `Query.from() expects Feed objects (org.dxos.type.feed), but received an object with typename '${typename ?? 'unknown'}'.`,
+          );
+        }
       }
     }
 
@@ -446,7 +460,13 @@ export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> =
  *
  * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
  */
-export const type = (schema: Schema.Schema.All | string, predicates?: Filter.Props<unknown>): Any => {
+export const type: {
+  <S extends Schema.Schema.All>(
+    schema: S,
+    predicates?: Filter.Props<Schema.Schema.Type<S>>,
+  ): Query<Schema.Schema.Type<S>>;
+  (schema: string, predicates?: Filter.Props<unknown>): Query<any>;
+} = (schema: Schema.Schema.All | string, predicates?: Filter.Props<unknown>): Any => {
   return new QueryClass({
     type: 'select',
     filter: Filter.type(schema, predicates).ast,
@@ -520,3 +540,8 @@ const _isScope = (value: unknown): value is QueryAST.Scope => {
   }
   return Object.keys(value).every((key) => SCOPE_KEYS.has(key));
 };
+
+/**
+ * Returns a human-readable string representation of a Query AST.
+ */
+export const pretty = (query: Any): string => internal.prettyQuery(query.ast);

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { type Filter } from '@dxos/echo';
 import { type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -16,7 +16,7 @@ import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { D3ForceGraph } from '../../components';
 import { useGraphModel } from '../../hooks';
 
-export type ExplorerContainerProps = SurfaceComponentProps<View.View>;
+export type ExplorerContainerProps = ObjectSurfaceProps<View.View>;
 
 export const ExplorerContainer = ({ role, subject: view }: ExplorerContainerProps) => {
   useObject(view);

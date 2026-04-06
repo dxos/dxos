@@ -19,6 +19,7 @@ import React, {
   type ComponentPropsWithoutRef,
   type ComponentRef,
   type FC,
+  PropsWithChildren,
   type ReactNode,
   type RefObject,
   forwardRef,
@@ -57,14 +58,13 @@ type DropdownMenuContextValue = {
 const [DropdownMenuProvider, useDropdownMenuContext] =
   createDropdownMenuContext<DropdownMenuContextValue>(DROPDOWN_MENU_NAME);
 
-type DropdownMenuRootProps = {
-  children?: ReactNode;
+type DropdownMenuRootProps = PropsWithChildren<{
   dir?: Direction;
   modal?: boolean;
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?(open: boolean): void;
-};
+}>;
 
 const DropdownMenuRoot = ({
   __scopeDropdownMenu,

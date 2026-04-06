@@ -7,7 +7,11 @@ import * as Schema from 'effect/Schema';
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
-import { EditorInputMode, EditorViewMode } from '@dxos/ui-editor/types';
+
+// Re-export Settings as merged const/type (not as namespace).
+import * as SettingsModule from './Settings';
+export const Settings = SettingsModule.Settings;
+export type Settings = SettingsModule.Settings;
 
 /**
  * Document Item type.
@@ -39,27 +43,8 @@ export const make = ({
   content = '',
   ...props
 }: Partial<{ name: string; fallbackName: string; content: string }> = {}) => {
-  const doc = Obj.make(Document, { ...props, content: Ref.make(Text.make(content)) });
+  const doc = Obj.make(Document, { ...props, content: Ref.make(Text.make({ content })) });
   // TODO(dmaretskyi): We need a better way to set parents when creating hierarchies.
   Obj.setParent(doc.content.target!, doc);
   return doc;
 };
-
-/**
- * Plugin settings.
- */
-export const Settings = Schema.mutable(
-  Schema.Struct({
-    defaultViewMode: EditorViewMode,
-    editorInputMode: Schema.optional(EditorInputMode),
-    experimental: Schema.optional(Schema.Boolean),
-    debug: Schema.optional(Schema.Boolean),
-    toolbar: Schema.optional(Schema.Boolean),
-    typewriter: Schema.optional(Schema.String),
-    // TODO(burdon): Per document settings.
-    numberedHeadings: Schema.optional(Schema.Boolean),
-    folding: Schema.optional(Schema.Boolean),
-  }),
-);
-
-export interface Settings extends Schema.Schema.Type<typeof Settings> {}

@@ -193,7 +193,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         {/* If readonly is set, then the callout is not needed. */}
         {schemaReadonly && !readonly && (
           <Message.Root valence='info' classNames='my-form-padding'>
-            <Message.Title>{t('system schema description')}</Message.Title>
+            <Message.Title>{t('system-schema.description')}</Message.Title>
           </Message.Root>
         )}
 
@@ -201,7 +201,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         <Form.Root schema={viewSchema} values={viewValues} fieldMap={fieldMap} db={db} onValuesChanged={handleUpdate}>
           <Form.FieldSet />
 
-          <FormFieldLabel label={t('fields label')} asChild />
+          <FormFieldLabel label={t('fields.label')} asChild />
           <FieldList
             schema={schema}
             view={view}
@@ -317,7 +317,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
     >
       {({ items: fields }) => (
         <>
-          {showHeading && <h3 className='text-sm'>{t('field path label')}</h3>}
+          {showHeading && <h3 className='text-sm'>{t('field-path.label')}</h3>}
           <div role='list' className='grid grid-cols-[min-content_1fr_min-content_min-content_min-content]'>
             {fields?.map((field) => {
               const hidden = field.visible === false;
@@ -351,7 +351,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     {!readonly && (
                       <>
                         <List.ItemDeleteButton
-                          label={t('delete field label')}
+                          label={t('delete-field.label')}
                           autoHide={false}
                           disabled={readonly || schemaReadonly || viewSnapshot.projection.fields.length <= 1}
                           onClick={() => handleDelete(field.id)}
@@ -360,7 +360,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                         <List.ItemIconButton
                           iconOnly
                           variant='ghost'
-                          label={t('toggle expand label', { ns: osTranslations })}
+                          label={t('toggle-expand.label', { ns: osTranslations })}
                           icon={expandedField === field.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                           onClick={() => handleToggleField(field)}
                           data-testid='field.toggle'
@@ -387,7 +387,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
             <div role='none' className='my-form-padding'>
               <IconButton
                 icon='ph--plus--regular'
-                label={t('add property button label')}
+                label={t('add-property-button.label')}
                 onClick={handleAdd}
                 disabled={viewSnapshot.projection.fields.length >= VIEW_FIELD_LIMIT}
                 classNames='w-full'

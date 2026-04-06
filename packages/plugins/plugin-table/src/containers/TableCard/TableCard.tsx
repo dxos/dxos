@@ -5,7 +5,7 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import React, { useContext, useMemo, useRef } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
@@ -21,7 +21,7 @@ import {
 import { type Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
 
-export type TableCardProps = SurfaceComponentProps<Table.Table>;
+export type TableCardProps = ObjectSurfaceProps<Table.Table>;
 
 export const TableCard = ({ role, subject: object }: TableCardProps) => {
   const registry = useContext(RegistryContext);
@@ -55,10 +55,9 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
 
   return (
     <Card.Content>
-      <TableComponent.Root>
-        <TableComponent.Main
+      <TableComponent.Root ref={tableRef}>
+        <TableComponent.Content
           key={Obj.getDXN(object).toString()}
-          ref={tableRef}
           model={model}
           presentation={presentation}
           schema={schema}

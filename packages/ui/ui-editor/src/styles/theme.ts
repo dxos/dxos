@@ -12,28 +12,28 @@ export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 // https://tailwindcss.com/docs/font-weight
 const headings: Record<HeadingLevel, { className: string; fontSize: string; lineHeight: string }> = {
   1: {
-    className: 'text-4xl',
-    fontSize: 'var(--text-4xl)',
+    className: 'text-3xl',
+    fontSize: 'var(--text-3xl)',
     lineHeight: 'var(--text-4xl--line-height)',
   },
   2: {
-    className: 'text-3xl',
-    fontSize: 'var(--text-3xl)',
+    className: 'text-2xl',
+    fontSize: 'var(--text-2xl)',
     lineHeight: 'var(--text-3xl--line-height)',
   },
   3: {
-    className: 'text-2xl',
-    fontSize: 'var(--text-2xl)',
+    className: 'text-xl',
+    fontSize: 'var(--text-xl)',
     lineHeight: 'var(--text-2xl--line-height)',
   },
   4: {
-    className: 'text-xl',
-    fontSize: 'var(--text-xl)',
+    className: 'text-lg',
+    fontSize: 'var(--text-lg)',
     lineHeight: 'var(--text-xl--line-height)',
   },
   5: {
-    className: 'text-lg',
-    fontSize: 'var(--text-lg)',
+    className: 'text-base',
+    fontSize: 'var(--text-base)',
     lineHeight: 'var(--text-lg--line-height)',
   },
   6: {

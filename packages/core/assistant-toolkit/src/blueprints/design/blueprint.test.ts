@@ -15,7 +15,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { QueueService, TracingService } from '@dxos/functions';
+import { QueueService, Trace, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
 import { Markdown } from '@dxos/plugin-markdown/types';
@@ -87,6 +87,7 @@ describe('Design Blueprint', { timeout: 120_000 }, () => {
               functions: MarkdownHandlers,
             }).pipe(Layer.provideMerge(TracingService.layerNoop)),
           ),
+          Layer.provideMerge(Trace.writerLayerNoop),
         ),
       ),
       TestHelpers.provideTestContext,

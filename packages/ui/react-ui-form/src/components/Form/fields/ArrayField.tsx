@@ -97,7 +97,7 @@ export const ArrayField = ({
                     <IconButton
                       icon='ph--x--regular'
                       iconOnly
-                      label={t('button remove')}
+                      label={t('remove.button')}
                       onClick={() => handleDelete(index)}
                       classNames='self-center'
                     />
@@ -111,7 +111,12 @@ export const ArrayField = ({
 
       {/* TODO(burdon): Get label from schema. */}
       {!readonly && layout !== 'static' && (
-        <IconButton classNames='flex w-full' icon='ph--plus--regular' label={t('add field')} onClick={handleAdd} />
+        <IconButton
+          classNames='flex w-full'
+          icon='ph--plus--regular'
+          label={t('add-field.button')}
+          onClick={handleAdd}
+        />
       )}
     </>
   );

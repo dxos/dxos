@@ -14,7 +14,13 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
 import { type ClientService } from '@dxos/client';
 import { type Database, Feed, type Key } from '@dxos/echo';
-import { CredentialsService, type FunctionInvocationService, type QueueService, TracingService } from '@dxos/functions';
+import {
+  CredentialsService,
+  type FunctionInvocationService,
+  type QueueService,
+  Trace,
+  TracingService,
+} from '@dxos/functions';
 import {
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
@@ -30,7 +36,8 @@ export type AiChatServices =
   | Feed.Service
   | FunctionInvocationService
   | QueueService
-  | TracingService;
+  | TracingService
+  | Trace.TraceService;
 
 // TODO(wittjosiah): Factor out.
 export const Provider = Schema.Literal('edge', 'lmstudio', 'ollama');
@@ -61,11 +68,12 @@ export const chatLayer = ({
 
   return FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
     Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions })),
-    Layer.provideMerge(RemoteFunctionExecutionService.withClient(spaceId, true)),
+    Layer.provideMerge(RemoteFunctionExecutionService.withClient(spaceId)),
     Layer.provideMerge(aiServiceLayer),
     Layer.provideMerge(CredentialsService.layerFromDatabase()),
     Layer.provideMerge(spaceLayer(spaceId, true)),
     Layer.provideMerge(TracingService.layerNoop),
+    Layer.provideMerge(Trace.writerLayerNoop),
     Layer.provideMerge(Feed.notAvailable),
   );
 };

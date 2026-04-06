@@ -24,7 +24,7 @@ export const useEventToolbarActions = ({ onNoteCreate }: UseEventToolbarActionsP
         {
           nodes.push(
             createMenuItemGroup('root', {
-              label: ['event toolbar label', { ns: meta.id }],
+              label: ['event-toolbar.menu', { ns: meta.id }],
             }),
           );
         }
@@ -36,7 +36,7 @@ export const useEventToolbarActions = ({ onNoteCreate }: UseEventToolbarActionsP
               onNoteCreate?.();
             },
             {
-              label: ['event toolbar create note menu', { ns: meta.id }],
+              label: ['event-toolbar-create-note.menu', { ns: meta.id }],
               icon: 'ph--note--regular',
             },
           );

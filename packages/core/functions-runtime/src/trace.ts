@@ -16,6 +16,7 @@ import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ErrorCodec, FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
 import { Message } from '@dxos/types';
+import { Process } from './process';
 
 export enum InvocationOutcome {
   SUCCESS = 'success',
@@ -51,6 +52,12 @@ export const InvocationTraceStartEvent = Schema.Struct({
    * Invocation id, the same for invocation start and end events.
    */
   invocationId: ObjectId,
+
+  /**
+   * Id of the parent invocation.
+   */
+  parentInvocationId: Schema.optional(ObjectId),
+
   /**
    * Event generation time.
    */
@@ -58,10 +65,10 @@ export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * Data passed to function / workflow as an argument.
    */
-  // TODO(burdon): Input schema?
-  input: Schema.Object,
+  input: Schema.Unknown,
   /**
-   * Queue  for function/workflow invocation events.
+   * Queue for function/workflow invocation events.
+   * If missing, events are assumed to be in the same Feed.
    */
   invocationTraceQueue: Schema.optional(Ref.Ref(Queue)),
   /**
@@ -78,12 +85,35 @@ export const InvocationTraceStartEvent = Schema.Struct({
    */
   chat: Schema.optional(Ref.Ref(Obj.Unknown)),
   /**
+   * Process-specific metadata.
+   */
+  process: Schema.optional(
+    Schema.Struct({
+      pid: Process.ID,
+      parentPid: Schema.optional(Process.ID),
+      /**
+       * Key of the executable.
+       */
+      key: Schema.String,
+
+      /**
+       * Process name.
+       */
+      name: Schema.optional(Schema.String),
+
+      /**
+       * Target object that the process is assigned to.
+       */
+      target: Schema.optional(Schema.String),
+    }),
+  ),
+  /**
    * Runtime executing the function.
    */
   runtime: Schema.optional(FunctionRuntimeKind),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.invocation-trace-start',
+    typename: 'org.dxos.type.invocationTraceStart',
     version: '0.1.0',
   }),
 );
@@ -111,7 +141,7 @@ export const InvocationTraceEndEvent = Schema.Struct({
   error: Schema.optional(SerializedError),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.invocation-trace-end',
+    typename: 'org.dxos.type.invocationTraceEnd',
     version: '0.1.0',
   }),
 );
@@ -136,7 +166,7 @@ export const TraceEvent = Schema.Struct({
   ingestionTimestamp: Schema.Number,
   logs: Schema.Array(TraceEventLog),
   exceptions: Schema.Array(TraceEventException),
-}).pipe(Type.object({ typename: 'org.dxos.type.trace-event', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'org.dxos.type.traceEvent', version: '0.1.0' }));
 
 export type TraceEvent = Schema.Schema.Type<typeof TraceEvent>;
 
@@ -149,7 +179,7 @@ export type InvocationSpan = {
   timestamp: number;
   duration: number;
   outcome: InvocationOutcome;
-  input: object;
+  input: unknown;
   invocationTraceQueue?: Ref.Ref<Queue>;
   invocationTarget?: Ref.Ref<Obj.Unknown>;
   trigger?: Ref.Ref<Trigger.Trigger>;
@@ -225,6 +255,7 @@ export namespace TracingServiceExt {
           log.warn('Failed to write trace event to queue', { error });
         });
       },
+      ephemeral: () => {},
       traceInvocationStart: () => Effect.die('TracingService.traceInvocationStart is not supported in this context.'),
       traceInvocationEnd: () => Effect.die('TracingService.traceInvocationEnd is not supported in this context.'),
     });
@@ -237,6 +268,9 @@ export namespace TracingServiceExt {
       getTraceContext: () => ({}),
       write: (event: Obj.Unknown, context: TracingService.TraceContext) => {
         log.info('trace event', { event });
+      },
+      ephemeral: (event: Obj.Unknown) => {
+        log.info('ephemeral trace event', { event });
       },
       traceInvocationStart: ({ payload, target }) =>
         Effect.sync(() => {
@@ -269,6 +303,7 @@ export namespace TracingServiceExt {
               log.warn('Failed to write trace event to queue', { error });
             });
           },
+          ephemeral: () => {},
           traceInvocationStart: Effect.fn('traceInvocationStart')(
             function* ({ payload, target }) {
               const invocationId = ObjectId.random();
@@ -284,6 +319,15 @@ export namespace TracingServiceExt {
                 invocationTarget: target ? Ref.fromDXN(target) : undefined,
                 trigger: payload.trigger ? Ref.fromDXN(DXN.fromLocalObjectId(payload.trigger.id)) : undefined,
                 chat: payload.chat,
+                process: !payload.process
+                  ? undefined
+                  : {
+                      pid: payload.process.pid as Process.ID,
+                      parentPid: payload.process.parentPid as Process.ID | undefined,
+                      key: payload.process.key,
+                      name: payload.process.name,
+                      target: payload.process.target,
+                    },
               });
               yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);
 
@@ -343,6 +387,8 @@ class PrettyConsoleTracer implements Context.Tag.Service<TracingService> {
       console.log('[EVENT]', JSON.stringify(traceContext), JSON.stringify(event, null, 2));
     }
   }
+
+  ephemeral(_event: Obj.Unknown, _traceContext: TracingService.TraceContext): void {}
 
   traceInvocationStart = Effect.fn('traceInvocationStart')(function* ({ payload, target }) {
     const now = Date.now();

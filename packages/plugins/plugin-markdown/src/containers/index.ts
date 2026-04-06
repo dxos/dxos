@@ -8,4 +8,3 @@ export type { MarkdownContainerProps } from './MarkdownContainer';
 
 export const MarkdownCard: ComponentType<any> = lazy(() => import('./MarkdownCard'));
 export const MarkdownContainer: ComponentType<any> = lazy(() => import('./MarkdownContainer'));
-export const MarkdownSettings: ComponentType<any> = lazy(() => import('./MarkdownSettings'));

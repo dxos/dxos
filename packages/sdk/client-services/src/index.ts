@@ -8,6 +8,7 @@ export * from './packlets/identity';
 export * from './packlets/invitations';
 export * from './packlets/locks';
 export * from './packlets/services';
+export * from './packlets/space-export';
 export * from './packlets/spaces';
 export * from './packlets/storage';
 export * from './packlets/worker';

@@ -15,7 +15,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { QueueService, TracingService } from '@dxos/functions';
+import { QueueService, Trace, TracingService } from '@dxos/functions';
 import { FunctionImplementationResolver } from '@dxos/functions-runtime';
 import { FunctionInvocationServiceLayerTestMocked, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { log } from '@dxos/log';
@@ -107,7 +107,7 @@ describe('Planning Blueprint', { timeout: 120_000 }, () => {
         ).pipe(
           Layer.provideMerge(
             FunctionInvocationServiceLayerTestMocked({ functions: TaskHandlers }).pipe(
-              Layer.provideMerge(TracingService.layerNoop),
+              Layer.provideMerge(Layer.mergeAll(TracingService.layerNoop, Trace.writerLayerNoop)),
             ),
           ),
           Layer.provideMerge(FunctionImplementationResolver.layerTest({ functions: TaskHandlers })),

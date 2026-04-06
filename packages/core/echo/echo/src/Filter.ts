@@ -18,7 +18,7 @@ import * as Ref from './Ref';
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
-  '~Filter': { value: Types.Contravariant<T> };
+  '~Filter': { value: Types.Covariant<T> };
 
   ast: QueryAST.Filter;
 }
@@ -278,7 +278,7 @@ export const lte = <T>(value: T): Filter<T | undefined> => {
  * Predicate for property to be in the provided array.
  * @param values - Values to check against.
  */
-const in$ = <T>(...values: T[]): Filter<T | undefined> => {
+const in$ = <T>(...values: T[]): Filter<T> => {
   return new FilterClass({
     type: 'in',
     values,
@@ -302,7 +302,7 @@ export const contains = <T>(value: T): Filter<readonly T[] | undefined> => {
  * @param from - Start of the range (inclusive).
  * @param to - End of the range (exclusive).
  */
-export const between = <T>(from: T, to: T): Filter<unknown> => {
+export const between = <T>(from: T, to: T): Filter<T> => {
   return new FilterClass({
     type: 'range',
     from,
@@ -417,3 +417,8 @@ const processPredicate = (predicate: any): QueryAST.Filter => {
     Match.orElse((value) => eq(value).ast),
   );
 };
+
+/**
+ * Returns a human-readable string representation of a Filter AST.
+ */
+export const pretty = (filter: Any): string => internal.prettyFilter(filter.ast);

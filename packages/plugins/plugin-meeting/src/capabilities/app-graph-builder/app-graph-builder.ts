@@ -15,9 +15,9 @@ import { Operation } from '@dxos/operation';
 import { PLANK_COMPANION_TYPE } from '@dxos/plugin-deck/types';
 import { DeckOperation } from '@dxos/plugin-deck/operations';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
-import { COMPOSER_SPACE_LOCK } from '@dxos/plugin-space';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Channel, ThreadCapabilities } from '@dxos/plugin-thread/types';
+import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 
 import { meta } from '../../meta';
@@ -50,7 +50,7 @@ export default Capability.makeModule(
         actions: (channel, get) => {
           const space = getSpace(channel);
           const state = space && get(CreateAtom.fromObservable(space.state));
-          if (!space || state !== SpaceState.SPACE_READY || space.properties[COMPOSER_SPACE_LOCK]) {
+          if (!space || state !== SpaceState.SPACE_READY || space.membershipPolicy === MembershipPolicy.LOCKED) {
             return Effect.succeed([]);
           }
           return Effect.succeed([
@@ -65,7 +65,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['share call link label', { ns: meta.id }],
+                label: ['share-call-link.label', { ns: meta.id }],
                 icon: 'ph--share-network--regular',
               },
             },
@@ -97,7 +97,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: get(AtomObj.make(meeting.thread)),
               properties: {
-                label: ['meeting thread label', { ns: meta.id }],
+                label: ['meeting-thread.label', { ns: meta.id }],
                 icon: 'ph--chat-text--regular',
                 position: 'hoist',
                 disposition: 'hidden',
@@ -183,8 +183,8 @@ export default Capability.makeModule(
               }),
               properties: {
                 label: enabled
-                  ? ['stop transcription label', { ns: meta.id }]
-                  : ['start transcription label', { ns: meta.id }],
+                  ? ['stop-transcription.label', { ns: meta.id }]
+                  : ['start-transcription.label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',
                 disposition: 'toolbar',
               },
@@ -204,7 +204,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: get(AtomObj.make(meeting.transcript)),
               properties: {
-                label: ['transcript companion label', { ns: meta.id }],
+                label: ['transcript-companion.label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',
                 position: 'hoist',
                 disposition: 'hidden',
@@ -224,7 +224,7 @@ export default Capability.makeModule(
               type: PLANK_COMPANION_TYPE,
               data: get(AtomObj.make(meeting.transcript)),
               properties: {
-                label: ['transcript companion label', { ns: meta.id }],
+                label: ['transcript-companion.label', { ns: meta.id }],
                 icon: 'ph--subtitles--regular',
                 position: 'hoist',
                 disposition: 'hidden',

@@ -24,7 +24,7 @@ const SpacePanelHeading = ({ titleId, space, onDone }: SpacePanelHeadingProps) =
   return (
     <Heading
       titleId={titleId}
-      title={t('space panel heading')}
+      title={t('space-panel.heading')}
       corner={<CloseButton data-testid='identity-panel-done' onDone={onDone} />}
     >
       <div role='none' className='flex gap-4 items-center justify-center my-4'>

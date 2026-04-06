@@ -21,15 +21,15 @@ const buildEmptyActions = (): ActionGraphProps => ({ nodes: [], edges: [] });
 const buildDefaultActions = (): ActionGraphProps => {
   const result: ActionGraphProps = { nodes: [], edges: [] };
   const actions = [
-    createMenuAction('action-edit', () => console.log('Edit'), {
+    createMenuAction('action-edit.menu', () => console.log('Edit'), {
       icon: 'ph--pencil--regular',
       label: 'Edit',
     }),
-    createMenuAction('action-share', () => console.log('Share'), {
+    createMenuAction('action-share.menu', () => console.log('Share'), {
       icon: 'ph--share--regular',
       label: 'Share',
     }),
-    createMenuAction('action-delete', () => console.log('Delete'), {
+    createMenuAction('action-delete.menu', () => console.log('Delete'), {
       icon: 'ph--trash--regular',
       label: 'Delete',
     }),
@@ -39,11 +39,11 @@ const buildDefaultActions = (): ActionGraphProps => {
   return result;
 };
 
-type StoryProps = Omit<AppBarProps, 'actions'> & {
+type DefaultStoryProps = Omit<AppBarProps, 'actions'> & {
   actions: ActionGraphProps;
 };
 
-const DefaultStory = ({ actions: actionsProp, ...props }: StoryProps) => {
+const DefaultStory = ({ actions: actionsProp, ...props }: DefaultStoryProps) => {
   const actions = useMemo(() => Atom.make(actionsProp).pipe(Atom.keepAlive), [actionsProp]);
   return (
     <MobileLayout.Root>
@@ -71,7 +71,7 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<StoryProps>;
+type Story = StoryObj<DefaultStoryProps>;
 
 export const Default: Story = {
   tags: ['test'],
@@ -104,7 +104,7 @@ export const Default: Story = {
     const editAction = await screen.findByRole('menuitem', { name: /edit/i });
     await userEvent.click(editAction);
     await expect(args.onAction).toHaveBeenCalledTimes(1);
-    await expect((args.onAction as Mock).mock.calls[0][0]).toHaveProperty('id', 'action-edit');
+    await expect((args.onAction as Mock).mock.calls[0][0]).toHaveProperty('id', 'action-edit.menu');
   },
 };
 

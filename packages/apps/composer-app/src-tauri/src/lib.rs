@@ -4,6 +4,8 @@
 mod oauth;
 #[cfg(desktop)]
 mod window_state;
+#[cfg(all(desktop, unix))]
+mod xattr_cmd;
 #[cfg(target_os = "macos")]
 mod menubar;
 #[cfg(target_os = "macos")]
@@ -52,7 +54,9 @@ pub fn run() {
             .plugin(tauri_plugin_os::init())
             .plugin(tauri_plugin_opener::init())
             .plugin(tauri_plugin_shell::init())
-            .plugin(tauri_plugin_deep_link::init());
+            .plugin(tauri_plugin_deep_link::init())
+            .plugin(tauri_plugin_dialog::init())
+            .plugin(tauri_plugin_fs::init());
 
         // Spotlight panel and global shortcut are macOS-only.
         #[cfg(target_os = "macos")]
@@ -90,6 +94,12 @@ pub fn run() {
         oauth::stop_oauth_server,
         oauth::get_oauth_result,
         oauth::initiate_oauth_flow,
+        #[cfg(unix)]
+        xattr_cmd::get_xattr,
+        #[cfg(unix)]
+        xattr_cmd::set_xattr,
+        #[cfg(unix)]
+        xattr_cmd::remove_xattr,
         #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,
     ]);

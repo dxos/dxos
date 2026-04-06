@@ -79,6 +79,7 @@ export default EntityExtraction.pipe(
       ),
     ),
   ),
+  Operation.opaqueHandler,
 );
 
 const extractContact = Effect.fn('extractContact')(function* (actor: Actor.Actor, tags?: readonly string[]) {

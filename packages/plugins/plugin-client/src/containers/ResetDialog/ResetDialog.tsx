@@ -41,9 +41,9 @@ export const ResetDialog = ({ mode, onReset, capabilityManager }: ResetDialogPro
   return (
     <Dialog.Content>
       <Dialog.Header>
-        <Dialog.Title>{t('reset dialog title')}</Dialog.Title>
+        <Dialog.Title>{t('reset-dialog.title')}</Dialog.Title>
       </Dialog.Header>
-      <Dialog.Description classNames='sr-only'>{t('reset dialog description')}</Dialog.Description>
+      <Dialog.Description classNames='sr-only'>{t('reset-dialog.description')}</Dialog.Description>
       <ConfirmReset active mode={mode} onConfirm={handleReset} onCancel={handleCancel} />
     </Dialog.Content>
   );

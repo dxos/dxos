@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { type Project } from '@dxos/assistant-toolkit';
 import { Annotation, Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -18,7 +18,7 @@ import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
-export type ProjectArticleProps = SurfaceComponentProps<Project.Project>;
+export type ProjectArticleProps = ObjectSurfaceProps<Project.Project>;
 
 export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
   const inputQueue = useAtomValue(
@@ -64,7 +64,7 @@ export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
         )}
 
         {stackObjects.length > 0 && (
-          <Focus.Group asChild>
+          <Focus.Group asChild border>
             <Mosaic.Container asChild withFocus autoScroll={viewport}>
               <ScrollArea.Root orientation='vertical'>
                 <ScrollArea.Viewport classNames='p-2' ref={setViewport}>
@@ -91,9 +91,9 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
     );
 
     return (
-      <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-        <Focus.Group asChild>
-          <Menu.Root>
+      <Menu.Root>
+        <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
+          <Focus.Item asChild>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
               <Card.Toolbar>
                 <Card.IconBlock padding>
@@ -117,9 +117,9 @@ const StackTile = forwardRef<HTMLDivElement, MosaicTileProps<Obj.Unknown>>(
                 <Surface.Surface role='card--content' limit={1} data={{ subject: data }} />
               </Card.Content>
             </Card.Root>
-          </Menu.Root>
-        </Focus.Group>
-      </Mosaic.Tile>
+          </Focus.Item>
+        </Mosaic.Tile>
+      </Menu.Root>
     );
   },
 );

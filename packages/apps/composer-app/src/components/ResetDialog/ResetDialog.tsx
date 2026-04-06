@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { type LogBuffer } from '@dxos/log';
 import { type Observability } from '@dxos/observability';
@@ -28,10 +28,10 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
   const context = 'context' in error && error.context && typeof error.context === 'object' ? error.context : {};
 
   const translatedTitle = t(`${error.name} title`, context);
-  const title = translatedTitle === `${error.name} title` ? t('fatal error title') : translatedTitle;
+  const title = translatedTitle === `${error.name} title` ? t('fatal-error.title') : translatedTitle;
 
   const translatedMessage = t(`${error.name} message`, context);
-  const message = translatedMessage === `${error.name} message` ? t('fatal error message') : translatedMessage;
+  const message = translatedMessage === `${error.name} message` ? t('fatal-error.message') : translatedMessage;
 
   const cause =
     error.cause instanceof Error ? String(error.cause.stack) : error.cause ? String(error.cause) : undefined;
@@ -70,7 +70,16 @@ export const ResetDialog = ({
   const error = propsError && parseError(t, propsError);
   const [showStack, setShowStack] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false);
   const download = useFileDownload();
+
+  useEffect(() => {
+    if (!feedbackSent) {
+      return;
+    }
+    const timeout = setTimeout(() => setFeedbackSent(false), 3_000);
+    return () => clearTimeout(timeout);
+  }, [feedbackSent]);
 
   const handleCopyError = useCallback(() => {
     void navigator.clipboard.writeText(JSON.stringify(error));
@@ -92,6 +101,7 @@ export const ResetDialog = ({
       const observability = await observabilityProp;
       observability.feedback.captureUserFeedback(values);
       setFeedbackOpen(false);
+      setFeedbackSent(true);
     },
     [observabilityProp],
   );
@@ -129,7 +139,7 @@ export const ResetDialog = ({
                       icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                       variant='ghost'
                       classNames='flex items-center'
-                      label={t('show stack label')}
+                      label={t('show-stack.label')}
                       onClick={() => setShowStack((showStack) => !showStack)}
                       data-testid='resetDialog.showStackTrace'
                     />
@@ -137,13 +147,13 @@ export const ResetDialog = ({
                       <IconButton
                         icon='ph--clipboard--duotone'
                         iconOnly
-                        label={t('copy error label')}
+                        label={t('copy-error.label')}
                         onClick={handleCopyError}
                       />
                       <IconButton
                         icon='ph--download-simple--regular'
                         iconOnly
-                        label={t('download logs label')}
+                        label={t('download-logs.label')}
                         onClick={handleDownloadLogs}
                       />
                     </div>
@@ -151,7 +161,7 @@ export const ResetDialog = ({
                 </div>
                 {showStack && (
                   <Message.Root key={error.message} classNames='overflow-auto' data-testid='resetDialog.stackTrace'>
-                    <pre className='text-xs max-h-16'>{error.stack}</pre>
+                    <pre className='text-xs max-h-[136px]'>{error.stack}</pre>
                   </Message.Root>
                 )}
               </>
@@ -159,22 +169,25 @@ export const ResetDialog = ({
           </AlertDialog.Body>
 
           <AlertDialog.ActionBar>
-            <Button variant='primary' onClick={handleSafeMode}>
-              {t('safe mode label')}
-            </Button>
-
+            <IconButton
+              variant='primary'
+              icon='ph--stethoscope--regular'
+              iconOnly={!isNotMobile}
+              label={t('safe-mode.label')}
+              onClick={handleSafeMode}
+            />
             {onReset && (
               <DropdownMenu.Root>
                 <DropdownMenu.Trigger asChild>
                   <Button data-testid='resetDialog.reset' variant='destructive'>
-                    {t('reset app label')}
+                    {t('reset-app.label')}
                   </Button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content side='top'>
                     <DropdownMenu.Viewport>
                       <DropdownMenu.Item data-testid='resetDialog.confirmReset' onClick={onReset}>
-                        {t('reset app confirm label')}
+                        {t('reset-app-confirm.label')}
                       </DropdownMenu.Item>
                     </DropdownMenu.Viewport>
                     <DropdownMenu.Arrow />
@@ -184,24 +197,29 @@ export const ResetDialog = ({
             )}
 
             <div role='none' className='flex-grow' />
-            {observabilityProp && isNotMobile && (
-              <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-                <Popover.Trigger asChild>
-                  <IconButton icon='ph--paper-plane-tilt--regular' label={t('feedback label')} />
-                </Popover.Trigger>
-                <Popover.Portal>
-                  <Popover.Content>
-                    <Popover.Viewport>
-                      <FeedbackForm onSave={handleSaveFeedback} />
-                    </Popover.Viewport>
-                    <Popover.Arrow />
-                  </Popover.Content>
-                </Popover.Portal>
-              </Popover.Root>
-            )}
+            {observabilityProp &&
+              isNotMobile &&
+              (feedbackSent ? (
+                <IconButton icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
+              ) : (
+                <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+                  <Popover.Trigger asChild>
+                    <IconButton icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
+                  </Popover.Trigger>
+                  <Popover.Portal>
+                    <Popover.Content>
+                      <Popover.Viewport>
+                        <FeedbackForm onSave={handleSaveFeedback} />
+                      </Popover.Viewport>
+                      <Popover.Arrow />
+                    </Popover.Content>
+                  </Popover.Portal>
+                </Popover.Root>
+              ))}
             <IconButton
               icon='ph--arrow-clockwise--regular'
-              label={t(needRefresh ? 'update and reload page label' : 'reload page label')}
+              iconOnly={!!isNotMobile}
+              label={t(needRefresh ? 'update-and-reload-page.label' : 'reload-page.label')}
               onClick={handleRefresh}
             />
           </AlertDialog.ActionBar>

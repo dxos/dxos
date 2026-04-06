@@ -9,13 +9,13 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { createKvsStore } from '@dxos/effect';
 
 import { meta } from '../../meta';
-import { SketchCapabilities, SketchSettingsSchema } from '../../types';
+import { Settings, SketchCapabilities } from '../../types';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = createKvsStore({
       key: meta.id,
-      schema: SketchSettingsSchema,
+      schema: Settings.Settings,
       defaultValue: () => ({}),
     });
 
@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
       Capability.contributes(SketchCapabilities.Settings, settingsAtom),
       Capability.contributes(AppCapabilities.Settings, {
         prefix: meta.id,
-        schema: SketchSettingsSchema,
+        schema: Settings.Settings,
         atom: settingsAtom,
       }),
     ];

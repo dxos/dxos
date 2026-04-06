@@ -27,7 +27,7 @@ export default Capability.makeModule(
               });
             }),
             properties: {
-              label: ['open about label', { ns: meta.id }],
+              label: ['open-about.label', { ns: meta.id }],
               icon: 'ph--info--regular',
               disposition: 'menu',
             },

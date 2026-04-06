@@ -24,6 +24,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
 import { Message } from '@dxos/types';
+import * as Record from 'effect/Record';
 
 import {
   AiSession,
@@ -36,15 +37,15 @@ import {
 
 import { AiContextBinder, AiContextService, type ContextBinding } from './context';
 
-export interface AiConversationRunProps {
+export interface AiConversationRunProps<Tools extends Record<string, Tool.Any>> {
   prompt: string;
   system?: string;
   observer?: GenerationObserver;
+  toolkit?: Toolkit.Toolkit<Tools>;
 }
 
 export type AiConversationOptions = {
   queue: Queue<Message.Message | ContextBinding>;
-  toolkit?: Toolkit.Any;
   registry?: Registry.Registry;
 };
 
@@ -69,7 +70,6 @@ export class AiConversation extends Resource {
   public constructor(options: AiConversationOptions) {
     super();
     this._queue = options.queue;
-    this._toolkit = options.toolkit;
     invariant(this._queue);
     this._binder = new AiContextBinder({ queue: this._queue, registry: options.registry });
   }
@@ -106,9 +106,9 @@ export class AiConversation extends Resource {
   /**
    * Creates a new cancelable request effect.
    */
-  public createRequest(
-    params: AiConversationRunProps,
-  ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements> {
+  public createRequest<Tools extends Record<string, Tool.Any> = {}>(
+    params: AiConversationRunProps<Tools>,
+  ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements | Tool.HandlersFor<Tools>> {
     return Effect.gen(this, function* () {
       const history = yield* Effect.promise(() => this.getHistory());
       const blueprints = this.context.getBlueprints();
@@ -139,17 +139,18 @@ export class AiConversation extends Resource {
         const currentBlueprints = this.context.getBlueprints();
         const mcps = yield* connectMcpServers(currentBlueprints);
         const toolkit = yield* createToolkit({
-          toolkit: this._toolkit,
+          toolkit: params.toolkit,
           blueprints: currentBlueprints,
           genericToolkits: mcps,
         });
+        log('toolkit', { tools: Record.keys(toolkit.tools) });
         const system = yield* formatSystemPrompt({
           system: params.system,
           blueprints: currentBlueprints,
           objects: this.context.getObjects(),
         }).pipe(Effect.orDie);
 
-        const { done } = yield* session.runTurn({
+        const { done } = yield* session.runAgentTurn({
           system,
           toolkit,
         });
@@ -157,6 +158,8 @@ export class AiConversation extends Resource {
         if (done) {
           break;
         }
+
+        yield* session.runTools({ toolkit });
       } while (true);
 
       log('result', {
@@ -220,9 +223,13 @@ export class AiConversationService extends Context.Tag('@dxos/assistant/AiConver
   /**
    * Run a prompt in the current conversation.
    */
-  static run = (
-    params: AiConversationRunProps,
-  ): Effect.Effect<Message.Message[], AiSessionRunError, AiSessionRunRequirements | AiConversationService> =>
+  static run = <Tools extends Record<string, Tool.Any> = {}>(
+    params: AiConversationRunProps<Tools>,
+  ): Effect.Effect<
+    Message.Message[],
+    AiSessionRunError,
+    AiSessionRunRequirements | Tool.HandlersFor<Tools> | AiConversationService
+  > =>
     Effect.gen(function* () {
       const conversation = yield* AiConversationService;
       return yield* conversation.createRequest(params);

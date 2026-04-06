@@ -16,8 +16,6 @@ import { printIdentity } from '../util';
 export const handler = Effect.fn(function* ({ displayName }: { displayName: string }) {
   const { json } = yield* CommandConfig;
   const client = yield* ClientService;
-  yield* Effect.tryPromise(() => client.spaces.waitUntilReady());
-
   const identity = client.halo.identity.get();
   if (!identity) {
     if (json) {

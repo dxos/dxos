@@ -6,10 +6,17 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  LayoutOperation,
+  createEdgeExistenceChecker,
+  validateNavigationTarget,
+} from '@dxos/app-toolkit';
+import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
 import { Operation } from '@dxos/operation';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
 
@@ -25,6 +32,25 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
       const settings = yield* Capabilities.getAtomValue(DeckCapabilities.Settings);
 
+      // Validate navigation targets, redirecting to 404 if not found.
+      const capabilities = yield* Capability.Service;
+      const pathResolvers = capabilities.getAll(AppCapabilities.NavigationPathResolver);
+      const checkRemoteExistence = yield* Capability.get(ClientCapabilities.Client).pipe(
+        Effect.map((client) =>
+          createEdgeExistenceChecker((spaceId, body) => client.edge.http.execQuery(new Context(), spaceId, body)),
+        ),
+        Effect.catchAll(() => Effect.succeed(undefined)),
+      );
+
+      const validatedSubjects = yield* Effect.all(
+        input.subject.map((subjectId) =>
+          input.navigation === 'immediate'
+            ? Effect.succeed(subjectId)
+            : validateNavigationTarget({ graph, subjectId, pathResolvers, checkRemoteExistence }),
+        ),
+      );
+      input = { ...input, subject: validatedSubjects };
+
       {
         const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
         if (input.workspace && state.activeDeck !== input.workspace) {
@@ -36,17 +62,18 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
       {
         const deck = yield* DeckCapabilities.getDeck();
         previouslyOpenIds = new Set<string>(deck.solo ? [deck.solo] : deck.active);
-        const next = deck.solo
-          ? [...input.subject]
-          : input.subject.reduce(
-              (acc, entryId) =>
-                openEntry(acc, entryId, {
-                  key: input.key,
-                  positioning: input.positioning ?? settings?.newPlankPositioning,
-                  pivotId: input.pivotId,
-                }),
-              deck.active,
-            );
+        const next =
+          deck.solo || !deck.initialized
+            ? [...input.subject]
+            : input.subject.reduce(
+                (acc, entryId) =>
+                  openEntry(acc, entryId, {
+                    key: input.key,
+                    positioning: input.positioning ?? settings?.newPlankPositioning,
+                    pivotId: input.pivotId,
+                  }),
+                deck.active,
+              );
 
         const { deckUpdates, toAttend: _toAttend } = computeActiveUpdates({ next, deck, attention });
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
@@ -81,6 +108,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           });
         }
       }
+
+      return validatedSubjects;
     }),
   ),
 );

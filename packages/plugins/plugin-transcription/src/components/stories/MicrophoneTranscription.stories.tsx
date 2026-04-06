@@ -18,7 +18,6 @@ import {
 import { Filter, type Obj } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
 import { MemoryQueue } from '@dxos/echo-db';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client';
@@ -49,7 +48,7 @@ const RECORDER_CONFIG = {
   interval: 200,
 };
 
-type StoryProps = {
+type DefaultStoryProps = {
   detectSpeaking?: boolean;
   transcriberConfig: TranscriberProps['config'];
   recorderConfig: MediaStreamRecorderProps['config'];
@@ -63,7 +62,7 @@ const DefaultStory = ({
   transcriberConfig,
   recorderConfig,
   audioConstraints,
-}: StoryProps) => {
+}: DefaultStoryProps) => {
   const [running, setRunning] = useState(false);
 
   // Audio.
@@ -86,13 +85,12 @@ const DefaultStory = ({
   }, [space]);
 
   // Entity extraction.
-  const { extractionFunction, executor, objects } = useMemo(() => {
+  const { extractionFunction, objects } = useMemo(() => {
     if (!space) {
       log.warn('no space');
       return {};
     }
 
-    let executor: FunctionExecutor | undefined;
     let extractionFunction: ExtractionFunction | undefined;
     let objects: Promise<Obj.Unknown[]> | undefined;
 
@@ -112,20 +110,8 @@ const DefaultStory = ({
         )
         .run();
     }
-    if (entityExtraction !== 'none') {
-      executor = new FunctionExecutor(
-        new ServiceContainer().setServices({
-          // ai: {
-          //   client: new Edge AiServiceClient({
-          //     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-          //   }),
-          // },
-          // database: { db: space!.db },
-        }),
-      );
-    }
 
-    return { extractionFunction, executor, objects };
+    return { extractionFunction, objects };
   }, [entityExtraction, space]);
 
   // Transcriber.
@@ -143,9 +129,7 @@ const DefaultStory = ({
 
       if (entityExtraction !== 'none') {
         invariant(extractionFunction, 'extractionFunction is required');
-        invariant(executor, 'executor is required');
         const result = await processTranscriptMessage({
-          executor,
           function: extractionFunction,
           input: {
             message,
@@ -203,7 +187,7 @@ const meta = {
           types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
+              const { personalSpace } = yield* initializeIdentity(client);
               // TODO(mykola): Make API easier to use.
               // TODO(mykola): Delete after enabling vector indexing by default.
               // Enable vector indexing.
@@ -219,7 +203,7 @@ const meta = {
                 }),
               );
               yield* Effect.promise(() => client.services.services.QueryService!.reindex());
-              yield* Effect.promise(() => seedTestData(defaultSpace));
+              yield* Effect.promise(() => seedTestData(personalSpace));
             }),
         }),
 

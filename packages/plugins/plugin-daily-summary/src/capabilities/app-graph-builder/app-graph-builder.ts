@@ -24,7 +24,7 @@ export default Capability.makeModule(
               type: `${meta.id}.space-settings-daily-summary`,
               data: `${meta.id}.space-settings-daily-summary`,
               properties: {
-                label: ['plugin name', { ns: meta.id }],
+                label: ['plugin.name', { ns: meta.id }],
                 icon: 'ph--calendar-check--regular',
               },
             },

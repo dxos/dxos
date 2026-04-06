@@ -33,6 +33,7 @@ import {
   type CredentialsService,
   type FunctionInvocationService,
   type QueueService,
+  Trace,
   TracingService,
 } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -267,6 +268,7 @@ export class ComputeGraphController extends Resource {
             Effect.provide(
               ComputeEventLogger.layerFromTracing.pipe(
                 Layer.provideMerge(TracingService.layerNoop), // TODO(dmaretskyi): Plug-in tracing events to visual feedback in the compute graph editor.
+                Layer.provideMerge(Trace.writerLayerNoop),
               ),
             ),
             Effect.flatMap(computeValueBag),
@@ -334,6 +336,7 @@ export class ComputeGraphController extends Resource {
               Effect.provide(
                 ComputeEventLogger.layerFromTracing.pipe(
                   Layer.provideMerge(TracingService.layerNoop), // TODO(dmaretskyi): Plug-in tracing events to visual feedback in the compute graph editor.
+                  Layer.provideMerge(Trace.writerLayerNoop),
                 ),
               ),
 

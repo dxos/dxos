@@ -4,12 +4,12 @@
 
 import React, { useState } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Card, Icon } from '@dxos/react-ui';
 
 import * as Video from '../../types/Video';
 
-export type VideoCardProps = SurfaceComponentProps<Video.YouTubeVideo>;
+export type VideoCardProps = ObjectSurfaceProps<Video.YouTubeVideo>;
 
 /**
  * YouTube video card with embedded player.
@@ -30,7 +30,7 @@ export const VideoCard = ({ subject: video }: VideoCardProps) => {
             title={video.title}
             allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
             allowFullScreen
-            className='w-full h-full rounded'
+            className='h-full w-full rounded'
           />
         </div>
       ) : (
@@ -40,9 +40,9 @@ export const VideoCard = ({ subject: video }: VideoCardProps) => {
           className='relative aspect-video w-full group cursor-pointer'
         >
           {video.thumbnailUrl ? (
-            <img src={video.thumbnailUrl} alt={video.title} className='w-full h-full object-cover rounded' />
+            <img src={video.thumbnailUrl} alt={video.title} className='h-full w-full object-cover rounded' />
           ) : (
-            <div className='w-full h-full bg-surface-hover rounded flex items-center justify-center'>
+            <div className='h-full w-full bg-surface-hover rounded flex items-center justify-center'>
               <Icon icon='ph--play--fill' size={12} />
             </div>
           )}

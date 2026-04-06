@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { type Prompt } from '@dxos/blueprints';
 import { Obj } from '@dxos/echo';
@@ -17,7 +17,7 @@ import { useAttention } from '@dxos/react-ui-attention';
 import { TemplateEditor } from '../../components';
 import { meta } from '../../meta';
 
-export type PromptArticleProps = SurfaceComponentProps<Prompt.Prompt>;
+export type PromptArticleProps = ObjectSurfaceProps<Prompt.Prompt>;
 
 export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProps) => {
   const { t } = useTranslation(meta.id);
@@ -48,7 +48,7 @@ export const PromptArticle = ({ role, attendableId, subject }: PromptArticleProp
     <Panel.Root role={role} className='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root disabled={!hasAttention} onClick={handleRun}>
-          <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run prompt label')} onClick={handleRun} />
+          <Toolbar.IconButton iconOnly icon='ph--play--regular' label={t('run-prompt.label')} onClick={handleRun} />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

@@ -1,12 +1,12 @@
 # ECHO SDK
 
-- Use barrels import/exports for ECHO types:
+- Use barrels import/exports for ECHO types; example:
 
 ```ts
-// types directory
-export * as Foo from './Foo';
+// `types` directory
+export * as Obj from './Obj';
 
 // usage
-import { Foo } from '../types';
-const x = Foo.make();
+import { Obj } from '../types';
+const x = Obj.make();
 ```

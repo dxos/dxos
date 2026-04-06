@@ -30,7 +30,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
         onCardRemove
           ? [
               createMenuAction('remove', () => onCardRemove(data), {
-                label: t('remove card label'),
+                label: t('remove-card.label'),
                 icon: 'ph--trash--regular',
               }),
             ]
@@ -48,7 +48,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
           debug={debug}
           dragHandle={dragHandle}
         >
-          <Focus.Group asChild>
+          <Focus.Item asChild>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
               <Card.Toolbar>
                 <Card.DragHandle ref={dragHandleRef} />
@@ -59,7 +59,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
-                    label={t('action menu label')}
+                    label={t('action-menu.label')}
                   />
                 </Menu.Trigger>
                 <Menu.Content items={menuItems} />
@@ -72,7 +72,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
                 </Card.Section>
               </Card.Content>
             </Card.Root>
-          </Focus.Group>
+          </Focus.Item>
         </Mosaic.Tile>
       </Menu.Root>
     );

@@ -3,31 +3,36 @@
 //
 
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
+import * as KeyValueStore from '@effect/platform/KeyValueStore';
 import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { GenericToolkit } from '@dxos/ai';
+import { AiService, GenericToolkit } from '@dxos/ai';
 import { Capabilities, Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { ToolExecutionServices } from '@dxos/assistant';
+import { AgentService, ToolExecutionServices } from '@dxos/assistant';
+import { ClientService } from '@dxos/client';
 import { SpaceProperties } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
-import { CredentialsService, QueueService } from '@dxos/functions';
+import { CredentialsService, feedServiceFromQueueServiceLayer, QueueService } from '@dxos/functions';
 import {
+  FeedTraceSink,
   FunctionImplementationResolver,
   FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
+  ProcessManager,
   RemoteFunctionExecutionService,
+  ServiceResolver,
   TracingServiceExt,
   TriggerDispatcher,
   TriggerStateStore,
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet, OperationRegistry } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client/types';
 
 import { AutomationCapabilities } from '../../types';
@@ -79,7 +84,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
           ...this.#capabilities.getAll(Capabilities.OperationHandler),
         );
 
-        const genericToolkitProvider = Layer.succeed(GenericToolkit.Provider, {
+        const genericToolkitProvider = Layer.succeed(GenericToolkit.GenericToolkitProvider, {
           getToolkit: () => {
             const toolkits = this.#capabilities.getAll(AppCapabilities.Toolkit);
             return GenericToolkit.merge(...toolkits);
@@ -96,18 +101,37 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
 
         return Layer.mergeAll(
           TriggerDispatcher.layer({ timeControl: 'natural' }),
-          // TODO(dmaretskyi): Make blueprints reactive and registry accept an atom.
           Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints)),
         ).pipe(
+          Layer.provideMerge(AgentService.layer()),
+          Layer.provideMerge(ProcessManager.layer()),
+          Layer.provideMerge(
+            ServiceResolver.layerRequirements(
+              Database.Service,
+              GenericToolkit.GenericToolkitProvider,
+              QueueService,
+              Feed.Service,
+              OperationRegistry.Service,
+              AiService.AiService,
+              CredentialsService,
+              Blueprint.RegistryService,
+            ),
+          ),
+          Layer.provideMerge(Layer.succeed(Blueprint.RegistryService, new Blueprint.Registry(blueprints))),
+          Layer.provideMerge(OperationRegistry.layer),
           Layer.provideMerge(Layer.succeed(Capability.Service, this.#capabilities)),
           Layer.provideMerge(Layer.succeed(Registry.AtomRegistry, registry)),
           Layer.provideMerge(
             Layer.mergeAll(
               TracingServiceLive,
+              FeedTraceSink.layerLive,
               TriggerStateStore.layerKv.pipe(Layer.provide(BrowserKeyValueStore.layerLocalStorage)),
               ToolExecutionServices,
+              KeyValueStore.layerMemory,
             ),
           ),
+          Layer.provideMerge(feedServiceFromQueueServiceLayer),
+          Layer.provideMerge(OperationHandlerSet.provide(operationHandlers)),
           Layer.provideMerge(
             FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
               Layer.provideMerge(genericToolkitProvider),
@@ -115,12 +139,12 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               Layer.provideMerge(
                 RemoteFunctionExecutionService.fromClient(
                   client,
-                  // If agent is not enabled do not provide spaceId because space context will be unavailable on EDGE.
                   client.config.get('runtime.client.edgeFeatures.agents') ? spaceId : undefined,
                 ),
               ),
               Layer.provideMerge(aiServiceLayer),
               Layer.provideMerge(CredentialsService.layerFromDatabase()),
+              Layer.provideMerge(ClientService.fromClient(client)),
               Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
               Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
               Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
@@ -149,7 +173,7 @@ const TracingServiceLive = Layer.unwrapEffect(
       });
     }
 
-    const queue = properties.invocationTraceQueue.target;
+    const queue = properties.invocationTraceQueue!.target;
     invariant(queue);
     return TracingServiceExt.layerInvocationsQueue({ invocationTraceQueue: queue });
   }),

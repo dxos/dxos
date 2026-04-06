@@ -50,7 +50,7 @@ export const useAlignState = (stateAtom: ToolbarStateAtom) => {
 
 const createAlignGroupAction = (value?: AlignValue) =>
   createMenuItemGroup('align', {
-    label: ['align label', { ns: meta.id }],
+    label: ['align.label', { ns: meta.id }],
     variant: 'toggleGroup',
     selectCardinality: 'single',
     value: `${alignKey}--${value}`,

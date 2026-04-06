@@ -8,6 +8,7 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { Context } from '@dxos/context';
 import { Filter, Obj, Tag } from '@dxos/echo';
 import { Script, Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
@@ -93,7 +94,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleForceRunTrigger = async (trigger: Trigger.Trigger) => {
-    await functionsServiceClient.forceRunCronTrigger(space.id, trigger.id);
+    await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
   };
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
@@ -105,7 +106,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   if (trigger) {
     return (
-      <Settings.Item title={t('trigger editor title')} description={t('trigger editor description')}>
+      <Settings.Item title={t('trigger-editor.title')} description={t('trigger-editor.description')}>
         <TriggerEditor
           db={space.db}
           trigger={trigger}
@@ -146,7 +147,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
       )}
 
       {filteredTriggers.length > 0 && <Separator classNames='my-4' />}
-      <IconButton icon='ph--plus--regular' label={t('new trigger label')} onClick={handleAdd} />
+      <IconButton icon='ph--plus--regular' label={t('new-trigger.label')} onClick={handleAdd} />
     </Settings.Container>
   );
 };

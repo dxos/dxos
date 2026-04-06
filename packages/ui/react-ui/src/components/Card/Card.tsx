@@ -4,10 +4,19 @@
 
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
-import React, { type PropsWithChildren, createContext, forwardRef, useContext } from 'react';
+import React, {
+  CSSProperties,
+  MouseEventHandler,
+  type PropsWithChildren,
+  createContext,
+  forwardRef,
+  useContext,
+  useMemo,
+} from 'react';
+import DOMPurify from 'dompurify';
 
 import { composable, composableProps, iconSize, mx, slottable } from '@dxos/ui-theme';
-import { type Density, type SlottableProps } from '@dxos/ui-types';
+import { type Density } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { Column } from '../../primitives';
@@ -28,6 +37,8 @@ import {
 // Context
 //
 
+const CARD_NAME = 'Card';
+
 type CardContextValue = {
   menuItems?: CardMenuItem<any>[];
 };
@@ -39,19 +50,21 @@ const CardContext = createContext<CardContextValue>({});
 // Root
 //
 
+const CARD_ROOT_NAME = 'Card.Root';
+
 type CardRootOwnProps = {
   id?: string;
   border?: boolean;
   fullWidth?: boolean;
   density?: Density;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
   tabIndex?: number;
-  onClick?: React.MouseEventHandler<HTMLDivElement>;
+  onClick?: MouseEventHandler<HTMLDivElement>;
   'data-selected'?: boolean;
   'data-testid'?: string;
 };
 
-type CardRootProps = SlottableProps<CardRootOwnProps>;
+type CardRootProps = CardRootOwnProps;
 
 const CardRoot = slottable<HTMLDivElement, CardRootOwnProps>(
   ({ children, id, asChild, role, border = true, fullWidth, density, ...props }, forwardedRef) => {
@@ -73,9 +86,13 @@ const CardRoot = slottable<HTMLDivElement, CardRootOwnProps>(
   },
 );
 
+CardRoot.displayName = CARD_ROOT_NAME;
+
 //
 // Toolbar
 //
+
+const CARD_TOOLBAR_NAME = 'Card.Toolbar';
 
 type CardToolbarProps = ToolbarRootProps;
 
@@ -89,9 +106,13 @@ const CardToolbar = composable<HTMLDivElement, CardToolbarProps>(({ children, cl
   );
 });
 
+CardToolbar.displayName = CARD_TOOLBAR_NAME;
+
 //
 // DragHandle
 //
+
+const CARD_DRAG_HANDLE_NAME = 'Card.DragHandle';
 
 type CardDragHandleProps = ToolbarDragHandleProps;
 
@@ -103,9 +124,13 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((props
   );
 });
 
+CardDragHandle.displayName = CARD_DRAG_HANDLE_NAME;
+
 //
 // CloseIconButton
 //
+
+const CARD_CLOSE_ICON_BUTTON_NAME = 'Card.CloseIconButton';
 
 type CloseIconButtonProps = ToolbarCloseIconButtonProps;
 
@@ -117,9 +142,13 @@ const CloseIconButton = forwardRef<HTMLButtonElement, CloseIconButtonProps>((pro
   );
 });
 
+CloseIconButton.displayName = CARD_CLOSE_ICON_BUTTON_NAME;
+
 //
 // Menu
 //
+
+const CARD_MENU_NAME = 'Card.Menu';
 
 type CardMenuItem<T extends any | void = void> = ToolbarMenuItem<T>;
 
@@ -136,9 +165,13 @@ const CardMenu = <T extends any | void = void>({ context, items, ...props }: Car
   );
 };
 
+(CardMenu as any).displayName = CARD_MENU_NAME;
+
 //
 // Icon
 //
+
+const CARD_ICON_NAME = 'Card.Icon';
 
 const CardIcon = (props: IconProps) => {
   return (
@@ -148,9 +181,13 @@ const CardIcon = (props: IconProps) => {
   );
 };
 
+(CardIcon as any).displayName = CARD_ICON_NAME;
+
 //
 // IconBlock
 //
+
+const CARD_ICON_BLOCK_NAME = 'Card.IconBlock';
 
 const CardIconBlock = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildren<{ padding?: boolean }>>>(
   ({ classNames, children, padding, ...props }, forwardedRef) => {
@@ -164,9 +201,13 @@ const CardIconBlock = forwardRef<HTMLDivElement, ThemedClassName<PropsWithChildr
   },
 );
 
+CardIconBlock.displayName = CARD_ICON_BLOCK_NAME;
+
 //
 // Title
 //
+
+const CARD_TITLE_NAME = 'Card.Title';
 
 const CardTitle = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
@@ -180,9 +221,13 @@ const CardTitle = slottable<HTMLDivElement>(({ children, asChild, ...props }, fo
   );
 });
 
+CardTitle.displayName = CARD_TITLE_NAME;
+
 //
 // Content
 //
+
+const CARD_CONTENT_NAME = 'Card.Content';
 
 const CardContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props, { role: 'none' });
@@ -196,9 +241,13 @@ const CardContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
   );
 });
 
+CardContent.displayName = CARD_CONTENT_NAME;
+
 //
 // Row
 //
+
+const CARD_ROW_NAME = 'Card.Row';
 
 type CardRowProps = { icon?: string; fullWidth?: boolean };
 
@@ -214,9 +263,13 @@ const CardRow = composable<HTMLDivElement, CardRowProps>(({ children, icon, ...p
   );
 });
 
+CardRow.displayName = CARD_ROW_NAME;
+
 //
 // Section
 //
+
+const CARD_SECTION_NAME = 'Card.Section';
 
 /**
  * @deprecated Merge with Card.Row fullWidth
@@ -232,9 +285,13 @@ const CardSection = slottable<HTMLDivElement>(({ children, asChild, role, ...pro
   );
 });
 
+CardSection.displayName = CARD_SECTION_NAME;
+
 //
 // Heading
 //
+
+const CARD_HEADING_NAME = 'Card.Heading';
 
 type CardHeadingProps = { variant?: 'default' | 'subtitle' };
 
@@ -260,9 +317,13 @@ const CardHeading = slottable<HTMLDivElement, CardHeadingProps>(
   },
 );
 
+CardHeading.displayName = CARD_HEADING_NAME;
+
 //
 // Text
 //
+
+const CARD_TEXT_NAME = 'Card.Text';
 
 type CardTextProps = { truncate?: boolean; variant?: 'default' | 'description' };
 
@@ -280,9 +341,42 @@ const CardText = slottable<HTMLDivElement, CardTextProps>(
   },
 );
 
+CardText.displayName = CARD_TEXT_NAME;
+
+//
+// Html
+//
+
+const CARD_HTML_NAME = 'Card.Html';
+
+type CardHtmlProps = { html: string; variant?: 'default' | 'description' };
+
+/**
+ * Renders sanitized HTML content inside a card text slot.
+ * Uses DOMPurify to prevent XSS from untrusted markup (e.g. RSS feed content).
+ */
+const CardHtml = ({ html, variant = 'default', ...props }: CardHtmlProps & ThemedClassName<object>) => {
+  const { tx } = useThemeContext();
+  const sanitized = useMemo(() => DOMPurify.sanitize(html), [html]);
+
+  return (
+    <div
+      {...props}
+      role='none'
+      className={tx('card.text', { variant })}
+      // eslint-disable-next-line react/no-danger
+      dangerouslySetInnerHTML={{ __html: sanitized }}
+    />
+  );
+};
+
+(CardHtml as any).displayName = CARD_HTML_NAME;
+
 //
 // Poster
 //
+
+const CARD_POSTER_NAME = 'Card.Poster';
 
 type CardPosterProps = ThemedClassName<
   {
@@ -312,9 +406,13 @@ const CardPoster = (props: CardPosterProps) => {
   }
 };
 
+(CardPoster as any).displayName = CARD_POSTER_NAME;
+
 //
 // Action
 //
+
+const CARD_ACTION_NAME = 'Card.Action';
 
 type CardActionProps = { icon?: string; label: string; actionIcon?: string; onClick?: () => void };
 
@@ -329,9 +427,13 @@ const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onCl
   );
 };
 
+(CardAction as any).displayName = CARD_ACTION_NAME;
+
 //
 // Link
 //
+
+const CARD_LINK_NAME = 'Card.Link';
 
 type CardLinkProps = { label: string; href: string };
 
@@ -345,6 +447,8 @@ const CardLink = ({ label, href }: CardLinkProps) => {
     </a>
   );
 };
+
+(CardLink as any).displayName = CARD_LINK_NAME;
 
 //
 // Card
@@ -372,6 +476,7 @@ export const Card = {
   Section: CardSection,
   Heading: CardHeading,
   Text: CardText,
+  Html: CardHtml,
   Poster: CardPoster,
   Action: CardAction,
   Link: CardLink,

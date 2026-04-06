@@ -17,7 +17,7 @@ import { AiSession, GenerationObserver, ToolExecutionServices, createToolkit } f
 import { Template } from '@dxos/blueprints';
 import { type DXN, Entity, Obj } from '@dxos/echo';
 import { Database } from '@dxos/echo';
-import { FunctionInvocationService, TracingService } from '@dxos/functions';
+import { FunctionInvocationService, Trace, TracingService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 import { type Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -103,6 +103,7 @@ export default Research.pipe(
           AiService.model('@anthropic/claude-sonnet-4-0'),
           ToolExecutionServices,
           FunctionInvocationService.layerNotAvailable,
+          Trace.writerLayerNoop,
         ).pipe(Layer.provide(GenericToolkit.providerEmpty)),
       ),
     ),
