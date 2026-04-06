@@ -142,7 +142,9 @@ export default Capability.makeModule(
             }
           }),
         );
-      }).pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('failed to initialize deep link listener', { error }))));
+      }).pipe(
+        Effect.catchAll((error) => Effect.sync(() => log.warn('failed to initialize deep link listener', { error }))),
+      );
     }
 
     // Sync URL with layout state changes.
