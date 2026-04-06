@@ -175,15 +175,21 @@ Property/method decorator. Exposes a value in the resource's info section (visib
 @trace.resource()
 class DataSpace {
   @trace.info()
-  get spaceId(): string { return this._spaceId; }
+  get spaceId(): string {
+    return this._spaceId;
+  }
 
   // Enum values are converted to their string representation.
   @trace.info({ enum: SpaceState })
-  get state(): SpaceState { return this._state; }
+  get state(): SpaceState {
+    return this._state;
+  }
 
   // Control serialization depth (default: 0 = toString, null = unlimited up to 8).
   @trace.info({ depth: 2 })
-  get config(): object { return this._config; }
+  get config(): object {
+    return this._config;
+  }
 }
 ```
 
@@ -210,6 +216,7 @@ class RpcServer {
 ```
 
 Available counters:
+
 - **`UnaryCounter`** — single incrementing value. `inc(by?: number)`.
 - **`MapCounter`** — keyed counters. `inc(key: string, by?: number)`.
 - **`TimeSeriesCounter`** — time-bucketed values. `inc(by?: number)`.
@@ -277,16 +284,17 @@ Access to `RemoteMetrics` for publishing OTEL-compatible metrics.
 
 Global singleton. Key fields:
 
-| Field | Type | Purpose |
-| --- | --- | --- |
-| `tracingBackend` | `TracingBackend?` | Set by observability package at startup. |
-| `resources` | `Map<number, ResourceEntry>` | All `@trace.resource()` instances. |
-| `resourceInstanceIndex` | `WeakMap<any, ResourceEntry>` | Instance → resource lookup. |
-| `logs` | `LogEntry[]` | Captured ERROR/WARN/TRACE log entries. |
-| `diagnostics` | `DiagnosticsManager` | Registered diagnostics. |
-| `remoteMetrics` | `RemoteMetrics` | OTEL-compatible metrics publishing. |
+| Field                   | Type                          | Purpose                                  |
+| ----------------------- | ----------------------------- | ---------------------------------------- |
+| `tracingBackend`        | `TracingBackend?`             | Set by observability package at startup. |
+| `resources`             | `Map<number, ResourceEntry>`  | All `@trace.resource()` instances.       |
+| `resourceInstanceIndex` | `WeakMap<any, ResourceEntry>` | Instance → resource lookup.              |
+| `logs`                  | `LogEntry[]`                  | Captured ERROR/WARN/TRACE log entries.   |
+| `diagnostics`           | `DiagnosticsManager`          | Registered diagnostics.                  |
+| `remoteMetrics`         | `RemoteMetrics`               | OTEL-compatible metrics publishing.      |
 
 Key methods:
+
 - `getDiagnostics()` — returns `{ resources, logs }`.
 - `findResourcesByClassName(name)` — find resources by class name.
 - `findResourcesByAnnotation(symbol)` — find resources by annotation.
@@ -303,10 +311,14 @@ const SpaceResource = Symbol.for('Space');
 @trace.resource({ annotation: SpaceResource })
 class Space {
   @trace.info()
-  get id(): string { return this._id; }
+  get id(): string {
+    return this._id;
+  }
 
   @trace.info({ enum: SpaceState })
-  get state(): SpaceState { return this._state; }
+  get state(): SpaceState {
+    return this._state;
+  }
 
   @trace.metricsCounter()
   private readonly _mutations = new MapCounter();
@@ -329,22 +341,30 @@ class Space {
     await this._applyMutation(ctx, objectId, data);
   }
 
-  private async _loadPipeline(ctx: Context): Promise<void> { /* ... */ }
-  private async _startReplication(ctx: Context): Promise<void> { /* ... */ }
-  private async _stopReplication(ctx: Context): Promise<void> { /* ... */ }
-  private async _applyMutation(ctx: Context, id: string, data: any): Promise<void> { /* ... */ }
+  private async _loadPipeline(ctx: Context): Promise<void> {
+    /* ... */
+  }
+  private async _startReplication(ctx: Context): Promise<void> {
+    /* ... */
+  }
+  private async _stopReplication(ctx: Context): Promise<void> {
+    /* ... */
+  }
+  private async _applyMutation(ctx: Context, id: string, data: any): Promise<void> {
+    /* ... */
+  }
 }
 ```
 
 ## File Map
 
-| File | Purpose |
-| --- | --- |
-| `api.ts` | Public `trace` object with all decorators and functions. |
-| `tracing-types.ts` | `RemoteSpan`, `StartSpanOptions`, `TracingBackend`, `TraceContextData`. |
-| `trace-processor.ts` | `TraceProcessor` singleton, `ResourceEntry`, `TRACE_PROCESSOR`. |
-| `rpc-trace-context.ts` | `ContextRpcCodec` — encode/decode for RPC boundaries. |
-| `symbols.ts` | `TRACE_SPAN_ATTRIBUTE`, `TracingContext`, `getTracingContext`. |
-| `metrics/` | Counter implementations (`UnaryCounter`, `MapCounter`, etc.). |
-| `diagnostic.ts` | `DiagnosticsManager` for queryable diagnostics. |
-| `diagnostics-channel.ts` | Node.js diagnostics channel integration. |
+| File                     | Purpose                                                                 |
+| ------------------------ | ----------------------------------------------------------------------- |
+| `api.ts`                 | Public `trace` object with all decorators and functions.                |
+| `tracing-types.ts`       | `RemoteSpan`, `StartSpanOptions`, `TracingBackend`, `TraceContextData`. |
+| `trace-processor.ts`     | `TraceProcessor` singleton, `ResourceEntry`, `TRACE_PROCESSOR`.         |
+| `rpc-trace-context.ts`   | `ContextRpcCodec` — encode/decode for RPC boundaries.                   |
+| `symbols.ts`             | `TRACE_SPAN_ATTRIBUTE`, `TracingContext`, `getTracingContext`.          |
+| `metrics/`               | Counter implementations (`UnaryCounter`, `MapCounter`, etc.).           |
+| `diagnostic.ts`          | `DiagnosticsManager` for queryable diagnostics.                         |
+| `diagnostics-channel.ts` | Node.js diagnostics channel integration.                                |
