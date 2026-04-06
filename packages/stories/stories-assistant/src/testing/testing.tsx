@@ -29,7 +29,7 @@ import {
 } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { type Space } from '@dxos/client/echo';
-import { Obj, Ref } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
 import { ExampleHandlers, Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -309,10 +309,12 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
               const space = client.spaces.get(db.spaceId);
               invariant(space, 'Space not found');
 
-              const queue = space.queues.create();
+              const feed = space.db.add(Feed.make());
+              const queueDxn = Feed.getQueueDxn(feed)!;
+              const queue = space.queues.get(queueDxn);
               const chat = Obj.make(Assistant.Chat, {
                 name,
-                queue: Ref.fromDXN(queue.dxn),
+                feed: Ref.make(feed),
               });
               const binder = new AiContextBinder({ queue, registry });
 

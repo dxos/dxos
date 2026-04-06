@@ -53,7 +53,7 @@ export const handleImport = ({ scene, hue, importGLBRef, setSelectedObjectId }: 
 };
 
 /** Exports the selected object as a binary STL file. */
-export const handleExportSTL = ({
+export const handleExport = ({
   selectedObjectId,
   solidsRef,
 }: Pick<ImportExportOptions, 'selectedObjectId' | 'solidsRef'>) => {

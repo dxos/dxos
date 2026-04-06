@@ -8,10 +8,6 @@ import { meta } from '../../meta';
 
 export type SpacetimeTool = 'select' | 'move' | 'extrude';
 
-export type ToolState = {
-  tool: SpacetimeTool;
-};
-
 const tools: Record<SpacetimeTool, string> = {
   select: 'ph--cursor--regular',
   move: 'ph--arrows-out-cardinal--regular',
@@ -20,7 +16,7 @@ const tools: Record<SpacetimeTool, string> = {
 
 /** Creates the tool selection toggle group. */
 export const createToolActions =
-  (state: ToolState, onToolChange: (next: Partial<ToolState>) => void): ActionGroupBuilderFn =>
+  (currentTool: string, onToolChange: (tool: string) => void): ActionGroupBuilderFn =>
   (builder) => {
     builder.group(
       'tool',
@@ -29,14 +25,14 @@ export const createToolActions =
         iconOnly: true,
         variant: 'toggleGroup',
         selectCardinality: 'single',
-        value: state.tool,
+        value: currentTool,
       } as ToolbarMenuActionGroupProperties,
       (group) => {
         for (const [tool, icon] of Object.entries(tools)) {
           group.action(
             tool,
-            { label: [`tool.${tool}.label`, { ns: meta.id }], checked: state.tool === tool, icon },
-            () => onToolChange({ tool: tool as SpacetimeTool }),
+            { label: [`tool.${tool}.label`, { ns: meta.id }], checked: currentTool === tool, icon },
+            () => onToolChange(tool),
           );
         }
       },

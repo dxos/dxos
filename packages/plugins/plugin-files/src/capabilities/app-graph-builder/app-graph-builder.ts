@@ -177,7 +177,7 @@ export default Capability.makeModule(
                     id: `${FilesOperation.Save.meta.key}:${entity.id}`,
                     data: () => Operation.invoke(FilesOperation.Save, { id: entity.id }),
                     properties: {
-                      label: [entity.handle ? 'save label' : 'save as label', { ns: meta.id }],
+                      label: [entity.handle ? 'save.label' : 'save-as.label', { ns: meta.id }],
                       icon: 'ph--floppy-disk--regular',
                       keyBinding: {
                         macos: 'meta+s',

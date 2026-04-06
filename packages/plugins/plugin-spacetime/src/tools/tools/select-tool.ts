@@ -17,7 +17,7 @@ import { type ToolContext } from '../tool-context';
 import { type Tool } from '../tool';
 
 const theme = {
-  selected: new Color3(0.2, 0.4, 0.6),
+  selected: new Color3(1.0, 0.2, 0.2),
 };
 
 /** Tool for selecting objects or faces via ray-picking. */
@@ -57,8 +57,51 @@ export class SelectTool implements Tool {
 
     const mesh = pickedMesh as Mesh;
 
-    if (ctx.selectionState.selectionMode === 'object') {
-      // Object selection: highlight layer glow managed by ctx.setSelection.
+    if (ctx.editorState.selectionMode === 'object') {
+      const event = info.event as PointerEvent;
+
+      if (event.shiftKey) {
+        // Multi-select: toggle this object in/out of the selection list.
+        const current = ctx.selection;
+        if (current?.type === 'multi-object') {
+          const existsIdx = current.objects.findIndex((entry) => entry.objectId === objectId);
+          if (existsIdx >= 0) {
+            // Remove from multi-selection.
+            const next = current.objects.filter((_, idx) => idx !== existsIdx);
+            if (next.length === 1) {
+              ctx.setSelection({ type: 'object', objectId: next[0].objectId, mesh: next[0].mesh, highlightMesh: null });
+            } else if (next.length === 0) {
+              ctx.setSelection(null);
+            } else {
+              ctx.setSelection({ type: 'multi-object', objects: next });
+            }
+          } else {
+            // Add to multi-selection.
+            ctx.setSelection({
+              type: 'multi-object',
+              objects: [...current.objects, { objectId, mesh }],
+            });
+          }
+        } else if (current?.type === 'object') {
+          if (current.objectId === objectId) {
+            ctx.setSelection(null);
+          } else {
+            ctx.setSelection({
+              type: 'multi-object',
+              objects: [
+                { objectId: current.objectId, mesh: current.mesh },
+                { objectId, mesh },
+              ],
+            });
+          }
+        } else {
+          // No selection or face selection: start fresh single select.
+          ctx.setSelection({ type: 'object', objectId, mesh, highlightMesh: null });
+        }
+        return true;
+      }
+
+      // Normal click: single select.
       ctx.setSelection({ type: 'object', objectId, mesh, highlightMesh: null });
       return true;
     }

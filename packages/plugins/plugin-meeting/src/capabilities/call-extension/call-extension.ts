@@ -8,8 +8,6 @@ import type * as Schema from 'effect/Schema';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
-import { FunctionExecutor } from '@dxos/functions-runtime';
-import { ServiceContainer } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -88,8 +86,6 @@ type EntityExtractionEnricherFactoryOptions = {
 };
 
 const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
-  const executor = new FunctionExecutor(new ServiceContainer());
-
   return async (message: Message.Message) => {
     const objects = await space.db
       .query(
@@ -105,7 +101,6 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
         objects: await Promise.all(objects.map((obj) => processContextObject(obj))),
       },
       function: extractionAnthropicFunction,
-      executor,
       options: { timeout: ENTITY_EXTRACTOR_TIMEOUT, fallbackToRaw: true },
     });
 

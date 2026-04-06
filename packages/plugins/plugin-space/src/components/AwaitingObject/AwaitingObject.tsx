@@ -82,10 +82,10 @@ export const AwaitingObject = ({ id }: { id: string }) => {
         <Toast.Description>
           {t(
             found
-              ? 'found object description'
+              ? 'found-object.description'
               : waiting
-                ? 'waiting for object description'
-                : 'object not found description',
+                ? 'waiting-for-object.description'
+                : 'object-not-found.description',
           )}
         </Toast.Description>
       </Toast.Body>
@@ -104,7 +104,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
         ) : (
           <Toast.Close asChild>
             <Button onClick={handleClose}>
-              {t(waiting ? 'close label' : 'confirm label', { ns: osTranslations })}
+              {t(waiting ? 'close.label' : 'confirm.label', { ns: osTranslations })}
             </Button>
           </Toast.Close>
         )}
