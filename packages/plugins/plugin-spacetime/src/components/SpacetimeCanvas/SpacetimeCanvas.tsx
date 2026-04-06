@@ -38,8 +38,8 @@ export type SpacetimeCanvasProps = {
   viewState?: ViewState;
   /** Reactive object count from ECHO subscription. Triggers sync when objects are added/removed. */
   objectCount?: number;
-  /** Called when the selected object changes. */
-  onSelectionChange?: (objectId: string | null) => void;
+  /** Called when the selection changes. Reports all selected object IDs (empty array = cleared). */
+  onSelectionChange?: (objectIds: string[]) => void;
   /** Parent ref to expose the solids map for export. */
   parentSolidsRef?: React.RefObject<Map<string, import('manifold-3d').Manifold> | null>;
   /** Ref to set the importGLB callback (canvas provides the implementation). */
@@ -213,9 +213,11 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             }
           }
           if (next?.type === 'multi-object') {
-            onSelectionChangeRef.current?.(next.entries[0]?.objectId ?? null);
+            onSelectionChangeRef.current?.(next.entries.map((entry) => entry.objectId));
+          } else if (next) {
+            onSelectionChangeRef.current?.([next.objectId]);
           } else {
-            onSelectionChangeRef.current?.(next?.objectId ?? null);
+            onSelectionChangeRef.current?.([]);
           }
 
           // Show vertex table for selected object, or scene overview when nothing selected.

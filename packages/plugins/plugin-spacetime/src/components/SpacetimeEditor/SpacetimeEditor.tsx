@@ -63,6 +63,7 @@ type SpacetimeEditorContextValue = {
 
   selectedObjectId: string | null;
   setSelectedObjectId: (id: string | null) => void;
+  setSelectedObjectIds: (ids: string[]) => void;
 
   selectedTemplate: Model.ObjectTemplate;
   onSelectedTemplateChange: (template: Model.ObjectTemplate) => void;
@@ -239,6 +240,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         editorActions={editorActions}
         selectedObjectId={selectedObjectId}
         setSelectedObjectId={setSelectedObjectId}
+        setSelectedObjectIds={setSelectedObjectIds}
         handleActionRef={handleActionRef}
         solidsRef={solidsRef}
         importGLBRef={importGLBRef}
@@ -316,7 +318,7 @@ const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasPr
     viewState,
     propertiesState,
     selectedObjectId,
-    setSelectedObjectId,
+    setSelectedObjectIds,
     solidsRef: parentSolidsRef,
     importGLBRef: parentImportGLBRef,
     handleActionRef: parentHandleActionRef,
@@ -333,7 +335,7 @@ const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasPr
       selectionMode={selectionState.selectionMode}
       viewState={viewState}
       objectCount={objectCount}
-      onSelectionChange={setSelectedObjectId}
+      onSelectionChange={setSelectedObjectIds}
       parentSolidsRef={parentSolidsRef}
       importGLBRef={parentImportGLBRef}
       handleActionRef={parentHandleActionRef}
