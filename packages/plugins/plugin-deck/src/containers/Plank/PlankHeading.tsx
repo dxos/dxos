@@ -16,7 +16,6 @@ import { useBreakpoints } from '../../hooks';
 import { meta } from '../../meta';
 import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
 import { DeckOperation } from '../../operations';
-import { soloInlinePadding } from '../DeckMain/fragments';
 
 import { usePlankContext } from './PlankContext';
 import { PlankCompanionControls, PlankControls } from './PlankControls';
@@ -142,7 +141,9 @@ export const PlankHeading = memo(
         style={iconSize(5)}
         classNames={[
           'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-coarse',
-          part === 'solo' ? soloInlinePadding : 'px-1',
+          part === 'solo'
+            ? 'ps-[calc(env(safe-area-inset-left)+.25rem)] pe-[calc(env(safe-area-inset-right)+.25rem)]'
+            : 'px-1',
           ...(layoutMode === 'solo--fullscreen'
             ? [
                 hoverableControls,

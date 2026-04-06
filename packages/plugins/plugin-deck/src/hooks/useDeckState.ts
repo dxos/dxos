@@ -36,7 +36,6 @@ export const useDeckState = (): DeckStateHook => {
   const registry = useCapability(Capabilities.AtomRegistry);
   const stateAtom = useCapability(DeckCapabilities.State);
   const ephemeralAtom = useCapability(DeckCapabilities.EphemeralState);
-
   const persistedState = useAtomValue(stateAtom);
   const ephemeralState = useAtomValue(ephemeralAtom);
 
