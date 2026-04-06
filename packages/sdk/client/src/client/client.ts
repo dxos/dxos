@@ -454,10 +454,7 @@ export class Client {
 
     invariant(this._services.services.SystemService, 'SystemService is not available.');
     log('client._open: subscribing to system status...');
-    this._statusStream = this._services.services.SystemService.queryStatus(
-      { interval: 3_000 },
-      { ctx: this._ctx },
-    );
+    this._statusStream = this._services.services.SystemService.queryStatus({ interval: 3_000 }, { ctx: this._ctx });
     this._statusStream.subscribe(
       async ({ status }) => {
         log('client._open: status received', { status });

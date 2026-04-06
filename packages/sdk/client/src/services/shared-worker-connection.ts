@@ -41,11 +41,7 @@ export class SharedWorkerConnection {
     this._systemPort = systemPort;
   }
 
-  async open(params: {
-    origin: string;
-    observabilityGroup?: string;
-    signalTelemetryEnabled?: boolean;
-  }): Promise<void> {
+  async open(params: { origin: string; observabilityGroup?: string; signalTelemetryEnabled?: boolean }): Promise<void> {
     const { RtcTransportService } = await import('@dxos/network-manager');
 
     this._config = await getAsyncProviderValue(this._configProvider);
