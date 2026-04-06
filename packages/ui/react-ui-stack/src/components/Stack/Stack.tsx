@@ -13,7 +13,6 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
-  useMemo,
   useState,
 } from 'react';
 
@@ -157,18 +156,6 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       };
     }, [stackElement, handleScroll]);
 
-    const gridClasses = useMemo(() => {
-      if (!rail) {
-        return orientation === 'horizontal' ? 'grid-rows-1 px-(--stack-gap)' : 'grid-cols-1 py-(--stack-gap)';
-      }
-
-      if (orientation === 'horizontal') {
-        return railGridHorizontal;
-      } else {
-        return railGridVertical;
-      }
-    }, [rail, orientation, size]);
-
     const Container = size === 'contain' ? ScrollContainer : 'div';
 
     return (
@@ -176,7 +163,17 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
         <Container
           {...props}
           {...(Number.isFinite(separatorOnScroll) && { onScroll: handleScroll })}
-          className={mx('grid relative [--stack-gap:var(--spacing-trim-xs)]', gridClasses, classNames)}
+          className={mx(
+            'relative grid [--stack-gap:var(--spacing-trim-xs)]',
+            rail
+              ? orientation === 'horizontal'
+                ? railGridHorizontal
+                : railGridVertical
+              : orientation === 'horizontal'
+                ? 'grid-rows-1 px-(--stack-gap)'
+                : 'grid-cols-1 py-(--stack-gap)',
+            classNames,
+          )}
           style={styles}
           aria-orientation={orientation}
           orientation={orientation}

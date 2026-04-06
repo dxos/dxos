@@ -42,4 +42,4 @@ then `Deck.Content` would access these as needed via the context.
 
 ## Phase 3 (Matrix)
 
-- We will
+We will create a new 'multi' layout.

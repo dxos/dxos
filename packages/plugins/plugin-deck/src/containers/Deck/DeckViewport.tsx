@@ -43,21 +43,24 @@ const DECK_VIEWPORT_NAME = 'DeckViewport';
 export type DeckViewportProps = PropsWithChildren;
 
 /**
- * Deck viewport that renders the main content area.
- * Handles empty state and CSS var sizing; children provide mode-specific content.
+ * Deck viewport that renders the main content area and sets CSS variables for plank sizing.
  */
 export const DeckViewport = ({ children }: DeckViewportProps) => {
-  const { deck, state, settings, layoutMode } = useDeckContext(DECK_VIEWPORT_NAME);
-  const { active, solo, plankSizing } = deck;
-  const { sidebarState, complementarySidebarState } = state;
+  const {
+    deck: { active, solo, plankSizing },
+    state: { sidebarState, complementarySidebarState },
+    settings,
+    layoutMode,
+  } = useDeckContext(DECK_VIEWPORT_NAME);
+
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
 
-  const mainPosition = useMemo(
+  const mainClasses = useMemo(
     () => [
-      'grid !top-[env(safe-area-inset-top)]',
-      topbar && '!top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]',
+      'grid top-[env(safe-area-inset-top)]!',
+      topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]!',
       hoistStatusbar && 'lg:bottom-(--dx-statusbar-size)',
     ],
     [topbar, hoistStatusbar],
@@ -65,8 +68,8 @@ export const DeckViewport = ({ children }: DeckViewportProps) => {
 
   if (!solo && active.length === 0) {
     return (
-      <Main.Content bounce handlesFocus classNames={mainPosition}>
-        <ContentEmpty />
+      <Main.Content bounce handlesFocus classNames={mainClasses}>
+        <DeckContentEmpty />
       </Main.Content>
     );
   }
@@ -75,7 +78,7 @@ export const DeckViewport = ({ children }: DeckViewportProps) => {
     <Main.Content
       bounce
       handlesFocus
-      classNames={mainPosition}
+      classNames={mainClasses}
       style={
         {
           '--main-spacing': settings?.encapsulatedPlanks ? '0.75rem' : '0',
@@ -165,7 +168,7 @@ export const DeckMultiMode = () => {
 
   return (
     <div role='none' className='relative bg-deck-surface overflow-hidden'>
-      <SidebarToggles topbar={topbar} fullscreen={fullscreen} />
+      <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
       <Stack
         classNames={[
           'absolute inset-y-(--main-spacing) -inset-w-px h-[calc(100%-2*var(--main-spacing))]',
@@ -181,7 +184,7 @@ export const DeckMultiMode = () => {
         {active.map((entryId) => (
           <Fragment key={entryId}>
             <PlankSeparator order={order[entryId] - 1} encapsulate={!!settings?.encapsulatedPlanks} />
-            <ConnectedPlank
+            <PlankContainer
               id={entryId}
               part='multi'
               active={active}
@@ -213,7 +216,7 @@ export const DeckSoloMode = () => {
 
   return (
     <div role='none' className='relative overflow-hidden bg-deck-surface'>
-      <SidebarToggles topbar={topbar} fullscreen={fullscreen} />
+      <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
       <StackContext.Provider
         value={{
           orientation: 'horizontal',
@@ -221,7 +224,7 @@ export const DeckSoloMode = () => {
           rail: true,
         }}
       >
-        <ConnectedPlank
+        <PlankContainer
           id={solo}
           part='solo'
           layoutMode={layoutMode}
@@ -244,7 +247,7 @@ const ToggleComplementarySidebarButton = () => (
   <NativeToggleComplementarySidebarButton classNames={mx(sidebarToggleStyles, 'right-2')} />
 );
 
-const SidebarToggles = ({ topbar, fullscreen }: { topbar: boolean; fullscreen: boolean }) => {
+const DeckSidebarToggles = ({ topbar, fullscreen }: { topbar: boolean; fullscreen: boolean }) => {
   if (topbar || fullscreen) {
     return null;
   }
@@ -261,7 +264,7 @@ const SidebarToggles = ({ topbar, fullscreen }: { topbar: boolean; fullscreen: b
 // ContentEmpty
 //
 
-export const ContentEmpty = () => {
+const DeckContentEmpty = () => {
   const breakpoint = useBreakpoints();
   const { deck } = useDeckState();
   const layoutMode = getMode(deck);
@@ -292,12 +295,12 @@ const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: b
   );
 
 //
-// ConnectedPlank
+// PlankContainer
 //
 
 const UNKNOWN_ID = 'unknown_id';
 
-type ConnectedPlankProps = Pick<PlankRootProps, 'layoutMode' | 'part' | 'settings'> &
+type PlankContainerProps = Pick<PlankRootProps, 'layoutMode' | 'part' | 'settings'> &
   Partial<Pick<PlankComponentProps, 'path' | 'order' | 'active'>> & {
     id?: string;
     companionVariant?: string;
@@ -308,84 +311,82 @@ type ConnectedPlankProps = Pick<PlankRootProps, 'layoutMode' | 'part' | 'setting
  * This is the bridge between DeckViewport (which knows about framework hooks) and
  * the pure Plank components (which receive everything via context).
  */
-const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: ConnectedPlankProps) => {
-  const { graph } = useAppGraph();
-  const { invokePromise } = useOperationInvoker();
-  const { state, deck } = useDeckState();
-  const node = useNode(graph, id);
-  const companions = useCompanions(id);
-  const { companionId } = useSelectedCompanion(companions, companionVariant);
-  const resolvedCompanionId = companionVariant ? companionId : undefined;
-  const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
-  const hasCompanion = !!(resolvedCompanionId && currentCompanion);
+const PlankContainer = memo(
+  ({ id = UNKNOWN_ID, layoutMode, part, settings, companionVariant, ...props }: PlankContainerProps) => {
+    const { graph } = useAppGraph();
+    const { invokePromise } = useOperationInvoker();
+    const { state, deck } = useDeckState();
+    const node = useNode(graph, id);
+    const companions = useCompanions(id);
+    const { companionId } = useSelectedCompanion(companions, companionVariant);
+    const resolvedCompanionId = companionVariant ? companionId : undefined;
+    const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
+    const hasCompanion = !!(resolvedCompanionId && currentCompanion);
 
-  const handleAdjust = useCallback(
-    (plankId: string, type: DeckOperation.PartAdjustment) => {
-      if (type === 'close') {
-        if (props.part === 'complementary') {
-          return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+    const handleAdjust = useCallback(
+      (plankId: string, type: DeckOperation.PartAdjustment) => {
+        if (type === 'close') {
+          if (part === 'complementary') {
+            return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+          }
+          return invokePromise(LayoutOperation.Close, { subject: [plankId] });
         }
-        return invokePromise(LayoutOperation.Close, { subject: [plankId] });
-      }
-      return invokePromise(DeckOperation.Adjust, { type, id: plankId });
-    },
-    [invokePromise, props.part],
-  );
+        return invokePromise(DeckOperation.Adjust, { type, id: plankId });
+      },
+      [invokePromise, part],
+    );
 
-  const handleResize = useCallback(
-    (plankId: string, size: number) => invokePromise(DeckOperation.UpdatePlankSize, { id: plankId, size }),
-    [invokePromise],
-  );
+    const handleResize = useCallback(
+      (plankId: string, size: number) => invokePromise(DeckOperation.UpdatePlankSize, { id: plankId, size }),
+      [invokePromise],
+    );
 
-  const handleScrollIntoView = useCallback(
-    (subject?: string) => invokePromise(LayoutOperation.ScrollIntoView, { subject }),
-    [invokePromise],
-  );
+    const handleScrollIntoView = useCallback(
+      (subject?: string) => invokePromise(LayoutOperation.ScrollIntoView, { subject }),
+      [invokePromise],
+    );
 
-  const handleChangeCompanion = useCallback(
-    (companion: string | null) => invokePromise(DeckOperation.ChangeCompanion, { companion }),
-    [invokePromise],
-  );
+    const handleChangeCompanion = useCallback(
+      (companion: string | null) => invokePromise(DeckOperation.ChangeCompanion, { companion }),
+      [invokePromise],
+    );
 
-  return (
-    <Plank.Root
-      graph={graph}
-      layoutMode={props.layoutMode}
-      part={props.part}
-      settings={props.settings}
-      popoverAnchorId={state.popoverAnchorId}
-      scrollIntoView={state.scrollIntoView}
-      plankSizing={deck.plankSizing}
-      onAdjust={handleAdjust}
-      onResize={handleResize}
-      onScrollIntoView={handleScrollIntoView}
-      onChangeCompanion={handleChangeCompanion}
-    >
-      <Plank.Content
-        solo={props.part === 'solo'}
-        companion={hasCompanion}
-        encapsulate={!!props.settings?.encapsulatedPlanks}
+    return (
+      <Plank.Root
+        graph={graph}
+        layoutMode={layoutMode}
+        part={part}
+        settings={settings}
+        popoverAnchorId={state.popoverAnchorId}
+        scrollIntoView={state.scrollIntoView}
+        plankSizing={deck.plankSizing}
+        onAdjust={handleAdjust}
+        onResize={handleResize}
+        onScrollIntoView={handleScrollIntoView}
+        onChangeCompanion={handleChangeCompanion}
       >
-        <Plank.Component
-          id={id}
-          node={node}
-          companioned={hasCompanion ? 'primary' : undefined}
-          companions={hasCompanion ? [] : companions}
-          {...props}
-          {...(props.part === 'solo' ? { part: 'solo-primary' } : {})}
-        />
-        {hasCompanion && (
+        <Plank.Content solo={part === 'solo'} companion={hasCompanion} encapsulate={!!settings?.encapsulatedPlanks}>
           <Plank.Component
-            id={resolvedCompanionId}
-            node={currentCompanion}
-            companions={companions}
-            companioned='companion'
-            primary={node}
+            id={id}
+            node={node}
+            companioned={hasCompanion ? 'primary' : undefined}
+            companions={hasCompanion ? [] : companions}
+            {...(part === 'solo' ? { part: 'solo-primary' } : { part })}
             {...props}
-            {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: (props.order ?? 0) + 1 })}
           />
-        )}
-      </Plank.Content>
-    </Plank.Root>
-  );
-});
+          {hasCompanion && (
+            <Plank.Component
+              id={resolvedCompanionId}
+              node={currentCompanion}
+              companions={companions}
+              companioned='companion'
+              primary={node}
+              {...(part === 'solo' ? { part: 'solo-companion' } : { part, order: (props.order ?? 0) + 1 })}
+              {...props}
+            />
+          )}
+        </Plank.Content>
+      </Plank.Root>
+    );
+  },
+);

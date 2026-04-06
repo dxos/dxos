@@ -9,7 +9,7 @@ import { LayoutOperation, NOT_FOUND_PATH, fromUrlPath, getWorkspaceFromPath, toU
 import { invariant } from '@dxos/invariant';
 import { Node } from '@dxos/plugin-graph';
 
-import { DeckCapabilities, type DeckStateProps, defaultDeck } from '../../types';
+import { DeckCapabilities, type StoredDeckState, defaultDeck } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -29,7 +29,7 @@ export default Capability.makeModule(
     };
 
     // Helper to update state.
-    const updateState = (fn: (current: DeckStateProps) => DeckStateProps) => {
+    const updateState = (fn: (current: StoredDeckState) => StoredDeckState) => {
       registry.set(stateAtom, fn(getState()));
     };
 

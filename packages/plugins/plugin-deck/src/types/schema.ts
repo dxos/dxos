@@ -61,7 +61,6 @@ export const defaultDeck: DeckState = {
 const LayoutMode = Schema.Literal('multi', 'solo', 'solo--fullscreen');
 export type LayoutMode = Schema.Schema.Type<typeof LayoutMode>;
 export const isLayoutMode = (value: any): value is LayoutMode => Schema.is(LayoutMode)(value);
-
 export const getMode = (deck: DeckState | DeepReadonly<DeckState>): LayoutMode => {
   if (deck.solo) {
     return deck.fullscreen ? 'solo--fullscreen' : 'solo';
@@ -71,7 +70,7 @@ export const getMode = (deck: DeckState | DeepReadonly<DeckState>): LayoutMode =
 };
 
 // Persisted plugin state (stored in KVS/localStorage).
-export const DeckStateSchema = Schema.Struct({
+export const StoredDeckState = Schema.Struct({
   sidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
   complementarySidebarState: Schema.Literal('closed', 'collapsed', 'expanded'),
   complementarySidebarPanel: Schema.optional(Schema.String),
@@ -80,11 +79,10 @@ export const DeckStateSchema = Schema.Struct({
   decks: Schema.mutable(Schema.Record({ key: Schema.String, value: Schema.mutable(DeckState) })),
   previousMode: Schema.mutable(Schema.Record({ key: Schema.String, value: LayoutMode })),
 }).pipe(Schema.mutable);
-export type DeckStateProps = Schema.Schema.Type<typeof DeckStateSchema>;
+export type StoredDeckState = Schema.Schema.Type<typeof StoredDeckState>;
 
-// TODO(burdon): Factor out state (in common with other layouts?)
 // Transient/ephemeral plugin state (not persisted).
-export const DeckEphemeralStateSchema = Schema.Struct({
+export const EphemeralDeckState = Schema.Struct({
   dialogOpen: Schema.Boolean,
   dialogType: Schema.optional(Schema.Literal('default', 'alert')),
   dialogBlockAlign: Schema.optional(Schema.Literal('start', 'center', 'end')),
@@ -92,7 +90,6 @@ export const DeckEphemeralStateSchema = Schema.Struct({
   dialogOverlayStyle: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   /** Data to be passed to the dialog Surface. */
   dialogContent: Schema.optional(Schema.Any),
-
   popoverOpen: Schema.Boolean,
   popoverSide: Schema.optional(Schema.Literal('top', 'right', 'bottom', 'left')),
   popoverAnchor: Schema.optional(Schema.Any),
@@ -103,17 +100,15 @@ export const DeckEphemeralStateSchema = Schema.Struct({
   popoverContentRef: Schema.optional(Schema.String),
   /** Data to be passed to the popover Surface. */
   popoverContent: Schema.optional(Schema.Any),
-
   toasts: Schema.mutable(Schema.Array(LayoutOperation.Toast)),
   currentUndoId: Schema.optional(Schema.String),
-
   /** The identifier of a component to scroll into view when it is mounted. */
   scrollIntoView: Schema.optional(Schema.String),
 }).pipe(Schema.mutable);
-export type DeckEphemeralStateProps = Schema.Schema.Type<typeof DeckEphemeralStateSchema>;
+export type EphemeralDeckState = Schema.Schema.Type<typeof EphemeralDeckState>;
 
 // Combined state type (for convenience in components that need both).
-export type DeckPluginState = DeckStateProps & DeckEphemeralStateProps;
+export type DeckPluginState = StoredDeckState & EphemeralDeckState;
 
 export namespace DeckAction {
   const PartAdjustmentSchema = Schema.Union(
