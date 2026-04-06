@@ -25,7 +25,6 @@ import {
   type EditorState,
   DEFAULT_EDITOR_STATE,
   getSelectedObjectIds,
-  type SelectionMode,
 } from '../../tools';
 import { type Scene, Model } from '../../types';
 
