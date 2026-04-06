@@ -172,13 +172,19 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         const setSelection = (next: Selection | null) => {
           // Clean up previous selection.
           const prev = selectionRef.current;
-          if (prev && prev.type !== 'multi-object') {
-            if (prev.highlightMesh) {
-              highlightLayer.removeMesh(prev.highlightMesh);
-              prev.highlightMesh.dispose();
-            }
-            if (prev.type === 'object') {
-              highlightLayer.removeMesh(prev.mesh);
+          if (prev) {
+            if (prev.type === 'multi-object') {
+              for (const entry of prev.entries) {
+                highlightLayer.removeMesh(entry.mesh);
+              }
+            } else {
+              if (prev.highlightMesh) {
+                highlightLayer.removeMesh(prev.highlightMesh);
+                prev.highlightMesh.dispose();
+              }
+              if (prev.type === 'object') {
+                highlightLayer.removeMesh(prev.mesh);
+              }
             }
           }
           // Apply new selection.
@@ -187,9 +193,16 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             highlightLayer.addMesh(next.mesh, theme.selected);
           } else if (next?.type === 'face' && next.highlightMesh) {
             highlightLayer.addMesh(next.highlightMesh, theme.selected);
+          } else if (next?.type === 'multi-object') {
+            for (const entry of next.entries) {
+              highlightLayer.addMesh(entry.mesh, theme.selected);
+            }
           }
-          const nextObjectId = next && next.type !== 'multi-object' ? next.objectId : null;
-          onSelectionChangeRef.current?.(nextObjectId);
+          if (next?.type === 'multi-object') {
+            onSelectionChangeRef.current?.(next.entries[0]?.objectId ?? null);
+          } else {
+            onSelectionChangeRef.current?.(next?.objectId ?? null);
+          }
 
           // Show vertex table for selected object, or scene overview when nothing selected.
           if (next && next.type !== 'multi-object') {

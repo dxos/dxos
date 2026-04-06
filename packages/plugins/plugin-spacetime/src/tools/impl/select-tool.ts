@@ -58,7 +58,50 @@ export class SelectTool implements Tool {
     const mesh = pickedMesh as Mesh;
 
     if (ctx.selectionState.selectionMode === 'object') {
-      // Object selection: highlight layer glow managed by ctx.setSelection.
+      const event = info.event as PointerEvent;
+
+      if (event.shiftKey) {
+        // Multi-select: toggle this object in/out of the selection list.
+        const current = ctx.selection;
+        if (current?.type === 'multi-object') {
+          const existsIdx = current.entries.findIndex((entry) => entry.objectId === objectId);
+          if (existsIdx >= 0) {
+            // Remove from multi-selection.
+            const next = current.entries.filter((_, idx) => idx !== existsIdx);
+            if (next.length === 1) {
+              ctx.setSelection({ type: 'object', objectId: next[0].objectId, mesh: next[0].mesh, highlightMesh: null });
+            } else if (next.length === 0) {
+              ctx.setSelection(null);
+            } else {
+              ctx.setSelection({ type: 'multi-object', entries: next });
+            }
+          } else {
+            // Add to multi-selection.
+            ctx.setSelection({
+              type: 'multi-object',
+              entries: [...current.entries, { objectId, mesh }],
+            });
+          }
+        } else if (current?.type === 'object') {
+          if (current.objectId === objectId) {
+            ctx.setSelection(null);
+          } else {
+            ctx.setSelection({
+              type: 'multi-object',
+              entries: [
+                { objectId: current.objectId, mesh: current.mesh },
+                { objectId, mesh },
+              ],
+            });
+          }
+        } else {
+          // No selection or face selection: start fresh single select.
+          ctx.setSelection({ type: 'object', objectId, mesh, highlightMesh: null });
+        }
+        return true;
+      }
+
+      // Normal click: single select.
       ctx.setSelection({ type: 'object', objectId, mesh, highlightMesh: null });
       return true;
     }
