@@ -79,6 +79,15 @@ async createSpace(options: CreateSpaceOptions = {}): Promise<Space> {
 }
 ```
 
+For **RPC service methods**, use `options.ctx` which carries the caller's trace context propagated across the wire by `ContextRpcCodec`:
+
+```typescript
+testCall: async (req: TestRequest, options?: RequestOptions) => {
+  const ctx = options?.ctx ?? Context.default();
+  return this._handleTestCall(ctx, req);
+},
+```
+
 ### 2. Event subscriptions and callbacks: use lifecycle ctx
 
 Callbacks are new entry points without a caller-provided ctx. Use `this._ctx` from `Resource` or a manually managed `Context`.
