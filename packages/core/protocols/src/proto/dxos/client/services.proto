@@ -332,6 +332,8 @@ message Space {
   optional PipelineState pipeline = 3;
   optional dxos.error.Error error = 4;
   optional dxos.echo.metadata.EdgeReplicationSetting edge_replication = 6;
+  repeated string tags = 7;
+  dxos.halo.credentials.MembershipPolicy membership_policy = 8;
 
   repeated SpaceMember members = 10;
   optional dxos.keys.PublicKey creator = 11;
@@ -341,6 +343,11 @@ message Space {
 }
 
 // TODO(burdon): Create type for epoch?
+
+message CreateSpaceRequest {
+  repeated string tags = 1;
+  dxos.halo.credentials.MembershipPolicy membership_policy = 2;
+}
 
 message UpdateSpaceRequest {
   dxos.keys.PublicKey space_key = 1;
@@ -458,7 +465,7 @@ message ImportSpaceResponse {
 }
 
 service SpacesService {
-  rpc CreateSpace(google.protobuf.Empty) returns (Space);
+  rpc CreateSpace(CreateSpaceRequest) returns (Space);
   rpc UpdateSpace(UpdateSpaceRequest) returns (google.protobuf.Empty);
   rpc QuerySpaces(google.protobuf.Empty) returns (stream QuerySpacesResponse);
 

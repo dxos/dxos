@@ -45,7 +45,7 @@ const AnchoredTo = Schema.Struct({
   anchor: Schema.optional(Schema.String),
 }).pipe(
   Type.relation({
-    typename: 'org.dxos.relation.anchored-to',
+    typename: 'org.dxos.relation.anchoredTo',
     version: '0.1.0',
     source: Type.Obj,
     target: Document,

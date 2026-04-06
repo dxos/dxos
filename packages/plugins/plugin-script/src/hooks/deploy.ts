@@ -43,7 +43,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
 
   // TODO(wittjosiah): Should this be an action?
   const errorItem = createMenuAction('error', () => {}, {
-    label: value.error ?? ['no error label', { ns: meta.id }],
+    label: value.error ?? ['no-error.label', { ns: meta.id }],
     icon: 'ph--warning-circle--regular',
     hidden: !value.error,
     classNames: value.error && messageValence('error'),
@@ -86,7 +86,7 @@ export const createDeploy = ({ state, script, space, fn, client, existingFunctio
     },
     {
       type: 'copy',
-      label: ['copy link label', { ns: meta.id }],
+      label: ['copy-link.label', { ns: meta.id }],
       icon: 'ph--link--regular',
       disabled: !value.functionUrl,
     },

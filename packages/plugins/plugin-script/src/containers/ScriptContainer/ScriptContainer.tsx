@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type SurfaceComponentProps } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { type Script } from '@dxos/functions';
@@ -15,12 +15,12 @@ import { createDataExtensions, listener, stackItemContentEditorClassNames } from
 
 import { ScriptToolbar, TypescriptEditor, type TypescriptEditorProps } from '../../components';
 import { useDeployState, useToolbarState } from '../../hooks';
-import { type ScriptSettings } from '../../types';
+import { type Settings } from '../../types';
 
-export type ScriptEditorProps = SurfaceComponentProps<
+export type ScriptEditorProps = ObjectSurfaceProps<
   Script.Script,
   {
-    settings?: ScriptSettings;
+    settings?: Settings.Settings;
   } & Pick<TypescriptEditorProps, 'env'>
 >;
 

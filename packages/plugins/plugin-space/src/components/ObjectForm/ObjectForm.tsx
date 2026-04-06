@@ -98,7 +98,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       defaultValues={values}
       createTypename={Type.getTypename(Tag.Tag)}
       createOptionIcon='ph--plus--regular'
-      createOptionLabel={['add tag label', { ns: pluginMeta.id }]}
+      createOptionLabel={['add-tag.label', { ns: pluginMeta.id }]}
       createInitialValuePath='label'
       createFieldMap={createFieldMap}
       db={db}

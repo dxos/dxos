@@ -106,7 +106,7 @@ export class Peer {
   /**
    * Respond to remote offer.
    */
-  async onOffer(message: OfferMessage): Promise<Answer> {
+  async onOffer(_ctx: Context, message: OfferMessage): Promise<Answer> {
     const remote = message.author;
 
     if (
@@ -169,7 +169,7 @@ export class Peer {
   /**
    * Initiate a connection to the remote peer.
    */
-  async initiateConnection(): Promise<void> {
+  async initiateConnection(ctx: Context): Promise<void> {
     invariant(!this.initiating, 'Initiation in progress.');
     invariant(!this.connection, 'Already connected.');
     const sessionId = PublicKey.random();
@@ -183,7 +183,7 @@ export class Peer {
       await this._connectionLimiter.connecting(sessionId);
       connection.initiate();
 
-      answer = await this._signalMessaging.offer({
+      answer = await this._signalMessaging.offer(ctx, {
         author: this.localInfo,
         recipient: this.remoteInfo,
         sessionId,
@@ -378,13 +378,13 @@ export class Peer {
     log('closed', { peerId: this.remoteInfo, sessionId: connection.sessionId });
   }
 
-  async onSignal(message: SignalMessage): Promise<void> {
+  async onSignal(ctx: Context, message: SignalMessage): Promise<void> {
     if (!this.connection) {
       log('dropping signal message for non-existent connection', { message });
       return;
     }
 
-    await this.connection.signal(message);
+    await this.connection.signal(ctx, message);
   }
 
   @synchronized

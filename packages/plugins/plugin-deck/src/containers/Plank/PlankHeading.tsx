@@ -1,0 +1,219 @@
+//
+// Copyright 2024 DXOS.org
+//
+
+import React, { Fragment, type MouseEvent, memo, useCallback, useEffect, useMemo } from 'react';
+
+import { Surface } from '@dxos/app-framework/ui';
+import { getCompanionVariant } from '@dxos/app-toolkit';
+import { Graph, type Node, useActionRunner } from '@dxos/plugin-graph';
+import { Icon, IconButton, Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { StackItem, type StackItemSigilAction } from '@dxos/react-ui-stack';
+import { TextTooltip } from '@dxos/react-ui-text-tooltip';
+import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dxos/ui-theme';
+
+import { useBreakpoints } from '../../hooks';
+import { meta } from '../../meta';
+import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
+import { DeckOperation } from '../../operations';
+
+import { usePlankContext } from './PlankRoot';
+import { PlankCompanionControls, PlankControls } from './PlankControls';
+
+const MAX_COMPANIONS = 5;
+
+export type PlankHeadingProps = {
+  id: string;
+  part: ResolvedPart;
+  layoutMode?: LayoutMode;
+  node?: Node.Node;
+  deckEnabled?: boolean;
+  canIncrementStart?: boolean;
+  canIncrementEnd?: boolean;
+  popoverAnchorId?: string;
+  primaryId?: string;
+  pending?: boolean;
+  companioned?: 'primary' | 'companion';
+  companions?: Node.Node[];
+  actions?: StackItemSigilAction[];
+};
+
+export const PlankHeading = memo(
+  ({
+    id,
+    part,
+    node,
+    deckEnabled,
+    canIncrementStart,
+    canIncrementEnd,
+    popoverAnchorId,
+    primaryId,
+    pending,
+    companioned,
+    companions,
+    layoutMode,
+    actions = [],
+  }: PlankHeadingProps) => {
+    const { t } = useTranslation(meta.id);
+    const { graph, onAdjust, onChangeCompanion } = usePlankContext('PlankHeading');
+    const runAction = useActionRunner();
+    const breakpoint = useBreakpoints();
+    const icon = node?.properties?.icon ?? 'ph--placeholder--regular';
+    const label = pending
+      ? t('pending.heading')
+      : toLocalizedString(node?.properties?.label ?? ['plank-heading-fallback.label', { ns: meta.id }], t);
+
+    const isCompanionNode = node?.type === PLANK_COMPANION_TYPE;
+
+    useEffect(() => {
+      const frame = requestAnimationFrame(() => {
+        // Load actions for the node.
+        if (node) {
+          void Graph.expand(graph, node.id, 'child');
+        }
+      });
+
+      return () => cancelAnimationFrame(frame);
+    }, [node]);
+
+    const attendableId = primaryId ?? id;
+    const capabilities = useMemo(
+      () => ({
+        deck: deckEnabled ?? true,
+        solo: breakpoint !== 'mobile' && (part === 'solo' || part === 'multi'),
+        incrementStart: canIncrementStart,
+        incrementEnd: canIncrementEnd,
+        fullscreen: !isCompanionNode,
+        companion: !isCompanionNode && companions && companions.length > 0,
+      }),
+      [breakpoint, part, companions, canIncrementStart, canIncrementEnd, isCompanionNode, deckEnabled],
+    );
+
+    const variant = isCompanionNode ? getCompanionVariant(id) : undefined;
+    const sigilActions = useMemo(() => {
+      if (!node) {
+        return undefined;
+      } else if (variant) {
+        return [];
+      } else {
+        return [
+          actions,
+          Graph.getActions(graph, node.id).filter((action) =>
+            ['list-item', 'list-item-primary', 'heading-list-item'].includes(action.properties.disposition),
+          ),
+        ].filter((a) => a.length > 0);
+      }
+    }, [actions, node, variant, graph]);
+
+    const handleAction = useCallback(
+      (action: StackItemSigilAction) => {
+        if (typeof action.data === 'function') {
+          void runAction(action as Node.Action, { parent: node, caller: meta.id });
+        }
+      },
+      [node, runAction],
+    );
+
+    const handlePlankAction = useCallback(
+      (eventType: DeckOperation.PartAdjustment) => {
+        onAdjust?.(id, eventType);
+      },
+      [onAdjust, id],
+    );
+
+    const ActionRoot = node && popoverAnchorId === `${meta.id}:${node.id}` ? Popover.Anchor : Fragment;
+
+    const handleTabClick = useCallback(
+      (event: MouseEvent) => {
+        const target = (event.target as HTMLElement).closest('[data-id]') as HTMLElement | null;
+        const tabId = target?.dataset?.id;
+        if (tabId) {
+          onChangeCompanion?.(tabId);
+        }
+      },
+      [onChangeCompanion],
+    );
+
+    return (
+      <StackItem.Heading
+        data-tauri-drag-region
+        data-plank-heading
+        style={iconSize(5)}
+        classNames={[
+          'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-coarse',
+          part === 'solo'
+            ? 'ps-[calc(env(safe-area-inset-left)+.25rem)] pe-[calc(env(safe-area-inset-right)+.25rem)]'
+            : 'px-1',
+          ...(layoutMode === 'solo--fullscreen'
+            ? [
+                hoverableControls,
+                hoverableFocusedWithinControls,
+                '*:transition-opacity *:opacity-(--controls-opacity) bg-transparent border-transparent transition-[background-color,border-color]',
+                'hover-hover:hover:bg-header-surface focus-within:bg-header-surface hover-hover:hover:border-subdued-separator focus-within:border-subdued-separator',
+              ]
+            : []),
+        ]}
+      >
+        {companions && isCompanionNode ? (
+          /* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */
+          <div data-tauri-drag-region role='none' className='flex-1 min-w-0 overflow-x-auto scrollbar-none flex gap-1'>
+            {companions.map(({ id, properties: { icon, label } }) => (
+              <IconButton
+                key={id}
+                data-id={id}
+                icon={icon}
+                iconOnly={companions.length > MAX_COMPANIONS && node?.id !== id}
+                label={toLocalizedString(label, t)}
+                variant={node?.id === id ? 'primary' : 'ghost'}
+                onClick={handleTabClick}
+              />
+            ))}
+          </div>
+        ) : (
+          <>
+            <ActionRoot>
+              {node && sigilActions ? (
+                <StackItem.Sigil
+                  icon={icon}
+                  related={part === 'complementary'}
+                  attendableId={attendableId}
+                  triggerLabel={t('actions-menu.label')}
+                  actions={sigilActions}
+                  onAction={handleAction}
+                >
+                  <Surface.Surface role='menu-footer' data={{ subject: node.data }} />
+                </StackItem.Sigil>
+              ) : (
+                <StackItem.SigilButton>
+                  <span className='sr-only'>{label}</span>
+                  <Icon icon={icon} />
+                </StackItem.SigilButton>
+              )}
+            </ActionRoot>
+            <TextTooltip text={label} onlyWhenTruncating>
+              <StackItem.HeadingLabel
+                data-tauri-drag-region
+                attendableId={attendableId}
+                related={part === 'complementary'}
+                {...(pending && { classNames: 'text-description' })}
+              >
+                {label}
+              </StackItem.HeadingLabel>
+            </TextTooltip>
+          </>
+        )}
+        {node && part !== 'complementary' && <Surface.Surface role='navbar-end' data={{ subject: node.data }} />}
+        {companioned === 'companion' ? (
+          <PlankCompanionControls primary={primaryId} />
+        ) : (
+          <PlankControls
+            capabilities={capabilities}
+            layoutMode={layoutMode}
+            close={part === 'complementary' ? 'minify-end' : true}
+            onClick={handlePlankAction}
+          />
+        )}
+      </StackItem.Heading>
+    );
+  },
+);

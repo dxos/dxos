@@ -2,44 +2,46 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Atom } from '@effect-atom/atom-react';
+import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { SHARED } from '@dxos/plugin-space/types';
+import { isNonNullable } from '@dxos/util';
 import { Expando, Text } from '@dxos/schema';
 
 import { meta } from '../../meta';
+import { NativeFilesystemOperation } from '../../operations';
 import {
   NativeFilesystemCapabilities,
-  NativeFilesystemOperation,
   isFilesystemDirectory,
   isFilesystemWorkspace,
-  type NativeMarkdownDocumentsService,
-  type FilesystemDirectory,
   type FilesystemEntry,
   type FilesystemFile,
   type FilesystemWorkspace,
   type NativeFilesystemState,
 } from '../../types';
+import { findDirectoryById } from '../../util';
+
+import type { FilesystemManager } from '../state';
 
 const FILESYSTEM_TYPE = `${meta.id}.workspace`;
 const SETTINGS_TYPE = `${meta.id}.settings`;
 const GENERAL_TYPE = `${meta.id}.general`;
 const DIRECTORY_TYPE = `${meta.id}.directory`;
-const IMAGE_TYPE = `${meta.id}.image`;
+const MARKDOWN_PENDING_TYPE = `${meta.id}.markdown-pending`;
 
 const workspaceRearrangeCache = new Map<string, (nextOrder: (FilesystemWorkspace | unknown)[]) => void>();
 
 export const createFilesystemEntryExtensions = (
   stateCapabilitiesAtom: Atom.Atom<Atom.Writable<NativeFilesystemState>[]>,
-  nativeMarkdownDocsCapabilitiesAtom: Atom.Atom<NativeMarkdownDocumentsService[]>,
+  filesystemManagerCapabilitiesAtom: Atom.Atom<FilesystemManager.FilesystemManager[]>,
 ) =>
   Effect.all([
     GraphBuilder.createExtension({
@@ -47,8 +49,8 @@ export const createFilesystemEntryExtensions = (
       match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
-        const [nativeMarkdownDocs] = get(nativeMarkdownDocsCapabilitiesAtom);
-        if (!stateAtom || !nativeMarkdownDocs) {
+        const [filesystemManager] = get(filesystemManagerCapabilitiesAtom);
+        if (!stateAtom || !filesystemManager) {
           return Effect.succeed([]);
         }
 
@@ -56,7 +58,11 @@ export const createFilesystemEntryExtensions = (
         const state: NativeFilesystemState = get(stateAtom);
         const workspace = state.workspaces.find((item) => item.id === workspaceId);
         return Effect.succeed(
-          workspace ? workspace.children.map((entry) => constructEntryNode(entry, nativeMarkdownDocs)) : [],
+          workspace
+            ? workspace.children
+                .map((entry) => constructEntryNode(entry, filesystemManager, workspaceId, get))
+                .filter(isNonNullable)
+            : [],
         );
       },
     }),
@@ -66,16 +72,20 @@ export const createFilesystemEntryExtensions = (
       match: NodeMatcher.whenNodeType(DIRECTORY_TYPE),
       connector: (node, get) => {
         const [stateAtom] = get(stateCapabilitiesAtom);
-        const [nativeMarkdownDocs] = get(nativeMarkdownDocsCapabilitiesAtom);
-        if (!stateAtom || !nativeMarkdownDocs) {
+        const [filesystemManager] = get(filesystemManagerCapabilitiesAtom);
+        if (!stateAtom || !filesystemManager) {
           return Effect.succeed([]);
         }
 
-        const directoryId = (node.data as FilesystemDirectory).id;
+        const directoryId = (node.data as { id: string }).id;
         const state: NativeFilesystemState = get(stateAtom);
-        const directory = findDirectoryById(state.workspaces, directoryId);
+        const result = findDirectoryById(state.workspaces, directoryId);
         return Effect.succeed(
-          directory ? directory.children.map((entry) => constructEntryNode(entry, nativeMarkdownDocs)) : [],
+          result
+            ? result.directory.children
+                .map((entry) => constructEntryNode(entry, filesystemManager, result.workspaceId, get))
+                .filter(isNonNullable)
+            : [],
         );
       },
     }),
@@ -85,13 +95,11 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
     const stateCapabilitiesAtom = yield* Capability.atom(NativeFilesystemCapabilities.State);
-    const nativeMarkdownDocsCapabilitiesAtom = yield* Capability.atom(
-      NativeFilesystemCapabilities.NativeMarkdownDocuments,
-    );
+    const filesystemManagerCapabilitiesAtom = yield* Capability.atom(NativeFilesystemCapabilities.FilesystemManager);
     const appGraphCapabilitiesAtom = capabilities.atom(AppCapabilities.AppGraph);
     const filesystemEntryExtensions = yield* createFilesystemEntryExtensions(
       stateCapabilitiesAtom,
-      nativeMarkdownDocsCapabilitiesAtom,
+      filesystemManagerCapabilitiesAtom,
     );
 
     const extensions = yield* Effect.all([
@@ -110,7 +118,7 @@ export default Capability.makeModule(
                 }
               }),
               properties: {
-                label: ['open directory label', { ns: meta.id }],
+                label: ['open-directory.label', { ns: meta.id }],
                 icon: 'ph--folder-open--regular',
                 testId: 'nativeFilesystem.openDirectory',
                 disposition: 'menu',
@@ -130,16 +138,15 @@ export default Capability.makeModule(
 
           const state: NativeFilesystemState = get(stateAtom);
           const client = capabilities.get(ClientCapabilities.Client);
-          const isReadyAtom = CreateAtom.fromObservable(client.spaces.isReady);
-          const isReady = get(isReadyAtom);
+          const personalSpace = getPersonalSpace(client);
 
-          if (!state.workspaces.length || !isReady) {
+          if (!state.workspaces.length || !personalSpace) {
             return Effect.succeed([]);
           }
 
           let spacesOrder: Obj.Any | undefined;
           let orderMap = new Map<string, number>();
-          const [order] = get(AtomQuery.make(client.spaces.default.db, Filter.type(Expando.Expando, { key: SHARED })));
+          const [order] = get(AtomQuery.make(personalSpace.db, Filter.type(Expando.Expando, { key: SHARED })));
           if (order) {
             const snapshot = get(AtomObj.make(order)) as { order?: string[] } | undefined;
             const orderArray: string[] = snapshot?.order ?? [];
@@ -201,7 +208,7 @@ export default Capability.makeModule(
                     type: SETTINGS_TYPE,
                     data: null,
                     properties: {
-                      label: ['settings panel label', { ns: meta.id }],
+                      label: ['settings-panel.label', { ns: meta.id }],
                       icon: 'ph--faders--regular',
                       disposition: 'alternate-tree',
                     },
@@ -223,7 +230,7 @@ export default Capability.makeModule(
               type: GENERAL_TYPE,
               data: GENERAL_TYPE,
               properties: {
-                label: ['settings general label', { ns: meta.id }],
+                label: ['settings-general.label', { ns: meta.id }],
                 icon: 'ph--sliders--regular',
                 position: 'hoist',
               },
@@ -239,10 +246,15 @@ export default Capability.makeModule(
   }),
 );
 
+/** Graph-facing subset of FilesystemManager used to resolve markdown nodes. */
+type MarkdownResolver = Pick<FilesystemManager.FilesystemManager, 'markdownBindingAtom' | 'getByFileId'>;
+
 const constructEntryNode = (
   entry: FilesystemEntry,
-  nativeMarkdownDocs: NativeMarkdownDocumentsService,
-): Node.NodeArg<any> => {
+  filesystemManager: MarkdownResolver,
+  workspaceId: string,
+  get: Atom.Context,
+): Node.NodeArg<any> | null => {
   if (isFilesystemDirectory(entry)) {
     return {
       id: entry.id,
@@ -258,59 +270,37 @@ const constructEntryNode = (
 
   const file = entry as FilesystemFile;
   if (file.type === 'markdown') {
-    const text = nativeMarkdownDocs.getOrCreate(file);
+    void get(filesystemManager.markdownBindingAtom(file.id));
+    const text = filesystemManager.getByFileId(file.id);
+    if (text) {
+      return {
+        id: file.id,
+        type: Text.Text.typename,
+        data: text,
+        properties: {
+          label: file.name,
+          icon: 'ph--file-text--regular',
+          modified: file.modified,
+          nativeFilesystemFileId: file.id,
+          nativeFilesystemPath: file.path,
+        },
+      };
+    }
+
     return {
       id: file.id,
-      type: Text.Text.typename,
-      data: text,
+      type: MARKDOWN_PENDING_TYPE,
+      data: null,
       properties: {
         label: file.name,
         icon: 'ph--file-text--regular',
         modified: file.modified,
         nativeFilesystemFileId: file.id,
         nativeFilesystemPath: file.path,
-        persistenceClass: 'memory',
       },
     };
   }
 
-  return {
-    id: file.id,
-    type: IMAGE_TYPE,
-    data: file,
-    properties: {
-      label: file.name,
-      icon: 'ph--image--regular',
-    },
-  };
-};
-
-const findDirectoryById = (workspaces: FilesystemWorkspace[], directoryId: string): FilesystemDirectory | undefined => {
-  for (const workspace of workspaces) {
-    const directory = findDirectoryInEntries(workspace.children, directoryId);
-    if (directory) {
-      return directory;
-    }
-  }
-
-  return undefined;
-};
-
-const findDirectoryInEntries = (entries: FilesystemEntry[], directoryId: string): FilesystemDirectory | undefined => {
-  for (const entry of entries) {
-    if (!isFilesystemDirectory(entry)) {
-      continue;
-    }
-
-    if (entry.id === directoryId) {
-      return entry;
-    }
-
-    const nestedDirectory = findDirectoryInEntries(entry.children, directoryId);
-    if (nestedDirectory) {
-      return nestedDirectory;
-    }
-  }
-
-  return undefined;
+  // Unsupported file type — skip.
+  return null;
 };

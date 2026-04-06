@@ -18,13 +18,13 @@ export const UserFeedback = Schema.Struct({
     Schema.nonEmptyString(),
     Schema.maxLength(4_096),
     Schema.annotations({
-      title: t['feedback textarea label'],
-      description: t['feedback textarea placeholder'],
+      title: t['feedback-textarea.label'],
+      description: t['feedback-textarea.placeholder'],
     }),
   ),
   includeLogs: Schema.Boolean.pipe(
     Schema.annotations({
-      title: t['include debug logs label'],
+      title: t['include-debug-logs.label'],
     }),
     Schema.optional,
   ),

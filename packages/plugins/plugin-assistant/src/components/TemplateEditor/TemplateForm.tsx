@@ -113,7 +113,7 @@ export const TemplateForm = ({ id, template, commandEditable = true, onChange }:
                   <div>
                     <Input.Root>
                       <Input.TextInput
-                        placeholder={t('command placeholder')}
+                        placeholder={t('command.placeholder')}
                         classNames='w-full bg-transparent'
                         value={input.default ?? ''}
                         onChange={(event) => handleInputDefaultChange(input.name, event.target.value)}

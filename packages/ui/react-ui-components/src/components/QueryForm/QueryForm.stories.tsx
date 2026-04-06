@@ -44,7 +44,7 @@ const meta = {
           <QueryForm {...args} onChange={setQuery} />
         </Toolbar.Root>
 
-        <Json data={query} classNames='p-2 text-xs' />
+        <Json.Data data={query} classNames='p-2 text-xs' />
       </div>
     );
   },

@@ -12,14 +12,13 @@ export const translations = [
   {
     'en-US': {
       [meta.id]: {
-        'plugin name': 'Search',
-        'search action label': 'Search spaces',
-        'search placeholder': 'Search…',
-        'search dialog title': 'Open',
-        'recently closed heading': 'Recently closed',
-        'pending results message': 'Searching…',
-        'empty results message': 'No matching objects',
-        'search label': 'Search',
+        'plugin.name': 'Search',
+        'search-action.label': 'Search spaces',
+        'search.placeholder': 'Search…',
+        'search-dialog.title': 'Search',
+        'recently-closed.heading': 'Recently closed',
+        'pending-results.message': 'Searching…',
+        'search.label': 'Search',
       },
     },
   },

@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { LayoutOperation, fromUrlPath, getWorkspaceFromPath, toUrlPath } from '@dxos/app-toolkit';
+import { LayoutOperation, NOT_FOUND_PATH, fromUrlPath, getWorkspaceFromPath, toUrlPath } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
 import { Node } from '@dxos/plugin-graph';
 
-import { DeckCapabilities, type DeckStateProps, defaultDeck } from '../../types';
+import { DeckCapabilities, type StoredDeckState, defaultDeck } from '../../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -29,7 +29,7 @@ export default Capability.makeModule(
     };
 
     // Helper to update state.
-    const updateState = (fn: (current: DeckStateProps) => DeckStateProps) => {
+    const updateState = (fn: (current: StoredDeckState) => StoredDeckState) => {
       registry.set(stateAtom, fn(getState()));
     };
 
@@ -58,12 +58,13 @@ export default Capability.makeModule(
       const activeId = qualifiedId !== workspace ? qualifiedId : undefined;
       if (activeId) {
         // Ensure the object referenced by the URL is open in the deck.
-        await invokePromise(LayoutOperation.Open, { subject: [activeId] });
-        // If not already in solo mode, switch to solo for the target object.
+        // Open validates the target and may redirect to 404, returning the resolved IDs.
+        const { data: resolvedIds } = await invokePromise(LayoutOperation.Open, { subject: [activeId] });
+        // If not already in solo mode, switch to solo for the resolved target.
         if (!deck.solo) {
-          await invokePromise(LayoutOperation.SetLayoutMode, { subject: activeId, mode: 'solo' });
+          await invokePromise(LayoutOperation.SetLayoutMode, { subject: resolvedIds?.[0] ?? activeId, mode: 'solo' });
         }
-      } else if (deck.solo) {
+      } else if (deck.solo && deck.solo !== NOT_FOUND_PATH) {
         // Stay in solo mode; redirect URL to reflect the current solo item.
         // Do not switch to deck mode here — only explicit user action should change layout mode.
         const path = toUrlPath(deck.solo);
@@ -90,7 +91,7 @@ export default Capability.makeModule(
         lastSolo = solo;
         lastActiveDeck = activeDeck;
 
-        const path = solo ? toUrlPath(solo) : toUrlPath(activeDeck);
+        const path = solo && solo !== NOT_FOUND_PATH ? toUrlPath(solo) : toUrlPath(activeDeck);
         if (window.location.pathname !== path) {
           // TODO(thure): In some browsers, this only preserves the most recent state change, even though this is not `history.replace`…
           history.pushState(null, '', `${path}${window.location.search}`);

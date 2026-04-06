@@ -70,7 +70,7 @@ export const rearrangeCache = new Map<string, (nextOrder: unknown[]) => void>();
 /** Build collection partials for drag/drop and copy behavior. */
 export const buildCollectionPartials = (
   collection: Collection.Collection,
-  db: Database.Database,
+  db: Database.Database, // TODO(burdon): db before collection.
   resolve: MetadataResolver,
 ) => ({
   acceptPersistenceClass: ACCEPT_ECHO_CLASS,
@@ -114,7 +114,7 @@ export const getCollectionGraphNodePartials = ({
   resolve,
 }: {
   collection: Collection.Collection;
-  db: Database.Database;
+  db: Database.Database; // TODO(burdon): db before collection.
   resolve: MetadataResolver;
 }) => {
   const id = Obj.getDXN(collection).toString();
@@ -162,7 +162,7 @@ export const createObjectNode = ({
     (object as any).name ||
     Obj.getLabel(object) ||
     metadata.label?.(object) ||
-    getDynamicLabel('object name placeholder', type, { default: 'New item' });
+    getDynamicLabel('object-name.placeholder', type, { default: 'New item' });
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));

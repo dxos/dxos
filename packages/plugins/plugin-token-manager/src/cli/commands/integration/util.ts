@@ -7,24 +7,24 @@ import { OAuthProvider } from '@dxos/protocols';
 import { type AccessToken } from '@dxos/types';
 
 export type OAuthPreset = {
-  label: string;
-  note: string; // TODO(burdon): Description?
-  source: string;
   provider: OAuthProvider;
+  source: string;
+  label: string;
   scopes: string[];
+  note?: string;
 };
 
 // TODO(wittjosiah): Copied from plugin-token-manager.
 export const OAUTH_PRESETS: OAuthPreset[] = [
   {
-    label: 'Google',
-    note: 'Email, calendar, YouTube (metadata + captions on your own videos), and Gmail send.',
-    source: 'google.com',
     provider: OAuthProvider.GOOGLE,
+    source: 'google.com',
+    label: 'Google',
     scopes: [
-      'https://www.googleapis.com/auth/gmail.readonly',
       'https://www.googleapis.com/auth/calendar.readonly',
+      'https://www.googleapis.com/auth/gmail.readonly',
       'https://www.googleapis.com/auth/gmail.send',
+      'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/youtube.readonly',
       'https://www.googleapis.com/auth/youtube.force-ssl',
     ],

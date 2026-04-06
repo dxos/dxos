@@ -175,6 +175,9 @@
       "path": "../plugin-preview"
     },
     {
+      "path": "../plugin-settings"
+    },
+    {
       "path": "../plugin-status-bar"
     },
     {

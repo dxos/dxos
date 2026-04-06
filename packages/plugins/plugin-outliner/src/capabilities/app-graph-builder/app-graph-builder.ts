@@ -44,7 +44,7 @@ export default Capability.makeModule(
             {
               id: OutlineOperation.CreateOutline.meta.key,
               properties: {
-                label: ['create outline label', { ns: meta.id }],
+                label: ['create-outline.label', { ns: meta.id }],
                 icon: 'ph--tree-structure--regular',
                 disposition: 'list-item',
               },
@@ -80,7 +80,7 @@ export default Capability.makeModule(
                 });
               }),
               properties: {
-                label: ['quick entry label', { ns: meta.id }],
+                label: ['quick-entry.label', { ns: meta.id }],
                 icon: 'ph--calendar-plus--regular',
               },
             },

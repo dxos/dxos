@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import React, { forwardRef, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type SurfaceComponentProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { type ObjectSurfaceProps, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { type Project } from '@dxos/assistant-toolkit';
 import { Annotation, Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
@@ -18,7 +18,7 @@ import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { isNonNullable } from '@dxos/util';
 
-export type ProjectArticleProps = SurfaceComponentProps<Project.Project>;
+export type ProjectArticleProps = ObjectSurfaceProps<Project.Project>;
 
 export const ProjectArticle = ({ subject: project }: ProjectArticleProps) => {
   const inputQueue = useAtomValue(

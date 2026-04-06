@@ -61,12 +61,8 @@ describe('ClientPlugin startup', () => {
           yield* Effect.promise(() => client.halo.createIdentity());
           mark('createIdentity', identityStart);
 
-          const spacesStart = performance.now();
-          yield* Effect.promise(() => client.spaces.waitUntilReady());
-          mark('spaces.waitUntilReady', spacesStart);
-
           const spaceStart = performance.now();
-          const space = client.spaces.default;
+          const space = yield* Effect.promise(() => client.spaces.create());
           yield* Effect.promise(() => space.waitUntilReady());
           mark('space.waitUntilReady', spaceStart);
 

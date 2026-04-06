@@ -23,6 +23,71 @@ export type MessageStackAction =
 export type MessageStackActionHandler = (action: MessageStackAction) => void;
 
 //
+// MessageStack
+//
+
+export type MessageStackProps = {
+  id: string;
+  messages: Message.Message[];
+  currentId?: string;
+  labels?: MailboxType.Labels;
+  ignoreAttention?: boolean;
+  onAction?: MessageStackActionHandler;
+};
+
+/**
+ * Card-based message stack component using mosaic layout.
+ */
+export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
+  ({ messages, labels, currentId, onAction, ...props }, forwardedRef) => {
+    const [viewport, setViewport] = useState<HTMLElement | null>(null);
+    const items = useMemo(
+      () => messages.map((message) => ({ message, labels, onAction })),
+      [messages, labels, onAction],
+    );
+
+    const handleCurrentChange = useCallback(
+      (id: string | undefined) => {
+        if (id) {
+          onAction?.({ type: 'current', messageId: id });
+        }
+      },
+      [onAction],
+    );
+
+    const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        (document.activeElement as HTMLElement | null)?.click();
+      }
+    }, []);
+
+    return (
+      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+        <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
+          <ScrollArea.Root padding centered>
+            <ScrollArea.Viewport ref={setViewport}>
+              <Mosaic.VirtualStack
+                Tile={MessageTile}
+                classNames='my-2'
+                gap={8}
+                items={items}
+                draggable={false}
+                getId={(item) => item.message.id}
+                getScrollElement={() => viewport}
+                estimateSize={() => 150}
+              />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Mosaic.Container>
+      </Focus.Group>
+    );
+  },
+);
+
+MessageStack.displayName = 'MessageStack';
+
+//
 // MessageTile
 //
 
@@ -32,7 +97,7 @@ type MessageTileData = {
   onAction?: MessageStackActionHandler;
 };
 
-type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'location' | 'data'> & { current?: boolean };
+type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'location' | 'current'>;
 
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
   const { message, labels, onAction } = data;
@@ -130,74 +195,3 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
 });
 
 MessageTile.displayName = 'MessageTile';
-
-//
-// MessageStack
-//
-
-export type MessageStackProps = {
-  id: string;
-  messages: Message.Message[];
-  currentId?: string;
-  labels?: MailboxType.Labels;
-  ignoreAttention?: boolean;
-  onAction?: MessageStackActionHandler;
-};
-
-/**
- * Card-based message stack component using mosaic layout.
- */
-export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ messages, labels, currentId, onAction, ...props }, forwardedRef) => {
-    const [viewport, setViewport] = useState<HTMLElement | null>(null);
-    const items = useMemo(
-      () => messages.map((message) => ({ message, labels, onAction })),
-      [messages, labels, onAction],
-    );
-
-    const handleCurrentChange = useCallback(
-      (id: string | undefined) => {
-        if (id) {
-          onAction?.({ type: 'current', messageId: id });
-        }
-      },
-      [onAction],
-    );
-
-    const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        (document.activeElement as HTMLElement | null)?.click();
-      }
-    }, []);
-
-    return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
-        <Mosaic.Container
-          asChild
-          withFocus
-          autoScroll={viewport}
-          currentId={currentId}
-          onCurrentChange={handleCurrentChange}
-        >
-          <ScrollArea.Root orientation='vertical' padding centered>
-            <ScrollArea.Viewport ref={setViewport}>
-              <Mosaic.VirtualStack
-                Tile={MessageTile}
-                classNames='my-2'
-                gap={8}
-                items={items}
-                draggable={false}
-                getId={(item) => item.message.id}
-                getScrollElement={() => viewport}
-                estimateSize={() => 150}
-              />
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Mosaic.Container>
-      </Focus.Group>
-    );
-  },
-);
-
-MessageStack.displayName = 'MessageStack';

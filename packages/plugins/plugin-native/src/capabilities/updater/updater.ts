@@ -101,11 +101,11 @@ export default Capability.makeModule(
         if (downloadSuccess) {
           yield* invoke(LayoutOperation.AddToast, {
             id: `${meta.id}.update-ready`,
-            title: ['update ready label', { ns: meta.id }],
-            description: ['update ready description', { ns: meta.id }],
+            title: ['update-ready.label', { ns: meta.id }],
+            description: ['update-ready.description', { ns: meta.id }],
             duration: Infinity,
-            actionLabel: ['update label', { ns: meta.id }],
-            actionAlt: ['update alt', { ns: meta.id }],
+            actionLabel: ['update.label', { ns: meta.id }],
+            actionAlt: ['update.alt', { ns: meta.id }],
             onAction: () => relaunch(),
           });
           return false;

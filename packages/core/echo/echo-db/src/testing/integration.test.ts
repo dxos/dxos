@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { asyncTimeout } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { Obj, Relation, Type } from '@dxos/echo';
 import { Filter, Query } from '@dxos/echo';
 import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
@@ -203,8 +204,8 @@ describe('Integration tests', () => {
 
     await using peer1 = await builder.createPeer();
     await using peer2 = await builder.createPeer();
-    await peer1.host.addReplicator(await network.createReplicator());
-    await peer2.host.addReplicator(await network.createReplicator());
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
 
     await using db1 = await peer1.createDatabase(spaceKey);
     await dataAssertion.seed(db1);
@@ -225,8 +226,8 @@ describe('Integration tests', () => {
 
     await using peer1 = await builder.createPeer();
     await using peer2 = await builder.createPeer();
-    await peer1.host.addReplicator(await network.createReplicator());
-    await peer2.host.addReplicator(await network.createReplicator());
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
 
     {
       await using db1 = await peer1.createDatabase(spaceKey1);
@@ -270,8 +271,8 @@ describe('Integration tests', () => {
     const teleportConnections = await teleportTestBuilder.connect(teleportPeer1, teleportPeer2);
     const replicator1 = new MeshEchoReplicator();
     const replicator2 = new MeshEchoReplicator();
-    await peer1.host.addReplicator(replicator1);
-    await peer2.host.addReplicator(replicator2);
+    await peer1.host.addReplicator(Context.default(), replicator1);
+    await peer2.host.addReplicator(Context.default(), replicator2);
     teleportConnections[0].teleport.addExtension('replicator', replicator1.createExtension());
     teleportConnections[1].teleport.addExtension('replicator', replicator2.createExtension());
 
@@ -306,8 +307,8 @@ describe('Integration tests', () => {
     const teleportConnections = await teleportTestBuilder.connect(teleportPeer1, teleportPeer2);
     const replicator1 = new MeshEchoReplicator();
     const replicator2 = new MeshEchoReplicator();
-    await peer1.host.addReplicator(replicator1);
-    await peer2.host.addReplicator(replicator2);
+    await peer1.host.addReplicator(Context.default(), replicator1);
+    await peer2.host.addReplicator(Context.default(), replicator2);
     teleportConnections[0].teleport.addExtension(
       'replicator',
       replicator1.createExtension(brokenAutomergeReplicatorFactory),
@@ -347,8 +348,8 @@ describe('Integration tests', () => {
 
       await using peer2 = await builder.createPeer();
 
-      await peer1.host.addReplicator(await network.createReplicator());
-      await peer2.host.addReplicator(await network.createReplicator());
+      await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+      await peer2.host.addReplicator(Context.default(), await network.createReplicator());
 
       await using db2 = await peer2.openDatabase(spaceKey, rootUrl);
 
@@ -374,8 +375,8 @@ describe('Integration tests', () => {
 
     await using peer1 = await builder.createPeer();
     await using peer2 = await builder.createPeer();
-    await peer1.host.addReplicator(await network.createReplicator());
-    await peer2.host.addReplicator(await network.createReplicator());
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
 
     await using db1 = await peer1.createDatabase(spaceKey);
     await using db2 = await peer2.openDatabase(spaceKey, db1.rootUrl!);
@@ -587,8 +588,8 @@ describe('load tests', () => {
 
     await using peer1 = await builder.createPeer();
     await using peer2 = await builder.createPeer();
-    await peer1.host.addReplicator(await network.createReplicator());
-    await peer2.host.addReplicator(await network.createReplicator());
+    await peer1.host.addReplicator(Context.default(), await network.createReplicator());
+    await peer2.host.addReplicator(Context.default(), await network.createReplicator());
 
     await using db1 = await peer1.createDatabase(spaceKey);
     await dataAssertion.seed(db1);

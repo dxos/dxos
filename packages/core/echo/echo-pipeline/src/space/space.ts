@@ -177,24 +177,24 @@ export class Space extends Resource {
     log('opening...');
 
     // Order is important.
-    await this._controlPipeline.start();
+    await this._controlPipeline.start(ctx);
 
     log('opened');
   }
 
   @synchronized
-  public async startProtocol(): Promise<void> {
+  public async startProtocol(ctx: Context): Promise<void> {
     invariant(this.isOpen);
-    await this.protocol.start();
+    await this.protocol.start(ctx);
     await this.protocol.addFeed(await this._feedProvider(this._genesisFeedKey));
   }
 
   @synchronized
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     log('closing...', { key: this._key });
 
     // Closes in reverse order to open.
-    await this.protocol.stop();
+    await this.protocol.stop(ctx);
     await this._controlPipeline.stop();
 
     log('closed');

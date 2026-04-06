@@ -58,7 +58,7 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
     'h-full w-full',
 
     orientation === 'vertical' && 'flex flex-col overflow-y-scroll',
-    orientation === 'horizontal' && 'flex overflow-x-scroll',
+    orientation === 'horizontal' && 'flex overflow-x-scroll overscroll-x-contain',
     orientation === 'all' && 'overflow-scroll',
 
     '[&::-webkit-scrollbar-corner]:bg-transparent',
@@ -69,7 +69,6 @@ export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
 
     // If contained within Column.Root grid the gutter is set by that component (--gutter CSS variable).
     // If centered, left padding compensates for scrollbar width so content is visually centered.
-
     (orientation === 'vertical' || orientation === 'all') &&
       (padding
         ? [

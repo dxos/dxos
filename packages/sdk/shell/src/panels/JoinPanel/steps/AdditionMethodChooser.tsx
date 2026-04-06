@@ -26,35 +26,35 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
 
   return (
     <>
-      <InputLabel>{t('addition method chooser title')}</InputLabel>
+      <InputLabel>{t('addition-method-chooser.title')}</InputLabel>
       <div role='none' className='flex flex-col gap-1 grow'>
         <CompoundButton
           {...sharedButtonProps}
-          description={t('create identity description')}
+          description={t('create-identity.description')}
           before={<Icon icon='ph--plus--regular' size={6} />}
           onClick={() => send({ type: 'createIdentity' })}
           data-autofocus='choosingAuthMethod'
           data-testid='identity-chooser.create-identity'
         >
-          {t('create identity label')}
+          {t('create-identity.label')}
         </CompoundButton>
         <CompoundButton
           {...sharedButtonProps}
-          description={t('join identity description')}
+          description={t('join-identity.description')}
           before={<Icon icon='ph--qr-code--regular' size={6} />}
           onClick={() => send({ type: 'acceptHaloInvitation' })}
           data-testid='identity-chooser.join-identity'
         >
-          {t('join identity label')}
+          {t('join-identity.label')}
         </CompoundButton>
         <CompoundButton
           {...sharedButtonProps}
-          description={t('recover identity description')}
+          description={t('recover-identity.description')}
           before={<Icon icon='ph--textbox--regular' size={6} />}
           onClick={() => send({ type: 'recoverIdentity' })}
           data-testid='identity-chooser.recover-identity'
         >
-          {t('recover identity label')}
+          {t('recover-identity.label')}
         </CompoundButton>
       </div>
     </>

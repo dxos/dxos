@@ -90,9 +90,9 @@ export const WithCompanion: Story = {
           types: [Feed.Feed, Mailbox.Mailbox, Message.Message, Person.Person],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
-              const { defaultSpace } = yield* initializeIdentity(client);
+              const { personalSpace } = yield* initializeIdentity(client);
               // TODO(wittjosiah): Share message builder with transcription stories. Factor out to @dxos/schema/testing.
-              yield* Effect.promise(() => initializeMailbox(defaultSpace));
+              yield* Effect.promise(() => initializeMailbox(personalSpace));
             }),
         }),
 

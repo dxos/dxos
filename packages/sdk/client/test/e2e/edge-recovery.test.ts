@@ -79,20 +79,21 @@ describe.runIf(process.env.DX_TEST_TAGS?.includes('sync-e2e'))(
       const { recoveryCode } = await clientA.services.services.IdentityService!.createRecoveryCredential({});
       console.log('### ClientA: recovery credential created');
 
-      await clientA.spaces.default.waitUntilReady();
-      await clientA.spaces.default.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
+      const spaceA = await clientA.spaces.create();
+      await spaceA.waitUntilReady();
+      await spaceA.internal.setEdgeReplicationPreference(EdgeReplicationSetting.ENABLED);
 
       console.log('### ClientA: creating test objects');
-      clientA.spaces.default.db.add(Obj.make(TestSchema.Expando, { name: 'test-object-1', counter: 42 }));
-      clientA.spaces.default.db.add(Obj.make(TestSchema.Expando, { name: 'test-object-2', counter: 99 }));
-      await clientA.spaces.default.db.flush();
+      spaceA.db.add(Obj.make(TestSchema.Expando, { name: 'test-object-1', counter: 42 }));
+      spaceA.db.add(Obj.make(TestSchema.Expando, { name: 'test-object-2', counter: 99 }));
+      await spaceA.db.flush();
 
       console.log('### ClientA: waiting for sync to edge');
-      await waitForSync(clientA.spaces.default.db);
+      await waitForSync(spaceA.db);
       await sleep(1_000);
       console.log('### ClientA: synced to edge');
 
-      const hostSpaceId = clientA.spaces.default.id;
+      const hostSpaceId = spaceA.id;
 
       // Fully destroy Client A — no peer available.
       console.log('### ClientA: destroying');

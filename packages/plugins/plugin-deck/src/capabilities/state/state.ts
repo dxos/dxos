@@ -11,18 +11,11 @@ import { createKvsStore } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
 import { meta } from '../../meta';
-import {
-  DeckCapabilities,
-  type DeckEphemeralStateProps,
-  type DeckStateProps,
-  DeckStateSchema,
-  defaultDeck,
-  getMode,
-} from '../../types';
+import { DeckCapabilities, type EphemeralDeckState, StoredDeckState, defaultDeck, getMode } from '../../types';
 import { sanitizePersistedState } from '../../util';
 
 /** Default persisted state. */
-const defaultDeckState: DeckStateProps = {
+const defaultDeckState: StoredDeckState = {
   sidebarState: 'expanded',
   complementarySidebarState: 'collapsed',
   complementarySidebarPanel: undefined,
@@ -35,7 +28,7 @@ const defaultDeckState: DeckStateProps = {
 };
 
 /** Default ephemeral state. */
-const defaultDeckEphemeralState: DeckEphemeralStateProps = {
+const defaultDeckEphemeralState: EphemeralDeckState = {
   dialogContent: null,
   dialogOpen: false,
   dialogBlockAlign: undefined,
@@ -56,12 +49,12 @@ export default Capability.makeModule(
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
       key: `${meta.id}.state`,
-      schema: DeckStateSchema,
+      schema: StoredDeckState,
       defaultValue: () => ({ ...defaultDeckState }),
     });
 
     // Ephemeral state (not persisted, but kept alive to prevent GC resets).
-    const ephemeralAtom = Atom.make<DeckEphemeralStateProps>({ ...defaultDeckEphemeralState }).pipe(Atom.keepAlive);
+    const ephemeralAtom = Atom.make<EphemeralDeckState>({ ...defaultDeckEphemeralState }).pipe(Atom.keepAlive);
 
     // Sanitize persisted state on startup (see sanitizePersistedState for details).
     const currentState = registry.get(stateAtom);

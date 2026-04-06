@@ -3,21 +3,22 @@
 //
 
 import * as Effect from 'effect/Effect';
-import localforage from 'localforage';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 
-import { meta } from '../meta';
-import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '../types';
+import { NativeFilesystemCapabilities } from '../types';
+
+import { OpenDirectory } from './definitions';
 import { loadWorkspace, openDirectoryPicker } from '../util';
 
-export default NativeFilesystemOperation.OpenDirectory.pipe(
+export default OpenDirectory.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const stateAtom = yield* Capability.get(NativeFilesystemCapabilities.State);
+      const filesystemManager = yield* Capability.get(NativeFilesystemCapabilities.FilesystemManager);
 
       const path = yield* openDirectoryPicker();
       if (!path) {
@@ -40,15 +41,10 @@ export default NativeFilesystemOperation.OpenDirectory.pipe(
         return { ...current, workspaces: [...current.workspaces, workspace] };
       });
 
-      const state = registry.get(stateAtom);
-      yield* Effect.promise(() => localforage.setItem(STORAGE_KEY, state.workspaces));
-
-      const dirWatcher = yield* Capability.get(NativeFilesystemCapabilities.DirectoryWatcher);
-      yield* dirWatcher.startWatching(workspace);
+      yield* filesystemManager.activateWorkspace(workspace);
+      yield* filesystemManager.persistState();
 
       return { id: workspace.id, subject: [workspace.id] };
     }),
   ),
 );
-
-const STORAGE_KEY = `${meta.id}.workspaces`;

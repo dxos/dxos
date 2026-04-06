@@ -8,7 +8,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Collection, Database, Obj, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
@@ -85,7 +85,7 @@ export const CreateObjectDialog = ({
         .filter((entry) => (views === true ? viewTypenames.has(entry.id) : true))
         .map((entry) => ({
           id: entry.id,
-          label: t('typename label', { ns: entry.id, defaultValue: entry.id }),
+          label: t('typename.label', { ns: entry.id, defaultValue: entry.id }),
           icon: entry.metadata?.icon,
         })),
     [manager, views, viewTypenames, t],
@@ -129,8 +129,8 @@ export const CreateObjectDialog = ({
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>
-          {t('create object dialog title', {
-            object: t('typename label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
+          {t('create-object-dialog.title', {
+            object: t('typename.label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
           })}
         </Dialog.Title>
         <Dialog.Close asChild>
@@ -144,7 +144,7 @@ export const CreateObjectDialog = ({
           target={target}
           typename={typename}
           initialFormValues={initialFormValues}
-          defaultSpaceId={client.spaces.default.id}
+          defaultSpaceId={getPersonalSpace(client)?.id ?? client.spaces.get()[0]?.id}
           resolve={resolve}
           onCreateObject={handleCreateObject}
           onTargetChange={setTarget}

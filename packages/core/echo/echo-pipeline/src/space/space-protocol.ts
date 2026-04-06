@@ -23,6 +23,7 @@ import { trace } from '@dxos/tracing';
 import { type AsyncCallback, CallbackCollection, ComplexMap } from '@dxos/util';
 
 import { AuthExtension, type AuthProvider, type AuthVerifier } from './auth';
+import { Context } from '@dxos/context';
 
 export const MOCK_AUTH_PROVIDER: AuthProvider = async (nonce: Uint8Array) => Buffer.from('mock');
 export const MOCK_AUTH_VERIFIER: AuthVerifier = async (nonce: Uint8Array, credential: Uint8Array) => true;
@@ -139,7 +140,7 @@ export class SpaceProtocol {
   }
 
   // TODO(burdon): Rename open? Common open/close interfaces for all services?
-  async start(): Promise<void> {
+  async start(ctx: Context): Promise<void> {
     if (this._connection) {
       return;
     }
@@ -151,7 +152,7 @@ export class SpaceProtocol {
 
     log('starting...');
     const topic = await this._topic;
-    this._connection = await this._networkManager.joinSwarm({
+    this._connection = await this._networkManager.joinSwarm(ctx, {
       protocolProvider: this._createProtocolProvider(credentials),
       topic,
       topology: this._topology,
@@ -165,12 +166,12 @@ export class SpaceProtocol {
     this._topology.forceUpdate();
   }
 
-  async stop(): Promise<void> {
+  async stop(ctx: Context): Promise<void> {
     await this.blobSync.close();
 
     if (this._connection) {
       log('stopping...');
-      await this._connection.close();
+      await this._connection.close(ctx);
       log('stopped');
     }
   }

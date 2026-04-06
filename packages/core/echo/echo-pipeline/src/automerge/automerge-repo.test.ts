@@ -30,6 +30,7 @@ import {
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
+import { Context } from '@dxos/context';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -961,7 +962,7 @@ const createTeleportTestPeer = async (
   });
   await echoAdapter.open();
   await echoAdapter.whenConnected();
-  await echoAdapter.addReplicator(meshAdapter);
+  await echoAdapter.addReplicator(Context.default(), meshAdapter);
   const [teleport] = teleportBuilder.createPeers({ factory: () => new TeleportPeer() });
   return { repo, meshAdapter, teleport };
 };

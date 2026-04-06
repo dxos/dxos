@@ -16,8 +16,8 @@ export const AutomationSettings = (props: AutomationPanelProps) => {
   return (
     <Settings.Root>
       <Settings.Section
-        title={t('automation verbose label', { ns: meta.id })}
-        description={t('automation description', { ns: meta.id })}
+        title={t('automation-verbose.label', { ns: meta.id })}
+        description={t('automation.description', { ns: meta.id })}
       >
         <AutomationPanel {...props} />
         <TriggersSettings db={props.space.db} />

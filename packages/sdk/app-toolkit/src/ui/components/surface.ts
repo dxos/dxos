@@ -3,21 +3,36 @@
 //
 
 import { type Obj } from '@dxos/echo';
+import { Space } from '@dxos/client/echo';
 
-// TODO(burdon): Standardize PluginSettings and ObjectProperties.
+// TODO(burdon): AUDIT classes of all surface providers.
 
 export type SurfaceRole =
-  | 'item'
   | 'article'
+  | 'card--content'
   | 'complementary' // Companion
-  | 'section'
-  | 'card--content';
+  | 'item'
+  | 'section';
+
+// TODO(burdon): attendableId => id ("attentable" is the valence)
 
 /**
- * Base type for surface components.
- * NOTE: These properties are passed from `Plank`.
+ * Generic type for surface components that are anchored to a space.
  */
-export type SurfaceComponentProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
+export type SpaceSurfaceProps<Props extends {} = {}> = {
+  space?: Space;
+
+  /** Surface role (superset of WAI-ARIA role). */
+  role?: string;
+
+  /** Path-based ID inherited from the surface data for attention tracking and graph action lookup. */
+  attendableId?: string;
+} & Props;
+
+/**
+ * Generic type for surface components that have a subject.
+ */
+export type ObjectSurfaceProps<Subject extends Obj.Unknown | undefined = Obj.Unknown, Props extends {} = {}> = {
   /** Surface role (superset of WAI-ARIA role). */
   role?: string;
 
@@ -30,3 +45,24 @@ export type SurfaceComponentProps<Subject extends Obj.Unknown | undefined = Obj.
   /** The primary object being displayed. */
   subject: Subject;
 } & Props;
+
+/**
+ * Generic type for surface components that are anchored to settings.
+ */
+export type SettingsSurfaceProps<T extends {}, Props extends {} = {}> = {
+  /** Reactive settings. */
+  settings: T;
+
+  /** Callback to update settings. */
+  onSettingsChange?: (cb: (current: T) => T) => void;
+} & Props;
+
+export type SurfaceThingProps = {
+  space?: Space;
+
+  /** Surface role (superset of WAI-ARIA role). */
+  role?: string;
+
+  /** Path-based ID inherited from the surface data for attention tracking and graph action lookup. */
+  attendableId?: string;
+};

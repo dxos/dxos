@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import { useState } from 'react';
 import React, { useCallback } from 'react';
 
+import { Context } from '@dxos/context';
 import * as OperationModule from '@dxos/operation';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
@@ -44,7 +45,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
 
   useAsyncEffect(async () => {
     setLoading(true);
-    const functions = await getDeployedFunctions(client, true);
+    const functions = await getDeployedFunctions(Context.default(), client, true);
     setFunctions(functions);
     setLoading(false);
   }, []);
@@ -95,7 +96,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
                     iconOnly
                     icon={state(func) === 'update' ? 'ph--arrows-clockwise--regular' : 'ph--download--regular'}
                     label={
-                      state(func) === 'update' ? t('update function button label') : t('import function button label')
+                      state(func) === 'update' ? t('update-function-button.label') : t('import-function-button.label')
                     }
                     disabled={state(func) === 'none'}
                     onClick={() => hanleImportOrUpdate(func)}
@@ -107,10 +108,7 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
         </List.Root>
       )}
 
-      {functions.length === 0 && !loading && (
-        <div className='text-center py-4 text-gray-500'>{t('no functions found')}</div>
-      )}
-      {loading && <div className='text-center py-4 text-gray-500'>{t('loading functions')}</div>}
+      {loading && <div className='text-center py-4 text-gray-500'>{t('loading-functions.message')}</div>}
     </Settings.Container>
   );
 };

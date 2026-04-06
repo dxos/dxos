@@ -11,7 +11,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import {
   OBJECT_ACTIONS_CONTRIBUTION_ID,
   OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
-  type SurfaceComponentProps,
+  type ObjectSurfaceProps,
   useObjectMenuItems,
 } from '@dxos/app-toolkit/ui';
 import { companionSegment } from '@dxos/app-toolkit';
@@ -26,7 +26,7 @@ import { usePipelineBoardModel } from '../../hooks';
 
 const PIPELINE_ITEM = 'PipelineItem';
 
-export type PipelineContainerProps = SurfaceComponentProps<Pipeline.Pipeline>;
+export type PipelineContainerProps = ObjectSurfaceProps<Pipeline.Pipeline>;
 
 export const PipelineContainer = ({ role, subject: pipeline, attendableId }: PipelineContainerProps) => {
   const registry = useCapability(Capabilities.AtomRegistry);

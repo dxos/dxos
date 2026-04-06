@@ -6,3 +6,4 @@ export * from './Combobox';
 export * from './Listbox';
 export * from './SearchList';
 export * from './SearchPanel';
+export * from './SearchStack';
