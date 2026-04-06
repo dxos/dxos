@@ -47,7 +47,7 @@ export const CommentsPanel = ({ anchors, currentId, showResolvedThreads, ...prop
             <Trans
               {...{
                 t,
-                i18nKey: 'no comments message',
+                i18nKey: 'no-comments.message',
                 components: {
                   commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='w-block' />,
                 },

@@ -113,6 +113,7 @@ export const CreateObjectDialog = ({
         if (result.subject.length > 0 && shouldNavigate(result.object)) {
           yield* operationInvoker.invoke(LayoutOperation.Open, {
             subject: [...result.subject],
+            navigation: 'immediate',
           });
         }
 
