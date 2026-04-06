@@ -24,7 +24,7 @@ import { mainPaddingTransitions, mx } from '@dxos/ui-theme';
 import { useBreakpoints, useCompanions, useDeckState, useHoistStatusbar, useSelectedCompanion } from '../../hooks';
 import { DeckOperation } from '../../operations';
 import { calculateOverscroll, layoutAppliesTopbar } from '../../util';
-import { Plank, type PlankComponentProps } from '../Plank';
+import { Plank, PlankRootProps, type PlankComponentProps } from '../Plank';
 import {
   ToggleComplementarySidebarButton as NativeToggleComplementarySidebarButton,
   ToggleSidebarButton as NativeToggleSidebarButton,
@@ -290,7 +290,7 @@ const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: b
 
 const UNKNOWN_ID = 'unknown_id';
 
-type ConnectedPlankProps = Pick<PlankComponentProps, 'layoutMode' | 'part' | 'settings'> &
+type ConnectedPlankProps = Pick<PlankRootProps, 'layoutMode' | 'part' | 'settings'> &
   Partial<Pick<PlankComponentProps, 'path' | 'order' | 'active'>> & {
     id?: string;
     companionVariant?: string;
@@ -340,7 +340,6 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
     [invokePromise],
   );
 
-  // TODO(burdon): Destructure props rather than passing everything to Root and Component.
   return (
     <Plank.Root
       graph={graph}
@@ -372,9 +371,9 @@ const ConnectedPlank = memo(({ id = UNKNOWN_ID, companionVariant, ...props }: Co
           <Plank.Component
             id={resolvedCompanionId}
             node={currentCompanion}
-            primary={node}
             companions={companions}
             companioned='companion'
+            primary={node}
             {...props}
             {...(props.part === 'solo' ? { part: 'solo-companion' } : { order: (props.order ?? 0) + 1 })}
           />

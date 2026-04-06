@@ -21,8 +21,7 @@ import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 
-// TOOD(burdon): Get layoutMode from root.
-export type PlankComponentProps = Pick<PlankRootProps, 'part' | 'layoutMode' | 'settings'> & {
+export type PlankComponentProps = Pick<PlankRootProps, 'part'> & {
   id: string;
   path?: string[];
   order?: number;
@@ -34,20 +33,8 @@ export type PlankComponentProps = Pick<PlankRootProps, 'part' | 'layoutMode' | '
 };
 
 export const PlankComponent = memo(
-  ({
-    // part,
-    // layoutMode,
-    // settings,
-    id,
-    path,
-    order,
-    active,
-    node,
-    primary,
-    companions,
-    companioned,
-  }: PlankComponentProps) => {
-    const { popoverAnchorId, scrollIntoView, plankSizing, onResize, onScrollIntoView } =
+  ({ part, id, path, order, active, node, primary, companions, companioned }: PlankComponentProps) => {
+    const { layoutMode, settings, popoverAnchorId, scrollIntoView, plankSizing, onResize, onScrollIntoView } =
       usePlankContext('PlankComponent');
 
     const canResize = layoutMode === 'multi';

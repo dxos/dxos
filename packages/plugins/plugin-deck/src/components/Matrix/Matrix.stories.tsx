@@ -78,9 +78,7 @@ const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
           <Plank.Content solo companion={false} encapsulate={false}>
             <Plank.Component
               id={props.data.id}
-              layoutMode='multi'
               part='multi'
-              // TODO(burdon): Simulate graph node.
               node={{
                 id: props.data.id,
                 data: props.data,

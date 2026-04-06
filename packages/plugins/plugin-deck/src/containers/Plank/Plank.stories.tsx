@@ -71,7 +71,7 @@ const DefaultStory = () => {
           <StackContext.Provider value={{ orientation: 'horizontal', size: 'contain', rail: true }}>
             <Plank.Root graph={graph} part='solo' layoutMode='solo'>
               <Plank.Content solo companion={false} encapsulate={false}>
-                <Plank.Component id={item.id} part='solo-primary' layoutMode='solo' node={node as any} />
+                <Plank.Component id={item.id} part='solo-primary' node={node as any} />
               </Plank.Content>
             </Plank.Root>
           </StackContext.Provider>

@@ -5,7 +5,7 @@
 import { PlankRoot, PlankRootProps } from './PlankRoot';
 import { PlankComponent, PlankComponentProps } from './PlankComponent';
 import { PlankContent, PlankContentProps } from './PlankContent';
-import { PlankHeading, PlankHeadingProps } from './PlankHeading';
+import { PlankHeading } from './PlankHeading';
 import { PlankControls } from './PlankControls';
 
 /**
@@ -19,4 +19,4 @@ export const Plank = {
   Controls: PlankControls,
 };
 
-export type { PlankRootProps, PlankComponentProps, PlankContentProps, PlankHeadingProps };
+export type { PlankRootProps, PlankComponentProps, PlankContentProps };
