@@ -20,17 +20,24 @@ export type ResolvedPart = Part | 'solo-primary' | 'solo-companion';
 export const PlankSizing = Schema.Record({ key: Schema.String, value: Schema.Number });
 export type PlankSizing = Schema.Schema.Type<typeof PlankSizing>;
 
-// State of an individual deck.
 export const DeckState = Schema.Struct({
   /** If false, the deck has not yet left solo mode and new planks should be soloed. */
   initialized: Schema.Boolean,
+  /** Item IDs of planks currently displayed in multi-mode. */
   active: Schema.mutable(Schema.Array(Schema.String)),
+  /** Item IDs of planks that have been closed; used for state persistence and reopening. */
   inactive: Schema.mutable(Schema.Array(Schema.String)),
-  solo: Schema.optional(Schema.String), // TODO(burdon): Layout mode?
+  /** Item ID of the single plank displayed in solo or fullscreen mode. */
+  solo: Schema.optional(Schema.String),
+  /** Whether the solo plank is displayed in fullscreen mode (no heading or sidebars). */
   fullscreen: Schema.Boolean,
+  /** Persisted plank widths in rem, keyed by item ID. */
   plankSizing: Schema.mutable(PlankSizing),
+  /** Whether the companion pane is visible alongside the active plank(s). */
   companionOpen: Schema.Boolean,
+  /** Which companion variant to display when the companion pane is open. */
   companionVariant: Schema.optional(Schema.String),
+  /** Persisted companion frame widths in rem, keyed by frame ID. */
   companionFrameSizing: Schema.mutable(PlankSizing),
 });
 export type DeckState = Schema.Schema.Type<typeof DeckState>;
@@ -46,6 +53,10 @@ export const defaultDeck: DeckState = {
   companionVariant: undefined,
   companionFrameSizing: {},
 };
+
+//
+// Layout
+//
 
 const LayoutMode = Schema.Literal('multi', 'solo', 'solo--fullscreen');
 export type LayoutMode = Schema.Schema.Type<typeof LayoutMode>;
