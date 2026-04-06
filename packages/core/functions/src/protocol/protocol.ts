@@ -22,10 +22,10 @@ import { type FunctionProtocol } from '@dxos/protocols';
 import { FunctionError } from '../errors';
 import { type FunctionServices } from '../sdk';
 import { CredentialsService, FunctionInvocationService, QueueService, TracingService } from '../services';
+import * as Trace from '../Trace';
 import { Operation } from '@dxos/operation';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
-import { Trace } from '../index';
 
 /**
  * Wraps a function handler made with `defineFunction` to a protocol that the functions-runtime expects.
