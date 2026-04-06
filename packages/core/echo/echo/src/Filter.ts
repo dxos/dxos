@@ -64,7 +64,7 @@ export const everything = (): FilterClass => {
 /**
  * Filter that matches no objects.
  */
-export const nothing = (): Filter<never> => {
+export const nothing = (): FilterClass => {
   return new FilterClass({
     type: 'not',
     filter: {
@@ -278,7 +278,7 @@ export const lte = <T>(value: T): Filter<T | undefined> => {
  * Predicate for property to be in the provided array.
  * @param values - Values to check against.
  */
-const in$ = <T>(...values: T[]): Filter<T | undefined> => {
+const in$ = <T>(...values: T[]): Filter<T> => {
   return new FilterClass({
     type: 'in',
     values,
@@ -302,7 +302,7 @@ export const contains = <T>(value: T): Filter<readonly T[] | undefined> => {
  * @param from - Start of the range (inclusive).
  * @param to - End of the range (exclusive).
  */
-export const between = <T>(from: T, to: T): Filter<unknown> => {
+export const between = <T>(from: T, to: T): Filter<T> => {
   return new FilterClass({
     type: 'range',
     from,
