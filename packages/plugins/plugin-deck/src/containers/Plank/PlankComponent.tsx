@@ -14,41 +14,38 @@ import { StackItem, railGridHorizontal } from '@dxos/react-ui-stack';
 import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
 
 import { useMainSize } from '../../hooks';
-import { type Settings, type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '../../types';
+import { PLANK_COMPANION_TYPE } from '../../types';
 
-import { usePlankContext } from './PlankContext';
+import { PlankRootProps, usePlankContext } from './PlankRoot';
 import { PlankError, PlankErrorFallback } from './PlankError';
 import { PlankHeading } from './PlankHeading';
 import { PlankLoading } from './PlankLoading';
 
 // TOOD(burdon): Get layoutMode from root.
-export type PlankComponentProps = {
+export type PlankComponentProps = Pick<PlankRootProps, 'part' | 'layoutMode' | 'settings'> & {
   id: string;
-  part: ResolvedPart;
-  layoutMode: LayoutMode;
   path?: string[];
   order?: number;
   active?: string[];
-  companioned?: 'primary' | 'companion';
   node?: Node.Node;
   primary?: Node.Node;
   companions?: Node.Node[];
-  settings?: Settings.Settings;
+  companioned?: 'primary' | 'companion';
 };
 
 export const PlankComponent = memo(
   ({
+    // part,
+    // layoutMode,
+    // settings,
     id,
-    part,
     path,
     order,
     active,
-    companioned,
     node,
     primary,
     companions,
-    layoutMode,
-    settings,
+    companioned,
   }: PlankComponentProps) => {
     const { popoverAnchorId, scrollIntoView, plankSizing, onResize, onScrollIntoView } =
       usePlankContext('PlankComponent');

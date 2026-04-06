@@ -2,12 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
-
-import { PlankRoot, PlankProvider, type PlankContextValue } from './PlankRoot';
-import { PlankComponent } from './PlankComponent';
-import { PlankContent } from './PlankContent';
-import { PlankHeading } from './PlankHeading';
+import { PlankRoot, PlankRootProps } from './PlankRoot';
+import { PlankComponent, PlankComponentProps } from './PlankComponent';
+import { PlankContent, PlankContentProps } from './PlankContent';
+import { PlankHeading, PlankHeadingProps } from './PlankHeading';
 import { PlankControls } from './PlankControls';
 
 /**
@@ -21,7 +19,4 @@ export const Plank = {
   Controls: PlankControls,
 };
 
-export type { PlankRootProps };
-export type { PlankComponentProps } from './PlankComponent';
-export type { PlankContentProps } from './PlankContent';
-export type { PlankContextValue } from './PlankContext';
+export type { PlankRootProps, PlankComponentProps, PlankContentProps, PlankHeadingProps };

@@ -39,11 +39,11 @@ export type PlankContextValue = {
 
 export const [PlankProvider, usePlankContext] = createContext<PlankContextValue>(PLANK_NAME);
 
-type PlankRootProps = PropsWithChildren<PlankContextValue>;
+export type PlankRootProps = PropsWithChildren<PlankContextValue>;
 
 /**
  * Headless root that provides plank context.
  */
-const PlankRoot = ({ children, ...context }: PlankRootProps) => {
+export const PlankRoot = ({ children, ...context }: PlankRootProps) => {
   return <PlankProvider {...context}>{children}</PlankProvider>;
 };

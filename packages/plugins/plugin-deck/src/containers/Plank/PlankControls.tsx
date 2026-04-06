@@ -22,26 +22,17 @@ export type PlankCapabilities = {
   companion?: boolean;
 };
 
-export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
-  onClick?: PlankControlHandler;
-  variant?: 'hide-disabled' | 'default';
-  close?: boolean | 'minify-start' | 'minify-end';
-  capabilities: PlankCapabilities;
-  layoutMode?: LayoutMode;
-  pin?: 'start' | 'end' | 'both';
-};
-
-const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
-  return <IconButton label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
-};
+//
+// Controls
+//
 
 const plankControlSpacing = 'px-2';
 
-type PlankComplimentControlsProps = {
+export type PlankCompanionControlsProps = {
   primary?: string;
 };
 
-export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankComplimentControlsProps>(
+export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionControlsProps>(
   ({ primary }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
     const { invokePromise } = useOperationInvoker();
@@ -61,6 +52,23 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompliment
     );
   },
 );
+
+const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
+  return <IconButton label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
+};
+
+//
+// PlankControls
+//
+
+export type PlankControlsProps = Omit<ButtonGroupProps, 'onClick'> & {
+  onClick?: PlankControlHandler;
+  variant?: 'hide-disabled' | 'default';
+  close?: boolean | 'minify-start' | 'minify-end';
+  capabilities: PlankCapabilities;
+  layoutMode?: LayoutMode;
+  pin?: 'start' | 'end' | 'both';
+};
 
 // TODO(wittjosiah): Duplicate of stack LayoutControls?
 //   Translations were to be duplicated between packages.
