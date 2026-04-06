@@ -2,7 +2,9 @@
 
 ## Overview
 
-Spacetime is a generative 3D modeling plugin for DXOS Composer. It provides an interactive 3D editor for creating, manipulating, and combining solid geometry within a collaborative ECHO-backed scene. Users can create primitives, import external models, perform boolean operations, and export results — all within the Composer application shell.
+Spacetime is a generative 3D modeling plugin for DXOS Composer.
+It provides an interactive 3D editor for creating, manipulating, and combining solid geometry within a collaborative ECHO-backed scene.
+Users can create primitives, import external models, perform boolean operations, and export results — all within the Composer application shell.
 
 The plugin uses Babylon.js for rendering and interaction, Manifold (WASM) for solid geometry operations, and ECHO for persistent, replicated scene state.
 

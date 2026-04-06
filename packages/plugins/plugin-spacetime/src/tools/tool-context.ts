@@ -5,8 +5,15 @@
 import { type ArcRotateCamera, type HighlightLayer, type Mesh, type Scene as BabylonScene } from '@babylonjs/core';
 import type { Manifold } from 'manifold-3d';
 
-import { type SelectionState, type ViewState } from '../components/SpacetimeToolbar';
 import { type Scene, type Model } from '../types';
+
+/** Selection granularity mode. */
+export type SelectionMode = 'object' | 'face';
+
+/** Current selection mode state used by tools. */
+export type SelectionState = {
+  selectionMode: SelectionMode;
+};
 import { type getManifold } from '../engine';
 
 /** Base selection fields shared by all selection types. */
@@ -61,7 +68,6 @@ export type ToolContext = {
   getObject: (id: string) => Model.Object | undefined;
   /** Current view state (selection mode, grid, etc.). */
   selectionState: SelectionState;
-  viewState: ViewState;
   /** Runtime Manifold solids keyed by object id. Persists across tool operations. */
   solids: Map<string, Manifold>;
   /** Scene-level highlight layer for object selection glow. */

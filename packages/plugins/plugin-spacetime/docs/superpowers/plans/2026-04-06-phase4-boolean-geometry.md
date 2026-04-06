@@ -842,7 +842,7 @@ In `actions.ts`, update the `EditorActions` type:
 
 ```typescript
 export type EditorActions = {
-  onAddObject: () => void;
+  onAdd: () => void;
   onDeleteSelected: () => void;
   onImport: () => void;
   onExportSTL: () => void;
@@ -861,7 +861,7 @@ export const createEditorActions =
       .action(
         'add-object',
         { label: ['action.add-object.label', { ns: meta.id }], icon: 'ph--plus--regular' },
-        actions.onAddObject,
+        actions.onAdd,
       )
       .action(
         'delete-object',

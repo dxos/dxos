@@ -18,17 +18,15 @@ import {
 } from '../../engine';
 import { DebugPanel, extractSolidDebugInfo, type DebugInfo } from './DebugPanel';
 import {
+  createToolManager,
   ToolManager,
-  SelectTool,
-  MoveTool,
-  ExtrudeTool,
   type Selection,
   type EditorState,
   type ActionResult,
+  type SelectionMode,
 } from '../../tools';
-import { AddObjectAction, DeleteObjectsAction, JoinObjectsAction, SubtractObjectsAction } from '../../tools/actions';
 import { type Scene, Model } from '../../types';
-import { type SelectionMode, type SpacetimeTool, type ViewState } from '../SpacetimeToolbar';
+import { type SpacetimeTool, type ViewState } from '../SpacetimeToolbar';
 
 export type SpacetimeCanvasProps = {
   showFps?: boolean;
@@ -163,15 +161,8 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           }
         }
 
-        // Set up tool manager.
-        const toolManager = new ToolManager();
-        toolManager.register(new SelectTool());
-        toolManager.register(new MoveTool());
-        toolManager.register(new ExtrudeTool());
-        toolManager.registerAction(new AddObjectAction());
-        toolManager.registerAction(new DeleteObjectsAction());
-        toolManager.registerAction(new JoinObjectsAction());
-        toolManager.registerAction(new SubtractObjectsAction());
+        // Set up tool manager with all tools and actions.
+        const toolManager = createToolManager();
         toolManagerRef.current = toolManager;
 
         // Create highlight layer for object selection glow.
@@ -271,9 +262,6 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
           },
           get selectionState() {
             return { selectionMode: selectionModeRef.current as SelectionMode };
-          },
-          get viewState() {
-            return viewStateRef.current ?? { showGrid: true, showDebug: false };
           },
           get selection() {
             return selectionRef.current;

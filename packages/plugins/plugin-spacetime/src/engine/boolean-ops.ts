@@ -25,6 +25,7 @@ const toWorldSpace = (solid: Manifold, objectPos: Model.Vec3, refPos: Model.Vec3
   if (Math.abs(dx) < 1e-6 && Math.abs(dy) < 1e-6 && Math.abs(dz) < 1e-6) {
     return solid;
   }
+
   return solid.translate([dx, dy, dz]);
 };
 
@@ -36,7 +37,6 @@ const toWorldSpace = (solid: Manifold, objectPos: Model.Vec3, refPos: Model.Vec3
 export const joinSolids = (wasm: ManifoldToplevel, solids: Manifold[], positions: Model.Vec3[]): BooleanResult => {
   const refPos = positions[0];
   const translated: Manifold[] = [];
-
   for (let idx = 0; idx < solids.length; idx++) {
     translated.push(toWorldSpace(solids[idx], positions[idx], refPos));
   }
@@ -64,7 +64,6 @@ export const joinSolids = (wasm: ManifoldToplevel, solids: Manifold[], positions
 export const subtractSolids = (wasm: ManifoldToplevel, solids: Manifold[], positions: Model.Vec3[]): BooleanResult => {
   const refPos = positions[0];
   const translated: Manifold[] = [];
-
   for (let idx = 0; idx < solids.length; idx++) {
     translated.push(toWorldSpace(solids[idx], positions[idx], refPos));
   }

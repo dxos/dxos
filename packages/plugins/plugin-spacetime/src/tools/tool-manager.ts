@@ -18,8 +18,9 @@ export class ToolManager {
   private _ctx: ToolContext | null = null;
 
   /** Register a tool. */
-  register(tool: Tool): void {
+  registerTool(tool: Tool): this {
     this._tools.set(tool.id, tool);
+    return this;
   }
 
   /** Set the shared tool context. Call when Babylon scene and Manifold are ready. */
@@ -70,8 +71,9 @@ export class ToolManager {
   }
 
   /** Register an action handler. */
-  registerAction(handler: ActionHandler): void {
+  registerAction(handler: ActionHandler): this {
     this._actions.set(handler.id, handler);
+    return this;
   }
 
   /** Dispatch an action by id. Returns the result, or undefined if action not found or no context. */

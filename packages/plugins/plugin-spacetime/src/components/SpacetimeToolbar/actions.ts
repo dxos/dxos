@@ -7,7 +7,7 @@ import { type ActionGroupBuilderFn, type ToolbarMenuActionGroupProperties } from
 import { meta } from '../../meta';
 import { type Model } from '../../types';
 
-type TemplateType = 'primitive' | 'preset';
+export type TemplateType = 'primitive' | 'preset';
 
 export type TemplateDefinition = {
   id: Model.ObjectTemplate;
@@ -64,12 +64,12 @@ export const templates: Record<TemplateType, TemplateDefinition[]> = {
 };
 
 export type EditorActions = {
-  onAddObject: () => void;
+  onAdd: () => void;
   onDeleteSelected: () => void;
-  onImport: () => void;
-  onExportSTL: () => void;
   onJoinSelected: () => void;
   onSubtractSelected: () => void;
+  onImport: () => void;
+  onExport: () => void;
 };
 
 /** Creates the object template selector with primitives and presets groups. */
@@ -121,33 +121,51 @@ export const createEditorActions =
     builder
       .action(
         'add-object',
-        { label: ['action.add-object.label', { ns: meta.id }], icon: 'ph--plus--regular' },
-        actions.onAddObject,
+        {
+          label: ['action.add-object.label', { ns: meta.id }],
+          icon: 'ph--plus--regular',
+        },
+        actions.onAdd,
       )
       .action(
         'delete-object',
-        { label: ['action.delete-object.label', { ns: meta.id }], icon: 'ph--trash--regular' },
+        {
+          label: ['action.delete-object.label', { ns: meta.id }],
+          icon: 'ph--trash--regular',
+        },
         actions.onDeleteSelected,
       )
       .separator('line')
       .action(
         'join-objects',
-        { label: ['action.join-objects.label', { ns: meta.id }], icon: 'ph--unite-square--regular' },
+        {
+          label: ['action.join-objects.label', { ns: meta.id }],
+          icon: 'ph--unite-square--regular',
+        },
         actions.onJoinSelected,
       )
       .action(
         'subtract-objects',
-        { label: ['action.subtract-objects.label', { ns: meta.id }], icon: 'ph--subtract-square--regular' },
+        {
+          label: ['action.subtract-objects.label', { ns: meta.id }],
+          icon: 'ph--subtract-square--regular',
+        },
         actions.onSubtractSelected,
       )
       .separator('line')
       .action(
         'import',
-        { label: ['action.import.label', { ns: meta.id }], icon: 'ph--upload-simple--regular' },
+        {
+          label: ['action.import.label', { ns: meta.id }],
+          icon: 'ph--upload-simple--regular',
+        },
         actions.onImport,
       )
       .action(
         'export',
-        { label: ['action.export.label', { ns: meta.id }], icon: 'ph--download-simple--regular' },
-        actions.onExportSTL,
+        {
+          label: ['action.export.label', { ns: meta.id }],
+          icon: 'ph--download-simple--regular',
+        },
+        actions.onExport,
       );

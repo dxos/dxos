@@ -83,7 +83,7 @@ Instead implement tool handlers that operate on the runtime properties and then 
   - View toggle group in toolbar via `view.ts` `createViewActions`.
   - `ViewState.showGrid` synced to `SceneManager.showGrid` via canvas effect.
 - [x] Menu action and operation to create a new cube.
-  - `EditorActions.onAddObject` in `actions.ts`, wired through editor context.
+  - `EditorActions.onAdd` in `actions.ts`, wired through editor context.
   - Creates `Model.Object` via `Model.make()`, adds `Ref` to scene via `Obj.change`.
   - Canvas subscribes to `objectCount` (via `useObject` on scene) and syncs new meshes reactively.
 - [x] Menu action and operation to delete the selected object.
