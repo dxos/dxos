@@ -168,7 +168,7 @@ export const DeckMultiMode = () => {
   );
 
   return (
-    <div role='none' className='border border-green-500 relative bg-deck-surface overflow-hidden'>
+    <div role='none' className='relative bg-deck-surface overflow-hidden'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
       <Stack
         classNames={[
