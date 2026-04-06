@@ -104,7 +104,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
         ) : (
           <Toast.Close asChild>
             <Button onClick={handleClose}>
-              {t(waiting ? 'close label' : 'confirm label', { ns: osTranslations })}
+              {t(waiting ? 'close.label' : 'confirm label', { ns: osTranslations })}
             </Button>
           </Toast.Close>
         )}

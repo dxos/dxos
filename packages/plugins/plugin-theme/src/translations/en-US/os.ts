@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+// TODO(burdon): Remove or update?
 export const os = (appName?: string) => ({
   // App-level translations (merged from appkit)
   'current app name': appName ?? 'Test App',

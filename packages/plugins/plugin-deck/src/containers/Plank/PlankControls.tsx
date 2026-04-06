@@ -101,10 +101,10 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
                 <PlankControl
                   label={t(
                     layoutMode === 'solo--fullscreen'
-                      ? 'exit fullscreen label'
+                      ? 'exit-fullscreen.label'
                       : layoutIsAnySolo
-                        ? 'show deck plank label'
-                        : 'show solo plank label',
+                        ? 'show-deck-plank.label'
+                        : 'show-solo-plank.label',
                   )}
                   classNames={buttonClassNames}
                   icon={
@@ -141,7 +141,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
         ) : (
           capabilities.fullscreen && (
             <PlankControl
-              label={t(layoutMode === 'solo--fullscreen' ? 'exit fullscreen label' : 'show fullscreen plank label')}
+              label={t(layoutMode === 'solo--fullscreen' ? 'exit-fullscreen.label' : 'show-fullscreen-plank.label')}
               classNames={buttonClassNames}
               icon={layoutMode === 'solo--fullscreen' ? 'ph--corners-in--regular' : 'ph--corners-out--regular'}
               onClick={() => onClick?.('solo--fullscreen')}
