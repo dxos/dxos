@@ -56,13 +56,3 @@ export type SettingsSurfaceProps<T extends {}, Props extends {} = {}> = {
   /** Callback to update settings. */
   onSettingsChange?: (cb: (current: T) => T) => void;
 } & Props;
-
-export type SurfaceThingProps = {
-  space?: Space;
-
-  /** Surface role (superset of WAI-ARIA role). */
-  role?: string;
-
-  /** Path-based ID inherited from the surface data for attention tracking and graph action lookup. */
-  attendableId?: string;
-};
