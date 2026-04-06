@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './boolean-ops';
 export * from './extrusion';
 export * from './glb-import';
 export * from './obj-import';
