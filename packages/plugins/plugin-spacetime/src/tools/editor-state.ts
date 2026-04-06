@@ -19,11 +19,11 @@ export type EditorState = {
   /** Current hue for new objects and selected object color. */
   hue: string;
   /** Currently selected template for new objects. */
-  selectedTemplate: Model.ObjectTemplate;
+  template: Model.ObjectTemplate;
   /** Canvas-level selection (includes Babylon mesh references). */
   selection: Selection | null;
-  /** Object ID to select after next canvas sync (set by actions, cleared by canvas). */
-  pendingSelectId: string | null;
+  /** Object IDs to select after next canvas sync (set by actions, cleared by canvas). */
+  pendingSelection: string[] | null;
 };
 
 /** Default editor state. */
@@ -33,7 +33,7 @@ export const DEFAULT_EDITOR_STATE: EditorState = {
   showGrid: true,
   showDebug: false,
   hue: 'blue',
-  selectedTemplate: 'cube',
+  template: 'cube',
   selection: null,
-  pendingSelectId: null,
+  pendingSelection: null,
 };

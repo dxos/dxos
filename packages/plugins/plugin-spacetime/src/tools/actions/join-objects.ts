@@ -74,6 +74,6 @@ export class JoinObjectsAction implements ActionHandler {
     result.solid.delete();
 
     const newObjId = (newObject as any).id as string;
-    ctx.editorState.pendingSelectId = newObjId;
+    ctx.editorState.pendingSelection = [newObjId];
   }
 }

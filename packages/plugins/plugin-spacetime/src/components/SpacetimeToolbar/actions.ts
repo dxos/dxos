@@ -98,6 +98,7 @@ export const createTemplateSelector =
           if (i++ > 0) {
             group.separator('line');
           }
+
           for (const template of items) {
             group.action(
               `${type}-${template.id}`,

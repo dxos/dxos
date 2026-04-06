@@ -114,7 +114,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
           importGLBRef,
           setSelectedObjectId: (id: string | null) => {
             if (id) {
-              updateEditorState({ pendingSelectId: id });
+              updateEditorState({ pendingSelection: [id] });
             }
           },
         }),

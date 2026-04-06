@@ -29,11 +29,6 @@ type SelectionBase = {
   highlightMesh: Mesh | null;
 };
 
-/** Whole-object selection. */
-export type ObjectSelection = SelectionBase & {
-  type: 'object';
-};
-
 /** Single-face selection. */
 export type FaceSelection = SelectionBase & {
   type: 'face';
@@ -41,6 +36,11 @@ export type FaceSelection = SelectionBase & {
   faceId: number;
   /** Outward normal of the selected face. */
   normal: { x: number; y: number; z: number };
+};
+
+/** Whole-object selection. */
+export type ObjectSelection = SelectionBase & {
+  type: 'object';
 };
 
 /** Multi-object selection (ordered list, first = primary). */
@@ -51,7 +51,7 @@ export type MultiObjectSelection = {
 };
 
 /** Shared selection state that persists across tool switches. */
-export type Selection = ObjectSelection | FaceSelection | MultiObjectSelection;
+export type Selection = FaceSelection | ObjectSelection | MultiObjectSelection;
 
 /** Shared context provided to all tools. */
 export type ToolContext = {

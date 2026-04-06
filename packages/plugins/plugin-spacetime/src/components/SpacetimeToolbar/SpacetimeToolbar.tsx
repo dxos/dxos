@@ -69,9 +69,7 @@ const createToolbarActions = (
       .separator('line')
       .subgraph(createToolActions(editorState.tool, (tool) => update({ tool })))
       .separator('line')
-      .subgraph(
-        createTemplateSelector(editorState.selectedTemplate, (template) => update({ selectedTemplate: template })),
-      )
+      .subgraph(createTemplateSelector(editorState.template, (template) => update({ template })))
       .separator('line')
       .subgraph(createEditorActions(editorActions, selectionCount))
       .separator()

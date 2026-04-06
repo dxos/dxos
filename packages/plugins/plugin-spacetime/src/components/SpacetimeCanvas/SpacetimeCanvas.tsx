@@ -286,6 +286,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
             if (!solid) {
               return undefined;
             }
+
             // Serialize mesh data for ECHO storage.
             const meshData = solid.getMesh();
             const { vertProperties, triVerts, numProp } = meshData;
@@ -448,21 +449,23 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
 
       // Handle pending selection from actions.
       const currentState = registry.get(editorStateAtom);
-      const pending = currentState.pendingSelectId;
-      if (pending) {
-        const mesh = meshesRef.current.get(pending);
-        if (mesh) {
-          // Use the setSelection from the tool context if available, otherwise write to atom directly.
-          const toolCtx = toolManagerRef.current;
-          if (toolCtx) {
-            // The tool context's setSelection handles highlight management.
-            const ctx = (toolCtx as any)._ctx;
-            if (ctx?.setSelection) {
-              ctx.setSelection({ type: 'object', objectId: pending, mesh, highlightMesh: null });
-            }
+      const pendingIds = currentState.pendingSelection;
+      if (pendingIds && pendingIds.length > 0) {
+        const toolCtx = (toolManagerRef.current as any)?._ctx;
+        if (pendingIds.length === 1) {
+          const mesh = meshesRef.current.get(pendingIds[0]);
+          if (mesh && toolCtx?.setSelection) {
+            toolCtx.setSelection({ type: 'object', objectId: pendingIds[0], mesh, highlightMesh: null });
+          }
+        } else {
+          const entries = pendingIds
+            .map((objectId) => ({ objectId, mesh: meshesRef.current.get(objectId)! }))
+            .filter((entry) => entry.mesh);
+          if (entries.length > 0 && toolCtx?.setSelection) {
+            toolCtx.setSelection({ type: 'multi-object', entries });
           }
         }
-        registry.set(editorStateAtom, { ...registry.get(editorStateAtom), pendingSelectId: null });
+        registry.set(editorStateAtom, { ...registry.get(editorStateAtom), pendingSelection: null });
       } else {
         // Refresh scene overview when nothing is selected.
         const currentSelection = currentState.selection;
@@ -501,6 +504,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
 );
 
 /** Map DXOS hue names to approximate Babylon Color3 values. */
+// TODO(burdon): Use TW config.
 const hueColors: Record<string, Color3> = {
   red: new Color3(0.8, 0.2, 0.2),
   orange: new Color3(0.9, 0.5, 0.1),
@@ -539,15 +543,13 @@ const theme = {
 
 /** Build scene overview debug info from ECHO scene data. */
 const extractSceneDebugInfo = (sceneData?: Scene.Scene): DebugInfo => {
-  if (!sceneData?.objects?.length) {
-    return { type: 'scene', objects: [] };
-  }
-  const objects = sceneData.objects
+  const objects = sceneData?.objects
     .map((ref) => {
       const obj = ref?.target as (Model.Object & { id?: string }) | undefined;
       if (!obj) {
         return undefined;
       }
+
       return {
         id: (obj as any).id as string,
         label: obj.label,
@@ -557,5 +559,9 @@ const extractSceneDebugInfo = (sceneData?: Scene.Scene): DebugInfo => {
       };
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry != null);
-  return { type: 'scene', objects };
+
+  return {
+    type: 'scene',
+    objects: objects ?? [],
+  };
 };

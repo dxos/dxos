@@ -20,10 +20,10 @@ export class AddObjectAction implements ActionHandler {
       return;
     }
 
-    const { selectedTemplate, hue } = ctx.editorState;
-    log.info('AddObjectAction.execute', { template: selectedTemplate, hue });
+    const { template, hue } = ctx.editorState;
+    log.info('AddObjectAction.execute', { template: template, hue });
 
-    const objData = presetObjData[selectedTemplate as Model.PresetType];
+    const objData = presetObjData[template as Model.PresetType];
     let object: Model.Object;
 
     if (objData) {
@@ -33,7 +33,7 @@ export class AddObjectAction implements ActionHandler {
       }
       object = Model.make({
         primitive: undefined,
-        label: selectedTemplate,
+        label: template,
         mesh: {
           vertexData: Model.encodeTypedArray(parsed.positions),
           indexData: Model.encodeTypedArray(parsed.indices),
@@ -42,7 +42,7 @@ export class AddObjectAction implements ActionHandler {
       });
     } else {
       object = Model.make({
-        primitive: selectedTemplate as Model.PrimitiveType,
+        primitive: template as Model.PrimitiveType,
         color: hue,
       });
     }
@@ -54,7 +54,7 @@ export class AddObjectAction implements ActionHandler {
 
     const objId = (object as any).id as string | undefined;
     if (objId) {
-      ctx.editorState.pendingSelectId = objId;
+      ctx.editorState.pendingSelection = [objId];
     }
   }
 }
