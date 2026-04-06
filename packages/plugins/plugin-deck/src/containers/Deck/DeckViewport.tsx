@@ -217,7 +217,7 @@ export const DeckMultiMode = () => {
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
       <Stack
         classNames={[
-          'absolute w-full h-[calc(100%-2*var(--main-spacing))] inset-y-(--main-spacing) -inset-w-px',
+          'absolute h-[calc(100%-2*var(--main-spacing))] w-full inset-y-(--main-spacing) -inset-w-px',
           mainPaddingTransitions,
         ]}
         style={padding}
@@ -229,7 +229,8 @@ export const DeckMultiMode = () => {
       >
         {active.map((entryId) => (
           <Fragment key={entryId}>
-            <PlankSeparator order={order[entryId] - 1} encapsulate={!!settings?.encapsulatedPlanks} />
+            {/* TODO(burdon): Setting for separator. */}
+            <PlankSeparator hidden order={order[entryId] - 1} encapsulate={!!settings?.encapsulatedPlanks} />
             <PlankContainer
               id={entryId}
               part='multi'
@@ -274,11 +275,11 @@ const DeckSidebarToggles = ({ topbar, fullscreen }: { topbar: boolean; fullscree
 // PlankSeparator
 //
 
-const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: boolean }) =>
+const PlankSeparator = ({ order, hidden, encapsulate }: { order: number; hidden?: boolean; encapsulate?: boolean }) =>
   order > 0 && (
     <span
       role='separator'
-      className={mx('row-span-2 bg-deck-surface', encapsulate ? 'w-0' : 'w-4')}
+      className={mx('row-span-2 bg-deck-surface', hidden && 'hidden', encapsulate ? 'w-0' : 'w-4')}
       style={{ gridColumn: order }}
     />
   );
@@ -340,7 +341,6 @@ const PlankContainer = memo(
       [invokePromise],
     );
 
-    console.log({ layoutMode, part, hasCompanion });
     return (
       <Plank.Root
         graph={graph}
