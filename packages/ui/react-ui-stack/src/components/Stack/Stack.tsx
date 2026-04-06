@@ -4,7 +4,6 @@
 
 import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, {
-  type CSSProperties,
   Children,
   type ComponentPropsWithRef,
   type FocusEvent,
@@ -37,13 +36,6 @@ export type Size = 'intrinsic' | 'contain' | 'split';
 export const railGridHorizontal = 'grid-rows-[[rail-start]_var(--dx-rail-size)_[content-start]_1fr_[content-end]]';
 export const railGridVertical = 'grid-cols-[[rail-start]_var(--dx-rail-size)_[content-start]_1fr_[content-end]]';
 
-export const railGridHorizontalContainFitContent =
-  'grid-rows-[[rail-start]_var(--dx-rail-size)_[content-start]_fit-content(calc(100%-var(--dx-rail-size)*2+2px))_[content-end]]';
-export const railGridVerticalContainFitContent =
-  'grid-cols-[[rail-start]_var(--dx-rail-size)_[content-start]_fit-content(calc(100%-var(--dx-rail-size)*2+2px))_[content-end]]';
-
-export const autoScrollRootAttributes = { 'data-drag-autoscroll': 'idle' };
-
 const PERPENDICULAR_FOCUS_THRESHHOLD = 128;
 
 const scrollIntoViewAndFocus = (el: HTMLElement, orientation: StackProps['orientation']) => {
@@ -70,15 +62,15 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
       id,
       style,
       orientation = 'vertical',
-      rail = true, // TODO(burdon): Change default to false.
+      rail = true,
       size = 'intrinsic',
-      onRearrange,
       itemsCount = Children.count(children),
-      getDropElement,
-      separatorOnScroll,
       circularFocus,
+      separatorOnScroll,
+      getDropElement,
       onBlur,
       onKeyDown,
+      onRearrange,
       ...props
     },
     forwardedRef,
@@ -88,14 +80,7 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
     const [lastFocusedItem, setLastFocusedItem] = useState<string>();
     const composedItemRef = composeRefs<HTMLDivElement>(stackRef, forwardedRef);
 
-    const styles: CSSProperties = {
-      [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
-        size === 'split' ? `repeat(${itemsCount}, 1fr)` : `repeat(${itemsCount}, min-content) [tabster-dummies] 0`,
-      ...style,
-    };
-
     const selfDroppable = !!(itemsCount < 1 && onRearrange && id);
-
     const { dropping } = useStackDropForElements({
       id,
       element: getDropElement && stackElement ? getDropElement(stackElement) : stackElement,
@@ -174,15 +159,21 @@ export const Stack = forwardRef<HTMLDivElement, StackProps>(
                 : 'grid-cols-1 py-(--stack-gap)',
             classNames,
           )}
-          style={styles}
+          style={{
+            [orientation === 'horizontal' ? 'gridTemplateColumns' : 'gridTemplateRows']:
+              size === 'split'
+                ? `repeat(${itemsCount}, 1fr)`
+                : `repeat(${itemsCount}, min-content) [tabster-dummies] 0`,
+            ...style,
+          }}
           aria-orientation={orientation}
           orientation={orientation}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
           data-dx-stack={stackId}
           data-dx-stack-circular-focus={circularFocus}
           data-dx-last-focused-item={lastFocusedItem}
           data-rail={rail}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
           ref={composedItemRef}
         >
           {children}
@@ -215,10 +206,11 @@ export { StackContext };
 export type { StackContextValue };
 
 /**
- * Handles moving focus using the arrow keys. Focus is only handled by the nearest stack;
- * if the arrow key matches the orientation, focus cycles between items, otherwise focus is passed to an adjacent stack item;
- * or, if there is no such stack item, focus is passed to the adjacent empty stack if one can be found.
+ * Handles moving focus using the arrow keys. Focus is only handled by the nearest stack.
+ * If the arrow key matches the orientation, focus cycles between items, otherwise focus is passed to an adjacent stack item;
+ * Or if there is no such stack item, focus is passed to the adjacent empty stack if one can be found.
  */
+// TODO(burdon): Replace with Mosaic.Stack which handles this automatically.
 const useKeyDown = (stackId: string, circularFocus?: boolean, onKeyDown?: StackProps['onKeyDown']) =>
   useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
