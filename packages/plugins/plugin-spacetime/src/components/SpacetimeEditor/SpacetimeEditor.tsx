@@ -21,18 +21,10 @@ import { useObject } from '@dxos/echo-react';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type EditorState, DEFAULT_EDITOR_STATE, getSelectedObjectIds } from '../../tools';
-import { type Scene, Model } from '../../types';
+import { type Scene } from '../../types';
 import { handleImport as doImport, handleExport as doExport } from './import-export';
 import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
-import {
-  type EditorActions,
-  type PropertiesState,
-  type SelectionState,
-  type ViewState,
-  SpacetimeToolbar,
-  type SpacetimeToolbarProps,
-} from '../SpacetimeToolbar';
-import { type ToolState } from '../SpacetimeToolbar/tools';
+import { type EditorActions, SpacetimeToolbar, type SpacetimeToolbarProps } from '../SpacetimeToolbar';
 
 //
 // Context
@@ -48,18 +40,6 @@ type SpacetimeEditorContextValue = {
 
   /** Actions. */
   editorActions: EditorActions;
-
-  // Compatibility for toolbar (Task 5 removes these).
-  toolState: ToolState;
-  onToolChange: (next: Partial<ToolState>) => void;
-  viewState: ViewState;
-  onViewChange: (next: Partial<ViewState>) => void;
-  propertiesState: PropertiesState;
-  onPropertiesChange: (next: Partial<PropertiesState>) => void;
-  selectionState: SelectionState;
-  onSelectionChange: (next: Partial<SelectionState>) => void;
-  selectedTemplate: Model.ObjectTemplate;
-  onSelectedTemplateChange: (template: Model.ObjectTemplate) => void;
 
   /** Ref for dispatching actions through ToolManager. */
   handleActionRef: React.MutableRefObject<(actionId: string) => void>;
@@ -81,7 +61,7 @@ const [SpacetimeEditorProvider, useSpacetimeEditorContext] =
 //
 
 interface SpacetimeController {
-  setTool(tool: Partial<ToolState>): void;
+  setTool(tool: string): void;
 }
 
 //
@@ -117,10 +97,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       (data: ArrayBuffer | string) => Promise<{ vertexData: string; indexData: string } | undefined>
     >(async () => undefined);
 
-    const dispatchAction = useCallback(
-      (actionId: string): void => handleActionRef.current(actionId),
-      [],
-    );
+    const dispatchAction = useCallback((actionId: string): void => handleActionRef.current(actionId), []);
 
     const handleAdd = useCallback(() => dispatchAction('add-object'), [dispatchAction]);
     const handleDeleteSelected = useCallback(() => dispatchAction('delete-objects'), [dispatchAction]);
@@ -196,57 +173,14 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       [handleAdd, handleDeleteSelected, handleImport, handleExport, handleJoinSelected, handleSubtractSelected],
     );
 
-    // Derive compatibility values from editorState for toolbar.
-    const toolState = useMemo<ToolState>(() => ({ tool: editorState.tool as ToolState['tool'] }), [editorState.tool]);
-    const viewState = useMemo<ViewState>(
-      () => ({ showGrid: editorState.showGrid, showDebug: editorState.showDebug }),
-      [editorState.showGrid, editorState.showDebug],
-    );
-    const propertiesState = useMemo<PropertiesState>(() => ({ hue: editorState.hue }), [editorState.hue]);
-    const selectionState = useMemo<SelectionState>(
-      () => ({ selectionMode: editorState.selectionMode, selectionCount: selectedObjectIds.length }),
-      [editorState.selectionMode, selectedObjectIds.length],
-    );
-
-    const onToolChange = useCallback(
-      (next: Partial<ToolState>) => updateEditorState(next as Partial<EditorState>),
-      [updateEditorState],
-    );
-    const onViewChange = useCallback(
-      (next: Partial<ViewState>) => updateEditorState(next as Partial<EditorState>),
-      [updateEditorState],
-    );
-    const onPropertiesChange = useCallback(
-      (next: Partial<PropertiesState>) => updateEditorState(next as Partial<EditorState>),
-      [updateEditorState],
-    );
-    const onSelectionChange = useCallback(
-      (next: Partial<SelectionState>) => updateEditorState(next as Partial<EditorState>),
-      [updateEditorState],
-    );
-    const onSelectedTemplateChange = useCallback(
-      (template: Model.ObjectTemplate) => updateEditorState({ selectedTemplate: template }),
-      [updateEditorState],
-    );
-
     useImperativeHandle(forwardedRef, () => ({
-      setTool: onToolChange,
+      setTool: (tool: string) => updateEditorState({ tool }),
     }));
 
     return (
       <SpacetimeEditorProvider
         scene={scene}
         editorStateAtom={editorStateAtom}
-        toolState={toolState}
-        onToolChange={onToolChange}
-        selectionState={selectionState}
-        onSelectionChange={onSelectionChange}
-        viewState={viewState}
-        onViewChange={onViewChange}
-        selectedTemplate={editorState.selectedTemplate}
-        onSelectedTemplateChange={onSelectedTemplateChange}
-        propertiesState={propertiesState}
-        onPropertiesChange={onPropertiesChange}
         editorActions={editorActions}
         handleActionRef={handleActionRef}
         solidsRef={solidsRef}
@@ -270,35 +204,14 @@ type SpacetimeEditorToolbarProps = Pick<SpacetimeToolbarProps, 'attendableId' | 
 
 const SpacetimeEditorToolbar = composable<HTMLDivElement, SpacetimeEditorToolbarProps>(
   ({ attendableId, alwaysActive, ...props }, forwardedRef) => {
-    const {
-      toolState,
-      onToolChange,
-      selectionState,
-      onSelectionChange,
-      viewState,
-      onViewChange,
-      selectedTemplate,
-      onSelectedTemplateChange,
-      propertiesState,
-      onPropertiesChange,
-      editorActions,
-    } = useSpacetimeEditorContext(SPACETIME_EDITOR_TOOLBAR);
+    const { editorStateAtom, editorActions } = useSpacetimeEditorContext(SPACETIME_EDITOR_TOOLBAR);
 
     return (
       <SpacetimeToolbar
         {...composableProps(props)}
         attendableId={attendableId}
         alwaysActive={alwaysActive}
-        toolState={toolState}
-        onToolChange={onToolChange}
-        selectionState={selectionState}
-        onSelectionChange={onSelectionChange}
-        viewState={viewState}
-        onViewChange={onViewChange}
-        selectedTemplate={selectedTemplate}
-        onSelectedTemplateChange={onSelectedTemplateChange}
-        propertiesState={propertiesState}
-        onPropertiesChange={onPropertiesChange}
+        editorStateAtom={editorStateAtom}
         editorActions={editorActions}
         ref={forwardedRef}
       />
@@ -316,7 +229,14 @@ const SPACETIME_EDITOR_CANVAS = 'SpacetimeEditor:Canvas';
 
 type SpacetimeEditorCanvasProsp = Omit<
   SpacetimeCanvasProps,
-  'showAxes' | 'showFps' | 'editorStateAtom' | 'scene' | 'objectCount' | 'parentSolidsRef' | 'importGLBRef' | 'handleActionRef'
+  | 'showAxes'
+  | 'showFps'
+  | 'editorStateAtom'
+  | 'scene'
+  | 'objectCount'
+  | 'parentSolidsRef'
+  | 'importGLBRef'
+  | 'handleActionRef'
 >;
 
 const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasProsp>((props, forwardedRef) => {
