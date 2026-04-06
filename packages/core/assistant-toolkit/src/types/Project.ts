@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContextBinder, AiContextService, type ContextBinding } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/blueprints';
-import { Annotation, Database, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Annotation, Database, Feed, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
@@ -102,7 +102,10 @@ export const makeInitialized = (
       useQualifyingAgent: props.useQualifyingAgent ?? true,
     });
     yield* Database.add(project);
-    const queue = yield* QueueService.createQueue<Message.Message | ContextBinding>();
+    const feed = yield* Database.add(Feed.make());
+    const feedQueueDxn = Feed.getQueueDxn(feed);
+    invariant(feedQueueDxn, 'Feed queue DXN not found.');
+    const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(feedQueueDxn);
     const contextBinder = new AiContextBinder({ queue });
     // TODO(dmaretskyi): Blueprint registry.
     const projectBlueprint = yield* Database.add(Obj.clone(blueprint, { deep: true }));
@@ -115,7 +118,7 @@ export const makeInitialized = (
     const chat = yield* Database.add(
       Chat.make({
         [Obj.Parent]: project,
-        queue: Ref.fromDXN(queue.dxn),
+        feed: Ref.make(feed),
       }),
     );
     yield* Database.add(
@@ -148,10 +151,13 @@ export const resetChatHistory = (
   Effect.gen(function* () {
     invariant(project.chat, 'Project must have an existing chat to reset.');
 
-    const existingQueue = yield* project.chat.pipe(Database.load).pipe(
-      Effect.map((_) => _.queue),
+    const existingFeed = yield* project.chat.pipe(Database.load).pipe(
+      Effect.map((_) => _.feed),
       Effect.flatMap(Database.load),
     );
+    const existingQueueDxn = Feed.getQueueDxn(existingFeed);
+    invariant(existingQueueDxn, 'Existing feed queue DXN not found.');
+    const existingQueue = yield* QueueService.getQueue(existingQueueDxn);
     const existingContextBinder = yield* acquireReleaseResource(
       () =>
         new AiContextBinder({
@@ -161,7 +167,10 @@ export const resetChatHistory = (
     const blueprints = existingContextBinder.getBlueprints().map((blueprint) => Ref.make(blueprint));
     const objects = existingContextBinder.getObjects().map((object) => Ref.make(object));
 
-    const queue = yield* QueueService.createQueue();
+    const feed = yield* Database.add(Feed.make());
+    const feedQueueDxn = Feed.getQueueDxn(feed);
+    invariant(feedQueueDxn, 'Feed queue DXN not found.');
+    const queue = yield* QueueService.getQueue(feedQueueDxn);
     const contextBinder = new AiContextBinder({ queue });
     yield* Effect.promise(() =>
       contextBinder.bind({
@@ -171,7 +180,7 @@ export const resetChatHistory = (
     );
     const chat = yield* Database.add(
       Chat.make({
-        queue: Ref.fromDXN(queue.dxn),
+        feed: Ref.make(feed),
       }),
     );
 

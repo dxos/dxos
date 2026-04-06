@@ -342,7 +342,10 @@ const createSchemaActions = ({
                   never
                 >;
                 if (result.subject.length > 0) {
-                  yield* Operation.invoke(LayoutOperation.Open, { subject: [...result.subject] });
+                  yield* Operation.invoke(LayoutOperation.Open, {
+                    subject: [...result.subject],
+                    navigation: 'immediate',
+                  });
                 }
               }
             }),

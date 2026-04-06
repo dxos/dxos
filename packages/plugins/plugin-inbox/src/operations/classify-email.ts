@@ -12,6 +12,7 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { ContextQueueService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
+import * as Trace from '@dxos/functions/Trace';
 import { Operation } from '@dxos/operation';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -115,6 +116,7 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
           ToolExecutionService.layerEmpty,
           TracingService.layerNoop,
           FunctionInvocationService.layerNotAvailable,
+          Trace.writerLayerNoop,
         ),
       ),
     ),

@@ -11,7 +11,6 @@ import { Filter, type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
 import { type Key, Obj, Ref, Type } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -99,14 +98,6 @@ export class MessageBuilder extends AbstractMessageBuilder {
 
 // TODO(burdon): Reconcile with BlockBuilder.
 class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
-  executor = new FunctionExecutor(
-    new ServiceContainer().setServices({
-      // ai: {
-      //   client: this.AiService,
-      // },
-    }),
-  );
-
   space: Space | undefined;
   currentMessage: number = 0;
   transcriptMessages: Message.Message[] = [];
@@ -139,7 +130,6 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
     const { message: enhancedMessage } = await processTranscriptMessage({
       input: { message },
-      executor: this.executor,
       function: extractionAnthropicFunction,
     });
 

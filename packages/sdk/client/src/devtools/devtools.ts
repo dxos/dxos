@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
-import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -82,6 +82,7 @@ export interface DevtoolsHook {
   Query: typeof Query;
   Filter: typeof Filter;
   Schema: typeof Schema;
+  Feed: typeof Feed;
 
   getMeta: typeof getMeta;
 }
@@ -178,6 +179,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     Query,
     Filter,
     Schema,
+    Feed,
     getMeta,
   };
 

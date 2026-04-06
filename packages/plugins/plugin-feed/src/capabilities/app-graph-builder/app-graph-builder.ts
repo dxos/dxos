@@ -49,6 +49,10 @@ export default Capability.makeModule(
         match: whenSpace,
         connector: (space, get) => {
           const feeds = get(AtomQuery.make(space.db, Filter.type(Subscription.Feed)));
+          if (feeds.length === 0) {
+            return Effect.succeed([]);
+          }
+
           return Effect.succeed([
             {
               id: 'feeds',
