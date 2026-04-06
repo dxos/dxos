@@ -57,7 +57,7 @@ export class SelectTool implements Tool {
 
     const mesh = pickedMesh as Mesh;
 
-    if (ctx.selectionState.selectionMode === 'object') {
+    if (ctx.editorState.selectionMode === 'object') {
       const event = info.event as PointerEvent;
 
       if (event.shiftKey) {

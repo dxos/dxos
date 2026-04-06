@@ -8,18 +8,18 @@ import type { Manifold } from 'manifold-3d';
 
 import { joinSolids, serializeManifold } from '../../engine';
 import { Model } from '../../types';
-import { type ActionHandler, type ActionResult, type EditorState, disposeSceneObject } from '../action';
-import { type ToolContext } from '../tool-context';
+import { type ActionHandler, disposeSceneObject } from '../action';
+import { type ToolContext, getSelectedObjectIds } from '../tool-context';
 
 /** Joins (unions) selected objects into a single merged object. */
 export class JoinObjectsAction implements ActionHandler {
   readonly id = 'join-objects';
 
-  execute(ctx: ToolContext, editorState: EditorState): ActionResult | undefined {
+  execute(ctx: ToolContext): void {
     const scene = ctx.echoScene;
-    const { selectedObjectIds } = editorState;
+    const selectedObjectIds = getSelectedObjectIds(ctx.editorState.selection);
     if (!scene || selectedObjectIds.length < 2) {
-      return undefined;
+      return;
     }
 
     const solids: Manifold[] = [];
@@ -38,7 +38,7 @@ export class JoinObjectsAction implements ActionHandler {
     }
 
     if (solids.length < 2) {
-      return undefined;
+      return;
     }
 
     log.info('JoinObjectsAction.execute', { count: solids.length });
@@ -74,6 +74,6 @@ export class JoinObjectsAction implements ActionHandler {
     result.solid.delete();
 
     const newObjId = (newObject as any).id as string;
-    return { selectObjectIds: [newObjId] };
+    ctx.editorState.pendingSelectId = newObjId;
   }
 }

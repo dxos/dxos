@@ -6,7 +6,7 @@ import { type PointerInfo, PointerEventTypes } from '@babylonjs/core';
 
 import { log } from '@dxos/log';
 
-import { type ActionHandler, type ActionResult, type EditorState } from './action';
+import { type ActionHandler } from './action';
 import { type Tool } from './tool';
 import { type ToolContext } from './tool-context';
 
@@ -76,14 +76,14 @@ export class ToolManager {
     return this;
   }
 
-  /** Dispatch an action by id. Returns the result, or undefined if action not found or no context. */
-  handleAction(id: string, editorState: EditorState): ActionResult | undefined {
+  /** Dispatch an action by id. */
+  handleAction(id: string): void {
     const handler = this._actions.get(id);
     if (!handler || !this._ctx) {
-      return undefined;
+      return;
     }
     log.info('handleAction', { id });
-    return handler.execute(this._ctx, editorState);
+    handler.execute(this._ctx);
   }
 
   /** Clean up all tools. */

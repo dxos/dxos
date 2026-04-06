@@ -5,18 +5,18 @@
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type ActionHandler, type ActionResult, type EditorState, disposeSceneObject } from '../action';
-import { type ToolContext } from '../tool-context';
+import { type ActionHandler, disposeSceneObject } from '../action';
+import { type ToolContext, getSelectedObjectIds } from '../tool-context';
 
 /** Deletes selected objects from the ECHO scene and disposes their runtime resources. */
 export class DeleteObjectsAction implements ActionHandler {
   readonly id = 'delete-objects';
 
-  execute(ctx: ToolContext, editorState: EditorState): ActionResult | undefined {
+  execute(ctx: ToolContext): void {
     const scene = ctx.echoScene;
-    const { selectedObjectIds } = editorState;
+    const selectedObjectIds = getSelectedObjectIds(ctx.editorState.selection);
     if (!scene || selectedObjectIds.length === 0) {
-      return undefined;
+      return;
     }
 
     log.info('DeleteObjectsAction.execute', { count: selectedObjectIds.length });
@@ -38,7 +38,5 @@ export class DeleteObjectsAction implements ActionHandler {
     for (const objId of selectedObjectIds) {
       disposeSceneObject(ctx, objId);
     }
-
-    return { selectObjectIds: [] };
   }
 }

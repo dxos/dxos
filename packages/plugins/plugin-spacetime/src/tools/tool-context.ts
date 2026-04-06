@@ -8,15 +8,10 @@ import type { Manifold } from 'manifold-3d';
 import { type getManifold } from '../engine';
 import { type Scene, type Model } from '../types';
 
+import { type EditorState } from './editor-state';
+
 /** Selection granularity mode. */
 export type SelectionMode = 'object' | 'face';
-
-/** Current selection state used by tools and toolbar. */
-export type SelectionState = {
-  selectionMode: SelectionMode;
-  /** Number of currently selected objects. */
-  selectionCount: number;
-};
 
 /** Base selection fields shared by all selection types. */
 type SelectionBase = {
@@ -68,8 +63,8 @@ export type ToolContext = {
   meshes: Map<string, Mesh>;
   /** Resolve an ECHO object id to its Model.Object. */
   getObject: (id: string) => Model.Object | undefined;
-  /** Current view state (selection mode, grid, etc.). */
-  selectionState: SelectionState;
+  /** Unified editor state shared with tools, actions, canvas, and toolbar. */
+  editorState: EditorState;
   /** Runtime Manifold solids keyed by object id. Persists across tool operations. */
   solids: Map<string, Manifold>;
   /** Scene-level highlight layer for object selection glow. */

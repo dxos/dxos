@@ -7,20 +7,20 @@ import { log } from '@dxos/log';
 
 import { parseOBJ, presetObjData } from '../../engine';
 import { Model } from '../../types';
-import { type ActionHandler, type ActionResult, type EditorState } from '../action';
+import { type ActionHandler } from '../action';
 import { type ToolContext } from '../tool-context';
 
 /** Creates a new primitive or preset object in the scene. */
 export class AddObjectAction implements ActionHandler {
   readonly id = 'add-object';
 
-  execute(ctx: ToolContext, editorState: EditorState): ActionResult | undefined {
+  execute(ctx: ToolContext): void {
     const scene = ctx.echoScene;
     if (!scene) {
-      return undefined;
+      return;
     }
 
-    const { selectedTemplate, hue } = editorState;
+    const { selectedTemplate, hue } = ctx.editorState;
     log.info('AddObjectAction.execute', { template: selectedTemplate, hue });
 
     const objData = presetObjData[selectedTemplate as Model.PresetType];
@@ -29,7 +29,7 @@ export class AddObjectAction implements ActionHandler {
     if (objData) {
       const parsed = parseOBJ(objData);
       if (!parsed) {
-        return undefined;
+        return;
       }
       object = Model.make({
         primitive: undefined,
@@ -53,6 +53,8 @@ export class AddObjectAction implements ActionHandler {
     Obj.setParent(object, scene);
 
     const objId = (object as any).id as string | undefined;
-    return objId ? { selectObjectIds: [objId] } : undefined;
+    if (objId) {
+      ctx.editorState.pendingSelectId = objId;
+    }
   }
 }
