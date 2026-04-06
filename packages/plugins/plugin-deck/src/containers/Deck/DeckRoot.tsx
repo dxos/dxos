@@ -14,7 +14,7 @@ const DECK_NAME = 'Deck';
 const DECK_ROOT_NAME = 'DeckRoot';
 
 /** Request to change the layout mode. */
-export type DeckLayoutChangeRequest = { subject?: string; mode: string } | { revert: true };
+export type DeckLayoutChangeRequest = { subject?: string; mode: LayoutMode } | { revert: true };
 
 //
 // Context

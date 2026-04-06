@@ -34,8 +34,8 @@ TODO(burdon): Factor out Rules into plugins/AGENTS.md
 
 The component `DeckMain` is very large and a point of complexity and bugs for the project.
 Carefully consider how we might split up DeckMain into smaller components inside the Radix-style Deck component.
-This would involve removing the reliance on `app-framework` and `app-tookit` hooks (e.g., usePluginManager) and instead passing these objects into `Deck.Root`;
-then `Deck.Main` would access these as needed via the context.
+This would involve removing the reliance on `app-framework` and `app-toolkit` hooks (e.g., usePluginManager) and instead passing these objects into `Deck.Root`;
+then `Deck.Content` would access these as needed via the context.
 
 - [x] Move Deck.Root OUT of Deck.Main and update current use of DeckMain to use the composite structure.
 - [x] Rename Deck.Main => Deck.Content (the layout shell: Main.Root, sidebars, overlay, topbar, statusbar, responsive effects).

@@ -241,9 +241,12 @@ const ToggleComplementarySidebarButton = () => (
 );
 
 const SidebarToggles = ({ topbar, fullscreen }: { topbar: boolean; fullscreen: boolean }) => {
+  if (topbar || fullscreen) {
+    return null;
+  }
+
   return (
     <>
-      {!topbar && !fullscreen}
       <ToggleSidebarButton />
       <ToggleComplementarySidebarButton />
     </>
