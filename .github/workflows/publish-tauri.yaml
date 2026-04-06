@@ -231,7 +231,15 @@ jobs:
         env:
           MACOS_PROVISION_PROFILE: ${{ secrets.MACOS_PROVISION_PROFILE }}
         run: |
+          if [ -z "$MACOS_PROVISION_PROFILE" ]; then
+            echo "Error: MACOS_PROVISION_PROFILE secret is not set"
+            exit 1
+          fi
           echo "$MACOS_PROVISION_PROFILE" | base64 --decode > packages/apps/composer-app/src-tauri/embedded.provisionprofile
+          if [ ! -s packages/apps/composer-app/src-tauri/embedded.provisionprofile ]; then
+            echo "Error: Provisioning profile is empty after decoding"
+            exit 1
+          fi
 
       - name: Set environment variables from secrets and env files
         run: .github/workflows/scripts/populate-env.sh ${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} >> $GITHUB_ENV

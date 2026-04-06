@@ -6,10 +6,10 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { APP_SCHEME, AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { runAndForwardErrors } from '@dxos/effect';
 import { isTauri } from '@dxos/util';
 
 import { DeckCapabilities } from '../../types';
-import { runAndForwardErrors } from '@dxos/effect';
 
 /** Identifier for the native redirect dialog surface (defined in welcome plugin). */
 const NATIVE_REDIRECT_DIALOG = 'org.dxos.plugin.welcome.component.native-redirect-dialog';

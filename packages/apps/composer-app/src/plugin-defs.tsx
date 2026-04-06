@@ -61,9 +61,8 @@ import { VoxelPlugin } from '@dxos/plugin-voxel';
 import { WnfsPlugin } from '@dxos/plugin-wnfs';
 import { YouTubePlugin } from '@dxos/plugin-youtube';
 import { ZenPlugin } from '@dxos/plugin-zen';
-import { isTruthy } from '@dxos/util';
-
 import { APP_DOMAIN } from '@dxos/app-toolkit';
+import { isTruthy } from '@dxos/util';
 
 import { steps } from './help';
 import { WelcomePlugin } from './plugins';

@@ -39,6 +39,13 @@ export type NativePasskeyLoginResult = {
 /** Domain for the Composer app (used for passkey RP ID, app links, and share links). */
 export const APP_DOMAIN = 'composer.space';
 
+/** Normalize URL-safe base64 to standard base64 and decode to bytes. */
+export const decodeUrlSafeBase64 = (encoded: string): Uint8Array => {
+  const b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
+  return Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+};
+
 /** Custom URL scheme for the Composer native app. */
 export const APP_SCHEME = 'composer://';
 
@@ -62,7 +69,7 @@ export const createNativePasskey = async (params: {
   const { invoke } = await import('@tauri-apps/api/core');
   const result = await invoke<NativePasskeyRegistrationResult>('plugin:macos-passkey|register_passkey', {
     domain: APP_DOMAIN,
-    challenge: Array.from(new Uint8Array(32)),
+    challenge: Array.from(crypto.getRandomValues(new Uint8Array(32))),
     username: params.username,
     userId: Array.from(params.userId),
     salt: [],
@@ -104,10 +111,7 @@ export const loginNativePasskey = async (params: { challenge: Uint8Array }): Pro
 export const extractPublicKeyFromAttestation = (
   attestationObjectEncoded: string,
 ): { publicKey: Uint8Array; algorithm: number } => {
-  // The plugin returns URL-safe base64. Normalize to standard base64 and decode.
-  const b64 = attestationObjectEncoded.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = b64 + '='.repeat((4 - (b64.length % 4)) % 4);
-  const attestationBytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+  const attestationBytes = decodeUrlSafeBase64(attestationObjectEncoded);
 
   // The authData is inside the CBOR-encoded attestation object.
   // We need to decode CBOR to get authData. Use a minimal inline decoder
@@ -189,10 +193,13 @@ const decodeCoseKey = (data: Uint8Array): { publicKey: Uint8Array; algorithm: nu
   // The raw public key is 0x04 || x || y (uncompressed point format, 65 bytes).
 
   const map = decodeCborMap(data);
-  const algorithm = map.get(3) as number;
+  const algorithm = map.get(3);
   const xCoord = map.get(-2) as Uint8Array;
   const yCoord = map.get(-3) as Uint8Array;
 
+  if (algorithm === undefined || typeof algorithm !== 'number') {
+    throw new Error('COSE key missing algorithm identifier');
+  }
   if (!xCoord || !yCoord) {
     throw new Error('COSE key missing x or y coordinates');
   }
@@ -274,7 +281,8 @@ const decodeCborValue = (data: Uint8Array, offset: number): { value: number | Ui
       return { value: data.slice(offset, offset + length), newOffset: offset + length };
     }
     case 3: {
-      // Text string — skip over it.
+      // Text string — skip without decoding. Returns offset as a placeholder value
+      // to satisfy the return type; newOffset advances past the string content.
       let length: number;
       if (additionalInfo < 24) {
         length = additionalInfo;
