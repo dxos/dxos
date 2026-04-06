@@ -35,6 +35,9 @@ const toWorldSpace = (solid: Manifold, objectPos: Model.Vec3, refPos: Model.Vec3
  * The result position is that of the first object.
  */
 export const joinSolids = (wasm: ManifoldToplevel, solids: Manifold[], positions: Model.Vec3[]): BooleanResult => {
+  if (solids.length === 0 || positions.length !== solids.length) {
+    throw new Error('joinSolids requires at least one solid and matching positions array');
+  }
   const refPos = positions[0];
   const translated: Manifold[] = [];
   for (let idx = 0; idx < solids.length; idx++) {
@@ -62,6 +65,9 @@ export const joinSolids = (wasm: ManifoldToplevel, solids: Manifold[], positions
  * The result position is that of the first object.
  */
 export const subtractSolids = (wasm: ManifoldToplevel, solids: Manifold[], positions: Model.Vec3[]): BooleanResult => {
+  if (solids.length === 0 || positions.length !== solids.length) {
+    throw new Error('subtractSolids requires at least one solid and matching positions array');
+  }
   const refPos = positions[0];
   const translated: Manifold[] = [];
   for (let idx = 0; idx < solids.length; idx++) {
