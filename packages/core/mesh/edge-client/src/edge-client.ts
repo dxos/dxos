@@ -2,8 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context as OtelContext, propagation } from '@opentelemetry/api';
-
 import {
   Event,
   PersistentLifecycle,
@@ -12,12 +10,11 @@ import {
   scheduleMicroTask,
   scheduleTaskInterval,
 } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { EdgeStatus } from '@dxos/protocols/proto/dxos/client/services';
-import { TRACE_SPAN_ATTRIBUTE } from '@dxos/tracing';
 import { protocol } from './defs';
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
 import { EdgeWsConnection } from './edge-ws-connection';
@@ -146,17 +143,12 @@ export class EdgeClient extends Resource implements EdgeConnection {
       throw new EdgeIdentityChangedError();
     }
 
-    // Inject W3C Trace Context from the DXOS Context's opaque OTEL context.
-    // WebSocket cannot set HTTP headers on the browser API, so we use the protobuf field.
-    const otelCtx = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE) as OtelContext | undefined;
-
-    if (otelCtx) {
-      const activeSpan: Record<string, string> = {};
-      propagation.inject(otelCtx, activeSpan);
+    const traceCtx = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE) as TraceContextData | undefined;
+    if (traceCtx) {
       message.traceContext = {
         $typeName: 'dxos.edge.messenger.TraceContext',
-        traceparent: activeSpan.traceparent,
-        tracestate: activeSpan.tracestate,
+        traceparent: traceCtx.traceparent,
+        tracestate: traceCtx.tracestate,
       };
     }
 

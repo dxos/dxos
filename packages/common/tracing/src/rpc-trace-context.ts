@@ -9,29 +9,14 @@ import { TRACE_PROCESSOR } from './trace-processor';
 import { type TraceContextData } from './tracing-types';
 
 /**
- * Codec for propagating trace identity across RPC boundaries.
- *
- * Hardcoded in `RpcPeer` — every outgoing request calls {@link encode} to
- * attach W3C trace context to the proto message, and every incoming request
- * calls {@link decode} to reconstruct a DXOS `Context` with the parent span.
- *
- * The opaque span context stored on `TRACE_SPAN_ATTRIBUTE` is a live runtime
- * object (e.g., OTEL `Context`) that cannot survive protobuf serialization.
- * This codec bridges that gap by delegating to {@link TracingBackend.inject}
- * and {@link TracingBackend.extract} which convert between the runtime object
- * and W3C `traceparent`/`tracestate` strings.
- *
- * When no tracing backend is registered, both methods gracefully degrade:
- * `encode` returns `undefined` (no trace header sent) and `decode` returns
- * a default `Context` (span becomes a new root).
+ * Codec for serializing/deserializing DXOS Context to/from W3C trace context across RPC boundaries.
+ * Used directly by RpcPeer — no configuration needed.
  */
 export class ContextRpcCodec {
   /**
-   * Serialize the active span from a DXOS `Context` into W3C trace context
-   * for an outgoing RPC request.
-   *
-   * @returns `TraceContextData` to attach to the proto message, or `undefined`
-   *          if the context has no active span or no backend is registered.
+   * Extract W3C trace context from a DXOS Context for injection into outgoing RPC requests.
+   * Reads the opaque OTEL span context from the Context attribute and delegates to the
+   * tracing backend registered on the TraceProcessor.
    */
   static encode(ctx: Context): TraceContextData | undefined {
     const spanContext = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE);
@@ -43,14 +28,9 @@ export class ContextRpcCodec {
   }
 
   /**
-   * Reconstruct a DXOS `Context` from W3C trace context received in an
-   * incoming RPC request.
-   *
-   * The deserialized opaque span context is placed on `TRACE_SPAN_ATTRIBUTE`
-   * so that downstream `@trace.span()` methods produce properly-parented spans.
-   *
-   * @returns A `Context` carrying the extracted span context, or `Context.default()`
-   *          if the trace data is missing/invalid or no backend is registered.
+   * Create a DXOS Context from W3C trace context received from an incoming RPC request.
+   * The extracted opaque OTEL context goes directly on the Context attribute so that
+   * downstream `@trace.span()` methods produce properly-parented spans.
    */
   static decode(traceContext: TraceContextData): Context {
     if (typeof traceContext.traceparent !== 'string' || traceContext.traceparent.length === 0) {

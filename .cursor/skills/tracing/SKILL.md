@@ -21,13 +21,19 @@ import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
 ```text
 ┌─────────────────────────────────────────────────────────┐
+│  @dxos/context                                          │
+│                                                         │
+│  TraceContextData  TRACE_SPAN_ATTRIBUTE                 │
+│  ContextRpcCodec  (encode/decode for RPC)               │
+└──────────────────────────┬──────────────────────────────┘
+                           │ used by
+┌──────────────────────────▼──────────────────────────────┐
 │  @dxos/tracing  (no OTEL dependency)                    │
 │                                                         │
 │  trace.resource()  trace.span()  trace.info()           │
 │  trace.metricsCounter()  trace.diagnostic()             │
 │  trace.spanStart() / trace.spanEnd()                    │
 │  TRACE_PROCESSOR  ─── tracingBackend?: TracingBackend   │
-│  ContextRpcCodec  (encode/decode for RPC)               │
 └──────────────────────────┬──────────────────────────────┘
                            │ registers at startup
 ┌──────────────────────────▼──────────────────────────────┐
@@ -40,9 +46,15 @@ import { trace, TRACE_PROCESSOR } from '@dxos/tracing';
 
 `TRACE_PROCESSOR` is a global singleton (`globalThis.TRACE_PROCESSOR`). It holds resources, logs, metrics, diagnostics, and the optional `tracingBackend`.
 
-### OTEL initialization
+### Key design: TraceContextData is serializable strings
 
-OTEL is initialized synchronously (static imports in `extension.ts`) before any traced code runs. The `isObservabilityDisabled` check is deferred — OTEL defaults to enabled and disables async if the user opted out.
+The `TRACE_SPAN_ATTRIBUTE` on DXOS `Context` stores `TraceContextData` — W3C `traceparent`/`tracestate` strings. Because these are plain strings (not live OTEL runtime objects):
+
+- They remain valid after the originating span ends, so long-lived `this._ctx` can serve as parents.
+- They cross RPC boundaries without inject/extract — `ContextRpcCodec` just reads/writes them directly.
+- They cross WebSocket/HTTP boundaries without OTEL API imports — edge clients read the strings directly.
+
+The OTEL backend performs `propagation.extract/inject` internally in `startSpan`.
 
 ### Browser timeline
 
@@ -55,16 +67,10 @@ Defined in `tracing-types.ts`. Implemented by `@dxos/observability`.
 ```typescript
 interface TracingBackend {
   startSpan: (options: StartSpanOptions) => RemoteSpan;
-  inject?: (opaqueContext: unknown) => TraceContextData | undefined;
-  extract?: (traceContext: TraceContextData) => unknown;
 }
 ```
 
-- **`startSpan`** — required. Creates a span, returns `{ end(), spanContext? }`.
-- **`inject`** — optional. Serializes an opaque `spanContext` to W3C `{ traceparent, tracestate }` for RPC wire format.
-- **`extract`** — optional. Deserializes W3C trace context from the wire back to an opaque `spanContext`.
-
-`inject`/`extract` exist because the opaque span context is a live OTEL `Context` runtime object that cannot survive protobuf serialization. They are called by `ContextRpcCodec` which is hardcoded in `RpcPeer`. Simple backends (e.g., Perfetto) only need `startSpan`.
+The backend receives and returns `TraceContextData` (W3C strings) — no opaque runtime objects cross the interface boundary. The OTEL backend performs `propagation.extract/inject` internally.
 
 ## RemoteSpan
 
@@ -73,20 +79,24 @@ Returned by `TracingBackend.startSpan()`.
 ```typescript
 type RemoteSpan = {
   end: () => void;
-  spanContext?: unknown;
+  setError?: (err: unknown) => void;
+  spanContext?: TraceContextData;
 };
 ```
 
-`spanContext` is stored on the DXOS `Context` via `TRACE_SPAN_ATTRIBUTE` (`'dxos.trace-span'`). It is an opaque OTEL `Context` object — the tracing package never inspects it. Child `@trace.span()` methods read it and pass it back as `StartSpanOptions.parentContext`.
+- `end()` — must be called exactly once to signal span completion.
+- `setError(err)` — records an error on the span (OTEL: `recordException` + `setStatus(ERROR)`).
+- `spanContext` — W3C trace context strings stored on the DXOS `Context` via `TRACE_SPAN_ATTRIBUTE`. Child spans read it and pass it back as `StartSpanOptions.parentContext`.
 
 ## How the `@trace.span()` Decorator Works
 
-1. Checks if `args[0]` is a `Context` — if so, reads the parent span from its `TRACE_SPAN_ATTRIBUTE`.
+1. Checks if `args[0]` is a `Context` — if so, reads `TraceContextData` from its `TRACE_SPAN_ATTRIBUTE`.
 2. Calls `TRACE_PROCESSOR.tracingBackend?.startSpan({ name, parentContext, ... })`.
-3. Derives a child `Context` with the new span's opaque context on `TRACE_SPAN_ATTRIBUTE`.
+3. Derives a child `Context` with the new span's `TraceContextData` on `TRACE_SPAN_ATTRIBUTE`.
 4. Replaces `args[0]` with the child context before calling the method body.
-5. Calls `remoteSpan.end()` in a `finally` block.
-6. If `showInBrowserTimeline`, also calls `performance.measure()` in the finally block.
+5. On error: calls `remoteSpan.setError(err)` before rethrowing.
+6. Calls `remoteSpan.end()` in a `finally` block.
+7. If `showInBrowserTimeline`, also calls `performance.measure()` in the finally block.
 
 If `args[0]` is not a `Context`, no parent linking occurs and no context replacement happens.
 
@@ -94,17 +104,17 @@ When `showInRemoteTracing = false`, the decorator skips steps 2-3 entirely. The 
 
 ## RPC Trace Context (ContextRpcCodec)
 
-`ContextRpcCodec` (in `rpc-trace-context.ts`) is hardcoded in `RpcPeer`. No configuration needed.
+`ContextRpcCodec` (in `@dxos/context`) is hardcoded in `RpcPeer`. No configuration needed.
 
 ```text
 Outgoing RPC:
-  ctx.getAttribute(TRACE_SPAN_ATTRIBUTE)  →  inject()  →  TraceContextData on proto wire
+  ctx.getAttribute(TRACE_SPAN_ATTRIBUTE)  →  TraceContextData on proto wire
 
 Incoming RPC:
-  TraceContextData from proto wire  →  extract()  →  new Context({ TRACE_SPAN_ATTRIBUTE: opaque })
+  TraceContextData from proto wire  →  new Context({ TRACE_SPAN_ATTRIBUTE: traceContext })
 ```
 
-When no backend is registered, `encode` returns `undefined` (no trace header) and `decode` returns `Context.default()` (new root span). Encoding failures are logged as warnings and do not break the RPC call.
+Because `TRACE_SPAN_ATTRIBUTE` stores `TraceContextData` strings directly, the codec is a trivial read/write — no backend-specific inject/extract is needed.
 
 ## API Reference
 
@@ -260,7 +270,7 @@ async openFeed(ctx: Context): Promise<Feed> {
 
 ### `trace.spanStart()` / `trace.spanEnd()`
 
-Manual span API for cases where decorator-based spans don't fit (e.g., spans that cross method boundaries).
+Manual span API for cases where decorator-based spans don't fit (e.g., spans that cross method boundaries). Supports `showInBrowserTimeline` independently of `showInRemoteTracing`.
 
 ```typescript
 trace.spanStart({
@@ -295,10 +305,10 @@ Global singleton. Key fields:
 
 Key methods:
 
-- `getDiagnostics()` — returns `{ resources, logs }`.
+- `getDiagnostics()` — returns `{ resources, logs }`. Calls `refresh()` on-demand.
 - `findResourcesByClassName(name)` — find resources by class name.
 - `findResourcesByAnnotation(symbol)` — find resources by annotation.
-- `refresh()` — updates all resource info and metrics.
+- `refresh()` — updates all resource info and metrics. Called on-demand by `getDiagnostics()`.
 
 ## Complete Example
 
@@ -358,13 +368,13 @@ class Space {
 
 ## File Map
 
-| File                     | Purpose                                                                 |
-| ------------------------ | ----------------------------------------------------------------------- |
-| `api.ts`                 | Public `trace` object with all decorators and functions.                |
-| `tracing-types.ts`       | `RemoteSpan`, `StartSpanOptions`, `TracingBackend`, `TraceContextData`. |
-| `trace-processor.ts`     | `TraceProcessor` singleton, `ResourceEntry`, `TRACE_PROCESSOR`.         |
-| `rpc-trace-context.ts`   | `ContextRpcCodec` — encode/decode for RPC boundaries.                   |
-| `symbols.ts`             | `TRACE_SPAN_ATTRIBUTE`, `TracingContext`, `getTracingContext`.          |
-| `metrics/`               | Counter implementations (`UnaryCounter`, `MapCounter`, etc.).           |
-| `diagnostic.ts`          | `DiagnosticsManager` for queryable diagnostics.                         |
-| `diagnostics-channel.ts` | Node.js diagnostics channel integration.                                |
+| File                                    | Purpose                                                         |
+| --------------------------------------- | --------------------------------------------------------------- |
+| `@dxos/context: trace-context.ts`       | `TraceContextData`, `TRACE_SPAN_ATTRIBUTE`, `ContextRpcCodec`.  |
+| `@dxos/tracing: api.ts`                 | Public `trace` object with all decorators and functions.        |
+| `@dxos/tracing: tracing-types.ts`       | `RemoteSpan`, `StartSpanOptions`, `TracingBackend`.             |
+| `@dxos/tracing: trace-processor.ts`     | `TraceProcessor` singleton, `ResourceEntry`, `TRACE_PROCESSOR`. |
+| `@dxos/tracing: symbols.ts`             | `TracingContext`, `getTracingContext`.                          |
+| `@dxos/tracing: metrics/`               | Counter implementations (`UnaryCounter`, `MapCounter`, etc.).   |
+| `@dxos/tracing: diagnostic.ts`          | `DiagnosticsManager` for queryable diagnostics.                 |
+| `@dxos/tracing: diagnostics-channel.ts` | Node.js diagnostics channel integration.                        |

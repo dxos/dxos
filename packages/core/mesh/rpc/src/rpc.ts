@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
-import { ContextRpcCodec } from '@dxos/tracing';
+import { ContextRpcCodec } from '@dxos/context';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { decodeRpcError } from './errors';

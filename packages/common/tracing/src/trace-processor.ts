@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { unrefTimeout } from '@dxos/async';
 import { LogLevel, type LogProcessor, getContextFromEntry, log } from '@dxos/log';
 import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
 import { type Metric, type Resource } from '@dxos/protocols/proto/dxos/tracing';
@@ -52,11 +51,7 @@ export class ResourceEntry {
 const MAX_RESOURCE_RECORDS = 2_000;
 const MAX_LOG_RECORDS = 1_000;
 
-const REFRESH_INTERVAL = 1_000;
-
 const MAX_INFO_OBJECT_DEPTH = 8;
-
-const IS_CLOUDFLARE_WORKERS = !!globalThis?.navigator?.userAgent?.includes('Cloudflare-Workers');
 
 export class TraceProcessor {
   public readonly diagnostics = new DiagnosticsManager();
@@ -76,11 +71,6 @@ export class TraceProcessor {
 
   constructor() {
     log.addProcessor(this._logProcessor.bind(this));
-
-    if (!IS_CLOUDFLARE_WORKERS) {
-      const refreshInterval = setInterval(this.refresh.bind(this), REFRESH_INTERVAL);
-      unrefTimeout(refreshInterval);
-    }
 
     if (DiagnosticsChannel.supported) {
       this.diagnosticsChannel.serve(this.diagnostics);

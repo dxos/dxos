@@ -3,8 +3,8 @@
 //
 
 import {
-  type Context,
   ROOT_CONTEXT,
+  SpanStatusCode,
   type Tracer,
   context as otelContext,
   propagation,
@@ -14,6 +14,7 @@ import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
+import { type TraceContextData } from '@dxos/context';
 import { log } from '@dxos/log';
 import { type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
@@ -46,28 +47,37 @@ export class OtelTraces {
   public start(): void {
     log('trace processor registered');
 
+    const tracer = this._tracer;
+
     TRACE_PROCESSOR.tracingBackend = {
-      startSpan: (options: StartSpanOptions) => {
+      startSpan: (options: StartSpanOptions): { end: () => void; setError?: (err: unknown) => void; spanContext?: TraceContextData } => {
         log('begin otel trace', { options });
-        const explicitParent = options.parentContext as Context | undefined;
-        const parentCtx = explicitParent ?? otelContext.active();
-        const span = this._tracer.startSpan(options.name, options, parentCtx);
+        const parentCtx = options.parentContext
+          ? propagation.extract(ROOT_CONTEXT, {
+              traceparent: options.parentContext.traceparent,
+              tracestate: options.parentContext.tracestate ?? '',
+            })
+          : otelContext.active();
+
+        const span = tracer.startSpan(options.name, options, parentCtx);
         const spanCtx = trace.setSpan(parentCtx, span);
+
+        const carrier: Record<string, string> = {};
+        propagation.inject(spanCtx, carrier);
+
         return {
           end: () => span.end(),
-          spanContext: spanCtx,
+          setError: (err: unknown) => {
+            if (err instanceof Error) {
+              span.recordException(err);
+            }
+            span.setStatus({ code: SpanStatusCode.ERROR, message: err instanceof Error ? err.message : String(err) });
+          },
+          spanContext: carrier.traceparent
+            ? { traceparent: carrier.traceparent, tracestate: carrier.tracestate }
+            : undefined,
         };
       },
-      inject: (opaqueContext) => {
-        const carrier: Record<string, string> = {};
-        propagation.inject(opaqueContext as Context, carrier);
-        return carrier.traceparent ? { traceparent: carrier.traceparent, tracestate: carrier.tracestate } : undefined;
-      },
-      extract: (traceContext) =>
-        propagation.extract(ROOT_CONTEXT, {
-          traceparent: traceContext.traceparent,
-          tracestate: traceContext.tracestate ?? '',
-        }),
     };
   }
 }

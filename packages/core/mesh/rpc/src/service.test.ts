@@ -6,14 +6,14 @@ import { beforeEach, describe, expect, test } from 'vitest';
 
 import { latch, sleep } from '@dxos/async';
 import { type RequestOptions, Stream } from '@dxos/codec-protobuf';
-import { Context } from '@dxos/context';
+import { Context, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
 import { schema } from '@dxos/protocols/proto';
 import {
   type TestRpcResponse,
   type TestService,
   type TestStreamService,
 } from '@dxos/protocols/proto/example/testing/rpc';
-import { TRACE_PROCESSOR, TRACE_SPAN_ATTRIBUTE } from '@dxos/tracing';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type ProtoRpcPeer, createProtoRpcPeer, createServiceBundle } from './service';
 import { createLinkedPorts, encodeMessage } from './testing';
@@ -588,59 +588,46 @@ describe('Protobuf service', () => {
   });
 
   test('W3C trace context propagates to handler options', async ({ expect }) => {
-    const traceparent = '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01';
-    const opaqueSpanCtx = { mock: 'otel-context' };
-
-    const previousBackend = TRACE_PROCESSOR.tracingBackend;
-    TRACE_PROCESSOR.tracingBackend = {
-      startSpan: () => ({ end: () => {} }),
-      inject: (opaque) => {
-        expect(opaque).toBe(opaqueSpanCtx);
-        return { traceparent };
-      },
-      extract: (traceContext) => {
-        expect(traceContext.traceparent).toEqual(traceparent);
-        return opaqueSpanCtx;
-      },
+    const traceContext = {
+      traceparent: '00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01',
+      tracestate: 'vendorkey=vendorvalue',
     };
 
-    try {
-      const [alicePort, bobPort] = createLinkedPorts();
-      let receivedCtx: Context | undefined;
+    const [alicePort, bobPort] = createLinkedPorts();
+    let receivedCtx: Context | undefined;
 
-      const server = createProtoRpcPeer({
-        exposed: {
-          TestService: schema.getService('example.testing.rpc.TestService'),
-        },
-        handlers: {
-          TestService: {
-            testCall: async (req: any, options?: RequestOptions) => {
-              receivedCtx = options?.ctx;
-              return { data: 'responseData' };
-            },
-            voidCall: async () => {},
+    const server = createProtoRpcPeer({
+      exposed: {
+        TestService: schema.getService('example.testing.rpc.TestService'),
+      },
+      handlers: {
+        TestService: {
+          testCall: async (req: any, options?: RequestOptions) => {
+            receivedCtx = options?.ctx;
+            return { data: 'responseData' };
           },
+          voidCall: async () => {},
         },
-        port: alicePort,
-      });
+      },
+      port: alicePort,
+    });
 
-      const callerCtx = new Context({ attributes: { [TRACE_SPAN_ATTRIBUTE]: opaqueSpanCtx } });
+    const callerCtx = new Context({ attributes: { [TRACE_SPAN_ATTRIBUTE]: traceContext } });
 
-      const client = createProtoRpcPeer({
-        requested: {
-          TestService: schema.getService('example.testing.rpc.TestService'),
-        },
-        port: bobPort,
-      });
+    const client = createProtoRpcPeer({
+      requested: {
+        TestService: schema.getService('example.testing.rpc.TestService'),
+      },
+      port: bobPort,
+    });
 
-      await Promise.all([server.open(), client.open()]);
+    await Promise.all([server.open(), client.open()]);
 
-      await client.rpc.TestService.testCall({ data: 'requestData' }, { ctx: callerCtx });
+    await client.rpc.TestService.testCall({ data: 'requestData' }, { ctx: callerCtx });
 
-      expect(receivedCtx).toBeInstanceOf(Context);
-      expect(receivedCtx!.getAttribute(TRACE_SPAN_ATTRIBUTE)).toBe(opaqueSpanCtx);
-    } finally {
-      TRACE_PROCESSOR.tracingBackend = previousBackend;
-    }
+    expect(receivedCtx).toBeInstanceOf(Context);
+    const received = receivedCtx!.getAttribute(TRACE_SPAN_ATTRIBUTE);
+    expect(received.traceparent).toEqual(traceContext.traceparent);
+    expect(received.tracestate).toEqual(traceContext.tracestate);
   });
 });

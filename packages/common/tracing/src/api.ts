@@ -2,10 +2,10 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Context } from '@dxos/context';
+import { Context, TRACE_SPAN_ATTRIBUTE } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
-import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
+import { getTracingContext } from './symbols';
 import { TRACE_PROCESSOR, sanitizeClassName } from './trace-processor';
 import type { RemoteSpan } from './tracing-types';
 
@@ -122,6 +122,7 @@ const span =
       try {
         return await method.apply(this, callArgs);
       } catch (err) {
+        remoteSpan?.setError?.(err);
         throw err;
       } finally {
         remoteSpan?.end();
@@ -133,6 +134,7 @@ const span =
   };
 
 const manualSpans = new Map<string, RemoteSpan>();
+const manualSpanTimestamps = new Map<string, { name: string; startTs: number }>();
 
 export type ManualSpanParams = {
   id: string;
@@ -153,13 +155,19 @@ const spanStart = (params: ManualSpanParams) => {
     return;
   }
 
+  const resourceEntry = TRACE_PROCESSOR.resourceInstanceIndex.get(params.instance);
+  const className = resourceEntry?.sanitizedClassName ?? 'unknown';
+  const spanName = `${className}.${params.methodName}`;
+
+  if (params.showInBrowserTimeline) {
+    manualSpanTimestamps.set(params.id, { name: spanName, startTs: performance.now() });
+  }
+
   if (params.showInRemoteTracing === false || !TRACE_PROCESSOR.tracingBackend) {
     return;
   }
 
   const parentSpanContext = params.parentCtx?.getAttribute(TRACE_SPAN_ATTRIBUTE);
-  const resourceEntry = TRACE_PROCESSOR.resourceInstanceIndex.get(params.instance);
-  const className = resourceEntry?.sanitizedClassName ?? 'unknown';
 
   const spanAttributes: Record<string, any> = {};
   if (resourceEntry) {
@@ -172,7 +180,7 @@ const spanStart = (params: ManualSpanParams) => {
   }
 
   const remoteSpan = TRACE_PROCESSOR.tracingBackend.startSpan({
-    name: `${className}.${params.methodName}`,
+    name: spanName,
     op: params.op ?? 'function',
     attributes: spanAttributes,
     parentContext: parentSpanContext,
@@ -188,6 +196,12 @@ const spanEnd = (id: string) => {
   if (remoteSpan) {
     remoteSpan.end();
     manualSpans.delete(id);
+  }
+
+  const timestamps = manualSpanTimestamps.get(id);
+  if (timestamps && typeof globalThis?.performance?.measure === 'function') {
+    performance.measure(timestamps.name, { start: timestamps.startTs, end: performance.now() });
+    manualSpanTimestamps.delete(id);
   }
 };
 

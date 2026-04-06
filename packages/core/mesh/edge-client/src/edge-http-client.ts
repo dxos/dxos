@@ -7,10 +7,8 @@ import * as HttpClient from '@effect/platform/HttpClient';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
-import { type Context as OtelContext, propagation } from '@opentelemetry/api';
-
 import { sleep } from '@dxos/async';
-import { Context } from '@dxos/context';
+import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
@@ -46,7 +44,6 @@ import {
   type QueryRequest as QueryRequestProto,
   type QueryResponse as QueryResponseProto,
 } from '@dxos/protocols/proto/dxos/echo/query';
-import { TRACE_SPAN_ATTRIBUTE } from '@dxos/tracing';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -557,14 +554,16 @@ const createRequest = (
  * Extract W3C Trace Context headers (traceparent/tracestate) from a DXOS Context.
  */
 const getTraceHeaders = (ctx: Context): Record<string, string> | undefined => {
-  const otelContext = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE) as OtelContext | undefined;
-  if (!otelContext) {
+  const traceCtx = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE) as TraceContextData | undefined;
+  if (!traceCtx) {
     return undefined;
   }
 
-  const headers: Record<string, string> = {};
-  propagation.inject(otelContext, headers);
-  return Object.keys(headers).length > 0 ? headers : undefined;
+  const headers: Record<string, string> = { traceparent: traceCtx.traceparent };
+  if (traceCtx.tracestate) {
+    headers.tracestate = traceCtx.tracestate;
+  }
+  return headers;
 };
 
 /**

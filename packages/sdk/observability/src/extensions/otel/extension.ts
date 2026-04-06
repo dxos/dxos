@@ -55,7 +55,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   metrics: metricsEnabled = false,
   traces: tracesEnabled = false,
 }) {
-  const enabledRef = yield* Ref.make(true);
+  const disabled = isObservabilityDisabledSync(serviceName)
+    || (yield* Effect.promise(() => isObservabilityDisabled(serviceName)));
+  const enabledRef = yield* Ref.make(!disabled);
   const tags = new Map<string, string>();
 
   const endpoint = isNode()
@@ -117,19 +119,16 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const extension: Extension = {
     initialize: () =>
       Effect.sync(() => {
+        if (disabled) {
+          return;
+        }
+
         if (logs) {
           log.runtimeConfig.processors.push(logs.logProcessor);
         }
         if (traces) {
           traces.start();
         }
-
-        // Check async storage for user opt-out, disable after initialization if needed.
-        void isObservabilityDisabled(serviceName).then((disabled) => {
-          if (disabled) {
-            Ref.update(enabledRef, () => false).pipe(Effect.runSync);
-          }
-        });
       }),
     enable: Effect.fn(function* () {
       yield* Effect.promise(() => storeObservabilityDisabled(serviceName, false));
@@ -174,6 +173,24 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   return extension;
 });
+
+/**
+ * Synchronous best-effort check for observability opt-out.
+ * Prevents telemetry from being emitted before the async storage check completes.
+ */
+const isObservabilityDisabledSync = (serviceName: string): boolean => {
+  if (isNode()) {
+    return process.env.DX_DISABLE_OBSERVABILITY === 'true';
+  }
+  try {
+    if (typeof localStorage !== 'undefined') {
+      return localStorage.getItem(`${serviceName}/observability-disabled`) === 'true';
+    }
+  } catch {
+    // localStorage not available (e.g., in workers).
+  }
+  return false;
+};
 
 /** Best-effort detection of the JavaScript execution context type. */
 const detectProcessType = (): string => {

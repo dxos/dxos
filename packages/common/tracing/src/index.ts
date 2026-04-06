@@ -12,7 +12,6 @@ export * from './metrics';
 export * from './diagnostic';
 export * from './diagnostics-channel';
 export * from './remote/metrics';
-export * from './rpc-trace-context';
 
 trace.diagnostic({
   id: 'process-info',

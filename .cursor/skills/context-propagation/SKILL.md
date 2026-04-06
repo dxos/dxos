@@ -248,7 +248,7 @@ Callback / detached async work:
 
 - **Breaking the chain with `Context.default()` in an intermediate method** — if a method calls `child(Context.default())` where `child` has `@trace.span()`, the span is an orphaned root. The intermediate method must accept `ctx` from its caller and forward it.
 - **Passing `this._ctx` in a direct call** when the method has `ctx` in scope — breaks trace hierarchy, creates a new root instead of a child span.
-- **Passing `ctx` in a callback or `scheduleTask`** — captures a stale context whose span has already ended.
+- **Passing `ctx` in a callback or `scheduleTask`** — captures a stale context whose span has already ended. However, `this._ctx` from lifecycle contexts still works as a parent because `TRACE_SPAN_ATTRIBUTE` stores W3C strings that remain valid after the span ends.
 - **Adding `ctx` to Node.js protocol methods** (e.g., `[Symbol.for('nodejs.util.inspect.custom')]`) — fixed-signature methods that don't support extra parameters.
 - **Adding `ctx` to public APIs** — user-facing methods should not expose `Context`; create `Context.default()` internally.
 - **Ignoring `options.ctx` in RPC service methods** — `RpcPeer` provides `options.ctx` with the caller's trace context decoded from W3C headers. Use `options?.ctx ?? Context.default()`, not `this._ctx` or a bare `Context.default()`. Using `this._ctx` breaks the cross-process trace hierarchy; using `Context.default()` discards the propagated trace.
