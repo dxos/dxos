@@ -221,7 +221,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static in<T>(...values: T[]): Filter$.Filter<T | undefined> {
+  static in<T>(...values: T[]): Filter$.Filter<T> {
     return new FilterClass({
       type: 'in',
       values,
@@ -235,7 +235,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static between<T>(from: T, to: T): Filter$.Filter<unknown> {
+  static between<T>(from: T, to: T): Filter$.Filter<T> {
     return new FilterClass({
       type: 'range',
       from,

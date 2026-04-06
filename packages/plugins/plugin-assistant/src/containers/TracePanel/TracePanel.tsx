@@ -103,7 +103,7 @@ const getExecutionGraph = (
         const events = get(_)
           .slice(-eventLimit)
           .flatMap((message) =>
-            message.events.map((event) => ({
+            message.events.map((event: Trace.Event) => ({
               id: message.id,
               meta: message.meta,
               ...event,
