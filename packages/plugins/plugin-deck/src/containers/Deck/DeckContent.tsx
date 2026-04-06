@@ -93,10 +93,7 @@ export const DeckContent = () => {
       <Sidebar />
       <ComplementarySidebar current={complementarySidebarPanel} />
       <Main.Overlay />
-      <DeckViewport>
-        <DeckMultiMode />
-        <DeckSoloMode />
-      </DeckViewport>
+      <DeckViewport>{solo ? <DeckSoloMode /> : <DeckMultiMode />}</DeckViewport>
       {topbar && <Banner variant='topbar' />}
       {hoistStatusbar && <StatusBar showHints={settings?.showHints} />}
     </Main.Root>

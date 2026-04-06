@@ -109,7 +109,7 @@ DeckViewport.displayName = DECK_VIEWPORT_NAME;
  */
 export const DeckMultiMode = () => {
   const { deck, settings, layoutMode } = useDeckContext('DeckMultiMode');
-  const { active, companionOpen, companionVariant, fullscreen, solo } = deck;
+  const { active, companionOpen, companionVariant, fullscreen } = deck;
   const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
@@ -135,21 +135,18 @@ export const DeckMultiMode = () => {
   useOnTransition(layoutMode, (mode) => mode !== 'multi', 'multi', restoreScroll);
 
   /** Save scroll position as the user scrolls. */
-  const handleScroll = useCallback(
-    (event: UIEvent) => {
-      if (!solo && event.currentTarget === event.target) {
-        scrollLeftRef.current = (event.target as HTMLDivElement).scrollLeft;
-      }
-    },
-    [solo],
-  );
+  const handleScroll = useCallback((event: UIEvent) => {
+    if (event.currentTarget === event.target) {
+      scrollLeftRef.current = (event.target as HTMLDivElement).scrollLeft;
+    }
+  }, []);
 
   const padding = useMemo(() => {
-    if (!solo && settings?.overscroll === 'centering') {
+    if (settings?.overscroll === 'centering') {
       return calculateOverscroll(active.length);
     }
     return {};
-  }, [solo, settings?.overscroll, deck]);
+  }, [settings?.overscroll, active.length]);
 
   const { order, itemsCount }: { order: Record<string, number>; itemsCount: number } = useMemo(() => {
     return active.reduce(
@@ -163,11 +160,7 @@ export const DeckMultiMode = () => {
   }, [active, companionOpen]);
 
   return (
-    <div
-      role='none'
-      className={!solo ? 'relative bg-deck-surface overflow-hidden' : 'sr-only'}
-      {...(solo && { inert: true })}
-    >
+    <div role='none' className='relative bg-deck-surface overflow-hidden'>
       <SidebarToggles topbar={topbar} fullscreen={fullscreen} />
       <Stack
         classNames={[
@@ -215,11 +208,7 @@ export const DeckSoloMode = () => {
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
 
   return (
-    <div
-      role='none'
-      className={solo ? 'relative overflow-hidden bg-deck-surface' : 'sr-only'}
-      {...(!solo && { inert: true })}
-    >
+    <div role='none' className='relative overflow-hidden bg-deck-surface'>
       <SidebarToggles topbar={topbar} fullscreen={fullscreen} />
       <StackContext.Provider
         value={{
