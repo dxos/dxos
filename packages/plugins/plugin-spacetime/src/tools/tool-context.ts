@@ -33,8 +33,15 @@ export type FaceSelection = SelectionBase & {
   normal: { x: number; y: number; z: number };
 };
 
+/** Multi-object selection (ordered list, first = primary). */
+export type MultiObjectSelection = {
+  type: 'multi-object';
+  /** Ordered list of selected objects (first = primary). */
+  entries: Array<{ objectId: string; mesh: Mesh }>;
+};
+
 /** Shared selection state that persists across tool switches. */
-export type Selection = ObjectSelection | FaceSelection;
+export type Selection = ObjectSelection | FaceSelection | MultiObjectSelection;
 
 /** Shared context provided to all tools. */
 export type ToolContext = {
@@ -65,4 +72,15 @@ export type ToolContext = {
   setSelection: (selection: Selection | null) => void;
   /** Report debug stats for the canvas overlay. */
   setDebugStats: (stats: Record<string, string | number>) => void;
+};
+
+/** Returns all selected object IDs from any selection type. */
+export const getSelectedObjectIds = (selection: Selection | null): string[] => {
+  if (!selection) {
+    return [];
+  }
+  if (selection.type === 'multi-object') {
+    return selection.entries.map((entry) => entry.objectId);
+  }
+  return [selection.objectId];
 };
