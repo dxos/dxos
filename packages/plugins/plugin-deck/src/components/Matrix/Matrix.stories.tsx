@@ -28,6 +28,7 @@ import { meta as pluginMeta } from '../../meta';
 import { translations } from '../../translations';
 
 import { Matrix, type MatrixController, type MatrixRootProps } from './Matrix';
+import { StackContext } from '@dxos/react-ui-stack';
 
 faker.seed(123);
 
@@ -69,47 +70,46 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
  * Tile that wraps a Plank for content rendering.
  */
 const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
-  const attentionAttrs = useAttentionAttributes(props.data.id);
   const graph = useMemo(() => Graph.make(), []);
   return (
-    <Mosaic.Tile {...props} asChild>
-      <Focus.Item asChild border current={props.current}>
-        <Panel.Root classNames='dx-current dx-hover w-full md:w-[50rem] snap-start shrink-0' {...attentionAttrs}>
-          <Panel.Toolbar asChild>
-            <Toolbar.Root>
-              <p>{Obj.getLabel(props.data)}</p>
-            </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content>
-            <Plank.Root layoutMode='multi' part='multi' graph={graph}>
-              <Plank.Component
-                id={props.data.id}
-                layoutMode='multi'
-                part='multi'
-                node={{ id: props.data.id, data: props.data, type: 'test', properties: {} } as any}
-              />
-            </Plank.Root>
-          </Panel.Content>
-        </Panel.Root>
-      </Focus.Item>
-    </Mosaic.Tile>
+    <StackContext.Provider value={{ orientation: 'horizontal', size: 'contain', rail: true }}>
+      <Plank.Root layoutMode='multi' part='multi' graph={graph}>
+        <Mosaic.Tile {...props} asChild>
+          <Plank.Content solo companion={false} encapsulate={false}>
+            <Plank.Component
+              id={props.data.id}
+              layoutMode='multi'
+              part='multi'
+              // TODO(burdon): Simulate graph node.
+              node={{
+                id: props.data.id,
+                data: props.data,
+                type: 'test',
+                properties: {},
+              }}
+            />
+          </Plank.Content>
+        </Mosaic.Tile>
+      </Plank.Root>
+    </StackContext.Provider>
   );
 };
 
-const storySurfaceExtension = Capability.contributes(
+const TestExtension = Capability.contributes(
   Capabilities.ReactSurface,
   Surface.create({
     id: 'story-article',
     role: 'article',
-    component: ({ data }) => {
-      const subject = (data as any)?.subject;
+    component: ({ data: { subject } }) => {
       if (!subject) {
         return <Loading />;
       }
 
       return (
         <Json.Root data={subject}>
-          <Json.Content />
+          <Json.Content>
+            <Json.Data />
+          </Json.Content>
         </Json.Root>
       );
     },
@@ -201,7 +201,7 @@ export const WithPlank: Story = {
   decorators: [
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
-      capabilities: [storySurfaceExtension],
+      capabilities: [TestExtension],
     }),
   ],
   parameters: {

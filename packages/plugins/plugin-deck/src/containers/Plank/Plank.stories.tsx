@@ -14,7 +14,7 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { faker } from '@dxos/random';
 import { Main } from '@dxos/react-ui';
 import { Json } from '@dxos/react-ui-syntax-highlighter';
-import { Loading, withLayout } from '@dxos/react-ui/testing';
+import { Loading } from '@dxos/react-ui/testing';
 import { StackContext } from '@dxos/react-ui-stack';
 import { Organization } from '@dxos/types';
 
@@ -85,7 +85,6 @@ const meta = {
   title: 'plugins/plugin-deck/containers/Plank',
   component: DefaultStory,
   decorators: [
-    withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [...corePlugins(), TestPlugin()],
       capabilities: [storySurfaceExtension],
@@ -93,7 +92,6 @@ const meta = {
     }),
   ],
   parameters: {
-    layout: 'fullscreen',
     translations,
   },
 } satisfies Meta<typeof DefaultStory>;

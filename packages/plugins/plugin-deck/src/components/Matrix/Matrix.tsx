@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useFocusFinders } from '@fluentui/react-tabster';
 import { createContext } from '@radix-ui/react-context';
 import React, { forwardRef, type PropsWithChildren, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 
@@ -69,6 +70,10 @@ const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
       viewportRef.current = element;
     }, []);
 
+    const { findFirstFocusable } = useFocusFinders();
+    const findFirstFocusableRef = useRef(findFirstFocusable);
+    findFirstFocusableRef.current = findFirstFocusable;
+
     // Sync attention system with current tile.
     const attended = useAttended();
     const itemIds = useRef(new Set<string>());
@@ -96,8 +101,9 @@ const MatrixRoot = forwardRef<MatrixController, MatrixRootProps>(
           return;
         }
 
-        // Focus first so attention updates immediately, then scroll.
-        tile.focus({ preventScroll: true });
+        // Focus first focusable element so attention updates immediately, then scroll.
+        const focusable = findFirstFocusableRef.current(tile);
+        (focusable ?? tile).focus({ preventScroll: true });
 
         const tileRect = tile.getBoundingClientRect();
         const viewportRect = viewport.getBoundingClientRect();
