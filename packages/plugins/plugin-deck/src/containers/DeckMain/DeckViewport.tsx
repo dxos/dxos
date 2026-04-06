@@ -24,60 +24,23 @@ import { fixedComplementarySidebarToggleStyles, fixedSidebarToggleStyles } from 
 
 const DECK_VIEWPORT_NAME = 'DeckViewport';
 
+//
+// DeckViewport
+//
+
 /**
  * Deck viewport that renders the main content area.
- * Handles empty state, deck mode (horizontal stack), and solo mode.
+ * Handles empty state, then delegates to MultiMode and SoloMode.
  */
 export const DeckViewport = () => {
   const { deck, state, settings, layoutMode } = useDeckContext(DECK_VIEWPORT_NAME);
-  const { active, companionOpen, companionVariant, fullscreen, solo, plankSizing } = deck;
+  const { active, fullscreen, solo, plankSizing } = deck;
   const { sidebarState, complementarySidebarState } = state;
-  const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
-  const scrollLeftRef = useRef<number>(null);
-  const deckRef = useRef<HTMLDivElement>(null);
-
-  /**
-   * Clear scroll restoration state if the window is resized.
-   */
-  const handleResize = useCallback(() => {
-    scrollLeftRef.current = null;
-  }, []);
-
-  useEffect(() => {
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [handleResize]);
-
-  const restoreScroll = useCallback(() => {
-    if (deckRef.current && scrollLeftRef.current != null) {
-      deckRef.current.scrollLeft = scrollLeftRef.current;
-    }
-  }, []);
-  useOnTransition(layoutMode, (mode) => mode !== 'multi', 'multi', restoreScroll);
-
-  /**
-   * Save scroll position as the user scrolls.
-   */
-  const handleScroll = useCallback(
-    (event: UIEvent) => {
-      if (!solo && event.currentTarget === event.target) {
-        scrollLeftRef.current = (event.target as HTMLDivElement).scrollLeft;
-      }
-    },
-    [solo],
-  );
 
   const isEmpty = !solo && active.length === 0;
-
-  const padding = useMemo(() => {
-    if (!solo && settings?.overscroll === 'centering') {
-      return calculateOverscroll(active.length);
-    }
-    return {};
-  }, [solo, settings?.overscroll, deck]);
 
   const mainPosition = useMemo(
     () => [
@@ -87,17 +50,6 @@ export const DeckViewport = () => {
     ],
     [topbar, hoistStatusbar],
   );
-
-  const { order, itemsCount }: { order: Record<string, number>; itemsCount: number } = useMemo(() => {
-    return active.reduce(
-      (acc: { order: Record<string, number>; itemsCount: number }, entryId) => {
-        acc.order[entryId] = acc.itemsCount + 1;
-        acc.itemsCount += companionOpen ? 3 : 2;
-        return acc;
-      },
-      { order: {}, itemsCount: 0 },
-    );
-  }, [active, companionOpen]);
 
   if (isEmpty) {
     return (
@@ -132,76 +84,171 @@ export const DeckViewport = () => {
         } as MainContentProps['style']
       }
     >
-      {/* Deck mode. */}
-      <div
-        role='none'
-        className={!solo ? 'relative bg-deck-surface overflow-hidden' : 'sr-only'}
-        {...(solo && { inert: true })}
-      >
-        {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
-        {!topbar && !fullscreen && (
-          <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
-        )}
-        <Stack
-          classNames={[
-            'absolute inset-y-(--main-spacing) -inset-w-px h-[calc(100%-2*var(--main-spacing))]',
-            mainPaddingTransitions,
-          ]}
-          itemsCount={itemsCount - 1}
-          size='contain'
-          orientation='horizontal'
-          style={padding}
-          onScroll={handleScroll}
-          ref={deckRef}
-        >
-          {active.map((entryId) => (
-            <Fragment key={entryId}>
-              <PlankSeparator order={order[entryId] - 1} encapsulate={!!settings?.encapsulatedPlanks} />
-              <ConnectedPlank
-                id={entryId}
-                part='multi'
-                active={active}
-                order={order[entryId]}
-                layoutMode={layoutMode}
-                companionVariant={effectiveCompanionVariant}
-                settings={settings}
-              />
-            </Fragment>
-          ))}
-        </Stack>
-      </div>
-
-      {/* Solo mode. */}
-      <div
-        role='none'
-        className={solo ? 'relative overflow-hidden bg-deck-surface' : 'sr-only'}
-        {...(!solo && { inert: true })}
-      >
-        {!topbar && !fullscreen && <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />}
-        {!topbar && !fullscreen && (
-          <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
-        )}
-        <StackContext.Provider
-          value={{
-            orientation: 'horizontal',
-            size: 'contain',
-            rail: true,
-          }}
-        >
-          <ConnectedPlank
-            id={solo}
-            part='solo'
-            layoutMode={layoutMode}
-            companionVariant={effectiveCompanionVariant}
-            settings={settings}
-          />
-        </StackContext.Provider>
-      </div>
+      <MultiMode />
+      <SoloMode />
     </Main.Content>
   );
 };
 
 DeckViewport.displayName = DECK_VIEWPORT_NAME;
+
+//
+// MultiMode
+//
+
+/**
+ * Multi-plank horizontal scrolling layout.
+ */
+const MultiMode = () => {
+  const { deck, settings, layoutMode } = useDeckContext('MultiMode');
+  const { active, companionOpen, companionVariant, fullscreen, solo } = deck;
+  const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
+  const breakpoint = useBreakpoints();
+  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+
+  const scrollLeftRef = useRef<number>(null);
+  const deckRef = useRef<HTMLDivElement>(null);
+
+  /** Clear scroll restoration state if the window is resized. */
+  const handleResize = useCallback(() => {
+    scrollLeftRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [handleResize]);
+
+  const restoreScroll = useCallback(() => {
+    if (deckRef.current && scrollLeftRef.current != null) {
+      deckRef.current.scrollLeft = scrollLeftRef.current;
+    }
+  }, []);
+  useOnTransition(layoutMode, (mode) => mode !== 'multi', 'multi', restoreScroll);
+
+  /** Save scroll position as the user scrolls. */
+  const handleScroll = useCallback(
+    (event: UIEvent) => {
+      if (!solo && event.currentTarget === event.target) {
+        scrollLeftRef.current = (event.target as HTMLDivElement).scrollLeft;
+      }
+    },
+    [solo],
+  );
+
+  const padding = useMemo(() => {
+    if (!solo && settings?.overscroll === 'centering') {
+      return calculateOverscroll(active.length);
+    }
+    return {};
+  }, [solo, settings?.overscroll, deck]);
+
+  const { order, itemsCount }: { order: Record<string, number>; itemsCount: number } = useMemo(() => {
+    return active.reduce(
+      (acc: { order: Record<string, number>; itemsCount: number }, entryId) => {
+        acc.order[entryId] = acc.itemsCount + 1;
+        acc.itemsCount += companionOpen ? 3 : 2;
+        return acc;
+      },
+      { order: {}, itemsCount: 0 },
+    );
+  }, [active, companionOpen]);
+
+  return (
+    <div
+      role='none'
+      className={!solo ? 'relative bg-deck-surface overflow-hidden' : 'sr-only'}
+      {...(solo && { inert: true })}
+    >
+      <SidebarToggles topbar={topbar} fullscreen={fullscreen} />
+      <Stack
+        classNames={[
+          'absolute inset-y-(--main-spacing) -inset-w-px h-[calc(100%-2*var(--main-spacing))]',
+          mainPaddingTransitions,
+        ]}
+        itemsCount={itemsCount - 1}
+        size='contain'
+        orientation='horizontal'
+        style={padding}
+        onScroll={handleScroll}
+        ref={deckRef}
+      >
+        {active.map((entryId) => (
+          <Fragment key={entryId}>
+            <PlankSeparator order={order[entryId] - 1} encapsulate={!!settings?.encapsulatedPlanks} />
+            <ConnectedPlank
+              id={entryId}
+              part='multi'
+              active={active}
+              order={order[entryId]}
+              layoutMode={layoutMode}
+              companionVariant={effectiveCompanionVariant}
+              settings={settings}
+            />
+          </Fragment>
+        ))}
+      </Stack>
+    </div>
+  );
+};
+
+//
+// SoloMode
+//
+
+/**
+ * Single-plank layout with optional companion.
+ */
+const SoloMode = () => {
+  const { deck, settings, layoutMode } = useDeckContext('SoloMode');
+  const { companionOpen, companionVariant, fullscreen, solo } = deck;
+  const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
+  const breakpoint = useBreakpoints();
+  const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+
+  return (
+    <div
+      role='none'
+      className={solo ? 'relative overflow-hidden bg-deck-surface' : 'sr-only'}
+      {...(!solo && { inert: true })}
+    >
+      <SidebarToggles topbar={topbar} fullscreen={fullscreen} />
+      <StackContext.Provider
+        value={{
+          orientation: 'horizontal',
+          size: 'contain',
+          rail: true,
+        }}
+      >
+        <ConnectedPlank
+          id={solo}
+          part='solo'
+          layoutMode={layoutMode}
+          companionVariant={effectiveCompanionVariant}
+          settings={settings}
+        />
+      </StackContext.Provider>
+    </div>
+  );
+};
+
+//
+// SidebarToggles
+//
+
+/** Shared sidebar toggle buttons for multi and solo modes. */
+const SidebarToggles = ({ topbar, fullscreen }: { topbar: boolean; fullscreen: boolean }) => {
+  if (topbar || fullscreen) {
+    return null;
+  }
+
+  return (
+    <>
+      <ToggleSidebarButton classNames={fixedSidebarToggleStyles} />
+      <ToggleComplementarySidebarButton classNames={fixedComplementarySidebarToggleStyles} />
+    </>
+  );
+};
 
 //
 // ConnectedPlank
