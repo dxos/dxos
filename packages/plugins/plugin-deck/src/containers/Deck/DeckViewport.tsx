@@ -17,6 +17,7 @@ import { addEventListener } from '@dxos/async';
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { invariant } from '@dxos/invariant';
 import { useNode } from '@dxos/plugin-graph';
 import { Main, type MainContentProps, useOnTransition } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
@@ -213,6 +214,7 @@ export const DeckSoloMode = () => {
   const effectiveCompanionVariant = companionOpen ? companionVariant : undefined;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
+  invariant(solo);
 
   return (
     <div role='none' className='relative overflow-hidden bg-deck-surface'>
@@ -298,11 +300,9 @@ const PlankSeparator = ({ order, encapsulate }: { order: number; encapsulate?: b
 // PlankContainer
 //
 
-const UNKNOWN_ID = 'unknown_id';
-
 type PlankContainerProps = Pick<PlankRootProps, 'layoutMode' | 'part' | 'settings'> &
+  Pick<PlankComponentProps, 'id'> &
   Partial<Pick<PlankComponentProps, 'path' | 'order' | 'active'>> & {
-    id?: string;
     companionVariant?: string;
   };
 
@@ -311,82 +311,82 @@ type PlankContainerProps = Pick<PlankRootProps, 'layoutMode' | 'part' | 'setting
  * This is the bridge between DeckViewport (which knows about framework hooks) and
  * the pure Plank components (which receive everything via context).
  */
-const PlankContainer = memo(
-  ({ id = UNKNOWN_ID, layoutMode, part, settings, companionVariant, ...props }: PlankContainerProps) => {
-    const { graph } = useAppGraph();
-    const { invokePromise } = useOperationInvoker();
-    const { state, deck } = useDeckState();
-    const node = useNode(graph, id);
-    const companions = useCompanions(id);
-    const { companionId } = useSelectedCompanion(companions, companionVariant);
-    const resolvedCompanionId = companionVariant ? companionId : undefined;
-    const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
-    const hasCompanion = !!(resolvedCompanionId && currentCompanion);
+const PlankContainer = memo(({ id, layoutMode, part, settings, companionVariant, ...props }: PlankContainerProps) => {
+  const { graph } = useAppGraph();
+  const { invokePromise } = useOperationInvoker();
+  const { state, deck } = useDeckState();
+  const node = useNode(graph, id);
+  const companions = useCompanions(id);
+  const { companionId } = useSelectedCompanion(companions, companionVariant);
+  const resolvedCompanionId = companionVariant ? companionId : undefined;
+  const currentCompanion = companions.find(({ id }) => id === resolvedCompanionId);
+  const hasCompanion = !!(resolvedCompanionId && currentCompanion);
 
-    const handleAdjust = useCallback(
-      (plankId: string, type: DeckOperation.PartAdjustment) => {
-        if (type === 'close') {
-          if (part === 'complementary') {
-            return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
-          }
+  const handleAdjust = useCallback(
+    (plankId: string, type: DeckOperation.PartAdjustment) => {
+      if (type === 'close') {
+        if (part === 'complementary') {
+          return invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+        } else {
           return invokePromise(LayoutOperation.Close, { subject: [plankId] });
         }
+      } else {
         return invokePromise(DeckOperation.Adjust, { type, id: plankId });
-      },
-      [invokePromise, part],
-    );
+      }
+    },
+    [invokePromise, part],
+  );
 
-    const handleResize = useCallback(
-      (plankId: string, size: number) => invokePromise(DeckOperation.UpdatePlankSize, { id: plankId, size }),
-      [invokePromise],
-    );
+  const handleResize = useCallback(
+    (plankId: string, size: number) => invokePromise(DeckOperation.UpdatePlankSize, { id: plankId, size }),
+    [invokePromise],
+  );
 
-    const handleScrollIntoView = useCallback(
-      (subject?: string) => invokePromise(LayoutOperation.ScrollIntoView, { subject }),
-      [invokePromise],
-    );
+  const handleScrollIntoView = useCallback(
+    (subject?: string) => invokePromise(LayoutOperation.ScrollIntoView, { subject }),
+    [invokePromise],
+  );
 
-    const handleChangeCompanion = useCallback(
-      (companion: string | null) => invokePromise(DeckOperation.ChangeCompanion, { companion }),
-      [invokePromise],
-    );
+  const handleChangeCompanion = useCallback(
+    (companion: string | null) => invokePromise(DeckOperation.ChangeCompanion, { companion }),
+    [invokePromise],
+  );
 
-    return (
-      <Plank.Root
-        graph={graph}
-        layoutMode={layoutMode}
-        part={part}
-        settings={settings}
-        popoverAnchorId={state.popoverAnchorId}
-        scrollIntoView={state.scrollIntoView}
-        plankSizing={deck.plankSizing}
-        onAdjust={handleAdjust}
-        onResize={handleResize}
-        onScrollIntoView={handleScrollIntoView}
-        onChangeCompanion={handleChangeCompanion}
-      >
-        <Plank.Content solo={part === 'solo'} companion={hasCompanion} encapsulate={!!settings?.encapsulatedPlanks}>
+  return (
+    <Plank.Root
+      graph={graph}
+      layoutMode={layoutMode}
+      part={part}
+      settings={settings}
+      popoverAnchorId={state.popoverAnchorId}
+      scrollIntoView={state.scrollIntoView}
+      plankSizing={deck.plankSizing}
+      onAdjust={handleAdjust}
+      onResize={handleResize}
+      onScrollIntoView={handleScrollIntoView}
+      onChangeCompanion={handleChangeCompanion}
+    >
+      <Plank.Content solo={part === 'solo'} companion={hasCompanion} encapsulate={!!settings?.encapsulatedPlanks}>
+        <Plank.Component
+          id={id}
+          node={node}
+          companioned={hasCompanion ? 'primary' : undefined}
+          companions={hasCompanion ? [] : companions}
+          {...(part === 'solo' ? { part: 'solo-primary' } : { part })}
+          {...props}
+        />
+        {hasCompanion && (
           <Plank.Component
-            id={id}
-            node={node}
-            companioned={hasCompanion ? 'primary' : undefined}
-            companions={hasCompanion ? [] : companions}
-            {...(part === 'solo' ? { part: 'solo-primary' } : { part })}
+            id={resolvedCompanionId}
+            node={currentCompanion}
+            companions={companions}
+            companioned='companion'
+            primary={node}
+            {...(part === 'solo' ? { part: 'solo-companion' } : { part, order: (props.order ?? 0) + 1 })}
             {...props}
           />
-          {hasCompanion && (
-            <Plank.Component
-              id={resolvedCompanionId}
-              node={currentCompanion}
-              companions={companions}
-              companioned='companion'
-              primary={node}
-              {...(part === 'solo' ? { part: 'solo-companion' } : { part, order: (props.order ?? 0) + 1 })}
-              {...props}
-            />
-          )}
-        </Plank.Content>
-      </Plank.Root>
-    );
-  },
-);
+        )}
+      </Plank.Content>
+    </Plank.Root>
+  );
+});
