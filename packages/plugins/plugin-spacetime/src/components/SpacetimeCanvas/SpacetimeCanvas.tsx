@@ -240,10 +240,10 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
 
         // Create tool context.
         toolManager.setContext({
+          manifold: wasm,
           scene: manager.scene,
           camera: manager.camera,
           canvas: canvas,
-          manifold: wasm,
           echoScene: sceneData,
           meshes: meshesRef.current,
           solids: solidsRef.current,

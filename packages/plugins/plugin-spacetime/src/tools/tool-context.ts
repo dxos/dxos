@@ -5,16 +5,17 @@
 import { type ArcRotateCamera, type HighlightLayer, type Mesh, type Scene as BabylonScene } from '@babylonjs/core';
 import type { Manifold } from 'manifold-3d';
 
+import { type getManifold } from '../engine';
 import { type Scene, type Model } from '../types';
 
 /** Selection granularity mode. */
 export type SelectionMode = 'object' | 'face';
 
 /** Current selection mode state used by tools. */
+// TODO(burdon): Do we need this type?
 export type SelectionState = {
   selectionMode: SelectionMode;
 };
-import { type getManifold } from '../engine';
 
 /** Base selection fields shared by all selection types. */
 type SelectionBase = {
@@ -52,14 +53,14 @@ export type Selection = ObjectSelection | FaceSelection | MultiObjectSelection;
 
 /** Shared context provided to all tools. */
 export type ToolContext = {
+  /** Manifold WASM module for CSG operations. */
+  manifold: Awaited<ReturnType<typeof getManifold>>;
   /** Babylon.js scene for visual manipulation. */
   scene: BabylonScene;
   /** Camera for controlling orbit during tool interactions. */
   camera: ArcRotateCamera;
   /** Canvas element for pointer coordinate mapping. */
   canvas: HTMLCanvasElement;
-  /** Manifold WASM module for CSG operations. */
-  manifold: Awaited<ReturnType<typeof getManifold>>;
   /** ECHO scene for committing changes after tool actions complete. */
   echoScene?: Scene.Scene;
   /** Map of ECHO object id to Babylon mesh. */
