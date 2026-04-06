@@ -17,7 +17,16 @@ import {
   rawDataToBabylon,
 } from '../../engine';
 import { DebugPanel, extractSolidDebugInfo, type DebugInfo } from './DebugPanel';
-import { ToolManager, SelectTool, MoveTool, ExtrudeTool, type Selection } from '../../tools';
+import {
+  ToolManager,
+  SelectTool,
+  MoveTool,
+  ExtrudeTool,
+  type Selection,
+  type EditorState,
+  type ActionResult,
+} from '../../tools';
+import { AddObjectAction, DeleteObjectsAction, JoinObjectsAction, SubtractObjectsAction } from '../../tools/actions';
 import { type Scene, Model } from '../../types';
 import { type SelectionMode, type SpacetimeTool, type ViewState } from '../SpacetimeToolbar';
 
@@ -37,7 +46,8 @@ export type SpacetimeCanvasProps = {
   importGLBRef?: React.MutableRefObject<
     (data: ArrayBuffer | string) => Promise<{ vertexData: string; indexData: string } | undefined>
   >;
-  deleteObjectRef?: React.MutableRefObject<(objectId: string) => void>;
+  /** Ref for editor to dispatch actions through ToolManager. */
+  handleActionRef?: React.MutableRefObject<(actionId: string, editorState: EditorState) => ActionResult | undefined>;
   /** Currently selected object id and hue for material updates. */
   selectedObjectId?: string | null;
   selectedHue?: string;
@@ -62,7 +72,7 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
       onSelectionChange,
       parentSolidsRef,
       importGLBRef,
-      deleteObjectRef,
+      handleActionRef,
       selectedObjectId,
       selectedHue,
       onToolChange,
@@ -158,6 +168,10 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         toolManager.register(new SelectTool());
         toolManager.register(new MoveTool());
         toolManager.register(new ExtrudeTool());
+        toolManager.registerAction(new AddObjectAction());
+        toolManager.registerAction(new DeleteObjectsAction());
+        toolManager.registerAction(new JoinObjectsAction());
+        toolManager.registerAction(new SubtractObjectsAction());
         toolManagerRef.current = toolManager;
 
         // Create highlight layer for object selection glow.
@@ -271,6 +285,10 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
         // Set initial tool.
         toolManager.setActiveTool(tool ?? 'select');
 
+        if (handleActionRef) {
+          handleActionRef.current = (actionId, editorState) => toolManager.handleAction(actionId, editorState);
+        }
+
         // Keyboard shortcuts scoped to canvas focus.
         keyDownHandlerRef.current = (event: KeyboardEvent) => {
           const target = event.target as HTMLElement;
@@ -323,31 +341,6 @@ export const SpacetimeCanvas = composable<HTMLDivElement, SpacetimeCanvasProps>(
               vertexData: Model.encodeTypedArray(positions),
               indexData: Model.encodeTypedArray(new Uint32Array(triVerts)),
             };
-          };
-        }
-
-        // Provide delete callback to parent.
-        if (deleteObjectRef) {
-          deleteObjectRef.current = (objectId: string) => {
-            // Clear selection if the deleted object is currently selected.
-            const currentSelection = selectionRef.current;
-            if (
-              currentSelection &&
-              currentSelection.type !== 'multi-object' &&
-              currentSelection.objectId === objectId
-            ) {
-              currentSelection.highlightMesh?.dispose();
-              if (currentSelection.type === 'object') {
-                highlightLayer.removeMesh(currentSelection.mesh);
-              }
-              selectionRef.current = null;
-            }
-            const mesh = meshesRef.current.get(objectId);
-            mesh?.dispose();
-            meshesRef.current.delete(objectId);
-            solidsRef.current.get(objectId)?.delete();
-            solidsRef.current.delete(objectId);
-            setDebugInfoRef.current(extractSceneDebugInfo(sceneData));
           };
         }
 

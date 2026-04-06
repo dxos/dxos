@@ -3,7 +3,6 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import type { Manifold, ManifoldToplevel } from 'manifold-3d';
 import React, {
   type PropsWithChildren,
   useEffect,
@@ -16,13 +15,13 @@ import React, {
   RefObject,
 } from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
-import { getManifold, joinSolids, subtractSolids, serializeManifold, parseOBJ, presetObjData } from '../../engine';
+import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { composable, composableProps } from '@dxos/ui-theme';
 
+import { type EditorState, type ActionResult } from '../../tools';
 import { type Scene, Model } from '../../types';
-import { handleImport as doImport, handleExportSTL as doExportSTL } from './import-export';
+import { handleImport as doImport, handleExport as doExport } from './import-export';
 import { SpacetimeCanvas, type SpacetimeCanvasProps } from '../SpacetimeCanvas';
 import {
   type EditorActions,
@@ -68,8 +67,8 @@ type SpacetimeEditorContextValue = {
   selectedTemplate: Model.ObjectTemplate;
   onSelectedTemplateChange: (template: Model.ObjectTemplate) => void;
 
-  /** Ref for canvas to provide object deletion (disposes mesh + solid). */
-  deleteObjectRef: RefObject<(objectId: string) => void>;
+  /** Ref for dispatching actions through ToolManager. */
+  handleActionRef: React.MutableRefObject<(actionId: string, editorState: EditorState) => ActionResult | undefined>;
 
   /** Runtime Manifold solids (provided by canvas). */
   solidsRef: RefObject<Map<string, import('manifold-3d').Manifold> | null>;
@@ -116,34 +115,13 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     }, []);
     const [selectedTemplate, setSelectedTemplate] = useState<Model.ObjectTemplate>('cube');
     const [propertiesState, setPropertiesState] = useState<PropertiesState>({ hue: 'blue' });
-    const deleteObjectRef = useRef<(objectId: string) => void>(() => {});
+    const handleActionRef = useRef<(actionId: string, editorState: EditorState) => ActionResult | undefined>(
+      () => undefined,
+    );
     const solidsRef = useRef<Map<string, import('manifold-3d').Manifold> | null>(null);
     const importGLBRef = useRef<
       (data: ArrayBuffer | string) => Promise<{ vertexData: string; indexData: string } | undefined>
     >(async () => undefined);
-    const wasmRef = useRef<ManifoldToplevel | null>(null);
-
-    useEffect(() => {
-      void getManifold().then((wasm) => {
-        wasmRef.current = wasm;
-      });
-    }, []);
-
-    const findObject = useCallback(
-      (objId: string): (Model.Object & { id?: string }) | undefined => {
-        if (!scene?.objects) {
-          return undefined;
-        }
-        for (const ref of scene.objects) {
-          const obj = ref?.target as (Model.Object & { id?: string }) | undefined;
-          if (obj && (obj as any).id === objId) {
-            return obj;
-          }
-        }
-        return undefined;
-      },
-      [scene],
-    );
 
     const handleToolChange = useCallback(
       (next: Partial<ToolState>) => setToolState((prev) => ({ ...prev, ...next })),
@@ -180,72 +158,25 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       [selectedObjectId, scene],
     );
 
-    const handleAddObject = useCallback(() => {
-      if (!scene) {
-        return;
-      }
-      const objData = presetObjData[selectedTemplate as Model.PresetType];
-      if (objData) {
-        // Preset: parse OBJ directly (no Manifold needed — works for non-watertight meshes too).
-        const parsed = parseOBJ(objData);
-        if (!parsed) {
-          return;
+    const dispatchAction = useCallback(
+      (actionId: string): void => {
+        const editorState: EditorState = {
+          selectedObjectIds,
+          selectedTemplate,
+          hue: propertiesState.hue,
+        };
+        const result = handleActionRef.current(actionId, editorState);
+        if (result?.selectObjectIds) {
+          setSelectedObjectIds(result.selectObjectIds);
         }
-        const object = Model.make({
-          primitive: undefined,
-          label: selectedTemplate,
-          mesh: {
-            vertexData: Model.encodeTypedArray(parsed.positions),
-            indexData: Model.encodeTypedArray(parsed.indices),
-          },
-          color: propertiesState.hue,
-        });
-        Obj.change(scene, (obj) => {
-          obj.objects.push(Ref.make(object));
-        });
-        Obj.setParent(object, scene);
-        const objId = (object as any).id as string | undefined;
-        if (objId) {
-          setSelectedObjectId(objId);
-        }
-      } else {
-        // Primitive: create parametric object.
-        const object = Model.make({ primitive: selectedTemplate as Model.PrimitiveType, color: propertiesState.hue });
-        Obj.change(scene, (obj) => {
-          obj.objects.push(Ref.make(object));
-        });
-        Obj.setParent(object, scene);
-        const objId = (object as any).id as string | undefined;
-        if (objId) {
-          setSelectedObjectId(objId);
-        }
-      }
-    }, [scene, selectedTemplate, propertiesState.hue]);
+      },
+      [selectedObjectIds, selectedTemplate, propertiesState.hue],
+    );
 
-    const handleDeleteSelected = useCallback(() => {
-      if (selectedObjectIds.length === 0) {
-        return;
-      }
-
-      // Remove from ECHO scene if it's an ECHO object.
-      if (scene) {
-        Obj.change(scene, (obj) => {
-          for (const objId of selectedObjectIds) {
-            const index = obj.objects.findIndex((ref) => (ref?.target as any)?.id === objId);
-            if (index !== -1) {
-              obj.objects.splice(index, 1);
-            }
-          }
-        });
-      }
-
-      // Remove mesh + solid from canvas (covers both ECHO and imported objects).
-      for (const objId of selectedObjectIds) {
-        deleteObjectRef.current(objId);
-      }
-
-      setSelectedObjectIds([]);
-    }, [scene, selectedObjectIds]);
+    const handleAdd = useCallback(() => dispatchAction('add-object'), [dispatchAction]);
+    const handleDeleteSelected = useCallback(() => dispatchAction('delete-objects'), [dispatchAction]);
+    const handleJoinSelected = useCallback(() => dispatchAction('join-objects'), [dispatchAction]);
+    const handleSubtractSelected = useCallback(() => dispatchAction('subtract-objects'), [dispatchAction]);
 
     const handleImport = useCallback(
       () =>
@@ -260,74 +191,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       [scene, propertiesState.hue],
     );
 
-    const handleExportSTL = useCallback(() => doExportSTL({ selectedObjectId, solidsRef }), [selectedObjectId]);
-
-    const performBooleanOp = useCallback(
-      (op: typeof joinSolids | typeof subtractSolids) => {
-        const wasm = wasmRef.current;
-        if (!scene || !solidsRef.current || !wasm || selectedObjectIds.length < 2) {
-          return;
-        }
-
-        const solids: Manifold[] = [];
-        const positions: Model.Vec3[] = [];
-        const objectsToDelete: string[] = [];
-
-        for (const objId of selectedObjectIds) {
-          const solid = solidsRef.current.get(objId);
-          const obj = findObject(objId);
-          if (!solid || !obj) {
-            continue;
-          }
-          solids.push(solid);
-          positions.push({ x: obj.position.x, y: obj.position.y, z: obj.position.z });
-          objectsToDelete.push(objId);
-        }
-
-        if (solids.length < 2) {
-          return;
-        }
-
-        const result = op(wasm, solids, positions);
-        const meshData = serializeManifold(result.solid);
-        const firstObj = findObject(objectsToDelete[0]);
-
-        const newObject = Model.make({
-          primitive: undefined,
-          mesh: meshData,
-          position: result.position,
-          color: firstObj?.color,
-        });
-
-        Obj.change(scene, (sceneObj) => {
-          // Remove source objects.
-          for (const objId of objectsToDelete) {
-            const index = sceneObj.objects.findIndex((ref) => (ref?.target as any)?.id === objId);
-            if (index !== -1) {
-              sceneObj.objects.splice(index, 1);
-            }
-          }
-          // Add new merged object.
-          sceneObj.objects.push(Ref.make(newObject));
-        });
-        Obj.setParent(newObject, scene);
-
-        // Clean up canvas for deleted objects.
-        for (const objId of objectsToDelete) {
-          deleteObjectRef.current(objId);
-        }
-
-        // Don't keep the result solid -- the canvas sync effect will recreate it from ECHO.
-        result.solid.delete();
-
-        const newObjId = (newObject as any).id as string;
-        setSelectedObjectIds([newObjId]);
-      },
-      [scene, selectedObjectIds, findObject],
-    );
-
-    const handleJoinSelected = useCallback(() => performBooleanOp(joinSolids), [performBooleanOp]);
-    const handleSubtractSelected = useCallback(() => performBooleanOp(subtractSolids), [performBooleanOp]);
+    const handleExport = useCallback(() => doExport({ selectedObjectId, solidsRef }), [selectedObjectId]);
 
     // Sync hue picker with selected object's color.
     useEffect(() => {
@@ -345,21 +209,14 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
 
     const editorActions: EditorActions = useMemo(
       () => ({
-        onAddObject: handleAddObject,
+        onAdd: handleAdd,
         onDeleteSelected: handleDeleteSelected,
-        onImport: handleImport,
-        onExportSTL: handleExportSTL,
         onJoinSelected: handleJoinSelected,
         onSubtractSelected: handleSubtractSelected,
+        onImport: handleImport,
+        onExport: handleExport,
       }),
-      [
-        handleAddObject,
-        handleDeleteSelected,
-        handleImport,
-        handleExportSTL,
-        handleJoinSelected,
-        handleSubtractSelected,
-      ],
+      [handleAdd, handleDeleteSelected, handleImport, handleExport, handleJoinSelected, handleSubtractSelected],
     );
 
     useImperativeHandle(forwardedRef, () => ({
@@ -382,7 +239,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         editorActions={editorActions}
         selectedObjectId={selectedObjectId}
         setSelectedObjectId={setSelectedObjectId}
-        deleteObjectRef={deleteObjectRef}
+        handleActionRef={handleActionRef}
         solidsRef={solidsRef}
         importGLBRef={importGLBRef}
       >
@@ -462,7 +319,7 @@ const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasPr
     setSelectedObjectId,
     solidsRef: parentSolidsRef,
     importGLBRef: parentImportGLBRef,
-    deleteObjectRef: parentDeleteObjectRef,
+    handleActionRef: parentHandleActionRef,
     editorActions,
   } = useSpacetimeEditorContext(SPACETIME_EDITOR_CANVAS);
   // Subscribe to ECHO scene changes so we re-render when objects are added/removed.
@@ -479,7 +336,7 @@ const SpacetimeEditorCanvas = composable<HTMLDivElement, SpacetimeEditorCanvasPr
       onSelectionChange={setSelectedObjectId}
       parentSolidsRef={parentSolidsRef}
       importGLBRef={parentImportGLBRef}
-      deleteObjectRef={parentDeleteObjectRef}
+      handleActionRef={parentHandleActionRef}
       selectedObjectId={selectedObjectId}
       selectedHue={propertiesState.hue}
       onToolChange={onToolChange}
