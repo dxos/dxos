@@ -82,7 +82,9 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     resourceFromAttributes({
       [ATTR_SERVICE_NAME]: serviceName,
       [ATTR_SERVICE_VERSION]: serviceVersion,
+      'service.instance.id': crypto.randomUUID(),
       'deployment.environment': environment,
+      'dxos.process.type': detectProcessType(),
     }),
   );
 
@@ -165,6 +167,20 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
     ].filter(isNonNullable),
   };
 });
+
+/** Best-effort detection of the JavaScript execution context type. */
+const detectProcessType = (): string => {
+  if (isNode()) {
+    return 'node';
+  }
+  if (typeof window !== 'undefined') {
+    return 'browser';
+  }
+  if (typeof (globalThis as any).SharedWorkerGlobalScope !== 'undefined') {
+    return 'shared-worker';
+  }
+  return 'dedicated-worker';
+};
 
 const parseHeaders = (unparsedHeaders: string): Record<string, string> => {
   return unparsedHeaders.split(';').reduce((acc: Record<string, string>, header) => {
