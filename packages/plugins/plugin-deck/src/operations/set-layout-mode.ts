@@ -14,12 +14,8 @@ import { updateActiveDeck } from './helpers';
 import { DeckCapabilities, type DeckState, type LayoutMode, getMode, isLayoutMode } from '../types';
 
 /** Normalize legacy persisted 'deck' mode to 'multi'. */
-const normalizeLayoutMode = (mode: unknown): LayoutMode => {
-  if (mode === 'deck') {
-    return 'multi';
-  }
-  return isLayoutMode(mode) ? mode : 'solo';
-};
+const normalizeLayoutMode = (mode: unknown): LayoutMode =>
+  mode === 'deck' ? 'multi' : isLayoutMode(mode) ? mode : 'solo';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.SetLayoutMode> = LayoutOperation.SetLayoutMode.pipe(
   Operation.withHandler(
@@ -27,6 +23,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SetLayoutMode> = Lay
       if ('mode' in input && !isLayoutMode(input.mode)) {
         return;
       }
+
       const state = yield* Capabilities.getAtomValue(DeckCapabilities.State);
       const deck = yield* DeckCapabilities.getDeck();
 
