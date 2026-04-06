@@ -7,11 +7,10 @@ import { trace } from './api';
 export * from './api';
 export * from './symbols';
 export * from './trace-processor';
-export * from './trace-sender';
+export * from './tracing-types';
 export * from './metrics';
 export * from './diagnostic';
 export * from './diagnostics-channel';
-export * from './remote/tracing';
 export * from './remote/metrics';
 export * from './rpc-trace-context';
 

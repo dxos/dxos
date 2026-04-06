@@ -3,25 +3,22 @@
 //
 
 import { unrefTimeout } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { LogLevel, type LogProcessor, getContextFromEntry, log } from '@dxos/log';
 import { type LogEntry } from '@dxos/protocols/proto/dxos/client/services';
-import { type Error as SerializedError } from '@dxos/protocols/proto/dxos/error';
-import { type Metric, type Resource, type Span } from '@dxos/protocols/proto/dxos/tracing';
+import { type Metric, type Resource } from '@dxos/protocols/proto/dxos/tracing';
 import { getPrototypeSpecificInstanceId } from '@dxos/util';
 
 import type { AddLinkOptions, TimeAware } from './api';
 import { DiagnosticsManager } from './diagnostic';
 import { DiagnosticsChannel } from './diagnostics-channel';
 import { type BaseCounter } from './metrics';
-import { RemoteMetrics, RemoteTracing } from './remote';
-import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
-import { TraceSender } from './trace-sender';
+import { RemoteMetrics } from './remote/metrics';
+import { getTracingContext } from './symbols';
+import type { TracingBackend } from './tracing-types';
 import { WeakRef } from './weak-ref';
 
 export type Diagnostics = {
   resources: Record<string, Resource>;
-  spans: Span[];
   logs: LogEntry[];
 };
 
@@ -29,17 +26,6 @@ export type TraceResourceConstructorProps = {
   constructor: { new (...args: any[]): {} };
   instance: any;
   annotation?: symbol;
-};
-
-export type TraceSpanProps = {
-  instance: any;
-  // TODO(wittjosiah): Rename to `name`.
-  methodName: string;
-  parentCtx: Context | null;
-  showInBrowserTimeline: boolean;
-  showInRemoteTracing?: boolean;
-  op?: string;
-  attributes?: Record<string, any>;
 };
 
 export class ResourceEntry {
@@ -63,16 +49,7 @@ export class ResourceEntry {
   }
 }
 
-export type TraceSubscription = {
-  flush: () => void;
-
-  dirtyResources: Set<number>;
-  dirtySpans: Set<number>;
-  newLogs: LogEntry[];
-};
-
 const MAX_RESOURCE_RECORDS = 2_000;
-const MAX_SPAN_RECORDS = 1_000;
 const MAX_LOG_RECORDS = 1_000;
 
 const REFRESH_INTERVAL = 1_000;
@@ -85,16 +62,13 @@ export class TraceProcessor {
   public readonly diagnostics = new DiagnosticsManager();
   public readonly diagnosticsChannel = new DiagnosticsChannel();
   public readonly remoteMetrics = new RemoteMetrics();
-  public readonly remoteTracing = new RemoteTracing();
 
-  readonly subscriptions: Set<TraceSubscription> = new Set();
+  /** Tracing backend registered by the observability package. */
+  public tracingBackend?: TracingBackend;
 
   readonly resources = new Map<number, ResourceEntry>();
   readonly resourceInstanceIndex = new WeakMap<any, ResourceEntry>();
   readonly resourceIdList: number[] = [];
-
-  readonly spans = new Map<number, Span>();
-  readonly spanIdList: number[] = [];
 
   readonly logs: LogEntry[] = [];
 
@@ -119,14 +93,10 @@ export class TraceProcessor {
     this.diagnostics.setInstanceTag(tag);
   }
 
-  /**
-   * @internal
-   */
-  // TODO(burdon): Comment.
+  /** @internal */
   createTraceResource(params: TraceResourceConstructorProps): void {
     const id = this.resources.size;
 
-    // Init metrics counters.
     const tracingContext = getTracingContext(Object.getPrototypeOf(params.instance));
     for (const key of Object.keys(tracingContext.metricsProperties)) {
       (params.instance[key] as BaseCounter)._assign(params.instance, key);
@@ -151,29 +121,11 @@ export class TraceProcessor {
     if (this.resourceIdList.length > MAX_RESOURCE_RECORDS) {
       this._clearResources();
     }
-
-    this._markResourceDirty(id);
-  }
-
-  createTraceSender(): TraceSender {
-    return new TraceSender(this);
-  }
-
-  traceSpan(params: TraceSpanProps): TracingSpan {
-    const span = new TracingSpan(this, params);
-    this._flushSpan(span);
-    return span;
   }
 
   // TODO(burdon): Not implemented.
   addLink(parent: any, child: any, opts: AddLinkOptions): void {}
 
-  //
-  // Getters
-  //
-
-  // TODO(burdon): Define type.
-  // TODO(burdon): Reconcile with system service.
   getDiagnostics(): Diagnostics {
     this.refresh();
 
@@ -184,7 +136,6 @@ export class TraceProcessor {
           entry.data,
         ]),
       ),
-      spans: Array.from(this.spans.values()),
       logs: this.logs.filter((log) => log.level >= LogLevel.INFO),
     };
   }
@@ -251,69 +202,15 @@ export class TraceProcessor {
         (instance[key] as BaseCounter)._tick?.(time);
       }
 
-      let _changed = false;
-
-      const oldInfo = resource.data.info;
       resource.data.info = this.getResourceInfo(instance);
-      _changed ||= !areEqualShallow(oldInfo, resource.data.info);
-
-      const oldMetrics = resource.data.metrics;
       resource.data.metrics = this.getResourceMetrics(instance);
-      _changed ||= !areEqualShallow(oldMetrics, resource.data.metrics);
-
-      // TODO(dmaretskyi): Test if works and enable.
-      // if (changed) {
-      this._markResourceDirty(resource.data.id);
-      // }
-    }
-
-    for (const subscription of this.subscriptions) {
-      subscription.flush();
-    }
-  }
-
-  //
-  // Implementation
-  //
-
-  /**
-   * @internal
-   */
-  _flushSpan(runtimeSpan: TracingSpan): void {
-    const span = runtimeSpan.serialize();
-    this.spans.set(span.id, span);
-    this.spanIdList.push(span.id);
-    if (this.spanIdList.length > MAX_SPAN_RECORDS) {
-      this._clearSpans();
-    }
-    this._markSpanDirty(span.id);
-    this.remoteTracing.flushSpan(runtimeSpan);
-  }
-
-  private _markResourceDirty(id: number): void {
-    for (const subscription of this.subscriptions) {
-      subscription.dirtyResources.add(id);
-    }
-  }
-
-  private _markSpanDirty(id: number): void {
-    for (const subscription of this.subscriptions) {
-      subscription.dirtySpans.add(id);
     }
   }
 
   private _clearResources(): void {
-    // TODO(dmaretskyi): Use FinalizationRegistry to delete finalized resources first.
     while (this.resourceIdList.length > MAX_RESOURCE_RECORDS) {
       const id = this.resourceIdList.shift()!;
       this.resources.delete(id);
-    }
-  }
-
-  private _clearSpans(): void {
-    while (this.spanIdList.length > MAX_SPAN_RECORDS) {
-      const id = this.spanIdList.shift()!;
-      this.spans.delete(id);
     }
   }
 
@@ -321,10 +218,6 @@ export class TraceProcessor {
     this.logs.push(log);
     if (this.logs.length > MAX_LOG_RECORDS) {
       this.logs.shift();
-    }
-
-    for (const subscription of this.subscriptions) {
-      subscription.newLogs.push(log);
     }
   }
 
@@ -363,121 +256,6 @@ export class TraceProcessor {
   };
 }
 
-// TODO(burdon): Comment.
-export class TracingSpan {
-  static nextId = 0;
-
-  readonly id: number;
-  readonly parentId: number | null = null;
-  readonly methodName: string;
-  readonly resourceId: number | null = null;
-  readonly op: string | undefined;
-  readonly attributes: Record<string, any>;
-  startTs: number;
-  endTs: number | null = null;
-  error: SerializedError | null = null;
-
-  private _showInBrowserTimeline: boolean;
-  private _showInRemoteTracing: boolean;
-  private readonly _ctx: Context;
-
-  constructor(
-    private _traceProcessor: TraceProcessor,
-    params: TraceSpanProps,
-  ) {
-    this.id = TracingSpan.nextId++;
-    this.methodName = params.methodName;
-    this.resourceId = _traceProcessor.getResourceId(params.instance);
-    this.startTs = performance.now();
-    this._showInBrowserTimeline = params.showInBrowserTimeline;
-    this._showInRemoteTracing = params.showInRemoteTracing ?? true;
-    this.op = params.op;
-    this.attributes = params.attributes ?? {};
-
-    const baseCtx = params.parentCtx ?? new Context();
-    this._ctx = this._showInRemoteTracing
-      ? baseCtx.derive({ attributes: { [TRACE_SPAN_ATTRIBUTE]: this.id } })
-      : baseCtx.derive();
-    if (params.parentCtx) {
-      const parentId = params.parentCtx.getAttribute(TRACE_SPAN_ATTRIBUTE);
-      if (typeof parentId === 'number') {
-        this.parentId = parentId;
-      }
-    }
-  }
-
-  get name() {
-    const resource = this._traceProcessor.resources.get(this.resourceId!);
-    return resource ? `${resource.sanitizedClassName}#${resource.data.instanceId}.${this.methodName}` : this.methodName;
-  }
-
-  /** Sanitized class name of the owning resource, if available. */
-  get sanitizedClassName(): string | undefined {
-    const resource = this.resourceId != null ? this._traceProcessor.resources.get(this.resourceId) : undefined;
-    return resource?.sanitizedClassName;
-  }
-
-  get ctx(): Context {
-    return this._ctx;
-  }
-
-  get showInRemoteTracing(): boolean {
-    return this._showInRemoteTracing;
-  }
-
-  markSuccess(): void {
-    this.endTs = performance.now();
-    this._traceProcessor._flushSpan(this);
-
-    if (this._showInBrowserTimeline) {
-      this._markInBrowserTimeline();
-    }
-  }
-
-  markError(err: unknown): void {
-    this.endTs = performance.now();
-    this.error = serializeError(err);
-    this._traceProcessor._flushSpan(this);
-
-    if (this._showInBrowserTimeline) {
-      this._markInBrowserTimeline();
-    }
-  }
-
-  serialize(): Span {
-    return {
-      id: this.id,
-      resourceId: this.resourceId ?? undefined,
-      methodName: this.methodName,
-      parentId: this.parentId ?? undefined,
-      startTs: this.startTs.toFixed(3),
-      endTs: this.endTs?.toFixed(3) ?? undefined,
-      error: this.error ?? undefined,
-    };
-  }
-
-  private _markInBrowserTimeline(): void {
-    if (typeof globalThis?.performance?.measure === 'function') {
-      performance.measure(this.name, { start: this.startTs, end: this.endTs! });
-    }
-  }
-}
-
-// TODO(burdon): Log cause.
-const serializeError = (err: unknown): SerializedError => {
-  if (err instanceof Error) {
-    return {
-      name: err.name,
-      message: err.message,
-    };
-  }
-
-  return {
-    message: String(err),
-  };
-};
-
-// TODO(burdon): Rename singleton and move out of package.
 export const TRACE_PROCESSOR: TraceProcessor = ((globalThis as any).TRACE_PROCESSOR ??= new TraceProcessor());
 
 const sanitizeValue = (value: any, depth: number, traceProcessor: TraceProcessor): any => {
@@ -501,7 +279,6 @@ const sanitizeValue = (value: any, depth: number, traceProcessor: TraceProcessor
       }
 
       if (typeof value.toJSON === 'function') {
-        // TODO(dmaretskyi): This has potential to cause infinite recursion.
         return sanitizeValue(value.toJSON(), depth, traceProcessor);
       }
 
@@ -525,27 +302,12 @@ const sanitizeValue = (value: any, depth: number, traceProcessor: TraceProcessor
         }
       }
 
-      // TODO(dmaretskyi): Expose trait.
       if (typeof value.truncate === 'function') {
         return value.truncate();
       }
 
       return value.toString();
   }
-};
-
-const areEqualShallow = (a: any, b: any) => {
-  for (const key in a) {
-    if (!(key in b) || a[key] !== b[key]) {
-      return false;
-    }
-  }
-  for (const key in b) {
-    if (!(key in a) || a[key] !== b[key]) {
-      return false;
-    }
-  }
-  return true;
 };
 
 export const sanitizeClassName = (className: string) => {

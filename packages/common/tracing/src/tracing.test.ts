@@ -5,7 +5,6 @@
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { log } from '@dxos/log';
 
 import { trace } from './api';
 import { TRACE_PROCESSOR } from './trace-processor';
@@ -62,7 +61,6 @@ describe('tracing', () => {
     await feed2.close().catch(() => {});
 
     expect([...TRACE_PROCESSOR.resources.values()].map((r) => r.instance.deref())).to.deep.eq([store, feed1, feed2]);
-    log.info('spans', { spans: TRACE_PROCESSOR.spans });
   });
 
   test('findByAnnotation', async () => {

@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type Context, ROOT_CONTEXT, type Tracer, propagation, trace } from '@opentelemetry/api';
+import { type Context, ROOT_CONTEXT, type Tracer, context as otelContext, propagation, trace } from '@opentelemetry/api';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { BasicTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
-import { log } from 'debug';
 
+import { log } from '@dxos/log';
 import { type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
 import { type OtelOptions } from './otel';
@@ -23,7 +23,7 @@ export class OtelTraces {
           new OTLPTraceExporter({
             url: this.options.endpoint + '/v1/traces',
             headers: this.options.headers,
-            concurrencyLimit: 10, // an optional limit on pending requests
+            concurrencyLimit: 10,
           }),
         ),
       ],
@@ -39,14 +39,18 @@ export class OtelTraces {
   public start(): void {
     log('trace processor registered');
 
-    TRACE_PROCESSOR.remoteTracing.registerProcessor({
+    TRACE_PROCESSOR.tracingBackend = {
       startSpan: (options: StartSpanOptions) => {
         log('begin otel trace', { options });
-        return this._tracer.startSpan(options.name, options);
+        const explicitParent = options.parentContext as Context | undefined;
+        const parentCtx = explicitParent ?? otelContext.active();
+        const span = this._tracer.startSpan(options.name, options, parentCtx);
+        const spanCtx = trace.setSpan(parentCtx, span);
+        return {
+          end: () => span.end(),
+          spanContext: spanCtx,
+        };
       },
-    });
-
-    TRACE_PROCESSOR.remoteTracing.setContextPropagation({
       inject: (opaqueContext) => {
         const carrier: Record<string, string> = {};
         propagation.inject(opaqueContext as Context, carrier);
@@ -57,6 +61,6 @@ export class OtelTraces {
           traceparent: traceContext.traceparent,
           tracestate: traceContext.tracestate ?? '',
         }),
-    });
+    };
   }
 }

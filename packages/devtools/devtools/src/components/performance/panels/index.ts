@@ -10,7 +10,6 @@ export * from './NetworkPanel';
 export * from './PerformancePanel';
 export * from './QueriesPanel';
 export * from './RawQueriesPanel';
-export * from './SpansPanel';
 export * from './SurfaceProfilerPanel';
 export * from './SyncStatus';
 export * from './TimeSeries';

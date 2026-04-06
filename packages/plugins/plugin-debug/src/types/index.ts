@@ -39,7 +39,6 @@ export namespace Devtools {
     export const Storage = `${Devtools.Client.id}.storage`;
     export const Logs = `${Devtools.Client.id}.logs`;
     export const Diagnostics = `${Devtools.Client.id}.diagnostics`;
-    export const Tracing = `${Devtools.Client.id}.tracing`;
   }
 
   export namespace Halo {

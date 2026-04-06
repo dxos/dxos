@@ -10,7 +10,6 @@ import { createIceProvider } from '@dxos/network-manager';
 import { RemoteServiceConnectionError } from '@dxos/protocols';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
-import { getTraceContext } from '@dxos/tracing';
 import { type MaybePromise, type Provider, getAsyncProviderValue } from '@dxos/util';
 
 // NOTE: Keep as RpcPorts to avoid dependency on @dxos/rpc-tunnel so we don't depend on browser-specific apis.
@@ -59,7 +58,6 @@ export class SharedWorkerConnection {
         BridgeService: this._transportService,
       },
       port: this._systemPort,
-      injectTraceContext: getTraceContext,
       // TODO(wittjosiah): Make longer and factor out to constant.
       // TODO(wittjosiah): If this is too long then it breaks the reset flows in Composer.
       timeout: 200,

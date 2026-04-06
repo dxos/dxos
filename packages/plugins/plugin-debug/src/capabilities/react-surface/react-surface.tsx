@@ -33,7 +33,6 @@ import {
   StoragePanel,
   SwarmPanel,
   TestingPanel,
-  TracingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
@@ -220,12 +219,6 @@ export default Capability.makeModule(
         role: 'article',
         filter: (data): data is any => data.subject === Devtools.Client.Diagnostics,
         component: () => <DiagnosticsPanel />,
-      }),
-      Surface.create({
-        id: `${meta.id}.client.tracing`,
-        role: 'article',
-        filter: (data): data is any => data.subject === Devtools.Client.Tracing,
-        component: () => <TracingPanel />,
       }),
       Surface.create({
         id: `${meta.id}.halo.identity`,

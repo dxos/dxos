@@ -46,7 +46,7 @@ import {
   type QueryRequest as QueryRequestProto,
   type QueryResponse as QueryResponseProto,
 } from '@dxos/protocols/proto/dxos/echo/query';
-import { TRACE_PROCESSOR, TRACE_SPAN_ATTRIBUTE } from '@dxos/tracing';
+import { TRACE_SPAN_ATTRIBUTE } from '@dxos/tracing';
 import { createUrl } from '@dxos/util';
 
 import { type EdgeIdentity, handleAuthChallenge } from './edge-identity';
@@ -557,18 +557,13 @@ const createRequest = (
  * Extract W3C Trace Context headers (traceparent/tracestate) from a DXOS Context.
  */
 const getTraceHeaders = (ctx: Context): Record<string, string> | undefined => {
-  const spanId = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE);
-  const otlpContext =
-    typeof spanId === 'number'
-      ? (TRACE_PROCESSOR.remoteTracing.getSpanContext(spanId) as OtelContext | undefined)
-      : undefined;
-
-  if (!otlpContext) {
+  const otelContext = ctx.getAttribute(TRACE_SPAN_ATTRIBUTE) as OtelContext | undefined;
+  if (!otelContext) {
     return undefined;
   }
 
   const headers: Record<string, string> = {};
-  propagation.inject(otlpContext, headers);
+  propagation.inject(otelContext, headers);
   return Object.keys(headers).length > 0 ? headers : undefined;
 };
 

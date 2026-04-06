@@ -4,13 +4,13 @@
 
 import { Trigger, asyncTimeout, synchronized } from '@dxos/async';
 import { type Any, type ProtoCodec, type RequestOptions, Stream } from '@dxos/codec-protobuf';
-import { type Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { RpcClosedError, RpcNotOpenError, encodeError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
-import { type Request, type Response, type RpcMessage, type TraceContext } from '@dxos/protocols/proto/dxos/rpc';
+import { type Request, type Response, type RpcMessage } from '@dxos/protocols/proto/dxos/rpc';
+import { ContextRpcCodec } from '@dxos/tracing';
 import { exponentialBackoffInterval } from '@dxos/util';
 
 import { decodeRpcError } from './errors';
@@ -42,12 +42,6 @@ export interface RpcPeerOptions {
    * What options get passed to the `callHandler` and `streamHandler`.
    */
   handlerRpcOptions?: RequestOptions;
-
-  /** Extract W3C trace context from {@link Context} for outgoing RPC requests. */
-  injectTraceContext?: (ctx: Context) => TraceContext | undefined;
-
-  /** Reconstruct {@link Context} from W3C trace context on incoming RPC requests. */
-  extractTraceContext?: (traceContext: TraceContext) => Context;
 }
 
 /**
@@ -392,13 +386,11 @@ export class RpcPeer {
         this._outgoingRequests.set(id, new PendingRpcRequest(resolve, reject, false));
       });
 
-      let traceContext: TraceContext | undefined;
+      let traceContext;
       try {
-        traceContext =
-          options?.ctx && this._params.injectTraceContext ? this._params.injectTraceContext(options.ctx) : undefined;
+        traceContext = options?.ctx ? ContextRpcCodec.encode(options.ctx) : undefined;
       } catch (err) {
-        this._outgoingRequests.delete(id);
-        throw err;
+        log.warn('failed to encode trace context', { err });
       }
 
       // Send request call.
@@ -477,10 +469,14 @@ export class RpcPeer {
 
       this._outgoingRequests.set(id, new PendingRpcRequest(onResponse, closeStream, true));
 
+      let traceContext;
       try {
-        const traceContext =
-          options?.ctx && this._params.injectTraceContext ? this._params.injectTraceContext(options.ctx) : undefined;
+        traceContext = options?.ctx ? ContextRpcCodec.encode(options.ctx) : undefined;
+      } catch (err) {
+        log.warn('failed to encode trace context', { err });
+      }
 
+      try {
         this._sendMessage({
           request: {
             id,
@@ -516,8 +512,8 @@ export class RpcPeer {
 
   private _getHandlerRpcOptions(req: Request): RequestOptions | undefined {
     const handlerOptions: RequestOptions = { ...this._params.handlerRpcOptions };
-    if (req.traceContext && this._params.extractTraceContext) {
-      handlerOptions.ctx = this._params.extractTraceContext(req.traceContext);
+    if (req.traceContext) {
+      handlerOptions.ctx = ContextRpcCodec.decode(req.traceContext);
     }
     return Object.keys(handlerOptions).length > 0 ? handlerOptions : undefined;
   }

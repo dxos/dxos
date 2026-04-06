@@ -14,6 +14,68 @@ Every internal method takes `ctx: Context` as its first parameter (Go-style). Th
 import { Context } from '@dxos/context';
 ```
 
+## Architecture
+
+The tracing system consists of three layers:
+
+1. **`@dxos/tracing`** — defines `@trace.span()`, `TraceProcessor`, and the `TracingBackend` interface. No OTEL dependency.
+2. **`@dxos/observability`** — implements `TracingBackend` using the OTEL SDK, registers on `TRACE_PROCESSOR.tracingBackend`.
+3. **`@dxos/context`** — carries an opaque OTEL span context via `getAttribute('dxos.trace-span')`.
+
+There are no custom span objects or global span maps. The `@trace.span()` decorator calls the OTEL backend directly through the `TracingBackend` interface.
+
+### How the decorator works
+
+```typescript
+@trace.span()
+async open(ctx: Context): Promise<void> {
+  // decorator flow:
+  // 1. Read parent's opaque OTEL context from ctx.getAttribute(TRACE_SPAN_ATTRIBUTE)
+  // 2. Call TRACE_PROCESSOR.tracingBackend.startSpan({ parentContext, name, ... })
+  // 3. Derive child context with remoteSpan.spanContext on TRACE_SPAN_ATTRIBUTE
+  // 4. Replace args[0] with child context
+  // 5. Wrap execution with remoteSpan.wrapExecution (sets OTEL active context)
+  // 6. Call remoteSpan.end() in finally block
+}
+```
+
+### Key types (`tracing-types.ts`)
+
+```typescript
+type RemoteSpan = {
+  end: () => void;
+  wrapExecution?: <T>(fn: () => T) => T;
+  spanContext?: unknown;  // opaque OTEL Context
+};
+
+interface TracingBackend {
+  startSpan: (options: StartSpanOptions) => RemoteSpan;
+  inject?: (opaqueContext: unknown) => TraceContextData | undefined;
+  extract?: (traceContext: TraceContextData) => unknown;
+}
+```
+
+### Context attribute
+
+`Context` carries an opaque span context (an OTEL `Context` object) via `TRACE_SPAN_ATTRIBUTE` (`'dxos.trace-span'`). The attribute is `unknown` at the type level — only the observability package knows it's an OTEL Context.
+
+When `showInRemoteTracing = false`, the decorator does not call `startSpan` and does not set `TRACE_SPAN_ATTRIBUTE` on the derived child context. The parent chain's `getAttribute()` climb-up logic then finds the grandparent's span context, preserving trace continuity.
+
+### RPC trace context propagation
+
+`ContextRpcCodec` (in `rpc-trace-context.ts`) serializes/deserializes W3C trace context across RPC boundaries. It is hardcoded in `RpcPeer` — no configuration needed:
+
+- **`ContextRpcCodec.encode(ctx)`** — reads the opaque span context from `ctx.getAttribute(TRACE_SPAN_ATTRIBUTE)` and calls `TRACE_PROCESSOR.tracingBackend.inject()` to produce `{ traceparent, tracestate }`.
+- **`ContextRpcCodec.decode(data)`** — calls `TRACE_PROCESSOR.tracingBackend.extract()` and places the resulting opaque context on a new `Context` attribute.
+
+### OTEL initialization
+
+OTEL is initialized synchronously (static imports) before any traced code runs. The `isObservabilityDisabled` check is moved off the critical path — OTEL defaults to enabled and checks async storage after initialization, disabling if the user opted out.
+
+### Browser timeline
+
+When `showInBrowserTimeline = true`, the decorator calls `performance.measure()` in the finally block. No custom span object is needed.
+
 ## Which methods need ctx
 
 **`ctx: Context` is always the first parameter.** This is a universal rule — not in an options bag, not as the last parameter, not optional. Every method that participates in context propagation takes `ctx: Context` as its very first parameter.
@@ -121,7 +183,7 @@ async initializeAll(ctx: Context): Promise<void> {
 
 ### 5. Complete call chain: every method between entry point and @trace.span must forward ctx
 
-The `@trace.span()` decorator reads the parent span ID from incoming `ctx`. If `ctx` is `Context.default()` (no parent span), the decorator creates an **orphaned root span** — disconnected from the trace hierarchy.
+The `@trace.span()` decorator reads the parent span context from incoming `ctx`. If `ctx` has no `TRACE_SPAN_ATTRIBUTE` (e.g., from `Context.default()`), the decorator creates an **orphaned root span** — disconnected from the trace hierarchy.
 
 **Critical rule**: every intermediate method between an entry point and a `@trace.span()` method must accept and forward `ctx`, even if the intermediate method itself has no `@trace.span()`. Otherwise the trace chain is broken.
 
@@ -198,7 +260,11 @@ User code (no ctx)
     → intermediate method forwards ctx (no @trace.span — passes as-is)
       → intermediate method forwards ctx (no @trace.span — passes as-is)
         → @trace.span() method receives ctx
-          decorator: creates span, derives child ctx, replaces args[0]
+          decorator: reads opaque spanContext from ctx attribute
+          calls tracingBackend.startSpan(parentContext: spanContext)
+          derives child ctx with new remoteSpan.spanContext
+          replaces args[0] with child ctx
+          wraps with remoteSpan.wrapExecution
           → method body receives child ctx
             → intermediate method forwards child ctx
               → @trace.span() method receives child ctx
@@ -211,7 +277,7 @@ Callback / detached async work:
       → @trace.span() method receives this._ctx — creates root span tied to object lifecycle
 ```
 
-Each `@trace.span()` method reads the parent span ID from the incoming ctx, creates a new span, derives a child context with the new span ID, and replaces `args[0]`. Methods without `@trace.span()` forward ctx as-is.
+Each `@trace.span()` method reads the opaque OTEL span context from the incoming ctx attribute, creates a new span via `TracingMethods.startSpan()`, derives a child context with the new span's opaque context, and replaces `args[0]`. Methods without `@trace.span()` forward ctx as-is.
 
 ## Quick reference
 

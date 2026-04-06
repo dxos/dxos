@@ -27,7 +27,7 @@ import { SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type Storage } from '@dxos/random-access-storage';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
-import { TRACE_PROCESSOR, trace as Trace } from '@dxos/tracing';
+import { trace as Trace } from '@dxos/tracing';
 import { WebsocketRpcClient } from '@dxos/websocket-rpc';
 
 import { EdgeAgentServiceImpl } from '../agents';
@@ -87,8 +87,6 @@ export class ClientServicesHost {
   private readonly _serviceRegistry: ServiceRegistry<ClientServices>;
   private readonly _systemService: SystemServiceImpl;
   private readonly _loggingService: LoggingServiceImpl;
-  private readonly _tracingService = TRACE_PROCESSOR.createTraceSender();
-
   private readonly _statusUpdate = new Event<void>();
 
   private _config?: Config;
@@ -176,7 +174,6 @@ export class ClientServicesHost {
 
     this._serviceRegistry = new ServiceRegistry<ClientServices>(clientServiceBundle, {
       SystemService: this._systemService,
-      TracingService: this._tracingService,
     });
   }
 
@@ -379,7 +376,6 @@ export class ClientServicesHost {
       ),
 
       LoggingService: this._loggingService,
-      TracingService: this._tracingService,
 
       // TODO(burdon): Move to new protobuf definitions.
       DevtoolsHost: new DevtoolsServiceImpl({

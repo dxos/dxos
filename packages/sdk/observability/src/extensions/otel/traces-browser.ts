@@ -90,8 +90,6 @@ export class OtelTraces {
     registerInstrumentations({
       instrumentations: [
         getWebAutoInstrumentations({
-          // Fetch is disabled in favor of explicit ctx on our call sites; if re-enabled, keep noisy
-          // third-party URLs out of traces (matches prior browser tracing setup).
           '@opentelemetry/instrumentation-fetch': { enabled: false, ignoreUrls: [/api\.ipdata\.co/] },
           '@opentelemetry/instrumentation-document-load': { enabled: false },
           '@opentelemetry/instrumentation-xml-http-request': { enabled: false },
@@ -99,7 +97,7 @@ export class OtelTraces {
       ],
     });
 
-    TRACE_PROCESSOR.remoteTracing.registerProcessor({
+    TRACE_PROCESSOR.tracingBackend = {
       startSpan: (options: StartSpanOptions) => {
         log('begin otel trace', { options });
         const explicitParent = options.parentContext as Context | undefined;
@@ -108,13 +106,9 @@ export class OtelTraces {
         const spanCtx = trace.setSpan(parentCtx, span);
         return {
           end: () => span.end(),
-          wrapExecution: <T>(fn: () => T): T => otelContext.with(spanCtx, fn),
           spanContext: spanCtx,
         };
       },
-    });
-
-    TRACE_PROCESSOR.remoteTracing.setContextPropagation({
       inject: (opaqueContext) => {
         const carrier: Record<string, string> = {};
         propagation.inject(opaqueContext as Context, carrier);
@@ -125,6 +119,6 @@ export class OtelTraces {
           traceparent: traceContext.traceparent,
           tracestate: traceContext.tracestate ?? '',
         }),
-    });
+    };
   }
 }

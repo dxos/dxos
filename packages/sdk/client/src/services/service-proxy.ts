@@ -12,7 +12,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { RemoteServiceConnectionTimeout } from '@dxos/protocols';
 import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
-import { getTraceContext, trace } from '@dxos/tracing';
+import { trace } from '@dxos/tracing';
 
 /**
  * Implements services that are not local to the app.
@@ -54,7 +54,6 @@ export class ClientServicesProxy implements ClientServicesProvider {
       exposed: {},
       handlers: {},
       port: this._port,
-      injectTraceContext: getTraceContext,
       // TODO(wittjosiah): Specifying breaks the reset flows in Composer.
       // timeout: this._timeout,
     });

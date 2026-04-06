@@ -37,7 +37,7 @@ import {
 import { type QueryStatusResponse, SystemStatus } from '@dxos/protocols/proto/dxos/client/services';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
 import { createIFramePort } from '@dxos/rpc-tunnel';
-import { createContextFromTraceContext, trace } from '@dxos/tracing';
+import { trace } from '@dxos/tracing';
 import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
 
 import { type ClientEdgeAPI, createClientEdgeAPI } from '../edge';
@@ -508,7 +508,6 @@ export class Client {
         handlerRpcOptions: {
           timeout: 60_000, // Timeout is specifically very high because shell will be managing its own timeouts on RPCs.
         },
-        extractTraceContext: createContextFromTraceContext,
       });
 
       await this._shellClientProxy.open();

@@ -13,7 +13,6 @@ import { invariant } from '@dxos/invariant';
 import { log, logInfo } from '@dxos/log';
 import { type BridgeService } from '@dxos/protocols/proto/dxos/mesh/bridge';
 import { type ProtoRpcPeer, type RpcPort, createProtoRpcPeer } from '@dxos/rpc';
-import { createContextFromTraceContext, getTraceContext } from '@dxos/tracing';
 import { Callback, type MaybePromise } from '@dxos/util';
 
 import { ClientRpcServer, type ClientRpcServerProps, type ClientServicesHost } from '../services';
@@ -77,7 +76,6 @@ export class WorkerSession {
     this._clientRpc = new ClientRpcServer({
       serviceRegistry: this._serviceHost.serviceRegistry,
       port: appPort,
-      extractTraceContext: createContextFromTraceContext,
       ...middleware,
     });
 
@@ -85,7 +83,6 @@ export class WorkerSession {
       ? new ClientRpcServer({
           serviceRegistry: this._serviceHost.serviceRegistry,
           port: shellPort,
-          extractTraceContext: createContextFromTraceContext,
           ...middleware,
         })
       : undefined;
@@ -115,8 +112,6 @@ export class WorkerSession {
         },
       },
       port: systemPort,
-      extractTraceContext: createContextFromTraceContext,
-      injectTraceContext: getTraceContext,
       timeout: 1_000, // With low timeout heartbeat may fail if the tab's thread is saturated.
     });
 

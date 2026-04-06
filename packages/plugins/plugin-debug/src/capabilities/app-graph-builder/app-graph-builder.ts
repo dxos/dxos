@@ -112,15 +112,6 @@ export default Capability.makeModule(
                           icon: 'ph--chart-line--regular',
                         },
                       },
-                      {
-                        id: Devtools.Client.Tracing,
-                        data: Devtools.Client.Tracing,
-                        type: DEVTOOLS_TYPE,
-                        properties: {
-                          label: ['tracing.label', { ns: meta.id }],
-                          icon: 'ph--fire--regular',
-                        },
-                      },
                     ],
                   },
                   {

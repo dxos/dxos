@@ -5,8 +5,9 @@
 import { Context } from '@dxos/context';
 import { type MaybePromise } from '@dxos/util';
 
-import { getTracingContext } from './symbols';
-import { TRACE_PROCESSOR, type TraceSpanProps, type TracingSpan } from './trace-processor';
+import { TRACE_SPAN_ATTRIBUTE, getTracingContext } from './symbols';
+import { TRACE_PROCESSOR, sanitizeClassName } from './trace-processor';
+import type { RemoteSpan } from './tracing-types';
 
 /**
  * Annotates a class as a tracked resource.
@@ -14,7 +15,6 @@ import { TRACE_PROCESSOR, type TraceSpanProps, type TracingSpan } from './trace-
 const resource =
   (options?: { annotation?: symbol }) =>
   <T extends { new (...args: any[]): {} }>(constructor: T) => {
-    // Wrapping class declaration into an IIFE so it doesn't capture the `klass` class name.
     const klass = (() =>
       class extends constructor {
         constructor(...rest: any[]) {
@@ -76,6 +76,7 @@ export type SpanOptions = {
 
 /**
  * Decorator that creates a span for the execution duration of the decorated method.
+ * Calls the TracingBackend directly; no custom TracingSpan objects.
  */
 const span =
   ({ showInBrowserTimeline = false, showInRemoteTracing = true, op, attributes }: SpanOptions = {}) =>
@@ -83,55 +84,110 @@ const span =
     const method = descriptor.value!;
 
     descriptor.value = async function (this: any, ...args: any) {
-      const explicitCtx = args[0] instanceof Context ? args[0] : null;
+      const parentCtx = args[0] instanceof Context ? args[0] : null;
+      const startTs = performance.now();
 
-      const span = TRACE_PROCESSOR.traceSpan({
-        parentCtx: explicitCtx,
-        methodName: propertyKey,
-        instance: this,
-        showInBrowserTimeline,
-        showInRemoteTracing,
-        op,
-        attributes,
-      });
+      const parentSpanContext = parentCtx?.getAttribute(TRACE_SPAN_ATTRIBUTE);
 
-      const callArgs = explicitCtx ? [span.ctx, ...args.slice(1)] : args;
+      const resourceEntry = TRACE_PROCESSOR.resourceInstanceIndex.get(this);
+      const className = resourceEntry?.sanitizedClassName ?? sanitizeClassName(target.constructor?.name ?? 'unknown');
+      const spanName = `${className}.${propertyKey}`;
 
-      return TRACE_PROCESSOR.remoteTracing.wrapExecution(span, async () => {
-        try {
-          return await method.apply(this, callArgs);
-        } catch (err) {
-          span.markError(err);
-          throw err;
-        } finally {
-          span.markSuccess();
+      const spanAttributes: Record<string, any> = {};
+      if (resourceEntry) {
+        spanAttributes.entryPoint = resourceEntry.sanitizedClassName;
+      }
+      if (attributes) {
+        for (const [key, value] of Object.entries(attributes)) {
+          spanAttributes[key.startsWith('ctx.') ? key : `ctx.${key}`] = value;
         }
-      });
+      }
+
+      const remoteSpan = showInRemoteTracing
+        ? TRACE_PROCESSOR.tracingBackend?.startSpan({
+            name: spanName,
+            op: op ?? 'function',
+            attributes: spanAttributes,
+            parentContext: parentSpanContext,
+          })
+        : undefined;
+
+      const childCtx =
+        remoteSpan?.spanContext != null
+          ? (parentCtx ?? new Context()).derive({ attributes: { [TRACE_SPAN_ATTRIBUTE]: remoteSpan.spanContext } })
+          : (parentCtx ?? new Context()).derive();
+
+      const callArgs = parentCtx ? [childCtx, ...args.slice(1)] : args;
+
+      try {
+        return await method.apply(this, callArgs);
+      } catch (err) {
+        throw err;
+      } finally {
+        remoteSpan?.end();
+        if (showInBrowserTimeline && typeof globalThis?.performance?.measure === 'function') {
+          performance.measure(spanName, { start: startTs, end: performance.now() });
+        }
+      }
     };
   };
 
-const spans = new Map<string, TracingSpan>();
+const manualSpans = new Map<string, RemoteSpan>();
+
+export type ManualSpanParams = {
+  id: string;
+  instance: any;
+  methodName: string;
+  parentCtx: Context | null;
+  showInBrowserTimeline?: boolean;
+  showInRemoteTracing?: boolean;
+  op?: string;
+  attributes?: Record<string, any>;
+};
 
 /**
  * Creates a span that must be ended manually.
  */
-const spanStart = (params: TraceSpanProps & { id: string }) => {
-  if (spans.has(params.id)) {
+const spanStart = (params: ManualSpanParams) => {
+  if (manualSpans.has(params.id)) {
     return;
   }
 
-  const span = TRACE_PROCESSOR.traceSpan(params);
-  spans.set(params.id, span);
+  if (params.showInRemoteTracing === false || !TRACE_PROCESSOR.tracingBackend) {
+    return;
+  }
+
+  const parentSpanContext = params.parentCtx?.getAttribute(TRACE_SPAN_ATTRIBUTE);
+  const resourceEntry = TRACE_PROCESSOR.resourceInstanceIndex.get(params.instance);
+  const className = resourceEntry?.sanitizedClassName ?? 'unknown';
+
+  const spanAttributes: Record<string, any> = {};
+  if (resourceEntry) {
+    spanAttributes.entryPoint = resourceEntry.sanitizedClassName;
+  }
+  if (params.attributes) {
+    for (const [key, value] of Object.entries(params.attributes)) {
+      spanAttributes[key.startsWith('ctx.') ? key : `ctx.${key}`] = value;
+    }
+  }
+
+  const remoteSpan = TRACE_PROCESSOR.tracingBackend.startSpan({
+    name: `${className}.${params.methodName}`,
+    op: params.op ?? 'function',
+    attributes: spanAttributes,
+    parentContext: parentSpanContext,
+  });
+  manualSpans.set(params.id, remoteSpan);
 };
 
 /**
  * Ends a span that was started manually.
  */
 const spanEnd = (id: string) => {
-  const span = spans.get(id);
-  if (span) {
-    span.markSuccess();
-    spans.delete(id);
+  const remoteSpan = manualSpans.get(id);
+  if (remoteSpan) {
+    remoteSpan.end();
+    manualSpans.delete(id);
   }
 };
 
@@ -149,9 +205,7 @@ const addLink = (parent: any, child: any, opts: AddLinkOptions = {}) => {
 };
 
 export type TraceDiagnosticProps<T> = {
-  /**
-   * Unique ID.
-   */
+  /** Unique ID. */
   id: string;
 
   /**
@@ -160,9 +214,7 @@ export type TraceDiagnosticProps<T> = {
    */
   name?: string;
 
-  /**
-   * Function that will be called to fetch the diagnostic data.
-   */
+  /** Function that will be called to fetch the diagnostic data. */
   fetch: () => MaybePromise<T>;
 };
 

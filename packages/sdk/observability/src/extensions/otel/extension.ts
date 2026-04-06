@@ -17,6 +17,9 @@ import buildSecrets from '../../cli-observability-secrets.json';
 import { type Extension, type ExtensionApi } from '../../observability-extension';
 import { isObservabilityDisabled, storeObservabilityDisabled } from '../../storage';
 import { stubExtension } from '../stub';
+import { OtelLogs } from './logs';
+import { OtelMetrics } from './metrics';
+import { OtelTraces } from './traces';
 
 export type ExtensionsOptions = {
   /** For the OTEL, the name of the entity for which signals (metrics or trace) are collected. */
@@ -52,12 +55,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   metrics: metricsEnabled = false,
   traces: tracesEnabled = false,
 }) {
-  const { OtelLogs } = yield* Effect.promise(() => import('./logs'));
-  const { OtelMetrics } = yield* Effect.promise(() => import('./metrics'));
-  const { OtelTraces } = yield* Effect.promise(() => import('./traces'));
-
-  const cachedDisabled = yield* Effect.promise(() => isObservabilityDisabled(serviceName));
-  const enabledRef = yield* Ref.make(!cachedDisabled);
+  const enabledRef = yield* Ref.make(true);
   const tags = new Map<string, string>();
 
   const endpoint = isNode()
@@ -116,7 +114,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       })
     : undefined;
 
-  return {
+  const extension: Extension = {
     initialize: () =>
       Effect.sync(() => {
         if (logs) {
@@ -125,6 +123,13 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         if (traces) {
           traces.start();
         }
+
+        // Check async storage for user opt-out, disable after initialization if needed.
+        void isObservabilityDisabled(serviceName).then((disabled) => {
+          if (disabled) {
+            Ref.update(enabledRef, () => false).pipe(Effect.runSync);
+          }
+        });
       }),
     enable: Effect.fn(function* () {
       yield* Effect.promise(() => storeObservabilityDisabled(serviceName, false));
@@ -166,6 +171,8 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
       traces ? ({ kind: 'traces', isAvailable: () => Effect.succeed(true) } satisfies ExtensionApi) : undefined,
     ].filter(isNonNullable),
   };
+
+  return extension;
 });
 
 /** Best-effort detection of the JavaScript execution context type. */
