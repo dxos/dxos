@@ -3,6 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
+import type { Manifold, ManifoldToplevel } from 'manifold-3d';
 import React, {
   type PropsWithChildren,
   useEffect,
@@ -16,7 +17,7 @@ import React, {
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import { parseOBJ, presetObjData } from '../../engine';
+import { getManifold, joinSolids, subtractSolids, serializeManifold, parseOBJ, presetObjData } from '../../engine';
 import { useObject } from '@dxos/echo-react';
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -108,7 +109,11 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     const [toolState, setToolState] = useState<ToolState>({ tool: 'select' });
     const [selectionState, setSelectionState] = useState<SelectionState>(DEFAULT_SELECTION_STATE);
     const [viewState, setViewState] = useState<ViewState>(DEFAULT_VIEW_STATE);
-    const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+    const [selectedObjectIds, setSelectedObjectIds] = useState<string[]>([]);
+    const selectedObjectId = selectedObjectIds[0] ?? null;
+    const setSelectedObjectId = useCallback((id: string | null) => {
+      setSelectedObjectIds(id ? [id] : []);
+    }, []);
     const [selectedTemplate, setSelectedTemplate] = useState<Model.ObjectTemplate>('cube');
     const [propertiesState, setPropertiesState] = useState<PropertiesState>({ hue: 'blue' });
     const deleteObjectRef = useRef<(objectId: string) => void>(() => {});
@@ -116,6 +121,29 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     const importGLBRef = useRef<
       (data: ArrayBuffer | string) => Promise<{ vertexData: string; indexData: string } | undefined>
     >(async () => undefined);
+    const wasmRef = useRef<ManifoldToplevel | null>(null);
+
+    useEffect(() => {
+      void getManifold().then((wasm) => {
+        wasmRef.current = wasm;
+      });
+    }, []);
+
+    const findObject = useCallback(
+      (objId: string): (Model.Object & { id?: string }) | undefined => {
+        if (!scene?.objects) {
+          return undefined;
+        }
+        for (const ref of scene.objects) {
+          const obj = ref?.target as (Model.Object & { id?: string }) | undefined;
+          if (obj && (obj as any).id === objId) {
+            return obj;
+          }
+        }
+        return undefined;
+      },
+      [scene],
+    );
 
     const handleToolChange = useCallback(
       (next: Partial<ToolState>) => setToolState((prev) => ({ ...prev, ...next })),
@@ -195,25 +223,29 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     }, [scene, selectedTemplate, propertiesState.hue]);
 
     const handleDeleteSelected = useCallback(() => {
-      if (!selectedObjectId) {
+      if (selectedObjectIds.length === 0) {
         return;
       }
 
       // Remove from ECHO scene if it's an ECHO object.
       if (scene) {
         Obj.change(scene, (obj) => {
-          const index = obj.objects.findIndex((ref) => (ref?.target as any)?.id === selectedObjectId);
-          if (index !== -1) {
-            obj.objects.splice(index, 1);
+          for (const objId of selectedObjectIds) {
+            const index = obj.objects.findIndex((ref) => (ref?.target as any)?.id === objId);
+            if (index !== -1) {
+              obj.objects.splice(index, 1);
+            }
           }
         });
       }
 
       // Remove mesh + solid from canvas (covers both ECHO and imported objects).
-      deleteObjectRef.current(selectedObjectId);
+      for (const objId of selectedObjectIds) {
+        deleteObjectRef.current(objId);
+      }
 
-      setSelectedObjectId(null);
-    }, [scene, selectedObjectId]);
+      setSelectedObjectIds([]);
+    }, [scene, selectedObjectIds]);
 
     const handleImport = useCallback(
       () =>
@@ -229,6 +261,73 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
     );
 
     const handleExportSTL = useCallback(() => doExportSTL({ selectedObjectId, solidsRef }), [selectedObjectId]);
+
+    const performBooleanOp = useCallback(
+      (op: typeof joinSolids | typeof subtractSolids) => {
+        const wasm = wasmRef.current;
+        if (!scene || !solidsRef.current || !wasm || selectedObjectIds.length < 2) {
+          return;
+        }
+
+        const solids: Manifold[] = [];
+        const positions: Model.Vec3[] = [];
+        const objectsToDelete: string[] = [];
+
+        for (const objId of selectedObjectIds) {
+          const solid = solidsRef.current.get(objId);
+          const obj = findObject(objId);
+          if (!solid || !obj) {
+            continue;
+          }
+          solids.push(solid);
+          positions.push({ x: obj.position.x, y: obj.position.y, z: obj.position.z });
+          objectsToDelete.push(objId);
+        }
+
+        if (solids.length < 2) {
+          return;
+        }
+
+        const result = op(wasm, solids, positions);
+        const meshData = serializeManifold(result.solid);
+        const firstObj = findObject(objectsToDelete[0]);
+
+        const newObject = Model.make({
+          primitive: undefined,
+          mesh: meshData,
+          position: result.position,
+          color: firstObj?.color,
+        });
+
+        Obj.change(scene, (sceneObj) => {
+          // Remove source objects.
+          for (const objId of objectsToDelete) {
+            const index = sceneObj.objects.findIndex((ref) => (ref?.target as any)?.id === objId);
+            if (index !== -1) {
+              sceneObj.objects.splice(index, 1);
+            }
+          }
+          // Add new merged object.
+          sceneObj.objects.push(Ref.make(newObject));
+        });
+        Obj.setParent(newObject, scene);
+
+        // Clean up canvas for deleted objects.
+        for (const objId of objectsToDelete) {
+          deleteObjectRef.current(objId);
+        }
+
+        // Don't keep the result solid -- the canvas sync effect will recreate it from ECHO.
+        result.solid.delete();
+
+        const newObjId = (newObject as any).id as string;
+        setSelectedObjectIds([newObjId]);
+      },
+      [scene, selectedObjectIds, findObject],
+    );
+
+    const handleJoinSelected = useCallback(() => performBooleanOp(joinSolids), [performBooleanOp]);
+    const handleSubtractSelected = useCallback(() => performBooleanOp(subtractSolids), [performBooleanOp]);
 
     // Sync hue picker with selected object's color.
     useEffect(() => {
@@ -250,8 +349,10 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
         onDeleteSelected: handleDeleteSelected,
         onImport: handleImport,
         onExportSTL: handleExportSTL,
+        onJoinSelected: handleJoinSelected,
+        onSubtractSelected: handleSubtractSelected,
       }),
-      [handleAddObject, handleDeleteSelected, handleImport, handleExportSTL],
+      [handleAddObject, handleDeleteSelected, handleImport, handleExportSTL, handleJoinSelected, handleSubtractSelected],
     );
 
     useImperativeHandle(forwardedRef, () => ({

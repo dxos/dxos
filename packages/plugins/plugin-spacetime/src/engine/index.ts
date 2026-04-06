@@ -9,5 +9,6 @@ export * from './obj-import';
 export * from './manifold-context';
 export * from './presets';
 export * from './mesh-converter';
+export * from './mesh-serializer';
 export * from './scene-manager';
 export * from './stl-export';

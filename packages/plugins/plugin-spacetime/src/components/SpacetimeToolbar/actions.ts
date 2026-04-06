@@ -68,6 +68,8 @@ export type EditorActions = {
   onDeleteSelected: () => void;
   onImport: () => void;
   onExportSTL: () => void;
+  onJoinSelected: () => void;
+  onSubtractSelected: () => void;
 };
 
 /** Creates the object template selector with primitives and presets groups. */
@@ -126,6 +128,17 @@ export const createEditorActions =
         'delete-object',
         { label: ['action.delete-object.label', { ns: meta.id }], icon: 'ph--trash--regular' },
         actions.onDeleteSelected,
+      )
+      .separator('line')
+      .action(
+        'join-objects',
+        { label: ['action.join-objects.label', { ns: meta.id }], icon: 'ph--unite-square--regular' },
+        actions.onJoinSelected,
+      )
+      .action(
+        'subtract-objects',
+        { label: ['action.subtract-objects.label', { ns: meta.id }], icon: 'ph--subtract-square--regular' },
+        actions.onSubtractSelected,
       )
       .separator('line')
       .action(
