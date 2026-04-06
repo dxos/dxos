@@ -18,11 +18,15 @@ import { Banner } from './Banner';
 const DECK_CONTENT_NAME = 'DeckContent';
 
 export const DeckContent = () => {
-  const { state, deck, updateState, layoutMode, settings, pluginManager, onLayoutChange } =
-    useDeckContext(DECK_CONTENT_NAME);
-  const { sidebarState, complementarySidebarState, complementarySidebarPanel } = state;
-  const { active, fullscreen, solo } = deck;
-
+  const {
+    state: { sidebarState, complementarySidebarState, complementarySidebarPanel },
+    deck: { active, fullscreen, solo },
+    updateState,
+    layoutMode,
+    settings,
+    pluginManager,
+    onLayoutChange,
+  } = useDeckContext(DECK_CONTENT_NAME);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);

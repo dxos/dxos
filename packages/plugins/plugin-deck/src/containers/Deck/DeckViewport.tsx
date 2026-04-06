@@ -45,13 +45,11 @@ const DECK_VIEWPORT_NAME = 'DeckViewport';
  */
 export const DeckViewport = ({ children }: PropsWithChildren) => {
   const { deck, state, settings, layoutMode } = useDeckContext(DECK_VIEWPORT_NAME);
-  const { active, fullscreen, solo, plankSizing } = deck;
+  const { active, solo, plankSizing } = deck;
   const { sidebarState, complementarySidebarState } = state;
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
-
-  const isEmpty = !solo && active.length === 0;
 
   const mainPosition = useMemo(
     () => [
@@ -62,7 +60,7 @@ export const DeckViewport = ({ children }: PropsWithChildren) => {
     [topbar, hoistStatusbar],
   );
 
-  if (isEmpty) {
+  if (!solo && active.length === 0) {
     return (
       <Main.Content bounce handlesFocus classNames={mainPosition}>
         <ContentEmpty />

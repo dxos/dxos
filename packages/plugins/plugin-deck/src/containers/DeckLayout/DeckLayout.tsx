@@ -22,10 +22,10 @@ export type DeckLayoutProps = Pick<ToasterProps, 'onDismissToast'>;
 export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
   const settings = useAtomCapability(DeckCapabilities.Settings);
   const pluginManager = usePluginManager();
-  const { state, deck, updateState } = useDeckState();
+  const { invokePromise } = useOperationInvoker();
+  const { deck, state, updateState } = useDeckState();
   const layoutMode = getMode(deck);
   const { toasts } = state;
-  const { invokePromise } = useOperationInvoker();
 
   const handleLayoutChange = useCallback(
     (request: DeckLayoutChangeRequest) => {
@@ -42,8 +42,8 @@ export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
           settings={settings}
           pluginManager={pluginManager}
           layoutMode={layoutMode}
-          state={state}
           deck={deck}
+          state={state}
           updateState={updateState}
           onLayoutChange={handleLayoutChange}
         >

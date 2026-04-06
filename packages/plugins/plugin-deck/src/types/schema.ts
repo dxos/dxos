@@ -26,7 +26,7 @@ export const DeckState = Schema.Struct({
   initialized: Schema.Boolean,
   active: Schema.mutable(Schema.Array(Schema.String)),
   inactive: Schema.mutable(Schema.Array(Schema.String)),
-  solo: Schema.optional(Schema.String),
+  solo: Schema.optional(Schema.String), // TODO(burdon): Layout mode?
   fullscreen: Schema.Boolean,
   plankSizing: Schema.mutable(PlankSizing),
   companionOpen: Schema.Boolean,

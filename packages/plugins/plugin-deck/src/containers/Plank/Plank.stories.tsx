@@ -40,7 +40,7 @@ const DefaultStory = ({ id }: PlankStoryProps) => {
 
   return (
     <Main.Root>
-      <Main.Content bounce handlesFocus classNames='border'>
+      <Main.Content bounce handlesFocus>
         <div role='none' className='relative overflow-hidden bg-deck-surface'>
           <StackContext.Provider value={{ orientation: 'horizontal', size: 'contain', rail: true }}>
             <Plank.Root graph={graph} part='solo' layoutMode='solo'>
